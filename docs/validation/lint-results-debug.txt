@@ -1,0 +1,264 @@
+<project>\app\src\main\res\values\styles.xml:5: Error: android:windowLightNavigationBar requires API level 27 (current min is 26) [NewApi]
+        <item name="android:windowLightNavigationBar">false</item>
+              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "NewApi":
+   This check scans through all the Android API calls in the application and
+   warns about any calls that are not available on all versions targeted by
+   this application (according to its minimum SDK attribute in the manifest).
+
+   If you really want to use this API and don't need to support older devices
+   just set the minSdkVersion in your build.gradle or AndroidManifest.xml
+   files.
+
+   If your code is deliberately accessing newer APIs, and you have ensured
+   (e.g. with conditional execution) that this code will only ever be called
+   on a supported platform, then you can annotate your class or method with
+   the @TargetApi annotation specifying the local minimum SDK to apply, such
+   as @TargetApi(11), such that this check considers 11 rather than your
+   manifest file's minimum SDK as the required API level.
+
+   If you are deliberately setting android: attributes in style definitions,
+   make sure you place this in a values-vNN folder in order to avoid running
+   into runtime conflicts on certain devices where manufacturers have added
+   custom attributes whose ids conflict with the new ones on later platforms.
+
+   Similarly, you can use tools:targetApi="11" in an XML file to indicate that
+   the element will only be inflated in an adequate context.
+
+<project>\local.properties:1: Error: Windows file separators (\) and drive letter separators (':') must be escaped (\\) in property files; use C\:/Users/baboe/Documents/Codex/2026-09-08/files-pasted-by-the-user-camerax/work/toolchain/android-sdk\r [PropertyEscape]
+sdk.dir=C:/Users/baboe/Documents/Codex/2026-09-08/files-pasted-by-the-user-camerax/work/toolchain/android-sdk
+         ~
+
+   Explanation for issues of type "PropertyEscape":
+   All backslashes and colons in .property files must be escaped with a
+   backslash (). This means that when writing a Windows path, you must escape
+   the file separators, so the path MyFiles should be written as
+   key=\\My\\Files.
+
+<project>\gradle\wrapper\gradle-wrapper.properties:3: Warning: A newer version of Gradle than 8.13 is available: 8.14.5 [AndroidGradlePluginVersion]
+distributionUrl=https\://services.gradle.org/distributions/gradle-8.13-bin.zip
+                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "AndroidGradlePluginVersion":
+   This detector looks for usage of the Android Gradle Plugin where the
+   version you are using is not the current stable release. Using older
+   versions is fine, and there are cases where you deliberately want to stick
+   with an older version. However, you may simply not be aware that a more
+   recent version is available, and that is what this lint check helps find.
+
+<project>\app\build.gradle.kts:24: Warning: A newer version of androidx.activity:activity-ktx than 1.10.1 is available: 1.13.0 [GradleDependency]
+    implementation("androidx.activity:activity-ktx:1.10.1")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<project>\app\build.gradle.kts:25: Warning: A newer version of androidx.core:core-ktx than 1.16.0 is available: 1.19.0 [GradleDependency]
+    implementation("androidx.core:core-ktx:1.16.0")
+                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "GradleDependency":
+   This detector looks for usages of libraries where the version you are using
+   is not the current stable release. Using older versions is fine, and there
+   are cases where you deliberately want to stick with an older version.
+   However, you may simply not be aware that a more recent version is
+   available, and that is what this lint check helps find.
+
+<project>\app\src\main\java\dev\cameradoctor\camera\CameraXEngine.kt:44: Error: This declaration is opt-in and its usage should be marked with @androidx.camera.camera2.interop.ExperimentalCamera2Interop or @OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class) [UnsafeOptInUsageError from androidx.annotation.experimental]
+                Camera2Interop.Extender(builder).setSessionCaptureCallback(telemetry.callback(session) { active })
+                               ~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\camera\CameraXEngine.kt:44: Error: This declaration is opt-in and its usage should be marked with @androidx.camera.camera2.interop.ExperimentalCamera2Interop or @OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class) [UnsafeOptInUsageError from androidx.annotation.experimental]
+                Camera2Interop.Extender(builder).setSessionCaptureCallback(telemetry.callback(session) { active })
+                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\camera\CameraXEngine.kt:54: Error: This declaration is opt-in and its usage should be marked with @androidx.camera.camera2.interop.ExperimentalCamera2Interop or @OptIn(markerClass = androidx.camera.camera2.interop.ExperimentalCamera2Interop.class) [UnsafeOptInUsageError from androidx.annotation.experimental]
+                    infos.filter { Camera2CameraInfo.from(it).cameraId == cameraId }
+                                                     ~~~~
+
+   Explanation for issues of type "UnsafeOptInUsageError":
+   This API has been flagged as opt-in with error-level severity.
+
+   Any declaration annotated with this marker is considered part of an
+   unstable or
+   otherwise non-standard API surface and its call sites should accept the
+   opt-in
+   aspect of it by using the @OptIn annotation, using the marker annotation
+   --
+   effectively causing further propagation of the opt-in aspect -- or
+   configuring
+   the UnsafeOptInUsageError check's options for project-wide opt-in.
+
+   To configure project-wide opt-in, specify the opt-in option value in
+   lint.xml
+   as a comma-delimited list of opted-in annotations:
+
+   <lint>
+       <issue id="UnsafeOptInUsageError">
+           <option name="opt-in" value="com.foo.ExperimentalBarAnnotation" />
+       </issue>
+   </lint>
+
+   Vendor: Android Open Source Project
+   Identifier: androidx.annotation.experimental
+   Feedback: https://issuetracker.google.com/issues/new?component=459778
+
+<project>\app\src\main\AndroidManifest.xml:6: Warning: The attribute android:allowBackup is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute android:dataExtractionRules specifying an @xml resource which configures cloud backups and device transfers on Android 12 and higher. [DataExtractionRules]
+        android:icon="@drawable/ic_scope" android:allowBackup="false" android:supportsRtl="true">
+                                                               ~~~~~
+
+   Explanation for issues of type "DataExtractionRules":
+   Before Android 12, the attributes android:allowBackup and
+   android:fullBackupContent were used to configure all forms of backup,
+   including cloud backups, device-to-device transfers and adb backup.
+
+   In Android 12 and higher, these attributes have been deprecated and will
+   only apply to cloud backups. You should instead use the attribute
+   android:dataExtractionRules, specifying an @xml resource that configures
+   which files to back up, for cloud backups and for device-to-device
+   transfers, separately. If your minSdkVersion supports older versions,
+   you'll still want to specify an android:fullBackupContent resource if the
+   default behavior is not right for your app.
+
+   https://developer.android.com/about/versions/12/backup-restore#xml-changes
+   https://goo.gle/DataExtractionRules
+
+<project>\app\src\main\java\dev\cameradoctor\ui\ScopeView.kt:53: Warning: Avoid object allocations during draw/layout operations (preallocate and reuse instead) [DrawAllocation]
+            val path = Path(); var lastY = 0f; var lastTime: Long? = null
+                       ~~~~~~
+
+   Explanation for issues of type "DrawAllocation":
+   You should avoid allocating objects during a drawing or layout operation.
+   These are called frequently, so a smooth UI can be interrupted by garbage
+   collection pauses caused by the object allocations.
+
+   The way this is generally handled is to allocate the needed objects up
+   front and to reuse them for each drawing operation.
+
+   Some methods allocate memory on your behalf (such as Bitmap.create), and
+   these should be handled in the same way.
+
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:254: Warning: Use the KTX extension function String.toUri instead? [UseKtx]
+            else startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:$packageName")))
+                                                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "UseKtx":
+   The Android KTX libraries decorates the Android platform SDK as well as
+   various libraries with more convenient extension functions available from
+   Kotlin, allowing you to use default parameters, named parameters, and
+   more.
+
+   Available options:
+
+   **remove-defaults** (default is true):
+   Whether to skip arguments that match the defaults provided by the extension.
+
+   Extensions often provide default values for some of the parameters. For example:
+   ```kotlin
+   fun Path.readLines(charset: Charset = Charsets.UTF_8): List<String> { return Files.readAllLines(this, charset) }
+   ```
+   This lint check will by default automatically omit parameters that match the default, so if your code was calling
+
+   ```kotlin
+   Files.readAllLines(file, Charset.UTF_8)
+   ```
+   lint would replace this with
+   ```kotlin
+   file.readLines()
+   ```
+   rather than
+
+   ```kotlin
+   file.readLines(Charset.UTF_8
+   ```
+   You can turn this behavior off using this option.
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="remove-defaults" value="true" />
+       </issue>
+   </lint>
+   ```
+
+   **require-present** (default is true):
+   Whether to only offer extensions already available.
+
+   This option lets you only have lint suggest extension replacements if those extensions are already available on the class path (in other words, you're already depending on the library containing the extension method.)
+
+   To configure this option, use a `lint.xml` file with an <option> like this:
+
+   ```xml
+   <lint>
+       <issue id="UseKtx">
+           <option name="require-present" value="true" />
+       </issue>
+   </lint>
+   ```
+
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:275: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        metrics.text="Result FPS ${fmt(num("resultFps"),"%.1f")}   ·   ISO ${num("iso")?.toInt() ?: "—"}\nExposure ${fmt(num("exposureNs")?.div(1e6),"%.2f ms")}   ·   Lens ${fmt(num("focusDiopters"),"%.2f D")}" 
+                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:275: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        metrics.text="Result FPS ${fmt(num("resultFps"),"%.1f")}   ·   ISO ${num("iso")?.toInt() ?: "—"}\nExposure ${fmt(num("exposureNs")?.div(1e6),"%.2f ms")}   ·   Lens ${fmt(num("focusDiopters"),"%.2f D")}" 
+                      ~~~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:275: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        metrics.text="Result FPS ${fmt(num("resultFps"),"%.1f")}   ·   ISO ${num("iso")?.toInt() ?: "—"}\nExposure ${fmt(num("exposureNs")?.div(1e6),"%.2f ms")}   ·   Lens ${fmt(num("focusDiopters"),"%.2f D")}" 
+                                                                ~~~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:275: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        metrics.text="Result FPS ${fmt(num("resultFps"),"%.1f")}   ·   ISO ${num("iso")?.toInt() ?: "—"}\nExposure ${fmt(num("exposureNs")?.div(1e6),"%.2f ms")}   ·   Lens ${fmt(num("focusDiopters"),"%.2f D")}" 
+                                                                                                          ~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:275: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        metrics.text="Result FPS ${fmt(num("resultFps"),"%.1f")}   ·   ISO ${num("iso")?.toInt() ?: "—"}\nExposure ${fmt(num("exposureNs")?.div(1e6),"%.2f ms")}   ·   Lens ${fmt(num("focusDiopters"),"%.2f D")}" 
+                                                                                                                                                                ~~~~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:282: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        timeline.text="Frame #${matched.frame} · observed callbacks\nSTART    ${if(start!=null) "+0.00 ms" else "—"}\nRESULT   ${offset(matched)}\nIMAGE    ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:282: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        timeline.text="Frame #${matched.frame} · observed callbacks\nSTART    ${if(start!=null) "+0.00 ms" else "—"}\nRESULT   ${offset(matched)}\nIMAGE    ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
+                       ~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:282: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        timeline.text="Frame #${matched.frame} · observed callbacks\nSTART    ${if(start!=null) "+0.00 ms" else "—"}\nRESULT   ${offset(matched)}\nIMAGE    ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
+                                              ~~~~~~~~~~~~~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:282: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        timeline.text="Frame #${matched.frame} · observed callbacks\nSTART    ${if(start!=null) "+0.00 ms" else "—"}\nRESULT   ${offset(matched)}\nIMAGE    ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
+                                                                     ~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:282: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        timeline.text="Frame #${matched.frame} · observed callbacks\nSTART    ${if(start!=null) "+0.00 ms" else "—"}\nRESULT   ${offset(matched)}\nIMAGE    ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
+                                                                                                                      ~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:282: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        timeline.text="Frame #${matched.frame} · observed callbacks\nSTART    ${if(start!=null) "+0.00 ms" else "—"}\nRESULT   ${offset(matched)}\nIMAGE    ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
+                                                                                                                                                   ~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:282: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        timeline.text="Frame #${matched.frame} · observed callbacks\nSTART    ${if(start!=null) "+0.00 ms" else "—"}\nRESULT   ${offset(matched)}\nIMAGE    ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
+                                                                                                                                                                              ~~~~~~~~~~~~~~~~~~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:291: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+        system.text="APP CPU ${"%.1f".format(Locale.US,percent)}%* · PSS ${"%.0f".format(Locale.US,memory)} MB · $thermalName"
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:291: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        system.text="APP CPU ${"%.1f".format(Locale.US,percent)}%* · PSS ${"%.0f".format(Locale.US,memory)} MB · $thermalName"
+                     ~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:291: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        system.text="APP CPU ${"%.1f".format(Locale.US,percent)}%* · PSS ${"%.0f".format(Locale.US,memory)} MB · $thermalName"
+                                ~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:291: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        system.text="APP CPU ${"%.1f".format(Locale.US,percent)}%* · PSS ${"%.0f".format(Locale.US,memory)} MB · $thermalName"
+                                                                ~~~~~~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:291: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        system.text="APP CPU ${"%.1f".format(Locale.US,percent)}%* · PSS ${"%.0f".format(Locale.US,memory)} MB · $thermalName"
+                                                                            ~~~~
+<project>\app\src\main\java\dev\cameradoctor\MainActivity.kt:291: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        system.text="APP CPU ${"%.1f".format(Locale.US,percent)}%* · PSS ${"%.0f".format(Locale.US,memory)} MB · $thermalName"
+                                                                                                           ~~~~~~
+
+   Explanation for issues of type "SetTextI18n":
+   When calling TextView#setText
+   * Never call Number#toString() to format numbers; it will not handle
+   fraction separators and locale-specific digits properly. Consider using
+   String#format with proper format specifications (%d or %f) instead.
+   * Do not pass a string literal (e.g. "Hello") to display text. Hardcoded
+   text can not be properly translated to other languages. Consider using
+   Android resource strings instead.
+   * Do not build messages by concatenating text chunks. Such messages can not
+   be properly translated.
+
+   https://developer.android.com/guide/topics/resources/localization.html
+
+5 errors, 24 warnings
