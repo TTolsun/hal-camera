@@ -115,7 +115,7 @@ v0.2가 끝났을 때 사용자가 할 수 있는 일은 세 가지다. 60초 �
 | H.4 | `buffer_latency` | 같은 frame의 `onCaptureStarted` 진입 → YUV `onImageAvailable` 진입 | ms | p50, p95 / 10 s | YUV stream이 있을 때만. 없으면 `UNKNOWN(not_measurable)` |
 | H.5 | `stall_count` | interval > 1.5 × 해당 frame의 자체 `SENSOR_FRAME_DURATION`인 횟수. baseline이 있으면 interval > 1.5 × baseline p50 조건도 함께 요구 | count | 합 / 10 s | 실제 drop 개수가 아니다. 자체 duration과 비교하므로 AE 가변 FPS에서도 판정 가능. duration이 없는 frame은 baseline p50 × 1.5 단독 기준으로 대체(cadence-aware fallback) |
 | H.6 | `ae_convergence` | 첫 `capture_result` → AE 상태가 CONVERGED/FLASH_REQUIRED/LOCKED인 첫 result | ms | 단일값 | 창 끝까지 미도달이면 `timeout` |
-| H.7 | `af_convergence` | 첫 `capture_result` → AF 상태가 PASSIVE_FOCUSED/FOCUSED_LOCKED인 첫 result | ms | 단일값 | AF 모드 OFF 또는 고정 초점은 `UNKNOWN(unsupported)`. NOT_FOCUSED_LOCKED는 수렴이 아니다 |
+| H.7 | `af_convergence` | 첫 `capture_result` → AF 상태가 PASSIVE_FOCUSED/FOCUSED_LOCKED인 첫 result | ms | 단일값 | AF 모드 OFF/EDOF 또는 고정 초점은 `UNKNOWN(unsupported)`. 실제 result의 AF 모드를 우선하고, 기존 로그는 같은 프레임의 request_observed.afMode를 사용한다. INACTIVE 상태만으로 미지원을 추정하지 않는다. NOT_FOCUSED_LOCKED는 수렴이 아니다 |
 | H.8 | `awb_convergence` | 첫 `capture_result` → AWB 상태가 CONVERGED/LOCKED인 첫 result | ms | 단일값 | |
 | H.9 | `callback_failure_count` | `capture_failed` + `buffer_lost` 이벤트 수 | count | 합 / 10 s | |
 
@@ -316,7 +316,7 @@ relative 열의 백분율은 baseline p50 대비 run p50의 증가율이다. p95
 | H.8 `awb_convergence` | metadata | ms | 단일 | ≤ 1500 → PASS, 그 외 WARN | +50 % → WARN | ≤ 1500 | > 1500 또는 timeout | v0.2 없음 | |
 | H.9 `callback_failure_count` | callback | count | 합 / 10 s | 0 / — / ≥1 | 없음 | 0 | 없음 | ≥ 1 | 하드 실패 |
 
-3A 수렴 시간은 장면(대비, 거리, AF 영역, 움직임)에 크게 좌우되고, Android API는 "몇 초 안에 수렴해야 정상"이라는 요구사항을 제공하지 않는다. 그래서 v0.2의 3A는 **성능 신호**이며 카메라 결함 신호가 아니고, FAIL을 내지 않는다. 10장의 사용자 안내에서 "밝은 곳에서 글자나 물체를 향해" 검사하도록 요구한다.
+3A 수렴 시간(H.6–H.8)은 관측 창 끝(10초)까지 미도달이면 timeout으로 기록하고, 화면에는 5초 이상이면 "5초 내 미완료"로 표시한다(2.4의 5초 timeout과 같은 기준). AF 상태가 창 내내 INACTIVE이면 고정 초점으로 보고 H.7을 UNKNOWN(unsupported)로 둔다(Galaxy S25+ 초광각에서 실측). 3A 수렴 시간은 장면(대비, 거리, AF 영역, 움직임)에 크게 좌우되고, Android API는 "몇 초 안에 수렴해야 정상"이라는 요구사항을 제공하지 않는다. 그래서 v0.2의 3A는 **성능 신호**이며 카메라 결함 신호가 아니고, FAIL을 내지 않는다. 10장의 사용자 안내에서 "밝은 곳에서 글자나 물체를 향해" 검사하도록 요구한다.
 
 환경 불일치 판정은 ISO 단독이 아니라 노출 부하 대리값을 쓴다.
 
