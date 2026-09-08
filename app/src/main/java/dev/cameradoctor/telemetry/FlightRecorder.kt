@@ -31,14 +31,22 @@ class FlightRecorder(
     private val preNs: Long = 10_000_000_000L,
     private val postNs: Long = 5_000_000_000L
 ) {
+    /** Optional live tap, invoked synchronously after each record on the recording thread. Keep it cheap. */
+    @Volatile var listener: ((Event) -> Unit)? = null
     private val ring = ArrayDeque<Event>()
     private var capacityEvictions = 0L
     private var pending: Pending? = null
     private data class Pending(val id: String, val trigger: Long, val events: MutableList<Event>, var truncated: Boolean = false)
     init { require(retentionNs >= preNs && maxEvents > 0 && preNs >= 0 && postNs >= 0) }
 
-    @Synchronized fun record(session: String, kind: String, frame: Long? = null,
+    fun record(session: String, kind: String, frame: Long? = null,
         sensorNs: Long? = null, values: Map<String, Any?> = emptyMap()): Event {
+        val event = store(session, kind, frame, sensorNs, values)
+        // Outside the lock so a listener may call snapshot() or record() without deadlocking.
+        listener?.invoke(event)
+        return event
+    }
+    @Synchronized private fun store(session: String, kind: String, frame: Long?, sensorNs: Long?, values: Map<String, Any?>): Event {
         val now = clock()
         trim(now)
         val event = Event(now, session, kind, frame, sensorNs, values.toMap())

@@ -241,8 +241,15 @@ class MainActivity : ComponentActivity() {
             restartCamera()
         }.apply { background=rounded(glass); setTextColor(Color.WHITE) }
         controls.addView(pauseButton,LinearLayout.LayoutParams(dp(44),dp(38)).apply { marginStart=dp(6) })
+        val checkButton=button("검사") {
+            recorder.finish("check_started")?.let { export(it) }
+            startActivity(android.content.Intent(this,dev.cameradoctor.check.CheckActivity::class.java))
+        }.apply { background=rounded(glass); setTextColor(Color.WHITE) }
+        controls.addView(checkButton,LinearLayout.LayoutParams(dp(52),dp(38)).apply { marginStart=dp(6) })
         statusText=label("INITIALIZING",11,mint,true); topBar.addView(statusText,lp(top=6))
         healthBanner=label("HEALTH · 대기",11,Color.WHITE,true).apply {
+            // Fixed two-line height: the banner must not grow or shrink as headlines change length.
+            setLines(2); gravity=Gravity.CENTER_VERTICAL
             setPadding(dp(10),dp(6),dp(10),dp(6)); background=rounded(glass); contentDescription="카메라 상태 판정. 누르면 근거를 표시"
             setOnClickListener { diagnostics.visibility=View.VISIBLE }
         }
