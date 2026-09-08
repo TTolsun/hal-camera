@@ -83,22 +83,30 @@ class MetricExtractor(private val minSamples: Int = 15) {
 
     fun observe(events: List<Event>, session: String, fromNs: Long, toNs: Long,
                 baselineIntervalMs: Double? = null, aggregation: Aggregation = Aggregation.PERCENTILE,
-                fixedFpsExpectedMs: Double? = null): Observation =
-        observe(frames(events, session, fromNs, toNs), baselineIntervalMs, aggregation, fixedFpsExpectedMs)
+                fixedFpsExpectedMs: Double? = null, warmupFrames: Int = 0): Observation =
+        observe(frames(events, session, fromNs, toNs), baselineIntervalMs, aggregation, fixedFpsExpectedMs, warmupFrames)
 
+    /**
+     * [warmupFrames]: the first frames of a freshly started stream carry a start-up cadence artefact (on Galaxy S25+
+     * frame #1 arrives 66.7 ms after frame #0 with a 33.3 ms duration, on every camera). Those frames are excluded from
+     * the interval, partial, buffer and stall metrics (H.1 to H.5) but still count for 3A convergence (H.6 to H.8),
+     * which is measured from the first result. Same idea as the warm-up exclusion in METRICS.md 0.2.
+     */
     fun observe(frames: List<FrameObservation>, baselineIntervalMs: Double? = null,
-                aggregation: Aggregation = Aggregation.PERCENTILE, fixedFpsExpectedMs: Double? = null): Observation {
-        val intervals = frames.mapNotNull { it.intervalMs }
-        val durations = frames.mapNotNull { it.ownDurationMs }
-        val partials = frames.mapNotNull { it.partialMs }
-        val buffers = frames.mapNotNull { it.bufferMs }
-        val loads = frames.mapNotNull { f -> f.iso?.let { i -> f.exposureNs?.let { e -> i * e / 1e6 } } }
+                aggregation: Aggregation = Aggregation.PERCENTILE, fixedFpsExpectedMs: Double? = null,
+                warmupFrames: Int = 0): Observation {
+        val steady = if (frames.size > warmupFrames) frames.drop(warmupFrames) else frames
+        val intervals = steady.mapNotNull { it.intervalMs }
+        val durations = steady.mapNotNull { it.ownDurationMs }
+        val partials = steady.mapNotNull { it.partialMs }
+        val buffers = steady.mapNotNull { it.bufferMs }
+        val loads = steady.mapNotNull { f -> f.iso?.let { i -> f.exposureNs?.let { e -> i * e / 1e6 } } }
         val intervalP50 = percentile(intervals, 0.5)
         val durationP50 = percentile(durations, 0.5)
         val partialP50 = percentile(partials, 0.5)
-        val stalledFrames = frames.filter { it.stalled(baselineIntervalMs) }
+        val stalledFrames = steady.filter { it.stalled(baselineIntervalMs) }
         val worstStall = stalledFrames.maxByOrNull { it.intervalMs ?: 0.0 }
-        val worstPartial = frames.filter { it.partialMs != null }.maxByOrNull { it.partialMs!! }
+        val worstPartial = steady.filter { it.partialMs != null }.maxByOrNull { it.partialMs!! }
         val last = frames.lastOrNull()
         val afSupported = frames.any { it.af != null }
         val aeStable = last?.ae.let { it == 2 || it == 3 || it == 4 }

@@ -37,6 +37,8 @@ class CheckEvaluator(
     )
 
     companion object {
+        /** Stream start-up frames excluded from interval metrics (MetricExtractor.observe warmupFrames). */
+        const val WARMUP_FRAMES = 5
         /** Metrics defined in the table but not run by the v0.2 Auto Check (4.3). */
         val NOT_RUN = listOf("2.1", "2.4", "2.6", "2.7", "3.1", "3.2", "3.3", "3.4", "3.5", "3.6", "3.7")
     }
@@ -50,7 +52,7 @@ class CheckEvaluator(
     ): EndpointEvaluation {
         val obs = if (result.observeStartNs != null && result.observeEndNs != null)
             extractor.observe(events, result.session, result.observeStartNs, result.observeEndNs, baseline?.get("H.1")?.value,
-                fixedFpsExpectedMs = fixedFpsExpectedMs) else null
+                fixedFpsExpectedMs = fixedFpsExpectedMs, warmupFrames = WARMUP_FRAMES) else null
         val samples = mutableListOf<MetricSample>()
         samples += result.launchSamples()
         samples += obs?.samples ?: listOf("H.1", "H.2", "H.3", "H.4", "H.5", "H.6", "H.7", "H.8").map {
