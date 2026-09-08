@@ -505,6 +505,7 @@ class MainActivity : ComponentActivity() {
     }
     /** After MARK INCIDENT: L1 verdict and L2 evidence captured at the trigger (11.4). Consumer wording; details behind a button. */
     private fun showIncidentSummary(file:File) {
+        if(destroyed || isFinishing) return
         val a=incidentAssessment; incidentAssessment=null
         val rule=a?.diagnosis?.rule ?: "insufficient_evidence"
         val v=a?.values.orEmpty()
