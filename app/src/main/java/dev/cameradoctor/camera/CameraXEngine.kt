@@ -86,6 +86,14 @@ class CameraXEngine(
             }
         })
     }
+    override fun setZoom(ratio: Float) {
+        val cam = camera ?: return
+        if (!active) return
+        val state = cam.cameraInfo.zoomState.value
+        val clamped = if (state != null) ratio.coerceIn(state.minZoomRatio, state.maxZoomRatio) else ratio
+        telemetry.event(session, "zoom_set", mapOf("zoomRequested" to clamped, "api" to "CameraControl.setZoomRatio"))
+        cam.cameraControl.setZoomRatio(clamped)
+    }
     override fun close(done: () -> Unit) {
         active = false
         analysis?.clearAnalyzer()
