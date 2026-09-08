@@ -167,17 +167,22 @@ val mpc = Build.VERSION.MEDIA_PERFORMANCE_CLASS          // 0이면 미선언
 val cddCameraLatencyApplicable = mpc >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE   // U = 34
 ```
 
-**조건 일치 등급 `condition_equivalence`**
+**두 축을 분리한다.** CDD가 이 기기·이 endpoint에 적용되는가(`cdd_applicability`)와, 측정 조건이 CDD 측정 조건과 얼마나 같은가(`condition_equivalence`)는 다른 질문이다. 한 필드에 섞으면 "MPC 미선언"과 "조명 통제 안 함"이 같은 값이 되어 경계가 흐려진다.
 
-| 등급 | 조건 | 값 초과 시 상태 | `fail_kind` |
+| `cdd_applicability` | 조건 |
+|---|---|
+| `applicable` | MPC ≥ U이고 primary camera(후면 메인 또는 전면) |
+| `not_applicable` | MPC 미선언, U 미만, 또는 primary camera가 아님 |
+
+| `condition_equivalence` | 조건 | 값 초과 시 상태 | `threshold_basis` |
 |---|---|---|---|
 | `equivalent` | CTS PerformanceTest와 같은 stream 구성, 같은 warm-up/반복 정책, ITS 조명(3000 K) 검증 | FAIL | `absolute_validated` |
 | `similar` | 관측 방식은 같지만 조명 통제 없음 (v0.2 Auto Check의 기본 상태) | WARN | `absolute_reference` |
-| `not_applicable` | MPC 미선언 또는 U 미만, 또는 primary camera가 아님 | WARN (product heuristic) | `heuristic` |
+| `non_equivalent` | stream 구성, 해상도, 측정 방식이 실질적으로 다름 | WARN | `absolute_reference` |
 
-v0.2 Auto Check는 조명을 통제하지 않으므로 항상 `similar` 또는 `not_applicable`이다. `equivalent`는 v0.3 Expert 시나리오 runner에서 조명 검증 절차가 생긴 뒤에만 나온다. 즉 **v0.2에서는 CDD 값 초과가 FAIL을 만들지 않는다.**
+`condition_equivalence`는 CDD 참조 지표(1.6, 2.2)에만 있고 그 외 지표에서는 null이다. `cdd_applicability = not_applicable`이면 CDD 값을 제품 경험 기준(`heuristic`)으로만 쓴다. v0.2 Auto Check는 조명을 통제하지 않으므로 `equivalent`가 나오지 않는다. `equivalent`는 v0.3 Expert 시나리오 runner에서 조명 검증 절차가 생긴 뒤에만 나온다. 즉 **v0.2에서는 CDD 값 초과가 FAIL을 만들지 않는다.**
 
-| 지표 | CDD 값 | `similar` (MPC ≥ U, primary) | `not_applicable` |
+| 지표 | CDD 값 | `applicable` + `similar`/`non_equivalent` | `not_applicable` |
 |---|---:|---|---|
 | 1.6 `preview_total[endpoint=yuv_proxy]` p50 | 500 ms | ≥ 500 ms → WARN(`absolute_reference`) | ≥ 500 ms → WARN(`heuristic`), ≥ 1000 ms → FAIL(`heuristic`) |
 | 2.2 `capture_latency[zsl=off,trigger=off,fmt=jpeg,res=1920x1080]` p50 | 1000 ms | ≥ 1000 ms → WARN(`absolute_reference`) | ≥ 1000 ms → WARN(`heuristic`), ≥ 2000 ms → FAIL(`heuristic`) |
@@ -210,15 +215,15 @@ absolute와 relative가 다른 상태를 내면 더 나쁜 상태를 채택하�
 
 상태 순서는 FAIL > WARN > PASS > UNKNOWN이다. UNKNOWN은 가장 낮지만, UNKNOWN과 PASS가 만나면 PASS다. 판정 근거가 하나라도 있으면 그 근거를 쓴다.
 
-**FAIL의 종류.** 같은 FAIL이라도 근거의 강도가 다르므로 `fail_kind`를 붙인다. composite health로 승격되는 규칙은 7.1절에 있다.
+**판정 근거 `threshold_basis`.** 상태(State)는 "얼마나 나쁜가"이고, `threshold_basis`는 "왜 그렇게 판정했는가"다. 두 축은 직교한다. `state=WARN, basis=absolute_reference`와 `state=FAIL, basis=relative`가 모두 정상 조합이다. final 상태를 결정한 기준의 basis를 기록하며, PASS이면 null이다. composite health로 승격되는 규칙은 7.1절에 있다.
 
-| `fail_kind` | 근거 | composite 승격 |
+| `threshold_basis` | 근거 | FAIL일 때 composite 승격 |
 |---|---|---|
 | `hard` | 5.6절의 오류, timeout | ISSUE |
 | `absolute_validated` | 조건이 `equivalent`인 CDD 기준 초과 | ISSUE |
-| `absolute_reference` | 조건이 `similar`인 CDD 기준 초과 (상태는 WARN이므로 실제로는 FAIL이 되지 않음) | WARNING |
-| `relative` | baseline 대비 +100 % 이상 | WARNING |
-| `heuristic` | 제품이 정한 경험 기준 (stall 횟수, fps 비율 등) | WARNING |
+| `absolute_reference` | 조건이 `similar`/`non_equivalent`인 CDD 참조값 초과. v0.2에서는 WARN까지만 낸다 | WARNING |
+| `relative` | baseline 대비 편차 | WARNING |
+| `heuristic` | 제품이 정한 경험 기준 (stall 횟수, fps 비율, 3A 시간 등) | WARNING |
 
 "평소보다 2배 느려짐"은 WARNING이고, `openCamera()` 실패는 ISSUE다. relative 기준 하나만으로 사용자에게 "문제가 있습니다"라고 말하지 않는다.
 
@@ -257,7 +262,7 @@ timeout 값은 production watchdog 값이며 카메라 성능 규격이 아니�
 
 relative 열의 백분율은 baseline p50 대비 run p50의 증가율이다. p95는 같은 규칙을 baseline p95에 적용한다. 작은 값의 잡음을 막기 위해 latency 지표는 절대 증가량 10 ms 미만이면 relative WARN을 내지 않는다.
 
-모든 임계값은 **제안값**이며 Galaxy S25+ 실측 후 확정한다. Absolute 열의 출처는 `absoluteSource`에 기록하며 값은 `cdd_2.2.7.2_H-1-5`, `cdd_2.2.7.2_H-1-6`, `physics`(자체 frame duration), `watchdog_v0.2`, `product_stability_v0.2`, `product_recording_v0.2` 중 하나다. `product_*`는 공식 규격이 아닌 제품 경험 기준이다. FAIL 열의 상태는 5.4절 `fail_kind`에 따라 composite 승격 여부가 다르며, 이 표에서 ISSUE로 승격되는 FAIL은 `hard`뿐이다(v0.2에는 `absolute_validated`가 나오지 않는다).
+모든 임계값은 **제안값**이며 Galaxy S25+ 실측 후 확정한다. Absolute 열의 출처는 `absoluteSource`에 기록하며 값은 `cdd_2.2.7.2_H-1-5`, `cdd_2.2.7.2_H-1-6`, `physics`(자체 frame duration), `watchdog_v0.2`, `product_stability_v0.2`, `product_recording_v0.2` 중 하나다. `product_*`는 공식 규격이 아닌 제품 경험 기준이다. FAIL 열의 상태는 5.4절 `threshold_basis`에 따라 composite 승격 여부가 다르며, 이 표에서 ISSUE로 승격되는 FAIL은 basis가 `hard`인 것뿐이다(v0.2에는 `absolute_validated`가 나오지 않는다).
 
 ### 6.1 그룹 A · Launch
 
@@ -330,8 +335,8 @@ ISO 100 · 1/120 s와 ISO 400 · 1/500 s는 ISO만 보면 4배 차이지만 노�
 
 | 수준 | 조건 |
 |---|---|
-| ISSUE | `fail_kind`가 `hard` 또는 `absolute_validated`인 FAIL 1건 이상 |
-| WARNING | ISSUE가 아니고, WARN 상태 지표 1개 이상 또는 `fail_kind`가 `relative`/`heuristic`인 FAIL 1개 이상 |
+| ISSUE | `threshold_basis`가 `hard` 또는 `absolute_validated`인 FAIL 1건 이상 |
+| WARNING | ISSUE가 아니고, WARN 상태 지표 1개 이상 또는 `threshold_basis`가 `relative`/`heuristic`인 FAIL 1개 이상 |
 | NORMAL | ISSUE도 WARNING도 아니고, 판정된(PASS) 지표의 가중치 합이 전체 가중치의 50 % 이상 |
 | INSUFFICIENT | 위 어느 것도 아님. UNKNOWN이 너무 많아 판정할 수 없음 |
 
@@ -404,8 +409,8 @@ UNKNOWN은 0점이 아니다. 분모에서 빠진다. 대신 coverage가 낮아�
 |---|---|---|---|
 | `normal` | WARN/FAIL 없음 | 현재 프레임 흐름은 정상입니다. | NORMAL |
 | `slower_than_baseline` | latency 지표 relative WARN/FAIL, absolute PASS | 규격 범위 안이지만 평소보다 느립니다. | RELATIVE DEGRADATION · {metric} +{pct}% vs baseline |
-| `below_spec` | `fail_kind=absolute_validated` (조건 `equivalent`일 때만. v0.2에서는 발생하지 않음) | 평소와 같지만 성능 기준을 만족하지 않습니다. | ABSOLUTE FAIL · {metric} {value} ≥ {bound} |
-| `cdd_reference_exceeded` | CDD 참조값 초과, 조건 `similar` 또는 `not_applicable` | 권장 성능 기준보다 느립니다. | CDD_REFERENCE_EXCEEDED · environment_not_equivalent · {metric} {value} ≥ {bound} |
+| `below_spec` | `threshold_basis=absolute_validated` (조건 `equivalent`일 때만. v0.2에서는 발생하지 않음) | 평소와 같지만 성능 기준을 만족하지 않습니다. | ABSOLUTE FAIL · {metric} {value} ≥ {bound} |
+| `cdd_reference_exceeded` | CDD 참조값 초과, 조건 `similar` 또는 `non_equivalent`, 또는 `cdd_applicability=not_applicable` | 권장 성능 기준보다 느립니다. | CDD_REFERENCE_EXCEEDED · environment_not_equivalent · {metric} {value} ≥ {bound} |
 | `sensor_stall` | H.5 WARN/FAIL, H.3 PASS | 프레임이 예상보다 늦게 도착합니다. | SENSOR STALL · interval > own duration · 앞단 |
 | `callback_delay` | H.5 PASS, H.3 WARN/FAIL | 프레임 응답이 지연됩니다. 촬영 파이프라인 후반부의 지연 가능성이 있습니다. | PARTIAL DELAY · cadence 정상 · 뒷단 |
 | `pipeline_stall` | H.5와 H.3 모두 WARN/FAIL | 프레임 흐름 전체가 정체됩니다. | PIPELINE STALL |
@@ -713,27 +718,50 @@ CAMERA HEALTH
 
 ### 13.2 MetricState
 
+세 축은 직교한다. State는 결과가 얼마나 나쁜가, ThresholdBasis는 왜 그렇게 판정했는가, ConditionEquivalence는 외부 기준과 조건이 얼마나 같은가다. 모든 enum은 JSON에서 snake_case 소문자로 직렬화한다(`NO_BASELINE` → `"no_baseline"`). 문자열 필드로 두지 않는다.
+
 ```kotlin
 enum class State { PASS, WARN, FAIL, UNKNOWN }
+
+enum class ThresholdBasis { HARD, ABSOLUTE_VALIDATED, ABSOLUTE_REFERENCE, RELATIVE, HEURISTIC }
+
+enum class ConditionEquivalence { EQUIVALENT, SIMILAR, NON_EQUIVALENT }
+
+enum class CddApplicability { APPLICABLE, NOT_APPLICABLE }
+
+enum class UnknownReason {
+    NOT_MEASURABLE, NOT_RUN, INSUFFICIENT_SAMPLES, NO_BASELINE,
+    UNSUPPORTED, CADENCE_CHANGED, CONDITION_MISMATCH
+}
 
 data class MetricState(
     val id: String,                  // "1.6", "H.3" ...
     val value: Double?,              // 대표값 (p50 등)
     val p95: Double? = null,
     val n: Int,
+
     val absolute: State,
     val absoluteBound: Double?,
-    val absoluteSource: String?,     // "cdd_2.2.7.2_H-1-6", "physics", "timeout" ...
+    val absoluteSource: String?,     // "cdd_2.2.7.2_H-1-6", "physics", "watchdog_v0.2", "product_stability_v0.2" ...
+
     val relative: State,
     val baselineValue: Double?,
     val deltaPct: Double?,
+
     val final: State,                // 5.4절 worst-of
-    val failKind: String?,           // hard | absolute_validated | absolute_reference | relative | heuristic
-    val conditionEquivalence: String?, // equivalent | similar | not_applicable (CDD 참조 지표만)
-    val unknownReason: String?,      // 5.5절 코드
-    val hardFailure: Boolean
-)
+
+    val thresholdBasis: ThresholdBasis?,          // final을 결정한 기준. PASS/UNKNOWN이면 null
+    val cddApplicability: CddApplicability?,      // CDD 참조 지표(1.6, 2.2)만. 그 외 null
+    val conditionEquivalence: ConditionEquivalence?, // CDD 참조 지표만. 그 외 null
+
+    val unknownReason: UnknownReason?              // final == UNKNOWN일 때 필수
+) {
+    val isHardFailure: Boolean
+        get() = final == State.FAIL && thresholdBasis == ThresholdBasis.HARD
+}
 ```
+
+`hardFailure` 필드는 두지 않는다. `thresholdBasis == HARD`에서 유도된다.
 
 ### 13.3 Health Report JSON (run JSON 확장)
 
@@ -746,7 +774,7 @@ METRICS.md 4장의 run JSON에 아래 필드를 추가한다. 기존 필드는 �
   "threshold_table_version": "0.2-draft",
   "endpoints": [ { "logicalCameraId": "0", "physicalCameraId": null, "role": "MAIN", "independentlyOpenable": true } ],
   "baseline_ref": { "run_id": "20260909-101500", "fingerprint": "...", "valid": true },
-  "metric_states": [ { "id": "1.6", "value": 412.0, "n": 1, "absolute": "PASS", "relative": "UNKNOWN", "final": "PASS", "unknownReason": "no_baseline", "hardFailure": false } ],
+  "metric_states": [ { "id": "1.6", "value": 412.0, "n": 1, "absolute": "pass", "absolute_source": "cdd_2.2.7.2_H-1-6", "relative": "unknown", "final": "pass", "threshold_basis": null, "cdd_applicability": "applicable", "condition_equivalence": "similar", "unknown_reason": null } ],
   "diagnosis": { "rule": "normal", "cause_layer": "unattributed", "evidence": [] },
   "health": { "level": "NORMAL", "coverage": 0.62, "score": null, "score_visible": false },
   "recommendation_id": "none"
@@ -757,7 +785,7 @@ METRICS.md 4장의 run JSON에 아래 필드를 추가한다. 기존 필드는 �
 
 | 테스트 | 검증 내용 |
 |---|---|
-| `ThresholdEngineTest` | 6장 표의 각 행에 대해 PASS/WARN/FAIL 경계값, baseline 없음, 하드 실패, 5.4절 충돌 4가지, `fail_kind` 부여, MPC 게이트(U 미만·미선언·U 이상), 조건 등급별 CDD 초과 상태, 가변 FPS [15,30]에서 66.7 ms가 WARN이 아님, 3A timeout이 FAIL이 아님, exposure_load 비율 4배 경계 |
+| `ThresholdEngineTest` | 6장 표의 각 행에 대해 PASS/WARN/FAIL 경계값, baseline 없음, 하드 실패, 5.4절 충돌 4가지, `threshold_basis` 부여, MPC 게이트(U 미만·미선언·U 이상), 조건 등급별 CDD 초과 상태, 가변 FPS [15,30]에서 66.7 ms가 WARN이 아님, 3A timeout이 FAIL이 아님, exposure_load 비율 4배 경계 |
 | `HealthComposerTest` | 7.1절 수준 결정, relative/heuristic FAIL은 WARNING이고 hard/absolute_validated FAIL만 ISSUE, coverage 70 % 경계, 하드 실패 cap 59, UNKNOWN 분모 제외, baseline 없으면 score null |
 | `DiagnosisRulesTest` | 8.2절 우선순위, HealthMonitor 기존 5개 case와 동일 판정 |
 | `MetricExtractorTest` | 고정 이벤트 목록에서 H.1–H.9 값, insufficient_samples 경계(14개/15개) |
