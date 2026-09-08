@@ -40,3 +40,8 @@ ADB 장치 목록이 비어 있어 실기기에서 프리뷰를 직접 관찰하
 ## 다음 한 단계
 
 `METRICS.md`의 기본 launch 관측 대상, shot-to-shot 제출 정책, 반복/복귀 규칙을 검토해 정의를 고정합니다. 그 다음 First preview 시나리오 하나부터 구현·실기기 검증합니다.
+
+
+## 문서 갱신 — 지표 정의표 v0.2
+
+사용자 원문을 별도 보존하고 METRICS.md를 Camera2/MediaRecorder 중심으로 갱신했다. callback/센서 시각, precapture 포함 여부, 간격 표본 수, drop 추정과 CTS 대응의 충돌은 검토안으로 정리했다. 앱 구현·APK·실기기 검증 상태는 checkpoint-001과 같다. 다음 단계는 정의서 검토이며, 새로운 성능 시나리오는 구현하지 않았다.

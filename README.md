@@ -2,7 +2,7 @@
 
 **중간 산출물 / checkpoint-001 · 2026-09-08**
 
-현재 우선 검토할 파일은 [1차 MVP 지표 정의서](docs/METRICS.md)입니다.
+현재 우선 검토할 파일은 사용자 정의표를 반영한 [1차 MVP 지표 정의서 v0.2](docs/METRICS.md)입니다. [원문 대비 검토 내용](docs/METRICS-REVIEW.md)도 함께 보존했습니다. v0.2는 문서 수정안이며 기존 프리뷰 APK의 기능 변경이 아닙니다.
 
 1차 계획: **Camera2 단일 엔진 · First preview · Shot-to-shot · Recording performance · 반복 통계 · run JSON export**.
 사용자 요청에 따라 전체 구현을 진행하지 않고 **실제 카메라 프리뷰 코드와 설치용 APK가 있는 체크포인트**를 공유합니다. 실기기 구동 확인은 아직 하지 않았습니다.
@@ -13,7 +13,7 @@
 
 | 항목 | 상태 |
 |---|---|
-| 지표 정의서 | v0.1 검토안 작성, CTS 원본 대조 |
+| 지표 정의서 | v0.2 검토안, 사용자 지표 ID·MVP 분류 유지, MediaRecorder 기본 |
 | 초기 Android 프로젝트 | Kotlin / Gradle Wrapper / APK 컴파일 완료 |
 | Flight Recorder 단위 테스트 | 7개 통과 |
 | Android Lint | 통과: 오류 0개 (경고는 보고서 참조) |
