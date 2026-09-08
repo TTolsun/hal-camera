@@ -174,7 +174,7 @@ class AutoCheckRunner(
     private fun endpointDone() {
         cancelTimer()
         fun ms(a: String, b: String): Double? { val x = marks[a]; val y = marks[b]; return if (x != null && y != null) (y - x) / 1e6 else null }
-        val stills = stillImageNs.indices.map { (stillImageNs[it] - stillSubmitNs[it]) / 1e6 }
+        val stills = stillImageNs.indices.filter { it < stillSubmitNs.size }.map { (stillImageNs[it] - stillSubmitNs[it]) / 1e6 }
         val stillResults = stillResultNs.indices.filter { it < stillSubmitNs.size }.map { (stillResultNs[it] - stillSubmitNs[it]) / 1e6 }
         val shot = stillSubmitNs.zipWithNext { a, b -> (b - a) / 1e6 }
         val r = EndpointResult(

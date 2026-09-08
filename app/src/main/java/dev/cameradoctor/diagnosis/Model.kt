@@ -86,6 +86,23 @@ data class MetricState(
     val isHardFailure: Boolean
         get() = final == State.FAIL && thresholdBasis == ThresholdBasis.HARD
 
+    companion object {
+        /** Inverse of [toJsonMap] for reading a stored run JSON. Unknown enum names fall back to UNKNOWN / null. */
+        fun fromJsonMap(m: Map<String, Any?>): MetricState {
+            fun d(k: String) = (m[k] as? Number)?.toDouble()
+            fun s(k: String) = (m[k] as? String)?.takeIf { it.isNotEmpty() && it != "null" }
+            fun <E : Enum<E>> e(k: String, values: Array<E>): E? = s(k)?.let { v -> values.firstOrNull { it.jsonName == v } }
+            return MetricState(
+                id = m["id"] as String, value = d("value"), p95 = d("p95"), n = (m["n"] as? Number)?.toInt() ?: 0,
+                absolute = e("absolute", State.values()) ?: State.UNKNOWN, absoluteBound = d("absolute_bound"), absoluteSource = s("absolute_source"),
+                relative = e("relative", State.values()) ?: State.UNKNOWN, baselineValue = d("baseline_value"), deltaPct = d("delta_pct"),
+                final = e("final", State.values()) ?: State.UNKNOWN, thresholdBasis = e("threshold_basis", ThresholdBasis.values()),
+                cddApplicability = e("cdd_applicability", CddApplicability.values()), conditionEquivalence = e("condition_equivalence", ConditionEquivalence.values()),
+                unknownReason = e("unknown_reason", UnknownReason.values())
+            )
+        }
+    }
+
     fun toJsonMap(): Map<String, Any?> = mapOf(
         "id" to id, "value" to value, "p95" to p95, "n" to n,
         "absolute" to absolute.jsonName, "absolute_bound" to absoluteBound, "absolute_source" to absoluteSource,
