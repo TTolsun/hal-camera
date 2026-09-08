@@ -24,6 +24,13 @@ class MetricCatalogTest {
         val line = MetricCatalog.consumerLine(st("H.7", 9921.4, State.WARN, ThresholdBasis.HEURISTIC, bound = 1500.0))
         assertTrue(line, line.contains("5초 내 미완료"))
         assertFalse(line, line.contains("9921"))
+        assertTrue(MetricCatalog.expertLine(st("H.7", 9921.4, State.WARN, ThresholdBasis.HEURISTIC, bound = 1500.0)).contains("9921.4 ms"))
+    }
+
+    @Test fun convergenceCompletedAtFiveSecondsKeepsItsValue() {
+        val line = MetricCatalog.consumerLine(st("H.6", 5000.0, State.WARN, ThresholdBasis.HEURISTIC, bound = 1500.0))
+        assertTrue(line, line.contains("5000.0 ms"))
+        assertFalse(line, line.contains("미완료"))
     }
 
     @Test fun consumerLineNeverShowsMetricId() {

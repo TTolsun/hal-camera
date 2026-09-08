@@ -77,9 +77,14 @@ object MetricCatalog {
     fun value(s: MetricState): String {
         val i = info(s.id)
         val v = s.value ?: return "—"
-        // A convergence value at or beyond the 5 s rule timeout is "did not finish", not a duration.
-        if (s.id in convergenceIds && v >= 5000.0) return "5초 내 미완료"
         return if (i.unit == "회" || i.unit == "개") "${v.toInt()}${i.unit}" else String.format(Locale.US, "%.1f %s", v, i.unit)
+    }
+
+    private fun consumerValue(s: MetricState): String {
+        // This describes the five-second boundary, not whether convergence eventually completed.
+        // Expert views retain the exact observed duration, including values beyond that boundary.
+        return if (s.id in convergenceIds && (s.value ?: 0.0) > 5000.0 &&
+            (s.final == State.WARN || s.final == State.FAIL)) "5초 내 미완료" else value(s)
     }
 
     /** Why a WARN/FAIL was raised, in consumer words, chosen by the basis that produced the state (5.4). */
@@ -114,6 +119,6 @@ object MetricCatalog {
             s.final == State.WARN || s.final == State.FAIL -> consumerWhy(s)
             else -> ""
         }
-        return "${stateMark(s.final)} ${i.consumer}  ${value(s)}$why"
+        return "${stateMark(s.final)} ${i.consumer}  ${consumerValue(s)}$why"
     }
 }
