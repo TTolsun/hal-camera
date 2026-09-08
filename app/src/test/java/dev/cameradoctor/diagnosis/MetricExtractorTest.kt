@@ -12,13 +12,13 @@ class MetricExtractorTest {
     private val x = MetricExtractor()
 
     private fun stream(frames: Int, gapMs: Double = 55.0, bufferMs: Double? = 60.0, ae: Int = 2, af: Int = 2, awb: Int = 2,
-                       duration: Long? = frameNs, iso: Int = 100, exposureNs: Long = 8_000_000L): MutableList<Event> {
+                       duration: Long? = frameNs, iso: Int = 100, exposureNs: Long = 8_000_000L, afMode: Int? = 4): MutableList<Event> {
         val out = mutableListOf<Event>()
         for (n in 0 until frames) {
             val start = n * frameNs
             out += Event(start, session, "capture_started", frame = n.toLong(), sensorNs = start)
             out += Event(start + (gapMs * 1e6).toLong(), session, "capture_result", frame = n.toLong(), sensorNs = start,
-                values = mapOf("frameDurationNs" to duration, "ae" to ae, "af" to af, "awb" to awb, "iso" to iso, "exposureNs" to exposureNs))
+                values = mapOf("frameDurationNs" to duration, "ae" to ae, "af" to af, "afMode" to afMode, "awb" to awb, "iso" to iso, "exposureNs" to exposureNs))
             if (bufferMs != null) out += Event(start + (bufferMs * 1e6).toLong(), session, "image_available", sensorNs = start, values = mapOf("stream" to "yuv"))
         }
         return out
@@ -86,6 +86,54 @@ class MetricExtractorTest {
         assertEquals(30 * frameNs / 1e6, h6.value!!, 0.01); assertEquals(false, h6.timeout)
         val never = x.observe(ev, session, 0, Long.MAX_VALUE).samples.first { it.id == "H.6" }
         assertEquals(true, never.timeout)
+    }
+
+    @Test fun afOffIsUnsupportedButScanningAfConverges() {
+        // Galaxy S25+ ultra-wide: AF_STATE stays INACTIVE (0) for all frames, so H.7 is UNSUPPORTED rather than a 10 s timeout.
+        val ev = stream(60, af = 0, afMode = 0)
+        val h7 = x.observe(ev, session, 0, Long.MAX_VALUE).samples.first { it.id == "H.7" }
+        assertEquals(UnknownReason.UNSUPPORTED, h7.unknownReason)
+        // A lens that scans (state 1) then locks (2) is supported.
+        val scanning = stream(60, af = 1).map { e -> if (e.kind == "capture_result" && e.frame!! >= 10) e.copy(values = e.values + ("af" to 2)) else e }
+        assertEquals(10 * frameNs / 1e6, x.observe(scanning, session, 0, Long.MAX_VALUE).samples.first { it.id == "H.7" }.value!!, 0.01)
+    }
+
+    @Test fun enabledButInactiveAfIsNotMistakenForFixedFocus() {
+        for (mode in listOf(1, 4)) {
+            val observation = x.observe(stream(60, af = 0, afMode = mode), session, 0, Long.MAX_VALUE)
+            assertTrue(observation.afSupported)
+            assertTrue(observation.samples.first { it.id == "H.7" }.timeout)
+            assertEquals(false, observation.threeAStable)
+        }
+    }
+
+    @Test fun missingModeDoesNotProveInactiveAfIsUnsupported() {
+        val observation = x.observe(stream(60, af = 0, afMode = null), session, 0, Long.MAX_VALUE)
+        assertTrue(observation.afSupported)
+        assertTrue(observation.samples.first { it.id == "H.7" }.timeout)
+    }
+
+    @Test fun oldEventsUseAfModeFromTheSameFramesObservedRequest() {
+        val events = stream(60, af = 0, afMode = null).flatMap { e ->
+            if (e.kind != "capture_result") listOf(e)
+            else listOf(e,
+                Event(e.atNs, session, "request_observed", frame = e.frame, values = mapOf("afMode" to 0)),
+                Event(e.atNs, "other", "request_observed", frame = e.frame, values = mapOf("afMode" to 4)))
+        }
+        val observation = x.observe(events, session, 0, Long.MAX_VALUE)
+        assertEquals(false, observation.afSupported)
+        assertEquals(UnknownReason.UNSUPPORTED, observation.samples.first { it.id == "H.7" }.unknownReason)
+        assertTrue(observation.threeAStable)
+    }
+
+    @Test fun effectiveAfModeTakesPriorityOverRequestedMode() {
+        val events = stream(60, af = 0, afMode = 4).flatMap { e ->
+            if (e.kind != "capture_result") listOf(e)
+            else listOf(e, Event(e.atNs, session, "request_observed", frame = e.frame, values = mapOf("afMode" to 0)))
+        }
+        assertTrue(x.observe(events, session, 0, Long.MAX_VALUE).afSupported)
+        assertEquals(UnknownReason.UNSUPPORTED,
+            x.observe(stream(60, af = 0, afMode = 5), session, 0, Long.MAX_VALUE).samples.first { it.id == "H.7" }.unknownReason)
     }
 
     @Test fun missingAfIsUnsupported() {

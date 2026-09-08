@@ -26,6 +26,7 @@ class Telemetry(val recorder: FlightRecorder) {
                     recorder.record(sessionId, "capture_result", result.frameNumber, sensor, mapOf(
                         "ae" to result[CaptureResult.CONTROL_AE_STATE],
                         "af" to result[CaptureResult.CONTROL_AF_STATE],
+                        "afMode" to (result[CaptureResult.CONTROL_AF_MODE] ?: request[CaptureRequest.CONTROL_AF_MODE]),
                         "awb" to result[CaptureResult.CONTROL_AWB_STATE],
                         "exposureNs" to result[CaptureResult.SENSOR_EXPOSURE_TIME],
                         "iso" to result[CaptureResult.SENSOR_SENSITIVITY],

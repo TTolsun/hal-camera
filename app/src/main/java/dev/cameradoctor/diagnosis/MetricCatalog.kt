@@ -72,10 +72,29 @@ object MetricCatalog {
         UnknownReason.CONDITION_MISMATCH -> "환경이 달라 비교 불가"
     }
 
+    private val convergenceIds = setOf("H.6", "H.7", "H.8", "2.4")
+
     fun value(s: MetricState): String {
         val i = info(s.id)
         val v = s.value ?: return "—"
         return if (i.unit == "회" || i.unit == "개") "${v.toInt()}${i.unit}" else String.format(Locale.US, "%.1f %s", v, i.unit)
+    }
+
+    private fun consumerValue(s: MetricState): String {
+        // This describes the five-second boundary, not whether convergence eventually completed.
+        // Expert views retain the exact observed duration, including values beyond that boundary.
+        return if (s.id in convergenceIds && (s.value ?: 0.0) > 5000.0 &&
+            (s.final == State.WARN || s.final == State.FAIL)) "5초 내 미완료" else value(s)
+    }
+
+    /** Why a WARN/FAIL was raised, in consumer words, chosen by the basis that produced the state (5.4). */
+    private fun consumerWhy(s: MetricState): String = when (s.thresholdBasis) {
+        ThresholdBasis.RELATIVE -> s.deltaPct?.let { String.format(Locale.US, "  평소보다 %+.0f%%", it) } ?: ""
+        ThresholdBasis.ABSOLUTE_REFERENCE -> s.absoluteBound?.let { String.format(Locale.US, "  권장 기준 %.0f %s 초과", it, info(s.id).unit) } ?: "  권장 기준 초과"
+        ThresholdBasis.ABSOLUTE_VALIDATED -> s.absoluteBound?.let { String.format(Locale.US, "  성능 기준 %.0f %s 초과", it, info(s.id).unit) } ?: "  성능 기준 초과"
+        ThresholdBasis.HEURISTIC -> if (s.id in convergenceIds) "" else s.absoluteBound?.let { String.format(Locale.US, "  기준 %.0f %s 초과", it, info(s.id).unit) } ?: ""
+        ThresholdBasis.HARD -> "  실패"
+        null -> ""
     }
 
     /** Expert line: name (id)  value  state [basis or unknown reason]  vs baseline. */
@@ -95,8 +114,11 @@ object MetricCatalog {
     /** Consumer line: plain name, value, state. No id, no basis vocabulary. */
     fun consumerLine(s: MetricState): String {
         val i = info(s.id)
-        val delta = s.deltaPct?.takeIf { s.final == State.WARN || s.final == State.FAIL }?.let { String.format(Locale.US, "  평소보다 %+.0f%%", it) } ?: ""
-        val why = if (s.final == State.UNKNOWN) "  (${unknownText(s.unknownReason)})" else ""
-        return "${stateMark(s.final)} ${i.consumer}  ${value(s)}$delta$why"
+        val why = when {
+            s.final == State.UNKNOWN -> "  (${unknownText(s.unknownReason)})"
+            s.final == State.WARN || s.final == State.FAIL -> consumerWhy(s)
+            else -> ""
+        }
+        return "${stateMark(s.final)} ${i.consumer}  ${consumerValue(s)}$why"
     }
 }

@@ -23,8 +23,12 @@ class MetricExtractor(private val minSamples: Int = 15) {
         val partialMs: Double?,
         val bufferMs: Double?,
         val ae: Int?, val af: Int?, val awb: Int?,
-        val iso: Double?, val exposureNs: Double?
+        val iso: Double?, val exposureNs: Double?,
+        val afMode: Int? = null
     ) {
+        // Camera2 OFF=0 and EDOF=5 do not run autofocus. Missing mode information does not prove AF is disabled.
+        val autofocusEnabled: Boolean get() = afMode != 0 && afMode != 5
+
         /** Stall against own SENSOR_FRAME_DURATION when present; otherwise against the baseline interval only. */
         fun stalled(baselineIntervalMs: Double?): Boolean {
             val i = intervalMs ?: return false
@@ -54,6 +58,7 @@ class MetricExtractor(private val minSamples: Int = 15) {
     fun frames(events: List<Event>, session: String, fromNs: Long, toNs: Long): List<FrameObservation> {
         val mine = events.filter { it.session == session }
         val started = mine.filter { it.kind == "capture_started" && it.frame != null }.associateBy { it.frame!! }
+        val requests = mine.filter { it.kind == "request_observed" && it.frame != null }.associateBy { it.frame!! }
         val images = mine.filter { it.kind == "image_available" && it.sensorNs != null }.groupBy { it.sensorNs!! }
         val results = mine.filter { it.kind == "capture_result" && it.atNs in fromNs..toNs }
         var previousSensor: Long? = null
@@ -74,7 +79,8 @@ class MetricExtractor(private val minSamples: Int = 15) {
                 intervalMs = interval, ownDurationMs = num(r, "frameDurationNs")?.div(1e6),
                 partialMs = start?.let { (r.atNs - it.atNs) / 1e6 }, bufferMs = buffer,
                 ae = int(r, "ae"), af = int(r, "af"), awb = int(r, "awb"),
-                iso = num(r, "iso"), exposureNs = num(r, "exposureNs")
+                iso = num(r, "iso"), exposureNs = num(r, "exposureNs"),
+                afMode = int(r, "afMode") ?: r.frame?.let { requests[it] }?.let { int(it, "afMode") }
             )
             if (r.sensorNs != null) previousSensor = r.sensorNs
         }
@@ -108,9 +114,10 @@ class MetricExtractor(private val minSamples: Int = 15) {
         val worstStall = stalledFrames.maxByOrNull { it.intervalMs ?: 0.0 }
         val worstPartial = steady.filter { it.partialMs != null }.maxByOrNull { it.partialMs!! }
         val last = frames.lastOrNull()
-        val afSupported = frames.any { it.af != null }
+        // INACTIVE can also be an enabled AF that has not converged; use the observed mode to identify AF OFF.
+        val afSupported = frames.any { it.af != null && it.autofocusEnabled }
         val aeStable = last?.ae.let { it == 2 || it == 3 || it == 4 }
-        val afStable = last?.af.let { it == null || it == 0 || it == 2 || it == 4 }
+        val afStable = last?.let { !it.autofocusEnabled || it.af == null || it.af == 2 || it.af == 4 } ?: true
         val awbStable = last?.awb.let { it == 2 || it == 3 }
         val insufficient = steady.size < minSamples
 
@@ -138,7 +145,7 @@ class MetricExtractor(private val minSamples: Int = 15) {
             MetricSample("H.5", if (insufficient) null else stalledFrames.size.toDouble(), n = steady.size,
                 unknownReason = if (insufficient) UnknownReason.INSUFFICIENT_SAMPLES else null),
             convergence("H.6", frames, insufficient) { it.ae == 2 || it.ae == 3 || it.ae == 4 },
-            if (afSupported) convergence("H.7", frames, insufficient) { it.af == 2 || it.af == 4 }
+            if (afSupported) convergence("H.7", frames, insufficient) { it.autofocusEnabled && (it.af == 2 || it.af == 4) }
             else MetricSample("H.7", null, n = frames.size, unknownReason = UnknownReason.UNSUPPORTED),
             convergence("H.8", frames, insufficient) { it.awb == 2 || it.awb == 3 }
         )
