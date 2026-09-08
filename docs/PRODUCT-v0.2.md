@@ -556,11 +556,11 @@ CAMERA HEALTH
 - "고장"이라는 단어는 쓰지 않는다. 하드 실패도 "카메라를 열지 못했습니다"까지만 말한다.
 
 
-### 11.6 시각 방향 (2026-09-09 사용자 지정: apple DESIGN.md)
+### 11.6 시각 방향 (2026-09-09 사용자 지정)
 
-기준 문서는 [docs/design/DESIGN.md](design/DESIGN.md)다. VoltAgent/awesome-design-md의 `design-md/apple/DESIGN.md`를 그대로 복사했고, `npx getdesign add apple`이 프로젝트에 넣는 파일과 같은 내용이다. 아래는 그 토큰을 Camera Doctor의 두 모드에 대응시킨 것이다.
+기준 문서는 [docs/design/DESIGN.md](design/DESIGN.md)다. 아래는 그 토큰을 Camera Doctor의 두 모드에 대응시킨 것이다.
 
-**원칙.** 장식 그라데이션과 chrome 그림자를 쓰지 않는다. 상호작용 색은 Action Blue 하나뿐이다. 판정 색(PASS/WARN/FAIL)은 apple 토큰에 없으므로 iOS 시스템 색을 빌려 쓰되, 판정 색은 상태 표시에만 쓰고 버튼에는 쓰지 않는다.
+**원칙.** 장식 그라데이션과 chrome 그림자를 쓰지 않는다. 상호작용 색은 Action Blue 하나뿐이다. 판정 색(PASS/WARN/FAIL)은 기준 문서에 없으므로 별도로 정의하되, 판정 색은 상태 표시에만 쓰고 버튼에는 쓰지 않는다.
 
 | 역할 | 토큰 | 값 | Camera Doctor 용도 |
 |---|---|---:|---|
@@ -575,12 +575,12 @@ CAMERA HEALTH
 | Expert 글자 | `body-on-dark` / `body-muted` | #ffffff / #cccccc | Diagnosis Summary / 보조 값 |
 | Expert 링크 | `primary-on-dark` | #2997ff | 어두운 배경 위 상호작용 |
 | 프리뷰 배경 | `surface-black` | #000000 | 카메라 프리뷰 뒤 |
-| PASS | iOS systemGreen | #34c759 | ● NORMAL, ✓ 표시 |
-| WARN | iOS systemOrange | #ff9500 | ● WARNING, △ 표시 |
-| FAIL | iOS systemRed | #ff3b30 | ● ISSUE |
+| PASS | `status-pass` | #34c759 | ● NORMAL, ✓ 표시 |
+| WARN | `status-warn` | #ff9500 | ● WARNING, △ 표시 |
+| FAIL | `status-fail` | #ff3b30 | ● ISSUE |
 | UNKNOWN | `ink-muted-48` | #7a7a7a | ○ 표시. 색으로 판정을 암시하지 않음 |
 
-**타이포.** SF Pro는 Android에 없으므로 Inter(variable)를 번들하고, 굵기 사다리는 300 / 400 / 600만 쓴다(500과 700은 쓰지 않는다). 표시 크기에서는 자간을 −0.01 em 줄인다. 숫자는 `tabular-nums`로 고정폭 정렬한다.
+**타이포.** 본문 서체는 Inter(variable)를 번들하고, 굵기 사다리는 300 / 400 / 600만 쓴다(500과 700은 쓰지 않는다). 표시 크기에서는 자간을 −0.01 em 줄인다. 숫자는 `tabular-nums`로 고정폭 정렬한다.
 
 | 용도 | 크기 | 굵기 | 자간 |
 |---|---:|---:|---:|
