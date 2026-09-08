@@ -38,6 +38,8 @@ class Camera2Engine(
     private var finished = false
     private var closeDone: (() -> Unit)? = null
     private var photoInFlight = false
+    @Volatile private var zoomRatio = 1f
+    private var chars: CameraCharacteristics? = null
     private val callback = telemetry.callback(sessionId) { active }
     override fun start() {
         telemetry.registerSession(sessionId, "Camera2", manager, cameraId)
@@ -81,7 +83,7 @@ class Camera2Engine(
     @Suppress("DEPRECATION")
     private fun configure(camera: CameraDevice) {
         try {
-            val chars = manager.getCameraCharacteristics(cameraId)
+            val chars = manager.getCameraCharacteristics(cameraId).also { this.chars = it }
             val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP] ?: error("No stream configuration")
             val size = choose(map.getOutputSizes(SurfaceTexture::class.java), 1280L * 720)
             val yuvSize = choose(map.getOutputSizes(ImageFormat.YUV_420_888), 640L * 480)
@@ -100,14 +102,8 @@ class Camera2Engine(
                     if (!active) { session.close(); return }
                     captureSession = session
                     try {
-                        val request = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
-                            addTarget(previewSurface!!); addTarget(yuv!!.surface)
-                            set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
-                            set(CaptureRequest.CONTROL_AF_MODE, afMode(chars))
-                            setTag("preview")
-                        }.build()
-                        telemetry.event(sessionId, "repeating_submit")
-                        session.setRepeatingRequest(request, callback, handler)
+                        telemetry.event(sessionId, "repeating_submit", mapOf("zoomRequested" to zoomRatio))
+                        session.setRepeatingRequest(previewRequest(camera, chars), callback, handler)
                         telemetry.event(sessionId, "configured", sizes)
                         report("Camera2 · LIVE", true)
                     } catch (e: Exception) { fail(e) }
@@ -119,6 +115,42 @@ class Camera2Engine(
                 }
             }, handler)
         } catch (e: Exception) { fail(e) }
+    }
+    private fun previewRequest(camera: CameraDevice, chars: CameraCharacteristics): CaptureRequest =
+        camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
+            addTarget(previewSurface!!); addTarget(yuv!!.surface)
+            set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
+            set(CaptureRequest.CONTROL_AF_MODE, afMode(chars))
+            applyZoom(this, chars)
+            setTag("preview")
+        }.build()
+    /** API 30+ uses CONTROL_ZOOM_RATIO (ultra-wide below 1x possible). Older devices crop the active array, so only >= 1x. */
+    private fun applyZoom(builder: CaptureRequest.Builder, chars: CameraCharacteristics) {
+        val ratio = zoomRatio
+        if (android.os.Build.VERSION.SDK_INT >= 30) {
+            val range = chars[CameraCharacteristics.CONTROL_ZOOM_RATIO_RANGE]
+            builder.set(CaptureRequest.CONTROL_ZOOM_RATIO, if (range != null) range.clamp(ratio) else 1f)
+            return
+        }
+        val active = chars[CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE] ?: return
+        val max = chars[CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM] ?: 1f
+        val r = ratio.coerceIn(1f, max)
+        val w = (active.width() / r).toInt(); val h = (active.height() / r).toInt()
+        val left = active.left + (active.width() - w) / 2; val top = active.top + (active.height() - h) / 2
+        builder.set(CaptureRequest.SCALER_CROP_REGION, android.graphics.Rect(left, top, left + w, top + h))
+    }
+    override fun setZoom(ratio: Float) {
+        handler.post {
+            val camera = device ?: return@post
+            val session = captureSession ?: return@post
+            val c = chars ?: return@post
+            if (!active) return@post
+            zoomRatio = ratio
+            try {
+                telemetry.event(sessionId, "zoom_set", mapOf("zoomRequested" to ratio, "api" to "setRepeatingRequest"))
+                session.setRepeatingRequest(previewRequest(camera, c), callback, handler)
+            } catch (e: Exception) { fail(e) }
+        }
     }
     private fun afMode(chars: CameraCharacteristics): Int {
         val modes = chars[CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES] ?: intArrayOf()
@@ -142,14 +174,16 @@ class Camera2Engine(
             if (!active || photoInFlight) return@post
             try {
                 val tag = "still-${android.os.SystemClock.elapsedRealtimeNanos()}"
+                val c = chars ?: manager.getCameraCharacteristics(cameraId)
                 val request = camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
                     addTarget(jpeg!!.surface)
                     set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
-                    set(CaptureRequest.CONTROL_AF_MODE, afMode(manager.getCameraCharacteristics(cameraId)))
+                    set(CaptureRequest.CONTROL_AF_MODE, afMode(c))
+                    applyZoom(this, c)
                     setTag(tag)
                 }.build()
                 photoInFlight = true
-                telemetry.event(sessionId, "capture_submit", mapOf("requestTag" to tag, "api" to "CameraCaptureSession.capture"))
+                telemetry.event(sessionId, "capture_submit", mapOf("requestTag" to tag, "api" to "CameraCaptureSession.capture", "zoomRequested" to zoomRatio))
                 session.capture(request, callback, handler)
                 handler.postDelayed({ if (photoInFlight && active) { photoInFlight = false; telemetry.event(sessionId, "capture_timeout"); report("Capture timed out (5s)", false) } }, 5000)
             } catch (e: Exception) { photoInFlight = false; fail(e) }
@@ -180,22 +214,30 @@ class Camera2Engine(
     }
     private fun fail(e: Exception) { telemetry.event(sessionId, "camera_error", mapOf("message" to e.toString())); report("Camera2: ${e.message}", false) }
     private fun report(message: String, ok: Boolean) { main.post { if (active) status(message, ok) } }
-    @Suppress("DEPRECATION")
+    @Suppress("DEPRECATION", "UNUSED_PARAMETER")
     private fun transform(size: Size, chars: CameraCharacteristics) {
         if (!active || view.width == 0) return
-        val displayDegrees = (view.display?.rotation ?: Surface.ROTATION_0) * 90
-        val sensorDegrees = chars[CameraCharacteristics.SENSOR_ORIENTATION] ?: 0
-        val front = chars[CameraCharacteristics.LENS_FACING] == CameraCharacteristics.LENS_FACING_FRONT
-        val relative = (sensorDegrees - (if (front) -displayDegrees else displayDegrees) + 360) % 360
+        val rotation = view.display?.rotation ?: Surface.ROTATION_0
         val w = view.width.toFloat(); val h = view.height.toFloat()
+        val cx = w / 2; val cy = h / 2
         val matrix = Matrix()
-        // Undo TextureView's default stretch, rotate around the center, then fill-crop uniformly.
-        matrix.setScale(size.width / w, size.height / h, w / 2, h / 2)
-        matrix.postRotate(relative.toFloat(), w / 2, h / 2)
-        val rotatedW = if (relative % 180 == 0) size.width else size.height
-        val rotatedH = if (relative % 180 == 0) size.height else size.width
-        val scale = maxOf(w / rotatedW, h / rotatedH)
-        matrix.postScale(if (front) -scale else scale, scale, w / 2, h / 2)
+        // The camera pipeline already rotates buffers (and mirrors front cameras) for the device's natural orientation,
+        // so in portrait a 1280x720 buffer is shown as 720x1280 stretched to the view. Only undo the stretch and fill-crop.
+        // In landscape the display itself is rotated, so follow the Camera2Basic sample: map, scale, then rotate.
+        if (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) {
+            val viewRect = RectF(0f, 0f, w, h)
+            val bufferRect = RectF(0f, 0f, size.height.toFloat(), size.width.toFloat())
+            bufferRect.offset(cx - bufferRect.centerX(), cy - bufferRect.centerY())
+            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL)
+            val scale = maxOf(h / size.height, w / size.width)
+            matrix.postScale(scale, scale, cx, cy)
+            matrix.postRotate(90f * (rotation - 2), cx, cy)
+        } else {
+            val contentW = size.height.toFloat(); val contentH = size.width.toFloat()
+            val scale = maxOf(w / contentW, h / contentH)
+            matrix.setScale(contentW * scale / w, contentH * scale / h, cx, cy)
+            if (rotation == Surface.ROTATION_180) matrix.postRotate(180f, cx, cy)
+        }
         view.setTransform(matrix)
     }
 }

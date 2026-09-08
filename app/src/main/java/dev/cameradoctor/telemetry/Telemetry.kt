@@ -31,6 +31,8 @@ class Telemetry(val recorder: FlightRecorder) {
                         "iso" to result[CaptureResult.SENSOR_SENSITIVITY],
                         "frameDurationNs" to result[CaptureResult.SENSOR_FRAME_DURATION],
                         "focusDiopters" to result[CaptureResult.LENS_FOCUS_DISTANCE],
+                        "zoomRatio" to if (android.os.Build.VERSION.SDK_INT >= 30) result[CaptureResult.CONTROL_ZOOM_RATIO] else null,
+                        "cropRegion" to result[CaptureResult.SCALER_CROP_REGION]?.toShortString(),
                         "intervalMs" to stats.intervalMs, "resultFps" to stats.fps,
                         "observedResultGap" to stats.resultGap, "requestTag" to request.tag?.toString()
                     ))
