@@ -67,30 +67,62 @@ class HealthMonitor(
         val threeA = "AE ${stateName("AE", ae)} · AF ${stateName("AF", af)} · AWB ${stateName("AWB", awb)}"
         val threeAStable = aeStable && afStable && awbStable
 
+        // The worst stalled frame decides the headline: its own interval, its own requested duration, its own partial gap.
+        val worstStall = recent.filter(::stalled).maxByOrNull { num(it, "intervalMs") ?: 0.0 }
+        val worstGap = recent.filter { gapMs(it) != null }.maxByOrNull { gapMs(it)!! }
+        val focus = worstStall ?: worstGap ?: last
+        val fInterval = num(focus, "intervalMs"); val fDuration = durationMs(focus); val fGap = gapMs(focus)
+
+        // Classification follows the interval / duration / partial table:
+        //   normal          33 / 33 / 55
+        //   cadence_change  67 / 67 / 55  AE variable FPS, not a stall
+        //   sensor_stall    67 / 33 / 55  frame arrived later than its own requested duration (sensor / HAL front end)
+        //   callback_delay  33 / 33 / 93  frame cadence fine, only the partial result is late (HAL back end / scheduling)
+        //   pipeline_stall  67 / 33 / 93  both
+        val case = when {
+            intervalAnomaly && gapAnomaly -> "pipeline_stall"
+            intervalAnomaly -> "sensor_stall"
+            gapAnomaly -> "callback_delay"
+            cadenceChanged -> "cadence_change"
+            else -> "normal"
+        }
+        val caseText = when (case) {
+            "pipeline_stall" -> "파이프라인 전체 정체: 간격과 partial 모두 지연"
+            "sensor_stall" -> "센서/HAL 앞단 stall: 요청 duration보다 늦게 도착"
+            "callback_delay" -> "HAL 뒷단 또는 스케줄링: 프레임 cadence 정상, partial만 지연"
+            "cadence_change" -> "AE 가변 FPS cadence 변경: stall 아님"
+            else -> "정상"
+        }
+        val row = "interval ${fmt(fInterval)} · duration ${fmt(fDuration)} · partial +${fmt(fGap)} ms (frame #${focus.frame ?: "—"})"
+
         val evidence = mutableListOf<String>()
-        evidence += "센서 간격: 최근 최대 ${fmt(recentMaxInterval)} ms · 기준 p50 ${fmt(tRef)} ms · 임계 ${fmt(threshold)} ms"
-        evidence += "요청 FPS 범위 ${fpsRange ?: "—"} · 프레임 duration 기준 ${fmt(baseDuration)} → 최근 ${fmt(recentDuration)} ms" +
-            if (cadenceChanged) " (가변 FPS cadence 변경, stall 아님)" else ""
-        evidence += "10초 내 stall ${stalls}회 (간격 > 1.5 × 기준 및 > 1.5 × 자체 duration. 실제 drop 개수 아님)"
-        evidence += "START→PARTIAL: 최근 최대 ${fmt(recentGapMax)} ms · 기준 p50 ${fmt(baseGap)} ms"
-        evidence += "3A: $threeA"
-        evidence += if (threeAStable) "3A 안정. 노출 변화로 인한 정상 cadence 변경 가능성 낮음" else "3A 수렴 중. 간격 변화가 노출 조정 때문일 수 있음"
-        evidence += "원인 층: unattributed (앱은 콜백만 관측. HAL/스케줄링 판정은 Perfetto 필요)"
+        evidence += "판정: $case — $caseText"
+        evidence += "관측: $row"
+        evidence += "기준 p50: interval ${fmt(tRef)} · duration ${fmt(baseDuration)} · partial +${fmt(baseGap)} ms (직전 10초, n=${baseline.size})"
+        evidence += "임계: interval > ${fmt(threshold)} ms 이면서 > 1.5 × 자체 duration · partial > ${fmt(baseGap?.times(1.5))} ms"
+        evidence += "요청 FPS 범위 ${fpsRange ?: "—"} · duration 최근 p50 ${fmt(recentDuration)} ms" + if (cadenceChanged) " (기준 대비 20% 이상 변경)" else ""
+        evidence += "10초 내 stall ${stalls}회 · 최근 최대 interval ${fmt(recentMaxInterval)} ms · 최근 최대 partial +${fmt(recentGapMax)} ms (실제 drop 개수 아님)"
+        evidence += "3A: $threeA" + if (threeAStable) " · 안정" else " · 수렴 중 (노출 조정이 간격을 바꿀 수 있음)"
+        evidence += "원인 층: unattributed. 앱은 콜백 도착만 관측하며 HAL 내부와 CPU 스케줄링은 Perfetto가 있어야 판정 가능"
 
         val values = mapOf(
+            "case" to case, "focusFrame" to focus.frame, "intervalMs" to fInterval, "frameDurationMs" to fDuration, "partialGapMs" to fGap,
             "tRefMs" to tRef, "thresholdMs" to threshold, "recentMaxIntervalMs" to recentMaxInterval, "stallCount10s" to stalls,
             "baselineGapMs" to baseGap, "recentMaxGapMs" to recentGapMax, "intervalAnomaly" to intervalAnomaly, "gapAnomaly" to gapAnomaly,
             "threeAStable" to threeAStable, "ae" to ae, "af" to af, "awb" to awb, "baselineFrames" to baseline.size,
             "baselineFrameDurationMs" to baseDuration, "recentFrameDurationMs" to recentDuration, "cadenceChanged" to cadenceChanged, "fpsRange" to fpsRange
         )
-        val fresh = when {
-            intervalAnomaly -> Assessment(HealthLevel.WARNING,
-                "⚠ FRAME INTERVAL ${fmt(recentMaxInterval)} ms · 기준 ${fmt(tRef)} ms (+${pct(recentMaxInterval!!, tRef)}%)", evidence, tRef, values)
-            gapAnomaly -> Assessment(HealthLevel.WARNING,
-                "⚠ PARTIAL CALLBACK +${fmt(recentGapMax)} ms · 기준 +${fmt(baseGap)} ms (+${pct(recentGapMax!!, baseGap!!)}%)", evidence, tRef, values)
-            cadenceChanged -> Assessment(HealthLevel.WATCH, "HEALTH · FPS cadence 변경 ${fmt(baseDuration)} → ${fmt(recentDuration)} ms (AE 가변 FPS)", evidence, tRef, values)
-            !threeAStable -> Assessment(HealthLevel.WATCH, "HEALTH · 3A 수렴 중 · interval ${fmt(recentIntervals.lastOrNull())} ms", evidence, tRef, values)
-            else -> Assessment(HealthLevel.OK, "HEALTH · OK · interval ${fmt(recentIntervals.lastOrNull())} ms · partial +${fmt(recent.lastOrNull()?.let(::gapMs))} ms", evidence, tRef, values)
+        val fresh = when (case) {
+            "pipeline_stall" -> Assessment(HealthLevel.WARNING,
+                "⚠ PIPELINE STALL · interval ${fmt(fInterval)} > duration ${fmt(fDuration)} · partial +${fmt(fGap)} ms (기준 +${fmt(baseGap)})", evidence, tRef, values)
+            "sensor_stall" -> Assessment(HealthLevel.WARNING,
+                "⚠ SENSOR STALL · interval ${fmt(fInterval)} ms > duration ${fmt(fDuration)} ms (+${pct(fInterval!!, tRef)}% vs 기준) · 앞단", evidence, tRef, values)
+            "callback_delay" -> Assessment(HealthLevel.WARNING,
+                "⚠ PARTIAL DELAY · +${fmt(fGap)} ms vs 기준 +${fmt(baseGap)} ms (+${pct(fGap!!, baseGap!!)}%) · cadence 정상 · 뒷단", evidence, tRef, values)
+            "cadence_change" -> Assessment(HealthLevel.WATCH,
+                "HEALTH · CADENCE ${fmt(baseDuration)} → ${fmt(recentDuration)} ms (AE 가변 FPS) · stall 아님", evidence, tRef, values)
+            else -> if (!threeAStable) Assessment(HealthLevel.WATCH, "HEALTH · 3A 수렴 중 · interval ${fmt(recentIntervals.lastOrNull())} ms", evidence, tRef, values)
+                else Assessment(HealthLevel.OK, "HEALTH · OK · interval ${fmt(recentIntervals.lastOrNull())} · duration ${fmt(recentDuration)} · partial +${fmt(recent.lastOrNull()?.let(::gapMs))} ms", evidence, tRef, values)
         }
         // Hold a warning briefly so a spike stays readable and can be captured; new warnings replace the held one.
         if (fresh.level == HealthLevel.WARNING) { lastWarningNs = now; held = fresh; return fresh }

@@ -46,7 +46,7 @@ class HealthMonitorTest {
             values = mapOf("intervalMs" to 73.3, "ae" to 2, "af" to 2, "awb" to 2))
         val a = HealthMonitor().assess(events, session, events.last().atNs + 1)
         assertEquals(HealthLevel.WARNING, a.level)
-        assertTrue(a.headline, a.headline.contains("FRAME INTERVAL"))
+        assertTrue(a.headline, a.headline.contains("SENSOR STALL"))
         assertEquals(true, a.values["intervalAnomaly"])
     }
 
@@ -59,7 +59,7 @@ class HealthMonitorTest {
             values = mapOf("intervalMs" to 33.3, "ae" to 2, "af" to 2, "awb" to 2))
         val a = HealthMonitor().assess(events, session, events.last().atNs + 1)
         assertEquals(HealthLevel.WARNING, a.level)
-        assertTrue(a.headline, a.headline.contains("PARTIAL CALLBACK"))
+        assertTrue(a.headline, a.headline.contains("PARTIAL DELAY"))
     }
 
     @Test
@@ -91,6 +91,30 @@ class HealthMonitorTest {
             values = mapOf("intervalMs" to 73.3, "frameDurationNs" to frameNs, "ae" to 2, "af" to 2, "awb" to 2))
         val a = HealthMonitor().assess(events, session, events.last().atNs + 1)
         assertEquals(HealthLevel.WARNING, a.level)
+    }
+
+    @Test
+    fun bothAnomaliesArePipelineStall() {
+        val events = steady(120)
+        val n = 120L; val start = n * frameNs + 40_000_000L
+        events += Event(start, session, "capture_started", frame = n, sensorNs = start)
+        events += Event(start + 95_000_000L, session, "capture_result", frame = n, sensorNs = start,
+            values = mapOf("intervalMs" to 73.3, "frameDurationNs" to frameNs, "ae" to 2, "af" to 2, "awb" to 2))
+        val a = HealthMonitor().assess(events, session, events.last().atNs + 1)
+        assertEquals(HealthLevel.WARNING, a.level)
+        assertEquals("pipeline_stall", a.values["case"])
+        assertEquals(120L, a.values["focusFrame"])
+    }
+
+    @Test
+    fun caseValuesFollowTheTable() {
+        assertEquals("normal", HealthMonitor().assess(steady(120), session, 120 * frameNs).values["case"])
+        val events = steady(120)
+        val n = 120L; val start = n * frameNs
+        events += Event(start, session, "capture_started", frame = n, sensorNs = start)
+        events += Event(start + 95_000_000L, session, "capture_result", frame = n, sensorNs = start,
+            values = mapOf("intervalMs" to 33.3, "frameDurationNs" to frameNs, "ae" to 2, "af" to 2, "awb" to 2))
+        assertEquals("callback_delay", HealthMonitor().assess(events, session, events.last().atNs + 1).values["case"])
     }
 
     @Test
