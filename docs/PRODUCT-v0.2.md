@@ -105,6 +105,8 @@ v0.2가 끝났을 때 사용자가 할 수 있는 일은 세 가지다. 60초 �
 
 관측 창은 기본 10초다. 시작점은 해당 endpoint의 첫 `capture_result` 도착, 끝점은 시작점 + 10초다. 관측 창 안에서 결과가 15개 미만이면 모든 H 지표는 `UNKNOWN(insufficient_samples)`다.
 
+**Warm-up 제외 (2026-09-09 실측 반영).** 스트림 시작 직후에는 cadence artefact가 있다. Galaxy S25+에서는 네 카메라 모두 frame #1이 frame #0보다 66.7 ms 뒤에 도착하는데 자체 duration은 33.3 ms여서 stall로 잡힌다. 그래서 관측 창의 **처음 5 프레임은 H.1–H.5(간격, partial, buffer, stall)에서 제외**한다. H.6–H.8 수렴 시간은 첫 result부터 재므로 제외하지 않는다. METRICS.md 0.2절의 warm-up 제외와 같은 원칙이다.
+
 | id | 지표 | 계산 | 단위 | 집계 | 비고 |
 |---|---|---|---:|---|---|
 | H.1 | `frame_interval_p50` | 인접 `capture_result`의 `SENSOR_TIMESTAMP` 차이 | ms | nearest-rank p50 / 10 s | 요청 FPS 범위와 `SENSOR_FRAME_DURATION`을 같이 기록 |
