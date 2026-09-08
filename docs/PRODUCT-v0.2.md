@@ -411,9 +411,9 @@ UNKNOWN은 0점이 아니다. 분모에서 빠진다. 대신 coverage가 낮아�
 | `slower_than_baseline` | latency 지표 relative WARN/FAIL, absolute PASS | 규격 범위 안이지만 평소보다 느립니다. | RELATIVE DEGRADATION · {metric} +{pct}% vs baseline |
 | `below_spec` | `threshold_basis=absolute_validated` (조건 `equivalent`일 때만. v0.2에서는 발생하지 않음) | 평소와 같지만 성능 기준을 만족하지 않습니다. | ABSOLUTE FAIL · {metric} {value} ≥ {bound} |
 | `cdd_reference_exceeded` | CDD 참조값 초과, 조건 `similar` 또는 `non_equivalent`, 또는 `cdd_applicability=not_applicable` | 권장 성능 기준보다 느립니다. | CDD_REFERENCE_EXCEEDED · environment_not_equivalent · {metric} {value} ≥ {bound} |
-| `sensor_stall` | H.5 WARN/FAIL, H.3 PASS | 프레임이 예상보다 늦게 도착합니다. | SENSOR STALL · interval > own duration · 앞단 |
-| `callback_delay` | H.5 PASS, H.3 WARN/FAIL | 프레임 응답이 지연됩니다. 촬영 파이프라인 후반부의 지연 가능성이 있습니다. | PARTIAL DELAY · cadence 정상 · 뒷단 |
-| `pipeline_stall` | H.5와 H.3 모두 WARN/FAIL | 프레임 흐름 전체가 정체됩니다. | PIPELINE STALL |
+| `sensor_stall` | H.5 WARN/FAIL, H.3과 H.4 PASS | 프레임이 예상보다 늦게 도착합니다. | SENSOR STALL · interval > own duration · 앞단 |
+| `callback_delay` | H.5 PASS, H.3 또는 H.4 WARN/FAIL | 프레임 응답이 지연됩니다. 촬영 파이프라인 후반부의 지연 가능성이 있습니다. | PARTIAL DELAY · cadence 정상 · 뒷단 |
+| `pipeline_stall` | H.5와 (H.3 또는 H.4) 모두 WARN/FAIL | 프레임 흐름 전체가 정체됩니다. | PIPELINE STALL |
 | `cadence_change` | H.1 UNKNOWN(cadence_changed) | 어두운 환경에서 프레임 속도가 낮아졌습니다. 문제가 아닙니다. | CADENCE CHANGE · AE variable FPS · not a stall |
 | `three_a_unstable` | H.6–H.8 중 WARN/FAIL | 초점 또는 노출 맞추기가 평소보다 오래 걸립니다. | 3A UNSTABLE · {axis} {ms} ms |
 | `three_a_searching` | 관측 창 끝에서 3A 미안정, 지표는 PASS | 초점을 맞추는 중입니다. | 3A SEARCHING |

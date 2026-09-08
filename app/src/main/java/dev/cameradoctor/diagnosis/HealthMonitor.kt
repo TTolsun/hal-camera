@@ -26,6 +26,9 @@ data class Assessment(
  * (spike detection) against the session baseline p95, and 3A convergence metrics (H.6 to H.8) are not judged because
  * the window start is not a convergence start. When the AE cadence changes, the H.1 baseline is scaled by the
  * duration ratio so a legitimate 30 to 15 fps change is not reported as slower.
+ *
+ * Not thread-safe: [assess] keeps the held-warning state in plain fields and must always be called from one thread
+ * (the main thread in MainActivity).
  */
 class HealthMonitor(
     private val recentNs: Long = 1_500_000_000L,
@@ -83,13 +86,7 @@ class HealthMonitor(
         evidence += "판정: ${diagnosis.rule} — $caseText"
         evidence += "관측: interval ${fmt(focus.intervalMs)} · duration ${fmt(focus.ownDurationMs)} · partial +${fmt(focus.partialMs)} ms (frame #${focus.frame ?: "—"})"
         evidence += "기준 p50: interval ${fmt(tRef)} · duration ${fmt(baseDuration)} · partial +${fmt(baseGap)} ms (n=${base.n})"
-        states.forEach { s ->
-            evidence += "${s.id} ${s.final.jsonName}" +
-                (s.thresholdBasis?.let { " · basis ${it.jsonName}" } ?: "") +
-                (s.absoluteBound?.let { " · abs bound ${fmt(it)} (${s.absoluteSource})" } ?: "") +
-                (s.deltaPct?.let { " · vs baseline ${pct(it)}" } ?: "") +
-                (s.unknownReason?.let { " · ${it.jsonName}" } ?: "")
-        }
+        states.forEach { s -> evidence += MetricCatalog.expertLine(s) }
         evidence += "10초 내 stall ${stalls}회 · 최근 최대 interval ${fmt(recentMaxInterval)} ms · 최근 최대 partial +${fmt(recentGapMax)} ms (실제 drop 개수 아님)"
         evidence += "3A: $threeA" + if (recent.threeAStable) " · 안정" else " · 수렴 중 (노출 조정이 간격을 바꿀 수 있음)"
         evidence += "원인 층: ${diagnosis.causeLayer.jsonName}. 앱은 콜백 도착만 관측하며 HAL 내부와 CPU 스케줄링은 Perfetto가 있어야 판정 가능"

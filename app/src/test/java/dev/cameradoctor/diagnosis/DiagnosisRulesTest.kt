@@ -27,6 +27,11 @@ class DiagnosisRulesTest {
         assertEquals("callback_delay", d.rule); assertEquals(CauseLayer.FRAMEWORK_CALLBACK, d.causeLayer)
     }
 
+    @Test fun bufferLatencyAloneIsAlsoCallbackDelay() {
+        assertEquals("callback_delay", rules.diagnose(with(st("H.4", State.WARN, ThresholdBasis.RELATIVE))).rule)
+        assertEquals("pipeline_stall", rules.diagnose(with(st("H.4", State.WARN, ThresholdBasis.RELATIVE), st("H.5", State.FAIL, ThresholdBasis.HEURISTIC))).rule)
+    }
+
     @Test fun bothIsPipelineStall() {
         val d = rules.diagnose(with(st("H.5", State.FAIL, ThresholdBasis.HEURISTIC), st("H.3", State.WARN, ThresholdBasis.RELATIVE)))
         assertEquals("pipeline_stall", d.rule)

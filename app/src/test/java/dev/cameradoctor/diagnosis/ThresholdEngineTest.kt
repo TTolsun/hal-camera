@@ -42,6 +42,12 @@ class ThresholdEngineTest {
         assertFalse(fail.isHardFailure)
     }
 
+    @Test fun noiseFloorBoundaryIsInclusiveAtTenMs() {
+        // Exactly 10 ms over a 20 ms baseline is +50 %: the floor no longer suppresses, so WARN.
+        assertEquals(State.WARN, one(MetricSample("H.3", 30.0, n = 30), BaselineValue(20.0)).final)
+        assertEquals(State.PASS, one(MetricSample("H.3", 29.99, n = 30), BaselineValue(20.0)).final)
+    }
+
     @Test fun noiseFloorSuppressesRelativeWarnOnTinyValues() {
         // 10 ms -> 13.5 ms is +35 % but only 3.5 ms: no WARN.
         val s = one(MetricSample("H.3", 13.5, n = 30), BaselineValue(10.0))
