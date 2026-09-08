@@ -31,6 +31,8 @@ class FlightRecorder(
     private val preNs: Long = 10_000_000_000L,
     private val postNs: Long = 5_000_000_000L
 ) {
+    /** Optional live tap, invoked synchronously after each record on the recording thread. Keep it cheap. */
+    @Volatile var listener: ((Event) -> Unit)? = null
     private val ring = ArrayDeque<Event>()
     private var capacityEvictions = 0L
     private var pending: Pending? = null
@@ -49,6 +51,7 @@ class FlightRecorder(
                 if (it.events.size < maxEvents * 2) it.events.add(event) else it.truncated = true
             }
         }
+        listener?.invoke(event)
         return event
     }
     @Synchronized fun snapshot(windowNs: Long = retentionNs): List<Event> {

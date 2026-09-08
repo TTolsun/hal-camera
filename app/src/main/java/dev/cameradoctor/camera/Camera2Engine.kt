@@ -56,8 +56,10 @@ class Camera2Engine(
         if (!active || opening || device != null) return
         try {
             opening = true
+            telemetry.event(sessionId, "open_call", mapOf("api" to "CameraManager.openCamera"))
             manager.openCamera(cameraId, object : CameraDevice.StateCallback() {
                 override fun onOpened(camera: CameraDevice) {
+                    telemetry.event(sessionId, "opened")
                     opening = false
                     device = camera
                     if (!active) camera.close() else configure(camera)
@@ -99,6 +101,7 @@ class Camera2Engine(
             telemetry.event(sessionId, "configure_requested", sizes)
             camera.createCaptureSession(listOf(previewSurface!!, yuv!!.surface, jpeg!!.surface), object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(session: CameraCaptureSession) {
+                    telemetry.event(sessionId, "session_configured", sizes)
                     if (!active) { session.close(); return }
                     captureSession = session
                     try {
