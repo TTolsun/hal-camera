@@ -108,7 +108,9 @@ class MetricExtractor(private val minSamples: Int = 15) {
         val worstStall = stalledFrames.maxByOrNull { it.intervalMs ?: 0.0 }
         val worstPartial = steady.filter { it.partialMs != null }.maxByOrNull { it.partialMs!! }
         val last = frames.lastOrNull()
-        val afSupported = frames.any { it.af != null }
+        // Fixed-focus lenses (Galaxy S25+ ultra-wide, LEGACY level) report AF_STATE INACTIVE for the whole window and never
+        // scan. Continuous AF always shows a scan or focused state, so "INACTIVE only" means AF is off, not slow.
+        val afSupported = frames.any { it.af != null } && frames.any { it.af != null && it.af != 0 }
         val aeStable = last?.ae.let { it == 2 || it == 3 || it == 4 }
         val afStable = last?.af.let { it == null || it == 0 || it == 2 || it == 4 }
         val awbStable = last?.awb.let { it == 2 || it == 3 }

@@ -88,6 +88,16 @@ class MetricExtractorTest {
         assertEquals(true, never.timeout)
     }
 
+    @Test fun afInactiveForWholeWindowIsFixedFocusUnsupported() {
+        // Galaxy S25+ ultra-wide: AF_STATE stays INACTIVE (0) for all frames, so H.7 is UNSUPPORTED rather than a 10 s timeout.
+        val ev = stream(60, af = 0)
+        val h7 = x.observe(ev, session, 0, Long.MAX_VALUE).samples.first { it.id == "H.7" }
+        assertEquals(UnknownReason.UNSUPPORTED, h7.unknownReason)
+        // A lens that scans (state 1) then locks (2) is supported.
+        val scanning = stream(60, af = 1).map { e -> if (e.kind == "capture_result" && e.frame!! >= 10) e.copy(values = e.values + ("af" to 2)) else e }
+        assertEquals(10 * frameNs / 1e6, x.observe(scanning, session, 0, Long.MAX_VALUE).samples.first { it.id == "H.7" }.value!!, 0.01)
+    }
+
     @Test fun missingAfIsUnsupported() {
         val ev = stream(30).map { e -> if (e.kind == "capture_result") e.copy(values = e.values - "af") else e }
         val h7 = x.observe(ev, session, 0, Long.MAX_VALUE).samples.first { it.id == "H.7" }
