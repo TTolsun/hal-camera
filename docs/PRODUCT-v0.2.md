@@ -656,6 +656,16 @@ CAMERA HEALTH
 
 현재 화면(CameraX/Camera2 전환, 카메라 선택, LIVE 프리뷰, health strip, frame timeline, 3A oscilloscope, MARK INCIDENT, ZIP 공유)은 그대로 Expert 탭이 된다. 3A oscilloscope는 Camera Doctor의 시그니처 화면으로 유지한다.
 
+### 12.1.1 실시간 health strip의 판정 규칙 (M1 구현 계약)
+
+실시간 strip은 Auto Check와 같은 MetricExtractor, ThresholdEngine, DiagnosisRules를 쓰되 다음 세 가지가 다르다. 이 차이는 HealthMonitor에만 있고 임계값 표에는 없다.
+
+1. **집계.** 최근 1.5초 창은 p50이 아니라 최대값으로 집계하고, 기준은 같은 세션 baseline(직전 프레임들)의 p95다. 한 프레임의 spike를 놓치지 않기 위해서다. Auto Check는 10초 창의 p50/p95를 쓴다.
+2. **cadence 보정.** AE 가변 FPS로 최근 frame duration p50이 baseline보다 20 % 넘게 바뀌면 H.1/H.2의 baseline을 duration 비율로 곱해 보정한다. 30 fps에서 15 fps로 정상 변경된 것을 "평소보다 느림"으로 보고하지 않기 위해서다.
+3. **3A.** H.6–H.8 수렴 시간은 판정하지 않는다. 1.5초 창의 시작은 수렴 시작점이 아니기 때문이다. 대신 창 끝에서 3A가 안정인지만 보고 `three_a_searching`(WATCH)으로 표시한다.
+
+실시간 strip의 수준 대응은 composite ISSUE/WARNING → WARNING, `normal` → OK, 그 외 규칙 → WATCH다.
+
 ### 12.2 추가하는 것
 
 1. **Diagnosis Summary 헤더.** 화면 상단에 규칙 ID, 기대값, 관측값, 계층별 상태를 고정 표시한다.
@@ -797,7 +807,7 @@ METRICS.md 4장의 run JSON에 아래 필드를 추가한다. 기존 필드는 �
 
 | 단계 | 내용 | 완료 기준 |
 |---|---|---|
-| M1 | Metric threshold engine | `MetricExtractor`, `ThresholdEngine`, `HealthComposer`, `DiagnosisRules`와 단위 테스트. 기존 HealthMonitor가 새 엔진 위에서 같은 판정을 냄 |
+| M1 | Metric threshold engine | `MetricExtractor`, `ThresholdEngine`, `HealthComposer`, `DiagnosisRules`와 단위 테스트. 기존 HealthMonitor가 새 엔진 위에서 같은 판정을 냄. **2026-09-09 완료: 단위 테스트 67개 통과, lint 오류 0** |
 | M2 | Auto Check runner | Galaxy S25+에서 60초 검사 완주, run JSON 저장, endpoint 열거 결과 기록 |
 | M3 | Diagnosis summary | L1/L2/L3 카드, Expert 상단 Diagnosis Summary, incident 저장 후 요약 |
 | M4 | Consumer Home | 첫 화면, 검사 준비/진행/결과, "방금 이상했어요", 결과 공유(zip에 Health Report 포함) |
