@@ -4,12 +4,13 @@
     <uses-feature android:name="android.hardware.camera.any" android:required="true" />
     <application android:theme="@style/AppTheme" android:label="Camera Doctor"
         android:icon="@drawable/ic_scope" android:allowBackup="false" android:supportsRtl="true">
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity android:name=".home.HomeActivity" android:exported="true" android:theme="@style/HomeTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".MainActivity" android:exported="false" />
         <activity android:name=".check.CheckActivity" android:exported="false" android:screenOrientation="portrait" />
         <provider android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">

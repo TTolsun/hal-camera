@@ -33,6 +33,12 @@ import java.util.*
 import java.util.concurrent.Executors
 
 class MainActivity : ComponentActivity() {
+    companion object { const val EXTRA_CONSUMER = "consumer" }
+    /** Consumer incident mode from Home: same engine and recorder, plain-language button and summary. */
+    private var consumer = false
+    private var incidentAssessment: Assessment? = null
+    private lateinit var summaryCard: TextView
+    private lateinit var timelineView: dev.cameradoctor.ui.TimelineView
     private val bg = Color.rgb(12,19,26)
     private val panel = Color.rgb(19,30,40)
     private val mint = Color.rgb(111,225,198)
@@ -104,14 +110,18 @@ class MainActivity : ComponentActivity() {
             val time = nowNs()
             val events = recorder.snapshot(10_000_000_000L)
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
-            scope.update(frames, time)
+            // Vertical cursors on every scope track: incident triggers (red) and the frames that produced a WARNING (orange).
+            val markers = events.filter { it.kind == "incident_trigger" }.map { Triple(it.atNs, "ISSUE", true) } +
+                events.filter { it.kind == "health_assessment" && it.values["level"] == "WARNING" && it.values["held"] != true }
+                    .map { Triple(it.atNs, (it.values["case"] as? String)?.uppercase(Locale.US)?.replace('_', ' ') ?: "WARN", false) }
+            scope.update(frames, time, markers)
             updateReadings(events, frames, time)
             updateHealth(events, frames, time)
             if (time-lastSystemNs >= 1_000_000_000L) { sampleSystem(); lastSystemNs=time }
             recorder.finish()?.let { export(it) }
             val remaining = recorder.remainingNs()
             reportButton.isEnabled = remaining == null && ready && !paused
-            reportButton.text = if (remaining != null) "${"%.1f".format(Locale.US, remaining/1e9)}s" else "WRONG"
+            reportButton.text = if (remaining != null) "${"%.1f".format(Locale.US, remaining/1e9)}s" else incidentLabel()
             val span = events.firstOrNull()?.let { (time-it.atNs)/1e9 } ?: 0.0
             recorderText.text = if (exporting > 0) "ZIP 저장 중…" else if (remaining != null) "기록 중 · 이후 ${"%.1f".format(Locale.US, remaining/1e9)}초 남음" else "30s 순환 버퍼  ·  ${"%.1f".format(Locale.US, span.coerceAtMost(10.0))}s / 10s 사전 기록 준비"
             main.postDelayed(this, 100)
@@ -120,7 +130,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        engineName = savedInstanceState?.getString("engine") ?: "CameraX"
+        consumer = intent.getBooleanExtra(EXTRA_CONSUMER, false)
+        engineName = savedInstanceState?.getString("engine") ?: if (consumer) "Camera2" else "CameraX"
         cameraId = savedInstanceState?.getString("camera") ?: ""
         paused = savedInstanceState?.getBoolean("paused") ?: false
         zoomRatio = savedInstanceState?.getFloat("zoom") ?: 1f
@@ -272,10 +283,10 @@ class MainActivity : ComponentActivity() {
         bottomBar.addView(metrics,lp(top=10))
         val mainRow=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL; gravity=Gravity.CENTER_VERTICAL }
         bottomBar.addView(mainRow,lp(top=12))
-        reportButton=button("WRONG") {
+        reportButton=button(incidentLabel()) {
             val id="incident_"+SimpleDateFormat("yyyyMMdd_HHmmss_SSS",Locale.US).format(Date())+"_"+UUID.randomUUID().toString().take(8)
-            if(recorder.trigger(id)) toast("5초 후 incident ZIP을 저장합니다")
-        }.apply { setTextColor(bg); textSize=10f; setTypeface(typeface,Typeface.BOLD); background=circle(coral); contentDescription="문제 순간 기록: 직전 10초와 이후 5초를 저장" }
+            if(recorder.trigger(id)) { incidentAssessment=lastHealth; toast(if(consumer) "이후 5초를 더 기록한 뒤 분석합니다" else "5초 후 incident ZIP을 저장합니다") }
+        }.apply { setTextColor(bg); textSize=if(consumer) 9f else 10f; setTypeface(typeface,Typeface.BOLD); background=circle(coral); contentDescription="문제 순간 기록: 직전 10초와 이후 5초를 저장" }
         captureButton=button("") { engine?.capture() }.apply { background=circle(Color.WHITE,ring=bg); contentDescription="셔터 측정" }
         val panelButton=button("진단") { diagnostics.visibility=if(diagnostics.visibility==View.VISIBLE) View.GONE else View.VISIBLE }
             .apply { background=circle(glass); setTextColor(Color.WHITE); textSize=11f }
@@ -291,6 +302,10 @@ class MainActivity : ComponentActivity() {
         val head=row().apply { gravity=Gravity.CENTER_VERTICAL }; body.addView(head)
         head.addView(LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; addView(label("CAMERA DOCTOR",22,Color.WHITE,true)); addView(label("CAMERA SYSTEM OBSERVATORY  /  0.1",10,muted)) },LinearLayout.LayoutParams(0,-2,1f))
         head.addView(button("닫기") { diagnostics.visibility=View.GONE },LinearLayout.LayoutParams(dp(72),dp(40)))
+        // Diagnosis Summary (12.2 item 1): rule, expected vs observed, per-layer state, cause layer. Always above the raw card.
+        body.addView(label("DIAGNOSIS",12,muted,true),lp(top=18))
+        summaryCard=label("baseline 수집 중…",12,Color.WHITE).apply { typeface=Typeface.MONOSPACE; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
+        body.addView(summaryCard,lp(top=10))
         body.addView(label("00   CAMERA HEALTH",12,muted,true),lp(top=18))
         body.addView(label("같은 세션의 직전 10초를 기준으로 판정. 앱 콜백 관측이며 HAL 원인은 판정하지 않음",10,muted),lp(top=4))
         healthCard=label("baseline 수집 중…",12,Color.WHITE).apply { typeface=Typeface.MONOSPACE; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
@@ -300,12 +315,14 @@ class MainActivity : ComponentActivity() {
         scope=ScopeView(this).apply { background=rounded(panel); contentDescription="AE, AF, AWB 상태와 노출, ISO, 센서 프레임 간격 그래프" }
         body.addView(scope,lp(height=342,top=10))
         body.addView(label("02   FRAME CALLBACK TIMELINE",12,muted,true),lp(top=20))
+        timelineView=dev.cameradoctor.ui.TimelineView(this).apply { background=rounded(panel); contentDescription="최근 프레임과 세션 평균의 START, PARTIAL, BUFFER 도착 시각 비교" }
+        body.addView(timelineView,lp(height=96,top=10))
         timeline=label("프레임 콜백을 기다리는 중…",12,Color.WHITE).apply { typeface=Typeface.MONOSPACE; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
-        body.addView(timeline,lp(top=10))
+        body.addView(timeline,lp(top=8))
         system=label("APP CPU —  ·  PSS —  ·  THERMAL —",11,muted)
         body.addView(system,lp(top=12))
         body.addView(label("03   FLIGHT RECORDER",12,muted,true),lp(top=20))
-        body.addView(label("프리뷰 화면의 붉은 WRONG 버튼을 누르면 직전 10초 + 이후 5초를 저장합니다.",12,Color.WHITE),lp(top=8))
+        body.addView(label("프리뷰 화면의 붉은 ${incidentLabel()} 버튼을 누르면 직전 10초 + 이후 5초를 저장합니다.",12,Color.WHITE),lp(top=8))
         recorderText=label("30s 순환 버퍼",11,muted); body.addView(recorderText,lp(top=8))
         val exports=row(); body.addView(exports,lp(top=8))
         shareButton=button("최근 ZIP 공유") { latestFile?.let { share(it) } }
@@ -393,6 +410,8 @@ class MainActivity : ComponentActivity() {
         fun offset(e:Event?)=if(e!=null && start!=null) "%+.2f ms".format(Locale.US,(e.atNs-start.atNs)/1e6) else "—"
         fun short(e:Event?)=if(e!=null && start!=null) "%+.1f".format(Locale.US,(e.atNs-start.atNs)/1e6) else "—"
         timeline.text="Frame #${matched.frame} · observed callbacks\nSTART    ${if(start!=null) "+0.00 ms" else "—"}\nPARTIAL  ${offset(matched)}\nBUFFER   ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
+        fun ms(e:Event?)=if(e!=null && start!=null) (e.atNs-start.atNs)/1e6 else null
+        timelineView.update(matched.frame,ms(matched),ms(image),(lastHealth?.values?.get("baselineGapMs") as? Number)?.toDouble(),(lastHealth?.values?.get("baselineBufferMs") as? Number)?.toDouble())
         stripText.text="#${matched.frame}  START +0  PARTIAL ${short(matched)}  BUFFER ${short(image)} ms"
     }
     private fun updateHealth(events:List<Event>,frames:List<Event>,time:Long) {
@@ -406,6 +425,7 @@ class MainActivity : ComponentActivity() {
             HealthLevel.NO_DATA -> { healthBanner.background=rounded(glass); healthBanner.setTextColor(muted) }
         }
         healthCard.text=if(a.evidence.isEmpty()) a.headline else (listOf(a.headline)+a.evidence).joinToString("\n")
+        summaryCard.text=diagnosisSummary(a)
         val previous=lastHealth
         if(previous==null || previous.level!=a.level || previous.headline!=a.headline) {
             recorder.record(sessionId.ifEmpty { "app" },"health_assessment",values=a.values+mapOf("level" to a.level.name,"headline" to a.headline))
@@ -430,7 +450,7 @@ class MainActivity : ComponentActivity() {
                 val file=IncidentExporter(app).export(incident,sessions)
                 main.post {
                     exporting--
-                    if(!destroyed) { latestFile=file; shareButton.isEnabled=true; toast("저장 완료 · ${file.name}") }
+                    if(!destroyed) { latestFile=file; shareButton.isEnabled=true; toast("저장 완료 · ${file.name}"); if(incident.finishReason=="completed") showIncidentSummary(file) }
                 }
             } catch(e:Exception) { main.post { exporting--; if(!destroyed) toast("ZIP 저장 실패: ${e.message}") } }
         }
@@ -461,6 +481,48 @@ class MainActivity : ComponentActivity() {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
         startActivity(Intent.createChooser(intent,"Incident 공유 · Google Drive 선택"))
+    }
+    private fun incidentLabel()=if(consumer) "방금\n이상했어요" else "MARK\nINCIDENT"
+    /** 12.2 item 1: the same diagnosis the consumer sees, with expected/observed and per-layer state for the expert. */
+    private fun diagnosisSummary(a:Assessment):String {
+        val d=a.diagnosis ?: return a.headline
+        val v=a.values
+        fun n(k:String)=(v[k] as? Number)?.toDouble()
+        fun f(x:Double?)=x?.let { "%.1f".format(Locale.US,it) } ?: "—"
+        val rule=d.rule
+        val cadence=if(v["cadenceChanged"]==true) "CADENCE CHANGE" else "NORMAL"
+        val callback=if(v["gapAnomaly"]==true) "ABNORMAL" else "NORMAL"
+        val sensor=if(v["intervalAnomaly"]==true) "ABNORMAL" else "NORMAL"
+        val threeA=if(v["threeAStable"]==true) "NORMAL" else "SEARCHING"
+        val mark=if(rule=="normal") "●" else "⚠"
+        val (expected,observed)=when(rule) {
+            "callback_delay","pipeline_stall" -> "partial +${f(n("baselineGapMs"))} ms (baseline p50)" to "partial +${f(n("partialGapMs"))} ms"
+            "sensor_stall" -> "interval ${f(n("tRefMs"))} ms (baseline p50)" to "interval ${f(n("intervalMs"))} ms"
+            "cadence_change" -> "duration ${f(n("baselineFrameDurationMs"))} ms" to "duration ${f(n("recentFrameDurationMs"))} ms"
+            else -> "interval ${f(n("tRefMs"))} ms" to "interval ${f(n("intervalMs"))} ms"
+        }
+        return "$mark $rule\n\nExpected   $expected\nObserved   $observed\n\n3A         $threeA\nCadence    $cadence\nSensor     $sensor\nCallback   $callback\n\ncause_layer  ${d.causeLayer.name.lowercase(Locale.US)}"
+    }
+    /** After MARK INCIDENT: L1 verdict and L2 evidence captured at the trigger (11.4). Consumer wording; details behind a button. */
+    private fun showIncidentSummary(file:File) {
+        val a=incidentAssessment; incidentAssessment=null
+        val rule=a?.diagnosis?.rule ?: "insufficient_evidence"
+        val v=a?.values.orEmpty()
+        fun n(k:String)=(v[k] as? Number)?.toDouble()
+        fun f(x:Double?)=x?.let { "%.0f ms".format(Locale.US,it) } ?: "—"
+        val l1=dev.cameradoctor.diagnosis.DiagnosisRules.CONSUMER_TEXT[rule] ?: rule
+        val l2=buildList {
+            if(rule=="callback_delay"||rule=="pipeline_stall") add("프레임 응답  평소 ${f(n("baselineGapMs"))} → 지금 ${f(n("partialGapMs"))}")
+            if(rule=="sensor_stall"||rule=="pipeline_stall") add("프레임 간격  평소 ${f(n("tRefMs"))} → 지금 ${f(n("intervalMs"))}")
+            add("최근 10초 화면 끊김  ${(v["stallCount10s"] as? Number)?.toInt() ?: 0}회")
+            add("초점·노출  ${if(v["threeAStable"]==true) "정상" else "맞추는 중"}")
+        }
+        val title=if(rule=="normal") "특별한 이상은 찾지 못했습니다" else "문제를 발견했습니다"
+        AlertDialog.Builder(this).setTitle(title)
+            .setMessage(l1+"\n\n"+l2.joinToString("\n")+"\n\n앱 콜백 관측 결과이며 카메라 내부 원인은 단정하지 않습니다.")
+            .setPositiveButton("상세 데이터") { _,_ -> diagnostics.visibility=View.VISIBLE }
+            .setNeutralButton("공유") { _,_ -> share(file) }
+            .setNegativeButton("닫기",null).show()
     }
     private fun showNotes() {
         AlertDialog.Builder(this).setTitle("측정 범위 / MVP")
