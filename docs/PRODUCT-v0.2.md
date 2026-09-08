@@ -111,7 +111,7 @@ v0.2가 끝났을 때 사용자가 할 수 있는 일은 세 가지다. 60초 �
 | H.2 | `frame_interval_p95` | 같음 | ms | p95 / 10 s | |
 | H.3 | `partial_latency` | 같은 frame의 `onCaptureStarted` 진입 → `onCaptureCompleted` 진입 | ms | p50, p95 / 10 s | HAL 처리 시간이 아니라 콜백 도착 차이 |
 | H.4 | `buffer_latency` | 같은 frame의 `onCaptureStarted` 진입 → YUV `onImageAvailable` 진입 | ms | p50, p95 / 10 s | YUV stream이 있을 때만. 없으면 `UNKNOWN(not_measurable)` |
-| H.5 | `stall_count` | interval > 1.5 × baseline interval p50 이면서 interval > 1.5 × 해당 frame의 자체 `SENSOR_FRAME_DURATION`인 횟수 | count | 합 / 10 s | 실제 drop 개수가 아니다. AE 가변 FPS는 제외 |
+| H.5 | `stall_count` | interval > 1.5 × 해당 frame의 자체 `SENSOR_FRAME_DURATION`인 횟수. baseline이 있으면 interval > 1.5 × baseline p50 조건도 함께 요구 | count | 합 / 10 s | 실제 drop 개수가 아니다. 자체 duration과 비교하므로 AE 가변 FPS에서도 판정 가능. duration이 없는 frame은 baseline p50 × 1.5 단독 기준으로 대체(cadence-aware fallback) |
 | H.6 | `ae_convergence` | 첫 `capture_result` → AE 상태가 CONVERGED/FLASH_REQUIRED/LOCKED인 첫 result | ms | 단일값 | 창 끝까지 미도달이면 `timeout` |
 | H.7 | `af_convergence` | 첫 `capture_result` → AF 상태가 PASSIVE_FOCUSED/FOCUSED_LOCKED인 첫 result | ms | 단일값 | AF 모드 OFF 또는 고정 초점은 `UNKNOWN(unsupported)`. NOT_FOCUSED_LOCKED는 수렴이 아니다 |
 | H.8 | `awb_convergence` | 첫 `capture_result` → AWB 상태가 CONVERGED/LOCKED인 첫 result | ms | 단일값 | |
@@ -149,7 +149,7 @@ still 3장은 60초 예산 때문이다. 통계가 필요한 2.5는 Expert 시�
 
 ### 5.2 CDD 기준 원문과 적용 범위
 
-CDD 2.2.7.2는 `Build.VERSION.MEDIA_PERFORMANCE_CLASS`를 선언한 handheld 기기에 적용된다. 확인한 원문 [S1]:
+CDD 2.2.7.2는 `Build.VERSION.MEDIA_PERFORMANCE_CLASS`를 선언한 handheld 기기에 적용되며, 요구사항은 performance class 버전별로 분기된다. 아래 500 ms / 1000 ms 값은 Android 14(U) 이상 class의 요구사항이다. 그 이전 class(R/S/T)에는 launch 600 ms 같은 다른 값이 쓰였으므로, 이 문서의 값은 **U 이상 class를 선언한 기기에만** 적용한다. 확인한 원문 [S1]:
 
 > [7.5/H-1-5] MUST have camera2 JPEG capture latency < 1000 ms for 1080p resolution as measured by the CTS camera PerformanceTest under ITS lighting conditions (3000K) for both primary cameras.
 >
@@ -158,14 +158,31 @@ CDD 2.2.7.2는 `Build.VERSION.MEDIA_PERFORMANCE_CLASS`를 선언한 handheld 기
 주의할 점 두 가지가 있다.
 
 1. CTS PerformanceTest 자체는 launch/capture 지연에 대해 assert하지 않고 ReportLog로 보고만 한다 [S2]. 한계값의 출처는 CTS가 아니라 CDD다. 문서와 UI에서 "CTS 기준"이라고 쓰지 않고 "CDD 기준"이라고 쓴다.
-2. Camera Doctor는 ITS 조명 조건을 재현하지 않고, 프리뷰 첫 프레임 정의도 CTS의 YUV 대리 관측과 같지만 해상도와 warm-up 정책은 다를 수 있다. 따라서 CDD 값은 다음 규칙으로만 쓴다.
+2. Camera Doctor는 ITS 조명 조건을 재현하지 않고, 프리뷰 첫 프레임 정의는 CTS의 YUV 대리 관측과 같지만 해상도, warm-up, 반복 정책은 다를 수 있다. 조건이 같지 않은데 "CDD FAIL"이라고 말하면 사용자는 CDD 위반으로 받아들인다. 따라서 CDD 값은 조건 일치 등급에 따라 다르게 쓴다.
 
-| 지표 | CDD 값 | MPC 선언 기기 (MEDIA_PERFORMANCE_CLASS ≥ 31) | 그 외 기기 |
+**적용 게이트 (코드 계약)**
+
+```kotlin
+val mpc = Build.VERSION.MEDIA_PERFORMANCE_CLASS          // 0이면 미선언
+val cddCameraLatencyApplicable = mpc >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE   // U = 34
+```
+
+**조건 일치 등급 `condition_equivalence`**
+
+| 등급 | 조건 | 값 초과 시 상태 | `fail_kind` |
+|---|---|---|---|
+| `equivalent` | CTS PerformanceTest와 같은 stream 구성, 같은 warm-up/반복 정책, ITS 조명(3000 K) 검증 | FAIL | `absolute_validated` |
+| `similar` | 관측 방식은 같지만 조명 통제 없음 (v0.2 Auto Check의 기본 상태) | WARN | `absolute_reference` |
+| `not_applicable` | MPC 미선언 또는 U 미만, 또는 primary camera가 아님 | WARN (product heuristic) | `heuristic` |
+
+v0.2 Auto Check는 조명을 통제하지 않으므로 항상 `similar` 또는 `not_applicable`이다. `equivalent`는 v0.3 Expert 시나리오 runner에서 조명 검증 절차가 생긴 뒤에만 나온다. 즉 **v0.2에서는 CDD 값 초과가 FAIL을 만들지 않는다.**
+
+| 지표 | CDD 값 | `similar` (MPC ≥ U, primary) | `not_applicable` |
 |---|---:|---|---|
-| 1.6 `preview_total[endpoint=yuv_proxy]` p50 | 500 ms | ≥ 500 ms → FAIL(cdd_bound), 조건 불일치 플래그 첨부 | ≥ 500 ms → WARN, ≥ 1000 ms → FAIL |
-| 2.2 `capture_latency[zsl=off,trigger=off,fmt=jpeg,res=1920x1080]` p50 | 1000 ms | ≥ 1000 ms → FAIL(cdd_bound) | ≥ 1000 ms → WARN, ≥ 2000 ms → FAIL |
+| 1.6 `preview_total[endpoint=yuv_proxy]` p50 | 500 ms | ≥ 500 ms → WARN(`absolute_reference`) | ≥ 500 ms → WARN(`heuristic`), ≥ 1000 ms → FAIL(`heuristic`) |
+| 2.2 `capture_latency[zsl=off,trigger=off,fmt=jpeg,res=1920x1080]` p50 | 1000 ms | ≥ 1000 ms → WARN(`absolute_reference`) | ≥ 1000 ms → WARN(`heuristic`), ≥ 2000 ms → FAIL(`heuristic`) |
 
-CDD는 primary camera(후면 메인, 전면)에만 적용된다. Ultra Wide, Telephoto endpoint에는 CDD 기준을 적용하지 않고 relative 기준만 쓴다.
+문구는 Consumer에서 "권장 성능 기준보다 느립니다", Expert에서 `CDD_REFERENCE_EXCEEDED · environment_not_equivalent`다. CDD는 primary camera(후면 메인, 전면)에만 적용된다. Ultra Wide, Telephoto endpoint에는 relative 기준과 product heuristic만 쓴다.
 
 ### 5.3 Baseline 정책
 
@@ -193,6 +210,18 @@ absolute와 relative가 다른 상태를 내면 더 나쁜 상태를 채택하�
 
 상태 순서는 FAIL > WARN > PASS > UNKNOWN이다. UNKNOWN은 가장 낮지만, UNKNOWN과 PASS가 만나면 PASS다. 판정 근거가 하나라도 있으면 그 근거를 쓴다.
 
+**FAIL의 종류.** 같은 FAIL이라도 근거의 강도가 다르므로 `fail_kind`를 붙인다. composite health로 승격되는 규칙은 7.1절에 있다.
+
+| `fail_kind` | 근거 | composite 승격 |
+|---|---|---|
+| `hard` | 5.6절의 오류, timeout | ISSUE |
+| `absolute_validated` | 조건이 `equivalent`인 CDD 기준 초과 | ISSUE |
+| `absolute_reference` | 조건이 `similar`인 CDD 기준 초과 (상태는 WARN이므로 실제로는 FAIL이 되지 않음) | WARNING |
+| `relative` | baseline 대비 +100 % 이상 | WARNING |
+| `heuristic` | 제품이 정한 경험 기준 (stall 횟수, fps 비율 등) | WARNING |
+
+"평소보다 2배 느려짐"은 WARNING이고, `openCamera()` 실패는 ISSUE다. relative 기준 하나만으로 사용자에게 "문제가 있습니다"라고 말하지 않는다.
+
 ### 5.5 UNKNOWN의 사유 코드
 
 | 코드 | 의미 |
@@ -202,7 +231,7 @@ absolute와 relative가 다른 상태를 내면 더 나쁜 상태를 채택하�
 | `insufficient_samples` | 관측 창 표본 부족 (H 지표 15개 미만, 반복 지표 유효 표본 0) |
 | `no_baseline` | relative 전용 지표인데 baseline 없음 |
 | `unsupported` | 기기가 기능을 지원하지 않음 (고정 초점 등) |
-| `cadence_changed` | AE 가변 FPS로 frame duration이 바뀌어 고정 기준 판정 불가 |
+| `cadence_changed` | AE 가변 FPS로 frame duration이 바뀌었고, 자체 `SENSOR_FRAME_DURATION`도 없어 관측 간격을 비교할 대상이 없음. duration이 있으면 이 사유를 쓰지 않고 duration 기준으로 판정한다 |
 | `condition_mismatch` | baseline과 conditions.effective가 다름 |
 
 UNKNOWN에는 항상 사유 코드가 붙는다. 사유 없는 UNKNOWN은 허용하지 않는다.
@@ -220,7 +249,7 @@ UNKNOWN에는 항상 사유 코드가 붙는다. 사유 없는 UNKNOWN은 허용
 | `capture_failed` 또는 `buffer_lost` 1건 이상 | H.9 |
 | close 3 s timeout | 1.7 |
 
-timeout 값은 제안값이다. CTS의 `WAIT_FOR_RESULT_TIMEOUT_MS = 3000`을 참고했다 [S2].
+timeout 값은 production watchdog 값이며 카메라 성능 규격이 아니다. CTS의 `WAIT_FOR_RESULT_TIMEOUT_MS = 3000`도 test harness 안전용 timeout이므로 "참고"로만 적고 "CTS 기준"이라고 부르지 않는다 [S2]. `absoluteSource`에는 `watchdog_v0.2`를 쓴다.
 
 ---
 
@@ -228,17 +257,17 @@ timeout 값은 제안값이다. CTS의 `WAIT_FOR_RESULT_TIMEOUT_MS = 3000`을 �
 
 relative 열의 백분율은 baseline p50 대비 run p50의 증가율이다. p95는 같은 규칙을 baseline p95에 적용한다. 작은 값의 잡음을 막기 위해 latency 지표는 절대 증가량 10 ms 미만이면 relative WARN을 내지 않는다.
 
-모든 임계값은 **제안값**이며 Galaxy S25+ 실측 후 확정한다.
+모든 임계값은 **제안값**이며 Galaxy S25+ 실측 후 확정한다. Absolute 열의 출처는 `absoluteSource`에 기록하며 값은 `cdd_2.2.7.2_H-1-5`, `cdd_2.2.7.2_H-1-6`, `physics`(자체 frame duration), `watchdog_v0.2`, `product_stability_v0.2`, `product_recording_v0.2` 중 하나다. `product_*`는 공식 규격이 아닌 제품 경험 기준이다. FAIL 열의 상태는 5.4절 `fail_kind`에 따라 composite 승격 여부가 다르며, 이 표에서 ISSUE로 승격되는 FAIL은 `hard`뿐이다(v0.2에는 `absolute_validated`가 나오지 않는다).
 
 ### 6.1 그룹 A · Launch
 
 | Metric | Source | Unit | Aggregation | Absolute | Relative | PASS | WARN | FAIL | Notes |
 |---|---|---:|---|---|---|---|---|---|---|
-| 1.1 `open_latency` | API 시각 | ms | p50 / n≥1 | 하드 실패만 | +30 % / +100 % | 둘 다 아님 | relative +30 % | 하드 실패 또는 +100 % | cold/warm 분리 |
+| 1.1 `open_latency` | API 시각 | ms | p50 / n≥1 | 하드 실패만 | +30 % / +100 % | 둘 다 아님 | relative +30 % | 하드 실패(`hard`) 또는 +100 %(`relative`) | cold/warm 분리 |
 | 1.2 `configure_latency` | API 시각 | ms | p50 | 하드 실패만 | +30 % / +100 % | | | | 스트림 구성 조건 키 |
 | 1.3 `first_frame_started_callback` | callback | ms | p50 | 3 s timeout | +30 % / +100 % | | | | |
 | 1.5 `activity_create_to_open` | 앱 시각 | ms | 단일 | 없음 | 없음 | 항상 UNKNOWN(not_measurable_for_health) | | | 권한 대기 포함. 기록만 하고 판정하지 않음 |
-| 1.6 `preview_total[endpoint=yuv_proxy]` | 차감 | ms | p50 | CDD 500 ms (5.2절) | +30 % / +100 % | < 500 ms이고 relative 이내 | 5.2절 | 5.2절 | primary camera만 CDD 적용 |
+| 1.6 `preview_total[endpoint=yuv_proxy]` | 차감 | ms | p50 | CDD 500 ms 참조 (5.2절) | +30 % / +100 % | < 500 ms이고 relative 이내 | ≥ 500 ms (`absolute_reference`) | v0.2에서는 `hard` 또는 `relative`만 | primary camera만 CDD 참조 |
 | 1.7 `close_latency` | API 시각 | ms | p50 | 3 s timeout | +50 % / +200 % | | | | 전환 시나리오 |
 | 1.8 `launch_yuv_proxy` | callback | ms | p50 | 3 s timeout | +30 % / +100 % | | | | 1.6의 끝점 |
 
@@ -247,7 +276,7 @@ relative 열의 백분율은 baseline p50 대비 run p50의 증가율이다. p95
 | Metric | Source | Unit | Aggregation | Absolute | Relative | PASS | WARN | FAIL | Notes |
 |---|---|---:|---|---|---|---|---|---|---|
 | 2.1 `shutter_lag` | 센서 시각 | ms | p50 | 없음 | +30 % / +100 % | | | | REALTIME 시계일 때만. Auto Check v0.2는 not_run |
-| 2.2 `capture_latency[jpeg,1080p]` | callback | ms | p50 (n=3) | CDD 1000 ms (5.2절) | +30 % / +100 % | | | | 2.4 미포함 |
+| 2.2 `capture_latency[jpeg,1080p]` | callback | ms | p50 (n=3) | CDD 1000 ms 참조 (5.2절) | +30 % / +100 % | < 1000 ms이고 relative 이내 | ≥ 1000 ms (`absolute_reference`) | v0.2에서는 `hard` 또는 `relative`만 | 2.4 미포함 |
 | 2.3 `capture_result_latency` | callback | ms | p50 | 5 s timeout | +30 % / +100 % | | | | |
 | 2.4 `precapture_convergence` | metadata | ms | p50 | 5 s timeout | +50 % | | | | not_run in v0.2 |
 | 2.5 `shot_to_shot` | API 시각 | ms | 원본 (n=1 in v0.2) | 없음 | +30 % / +100 % | | | | 표본 1개는 UNKNOWN(insufficient_samples). Expert runner에서만 판정 |
@@ -261,7 +290,7 @@ relative 열의 백분율은 baseline p50 대비 run p50의 증가율이다. p95
 | 3.1 `record_start_to_camera_callback` | callback | ms | p50 | 3 s timeout | +30 % / +100 % | | | | |
 | 3.2 `camera_frame_interval_anomaly` | 센서 간격 | count | 10 s 창 | 0 / 1–2 / ≥3 | 없음 | 0 | 1–2 | ≥ 3 | 실제 drop 아님 |
 | 3.3 `encoder_frame_drop` | MediaCodec | count | | | | UNKNOWN(not_measurable) | | | MVP 밖 |
-| 3.4 `steady_fps` | 센서 시각 | fps | 1 s 창 p50 | 요청 FPS 대비 −5 % / −15 % | 없음 | ≥ 95 % | 85–95 % | < 85 % | |
+| 3.4 `steady_fps` | 센서 시각 | fps | 1 s 창 p50 | 요청 FPS 대비 −5 % / −15 % (`product_recording_v0.2`) | 없음 | ≥ 95 % | 85–95 % | < 85 % (`heuristic`) | 규격 아님. v0.3 runner에서는 expected/observed frame 수와 drop event로 대체 검토 |
 | 3.5 `long_run_drift` | 센서 시각 | fps | 1 min 창 | 첫 분 대비 −10 % / −25 % | 없음 | | | | 10분 별도 시나리오 |
 | 3.6 `record_stop_latency` | API 시각 | ms | p50 | 예외는 FAIL | +50 % / +200 % | | | | |
 | 3.7 `frame_interval_jitter` | 센서 간격 | ms | 표준편차, p95 | 없음 | +50 % / +150 % | | | | |
@@ -270,17 +299,28 @@ relative 열의 백분율은 baseline p50 대비 run p50의 증가율이다. p95
 
 | Metric | Source | Unit | Aggregation | Absolute | Relative | PASS | WARN | FAIL | Notes |
 |---|---|---:|---|---|---|---|---|---|---|
-| H.1 `frame_interval_p50` | 센서 간격 | ms | p50 / 10 s | 요청 FPS 상한의 1e9/fps × 1.2 초과 시 WARN | +20 % / +50 % | | | | duration이 바뀌면 UNKNOWN(cadence_changed) |
+| H.1 `frame_interval_p50` | 센서 간격 | ms | p50 / 10 s | 고정 FPS([30,30])일 때만: p50 > 1e9/fps × 1.2 → WARN. 가변 FPS([15,30] 등)는 target range로 WARN을 내지 않고 frame별 자체 `SENSOR_FRAME_DURATION` × 1.2와 비교 (`physics`) | +20 % / +50 % | 유효 cadence 이내 | > 1.2 × expected | `relative`만 | target FPS 상한을 기준으로 쓰지 않는다. [15,30]에서 66.7 ms는 정상이다. duration도 없고 cadence가 바뀌면 그때만 UNKNOWN(cadence_changed) |
 | H.2 `frame_interval_p95` | 센서 간격 | ms | p95 / 10 s | 없음 | +30 % / +100 % | | | | |
 | H.3 `partial_latency` | callback | ms | p50, p95 / 10 s | 없음 | +30 % / +100 % | | | | 절대 증가 10 ms 미만은 WARN 안 냄 |
 | H.4 `buffer_latency` | callback | ms | p50, p95 / 10 s | 없음 | +30 % / +100 % | | | | YUV stream 필요 |
-| H.5 `stall_count` | 센서 간격 | count | 합 / 10 s | 0 / 1–2 / ≥3 | 없음 | 0 | 1–2 | ≥ 3 | baseline 없으면 자체 duration 기준만 사용 |
-| H.6 `ae_convergence` | metadata | ms | 단일 | ≤ 1500 / ≤ 5000 / timeout | +50 % | ≤ 1500 | 1500–5000 | timeout | |
-| H.7 `af_convergence` | metadata | ms | 단일 | ≤ 1500 / ≤ 5000 / timeout | +50 % | ≤ 1500 | 1500–5000 | timeout | 고정 초점은 UNKNOWN(unsupported) |
-| H.8 `awb_convergence` | metadata | ms | 단일 | ≤ 1500 / ≤ 5000 / timeout | +50 % | ≤ 1500 | 1500–5000 | timeout | |
+| H.5 `stall_count` | 센서 간격 | count | 합 / 10 s | 0 / 1–2 / ≥3 (`product_stability_v0.2`) | 없음 | 0 | 1–2 | ≥ 3 (`heuristic`) | 자체 `SENSOR_FRAME_DURATION`이 있으면 가변 FPS에서도 판정. 없을 때만 baseline p50 × 1.5 단독 기준. 공식 규격 아님 |
+| H.6 `ae_convergence` | metadata | ms | 단일 | ≤ 1500 → PASS, 그 외 WARN (`product_stability_v0.2`) | +50 % → WARN | ≤ 1500 | > 1500 또는 timeout | v0.2 없음 | 장면 의존. 성능 신호이지 결함 신호가 아님 |
+| H.7 `af_convergence` | metadata | ms | 단일 | ≤ 1500 → PASS, 그 외 WARN | +50 % → WARN | ≤ 1500 | > 1500 또는 timeout | v0.2 없음 | 고정 초점은 UNKNOWN(unsupported). FAIL은 v0.3 AF robustness(통제 대상, 10회 반복, 7/10 timeout)에서만 |
+| H.8 `awb_convergence` | metadata | ms | 단일 | ≤ 1500 → PASS, 그 외 WARN | +50 % → WARN | ≤ 1500 | > 1500 또는 timeout | v0.2 없음 | |
 | H.9 `callback_failure_count` | callback | count | 합 / 10 s | 0 / — / ≥1 | 없음 | 0 | 없음 | ≥ 1 | 하드 실패 |
 
-3A 수렴 시간은 장면에 크게 좌우된다. 어두운 장면이나 저대비 장면에서는 AF timeout이 정상일 수 있으므로, 10장의 사용자 안내에서 "밝은 곳에서 글자나 물체를 향해" 검사하도록 요구하고, 조도 대리값으로 `SENSOR_SENSITIVITY`와 `SENSOR_EXPOSURE_TIME`을 run에 기록한다. ISO가 baseline보다 4배 이상 높으면 H.6–H.8 판정을 UNKNOWN(condition_mismatch)로 바꾼다.
+3A 수렴 시간은 장면(대비, 거리, AF 영역, 움직임)에 크게 좌우되고, Android API는 "몇 초 안에 수렴해야 정상"이라는 요구사항을 제공하지 않는다. 그래서 v0.2의 3A는 **성능 신호**이며 카메라 결함 신호가 아니고, FAIL을 내지 않는다. 10장의 사용자 안내에서 "밝은 곳에서 글자나 물체를 향해" 검사하도록 요구한다.
+
+환경 불일치 판정은 ISO 단독이 아니라 노출 부하 대리값을 쓴다.
+
+```text
+exposure_load = SENSOR_SENSITIVITY × SENSOR_EXPOSURE_TIME   (관측 창 p50)
+exposure_load_ratio = exposure_load(run) / exposure_load(baseline)
+
+exposure_load_ratio > 4 또는 < 0.25 → H.6–H.8을 UNKNOWN(condition_mismatch)
+```
+
+ISO 100 · 1/120 s와 ISO 400 · 1/500 s는 ISO만 보면 4배 차이지만 노출 부하는 거의 같으므로 같은 환경으로 본다. 조리개가 바뀌는 기기는 `LENS_APERTURE`도 곱에 넣는다. 이 값도 lux 측정이 아니라 대리값이며, run JSON에 원본을 남긴다.
 
 ---
 
@@ -290,12 +330,12 @@ relative 열의 백분율은 baseline p50 대비 run p50의 증가율이다. p95
 
 | 수준 | 조건 |
 |---|---|
-| ISSUE | 하드 실패 1건 이상, 또는 FAIL 상태 지표 1개 이상 |
-| WARNING | ISSUE가 아니고 WARN 상태 지표 1개 이상 |
+| ISSUE | `fail_kind`가 `hard` 또는 `absolute_validated`인 FAIL 1건 이상 |
+| WARNING | ISSUE가 아니고, WARN 상태 지표 1개 이상 또는 `fail_kind`가 `relative`/`heuristic`인 FAIL 1개 이상 |
 | NORMAL | ISSUE도 WARNING도 아니고, 판정된(PASS) 지표의 가중치 합이 전체 가중치의 50 % 이상 |
 | INSUFFICIENT | 위 어느 것도 아님. UNKNOWN이 너무 많아 판정할 수 없음 |
 
-endpoint별로 먼저 계산하고, 기기 전체 수준은 endpoint 중 가장 나쁜 수준이다.
+endpoint별로 먼저 계산하고, 기기 전체 수준은 endpoint 중 가장 나쁜 수준이다. 3A timeout 하나로는 ISSUE가 되지 않고 WARNING이다. "평소보다 2배 느림"도 WARNING이다. ISSUE는 카메라를 열지 못했거나, 촬영이 실패했거나, 조건이 검증된 규격을 넘었을 때만이다.
 
 Consumer 화면의 기본 표시는 다음 형태다.
 
@@ -329,11 +369,20 @@ score = round(100 × Σ w_i · p_i / Σ w_i (판정된 지표))
 
 하드 실패가 있으면 score = min(score, 59)
 coverage < 0.7 이면 score = null
+baseline == null 이면 score = null   (첫 검사 점수 금지)
 ```
 
-### 7.4 UNKNOWN 처리
+### 7.4 UNKNOWN 처리와 첫 검사
 
-UNKNOWN은 0점이 아니다. 분모에서 빠진다. 대신 coverage가 낮아지고, coverage가 70 % 미만이면 점수를 내지 않는다. 첫 검사(baseline 없음)에서는 relative 전용 지표가 모두 UNKNOWN이므로 보통 점수가 나오지 않는다. 이것이 의도된 동작이다.
+UNKNOWN은 0점이 아니다. 분모에서 빠진다. 대신 coverage가 낮아지고, coverage가 70 % 미만이면 점수를 내지 않는다.
+
+첫 검사(baseline 없음)에서는 absolute 판정만으로도 coverage 70 %를 넘길 수 있다(1.1, 1.2, 1.3, 1.6, 1.8, 2.2, 2.3, H.1, H.5, H.6–H.9가 모두 absolute 판정 가능). 그래서 coverage 규칙에 기대지 않고 **baseline이 없으면 점수를 내지 않는다**고 명시한다. composite level(NORMAL/WARNING/ISSUE)은 첫 검사에서도 낸다. Consumer 문구는 다음과 같다.
+
+```text
+첫 검사가 완료되었습니다.
+이 결과를 기준으로 저장했습니다.
+다음 검사부터 변화도 함께 확인합니다.
+```
 
 ### 7.5 점수 노출 조건
 
@@ -355,7 +404,8 @@ UNKNOWN은 0점이 아니다. 분모에서 빠진다. 대신 coverage가 낮아�
 |---|---|---|---|
 | `normal` | WARN/FAIL 없음 | 현재 프레임 흐름은 정상입니다. | NORMAL |
 | `slower_than_baseline` | latency 지표 relative WARN/FAIL, absolute PASS | 규격 범위 안이지만 평소보다 느립니다. | RELATIVE DEGRADATION · {metric} +{pct}% vs baseline |
-| `below_spec` | absolute FAIL, relative PASS 또는 UNKNOWN | 평소와 같지만 성능 기준을 만족하지 않습니다. | ABSOLUTE FAIL · {metric} {value} ≥ {bound} |
+| `below_spec` | `fail_kind=absolute_validated` (조건 `equivalent`일 때만. v0.2에서는 발생하지 않음) | 평소와 같지만 성능 기준을 만족하지 않습니다. | ABSOLUTE FAIL · {metric} {value} ≥ {bound} |
+| `cdd_reference_exceeded` | CDD 참조값 초과, 조건 `similar` 또는 `not_applicable` | 권장 성능 기준보다 느립니다. | CDD_REFERENCE_EXCEEDED · environment_not_equivalent · {metric} {value} ≥ {bound} |
 | `sensor_stall` | H.5 WARN/FAIL, H.3 PASS | 프레임이 예상보다 늦게 도착합니다. | SENSOR STALL · interval > own duration · 앞단 |
 | `callback_delay` | H.5 PASS, H.3 WARN/FAIL | 프레임 응답이 지연됩니다. 촬영 파이프라인 후반부의 지연 가능성이 있습니다. | PARTIAL DELAY · cadence 정상 · 뒷단 |
 | `pipeline_stall` | H.5와 H.3 모두 WARN/FAIL | 프레임 흐름 전체가 정체됩니다. | PIPELINE STALL |
@@ -371,7 +421,7 @@ UNKNOWN은 0점이 아니다. 분모에서 빠진다. 대신 coverage가 낮아�
 
 ### 8.2 우선순위
 
-여러 규칙이 동시에 맞으면 `hard_failure` > `pipeline_stall` > `sensor_stall` > `callback_delay` > `below_spec` > `slower_than_baseline` > `three_a_unstable` > `cadence_change` > `three_a_searching` > `normal` 순서로 헤드라인을 정하고, 나머지는 증거 목록에 남긴다.
+여러 규칙이 동시에 맞으면 `hard_failure` > `below_spec` > `pipeline_stall` > `sensor_stall` > `callback_delay` > `cdd_reference_exceeded` > `slower_than_baseline` > `three_a_unstable` > `cadence_change` > `three_a_searching` > `normal` 순서로 헤드라인을 정하고, 나머지는 증거 목록에 남긴다.
 
 ---
 
@@ -678,6 +728,8 @@ data class MetricState(
     val baselineValue: Double?,
     val deltaPct: Double?,
     val final: State,                // 5.4절 worst-of
+    val failKind: String?,           // hard | absolute_validated | absolute_reference | relative | heuristic
+    val conditionEquivalence: String?, // equivalent | similar | not_applicable (CDD 참조 지표만)
     val unknownReason: String?,      // 5.5절 코드
     val hardFailure: Boolean
 )
@@ -705,8 +757,8 @@ METRICS.md 4장의 run JSON에 아래 필드를 추가한다. 기존 필드는 �
 
 | 테스트 | 검증 내용 |
 |---|---|
-| `ThresholdEngineTest` | 6장 표의 각 행에 대해 PASS/WARN/FAIL 경계값, baseline 없음, 하드 실패, 5.4절 충돌 4가지 |
-| `HealthComposerTest` | 7.1절 수준 결정, coverage 70 % 경계, 하드 실패 cap 59, UNKNOWN 분모 제외 |
+| `ThresholdEngineTest` | 6장 표의 각 행에 대해 PASS/WARN/FAIL 경계값, baseline 없음, 하드 실패, 5.4절 충돌 4가지, `fail_kind` 부여, MPC 게이트(U 미만·미선언·U 이상), 조건 등급별 CDD 초과 상태, 가변 FPS [15,30]에서 66.7 ms가 WARN이 아님, 3A timeout이 FAIL이 아님, exposure_load 비율 4배 경계 |
+| `HealthComposerTest` | 7.1절 수준 결정, relative/heuristic FAIL은 WARNING이고 hard/absolute_validated FAIL만 ISSUE, coverage 70 % 경계, 하드 실패 cap 59, UNKNOWN 분모 제외, baseline 없으면 score null |
 | `DiagnosisRulesTest` | 8.2절 우선순위, HealthMonitor 기존 5개 case와 동일 판정 |
 | `MetricExtractorTest` | 고정 이벤트 목록에서 H.1–H.9 값, insufficient_samples 경계(14개/15개) |
 | `AutoCheckRunnerTest` | fake engine으로 timeout 전이, 한 endpoint 실패 후 다음 endpoint 계속 |
@@ -743,7 +795,8 @@ M1이 끝나기 전에 M4의 결과 화면을 만들지 않는다. 화면이 먼
 
 ## 미결 사항 — 사용자 확정 필요
 
-- [ ] 6장 임계값 전부 (실측 후 확정)
+- [ ] 6장 임계값 전부 (실측 후 확정). 2026-09-09 검토로 반영한 변경: CDD 게이트를 MPC ≥ U로, 조건 비동일 시 CDD 초과는 WARN, H.1의 target FPS 상한 기준 제거, 3A는 FAIL 없음, relative/heuristic FAIL은 ISSUE로 승격하지 않음, 첫 검사 점수 금지, 환경 불일치는 exposure_load 비율
+- [ ] latency 지표별 noise floor: v0.2는 10 ms 전역 값 유지, 이후 `noiseFloorMs(metric)`로 분리
 - [ ] 7.2절 가중치
 - [ ] 점수 노출 시점: 이 문서는 7.5절 조건 충족 전까지 비노출을 제안한다. 2026-09-09 UI 의견에서 Health Score를 다음 기능 4개에 포함했는데, 계산과 JSON 기록은 M1에서 하되 화면 노출은 7.5절 조건 이후로 두는 안으로 정리했다.
 - [ ] Auto Check still 해상도: CDD 비교를 위해 1920x1080 JPEG 제안. 최대 해상도는 Expert runner
