@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="dev.cameradoctor.telemetry.FlightRecorderTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-08T14:06:13.296Z" hostname="똘럭북" time="0.024">
+<testsuite name="dev.cameradoctor.telemetry.FlightRecorderTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-08T14:11:47.462Z" hostname="똘럭북" time="0.021">
   <properties/>
   <testcase name="missingAndNonmonotonicSensorTimesDoNotBecomeFps" classname="dev.cameradoctor.telemetry.FlightRecorderTest" time="0.004"/>
-  <testcase name="concurrentCallbacksAreNotLost" classname="dev.cameradoctor.telemetry.FlightRecorderTest" time="0.015"/>
-  <testcase name="snapshotExpiresWithoutNewCallbacks" classname="dev.cameradoctor.telemetry.FlightRecorderTest" time="0.001"/>
-  <testcase name="retainsExactIncidentWindowAndDoesNotIncludeLateFrames" classname="dev.cameradoctor.telemetry.FlightRecorderTest" time="0.003"/>
+  <testcase name="concurrentCallbacksAreNotLost" classname="dev.cameradoctor.telemetry.FlightRecorderTest" time="0.014"/>
+  <testcase name="snapshotExpiresWithoutNewCallbacks" classname="dev.cameradoctor.telemetry.FlightRecorderTest" time="0.0"/>
+  <testcase name="retainsExactIncidentWindowAndDoesNotIncludeLateFrames" classname="dev.cameradoctor.telemetry.FlightRecorderTest" time="0.002"/>
   <testcase name="boundsPinnedMemoryAndReportsTruncation" classname="dev.cameradoctor.telemetry.FlightRecorderTest" time="0.0"/>
   <testcase name="pauseReturnsExplicitPartialIncident" classname="dev.cameradoctor.telemetry.FlightRecorderTest" time="0.0"/>
   <testcase name="preservesPinnedPreWindowEvenWhenRingOverflows" classname="dev.cameradoctor.telemetry.FlightRecorderTest" time="0.0"/>

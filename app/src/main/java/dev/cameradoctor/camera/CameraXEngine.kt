@@ -14,7 +14,7 @@ import androidx.lifecycle.Observer
 import dev.cameradoctor.telemetry.Telemetry
 import java.util.concurrent.ExecutorService
 
-@OptIn(ExperimentalCamera2Interop::class)
+@androidx.annotation.OptIn(markerClass = [ExperimentalCamera2Interop::class])
 class CameraXEngine(
     private val context: Context,
     private val owner: LifecycleOwner,

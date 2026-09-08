@@ -5,7 +5,7 @@
 현재 우선 검토할 파일은 [1차 MVP 지표 정의서](docs/METRICS.md)입니다.
 
 1차 계획: **Camera2 단일 엔진 · First preview · Shot-to-shot · Recording performance · 반복 통계 · run JSON export**.
-사용자 요청에 따라 전체 구현을 진행하지 않고 이 시점의 작업을 공유합니다.
+사용자 요청에 따라 전체 구현을 진행하지 않고 **실제 카메라 프리뷰 코드와 설치용 APK가 있는 체크포인트**를 공유합니다. 실기기 구동 확인은 아직 하지 않았습니다.
 
 ## 현재 코드와 계획의 관계
 
@@ -16,7 +16,7 @@
 | 지표 정의서 | v0.1 검토안 작성, CTS 원본 대조 |
 | 초기 Android 프로젝트 | Kotlin / Gradle Wrapper / APK 컴파일 완료 |
 | Flight Recorder 단위 테스트 | 7개 통과 |
-| Android Lint | **실패: 오류 5개, 경고 24개** |
+| Android Lint | 통과: 오류 0개 (경고는 보고서 참조) |
 | 실제 카메라 장치 테스트 | 미실행 |
 | 새 계획의 3개 시나리오·반복 루프 | 미구현 |
 | Google Drive | 체크포인트 소스·문서·검증 보고서 관리 |
@@ -31,7 +31,16 @@ Android Studio에서 이 폴더를 엽니다. JDK 17, Android SDK 36, AGP 8.13.2
 .\gradlew.bat assembleDebug testDebugUnitTest lintDebug
 ```
 
-현재 체크포인트에서는 마지막 lint 단계가 실패합니다. `local.properties`는 PC별 SDK 경로로 생성하며 Git에 포함하지 않습니다. 툴체인 다운로드·빌드 캐시도 저장소에 포함하지 않습니다.
+현재 체크포인트에서 위 세 작업은 모두 통과했습니다. `local.properties`는 PC별 SDK 경로로 생성하며 Git에 포함하지 않습니다. 툴체인 다운로드·빌드 캐시도 저장소에 포함하지 않습니다.
+
+## 설치 후 확인
+
+1. Google Drive 체크포인트의 `CameraDoctor-checkpoint-001-preview.apk`를 기기에 내려받아 설치합니다.
+2. Camera Doctor 실행 → 카메라 권한 허용 → 실제 프리뷰 확인.
+3. Camera2 버튼을 눌러 직접 Camera2 프리뷰도 확인합니다.
+4. 실패 시 화면 오류 문구와 기기 모델·Android 버전을 기록합니다.
+
+이 APK는 debug 서명이며, 카메라 실기기 테스트·녹화 성능 시나리오 검증을 마친 릴리스가 아닙니다.
 
 ## 관리 방식
 

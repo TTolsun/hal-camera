@@ -16,15 +16,18 @@
 
 - APK 생성 성공. 초기 탐색용 APK이며 실기기 동작은 확인하지 않았습니다.
 - FlightRecorderTest: tests=7, failures=0, errors=0.
-- Lint: 5 errors, 24 warnings. 따라서 전체 검증 명령은 실패했습니다.
+- 최종 Lint: 오류 0개. 경고는 첨부 보고서에 보존했습니다.
+- 최종 전체 검증: BUILD SUCCESSFUL (43초).
 
-오류 분류:
+초기 검사에서 발견되어 이번 프리뷰 체크포인트를 위해 수정한 오류:
 
 1. API 26에서 API 27의 `windowLightNavigationBar`를 참조하는 style 1건.
 2. 이 PC의 `local.properties` SDK 경로 escape 1건. 이 파일은 저장소에서 제외됩니다.
 3. Camera2Interop 실험 API opt-in 표기 3건.
 
-추가 구현 중단 요청 이후 이 오류들을 고치거나 재빌드하지 않았습니다. 현재 상태 그대로 검토할 수 있도록 보고서를 보존했습니다.
+사용자가 중간 산출물에 실제 카메라 프리뷰를 요구한 후, 위 빌드 검사 오류만 수정하고 재검증했습니다. 새 성능 시나리오 구현은 진행하지 않았습니다.
+
+ADB 장치 목록이 비어 있어 실기기에서 프리뷰를 직접 관찰하거나 테스트하지 못했습니다. APK에 실제 CameraX/Camera2 preview 경로는 구현되어 있습니다. 사용자가 기기에 설치해 확인할 수 있도록 APK를 제공합니다.
 
 ## 아직 하지 않은 것
 
