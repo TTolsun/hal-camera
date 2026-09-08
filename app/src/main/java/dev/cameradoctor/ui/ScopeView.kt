@@ -13,15 +13,32 @@ class ScopeView(context: Context) : View(context) {
     private val mint = Color.rgb(111, 225, 198)
     private val blue = Color.rgb(118, 179, 255)
     private val amber = Color.rgb(255, 199, 109)
+    private val issue = Color.rgb(255, 59, 48)
+    private val warn = Color.rgb(255, 149, 0)
     private var events = emptyList<Event>()
     private var now = 0L
-    fun update(frames: List<Event>, time: Long) { events = frames; now = time; invalidate() }
+    /** Vertical cursors drawn across every track: (time, label, isIncident). Incident triggers are red, anomalies orange. */
+    private var markers = emptyList<Triple<Long, String, Boolean>>()
+    fun update(frames: List<Event>, time: Long, markers: List<Triple<Long, String, Boolean>> = emptyList()) {
+        events = frames; now = time; this.markers = markers; invalidate()
+    }
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         val d = resources.displayMetrics.density
         val left = 12*d; val right = width - 12*d
         val row = height / 6f
         val start = now - 10_000_000_000L
+        // Incident / anomaly cursors first so the traces draw on top of them and correlation across tracks is visible.
+        markers.filter { it.first >= start }.forEach { (time, label, incident) ->
+            val x = left + (right-left)*((time-start)/1e10).toFloat().coerceIn(0f,1f)
+            paint.style = Paint.Style.STROKE; paint.strokeWidth = 1.2f*d; paint.color = if (incident) issue else warn
+            paint.pathEffect = android.graphics.DashPathEffect(floatArrayOf(4*d, 3*d), 0f)
+            canvas.drawLine(x, 4*d, x, height - 4*d, paint)
+            paint.pathEffect = null; paint.style = Paint.Style.FILL; paint.textSize = 9*d
+            paint.textAlign = if (x > width/2) Paint.Align.RIGHT else Paint.Align.LEFT
+            canvas.drawText(label, x + (if (x > width/2) -3*d else 3*d), height - 6*d, paint)
+            paint.textAlign = Paint.Align.LEFT
+        }
         val series = listOf("ae", "af", "awb", "exposureNs", "iso", "intervalMs")
         val labels = listOf("AE", "AF", "AWB", "EXPOSURE", "ISO", "INTERVAL")
         val colors = listOf(mint, blue, amber, mint, blue, amber)

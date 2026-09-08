@@ -97,6 +97,7 @@ class HealthMonitor(
             "frameDurationMs" to focus.ownDurationMs, "partialGapMs" to focus.partialMs,
             "tRefMs" to tRef, "thresholdMs" to 1.5 * tRef, "recentMaxIntervalMs" to recentMaxInterval, "stallCount10s" to stalls,
             "baselineGapMs" to baseGap, "recentMaxGapMs" to recentGapMax,
+            "baselineBufferMs" to MetricExtractor.percentile(base.frames.mapNotNull { it.bufferMs }, 0.5),
             "intervalAnomaly" to (recent.stallCount > 0), "gapAnomaly" to (byId["H.3"]?.final.let { it == State.WARN || it == State.FAIL }),
             "threeAStable" to recent.threeAStable, "ae" to last.ae, "af" to last.af, "awb" to last.awb, "baselineFrames" to base.n,
             "baselineFrameDurationMs" to baseDuration, "recentFrameDurationMs" to recentDuration, "cadenceChanged" to cadenceChanged,

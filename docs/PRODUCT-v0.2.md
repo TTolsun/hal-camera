@@ -808,10 +808,10 @@ METRICS.md 4장의 run JSON에 아래 필드를 추가한다. 기존 필드는 �
 | 단계 | 내용 | 완료 기준 |
 |---|---|---|
 | M1 | Metric threshold engine | `MetricExtractor`, `ThresholdEngine`, `HealthComposer`, `DiagnosisRules`와 단위 테스트. 기존 HealthMonitor가 새 엔진 위에서 같은 판정을 냄. **2026-09-09 완료: 단위 테스트 67개 통과, lint 오류 0** |
-| M2 | Auto Check runner | Galaxy S25+에서 60초 검사 완주, run JSON 저장, endpoint 열거 결과 기록 |
-| M3 | Diagnosis summary | L1/L2/L3 카드, Expert 상단 Diagnosis Summary, incident 저장 후 요약 |
-| M4 | Consumer Home | 첫 화면, 검사 준비/진행/결과, "방금 이상했어요", 결과 공유(zip에 Health Report 포함) |
-| M5 | Expert Mode migration | 현재 화면을 Expert 탭으로 이동, incident vertical marker, timeline 그래프, raw metric 표 |
+| M2 | Auto Check runner | Galaxy S25+에서 60초 검사 완주, run JSON 저장, endpoint 열거 결과 기록. **2026-09-09 코드 merge(`e192bdf`), 단위 테스트 9개. 실기기 완주는 미확인** |
+| M3 | Diagnosis summary | L1/L2/L3 카드, Expert 상단 Diagnosis Summary, incident 저장 후 요약. **2026-09-09 구현** |
+| M4 | Consumer Home | 첫 화면, 검사 준비/진행/결과, "방금 이상했어요", 결과 공유. **2026-09-09 구현. 공유는 zip 대신 run JSON 파일 직접 공유** |
+| M5 | Expert Mode migration | 현재 화면을 Expert 탭으로 이동, incident vertical marker, timeline 그래프, raw metric 표. **2026-09-09 구현** |
 
 M1이 끝나기 전에 M4의 결과 화면을 만들지 않는다. 화면이 먼저 생기면 점수와 판정이 화면에 맞춰 역산되기 때문이다.
 
