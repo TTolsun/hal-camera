@@ -112,7 +112,7 @@ class MetricExtractor(private val minSamples: Int = 15) {
         val aeStable = last?.ae.let { it == 2 || it == 3 || it == 4 }
         val afStable = last?.af.let { it == null || it == 0 || it == 2 || it == 4 }
         val awbStable = last?.awb.let { it == 2 || it == 3 }
-        val insufficient = frames.size < minSamples
+        val insufficient = steady.size < minSamples
 
         fun rep(xs: List<Double>): Double? = when (aggregation) {
             Aggregation.PERCENTILE -> percentile(xs, 0.5)
@@ -135,7 +135,7 @@ class MetricExtractor(private val minSamples: Int = 15) {
             sample("H.2", intervals).let { it.copy(value = if (it.value == null) null else percentile(intervals, 0.95)) },
             sample("H.3", partials),
             sample("H.4", buffers),
-            MetricSample("H.5", if (insufficient) null else stalledFrames.size.toDouble(), n = frames.size,
+            MetricSample("H.5", if (insufficient) null else stalledFrames.size.toDouble(), n = steady.size,
                 unknownReason = if (insufficient) UnknownReason.INSUFFICIENT_SAMPLES else null),
             convergence("H.6", frames, insufficient) { it.ae == 2 || it.ae == 3 || it.ae == 4 },
             if (afSupported) convergence("H.7", frames, insufficient) { it.af == 2 || it.af == 4 }

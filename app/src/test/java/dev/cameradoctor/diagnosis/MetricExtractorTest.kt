@@ -71,6 +71,8 @@ class MetricExtractorTest {
         val warm = x.observe(ev, session, 0, Long.MAX_VALUE, baselineIntervalMs = 33.3, warmupFrames = 5)
         assertEquals(0, warm.stallCount)
         assertEquals(60, warm.n)
+        assertEquals(55, warm.samples.first { it.id == "H.5" }.n)
+        assertTrue(x.observe(ev.take(0), session, 0, Long.MAX_VALUE, warmupFrames = 5).samples.all { it.value == null })
         // AE converged at frame 3, inside the warm-up: convergence still measured from the first result.
         assertEquals(3 * frameNs / 1e6, warm.samples.first { it.id == "H.6" }.value!!, 0.01)
     }
