@@ -555,6 +555,44 @@ CAMERA HEALTH
 - ISO, AE, AF, AWB, partial 같은 용어는 L1과 L2에 쓰지 않는다. L2에서는 "노출", "초점", "색", "프레임 응답"으로 바꾼다.
 - "고장"이라는 단어는 쓰지 않는다. 하드 실패도 "카메라를 열지 못했습니다"까지만 말한다.
 
+
+### 11.6 시각 방향 (2026-09-09 사용자 지정: apple DESIGN.md)
+
+기준 문서는 [docs/design/DESIGN-apple.md](design/DESIGN-apple.md)다. VoltAgent/awesome-design-md의 `design-md/apple/DESIGN.md`를 그대로 복사했고, `npx getdesign add apple`이 프로젝트에 넣는 파일과 같은 내용이다. 아래는 그 토큰을 Camera Doctor의 두 모드에 대응시킨 것이다.
+
+**원칙.** 장식 그라데이션과 chrome 그림자를 쓰지 않는다. 상호작용 색은 Action Blue 하나뿐이다. 판정 색(PASS/WARN/FAIL)은 apple 토큰에 없으므로 iOS 시스템 색을 빌려 쓰되, 판정 색은 상태 표시에만 쓰고 버튼에는 쓰지 않는다.
+
+| 역할 | 토큰 | 값 | Camera Doctor 용도 |
+|---|---|---:|---|
+| 기본 배경 | `canvas-parchment` | #f5f5f7 | Consumer 화면 배경 |
+| 카드 | `canvas` | #ffffff | 결과 카드, 항목 카드. 1 px `hairline` #e0e0e0 테두리, 모서리 18 px |
+| 본문 글자 | `ink` | #1d1d1f | 모든 헤드라인과 본문 |
+| 보조 글자 | `ink-muted-48` | #7a7a7a | 검사 시각, 단위, 각주 |
+| 상호작용 | `primary` | #0066cc | "60초 카메라 검사", "상세 분석 보기", 링크. 유일한 버튼 색 |
+| 포커스 | `primary-focus` | #0071e3 | 포커스 링 |
+| Expert 배경 | `surface-tile-1` | #272729 | Expert 탭 전체 배경. 프리뷰와 scope가 있는 화면은 어두운 tile |
+| Expert 카드 | `surface-tile-2` / `surface-tile-3` | #2a2a2c / #252527 | 인접 패널의 미세 구분 |
+| Expert 글자 | `body-on-dark` / `body-muted` | #ffffff / #cccccc | Diagnosis Summary / 보조 값 |
+| Expert 링크 | `primary-on-dark` | #2997ff | 어두운 배경 위 상호작용 |
+| 프리뷰 배경 | `surface-black` | #000000 | 카메라 프리뷰 뒤 |
+| PASS | iOS systemGreen | #34c759 | ● NORMAL, ✓ 표시 |
+| WARN | iOS systemOrange | #ff9500 | ● WARNING, △ 표시 |
+| FAIL | iOS systemRed | #ff3b30 | ● ISSUE |
+| UNKNOWN | `ink-muted-48` | #7a7a7a | ○ 표시. 색으로 판정을 암시하지 않음 |
+
+**타이포.** SF Pro는 Android에 없으므로 Inter(variable)를 번들하고, 굵기 사다리는 300 / 400 / 600만 쓴다(500과 700은 쓰지 않는다). 표시 크기에서는 자간을 −0.01 em 줄인다. 숫자는 `tabular-nums`로 고정폭 정렬한다.
+
+| 용도 | 크기 | 굵기 | 자간 |
+|---|---:|---:|---:|
+| 판정 헤드라인 (● NORMAL) | 34 sp | 600 | −0.37 px |
+| 결과 큰 숫자 (95 ms, 92) | 56 sp | 600 | −0.28 px |
+| 카드 제목 | 21 sp | 600 | 0 |
+| 본문 | 17 sp | 400 | −0.37 px, 행간 1.47 |
+| 캡션, 버튼 | 14 sp | 400 | −0.22 px |
+| 각주 | 12 sp | 400 | −0.12 px |
+
+**현재 Expert 화면의 색.** 지금 코드의 mint(#6fe1c6), coral(#ff807e), muted(#99aec0), glass(반투명 #0c131a)는 위 표로 교체한다. scope 트랙 색은 판정 색과 겹치지 않도록 파랑 계열 명도 단계(#2997ff, #7fbfff, #cccccc)로 통일하고, 이상 프레임과 incident 커서만 systemOrange/systemRed를 쓴다.
+
 ---
 
 ## 12. Expert UI Contract
