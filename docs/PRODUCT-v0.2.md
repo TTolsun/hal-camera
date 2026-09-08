@@ -558,7 +558,7 @@ CAMERA HEALTH
 
 ### 11.6 시각 방향 (2026-09-09 사용자 지정: apple DESIGN.md)
 
-기준 문서는 [docs/design/DESIGN-apple.md](design/DESIGN-apple.md)다. VoltAgent/awesome-design-md의 `design-md/apple/DESIGN.md`를 그대로 복사했고, `npx getdesign add apple`이 프로젝트에 넣는 파일과 같은 내용이다. 아래는 그 토큰을 Camera Doctor의 두 모드에 대응시킨 것이다.
+기준 문서는 [docs/design/DESIGN.md](design/DESIGN.md)다. VoltAgent/awesome-design-md의 `design-md/apple/DESIGN.md`를 그대로 복사했고, `npx getdesign add apple`이 프로젝트에 넣는 파일과 같은 내용이다. 아래는 그 토큰을 Camera Doctor의 두 모드에 대응시킨 것이다.
 
 **원칙.** 장식 그라데이션과 chrome 그림자를 쓰지 않는다. 상호작용 색은 Action Blue 하나뿐이다. 판정 색(PASS/WARN/FAIL)은 apple 토큰에 없으므로 iOS 시스템 색을 빌려 쓰되, 판정 색은 상태 표시에만 쓰고 버튼에는 쓰지 않는다.
 
