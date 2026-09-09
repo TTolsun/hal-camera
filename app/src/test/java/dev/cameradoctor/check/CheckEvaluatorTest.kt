@@ -73,8 +73,9 @@ class CheckEvaluatorTest {
         val s = ev.states.first { it.id == "1.6" }
         assertEquals(State.WARN, s.final); assertEquals(ThresholdBasis.ABSOLUTE_REFERENCE, s.thresholdBasis)
         assertEquals("cdd_reference_exceeded", ev.diagnosis.rule)
-        // Same value on a non-primary lens is a heuristic WARN, not a CDD reference.
-        val tele = evaluator.evaluate(result(start, preview = 700.0, primary = false), steady(start), null, 35).states.first { it.id == "1.6" }
+        // A non-primary lens uses the product heuristic (1.5x the CDD value): 700 ms passes, 800 ms is a heuristic WARN.
+        assertEquals(State.PASS, evaluator.evaluate(result(start, preview = 700.0, primary = false), steady(start), null, 35).states.first { it.id == "1.6" }.final)
+        val tele = evaluator.evaluate(result(start, preview = 800.0, primary = false), steady(start), null, 35).states.first { it.id == "1.6" }
         assertEquals(ThresholdBasis.HEURISTIC, tele.thresholdBasis)
     }
 
@@ -93,6 +94,23 @@ class CheckEvaluatorTest {
         val ev = evaluator.evaluate(result(start), steady(start, af = null), null, 35)
         assertEquals(UnknownReason.UNSUPPORTED, ev.states.first { it.id == "H.7" }.unknownReason)
         assertNotNull(ev.baselineCandidate)
+    }
+
+    @Test fun sceneBrightnessMismatchMakesThreeAUncomparable() {
+        val start = 5_000_000_000L
+        // This run's exposure load is ISO 100 x 8 ms = 800. A baseline recorded at 4000 (5x darker scene) is a mismatch.
+        val base = mapOf("H.6" to BaselineValue(100.0), "H.7" to BaselineValue(400.0), "H.8" to BaselineValue(100.0),
+            CheckEvaluator.EXPOSURE_LOAD_KEY to BaselineValue(4000.0))
+        val ev = evaluator.evaluate(result(start), steady(start), base, 35)
+        listOf("H.6", "H.7", "H.8").forEach { id ->
+            val s = ev.states.first { it.id == id }
+            assertEquals(id, State.UNKNOWN, s.final); assertEquals(UnknownReason.CONDITION_MISMATCH, s.unknownReason)
+        }
+        // Within 4x the comparison stays.
+        val near = evaluator.evaluate(result(start), steady(start), base + (CheckEvaluator.EXPOSURE_LOAD_KEY to BaselineValue(1500.0)), 35)
+        assertEquals(State.PASS, near.states.first { it.id == "H.6" }.final)
+        // The baseline candidate carries the exposure load for the next run.
+        assertTrue(ev.baselineCandidate!!.containsKey(CheckEvaluator.EXPOSURE_LOAD_KEY))
     }
 
     @Test fun overallIsWorstEndpoint() {

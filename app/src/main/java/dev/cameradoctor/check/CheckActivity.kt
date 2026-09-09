@@ -197,6 +197,9 @@ class CheckActivity : ComponentActivity() {
             if (entry == null && ev.baselineCandidate != null && aborted == null && qualifiesAsBaseline()) {
                 store.put(r.endpoint.key, conditions, runId, ev.baselineCandidate)
                 refs[r.endpoint.key] = mapOf("run_id" to runId, "valid" to true, "created_now" to true)
+            } else if (entry != null && !entry.values.containsKey(CheckEvaluator.EXPOSURE_LOAD_KEY) && ev.baselineCandidate?.containsKey(CheckEvaluator.EXPOSURE_LOAD_KEY) == true) {
+                // Migration: baselines recorded before the exposure-load rule get this run's scene as their reference scene.
+                store.put(r.endpoint.key, conditions, entry.runId, entry.values + (CheckEvaluator.EXPOSURE_LOAD_KEY to ev.baselineCandidate.getValue(CheckEvaluator.EXPOSURE_LOAD_KEY)))
             }
             ev
         }

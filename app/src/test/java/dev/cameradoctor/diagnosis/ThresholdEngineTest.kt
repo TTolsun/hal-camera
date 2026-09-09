@@ -93,7 +93,9 @@ class ThresholdEngineTest {
 
     @Test fun cddNotApplicableBelowU() {
         val t = DeviceContext(mediaPerformanceClass = 33, primaryCamera = true)
-        val s = one(MetricSample("1.6", 700.0, n = 1), null, t)
+        // Non-MPC devices: product heuristic at 1.5x / 2x the CDD value (S25+ sits at 550-620 ms normally).
+        assertEquals(State.PASS, one(MetricSample("1.6", 700.0, n = 1), null, t).final)
+        val s = one(MetricSample("1.6", 750.0, n = 1), null, t)
         assertEquals(CddApplicability.NOT_APPLICABLE, s.cddApplicability)
         assertEquals(State.WARN, s.final); assertEquals(ThresholdBasis.HEURISTIC, s.thresholdBasis)
         val fail = one(MetricSample("1.6", 1000.0, n = 1), null, t)

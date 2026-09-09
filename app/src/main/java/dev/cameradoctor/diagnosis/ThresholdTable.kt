@@ -15,8 +15,13 @@ object ThresholdTable {
         object None : Absolute()
         /** Fixed bounds. Exceeding warnAt gives WARN, exceeding failAt (if any) gives FAIL, both with [basis]. */
         data class Bounds(val warnAt: Double, val failAt: Double?, val source: String, val basis: ThresholdBasis) : Absolute()
-        /** CDD reference (5.2). The engine decides WARN/FAIL from applicability and condition equivalence. */
-        data class Cdd(val bound: Double, val source: String, val heuristicFailAt: Double) : Absolute()
+        /**
+         * CDD reference (5.2). The engine decides WARN/FAIL from applicability and condition equivalence.
+         * On devices where the CDD does not apply, [heuristicWarnAt]/[heuristicFailAt] are the product bounds:
+         * 1.5x and 2x the CDD value (Galaxy S25+, non-MPC, sits at 550-620 ms preview start in every run, so the
+         * bare CDD value produced a permanent WARN that meant nothing to the user).
+         */
+        data class Cdd(val bound: Double, val source: String, val heuristicWarnAt: Double, val heuristicFailAt: Double) : Absolute()
         /** Cadence metric (H.1): compare against the sample's own expectedMs times [tolerance]. */
         data class Cadence(val tolerance: Double, val source: String) : Absolute()
         /** Count metric: 0 PASS, [warnAt]..[failAt) WARN, >= failAt FAIL, all heuristic. */
@@ -45,12 +50,12 @@ object ThresholdTable {
         Rule("1.2", Absolute.None, latency, 5.0, "launch"),
         Rule("1.3", Absolute.None, latency, 5.0, "launch"),
         Rule("1.5", Absolute.None, null, 0.0, "launch"),
-        Rule("1.6", Absolute.Cdd(500.0, CDD_LAUNCH, 1000.0), latency, 5.0, "launch"),
+        Rule("1.6", Absolute.Cdd(500.0, CDD_LAUNCH, 750.0, 1000.0), latency, 5.0, "launch"),
         Rule("1.7", Absolute.None, slow, 0.0, "launch"),
         Rule("1.8", Absolute.None, latency, 5.0, "launch"),
         // 6.2 Still. Weight 25 over 2.2, 2.3.
         Rule("2.1", Absolute.None, latency, 0.0, "still"),
-        Rule("2.2", Absolute.Cdd(1000.0, CDD_JPEG, 2000.0), latency, 12.5, "still"),
+        Rule("2.2", Absolute.Cdd(1000.0, CDD_JPEG, 1500.0, 2000.0), latency, 12.5, "still"),
         Rule("2.3", Absolute.None, latency, 12.5, "still"),
         Rule("2.4", Absolute.None, Relative(50.0, null), 0.0, "still"),
         Rule("2.5", Absolute.None, latency, 0.0, "still"),
