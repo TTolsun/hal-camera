@@ -61,11 +61,13 @@ data class BenchmarkProfile(
 
     companion object {
         /**
-         * The standard profile. The id keeps the "-draft" suffix until M2 confirms the 1080p YUV stream on the
-         * Galaxy S25+; after that the id is "camera2-standard-v1" and the values never change again (3.5).
+         * The standard profile, confirmed on 2026-09-10 (plan 3.5). The M2 device check on a Galaxy S25+ ran
+         * three rear-main runs with the 1080p YUV stream and reported zero stalls in every observation window,
+         * so the 1080p condition stands and the id lost its "-draft" suffix. From here the values never change:
+         * a different condition needs a new id (v2), because runs of one id must stay comparable forever.
          */
         val CAMERA2_STANDARD_V1 = BenchmarkProfile(
-            id = "camera2-standard-v1-draft",
+            id = "camera2-standard-v1",
             engine = "camera2",
             previewSize = "1920x1080",
             yuvSize = "1920x1080",
