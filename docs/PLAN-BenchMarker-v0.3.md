@@ -554,6 +554,7 @@ data class BuildIdentityComparison(
 |---|---|---|
 | 뜻 | 개발자가 의도적으로 고른 기준 형상 | 직전에 잰 값 |
 | 정하는 방법 | 결과 화면이나 이력에서 `SET AS BASELINE`. **자동 생성 없음** | 같은 `(comparisonContractId, endpoint.key)`의 가장 최근 comparison-eligible run을 자동 선택. 자기 자신 제외 |
+| 해제하는 방법 | 이미 baseline인 run에서는 같은 버튼이 `CLEAR BASELINE`이다. 포인터만 지우고 run 파일은 남긴다 | 해당 없음 |
 | 저장 | `files/benchmarks/index.json`에 `(comparisonContractId, endpoint.key)` → run_id 포인터 | 저장하지 않고 조회 시 계산 |
 | regression 상태 | 이것 대비로만 IMPROVED / STABLE / REGRESSED | 상태 없음. delta %만 참고 표시 |
 | 없을 때 | `UNKNOWN(no_baseline)`. 화면에는 reference delta만 | 첫 run이면 표시 없음 |
@@ -563,6 +564,7 @@ data class BuildIdentityComparison(
 - profile.id가 다르면 비교하지 않는다. 모든 지표가 `UNKNOWN(condition_mismatch)`이다.
 - comparison 부적격 run(5.3)은 baseline으로 지정할 수 없고 reference로도 선택되지 않는다.
 - baseline run 파일이 삭제되면 포인터를 지우고 `NO_BASELINE`으로 돌아간다.
+- **baseline 해제는 run 삭제와 별개다.** 기준으로 삼았던 형상이 더 이상 기준이 아니게 되는 일과, 그 측정 결과가 필요 없어지는 일은 다르다. 지정을 무르려고 run 파일을 지워야 한다면 측정 데이터를 잃게 되므로, 이미 baseline인 run의 결과 화면에서는 `SET AS BASELINE`이 `CLEAR BASELINE`으로 바뀌어 포인터만 지운다. 다른 run에 `SET AS BASELINE`을 누르면 포인터는 그대로 덮어써지므로 갱신에는 별도 동작이 필요 없다.
 
 ### 7.2 Regression rule `regression-rule-v1`
 
@@ -735,6 +737,8 @@ STABILITY
 [ SET AS BASELINE ]   [ COMPARE ]   [ EXPORT ]
 ```
 
+이 run이 이미 baseline이면 첫 버튼이 `[ CLEAR BASELINE ]`이 된다(7.1).
+
 baseline이 없는 첫 run의 머리글은 다음과 같다.
 
 ```text
@@ -776,7 +780,7 @@ RESULTS                                 camera2-standard-v1 · 후면 메인   [
 | **M1** | Data contract | `BenchmarkProfile`(launchMode 포함), `BenchmarkModel`(`SubjectLabel`, `RunRef`), `RegressionRules` 표(값은 잠정), `RunValidity`(flag 표 → 세 단계), `BuildIdentity`, `BenchmarkEvaluator`(통계만), `BenchmarkReport`(JSON 3 쓰기 · 읽기, `compatibility` · `env.thermal_max` · `power_save_mode` 포함), `BenchmarkStore`(파일 · index). `MetricExtractor`에 H.10 | 단위 테스트: profile 직렬화, JSON round-trip, 통계 경계(n=9 p95는 max, n=8 간격), 7.2 표의 지표별 경계값, validity flag 표에서 세 boolean 유도(thermal_max 경계 포함), identity 비교의 null 처리. 기존 앱 동작 변화 없음. `assembleDebug testDebugUnitTest lintDebug` 통과 | 약 4시간 |
 | **M2** | Measurement correctness | `ProfileCompatibility`(static + API 35 `CameraDeviceSetup` 경로), `ThermalTracker`, `BenchmarkRunner` 순수 Kotlin(launch 반복 → warm-up → observe → still 반복 → close, timeout과 abort), `Camera2Engine`이 profile 스트림 크기를 받음, 최소 `BenchmarkActivity`(preflight 결과와 method, START, 진행 텍스트, 완료 후 JSON 경로) | **S25+에서 후면 메인 3회, 전면 1회(preflight 통과 확인), 초광각 1회(AF OFF 경로) 완주하고 JSON을 Drive에 저장.** `isCameraDeviceSetupSupported()` 값과 정확 질의 결과 기록. YUV 1080p가 stall을 만들지 확인한 뒤 profile id를 `-draft`에서 확정. warm reopen 값이 v0.2 단일 open 값과 어떻게 다른지, thermal_max가 run 중 어떻게 움직였는지 STATUS에 기록. **밝은 곳과 어두운 곳에서 각각 반복해 `exposure_load_p50`과 2.2 / 2.3 / 2.5의 상관을 확인**하고 7.5에 Capture를 넣을지 결정 | 약 7시간 + 실기기 1시간 |
 | **M3** | Product conversion | 8.1 LIVE 버튼 정리, 런처를 `MainActivity`로, 8.2 – 8.4 화면(p50 / max 표시 규칙, eligibility 머리글), `EXPORT`(JSON 공유). 2.3의 삭제 목록 전부 제거. 앱 label "Camera BenchMarker", versionName 0.3.x | Doctor 클래스 0개. 결과 화면이 eligibility 세 단계와 reference delta를 표시 | 약 5시간 |
-| **M4** | Developer workflow | 명시적 `BaselineStore`(포인터, comparison-eligible만 허용), `ReferenceResolver`, `RegressionDetector`(7.2 표 적용, 7.5 조건 차이, 표시 시점 재계산), 결과 화면의 vs baseline / vs previous 열, 7.4 identity 요약, `SET AS BASELINE`, 7.3 COMPARE 화면 | 테스트: 7.2 표 각 행의 경계값, profile 불일치, 7.5 네 조건, 부적격 run 배제, baseline 파일 삭제, identity null 조합 | 약 6시간 |
+| **M4** | Developer workflow | 명시적 `BaselineStore`(포인터, comparison-eligible만 허용), `ReferenceResolver`, `RegressionDetector`(7.2 표 적용, 7.5 조건 차이, 표시 시점 재계산), 결과 화면의 vs baseline / vs previous 열, 7.4 identity 요약, `SET AS BASELINE`과 `CLEAR BASELINE`, 7.3 COMPARE 화면 | 테스트: 7.2 표 각 행의 경계값, profile 불일치, 7.5 네 조건, 부적격 run 배제, baseline 파일 삭제, baseline 해제 후 `NO_BASELINE` 복귀, identity null 조합 | 약 6시간 |
 | **M5a** | Internal score | `ScoreComposer`, 지표별 normalization curve 시제품, 카테고리 점수, **Camera Endpoint Score** 0 – 1000, 3A 카테고리 weight 0, `scoring_rule_version = score-v1-draft`. curve 학습 dataset은 정상 조건의 `scoring_eligible` run만 | **시작 조건: S25+ profile v1 scoring-eligible run이 정상 조건 10회 이상.** 발열 · 저조도 · 카메라 점유 경쟁 run(각 3회 이상)은 curve에 넣지 않고 점수가 실제로 내려가는지 확인하는 sensitivity 검증에만 쓴다 | 데이터 수집 후 약 3시간 |
 | **M5b** | Public endpoint score | 여러 제조사 · 성능군 단말의 scoring-eligible 분포로 curve 확정, `scoring_rule_version = score-v1`. 이름은 Camera Endpoint Score. Device Score는 표준 endpoint 집합 이후 | **release gate: 최소 5 – 10개 기기의 분포.** S25+ 하나로 만든 curve는 S25+ regression score이지 기기 간 benchmark score가 아니다 | 기기 확보 후 약 3시간 |
 | **M6** | History / export / configuration tracking | 8.5 RESULTS 화면(eligibility 필터), `RunIndex`, 임의 두 run COMPARE, run 삭제, CSV export, PC 집계 스크립트(`tools/aggregate.py`: JSON 폴더 → CSV, 기본 `scoring_eligible`, 옵션 `comparison_eligible`), subject 자동 채움(직전 run 값 재사용) | | 약 5시간 |
@@ -904,3 +908,19 @@ M1은 PR #11(다른 세션, `80fa1ff`)로 main에 들어갔고, 그 PR의 후속
 | P2 | 파일 저장 원자성, run id 충돌, index 손상 은닉 | temp → fsync → atomic rename. run id에 millisecond suffix(`yyyyMMdd-HHmmss-SSS`). 손상된 index와 읽기 실패는 `lastIndexError` / `lastReadError`와 로그로 노출 |
 | 순환 | `diagnosis.MetricCatalog` ↔ `benchmark` | category · 영문 이름 · 단위를 `benchmark.BenchmarkMetricCatalog`(`MetricInfo.kt`)로 분리. `diagnosis`는 benchmark를 참조하지 않는다 |
 | 리뷰 | JSON 필수 필드의 `as String` 캐스트 | `JsonMaps.reqString / reqBoolean / reqInt / reqLong`. 누락 · 타입 오류는 키 이름이 든 `IllegalArgumentException` |
+
+### 2026-09-10 M2 실기기 측정 반영
+
+M2 코드는 PR #14로 main에 들어갔고(리뷰 P1 2건 · P2 2건 반영), Galaxy S25+에서 run 5개(전면 2회, 후면 메인 3회)를 완주했다. 측정 결과는 Drive `checkpoints/checkpoint-010-bm-m2-runner/DEVICE-RESULTS.md`에 있다.
+
+| 항목 | 결과 |
+|---|---|
+| profile 확정 | 후면 메인 3회 모두 관측 창 H.5 stall 0개. YUV 1080p를 유지하고 `camera2-standard-v1`으로 확정(3.5, PR #17). 이후 조건은 불변이며 바꾸려면 `v2`다 |
+| preflight 경로 | S25+(API 36)에서 `isCameraDeviceSetupSupported()` = true. `device_setup` 정확 질의로 SUPPORTED, `frame_budget_ok` = true. static 보장 표로 물러설 필요가 없었다(3.6) |
+| 조도 상관 | 노출 부하 5.6배 차이에서 1.6 preview total 35 %, 1.3 first started 57 %, 2.2 capture 6 – 12 % 차이. 13장 검토 3의 5번 미결 항목에 대한 실측 근거이며, 7.5에 Capture를 넣을지와 함께 **Launch 쪽 영향이 더 크다는 점**을 같이 다루어야 한다 |
+| 실제 카덴스 | H.1이 조도에 따라 33.34 ms(30.0 fps)와 33.51 ms(29.84 fps) 사이에서 움직인다. 요청 fps range는 `[30,30]` 그대로이므로 `CADENCE_NOT_FIXED`로는 잡히지 않는다. 요청 카덴스와 실제 카덴스는 다른 질문이다 |
+| 2.7의 근거 | still 촬영 구간에서 100.02 ms 간격 프레임이 10개 나왔다(33.36 ms의 3배). 관측 창 밖이라 H.5에 잡히지 않으며, 이를 재는 지표가 2.7 stall during capture다. 잡을 현상이 실재함이 확인되었다 |
+| 3A timeout | 저조도에서 H.7이 약 13초로 `timeout = true`, 밝은 곳에서는 467 ms. timeout일 때 관측 창 길이가 metric value로 저장되므로 M4의 delta 계산이 이 값을 그대로 쓰면 안 된다 |
+| thermal | 다섯 run 모두 `thermal_start = thermal_max = thermal_end = 0`. 45초 run으로는 발열이 없어 `THERMAL_HIGH`와 `THERMAL_CHANGED`는 실측으로 검증되지 않았다 |
+
+계약에 추가한 것: baseline 해제(`CLEAR BASELINE`, 7.1과 8.4). run을 지우지 않고 기준 지정만 무르는 방법이 없었다. M4 범위이며 이슈 #8에 반영했다.
