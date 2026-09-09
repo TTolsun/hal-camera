@@ -55,6 +55,8 @@ class HomeActivity : ComponentActivity() {
             head.addView(Look.text(this, levelText(latest.level), 34, Look.ink, bold = true), LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(10) })
             status.addView(head)
             status.addView(Look.text(this, "마지막 검사 ${runDate(latest.runId)}", 14, Look.inkMuted), lp(top = 4))
+            if (latest.aborted != null) status.addView(Look.text(this, "이 검사는 끝나기 전에 중단되었습니다(${abortText(latest.aborted)}). 다시 검사해 주세요.", 14, Look.statusWarn), lp(top = 8))
+            latest.newerAbortedRunId?.let { status.addView(Look.text(this, "${runDate(it)} 검사는 끝나기 전에 중단되어 결과에 반영하지 않았습니다.", 13, Look.inkMuted), lp(top = 8)) }
             if (latest.baselineCreated) status.addView(Look.text(this, "이 결과를 기준으로 저장했습니다. 다음 검사부터 변화도 함께 확인합니다.", 14, Look.ink), lp(top = 8))
             latest.endpoints.forEach { e ->
                 val r = Look.row(this)
@@ -64,7 +66,9 @@ class HomeActivity : ComponentActivity() {
                 val text = DiagnosisRules.CONSUMER_TEXT[e.diagnosis]
                 if (text != null && e.diagnosis != "normal") status.addView(Look.text(this, text, 13, Look.inkMuted), lp(top = 2))
             }
-            status.addView(Look.ghostButton(this, "결과 자세히 보기") { startActivity(Intent(this, CheckActivity::class.java).putExtra("show_latest", true)) }, lp(top = 14))
+            status.addView(Look.ghostButton(this, "결과 자세히 보기") {
+                startActivity(Intent(this, CheckActivity::class.java).putExtra(CheckActivity.EXTRA_SHOW_LATEST, true).putExtra(CheckActivity.EXTRA_RUN_FILE, latest.file.absolutePath))
+            }, lp(top = 14))
         }
         body.addView(status, lp(top = 20))
 
@@ -96,6 +100,7 @@ class HomeActivity : ComponentActivity() {
     }
     private fun mark(level: String) = when (level.lowercase()) { "normal" -> "✓"; "warning" -> "△"; "issue" -> "✗"; else -> "○" }
     private fun levelText(level: String) = when (level.lowercase()) { "normal" -> "정상"; "warning" -> "주의"; "issue" -> "문제 발견"; else -> "판정 불가" }
+    private fun abortText(reason: String) = when (reason) { "background" -> "앱이 화면에서 벗어남"; "no_camera" -> "사용할 카메라 없음"; "permission" -> "권한 없음"; else -> reason }
     private fun roleText(role: String) = when (role) {
         "MAIN" -> "후면 메인"; "ULTRA_WIDE" -> "후면 초광각"; "TELE" -> "후면 망원"; "FRONT" -> "전면"; "EXTERNAL" -> "외부"; else -> "후면"
     }

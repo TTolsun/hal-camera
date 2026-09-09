@@ -49,7 +49,11 @@ import java.util.Locale
  * With EXTRA_SHOW_LATEST the latest stored run is rendered without running the camera.
  */
 class CheckActivity : ComponentActivity() {
-    companion object { const val EXTRA_SHOW_LATEST = "show_latest" }
+    companion object {
+        const val EXTRA_SHOW_LATEST = "show_latest"
+        /** Absolute path of the run JSON to show; when absent the newest file in files/checks is used. */
+        const val EXTRA_RUN_FILE = "run_file"
+    }
 
     private val main = Handler(Looper.getMainLooper())
     private val recorder = FlightRecorder(::nowNs, retentionNs = 120_000_000_000L, maxEvents = 60_000, preNs = 0, postNs = 0)
@@ -98,7 +102,8 @@ class CheckActivity : ComponentActivity() {
         recorder.listener = { e -> main.post { if (!destroyed) onEvent(e) } }
 
         if (intent.getBooleanExtra(EXTRA_SHOW_LATEST, false)) {
-            val file = File(filesDir, "checks").listFiles()?.filter { it.extension == "json" }?.maxByOrNull { it.lastModified() }
+            val requested = intent.getStringExtra(EXTRA_RUN_FILE)?.let(::File)?.takeIf { it.isFile && it.parentFile?.name == "checks" }
+            val file = requested ?: File(filesDir, "checks").listFiles()?.filter { it.extension == "json" }?.maxByOrNull { it.lastModified() }
             val r = file?.let { CheckResult.fromFile(it) }
             if (r != null) showResult(r) else status.text = "저장된 검사 결과가 없습니다"
         }

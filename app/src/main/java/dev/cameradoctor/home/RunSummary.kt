@@ -11,15 +11,30 @@ data class RunSummary(
     val file: File,
     val endpoints: List<EndpointLine>,
     val baselineCreated: Boolean,
-    val consumerText: String?
+    val consumerText: String?,
+    val aborted: String? = null,
+    /** Run id of a newer run that was aborted, when the summary shown is the latest completed one. */
+    val newerAbortedRunId: String? = null
 ) {
     data class EndpointLine(val role: String, val level: String, val diagnosis: String)
 
     companion object {
-        fun latestFile(context: Context): File? =
-            File(context.filesDir, "checks").listFiles()?.filter { it.extension == "json" }?.maxByOrNull { it.lastModified() }
+        fun files(context: Context): List<File> =
+            File(context.filesDir, "checks").listFiles()?.filter { it.extension == "json" }?.sortedByDescending { it.lastModified() }.orEmpty()
 
-        fun load(context: Context): RunSummary? = latestFile(context)?.let { parse(it) }
+        fun latestFile(context: Context): File? = files(context).firstOrNull()
+
+        /**
+         * The home verdict is the latest *completed* run. An aborted run is a partial result and must not replace it;
+         * it is mentioned as a note instead. If every stored run is aborted, the latest aborted one is shown as-is.
+         */
+        fun load(context: Context): RunSummary? {
+            val parsed = files(context).mapNotNull { parse(it) }
+            if (parsed.isEmpty()) return null
+            val completed = parsed.firstOrNull { it.aborted == null } ?: return parsed.first()
+            val newest = parsed.first()
+            return if (newest.aborted != null && newest.runId != completed.runId) completed.copy(newerAbortedRunId = newest.runId) else completed
+        }
 
         fun parse(file: File): RunSummary? = try {
             val o = JSONObject(file.readText())
@@ -32,7 +47,8 @@ data class RunSummary(
             }
             val refs = o.optJSONObject("baseline_ref")
             val created = refs?.keys()?.asSequence()?.any { refs.optJSONObject(it)?.optBoolean("created_now") == true } ?: false
-            RunSummary(o.getString("run_id"), o.getJSONObject("health").getString("level"), file, lines, created, null)
+            val aborted = o.optString("aborted").takeIf { it.isNotEmpty() && it != "null" }
+            RunSummary(o.getString("run_id"), o.getJSONObject("health").getString("level"), file, lines, created, null, aborted)
         } catch (_: Exception) { null }
     }
 }
