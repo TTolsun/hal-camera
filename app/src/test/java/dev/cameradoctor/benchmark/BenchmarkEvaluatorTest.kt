@@ -3,6 +3,7 @@ package dev.cameradoctor.benchmark
 import dev.cameradoctor.diagnosis.MetricExtractor
 import dev.cameradoctor.diagnosis.UnknownReason
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -121,5 +122,21 @@ class BenchmarkEvaluatorTest {
         assertEquals(0.0, h5.value!!, 0.0)
         assertEquals(295, h5.sampleCount)
         assertEquals(Category.STABILITY, h5.category)
+    }
+
+    @Test fun unobservedWindowMarksCountsNotRun() {
+        val ms = evaluator.evaluate(BenchmarkEvaluator.Input(cycles(), stills(), null, 0, observed = false))
+        val h9 = ms.first { it.id == "H.9" }
+        assertNull(h9.value)
+        assertEquals(UnknownReason.NOT_RUN, h9.unknownReason)
+        assertEquals(0, h9.sampleCount)
+    }
+
+    @Test fun insufficientWindowFramesNullTheValueButKeepStats() {
+        val h1 = evaluate(observation(n = 10))["H.1"]!!
+        assertNull(h1.value)
+        assertEquals(UnknownReason.INSUFFICIENT_SAMPLES, h1.unknownReason)
+        assertEquals(5, h1.sampleCount)
+        assertNotNull(h1.p50)
     }
 }

@@ -117,7 +117,8 @@ class BenchmarkEvaluator(private val profile: BenchmarkProfile) {
 
         out += if (!input.observed || obs == null) notRun("H.5")
         else count("H.5", obs.stallCount, intervals.size)
-        out += count("H.9", input.callbackFailures, steady.size + input.stills.size)
+        out += if (!input.observed) notRun("H.9")
+        else count("H.9", input.callbackFailures, steady.size + input.stills.size)
         out += notRun("2.7")
 
         for (id in BenchmarkMetrics.THREE_A) out += threeA(id, obs, input.observed)
@@ -143,7 +144,8 @@ class BenchmarkEvaluator(private val profile: BenchmarkProfile) {
     private fun windowed(id: String, xs: List<Double>, observed: Boolean, aggregate: (List<Double>) -> Double?): BenchmarkMetric {
         if (!observed) return notRun(id)
         val s = Stats.of(xs)
-        val v = aggregate(xs)
+        // Same rule as MetricExtractor.sample(): below the minimum frame count the value is unknown, the stats stay.
+        val v = if (xs.size < ValidityFlags.MIN_OBSERVED_FRAMES) null else aggregate(xs)
         return BenchmarkMetric(
             id = id, category = category(id), unit = unit(id),
             value = v, p50 = s.p50, p95 = s.p95, min = s.min, max = s.max, sampleCount = s.n,
