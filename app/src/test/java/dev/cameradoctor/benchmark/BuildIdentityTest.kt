@@ -38,6 +38,19 @@ class BuildIdentityTest {
         assertEquals(true, BuildIdentity.compare(a, d).sameCameraBuild)
     }
 
+    @Test fun sameVendorFingerprintDoesNotHideADifferentInfoVersion() {
+        val b = a.copy(device = device.copy(cameraInfoVersion = "hal-2"))
+        val c = BuildIdentity.compare(a, b)
+        assertEquals(true, c.sameVendorFingerprint)
+        assertEquals(false, c.sameCameraInfoVersion)
+        assertEquals(false, c.sameCameraBuild)
+        // Only INFO_VERSION known and equal: true. Neither known: null.
+        val onlyInfo = a.copy(device = device.copy(vendorFingerprint = null))
+        assertEquals(true, BuildIdentity.compare(onlyInfo, onlyInfo).sameCameraBuild)
+        val nothing = a.copy(device = device.copy(vendorFingerprint = null, cameraInfoVersion = null))
+        assertNull(BuildIdentity.compare(nothing, nothing).sameCameraBuild)
+    }
+
     @Test fun appVersionDiffersByCodeToo() {
         val c = BuildIdentity.compare(a, a.copy(app = AppInfo("0.3.0", 4)))
         assertFalse(c.sameAppVersion)

@@ -890,3 +890,17 @@ M2가 끝나면 사용자는 결과 UI 없이도 S25+에서 run을 반복해 raw
 | 6 | S25+ 하나로 만든 curve는 기기 간 benchmark score가 아니다 | M5를 M5a internal(`score-v1-draft`)과 M5b public(5 – 10개 기기, `score-v1`)으로 분리. stress run은 curve가 아니라 sensitivity 검증용(9장, 11장 18번) |
 
 M1 구현 중 계약에 추가한 것: `BenchmarkMetric.timeout`(3A 수렴이 관측 창 안에 끝나지 않음. METRICS.md 2.4의 timeout 기록 원칙), `Compatibility.NOT_CHECKED`(preflight가 없던 run의 기본값), `BenchmarkRun.raw`(6장의 `raw` 블록을 모델에서도 보존). `UnknownReason`은 M3까지 `diagnosis` 패키지의 것을 그대로 쓴다.
+
+### 2026-09-10 PR #11 후속 검토 반영
+
+M1은 PR #11(다른 세션, `80fa1ff`)로 main에 들어갔고, 그 PR의 후속 검토 코멘트(P1 3건, P2 2건, 패키지 순환)를 후속 PR에서 처리했다. 계약에 더해진 것:
+
+| # | 지적 | 반영 |
+|---|---|---|
+| P1 | 알 수 없는 validity flag가 fail-open | `RunValidity.fromJsonMap`은 모르는 flag가 하나라도 있으면 comparison · scoring 부적격(measurement는 표대로). `unknownFlags` 필드와 `validity_rule_version`(`validity-v1`) 추가(5.3) |
+| P1 | comparison contract 무결성 미검증 | 읽을 때 `kind == "benchmark"`, contract 구성 필드 전부 필수, 저장된 `comparison_contract_id`와 재계산값 일치, 확정(non-draft) canonical profile은 저장된 정의가 앱 정의와 동일해야 함. 어긋나면 읽을 수 없는 run(6장) |
+| P1 | decode 시 events 유실 | `BenchmarkRun.events`로 보존. 읽고 다시 내보내도 관측 창 metric의 원본이 남는다(5.1, 6장) |
+| P2 | `sameCameraBuild`가 형상 차이를 숨김 | 알려진 축 중 하나라도 다르면 false, 모두 같을 때만 true, 둘 다 없을 때만 null(5.4) |
+| P2 | 파일 저장 원자성, run id 충돌, index 손상 은닉 | temp → fsync → atomic rename. run id에 millisecond suffix(`yyyyMMdd-HHmmss-SSS`). 손상된 index와 읽기 실패는 `lastIndexError` / `lastReadError`와 로그로 노출 |
+| 순환 | `diagnosis.MetricCatalog` ↔ `benchmark` | category · 영문 이름 · 단위를 `benchmark.BenchmarkMetricCatalog`(`MetricInfo.kt`)로 분리. `diagnosis`는 benchmark를 참조하지 않는다 |
+| 리뷰 | JSON 필수 필드의 `as String` 캐스트 | `JsonMaps.reqString / reqBoolean / reqInt / reqLong`. 누락 · 타입 오류는 키 이름이 든 `IllegalArgumentException` |

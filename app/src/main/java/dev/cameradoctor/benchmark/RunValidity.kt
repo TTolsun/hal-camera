@@ -13,6 +13,9 @@ data class ValidityFlag(
 )
 
 object ValidityFlags {
+    /** Bumped whenever a flag is added or a column of the table changes. Stored in every run's validity block. */
+    const val VERSION = "validity-v1"
+
     // Measurement invalid: the run does not contain what the profile promised.
     val ABORTED = ValidityFlag("ABORTED", true, true, true)
     val HARD_FAILURE = ValidityFlag("HARD_FAILURE", true, true, true)
@@ -47,13 +50,21 @@ object ValidityFlags {
     const val MIN_OBSERVED_FRAMES = 15
 }
 
+/**
+ * [unknownFlags] are codes this app version does not know. They are kept verbatim and treated fail-closed: a run
+ * carrying a flag we cannot interpret is never compared or scored, because the flag may have been a blocking one
+ * in the version that wrote it (PR #11 follow-up review).
+ */
 data class RunValidity(
     val measurementValid: Boolean,
     val comparisonEligible: Boolean,
     val scoringEligible: Boolean,
-    val flags: List<String>
+    val flags: List<String>,
+    val unknownFlags: List<String> = emptyList(),
+    val ruleVersion: String = ValidityFlags.VERSION
 ) {
     fun toJsonMap(): Map<String, Any?> = mapOf(
+        "validity_rule_version" to ruleVersion,
         "measurement_valid" to measurementValid, "comparison_eligible" to comparisonEligible,
         "scoring_eligible" to scoringEligible, "flags" to flags
     )
@@ -66,13 +77,18 @@ data class RunValidity(
             return RunValidity(measurement, comparison, scoring, flags.map { it.code }.distinct())
         }
 
-        /** Reading a stored run re-derives the booleans from the flag codes so a table change is applied consistently. */
+        /**
+         * Reading a stored run re-derives the booleans from the flag codes so a table change is applied consistently.
+         * Unknown codes block comparison and scoring (fail-closed); the stored booleans are never trusted.
+         */
         fun fromJsonMap(m: Map<String, Any?>?): RunValidity {
-            val codes = JsonMaps.strings(m?.get("flags"))
+            val codes = JsonMaps.strings(m?.get("flags")).distinct()
             val known = codes.mapNotNull { ValidityFlags.byCode(it) }
+            val unknown = codes.filter { ValidityFlags.byCode(it) == null }
             val derived = from(known)
-            // Unknown codes (from a newer app) are kept in the list but cannot influence the booleans.
-            return derived.copy(flags = codes)
+            val version = JsonMaps.s(m?.get("validity_rule_version")) ?: ValidityFlags.VERSION
+            return if (unknown.isEmpty()) derived.copy(flags = codes, ruleVersion = version)
+            else derived.copy(comparisonEligible = false, scoringEligible = false, flags = codes, unknownFlags = unknown, ruleVersion = version)
         }
     }
 }

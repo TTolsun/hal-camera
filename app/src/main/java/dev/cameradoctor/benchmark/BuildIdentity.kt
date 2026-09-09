@@ -13,8 +13,16 @@ data class BuildIdentityComparison(
     val sameSubjectLabel: Boolean?,
     val sameSubjectCommit: Boolean?
 ) {
-    /** "Camera build" line of the UI: vendor fingerprint first, then INFO_VERSION, else unknown (null). */
-    val sameCameraBuild: Boolean? get() = sameVendorFingerprint ?: sameCameraInfoVersion
+    /**
+     * "Camera build" line of the UI. Any known axis that differs makes it false; true only when every known axis
+     * agrees; null when neither vendor fingerprint nor INFO_VERSION is known on both sides. A same vendor
+     * fingerprint must not hide a different INFO_VERSION (PR #11 follow-up review).
+     */
+    val sameCameraBuild: Boolean?
+        get() {
+            val known = listOfNotNull(sameVendorFingerprint, sameCameraInfoVersion)
+            return if (known.isEmpty()) null else known.all { it }
+        }
 
     fun toJsonMap(): Map<String, Any?> = mapOf(
         "same_system_fingerprint" to sameSystemFingerprint, "same_vendor_fingerprint" to sameVendorFingerprint,

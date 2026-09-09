@@ -1,35 +1,31 @@
 package dev.cameradoctor.diagnosis
 
-import dev.cameradoctor.benchmark.Category
 import java.util.Locale
 
 /**
  * Human names for metric ids and states. UI layers must go through this: a metric id such as "H.1" is never shown
  * alone (docs/PRODUCT-v0.2.md 11.5). Expert views append the id in parentheses; consumer views omit it.
+ * BenchMarker category and English short names live in benchmark.BenchmarkMetricCatalog so this package does not
+ * depend on the benchmark package.
  */
 object MetricCatalog {
-    /**
-     * [category] and [short] serve the BenchMarker result screens (docs/PLAN-BenchMarker-v0.3.md chapter 4, 8.4):
-     * short English names such as "Open" and "First frame". Ids outside the benchmark set keep null / the Korean name.
-     */
-    data class Info(val id: String, val name: String, val consumer: String, val unit: String,
-                    val category: Category? = null, val short: String = name)
+    data class Info(val id: String, val name: String, val consumer: String, val unit: String)
 
     private val infos = listOf(
-        Info("1.1", "카메라 열기", "카메라 켜기", "ms", Category.LAUNCH, "Open"),
-        Info("1.2", "세션 구성", "카메라 준비", "ms", Category.LAUNCH, "Configure"),
-        Info("1.3", "첫 프레임 시작 콜백", "첫 화면 응답", "ms", Category.LAUNCH, "First started"),
+        Info("1.1", "카메라 열기", "카메라 켜기", "ms"),
+        Info("1.2", "세션 구성", "카메라 준비", "ms"),
+        Info("1.3", "첫 프레임 시작 콜백", "첫 화면 응답", "ms"),
         Info("1.5", "액티비티 생성→열기", "앱 준비", "ms"),
-        Info("1.6", "프리뷰 시작 총 지연", "화면이 켜질 때까지", "ms", Category.LAUNCH, "First frame"),
-        Info("1.7", "카메라 닫기", "카메라 끄기", "ms", Category.LAUNCH, "Close"),
-        Info("1.8", "첫 YUV 프레임 도착", "첫 프레임 도착", "ms", Category.LAUNCH, "First YUV"),
+        Info("1.6", "프리뷰 시작 총 지연", "화면이 켜질 때까지", "ms"),
+        Info("1.7", "카메라 닫기", "카메라 끄기", "ms"),
+        Info("1.8", "첫 YUV 프레임 도착", "첫 프레임 도착", "ms"),
         Info("2.1", "셔터 지연", "셔터 반응", "ms"),
-        Info("2.2", "촬영→이미지 수신", "사진 저장 속도", "ms", Category.CAPTURE, "Capture"),
-        Info("2.3", "촬영→결과 메타데이터", "촬영 결과 응답", "ms", Category.CAPTURE, "Result"),
+        Info("2.2", "촬영→이미지 수신", "사진 저장 속도", "ms"),
+        Info("2.3", "촬영→결과 메타데이터", "촬영 결과 응답", "ms"),
         Info("2.4", "3A 사전 수렴", "촬영 전 초점·노출", "ms"),
-        Info("2.5", "연속 촬영 간격", "연속 촬영", "ms", Category.CAPTURE, "Shot-to-shot"),
+        Info("2.5", "연속 촬영 간격", "연속 촬영", "ms"),
         Info("2.6", "프리뷰 복귀", "촬영 후 화면 복귀", "ms"),
-        Info("2.7", "촬영 중 프리뷰 stall", "촬영 중 끊김", "회", Category.STABILITY, "Stall during capture"),
+        Info("2.7", "촬영 중 프리뷰 stall", "촬영 중 끊김", "회"),
         Info("3.1", "녹화 시작→첫 콜백", "녹화 시작", "ms"),
         Info("3.2", "녹화 중 간격 이상", "녹화 중 끊김", "회"),
         Info("3.3", "인코더 프레임 손실", "녹화 프레임 손실", "개"),
@@ -37,16 +33,16 @@ object MetricCatalog {
         Info("3.5", "장시간 녹화 FPS 저하", "장시간 녹화", "fps"),
         Info("3.6", "녹화 정지 지연", "녹화 정지", "ms"),
         Info("3.7", "녹화 간격 jitter", "녹화 흔들림", "ms"),
-        Info("H.1", "프레임 간격 p50", "프레임 속도", "ms", Category.PREVIEW, "Interval p50"),
-        Info("H.2", "프레임 간격 p95", "프레임 속도 편차", "ms", Category.PREVIEW, "Interval p95"),
-        Info("H.3", "partial 결과 지연", "프레임 응답", "ms", Category.PREVIEW, "Partial"),
-        Info("H.4", "버퍼 도착 지연", "프레임 전달", "ms", Category.PREVIEW, "Buffer"),
-        Info("H.5", "frame stall 횟수", "화면 끊김", "회", Category.STABILITY, "Stalls"),
-        Info("H.6", "AE 수렴 시간", "노출 맞추기", "ms", Category.THREE_A, "AE"),
-        Info("H.7", "AF 수렴 시간", "초점 맞추기", "ms", Category.THREE_A, "AF"),
-        Info("H.8", "AWB 수렴 시간", "색 맞추기", "ms", Category.THREE_A, "AWB"),
-        Info("H.9", "콜백 실패 횟수", "촬영 오류", "회", Category.STABILITY, "Callback fail"),
-        Info("H.10", "프레임 간격 jitter", "프레임 흔들림", "ms", Category.PREVIEW, "Jitter")
+        Info("H.1", "프레임 간격 p50", "프레임 속도", "ms"),
+        Info("H.2", "프레임 간격 p95", "프레임 속도 편차", "ms"),
+        Info("H.3", "partial 결과 지연", "프레임 응답", "ms"),
+        Info("H.4", "버퍼 도착 지연", "프레임 전달", "ms"),
+        Info("H.5", "frame stall 횟수", "화면 끊김", "회"),
+        Info("H.6", "AE 수렴 시간", "노출 맞추기", "ms"),
+        Info("H.7", "AF 수렴 시간", "초점 맞추기", "ms"),
+        Info("H.8", "AWB 수렴 시간", "색 맞추기", "ms"),
+        Info("H.9", "콜백 실패 횟수", "촬영 오류", "회"),
+        Info("H.10", "프레임 간격 jitter", "프레임 흔들림", "ms")
     ).associateBy { it.id }
 
     fun info(id: String): Info = infos[id] ?: Info(id, id, id, "")

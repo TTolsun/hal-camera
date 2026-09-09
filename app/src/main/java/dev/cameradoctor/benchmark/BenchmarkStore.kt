@@ -1,8 +1,12 @@
 package dev.cameradoctor.benchmark
 
 import android.content.Context
+import android.util.Log
 import org.json.JSONObject
 import java.io.File
+import java.io.FileOutputStream
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 /**
  * Baseline pointers (docs/PLAN-BenchMarker-v0.3.md 7.1): (comparisonContractId, endpoint.key) -> run_id.
@@ -33,6 +37,19 @@ data class BenchmarkIndex(val baselines: Map<String, String> = emptyMap()) {
     }
 }
 
+/** Temp file, flush, fsync, atomic rename. A process killed mid-write leaves the previous file or a stray .tmp, never a truncated file. */
+object AtomicFiles {
+    fun write(target: File, text: String) {
+        val tmp = File(target.parentFile, target.name + ".tmp")
+        FileOutputStream(tmp).use { out ->
+            out.write(text.toByteArray(Charsets.UTF_8))
+            out.flush()
+            out.fd.sync()
+        }
+        Files.move(tmp.toPath(), target.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+    }
+}
+
 /** files/benchmarks/: one JSON per run plus index.json. */
 class BenchmarkStore(val dir: File) {
     constructor(context: Context) : this(File(context.filesDir, DIR_NAME))
@@ -41,21 +58,34 @@ class BenchmarkStore(val dir: File) {
 
     fun file(runId: String): File = File(dir, "$runId.json")
 
-    /** Run files newest first. Run ids are timestamps, so name order is time order. */
+    /** Run files newest first. Run ids are timestamps, so name order is time order. Stray .tmp files are ignored. */
     fun files(): List<File> = dir.listFiles()?.filter { it.extension == "json" && it.name != INDEX_NAME }?.sortedByDescending { it.name }.orEmpty()
 
     fun runIds(): Set<String> = files().map { it.nameWithoutExtension }.toSet()
 
-    fun index(): BenchmarkIndex = try {
+    /** A corrupt index is reported through [lastIndexError] and the log, not hidden as "no baselines". */
+    var lastIndexError: String? = null
+        private set
+
+    fun index(): BenchmarkIndex {
         val f = File(dir, INDEX_NAME)
-        if (f.exists()) BenchmarkIndex.fromJsonMap(BenchmarkReport.toMap(JSONObject(f.readText()))) else BenchmarkIndex()
-    } catch (_: Exception) { BenchmarkIndex() }
+        if (!f.exists()) { lastIndexError = null; return BenchmarkIndex() }
+        return try {
+            lastIndexError = null
+            BenchmarkIndex.fromJsonMap(BenchmarkReport.toMap(JSONObject(f.readText())))
+        } catch (e: Exception) {
+            lastIndexError = "$INDEX_NAME: ${e.message}"
+            Log.w(TAG, "corrupt $INDEX_NAME, baselines unavailable: ${e.message}")
+            BenchmarkIndex()
+        }
+    }
 
     fun saveIndex(index: BenchmarkIndex) {
-        File(dir, INDEX_NAME).writeText(BenchmarkReport.json(index.toJsonMap()).toString(2))
+        AtomicFiles.write(File(dir, INDEX_NAME), BenchmarkReport.json(index.toJsonMap()).toString(2))
     }
 
     companion object {
+        private const val TAG = "BenchmarkStore"
         const val DIR_NAME = "benchmarks"
         const val INDEX_NAME = "index.json"
     }

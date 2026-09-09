@@ -86,13 +86,27 @@ class RunValidityTest {
     }
 
     @Test fun jsonReadRederivesBooleansFromFlagCodes() {
+        // Stored booleans lie (all true) but the flag table decides: CHARGING blocks scoring only.
         val stored = mapOf("measurement_valid" to true, "comparison_eligible" to true, "scoring_eligible" to true,
-            "flags" to listOf("CHARGING", "FUTURE_FLAG"))
+            "flags" to listOf("CHARGING"))
         val v = RunValidity.fromJsonMap(stored)
-        // The table, not the stored booleans, decides; unknown codes are kept but ignored.
-        assertTrue(v.comparisonEligible); assertFalse(v.scoringEligible)
-        assertEquals(listOf("CHARGING", "FUTURE_FLAG"), v.flags)
-        val round = RunValidity.fromJsonMap(v.toJsonMap())
-        assertEquals(v, round)
+        assertTrue(v.measurementValid); assertTrue(v.comparisonEligible); assertFalse(v.scoringEligible)
+        assertEquals(listOf("CHARGING"), v.flags)
+        assertTrue(v.unknownFlags.isEmpty())
+        assertEquals(ValidityFlags.VERSION, v.ruleVersion)
+        assertEquals(v, RunValidity.fromJsonMap(v.toJsonMap()))
+        assertEquals(ValidityFlags.VERSION, v.toJsonMap()["validity_rule_version"])
+    }
+
+    @Test fun unknownFlagsFailClosed() {
+        // A newer app may have added a blocking flag this version does not know: never compare or score such a run.
+        val stored = mapOf("validity_rule_version" to "validity-v9", "measurement_valid" to true,
+            "comparison_eligible" to true, "scoring_eligible" to true, "flags" to listOf("FUTURE_FLAG"))
+        val v = RunValidity.fromJsonMap(stored)
+        assertTrue(v.measurementValid)
+        assertFalse(v.comparisonEligible); assertFalse(v.scoringEligible)
+        assertEquals(listOf("FUTURE_FLAG"), v.unknownFlags)
+        assertEquals(listOf("FUTURE_FLAG"), v.flags)
+        assertEquals("validity-v9", v.ruleVersion)
     }
 }

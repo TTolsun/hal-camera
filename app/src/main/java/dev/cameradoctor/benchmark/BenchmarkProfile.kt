@@ -84,6 +84,14 @@ data class BenchmarkProfile(
         )
 
         /**
+         * Profiles this app defines, by id. A stored run whose profile id is a confirmed (non-draft) canonical id
+         * must carry exactly this definition, otherwise the file is rejected (BenchmarkReportCodec).
+         */
+        val CANONICAL: Map<String, BenchmarkProfile> = listOf(CAMERA2_STANDARD_V1).associateBy { it.id }
+
+        fun canonical(id: String): BenchmarkProfile? = CANONICAL[id]
+
+        /**
          * Every profile field is part of the comparison contract, so a missing or mistyped field is an
          * IllegalArgumentException with the key name rather than a silently substituted default: a profile read
          * back with a guessed stream size would compare runs that must not be compared.

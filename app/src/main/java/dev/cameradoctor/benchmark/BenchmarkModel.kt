@@ -37,12 +37,12 @@ data class MeasurementContract(
 
         fun forProfile(profile: BenchmarkProfile) = MeasurementContract(profile.id, METRIC_DEFINITION_VERSION, STATS_METHOD, CLOCK)
 
-        /** profile_id is required; the other three default to this app's constants, which is what every writer used. */
+        /** All four fields are required: a contract with a guessed component would silently promote a file to the current contract. */
         fun fromJsonMap(m: Map<String, Any?>) = MeasurementContract(
             profileId = JsonMaps.reqString(m, "profile_id", "contract"),
-            metricDefinitionVersion = JsonMaps.s(m["metric_definition_version"]) ?: METRIC_DEFINITION_VERSION,
-            statsMethod = JsonMaps.s(m["stats_method"]) ?: STATS_METHOD,
-            clock = JsonMaps.s(m["clock"]) ?: CLOCK
+            metricDefinitionVersion = JsonMaps.reqString(m, "metric_definition_version", "contract"),
+            statsMethod = JsonMaps.reqString(m, "stats_method", "contract"),
+            clock = JsonMaps.reqString(m, "clock", "contract")
         )
     }
 }
@@ -232,7 +232,12 @@ data class RunRef(
     }
 }
 
-/** One benchmark run as stored in files/benchmarks/<runId>.json (schema 3). */
+/**
+ * One benchmark run as stored in files/benchmarks/<runId>.json (schema 3).
+ * [events] is the full telemetry event list as maps (BenchmarkReportCodec.eventToMap). It is part of the run
+ * because observation-window metrics keep samples = null and are recomputed from these events; a read and
+ * re-exported run must not lose them.
+ */
 data class BenchmarkRun(
     val runId: String,
     val exportedAtUtc: String,
@@ -254,6 +259,7 @@ data class BenchmarkRun(
     val scoringRuleVersion: String? = null,
     val endpointScore: Int? = null,
     val raw: Map<String, Any?> = emptyMap(),
+    val events: List<Map<String, Any?>> = emptyList(),
     val file: File? = null
 ) {
     val regressedCount: Int get() = metrics.count { it.regression == RegressionState.REGRESSED }
@@ -274,6 +280,7 @@ object JsonMaps {
     fun strings(v: Any?): List<String> = (v as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
     @Suppress("UNCHECKED_CAST")
     fun map(v: Any?): Map<String, Any?>? = v as? Map<String, Any?>
+    fun maps(v: Any?): List<Map<String, Any?>> = (v as? List<*>)?.mapNotNull { map(it) } ?: emptyList()
     fun <E : Enum<E>> enum(key: String, m: Map<String, Any?>, values: Array<E>): E? =
         s(m[key])?.let { name -> values.firstOrNull { it.jsonName == name } }
 
