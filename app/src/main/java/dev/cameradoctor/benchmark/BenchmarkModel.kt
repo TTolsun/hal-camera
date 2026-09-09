@@ -37,8 +37,12 @@ data class MeasurementContract(
 
         fun forProfile(profile: BenchmarkProfile) = MeasurementContract(profile.id, METRIC_DEFINITION_VERSION, STATS_METHOD, CLOCK)
 
+        /** All four fields are required: a contract with a guessed component would silently promote a file to the current contract. */
         fun fromJsonMap(m: Map<String, Any?>) = MeasurementContract(
-            m["profile_id"] as String, m["metric_definition_version"] as String, m["stats_method"] as String, m["clock"] as String
+            profileId = JsonMaps.reqString(m, "profile_id", "contract"),
+            metricDefinitionVersion = JsonMaps.reqString(m, "metric_definition_version", "contract"),
+            statsMethod = JsonMaps.reqString(m, "stats_method", "contract"),
+            clock = JsonMaps.reqString(m, "clock", "contract")
         )
     }
 }
@@ -91,7 +95,7 @@ data class BenchmarkMetric(
 
     companion object {
         fun fromJsonMap(m: Map<String, Any?>): BenchmarkMetric = BenchmarkMetric(
-            id = m["id"] as String,
+            id = JsonMaps.reqString(m, "id", "metric"),
             category = JsonMaps.enum("category", m, Category.values()) ?: Category.RESOURCE,
             unit = m["unit"] as? String ?: "",
             value = JsonMaps.d(m["value"]), p50 = JsonMaps.d(m["p50"]), p95 = JsonMaps.d(m["p95"]),
@@ -228,7 +232,12 @@ data class RunRef(
     }
 }
 
-/** One benchmark run as stored in files/benchmarks/<runId>.json (schema 3). */
+/**
+ * One benchmark run as stored in files/benchmarks/<runId>.json (schema 3).
+ * [events] is the full telemetry event list as maps (BenchmarkReportCodec.eventToMap). It is part of the run
+ * because observation-window metrics keep samples = null and are recomputed from these events; a read and
+ * re-exported run must not lose them.
+ */
 data class BenchmarkRun(
     val runId: String,
     val exportedAtUtc: String,
@@ -250,6 +259,7 @@ data class BenchmarkRun(
     val scoringRuleVersion: String? = null,
     val endpointScore: Int? = null,
     val raw: Map<String, Any?> = emptyMap(),
+    val events: List<Map<String, Any?>> = emptyList(),
     val file: File? = null
 ) {
     val regressedCount: Int get() = metrics.count { it.regression == RegressionState.REGRESSED }
@@ -270,8 +280,20 @@ object JsonMaps {
     fun strings(v: Any?): List<String> = (v as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
     @Suppress("UNCHECKED_CAST")
     fun map(v: Any?): Map<String, Any?>? = v as? Map<String, Any?>
+    fun maps(v: Any?): List<Map<String, Any?>> = (v as? List<*>)?.mapNotNull { map(it) } ?: emptyList()
     fun <E : Enum<E>> enum(key: String, m: Map<String, Any?>, values: Array<E>): E? =
         s(m[key])?.let { name -> values.firstOrNull { it.jsonName == name } }
+
+    // Required fields: a missing or mistyped value is an IllegalArgumentException naming the key, never a
+    // ClassCastException or a silently substituted value. BenchmarkReport.read() turns it into "unreadable run".
+    fun reqString(m: Map<String, Any?>, key: String, where: String): String =
+        s(m[key]) ?: throw IllegalArgumentException("$where.$key missing or not a string: ${m[key]}")
+    fun reqBoolean(m: Map<String, Any?>, key: String, where: String): Boolean =
+        m[key] as? Boolean ?: throw IllegalArgumentException("$where.$key missing or not a boolean: ${m[key]}")
+    fun reqInt(m: Map<String, Any?>, key: String, where: String): Int =
+        i(m[key]) ?: throw IllegalArgumentException("$where.$key missing or not a number: ${m[key]}")
+    fun reqLong(m: Map<String, Any?>, key: String, where: String): Long =
+        (m[key] as? Number)?.toLong() ?: throw IllegalArgumentException("$where.$key missing or not a number: ${m[key]}")
 
     fun endpointToMap(e: CameraEndpoint): Map<String, Any?> = e.toJsonMap()
 

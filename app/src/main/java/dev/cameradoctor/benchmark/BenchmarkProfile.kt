@@ -83,23 +83,37 @@ data class BenchmarkProfile(
             excludeFirst = true
         )
 
+        /**
+         * Profiles this app defines, by id. A stored run whose profile id is a confirmed (non-draft) canonical id
+         * must carry exactly this definition, otherwise the file is rejected (BenchmarkReportCodec).
+         */
+        val CANONICAL: Map<String, BenchmarkProfile> = listOf(CAMERA2_STANDARD_V1).associateBy { it.id }
+
+        fun canonical(id: String): BenchmarkProfile? = CANONICAL[id]
+
+        /**
+         * Every profile field is part of the comparison contract, so a missing or mistyped field is an
+         * IllegalArgumentException with the key name rather than a silently substituted default: a profile read
+         * back with a guessed stream size would compare runs that must not be compared.
+         */
         fun fromJsonMap(m: Map<String, Any?>): BenchmarkProfile = BenchmarkProfile(
-            id = m["id"] as String,
-            engine = m["engine"] as String,
-            previewSize = m["preview_size"] as String,
-            yuvSize = m["yuv_size"] as String,
-            stillFormat = m["still_format"] as String,
-            stillSize = m["still_size"] as String,
-            fpsRange = m["fps_range"] as String,
-            zsl = m["zsl"] as Boolean,
-            trigger = m["trigger"] as Boolean,
-            afMode = m["af_mode"] as String,
-            launchMode = LaunchMode.values().firstOrNull { it.jsonName == m["launch_mode"] } ?: LaunchMode.WARM_REOPEN,
-            launchIterations = (m["launch_iterations"] as Number).toInt(),
-            warmupMs = (m["warmup_ms"] as Number).toLong(),
-            observeMs = (m["observe_ms"] as Number).toLong(),
-            stillCount = (m["still_count"] as Number).toInt(),
-            excludeFirst = m["exclude_first"] as Boolean
+            id = JsonMaps.reqString(m, "id", "profile"),
+            engine = JsonMaps.reqString(m, "engine", "profile"),
+            previewSize = JsonMaps.reqString(m, "preview_size", "profile"),
+            yuvSize = JsonMaps.reqString(m, "yuv_size", "profile"),
+            stillFormat = JsonMaps.reqString(m, "still_format", "profile"),
+            stillSize = JsonMaps.reqString(m, "still_size", "profile"),
+            fpsRange = JsonMaps.reqString(m, "fps_range", "profile"),
+            zsl = JsonMaps.reqBoolean(m, "zsl", "profile"),
+            trigger = JsonMaps.reqBoolean(m, "trigger", "profile"),
+            afMode = JsonMaps.reqString(m, "af_mode", "profile"),
+            launchMode = JsonMaps.enum("launch_mode", m, LaunchMode.values())
+                ?: throw IllegalArgumentException("profile.launch_mode missing or unknown: ${m["launch_mode"]}"),
+            launchIterations = JsonMaps.reqInt(m, "launch_iterations", "profile"),
+            warmupMs = JsonMaps.reqLong(m, "warmup_ms", "profile"),
+            observeMs = JsonMaps.reqLong(m, "observe_ms", "profile"),
+            stillCount = JsonMaps.reqInt(m, "still_count", "profile"),
+            excludeFirst = JsonMaps.reqBoolean(m, "exclude_first", "profile")
         )
     }
 }

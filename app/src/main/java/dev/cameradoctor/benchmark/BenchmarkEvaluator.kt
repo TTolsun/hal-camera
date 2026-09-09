@@ -1,6 +1,5 @@
 package dev.cameradoctor.benchmark
 
-import dev.cameradoctor.diagnosis.MetricCatalog
 import dev.cameradoctor.diagnosis.MetricExtractor
 import dev.cameradoctor.diagnosis.UnknownReason
 
@@ -125,9 +124,9 @@ class BenchmarkEvaluator(private val profile: BenchmarkProfile) {
         return out
     }
 
-    private fun info(id: String) = MetricCatalog.info(id)
-    private fun category(id: String) = info(id).category ?: Category.RESOURCE
-    private fun unit(id: String) = info(id).unit.let { if (it == "회" || it == "개") "count" else it }
+    // Display metadata comes from the benchmark package's own catalog so diagnosis and benchmark do not depend on each other.
+    private fun category(id: String) = BenchmarkMetricCatalog.info(id)?.category ?: Category.RESOURCE
+    private fun unit(id: String) = BenchmarkMetricCatalog.info(id)?.unit ?: "ms"
 
     /** Metrics with a profile-bounded sample count: samples are stored, value is p50. */
     private fun bounded(id: String, xs: List<Double>, warm: List<Double>): BenchmarkMetric {

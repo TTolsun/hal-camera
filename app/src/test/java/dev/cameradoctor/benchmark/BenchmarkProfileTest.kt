@@ -3,6 +3,7 @@ package dev.cameradoctor.benchmark
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 
 class BenchmarkProfileTest {
@@ -31,6 +32,21 @@ class BenchmarkProfileTest {
         val back = BenchmarkProfile.fromJsonMap(p.toJsonMap())
         assertEquals(p, back)
         assertEquals("warm_reopen", p.toJsonMap()["launch_mode"])
+    }
+
+    @Test fun malformedProfileMapFailsWithTheKeyNameNotAClassCast() {
+        val missing = p.toJsonMap() - "yuv_size"
+        try { BenchmarkProfile.fromJsonMap(missing); fail("missing key must be rejected") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("yuv_size")) }
+        val wrongType = p.toJsonMap() + ("zsl" to "off")
+        try { BenchmarkProfile.fromJsonMap(wrongType); fail("wrong type must be rejected") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("zsl")) }
+        val badMode = p.toJsonMap() + ("launch_mode" to "cold")
+        try { BenchmarkProfile.fromJsonMap(badMode); fail("unknown launch mode must be rejected") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("launch_mode")) }
+        // org.json hands numbers back as Int or Long; both must be accepted.
+        val longs = p.toJsonMap() + ("launch_iterations" to 10L) + ("warmup_ms" to 3000)
+        assertEquals(p, BenchmarkProfile.fromJsonMap(longs))
     }
 
     @Test fun conditionsKeyIsStableAndNamesTheLaunchMode() {
