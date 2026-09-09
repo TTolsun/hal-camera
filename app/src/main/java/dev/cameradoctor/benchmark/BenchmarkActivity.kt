@@ -200,8 +200,15 @@ class BenchmarkActivity : ComponentActivity() {
         val driver = object : BenchmarkRunner.Driver {
             override fun open(endpoint: CameraEndpoint, session: String) {
                 firstYuvSeen = false
-                engine = Camera2Engine(this@BenchmarkActivity, preview, endpoint.logicalCameraId, session, telemetry, spec) { _, _ -> }
-                    .also { it.start() }
+                try {
+                    engine = Camera2Engine(this@BenchmarkActivity, preview, endpoint.logicalCameraId, session, telemetry, spec) { _, _ -> }
+                        .also { it.start() }
+                } catch (e: Exception) {
+                    // Without this the runner would only learn about the failure from the open timeout, five
+                    // seconds later and with no reason recorded.
+                    engine = null
+                    recorder.record(session, "camera_error", values = mapOf("message" to e.toString(), "where" to "engine_start"))
+                }
             }
             override fun still(session: String) { engine?.capture() }
             override fun close(session: String) {

@@ -2,6 +2,8 @@ package dev.cameradoctor.benchmark
 
 import android.content.Context
 import android.os.Build
+import android.os.Handler
+import android.os.HandlerThread
 import android.os.PowerManager
 
 /**
@@ -16,6 +18,9 @@ import android.os.PowerManager
 class ThermalTracker(context: Context, private val onChange: (Int) -> Unit = {}) {
     private val power = context.getSystemService(PowerManager::class.java)
     private var listener: PowerManager.OnThermalStatusChangedListener? = null
+    // The callback records a telemetry event, which takes the recorder's lock. Running that inline would hold a
+    // framework thread of the thermal service, so the run gets its own thread for it.
+    private var thread: HandlerThread? = null
 
     var start: Int? = null
         private set
@@ -40,7 +45,10 @@ class ThermalTracker(context: Context, private val onChange: (Int) -> Unit = {})
             onChange(status)
         }
         listener = l
-        pm.addThermalStatusListener({ it.run() }, l)
+        val t = HandlerThread("CD.Thermal").apply { start() }
+        thread = t
+        val handler = Handler(t.looper)
+        pm.addThermalStatusListener({ handler.post(it) }, l)
     }
 
     /** Unregisters the listener and returns the status at the end of the run. */
@@ -54,6 +62,8 @@ class ThermalTracker(context: Context, private val onChange: (Int) -> Unit = {})
             max = maxOf(max ?: end, end)
         }
         listener = null
+        thread?.quitSafely()
+        thread = null
         return current
     }
 }
