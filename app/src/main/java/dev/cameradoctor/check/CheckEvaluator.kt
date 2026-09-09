@@ -64,7 +64,7 @@ class CheckEvaluator(
         // times are not comparable. They become UNKNOWN(condition_mismatch) rather than a misleading relative WARN.
         val baselineLoad = baseline?.get(EXPOSURE_LOAD_KEY)?.value
         val load = obs?.exposureLoadP50
-        val mismatch = baselineLoad != null && load != null && baselineLoad > 0.0 &&
+        val mismatch = baselineLoad != null && load != null && baselineLoad > 0.0 && load > 0.0 &&
             (load / baselineLoad > EXPOSURE_MISMATCH_RATIO || load / baselineLoad < 1.0 / EXPOSURE_MISMATCH_RATIO)
         samples += obs?.samples?.map { s ->
             if (mismatch && s.id in THREE_A && s.unknownReason == null) s.copy(value = null, unknownReason = UnknownReason.CONDITION_MISMATCH) else s

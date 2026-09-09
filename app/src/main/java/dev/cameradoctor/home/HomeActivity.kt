@@ -100,7 +100,7 @@ class HomeActivity : ComponentActivity() {
     }
     private fun mark(level: String) = when (level.lowercase()) { "normal" -> "✓"; "warning" -> "△"; "issue" -> "✗"; else -> "○" }
     private fun levelText(level: String) = when (level.lowercase()) { "normal" -> "정상"; "warning" -> "주의"; "issue" -> "문제 발견"; else -> "판정 불가" }
-    private fun abortText(reason: String) = when (reason) { "background" -> "앱이 화면에서 벗어남"; "no_camera" -> "사용할 카메라 없음"; "permission" -> "권한 없음"; else -> reason }
+    private fun abortText(reason: String) = when (reason) { "background" -> "앱이 화면에서 벗어남"; "no_camera" -> "사용할 카메라 없음"; "permission" -> "권한 없음"; else -> "검사 중단" }
     private fun roleText(role: String) = when (role) {
         "MAIN" -> "후면 메인"; "ULTRA_WIDE" -> "후면 초광각"; "TELE" -> "후면 망원"; "FRONT" -> "전면"; "EXTERNAL" -> "외부"; else -> "후면"
     }
