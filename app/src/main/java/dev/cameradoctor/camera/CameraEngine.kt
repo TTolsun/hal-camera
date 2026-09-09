@@ -56,3 +56,16 @@ fun Telemetry.registerSession(session: String, engine: String, manager: CameraMa
     sessions[session] = describeCamera(manager, cameraId) + mapOf("engine" to engine, "sessionId" to session)
     event(session, "open_requested", mapOf("engine" to engine, "cameraId" to cameraId))
 }
+
+/**
+ * Exact stream sizes and fps range an engine must configure, taken from a BenchmarkProfile. When present the
+ * engine never falls back to a smaller size: a benchmark run that silently measured 720p would be compared with
+ * 1080p runs under the same profile id (METRICS.md 0.4, "no automatic fallback"). The preflight
+ * (ProfileCompatibility) is what decides whether these sizes are available at all.
+ */
+data class StreamSpec(
+    val preview: android.util.Size,
+    val yuv: android.util.Size,
+    val jpeg: android.util.Size,
+    val fpsRange: android.util.Range<Int>?
+)

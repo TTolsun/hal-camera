@@ -259,6 +259,12 @@ class MainActivity : ComponentActivity() {
             startActivity(android.content.Intent(this,dev.cameradoctor.check.CheckActivity::class.java))
         }.apply { background=rounded(glass); setTextColor(Color.WHITE) }
         controls.addView(checkButton,LinearLayout.LayoutParams(dp(52),dp(38)).apply { marginStart=dp(6) })
+        // M2 entry point for the benchmark flow. Doctor and BenchMarker live side by side until M3 (plan chapter 9).
+        val benchButton=button("BM") {
+            recorder.finish("benchmark_started")?.let { export(it) }
+            startActivity(android.content.Intent(this,dev.cameradoctor.benchmark.BenchmarkActivity::class.java))
+        }.apply { background=rounded(glass); setTextColor(Color.WHITE) }
+        controls.addView(benchButton,LinearLayout.LayoutParams(dp(44),dp(38)).apply { marginStart=dp(6) })
         // Consumer incident mode (11.4): the engine picker, camera spinner and check entry are expert chrome; hide them.
         if(consumer) controls.visibility=View.GONE
         statusText=label("INITIALIZING",11,mint,true); topBar.addView(statusText,lp(top=6))

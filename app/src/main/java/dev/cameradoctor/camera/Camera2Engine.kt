@@ -22,6 +22,8 @@ class Camera2Engine(
     private val cameraId: String,
     private val sessionId: String,
     private val telemetry: Telemetry,
+    /** Benchmark profile streams. null keeps the LIVE screen behaviour of picking sizes by pixel budget. */
+    private val spec: StreamSpec? = null,
     private val status: (String, Boolean) -> Unit
 ) : CameraEngine {
     private val thread = HandlerThread("CD.Camera2").apply { start() }
@@ -87,16 +89,26 @@ class Camera2Engine(
         try {
             val chars = manager.getCameraCharacteristics(cameraId).also { this.chars = it }
             val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP] ?: error("No stream configuration")
-            val size = choose(map.getOutputSizes(SurfaceTexture::class.java), 1280L * 720)
-            val yuvSize = choose(map.getOutputSizes(ImageFormat.YUV_420_888), 640L * 480)
-            val jpegSize = choose(map.getOutputSizes(ImageFormat.JPEG), 1920L * 1080)
+            // With a profile spec the sizes are exact and unavailable ones fail the configure step: measuring a
+            // smaller stream under the same profile id would corrupt every comparison made with that id.
+            val size = spec?.preview?.also { require(it in map.getOutputSizes(SurfaceTexture::class.java)) { "preview $it unsupported" } }
+                ?: choose(map.getOutputSizes(SurfaceTexture::class.java), 1280L * 720)
+            val yuvSize = spec?.yuv?.also { require(it in map.getOutputSizes(ImageFormat.YUV_420_888)) { "yuv $it unsupported" } }
+                ?: choose(map.getOutputSizes(ImageFormat.YUV_420_888), 640L * 480)
+            val jpegSize = spec?.jpeg?.also { require(it in map.getOutputSizes(ImageFormat.JPEG)) { "jpeg $it unsupported" } }
+                ?: choose(map.getOutputSizes(ImageFormat.JPEG), 1920L * 1080)
             val texture = view.surfaceTexture ?: error("Preview surface unavailable")
             texture.setDefaultBufferSize(size.width, size.height)
             previewSurface = Surface(texture)
             main.post { transform(size, chars) }
             yuv = reader(yuvSize, ImageFormat.YUV_420_888, "analysis_acquire_latest")
             jpeg = reader(jpegSize, ImageFormat.JPEG, "still")
-            val sizes = mapOf("preview" to size.toString(), "analysis" to yuvSize.toString(), "jpeg" to jpegSize.toString())
+            // The effective values go into the event so conditions.effective in the run JSON reports what the
+            // camera actually ran with, not what the profile asked for (3.1, fixed-focus cameras run AF OFF).
+            val sizes = mapOf(
+                "preview" to size.toString(), "analysis" to yuvSize.toString(), "jpeg" to jpegSize.toString(),
+                "afMode" to afMode(chars), "fpsRange" to spec?.fpsRange?.toString()
+            )
             telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
             telemetry.event(sessionId, "configure_requested", sizes)
             camera.createCaptureSession(listOf(previewSurface!!, yuv!!.surface, jpeg!!.surface), object : CameraCaptureSession.StateCallback() {
@@ -124,6 +136,7 @@ class Camera2Engine(
             addTarget(previewSurface!!); addTarget(yuv!!.surface)
             set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
             set(CaptureRequest.CONTROL_AF_MODE, afMode(chars))
+            spec?.fpsRange?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, it) }
             applyZoom(this, chars)
             setTag("preview")
         }.build()
