@@ -602,6 +602,15 @@ v1의 비교와 regression은 대표값(`value`, latency는 p50)만 쓴다. p95 
 
 비교는 `comparisonContractId`가 같은 run 사이에서만 한다. profile이 같아도 `metric_definition_version`이 다르면(예: H.10 계산법 변경) `UNKNOWN(condition_mismatch)`이다.
 
+표에 적히지 않았지만 `RegressionDetector`가 지켜야 하는 규칙이 네 가지 더 있다. M4 구현에서 확정했다.
+
+| 상황 | 판정 | 이유 |
+|---|---|---|
+| 두 run의 `endpoint.key`가 다름 | 모든 지표 `UNKNOWN(condition_mismatch)` | baseline 포인터가 `(contract, endpoint.key)` 키를 쓰므로 결과 화면에서는 생기지 않지만, 7.3 COMPARE가 임의의 두 run을 고를 수 있다. 후면 메인과 초광각을 나란히 놓고 regression을 말할 수는 없다 |
+| 한쪽이라도 comparison 부적격(5.3) | 모든 지표 `UNKNOWN(condition_mismatch)` | 5.3의 `comparisonEligible`이 곧 "regression 비교에 써도 되는가"이다. 부적격 run으로 IMPROVED나 REGRESSED를 표시하면 그 단계를 나눈 의미가 없다 |
+| 한쪽이라도 `timeout = true` | 해당 지표만 `UNKNOWN(not_measurable)` | timeout일 때 저장된 값은 수렴 시간이 아니라 관측 창 길이다(13장 2026-09-10 M2). 그대로 빼면 창 길이와 수렴 시간을 비교하게 된다 |
+| LATENCY인데 baseline 값이 0 | `delta_pct`는 null, 절대 차이만으로 COUNT와 같은 방식으로 판정 | 0으로 나눌 수 없다. 그렇다고 STABLE로 두면 0 ms에서 40 ms가 된 변화를 놓친다 |
+
 ### 7.3 Compare
 
 두 run JSON을 읽어 지표별로 나란히 놓는다. 기본은 baseline 대 최신 run이고, M6의 이력 화면에서 임의의 두 run을 고를 수 있다. 비교 자체는 `RegressionDetector.compare(base, current, rules)` 순수 함수 하나이고 화면은 그 결과를 표로 그린다. 아래 예시는 7.2 표로 검산한 것이다. Open +13 %는 15 % 미만이라 STABLE이고, Jitter +122 %는 절대 차이 3.9 ms가 floor 1 ms를 넘으므로 REGRESSED다.
