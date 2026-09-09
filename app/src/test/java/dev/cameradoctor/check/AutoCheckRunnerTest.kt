@@ -102,6 +102,9 @@ class AutoCheckRunnerTest {
         assertEquals("OPEN", r.log.done[0].hardFailure)
         assertTrue(r.log.done[0].launchSamples().first { it.id == "1.1" }.hardFailure)
         assertEquals(dev.cameradoctor.diagnosis.UnknownReason.NOT_RUN, r.log.done[0].launchSamples().first { it.id == "1.2" }.unknownReason)
+        // After a failed open, close latency and shot-to-shot are not measurements of anything: NOT_RUN, not a value.
+        assertEquals(dev.cameradoctor.diagnosis.UnknownReason.NOT_RUN, r.log.done[0].launchSamples().first { it.id == "1.7" }.unknownReason)
+        assertEquals(dev.cameradoctor.diagnosis.UnknownReason.NOT_RUN, r.log.done[0].launchSamples().first { it.id == "2.5" }.unknownReason)
         assertEquals(Step.OPEN, r.runner.step)            // second endpoint started
         r.happyEndpoint()
         assertEquals(Step.DONE, r.runner.step)

@@ -58,7 +58,9 @@ class AutoCheckRunner(
         val previewTotalMs: Double?, val closeMs: Double?,
         val stillLatenciesMs: List<Double>, val stillResultLatenciesMs: List<Double>, val shotToShotMs: List<Double>,
         val observeStartNs: Long?, val observeEndNs: Long?,
-        val timestamps: Map<String, Long>
+        val timestamps: Map<String, Long>,
+        /** Number of still requests actually submitted; 0 when the endpoint failed before the STILL step. */
+        val stillSubmitNsCount: Int = stillLatenciesMs.size
     ) {
         /** Group A samples for ThresholdEngine (4.3). Metrics not run in v0.2 are reported UNKNOWN(not_run) by the caller. */
         fun launchSamples(): List<MetricSample> {
@@ -72,14 +74,18 @@ class AutoCheckRunner(
                 latency("1.3", firstStartedMs, Step.FIRST_FRAME),
                 latency("1.8", yuvProxyMs, Step.FIRST_FRAME),
                 latency("1.6", previewTotalMs, Step.FIRST_FRAME),
-                latency("1.7", closeMs, Step.CLOSE),
+                // Close latency only means something after a successful open; after a failure the engine has often
+                // already closed itself, so the observed value is meaningless (even negative).
+                if (failedStep != null && failedStep != Step.CLOSE) MetricSample("1.7", null, unknownReason = UnknownReason.NOT_RUN)
+                else latency("1.7", closeMs?.takeIf { it >= 0.0 }, Step.CLOSE),
                 MetricSample("2.2", p50(stillLatenciesMs), p95 = dev.cameradoctor.diagnosis.MetricExtractor.percentile(stillLatenciesMs, 0.95),
                     n = stillLatenciesMs.size, hardFailure = failedStep == Step.STILL,
                     unknownReason = if (stillLatenciesMs.isEmpty() && failedStep != Step.STILL) UnknownReason.NOT_RUN else null),
                 MetricSample("2.3", p50(stillResultLatenciesMs), n = stillResultLatenciesMs.size,
                     unknownReason = if (stillResultLatenciesMs.isEmpty()) UnknownReason.NOT_RUN else null),
                 // 2.5 needs a statistic; with 3 stills there is one valid interval, so it stays UNKNOWN(insufficient_samples).
-                MetricSample("2.5", null, n = shotToShotMs.size, unknownReason = UnknownReason.INSUFFICIENT_SAMPLES)
+                MetricSample("2.5", null, n = shotToShotMs.size,
+                    unknownReason = if (stillSubmitNsCount == 0) UnknownReason.NOT_RUN else UnknownReason.INSUFFICIENT_SAMPLES)
             )
         }
     }
@@ -183,7 +189,8 @@ class AutoCheckRunner(
             firstStartedMs = ms("repeating_call", "first_started"), yuvProxyMs = ms("repeating_call", "first_yuv"),
             previewTotalMs = ms("open_call", "first_yuv"), closeMs = ms("close_call", "closed"),
             stillLatenciesMs = stills, stillResultLatenciesMs = stillResults, shotToShotMs = shot,
-            observeStartNs = marks["observe_start"], observeEndNs = marks["observe_end"], timestamps = marks.toMap()
+            observeStartNs = marks["observe_start"], observeEndNs = marks["observe_end"], timestamps = marks.toMap(),
+            stillSubmitNsCount = stillSubmitNs.size
         )
         results += r
         listener.onEndpointDone(r)
