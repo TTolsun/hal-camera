@@ -186,8 +186,10 @@ val cddCameraLatencyApplicable = mpc >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE   /
 
 | 지표 | CDD 값 | `applicable` + `similar`/`non_equivalent` | `not_applicable` |
 |---|---:|---|---|
-| 1.6 `preview_total[endpoint=yuv_proxy]` p50 | 500 ms | ≥ 500 ms → WARN(`absolute_reference`) | ≥ 500 ms → WARN(`heuristic`), ≥ 1000 ms → FAIL(`heuristic`) |
-| 2.2 `capture_latency[zsl=off,trigger=off,fmt=jpeg,res=1920x1080]` p50 | 1000 ms | ≥ 1000 ms → WARN(`absolute_reference`) | ≥ 1000 ms → WARN(`heuristic`), ≥ 2000 ms → FAIL(`heuristic`) |
+| 1.6 `preview_total[endpoint=yuv_proxy]` p50 | 500 ms | ≥ 500 ms → WARN(`absolute_reference`) | ≥ 750 ms → WARN(`heuristic`), ≥ 1000 ms → FAIL(`heuristic`) |
+| 2.2 `capture_latency[zsl=off,trigger=off,fmt=jpeg,res=1920x1080]` p50 | 1000 ms | ≥ 1000 ms → WARN(`absolute_reference`) | ≥ 1500 ms → WARN(`heuristic`), ≥ 2000 ms → FAIL(`heuristic`) |
+
+MPC 미선언 기기의 heuristic 경계는 CDD 값의 1.5배(WARN)와 2배(FAIL)다. **2026-09-09 실측 반영:** Galaxy S25+(MPC 미선언)는 정상 상태에서 프리뷰 시작이 550–620 ms로 반복 측정되어, CDD 값 500 ms를 그대로 heuristic WARN 경계로 쓰면 매 검사마다 의미 없는 주의가 붙었다.
 
 문구는 Consumer에서 "권장 성능 기준보다 느립니다", Expert에서 `CDD_REFERENCE_EXCEEDED · environment_not_equivalent`다. CDD는 primary camera(후면 메인, 전면)에만 적용된다. Ultra Wide, Telephoto endpoint에는 relative 기준과 product heuristic만 쓴다.
 

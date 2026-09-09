@@ -102,8 +102,8 @@ class ThresholdEngine(private val table: Map<String, ThresholdTable.Rule> = Thre
         } else {
             when {
                 value >= a.heuristicFailAt -> Abs(State.FAIL, a.heuristicFailAt, a.source, ThresholdBasis.HEURISTIC)
-                over -> Abs(State.WARN, a.bound, a.source, ThresholdBasis.HEURISTIC)
-                else -> Abs(State.PASS, a.bound, a.source, null)
+                value >= a.heuristicWarnAt -> Abs(State.WARN, a.heuristicWarnAt, a.source, ThresholdBasis.HEURISTIC)
+                else -> Abs(State.PASS, a.heuristicWarnAt, a.source, null)
             }
         }
     }
