@@ -102,7 +102,8 @@ class CheckActivity : ComponentActivity() {
         recorder.listener = { e -> main.post { if (!destroyed) onEvent(e) } }
 
         if (intent.getBooleanExtra(EXTRA_SHOW_LATEST, false)) {
-            val requested = intent.getStringExtra(EXTRA_RUN_FILE)?.let(::File)?.takeIf { it.isFile && it.parentFile?.name == "checks" }
+            val checksDir = File(filesDir, "checks").canonicalFile
+            val requested = intent.getStringExtra(EXTRA_RUN_FILE)?.let { File(it).canonicalFile }?.takeIf { it.isFile && it.parentFile == checksDir }
             val file = requested ?: File(filesDir, "checks").listFiles()?.filter { it.extension == "json" }?.maxByOrNull { it.lastModified() }
             val r = file?.let { CheckResult.fromFile(it) }
             if (r != null) showResult(r) else status.text = "저장된 검사 결과가 없습니다"

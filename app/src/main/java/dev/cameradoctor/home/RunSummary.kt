@@ -20,7 +20,8 @@ data class RunSummary(
 
     companion object {
         fun files(context: Context): List<File> =
-            File(context.filesDir, "checks").listFiles()?.filter { it.extension == "json" }?.sortedByDescending { it.lastModified() }.orEmpty()
+            File(context.filesDir, "checks").listFiles()?.filter { it.extension == "json" }
+                ?.sortedWith(compareByDescending<File> { it.lastModified() }.thenByDescending { it.name }).orEmpty()
 
         fun latestFile(context: Context): File? = files(context).firstOrNull()
 
