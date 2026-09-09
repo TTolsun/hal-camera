@@ -96,11 +96,11 @@ class BenchmarkActivity : ComponentActivity() {
         card.addView(title)
         card.addView(Look.text(this, "profile ${profile.id}", 12, Look.onDarkMuted, mono = true), lp(top = 4))
         preflightText = Look.text(this, "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted, mono = true)
-        card.addView(preflightText, lp(top = 8))
+        card.addView(copyOnTap(preflightText, "preflight"), lp(top = 8))
         progressText = Look.text(this, "", 14, Look.onDark, mono = true)
         card.addView(progressText, lp(top = 10))
         resultText = Look.text(this, "", 11, Look.onDarkMuted, mono = true)
-        card.addView(resultText, lp(top = 8))
+        card.addView(copyOnTap(resultText, "run"), lp(top = 8))
         panel.addView(card)
 
         val row = Look.row(this)
@@ -291,6 +291,7 @@ class BenchmarkActivity : ComponentActivity() {
             append(" · flags=${run.validity.flags.joinToString(",").ifEmpty { "none" }}")
             append("\nmeasurement=${run.validity.measurementValid} comparison=${run.validity.comparisonEligible} scoring=${run.validity.scoringEligible}")
             result.hardFailure?.let { append("\nhard failure: $it") }
+            append("\n탭하면 이 내용을, 길게 누르면 JSON 경로만 복사합니다.")
         }
     }
 
@@ -336,6 +337,30 @@ class BenchmarkActivity : ComponentActivity() {
         process.waitFor()
         value?.takeIf { it.isNotEmpty() }
     } catch (_: Exception) { null }
+
+    /**
+     * Makes a read-only text block copyable. The preflight verdict and the run summary are the two things worth
+     * carrying to a PC (a run id, a file path, the flags of a run), and reading them off the screen by hand is
+     * error-prone. A tap copies the whole block; a long press copies just the run JSON path when there is one.
+     */
+    private fun copyOnTap(view: android.widget.TextView, label: String): android.widget.TextView = view.apply {
+        setOnClickListener { copy(label, text.toString()) }
+        setOnLongClickListener {
+            val path = lastFile?.absolutePath
+            if (path == null) copy(label, text.toString()) else copy("$label path", path)
+            true
+        }
+    }
+
+    private fun copy(label: String, value: String) {
+        if (value.isBlank()) return
+        getSystemService(android.content.ClipboardManager::class.java)
+            ?.setPrimaryClip(ClipData.newPlainText(label, value)) ?: return
+        // Android 13 and above shows its own copy confirmation, so a second toast would just repeat it.
+        if (Build.VERSION.SDK_INT < 33) {
+            android.widget.Toast.makeText(this, "복사했습니다", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
 
     private fun share(file: File) {
         val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
