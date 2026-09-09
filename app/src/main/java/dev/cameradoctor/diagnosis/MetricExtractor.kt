@@ -50,7 +50,11 @@ class MetricExtractor(private val minSamples: Int = 15) {
         val worstPartial: FrameObservation?,
         val threeAStable: Boolean,
         val afSupported: Boolean,
-        val last: FrameObservation?
+        val last: FrameObservation?,
+        /** Frames after the warm-up drop; the population every interval / partial / buffer statistic was computed from. */
+        val steadyFrames: List<FrameObservation> = frames,
+        /** H.10 frame_interval_jitter: population standard deviation (ddof = 0) of the steady intervals, ms. */
+        val intervalJitterMs: Double? = null
     ) {
         val n: Int get() = frames.size
     }
@@ -149,8 +153,14 @@ class MetricExtractor(private val minSamples: Int = 15) {
             else MetricSample("H.7", null, n = frames.size, unknownReason = UnknownReason.UNSUPPORTED),
             convergence("H.8", frames, insufficient) { it.awb == 2 || it.awb == 3 }
         )
+        // H.10: population standard deviation (ddof = 0) of the steady intervals, the METRICS.md 3.7 definition applied to preview.
+        val jitter = if (intervals.isEmpty()) null else {
+            val mean = intervals.average()
+            kotlin.math.sqrt(intervals.sumOf { (it - mean) * (it - mean) } / intervals.size)
+        }
         return Observation(frames, samples, intervalP50, durationP50, partialP50, percentile(loads, 0.5),
-            stalledFrames.size, worstStall, worstPartial, aeStable && afStable && awbStable, afSupported, last)
+            stalledFrames.size, worstStall, worstPartial, aeStable && afStable && awbStable, afSupported, last,
+            steadyFrames = steady, intervalJitterMs = jitter)
     }
 
     /** H.9 needs failure events, which are not frame observations; count them separately. */
