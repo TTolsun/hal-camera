@@ -72,7 +72,7 @@ class BenchmarkReportCodecTest {
         for (k in required) assertTrue(k, m.containsKey(k))
         assertEquals(3, m["schema_version"])
         assertEquals("benchmark", m["kind"])
-        assertEquals("camera2-standard-v1-draft|metrics-0.3|nearest_rank|elapsedRealtimeNanos", m["comparison_contract_id"])
+        assertEquals("camera2-standard-v1|metrics-0.3|nearest_rank|elapsedRealtimeNanos", m["comparison_contract_id"])
         assertEquals("regression-rule-v1", m["regression_rule_version"])
         @Suppress("UNCHECKED_CAST") val summary = m["summary"] as Map<String, Any?>
         assertEquals(r.metrics.size, summary["unknown"])
@@ -134,11 +134,11 @@ class BenchmarkReportCodecTest {
         val tampered = ok + ("profile" to (storedProfile + ("yuv_size" to "1280x720")))
         try { BenchmarkReportCodec.fromJsonMap(tampered, canonicalProfiles = canonical); fail("canonical mismatch") }
         catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("canonical")) }
-        // A draft id may change while it is a draft, so the same tampering on the draft profile still loads.
-        val draft = BenchmarkReportCodec.toJsonMap(run())
+        // A draft id may still change, so the same tampering on a draft profile loads without complaint.
+        val draft = BenchmarkReportCodec.toJsonMap(run(profile.copy(id = "camera2-standard-v2-draft")))
         @Suppress("UNCHECKED_CAST") val draftProfile = draft["profile"] as Map<String, Any?>
         val draftTampered = draft + ("profile" to (draftProfile + ("yuv_size" to "1280x720")))
-        assertEquals("1280x720", BenchmarkReportCodec.fromJsonMap(draftTampered).profile.yuvSize)
+        assertEquals("1280x720", BenchmarkReportCodec.fromJsonMap(draftTampered, canonicalProfiles = canonical).profile.yuvSize)
     }
 
     @Test fun otherSchemaVersionIsRejected() {

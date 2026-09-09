@@ -1,6 +1,7 @@
 package dev.cameradoctor.benchmark
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -9,9 +10,11 @@ import org.junit.Test
 class BenchmarkProfileTest {
     private val p = BenchmarkProfile.CAMERA2_STANDARD_V1
 
-    @Test fun standardProfileIsDraftUntilM2ConfirmsIt() {
-        assertTrue(p.isDraft)
-        assertEquals("camera2-standard-v1-draft", p.id)
+    @Test fun standardProfileIsConfirmedAfterTheM2DeviceCheck() {
+        // Confirmed on the Galaxy S25+ (M2): three rear-main runs with zero stalls in the observation window,
+        // so the 1080p YUV condition stands and the id carries no "-draft" suffix any more (plan 3.5).
+        assertFalse(p.isDraft)
+        assertEquals("camera2-standard-v1", p.id)
         assertEquals(LaunchMode.WARM_REOPEN, p.launchMode)
         assertEquals("1920x1080", p.previewSize)
         assertEquals("1920x1080", p.yuvSize)
@@ -58,7 +61,7 @@ class BenchmarkProfileTest {
 
     @Test fun contractIdCombinesProfileAndMetricDefinition() {
         val c = MeasurementContract.forProfile(p)
-        assertEquals("camera2-standard-v1-draft|metrics-0.3|nearest_rank|elapsedRealtimeNanos", c.comparisonContractId)
+        assertEquals("camera2-standard-v1|metrics-0.3|nearest_rank|elapsedRealtimeNanos", c.comparisonContractId)
         // Same profile, different metric computation: not comparable.
         val other = c.copy(metricDefinitionVersion = "metrics-0.4")
         assertNotEquals(c.comparisonContractId, other.comparisonContractId)

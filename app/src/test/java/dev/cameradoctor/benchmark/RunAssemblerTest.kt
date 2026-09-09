@@ -91,11 +91,19 @@ class RunAssemblerTest {
     )
 
     @Test
-    fun `a clean run is measurement valid and comparison eligible`() {
+    fun `a clean run on the confirmed profile is eligible for all three stages`() {
         val run = RunAssembler.assemble(result(), listOf(configuredEvent()) + previewEvents(), profile, context())
         assertTrue(run.validity.measurementValid)
         assertTrue(run.validity.comparisonEligible)
-        // The profile id still carries -draft, which blocks scoring only (5.3).
+        assertTrue(run.validity.scoringEligible)
+        assertEquals(emptyList<String>(), run.validity.flags)
+    }
+
+    @Test
+    fun `a draft profile keeps the run out of scoring only`() {
+        val draft = profile.copy(id = "camera2-standard-v2-draft")
+        val run = RunAssembler.assemble(result(), listOf(configuredEvent()) + previewEvents(), draft, context())
+        assertTrue(run.validity.comparisonEligible)
         assertFalse(run.validity.scoringEligible)
         assertEquals(listOf(ValidityFlags.PROFILE_DRAFT.code), run.validity.flags)
     }
