@@ -838,7 +838,7 @@ M1이 끝나기 전에 M4의 결과 화면을 만들지 않는다. 화면이 먼
 ## 미결 사항 — 사용자 확정 필요
 
 - [ ] 6장 임계값 전부 (실측 후 확정). 2026-09-09 검토로 반영한 변경: CDD 게이트를 MPC ≥ U로, 조건 비동일 시 CDD 초과는 WARN, H.1의 target FPS 상한 기준 제거, 3A는 FAIL 없음, relative/heuristic FAIL은 ISSUE로 승격하지 않음, 첫 검사 점수 금지, 환경 불일치는 exposure_load 비율
-- [ ] latency 지표별 noise floor: v0.2는 10 ms 전역 값 유지, 이후 `noiseFloorMs(metric)`로 분리
+- [x] latency 지표별 noise floor: 2026-09-09 실측 반영. 1.1 열기와 1.7 닫기는 50 ms(전면 카메라 열기 16 ms→44 ms가 +170% FAIL로 잡힘), 나머지는 10 ms
 - [ ] 7.2절 가중치
 - [ ] 점수 노출 시점: 이 문서는 7.5절 조건 충족 전까지 비노출을 제안한다. 2026-09-09 UI 의견에서 Health Score를 다음 기능 4개에 포함했는데, 계산과 JSON 기록은 M1에서 하되 화면 노출은 7.5절 조건 이후로 두는 안으로 정리했다.
 - [ ] Auto Check still 해상도: CDD 비교를 위해 1920x1080 JPEG 제안. 최대 해상도는 Expert runner

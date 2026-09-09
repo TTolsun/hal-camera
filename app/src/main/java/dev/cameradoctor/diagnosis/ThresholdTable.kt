@@ -43,15 +43,19 @@ object ThresholdTable {
 
     private val latency = Relative(30.0, 100.0)
     private val slow = Relative(50.0, 200.0)
+    /** Open/close are tens of milliseconds and jitter by that much run to run (S25+: 16 ms then 44 ms). A 10 ms floor turns
+     *  jitter into a +170 % relative FAIL, so these two use a 50 ms floor. */
+    private val tiny = Relative(30.0, 100.0, noiseFloorMs = 50.0)
+    private val tinySlow = Relative(50.0, 200.0, noiseFloorMs = 50.0)
 
     val rules: Map<String, Rule> = listOf(
         // 6.1 Launch. Weight 25 spread over 1.1, 1.2, 1.3, 1.6, 1.8.
-        Rule("1.1", Absolute.None, latency, 5.0, "launch"),
+        Rule("1.1", Absolute.None, tiny, 5.0, "launch"),
         Rule("1.2", Absolute.None, latency, 5.0, "launch"),
         Rule("1.3", Absolute.None, latency, 5.0, "launch"),
         Rule("1.5", Absolute.None, null, 0.0, "launch"),
         Rule("1.6", Absolute.Cdd(500.0, CDD_LAUNCH, 750.0, 1000.0), latency, 5.0, "launch"),
-        Rule("1.7", Absolute.None, slow, 0.0, "launch"),
+        Rule("1.7", Absolute.None, tinySlow, 0.0, "launch"),
         Rule("1.8", Absolute.None, latency, 5.0, "launch"),
         // 6.2 Still. Weight 25 over 2.2, 2.3.
         Rule("2.1", Absolute.None, latency, 0.0, "still"),

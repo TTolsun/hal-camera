@@ -34,12 +34,19 @@ class ThresholdEngineTest {
     // 6 relative boundaries: +30 WARN, +100 FAIL(relative), noise floor 10 ms
     @Test fun relativeBoundaries() {
         val b = BaselineValue(100.0)
-        assertEquals(State.PASS, one(MetricSample("1.1", 129.0, n = 1), b).final)
-        val warn = one(MetricSample("1.1", 130.0, n = 1), b)
+        assertEquals(State.PASS, one(MetricSample("1.2", 129.0, n = 1), b).final)
+        val warn = one(MetricSample("1.2", 130.0, n = 1), b)
         assertEquals(State.WARN, warn.final); assertEquals(ThresholdBasis.RELATIVE, warn.thresholdBasis)
-        val fail = one(MetricSample("1.1", 200.0, n = 1), b)
+        val fail = one(MetricSample("1.2", 200.0, n = 1), b)
         assertEquals(State.FAIL, fail.final); assertEquals(ThresholdBasis.RELATIVE, fail.thresholdBasis)
         assertFalse(fail.isHardFailure)
+    }
+
+    @Test fun openLatencyUsesFiftyMsNoiseFloor() {
+        // S25+ front camera: 16 ms baseline, 44 ms this run (+170 %) is jitter, not a finding.
+        assertEquals(State.PASS, one(MetricSample("1.1", 44.0, n = 1), BaselineValue(16.0)).final)
+        assertEquals(State.FAIL, one(MetricSample("1.1", 70.0, n = 1), BaselineValue(16.0)).final)
+        assertEquals(State.PASS, one(MetricSample("1.7", 60.0, n = 1), BaselineValue(20.0)).final)
     }
 
     @Test fun noiseFloorBoundaryIsInclusiveAtTenMs() {
