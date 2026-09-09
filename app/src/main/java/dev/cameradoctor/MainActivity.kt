@@ -291,7 +291,7 @@ class MainActivity : ComponentActivity() {
         reportButton=button(incidentLabel()) {
             val id="incident_"+SimpleDateFormat("yyyyMMdd_HHmmss_SSS",Locale.US).format(Date())+"_"+UUID.randomUUID().toString().take(8)
             if(recorder.trigger(id)) { incidentAssessment=lastHealth; toast(if(consumer) "이후 5초를 더 기록한 뒤 분석합니다" else "5초 후 incident ZIP을 저장합니다") }
-        }.apply { setTextColor(bg); textSize=if(consumer) 9f else 10f; setTypeface(typeface,Typeface.BOLD); background=circle(coral); contentDescription="문제 순간 기록: 직전 10초와 이후 5초를 저장" }
+        }.apply { setTextColor(Color.WHITE); textSize=if(consumer) 9f else 10f; setTypeface(typeface,Typeface.BOLD); background=circle(coral); contentDescription="문제 순간 기록: 직전 10초와 이후 5초를 저장" }
         captureButton=button("") { engine?.capture() }.apply { background=circle(Color.WHITE,ring=bg); contentDescription="셔터 측정" }
         val panelButton=button("진단") { diagnostics.visibility=if(diagnostics.visibility==View.VISIBLE) View.GONE else View.VISIBLE }
             .apply { background=circle(glass); setTextColor(Color.WHITE); textSize=11f }
@@ -347,7 +347,7 @@ class MainActivity : ComponentActivity() {
         // 12.3: baseline reset is an expert-only action. Clears every endpoint's stored reference run.
         tools.addView(button("기준 초기화") {
             AlertDialog.Builder(this).setTitle("검사 기준 초기화").setMessage("저장된 기준(baseline)을 모두 지웁니다. 다음 60초 검사가 새 기준이 됩니다.")
-                .setNegativeButton("취소",null).setPositiveButton("초기화") { _,_ -> dev.cameradoctor.baseline.BaselineStore(this).clear(); toast("기준을 지웠습니다") }.show()
+                .setNegativeButton("취소",null).setPositiveButton("초기화") { _,_ -> io.execute { dev.cameradoctor.baseline.BaselineStore(this).clear(); main.post { if(!destroyed) toast("기준을 지웠습니다") } } }.show()
         },LinearLayout.LayoutParams(0,dp(48),1f).apply { marginStart=dp(6) })
         body.addView(label("LOCAL RECORDING · NO IMAGE PIXELS SAVED",10,muted),lp(top=18))
 
@@ -432,8 +432,8 @@ class MainActivity : ComponentActivity() {
         strip.update(frames,a.tRefMs,time)
         healthBanner.text=a.headline
         when(a.level) {
-            HealthLevel.WARNING -> { healthBanner.background=rounded(coral); healthBanner.setTextColor(bg) }
-            HealthLevel.WATCH -> { healthBanner.background=rounded(dev.cameradoctor.ui.Look.statusWarn); healthBanner.setTextColor(bg) }
+            HealthLevel.WARNING -> { healthBanner.background=rounded(coral); healthBanner.setTextColor(Color.WHITE) }
+            HealthLevel.WATCH -> { healthBanner.background=rounded(dev.cameradoctor.ui.Look.statusWarn); healthBanner.setTextColor(Color.WHITE) }
             HealthLevel.OK -> { healthBanner.background=rounded(glass); healthBanner.setTextColor(mint) }
             HealthLevel.NO_DATA -> { healthBanner.background=rounded(glass); healthBanner.setTextColor(muted) }
         }
