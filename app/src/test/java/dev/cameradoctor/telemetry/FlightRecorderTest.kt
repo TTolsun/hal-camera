@@ -18,6 +18,21 @@ class FlightRecorderTest {
         assertEquals("completed", incident.finishReason)
         assertNull(recorder.finish())
     }
+    @Test fun clearDropsRetainedEventsButKeepsACollectingIncident() {
+        val recorder = FlightRecorder({ now })
+        repeat(5) { now = it * sec; recorder.record("first_run", "result", it.toLong()) }
+        recorder.trigger("incident")
+        recorder.clear()
+        assertTrue(recorder.snapshot().isEmpty())
+        now = 6 * sec
+        recorder.record("second_run", "result", 6)
+        val snapshot = recorder.snapshot()
+        assertEquals(1, snapshot.size)
+        assertEquals("second_run", snapshot.single().session)
+        // The incident kept its own copy of the pre-window, so clearing the ring did not shorten it:
+        // five pre-window events, the trigger marker and the one recorded after the clear.
+        assertEquals(7, recorder.finish("clear")!!.events.size)
+    }
     @Test fun snapshotExpiresWithoutNewCallbacks() {
         val recorder = FlightRecorder({ now })
         recorder.record("x", "result")

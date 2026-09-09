@@ -61,6 +61,7 @@ class BenchmarkActivity : ComponentActivity() {
     private var endpoints: List<CameraEndpoint> = emptyList()
     private var selected = 0
     private var compatibility: Compatibility = Compatibility.NOT_CHECKED
+    private var deviceSetupSupported: Boolean? = null
     private var runner: BenchmarkRunner? = null
     private var engine: Camera2Engine? = null
     private var thermal: ThermalTracker? = null
@@ -148,13 +149,10 @@ class BenchmarkActivity : ComponentActivity() {
         val metrics = resources.displayMetrics
         val checker = ProfileCompatibilityChecker(manager, metrics.widthPixels, metrics.heightPixels)
         compatibility = checker.check(profile, endpoint.logicalCameraId)
-        val setupSupported = if (Build.VERSION.SDK_INT >= 35)
+        deviceSetupSupported = if (Build.VERSION.SDK_INT >= 35)
             runCatching { manager.isCameraDeviceSetupSupported(endpoint.logicalCameraId) }.getOrNull() else null
-        recorder.record("app", "preflight", values = mapOf(
-            "cameraId" to endpoint.logicalCameraId, "method" to compatibility.method,
-            "supported" to compatibility.supported, "reasons" to compatibility.reasons,
-            "frame_budget_ok" to compatibility.frameBudgetOk, "device_setup_supported" to setupSupported
-        ))
+        val setupSupported = deviceSetupSupported
+        recordPreflight(endpoint)
         title.text = "${roleText(endpoint.role)} · ${endpoint.key}"
         preflightText.text = buildString {
             append(if (compatibility.supported) "SUPPORTED" else "UNSUPPORTED")
@@ -169,6 +167,15 @@ class BenchmarkActivity : ComponentActivity() {
         progressText.text = ""
     }
 
+    /** The preflight verdict belongs in every run file, so it is recorded again after the recorder is cleared. */
+    private fun recordPreflight(endpoint: CameraEndpoint) {
+        recorder.record("app", "preflight", values = mapOf(
+            "cameraId" to endpoint.logicalCameraId, "method" to compatibility.method,
+            "supported" to compatibility.supported, "reasons" to compatibility.reasons,
+            "frame_budget_ok" to compatibility.frameBudgetOk, "device_setup_supported" to deviceSetupSupported
+        ))
+    }
+
     // ---- run ----
 
     private fun begin() {
@@ -179,6 +186,9 @@ class BenchmarkActivity : ComponentActivity() {
         startButton.isEnabled = false
         cameraButton.isEnabled = false
         resultText.text = ""
+        // Each run file carries only its own events. The recorder keeps 180 s, which is long enough for two runs.
+        recorder.clear()
+        recordPreflight(endpoint)
         envStart.clear(); envStart += environment()
         thermal = ThermalTracker(this) { status ->
             recorder.record("run", "thermal_status", values = mapOf("status" to status))
