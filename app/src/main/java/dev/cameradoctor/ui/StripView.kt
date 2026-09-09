@@ -8,8 +8,8 @@ import dev.cameradoctor.telemetry.Event
 /** Ten-second sparkline of sensor frame intervals with the session baseline and the 1.5x threshold drawn as guides. */
 class StripView(context: Context) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val amber = Color.rgb(255, 199, 109)
-    private val coral = Color.rgb(255, 128, 126)
+    private val amber = Color.rgb(127, 191, 255)   // interval trace: blue shade, not a status colour
+    private val coral = Color.rgb(255, 149, 0)     // statusWarn for stalled points
     private val guide = Color.argb(140, 153, 174, 192)
     private var points = emptyList<Pair<Long, Double>>()
     private var tRef: Double? = null

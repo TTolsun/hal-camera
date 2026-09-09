@@ -10,9 +10,9 @@ import java.util.Locale
 class ScopeView(context: Context) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val grid = Color.rgb(36, 53, 66)
-    private val mint = Color.rgb(111, 225, 198)
-    private val blue = Color.rgb(118, 179, 255)
-    private val amber = Color.rgb(255, 199, 109)
+    private val mint = Color.rgb(41, 151, 255)   // primaryOnDark
+    private val blue = Color.rgb(127, 191, 255)
+    private val amber = Color.rgb(204, 204, 204)   // onDarkMuted; track colours stay off the status palette
     private val issue = Color.rgb(255, 59, 48)
     private val warn = Color.rgb(255, 149, 0)
     private var events = emptyList<Event>()
