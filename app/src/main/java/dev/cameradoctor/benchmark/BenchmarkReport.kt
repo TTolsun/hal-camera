@@ -67,7 +67,7 @@ object BenchmarkReportCodec {
             ?.mapNotNull { (k, v) -> (v as? String)?.let { k to it } }?.toMap() ?: emptyMap()
         val summary = JsonMaps.map(m["summary"])
         return BenchmarkRun(
-            runId = m["run_id"] as String,
+            runId = JsonMaps.reqString(m, "run_id", "run"),
             exportedAtUtc = m["exported_at_utc"] as? String ?: "",
             aborted = JsonMaps.s(m["aborted"]),
             profile = profile,
