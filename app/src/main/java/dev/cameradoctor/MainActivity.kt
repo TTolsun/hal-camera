@@ -38,13 +38,15 @@ class MainActivity : ComponentActivity() {
     private var consumer = false
     private var incidentAssessment: Assessment? = null
     private lateinit var summaryCard: TextView
+    private lateinit var verdictCard: TextView
     private lateinit var timelineView: dev.cameradoctor.ui.TimelineView
-    private val bg = Color.rgb(12,19,26)
-    private val panel = Color.rgb(19,30,40)
-    private val mint = Color.rgb(111,225,198)
-    private val muted = Color.rgb(153,174,192)
-    private val coral = Color.rgb(255,128,126)
-    private val glass = Color.argb(150,12,19,26)
+    // Expert palette from docs/design/DESIGN.md via ui/Look (PRODUCT-v0.2 11.6): dark tiles, one blue accent, status colours only for state marks.
+    private val bg = dev.cameradoctor.ui.Look.expertTile
+    private val panel = dev.cameradoctor.ui.Look.expertTile2
+    private val mint = dev.cameradoctor.ui.Look.primaryOnDark
+    private val muted = dev.cameradoctor.ui.Look.onDarkMuted
+    private val coral = dev.cameradoctor.ui.Look.statusFail
+    private val glass = Color.argb(150,39,39,41)
     private val main = Handler(Looper.getMainLooper())
     private val cameraWorker = Executors.newSingleThreadExecutor()
     private val io = Executors.newSingleThreadExecutor()
@@ -257,6 +259,8 @@ class MainActivity : ComponentActivity() {
             startActivity(android.content.Intent(this,dev.cameradoctor.check.CheckActivity::class.java))
         }.apply { background=rounded(glass); setTextColor(Color.WHITE) }
         controls.addView(checkButton,LinearLayout.LayoutParams(dp(52),dp(38)).apply { marginStart=dp(6) })
+        // Consumer incident mode (11.4): the engine picker, camera spinner and check entry are expert chrome; hide them.
+        if(consumer) controls.visibility=View.GONE
         statusText=label("INITIALIZING",11,mint,true); topBar.addView(statusText,lp(top=6))
         healthBanner=label("HEALTH · 대기",11,Color.WHITE,true).apply {
             // Fixed two-line height: the banner must not grow or shrink as headlines change length.
@@ -281,12 +285,13 @@ class MainActivity : ComponentActivity() {
         bottomBar.addView(zoomRow,LinearLayout.LayoutParams(-2,-2).apply { topMargin=dp(10) })
         metrics=label("FPS —  ·  ISO —  ·  Exp —\nLens —  ·  Zoom —",11,Color.WHITE).apply { gravity=Gravity.CENTER; typeface=Typeface.MONOSPACE }
         bottomBar.addView(metrics,lp(top=10))
+        if(consumer) { zoomRow.visibility=View.GONE; metrics.visibility=View.GONE }
         val mainRow=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL; gravity=Gravity.CENTER_VERTICAL }
         bottomBar.addView(mainRow,lp(top=12))
         reportButton=button(incidentLabel()) {
             val id="incident_"+SimpleDateFormat("yyyyMMdd_HHmmss_SSS",Locale.US).format(Date())+"_"+UUID.randomUUID().toString().take(8)
             if(recorder.trigger(id)) { incidentAssessment=lastHealth; toast(if(consumer) "이후 5초를 더 기록한 뒤 분석합니다" else "5초 후 incident ZIP을 저장합니다") }
-        }.apply { setTextColor(bg); textSize=if(consumer) 9f else 10f; setTypeface(typeface,Typeface.BOLD); background=circle(coral); contentDescription="문제 순간 기록: 직전 10초와 이후 5초를 저장" }
+        }.apply { setTextColor(Color.WHITE); textSize=if(consumer) 9f else 10f; setTypeface(typeface,Typeface.BOLD); background=circle(coral); contentDescription="문제 순간 기록: 직전 10초와 이후 5초를 저장" }
         captureButton=button("") { engine?.capture() }.apply { background=circle(Color.WHITE,ring=bg); contentDescription="셔터 측정" }
         val panelButton=button("진단") { diagnostics.visibility=if(diagnostics.visibility==View.VISIBLE) View.GONE else View.VISIBLE }
             .apply { background=circle(glass); setTextColor(Color.WHITE); textSize=11f }
@@ -300,8 +305,11 @@ class MainActivity : ComponentActivity() {
         diagnostics.addView(body)
         root.addView(diagnostics,FrameLayout.LayoutParams(-1,-1))
         val head=row().apply { gravity=Gravity.CENTER_VERTICAL }; body.addView(head)
-        head.addView(LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; addView(label("CAMERA DOCTOR",22,Color.WHITE,true)); addView(label("CAMERA SYSTEM OBSERVATORY  /  0.1",10,muted)) },LinearLayout.LayoutParams(0,-2,1f))
+        head.addView(LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; addView(label("CAMERA DOCTOR",22,Color.WHITE,true)); addView(label("EXPERT DIAGNOSTICS  /  0.2",10,muted)) },LinearLayout.LayoutParams(0,-2,1f))
         head.addView(button("닫기") { diagnostics.visibility=View.GONE },LinearLayout.LayoutParams(dp(72),dp(40)))
+        // L1 verdict + L2 evidence first (11.1): what the 진단 button answers before any raw data.
+        verdictCard=label("진단 준비 중…",15,Color.WHITE).apply { setPadding(dp(14),dp(16),dp(14),dp(16)); background=rounded(panel); setLineSpacing(0f,1.25f) }
+        body.addView(verdictCard,lp(top=16))
         // Diagnosis Summary (12.2 item 1): rule, expected vs observed, per-layer state, cause layer. Always above the raw card.
         body.addView(label("DIAGNOSIS",12,muted,true),lp(top=18))
         summaryCard=label("baseline 수집 중…",12,Color.WHITE).apply { typeface=Typeface.MONOSPACE; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
@@ -336,6 +344,11 @@ class MainActivity : ComponentActivity() {
             else startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:$packageName")))
         },LinearLayout.LayoutParams(0,dp(48),1f))
         tools.addView(button("측정 안내") { showNotes() },LinearLayout.LayoutParams(0,dp(48),1f))
+        // 12.3: baseline reset is an expert-only action. Clears every endpoint's stored reference run.
+        tools.addView(button("기준 초기화") {
+            AlertDialog.Builder(this).setTitle("검사 기준 초기화").setMessage("저장된 기준(baseline)을 모두 지웁니다. 다음 60초 검사가 새 기준이 됩니다.")
+                .setNegativeButton("취소",null).setPositiveButton("초기화") { _,_ -> io.execute { dev.cameradoctor.baseline.BaselineStore(this).clear(); main.post { if(!destroyed) toast("기준을 지웠습니다") } } }.show()
+        },LinearLayout.LayoutParams(0,dp(48),1f).apply { marginStart=dp(6) })
         body.addView(label("LOCAL RECORDING · NO IMAGE PIXELS SAVED",10,muted),lp(top=18))
 
         root.setOnApplyWindowInsetsListener { _,insets ->
@@ -419,13 +432,14 @@ class MainActivity : ComponentActivity() {
         strip.update(frames,a.tRefMs,time)
         healthBanner.text=a.headline
         when(a.level) {
-            HealthLevel.WARNING -> { healthBanner.background=rounded(coral); healthBanner.setTextColor(bg) }
-            HealthLevel.WATCH -> { healthBanner.background=rounded(Color.argb(200,255,199,109)); healthBanner.setTextColor(bg) }
+            HealthLevel.WARNING -> { healthBanner.background=rounded(coral); healthBanner.setTextColor(Color.WHITE) }
+            HealthLevel.WATCH -> { healthBanner.background=rounded(dev.cameradoctor.ui.Look.statusWarn); healthBanner.setTextColor(Color.WHITE) }
             HealthLevel.OK -> { healthBanner.background=rounded(glass); healthBanner.setTextColor(mint) }
             HealthLevel.NO_DATA -> { healthBanner.background=rounded(glass); healthBanner.setTextColor(muted) }
         }
         healthCard.text=if(a.evidence.isEmpty()) a.headline else (listOf(a.headline)+a.evidence).joinToString("\n")
         summaryCard.text=diagnosisSummary(a)
+        verdictCard.text=consumerSummary(a)
         val previous=lastHealth
         if(previous==null || previous.level!=a.level || previous.headline!=a.headline) {
             recorder.record(sessionId.ifEmpty { "app" },"health_assessment",values=a.values+mapOf("level" to a.level.name,"headline" to a.headline))
@@ -503,10 +517,8 @@ class MainActivity : ComponentActivity() {
         }
         return "$mark $rule\n\nExpected   $expected\nObserved   $observed\n\n3A         $threeA\nCadence    $cadence\nSensor     $sensor\nCallback   $callback\n\ncause_layer  ${d.causeLayer.name.lowercase(Locale.US)}"
     }
-    /** After MARK INCIDENT: L1 verdict and L2 evidence captured at the trigger (11.4). Consumer wording; details behind a button. */
-    private fun showIncidentSummary(file:File) {
-        if(destroyed || isFinishing) return
-        val a=incidentAssessment; incidentAssessment=null
+    /** L1 verdict line + L2 evidence lines in consumer words (11.1). Shared by the panel verdict card and the incident dialog. */
+    private fun consumerLines(a:Assessment?):Triple<String,String,List<String>> {
         val rule=a?.diagnosis?.rule ?: "insufficient_evidence"
         val v=a?.values.orEmpty()
         fun n(k:String)=(v[k] as? Number)?.toDouble()
@@ -515,10 +527,22 @@ class MainActivity : ComponentActivity() {
         val l2=buildList {
             if(rule=="callback_delay"||rule=="pipeline_stall") add("프레임 응답  평소 ${f(n("baselineGapMs"))} → 지금 ${f(n("partialGapMs"))}")
             if(rule=="sensor_stall"||rule=="pipeline_stall") add("프레임 간격  평소 ${f(n("tRefMs"))} → 지금 ${f(n("intervalMs"))}")
-            add("최근 10초 화면 끊김  ${(v["stallCount10s"] as? Number)?.toInt() ?: 0}회")
-            add("초점·노출  ${if(v["threeAStable"]==true) "정상" else "맞추는 중"}")
+            if(a!=null) { add("최근 10초 화면 끊김  ${(v["stallCount10s"] as? Number)?.toInt() ?: 0}회"); add("초점·노출  ${if(v["threeAStable"]==true) "정상" else "맞추는 중"}") }
         }
-        val title=if(rule=="normal") "특별한 이상은 찾지 못했습니다" else "문제를 발견했습니다"
+        val title=when { a==null -> "아직 판정할 데이터가 없습니다"; rule=="normal" -> "특별한 이상은 찾지 못했습니다"; a.level==HealthLevel.WATCH -> "지켜보는 중입니다"; else -> "문제를 발견했습니다" }
+        return Triple(title,l1,l2)
+    }
+    private fun consumerSummary(a:Assessment):String {
+        if(a.level==HealthLevel.NO_DATA) return "● 판정 준비 중\n${a.headline}"
+        val (title,l1,l2)=consumerLines(a)
+        val mark=when(a.level) { HealthLevel.WARNING -> "⚠"; HealthLevel.WATCH -> "◐"; else -> "●" }
+        return "$mark $title\n$l1\n\n"+l2.joinToString("\n")
+    }
+    /** After MARK INCIDENT: L1 verdict and L2 evidence captured at the trigger (11.4). Consumer wording; details behind a button. */
+    private fun showIncidentSummary(file:File) {
+        if(destroyed || isFinishing) return
+        val a=incidentAssessment; incidentAssessment=null
+        val (title,l1,l2)=consumerLines(a)
         AlertDialog.Builder(this).setTitle(title)
             .setMessage(l1+"\n\n"+l2.joinToString("\n")+"\n\n앱 콜백 관측 결과이며 카메라 내부 원인은 단정하지 않습니다.")
             .setPositiveButton("상세 데이터") { _,_ -> diagnostics.visibility=View.VISIBLE }
