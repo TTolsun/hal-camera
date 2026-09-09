@@ -96,6 +96,20 @@ class RegressionDetectorTest {
         assertNull(compare(null, 120.0).deltaPct)
     }
 
+    @Test fun theMissingSideExplainsTheMissingValue() {
+        // Every metric is stored with NO_BASELINE as its default reason, so the present side never explains a gap.
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("H.4", null, unknownReason = UnknownReason.NOT_MEASURABLE)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.4", 20.0)))
+        val m = RegressionDetector.compare(base, current).metric("H.4")!!
+        assertEquals(UnknownReason.NOT_MEASURABLE, m.unknownReason)
+
+        val flipped = RegressionDetector.compare(
+            run(runId = "20260910-100000-000", metrics = listOf(metric("H.4", 20.0))),
+            run(runId = "20260910-110000-000", metrics = listOf(metric("H.4", null, unknownReason = UnknownReason.INSUFFICIENT_SAMPLES)))
+        ).metric("H.4")!!
+        assertEquals(UnknownReason.INSUFFICIENT_SAMPLES, flipped.unknownReason)
+    }
+
     @Test fun aTimedOutThreeAMetricIsNotCompared() {
         val base = run(runId = "20260910-100000-000", metrics = listOf(metric("H.7", 13000.0, timeout = true)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.7", 460.0)))

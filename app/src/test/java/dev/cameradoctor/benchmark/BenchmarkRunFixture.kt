@@ -16,13 +16,19 @@ object BenchmarkRunFixture {
 
     fun endpoint(key: String = "0") = CameraEndpoint(key, null, LensRole.MAIN, 1, true, true, null, 24.0, 1, 3, 0.6f, 10f)
 
+    /**
+     * [unknownReason] defaults to what [BenchmarkEvaluator] actually writes: NO_BASELINE on a measured metric
+     * before any comparison ran, NOT_RUN when there is no sample. A fixture that left it null would hide the
+     * case where a stored default is mistaken for a real reason (PR #20 review).
+     */
     fun metric(id: String, value: Double?, timeout: Boolean = false, unknownReason: UnknownReason? = null): BenchmarkMetric {
         val info = BenchmarkMetricCatalog.info(id)
         return BenchmarkMetric(
             id = id, category = info?.category ?: Category.RESOURCE, unit = info?.unit ?: "ms",
             value = value, p50 = value, p95 = value, min = value, max = value,
             sampleCount = if (value == null) 0 else 9, samples = null, excludedWarmup = null,
-            timeout = timeout, unknownReason = unknownReason
+            timeout = timeout,
+            unknownReason = unknownReason ?: if (value == null) UnknownReason.NOT_RUN else UnknownReason.NO_BASELINE
         )
     }
 

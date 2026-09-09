@@ -144,7 +144,7 @@ object RegressionDetector {
         // 2026-09-10). Comparing that number would report a regression against a window, not a convergence.
         val timedOut = base?.timeout == true || current?.timeout == true
         val reason = when {
-            b == null || c == null -> current?.unknownReason ?: base?.unknownReason ?: UnknownReason.NOT_RUN
+            b == null || c == null -> missingReason(base, current)
             timedOut -> UnknownReason.NOT_MEASURABLE
             !comparable -> UnknownReason.CONDITION_MISMATCH
             mismatches.any { it.blocks(id) } -> UnknownReason.CONDITION_MISMATCH
@@ -154,6 +154,17 @@ object RegressionDetector {
         if (reason != null) return MetricComparison(id, b, c, delta, RegressionState.UNKNOWN, reason)
 
         return MetricComparison(id, b, c, delta, state(rule!!, b!!, c!!), null)
+    }
+
+    /**
+     * Why a metric has no value. Only the side that is actually missing can explain it: every metric is written
+     * with `NO_BASELINE` as its stored default before any comparison ran (BenchmarkEvaluator), so a present
+     * value's reason says nothing, and reading it would report "no baseline" for a run that has one.
+     */
+    private fun missingReason(base: BenchmarkMetric?, current: BenchmarkMetric?): UnknownReason {
+        fun reasonOf(m: BenchmarkMetric?): UnknownReason? =
+            m?.takeIf { it.value == null }?.unknownReason?.takeIf { it != UnknownReason.NO_BASELINE }
+        return reasonOf(current) ?: reasonOf(base) ?: UnknownReason.NOT_RUN
     }
 
     /** (current − baseline) / baseline × 100. Null when a value is missing or the baseline is zero. */
