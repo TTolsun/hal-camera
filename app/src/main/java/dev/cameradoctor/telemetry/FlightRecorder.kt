@@ -64,6 +64,16 @@ class FlightRecorder(
         trim(now)
         return ring.filter { it.atNs >= now - windowNs }
     }
+    /**
+     * Drops every retained event so the next snapshot() only sees what happens from now on. A benchmark run keeps
+     * its own recorder and must not export the previous run's events; without this the 180 s retention window makes
+     * back-to-back runs share their raw events. An incident that is still collecting keeps its own copy, so a
+     * pending trigger is left alone.
+     */
+    @Synchronized fun clear() {
+        ring.clear()
+        capacityEvictions = 0
+    }
     @Synchronized fun trigger(id: String): Boolean {
         if (pending != null) return false
         val now = clock()

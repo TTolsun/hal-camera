@@ -139,7 +139,7 @@ Profile은 측정 조건 전체를 고정한 불변 객체이고, 모든 run JSO
 
 | 항목 | 값 | 비고 |
 |---|---|---:|
-| `id` | `camera2-standard-v1` | M2 실기기 확인 전까지는 `camera2-standard-v1-draft`로 기록 |
+| `id` | `camera2-standard-v1` | 2026-09-10 M2 실기기 확인으로 확정. draft 기간 종료 |
 | engine | Camera2 | |
 | preview | 1920x1080, TextureView | 현재 코드는 1280x720. METRICS.md 미결 항목의 제안값을 채택 |
 | yuv (1.8 대리 스트림, H.4) | 1920x1080, `YUV_420_888`, acquireLatest 후 즉시 close | 현재 코드는 640x480. CTS `testCameraLaunch`와 같은 크기 정책 |
@@ -215,7 +215,7 @@ data class BenchmarkProfile(
 
 ### 3.5 불변 규칙
 
-- `camera2-standard-v1-draft` 기간에만 조건을 바꿀 수 있다. M2 실기기 확인 뒤 `camera2-standard-v1`로 확정하면 이후에는 어떤 값도 바꾸지 않는다. 바꿔야 하면 `v2`다.
+- `camera2-standard-v1-draft` 기간에만 조건을 바꿀 수 있었다. 2026-09-10에 Galaxy S25+ 실기기 5회 run(후면 메인 3회, 전면 1회, 초광각 1회)에서 1080p YUV 스트림이 33.5 ms 고정 간격을 유지했고 H.5 stall이 모두 0이었으므로 `camera2-standard-v1`으로 확정했다. 이후에는 어떤 값도 바꾸지 않는다. 바꿔야 하면 `v2`다.
 - draft로 기록된 run은 `PROFILE_DRAFT` flag가 붙어 scoring 부적격이다. profile id가 다르므로 v1 결과와는 애초에 비교되지 않는다.
 
 ### 3.6 ProfileCompatibility preflight
