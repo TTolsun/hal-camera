@@ -241,13 +241,17 @@ class BenchmarkActivity : ComponentActivity() {
             "session_configured" -> r.signal(s, BenchmarkRunner.Signal.CONFIGURED, e.atNs)
             "repeating_submit" -> r.mark(s, "repeating_call", e.atNs)
             "capture_started" -> if (s == r.currentSession) r.firstStarted(s, e.atNs)
+            // The engine records capture_submit right before CameraCaptureSession.capture(), which is the
+            // submission time METRICS.md asks for, and the tag ties every still callback to its request.
+            "capture_submit" -> (e.values["requestTag"] as? String)?.let { r.stillSubmitted(s, it, e.atNs) }
             "image_available" -> when (e.values["stream"]) {
-                "still" -> r.signal(s, BenchmarkRunner.Signal.STILL_RECEIVED, e.atNs)
+                "still" -> r.stillImage(s, e.sensorNs, e.atNs)
                 else -> if (!firstYuvSeen && s == r.currentSession) {
                     firstYuvSeen = true; r.signal(s, BenchmarkRunner.Signal.FIRST_FRAME, e.atNs)
                 }
             }
-            "capture_result" -> if ((e.values["requestTag"] as? String)?.startsWith("still-") == true) r.stillResult(s, e.atNs)
+            "capture_result" -> (e.values["requestTag"] as? String)?.takeIf { it.startsWith("still-") }
+                ?.let { r.stillResult(s, it, e.sensorNs, e.atNs) }
             "closed" -> r.signal(s, BenchmarkRunner.Signal.CLOSED, e.atNs)
             "camera_error", "configure_failed", "capture_timeout" ->
                 r.signal(s, BenchmarkRunner.Signal.ERROR, e.atNs, e.kind)

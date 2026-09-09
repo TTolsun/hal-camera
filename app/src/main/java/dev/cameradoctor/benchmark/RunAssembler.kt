@@ -41,10 +41,10 @@ object RunAssembler {
         val end = result.observeEndNs
         if (session == null || start == null || end == null) return ObservationInput(null, 0, 0, 0, null)
         val extractor = MetricExtractor(ValidityFlags.MIN_OBSERVED_FRAMES)
-        // The 3A window opens at the first frame of the observation session, so the frames are taken from there
-        // and the warm-up frames are dropped for the cadence metrics only.
-        val from = result.observeFirstFrameNs ?: start
-        val frames = extractor.frames(events, session, from, end)
+        // 3A convergence is measured from the first capture result of the observation session (3.2), which can
+        // precede the first YUV image, so the frames are collected from the whole session rather than from
+        // observeFirstFrameNs. The warm-up frames are then dropped for the cadence metrics only.
+        val frames = extractor.frames(events, session, Long.MIN_VALUE, end)
         val warmup = frames.count { it.resultAtNs < start }
         val expectedMs = fixedFpsExpectedMs(profile)
         val observation = extractor.observe(frames, fixedFpsExpectedMs = expectedMs, warmupFrames = warmup)

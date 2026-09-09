@@ -197,6 +197,40 @@ class RunAssemblerTest {
     }
 
     @Test
+    fun `a window whose frames are all warm-up leaves no observation samples`() {
+        // The camera delivered results during the 3 s warm-up and then stopped: the observation window is empty
+        // and the warm-up frames must not be reused as if they had been observed (PR #14 review).
+        val warmupOnly = previewEvents().filter { it.atNs < observeStartNs }
+        val obs = RunAssembler.observe(result(), warmupOnly, profile)
+        assertEquals(0, obs.observedFrames)
+        val run = RunAssembler.assemble(result(), listOf(configuredEvent()) + warmupOnly, profile, context())
+        assertFalse(run.validity.measurementValid)
+        assertTrue(ValidityFlags.INSUFFICIENT_SAMPLES.code in run.validity.flags)
+        assertNull(run.metric("H.1")!!.value)
+    }
+
+    @Test
+    fun `3A convergence is measured from the first result even when it precedes the first YUV`() {
+        // A result at 100 ms is SEARCHING, the first YUV image only arrives at 120 ms, and AE converges at
+        // 133 ms. Starting the window at the YUV image would report the 33 ms convergence as 0 ms.
+        val start = firstFrameNs
+        val events = listOf(
+            Event(start - 5_000_000, session, "capture_started", frame = 0L, sensorNs = start),
+            Event(start, session, "capture_result", frame = 0L, sensorNs = start,
+                values = mapOf("intervalMs" to 33.333, "ae" to 1, "af" to 4, "awb" to 2, "afMode" to 4)),
+            Event(start + 28_000_000, session, "capture_started", frame = 1L, sensorNs = start + 33_333_000),
+            Event(start + 33_333_000, session, "capture_result", frame = 1L, sensorNs = start + 33_333_000,
+                values = mapOf("intervalMs" to 33.333, "ae" to 2, "af" to 4, "awb" to 2, "afMode" to 4))
+        ) + previewEvents().filter { it.atNs > start + 33_333_000 }
+        // The first YUV image is recorded after the first result, which is what the runner reports as
+        // observeFirstFrameNs; the 3A window must still open at the result.
+        val withLateYuv = result().copy(observeFirstFrameNs = start + 20_000_000)
+        val obs = RunAssembler.observe(withLateYuv, events, profile)
+        val ae = obs.observation!!.samples.first { it.id == "H.6" }
+        assertEquals(33.333, ae.value!!, 0.1)
+    }
+
+    @Test
     fun `thermal throttling in the middle of a run blocks comparison even when it cools down`() {
         val run = RunAssembler.assemble(
             result(), listOf(configuredEvent()) + previewEvents(), profile,

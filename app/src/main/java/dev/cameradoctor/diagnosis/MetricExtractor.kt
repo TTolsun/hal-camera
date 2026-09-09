@@ -105,7 +105,10 @@ class MetricExtractor(private val minSamples: Int = 15) {
     fun observe(frames: List<FrameObservation>, baselineIntervalMs: Double? = null,
                 aggregation: Aggregation = Aggregation.PERCENTILE, fixedFpsExpectedMs: Double? = null,
                 warmupFrames: Int = 0): Observation {
-        val steady = if (frames.size > warmupFrames) frames.drop(warmupFrames) else frames
+        // Dropping every frame is a real answer, not a reason to fall back to the full list: when the whole
+        // window turned out to be warm-up there is nothing steady to measure, and reusing the warm-up frames
+        // would report them as valid observation samples (PR #14 review).
+        val steady = frames.drop(warmupFrames)
         val intervals = steady.mapNotNull { it.intervalMs }
         val durations = steady.mapNotNull { it.ownDurationMs }
         val partials = steady.mapNotNull { it.partialMs }

@@ -98,6 +98,24 @@ class BenchmarkRunnerTest {
         r.signal(s, BenchmarkRunner.Signal.CLOSED, clock.ns)
     }
 
+    /**
+     * One still the way Camera2Engine reports it: the engine posts the request to its own thread, records
+     * capture_submit with a tag, then the result and the JPEG come back carrying the same sensor timestamp.
+     */
+    private fun completeStill(
+        r: BenchmarkRunner, index: Int, queueMs: Long = 5, resultMs: Long = 120, imageMs: Long = 60
+    ) {
+        val s = r.currentSession
+        clock.advanceMs(queueMs)
+        val tag = "still-$index"
+        r.stillSubmitted(s, tag, clock.ns)
+        val sensorNs = clock.ns
+        clock.advanceMs(resultMs)
+        r.stillResult(s, tag, sensorNs, clock.ns)
+        clock.advanceMs(imageMs)
+        r.stillImage(s, sensorNs, clock.ns)
+    }
+
     /** The full happy path: launchIterations cycles, then the observation session, window, stills and close. */
     private fun runToEnd(r: BenchmarkRunner) {
         r.start()
@@ -108,11 +126,7 @@ class BenchmarkRunnerTest {
         completeOpen(r)                       // the observation session stays open
         scheduler.advanceMs(profile.warmupMs)
         scheduler.advanceMs(profile.observeMs)
-        repeat(profile.stillCount) {
-            clock.advanceMs(150)
-            r.stillResult(r.currentSession, clock.ns)
-            r.signal(r.currentSession, BenchmarkRunner.Signal.STILL_RECEIVED, clock.ns)
-        }
+        repeat(profile.stillCount) { completeStill(r, it) }
         completeClose(r)
     }
 
@@ -172,10 +186,7 @@ class BenchmarkRunnerTest {
         repeat(profile.launchIterations - 1) { completeOpen(r); completeClose(r) }
         completeOpen(r)
         scheduler.advanceMs(profile.warmupMs + profile.observeMs)
-        repeat(profile.stillCount) {
-            clock.advanceMs(150)
-            r.signal(r.currentSession, BenchmarkRunner.Signal.STILL_RECEIVED, clock.ns)
-        }
+        repeat(profile.stillCount) { completeStill(r, it) }
         completeClose(r)
 
         val result = listener.result!!
@@ -237,10 +248,7 @@ class BenchmarkRunnerTest {
         scheduler.advanceMs(profile.warmupMs + profile.observeMs)
         // First still times out, the rest arrive.
         scheduler.advanceMs(BenchmarkRunner.Config().stillTimeoutMs)
-        repeat(profile.stillCount - 1) {
-            clock.advanceMs(150)
-            r.signal(r.currentSession, BenchmarkRunner.Signal.STILL_RECEIVED, clock.ns)
-        }
+        repeat(profile.stillCount - 1) { completeStill(r, it + 1) }
         completeClose(r)
 
         val result = listener.result!!
@@ -275,10 +283,7 @@ class BenchmarkRunnerTest {
         repeat(profile.launchIterations) { completeOpen(r); completeClose(r) }
         completeOpen(r)
         scheduler.advanceMs(profile.warmupMs + profile.observeMs)
-        repeat(profile.stillCount) {
-            clock.advanceMs(150)
-            r.signal(r.currentSession, BenchmarkRunner.Signal.STILL_RECEIVED, clock.ns)
-        }
+        repeat(profile.stillCount) { completeStill(r, it) }
         scheduler.advanceMs(BenchmarkRunner.Config().closeTimeoutMs)
 
         val result = listener.result!!
@@ -298,6 +303,116 @@ class BenchmarkRunnerTest {
             ),
             listener.phases
         )
+    }
+
+    /** Drives the run up to the first still submission, so the still tests can start from there. */
+    private fun runToFirstStill(r: BenchmarkRunner) {
+        r.start()
+        repeat(profile.launchIterations) { completeOpen(r); completeClose(r) }
+        completeOpen(r)
+        scheduler.advanceMs(profile.warmupMs + profile.observeMs)
+    }
+
+    @Test
+    fun `a result arriving after the next capture was submitted stays on its own sample`() {
+        val r = runner()
+        runToFirstStill(r)
+        val s = r.currentSession
+        // Capture 0: the JPEG comes back before its result, so the run moves on with the result outstanding.
+        clock.advanceMs(5)
+        r.stillSubmitted(s, "still-0", clock.ns)
+        val sensor0 = clock.ns
+        clock.advanceMs(180)
+        r.stillImage(s, sensor0, clock.ns)
+        val image0 = clock.ns
+        // Capture 1 is already in flight when capture 0's result finally arrives.
+        clock.advanceMs(5)
+        r.stillSubmitted(s, "still-1", clock.ns)
+        clock.advanceMs(10)
+        val result0 = clock.ns
+        r.stillResult(s, "still-0", sensor0, result0)
+        repeat(profile.stillCount - 1) { completeStill(r, it + 1) }
+        completeClose(r)
+
+        val stills = listener.result!!.stills
+        assertEquals((image0 - sensor0) / 1e6, stills[0].latencyMs!!, 0.001)
+        assertEquals((result0 - sensor0) / 1e6, stills[0].resultLatencyMs!!, 0.001)
+        // Capture 1 keeps its own result, not the late one from capture 0.
+        assertTrue(stills[1].resultLatencyMs!! < stills[0].resultLatencyMs!!)
+    }
+
+    @Test
+    fun `a JPEG that arrives after its timeout belongs to its own sample and does not advance the run`() {
+        val r = runner()
+        runToFirstStill(r)
+        val s = r.currentSession
+        clock.advanceMs(5)
+        r.stillSubmitted(s, "still-0", clock.ns)
+        val sensor0 = clock.ns
+        // The result identifies the request, then the capture times out before the JPEG is delivered.
+        clock.advanceMs(100)
+        r.stillResult(s, "still-0", sensor0, clock.ns)
+        scheduler.advanceMs(BenchmarkRunner.Config().stillTimeoutMs)
+        assertEquals("the next capture was submitted", 2, driver.stills)
+        clock.advanceMs(5)
+        r.stillSubmitted(s, "still-1", clock.ns)
+        // The late JPEG of capture 0 must not count as capture 1 arriving.
+        clock.advanceMs(10)
+        val late = clock.ns
+        r.stillImage(s, sensor0, late)
+        assertEquals("no third capture was submitted", 2, driver.stills)
+
+        repeat(profile.stillCount - 1) { completeStill(r, it + 1) }
+        completeClose(r)
+        val stills = listener.result!!.stills
+        assertEquals(late, stills[0].imageNs)
+        assertEquals("STILL_timeout", listener.result!!.hardFailure)
+    }
+
+    @Test
+    fun `the submission time comes from the engine, not from the driver call`() {
+        val r = runner()
+        runToFirstStill(r)
+        val s = r.currentSession
+        val driverCall = clock.ns
+        // The engine posts the request to its own thread; 100 ms of queue wait must not land in the latency.
+        clock.advanceMs(100)
+        val actualSubmit = clock.ns
+        r.stillSubmitted(s, "still-0", actualSubmit)
+        val sensor0 = clock.ns
+        clock.advanceMs(180)
+        r.stillImage(s, sensor0, clock.ns)
+        repeat(profile.stillCount - 1) { completeStill(r, it + 1) }
+        completeClose(r)
+
+        val first = listener.result!!.stills.first()
+        assertEquals(actualSubmit, first.submitNs)
+        assertTrue("the queue wait is excluded", first.submitNs > driverCall)
+        assertEquals(180.0, first.latencyMs!!, 0.001)
+    }
+
+    @Test
+    fun `the last capture keeps a result that arrives while the camera is closing`() {
+        val r = runner()
+        runToFirstStill(r)
+        val s = r.currentSession
+        repeat(profile.stillCount - 1) { completeStill(r, it) }
+        // The last capture: the JPEG closes the still phase, the result follows during CLOSE.
+        val last = profile.stillCount - 1
+        clock.advanceMs(5)
+        r.stillSubmitted(s, "still-$last", clock.ns)
+        val sensorLast = clock.ns
+        clock.advanceMs(180)
+        r.stillImage(s, sensorLast, clock.ns)
+        assertEquals(BenchmarkRunner.Step.CLOSE, r.step)
+        clock.advanceMs(20)
+        val lateResult = clock.ns
+        r.stillResult(s, "still-$last", sensorLast, lateResult)
+        completeClose(r)
+
+        val stills = listener.result!!.stills
+        assertEquals(profile.stillCount, stills.size)
+        assertEquals((lateResult - sensorLast) / 1e6, stills.last().resultLatencyMs!!, 0.001)
     }
 
     @Test

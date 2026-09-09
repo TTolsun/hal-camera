@@ -47,8 +47,12 @@ class BenchmarkRunner(
     /** The six phases of the progress screen (3.2). */
     enum class Phase { CAMERA_OPEN, FIRST_PREVIEW, PREVIEW_STABILITY, THREE_A, STILL_CAPTURE, CAMERA_CLOSE }
 
-    /** Camera-side events the runner reacts to. Timestamps are elapsedRealtimeNanos. */
-    enum class Signal { OPENED, CONFIGURED, FIRST_FRAME, STILL_RECEIVED, CLOSED, ERROR }
+    /**
+     * Camera-side events the runner reacts to. Timestamps are elapsedRealtimeNanos. Still callbacks are not
+     * signals: they carry a request tag or a sensor timestamp and go through [stillSubmitted], [stillImage] and
+     * [stillResult] so each callback lands on the request it belongs to.
+     */
+    enum class Signal { OPENED, CONFIGURED, FIRST_FRAME, CLOSED, ERROR }
 
     interface Driver {
         /** Open [endpoint] with the profile's streams and start repeating. Must report OPENED, CONFIGURED, FIRST_FRAME. */
@@ -103,16 +107,15 @@ class BenchmarkRunner(
     private var timer: Any? = null
     private val marks = LinkedHashMap<String, Long>()
     private val cycles = mutableListOf<LaunchCycle>()
-    private val stills = mutableListOf<StillSample>()
+    private val stills = mutableListOf<PendingStill>()
+    /** JPEGs whose request is not known yet, by sensor timestamp; claimed when the matching result arrives. */
+    private val unmatchedImages = LinkedHashMap<Long, Long>()
     private val sessions = mutableListOf<String>()
     private var cycleFailed = false
     private var consecutiveFailures = 0
     private var hardFailure: String? = null
     private var aborted: String? = null
     private var stillIndex = 0
-    private var stillSubmitNs = 0L
-    private var stillImageNs: Long? = null
-    private var stillResultNs: Long? = null
     private var observeSession: String? = null
     private var observeFirstFrameNs: Long? = null
     private var observeStartNs: Long? = null
@@ -150,7 +153,6 @@ class BenchmarkRunner(
                 marks["first_yuv"] = atNs
                 if (onObservationSession) { observeFirstFrameNs = atNs; enter(Step.WARMUP) } else enter(Step.CYCLE_CLOSE)
             }
-            Signal.STILL_RECEIVED -> if (step == Step.STILL) { stillImageNs = atNs; stillDone() }
             Signal.CLOSED -> when (step) {
                 Step.CYCLE_CLOSE -> { marks["closed"] = atNs; cycleDone() }
                 Step.CLOSE -> { marks["closed"] = atNs; finish() }
@@ -160,9 +162,58 @@ class BenchmarkRunner(
         }
     }
 
-    /** Result callback of a still request (onCaptureCompleted); used for 2.3. */
-    fun stillResult(session: String, atNs: Long = clock()) {
-        if (session == this.session && step == Step.STILL && stillResultNs == null) stillResultNs = atNs
+    /**
+     * The engine reported the actual submission of a still (Camera2Engine's `capture_submit`) together with the
+     * request tag it used. The submission time comes from here rather than from the moment [Driver.still] was
+     * called: the engine posts the request to its own thread, and METRICS.md measures from just before the API
+     * call, so counting the queue wait would inflate 2.2, 2.3 and 2.5.
+     */
+    fun stillSubmitted(session: String, tag: String, atNs: Long = clock()) {
+        if (session != this.session) return
+        val p = stills.lastOrNull { it.tag == null && !it.closed } ?: return
+        p.tag = tag
+        p.submitNs = atNs
+    }
+
+    /**
+     * A JPEG arrived. [sensorNs] is the image timestamp, which equals the SENSOR_TIMESTAMP of the request's
+     * result, so it identifies the request even when the callbacks overtake each other. An image whose request
+     * is not known yet is held until its result names it, and it never silently becomes a later sample.
+     */
+    fun stillImage(session: String, sensorNs: Long?, atNs: Long = clock()) {
+        if (session != this.session) return
+        val current = stills.lastOrNull()
+        val known = sensorNs?.let { s -> stills.firstOrNull { it.sensorNs == s } }
+        if (known != null) {
+            if (known.imageNs == null) known.imageNs = atNs
+            if (known === current && step == Step.STILL) stillAdvance()
+            return
+        }
+        if (sensorNs != null) unmatchedImages[sensorNs] = atNs
+        // Not attributable yet: it still means one capture came back, so the current sample takes it for now and
+        // the result that names the image corrects the attribution.
+        if (current != null && !current.closed && current.imageNs == null && step == Step.STILL) {
+            current.imageNs = atNs
+            stillAdvance()
+        }
+    }
+
+    /**
+     * Result callback of a still request (onCaptureCompleted); used for 2.3. Matched by request tag, so a result
+     * that arrives after the next capture was submitted, or after the run moved on to CLOSE, still lands on its
+     * own sample.
+     */
+    fun stillResult(session: String, tag: String?, sensorNs: Long? = null, atNs: Long = clock()) {
+        if (session != this.session) return
+        val p = tag?.let { t -> stills.firstOrNull { it.tag == t } } ?: return
+        if (p.resultNs == null) p.resultNs = atNs
+        if (sensorNs == null || p.sensorNs != null) return
+        p.sensorNs = sensorNs
+        unmatchedImages.remove(sensorNs)?.let { imageAt ->
+            // Take the image back from whichever sample had provisionally claimed it.
+            stills.firstOrNull { it !== p && it.imageNs == imageAt }?.imageNs = null
+            p.imageNs = imageAt
+        }
     }
 
     /** The first repeating capture started (onCaptureStarted); used for 1.3. */
@@ -237,7 +288,8 @@ class BenchmarkRunner(
         marks["failure"] = atNs
         if (hardFailure == null) hardFailure = reason
         when (step) {
-            Step.STILL -> stillDone()                       // record the missing image and try the next capture
+            // Close this sample so a late JPEG is still attributed to it, then try the next capture.
+            Step.STILL -> { stills.lastOrNull()?.closed = true; stillAdvance() }
             Step.CYCLE_CLOSE -> cycleDone()
             Step.CLOSE -> finish()
             Step.OPEN, Step.CONFIGURE, Step.FIRST_FRAME -> {
@@ -283,25 +335,29 @@ class BenchmarkRunner(
 
     private fun submitStill() {
         cancelTimer()
-        stillImageNs = null
-        stillResultNs = null
-        stillSubmitNs = clock()
+        // The submission time is provisional until the engine reports capture_submit for this request.
+        stills += PendingStill(stillIndex, profile.excludeFirst && stillIndex == 0, clock())
         driver.still(session)
         arm(config.stillTimeoutMs)
     }
 
-    /** Records the current still (with a null image when it timed out) and moves to the next one or to CLOSE. */
-    private fun stillDone() {
+    /** Moves on to the next capture, or to CLOSE when the profile's captures are done. */
+    private fun stillAdvance() {
         cancelTimer()
-        stills += StillSample(
-            index = stillIndex,
-            warmup = profile.excludeFirst && stillIndex == 0,
-            submitNs = stillSubmitNs,
-            imageNs = stillImageNs,
-            resultNs = stillResultNs
-        )
         stillIndex++
         if (aborted != null || stillIndex >= profile.stillCount) enter(Step.CLOSE) else submitStill()
+    }
+
+    /** One still capture while the run is in flight; [StillSample] is the immutable form stored in the result. */
+    private class PendingStill(val index: Int, val warmup: Boolean, var submitNs: Long) {
+        var tag: String? = null
+        var imageNs: Long? = null
+        var resultNs: Long? = null
+        var sensorNs: Long? = null
+        /** Timed out: a JPEG arriving later belongs here, but must not advance the run any further. */
+        var closed = false
+
+        fun toSample() = StillSample(index, warmup, submitNs, imageNs, resultNs)
     }
 
     private fun arm(ms: Long) {
@@ -325,7 +381,7 @@ class BenchmarkRunner(
         step = if (aborted != null) Step.ABORTED else Step.DONE
         listener.onFinished(
             Result(
-                runId = runId, endpoint = endpoint, cycles = cycles.toList(), stills = stills.toList(),
+                runId = runId, endpoint = endpoint, cycles = cycles.toList(), stills = stills.map { it.toSample() },
                 observeSession = observeSession, observeFirstFrameNs = observeFirstFrameNs,
                 observeStartNs = observeStartNs, observeEndNs = observeEndNs,
                 hardFailure = hardFailure, aborted = aborted, sessions = sessions.toList()
