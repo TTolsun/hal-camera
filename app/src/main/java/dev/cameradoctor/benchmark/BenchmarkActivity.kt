@@ -291,7 +291,7 @@ class BenchmarkActivity : ComponentActivity() {
             append(" · flags=${run.validity.flags.joinToString(",").ifEmpty { "none" }}")
             append("\nmeasurement=${run.validity.measurementValid} comparison=${run.validity.comparisonEligible} scoring=${run.validity.scoringEligible}")
             result.hardFailure?.let { append("\nhard failure: $it") }
-            append("\n탭하면 이 내용을, 길게 누르면 JSON 경로만 복사합니다.")
+            append("\n\nTap to copy this summary. Long press to copy the JSON path.")
         }
     }
 
