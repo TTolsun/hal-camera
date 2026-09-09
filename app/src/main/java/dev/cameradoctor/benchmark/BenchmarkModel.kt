@@ -37,8 +37,12 @@ data class MeasurementContract(
 
         fun forProfile(profile: BenchmarkProfile) = MeasurementContract(profile.id, METRIC_DEFINITION_VERSION, STATS_METHOD, CLOCK)
 
+        /** profile_id is required; the other three default to this app's constants, which is what every writer used. */
         fun fromJsonMap(m: Map<String, Any?>) = MeasurementContract(
-            m["profile_id"] as String, m["metric_definition_version"] as String, m["stats_method"] as String, m["clock"] as String
+            profileId = JsonMaps.reqString(m, "profile_id", "contract"),
+            metricDefinitionVersion = JsonMaps.s(m["metric_definition_version"]) ?: METRIC_DEFINITION_VERSION,
+            statsMethod = JsonMaps.s(m["stats_method"]) ?: STATS_METHOD,
+            clock = JsonMaps.s(m["clock"]) ?: CLOCK
         )
     }
 }
@@ -91,7 +95,7 @@ data class BenchmarkMetric(
 
     companion object {
         fun fromJsonMap(m: Map<String, Any?>): BenchmarkMetric = BenchmarkMetric(
-            id = m["id"] as String,
+            id = JsonMaps.reqString(m, "id", "metric"),
             category = JsonMaps.enum("category", m, Category.values()) ?: Category.RESOURCE,
             unit = m["unit"] as? String ?: "",
             value = JsonMaps.d(m["value"]), p50 = JsonMaps.d(m["p50"]), p95 = JsonMaps.d(m["p95"]),
@@ -272,6 +276,17 @@ object JsonMaps {
     fun map(v: Any?): Map<String, Any?>? = v as? Map<String, Any?>
     fun <E : Enum<E>> enum(key: String, m: Map<String, Any?>, values: Array<E>): E? =
         s(m[key])?.let { name -> values.firstOrNull { it.jsonName == name } }
+
+    // Required fields: a missing or mistyped value is an IllegalArgumentException naming the key, never a
+    // ClassCastException or a silently substituted value. BenchmarkReport.read() turns it into "unreadable run".
+    fun reqString(m: Map<String, Any?>, key: String, where: String): String =
+        s(m[key]) ?: throw IllegalArgumentException("$where.$key missing or not a string: ${m[key]}")
+    fun reqBoolean(m: Map<String, Any?>, key: String, where: String): Boolean =
+        m[key] as? Boolean ?: throw IllegalArgumentException("$where.$key missing or not a boolean: ${m[key]}")
+    fun reqInt(m: Map<String, Any?>, key: String, where: String): Int =
+        i(m[key]) ?: throw IllegalArgumentException("$where.$key missing or not a number: ${m[key]}")
+    fun reqLong(m: Map<String, Any?>, key: String, where: String): Long =
+        (m[key] as? Number)?.toLong() ?: throw IllegalArgumentException("$where.$key missing or not a number: ${m[key]}")
 
     fun endpointToMap(e: CameraEndpoint): Map<String, Any?> = e.toJsonMap()
 

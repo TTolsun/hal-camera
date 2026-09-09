@@ -89,6 +89,20 @@ class BenchmarkReportCodecTest {
         assertEquals(ms["1.1"], BenchmarkMetric.fromJsonMap(open))
     }
 
+    @Test fun missingRequiredFieldsFailWithTheKeyName() {
+        val m = BenchmarkReportCodec.toJsonMap(run())
+        try { BenchmarkReportCodec.fromJsonMap(m - "run_id"); fail("run_id required") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("run_id")) }
+        val metric = run().metrics.first().toJsonMap() - "id"
+        try { BenchmarkMetric.fromJsonMap(metric); fail("metric id required") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("id")) }
+        try { MeasurementContract.fromJsonMap(mapOf("clock" to "x")); fail("profile_id required") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("profile_id")) }
+        // Optional contract fields fall back to the writer constants.
+        val c = MeasurementContract.fromJsonMap(mapOf("profile_id" to "p"))
+        assertEquals(MeasurementContract.METRIC_DEFINITION_VERSION, c.metricDefinitionVersion)
+    }
+
     @Test fun otherSchemaVersionIsRejected() {
         val m = BenchmarkReportCodec.toJsonMap(run()) + ("schema_version" to 2)
         try {
