@@ -18,4 +18,5 @@ graph LR
     event-record -->|"RunAssembler의 관측 세션·H.9 입력"| benchmark-metrics
     judged-states -->|"schema 2 저장"| run-json
     benchmark-metrics -->|"유효성·측정값을 schema 3 저장"| run-json
-    run-json -->|"측정값 읽기; 비교 UI 연결은 별도 작업"| rendered-screens
+    run-json -->|"저장 결과와 기준 실행을 비교해 결과·비교 테이블 표시"| rendered-screens
+

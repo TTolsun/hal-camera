@@ -1,1 +1,2 @@
-benchmark/BenchmarkActivity.kt는 LIVE에서 진입하는 벤치마크 실행 화면입니다. ProfileCompatibilityChecker로 사전 확인하고 StreamSpec과 ThermalTracker를 준비해 BenchmarkRunner를 실행합니다. finishRun은 RunAssembler와 BenchmarkReport로 결과를 저장하며 표본 수·flag·저장 경로를 표시합니다. ResultPresenter 비교 테이블은 아직 이 경로에서 호출하지 않습니다.
+benchmark/BenchmarkActivity.kt는 LIVE에서 진입하는 벤치마크 실행 화면입니다. ProfileCompatibilityChecker로 사전 확인하고 StreamSpec과 ThermalTracker를 준비해 BenchmarkRunner를 실행합니다. finishRun은 RunAssembler와 BenchmarkReport로 결과를 저장하며 표본 수·flag·저장 경로를 표시합니다. finishRun은 io 실행기에서 baseline 또는 이전 실행을 선택하고 비교한 후 RESULT 화면으로 전환합니다. renderResult는 ResultPresenter, renderCompare는 ComparePresenter를 호출합니다. MainActivity가 선택 카메라 ID와 엔진 이름을 전달하며 시작 카드는 StartCardPresenter, 실행 진행률은 ProgressPresenter로 구성합니다.
+

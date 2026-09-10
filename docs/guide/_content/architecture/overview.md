@@ -31,7 +31,7 @@ HALCamera는 단일 모듈 Android 앱입니다(`:app`, applicationId `dev.halca
 
 `diagnosis/`는 v0.2의 건강 판정 계층(PASS / WARN / FAIL)이고, `benchmark/`는 v0.3 Camera BenchMarker의 측정 전용 데이터 계약(IMPROVED / STABLE / REGRESSED / UNKNOWN)입니다. 2026-09-09에 v0.2를 중단하고 v0.3으로 전환하기로 결정했기 때문에(D-002) 두 계층이 M3까지 공존합니다. 전환 이유 자체는 결정 기록에 아직 적혀 있지 않으므로 확인 필요입니다.
 
-Home·Auto Check는 v0.2 건강 판정을 사용하고, LIVE에서 진입하는 BenchmarkActivity는 v0.3 측정 경로를 실행합니다. `MainActivity`가 `FlightRecorder`, `Telemetry`, `HealthMonitor`를 직접 들고 있고, 카메라 열기, 권한 처리, incident 내보내기, CPU 샘플링까지 한 클래스에서 처리합니다. `BenchmarkRunner`는 코드에 존재하며 warm reopen 반복과 관측 세션을 구동하는 상태 기계입니다. BenchmarkActivity가 러너를 구동하고, 완료 후 RunAssembler로 결과를 조립해 BenchmarkReport로 저장합니다.
+Home·Auto Check는 v0.2 건강 판정을 사용하고, LIVE에서 진입하는 BenchmarkActivity는 v0.3 측정 경로를 실행합니다. `MainActivity`가 `FlightRecorder`, `Telemetry`, `HealthMonitor`를 직접 들고 있고, 카메라 열기, 권한 처리, incident 내보내기, CPU 샘플링까지 한 클래스에서 처리합니다. `BenchmarkRunner`는 코드에 존재하며 warm reopen 반복과 관측 세션을 구동하는 상태 기계입니다. BenchmarkActivity가 러너를 구동하고, 완료 후 RunAssembler로 결과를 조립해 BenchmarkReport로 저장합니다. 이어서 baseline 또는 이전 실행을 선택해 RegressionDetector로 비교하고 결과·비교 테이블을 표시합니다.
 
 Camera2 엔진과 CameraX 엔진을 둘 다 유지하는 것은 2026-09-08의 결정입니다(D-001). Camera2가 측정 경로, CameraX가 비교 경로입니다. 이 결정의 이유는 결정 기록에 아직 없으므로 확인 필요입니다.
 
@@ -41,4 +41,4 @@ Camera2 엔진과 CameraX 엔진을 둘 다 유지하는 것은 2026-09-08의 �
 2. `telemetry/Telemetry.kt`와 `telemetry/FlightRecorder.kt` — 무엇이 어떤 이름의 이벤트로 기록되는지 봅니다. 이 두 파일을 합쳐도 200줄이 되지 않습니다.
 3. `check/AutoCheckRunner.kt` — 엔드포인트마다 OPEN, CONFIGURE, FIRST_FRAME, OBSERVE(10초), STILL 3회, CLOSE 순서로 진행하는 상태 기계입니다.
 4. `check/CheckEvaluator.kt` — 러너 결과와 이벤트가 만나서 지표가 되는 지점입니다.
-5. `MainActivity.kt` — 위 요소들을 조립하는 곳입니다. 566줄이므로 마지막에 읽습니다.
+5. `MainActivity.kt` — 위 요소들을 조립하는 곳입니다. 화면과 실행 경로를 연결하므로 마지막에 읽습니다.

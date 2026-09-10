@@ -116,7 +116,7 @@ pages:
             - 결과가 예상과 다를 때 어느 단계의 출력을 먼저 확인해야 하는가
           must_link: [FlightRecorder, MetricExtractor, CheckEvaluator]
           forbid:
-            - 벤치마크 측정·저장 경로와 아직 Activity에 연결되지 않은 비교 UI를 구분합니다.
+            - 측정값의 저장과 baseline/reference를 이용한 비교 결과 계산을 구분합니다.
 
       - id: runtime-diagram
         kind: omm

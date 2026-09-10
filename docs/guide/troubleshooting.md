@@ -17,9 +17,9 @@ nav_order: 7
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-10 @ `037db0d` · Codex |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-10 @ `037db0d` · Codex |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-10 @ `037db0d` · Codex |
+| 구조 원본 `data-flow` | 관련 소스 변경됨 — 재검토 필요 | 검토 2026-09-10 @ `037db0d` · Codex |
+| 구조 원본 `state-transitions` | 관련 소스 변경됨 — 재검토 필요 | 검토 2026-09-10 @ `037db0d` · Codex |
+| 원고 `layer-isolation` | 관련 소스 변경됨 — 재검토 필요 | 검토 2026-09-10 @ `037db0d` · Codex |
 
 <!-- omm:end id=status -->
 
@@ -126,7 +126,7 @@ incident 번들에는 이벤트와 메타데이터만 담기고 이미지 픽셀
 3. **센서 시계 도메인을 확인합니다.** 센서 타임스탬프는 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 `atNs`와 비교할 수 있습니다. 그렇지 않은 기기에서 두 값을 빼면 의미 없는 차이가 나옵니다.
 4. **프레임워크와 HAL을 나눕니다.** 앱의 관측만으로는 이 둘을 확정할 수 없습니다. 이 단계부터는 시스템 트레이스와 카메라 서비스 로그가 필요하며, 팀에서 쓰는 수집 절차는 확인 필요입니다.
 
-<sub>근거 파일: `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt` · 근거 수준: 코드 확인 · 검토 2026-09-10 @ `037db0d` · Codex</sub>
+<sub>근거 파일: `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt` · 근거 수준: 코드 확인 · 검토 상태: 관련 소스 변경됨 — 재검토 필요</sub>
 
 <!-- omm:end id=layer-isolation -->
 
@@ -143,7 +143,7 @@ incident 번들에는 이벤트와 메타데이터만 담기고 이미지 픽셀
 
 **후속 작업**
 
-1. 비교 UI를 연결할 때 저장된 측정값과 다시 계산하는 비교 결과를 분리해 표시합니다.
+1. baseline 설정·해제와 이전 실행 선택 시 저장된 측정값과 다시 계산하는 비교 결과를 구분해 검증합니다.
 2. 2.7을 위한 촬영 구간 프레임 관측을 구현합니다.
 3. 원시 이벤트와 표본 부족·조건 불일치 상태를 함께 점검하는 기기 검증 절차를 기록합니다.
 

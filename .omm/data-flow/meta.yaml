@@ -1,8 +1,8 @@
 created: 2026-09-09T16:20:14.267Z
-updated: 2026-09-10T17:18:24.021Z
-update_count: 15
-last_field: context
-git_commit: 8a8701e
+updated: 2026-09-10T17:23:59.544Z
+update_count: 18
+last_field: diagram
+git_commit: e374ca0
 git_branch: codex/pr27-doc-review
 children:
   - benchmark-metrics
@@ -14,15 +14,51 @@ children:
   - rendered-screens
   - run-json
   - runner-marks
-prev_diagram: >
-  graph LR
-      callbacks["Camera2 callbacks"] --> telemetry["Telemetry / FlightRecorder"]
-      autocheck["AutoCheckRunner.EndpointResult"] --> check["CheckEvaluator"]
-      telemetry --> check
-      check --> health["HealthReport / schema 2"]
-      benchmark["BenchmarkRunner.Result"] --> assembly["RunAssembler"]
-      telemetry --> assembly
-      assembly --> metrics["BenchmarkEvaluator / RunValidityEvaluator"]
-      metrics --> run["BenchmarkReport / schema 3"]
-      run --> summary["BenchmarkActivity 실행 요약"]
-      run -. "별도 비교 로직, Activity 미연결" .-> compare["RegressionDetector / ResultPresenter"]
+prev_diagram: "graph LR
+
+  \    framework-callbacks[\"Camera2 콜백\\nplatform API\"]
+
+  \    event-record[\"Telemetry / FlightRecorder\\ntelemetry/Telemetry.kt,
+  FlightRecorder.kt\"]
+
+  \    runner-marks[\"AutoCheckRunner /
+  BenchmarkRunner\\ncheck/AutoCheckRunner.kt, benchmark/BenchmarkRunner.kt\"]
+
+  \    frame-observations[\"FrameObservation\\ndiagnosis/MetricExtractor.kt\"]
+
+  \    metric-samples[\"Auto Check 표본\\ncheck/CheckEvaluator.kt\"]
+
+  \    judged-states[\"상태·진단·건강 판정\\ndiagnosis/ThresholdEngine.kt,
+  DiagnosisRules.kt, HealthComposer.kt\"]
+
+  \    benchmark-metrics[\"RunAssembler /
+  BenchmarkEvaluator\\nbenchmark/RunAssembler.kt, BenchmarkEvaluator.kt\"]
+
+  \    run-json[\"실행 파일\\nreport/HealthReport.kt,
+  benchmark/BenchmarkReport.kt\"]
+
+  \    rendered-screens[\"저장 결과 및 실행 요약\\ncheck/CheckActivity.kt,
+  benchmark/BenchmarkActivity.kt\"]
+
+  \    framework-callbacks -->|\"세션·프레임·센서 시각을 포함한 이벤트\"| event-record
+
+  \    framework-callbacks -->|\"Driver의 단계 완료 신호\"| runner-marks
+
+  \    event-record -->|\"관측 창 결과를 start/request/image에 연결\"| frame-observations
+
+  \    frame-observations -->|\"Auto Check 워밍업 제외 후 H.1~H.8\"| metric-samples
+
+  \    runner-marks -->|\"EndpointResult의 1.x·2.x 지연\"| metric-samples
+
+  \    metric-samples -->|\"임계값과 baseline 적용\"| judged-states
+
+  \    runner-marks -->|\"BenchmarkRunner.Result의 cycles·stills\"|
+  benchmark-metrics
+
+  \    event-record -->|\"RunAssembler의 관측 세션·H.9 입력\"| benchmark-metrics
+
+  \    judged-states -->|\"schema 2 저장\"| run-json
+
+  \    benchmark-metrics -->|\"유효성·측정값을 schema 3 저장\"| run-json
+
+  \    run-json -->|\"측정값 읽기; 비교 UI 연결은 별도 작업\"| rendered-screens\r\n"

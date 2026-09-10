@@ -11,6 +11,9 @@ sources:
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt#finishRun
   - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt#assemble
   - app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt#compare
+  - app/src/main/java/dev/halcamera/benchmark/ResultPresenter.kt#present
+  - app/src/main/java/dev/halcamera/benchmark/ComparePresenter.kt#present
+  - app/src/main/java/dev/halcamera/benchmark/BaselineManager.kt
   - app/src/main/java/dev/halcamera/MainActivity.kt
 decisions: []
 verifications: []
@@ -51,4 +54,6 @@ Auto Check 한 번은 다음 순서로 진행됩니다. 사용자가 검사를 �
 
 LIVE의 벤치마크 진입은 `MainActivity`에서 `BenchmarkActivity`를 엽니다. `BenchmarkActivity.finishRun()`은 러너 결과와 recorder의 이벤트를 `RunAssembler.assemble()`에 넘깁니다. 조립기는 `BenchmarkEvaluator`와 `RunValidityEvaluator`로 측정값과 유효성을 만들고, Activity가 `BenchmarkReport.write()`로 schema 3 실행 파일과 이벤트를 저장합니다. 따라서 이 경로는 이미 코드로 연결돼 있습니다.
 
-Auto Check와 달리 벤치마크의 워밍업 제외 수는 고정 5개가 아닙니다. `RunAssembler.observe()`가 관측 세션의 첫 결과부터 프레임을 모아 관측 시작 이전의 프레임 수를 계산하고, 이를 간격·버퍼 통계에서 제외합니다. 3A 수렴은 세션 첫 결과부터 계산합니다. `RegressionDetector`, `BaselineManager`, `ResultPresenter`는 별도의 비교·표시 로직이며 현재 `BenchmarkActivity.finishRun()`은 저장 경로와 표본 수·flag 요약을 표시합니다. 이 화면에서 비교 테이블을 구동하는 호출은 없습니다.
+Auto Check와 달리 벤치마크의 워밍업 제외 수는 고정 5개가 아닙니다. `RunAssembler.observe()`가 관측 세션의 첫 결과부터 프레임을 모아 관측 시작 이전의 프레임 수를 계산하고, 이를 간격·버퍼 통계에서 제외합니다. 3A 수렴은 세션 첫 결과부터 계산합니다. `BenchmarkActivity.finishRun()`은 io 실행기에서 조립·저장을 수행하고, `BaselineManager`로 설정된 baseline을 먼저 선택하며 없으면 이전 적격 실행을 reference로 선택합니다. `RegressionDetector.compare()`로 비교한 뒤 main Handler에서 RESULT 화면으로 전환합니다. `renderResult()`는 `ResultPresenter`, `renderCompare()`는 `ComparePresenter`를 사용합니다. `toggleBaseline()`으로 기준을 설정·해제하면 같은 선택·비교 절차를 다시 수행합니다.
+
+LIVE에서 넘긴 카메라 ID와 엔진 이름은 시작 카드의 입력입니다. 벤치마크 실행은 프로파일에 맞춰 Camera2로 전환합니다. 시작 조건과 6단계 진행률은 각각 `StartCardPresenter`와 `ProgressPresenter`가 표시 모델로 만듭니다.
