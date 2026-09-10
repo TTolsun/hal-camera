@@ -1,7 +1,7 @@
 ---
 title: Evidence
 ---
-# Trust starts with a trace.
+<h1 lang="en">Trust starts with a trace.</h1>
 
 **설명의 근거 수준과 검토 상태를 함께 확인하세요.** 코드를 읽어 확인한 동작과 실제 기기에서 확인한 결과는 서로 다른 근거입니다.
 
@@ -12,7 +12,7 @@ flowchart LR
     C --> D["검토 상태와 함께 표시"]
 ```
 
-## Know what each claim means.
+<h2 lang="en">Know what each claim means.</h2>
 
 | 근거 수준 | 의미 | 확인할 자료 |
 | --- | --- | --- |
@@ -20,7 +20,7 @@ flowchart LR
 | 기기 검증 | 해당 기기에서 관찰한 동작입니다. 다른 환경의 결과까지 보장하지 않습니다. | 해당 설명에 연결된 기기 검증 기록을 확인합니다. |
 | 설계 의도 | 결정 기록에 명시된 선택입니다. | D-번호가 있는 설계 결정 원문을 확인합니다. |
 
-## Check freshness before relying on it.
+<h2 lang="en">Check freshness before relying on it.</h2>
 
 [아키텍처](architecture.md)와 [디버깅](troubleshooting.md) 문서 끝의 **문서 검토 상태**를 펼치면 기준 앱 버전과 검토 커밋을 확인할 수 있습니다. 관련 소스가 바뀌었거나 원고 검토가 끝나지 않았다면 표시된 상태를 따라 재검토해야 합니다.
 

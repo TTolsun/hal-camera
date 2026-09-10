@@ -33,11 +33,13 @@ jobs:
         with:
           node-version: 24
       - name: 파이프라인 회귀 검사
-        run: node --test tools/docgen/regression.test.mjs
+        run: node --test tools/docgen/regression.test.mjs tools/docgen/design.test.mjs
       - name: 동기화 검사 의존성 설치
         run: npm ci --prefix tools/docgen --ignore-scripts
       - name: 동기화 실패 복구 검사 (모델 호출 없음)
         run: node --test tools/docgen/sync.test.mjs
+      - name: 디자인 생성 결과 일치 검사
+        run: node tools/docgen/common.mjs design --check
       - name: 사실 추출
         run: node tools/docgen/extract.mjs
       - name: 원본 최신성 검사

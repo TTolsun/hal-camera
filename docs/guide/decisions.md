@@ -1,7 +1,7 @@
 ---
 title: Decisions
 ---
-# Make the reasoning visible.
+<h1 lang="en">Make the reasoning visible.</h1>
 
 **결정 번호를 따라 구현과 설계 의도를 구분하세요.** 선택한 방식은 기록에 근거해 설명하고, 기록되지 않은 이유는 확인이 필요한 상태로 남깁니다.
 
@@ -11,7 +11,7 @@ flowchart LR
     B --> C["구현 대조<br/>현재 동작과 구분"]
 ```
 
-## The decision register.
+<h2 lang="en">The decision register.</h2>
 
 | 기록 | 선택한 방식 | 이유의 기록 상태 |
 | --- | --- | --- |

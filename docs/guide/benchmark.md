@@ -1,7 +1,7 @@
 ---
 title: Benchmark
 ---
-# Measurements with meaning.
+<h1 lang="en">Measurements with meaning.</h1>
 
 **측정값을 비교하기 전에 실행 조건과 관측 범위를 확인하세요.** HALCamera의 벤치마크는 앱에서 관측한 실행 시각과 카메라 콜백을 바탕으로 결과를 저장하고 기준 실행과 비교합니다.
 
@@ -14,7 +14,7 @@ flowchart LR
 
 이 그림은 벤치마크 결과가 만들어지는 개념적 순서입니다. 실제 호출은 `BenchmarkActivity`가 조정합니다.
 
-## Read the result in context.
+<h2 lang="en">Read the result in context.</h2>
 
 | 확인할 항목 | 확인하는 이유 |
 | --- | --- |
@@ -25,7 +25,7 @@ flowchart LR
 
 <p class="editorial" lang="en">A number is only useful<br>when its context travels with it.</p>
 
-## Follow the implementation.
+<h2 lang="en">Follow the implementation.</h2>
 
 구체적인 실행 순서, 중단 조건, 저장·비교 과정은 [아키텍처의 벤치마크 설명](architecture.md#벤치마크의-실행과-중단-조건)에서 확인하세요. 이 페이지는 해당 설명으로 들어가는 요약이며 별도의 실측 결과를 주장하지 않습니다.
 
