@@ -10,7 +10,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 
 /**
- * Visual tokens from docs/design/DESIGN.md mapped in PRODUCT-v0.2.md 11.6. Consumer screens are light parchment with
+ * Visual tokens from docs/design/DESIGN.md mapped in docs/archive/PRODUCT-v0.2.md 11.6. Consumer screens are light parchment with
  * one Action Blue; expert screens are dark tiles. Status colours are only used for state marks, never for buttons.
  */
 object Look {

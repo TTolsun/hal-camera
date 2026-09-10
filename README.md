@@ -1,52 +1,84 @@
-# HAL Camera
+# HAL CAM
 
-**중간 산출물 / checkpoint-001 · 2026-09-08**
+Android 카메라의 **launch · preview · capture 성능을 반복 측정하고, 이전 실행과 비교해 회귀를 찾는 개발자 도구**입니다.
 
-현재 우선 검토할 파일은 사용자 정의표를 반영한 [1차 MVP 지표 정의서 v0.2](docs/METRICS.md)입니다. [원문 대비 검토 내용](docs/METRICS-REVIEW.md)도 함께 보존했습니다. v0.2는 문서 수정안이며 기존 프리뷰 APK의 기능 변경이 아닙니다.
+같은 기기에서 같은 profile로 run을 반복하고, 그중 하나를 baseline으로 지정하면, 이후 run은 baseline 대비 지표별 delta와 REGRESSED 판정을 표시합니다. 측정 대상은 앱이 관측할 수 있는 것, 곧 Camera2 콜백의 도착 시각과 metadata뿐입니다. HAL 내부 처리 시간이나 화면에 실제로 표시된 프레임은 측정하지 않습니다.
 
-1차 계획: **Camera2 단일 엔진 · First preview · Shot-to-shot · Recording performance · 반복 통계 · run JSON export**.
-사용자 요청에 따라 전체 구현을 진행하지 않고 **실제 카메라 프리뷰 코드와 설치용 APK가 있는 체크포인트**를 공유합니다. 실기기 구동 확인은 아직 하지 않았습니다.
+## 무엇을 측정하는가
 
-## 현재 코드와 계획의 관계
-
-`app/`은 처음 제안된 Live Inspector/Flight Recorder 아이디어를 탐색하며 작성한 초기 코드입니다. CameraX/Camera2 전환, metadata callback, scope, incident ZIP 코드가 들어 있지만, **새로운 1차 성능 측정 MVP 구현은 아닙니다**. 다음 단계에서 재사용 여부를 결정할 초안으로 보존합니다.
-
-| 항목 | 상태 |
+| 범주 | 지표 |
 |---|---|
-| 지표 정의서 | v0.2 검토안, 사용자 지표 ID·MVP 분류 유지, MediaRecorder 기본 |
-| 초기 Android 프로젝트 | Kotlin / Gradle Wrapper / APK 컴파일 완료 |
-| Flight Recorder 단위 테스트 | 7개 통과 |
-| Android Lint | 통과: 오류 0개 (경고는 보고서 참조) |
-| 실제 카메라 장치 테스트 | 미실행 |
-| 새 계획의 3개 시나리오·반복 루프 | 미구현 |
-| Google Drive | 체크포인트 소스·문서·검증 보고서 관리 |
+| LAUNCH | 카메라 열기, 세션 구성, 첫 started 콜백, 첫 YUV, 첫 프레임, 닫기 |
+| PREVIEW | 프레임 간격 p50 / p95, partial 지연, buffer 지연, jitter |
+| CAPTURE | 촬영 지연, 결과 metadata 지연, 연속 촬영 간격 |
+| STABILITY | stall 횟수, 콜백 실패 횟수, 촬영 중 stall |
+| 3A | AE / AF / AWB 수렴 시간 (M5까지 informational) |
 
-APK가 생성되었다는 사실은 실제 카메라 동작 검증이나 MVP 완성을 의미하지 않습니다. 현재 검증 결과와 남은 항목은 [STATUS](docs/STATUS.md)에 기록했습니다.
+지표의 시작점과 종료점, 시계 종류, 통계 규칙은 [METRICS.md](docs/METRICS.md)에 정의되어 있습니다.
+
+## 화면
+
+| 화면 | 하는 일 |
+|---|---|
+| **LIVE** (런처) | CameraX / Camera2 전환, 카메라 선택, 실시간 프레임 간격과 콜백 지연 표시. `MARK` 버튼으로 직전 10초와 이후 5초를 incident ZIP으로 저장합니다 |
+| **BENCHMARK** | profile 시작 카드 → 6단계 진행 → 결과 표. `SET AS BASELINE`, `COMPARE`, `EXPORT` |
+
+LIVE는 관측한 숫자만 보여 주며 정상 / 이상을 판정하지 않습니다. 판정은 baseline과 비교할 때에만 성립하고, 그 일은 BENCHMARK가 합니다.
+
+## profile
+
+현재 profile은 `camera2-standard-v1` 하나입니다.
+
+```
+Camera2 · 1080p30 · warm reopen
+open 10회 반복 → 3초 warm-up → 10초 관측 → 정지 영상 10장 → close
+첫 반복은 통계에서 제외
+```
+
+실행 전에 preflight로 이 카메라가 profile을 지원하는지 확인합니다. API 35 이상에서는 `CameraDeviceSetup`으로 정확히 질의하고, 그 이하에서는 출력 크기 목록으로 판단합니다.
+
+## 비교 규칙
+
+- **baseline은 명시적으로만 지정됩니다.** 자동으로 만들어지지 않습니다.
+- baseline이 없으면 직전 run과 비교하되, **delta만 표시하고 REGRESSED 판정은 붙이지 않습니다.** 아무도 기준으로 고르지 않은 run에 대한 회귀는 회귀가 아니기 때문입니다.
+- 지표마다 임계 비율과 noise floor가 따로 있습니다. 5 ms가 11 ms로 늘어나면 +120 %이지만 절대 차이가 6 ms이므로 회귀로 보지 않습니다.
+- run은 세 단계로 걸러집니다. 측정 유효 → 비교 가능 → 점수 가능. 충전 중인 run은 비교에는 쓰이지만 점수에서는 빠집니다.
+- thermal, 절전 모드, 충전 상태, 노출 부하가 크게 다르면 비교 시점 조건 차이로 표시합니다.
 
 ## 빌드
 
-Android Studio에서 이 폴더를 엽니다. JDK 17, Android SDK 36, AGP 8.13.2, Gradle 8.13을 사용합니다.
+JDK 17, Android SDK 36, AGP 8.13.2, Gradle 8.13을 사용합니다.
 
-```powershell
-.\gradlew.bat assembleDebug testDebugUnitTest lintDebug
+```bash
+./gradlew assembleDebug testDebugUnitTest lintDebug
 ```
 
-현재 체크포인트에서 위 세 작업은 모두 통과했습니다. `local.properties`는 PC별 SDK 경로로 생성하며 Git에 포함하지 않습니다. 툴체인 다운로드·빌드 캐시도 저장소에 포함하지 않습니다.
+`local.properties`는 PC마다 직접 만들며 저장소에 포함하지 않습니다. release 서명을 하려면 `settings.gradle.kts` 옆에 `keystore.properties`를 두고 `storeFile`, `storePassword`, `keyAlias`, `keyPassword`를 적습니다. 이 파일이 없으면 release는 서명 없이 빌드되므로 키가 없는 PC에서도 debug 빌드와 CI가 동작합니다.
 
-## 설치 후 확인
+Windows에서 프로젝트 경로에 한글이 있으면 Android Gradle Plugin이 빌드를 거부합니다. `subst`로 ASCII 드라이브 문자를 만든 뒤 그 경로에서 빌드하십시오.
 
-1. Google Drive 체크포인트의 `HALCamera-checkpoint-001-preview.apk`를 기기에 내려받아 설치합니다.
-2. HAL Camera 실행 → 카메라 권한 허용 → 실제 프리뷰 확인.
-3. Camera2 버튼을 눌러 직접 Camera2 프리뷰도 확인합니다.
-4. 실패 시 화면 오류 문구와 기기 모델·Android 버전을 기록합니다.
+## run JSON
 
-이 APK는 debug 서명이며, 카메라 실기기 테스트·녹화 성능 시나리오 검증을 마친 릴리스가 아닙니다.
+run 하나는 `files/benchmarks/<run_id>.json`에 schema 3으로 저장됩니다. 결과 화면의 `EXPORT`로 공유할 수 있습니다. 파일에는 지표값, profile, 기기와 빌드 식별자, 환경값(thermal 시작 · 최고 · 종료, 절전 모드, 충전 상태), validity flag, 그리고 raw 표본이 들어 있습니다. **사진이나 프리뷰 픽셀은 저장하지 않습니다.**
 
-## 관리 방식
+## 문서
 
-- GitHub 비공개 저장소: 소스와 정의서 버전 관리.
-- [Google Drive HALCamera](https://drive.google.com/drive/folders/1JghtHY74UGHjZ3I2LeO7hUFh-TRgu0mP): 체크포인트 ZIP, 문서, 테스트 결과 보관.
-- 다른 PC에서 작업할 때 GitHub를 clone하거나 Drive의 source ZIP을 내려받아 로컬 Android Studio에서 엽니다.
-- Drive 웹에서 Android 앱을 컴파일·실행하는 환경은 구성하지 않았습니다. 자동 동기화나 자동 배포도 아직 설정하지 않았습니다.
+| 문서 | 내용 |
+|---|---|
+| [PLAN-BenchMarker-v0.3.md](docs/PLAN-BenchMarker-v0.3.md) | 현재 제품 계획. 지표, 화면, 비교 규칙, 마일스톤 |
+| [METRICS.md](docs/METRICS.md) | 지표 정의. 시작 · 종료 지점, 시계, 통계 |
+| [METRICS-REVIEW.md](docs/METRICS-REVIEW.md) | 지표 정의에 대한 검토 기록 |
+| [design/DESIGN.md](docs/design/DESIGN.md) | 화면 색과 타이포그래피 토큰 |
+| [archive/PRODUCT-v0.2.md](docs/archive/PRODUCT-v0.2.md) | 이전 제품 정의(Camera Doctor). 카메라 열거 절차와 디자인 토큰은 v0.3도 참조합니다 |
 
-향후 완성된 결과물은 `releases/`, 검토 중인 결과물은 `checkpoints/`에 저장합니다.
+## 코드 구조
+
+```
+camera/     Camera2 / CameraX 엔진, 카메라 엔드포인트 열거
+telemetry/  Telemetry, FlightRecorder(30초 순환 버퍼), incident ZIP
+metrics/    이벤트 → 지표 계산. 화면도 판정도 모르는 leaf
+benchmark/  profile, runner, 통계, 비교 규칙, 저장, 화면
+ui/         Look 토큰, 그래프 뷰, LIVE 실시간 수치
+```
+
+화면은 XML 없이 Kotlin 코드로 만듭니다. 판정과 배치 규칙은 순수 Kotlin 객체에 두어 기기 없이 JVM 테스트로 검증합니다.

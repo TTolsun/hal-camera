@@ -8,7 +8,7 @@ import android.view.View
 import java.util.Locale
 
 /**
- * Frame callback timeline as two dot-lines (docs/PRODUCT-v0.2.md 12.2 item 3):
+ * Frame callback timeline as two dot-lines (docs/archive/PRODUCT-v0.2.md 12.2 item 3):
  * the latest frame (START, PARTIAL, BUFFER offsets) above the session-typical p50 offsets,
  * so where the delay sits is visible without reading numbers.
  */

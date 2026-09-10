@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
         const val MARK_LABEL = "MARK"
     }
     private lateinit var timelineView: dev.halcamera.ui.TimelineView
-    // Expert palette from docs/design/DESIGN.md via ui/Look (PRODUCT-v0.2 11.6): dark tiles, one blue accent, status colours only for state marks.
+    // Expert palette from docs/design/DESIGN.md via ui/Look (docs/archive/PRODUCT-v0.2.md 11.6): dark tiles, one blue accent, status colours only for state marks.
     private val bg = dev.halcamera.ui.Look.expertTile
     private val panel = dev.halcamera.ui.Look.expertTile2
     private val mint = dev.halcamera.ui.Look.primaryOnDark
