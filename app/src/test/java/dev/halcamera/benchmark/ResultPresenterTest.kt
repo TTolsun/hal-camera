@@ -148,6 +148,39 @@ class ResultPresenterTest {
         assertEquals("baseline 없음 · 비교할 이전 run이 없습니다", v.comparisonLine)
         assertNull(v.identityLine)
         assertEquals("", v.sections.first().deltaHeader)
+        // There is no delta column, so no row may print anything in it. A dash under an empty header claims the
+        // column exists and that every metric failed to be judged in it, which is a far worse report than the
+        // truth, namely that this is simply the first run.
+        assertTrue(v.sections.flatMap { it.rows }.all { it.delta.isEmpty() })
+        assertFalse(v.render().lines().any { it.trimEnd().endsWith("—") })
+    }
+
+    @Test fun theRunThatIsTheBaselineIsNotToldToMakeItselfTheBaseline() {
+        // The button reads CLEAR BASELINE at this point, so a hint naming SET AS BASELINE points at nothing.
+        // Being measured against a baseline and being one are separate states, and only the first was checked.
+        val alone = present(run(metrics = listOf(metric("2.2", 164.0))), isBaseline = true)
+        assertEquals("CLEAR BASELINE", alone.baselineButton)
+        assertNull(alone.hint)
+
+        val previous = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 150.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 164.0)))
+        val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
+        assertEquals("[ SET AS BASELINE ]을 누르면 이 run이 기준이 됩니다", v.hint)
+    }
+
+    @Test fun theBaselineItselfIsNotDescribedAsHavingNoBaseline() {
+        // The baseline has nothing above it to be measured against, so it falls back to the previous run. The
+        // headline read "baseline 없음" while the button beside it read CLEAR BASELINE, which are two claims
+        // about the same run that cannot both be true.
+        val previous = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 150.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 164.0)))
+        val c = RegressionDetector.compare(previous, current)
+        val asBaseline = present(current, c, ComparedTo.PREVIOUS, isBaseline = true)
+        assertEquals("이 run이 baseline입니다 · 이전 run 20260910-100000-000 대비 표시", asBaseline.comparisonLine)
+        assertEquals("baseline 없음 · 이전 run 20260910-100000-000 대비 표시", present(current, c, ComparedTo.PREVIOUS).comparisonLine)
+
+        val alone = present(run(metrics = listOf(metric("2.2", 164.0))), isBaseline = true)
+        assertEquals("이 run이 baseline입니다 · 비교할 이전 run이 없습니다", alone.comparisonLine)
     }
 
     // ---- a comparison that did not happen (PR #21 review) ----

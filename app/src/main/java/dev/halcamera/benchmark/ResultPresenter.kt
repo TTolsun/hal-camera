@@ -95,10 +95,14 @@ object ResultPresenter {
                 run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() } ?: "(subject 없음)"
             ).joinToString(" · "),
             eligibilityLine = eligibilityLine(run),
-            comparisonLine = comparisonLine(run, comparison, comparedTo),
+            comparisonLine = comparisonLine(run, comparison, comparedTo, isBaseline),
             identityLine = comparison?.identity?.let(::identityLine),
             conditionLine = comparison?.let(::conditionLine),
-            hint = if (comparedTo == ComparedTo.BASELINE) null else "[ SET AS BASELINE ]을 누르면 이 run이 기준이 됩니다",
+            // The hint names a button that is no longer on the screen once this run is itself the baseline: the
+            // button reads CLEAR BASELINE by then, so telling the reader to press SET AS BASELINE describes
+            // nothing they can do. Being compared against a baseline and being one are separate states.
+            hint = if (comparedTo == ComparedTo.BASELINE || isBaseline) null
+            else "[ SET AS BASELINE ]을 누르면 이 run이 기준이 됩니다",
             sections = sections,
             threeALine = threeALine(run),
             baselineButton = if (isBaseline) "CLEAR BASELINE" else "SET AS BASELINE",
@@ -130,13 +134,26 @@ object ResultPresenter {
         return listOfNotNull(head, thermalText?.let { "thermal $it" }, suffix).joinToString(" · ")
     }
 
-    fun comparisonLine(run: BenchmarkRun, comparison: RunComparison?, comparedTo: ComparedTo): String = when {
-        comparison == null || comparedTo == ComparedTo.NONE -> "baseline 없음 · 비교할 이전 run이 없습니다"
+    /**
+     * A run measured against a reference is not always a run without a baseline: the baseline itself has nothing
+     * to compare against but its predecessor, so [isBaseline] decides which of the two facts the line reports.
+     */
+    fun comparisonLine(
+        run: BenchmarkRun,
+        comparison: RunComparison?,
+        comparedTo: ComparedTo,
+        isBaseline: Boolean = false
+    ): String = when {
+        comparison == null || comparedTo == ComparedTo.NONE ->
+            if (isBaseline) "이 run이 baseline입니다 · 비교할 이전 run이 없습니다"
+            else "baseline 없음 · 비교할 이전 run이 없습니다"
         // No metric could be judged: saying "REGRESSED 없음" here would read as a clean result rather than as a
         // comparison that never happened (PR #21 review).
         comparison.judgedCount == 0 && comparedTo == ComparedTo.BASELINE ->
             "판정 불가   baseline ${comparison.baseRunId} · 비교 조건을 만족하는 지표가 없습니다"
-        comparedTo == ComparedTo.PREVIOUS -> "baseline 없음 · 이전 run ${comparison.baseRunId} 대비 표시"
+        comparedTo == ComparedTo.PREVIOUS ->
+            if (isBaseline) "이 run이 baseline입니다 · 이전 run ${comparison.baseRunId} 대비 표시"
+            else "baseline 없음 · 이전 run ${comparison.baseRunId} 대비 표시"
         comparison.hasRegression -> "▲ ${comparison.regressedCount} REGRESSED   baseline ${comparison.baseRunId}"
         else -> "REGRESSED 없음   baseline ${comparison.baseRunId}"
     }
@@ -199,7 +216,10 @@ object ResultPresenter {
             label = info?.short ?: metric.id,
             value = format(metric, metric.value),
             stat = statHeader(metric)?.let { format(metric, statValue(metric)) }.orEmpty(),
-            delta = delta(metric, comparison),
+            // With nothing to compare against there is no delta column at all, so the cell has to be empty. A
+            // dash would claim the column exists and that every metric happens to be unmeasurable in it, which
+            // is a different and much more alarming statement than "this is the first run".
+            delta = if (comparedTo == ComparedTo.NONE) "" else delta(metric, comparison),
             // A reference delta carries no state, so it never gets the regression marker (8.4).
             marker = if (comparedTo == ComparedTo.BASELINE) marker(comparison?.state) else "",
             note = noteFor(comparison, comparedTo)
