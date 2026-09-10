@@ -16,9 +16,13 @@ class ProgressPresenterTest {
         assertEquals("6 / 6  Camera Close", ProgressPresenter.headline(Phase.CAMERA_CLOSE, 0, 0))
     }
 
-    @Test fun theLaunchCycleCounterAppearsOnlyWhereTheRunnerReportsOne() {
+    @Test fun theLaunchCycleCounterBelongsToTheLaunchPhaseAlone() {
         assertEquals("1 / 6  Camera Open  3/10", ProgressPresenter.headline(Phase.CAMERA_OPEN, 2, 10))
         assertEquals("5 / 6  Still Capture", ProgressPresenter.headline(Phase.STILL_CAPTURE, 0, 0))
+        // BenchmarkRunner keeps reporting (launchIterations, launchIterations) after the cycles are done, which
+        // taken literally would read as cycle 11 of 10.
+        assertEquals("2 / 6  First Preview", ProgressPresenter.headline(Phase.FIRST_PREVIEW, 10, 10))
+        assertEquals("6 / 6  Camera Close", ProgressPresenter.headline(Phase.CAMERA_CLOSE, 10, 10))
     }
 
     // ---- bar ----
@@ -29,6 +33,13 @@ class ProgressPresenterTest {
         assertEquals(27, ProgressPresenter.percent(Phase.FIRST_PREVIEW, 0, 0))
         assertEquals(43, ProgressPresenter.percent(Phase.PREVIEW_STABILITY, 0, 0))
         assertEquals(98, ProgressPresenter.percent(Phase.CAMERA_CLOSE, 0, 0))
+    }
+
+    @Test fun theRunnersLeftoverCycleCountDoesNotAdvanceALaterPhase() {
+        // The arguments the real runner sends after the launch cycles; only the phase may move the bar here.
+        assertEquals(27, ProgressPresenter.percent(Phase.FIRST_PREVIEW, 10, 10))
+        assertEquals(43, ProgressPresenter.percent(Phase.PREVIEW_STABILITY, 10, 10))
+        assertEquals(82, ProgressPresenter.percent(Phase.STILL_CAPTURE, 10, 10))
     }
 
     @Test fun theLaunchPhaseAdvancesWithItsCycles() {

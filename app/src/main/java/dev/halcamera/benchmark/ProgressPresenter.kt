@@ -75,19 +75,30 @@ object ProgressPresenter {
 
     private val TOTAL_SECONDS = PHASE_SECONDS.values.sum()
 
-    /** "1 / 6  Camera Open  3/10" — the launch cycle counter only appears where the runner reports one. */
+    /** "1 / 6  Camera Open  3/10" — the launch cycle counter only appears while the launch cycles are running. */
     fun headline(phase: BenchmarkRunner.Phase, iteration: Int, total: Int): String {
         val step = phase.ordinal + 1
-        val suffix = if (total > 0) "  ${iteration + 1}/$total" else ""
+        val suffix = if (countsLaunchCycles(phase, total)) "  ${iteration + 1}/$total" else ""
         return "$step / $PHASE_COUNT  ${phaseText(phase)}$suffix"
     }
 
     fun percent(phase: BenchmarkRunner.Phase, iteration: Int, total: Int): Int {
         val before = BenchmarkRunner.Phase.values().takeWhile { it != phase }.sumOf { PHASE_SECONDS[it] ?: 0.0 }
-        val fraction = if (total > 0) (iteration.toDouble() / total).coerceIn(0.0, 1.0) else 0.0
-        val elapsed = before + (PHASE_SECONDS[phase] ?: 0.0) * fraction
+        val elapsed = before + (PHASE_SECONDS[phase] ?: 0.0) * launchFraction(phase, iteration, total)
         return ((elapsed / TOTAL_SECONDS) * 100).roundToInt().coerceIn(0, 100)
     }
+
+    /**
+     * [BenchmarkRunner.progress] reports `iteration = total = launchIterations` for every phase after the launch
+     * cycles, because the observation session is the eleventh open. Taken at face value that reads as cycle
+     * 11/10 and drives the bar to the end of each phase the moment it starts, so the counter is confined here to
+     * the one phase it describes rather than changing the runner's contract, which other callers already read.
+     */
+    private fun countsLaunchCycles(phase: BenchmarkRunner.Phase, total: Int) =
+        phase == BenchmarkRunner.Phase.CAMERA_OPEN && total > 0
+
+    private fun launchFraction(phase: BenchmarkRunner.Phase, iteration: Int, total: Int): Double =
+        if (countsLaunchCycles(phase, total)) (iteration.toDouble() / total).coerceIn(0.0, 1.0) else 0.0
 
     fun bar(percent: Int, width: Int = BAR_WIDTH): String {
         val filled = ((percent.coerceIn(0, 100) / 100.0) * width).roundToInt()

@@ -3,6 +3,7 @@ package dev.halcamera.benchmark
 import dev.halcamera.benchmark.BenchmarkRunFixture.metric
 import dev.halcamera.benchmark.BenchmarkRunFixture.run
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -21,8 +22,11 @@ class ComparePresenterTest {
         subject = SubjectLabel("SW42_release", "a8f29c1")
     )
 
-    private fun view(b: BenchmarkRun = base, c: BenchmarkRun = current) =
-        ComparePresenter.present(b, c, RegressionDetector.compare(b, c))
+    private fun view(
+        b: BenchmarkRun = base,
+        c: BenchmarkRun = current,
+        comparedTo: ComparedTo = ComparedTo.BASELINE
+    ) = ComparePresenter.present(b, c, RegressionDetector.compare(b, c), comparedTo)
 
     private fun row(label: String, b: BenchmarkRun = base, c: BenchmarkRun = current) =
         view(b, c).rows.first { it.label == label }
@@ -78,6 +82,41 @@ class ComparePresenterTest {
         val r = row("Capture", c = hot)
         assertEquals("조건 불일치", r.marker)
         assertEquals("+35%", r.delta)
+    }
+
+    // ---- baseline versus reference (7.1) ----
+
+    @Test fun aReferenceComparisonShowsNoVerdict() {
+        // A reference is only the run measured before this one. Hanging REGRESSED off it would report a
+        // regression against a configuration nobody chose as the standard.
+        val r = view(comparedTo = ComparedTo.PREVIOUS).rows.first { it.label == "Capture" }
+        assertEquals("+35%", r.delta)
+        assertEquals("", r.marker)
+        assertFalse(r.hasVerdict)
+    }
+
+    @Test fun aReferenceComparisonIsLabelledAsOne() {
+        val v = view(comparedTo = ComparedTo.PREVIOUS)
+        assertEquals("PREVIOUS", v.baseHeader)
+        assertTrue(v.baseLine.startsWith("previous"))
+        assertTrue(v.referenceNote!!.contains("baseline 없음"))
+        assertTrue(v.render().contains("PREVIOUS"))
+        assertFalse(v.render().contains("REGRESSED"))
+    }
+
+    @Test fun aBaselineComparisonKeepsItsVerdicts() {
+        val v = view()
+        assertEquals("BASELINE", v.baseHeader)
+        assertNull(v.referenceNote)
+        assertTrue(v.rows.any { it.hasVerdict })
+    }
+
+    @Test fun aReferenceComparisonStillSaysWhyADeltaIsUntrustworthy() {
+        // The reason a metric could not be judged explains the delta itself, so it survives even without a verdict.
+        val hot = run(runId = current.runId, metrics = current.metrics, thermalMax = 3)
+        val r = view(c = hot, comparedTo = ComparedTo.PREVIOUS).rows.first { it.label == "Capture" }
+        assertEquals("조건 불일치", r.marker)
+        assertFalse(r.hasVerdict)
     }
 
     // ---- header ----

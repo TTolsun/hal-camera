@@ -17,7 +17,13 @@ data class StartCard(
     val durationLine: String,
     val detailLine: String,
     val notices: List<String>,
-    val blockedReason: String?
+    val blockedReason: String?,
+    /**
+     * True when the block is a property of the moment rather than of the camera. A hot device cools down, so
+     * that card needs a way back to START; an unsupported profile never becomes supported here (3.6), and
+     * offering to re-check would send the developer to wait for nothing.
+     */
+    val refreshable: Boolean
 ) {
     val canStart: Boolean get() = blockedReason == null
 }
@@ -65,7 +71,8 @@ object StartCardPresenter {
             durationLine = "약 ${ESTIMATED_SECONDS}초. 밝은 곳에서 글자나 물건을 향해 폰을 고정하세요.",
             detailLine = "${profile.launchIterations}회 open · ${profile.observeMs / 1000}초 관측 · ${profile.stillCount}장",
             notices = notices,
-            blockedReason = blockedReason(compatibility, thermalStatus)
+            blockedReason = blockedReason(compatibility, thermalStatus),
+            refreshable = compatibility.supported
         )
     }
 

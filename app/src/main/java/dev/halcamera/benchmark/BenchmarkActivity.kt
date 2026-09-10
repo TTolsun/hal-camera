@@ -3,6 +3,7 @@ package dev.halcamera.benchmark
 import android.Manifest
 import android.content.ClipData
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
@@ -103,6 +104,8 @@ class BenchmarkActivity : ComponentActivity() {
     private val envStart = HashMap<String, Any?>()
     /** Read once when START is pressed: the fields describe the run that is starting, not whatever is on screen when it ends. */
     private var runSubject = SubjectLabel()
+    /** What is currently typed into the card. Null until the fields are shown, when the last run's labels seed them. */
+    private var draftSubject: SubjectLabel? = null
 
     private var lastRun: BenchmarkRun? = null
     private var lastFile: File? = null
@@ -192,6 +195,20 @@ class BenchmarkActivity : ComponentActivity() {
             runCatching { manager.isCameraDeviceSetupSupported(endpoint.logicalCameraId) }.getOrNull() else null
         recordPreflight(endpoint)
         cardError = null
+        // A camera change is a new subject as far as the card is concerned, but the typed labels describe the
+        // build under test, not the lens, so they survive it.
+        captureDraft()
+        refreshCard()
+        screen = Screen.CARD
+        render()
+    }
+
+    /**
+     * Re-reads the conditions that can change while the card is open and rebuilds it. The preflight verdict is
+     * kept: it describes the camera, not the moment.
+     */
+    private fun refreshCard() {
+        val endpoint = endpoints.getOrNull(selected) ?: return
         startCard = StartCardPresenter.present(
             profile = profile,
             compatibility = compatibility,
@@ -202,8 +219,6 @@ class BenchmarkActivity : ComponentActivity() {
         )
         // The card said Camera2 would be used, so the app is on Camera2 from here and says so only once.
         engineName = StartCardPresenter.ENGINE_CAMERA2
-        screen = Screen.CARD
-        render()
     }
 
     /** The preflight verdict belongs in every run file, so it is recorded again after the recorder is cleared. */
@@ -249,14 +264,15 @@ class BenchmarkActivity : ComponentActivity() {
         state.notices.forEach { card.addView(Look.text(this, "· $it", 12, Look.statusWarn), lp(top = 8)) }
         state.blockedReason?.let { card.addView(Look.text(this, it, 13, Look.statusFail, bold = true), lp(top = 10)) }
 
-        if (state.canStart) {
-            val last = subjectPrefs.last()
+        // The fields stay while the device cools, so a label typed before the phone got hot is not lost.
+        if (state.canStart || state.refreshable) {
+            val draft = draftSubject ?: subjectPrefs.last()
             card.addView(Look.text(this, "Subject build (선택)", 11, Look.onDarkMuted), lp(top = 14))
-            buildInput = input(last.subjectBuildLabel).also { card.addView(it, lp(top = 4)) }
+            buildInput = input(draft.subjectBuildLabel).also { card.addView(it, lp(top = 4)) }
             card.addView(Look.text(this, "Subject commit (선택)", 11, Look.onDarkMuted), lp(top = 10))
-            commitInput = input(last.subjectCommit).also { card.addView(it, lp(top = 4)) }
+            commitInput = input(draft.subjectCommit).also { card.addView(it, lp(top = 4)) }
             card.addView(Look.text(this, "Note (선택)", 11, Look.onDarkMuted), lp(top = 10))
-            noteInput = input(null).also { card.addView(it, lp(top = 4)) }
+            noteInput = input(draft.note).also { card.addView(it, lp(top = 4)) }
         } else {
             buildInput = null; commitInput = null; noteInput = null
         }
@@ -266,9 +282,25 @@ class BenchmarkActivity : ComponentActivity() {
         row.addView(Look.ghostButton(this, "카메라 변경", dark = true) { selectNext() }, LinearLayout.LayoutParams(0, dp(52), 1f))
         row.addView(Look.ghostButton(this, "닫기", dark = true) { finish() }, LinearLayout.LayoutParams(-2, dp(52)).apply { marginStart = dp(8) })
         actions.addView(row)
-        if (state.canStart) {
-            actions.addView(Look.primaryButton(this, "START BENCHMARK") { begin() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
+        when {
+            state.canStart ->
+                actions.addView(Look.primaryButton(this, "START BENCHMARK") { begin() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
+            // Without this a card opened at SEVERE never offers START again, however long the device rests.
+            state.refreshable ->
+                actions.addView(Look.primaryButton(this, "환경 다시 확인") { recheck() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
         }
+    }
+
+    private fun recheck() {
+        captureDraft()
+        refreshCard()
+        render()
+    }
+
+    /** Keeps what is typed across a re-render; the fields describe the build under test, not this card. */
+    private fun captureDraft() {
+        if (buildInput == null && commitInput == null && noteInput == null) return
+        draftSubject = readSubject()
     }
 
     /** 8.3. */
@@ -329,8 +361,8 @@ class BenchmarkActivity : ComponentActivity() {
         if (run == null || base == null || cmp == null) {
             card.addView(Look.text(this, "비교할 run이 없습니다.", 13, Look.onDarkMuted), lp(top = 2))
         } else {
-            card.addView(wide(Look.text(this, ComparePresenter.present(base, run, cmp).render(), 11, Look.onDark, mono = true)
-                .also { copyOnTap(it, "compare") }))
+            val text = ComparePresenter.present(base, run, cmp, comparedTo).render()
+            card.addView(wide(Look.text(this, text, 11, Look.onDark, mono = true).also { copyOnTap(it, "compare") }))
         }
         content.addView(card)
         actions.addView(Look.ghostButton(this, "결과로 돌아가기", dark = true) { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(-1, dp(52)))
@@ -341,7 +373,12 @@ class BenchmarkActivity : ComponentActivity() {
     private fun begin() {
         if (runner != null || endpoints.isEmpty()) return
         if (!hasPermission()) { requestCamera.launch(Manifest.permission.CAMERA); return }
-        if (startCard?.canStart != true) return
+        captureDraft()
+        // The card is a snapshot taken when it was opened, and the device can heat up or enter power save while
+        // the subject fields are being typed. ThermalTracker only records once the run is under way, so without
+        // this a run would start at SEVERE and be thrown away afterwards.
+        refreshCard()
+        if (startCard?.canStart != true) { render(); return }
         val endpoint = endpoints[selected]
         runSubject = readSubject()
         subjectPrefs.save(runSubject)
@@ -581,7 +618,10 @@ class BenchmarkActivity : ComponentActivity() {
         val info = packageManager.getPackageInfo(packageName, 0)
         @Suppress("DEPRECATION")
         val code = if (Build.VERSION.SDK_INT >= 28) info.longVersionCode.toInt() else info.versionCode
-        return AppInfo(info.versionName ?: "", code)
+        // Without this every run stores app.debuggable = null, which drops DEBUGGABLE_BUILD from the validity
+        // flags and leaves BuildIdentity.sameAppBuild permanently unknown.
+        val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        return AppInfo(info.versionName ?: "", code, debuggable)
     }
 
     private fun cameraInfoVersion(cameraId: String): String? = if (Build.VERSION.SDK_INT < 28) null else try {

@@ -55,6 +55,14 @@ class StartCardPresenterTest {
         assertTrue(c.notices.isEmpty())
     }
 
+    @Test fun aThermalBlockCanBeReCheckedAndAProfileBlockCannot() {
+        // A hot device cools down, so that card needs a way back to START. An unsupported profile never becomes
+        // supported here, and offering to re-check would send the developer to wait for nothing.
+        assertTrue(card(thermalStatus = StartCardPresenter.THERMAL_SEVERE).refreshable)
+        assertFalse(card(compatibility = unsupported).refreshable)
+        assertFalse(card(compatibility = unsupported, thermalStatus = StartCardPresenter.THERMAL_SEVERE).refreshable)
+    }
+
     // ---- what only warns ----
 
     @Test fun moderateThermalStartsAndNamesTheFlagItWillCarry() {
