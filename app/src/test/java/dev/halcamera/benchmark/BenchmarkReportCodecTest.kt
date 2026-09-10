@@ -27,7 +27,7 @@ class BenchmarkReportCodecTest {
             aborted = null, hardFailure = false, preflightSupported = true, preflightMismatch = false,
             launchSamples = 9, stillSamples = 9, observedFrames = 298, expectedLaunchSamples = 9, expectedStillSamples = 9,
             cadenceFixed = true, thermalStart = 0, thermalMax = 1, thermalEnd = 1, powerSaveMode = false, charging = true,
-            batteryStart = 82, profileDraft = p.isDraft, subjectLabeled = true))
+            batteryStart = 82, profileDraft = p.isDraft, debuggableBuild = false, subjectLabeled = true))
         val identity = BuildIdentity.compare(BuildIdentity(device, app, subject), BuildIdentity(device.copy(fingerprint = "samsung/other"), app, SubjectLabel("SW41", "9c01d2e")))
         return BenchmarkRun(
             runId = "20260909-101422-123",
@@ -60,7 +60,16 @@ class BenchmarkReportCodecTest {
         assertFalse(back.validity.scoringEligible)
     }
 
-    @Test fun topLevelKeysFollowSchema3() {
+    @Test fun schema3FilesAreStillReadable() {
+        // Runs recorded before app.debuggable existed must keep opening; the field reads back as unknown.
+        val m = BenchmarkReportCodec.toJsonMap(run()).toMutableMap()
+        m["schema_version"] = 3
+        m["app"] = mapOf("version_name" to "0.3.0", "version_code" to 3)
+        val back = BenchmarkReportCodec.fromJsonMap(m)
+        assertEquals(null, back.app.debuggable)
+    }
+
+    @Test fun topLevelKeysFollowSchema4() {
         val r = run()
         val m = BenchmarkReportCodec.toJsonMap(r)
         val required = listOf(
@@ -70,7 +79,7 @@ class BenchmarkReportCodecTest {
             "metrics", "summary", "raw", "events"
         )
         for (k in required) assertTrue(k, m.containsKey(k))
-        assertEquals(3, m["schema_version"])
+        assertEquals(4, m["schema_version"])
         assertEquals("benchmark", m["kind"])
         assertEquals("camera2-standard-v1|metrics-0.3|nearest_rank|elapsedRealtimeNanos", m["comparison_contract_id"])
         assertEquals("regression-rule-v1", m["regression_rule_version"])

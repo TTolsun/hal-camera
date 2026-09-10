@@ -163,6 +163,7 @@ object ResultPresenter {
         "Android " + same(id.sameSystemFingerprint),
         "Camera build " + (id.sameCameraBuild?.let(::same) ?: "알 수 없음"),
         "앱 " + same(id.sameAppVersion),
+        id.sameAppBuild?.let { "앱 빌드 " + same(it) },
         listOfNotNull(id.sameSubjectLabel, id.sameSubjectCommit).let { axes ->
             if (axes.isEmpty()) null else "subject " + same(axes.all { it })
         }

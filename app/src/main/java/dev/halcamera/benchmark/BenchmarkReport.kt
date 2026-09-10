@@ -20,7 +20,10 @@ import java.util.TimeZone
  * promoted to the current contract.
  */
 object BenchmarkReportCodec {
-    const val SCHEMA_VERSION = 3
+    const val SCHEMA_VERSION = 4
+
+    /** Schema 3 files are still read: schema 4 only added the optional app.debuggable field, which reads back as null. */
+    val READABLE_SCHEMA_VERSIONS = 3..4
     const val KIND = "benchmark"
 
     fun toJsonMap(run: BenchmarkRun): Map<String, Any?> = linkedMapOf(
@@ -68,7 +71,7 @@ object BenchmarkReportCodec {
         file: File? = null,
         canonicalProfiles: Map<String, BenchmarkProfile> = BenchmarkProfile.CANONICAL
     ): BenchmarkRun {
-        require(JsonMaps.i(m["schema_version"]) == SCHEMA_VERSION) { "unsupported schema_version ${m["schema_version"]}" }
+        require(JsonMaps.i(m["schema_version"]) in READABLE_SCHEMA_VERSIONS) { "unsupported schema_version ${m["schema_version"]}" }
         require(m["kind"] == KIND) { "kind must be \"$KIND\": ${m["kind"]}" }
         val profile = BenchmarkProfile.fromJsonMap(JsonMaps.map(m["profile"]) ?: throw IllegalArgumentException("profile missing"))
         // A draft profile may still change (3.5), so only confirmed ids are checked against the canonical definition.

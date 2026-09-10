@@ -56,6 +56,21 @@ class BuildIdentityTest {
         assertFalse(c.sameAppVersion)
     }
 
+    @Test fun debugAndReleaseAreNotTheSameBuild() {
+        val release = a.copy(app = AppInfo("0.3.0", 3, debuggable = false))
+        val debug = a.copy(app = AppInfo("0.3.0", 3, debuggable = true))
+        assertEquals(false, BuildIdentity.compare(release, debug).sameAppBuild)
+        assertEquals(true, BuildIdentity.compare(debug, debug).sameAppBuild)
+        // The version axis alone cannot see the difference, which is why the build axis exists.
+        assertTrue(BuildIdentity.compare(release, debug).sameAppVersion)
+    }
+
+    @Test fun appBuildIsUnknownWhenEitherSidePredatesTheField() {
+        val known = a.copy(app = AppInfo("0.3.0", 3, debuggable = true))
+        assertNull(BuildIdentity.compare(known, a).sameAppBuild)
+        assertNull(BuildIdentity.compare(a, a).sameAppBuild)
+    }
+
     @Test fun jsonRoundTrip() {
         val c = BuildIdentity.compare(a, a.copy(device = device.copy(vendorFingerprint = null)))
         assertEquals(c, BuildIdentityComparison.fromJsonMap(c.toJsonMap()))

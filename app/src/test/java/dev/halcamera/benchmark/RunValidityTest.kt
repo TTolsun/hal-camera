@@ -10,7 +10,7 @@ class RunValidityTest {
         aborted = null, hardFailure = false, preflightSupported = true, preflightMismatch = false,
         launchSamples = 9, stillSamples = 9, observedFrames = 297, expectedLaunchSamples = 9, expectedStillSamples = 9,
         cadenceFixed = true, thermalStart = 0, thermalMax = 0, thermalEnd = 0,
-        powerSaveMode = false, charging = false, batteryStart = 80, profileDraft = false, subjectLabeled = true
+        powerSaveMode = false, charging = false, batteryStart = 80, profileDraft = false, debuggableBuild = false, subjectLabeled = true
     )
 
     private fun eval(x: ValidityInputs) = RunValidityEvaluator.evaluate(x)
@@ -96,6 +96,21 @@ class RunValidityTest {
         assertEquals(ValidityFlags.VERSION, v.ruleVersion)
         assertEquals(v, RunValidity.fromJsonMap(v.toJsonMap()))
         assertEquals(ValidityFlags.VERSION, v.toJsonMap()["validity_rule_version"])
+    }
+
+    @Test fun debuggableBuildBlocksScoringOnly() {
+        // The run measured what the profile asked for and may be compared with other runs from the same build,
+        // but its numbers carry the debug build own overhead, so they must not feed a cross-device score.
+        val v = eval(clean().copy(debuggableBuild = true))
+        assertTrue(v.measurementValid); assertTrue(v.comparisonEligible); assertFalse(v.scoringEligible)
+        assertTrue(v.flags.contains("DEBUGGABLE_BUILD"))
+    }
+
+    @Test fun debuggableUnknownRaisesNoFlag() {
+        // Runs written before the field existed say nothing about the build; absence is not "release".
+        val v = eval(clean().copy(debuggableBuild = null))
+        assertFalse(v.flags.contains("DEBUGGABLE_BUILD"))
+        assertTrue(v.scoringEligible)
     }
 
     @Test fun unknownFlagsFailClosed() {
