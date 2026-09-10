@@ -9,3 +9,6 @@ keystore.properties
 
 # docgen: omm 동기화 전 스냅샷
 tools/docgen/state/omm-backup/
+tools/docgen/node_modules/
+tools/docgen/state/sync-transaction/
+tools/docgen/state/.sync-lock

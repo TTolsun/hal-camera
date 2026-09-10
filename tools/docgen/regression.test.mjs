@@ -9,7 +9,7 @@ const source = path.resolve(import.meta.dirname, '../..');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hal-docgen-test-'));
 for (const dir of ['tools/docgen', 'docs/guide', '.omm', 'app', 'gradle']) {
   fs.mkdirSync(path.dirname(path.join(root, dir)), { recursive: true });
-  fs.cpSync(path.join(source, dir), path.join(root, dir), { recursive: true, filter: p => !p.includes('omm-backup') && path.basename(p) !== 'build' });
+  fs.cpSync(path.join(source, dir), path.join(root, dir), { recursive: true, filter: p => !p.includes('omm-backup') && !['build', 'node_modules'].includes(path.basename(p)) });
 }
 fs.copyFileSync(path.join(source, 'settings.gradle.kts'), path.join(root, 'settings.gradle.kts'));
 const file = p => path.join(root, p);
