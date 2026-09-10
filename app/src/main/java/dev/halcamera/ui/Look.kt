@@ -47,9 +47,42 @@ object Look {
 
     fun pill(context: Context, fill: Int) = GradientDrawable().apply { setColor(fill); cornerRadius = dp(context, 999).toFloat() }
 
+    /**
+     * A typeface whose digits and letters all occupy one cell, which is what every table in this app assumes:
+     * the presenters align their columns with [String.padEnd] and the result is only a table if the face is
+     * monospaced.
+     *
+     * [Typeface.MONOSPACE] is not enough. It names the `monospace` family, and a device whose system font has
+     * been substituted resolves that name to the substituted face: on a Galaxy S25+ ten M glyphs, ten i glyphs
+     * and ten digits all came out different widths, so every table on the device was ragged. Loading the font
+     * file directly bypasses the family name, and the file is the one the platform's own `monospace` alias
+     * points at, so nothing is bundled and nothing is licensed differently from the system.
+     *
+     * A device without any of these files falls back to the family name, which is no worse than before.
+     */
+    val mono: Typeface by lazy {
+        val candidates = listOf(
+            "/system/fonts/DroidSansMono.ttf",
+            "/system/fonts/RobotoMono-Regular.ttf",
+            "/system/fonts/CutiveMono.ttf"
+        )
+        candidates.asSequence()
+            .mapNotNull { path -> runCatching { Typeface.createFromFile(path) }.getOrNull() }
+            .firstOrNull { it.isMonospaced() }
+            ?: Typeface.MONOSPACE
+    }
+
+    /** Measures the face rather than trusting its name: two glyphs of very different shape must be equally wide. */
+    private fun Typeface.isMonospaced(): Boolean {
+        val paint = android.graphics.Paint().apply { typeface = this@isMonospaced; textSize = 100f }
+        val wide = paint.measureText("M")
+        val narrow = paint.measureText("i")
+        return wide > 0f && kotlin.math.abs(wide - narrow) < 0.5f
+    }
+
     fun text(context: Context, s: CharSequence, sizeSp: Int, color: Int, bold: Boolean = false, mono: Boolean = false) = TextView(context).apply {
         text = s; textSize = sizeSp.toFloat(); setTextColor(color)
-        typeface = if (mono) Typeface.MONOSPACE else if (bold) Typeface.create(Typeface.DEFAULT, Typeface.BOLD) else Typeface.DEFAULT
+        typeface = if (mono) Look.mono else if (bold) Typeface.create(Typeface.DEFAULT, Typeface.BOLD) else Typeface.DEFAULT
         if (sizeSp >= 17) letterSpacing = -0.02f
         setLineSpacing(0f, if (sizeSp <= 14) 1.35f else 1.15f)
     }

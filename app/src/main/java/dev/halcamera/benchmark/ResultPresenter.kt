@@ -201,9 +201,11 @@ object ResultPresenter {
             title = category.name.replace('_', ' '),
             valueHeader = "p50",
             statHeader = metrics.mapNotNull { statHeader(it) }.firstOrNull().orEmpty(),
+            // Abbreviated so the column and its markers fit the card. Which run the delta is against is spelled
+            // out in full on the comparison line above the table, so the header only has to distinguish the two.
             deltaHeader = when (comparedTo) {
-                ComparedTo.BASELINE -> "vs baseline"
-                ComparedTo.PREVIOUS -> "vs previous"
+                ComparedTo.BASELINE -> "vs base"
+                ComparedTo.PREVIOUS -> "vs prev"
                 ComparedTo.NONE -> ""
             },
             rows = rows
@@ -307,11 +309,21 @@ object ResultPresenter {
 
     // ---- monospace layout ----
 
-    /** LABEL fits the longest catalog name ("Stall during capture") plus its indent; DELTA fits "vs baseline". */
-    private const val LABEL = 24
-    private const val VALUE = 9
-    private const val STAT = 9
-    private const val DELTA = 13
+    /**
+     * The table has to fit the card, which is about 303dp wide on a phone. In a real monospace face at 10sp that
+     * is roughly 45 cells, and these four columns plus the marker come to 44.
+     *
+     * The widths were larger when the face was not actually monospaced: nothing lined up, so nothing revealed
+     * that the line had grown past the screen. Once it did line up the verdict markers sat off the right edge,
+     * reachable only by scrolling, which is the wrong place for the one thing the reader is looking for.
+     *
+     * LABEL fits the longest catalog name ("Capture stalls") plus its indent and a separator; DELTA fits
+     * "vs base" and a two-cell gap.
+     */
+    private const val LABEL = 17
+    private const val VALUE = 8
+    private const val STAT = 8
+    private const val DELTA = 8
 
     // Columns are padded and then the line is trimmed: an empty trailing column must not leave stray spaces
     // behind, because the result text is copied to a PC as often as it is read on the phone.

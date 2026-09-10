@@ -129,8 +129,17 @@ object ComparePresenter {
     private const val RUN_ID = 22
     private const val SUBJECT = 16
     private const val BUILD = 20
-    private const val LABEL = 20
-    private const val VALUE = 11
+
+    /**
+     * The metric rows are sized like the result table so both fit the card without a horizontal scroll: LABEL
+     * holds the longest catalog name plus a separator, and each value column holds "1234.5 ms".
+     *
+     * The three identity lines above them stay wide and still scroll. A run id is 22 characters and cannot be
+     * shortened without making it useless for finding the file, so that is a cost worth paying on three lines
+     * rather than on every row of the table.
+     */
+    private const val LABEL = 15
+    private const val VALUE = 10
     private const val DELTA = 8
 
     fun headerLine(baseHeader: String): String =

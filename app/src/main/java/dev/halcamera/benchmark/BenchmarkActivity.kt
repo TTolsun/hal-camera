@@ -331,7 +331,7 @@ class BenchmarkActivity : ComponentActivity() {
             return
         }
         val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, deviceName(), roleText(run.endpoint.role))
-        card.addView(wide(Look.text(this, view.render(), 11, Look.onDark, mono = true).also { copyOnTap(it, "result") }))
+        card.addView(wide(Look.text(this, view.render(), 9, Look.onDark, mono = true).also { copyOnTap(it, "result") }))
         card.addView(Look.text(this, lastSummary, 10, Look.onDarkMuted, mono = true), lp(top = 10))
         content.addView(card)
 
@@ -363,7 +363,7 @@ class BenchmarkActivity : ComponentActivity() {
             card.addView(Look.text(this, "비교할 run이 없습니다.", 13, Look.onDarkMuted), lp(top = 2))
         } else {
             val text = ComparePresenter.present(base, run, cmp, comparedTo, isBaseline).render()
-            card.addView(wide(Look.text(this, text, 11, Look.onDark, mono = true).also { copyOnTap(it, "compare") }))
+            card.addView(wide(Look.text(this, text, 9, Look.onDark, mono = true).also { copyOnTap(it, "compare") }))
         }
         content.addView(card)
         actions.addView(Look.ghostButton(this, "결과로 돌아가기", dark = true) { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(-1, dp(52)))
@@ -643,7 +643,7 @@ class BenchmarkActivity : ComponentActivity() {
         setTextColor(Look.onDark)
         setHintTextColor(Look.onDarkMuted)
         textSize = 14f
-        typeface = Typeface.MONOSPACE
+        typeface = Look.mono
         isSingleLine = true
         inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         background = Look.cardBackground(this@BenchmarkActivity, Look.expertTile, Look.expertTile3)

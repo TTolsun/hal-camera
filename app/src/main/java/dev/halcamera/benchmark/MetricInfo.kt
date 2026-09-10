@@ -26,7 +26,9 @@ object BenchmarkMetricCatalog {
         MetricInfo("2.5", Category.CAPTURE, "Shot-to-shot", "ms"),
         MetricInfo("H.5", Category.STABILITY, "Stalls", "count"),
         MetricInfo("H.9", Category.STABILITY, "Callback fail", "count"),
-        MetricInfo("2.7", Category.STABILITY, "Stall during capture", "count"),
+        // Six characters shorter than "Stall during capture", which was the one name that set the label column
+        // width for the whole table and pushed the verdict markers off the screen.
+        MetricInfo("2.7", Category.STABILITY, "Capture stalls", "count"),
         MetricInfo("H.6", Category.THREE_A, "AE", "ms"),
         MetricInfo("H.7", Category.THREE_A, "AF", "ms"),
         MetricInfo("H.8", Category.THREE_A, "AWB", "ms")
