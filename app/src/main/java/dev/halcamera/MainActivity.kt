@@ -98,7 +98,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var recorderText: TextView
     private lateinit var shareButton: Button
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) restartCamera() else setStatus("카메라 권한이 필요합니다 · 진단 패널의 권한 버튼으로 재시도", false)
+        if (granted) restartCamera() else setStatus("카메라 권한이 필요합니다 · 측정 패널의 권한 버튼으로 재시도", false)
     }
     private val saveDocument = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         val file = saveFile
