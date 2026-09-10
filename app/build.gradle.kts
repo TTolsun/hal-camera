@@ -3,10 +3,10 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 android {
-    namespace = "dev.cameradoctor"
+    namespace = "dev.halcamera"
     compileSdk = 36
     defaultConfig {
-        applicationId = "dev.cameradoctor"
+        applicationId = "dev.halcamera"
         minSdk = 26
         targetSdk = 36
         versionCode = 3

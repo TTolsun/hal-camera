@@ -1,0 +1,151 @@
+package dev.halcamera.benchmark
+
+import dev.halcamera.check.CameraEndpoint
+import dev.halcamera.check.LensRole
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
+import org.junit.Test
+
+class BenchmarkReportCodecTest {
+    private val profile = BenchmarkProfile.CAMERA2_STANDARD_V1
+    private val device = DeviceInfo("samsung", "SM-S936N", "BP4A.251205.006", "inc", "samsung/fp", null, 36, "2025-12-01", "hal-1")
+    private val app = AppInfo("0.3.0", 3)
+    private val subject = SubjectLabel("SW42_release_20260909", "a8f29c1", null, "SAT 변경 적용")
+
+    private val events: List<Map<String, Any?>> = listOf(
+        mapOf("atNs" to "1000", "session" to "bm-0", "kind" to "open_call", "frame" to null, "sensorNs" to null, "values" to mapOf("api" to "CameraManager.openCamera")),
+        mapOf("atNs" to "2000", "session" to "bm-0", "kind" to "capture_result", "frame" to 7L, "sensorNs" to "1900", "values" to mapOf("ae" to 2, "intervalMs" to 33.3))
+    )
+
+    private fun run(p: BenchmarkProfile = profile): BenchmarkRun {
+        val cycles = (0 until 10).map { i -> LaunchCycle(i, i == 0, 140.0 + i, 40.0, 90.0, 120.0, 400.0, 80.0, timestampsNs = mapOf("open_call" to 1_000L * i)) }
+        val stills = (0 until 10).map { i -> StillSample(i, i == 0, i * 400_000_000L, i * 400_000_000L + 160_000_000L, i * 400_000_000L + 150_000_000L) }
+        val metrics = BenchmarkEvaluator(p).evaluate(BenchmarkEvaluator.Input(cycles, stills, null, 0))
+        val validity = RunValidityEvaluator.evaluate(ValidityInputs(
+            aborted = null, hardFailure = false, preflightSupported = true, preflightMismatch = false,
+            launchSamples = 9, stillSamples = 9, observedFrames = 298, expectedLaunchSamples = 9, expectedStillSamples = 9,
+            cadenceFixed = true, thermalStart = 0, thermalMax = 1, thermalEnd = 1, powerSaveMode = false, charging = true,
+            batteryStart = 82, profileDraft = p.isDraft, subjectLabeled = true))
+        val identity = BuildIdentity.compare(BuildIdentity(device, app, subject), BuildIdentity(device.copy(fingerprint = "samsung/other"), app, SubjectLabel("SW41", "9c01d2e")))
+        return BenchmarkRun(
+            runId = "20260909-101422-123",
+            exportedAtUtc = "2026-09-09T01:14:22.000Z",
+            aborted = null,
+            profile = p,
+            contract = MeasurementContract.forProfile(p),
+            compatibility = Compatibility("device_setup", true, emptyList(), true),
+            effectiveConditions = mapOf("af_mode" to "CONTINUOUS_PICTURE", "fps_range" to "[30,30]"),
+            endpoint = CameraEndpoint("0", null, LensRole.MAIN, 1, true, true, null, 24.0, 1, 3, 0.6f, 10f),
+            device = device, app = app, subject = subject,
+            env = RunEnv(0, 1, 1, 82, 80, true, false, 0),
+            validity = validity,
+            baselineRef = RunRef("20260909-095100-000", true, identity),
+            referenceRef = null,
+            metrics = metrics,
+            raw = mapOf("launch_cycles" to cycles.map { it.toJsonMap() }, "stills" to stills.map { it.toJsonMap() },
+                "observation" to mapOf("frames" to 298, "exposure_load_p50" to 1.2e6)),
+            events = events
+        )
+    }
+
+    @Test fun roundTripPreservesTheRunIncludingEvents() {
+        val r = run()
+        val back = BenchmarkReportCodec.fromJsonMap(BenchmarkReportCodec.toJsonMap(r))
+        assertEquals(r, back)
+        assertEquals(events, back.events)
+        assertEquals(r.contract.comparisonContractId, back.contract.comparisonContractId)
+        assertTrue(back.validity.comparisonEligible)
+        assertFalse(back.validity.scoringEligible)
+    }
+
+    @Test fun topLevelKeysFollowSchema3() {
+        val r = run()
+        val m = BenchmarkReportCodec.toJsonMap(r)
+        val required = listOf(
+            "schema_version", "kind", "run_id", "exported_at_utc", "aborted", "profile", "compatibility", "conditions",
+            "metric_definition_version", "stats_method", "clock", "comparison_contract_id", "regression_rule_version",
+            "scoring_rule_version", "device", "app", "subject", "endpoint", "env", "validity", "baseline_ref", "reference_ref",
+            "metrics", "summary", "raw", "events"
+        )
+        for (k in required) assertTrue(k, m.containsKey(k))
+        assertEquals(3, m["schema_version"])
+        assertEquals("benchmark", m["kind"])
+        assertEquals("camera2-standard-v1|metrics-0.3|nearest_rank|elapsedRealtimeNanos", m["comparison_contract_id"])
+        assertEquals("regression-rule-v1", m["regression_rule_version"])
+        @Suppress("UNCHECKED_CAST") val summary = m["summary"] as Map<String, Any?>
+        assertEquals(r.metrics.size, summary["unknown"])
+        assertEquals(null, summary["endpoint_score"])
+        @Suppress("UNCHECKED_CAST") val env = m["env"] as Map<String, Any?>
+        assertTrue(env.containsKey("thermal_max"))
+        assertTrue(env.containsKey("power_save_mode"))
+        @Suppress("UNCHECKED_CAST") val subjectMap = m["subject"] as Map<String, Any?>
+        assertEquals("a8f29c1", subjectMap["commit"])
+        @Suppress("UNCHECKED_CAST") val validity = m["validity"] as Map<String, Any?>
+        assertEquals(ValidityFlags.VERSION, validity["validity_rule_version"])
+        assertEquals(2, (m["events"] as List<*>).size)
+    }
+
+    @Test fun metricJsonUsesNForSampleCountAndKeepsSamplesNullForWindowMetrics() {
+        val ms = run().metrics.associateBy { it.id }
+        val open = ms["1.1"]!!.toJsonMap()
+        assertEquals(9, open["n"])
+        assertFalse(open.containsKey("sample_count"))
+        assertEquals(9, (open["samples"] as List<*>).size)
+        val h1 = ms["H.1"]!!.toJsonMap()
+        assertEquals(null, h1["samples"])
+        assertEquals("not_run", h1["unknown_reason"])
+        assertEquals(ms["1.1"], BenchmarkMetric.fromJsonMap(open))
+    }
+
+    @Test fun missingRequiredFieldsFailWithTheKeyName() {
+        val m = BenchmarkReportCodec.toJsonMap(run())
+        for (key in listOf("run_id", "metric_definition_version", "stats_method", "clock", "comparison_contract_id")) {
+            try { BenchmarkReportCodec.fromJsonMap(m - key); fail("$key required") }
+            catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains(key)) }
+        }
+        val metric = run().metrics.first().toJsonMap() - "id"
+        try { BenchmarkMetric.fromJsonMap(metric); fail("metric id required") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("id")) }
+        try { MeasurementContract.fromJsonMap(mapOf("profile_id" to "p")); fail("contract components required") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("metric_definition_version")) }
+    }
+
+    @Test fun contractIntegrityIsVerified() {
+        val m = BenchmarkReportCodec.toJsonMap(run())
+        // Wrong kind.
+        try { BenchmarkReportCodec.fromJsonMap(m + ("kind" to "incident")); fail("kind must be benchmark") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("kind")) }
+        // Stored contract id does not match the components: the file was edited or written by a different contract.
+        try { BenchmarkReportCodec.fromJsonMap(m + ("metric_definition_version" to "metrics-0.4")); fail("contract id mismatch") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("comparison_contract_id")) }
+        try { BenchmarkReportCodec.fromJsonMap(m + ("comparison_contract_id" to "x")); fail("contract id mismatch") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("comparison_contract_id")) }
+    }
+
+    @Test fun confirmedCanonicalProfileMustMatchExactly() {
+        val confirmed = profile.copy(id = "camera2-standard-v1")
+        val canonical = mapOf(confirmed.id to confirmed)
+        val ok = BenchmarkReportCodec.toJsonMap(run(confirmed))
+        assertEquals(confirmed, BenchmarkReportCodec.fromJsonMap(ok, canonicalProfiles = canonical).profile)
+        // Same id, different stream size: rejected.
+        @Suppress("UNCHECKED_CAST") val storedProfile = ok["profile"] as Map<String, Any?>
+        val tampered = ok + ("profile" to (storedProfile + ("yuv_size" to "1280x720")))
+        try { BenchmarkReportCodec.fromJsonMap(tampered, canonicalProfiles = canonical); fail("canonical mismatch") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("canonical")) }
+        // A draft id may still change, so the same tampering on a draft profile loads without complaint.
+        val draft = BenchmarkReportCodec.toJsonMap(run(profile.copy(id = "camera2-standard-v2-draft")))
+        @Suppress("UNCHECKED_CAST") val draftProfile = draft["profile"] as Map<String, Any?>
+        val draftTampered = draft + ("profile" to (draftProfile + ("yuv_size" to "1280x720")))
+        assertEquals("1280x720", BenchmarkReportCodec.fromJsonMap(draftTampered, canonicalProfiles = canonical).profile.yuvSize)
+    }
+
+    @Test fun otherSchemaVersionIsRejected() {
+        val m = BenchmarkReportCodec.toJsonMap(run()) + ("schema_version" to 2)
+        try {
+            BenchmarkReportCodec.fromJsonMap(m)
+            fail("schema 2 must be rejected")
+        } catch (_: IllegalArgumentException) { }
+    }
+}

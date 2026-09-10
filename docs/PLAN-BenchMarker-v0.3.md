@@ -1,13 +1,13 @@
-# Camera BenchMarker 전환 계획 v0.3
+# HAL Camera 전환 계획 v0.3
 
 - 작성일: 2026-09-09
 - 상태: **2026-09-09 검토 3회 반영(13장). Data contract(3 · 5 · 6장)는 freeze. 이후 변경은 13장에 기록하고 schema_version 또는 계약 버전을 올린다.** 11장의 결정 항목이 확정되면 이 문서를 `PRODUCT-v0.3.md`로 승격한다.
 - 대체하는 문서: `PRODUCT-v0.2.md`(Camera Doctor). 지표 정의는 `METRICS.md`를 그대로 상위 문서로 둔다. 시작점과 끝점, 시계, 통계 규칙은 바뀌지 않는다.
-- 코드 기준: GitHub `TTolsun/camera-doctor` main `0163730` (2026-09-09). 단위 테스트 96개, lint 오류 0.
+- 코드 기준: GitHub `TTolsun/hal-camera` main `0163730` (2026-09-09). 단위 테스트 96개, lint 오류 0.
 
 ## 0. 제품 한 문장
 
-> Camera BenchMarker는 카메라가 건강한지 판정하는 앱이 아니라, 카메라가 얼마나 빠르고 안정적인지, 그리고 SW 변경 후 어떻게 달라졌는지를 측정하는 앱이다.
+> HAL Camera는 카메라가 건강한지 판정하는 앱이 아니라, 카메라가 얼마나 빠르고 안정적인지, 그리고 SW 변경 후 어떻게 달라졌는지를 측정하는 앱이다.
 
 목표는 두 개다.
 
@@ -29,7 +29,7 @@ measurement (raw samples, n회 반복)
 
 ## 1. v0.2에서 무엇이 바뀌는가
 
-| 항목 | Camera Doctor v0.2 | Camera BenchMarker v0.3 |
+| 항목 | Camera Doctor v0.2 | HAL Camera v0.3 |
 |---|---|---|
 | 질문 | 카메라가 정상인가 | 얼마나 빠른가, 이전 빌드보다 어떤가 |
 | 판정 | PASS / WARN / FAIL, NORMAL / WARNING / ISSUE | 없음. 수치와 IMPROVED / STABLE / REGRESSED |
@@ -788,7 +788,7 @@ RESULTS                                 camera2-standard-v1 · 후면 메인   [
 |---|---|---|---|---:|
 | **M1** | Data contract | `BenchmarkProfile`(launchMode 포함), `BenchmarkModel`(`SubjectLabel`, `RunRef`), `RegressionRules` 표(값은 잠정), `RunValidity`(flag 표 → 세 단계), `BuildIdentity`, `BenchmarkEvaluator`(통계만), `BenchmarkReport`(JSON 3 쓰기 · 읽기, `compatibility` · `env.thermal_max` · `power_save_mode` 포함), `BenchmarkStore`(파일 · index). `MetricExtractor`에 H.10 | 단위 테스트: profile 직렬화, JSON round-trip, 통계 경계(n=9 p95는 max, n=8 간격), 7.2 표의 지표별 경계값, validity flag 표에서 세 boolean 유도(thermal_max 경계 포함), identity 비교의 null 처리. 기존 앱 동작 변화 없음. `assembleDebug testDebugUnitTest lintDebug` 통과 | 약 4시간 |
 | **M2** | Measurement correctness | `ProfileCompatibility`(static + API 35 `CameraDeviceSetup` 경로), `ThermalTracker`, `BenchmarkRunner` 순수 Kotlin(launch 반복 → warm-up → observe → still 반복 → close, timeout과 abort), `Camera2Engine`이 profile 스트림 크기를 받음, 최소 `BenchmarkActivity`(preflight 결과와 method, START, 진행 텍스트, 완료 후 JSON 경로) | **S25+에서 후면 메인 3회, 전면 1회(preflight 통과 확인), 초광각 1회(AF OFF 경로) 완주하고 JSON을 Drive에 저장.** `isCameraDeviceSetupSupported()` 값과 정확 질의 결과 기록. YUV 1080p가 stall을 만들지 확인한 뒤 profile id를 `-draft`에서 확정. warm reopen 값이 v0.2 단일 open 값과 어떻게 다른지, thermal_max가 run 중 어떻게 움직였는지 STATUS에 기록. **밝은 곳과 어두운 곳에서 각각 반복해 `exposure_load_p50`과 2.2 / 2.3 / 2.5의 상관을 확인**하고 7.5에 Capture를 넣을지 결정 | 약 7시간 + 실기기 1시간 |
-| **M3** | Product conversion | 8.1 LIVE 버튼 정리, 런처를 `MainActivity`로, 8.2 – 8.4 화면(p50 / max 표시 규칙, eligibility 머리글), `EXPORT`(JSON 공유). 2.3의 삭제 목록 전부 제거. 앱 label "Camera BenchMarker", versionName 0.3.x | Doctor 클래스 0개. 결과 화면이 eligibility 세 단계와 reference delta를 표시 | 약 5시간 |
+| **M3** | Product conversion | 8.1 LIVE 버튼 정리, 런처를 `MainActivity`로, 8.2 – 8.4 화면(p50 / max 표시 규칙, eligibility 머리글), `EXPORT`(JSON 공유). 2.3의 삭제 목록 전부 제거. 앱 label "HAL Camera", versionName 0.3.x | Doctor 클래스 0개. 결과 화면이 eligibility 세 단계와 reference delta를 표시 | 약 5시간 |
 | **M4** | Developer workflow | 명시적 `BaselineStore`(포인터, comparison-eligible만 허용), `ReferenceResolver`, `RegressionDetector`(7.2 표 적용, 7.5 조건 차이, 표시 시점 재계산), 결과 화면의 vs baseline / vs previous 열, 7.4 identity 요약, `SET AS BASELINE`과 `CLEAR BASELINE`, 7.3 COMPARE 화면 | 테스트: 7.2 표 각 행의 경계값, profile 불일치, 7.5 네 조건, 부적격 run 배제, baseline 파일 삭제, baseline 해제 후 `NO_BASELINE` 복귀, identity null 조합 | 약 6시간 |
 | **M5a** | Internal score | `ScoreComposer`, 지표별 normalization curve 시제품, 카테고리 점수, **Camera Endpoint Score** 0 – 1000, 3A 카테고리 weight 0, `scoring_rule_version = score-v1-draft`. curve 학습 dataset은 정상 조건의 `scoring_eligible` run만 | **시작 조건: S25+ profile v1 scoring-eligible run이 정상 조건 10회 이상.** 발열 · 저조도 · 카메라 점유 경쟁 run(각 3회 이상)은 curve에 넣지 않고 점수가 실제로 내려가는지 확인하는 sensitivity 검증에만 쓴다 | 데이터 수집 후 약 3시간 |
 | **M5b** | Public endpoint score | 여러 제조사 · 성능군 단말의 scoring-eligible 분포로 curve 확정, `scoring_rule_version = score-v1`. 이름은 Camera Endpoint Score. Device Score는 표준 endpoint 집합 이후 | **release gate: 최소 5 – 10개 기기의 분포.** S25+ 하나로 만든 curve는 S25+ regression score이지 기기 간 benchmark score가 아니다 | 기기 확보 후 약 3시간 |
@@ -806,7 +806,7 @@ M2가 끝나면 사용자는 결과 UI 없이도 S25+에서 run을 반복해 raw
 2. 빌드는 Codex toolchain으로 `gradle.bat -p <project> --no-daemon --offline assembleDebug testDebugUnitTest lintDebug`.
 3. merge 전에 cavecrew-reviewer 리뷰. 심각 지적은 같은 브랜치에서 수정 후 merge.
 4. Drive `checkpoints/checkpoint-008-bm-m1-model/`부터 이어서 APK, diff, STATUS, 실기기 JSON을 저장한다.
-5. 실기기 검증은 사용자가 잠금을 풀고 `START BENCHMARK`를 누른다. 결과는 `adb exec-out run-as dev.cameradoctor cat files/benchmarks/<runId>.json`으로 꺼낸다.
+5. 실기기 검증은 사용자가 잠금을 풀고 `START BENCHMARK`를 누른다. 결과는 `adb exec-out run-as dev.halcamera cat files/benchmarks/<runId>.json`으로 꺼낸다.
 6. 문서 순서: 이 계획 → 결정 확정 → `PRODUCT-v0.3.md` 승격 → 코드. 규칙(profile, regression rule, validity flag 표)을 바꿀 때는 문서를 먼저 고친다.
 
 ---
@@ -817,14 +817,14 @@ M2가 끝나면 사용자는 결과 UI 없이도 S25+에서 run을 반복해 raw
 
 | # | 항목 | 제안 | 이유 |
 |---|---|---|---|
-| 1 | 앱 이름과 패키지 | label은 "Camera BenchMarker", `applicationId`는 `dev.cameradoctor` 유지 | 패키지를 바꾸면 기존 설치본, 저장된 run, adb 스크립트가 모두 끊긴다. 저장소 이름(`camera-doctor` → `camera-benchmarker`)은 GitHub가 redirect를 유지하므로 언제든 바꿔도 된다. 사용자 선택 |
+| 1 | 앱 이름과 패키지 | **2026-09-10 확정:** 제품 이름은 **HAL Camera**, label은 "HAL Camera", `applicationId`와 패키지는 `dev.halcamera`, 저장소는 `TTolsun/hal-camera` | 사용자가 이름을 새로 정하면서 패키지까지 함께 바꾸기로 결정했다. `applicationId`가 바뀌면 기존 설치본은 별개의 앱이 되므로, 제거하기 전에 Drive `device-backup-2026-09-10-rename/`으로 `files`와 `shared_prefs`를 받아 두었고 복원 절차는 그 폴더의 README에 있다. 저장소 이름은 GitHub가 redirect를 유지한다 |
 | 2 | Profile v1 스트림 크기 | preview 1920x1080, YUV 1920x1080, JPEG 1920x1080 | METRICS.md 미결 항목의 제안값과 사용자 화면 예시("1080p30")와 일치. M2에서 YUV 1080p가 H.5 stall을 만들면 720p로 낮추고 그때 v1을 확정. 확정 후에는 불변(3.5) |
 | 3 | 반복 수 | launch 10회(n=9), still 10회(n=9, 간격 8) | METRICS.md 0.2절 기본 반복 10회, 첫 회 제외와 일치 |
 | 4 | run 범위 | 1 run = 카메라 1개 | 사용자 카드 예시("Rear Main · ~45 sec")와 일치. 전면 · 초광각은 카메라를 바꿔 다시 실행 |
 | 5 | regression 규칙 | 전역 값 대신 지표별 표(7.2). 초기값은 open / capture 15 % + 10 ms, jitter 20 % + 1 ms, stall +2, callback failure +1 | 전역 10 ms floor는 문서 안에서 이미 예시와 모순되었다(Jitter 3.2 → 7.1 ms). M5에서 분포를 보고 조정 |
 | 6 | baseline 정책 | 명시적 지정만. 자동 baseline 없음. 직전 comparison-eligible run은 REFERENCE로 자동 비교하되 상태는 내지 않음 | v0.2에서 artefact가 든 첫 run이 baseline이 된 사례. "baseline"은 의도한 기준점이라는 뜻을 지킨다 |
 | 7 | Score | M5까지 계산도 표시도 없음. JSON `score: null` | 사용자 원칙: raw 분포 먼저 |
-| 8 | 버전 | M1부터 versionName 0.3.0, 마일스톤마다 patch 증가 | v0.2 = Doctor, v0.3 = BenchMarker 첫 라인 |
+| 8 | 버전 | M1부터 versionName 0.3.0, 마일스톤마다 patch 증가 | v0.2 = Doctor, v0.3 = HAL Camera 첫 라인 |
 | 9 | 지표 표시 이름 | 결과 · 비교 화면은 영문 짧은 이름, 안내 문구는 한국어 | 8.4 |
 | 10 | 첫 score의 이름 | Camera Endpoint Score. Device Score는 표준 endpoint 집합 이후 | 실제로 잰 것은 "S25+ 후면 메인 camera2-standard-v1"이다 |
 | 11 | 3A와 score | score-v1에서 weight 0(informational). regression 비교에는 포함 | 장면 · 거리 · 조도 의존이 커서 기기 간 비교에 쓰면 환경 차이가 성능처럼 보인다 |
@@ -845,7 +845,7 @@ M2가 끝나면 사용자는 결과 UI 없이도 S25+에서 run을 반복해 raw
 | `docs/PRODUCT-v0.2.md` (Drive, repo) | `docs/archive/PRODUCT-v0.2.md`로 이동. 삭제하지 않는다. 열거 절차(9장), Auto Check 시간 예산(10장), 디자인 토큰(11.6), exposure_load 규칙(6장)은 v0.3 문서가 참조한다 |
 | `docs/METRICS.md`, `METRICS-REVIEW.md` | 유지. H.10 추가, 0.2절에 `launch_mode = warm_reopen` 대응 명시, 0.3절 환경값에 `thermal_max`와 절전 모드 추가, 0.5절에 schema 3 언급 |
 | `docs/design/DESIGN.md` | 유지. Expert 어두운 배경 토큰이 LIVE와 BENCHMARK 화면의 기준 |
-| `README.md` | M3에서 제품 정의와 빌드 방법을 BenchMarker 기준으로 다시 쓴다 |
+| `README.md` | M3에서 제품 정의와 빌드 방법을 HAL Camera 기준으로 다시 쓴다 |
 | Drive `checkpoints/001 – 007` | 그대로 보존 |
 | 기기의 `files/checks/*.json`, `files/incidents/*` | M3 설치 전에 `adb exec-out run-as`로 백업. schema 2 파일은 v0.3 앱이 읽지 않는다 |
 | 삭제하는 개념 | Camera Health, NORMAL / WARNING / ISSUE, Health Score, 중고폰 검사, Consumer Health Check, Diagnosis rules, CDD 기반 판정, "방금 이상했어요", 고장 · 이상 진단 |
