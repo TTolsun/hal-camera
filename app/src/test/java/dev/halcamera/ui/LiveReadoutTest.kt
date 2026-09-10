@@ -65,6 +65,32 @@ class LiveReadoutTest {
         assertEquals(66.7, r.intervalMs!!, 0.5)
     }
 
+    @Test fun aStoppedStreamStopsReportingCurrentNumbers() {
+        // The last frame stays in the ten-second buffer after the camera stops, and reading it as the current
+        // value made a camera delivering nothing look like one delivering perfectly on time (PR #35 review).
+        val frames = 60
+        val events = stream(frames)
+        val fourSecondsLater = now(frames) + 4_000_000_000L
+        val r = LiveReadout().read(events, session, fourSecondsLater)
+
+        assertFalse(r.hasCurrentFrame)
+        assertNull(r.intervalMs)
+        assertNull(r.partialMs)
+        assertNull(r.bufferMs)
+        assertNull(r.frameDurationMs)
+        assertNull(r.maxIntervalMs)
+        assertNull(r.ae)
+
+        // What was measured before the stream stopped is still true, so the reference and the count survive.
+        assertTrue(r.hasReference)
+        assertEquals(33.3, r.intervalRefMs!!, 0.1)
+        assertEquals(frames, r.baselineFrames)
+
+        val lines = LiveReadout.panelText(r).lines()
+        assertTrue(lines.first { it.startsWith("interval ") }.endsWith("—"))
+        assertTrue(lines.first { it.startsWith("interval ref p50") }.endsWith("33.3 ms"))
+    }
+
     @Test fun everyRowOfThePanelPutsItsValueInTheSameColumn() {
         // The block is monospace, so the columns only line up if every label is padded to the same cell count.
         // Korean labels break this silently: padEnd counts one char where the face draws two cells.

@@ -86,6 +86,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var readoutCard: TextView
     private val readout = LiveReadout()
     private var lastReading: LiveReading? = null
+    /** The reading at each MARK, held by incident id until that incident's ZIP is written. Main thread only. */
+    private val markedReadings = mutableMapOf<String, LiveReading?>()
     private lateinit var metrics: TextView
     private lateinit var timeline: TextView
     private lateinit var system: TextView
@@ -295,7 +297,10 @@ class MainActivity : ComponentActivity() {
         bottomBar.addView(mainRow,lp(top=12))
         reportButton=button(MARK_LABEL) {
             val id="incident_"+SimpleDateFormat("yyyyMMdd_HHmmss_SSS",Locale.US).format(Date())+"_"+UUID.randomUUID().toString().take(8)
-            if(recorder.trigger(id)) toast("5초 후 incident ZIP을 저장합니다")
+            // The reading is captured here, not when the dialog opens. The dialog is at least five seconds later
+            // and after an asynchronous write, by which point lastReading has been replaced many times over and
+            // may even belong to a different camera. What the dialog shows has to be the evidence for that ZIP.
+            if(recorder.trigger(id)) { markedReadings[id]=lastReading; toast("5초 후 incident ZIP을 저장합니다") }
         }.apply { setTextColor(Color.WHITE); textSize=11f; setTypeface(typeface,Typeface.BOLD); background=circle(coral); contentDescription="MARK: 직전 10초와 이후 5초를 저장" }
         captureButton=button("") { engine?.capture() }.apply { background=circle(Color.WHITE,ring=bg); contentDescription="SHUTTER" }
         // 8.1: the third control is the benchmark, which is what this app is for. It measures the camera the LIVE
@@ -439,8 +444,12 @@ class MainActivity : ComponentActivity() {
     private fun updateReadout(events:List<Event>,frames:List<Event>,time:Long) {
         val r=readout.read(events,sessionId,time)
         strip.update(frames,r.intervalRefMs,time)
-        readoutCard.text=if(r.hasReference) LiveReadout.panelText(r)
-        else "기준 수집 중 (${r.baselineFrames}프레임)\n" + LiveReadout.panelText(r)
+        val note=when {
+            !r.hasCurrentFrame -> "수신 중인 프레임 없음"
+            !r.hasReference -> "기준 수집 중 (${r.baselineFrames}프레임)"
+            else -> null
+        }
+        readoutCard.text=listOfNotNull(note,LiveReadout.panelText(r)).joinToString("\n")
         lastReading=r
     }
     private fun sampleSystem() {
@@ -461,9 +470,10 @@ class MainActivity : ComponentActivity() {
                 val file=IncidentExporter(app).export(incident,sessions)
                 main.post {
                     exporting--
-                    if(!destroyed) { latestFile=file; shareButton.isEnabled=true; toast("저장 완료 · ${file.name}"); if(incident.finishReason=="completed") showSaved(file) }
+                    val marked=markedReadings.remove(incident.id)
+                    if(!destroyed) { latestFile=file; shareButton.isEnabled=true; toast("저장 완료 · ${file.name}"); if(incident.finishReason=="completed") showSaved(file,marked) }
                 }
-            } catch(e:Exception) { main.post { exporting--; if(!destroyed) toast("ZIP 저장 실패: ${e.message}") } }
+            } catch(e:Exception) { main.post { exporting--; markedReadings.remove(incident.id); if(!destroyed) toast("ZIP 저장 실패: ${e.message}") } }
         }
     }
     private fun incidentFiles()=File(filesDir,"incidents").listFiles()?.filter { it.extension=="zip" }?.sortedByDescending { it.lastModified() }.orEmpty()
@@ -497,16 +507,16 @@ class MainActivity : ComponentActivity() {
      * 8.1: the dialog after a MARK keeps raw values only. It used to open with a verdict sentence and evidence
      * lines in consumer words, which claimed more about the recording than the app had measured.
      */
-    private fun showSaved(file:File) {
+    private fun showSaved(file:File,marked:LiveReading?) {
         if(destroyed || isFinishing) return
-        val r=lastReading
         fun ms(v:Double?)=v?.let { String.format(Locale.US,"%.1f ms",it) } ?: "—"
-        val body=if(r==null) "직전 10초와 이후 5초를 저장했습니다." else listOf(
+        val body=if(marked==null) "직전 10초와 이후 5초를 저장했습니다." else listOf(
             "직전 10초와 이후 5초를 저장했습니다.",
+            "MARK을 누른 시점의 값입니다.",
             "",
-            "interval        ${ms(r.intervalMs)}   (기준 p50 ${ms(r.intervalRefMs)})",
-            "partial         ${ms(r.partialMs)}   (기준 p50 ${ms(r.baselinePartialMs)})",
-            "stall (10s)     ${r.stalls}회"
+            "interval        ${ms(marked.intervalMs)}   (기준 p50 ${ms(marked.intervalRefMs)})",
+            "partial         ${ms(marked.partialMs)}   (기준 p50 ${ms(marked.baselinePartialMs)})",
+            "stall (10s)     ${marked.stalls}회"
         ).joinToString("\n")
         AlertDialog.Builder(this).setTitle(file.name)
             .setMessage(body)

@@ -31,6 +31,9 @@ data class LiveReading(
     val ae: Int?, val af: Int?, val awb: Int?
 ) {
     val hasReference: Boolean get() = intervalRefMs != null
+
+    /** Whether a frame arrived inside the recent window. False means the stream has stopped, not that it is fine. */
+    val hasCurrentFrame: Boolean get() = intervalMs != null || partialMs != null || bufferMs != null
 }
 
 /**
@@ -45,10 +48,13 @@ class LiveReadout(
 
     fun read(events: List<Event>, session: String, now: Long): LiveReading {
         val all = extractor.frames(events, session, Long.MIN_VALUE, now)
-        val last = all.lastOrNull()
         // The reference needs a settled population, so it is drawn from the frames older than the recent window.
         val older = all.filter { it.resultAtNs < now - recentNs }
         val recent = all.filter { it.resultAtNs >= now - recentNs }
+        // Every "current" number comes from the recent window and not from the last frame ever seen. A stopped or
+        // paused stream leaves its final frame in the ten-second buffer, and reading that as the current value
+        // makes a camera that is delivering nothing look like one delivering perfectly on time.
+        val last = recent.lastOrNull()
         if (older.size < minBaseline) {
             return LiveReading(
                 all.size, null, null, null, last?.intervalMs, null, last?.ownDurationMs,
@@ -67,6 +73,8 @@ class LiveReadout(
             frameDurationMs = last?.ownDurationMs,
             partialMs = last?.partialMs,
             bufferMs = last?.bufferMs,
+            // The stall count stays over the whole buffer: it is a count of what happened in the last ten
+            // seconds, which is still true of a stream that has since stopped.
             stalls = all.count { it.stalled(ref) },
             ae = last?.ae, af = last?.af, awb = last?.awb
         )
