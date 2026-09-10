@@ -1,7 +1,7 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.diagnosis.UnknownReason
-import dev.halcamera.diagnosis.jsonName
+import dev.halcamera.metrics.UnknownReason
+import dev.halcamera.metrics.jsonName
 import java.util.Locale
 
 /** Which run the delta column is measured against (docs/PLAN-BenchMarker-v0.3.md 7.1, 8.4). */

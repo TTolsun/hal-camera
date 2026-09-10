@@ -1,6 +1,6 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.diagnosis.UnknownReason
+import dev.halcamera.metrics.UnknownReason
 
 /**
  * Condition differences between two otherwise eligible runs (docs/PLAN-BenchMarker-v0.3.md 7.5).

@@ -1,6 +1,6 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.check.CameraEndpoint
+import dev.halcamera.camera.CameraEndpoint
 
 /**
  * Benchmark state machine (docs/PLAN-BenchMarker-v0.3.md 3.2). Pure Kotlin: the camera is driven through [Driver],

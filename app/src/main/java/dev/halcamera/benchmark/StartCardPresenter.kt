@@ -1,6 +1,6 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.diagnosis.jsonName
+import dev.halcamera.metrics.jsonName
 
 /**
  * The BENCHMARK start card (docs/PLAN-BenchMarker-v0.3.md 8.2).

@@ -1,7 +1,7 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.check.CameraEndpoint
-import dev.halcamera.check.LensRole
+import dev.halcamera.camera.CameraEndpoint
+import dev.halcamera.camera.LensRole
 import dev.halcamera.telemetry.Event
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -153,7 +153,7 @@ class RunAssemblerTest {
         assertFalse(run.validity.measurementValid)
         assertTrue(ValidityFlags.HARD_FAILURE.code in run.validity.flags)
         assertTrue(ValidityFlags.INSUFFICIENT_SAMPLES.code in run.validity.flags)
-        assertEquals(dev.halcamera.diagnosis.UnknownReason.NOT_RUN, run.metric("H.1")!!.unknownReason)
+        assertEquals(dev.halcamera.metrics.UnknownReason.NOT_RUN, run.metric("H.1")!!.unknownReason)
     }
 
     @Test

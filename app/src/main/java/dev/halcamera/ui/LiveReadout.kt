@@ -1,6 +1,6 @@
 package dev.halcamera.ui
 
-import dev.halcamera.diagnosis.MetricExtractor
+import dev.halcamera.metrics.MetricExtractor
 import dev.halcamera.telemetry.Event
 import java.util.Locale
 

@@ -1,4 +1,4 @@
-package dev.halcamera.diagnosis
+package dev.halcamera.metrics
 
 import dev.halcamera.telemetry.Event
 import org.junit.Assert.assertEquals

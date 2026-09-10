@@ -1,7 +1,7 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.diagnosis.MetricExtractor
-import dev.halcamera.diagnosis.UnknownReason
+import dev.halcamera.metrics.MetricExtractor
+import dev.halcamera.metrics.UnknownReason
 
 /** One warm-reopen launch cycle as measured by the runner (M2). Millisecond values are null when the step did not complete. */
 data class LaunchCycle(
@@ -124,7 +124,7 @@ class BenchmarkEvaluator(private val profile: BenchmarkProfile) {
         return out
     }
 
-    // Display metadata comes from the benchmark package's own catalog so diagnosis and benchmark do not depend on each other.
+    // Display metadata comes from the benchmark package's own catalog, so metrics stays free of display concerns.
     private fun category(id: String) = BenchmarkMetricCatalog.info(id)?.category ?: Category.RESOURCE
     private fun unit(id: String) = BenchmarkMetricCatalog.info(id)?.unit ?: "ms"
 

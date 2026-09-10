@@ -2,8 +2,9 @@ package dev.halcamera.benchmark
 
 /**
  * Display metadata for the benchmark metric ids (docs/PLAN-BenchMarker-v0.3.md chapter 4, 8.4): category, short
- * English name and unit. Lives in the benchmark package so that nothing here depends on the Doctor-era
- * diagnosis package (which is deleted in M3); the Korean names in diagnosis.MetricCatalog stay for the v0.2 UI.
+ * English name and unit. Lives in the benchmark package rather than beside the extractor because these names are
+ * a property of the result screen, not of the measurement: `metrics` stays a leaf that knows nothing about how
+ * its numbers are displayed.
  */
 data class MetricInfo(val id: String, val category: Category, val short: String, val unit: String)
 

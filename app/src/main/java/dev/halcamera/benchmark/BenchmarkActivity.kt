@@ -34,10 +34,10 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import dev.halcamera.camera.Camera2Engine
 import dev.halcamera.camera.StreamSpec
-import dev.halcamera.check.CameraEndpoint
-import dev.halcamera.check.CameraEndpointResolver
-import dev.halcamera.check.LensRole
-import dev.halcamera.check.LensRoles
+import dev.halcamera.camera.CameraEndpoint
+import dev.halcamera.camera.CameraEndpointResolver
+import dev.halcamera.camera.LensRole
+import dev.halcamera.camera.LensRoles
 import dev.halcamera.telemetry.Event
 import dev.halcamera.telemetry.FlightRecorder
 import dev.halcamera.telemetry.Telemetry

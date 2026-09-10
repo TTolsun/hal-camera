@@ -1,7 +1,7 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.check.CameraEndpoint
-import dev.halcamera.check.LensRole
+import dev.halcamera.camera.CameraEndpoint
+import dev.halcamera.camera.LensRole
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

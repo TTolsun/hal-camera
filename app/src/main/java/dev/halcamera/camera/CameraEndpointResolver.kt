@@ -1,4 +1,4 @@
-package dev.halcamera.check
+package dev.halcamera.camera
 
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
