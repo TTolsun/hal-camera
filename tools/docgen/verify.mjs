@@ -63,7 +63,7 @@ for (const entry of keys) {
     record.accepted = { codeHash: current.codeHash, modelHash: current.modelHash, at: today, commit: head };
   }
   const st = stateOf(current, record.accepted);
-  record.observed = { codeHash: current.codeHash, modelHash: current.modelHash, state: st, fileCount: current.fileCount };
+  record.observed = { state: st };
   state.entries[entry.key] = record;
   rows.push({ key: entry.key, state: st, note: record.accepted ? `검토 ${record.accepted.at} @ ${record.accepted.commit ?? "?"}` : "" });
   if (st !== "fresh") problems += 1;
