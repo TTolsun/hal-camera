@@ -3,9 +3,9 @@ package dev.halcamera.benchmark
 import android.Manifest
 import android.content.ClipData
 import android.content.Intent
-import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.graphics.Typeface
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.os.BatteryManager
@@ -14,14 +14,19 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.text.InputType
 import android.util.Range
 import android.util.Size
 import android.view.Gravity
 import android.view.TextureView
+import android.view.View
 import android.view.WindowManager
-import android.widget.Button
+import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -38,53 +43,91 @@ import dev.halcamera.telemetry.Telemetry
 import dev.halcamera.telemetry.nowNs
 import dev.halcamera.ui.Look
 import java.io.File
+import java.util.concurrent.Executors
 
 /**
- * Minimum BENCHMARK screen for M2 (docs/PLAN-BenchMarker-v0.3.md chapter 9): pick a camera, show the preflight
- * verdict and how it was reached, run the profile, show the six phases and finally the path of the run JSON.
- * The result screen with metric values is M3; here the numbers are only written to the file.
+ * The BENCHMARK screen (docs/PLAN-BenchMarker-v0.3.md 8.2 - 8.4 and 7.3): the start card with the preflight
+ * verdict and the subject label, the six-phase progress, the result table, and COMPARE against the run the
+ * result is measured against.
+ *
+ * The activity owns the camera, the files and the clock; every layout and verdict rule lives in a pure object
+ * ([StartCardPresenter], [ProgressPresenter], [ResultPresenter], [ComparePresenter], [RegressionDetector]) so
+ * that what the screen says is testable without a device.
  */
 class BenchmarkActivity : ComponentActivity() {
+
+    private enum class Screen { CARD, RUNNING, RESULT, COMPARE }
 
     private val main = Handler(Looper.getMainLooper())
     private val recorder = FlightRecorder(::nowNs, retentionNs = 180_000_000_000L, maxEvents = 60_000, preNs = 0, postNs = 0)
     private val telemetry = Telemetry(recorder)
     private val profile = BenchmarkProfile.CAMERA2_STANDARD_V1
 
-    private lateinit var preview: TextureView
-    private lateinit var title: android.widget.TextView
-    private lateinit var preflightText: android.widget.TextView
-    private lateinit var progressText: android.widget.TextView
-    private lateinit var resultText: android.widget.TextView
-    private lateinit var startButton: Button
-    private lateinit var cameraButton: Button
+    // Writing a run file and reading the baseline and reference runs back are hundreds of kilobytes of JSON each;
+    // doing that on the main thread would freeze the screen exactly when the result is supposed to appear.
+    private val io = Executors.newSingleThreadExecutor()
+    private val store by lazy { BenchmarkStore(this) }
+    private val report by lazy { BenchmarkReport(store) }
+    private val baselines by lazy { BaselineManager(StoreRunCatalog(store, report)) }
+    private val subjectPrefs by lazy { SubjectPrefs(this) }
 
+    private lateinit var preview: TextureView
+    private lateinit var content: LinearLayout
+    private lateinit var actions: LinearLayout
+
+    // Views the running screen updates in place instead of rebuilding on every frame.
+    private var progressHeadline: TextView? = null
+    private var progressBar: TextView? = null
+    private var progressStats: TextView? = null
+    private var buildInput: EditText? = null
+    private var commitInput: EditText? = null
+    private var noteInput: EditText? = null
+
+    private var screen = Screen.CARD
     private var endpoints: List<CameraEndpoint> = emptyList()
     private var selected = 0
     private var compatibility: Compatibility = Compatibility.NOT_CHECKED
     private var deviceSetupSupported: Boolean? = null
+    private var startCard: StartCard? = null
+    private var cardError: String? = null
+    private var engineName = StartCardPresenter.ENGINE_CAMERA2
+
     private var runner: BenchmarkRunner? = null
     private var engine: Camera2Engine? = null
     private var thermal: ThermalTracker? = null
+    private val liveStats = LiveFrameStats()
+    private var livePhase: BenchmarkRunner.Phase? = null
+    private var ticker: Runnable? = null
     private var firstYuvSeen = false
     private var destroyed = false
-    private var lastFile: File? = null
     private val envStart = HashMap<String, Any?>()
+    /** Read once when START is pressed: the fields describe the run that is starting, not whatever is on screen when it ends. */
+    private var runSubject = SubjectLabel()
+
+    private var lastRun: BenchmarkRun? = null
+    private var lastFile: File? = null
+    private var lastSummary: String = ""
+    private var baseRun: BenchmarkRun? = null
+    private var comparison: RunComparison? = null
+    private var comparedTo: ComparedTo = ComparedTo.NONE
+    private var isBaseline = false
 
     private val requestCamera = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) enumerate() else title.text = "카메라 권한이 없어 벤치마크를 실행할 수 없습니다."
+        if (granted) enumerate() else { cardError = "카메라 권한이 없어 벤치마크를 실행할 수 없습니다."; render() }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        engineName = intent.getStringExtra(EXTRA_ENGINE) ?: StartCardPresenter.ENGINE_CAMERA2
+
         val root = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
         setContentView(root)
         preview = TextureView(this)
         root.addView(preview, FrameLayout.LayoutParams(-1, -1))
 
         val panel = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL; gravity = Gravity.BOTTOM
+            orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(48), dp(20), dp(28))
             background = android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.BOTTOM_TOP,
@@ -93,37 +136,30 @@ class BenchmarkActivity : ComponentActivity() {
         }
         root.addView(panel, FrameLayout.LayoutParams(-1, -1))
 
-        val card = Look.card(this, dark = true)
-        title = Look.text(this, "BENCHMARK", 21, Look.onDark, bold = true)
-        card.addView(title)
-        card.addView(Look.text(this, "profile ${profile.id}", 12, Look.onDarkMuted, mono = true), lp(top = 4))
-        preflightText = Look.text(this, "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted, mono = true)
-        card.addView(copyOnTap(preflightText, "preflight"), lp(top = 8))
-        progressText = Look.text(this, "", 14, Look.onDark, mono = true)
-        card.addView(progressText, lp(top = 10))
-        resultText = Look.text(this, "", 11, Look.onDarkMuted, mono = true)
-        card.addView(copyOnTap(resultText, "run"), lp(top = 8))
-        panel.addView(card)
-
-        val row = Look.row(this)
-        cameraButton = Look.ghostButton(this, "카메라 변경", dark = true) { selectNext() }
-        row.addView(cameraButton, LinearLayout.LayoutParams(0, dp(52), 1f))
-        row.addView(Look.ghostButton(this, "JSON 공유", dark = true) { lastFile?.let(::share) }, LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginStart = dp(8) })
-        panel.addView(row, lp(top = 12))
-
-        val row2 = Look.row(this)
-        startButton = Look.primaryButton(this, "START BENCHMARK") { begin() }
-        row2.addView(startButton, LinearLayout.LayoutParams(0, dp(56), 1f))
-        row2.addView(Look.ghostButton(this, "닫기", dark = true) { finish() }, LinearLayout.LayoutParams(-2, dp(56)).apply { marginStart = dp(8) })
-        panel.addView(row2, lp(top = 8))
+        // Short content sits at the bottom like the M2 card; a long result table scrolls instead of being cut off.
+        val scroll = ScrollView(this).apply { isFillViewport = true }
+        content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.BOTTOM }
+        scroll.addView(content, FrameLayout.LayoutParams(-1, -2))
+        panel.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        actions = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        panel.addView(actions, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
 
         recorder.listener = { e -> main.post { if (!destroyed) onEvent(e) } }
+        render()
 
         if (hasPermission()) enumerate() else requestCamera.launch(Manifest.permission.CAMERA)
     }
 
     override fun onStop() { runner?.abort("background"); super.onStop() }
-    override fun onDestroy() { destroyed = true; recorder.listener = null; thermal?.stop(); super.onDestroy() }
+
+    override fun onDestroy() {
+        destroyed = true
+        recorder.listener = null
+        ticker?.let { main.removeCallbacks(it) }
+        thermal?.stop()
+        io.shutdown()
+        super.onDestroy()
+    }
 
     private fun hasPermission() =
         ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
@@ -133,8 +169,10 @@ class BenchmarkActivity : ComponentActivity() {
     private fun enumerate() {
         val manager = getSystemService(CameraManager::class.java)
         endpoints = LensRoles.checkOrder(CameraEndpointResolver(manager).resolve()).filter { it.independentlyOpenable }
-        if (endpoints.isEmpty()) { title.text = "열 수 있는 카메라가 없습니다."; startButton.isEnabled = false; return }
-        selected = 0
+        if (endpoints.isEmpty()) { cardError = "열 수 있는 카메라가 없습니다."; render(); return }
+        // 8.1: the camera chosen on the LIVE screen is the benchmark subject.
+        val wanted = intent.getStringExtra(EXTRA_CAMERA_ID)
+        selected = endpoints.indexOfFirst { it.logicalCameraId == wanted }.takeIf { it >= 0 } ?: 0
         preflight()
     }
 
@@ -152,20 +190,20 @@ class BenchmarkActivity : ComponentActivity() {
         compatibility = checker.check(profile, endpoint.logicalCameraId)
         deviceSetupSupported = if (Build.VERSION.SDK_INT >= 35)
             runCatching { manager.isCameraDeviceSetupSupported(endpoint.logicalCameraId) }.getOrNull() else null
-        val setupSupported = deviceSetupSupported
         recordPreflight(endpoint)
-        title.text = "${roleText(endpoint.role)} · ${endpoint.key}"
-        preflightText.text = buildString {
-            append(if (compatibility.supported) "SUPPORTED" else "UNSUPPORTED")
-            append(" · method=${compatibility.method}")
-            append(" · frame_budget_ok=${compatibility.frameBudgetOk}")
-            append("\ndevice_setup_supported=$setupSupported")
-            if (compatibility.reasons.isNotEmpty()) append("\n실패 사유: ${compatibility.reasons.joinToString(", ")}")
-            append("\n약 45초 · ${profile.launchIterations}회 open · ${profile.observeMs / 1000}초 관측 · ${profile.stillCount}장")
-        }
-        // UNSUPPORTED never produces a run file (3.6): the profile is not lowered to fit the device.
-        startButton.isEnabled = compatibility.supported
-        progressText.text = ""
+        cardError = null
+        startCard = StartCardPresenter.present(
+            profile = profile,
+            compatibility = compatibility,
+            endpointName = roleText(endpoint.role),
+            engineName = engineName,
+            thermalStatus = currentThermalStatus(),
+            powerSaveMode = getSystemService(PowerManager::class.java)?.isPowerSaveMode
+        )
+        // The card said Camera2 would be used, so the app is on Camera2 from here and says so only once.
+        engineName = StartCardPresenter.ENGINE_CAMERA2
+        screen = Screen.CARD
+        render()
     }
 
     /** The preflight verdict belongs in every run file, so it is recorded again after the recorder is cleared. */
@@ -177,20 +215,143 @@ class BenchmarkActivity : ComponentActivity() {
         ))
     }
 
+    private fun currentThermalStatus(): Int? =
+        if (Build.VERSION.SDK_INT >= 29) getSystemService(PowerManager::class.java)?.currentThermalStatus else null
+
+    // ---- screens ----
+
+    private fun render() {
+        content.removeAllViews()
+        actions.removeAllViews()
+        when (screen) {
+            Screen.CARD -> renderCard()
+            Screen.RUNNING -> renderRunning()
+            Screen.RESULT -> renderResult()
+            Screen.COMPARE -> renderCompare()
+        }
+    }
+
+    /** 8.2. */
+    private fun renderCard() {
+        progressHeadline = null; progressBar = null; progressStats = null
+        val card = Look.card(this, dark = true)
+        val state = startCard
+        card.addView(Look.text(this, "STANDARD CAMERA BENCHMARK", 19, Look.onDark, bold = true))
+        if (state == null) {
+            card.addView(Look.text(this, cardError ?: "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted), lp(top = 10))
+            content.addView(card)
+            actions.addView(Look.ghostButton(this, "닫기", dark = true) { finish() }, LinearLayout.LayoutParams(-1, dp(52)))
+            return
+        }
+        card.addView(Look.text(this, state.titleLine, 13, Look.onDarkMuted), lp(top = 6))
+        card.addView(Look.text(this, "${state.profileLine}\n${state.verdictLine}", 12, Look.onDarkMuted, mono = true), lp(top = 8))
+        card.addView(Look.text(this, "${state.durationLine}\n${state.detailLine}", 13, Look.onDark), lp(top = 10))
+        state.notices.forEach { card.addView(Look.text(this, "· $it", 12, Look.statusWarn), lp(top = 8)) }
+        state.blockedReason?.let { card.addView(Look.text(this, it, 13, Look.statusFail, bold = true), lp(top = 10)) }
+
+        if (state.canStart) {
+            val last = subjectPrefs.last()
+            card.addView(Look.text(this, "Subject build (선택)", 11, Look.onDarkMuted), lp(top = 14))
+            buildInput = input(last.subjectBuildLabel).also { card.addView(it, lp(top = 4)) }
+            card.addView(Look.text(this, "Subject commit (선택)", 11, Look.onDarkMuted), lp(top = 10))
+            commitInput = input(last.subjectCommit).also { card.addView(it, lp(top = 4)) }
+            card.addView(Look.text(this, "Note (선택)", 11, Look.onDarkMuted), lp(top = 10))
+            noteInput = input(null).also { card.addView(it, lp(top = 4)) }
+        } else {
+            buildInput = null; commitInput = null; noteInput = null
+        }
+        content.addView(card)
+
+        val row = Look.row(this)
+        row.addView(Look.ghostButton(this, "카메라 변경", dark = true) { selectNext() }, LinearLayout.LayoutParams(0, dp(52), 1f))
+        row.addView(Look.ghostButton(this, "닫기", dark = true) { finish() }, LinearLayout.LayoutParams(-2, dp(52)).apply { marginStart = dp(8) })
+        actions.addView(row)
+        if (state.canStart) {
+            actions.addView(Look.primaryButton(this, "START BENCHMARK") { begin() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
+        }
+    }
+
+    /** 8.3. */
+    private fun renderRunning() {
+        val card = Look.card(this, dark = true)
+        card.addView(Look.text(this, "BENCHMARKING", 19, Look.onDark, bold = true))
+        // The first phase is shown before the runner starts, so the card never appears blank for a frame.
+        val first = ProgressPresenter.headline(BenchmarkRunner.Phase.CAMERA_OPEN, 0, profile.launchIterations)
+        progressHeadline = Look.text(this, first, 14, Look.onDark, mono = true).also { card.addView(it, lp(top = 10)) }
+        progressBar = Look.text(this, "${ProgressPresenter.bar(0)}  0%", 13, Look.primaryOnDark, mono = true)
+            .also { card.addView(it, lp(top = 4)) }
+        progressStats = Look.text(this, "", 12, Look.onDarkMuted, mono = true).also { card.addView(it, lp(top = 10)) }
+        content.addView(card)
+        actions.addView(Look.ghostButton(this, "중단", dark = true) { runner?.abort("user") }, LinearLayout.LayoutParams(-1, dp(52)))
+        updateStats()
+    }
+
+    /** 8.4. */
+    private fun renderResult() {
+        progressHeadline = null; progressBar = null; progressStats = null
+        val run = lastRun
+        val card = Look.card(this, dark = true)
+        if (run == null) {
+            card.addView(Look.text(this, "CAMERA BENCHMARK", 19, Look.onDark, bold = true))
+            card.addView(Look.text(this, lastSummary.ifBlank { "결과를 만들지 못했습니다." }, 12, Look.onDarkMuted, mono = true), lp(top = 10))
+            content.addView(card)
+            actions.addView(Look.primaryButton(this, "새 run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)))
+            return
+        }
+        val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, deviceName(), roleText(run.endpoint.role))
+        card.addView(wide(Look.text(this, view.render(), 11, Look.onDark, mono = true).also { copyOnTap(it, "result") }))
+        card.addView(Look.text(this, lastSummary, 10, Look.onDarkMuted, mono = true), lp(top = 10))
+        content.addView(card)
+
+        val row = Look.row(this)
+        val baselineButton = Look.ghostButton(this, view.baselineButton, dark = true) { toggleBaseline() }
+        baselineButton.isEnabled = view.baselineButtonEnabled
+        baselineButton.alpha = if (view.baselineButtonEnabled) 1f else 0.4f
+        row.addView(baselineButton, LinearLayout.LayoutParams(0, dp(52), 1f))
+        val compareButton = Look.ghostButton(this, "COMPARE", dark = true) { screen = Screen.COMPARE; render() }
+        compareButton.isEnabled = baseRun != null
+        compareButton.alpha = if (baseRun != null) 1f else 0.4f
+        row.addView(compareButton, LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginStart = dp(8) })
+        val exportButton = Look.ghostButton(this, "EXPORT", dark = true) { lastFile?.let(::share) }
+        exportButton.isEnabled = lastFile != null
+        exportButton.alpha = if (lastFile != null) 1f else 0.4f
+        row.addView(exportButton, LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginStart = dp(8) })
+        actions.addView(row)
+        actions.addView(Look.primaryButton(this, "새 run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
+    }
+
+    /** 7.3. */
+    private fun renderCompare() {
+        val run = lastRun
+        val base = baseRun
+        val cmp = comparison
+        val card = Look.card(this, dark = true)
+        if (run == null || base == null || cmp == null) {
+            card.addView(Look.text(this, "비교할 run이 없습니다.", 13, Look.onDarkMuted), lp(top = 2))
+        } else {
+            card.addView(wide(Look.text(this, ComparePresenter.present(base, run, cmp).render(), 11, Look.onDark, mono = true)
+                .also { copyOnTap(it, "compare") }))
+        }
+        content.addView(card)
+        actions.addView(Look.ghostButton(this, "결과로 돌아가기", dark = true) { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(-1, dp(52)))
+    }
+
     // ---- run ----
 
     private fun begin() {
         if (runner != null || endpoints.isEmpty()) return
         if (!hasPermission()) { requestCamera.launch(Manifest.permission.CAMERA); return }
-        if (!compatibility.supported) return
+        if (startCard?.canStart != true) return
         val endpoint = endpoints[selected]
-        startButton.isEnabled = false
-        cameraButton.isEnabled = false
-        resultText.text = ""
+        runSubject = readSubject()
+        subjectPrefs.save(runSubject)
+
         // Each run file carries only its own events. The recorder keeps 180 s, which is long enough for two runs.
         recorder.clear()
         recordPreflight(endpoint)
         envStart.clear(); envStart += environment()
+        liveStats.reset()
+        livePhase = null
         thermal = ThermalTracker(this) { status ->
             recorder.record("run", "thermal_status", values = mapOf("status" to status))
         }.also { it.start() }
@@ -231,14 +392,50 @@ class BenchmarkActivity : ComponentActivity() {
         }
         val listener = object : BenchmarkRunner.Listener {
             override fun onProgress(phase: BenchmarkRunner.Phase, step: BenchmarkRunner.Step, iteration: Int, total: Int) {
-                val n = phase.ordinal + 1
-                val suffix = if (phase == BenchmarkRunner.Phase.CAMERA_OPEN && total > 0) "  ${iteration + 1}/$total" else ""
-                progressText.text = "$n/6  ${phaseText(phase)}$suffix"
+                // The observation session starts here, so the live numbers describe it rather than the ten
+                // launch cycles that came before and are measured separately.
+                if (phase != livePhase && phase == BenchmarkRunner.Phase.FIRST_PREVIEW) liveStats.reset()
+                livePhase = phase
+                progressHeadline?.text = ProgressPresenter.headline(phase, iteration, total)
+                progressBar?.text = ProgressPresenter.percent(phase, iteration, total)
+                    .let { "${ProgressPresenter.bar(it)}  $it%" }
             }
             override fun onFinished(result: BenchmarkRunner.Result) { if (!destroyed) finishRun(result) }
         }
+        screen = Screen.RUNNING
+        render()
+        startTicker()
         runner = BenchmarkRunner(driver, scheduler, ::nowNs, profile, endpoint, runId, BenchmarkRunner.Config(), listener)
             .also { it.start() }
+    }
+
+    private fun readSubject(): SubjectLabel {
+        val previous = subjectPrefs.last()
+        fun value(field: EditText?) = field?.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }
+        return SubjectLabel(
+            subjectBuildLabel = value(buildInput),
+            subjectCommit = value(commitInput),
+            subjectBranch = previous.subjectBranch,
+            note = value(noteInput)
+        )
+    }
+
+    /** Sorting the live intervals once per frame would be wasted work, so the numbers refresh on a timer (8.3). */
+    private fun startTicker() {
+        ticker?.let { main.removeCallbacks(it) }
+        val r = object : Runnable {
+            override fun run() {
+                if (destroyed || screen != Screen.RUNNING) return
+                updateStats()
+                main.postDelayed(this, STATS_INTERVAL_MS)
+            }
+        }
+        ticker = r
+        main.postDelayed(r, STATS_INTERVAL_MS)
+    }
+
+    private fun updateStats() {
+        progressStats?.text = ProgressPresenter.statLines(liveStats.snapshot(), thermal?.current)
     }
 
     /** Maps Camera2Engine telemetry events to runner signals. Runs on the main thread. */
@@ -257,8 +454,11 @@ class BenchmarkActivity : ComponentActivity() {
             "capture_submit" -> (e.values["requestTag"] as? String)?.let { r.stillSubmitted(s, it, e.atNs) }
             "image_available" -> when (e.values["stream"]) {
                 "still" -> r.stillImage(s, e.sensorNs, e.atNs)
-                else -> if (!firstYuvSeen && s == r.currentSession) {
-                    firstYuvSeen = true; r.signal(s, BenchmarkRunner.Signal.FIRST_FRAME, e.atNs)
+                else -> {
+                    if (s == r.currentSession) liveStats.frame(e.sensorNs)
+                    if (!firstYuvSeen && s == r.currentSession) {
+                        firstYuvSeen = true; r.signal(s, BenchmarkRunner.Signal.FIRST_FRAME, e.atNs)
+                    }
                 }
             }
             "capture_result" -> (e.values["requestTag"] as? String)?.takeIf { it.startsWith("still-") }
@@ -271,6 +471,7 @@ class BenchmarkActivity : ComponentActivity() {
 
     private fun finishRun(result: BenchmarkRunner.Result) {
         runner = null
+        ticker?.let { main.removeCallbacks(it) }
         val thermalEnd = thermal?.stop()
         val events = recorder.snapshot()
         val endEnv = environment()
@@ -285,24 +486,68 @@ class BenchmarkActivity : ComponentActivity() {
             exportedAtUtc = BenchmarkReport.utcNow(),
             device = deviceInfo(result.endpoint.logicalCameraId),
             app = appInfo(),
-            subject = SubjectLabel(),
+            subject = runSubject,
             env = env,
             compatibility = compatibility
         )
-        val run = RunAssembler.assemble(result, events, profile, context)
-        val file = try { BenchmarkReport(this).write(run, events) } catch (e: Exception) { null }
-        lastFile = file
-        startButton.isEnabled = true
-        cameraButton.isEnabled = true
-        progressText.text = if (result.aborted != null) "중단됨 (${result.aborted})" else "완료"
-        resultText.text = buildString {
-            append(file?.let { "run ${run.runId}\n${it.absolutePath}" } ?: "run JSON 저장에 실패했습니다")
-            append("\nlaunch n=${result.validLaunchSamples}/${profile.expectedLaunchSamples}")
-            append(" · still n=${result.validStillSamples}/${profile.expectedStillSamples}")
-            append(" · flags=${run.validity.flags.joinToString(",").ifEmpty { "none" }}")
-            append("\nmeasurement=${run.validity.measurementValid} comparison=${run.validity.comparisonEligible} scoring=${run.validity.scoringEligible}")
-            result.hardFailure?.let { append("\nhard failure: $it") }
-            append("\n\nTap to copy this summary. Long press to copy the JSON path.")
+        // Assembling, writing and then reading the baseline back is far too much work for the main thread; the
+        // screen shows the progress card until the result is ready.
+        io.execute {
+            val run = RunAssembler.assemble(result, events, profile, context)
+            val file = try { report.write(run, events) } catch (e: Exception) { null }
+            val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
+            val base = baseline ?: baselines.reference(run)
+            val to = when {
+                baseline != null -> ComparedTo.BASELINE
+                base != null -> ComparedTo.PREVIOUS
+                else -> ComparedTo.NONE
+            }
+            val cmp = RegressionDetector.compare(base, run)
+            val onBaseline = baselines.isBaseline(run)
+            main.post {
+                if (destroyed) return@post
+                lastRun = run; lastFile = file; baseRun = base; comparedTo = to; comparison = cmp; isBaseline = onBaseline
+                lastSummary = summary(run, result, file)
+                screen = Screen.RESULT
+                render()
+            }
+        }
+    }
+
+    /** The measurement facts the result table does not show: sample counts, flags and the file the run went to. */
+    private fun summary(run: BenchmarkRun, result: BenchmarkRunner.Result, file: File?): String = buildString {
+        append(file?.absolutePath ?: "run JSON 저장에 실패했습니다")
+        append("\nlaunch n=${result.validLaunchSamples}/${profile.expectedLaunchSamples}")
+        append(" · still n=${result.validStillSamples}/${profile.expectedStillSamples}")
+        append(" · flags=${run.validity.flags.joinToString(",").ifEmpty { "none" }}")
+        result.aborted?.let { append("\n중단됨 ($it)") }
+        result.hardFailure?.let { append("\nhard failure: $it") }
+    }
+
+    /**
+     * `SET AS BASELINE` / `CLEAR BASELINE` (7.1). The pointer is written and the comparison recomputed on the
+     * io thread, because clearing a baseline changes which run the result is measured against and that means
+     * reading the reference run from disk.
+     */
+    private fun toggleBaseline() {
+        val run = lastRun ?: return
+        io.execute {
+            baselines.toggle(run)
+            val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
+            val base = baseline ?: baselines.reference(run)
+            val to = when {
+                baseline != null -> ComparedTo.BASELINE
+                base != null -> ComparedTo.PREVIOUS
+                else -> ComparedTo.NONE
+            }
+            val cmp = RegressionDetector.compare(base, run)
+            val onBaseline = baselines.isBaseline(run)
+            main.post {
+                if (destroyed) return@post
+                baseRun = base; comparedTo = to; comparison = cmp; isBaseline = onBaseline
+                if (screen == Screen.COMPARE && base == null) screen = Screen.RESULT
+                render()
+            }
         }
     }
 
@@ -321,6 +566,8 @@ class BenchmarkActivity : ComponentActivity() {
     private fun batteryPercent(): Int? =
         getSystemService(BatteryManager::class.java)?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)?.takeIf { it > 0 }
 
+    private fun deviceName(): String = "${Build.MANUFACTURER} ${Build.MODEL}"
+
     private fun deviceInfo(cameraId: String): DeviceInfo = DeviceInfo(
         manufacturer = Build.MANUFACTURER, model = Build.MODEL, buildDisplay = Build.DISPLAY,
         buildIncremental = Build.VERSION.INCREMENTAL, fingerprint = Build.FINGERPRINT,
@@ -334,8 +581,7 @@ class BenchmarkActivity : ComponentActivity() {
         val info = packageManager.getPackageInfo(packageName, 0)
         @Suppress("DEPRECATION")
         val code = if (Build.VERSION.SDK_INT >= 28) info.longVersionCode.toInt() else info.versionCode
-        val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-        return AppInfo(info.versionName ?: "", code, debuggable)
+        return AppInfo(info.versionName ?: "", code)
     }
 
     private fun cameraInfoVersion(cameraId: String): String? = if (Build.VERSION.SDK_INT < 28) null else try {
@@ -350,12 +596,32 @@ class BenchmarkActivity : ComponentActivity() {
         value?.takeIf { it.isNotEmpty() }
     } catch (_: Exception) { null }
 
+    // ---- small view helpers ----
+
+    private fun input(initial: String?): EditText = EditText(this).apply {
+        setText(initial.orEmpty())
+        setTextColor(Look.onDark)
+        setHintTextColor(Look.onDarkMuted)
+        textSize = 14f
+        typeface = Typeface.MONOSPACE
+        isSingleLine = true
+        inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
+        background = Look.cardBackground(this@BenchmarkActivity, Look.expertTile, Look.expertTile3)
+        setPadding(dp(12), dp(10), dp(12), dp(10))
+    }
+
+    /** The result and compare tables are laid out in fixed monospace columns, so they scroll sideways rather than wrap. */
+    private fun wide(view: View): HorizontalScrollView = HorizontalScrollView(this).apply {
+        isHorizontalScrollBarEnabled = false
+        addView(view, LinearLayout.LayoutParams(-2, -2))
+    }
+
     /**
-     * Makes a read-only text block copyable. The preflight verdict and the run summary are the two things worth
-     * carrying to a PC (a run id, a file path, the flags of a run), and reading them off the screen by hand is
-     * error-prone. A tap copies the whole block; a long press copies just the run JSON path when there is one.
+     * Makes a read-only text block copyable. A run id, a file path and the result table are the things worth
+     * carrying to a PC, and reading them off the screen by hand is error-prone. A tap copies the whole block; a
+     * long press copies just the run JSON path when there is one.
      */
-    private fun copyOnTap(view: android.widget.TextView, label: String): android.widget.TextView = view.apply {
+    private fun copyOnTap(view: TextView, label: String): TextView = view.apply {
         setOnClickListener { copy(label, text.toString()) }
         setOnLongClickListener {
             val path = lastFile?.absolutePath
@@ -383,15 +649,6 @@ class BenchmarkActivity : ComponentActivity() {
         }, "run JSON 공유"))
     }
 
-    private fun phaseText(p: BenchmarkRunner.Phase) = when (p) {
-        BenchmarkRunner.Phase.CAMERA_OPEN -> "Camera Open"
-        BenchmarkRunner.Phase.FIRST_PREVIEW -> "First Preview"
-        BenchmarkRunner.Phase.PREVIEW_STABILITY -> "Preview Stability"
-        BenchmarkRunner.Phase.THREE_A -> "3A Response"
-        BenchmarkRunner.Phase.STILL_CAPTURE -> "Still Capture"
-        BenchmarkRunner.Phase.CAMERA_CLOSE -> "Camera Close"
-    }
-
     private fun roleText(r: LensRole) = when (r) {
         LensRole.MAIN -> "후면 메인"; LensRole.ULTRA_WIDE -> "후면 초광각"; LensRole.TELE -> "후면 망원"
         LensRole.FRONT -> "전면"; LensRole.EXTERNAL -> "외부"; LensRole.UNKNOWN -> "기타"
@@ -399,4 +656,11 @@ class BenchmarkActivity : ComponentActivity() {
 
     private fun lp(top: Int = 0) = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top) }
     private fun dp(v: Int) = Look.dp(this, v)
+
+    companion object {
+        /** The engine and camera the LIVE screen was showing (8.1); the benchmark measures what the user was looking at. */
+        const val EXTRA_ENGINE = "engine"
+        const val EXTRA_CAMERA_ID = "camera_id"
+        private const val STATS_INTERVAL_MS = 250L
+    }
 }
