@@ -362,7 +362,7 @@ class BenchmarkActivity : ComponentActivity() {
         if (run == null || base == null || cmp == null) {
             card.addView(Look.text(this, "비교할 run이 없습니다.", 13, Look.onDarkMuted), lp(top = 2))
         } else {
-            val text = ComparePresenter.present(base, run, cmp, comparedTo).render()
+            val text = ComparePresenter.present(base, run, cmp, comparedTo, isBaseline).render()
             card.addView(wide(Look.text(this, text, 11, Look.onDark, mono = true).also { copyOnTap(it, "compare") }))
         }
         content.addView(card)

@@ -25,8 +25,9 @@ class ComparePresenterTest {
     private fun view(
         b: BenchmarkRun = base,
         c: BenchmarkRun = current,
-        comparedTo: ComparedTo = ComparedTo.BASELINE
-    ) = ComparePresenter.present(b, c, RegressionDetector.compare(b, c), comparedTo)
+        comparedTo: ComparedTo = ComparedTo.BASELINE,
+        currentIsBaseline: Boolean = false
+    ) = ComparePresenter.present(b, c, RegressionDetector.compare(b, c), comparedTo, currentIsBaseline)
 
     private fun row(label: String, b: BenchmarkRun = base, c: BenchmarkRun = current) =
         view(b, c).rows.first { it.label == label }
@@ -101,6 +102,17 @@ class ComparePresenterTest {
         assertTrue(v.baseLine.startsWith("previous"))
         assertTrue(v.referenceNote!!.contains("baseline 없음"))
         assertTrue(v.render().contains("PREVIOUS"))
+        assertFalse(v.render().contains("REGRESSED"))
+    }
+
+    @Test fun theBaselineItselfIsNotDescribedAsHavingNoBaseline() {
+        // The baseline has nothing above it, so it is measured against the previous run like any reference
+        // comparison. That is not the same situation as having no baseline at all, and the screen said it was
+        // while the button next to it read CLEAR BASELINE.
+        val v = view(comparedTo = ComparedTo.PREVIOUS, currentIsBaseline = true)
+        assertEquals("PREVIOUS", v.baseHeader)
+        assertFalse(v.referenceNote!!.contains("baseline 없음"))
+        assertTrue(v.referenceNote!!.startsWith("이 run이 baseline입니다"))
         assertFalse(v.render().contains("REGRESSED"))
     }
 

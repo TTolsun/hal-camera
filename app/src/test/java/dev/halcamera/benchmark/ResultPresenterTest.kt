@@ -168,6 +168,21 @@ class ResultPresenterTest {
         assertEquals("[ SET AS BASELINE ]을 누르면 이 run이 기준이 됩니다", v.hint)
     }
 
+    @Test fun theBaselineItselfIsNotDescribedAsHavingNoBaseline() {
+        // The baseline has nothing above it to be measured against, so it falls back to the previous run. The
+        // headline read "baseline 없음" while the button beside it read CLEAR BASELINE, which are two claims
+        // about the same run that cannot both be true.
+        val previous = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 150.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 164.0)))
+        val c = RegressionDetector.compare(previous, current)
+        val asBaseline = present(current, c, ComparedTo.PREVIOUS, isBaseline = true)
+        assertEquals("이 run이 baseline입니다 · 이전 run 20260910-100000-000 대비 표시", asBaseline.comparisonLine)
+        assertEquals("baseline 없음 · 이전 run 20260910-100000-000 대비 표시", present(current, c, ComparedTo.PREVIOUS).comparisonLine)
+
+        val alone = present(run(metrics = listOf(metric("2.2", 164.0))), isBaseline = true)
+        assertEquals("이 run이 baseline입니다 · 비교할 이전 run이 없습니다", alone.comparisonLine)
+    }
+
     // ---- a comparison that did not happen (PR #21 review) ----
 
     @Test fun aComparisonWithNoJudgedMetricSaysSoInsteadOfReportingNoRegression() {
