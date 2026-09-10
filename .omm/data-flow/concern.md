@@ -1,4 +1,4 @@
-- 이 흐름의 벤치마크 갈래는 아직 연결되어 있지 않습니다. `BenchmarkEvaluator`는 `LaunchCycle`과 `StillSample` 목록을 기대하는데 이것을 만드는 곳이 없습니다. M2 러너가 빠진 단계입니다. 지금 디스크에 도달하는 경로는 v0.2 하나뿐입니다.
-- 평가 단계 두 곳이 같은 `FrameObservation`을 서로 다른 코드로 읽습니다. `MetricExtractor.observe`가 v0.2용으로 H.1부터 H.8까지 계산하고, `BenchmarkEvaluator.windowed`가 `Observation.steadyFrames`에서 H.1부터 H.4까지와 H.10을 다시 계산합니다. 둘 다 같은 `percentile`을 호출하므로 현재는 결과가 일치하지만, 중복은 실재하며 벤치마크 경로 쪽만 별도로 테스트되고 있습니다.
-- `FlightRecorder`의 개수 상한을 넘으면 가장 오래된 이벤트가 조용히 버려집니다. 버려진 개수는 `capacityEvictions`로 export되므로 번들이 잘렸다는 사실은 알 수 있습니다. 다만 시작 부분을 잃은 창에서 계산된 지표에 별도 표시가 붙지는 않습니다.
-- 라이브 tap(`FlightRecorder.listener`)은 기록 스레드에서 동기적으로 실행됩니다. 여기에 무거운 작업을 추가하면 기록 경로 자체가 느려지고, 결과적으로 측정 대상인 간격에도 영향을 줍니다.
+- 촬영 중 프리뷰 stall 2.7은 아직 NOT_RUN입니다.
+- MetricExtractor와 BenchmarkEvaluator가 일부 통계 계산을 나눠 수행하므로 워밍업과 표본 수 기준을 함께 검토해야 합니다.
+- FlightRecorder의 이벤트 상한을 넘으면 오래된 이벤트가 제거됩니다. incident의 capacityEvictions와 incidentTruncated를 확인해야 합니다.
+- FlightRecorder.listener는 기록 스레드에서 동기 실행되므로 무거운 처리는 측정 경로에 영향을 줍니다.

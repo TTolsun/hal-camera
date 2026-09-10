@@ -19,6 +19,7 @@ import { collectKeys, computeHashes, stateOf, STATE_LABEL } from "./model.mjs";
 
 const args = process.argv.slice(2);
 const mode = args.includes("--check") ? "check" : args.includes("--accept") ? "accept" : "report";
+const reviewer = args.find((a) => a.startsWith("--reviewer="))?.slice("--reviewer=".length) || "unspecified";
 const targets = args.filter((a) => !a.startsWith("--"));
 
 function gitShortHead() {
@@ -48,11 +49,15 @@ for (const entry of keys) {
   const record = state.entries[entry.key] ?? {};
 
   if (!current.exists) {
+    record.observed = { state: "missing" };
+    state.entries[entry.key] = record;
     rows.push({ key: entry.key, state: "missing", note: "원본 파일이 없습니다" });
     problems += 1;
     continue;
   }
   if (current.missingCited?.length) {
+    record.observed = { state: "missing" };
+    state.entries[entry.key] = record;
     rows.push({ key: entry.key, state: "missing", note: `인용한 근거 파일이 없습니다: ${current.missingCited.join(", ")}` });
     problems += 1;
     continue;
@@ -60,7 +65,7 @@ for (const entry of keys) {
 
   const accepting = mode === "accept" && (targets.length === 0 || targets.includes(entry.key));
   if (accepting) {
-    record.accepted = { codeHash: current.codeHash, modelHash: current.modelHash, at: today, commit: head };
+    record.accepted = { codeHash: current.codeHash, modelHash: current.modelHash, at: today, commit: head, reviewer };
   }
   const st = stateOf(current, record.accepted);
   record.observed = { state: st };
@@ -74,7 +79,7 @@ for (const key of Object.keys(state.entries)) {
   if (!keys.some((k) => k.key === key)) delete state.entries[key];
 }
 
-writeState("evidence.json", state);
+if (!args.includes("--dry-run")) writeState("evidence.json", state);
 
 const width = Math.max(...rows.map((r) => r.key.length));
 for (const r of rows) {

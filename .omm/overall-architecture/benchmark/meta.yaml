@@ -1,6 +1,6 @@
 created: 2026-09-09T16:16:49.457Z
-updated: 2026-09-09T16:31:45.091Z
-update_count: 4
+updated: 2026-09-10T17:16:27.018Z
+update_count: 5
 last_field: diagram
 kind: nested-class
 title: benchmark
@@ -8,27 +8,65 @@ children:
   - benchmark-evaluator
   - benchmark-model
   - benchmark-profile
+  - benchmark-runner
   - build-identity
+  - comparison
   - metric-info
   - regression-rules
+  - run-assembler
   - run-validity
 parentPath: []
-prev_diagram: >
-  graph LR
-      benchmark-profile["BenchmarkProfile\napp/src/main/java/dev/halcamera/benchmark/BenchmarkProfile.kt"]
-      benchmark-model["BenchmarkModel: run, metric, contract\napp/src/main/java/dev/halcamera/benchmark/BenchmarkModel.kt"]
-      benchmark-evaluator["BenchmarkEvaluator + Stats\napp/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt"]
-      regression-rules["RegressionRules\napp/src/main/java/dev/halcamera/benchmark/RegressionRules.kt"]
-      run-validity["RunValidity + ValidityFlags\napp/src/main/java/dev/halcamera/benchmark/RunValidity.kt"]
-      build-identity["BuildIdentity\napp/src/main/java/dev/halcamera/benchmark/BuildIdentity.kt"]
+prev_diagram: "graph LR\r
 
-      benchmark-profile -->|"profile id opens the comparison contract id"| benchmark-model
-      benchmark-profile -->|"expected sample counts and warm-up exclusion"| benchmark-evaluator
-      benchmark-evaluator -->|"BenchmarkMetric with p50, p95, min, max, n"| benchmark-model
-      regression-rules -->|"per-metric delta and noise floor, applied in M4"| benchmark-model
-      run-validity -->|"three booleans: measurement, comparison, scoring"| benchmark-model
-      build-identity -->|"six-axis comparison stored inside every RunRef"| benchmark-model
-      benchmark-profile -->|"draft profile raises PROFILE_DRAFT"| run-validity
+  \    benchmark-profile[\"BenchmarkProfile\\napp/src/main/java/dev/halcamera/b\
+  enchmark/BenchmarkProfile.kt\"]\r
 
-      classDef concern fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e
-      class benchmark-evaluator concern
+  \    benchmark-model[\"BenchmarkModel: run, metric,
+  contract\\napp/src/main/java/dev/halcamera/benchmark/BenchmarkModel.kt\"]\r
+
+  \    benchmark-evaluator[\"BenchmarkEvaluator +
+  Stats\\napp/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt\"]\r
+
+  \    metric-info[\"BenchmarkMetricCatalog\\napp/src/main/java/dev/halcamera/b\
+  enchmark/MetricInfo.kt\"]\r
+
+  \    regression-rules[\"RegressionRules\\napp/src/main/java/dev/halcamera/ben\
+  chmark/RegressionRules.kt\"]\r
+
+  \    run-validity[\"RunValidity +
+  ValidityFlags\\napp/src/main/java/dev/halcamera/benchmark/RunValidity.kt\"]\r
+
+  \    build-identity[\"BuildIdentity\\napp/src/main/java/dev/halcamera/benchma\
+  rk/BuildIdentity.kt\"]\r
+
+  \r
+
+  \    benchmark-profile -->|\"profile id opens the comparison contract id\"|
+  benchmark-model\r
+
+  \    benchmark-profile -->|\"expected sample counts and warm-up exclusion\"|
+  benchmark-evaluator\r
+
+  \    metric-info -->|\"category and unit per metric id, no diagnosis
+  dependency\"| benchmark-evaluator\r
+
+  \    benchmark-evaluator -->|\"BenchmarkMetric with p50, p95, min, max, n\"|
+  benchmark-model\r
+
+  \    regression-rules -->|\"per-metric delta and noise floor, applied in M4\"|
+  benchmark-model\r
+
+  \    run-validity -->|\"three booleans plus the unknown flags that fail them
+  closed\"| benchmark-model\r
+
+  \    build-identity -->|\"six-axis comparison stored inside every RunRef\"|
+  benchmark-model\r
+
+  \    benchmark-profile -->|\"draft profile raises PROFILE_DRAFT\"|
+  run-validity\r
+
+  \r
+
+  \    classDef concern fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e\r
+
+  \    class benchmark-evaluator concern\r\n"

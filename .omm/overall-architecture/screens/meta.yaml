@@ -1,31 +1,59 @@
 created: 2026-09-09T16:09:56.205Z
-updated: 2026-09-09T16:10:20.880Z
-update_count: 3
+updated: 2026-09-10T17:16:31.031Z
+update_count: 4
 last_field: diagram
 kind: nested-class
 title: screens
 children:
+  - benchmark-screen
   - check-screen
   - expert-screen
   - home-screen
   - look-tokens
   - run-summary
 parentPath: []
-prev_diagram: >
-  graph LR
-      home-screen["HomeActivity\napp/src/main/java/dev/halcamera/home/HomeActivity.kt"]
-      run-summary["RunSummary\napp/src/main/java/dev/halcamera/home/RunSummary.kt"]
-      check-screen["CheckActivity\napp/src/main/java/dev/halcamera/check/CheckActivity.kt"]
-      expert-screen["MainActivity\napp/src/main/java/dev/halcamera/MainActivity.kt"]
-      look-tokens["Look\napp/src/main/java/dev/halcamera/ui/Look.kt"]
+prev_diagram: "graph LR\r
 
-      home-screen -->|"read the newest run JSON for the status card"| run-summary
-      home-screen -->|"start after the CAMERA permission is granted"| check-screen
-      home-screen -->|"start with EXTRA_CONSUMER for incident recording"| expert-screen
-      check-screen -->|"restart itself with EXTRA_SHOW_LATEST to render a stored run"| check-screen
-      home-screen -->|"canvas, card and text tokens"| look-tokens
-      check-screen -->|"canvas, card and status colours"| look-tokens
-      expert-screen -->|"dark expert tile palette"| look-tokens
+  \    home-screen[\"HomeActivity\\napp/src/main/java/dev/halcamera/home/HomeAc\
+  tivity.kt\"]\r
 
-      classDef entry fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e
-      class home-screen entry
+  \    run-summary[\"RunSummary\\napp/src/main/java/dev/halcamera/home/RunSumma\
+  ry.kt\"]\r
+
+  \    check-screen[\"CheckActivity\\napp/src/main/java/dev/halcamera/check/Che\
+  ckActivity.kt\"]\r
+
+  \    expert-screen[\"MainActivity\\napp/src/main/java/dev/halcamera/MainActiv\
+  ity.kt\"]\r
+
+  \    look-tokens[\"Look\\napp/src/main/java/dev/halcamera/ui/Look.kt\"]\r
+
+  \r
+
+  \    home-screen -->|\"read the newest run JSON for the status card\"|
+  run-summary\r
+
+  \    home-screen -->|\"run a new check once CAMERA is granted\"|
+  check-screen\r
+
+  \    home-screen -->|\"EXTRA_SHOW_LATEST + EXTRA_RUN_FILE: render a stored
+  run, no camera\"| check-screen\r
+
+  \    home-screen -->|\"EXTRA_CONSUMER: plain-language incident recording\"|
+  expert-screen\r
+
+  \    home-screen -->|\"expert row: full instrument view\"| expert-screen\r
+
+  \    expert-screen -->|\"jump into the Auto Check\"| check-screen\r
+
+  \    home-screen -->|\"canvas, card and text tokens\"| look-tokens\r
+
+  \    check-screen -->|\"canvas, card and status colours\"| look-tokens\r
+
+  \    expert-screen -->|\"dark expert tile palette\"| look-tokens\r
+
+  \r
+
+  \    classDef entry fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e\r
+
+  \    class home-screen entry\r\n"

@@ -67,3 +67,12 @@ node tools/docgen/selftest.mjs           # 산문 보존, 재현성, 최신성 �
 
 - Google Drive 가상 파일 시스템 위의 작업본에서는 `npm install` 이 0바이트 파일을 만듭니다. 그래서 의존성을 두지 않으며, YAML 은 `yaml-lite.mjs` 의 부분집합만 지원합니다(앵커, 여러 줄 스칼라, 인라인 매핑 없음).
 - `.omm/` 바로 아래의 디렉터리는 모두 omm CLI 가 perspective 로 인식합니다. 그래서 추출 결과와 검증 상태는 `tools/docgen/state/` 에 둡니다.
+
+## 검증 규칙과 PR 검토
+
+- 해시 입력의 CRLF는 LF로 정규화합니다. 코드 근거는 텍스트 파일만 지정합니다.
+- 원고 최신성에는 구조의 모든 하위 필드, 원고, 바인딩의 집필 지침, facts와 두 사람 입력 파일의 내용이 포함됩니다. 집필 프롬프트가 전체 입력 파일을 읽으므로 인용 ID가 같아도 파일 내용 변경은 재검토 대상입니다.
+- sync --dry-run은 상태 파일을 쓰지 않으며, 변경된 코드에서 다시 최신성을 계산합니다. 실제 스캔 후에는 원고 의존성을 다시 계산합니다.
+- node --test tools/docgen/regression.test.mjs는 임시 복사본에서 줄바꿈·입력 변경·dry-run·마커 오류를 검사합니다. CI는 Windows와 Ubuntu에서 실행합니다.
+- 검토 기록은 node tools/docgen/verify.mjs --accept --reviewer=이름 형식으로 작성자를 명시할 수 있습니다. Codex의 코드 대조 기록은 사람의 승인이나 기기 실측을 뜻하지 않습니다. 자동 sync는 accept를 실행하지 않습니다.
+- Pages PR 빌드는 Jekyll 산출물을 확인하며 배포는 main push에서만 수행합니다. 레이아웃은 Mermaid 11.12.0을 CDN에서 불러와 구조도를 표시합니다.

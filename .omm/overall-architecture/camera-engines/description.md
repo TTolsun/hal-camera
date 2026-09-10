@@ -1,5 +1,1 @@
-`app/src/main/java/dev/halcamera/camera/` — two interchangeable implementations of one four-method interface, plus the characteristics helpers they share.
-
-Both engines are kept on purpose. Camera2 is the measurement path, because it exposes `CaptureRequest` / `TotalCaptureResult` metadata directly and is what every metric definition is written against. CameraX is the comparison path: the same interface, the same telemetry callback (attached through `Camera2Interop.Extender`), so a difference in observed numbers can be attributed to the library rather than to the measurement code.
-
-The interface is deliberately small — `start()`, `capture()`, `setZoom(ratio)`, `close(done)` — and its hardest contract is the close callback: it fires only once the engine has genuinely relinquished the camera, because the next open is chained off it.
+camera/는 CameraEngine 인터페이스와 Camera2Engine·CameraXEngine을 제공합니다. Camera2Engine은 기본 크기 선택 경로와 벤치마크용 명시적 StreamSpec 경로를 구분합니다. 세션별 콜백과 close(done) 완료 통지가 러너에 연결됩니다.

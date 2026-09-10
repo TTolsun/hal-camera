@@ -13,6 +13,8 @@ on:
     paths:
       - "app/**"
       - "settings.gradle.kts"
+      - "gradle/**"
+      - ".github/workflows/docs-check.yml"
       - ".omm/**"
       - "docs/guide/**"
       - "tools/docgen/**"
@@ -21,12 +23,17 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: 파이프라인 회귀 검사
+        run: node --test tools/docgen/regression.test.mjs
       - name: 사실 추출
         run: node tools/docgen/extract.mjs
       - name: 원본 최신성 검사

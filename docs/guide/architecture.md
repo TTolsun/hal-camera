@@ -37,14 +37,14 @@ HALCamera는 단일 모듈 Android 앱입니다(`:app`, applicationId `dev.halca
 
 1. **카메라 구동** — `camera/` 패키지. `CameraEngine` 인터페이스 뒤에 `Camera2Engine`과 `CameraXEngine`이 있습니다. 카메라를 점유하는 엔진은 항상 하나뿐이어야 하며, `close(done)`은 기기를 실제로 반납한 뒤에만 콜백을 호출합니다. 다음 open이 그 콜백에서 시작되기 때문입니다.
 2. **기록** — `telemetry/` 패키지. `Telemetry.callback()`이 만들어 주는 `CaptureCallback`이 `onCaptureStarted`, `onCaptureCompleted`, `onCaptureFailed`, `onCaptureBufferLost`를 각각 `Event`로 바꿔 `FlightRecorder` 링 버퍼에 넣습니다. 모든 `atNs`는 `SystemClock.elapsedRealtimeNanos()` 하나의 시계를 씁니다. 센서 타임스탬프는 `sensorNs`에 따로 담깁니다.
-3. **평가** — `check/`, `diagnosis/`, `benchmark/` 패키지. 이 계층은 Android import가 없는 순수 Kotlin이라 JVM 단위 테스트로 검증됩니다. 러너(`AutoCheckRunner`, `BenchmarkRunner`)는 카메라와 시계를 `Driver`, `Scheduler`, `clock` 파라미터를 통해서만 만집니다.
-4. **저장과 표시** — 평가가 끝난 실행 결과는 파일로 기록되고, 화면은 그 파일을 다시 읽습니다. 어떤 화면도 값을 다시 계산하지 않습니다.
+3. **평가** — `check/`, `diagnosis/`, `benchmark/` 패키지. 러너·지표 계산·비교 로직은 Android 의존성에서 분리돼 JVM 단위 테스트로 검증됩니다. 같은 패키지의 Activity, ThermalTracker, 파일 저장 어댑터는 Android 의존성이 있으므로 패키지 전체가 순수 Kotlin인 것은 아닙니다. 러너(`AutoCheckRunner`, `BenchmarkRunner`)는 카메라와 시계를 `Driver`, `Scheduler`, `clock` 파라미터를 통해서만 만집니다.
+4. **저장과 표시** — 평가가 끝난 실행 결과는 파일로 기록되고, 화면은 그 파일을 다시 읽습니다. 측정값을 읽는 경로와 비교 상태를 계산하는 경로를 구분합니다. RegressionDetector는 저장된 측정값 두 개로 비교 결과를 계산하는 순수 로직입니다.
 
 ### 평가 계층이 두 개인 이유
 
 `diagnosis/`는 v0.2의 건강 판정 계층(PASS / WARN / FAIL)이고, `benchmark/`는 v0.3 Camera BenchMarker의 측정 전용 데이터 계약(IMPROVED / STABLE / REGRESSED / UNKNOWN)입니다. 2026-09-09에 v0.2를 중단하고 v0.3으로 전환하기로 결정했기 때문에(D-002) 두 계층이 M3까지 공존합니다. 전환 이유 자체는 결정 기록에 아직 적혀 있지 않으므로 확인 필요입니다.
 
-지금 실제 화면을 구동하는 쪽은 v0.2입니다. `MainActivity`가 `FlightRecorder`, `Telemetry`, `HealthMonitor`를 직접 들고 있고, 카메라 열기, 권한 처리, incident 내보내기, CPU 샘플링까지 한 클래스에서 처리합니다. `BenchmarkRunner`는 코드에 존재하며 warm reopen 반복과 관측 세션을 구동하는 상태 기계입니다. 이 러너가 어느 화면에서 어떤 경로로 실행되는지는 이 원고에서 확인하지 않았으므로 확인 필요로 남깁니다.
+Home·Auto Check는 v0.2 건강 판정을 사용하고, LIVE에서 진입하는 BenchmarkActivity는 v0.3 측정 경로를 실행합니다. `MainActivity`가 `FlightRecorder`, `Telemetry`, `HealthMonitor`를 직접 들고 있고, 카메라 열기, 권한 처리, incident 내보내기, CPU 샘플링까지 한 클래스에서 처리합니다. `BenchmarkRunner`는 코드에 존재하며 warm reopen 반복과 관측 세션을 구동하는 상태 기계입니다. BenchmarkActivity가 러너를 구동하고, 완료 후 RunAssembler로 결과를 조립해 BenchmarkReport로 저장합니다.
 
 Camera2 엔진과 CameraX 엔진을 둘 다 유지하는 것은 2026-09-08의 결정입니다(D-001). Camera2가 측정 경로, CameraX가 비교 경로입니다. 이 결정의 이유는 결정 기록에 아직 없으므로 확인 필요입니다.
 
@@ -56,7 +56,7 @@ Camera2 엔진과 CameraX 엔진을 둘 다 유지하는 것은 2026-09-08의 �
 4. `check/CheckEvaluator.kt` — 러너 결과와 이벤트가 만나서 지표가 되는 지점입니다.
 5. `MainActivity.kt` — 위 요소들을 조립하는 곳입니다. 566줄이므로 마지막에 읽습니다.
 
-<sub>근거 파일: `app/build.gradle.kts`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt` · 설계 결정: `D-001`, `D-002` · 근거 수준: 코드 확인 · 검토 상태: 검증 정보 없음</sub>
+<sub>근거 파일: `app/build.gradle.kts`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt` · 설계 결정: `D-001`, `D-002` · 근거 수준: 코드 확인 · 검토 상태: 검증 정보 없음</sub>
 
 <!-- omm:end id=overview -->
 
@@ -68,33 +68,29 @@ Camera2 엔진과 CameraX 엔진을 둘 다 유지하는 것은 2026-09-08의 �
 
 ```mermaid
 graph LR
-    screens["Screens\napp/src/main/java/dev/halcamera/{home,check}/, MainActivity.kt"]
-    camera-engines["Camera Engines\napp/src/main/java/dev/halcamera/camera/"]
-    telemetry["Telemetry & Flight Recorder\napp/src/main/java/dev/halcamera/telemetry/"]
-    check-runner["Auto Check Runner\napp/src/main/java/dev/halcamera/check/"]
-    diagnosis["Diagnosis Engine v0.2\napp/src/main/java/dev/halcamera/diagnosis/"]
-    benchmark["Benchmark Contract v0.3\napp/src/main/java/dev/halcamera/benchmark/"]
-    persistence["Run Persistence\napp/src/main/java/dev/halcamera/{report,baseline}/"]
-    ui-widgets["Custom Views\napp/src/main/java/dev/halcamera/ui/"]
-    platform-camera["Android Camera2 / CameraX\nplatform API"]
-
-    screens -->|"own the preview surface, start and close one engine at a time"| camera-engines
-    camera-engines -->|"openCamera, createCaptureSession, capture"| platform-camera
-    camera-engines -->|"push CaptureCallback and ImageReader events"| telemetry
-    check-runner -->|"drive open / still / close through the Driver interface"| camera-engines
-    telemetry -->|"ring-buffer Event list for one session and time window"| diagnosis
-    check-runner -->|"per-endpoint EndpointResult with launch and still timings"| diagnosis
-    diagnosis -->|"reuse MetricExtractor percentiles and MetricCatalog names"| benchmark
-    diagnosis -->|"MetricState, Diagnosis, Health for the run JSON"| persistence
-    benchmark -->|"BenchmarkMetric, RunValidity, schema 3 run JSON"| persistence
-    screens -->|"read the newest stored run to render without touching the camera"| persistence
-    screens -->|"draw live scope, strip and timeline"| ui-widgets
-    telemetry -->|"synchronous live tap on each recorded event"| ui-widgets
-
-    classDef external fill:#585b70,stroke:#585b70,color:#cdd6f4
-    classDef store fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
-    class platform-camera external
-    class persistence store
+    screens["화면 및 진입점\napp/src/main/java/dev/halcamera/{home,check,benchmark}/"]
+    camera-engines["Camera2Engine / CameraXEngine\napp/src/main/java/dev/halcamera/camera/"]
+    telemetry["Telemetry / FlightRecorder\napp/src/main/java/dev/halcamera/telemetry/"]
+    check-runner["AutoCheckRunner / CheckEvaluator\napp/src/main/java/dev/halcamera/check/"]
+    diagnosis["건강 판정 v0.2\napp/src/main/java/dev/halcamera/diagnosis/"]
+    benchmark["측정·비교 v0.3\napp/src/main/java/dev/halcamera/benchmark/"]
+    persistence["실행·인덱스 저장\napp/src/main/java/dev/halcamera/{report,baseline,benchmark}/"]
+    ui-widgets["Scope / Strip / Timeline\napp/src/main/java/dev/halcamera/ui/"]
+    platform-camera["Android Camera API\nplatform API"]
+    screens -->|"LIVE 엔진을 소유하고 실행 화면 진입"| camera-engines
+    screens -->|"Auto Check 실행"| check-runner
+    screens -->|"BenchmarkActivity 측정 시작"| benchmark
+    camera-engines -->|"open / session / capture"| platform-camera
+    camera-engines -->|"카메라 콜백과 이미지 메타데이터"| telemetry
+    check-runner -->|"Driver 호출"| camera-engines
+    benchmark -->|"프로파일 StreamSpec으로 Driver 호출"| camera-engines
+    telemetry -->|"세션 이벤트와 관측 창"| diagnosis
+    check-runner -->|"EndpointResult와 launchSamples"| diagnosis
+    telemetry -->|"RunAssembler에 원시 이벤트 공급"| benchmark
+    diagnosis -->|"schema 2 건강 결과"| persistence
+    benchmark -->|"schema 3 측정 결과 및 실행 인덱스"| persistence
+    screens -->|"저장 결과 읽기"| persistence
+    telemetry -->|"동기 listener의 라이브 표시"| ui-widgets
 ```
 
 <sub>근거: `.omm/overall-architecture/diagram` · 근거 수준: 코드 확인</sub>
@@ -107,15 +103,15 @@ graph LR
 
 <!-- omm:begin id=module-roles -->
 
-- **benchmark** — `app/src/main/java/dev/halcamera/benchmark/` — the Camera BenchMarker v0.3 data contract, milestone M1. Nine files, all pure Kotlin, implementing chapters 3 to 7 of `docs/PLAN-BenchMarker-v0.3.md`. (하위: `benchmark-evaluator`, `benchmark-model`, `benchmark-profile`, `build-identity`, `metric-info`, `regression-rules`, `run-validity`)
-- **camera-engines** — `app/src/main/java/dev/halcamera/camera/` — two interchangeable implementations of one four-method interface, plus the characteristics helpers they share. (하위: `camera2-engine`, `camerax-engine`, `engine-interface`)
-- **check-runner** — `app/src/main/java/dev/halcamera/check/` — enumerating what can be measured, driving the measurement, and evaluating one endpoint's result. (하위: `check-evaluator`, `check-result`, `check-state-machine`, `endpoint-model`, `endpoint-resolver`)
-- **diagnosis** — `app/src/main/java/dev/halcamera/diagnosis/` — the v0.2 health layer, and still the one every shipped screen uses. Nine files, all pure Kotlin, implementing chapters 4 to 8 and 13.2 of `docs/PRODUCT-v0.2.md`. (하위: `diagnosis-model`, `diagnosis-rules`, `health-composer`, `health-monitor`, `metric-catalog`, `metric-extractor`, `threshold-engine`, `threshold-table`)
-- **persistence** — Everything the app writes lives in app-internal storage under `Context.filesDir`, plus one `SharedPreferences` file. There is no database, no network and no external storage; sharing happens only through a `FileProvider` the user triggers explicitly. (하위: `baseline-store`, `benchmark-report`, `benchmark-store`, `health-report`)
-- **platform-camera** — The Android camera stack — the only thing outside this codebase, and the subject under measurement rather than a dependency to be abstracted away.
-- **screens** — The three Activities, all built in Kotlin without XML layouts or Compose. Covers `home/HomeActivity.kt` (112 lines), `check/CheckActivity.kt` (319 lines), `MainActivity.kt` (566 lines) and the shared visual tokens in `ui/Look.kt`. (하위: `check-screen`, `expert-screen`, `home-screen`, `look-tokens`, `run-summary`)
-- **telemetry** — `app/src/main/java/dev/halcamera/telemetry/` — the recording layer every measurement is derived from. Three files: `Telemetry.kt` (the Camera2 callback adapter), `FlightRecorder.kt` (the ring buffer and incident windows) and `IncidentExporter.kt` (the ZIP bundle). (하위: `capture-callbacks`, `flight-recorder`, `incident-exporter`)
-- **ui-widgets** — `app/src/main/java/dev/halcamera/ui/` — three custom `View` subclasses that draw telemetry directly onto a `Canvas`, plus the `Look` token file covered under Screens. No charting library is used.
+- **benchmark** — benchmark/는 프로파일, 러너, 지표 계산, 유효성, schema 3 저장, baseline·비교 로직을 포함합니다. BenchmarkActivity와 ThermalTracker는 Android 의존성이 있고 순수 계산 로직과 분리됩니다. 실행 완료는 RunAssembler와 BenchmarkReport까지 연결되며, ResultPresenter 비교 UI는 Activity에서 아직 호출되지 않습니다. (하위: `benchmark-evaluator`, `benchmark-model`, `benchmark-profile`, `benchmark-runner`, `build-identity`, `comparison`, `metric-info`, `regression-rules`, `run-assembler`, `run-validity`)
+- **camera-engines** — camera/는 CameraEngine 인터페이스와 Camera2Engine·CameraXEngine을 제공합니다. Camera2Engine은 기본 크기 선택 경로와 벤치마크용 명시적 StreamSpec 경로를 구분합니다. 세션별 콜백과 close(done) 완료 통지가 러너에 연결됩니다. (하위: `camera2-engine`, `camerax-engine`, `engine-interface`)
+- **check-runner** — check/는 카메라 엔드포인트 열거, AutoCheckRunner 상태 기계, CheckEvaluator 평가 및 CheckActivity를 포함합니다. Auto Check는 기본 10초 관측과 3회 촬영을 수행합니다. (하위: `check-evaluator`, `check-result`, `check-state-machine`, `endpoint-model`, `endpoint-resolver`)
+- **diagnosis** — diagnosis/는 Auto Check와 LIVE 건강 표시가 사용하는 v0.2 지표·임계값·진단 로직입니다. MetricExtractor와 UnknownReason은 benchmark/에서도 공유합니다. 모든 화면이 이 건강 판정을 사용하는 것은 아닙니다. (하위: `diagnosis-model`, `diagnosis-rules`, `health-composer`, `health-monitor`, `metric-catalog`, `metric-extractor`, `threshold-engine`, `threshold-table`)
+- **persistence** — 앱 내부 파일과 SharedPreferences를 사용합니다. HealthReport는 Auto Check 결과, BenchmarkReport는 schema 3 실행과 이벤트, BenchmarkStore는 실행 인덱스, BaselineManager는 비교 기준 포인터를 다룹니다. 공유는 FileProvider를 통해 사용자가 시작합니다. (하위: `baseline-store`, `benchmark-report`, `benchmark-store`, `health-report`)
+- **platform-camera** — 측정 경계 바깥의 Android Camera2·CameraX와 카메라 스택입니다. 앱이 관측하는 API·콜백 시각을 HAL 내부 실행 시간이나 프리뷰 렌더링 완료 시각과 동일시하지 않습니다.
+- **screens** — 앱에는 HomeActivity, MainActivity, CheckActivity, BenchmarkActivity 네 Activity가 있습니다. Home이 런처이고 LIVE의 벤치마크 버튼은 BenchmarkActivity를 엽니다. 뷰는 Kotlin으로 생성합니다. (하위: `benchmark-screen`, `check-screen`, `expert-screen`, `home-screen`, `look-tokens`, `run-summary`)
+- **telemetry** — Telemetry는 Camera2 콜백을 이벤트로 변환하고 FlightRecorder는 메모리 링 버퍼와 incident 창을 관리합니다. IncidentExporter는 이벤트·환경을 ZIP으로 내보냅니다. 라이브 listener는 기록 스레드에서 동기 실행됩니다. (하위: `capture-callbacks`, `flight-recorder`, `incident-exporter`)
+- **ui-widgets** — ui/는 ScopeView, StripView, TimelineView 및 Look의 공통 시각 설정을 포함합니다. 커스텀 View는 Canvas에 관측 데이터를 그립니다.
 
 <sub>근거: `.omm/overall-architecture/*/description.md` · 근거 수준: 코드 확인</sub>
 
@@ -140,9 +136,9 @@ Auto Check 한 번은 다음 순서로 진행됩니다. 사용자가 검사를 �
 
 `CheckEvaluator.evaluate(result, events, baseline, mediaPerformanceClass)`는 다음 순서로 지표를 만듭니다.
 
-1. 관측 창이 있으면 `MetricExtractor.observe()`가 그 창 안의 이벤트에서 H.x 지표를 계산합니다. 스트림 시작 직후 `WARMUP_FRAMES = 5` 프레임은 간격 지표에서 제외됩니다. 관측 프레임이 15개 미만이면 값은 null이 되고 `unknownReason`이 `INSUFFICIENT_SAMPLES`로 채워집니다.
+1. 관측 창이 있으면 `MetricExtractor.observe()`가 그 창 안의 이벤트에서 H.x 지표를 계산합니다. Auto Check 관측 창의 첫 `WARMUP_FRAMES = 5` 결과 프레임은 H.1~H.5의 간격·partial·버퍼·stall 통계에서 제외됩니다. 3A 수렴은 제외 전 결과를 사용합니다. 관측 창의 결과 프레임에서 첫 5개를 제외한 steady 프레임이 15개 미만이면 H.1~H.8의 측정 가능 지표 값은 null이 되고 `unknownReason`이 `INSUFFICIENT_SAMPLES`로 채워집니다.
 2. `EndpointResult.launchSamples()`가 1.x, 2.x 지표를 만듭니다. 실패한 단계의 지표는 hard failure로, 실행되지 않은 단계는 `NOT_RUN`으로 표시됩니다.
-3. baseline이 있고 ISO × 노출 시간의 p50이 baseline과 4배 이상 다르면 3A 수렴 지표(H.6, H.7, H.8)는 `CONDITION_MISMATCH`가 됩니다. 장면이 달라서 비교할 수 없다는 뜻입니다.
+3. baseline이 있고 현재와 baseline의 ISO × 노출 시간 p50이 모두 양수이며 그 비율이 4 초과 또는 1/4 미만이면, 기존 unknownReason이 없는 3A 수렴 지표(H.6, H.7, H.8)는 `CONDITION_MISMATCH`가 됩니다. 장면이 달라서 비교할 수 없다는 뜻입니다.
 4. v0.2에서 실행하지 않는 지표(2.1, 2.4, 2.6, 2.7, 3.x)는 항상 `NOT_RUN`이고, 1.5는 `NOT_MEASURABLE`입니다.
 5. `ThresholdEngine`이 상태를, `DiagnosisRules`가 진단을, `HealthComposer`가 건강 수준을 만듭니다. 기기 전체 수준은 엔드포인트 중 가장 나쁜 값입니다.
 
@@ -151,15 +147,19 @@ Auto Check 한 번은 다음 순서로 진행됩니다. 사용자가 검사를 �
 ### 결과가 예상과 다를 때 확인하는 순서
 
 1. `EndpointResult.hardFailure`와 `failedStep` — 어느 단계에서 타임아웃이 났는지 먼저 봅니다. 이후 지표는 그 영향을 받습니다.
-2. 이벤트의 `session`과 관측 창 — 지표는 같은 세션 ID의 이벤트만, 그것도 창 안의 것만 씁니다. 기대한 이벤트가 다른 세션에 붙어 있거나 창 밖에 있으면 지표에 반영되지 않습니다.
+2. 이벤트의 `session`과 관측 창 — 같은 세션 ID의 capture_result 중 관측 창 안의 결과 프레임을 대상으로 삼습니다. 연결할 capture_started·request_observed·image_available은 창 밖에서도 찾으며, 첫 간격 계산에는 창 직전 결과의 센서 타임스탬프도 사용합니다. H.9 실패 이벤트 개수는 관측 창 안에서만 셉니다.
 3. `unknownReason` — `NOT_RUN`, `INSUFFICIENT_SAMPLES`, `CONDITION_MISMATCH`, `NOT_MEASURABLE`은 각각 원인이 다릅니다. 값이 null인 이유가 여기 적혀 있습니다.
 4. 임계값 — 상태 판정이 이상하면 `ThresholdTable`을 봅니다. v0.2의 임계값은 이 한 곳에만 있습니다.
 
 ### 벤치마크 갈래
 
-`BenchmarkRunner`는 v0.3의 상태 기계입니다. warm reopen을 `launchIterations`만큼 반복한 뒤 관측 세션을 하나 더 열어 WARMUP, OBSERVE, STILL, CLOSE를 진행합니다. 실패한 사이클은 `failed = true`로 기록하고 다음 사이클로 넘어가며, 연속 실패가 `maxConsecutiveFailures`(기본 3회)에 이르거나 관측 세션이 실패할 때만 실행이 중단됩니다. 이 러너의 출력이 `BenchmarkEvaluator`와 실행 파일까지 연결되어 있는지는 이 원고에서 확인하지 않았으므로 확인 필요입니다.
+`BenchmarkRunner`는 v0.3의 상태 기계입니다. warm reopen을 `launchIterations`만큼 반복한 뒤 관측 세션을 하나 더 열어 WARMUP, OBSERVE, STILL, CLOSE를 진행합니다. 실패한 사이클은 `failed = true`로 기록하고 다음 사이클로 넘어가며, 연속 실패가 `maxConsecutiveFailures`(기본 3회)에 이르거나 관측 세션이 실패하면 중단되며, 명시적인 abort도 실행을 종료할 수 있습니다.
 
-<sub>근거 파일: `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt` · 근거 수준: 코드 확인 · 검토 상태: 검증 정보 없음</sub>
+LIVE의 벤치마크 진입은 `MainActivity`에서 `BenchmarkActivity`를 엽니다. `BenchmarkActivity.finishRun()`은 러너 결과와 recorder의 이벤트를 `RunAssembler.assemble()`에 넘깁니다. 조립기는 `BenchmarkEvaluator`와 `RunValidityEvaluator`로 측정값과 유효성을 만들고, Activity가 `BenchmarkReport.write()`로 schema 3 실행 파일과 이벤트를 저장합니다. 따라서 이 경로는 이미 코드로 연결돼 있습니다.
+
+Auto Check와 달리 벤치마크의 워밍업 제외 수는 고정 5개가 아닙니다. `RunAssembler.observe()`가 관측 세션의 첫 결과부터 프레임을 모아 관측 시작 이전의 프레임 수를 계산하고, 이를 간격·버퍼 통계에서 제외합니다. 3A 수렴은 세션 첫 결과부터 계산합니다. `RegressionDetector`, `BaselineManager`, `ResultPresenter`는 별도의 비교·표시 로직이며 현재 `BenchmarkActivity.finishRun()`은 저장 경로와 표본 수·flag 요약을 표시합니다. 이 화면에서 비교 테이블을 구동하는 호출은 없습니다.
+
+<sub>근거 파일: `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt` · 근거 수준: 코드 확인 · 검토 상태: 검증 정보 없음</sub>
 
 <!-- omm:end id=runtime-flow -->
 
@@ -167,36 +167,26 @@ Auto Check 한 번은 다음 순서로 진행됩니다. 사용자가 검사를 �
 
 ```mermaid
 graph LR
-    framework-callbacks["Camera2 callbacks\nCaptureCallback, ImageReader, CameraState"]
-    event-record["Event records\ntelemetry/Telemetry.kt, FlightRecorder.kt"]
-    runner-marks["Step marks and timings\ncheck/AutoCheckRunner.kt"]
-    frame-observations["FrameObservation per result\ndiagnosis/MetricExtractor.kt"]
-    metric-samples["MetricSample per metric id\ndiagnosis/MetricExtractor.kt, check/AutoCheckRunner.kt"]
-    judged-states["MetricState, Diagnosis, Health\ndiagnosis/ThresholdEngine.kt, DiagnosisRules.kt, HealthComposer.kt"]
-    benchmark-metrics["BenchmarkMetric statistics\nbenchmark/BenchmarkEvaluator.kt"]
-    run-json["Run JSON on disk\nfiles/checks/, files/benchmarks/, files/incidents/"]
-    rendered-screens["Rendered result\ncheck/CheckResult.kt, home/RunSummary.kt"]
-
-    framework-callbacks -->|"one Event per callback, tagged with session and elapsedRealtimeNanos"| event-record
-    framework-callbacks -->|"driver reports OPENED, CONFIGURED, FIRST_FRAME, STILL_RECEIVED, CLOSED"| runner-marks
-    event-record -->|"join capture_started, request_observed and image_available by frame and sensor timestamp"| frame-observations
-    frame-observations -->|"aggregate the steady window into H.1 to H.8"| metric-samples
-    event-record -->|"count capture_failed and buffer_lost for H.9"| metric-samples
-    runner-marks -->|"subtract mark pairs into 1.x and 2.x latencies"| metric-samples
-    metric-samples -->|"judge absolutely and relatively against ThresholdTable and the baseline"| judged-states
-    frame-observations -->|"same percentiles, no judgement, statistics only"| benchmark-metrics
-    runner-marks -->|"LaunchCycle and StillSample, supplied by the missing M2 runner"| benchmark-metrics
-    judged-states -->|"HealthReport writes schema 2"| run-json
-    benchmark-metrics -->|"BenchmarkReport writes schema 3"| run-json
-    event-record -->|"IncidentExporter writes events.jsonl into the incident ZIP"| run-json
-    run-json -->|"read back on resume, never recomputed"| rendered-screens
-
-    classDef store fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
-    classDef external fill:#585b70,stroke:#585b70,color:#cdd6f4
-    classDef concern fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e
-    class run-json store
-    class framework-callbacks external
-    class benchmark-metrics concern
+    framework-callbacks["Camera2 콜백\nplatform API"]
+    event-record["Telemetry / FlightRecorder\ntelemetry/Telemetry.kt, FlightRecorder.kt"]
+    runner-marks["AutoCheckRunner / BenchmarkRunner\ncheck/AutoCheckRunner.kt, benchmark/BenchmarkRunner.kt"]
+    frame-observations["FrameObservation\ndiagnosis/MetricExtractor.kt"]
+    metric-samples["Auto Check 표본\ncheck/CheckEvaluator.kt"]
+    judged-states["상태·진단·건강 판정\ndiagnosis/ThresholdEngine.kt, DiagnosisRules.kt, HealthComposer.kt"]
+    benchmark-metrics["RunAssembler / BenchmarkEvaluator\nbenchmark/RunAssembler.kt, BenchmarkEvaluator.kt"]
+    run-json["실행 파일\nreport/HealthReport.kt, benchmark/BenchmarkReport.kt"]
+    rendered-screens["저장 결과 및 실행 요약\ncheck/CheckActivity.kt, benchmark/BenchmarkActivity.kt"]
+    framework-callbacks -->|"세션·프레임·센서 시각을 포함한 이벤트"| event-record
+    framework-callbacks -->|"Driver의 단계 완료 신호"| runner-marks
+    event-record -->|"관측 창 결과를 start/request/image에 연결"| frame-observations
+    frame-observations -->|"Auto Check 워밍업 제외 후 H.1~H.8"| metric-samples
+    runner-marks -->|"EndpointResult의 1.x·2.x 지연"| metric-samples
+    metric-samples -->|"임계값과 baseline 적용"| judged-states
+    runner-marks -->|"BenchmarkRunner.Result의 cycles·stills"| benchmark-metrics
+    event-record -->|"RunAssembler의 관측 세션·H.9 입력"| benchmark-metrics
+    judged-states -->|"schema 2 저장"| run-json
+    benchmark-metrics -->|"유효성·측정값을 schema 3 저장"| run-json
+    run-json -->|"측정값 읽기; 비교 UI 연결은 별도 작업"| rendered-screens
 ```
 
 <sub>근거: `.omm/data-flow/diagram` · 근거 수준: 코드 확인</sub>
@@ -208,21 +198,17 @@ graph LR
 <!-- omm:begin id=lifecycle-diagram -->
 
 ```mermaid
-graph TD
-    check-sequence["Auto Check step machine\ncheck/AutoCheckRunner.kt"]
-    engine-lifecycle["Camera engine open and close\ncamera/Camera2Engine.kt, CameraXEngine.kt"]
-    incident-window["Incident pre and post window\ntelemetry/FlightRecorder.kt"]
-    metric-verdict["Metric verdict resolution\ndiagnosis/ThresholdEngine.kt, Model.kt"]
-    validity-gate["Run validity gates\nbenchmark/RunValidity.kt"]
-
-    check-sequence -->|"drive open, still and close through the Driver interface"| engine-lifecycle
-    engine-lifecycle -->|"OPENED, CONFIGURED, FIRST_FRAME, STILL_RECEIVED, CLOSED signals"| check-sequence
-    check-sequence -->|"a timeout or error sets failedStep, which becomes hardFailure"| metric-verdict
-    check-sequence -->|"aborted reason and per-step sample counts"| validity-gate
-    incident-window -->|"trigger and finish run beside the sequence, on the same recorder"| check-sequence
-
-    classDef concern fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e
-    class engine-lifecycle concern
+graph LR
+    check-sequence["Auto Check 및 Benchmark 러너\ncheck/AutoCheckRunner.kt, benchmark/BenchmarkRunner.kt"]
+    engine-lifecycle["엔진 open / close\ncamera/Camera2Engine.kt, CameraXEngine.kt"]
+    incident-window["incident 이전·이후 창\ntelemetry/FlightRecorder.kt"]
+    metric-verdict["Auto Check 판정 순서\ndiagnosis/ThresholdEngine.kt"]
+    validity-gate["벤치마크 유효성\nbenchmark/RunAssembler.kt, RunValidity.kt"]
+    check-sequence -->|"Driver를 통해 open / still / close"| engine-lifecycle
+    engine-lifecycle -->|"현재 세션의 단계 완료 신호"| check-sequence
+    check-sequence -->|"Auto Check failedStep과 지표 표본"| metric-verdict
+    check-sequence -->|"Benchmark Result와 환경 flag"| validity-gate
+    incident-window -->|"러너와 별개로 이벤트 창 보존"| engine-lifecycle
 ```
 
 <sub>근거: `.omm/state-transitions/diagram` · 근거 수준: 코드 확인</sub>
@@ -245,7 +231,7 @@ graph TD
 ./gradlew :app:testDebugUnitTest
 ```
 
-`CheckEvaluatorTest`, `AutoCheckRunnerTest`, `MetricExtractorTest`, `BenchmarkRunner` 관련 테스트가 통과하면 4.3의 흐름이 코드와 일치하는 것입니다. 기기에서의 동작 확인은 [디버깅 및 문제 해결](troubleshooting.md)을 참고합니다.
+`CheckEvaluatorTest`, `AutoCheckRunnerTest`, `MetricExtractorTest`, `BenchmarkRunner` 관련 테스트로 단계 전이와 계산 규칙을 확인합니다. 테스트 통과와 별도로 문서의 조건·예외를 코드에 대조해야 합니다. 기기에서의 동작 확인은 [디버깅 및 문제 해결](troubleshooting.md)을 참고합니다.
 
 ## 제약 및 알려진 문제
 
@@ -267,24 +253,17 @@ graph TD
 
 **확인 필요** — 스캔 시점에 확신할 수 없었거나 현재 알려진 미완 사항입니다.
 
-- 평가 스택이 두 개 공존합니다. `diagnosis/`(건강 판정, v0.2)는 살아 있고 출시된 화면을 구동합니다. `benchmark/`(측정, v0.3)는 이를 대체할 예정이지만 데이터 계약에서 멈춰 있습니다. 표시용 메타데이터를 `benchmark/MetricInfo.kt`로 옮겨서 명명 의존성은 끊었지만, `BenchmarkEvaluator`와 `BenchmarkModel`이 여전히 `diagnosis/`에서 `MetricExtractor`, `UnknownReason`, `jsonName`을 import합니다. 따라서 M3에서 삭제하려면 이것들을 중립적인 위치로 먼저 옮겨야 합니다.
-- `MainActivity`는 566줄이며 뷰 생성, 권한 처리, 엔진 생명주기, incident export, CPU 샘플링을 한 클래스에 섞어 두었습니다. 가장 큰 파일이면서 가장 테스트하기 어려운 파일입니다.
-- `HealthMonitor`는 스레드 안전하지 않다고 명시되어 있고 warning 유지 상태를 평범한 필드에 보관합니다. 모든 호출이 메인 스레드에서 올 때에만 안전합니다.
-- `BenchmarkEvaluator`는 `notRun("2.7")`을 무조건 반환하고, H.9는 러너가 아직 제공하지 않는 콜백 실패 횟수로 계산합니다. M2 러너가 없기 때문이며, 지금 만들어지는 run JSON은 불완전합니다.
-- 표준 프로파일 ID가 아직 `camera2-standard-v1-draft`입니다. 따라서 이 프로파일로 만든 실행은 모두 `PROFILE_DRAFT` validity flag를 달고 설계상 점수 대상에서 제외됩니다.
-- `IncidentExporter`가 `device.json`에 `appVersion`을 `"0.1.0"`으로 하드코딩하는데, 모듈이 선언한 `versionName`은 `"0.3.0"`입니다.
+- BenchmarkEvaluator는 촬영 중 프리뷰 stall 지표 2.7을 아직 NOT_RUN으로 반환합니다. H.9의 콜백 실패 수는 RunAssembler가 관측 창에서 수집합니다.
+- 비교 로직과 ResultPresenter는 구현됐지만 BenchmarkActivity의 완료 화면에는 아직 연결되지 않았습니다.
+- MainActivity는 화면 구성과 엔진 수명주기·권한·incident export를 함께 관리합니다. 콜백 실행 스레드는 변경 시 별도로 검증해야 합니다.
+- HealthMonitor의 상태는 스레드 안전하지 않습니다. 호출 스레드 제약을 유지해야 합니다.
+- 일부 v0.3 로직은 diagnosis의 MetricExtractor와 UnknownReason을 사용하므로 구 평가 계층을 삭제하기 전에 공통 의존성을 분리해야 합니다.
 
 **후속 작업**
 
-`docs/PLAN-BenchMarker-v0.3.md`의 마일스톤을 계획된 순서대로 정리하면 다음과 같습니다.
-
-1. M2 `BenchmarkRunner`: warm-reopen 실행 루프, 관측 창, 연속 촬영을 구동해서 `BenchmarkEvaluator`가 실제 입력을 받도록 합니다. 이 과정에서 Galaxy S25+가 1080p YUV 스트림을 감당하는지도 확인되며, 그 결과에 따라 프로파일 ID에서 `-draft` 접미사를 뗄 수 있습니다.
-2. M3 결과 UI, 그리고 `diagnosis/`에서 공용 헬퍼를 분리한 뒤의 Doctor 코드 삭제.
-3. M4 baseline, compare, regression: `RegressionRules`를 적용하고 각 지표의 `baseline_ref`, `reference_ref`, `delta_pct`, `regression`을 채웁니다.
-4. M5 Score. 의도적으로 미뤄 둔 항목입니다. profile v1 실행이 충분히 쌓이기 전에는 점수를 계산하지도 표시하지도 않습니다.
-5. M6 실행 이력과 빌드 관리.
-
-독립적으로 처리할 수 있는 작은 항목도 있습니다. `IncidentExporter`의 하드코딩된 `appVersion`을 고치고, `2.7`(촬영 중 프리뷰 stall)에 무조건적인 `NOT_RUN` 대신 실제 계산 근거를 부여하는 일입니다.
+1. 기존 비교·baseline·결과 표시 로직을 화면에 연결할 때 현재의 측정·저장 경로와 함께 회귀 검증합니다.
+2. 촬영 중 프리뷰 stall(2.7)의 관측 구간과 계산 규칙을 정의하고 구현합니다.
+3. 스레드별 콜백과 리소스 소유권 설명을 보완합니다. 기기 검증 주장은 사람 입력에 근거 기록이 있을 때만 추가합니다.
 
 <sub>근거: `.omm/overall-architecture/concern.md`, `.omm/overall-architecture/todo.md` · 근거 수준: 설계 의도 / 추정</sub>
 

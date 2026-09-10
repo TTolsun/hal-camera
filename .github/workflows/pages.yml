@@ -9,6 +9,10 @@ on:
     branches: [main]
     paths:
       - "docs/guide/**"
+  pull_request:
+    paths:
+      - "docs/guide/**"
+      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -17,7 +21,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -26,6 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
       - uses: actions/jekyll-build-pages@v1
         with:
           source: ./docs/guide
@@ -33,6 +38,7 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
 
   deploy:
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:

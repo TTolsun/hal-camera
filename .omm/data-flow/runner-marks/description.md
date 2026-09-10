@@ -1,7 +1,3 @@
-Stage 1b, the parallel track. `AutoCheckRunner` keeps a `LinkedHashMap<String, Long>` of named timestamps per endpoint and derives every launch and capture latency by subtracting pairs from it.
+AutoCheckRunner와 BenchmarkRunner는 API 호출 직전 mark와 현재 세션의 완료 신호 시각으로 지연을 계산합니다. request_observed는 onCaptureStarted 시점의 요청 내용이므로 제출 시각을 대체하지 않습니다.
 
-The marks are `open_call`, `opened`, `configure_call`, `configured`, `repeating_call`, `first_started`, `first_yuv`, `observe_start`, `observe_end`, `close_call`, `closed`, plus `timeout` or `error` when a step fails. `mark()` uses `putIfAbsent` by default, so the *first* occurrence wins and a retried callback cannot overwrite a measured start.
-
-This track exists because the event track cannot cover it: there is no callback for "the app called `openCamera`", so the driver calls `mark()` immediately before the API call rather than letting the runner guess. Still captures keep their own three parallel lists — submit, image and result timestamps — and are zipped by index, so a missing image does not shift the pairing.
-
-The two window marks are the bridge to the event track: `CheckEvaluator` passes `observe_start` and `observe_end` to `MetricExtractor` as the time window to read events from.
+Auto Check의 EndpointResult는 CheckEvaluator로 전달됩니다. BenchmarkRunner는 LaunchCycle, StillSample, 관측 세션과 창 정보를 Result로 내보내고 RunAssembler가 이를 받습니다. 근거: check/AutoCheckRunner.kt, benchmark/BenchmarkRunner.kt, benchmark/RunAssembler.kt.

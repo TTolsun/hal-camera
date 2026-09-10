@@ -97,14 +97,14 @@ export function hashFiles(relPaths) {
   for (const rel of [...relPaths].sort()) {
     hash.update(rel);
     hash.update("\0");
-    hash.update(fs.readFileSync(repoPath(rel)));
+    hash.update(normalizeText(fs.readFileSync(repoPath(rel), "utf8")));
     hash.update("\0");
   }
   return hash.digest("hex").slice(0, 16);
 }
 
 export function hashText(text) {
-  return crypto.createHash("sha256").update(text, "utf8").digest("hex").slice(0, 16);
+  return crypto.createHash("sha256").update(normalizeText(text), "utf8").digest("hex").slice(0, 16);
 }
 
 // --- omm 원본 읽기 --------------------------------------------------------
@@ -151,3 +151,6 @@ export const fail = (message) => {
   process.stderr.write(`오류: ${message}\n`);
   process.exit(1);
 };
+
+// Evidence and manuscripts are text; checkout line endings are not changes.
+export const normalizeText = (text) => text.replace(/\r\n/g, "\n");

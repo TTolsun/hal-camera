@@ -79,7 +79,7 @@ const facts = {
 const previous = readState("facts.json");
 const changed = !previous || hashText(JSON.stringify(previous.facts)) !== hashText(JSON.stringify(facts));
 
-writeState("facts.json", { schema: 1, facts });
+if (!process.argv.includes("--dry-run")) writeState("facts.json", { schema: 1, facts });
 
 const missing = Object.entries(facts["build-facts"])
   .filter(([, v]) => v === null)

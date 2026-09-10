@@ -1,7 +1,3 @@
-단계 경계를 지금 위치에 그은 이유는, 파이프라인에서 잡음이 많은 부분과 해석이 들어간 부분을 분리해 두기 위해서입니다.
+Event에는 앱 관측 시각, 세션, 종류, 선택적 프레임 번호·센서 시각과 값이 담깁니다. Telemetry는 원시 메타데이터와 함께 FrameTracker에서 계산한 intervalMs·resultFps·observedResultGap도 기록하므로 이벤트의 모든 값이 원시값인 것은 아닙니다.
 
-`Event`는 의도적으로 단순합니다. 타임스탬프, 세션, 종류, 선택적 프레임 번호와 센서 타임스탬프, 그리고 타입이 없는 `Map<String, Any?>` 값 묶음이 전부입니다. 기록 시점에는 아무것도 해석하지 않는데, 해석은 제품 버전에 따라 바뀌는 반면 원본 기록은 바뀌지 않아야 하기 때문입니다. incident 번들이 쓸모 있는 이유도 같습니다. 번들은 이벤트를 그대로 담아 보내므로, 나중에 읽는 사람이 다시 계산할 수 있습니다.
-
-조인 키가 중요합니다. 프레임은 `capture_started`와 `capture_result` 사이에서 `frameNumber`로 맞추고, 버퍼는 `capture_result`와 `image_available` 사이에서 센서 타임스탬프로 맞춥니다. 두 값 모두 가정하지 않고 기록합니다. `describeCamera`가 센서 타임스탬프 소스가 elapsed realtime과 비교 가능한지 여부까지 기록하는 것도 같은 이유입니다.
-
-러너 경로가 따로 존재하는 이유는 이벤트 경로가 답할 수 없는 질문이 있기 때문입니다. "앱이 `openCamera`를 호출했다"에 해당하는 콜백은 없으므로, 드라이버가 각 API 호출 직전에 `AutoCheckRunner.mark()`를 호출합니다. 반대 방향의 한계는 `Telemetry`의 주석이 명시합니다. `request_observed`는 `onCaptureStarted`에서 발생하며 요청을 제출한 시각이 아닙니다.
+프레임 번호는 started/result/request 연결에, 센서 타임스탬프는 이미지 연결에 사용합니다. request_observed는 onCaptureStarted에서 관측한 요청이며 제출 시각은 러너의 mark와 별개입니다. 설계 의도는 사람의 결정 기록을 근거로 작성합니다.

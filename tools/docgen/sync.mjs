@@ -27,7 +27,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { execFileSync, spawnSync } from "node:child_process";
 import { readBindings, readState, REPO_ROOT, STATE_DIR, OMM_DIR, globFiles, fail } from "./lib.mjs";
-import { collectKeys, contentPath, splitFrontMatter } from "./model.mjs";
+import { collectKeys, contentPath, splitFrontMatter, computeHashes, stateOf } from "./model.mjs";
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has("--dry-run");
@@ -50,7 +50,7 @@ function git(...a) {
 
 // claude CLI 호출. 프롬프트는 인자 길이 제한을 피하기 위해 stdin 으로 넘깁니다.
 function claude(prompt, { allowedTools, cwd = REPO_ROOT }) {
-  const cli = isWin ? "claude.cmd" : "claude";
+  const cli = "claude";
   const cliArgs = ["-p", "--output-format", "text", "--allowedTools", allowedTools, "--permission-mode", "acceptEdits"];
   if (dryRun) {
     log(`  [dry-run] ${cli} ${cliArgs.join(" ")}  (프롬프트 ${prompt.length}자)`);
@@ -63,18 +63,22 @@ function claude(prompt, { allowedTools, cwd = REPO_ROOT }) {
 
 // --- 1. 무엇이 낡았는가 ---------------------------------------------------------
 log("1/6 추출기와 검증기 실행");
-const ex = runNode("extract.mjs");
+const ex = runNode("extract.mjs", ...(dryRun ? ["--dry-run"] : []));
 if (ex.status !== 0) fail(`extract.mjs 실패\n${ex.stderr}`);
-const vf = runNode("verify.mjs");
+const vf = runNode("verify.mjs", ...(dryRun ? ["--dry-run"] : []));
 if (vf.status !== 0) fail(`verify.mjs 실패\n${vf.stderr}`);
 
 const bindings = readBindings();
 const evidence = readState("evidence.json", { entries: {} }).entries;
 const keys = collectKeys(bindings);
-const needs = (key) => force || (evidence[key]?.observed?.state ?? "unknown") !== "fresh";
+const needs = (key) => {
+  const entry = keys.find((k) => k.key === key);
+  const current = computeHashes(bindings, entry);
+  return force || !current.exists || current.missingCited?.length || stateOf(current, evidence[key]?.accepted) !== "fresh";
+};
 
 const stalePerspectives = keys.filter((k) => k.kind === "omm" && needs(k.key));
-const staleContents = keys.filter((k) => k.kind === "content" && needs(k.key));
+let staleContents = keys.filter((k) => k.kind === "content" && needs(k.key));
 
 if (!stalePerspectives.length && !staleContents.length) {
   log("동기화 불필요: 모든 원본이 최신입니다.");
@@ -151,6 +155,9 @@ ${scope}
   log("3/6, 4/6 재스캔 건너뜀");
 }
 
+// Recompute after scanning: updated structures can invalidate previously fresh manuscripts.
+if (!dryRun) staleContents = keys.filter((k) => k.kind === "content" && needs(k.key));
+
 // --- 5. 재집필 -----------------------------------------------------------------
 const stripFence = (text) => {
   const t = text.trim();
@@ -196,6 +203,7 @@ log("6/6 검증기와 생성기 재실행");
 if (!dryRun) {
   const v2 = runNode("verify.mjs");
   process.stdout.write(v2.stdout);
+  if (v2.status !== 0) fail("검증기 실패");
   const g = runNode("generate.mjs");
   process.stdout.write(g.stdout + g.stderr);
   if (g.status !== 0) fail("생성기 실패");

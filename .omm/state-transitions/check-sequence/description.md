@@ -1,5 +1,3 @@
-`check/AutoCheckRunner.kt`. Per endpoint: OPEN -> CONFIGURE -> FIRST_FRAME -> OBSERVE (fixed 10 s) -> STILL x3 -> CLOSE, then the next endpoint; DONE or ABORTED at the end.
+AutoCheckRunner는 엔드포인트별 OPEN → CONFIGURE → FIRST_FRAME → OBSERVE(기본 10초) → STILL(기본 3회) → CLOSE를 진행합니다. 개별 실패는 다음 엔드포인트로 이어지고 명시적 abort는 종료합니다.
 
-Transitions are driven by `Signal` (OPENED, CONFIGURED, FIRST_FRAME, STILL_RECEIVED, CLOSED, ERROR) and by a `Scheduler` timer. Each `enter(step)` cancels the previous timer, notifies the listener, performs the step's action and arms a new timeout. A timeout sets `failedStep = step`, records a `timeout` mark and jumps to CLOSE; ERROR does the same with an `error` mark. Either way `endpointDone()` still builds a full `EndpointResult`, so a failed endpoint contributes a row rather than a gap.
-
-`abort(reason)` from the UI takes the same path when a step is in flight, so the camera is always closed properly rather than dropped.
+BenchmarkRunner는 launchIterations 회의 warm reopen과 추가 관측 세션을 분리합니다. 각 사이클은 OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE이며, 추가 세션은 WARMUP → OBSERVE → STILL → CLOSE입니다. 연속 사이클 실패 한도(기본 3회), 관측 세션 실패, 명시적 abort에서 조기 종료합니다. 근거: check/AutoCheckRunner.kt, benchmark/BenchmarkRunner.kt.

@@ -1,20 +1,22 @@
 graph LR
-    benchmark-profile["BenchmarkProfile\napp/src/main/java/dev/halcamera/benchmark/BenchmarkProfile.kt"]
-    benchmark-model["BenchmarkModel: run, metric, contract\napp/src/main/java/dev/halcamera/benchmark/BenchmarkModel.kt"]
-    benchmark-evaluator["BenchmarkEvaluator + Stats\napp/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt"]
-    metric-info["BenchmarkMetricCatalog\napp/src/main/java/dev/halcamera/benchmark/MetricInfo.kt"]
-    regression-rules["RegressionRules\napp/src/main/java/dev/halcamera/benchmark/RegressionRules.kt"]
-    run-validity["RunValidity + ValidityFlags\napp/src/main/java/dev/halcamera/benchmark/RunValidity.kt"]
-    build-identity["BuildIdentity\napp/src/main/java/dev/halcamera/benchmark/BuildIdentity.kt"]
-
-    benchmark-profile -->|"profile id opens the comparison contract id"| benchmark-model
-    benchmark-profile -->|"expected sample counts and warm-up exclusion"| benchmark-evaluator
-    metric-info -->|"category and unit per metric id, no diagnosis dependency"| benchmark-evaluator
-    benchmark-evaluator -->|"BenchmarkMetric with p50, p95, min, max, n"| benchmark-model
-    regression-rules -->|"per-metric delta and noise floor, applied in M4"| benchmark-model
-    run-validity -->|"three booleans plus the unknown flags that fail them closed"| benchmark-model
-    build-identity -->|"six-axis comparison stored inside every RunRef"| benchmark-model
-    benchmark-profile -->|"draft profile raises PROFILE_DRAFT"| run-validity
-
-    classDef concern fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e
-    class benchmark-evaluator concern
+    benchmark-profile["BenchmarkProfile\nbenchmark/BenchmarkProfile.kt"]
+    benchmark-model["BenchmarkRun / MeasurementContract\nbenchmark/BenchmarkModel.kt"]
+    benchmark-evaluator["BenchmarkEvaluator / Stats\nbenchmark/BenchmarkEvaluator.kt"]
+    metric-info["표시 이름과 단위\nbenchmark/MetricInfo.kt"]
+    regression-rules["회귀 판정 규칙\nbenchmark/RegressionRules.kt"]
+    run-validity["RunValidityEvaluator\nbenchmark/RunValidity.kt"]
+    build-identity["빌드 식별 비교\nbenchmark/BuildIdentity.kt"]
+    benchmark-runner["BenchmarkRunner\nbenchmark/BenchmarkRunner.kt"]
+    run-assembler["RunAssembler\nbenchmark/RunAssembler.kt"]
+    comparison["baseline·비교·표시 로직\nbenchmark/RegressionDetector.kt, BaselineManager.kt, ResultPresenter.kt"]
+    benchmark-profile -->|"반복 수·워밍업·관측·촬영 조건"| benchmark-runner
+    benchmark-runner -->|"cycles / stills / 관측 세션"| run-assembler
+    run-assembler -->|"원시 표본과 관측 이벤트로 입력 구성"| benchmark-evaluator
+    benchmark-profile -->|"비교 계약과 표본 수"| benchmark-model
+    metric-info -->|"지표 메타데이터"| benchmark-model
+    benchmark-evaluator -->|"측정 통계"| benchmark-model
+    run-assembler -->|"실패·환경·표본 수"| run-validity
+    run-validity -->|"measurement / comparison / scoring 적격성"| benchmark-model
+    benchmark-model -->|"저장된 두 실행"| comparison
+    regression-rules -->|"지표별 delta와 noise floor"| comparison
+    build-identity -->|"빌드 축별 동일성"| comparison

@@ -1,9 +1,9 @@
 created: 2026-09-09T16:20:14.267Z
-updated: 2026-09-09T16:42:20.755Z
-update_count: 13
-last_field: note
-git_commit: 1e3d2a0
-git_branch: main
+updated: 2026-09-10T17:18:24.021Z
+update_count: 15
+last_field: context
+git_commit: 8a8701e
+git_branch: codex/pr27-doc-review
 children:
   - benchmark-metrics
   - event-record
@@ -14,3 +14,15 @@ children:
   - rendered-screens
   - run-json
   - runner-marks
+prev_diagram: >
+  graph LR
+      callbacks["Camera2 callbacks"] --> telemetry["Telemetry / FlightRecorder"]
+      autocheck["AutoCheckRunner.EndpointResult"] --> check["CheckEvaluator"]
+      telemetry --> check
+      check --> health["HealthReport / schema 2"]
+      benchmark["BenchmarkRunner.Result"] --> assembly["RunAssembler"]
+      telemetry --> assembly
+      assembly --> metrics["BenchmarkEvaluator / RunValidityEvaluator"]
+      metrics --> run["BenchmarkReport / schema 3"]
+      run --> summary["BenchmarkActivity 실행 요약"]
+      run -. "별도 비교 로직, Activity 미연결" .-> compare["RegressionDetector / ResultPresenter"]

@@ -1,15 +1,11 @@
-graph TD
-    check-sequence["Auto Check step machine\ncheck/AutoCheckRunner.kt"]
-    engine-lifecycle["Camera engine open and close\ncamera/Camera2Engine.kt, CameraXEngine.kt"]
-    incident-window["Incident pre and post window\ntelemetry/FlightRecorder.kt"]
-    metric-verdict["Metric verdict resolution\ndiagnosis/ThresholdEngine.kt, Model.kt"]
-    validity-gate["Run validity gates\nbenchmark/RunValidity.kt"]
-
-    check-sequence -->|"drive open, still and close through the Driver interface"| engine-lifecycle
-    engine-lifecycle -->|"OPENED, CONFIGURED, FIRST_FRAME, STILL_RECEIVED, CLOSED signals"| check-sequence
-    check-sequence -->|"a timeout or error sets failedStep, which becomes hardFailure"| metric-verdict
-    check-sequence -->|"aborted reason and per-step sample counts"| validity-gate
-    incident-window -->|"trigger and finish run beside the sequence, on the same recorder"| check-sequence
-
-    classDef concern fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e
-    class engine-lifecycle concern
+graph LR
+    check-sequence["Auto Check 및 Benchmark 러너\ncheck/AutoCheckRunner.kt, benchmark/BenchmarkRunner.kt"]
+    engine-lifecycle["엔진 open / close\ncamera/Camera2Engine.kt, CameraXEngine.kt"]
+    incident-window["incident 이전·이후 창\ntelemetry/FlightRecorder.kt"]
+    metric-verdict["Auto Check 판정 순서\ndiagnosis/ThresholdEngine.kt"]
+    validity-gate["벤치마크 유효성\nbenchmark/RunAssembler.kt, RunValidity.kt"]
+    check-sequence -->|"Driver를 통해 open / still / close"| engine-lifecycle
+    engine-lifecycle -->|"현재 세션의 단계 완료 신호"| check-sequence
+    check-sequence -->|"Auto Check failedStep과 지표 표본"| metric-verdict
+    check-sequence -->|"Benchmark Result와 환경 flag"| validity-gate
+    incident-window -->|"러너와 별개로 이벤트 창 보존"| engine-lifecycle

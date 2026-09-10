@@ -1,0 +1,1 @@
+benchmark/BenchmarkActivity.kt는 LIVE에서 진입하는 벤치마크 실행 화면입니다. ProfileCompatibilityChecker로 사전 확인하고 StreamSpec과 ThermalTracker를 준비해 BenchmarkRunner를 실행합니다. finishRun은 RunAssembler와 BenchmarkReport로 결과를 저장하며 표본 수·flag·저장 경로를 표시합니다. ResultPresenter 비교 테이블은 아직 이 경로에서 호출하지 않습니다.

@@ -9,3 +9,11 @@ include:
 exclude:
   - _bindings.yaml
   - _content
+
+plugins:
+  - jekyll-relative-links
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default

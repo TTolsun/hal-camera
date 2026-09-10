@@ -100,7 +100,7 @@ function evidenceLine(parts) {
 function acceptedNote(key) {
   const rec = evidence[key];
   if (!rec?.accepted) return null;
-  return `검토 ${rec.accepted.at}${rec.accepted.commit ? ` @ ${code(rec.accepted.commit)}` : ""}`;
+  return `검토 ${rec.accepted.at}${rec.accepted.commit ? ` @ ${code(rec.accepted.commit)}` : ""}${rec.accepted.reviewer ? ` · ${rec.accepted.reviewer}` : ""}`;
 }
 
 function observedState(key) {

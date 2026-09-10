@@ -40,6 +40,7 @@ sources:
     kind: omm
     evidence:
       - app/src/main/java/dev/halcamera/**/*.kt
+      - app/src/main/AndroidManifest.xml
       - app/build.gradle.kts
       - settings.gradle.kts
 
@@ -50,10 +51,14 @@ sources:
       - app/src/main/java/dev/halcamera/benchmark/**/*.kt
       - app/src/main/java/dev/halcamera/check/**/*.kt
       - app/src/main/java/dev/halcamera/report/**/*.kt
+      - app/src/main/java/dev/halcamera/diagnosis/**/*.kt
 
   state-transitions:
     kind: omm
     evidence:
+      - app/src/main/java/dev/halcamera/benchmark/**/*.kt
+      - app/src/main/java/dev/halcamera/telemetry/**/*.kt
+      - app/src/main/java/dev/halcamera/diagnosis/**/*.kt
       - app/src/main/java/dev/halcamera/camera/**/*.kt
       - app/src/main/java/dev/halcamera/check/**/*.kt
 
@@ -111,7 +116,7 @@ pages:
             - 결과가 예상과 다를 때 어느 단계의 출력을 먼저 확인해야 하는가
           must_link: [FlightRecorder, MetricExtractor, CheckEvaluator]
           forbid:
-            - 아직 연결되지 않은 벤치마크 갈래(M2 러너)를 동작하는 것처럼 쓰지 않습니다.
+            - 벤치마크 측정·저장 경로와 아직 Activity에 연결되지 않은 비교 UI를 구분합니다.
 
       - id: runtime-diagram
         kind: omm

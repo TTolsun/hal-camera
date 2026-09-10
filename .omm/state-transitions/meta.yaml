@@ -1,12 +1,22 @@
 created: 2026-09-09T16:22:59.348Z
-updated: 2026-09-09T16:43:19.081Z
-update_count: 13
-last_field: note
-git_commit: 1e3d2a0
-git_branch: main
+updated: 2026-09-10T17:18:20.626Z
+update_count: 15
+last_field: context
+git_commit: 8a8701e
+git_branch: codex/pr27-doc-review
 children:
   - check-sequence
   - engine-lifecycle
   - incident-window
   - metric-verdict
   - validity-gate
+prev_diagram: |
+  graph LR
+      auto["AutoCheckRunner: 엔드포인트 순회"] --> engine["CameraEngine: open / close"]
+      benchmark["BenchmarkRunner: launch 반복 + 관측 세션"] --> engine
+      engine --> signals["세션별 OPENED / CONFIGURED / FIRST_FRAME / CLOSED"]
+      signals --> auto
+      signals --> benchmark
+      benchmark --> result["Result + 실패 / abort"]
+      result --> validity["RunAssembler / RunValidityEvaluator"]
+      incident["FlightRecorder incident 창"] -. "독립 타임라인" .-> engine

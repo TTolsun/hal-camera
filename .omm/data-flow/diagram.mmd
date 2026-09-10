@@ -1,31 +1,21 @@
 graph LR
-    framework-callbacks["Camera2 callbacks\nCaptureCallback, ImageReader, CameraState"]
-    event-record["Event records\ntelemetry/Telemetry.kt, FlightRecorder.kt"]
-    runner-marks["Step marks and timings\ncheck/AutoCheckRunner.kt"]
-    frame-observations["FrameObservation per result\ndiagnosis/MetricExtractor.kt"]
-    metric-samples["MetricSample per metric id\ndiagnosis/MetricExtractor.kt, check/AutoCheckRunner.kt"]
-    judged-states["MetricState, Diagnosis, Health\ndiagnosis/ThresholdEngine.kt, DiagnosisRules.kt, HealthComposer.kt"]
-    benchmark-metrics["BenchmarkMetric statistics\nbenchmark/BenchmarkEvaluator.kt"]
-    run-json["Run JSON on disk\nfiles/checks/, files/benchmarks/, files/incidents/"]
-    rendered-screens["Rendered result\ncheck/CheckResult.kt, home/RunSummary.kt"]
-
-    framework-callbacks -->|"one Event per callback, tagged with session and elapsedRealtimeNanos"| event-record
-    framework-callbacks -->|"driver reports OPENED, CONFIGURED, FIRST_FRAME, STILL_RECEIVED, CLOSED"| runner-marks
-    event-record -->|"join capture_started, request_observed and image_available by frame and sensor timestamp"| frame-observations
-    frame-observations -->|"aggregate the steady window into H.1 to H.8"| metric-samples
-    event-record -->|"count capture_failed and buffer_lost for H.9"| metric-samples
-    runner-marks -->|"subtract mark pairs into 1.x and 2.x latencies"| metric-samples
-    metric-samples -->|"judge absolutely and relatively against ThresholdTable and the baseline"| judged-states
-    frame-observations -->|"same percentiles, no judgement, statistics only"| benchmark-metrics
-    runner-marks -->|"LaunchCycle and StillSample, supplied by the missing M2 runner"| benchmark-metrics
-    judged-states -->|"HealthReport writes schema 2"| run-json
-    benchmark-metrics -->|"BenchmarkReport writes schema 3"| run-json
-    event-record -->|"IncidentExporter writes events.jsonl into the incident ZIP"| run-json
-    run-json -->|"read back on resume, never recomputed"| rendered-screens
-
-    classDef store fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
-    classDef external fill:#585b70,stroke:#585b70,color:#cdd6f4
-    classDef concern fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e
-    class run-json store
-    class framework-callbacks external
-    class benchmark-metrics concern
+    framework-callbacks["Camera2 콜백\nplatform API"]
+    event-record["Telemetry / FlightRecorder\ntelemetry/Telemetry.kt, FlightRecorder.kt"]
+    runner-marks["AutoCheckRunner / BenchmarkRunner\ncheck/AutoCheckRunner.kt, benchmark/BenchmarkRunner.kt"]
+    frame-observations["FrameObservation\ndiagnosis/MetricExtractor.kt"]
+    metric-samples["Auto Check 표본\ncheck/CheckEvaluator.kt"]
+    judged-states["상태·진단·건강 판정\ndiagnosis/ThresholdEngine.kt, DiagnosisRules.kt, HealthComposer.kt"]
+    benchmark-metrics["RunAssembler / BenchmarkEvaluator\nbenchmark/RunAssembler.kt, BenchmarkEvaluator.kt"]
+    run-json["실행 파일\nreport/HealthReport.kt, benchmark/BenchmarkReport.kt"]
+    rendered-screens["저장 결과 및 실행 요약\ncheck/CheckActivity.kt, benchmark/BenchmarkActivity.kt"]
+    framework-callbacks -->|"세션·프레임·센서 시각을 포함한 이벤트"| event-record
+    framework-callbacks -->|"Driver의 단계 완료 신호"| runner-marks
+    event-record -->|"관측 창 결과를 start/request/image에 연결"| frame-observations
+    frame-observations -->|"Auto Check 워밍업 제외 후 H.1~H.8"| metric-samples
+    runner-marks -->|"EndpointResult의 1.x·2.x 지연"| metric-samples
+    metric-samples -->|"임계값과 baseline 적용"| judged-states
+    runner-marks -->|"BenchmarkRunner.Result의 cycles·stills"| benchmark-metrics
+    event-record -->|"RunAssembler의 관측 세션·H.9 입력"| benchmark-metrics
+    judged-states -->|"schema 2 저장"| run-json
+    benchmark-metrics -->|"유효성·측정값을 schema 3 저장"| run-json
+    run-json -->|"측정값 읽기; 비교 UI 연결은 별도 작업"| rendered-screens

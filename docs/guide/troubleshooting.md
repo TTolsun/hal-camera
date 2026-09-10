@@ -104,7 +104,7 @@ incident 번들에는 이벤트와 메타데이터만 담기고 이미지 픽셀
 
 다음은 앱이 위 사실에서 계산한 값입니다. 여기서 이상이 보이면 먼저 앱의 규칙을 의심합니다.
 
-- `intervalMs`, `resultFps`, `observedResultGap` — 결과 콜백 사이의 간격입니다. `FrameStats`의 주석대로 이것은 관측된 결과 간격이지 HAL의 드롭 횟수도 프리뷰 렌더링 드롭 횟수도 아닙니다.
+- `intervalMs`, `resultFps`, `observedResultGap` — 센서 타임스탬프 차이로 계산한 간격·FPS와 결과 프레임 번호 차이로 계산한 gap입니다. `FrameStats`의 주석대로 이것은 관측된 결과 간격이지 HAL의 드롭 횟수도 프리뷰 렌더링 드롭 횟수도 아닙니다.
 - H.x 지표와 상태 판정 전부.
 
 ### 앱 규칙이 만들 수 있는 증상
@@ -113,16 +113,16 @@ incident 번들에는 이벤트와 메타데이터만 담기고 이미지 픽셀
 | --- | --- | --- |
 | 이미 닫힌 세션의 콜백은 기록하지 않음 | `Telemetry.callback`의 `alive()` 검사 | 닫는 도중의 마지막 프레임들이 이벤트에 없음 |
 | 지표는 같은 세션 ID의 이벤트만 사용 | `CheckEvaluator.evaluate`가 `result.session`을 넘김 | 다른 세션의 콜백이 섞이지 않는 대신, 세션 ID가 어긋나면 지표가 비어 있음 |
-| 스트림 시작 직후 5프레임 제외 | `CheckEvaluator.WARMUP_FRAMES` | 첫 프레임들의 긴 간격이 H.x에 나타나지 않음 |
-| 관측 프레임 15개 미만이면 값 null | `MetricExtractor(minSamples = 15)` | 값 대신 `INSUFFICIENT_SAMPLES`가 표시됨. 통계 자체는 남아 있음 |
+| Auto Check 관측 창의 첫 5프레임을 H.1~H.5 통계에서 제외 | `CheckEvaluator.WARMUP_FRAMES` | 첫 프레임들의 긴 간격이 H.1~H.5에 나타나지 않음. 3A 수렴은 제외 전 프레임 사용 |
+| 워밍업 제외 후 steady 프레임 15개 미만이면 값 null | `MetricExtractor(minSamples = 15)` | 값 대신 `INSUFFICIENT_SAMPLES`가 표시됨. 통계 자체는 남아 있음 |
 | 링 버퍼 18,000개 상한을 넘으면 가장 오래된 이벤트 폐기 | `FlightRecorder.store` | 창의 앞부분이 잘림. 잘렸다는 사실은 `capacityEvictions`로만 알 수 있고, 잘린 창에서 계산된 지표에 별도 표시는 없음 |
 | 보존 기간 30초 | `FlightRecorder(retentionNs)` | 30초보다 오래된 이벤트는 `snapshot()`에 없음 |
 | 라이브 tap은 기록 스레드에서 동기 실행 | `FlightRecorder.listener` | tap에 무거운 작업을 넣으면 기록 경로가 느려지고 측정 대상인 간격 자체가 왜곡됨 |
 
 ### 계층을 좁히는 순서
 
-1. **앱 규칙인지 확인합니다.** 값이 null이면 `unknownReason`을 봅니다. `capacityEvictions`가 0보다 크면 창이 잘린 것입니다. 관측 창 범위와 세션 ID가 기대와 맞는지 확인합니다. 여기서 설명되면 앱 문제입니다.
-2. **이벤트의 원시값을 봅니다.** `capture_failed`의 `reason`, `buffer_lost`의 발생 시점, `capture_result`의 `frameDurationNs`와 센서 타임스탬프 간격을 직접 봅니다. 이 값들은 프레임워크가 준 것이므로, 여기서 이상이 보이면 앱 바깥입니다.
+1. **앱 규칙인지 확인합니다.** 값이 null이면 `unknownReason`을 봅니다. `capacityEvictions`가 0보다 크면 창이 잘린 것입니다. 관측 창 범위와 세션 ID가 기대와 맞는지 확인합니다. 의도된 규칙에 따른 결과인지 앱 구현의 오류인지 구분합니다.
+2. **이벤트의 원시값을 봅니다.** `capture_failed`의 `reason`, `buffer_lost`의 발생 시점, `capture_result`의 `frameDurationNs`와 센서 타임스탬프 간격을 직접 봅니다. 이 값들은 프레임워크가 준 것이므로, 원시값 이상만으로 HAL 문제를 확정하지 말고 요청 설정·콜백 처리와 시스템 로그를 함께 확인합니다.
 3. **센서 시계 도메인을 확인합니다.** 센서 타임스탬프는 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 `atNs`와 비교할 수 있습니다. 그렇지 않은 기기에서 두 값을 빼면 의미 없는 차이가 나옵니다.
 4. **프레임워크와 HAL을 나눕니다.** 앱의 관측만으로는 이 둘을 확정할 수 없습니다. 이 단계부터는 시스템 트레이스와 카메라 서비스 로그가 필요하며, 팀에서 쓰는 수집 절차는 확인 필요입니다.
 
@@ -136,17 +136,16 @@ incident 번들에는 이벤트와 메타데이터만 담기고 이미지 픽셀
 
 **확인 필요** — 스캔 시점에 확신할 수 없었거나 현재 알려진 미완 사항입니다.
 
-- 이 흐름의 벤치마크 갈래는 아직 연결되어 있지 않습니다. `BenchmarkEvaluator`는 `LaunchCycle`과 `StillSample` 목록을 기대하는데 이것을 만드는 곳이 없습니다. M2 러너가 빠진 단계입니다. 지금 디스크에 도달하는 경로는 v0.2 하나뿐입니다.
-- 평가 단계 두 곳이 같은 `FrameObservation`을 서로 다른 코드로 읽습니다. `MetricExtractor.observe`가 v0.2용으로 H.1부터 H.8까지 계산하고, `BenchmarkEvaluator.windowed`가 `Observation.steadyFrames`에서 H.1부터 H.4까지와 H.10을 다시 계산합니다. 둘 다 같은 `percentile`을 호출하므로 현재는 결과가 일치하지만, 중복은 실재하며 벤치마크 경로 쪽만 별도로 테스트되고 있습니다.
-- `FlightRecorder`의 개수 상한을 넘으면 가장 오래된 이벤트가 조용히 버려집니다. 버려진 개수는 `capacityEvictions`로 export되므로 번들이 잘렸다는 사실은 알 수 있습니다. 다만 시작 부분을 잃은 창에서 계산된 지표에 별도 표시가 붙지는 않습니다.
-- 라이브 tap(`FlightRecorder.listener`)은 기록 스레드에서 동기적으로 실행됩니다. 여기에 무거운 작업을 추가하면 기록 경로 자체가 느려지고, 결과적으로 측정 대상인 간격에도 영향을 줍니다.
+- 촬영 중 프리뷰 stall 2.7은 아직 NOT_RUN입니다.
+- MetricExtractor와 BenchmarkEvaluator가 일부 통계 계산을 나눠 수행하므로 워밍업과 표본 수 기준을 함께 검토해야 합니다.
+- FlightRecorder의 이벤트 상한을 넘으면 오래된 이벤트가 제거됩니다. incident의 capacityEvictions와 incidentTruncated를 확인해야 합니다.
+- FlightRecorder.listener는 기록 스레드에서 동기 실행되므로 무거운 처리는 측정 경로에 영향을 줍니다.
 
 **후속 작업**
 
-1. M2 `BenchmarkRunner`를 만들어 벤치마크 갈래에 입력원을 붙입니다. warm-reopen 반복마다 `LaunchCycle`을, 촬영마다 `StillSample`을 만들어야 하고, H.9를 위해 콜백 실패 횟수도 세야 합니다.
-2. `BenchmarkEvaluator`의 `2.7`(촬영 중 프리뷰 stall)에 무조건적인 `NOT_RUN` 대신 실제 계산을 넣습니다.
-3. `BenchmarkEvaluator.windowed`가 H.1부터 H.4까지를 계속 다시 계산할지, 아니면 `MetricExtractor.Observation.samples`를 직접 사용할지 정합니다. 두 경로가 어긋나지 않게 하기 위해서입니다.
-4. `benchmark-metrics`와 `run-json` 사이에 M4 regression detector를 넣습니다. `RegressionRules`를 적용해서 `baseline_value`, `delta_pct`, `regression`을 채우고 `baseline_ref`와 `reference_ref`를 설정합니다.
+1. 비교 UI를 연결할 때 저장된 측정값과 다시 계산하는 비교 결과를 분리해 표시합니다.
+2. 2.7을 위한 촬영 구간 프레임 관측을 구현합니다.
+3. 원시 이벤트와 표본 부족·조건 불일치 상태를 함께 점검하는 기기 검증 절차를 기록합니다.
 
 <sub>근거: `.omm/data-flow/concern.md`, `.omm/data-flow/todo.md` · 근거 수준: 설계 의도 / 추정</sub>
 
