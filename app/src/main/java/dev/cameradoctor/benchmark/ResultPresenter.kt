@@ -1,18 +1,23 @@
 package dev.cameradoctor.benchmark
 
+import dev.cameradoctor.diagnosis.UnknownReason
 import dev.cameradoctor.diagnosis.jsonName
 import java.util.Locale
 
 /** Which run the delta column is measured against (docs/PLAN-BenchMarker-v0.3.md 7.1, 8.4). */
 enum class ComparedTo { BASELINE, PREVIOUS, NONE }
 
-/** One metric line of the result table. Empty strings are columns this metric does not have. */
+/**
+ * One metric line of the result table. Empty strings are columns this metric does not have.
+ * [note] says why a metric has no verdict, so an UNKNOWN row is never indistinguishable from a stable one.
+ */
 data class ResultRow(
     val label: String,
     val value: String,
     val stat: String,
     val delta: String,
-    val marker: String
+    val marker: String,
+    val note: String = ""
 )
 
 data class ResultSection(
@@ -33,6 +38,8 @@ data class ResultView(
     val eligibilityLine: String,
     val comparisonLine: String,
     val identityLine: String?,
+    /** Condition differences between the two runs (7.5). Kept apart from the run's own eligibility line. */
+    val conditionLine: String?,
     val hint: String?,
     val sections: List<ResultSection>,
     val threeALine: String?,
@@ -47,6 +54,7 @@ data class ResultView(
         appendLine()
         appendLine(comparisonLine)
         identityLine?.let { appendLine("                $it") }
+        conditionLine?.let { appendLine("                $it") }
         hint?.let { appendLine(it) }
         appendLine()
         sections.forEach { section ->
@@ -89,6 +97,7 @@ object ResultPresenter {
             eligibilityLine = eligibilityLine(run),
             comparisonLine = comparisonLine(run, comparison, comparedTo),
             identityLine = comparison?.identity?.let(::identityLine),
+            conditionLine = comparison?.let(::conditionLine),
             hint = if (comparedTo == ComparedTo.BASELINE) null else "[ SET AS BASELINE ]을 누르면 이 run이 기준이 됩니다",
             sections = sections,
             threeALine = threeALine(run),
@@ -123,9 +132,30 @@ object ResultPresenter {
 
     fun comparisonLine(run: BenchmarkRun, comparison: RunComparison?, comparedTo: ComparedTo): String = when {
         comparison == null || comparedTo == ComparedTo.NONE -> "baseline 없음 · 비교할 이전 run이 없습니다"
+        // No metric could be judged: saying "REGRESSED 없음" here would read as a clean result rather than as a
+        // comparison that never happened (PR #21 review).
+        comparison.judgedCount == 0 && comparedTo == ComparedTo.BASELINE ->
+            "판정 불가   baseline ${comparison.baseRunId} · 비교 조건을 만족하는 지표가 없습니다"
         comparedTo == ComparedTo.PREVIOUS -> "baseline 없음 · 이전 run ${comparison.baseRunId} 대비 표시"
         comparison.hasRegression -> "▲ ${comparison.regressedCount} REGRESSED   baseline ${comparison.baseRunId}"
         else -> "REGRESSED 없음   baseline ${comparison.baseRunId}"
+    }
+
+    /**
+     * 7.5 condition differences. These belong to the pair, not to either run, so they cannot appear in the
+     * eligibility line: two runs that are each perfectly eligible can still be incomparable, and a charging
+     * difference keeps every verdict while being the only thing that explains a shifted number.
+     */
+    fun conditionLine(comparison: RunComparison): String? {
+        if (comparison.conditionMismatches.isEmpty()) return null
+        return "비교 시점 조건 차이: " + comparison.conditionMismatches.joinToString(" · ", transform = ::conditionText)
+    }
+
+    fun conditionText(m: ConditionMismatch): String = when (m) {
+        ConditionMismatch.THERMAL_MAX_DIFFERS -> "thermal 최고값 2단계 이상 차이"
+        ConditionMismatch.POWER_SAVE_DIFFERS -> "절전 모드 다름"
+        ConditionMismatch.CHARGING_DIFFERS -> "충전 상태 다름"
+        ConditionMismatch.EXPOSURE_DIFFERS -> "노출 부하 4배 이상 차이 (3A 제외)"
     }
 
     /** 7.4: four axes summarised in one line; the subject axis is dropped when neither side is labelled. */
@@ -170,8 +200,28 @@ object ResultPresenter {
             stat = statHeader(metric)?.let { format(metric, statValue(metric)) }.orEmpty(),
             delta = delta(metric, comparison),
             // A reference delta carries no state, so it never gets the regression marker (8.4).
-            marker = if (comparedTo == ComparedTo.BASELINE) marker(comparison?.state) else ""
+            marker = if (comparedTo == ComparedTo.BASELINE) marker(comparison?.state) else "",
+            note = noteFor(comparison, comparedTo)
         )
+    }
+
+    /**
+     * Why this row has no verdict. Without it an UNKNOWN row and a STABLE row look the same, and the reason a
+     * comparison did not happen is exactly what tells the developer whether to re-run or to look at the code.
+     */
+    fun noteFor(comparison: MetricComparison?, comparedTo: ComparedTo): String {
+        if (comparison == null || comparedTo == ComparedTo.NONE) return ""
+        if (comparison.state != RegressionState.UNKNOWN) return ""
+        return when (comparison.unknownReason) {
+            UnknownReason.CONDITION_MISMATCH -> "조건 불일치"
+            UnknownReason.NOT_MEASURABLE -> "판정 불가"
+            UnknownReason.INSUFFICIENT_SAMPLES -> "표본 부족"
+            UnknownReason.NOT_RUN -> "미실행"
+            UnknownReason.NO_BASELINE -> "baseline 없음"
+            UnknownReason.UNSUPPORTED -> "미지원"
+            UnknownReason.CADENCE_CHANGED -> "cadence 변경"
+            null -> ""
+        }
     }
 
     /**
@@ -249,7 +299,7 @@ object ResultPresenter {
 
     fun rowLine(row: ResultRow): String =
         (pad("  " + row.label, LABEL) + right(row.value, VALUE) + right(row.stat, STAT) + right(row.delta, DELTA) +
-            (if (row.marker.isEmpty()) "" else "  " + row.marker)).trimEnd()
+            listOf(row.marker, row.note).filter { it.isNotEmpty() }.joinToString(" ", prefix = "  ")).trimEnd()
 
     private fun pad(s: String, width: Int) = if (s.length >= width) s else s + " ".repeat(width - s.length)
     private fun right(s: String, width: Int) = if (s.length >= width) s else " ".repeat(width - s.length) + s

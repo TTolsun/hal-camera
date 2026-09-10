@@ -50,6 +50,12 @@ data class RunComparison(
     /** The run-wide REGRESSION DETECTED banner (7.2). */
     val hasRegression: Boolean get() = regressedCount >= 1
 
+    /**
+     * How many metrics the rules could actually judge. Zero means the two runs were not comparable at all, which
+     * is a different statement from "nothing regressed" and has to be shown as one (PR #21 review).
+     */
+    val judgedCount: Int get() = metrics.count { it.state != RegressionState.UNKNOWN }
+
     fun metric(id: String): MetricComparison? = metrics.firstOrNull { it.metricId == id }
 
     companion object {

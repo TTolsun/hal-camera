@@ -150,6 +150,62 @@ class ResultPresenterTest {
         assertEquals("", v.sections.first().deltaHeader)
     }
 
+    // ---- a comparison that did not happen (PR #21 review) ----
+
+    @Test fun aComparisonWithNoJudgedMetricSaysSoInsteadOfReportingNoRegression() {
+        // The current run is eligible; the baseline became ineligible under a changed flag table.
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0)), flags = listOf(ValidityFlags.CADENCE_NOT_FIXED))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 221.0)))
+        val c = RegressionDetector.compare(base, current)
+        assertEquals(0, c.judgedCount)
+
+        val v = present(current, c, ComparedTo.BASELINE)
+        assertEquals("판정 불가   baseline 20260910-100000-000 · 비교 조건을 만족하는 지표가 없습니다", v.comparisonLine)
+        // The row keeps its delta but says why there is no verdict.
+        val row = v.sections.first { it.title == "CAPTURE" }.rows.first()
+        assertEquals("조건 불일치", row.note)
+        assertEquals("+35%", row.delta)
+        assertEquals("", row.marker)
+        assertTrue(v.render(), v.render().contains("조건 불일치"))
+    }
+
+    @Test fun onlyTheMetricsThatCouldNotBeJudgedCarryANote() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("1.1", 100.0), metric("1.2", null)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("1.1", 100.0), metric("1.2", 40.0)))
+        val rows = present(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+            .sections.first { it.title == "LAUNCH" }.rows
+        assertEquals("", rows.first { it.label == "Open" }.note)
+        assertEquals("미실행", rows.first { it.label == "Configure" }.note)
+    }
+
+    // ---- pairwise condition banner (7.5) ----
+
+    @Test fun aChargingDifferenceIsShownEvenThoughEveryVerdictStands() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0)), charging = true, flags = listOf(ValidityFlags.CHARGING))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 221.0)), charging = false)
+        val c = RegressionDetector.compare(base, current)
+        val v = present(current, c, ComparedTo.BASELINE)
+        // The current run alone is fully eligible, so its own headline says nothing about charging.
+        assertEquals("비교 가능 · 점수 가능 · thermal 0 → 1 → 1", v.eligibilityLine)
+        assertEquals("비교 시점 조건 차이: 충전 상태 다름", v.conditionLine)
+        assertEquals("▲", v.sections.first { it.title == "CAPTURE" }.rows.first().marker)
+        assertTrue(v.render(), v.render().contains("비교 시점 조건 차이: 충전 상태 다름"))
+    }
+
+    @Test fun severalConditionDifferencesAreListedTogether() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("H.7", 400.0)), thermalMax = 0, exposureLoad = 1.0e6)
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.7", 400.0)), thermalMax = 3, exposureLoad = 5.0e6,
+            flags = listOf(ValidityFlags.THERMAL_HIGH))
+        val v = present(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+        assertEquals("비교 시점 조건 차이: thermal 최고값 2단계 이상 차이 · 노출 부하 4배 이상 차이 (3A 제외)", v.conditionLine)
+    }
+
+    @Test fun withoutAConditionDifferenceThereIsNoBanner() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 170.0)))
+        assertNull(present(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE).conditionLine)
+    }
+
     // ---- identity summary (7.4) ----
 
     @Test fun theIdentityLineSummarisesFourAxes() {
