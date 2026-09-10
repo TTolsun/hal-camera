@@ -229,17 +229,30 @@ class MainActivity : ComponentActivity() {
         val controls=row(); topBar.addView(controls)
         engineX=button("CameraX") { chooseEngine("CameraX") }
         engine2=button("Camera2") { chooseEngine("Camera2") }
-        controls.addView(engineX,LinearLayout.LayoutParams(dp(88),dp(38)))
-        controls.addView(engine2,LinearLayout.LayoutParams(dp(88),dp(38)).apply { marginStart=dp(6) })
+        // The engine pills give up a little width to the camera picker beside them, which has to hold a whole
+        // label while these two hold one word each.
+        controls.addView(engineX,LinearLayout.LayoutParams(dp(76),dp(38)))
+        controls.addView(engine2,LinearLayout.LayoutParams(dp(76),dp(38)).apply { marginStart=dp(6) })
         val ids=try { manager.cameraIdList.toList().sortedBy { manager.getCameraCharacteristics(it)[CameraCharacteristics.LENS_FACING] != CameraCharacteristics.LENS_FACING_BACK } } catch (_:Exception) { emptyList() }
         if (cameraId !in ids) cameraId=ids.firstOrNull().orEmpty()
-        val spinner=Spinner(this).apply { background=rounded(glass); setPadding(dp(10),0,dp(10),0) }
+        val spinner=Spinner(this).apply { background=rounded(glass); setPadding(dp(8),0,dp(8),0) }
+        // "Cam" in front of every entry cost width that the id and the facing both need, and said nothing: this
+        // is the camera row.
         val entries=ids.map { id ->
             val facing=manager.getCameraCharacteristics(id)[CameraCharacteristics.LENS_FACING]
-            "Cam $id · ${when(facing) { CameraCharacteristics.LENS_FACING_BACK -> "Back"; CameraCharacteristics.LENS_FACING_FRONT -> "Front"; else -> "Ext" }}"
+            "$id · ${when(facing) { CameraCharacteristics.LENS_FACING_BACK -> "Back"; CameraCharacteristics.LENS_FACING_FRONT -> "Front"; else -> "Ext" }}"
         }
+        // The collapsed view is built here rather than taken from a platform layout. Both stock spinner layouts
+        // carry a minimum height of their own (listPreferredItemHeightSmall, 48dp), and inside this 38dp pill the
+        // label was laid out where the pill could not draw it: the picker looked empty while the dropdown listed
+        // all four cameras. The dropdown keeps the platform layout, where there is room for it.
         spinner.adapter=object:ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,entries) {
-            override fun getView(position:Int,convertView:View?,parent:ViewGroup):View=(super.getView(position,convertView,parent) as TextView).apply { setTextColor(Color.WHITE); textSize=13f }
+            override fun getView(position:Int,convertView:View?,parent:ViewGroup):View =
+                (convertView as? TextView ?: TextView(this@MainActivity)).apply {
+                    text=getItem(position); setTextColor(Color.WHITE); textSize=13f
+                    gravity=Gravity.CENTER_VERTICAL; maxLines=1; ellipsize=android.text.TextUtils.TruncateAt.END
+                    minimumHeight=0; minHeight=0; setPadding(0,0,0,0)
+                }
         }
         spinner.setSelection(ids.indexOf(cameraId).coerceAtLeast(0))
         spinner.onItemSelectedListener=object:AdapterView.OnItemSelectedListener {

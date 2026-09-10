@@ -73,24 +73,30 @@ class LiveReadout(
     }
 
     companion object {
-        /** The panel's raw table. One row per number, aligned, and a dash wherever a value cannot be read yet. */
+        /**
+         * The panel's raw table. One row per number, aligned, and a dash wherever a value cannot be read yet.
+         *
+         * The labels are English because the block is drawn in a monospace face, where a Hangul glyph occupies
+         * two cells while [String.padEnd] counts it as one: Korean labels put every value in a different column.
+         * The 3A states get their own indented rows rather than one long line, so no row has to wrap.
+         */
         fun panelText(r: LiveReading): String {
             fun ms(v: Double?) = v?.let { String.format(Locale.US, "%.1f ms", it) } ?: "—"
-            val threeA = "AE ${dev.halcamera.telemetry.stateName("AE", r.ae)} · " +
-                "AF ${dev.halcamera.telemetry.stateName("AF", r.af)} · " +
-                "AWB ${dev.halcamera.telemetry.stateName("AWB", r.awb)}"
+            fun row(label: String, value: String) = label.padEnd(LABEL_WIDTH) + value
             return listOf(
-                "interval" to ms(r.intervalMs),
-                "interval 기준 p50" to ms(r.intervalRefMs),
-                "interval 최근 최대" to ms(r.maxIntervalMs),
-                "frame duration" to ms(r.frameDurationMs),
-                "partial" to ms(r.partialMs),
-                "partial 기준 p50" to ms(r.baselinePartialMs),
-                "buffer" to ms(r.bufferMs),
-                "stall (10s)" to "${r.stalls}회",
-                "기준 프레임 수" to "${r.baselineFrames}개",
-                "3A" to threeA
-            ).joinToString("\n") { (label, value) -> label.padEnd(LABEL_WIDTH) + value }
+                row("interval", ms(r.intervalMs)),
+                row("interval ref p50", ms(r.intervalRefMs)),
+                row("interval max", ms(r.maxIntervalMs)),
+                row("frame duration", ms(r.frameDurationMs)),
+                row("partial", ms(r.partialMs)),
+                row("partial ref p50", ms(r.baselinePartialMs)),
+                row("buffer", ms(r.bufferMs)),
+                row("stalls (10s)", r.stalls.toString()),
+                row("ref frames", r.baselineFrames.toString()),
+                row("  AE", dev.halcamera.telemetry.stateName("AE", r.ae)),
+                row("  AF", dev.halcamera.telemetry.stateName("AF", r.af)),
+                row("  AWB", dev.halcamera.telemetry.stateName("AWB", r.awb))
+            ).joinToString("\n")
         }
 
         /** The one-line strip caption under the sparkline. */
@@ -99,6 +105,6 @@ class LiveReadout(
             return "#${frame ?: "—"}  START +0  PARTIAL ${short(partialMs)}  BUFFER ${short(bufferMs)} ms"
         }
 
-        private const val LABEL_WIDTH = 20
+        internal const val LABEL_WIDTH = 18
     }
 }
