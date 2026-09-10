@@ -17,11 +17,11 @@ nav_order: 4
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 검증 정보 없음 | — |
-| 구조 원본 `overall-architecture` | 검증 정보 없음 | — |
-| 구조 원본 `state-transitions` | 검증 정보 없음 | — |
-| 원고 `overview` | 검증 정보 없음 | — |
-| 원고 `runtime-flow` | 검증 정보 없음 | — |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-10 @ `037db0d` · Codex |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-10 @ `037db0d` · Codex |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-10 @ `037db0d` · Codex |
+| 원고 `overview` | 최신 | 검토 2026-09-10 @ `037db0d` · Codex |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-10 @ `037db0d` · Codex |
 
 <!-- omm:end id=status -->
 
@@ -56,7 +56,7 @@ Camera2 엔진과 CameraX 엔진을 둘 다 유지하는 것은 2026-09-08의 �
 4. `check/CheckEvaluator.kt` — 러너 결과와 이벤트가 만나서 지표가 되는 지점입니다.
 5. `MainActivity.kt` — 위 요소들을 조립하는 곳입니다. 566줄이므로 마지막에 읽습니다.
 
-<sub>근거 파일: `app/build.gradle.kts`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt` · 설계 결정: `D-001`, `D-002` · 근거 수준: 코드 확인 · 검토 상태: 검증 정보 없음</sub>
+<sub>근거 파일: `app/build.gradle.kts`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt` · 설계 결정: `D-001`, `D-002` · 근거 수준: 코드 확인 · 검토 2026-09-10 @ `037db0d` · Codex</sub>
 
 <!-- omm:end id=overview -->
 
@@ -159,7 +159,7 @@ LIVE의 벤치마크 진입은 `MainActivity`에서 `BenchmarkActivity`를 엽�
 
 Auto Check와 달리 벤치마크의 워밍업 제외 수는 고정 5개가 아닙니다. `RunAssembler.observe()`가 관측 세션의 첫 결과부터 프레임을 모아 관측 시작 이전의 프레임 수를 계산하고, 이를 간격·버퍼 통계에서 제외합니다. 3A 수렴은 세션 첫 결과부터 계산합니다. `RegressionDetector`, `BaselineManager`, `ResultPresenter`는 별도의 비교·표시 로직이며 현재 `BenchmarkActivity.finishRun()`은 저장 경로와 표본 수·flag 요약을 표시합니다. 이 화면에서 비교 테이블을 구동하는 호출은 없습니다.
 
-<sub>근거 파일: `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt` · 근거 수준: 코드 확인 · 검토 상태: 검증 정보 없음</sub>
+<sub>근거 파일: `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt` · 근거 수준: 코드 확인 · 검토 2026-09-10 @ `037db0d` · Codex</sub>
 
 <!-- omm:end id=runtime-flow -->
 

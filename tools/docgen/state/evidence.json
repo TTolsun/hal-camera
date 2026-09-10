@@ -3,32 +3,74 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "unknown"
+        "state": "fresh"
+      },
+      "accepted": {
+        "codeHash": "6c784057678eeff1",
+        "modelHash": "27e811c42b7c748c",
+        "at": "2026-09-10",
+        "commit": "037db0d",
+        "reviewer": "Codex"
       }
     },
     "omm:data-flow": {
       "observed": {
-        "state": "unknown"
+        "state": "fresh"
+      },
+      "accepted": {
+        "codeHash": "fa2cda9ebce4e7d6",
+        "modelHash": "f5dbf6052c0df9d2",
+        "at": "2026-09-10",
+        "commit": "037db0d",
+        "reviewer": "Codex"
       }
     },
     "omm:state-transitions": {
       "observed": {
-        "state": "unknown"
+        "state": "fresh"
+      },
+      "accepted": {
+        "codeHash": "4492b5dd44a2267e",
+        "modelHash": "30322ddfa1385115",
+        "at": "2026-09-10",
+        "commit": "037db0d",
+        "reviewer": "Codex"
       }
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "unknown"
+        "state": "fresh"
+      },
+      "accepted": {
+        "codeHash": "6c784057678eeff1",
+        "modelHash": "cac18c0f17684e1a",
+        "at": "2026-09-10",
+        "commit": "037db0d",
+        "reviewer": "Codex"
       }
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "unknown"
+        "state": "fresh"
+      },
+      "accepted": {
+        "codeHash": "a8bc364d2940cf8c",
+        "modelHash": "3718e491acb1ff97",
+        "at": "2026-09-10",
+        "commit": "037db0d",
+        "reviewer": "Codex"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "unknown"
+        "state": "fresh"
+      },
+      "accepted": {
+        "codeHash": "b29ba9bb657ed6a0",
+        "modelHash": "595e6e8a85be29f8",
+        "at": "2026-09-10",
+        "commit": "037db0d",
+        "reviewer": "Codex"
       }
     }
   }
