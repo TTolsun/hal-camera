@@ -4,7 +4,8 @@
     <uses-feature android:name="android.hardware.camera.any" android:required="true" />
     <application android:theme="@style/AppTheme" android:label="HAL Camera"
         android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="false" android:supportsRtl="true">
-        <activity android:name=".home.HomeActivity" android:exported="true" android:theme="@style/HomeTheme">
+        <!-- The launcher label is shorter than the application label so it fits under the icon. -->
+        <activity android:name=".home.HomeActivity" android:exported="true" android:label="HAL CAM" android:theme="@style/HomeTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
