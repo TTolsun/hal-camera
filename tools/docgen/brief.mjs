@@ -7,7 +7,7 @@
 //
 // 사용법
 //   node brief.mjs <page> <block-id>            프롬프트를 stdout 으로 출력합니다.
-//   claude -p "$(node brief.mjs architecture.md overview)" > docs/guide/_content/architecture/overview.md
+//   node sync.mjs --write-only  # 로컬 Qwen으로 낡은 원고를 갱신합니다.
 //
 // 집필 LLM 이 쓸 수 있는 곳은 _content/ 아래의 해당 파일 하나뿐입니다.
 import fs from "node:fs";

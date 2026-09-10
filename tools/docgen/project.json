@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "sourceRoot": ".",
+  "bindings": "docs/guide/_bindings.yaml",
+  "stateDir": "tools/docgen/state",
+  "styleDir": "tools/docgen/style",
+  "factsAdapter": "tools/docgen/extract-project.mjs",
+  "factsRenderer": "tools/docgen/render-facts.mjs",
+  "sourceInputs": ["app/build.gradle.kts", "gradle/wrapper/*.properties", "settings.gradle.kts"],
+  "agent": {"kind": "ollama", "model": "qwen3.5:4b", "baseUrl": "http://127.0.0.1:11434"},
+  "changes": {"mode": "working-tree"},
+  "jira": {"enabled": false},
+  "confluence": {"enabled": false},
+  "design": {"preset": "slack", "reference": "DESIGN.md"}
+}

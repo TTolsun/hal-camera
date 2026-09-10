@@ -71,7 +71,7 @@ nav_order: 4
 - 근거 파일: `app/src/main/java/dev/halcamera/diagnosis/Model.kt`, `app/build.gradle.kts`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`
 - 설계 결정: `D-001`, `D-002`
 - 근거 수준: 코드 확인
-- 검토 2026-09-10 @ `4e9e8c1` · Codex
+- 검토 2026-09-10 @ `5474f70` · Codex
 
 </details>
 
@@ -152,7 +152,7 @@ graph LR
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-10 @ `4e9e8c1` · Codex
+- 검토 2026-09-10 @ `5474f70` · Codex
 
 </details>
 
@@ -244,7 +244,7 @@ LIVE에서 전달한 카메라 ID와 엔진 이름은 시작 카드에 사용합
 
 - 근거 파일: `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`, `app/src/main/java/dev/halcamera/benchmark/ResultPresenter.kt`, `app/src/main/java/dev/halcamera/benchmark/ComparePresenter.kt`, `app/src/main/java/dev/halcamera/benchmark/BaselineManager.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-10 @ `4e9e8c1` · Codex
+- 검토 2026-09-10 @ `5474f70` · Codex
 
 </details>
 
@@ -358,7 +358,7 @@ graph LR
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt`, `app/src/main/java/dev/halcamera/check/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/diagnosis/ThresholdTable.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-10 @ `4e9e8c1` · Codex
+- 검토 2026-09-10 @ `5474f70` · Codex
 
 </details>
 
@@ -413,13 +413,13 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-10 @ `4373a38` · Codex |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-10 @ `4373a38` · Codex |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-10 @ `4373a38` · Codex |
-| 원고 `overview` | 최신 | 검토 2026-09-10 @ `4e9e8c1` · Codex |
-| 원고 `module-roles` | 최신 | 검토 2026-09-10 @ `4e9e8c1` · Codex |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-10 @ `4e9e8c1` · Codex |
-| 원고 `constraints` | 최신 | 검토 2026-09-10 @ `4e9e8c1` · Codex |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
+| 원고 `overview` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
+| 원고 `module-roles` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
+| 원고 `constraints` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
 
 <!-- omm:end id=status -->
 

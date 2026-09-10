@@ -109,7 +109,7 @@ H.x 지표와 상태 판정도 앱의 계산 결과입니다. 이 값이 예상�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-10 @ `4e9e8c1` · Codex
+- 검토 2026-09-10 @ `5474f70` · Codex
 
 </details>
 
@@ -187,9 +187,9 @@ H.x 지표와 상태 판정도 앱의 계산 결과입니다. 이 값이 예상�
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-10 @ `4373a38` · Codex |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-10 @ `4373a38` · Codex |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-10 @ `4e9e8c1` · Codex |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
 
 <!-- omm:end id=status -->
 

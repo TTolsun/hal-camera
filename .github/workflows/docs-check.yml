@@ -5,7 +5,7 @@
 #   생성 일치:   .omm/ 과 바인딩에서 만든 결과가 docs/guide 와 같은가        (generate --check)
 # 추출기와 검증기가 쓰는 state/ 파일이 커밋된 것과 다르면 그것도 실패입니다.
 #
-# 생성기는 외부 의존성이 없으므로 npm install 이 필요 없습니다.
+# 생성기에는 외부 의존성이 없습니다. 복구 검사는 고정된 OMM CLI를 사용합니다.
 name: docs-check
 
 on:
@@ -34,6 +34,10 @@ jobs:
           node-version: 24
       - name: 파이프라인 회귀 검사
         run: node --test tools/docgen/regression.test.mjs
+      - name: 동기화 검사 의존성 설치
+        run: npm ci --prefix tools/docgen --ignore-scripts
+      - name: 동기화 실패 복구 검사 (모델 호출 없음)
+        run: node --test tools/docgen/sync.test.mjs
       - name: 사실 추출
         run: node tools/docgen/extract.mjs
       - name: 원본 최신성 검사
