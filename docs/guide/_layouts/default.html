@@ -20,6 +20,7 @@
     .diagram-canvas svg{display:block;flex:none;max-width:none!important;background:#fff}
     @media(max-width:600px){.diagram-toolbar h2{width:100%}.diagram-toolbar{gap:6px;padding:8px}.diagram-toolbar button{padding:6px 8px}}
   </style>
+  <link rel="stylesheet" href="{{ '/assets/docflow-design.css' | relative_url }}">
 </head>
 <body>
   <nav aria-label="문서 메뉴">
@@ -44,6 +45,9 @@
     </div>
   </dialog>
   <script type="module">
+    document.querySelectorAll('nav a').forEach(link => {
+      if (new URL(link.href).pathname === location.pathname) link.setAttribute('aria-current', 'page');
+    });
     const dialog = document.querySelector('.diagram-dialog');
     const viewport = dialog.querySelector('.diagram-viewport');
     const canvas = dialog.querySelector('.diagram-canvas');

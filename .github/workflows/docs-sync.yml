@@ -28,7 +28,14 @@ jobs:
         env:
           DOCGEN_OLLAMA_URL: http://127.0.0.1:11434
           DOCGEN_QWEN_MODEL: qwen3.5:4b
-        run: node tools/docgen/sync.mjs
+          DOCFLOW_ENGINE_ROOT: ${{ vars.DOCFLOW_ENGINE_ROOT }}
+        shell: pwsh
+        run: |
+          if ($env:DOCFLOW_ENGINE_ROOT) {
+            node tools/docgen/common.mjs sync
+          } else {
+            node tools/docgen/sync.mjs
+          }
       - name: PR 생성
         uses: peter-evans/create-pull-request@v7
         with:
