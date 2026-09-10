@@ -82,7 +82,7 @@ function assemble(parsed, rendered) {
     } else {
       out.push(`<!-- omm:begin id=${seg.id} -->`);
       out.push("");
-      out.push(...rendered.get(seg.id).split("\n"));
+      out.push(...rendered.get(seg.id).split(/\r?\n/));
       out.push("");
       out.push(`<!-- omm:end id=${seg.id} -->`);
     }

@@ -127,7 +127,9 @@ export function ommFieldPath(source, field) {
 export function readOmmField(source, field) {
   const file = ommFieldPath(source, field);
   if (!fs.existsSync(file)) return null;
-  const text = fs.readFileSync(file, "utf8").trim();
+  // autocrlf 체크아웃에서는 파일이 CRLF 로 읽힙니다. 생성기가 줄을 다시 합칠 때
+  // \r 이 남지 않도록 여기서 LF 로 정규화합니다.
+  const text = fs.readFileSync(file, "utf8").replace(/\r\n/g, "\n").trim();
   return text.length ? text : null;
 }
 
