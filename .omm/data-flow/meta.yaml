@@ -1,0 +1,66 @@
+created: 2026-09-09T16:20:14.267Z
+updated: 2026-09-10T17:26:15.597Z
+update_count: 21
+last_field: todo
+git_commit: 1c965c0
+git_branch: codex/pr27-doc-review
+children:
+  - benchmark-metrics
+  - event-record
+  - frame-observations
+  - framework-callbacks
+  - judged-states
+  - metric-samples
+  - rendered-screens
+  - run-json
+  - runner-marks
+prev_diagram: "graph LR
+
+  \    framework-callbacks[\"Camera2 콜백\\nplatform API\"]
+
+  \    event-record[\"Telemetry / FlightRecorder\\ntelemetry/Telemetry.kt,
+  FlightRecorder.kt\"]
+
+  \    runner-marks[\"AutoCheckRunner /
+  BenchmarkRunner\\ncheck/AutoCheckRunner.kt, benchmark/BenchmarkRunner.kt\"]
+
+  \    frame-observations[\"FrameObservation\\ndiagnosis/MetricExtractor.kt\"]
+
+  \    metric-samples[\"Auto Check 표본\\ncheck/CheckEvaluator.kt\"]
+
+  \    judged-states[\"상태·진단·건강 판정\\ndiagnosis/ThresholdEngine.kt,
+  DiagnosisRules.kt, HealthComposer.kt\"]
+
+  \    benchmark-metrics[\"RunAssembler /
+  BenchmarkEvaluator\\nbenchmark/RunAssembler.kt, BenchmarkEvaluator.kt\"]
+
+  \    run-json[\"실행 파일\\nreport/HealthReport.kt,
+  benchmark/BenchmarkReport.kt\"]
+
+  \    rendered-screens[\"저장 결과 및 실행 요약\\ncheck/CheckActivity.kt,
+  benchmark/BenchmarkActivity.kt\"]
+
+  \    framework-callbacks -->|\"세션·프레임·센서 시각을 포함한 이벤트\"| event-record
+
+  \    framework-callbacks -->|\"Driver의 단계 완료 신호\"| runner-marks
+
+  \    event-record -->|\"관측 창 결과를 start/request/image에 연결\"| frame-observations
+
+  \    frame-observations -->|\"Auto Check 워밍업 제외 후 H.1~H.8\"| metric-samples
+
+  \    runner-marks -->|\"EndpointResult의 1.x·2.x 지연\"| metric-samples
+
+  \    metric-samples -->|\"임계값과 baseline 적용\"| judged-states
+
+  \    runner-marks -->|\"BenchmarkRunner.Result의 cycles·stills\"|
+  benchmark-metrics
+
+  \    event-record -->|\"RunAssembler의 관측 세션·H.9 입력\"| benchmark-metrics
+
+  \    judged-states -->|\"schema 2 저장\"| run-json
+
+  \    benchmark-metrics -->|\"유효성·측정값을 schema 3 저장\"| run-json
+
+  \    run-json -->|\"저장 결과와 기준 실행을 비교해 결과·비교 테이블 표시\"| rendered-screens\r
+
+  \r\n"

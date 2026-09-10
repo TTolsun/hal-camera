@@ -1,0 +1,9 @@
+created: 2026-09-09T16:31:29.963Z
+updated: 2026-09-09T16:31:29.964Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: metric-info
+children: []
+parentPath:
+  - benchmark

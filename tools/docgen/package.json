@@ -1,0 +1,14 @@
+{
+  "name": "halcamera-docgen",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "HALCamera 개발자 가이드 생성기. 외부 의존성이 없어 npm install 없이 실행됩니다.",
+  "scripts": {
+    "extract": "node extract.mjs",
+    "verify": "node verify.mjs",
+    "generate": "node generate.mjs",
+    "check": "node verify.mjs --check && node generate.mjs --check",
+    "accept": "node verify.mjs --accept"
+  }
+}

@@ -1,0 +1,3 @@
+- Every field is part of the comparison contract, so `fromJsonMap` is fail-closed: a missing or mistyped key raises an `IllegalArgumentException` naming it rather than substituting a default. A profile read back with a guessed stream size would let two runs compare that must not.
+- `CANONICAL` holds the profiles this app version defines. A stored run whose profile id is a confirmed (non-draft) canonical id must carry exactly that definition, or `BenchmarkReportCodec` rejects the file.
+- The id may only lose its `-draft` suffix once the 1080p streams are confirmed on device. After that the values never change again; a different configuration is a different id.

@@ -1,0 +1,1 @@
+benchmark/는 프로파일, 러너, 지표 계산, 유효성, schema 3 저장, baseline·비교 로직을 포함합니다. BenchmarkActivity와 ThermalTracker는 Android 의존성이 있고 순수 계산 로직과 분리됩니다. BenchmarkActivity가 실행 완료 후 RunAssembler·BenchmarkReport·BaselineManager·RegressionDetector를 입출력 실행기에서 호출하고, 메인 스레드로 돌아와 ResultPresenter/ComparePresenter 결과를 표시합니다. 시작 카드·진행률에는 StartCardPresenter·ProgressPresenter를 사용합니다.

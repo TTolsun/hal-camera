@@ -1,0 +1,14 @@
+graph LR
+    home-screen["HomeActivity\nhome/HomeActivity.kt"]
+    run-summary["RunSummary\nhome/RunSummary.kt"]
+    check-screen["CheckActivity\ncheck/CheckActivity.kt"]
+    expert-screen["MainActivity / LIVE\nMainActivity.kt"]
+    benchmark-screen["BenchmarkActivity\nbenchmark/BenchmarkActivity.kt"]
+    look-tokens["Look\nui/Look.kt"]
+    home-screen -->|"저장된 최근 검사 요약"| run-summary
+    home-screen -->|"권한 확인 후 검사 시작 / 저장 결과 보기"| check-screen
+    home-screen -->|"Expert Diagnostics 진입"| expert-screen
+    expert-screen -->|"LIVE에서 벤치마크 화면 열기"| benchmark-screen
+    home-screen -->|"공통 색상과 View 생성"| look-tokens
+    check-screen -->|"공통 색상과 View 생성"| look-tokens
+    expert-screen -->|"공통 색상과 View 생성"| look-tokens

@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "facts": {
+    "build-facts": {
+      "applicationId": "dev.halcamera",
+      "namespace": "dev.halcamera",
+      "versionName": "0.3.1",
+      "versionCode": "4",
+      "minSdk": "26",
+      "targetSdk": "36",
+      "compileSdk": "36",
+      "gradleVersion": "8.13",
+      "jvmTarget": "17"
+    },
+    "telemetry-facts": {
+      "tags": [
+        {
+          "tag": "BenchmarkReport",
+          "sources": [
+            "app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt"
+          ]
+        },
+        {
+          "tag": "BenchmarkStore",
+          "sources": [
+            "app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt"
+          ]
+        },
+        {
+          "tag": "ProfileCompatibility",
+          "sources": [
+            "app/src/main/java/dev/halcamera/benchmark/ProfileCompatibility.kt"
+          ]
+        }
+      ]
+    }
+  }
+}

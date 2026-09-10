@@ -1,0 +1,59 @@
+created: 2026-09-09T16:09:56.205Z
+updated: 2026-09-10T17:16:31.031Z
+update_count: 4
+last_field: diagram
+kind: nested-class
+title: screens
+children:
+  - benchmark-screen
+  - check-screen
+  - expert-screen
+  - home-screen
+  - look-tokens
+  - run-summary
+parentPath: []
+prev_diagram: "graph LR\r
+
+  \    home-screen[\"HomeActivity\\napp/src/main/java/dev/halcamera/home/HomeAc\
+  tivity.kt\"]\r
+
+  \    run-summary[\"RunSummary\\napp/src/main/java/dev/halcamera/home/RunSumma\
+  ry.kt\"]\r
+
+  \    check-screen[\"CheckActivity\\napp/src/main/java/dev/halcamera/check/Che\
+  ckActivity.kt\"]\r
+
+  \    expert-screen[\"MainActivity\\napp/src/main/java/dev/halcamera/MainActiv\
+  ity.kt\"]\r
+
+  \    look-tokens[\"Look\\napp/src/main/java/dev/halcamera/ui/Look.kt\"]\r
+
+  \r
+
+  \    home-screen -->|\"read the newest run JSON for the status card\"|
+  run-summary\r
+
+  \    home-screen -->|\"run a new check once CAMERA is granted\"|
+  check-screen\r
+
+  \    home-screen -->|\"EXTRA_SHOW_LATEST + EXTRA_RUN_FILE: render a stored
+  run, no camera\"| check-screen\r
+
+  \    home-screen -->|\"EXTRA_CONSUMER: plain-language incident recording\"|
+  expert-screen\r
+
+  \    home-screen -->|\"expert row: full instrument view\"| expert-screen\r
+
+  \    expert-screen -->|\"jump into the Auto Check\"| check-screen\r
+
+  \    home-screen -->|\"canvas, card and text tokens\"| look-tokens\r
+
+  \    check-screen -->|\"canvas, card and status colours\"| look-tokens\r
+
+  \    expert-screen -->|\"dark expert tile palette\"| look-tokens\r
+
+  \r
+
+  \    classDef entry fill:#89b4fa,stroke:#89b4fa,color:#1e1e2e\r
+
+  \    class home-screen entry\r\n"

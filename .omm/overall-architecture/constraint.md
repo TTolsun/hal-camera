@@ -1,0 +1,7 @@
+- 평가 코드는 Android import 없이 순수 Kotlin으로 유지해야 하며, 그래야 `testDebugUnitTest`로 JVM에서 실행됩니다. `MetricExtractor`, `ThresholdEngine`, `AutoCheckRunner`, `BenchmarkEvaluator`, `RunValidityEvaluator`와 모든 모델 파일이 이 규칙을 따릅니다. `AutoCheckRunner`는 카메라와 시계에 `Driver`, `Scheduler`, `clock` 파라미터를 통해서만 접근합니다.
+- `org.json`은 파일 경계에서만 사용할 수 있습니다(`BenchmarkReport`, `HealthReport`, `IncidentExporter`, `*Store` 클래스들). 계약 자체는 snake_case 키를 가진 `Map<String, Any?>`로 이동합니다.
+- 시계는 `elapsedRealtimeNanos` 하나뿐입니다. 센서 타임스탬프는 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고하지 않는 한 별도의 도메인에 머무릅니다.
+- 카메라를 점유하는 `CameraEngine`은 항상 하나뿐이어야 합니다. `close(done)`은 기기를 실제로 반납한 뒤에만 콜백을 호출해야 하는데, 다음 open이 그 콜백에서 시작되기 때문입니다.
+- 열거에는 공개 Camera2 API만 사용합니다. 숨겨진 카메라 ID는 절대 탐색하지 않으며, 논리 카메라 뒤의 물리 카메라는 열지 않고 `independentlyOpenable = false`로 기록만 합니다.
+- 이미지 픽셀은 어떤 경우에도 저장하지 않습니다. incident 번들에는 메타데이터와 이벤트만 담깁니다.
+- 임계값은 계층마다 정확히 한 곳에만 존재합니다. v0.2는 `ThresholdTable`, v0.3은 `RegressionRules`입니다. 여기의 숫자를 바꾸는 작업은 `docs/` 변경을 뒤따르는 것이 전제입니다.

@@ -1,0 +1,5 @@
+`app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt` (101 lines). Writes one closed `Incident` to `files/incidents/<id>.zip`, shared out through `FileProvider`.
+
+It writes to a `.partial` file and only then renames it into place, so a crash or a full disk cannot leave a half-written bundle that looks complete. The bundle contains `incident.json` (schema 1 summary), `device.json`, `camera_characteristics.json` for the sessions that actually appear in the events, `events.jsonl`, `capture_requests.jsonl`, `capture_results.jsonl` and a human-readable `incident.md`.
+
+Two habits in this file define how the project reports data. Nanosecond values are written as decimal *strings* so JavaScript tooling cannot round them. And the summary carries an explicit `omitted` map naming what is not in the bundle and why (Perfetto and simpleperf collectors are engineering-mode only, logcat needs external ADB, no preview pixels are persisted), alongside a `measurementNotes` list restating the interpretation limits. `halDroppedFrames` is present and always null, rather than absent, so a consumer cannot mistake an unmeasured quantity for zero.

@@ -1,0 +1,26 @@
+created: 2026-09-09T16:18:30.377Z
+updated: 2026-09-09T16:19:00.156Z
+update_count: 4
+last_field: diagram
+kind: nested-class
+title: persistence
+children:
+  - baseline-store
+  - benchmark-report
+  - benchmark-store
+  - health-report
+parentPath: []
+prev_diagram: >
+  graph LR
+      baseline-store["BaselineStore\napp/src/main/java/dev/halcamera/baseline/BaselineStore.kt"]
+      health-report["HealthReport writer\napp/src/main/java/dev/halcamera/report/HealthReport.kt"]
+      benchmark-report["BenchmarkReport + codec\napp/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt"]
+      benchmark-store["BenchmarkStore + BenchmarkIndex\napp/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt"]
+
+      baseline-store -->|"supply the previous per-endpoint values a run is judged against"| health-report
+      health-report -->|"write files/checks/<runId>.json, schema 2"| health-report
+      benchmark-report -->|"ask for the run file path and the index"| benchmark-store
+      benchmark-store -->|"index.json maps comparison contract id + endpoint key to a baseline run id"| benchmark-report
+
+      classDef store fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+      class benchmark-store,baseline-store store

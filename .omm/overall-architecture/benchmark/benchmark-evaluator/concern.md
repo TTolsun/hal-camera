@@ -1,0 +1,1 @@
+2.7 remains NOT_RUN because capture-window preview stall is not implemented. H.9 is supplied by RunAssembler from capture_failed and buffer_lost events in the observation window. MetricExtractor and UnknownReason remain shared dependencies from diagnosis/.

@@ -2,7 +2,7 @@
 
 - 작성일: 2026-09-09
 - 상태: **2026-09-09 검토 3회 반영(13장). Data contract(3 · 5 · 6장)는 freeze. 이후 변경은 13장에 기록하고 schema_version 또는 계약 버전을 올린다.** 11장의 결정 항목이 확정되면 이 문서를 `PRODUCT-v0.3.md`로 승격한다.
-- 대체하는 문서: `PRODUCT-v0.2.md`(Camera Doctor). 지표 정의는 `METRICS.md`를 그대로 상위 문서로 둔다. 시작점과 끝점, 시계, 통계 규칙은 바뀌지 않는다.
+- 대체하는 문서: `PRODUCT-v0.2.md`(HAL Camera). 지표 정의는 `METRICS.md`를 그대로 상위 문서로 둔다. 시작점과 끝점, 시계, 통계 규칙은 바뀌지 않는다.
 - 코드 기준: GitHub `TTolsun/hal-camera` main `0163730` (2026-09-09). 단위 테스트 96개, lint 오류 0.
 
 ## 0. 제품 한 문장
@@ -29,7 +29,7 @@ measurement (raw samples, n회 반복)
 
 ## 1. v0.2에서 무엇이 바뀌는가
 
-| 항목 | Camera Doctor v0.2 | HAL Camera v0.3 |
+| 항목 | HAL Camera v0.2 | HAL Camera v0.3 |
 |---|---|---|
 | 질문 | 카메라가 정상인가 | 얼마나 빠른가, 이전 빌드보다 어떤가 |
 | 판정 | PASS / WARN / FAIL, NORMAL / WARNING / ISSUE | 없음. 수치와 IMPROVED / STABLE / REGRESSED |

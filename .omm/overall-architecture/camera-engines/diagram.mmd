@@ -1,0 +1,9 @@
+graph LR
+    engine-interface["CameraEngine + characteristics helpers\napp/src/main/java/dev/halcamera/camera/CameraEngine.kt"]
+    camera2-engine["Camera2Engine\napp/src/main/java/dev/halcamera/camera/Camera2Engine.kt"]
+    camerax-engine["CameraXEngine\napp/src/main/java/dev/halcamera/camera/CameraXEngine.kt"]
+
+    camera2-engine -->|"implements start / capture / setZoom / close"| engine-interface
+    camerax-engine -->|"implements the same four methods"| engine-interface
+    engine-interface -->|"registerSession writes describeCamera into Telemetry.sessions"| camera2-engine
+    engine-interface -->|"registerSession writes describeCamera into Telemetry.sessions"| camerax-engine

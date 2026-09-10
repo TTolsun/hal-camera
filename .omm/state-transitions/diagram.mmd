@@ -1,0 +1,11 @@
+graph LR
+    check-sequence["Auto Check 및 Benchmark 러너\ncheck/AutoCheckRunner.kt, benchmark/BenchmarkRunner.kt"]
+    engine-lifecycle["엔진 open / close\ncamera/Camera2Engine.kt, CameraXEngine.kt"]
+    incident-window["incident 이전·이후 창\ntelemetry/FlightRecorder.kt"]
+    metric-verdict["Auto Check 판정 순서\ndiagnosis/ThresholdEngine.kt"]
+    validity-gate["벤치마크 유효성\nbenchmark/RunAssembler.kt, RunValidity.kt"]
+    check-sequence -->|"Driver를 통해 open / still / close"| engine-lifecycle
+    engine-lifecycle -->|"현재 세션의 단계 완료 신호"| check-sequence
+    check-sequence -->|"Auto Check failedStep과 지표 표본"| metric-verdict
+    check-sequence -->|"Benchmark Result와 환경 flag"| validity-gate
+    incident-window -->|"러너와 별개로 이벤트 창 보존"| engine-lifecycle

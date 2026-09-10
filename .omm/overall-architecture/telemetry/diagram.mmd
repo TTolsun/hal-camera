@@ -1,0 +1,12 @@
+graph LR
+    capture-callbacks["Telemetry\napp/src/main/java/dev/halcamera/telemetry/Telemetry.kt"]
+    flight-recorder["FlightRecorder + FrameTracker\napp/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt"]
+    incident-exporter["IncidentExporter\napp/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt"]
+
+    capture-callbacks -->|"record() one Event per framework callback"| flight-recorder
+    capture-callbacks -->|"FrameTracker derives intervalMs, fps and result gap per frame"| flight-recorder
+    flight-recorder -->|"finish() hands over a closed Incident window"| incident-exporter
+    capture-callbacks -->|"sessions map supplies camera_characteristics.json"| incident-exporter
+
+    classDef store fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+    class incident-exporter store

@@ -1,0 +1,33 @@
+created: 2026-09-09T16:08:35.012Z
+updated: 2026-09-10T17:26:39.815Z
+update_count: 24
+last_field: todo
+git_commit: 1c965c0
+git_branch: codex/pr27-doc-review
+children:
+  - benchmark
+  - camera-engines
+  - check-runner
+  - diagnosis
+  - persistence
+  - platform-camera
+  - screens
+  - telemetry
+  - ui-widgets
+prev_diagram: >
+  graph LR
+      home["HomeActivity"] --> check["CheckActivity / AutoCheckRunner"]
+      home --> live["MainActivity / LIVE"]
+      live --> bench["BenchmarkActivity / BenchmarkRunner"]
+      check --> camera["Camera2Engine / CameraXEngine"]
+      live --> camera
+      bench --> camera
+      camera --> platform["Android Camera API"]
+      camera --> telemetry["Telemetry / FlightRecorder"]
+      telemetry --> v2["MetricExtractor / CheckEvaluator"]
+      telemetry --> v3["RunAssembler / BenchmarkEvaluator"]
+      check --> v2
+      bench --> v3
+      v2 --> files["앱 내부 파일"]
+      v3 --> files
+      files -. "비교 UI 연결 필요" .-> comparison["BaselineManager / RegressionDetector / ResultPresenter"]
