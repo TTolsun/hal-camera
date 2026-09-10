@@ -88,7 +88,7 @@ class ResultPresenterTest {
         // A reference delta carries no state, so it is shown without a marker (8.4).
         val vsPrevious = present(current, c, ComparedTo.PREVIOUS)
         assertEquals("", vsPrevious.sections.first { it.title == "CAPTURE" }.rows.first().marker)
-        assertEquals("vs previous", vsPrevious.sections.first().deltaHeader)
+        assertEquals("vs prev", vsPrevious.sections.first().deltaHeader)
     }
 
     @Test fun anImprovementIsMarkedToo() {
@@ -282,7 +282,11 @@ class ResultPresenterTest {
         val valueEnd = open.indexOf("142 ms") + "142 ms".length
         assertEquals(valueEnd, interval.indexOf("33.3 ms") + "33.3 ms".length)
         assertEquals(valueEnd, stalls.indexOf("0") + 1)
-        assertEquals(valueEnd + 9, open.indexOf("161 ms") + "161 ms".length)
+        // The second statistic ends one stat column further along.
+        assertEquals(valueEnd + 8, open.indexOf("161 ms") + "161 ms".length)
+        // The four columns have to fit the card, which holds about 45 cells of a real monospace face at 10sp.
+        // Without this the table can grow past the screen again and put the verdict markers out of sight.
+        present(current).sections.forEach { assertTrue(it.title, ResultPresenter.headerLine(it).length <= 45) }
         // Column names appear once, above the first section.
         assertTrue(text, text.lines().first { it.startsWith("LAUNCH") }.contains("p50"))
         assertEquals("PREVIEW", text.lines().first { it.startsWith("PREVIEW") })
