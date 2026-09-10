@@ -643,7 +643,7 @@ class BenchmarkActivity : ComponentActivity() {
         setTextColor(Look.onDark)
         setHintTextColor(Look.onDarkMuted)
         textSize = 14f
-        typeface = Typeface.MONOSPACE
+        typeface = Look.mono
         isSingleLine = true
         inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
         background = Look.cardBackground(this@BenchmarkActivity, Look.expertTile, Look.expertTile3)

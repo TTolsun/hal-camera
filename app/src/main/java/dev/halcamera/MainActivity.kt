@@ -286,12 +286,12 @@ class MainActivity : ComponentActivity() {
         val stripBox=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; background=rounded(glass); setPadding(dp(10),dp(6),dp(10),dp(6)) }
         strip=StripView(this).apply { contentDescription="최근 10초 센서 프레임 간격. 실선은 기준, 점선은 1.5배 임계" }
         stripBox.addView(strip,lp(height=40))
-        stripText=label("START —   PARTIAL —   BUFFER —",10,Color.WHITE).apply { typeface=Typeface.MONOSPACE }
+        stripText=label("START —   PARTIAL —   BUFFER —",10,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono }
         stripBox.addView(stripText,lp(top=2))
         bottomBar.addView(stripBox,lp())
         zoomRow=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL; gravity=Gravity.CENTER; background=pill(glass); setPadding(dp(6),dp(4),dp(6),dp(4)) }
         bottomBar.addView(zoomRow,LinearLayout.LayoutParams(-2,-2).apply { topMargin=dp(10) })
-        metrics=label("FPS —  ·  ISO —  ·  Exp —\nLens —  ·  Zoom —",11,Color.WHITE).apply { gravity=Gravity.CENTER; typeface=Typeface.MONOSPACE }
+        metrics=label("FPS —  ·  ISO —  ·  Exp —\nLens —  ·  Zoom —",11,Color.WHITE).apply { gravity=Gravity.CENTER; typeface=dev.halcamera.ui.Look.mono }
         bottomBar.addView(metrics,lp(top=10))
         val mainRow=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL; gravity=Gravity.CENTER_VERTICAL }
         bottomBar.addView(mainRow,lp(top=12))
@@ -328,7 +328,7 @@ class MainActivity : ComponentActivity() {
         // from a two-second window, which the app could not actually establish; BENCHMARK answers that properly.
         body.addView(label("00   LIVE READOUT",12,muted,true),lp(top=18))
         body.addView(label("같은 세션의 직전 프레임에서 읽은 값. 기준 p50은 최근 창을 제외한 나머지 프레임의 중앙값",10,muted),lp(top=4))
-        readoutCard=label("프레임을 기다리는 중…",12,Color.WHITE).apply { typeface=Typeface.MONOSPACE; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
+        readoutCard=label("프레임을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
         body.addView(readoutCard,lp(top=10))
         body.addView(label("01   3A OSCILLOSCOPE",12,muted,true),lp(top=18))
         body.addView(label("최근 10초 · 3A 상태는 단계값, 연속값 그래프는 자동 스케일",10,muted),lp(top=4))
@@ -337,7 +337,7 @@ class MainActivity : ComponentActivity() {
         body.addView(label("02   FRAME CALLBACK TIMELINE",12,muted,true),lp(top=20))
         timelineView=dev.halcamera.ui.TimelineView(this).apply { background=rounded(panel); contentDescription="최근 프레임과 세션 평균의 START, PARTIAL, BUFFER 도착 시각 비교" }
         body.addView(timelineView,lp(height=96,top=10))
-        timeline=label("프레임 콜백을 기다리는 중…",12,Color.WHITE).apply { typeface=Typeface.MONOSPACE; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
+        timeline=label("프레임 콜백을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
         body.addView(timeline,lp(top=8))
         system=label("APP CPU —  ·  PSS —  ·  THERMAL —",11,muted)
         body.addView(system,lp(top=12))
