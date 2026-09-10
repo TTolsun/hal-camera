@@ -60,6 +60,18 @@ class ProgressPresenterTest {
         assertEquals("░".repeat(ProgressPresenter.BAR_WIDTH), ProgressPresenter.bar(0))
     }
 
+    @Test fun theProgressLineLeadsWithThePercentSoTheNumberSurvivesANarrowCard() {
+        // The block characters are drawn by a fallback font wider than the monospace one, so the line has to
+        // stay short enough to hold one line on a phone, and the percentage has to come before the part that
+        // would be cut off if it ever did not.
+        val line = ProgressPresenter.barLine(43)
+        assertTrue(line.startsWith(" 43%  "))
+        assertEquals(ProgressPresenter.BAR_WIDTH + 6, line.length)
+        assertTrue(line.length <= 24)
+        assertEquals("  0%  " + ProgressPresenter.bar(0), ProgressPresenter.barLine(0))
+        assertEquals("100%  " + ProgressPresenter.bar(100), ProgressPresenter.barLine(100))
+    }
+
     // ---- live numbers ----
 
     @Test fun aFrameWithoutASensorTimestampStillCounts() {

@@ -54,7 +54,14 @@ class LiveFrameStats {
 object ProgressPresenter {
 
     const val PHASE_COUNT = 6
-    const val BAR_WIDTH = 20
+
+    /**
+     * The bar is deliberately short. U+2588 is absent from Roboto Mono, so every cell is drawn by a fallback
+     * font whose advance is wider than the monospace one and grows with the user's display size setting. At the
+     * twenty cells this started with, the line wrapped on a Galaxy S25+ and the percentage ended up on a line of
+     * its own, which reads as a broken layout rather than as progress.
+     */
+    const val BAR_WIDTH = 14
 
     /**
      * Seconds per phase from the time budget of 3.3. The bar is weighted by them rather than by phase count
@@ -99,6 +106,13 @@ object ProgressPresenter {
 
     private fun launchFraction(phase: BenchmarkRunner.Phase, iteration: Int, total: Int): Double =
         if (countsLaunchCycles(phase, total)) (iteration.toDouble() / total).coerceIn(0.0, 1.0) else 0.0
+
+    /**
+     * The whole progress line. The percentage is placed first on purpose, because it is the part that has to
+     * survive: if the line ever does outgrow the card, what gets cut off is a cell of the bar and not the number.
+     */
+    fun barLine(percent: Int, width: Int = BAR_WIDTH): String =
+        String.format(Locale.US, "%3d%%  ", percent.coerceIn(0, 100)) + bar(percent, width)
 
     fun bar(percent: Int, width: Int = BAR_WIDTH): String {
         val filled = ((percent.coerceIn(0, 100) / 100.0) * width).roundToInt()

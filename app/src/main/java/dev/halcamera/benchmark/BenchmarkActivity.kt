@@ -310,8 +310,8 @@ class BenchmarkActivity : ComponentActivity() {
         // The first phase is shown before the runner starts, so the card never appears blank for a frame.
         val first = ProgressPresenter.headline(BenchmarkRunner.Phase.CAMERA_OPEN, 0, profile.launchIterations)
         progressHeadline = Look.text(this, first, 14, Look.onDark, mono = true).also { card.addView(it, lp(top = 10)) }
-        progressBar = Look.text(this, "${ProgressPresenter.bar(0)}  0%", 13, Look.primaryOnDark, mono = true)
-            .also { card.addView(it, lp(top = 4)) }
+        progressBar = Look.text(this, ProgressPresenter.barLine(0), 13, Look.primaryOnDark, mono = true)
+            .also { it.maxLines = 1; card.addView(it, lp(top = 4)) }
         progressStats = Look.text(this, "", 12, Look.onDarkMuted, mono = true).also { card.addView(it, lp(top = 10)) }
         content.addView(card)
         actions.addView(Look.ghostButton(this, "중단", dark = true) { runner?.abort("user") }, LinearLayout.LayoutParams(-1, dp(52)))
@@ -335,20 +335,21 @@ class BenchmarkActivity : ComponentActivity() {
         card.addView(Look.text(this, lastSummary, 10, Look.onDarkMuted, mono = true), lp(top = 10))
         content.addView(card)
 
+        // SET AS BASELINE is more than twice as long as the other two labels, and a third of the screen is not
+        // enough for it once the pill padding is taken off: on a Galaxy S25+ it was drawn as "SET AS BASELI…"
+        // and COMPARE was broken across two lines. So the long label gets a row of its own and the two short
+        // ones share the row below it.
+        actions.addView(
+            action(view.baselineButton, view.baselineButtonEnabled) { toggleBaseline() },
+            LinearLayout.LayoutParams(-1, dp(52))
+        )
         val row = Look.row(this)
-        val baselineButton = Look.ghostButton(this, view.baselineButton, dark = true) { toggleBaseline() }
-        baselineButton.isEnabled = view.baselineButtonEnabled
-        baselineButton.alpha = if (view.baselineButtonEnabled) 1f else 0.4f
-        row.addView(baselineButton, LinearLayout.LayoutParams(0, dp(52), 1f))
-        val compareButton = Look.ghostButton(this, "COMPARE", dark = true) { screen = Screen.COMPARE; render() }
-        compareButton.isEnabled = baseRun != null
-        compareButton.alpha = if (baseRun != null) 1f else 0.4f
-        row.addView(compareButton, LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginStart = dp(8) })
-        val exportButton = Look.ghostButton(this, "EXPORT", dark = true) { lastFile?.let(::share) }
-        exportButton.isEnabled = lastFile != null
-        exportButton.alpha = if (lastFile != null) 1f else 0.4f
-        row.addView(exportButton, LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginStart = dp(8) })
-        actions.addView(row)
+        row.addView(action("COMPARE", baseRun != null) { screen = Screen.COMPARE; render() }, LinearLayout.LayoutParams(0, dp(52), 1f))
+        row.addView(
+            action("EXPORT", lastFile != null) { lastFile?.let(::share) },
+            LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginStart = dp(8) }
+        )
+        actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         actions.addView(Look.primaryButton(this, "새 run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
     }
 
@@ -434,8 +435,7 @@ class BenchmarkActivity : ComponentActivity() {
                 if (phase != livePhase && phase == BenchmarkRunner.Phase.FIRST_PREVIEW) liveStats.reset()
                 livePhase = phase
                 progressHeadline?.text = ProgressPresenter.headline(phase, iteration, total)
-                progressBar?.text = ProgressPresenter.percent(phase, iteration, total)
-                    .let { "${ProgressPresenter.bar(it)}  $it%" }
+                progressBar?.text = ProgressPresenter.barLine(ProgressPresenter.percent(phase, iteration, total))
             }
             override fun onFinished(result: BenchmarkRunner.Result) { if (!destroyed) finishRun(result) }
         }
@@ -651,6 +651,13 @@ class BenchmarkActivity : ComponentActivity() {
     }
 
     /** The result and compare tables are laid out in fixed monospace columns, so they scroll sideways rather than wrap. */
+    /** A ghost button that shows whether it can be pressed, since three of the result actions depend on state. */
+    private fun action(label: String, enabled: Boolean, onClick: () -> Unit) =
+        Look.ghostButton(this, label, dark = true) { onClick() }.apply {
+            isEnabled = enabled
+            alpha = if (enabled) 1f else 0.4f
+        }
+
     private fun wide(view: View): HorizontalScrollView = HorizontalScrollView(this).apply {
         isHorizontalScrollBarEnabled = false
         addView(view, LinearLayout.LayoutParams(-2, -2))
