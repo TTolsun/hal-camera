@@ -3,13 +3,14 @@
         Android 12 and later draw the launch splash themselves from the launcher activity's theme. The icon is
         masked to a circle, so the adaptive launcher icon is used as it is rather than a separate artwork, and the
         plate behind it repeats the icon background colour so the logo does not sit on a bright ring.
+
+        These items moved here from HomeTheme when LIVE became the launcher in M3.
     -->
-    <style name="HomeTheme" parent="android:style/Theme.Material.Light.NoActionBar">
+    <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:statusBarColor">#F5F5F7</item>
+        <item name="android:windowLightStatusBar">false</item>
         <item name="android:colorAccent">#0066CC</item>
-        <item name="android:windowBackground">#F5F5F7</item>
+        <item name="android:windowBackground">#272729</item>
         <item name="android:windowSplashScreenBackground">@color/ic_launcher_background</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
         <item name="android:windowSplashScreenIconBackgroundColor">@color/ic_launcher_background</item>

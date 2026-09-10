@@ -5,11 +5,17 @@ import android.graphics.*
 import android.view.View
 import dev.halcamera.telemetry.Event
 
-/** Ten-second sparkline of sensor frame intervals with the session baseline and the 1.5x threshold drawn as guides. */
+/**
+ * Ten-second sparkline of sensor frame intervals, with the session median and 1.5x that value drawn as guides.
+ *
+ * Nothing here is coloured by verdict (docs/PLAN-BenchMarker-v0.3.md 8.1). The points above the dashed guide used
+ * to be drawn in the warning colour, which turned a scale marker into an opinion: an interval above 1.5x the
+ * median is worth seeing, but on the LIVE screen it is one frame and not a diagnosis. The guides say where each
+ * value sits and the reader draws the conclusion.
+ */
 class StripView(context: Context) : View(context) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val amber = Color.rgb(127, 191, 255)   // interval trace: blue shade, not a status colour
-    private val coral = Color.rgb(255, 149, 0)     // statusWarn for stalled points
+    private val trace = Color.rgb(127, 191, 255)
     private val guide = Color.argb(140, 153, 174, 192)
     private var points = emptyList<Pair<Long, Double>>()
     private var tRef: Double? = null
@@ -39,12 +45,13 @@ class StripView(context: Context) : View(context) {
             paint.pathEffect = null
         }
         if (points.size < 2) return
-        paint.color = amber; paint.strokeWidth = 1.5f * d
+        paint.color = trace; paint.strokeWidth = 1.5f * d
         val path = Path()
         points.forEachIndexed { i, (t, v) -> if (i == 0) path.moveTo(x(t), y(v)) else path.lineTo(x(t), y(v)) }
         canvas.drawPath(path, paint)
+        // The points above the dashed guide keep a mark so they can be picked out, in the trace colour.
         if (ref != null) {
-            paint.style = Paint.Style.FILL; paint.color = coral
+            paint.style = Paint.Style.FILL
             for ((t, v) in points) if (v > ref * 1.5) canvas.drawCircle(x(t), y(v), 3 * d, paint)
         }
     }
