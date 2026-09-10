@@ -153,6 +153,7 @@ object RunAssembler {
                 charging = context.env.charging,
                 batteryStart = context.env.batteryStart,
                 profileDraft = profile.isDraft,
+                debuggableBuild = context.app.debuggable,
                 subjectLabeled = !context.subject.isUnlabeled
             )
         )

@@ -161,11 +161,18 @@ data class DeviceInfo(
     }
 }
 
-data class AppInfo(val versionName: String, val versionCode: Int) {
-    fun toJsonMap(): Map<String, Any?> = mapOf("version_name" to versionName, "version_code" to versionCode)
+/**
+ * The app build a run came from. [debuggable] is null for runs written before the field existed (schema 3).
+ * A debuggable build is not a smaller difference than a different version: ART neither applies the baseline
+ * profile nor optimises as aggressively, so app-side work lands inside the measured intervals. It is recorded
+ * here rather than derived at read time because the reader cannot know how the file was produced.
+ */
+data class AppInfo(val versionName: String, val versionCode: Int, val debuggable: Boolean? = null) {
+    fun toJsonMap(): Map<String, Any?> = mapOf("version_name" to versionName, "version_code" to versionCode, "debuggable" to debuggable)
 
     companion object {
-        fun fromJsonMap(m: Map<String, Any?>) = AppInfo(m["version_name"] as? String ?: "", JsonMaps.i(m["version_code"]) ?: 0)
+        fun fromJsonMap(m: Map<String, Any?>) =
+            AppInfo(m["version_name"] as? String ?: "", JsonMaps.i(m["version_code"]) ?: 0, m["debuggable"] as? Boolean)
     }
 }
 

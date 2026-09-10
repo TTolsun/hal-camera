@@ -10,6 +10,8 @@ data class BuildIdentityComparison(
     val sameVendorFingerprint: Boolean?,
     val sameCameraInfoVersion: Boolean?,
     val sameAppVersion: Boolean,
+    /** Null when either side predates the debuggable field. A debug build and a release build are not the same build. */
+    val sameAppBuild: Boolean?,
     val sameSubjectLabel: Boolean?,
     val sameSubjectCommit: Boolean?
 ) {
@@ -27,6 +29,7 @@ data class BuildIdentityComparison(
     fun toJsonMap(): Map<String, Any?> = mapOf(
         "same_system_fingerprint" to sameSystemFingerprint, "same_vendor_fingerprint" to sameVendorFingerprint,
         "same_camera_info_version" to sameCameraInfoVersion, "same_app_version" to sameAppVersion,
+        "same_app_build" to sameAppBuild,
         "same_subject_label" to sameSubjectLabel, "same_subject_commit" to sameSubjectCommit
     )
 
@@ -34,6 +37,7 @@ data class BuildIdentityComparison(
         fun fromJsonMap(m: Map<String, Any?>?) = BuildIdentityComparison(
             m?.get("same_system_fingerprint") as? Boolean ?: false, m?.get("same_vendor_fingerprint") as? Boolean,
             m?.get("same_camera_info_version") as? Boolean, m?.get("same_app_version") as? Boolean ?: false,
+            m?.get("same_app_build") as? Boolean,
             m?.get("same_subject_label") as? Boolean, m?.get("same_subject_commit") as? Boolean
         )
     }
@@ -49,9 +53,13 @@ data class BuildIdentity(val device: DeviceInfo, val app: AppInfo, val subject: 
             sameVendorFingerprint = both(a.device.vendorFingerprint, b.device.vendorFingerprint),
             sameCameraInfoVersion = both(a.device.cameraInfoVersion, b.device.cameraInfoVersion),
             sameAppVersion = a.app.versionName == b.app.versionName && a.app.versionCode == b.app.versionCode,
+            sameAppBuild = bothBool(a.app.debuggable, b.app.debuggable),
             sameSubjectLabel = both(a.subject.subjectBuildLabel, b.subject.subjectBuildLabel),
             sameSubjectCommit = both(a.subject.subjectCommit, b.subject.subjectCommit)
         )
+
+        /** Equal only when both sides carry a value; blank counts as missing. */
+        private fun bothBool(x: Boolean?, y: Boolean?): Boolean? = if (x == null || y == null) null else x == y
 
         /** Equal only when both sides carry a value; blank counts as missing. */
         private fun both(x: String?, y: String?): Boolean? =

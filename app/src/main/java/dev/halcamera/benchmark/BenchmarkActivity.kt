@@ -3,6 +3,7 @@ package dev.halcamera.benchmark
 import android.Manifest
 import android.content.ClipData
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.hardware.camera2.CameraCharacteristics
@@ -333,7 +334,8 @@ class BenchmarkActivity : ComponentActivity() {
         val info = packageManager.getPackageInfo(packageName, 0)
         @Suppress("DEPRECATION")
         val code = if (Build.VERSION.SDK_INT >= 28) info.longVersionCode.toInt() else info.versionCode
-        return AppInfo(info.versionName ?: "", code)
+        val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
+        return AppInfo(info.versionName ?: "", code, debuggable)
     }
 
     private fun cameraInfoVersion(cameraId: String): String? = if (Build.VERSION.SDK_INT < 28) null else try {

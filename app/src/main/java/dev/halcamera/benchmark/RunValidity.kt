@@ -14,7 +14,7 @@ data class ValidityFlag(
 
 object ValidityFlags {
     /** Bumped whenever a flag is added or a column of the table changes. Stored in every run's validity block. */
-    const val VERSION = "validity-v1"
+    const val VERSION = "validity-v2"
 
     // Measurement invalid: the run does not contain what the profile promised.
     val ABORTED = ValidityFlag("ABORTED", true, true, true)
@@ -29,6 +29,8 @@ object ValidityFlags {
     val CHARGING = ValidityFlag("CHARGING", false, false, true)
     val BATTERY_LOW = ValidityFlag("BATTERY_LOW", false, false, true)
     val PROFILE_DRAFT = ValidityFlag("PROFILE_DRAFT", false, false, true)
+    /** A debuggable build measures its own overhead as well, so its numbers never leave this device. */
+    val DEBUGGABLE_BUILD = ValidityFlag("DEBUGGABLE_BUILD", false, false, true)
     // Informational only.
     val PREFLIGHT_MISMATCH = ValidityFlag("PREFLIGHT_MISMATCH", false, false, false)
     val THERMAL_CHANGED = ValidityFlag("THERMAL_CHANGED", false, false, false)
@@ -37,7 +39,7 @@ object ValidityFlags {
     val all: List<ValidityFlag> = listOf(
         ABORTED, HARD_FAILURE, PROFILE_UNSUPPORTED, INSUFFICIENT_SAMPLES,
         CADENCE_NOT_FIXED, THERMAL_HIGH, POWER_SAVE_MODE,
-        CHARGING, BATTERY_LOW, PROFILE_DRAFT,
+        CHARGING, BATTERY_LOW, PROFILE_DRAFT, DEBUGGABLE_BUILD,
         PREFLIGHT_MISMATCH, THERMAL_CHANGED, LABEL_MISSING
     )
 
@@ -112,6 +114,7 @@ data class ValidityInputs(
     val charging: Boolean?,
     val batteryStart: Int?,
     val profileDraft: Boolean,
+    val debuggableBuild: Boolean?,
     val subjectLabeled: Boolean,
     val minObservedFrames: Int = ValidityFlags.MIN_OBSERVED_FRAMES
 )
@@ -133,6 +136,7 @@ object RunValidityEvaluator {
         if (x.charging == true) out += ValidityFlags.CHARGING
         if (x.batteryStart != null && x.batteryStart < ValidityFlags.BATTERY_LOW_PCT) out += ValidityFlags.BATTERY_LOW
         if (x.profileDraft) out += ValidityFlags.PROFILE_DRAFT
+        if (x.debuggableBuild == true) out += ValidityFlags.DEBUGGABLE_BUILD
         if (x.thermalStart != null && x.thermalEnd != null && x.thermalStart != x.thermalEnd) out += ValidityFlags.THERMAL_CHANGED
         if (!x.subjectLabeled) out += ValidityFlags.LABEL_MISSING
         return out

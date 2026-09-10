@@ -933,3 +933,17 @@ M2 코드는 PR #14로 main에 들어갔고(리뷰 P1 2건 · P2 2건 반영), G
 | thermal | 다섯 run 모두 `thermal_start = thermal_max = thermal_end = 0`. 45초 run으로는 발열이 없어 `THERMAL_HIGH`와 `THERMAL_CHANGED`는 실측으로 검증되지 않았다 |
 
 계약에 추가한 것: baseline 해제(`CLEAR BASELINE`, 7.1과 8.4). run을 지우지 않고 기준 지정만 무르는 방법이 없었다. M4 범위이며 이슈 #8에 반영했다.
+
+### 2026-09-11 debuggable 빌드 축 추가 (schema 4, validity-v2)
+
+이름을 HAL Camera로 바꾸면서 release 빌드에 서명을 붙였는데, release 빌드는 `run-as`가 막혀 있어 결과를 adb로 꺼낼 수 없고, 반대로 debug 빌드는 ART가 baseline profile을 적용하지 않아 앱 쪽 오버헤드가 측정 구간 안으로 들어온다. 두 빌드의 run을 나란히 비교하면 `same_app_version`이 true로 나오므로 앱이 "같은 빌드"라고 잘못 판정한다. 그래서 빌드 종류를 계약에 기록한다.
+
+| 항목 | 내용 |
+|---|---|
+| `app.debuggable` | run JSON의 `app` 블록에 boolean으로 저장한다. 값이 없으면 알 수 없음이며, 그것을 release로 간주하지 않는다 |
+| `schema_version` | 3에서 4로 올린다. 읽기는 3과 4를 모두 받는다. 필드가 추가되기만 했으므로 기존 run 파일은 그대로 열린다 |
+| `same_app_build` | `BuildIdentityComparison`의 일곱 번째 축이다. 양쪽 모두 값이 있을 때만 비교하고, 결과 화면 7.4 줄에 "앱 빌드"로 표시한다 |
+| `DEBUGGABLE_BUILD` | validity flag를 추가한다. 측정과 비교는 막지 않고 scoring만 막는다. 같은 debug 빌드끼리의 비교는 조건이 같으므로 의미가 있지만, 기기 간 점수에는 debug 빌드의 오버헤드가 섞이면 안 된다 |
+| `validity_rule_version` | `validity-v1`에서 `validity-v2`로 올린다 |
+
+측정용 run은 release 빌드로 돌리고 결과는 앱의 `EXPORT`로 꺼내는 것을 기본으로 한다. debug 빌드는 기능 확인과 데이터 복원에 쓴다. 2026-09-10 실기기 검증 run 13개는 모두 debug 빌드에서 나왔고 `app.debuggable`이 없으므로 알 수 없음으로 읽힌다.
