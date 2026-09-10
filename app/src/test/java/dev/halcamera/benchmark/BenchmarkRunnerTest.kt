@@ -9,13 +9,16 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Virtual clock so warm-up and observation windows pass without the test waiting for them. */
-private class FakeClock {
+/**
+ * Virtual clock so warm-up and observation windows pass without the test waiting for them. Internal because
+ * ProgressWiringTest drives a real runner with the same fakes to check what the progress screen would show.
+ */
+internal class FakeClock {
     var ns = 1_000_000_000L
     fun advanceMs(ms: Long) { ns += ms * 1_000_000 }
 }
 
-private class FakeScheduler(private val clock: FakeClock) : BenchmarkRunner.Scheduler {
+internal class FakeScheduler(private val clock: FakeClock) : BenchmarkRunner.Scheduler {
     class Task(val dueNs: Long, val action: () -> Unit)
 
     private val tasks = ArrayList<Task>()
@@ -40,7 +43,7 @@ private class FakeScheduler(private val clock: FakeClock) : BenchmarkRunner.Sche
     val pending: Int get() = tasks.size
 }
 
-private class FakeDriver : BenchmarkRunner.Driver {
+internal class FakeDriver : BenchmarkRunner.Driver {
     val opens = ArrayList<String>()
     val closes = ArrayList<String>()
     var stills = 0

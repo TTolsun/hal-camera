@@ -262,7 +262,12 @@ class MainActivity : ComponentActivity() {
         // M2 entry point for the benchmark flow. Doctor and BenchMarker live side by side until M3 (plan chapter 9).
         val benchButton=button("BM") {
             recorder.finish("benchmark_started")?.let { export(it) }
-            startActivity(android.content.Intent(this,dev.halcamera.benchmark.BenchmarkActivity::class.java))
+            // 8.1: the benchmark measures the camera the LIVE screen was showing, and the start card says so
+            // before switching the engine to Camera2, which the profile requires.
+            startActivity(android.content.Intent(this,dev.halcamera.benchmark.BenchmarkActivity::class.java).apply {
+                putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_ENGINE,engineName)
+                putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_CAMERA_ID,cameraId)
+            })
         }.apply { background=rounded(glass); setTextColor(Color.WHITE) }
         controls.addView(benchButton,LinearLayout.LayoutParams(dp(44),dp(38)).apply { marginStart=dp(6) })
         // Consumer incident mode (11.4): the engine picker, camera spinner and check entry are expert chrome; hide them.
