@@ -94,7 +94,7 @@ function assemble(parsed, rendered) {
 const code = (s) => `\`${s}\``;
 
 function evidenceLine(parts) {
-  return `<sub>${parts.filter(Boolean).join(" · ")}</sub>`;
+  return ['<details class="doc-evidence" markdown="1">', '<summary>근거와 검토 정보</summary>', "", ...parts.filter(Boolean).map(part => `- ${part}`), "", "</details>"].join("\n");
 }
 
 function acceptedNote(key) {
@@ -158,7 +158,7 @@ function renderOmmTree(block) {
     const desc = firstParagraph(readOmmField(`${block.source}/${child}`, "description")) ?? "확인 필요";
     const grandchildren = ommChildren(`${block.source}/${child}`);
     const sub = grandchildren.length ? ` (하위: ${grandchildren.map(code).join(", ")})` : "";
-    return `- **${child}** — ${desc}${sub}`;
+    return `- **${child}**: ${desc}${sub}`;
   });
   return [
     ...items,
@@ -171,7 +171,7 @@ function renderConcerns(block) {
   const concern = readOmmField(block.source, "concern");
   const todo = readOmmField(block.source, "todo");
   const out = [];
-  out.push("**확인 필요** — 스캔 시점에 확신할 수 없었거나 현재 알려진 미완 사항입니다.");
+  out.push("다음 항목은 구조 스캔에서 확인한 제약이나 추가 검증이 필요한 사항입니다.");
   out.push("");
   out.push(concern ?? "- (기록 없음)");
   if (todo) {

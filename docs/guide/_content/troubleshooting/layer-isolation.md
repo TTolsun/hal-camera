@@ -9,42 +9,48 @@ sources:
 decisions: []
 verifications: []
 ---
-앱이 남기는 기록은 두 종류입니다. 프레임워크가 준 값을 그대로 옮긴 것과, 앱이 계산한 것입니다. 계층을 좁히려면 이 둘을 먼저 구분해야 합니다.
+**먼저 앱의 필터와 계산 규칙을 확인한 뒤 원시 이벤트를 대조하세요.** 앱은 프레임워크에서 받은 값과, 그 값으로 계산한 지표를 함께 기록합니다. 둘을 구분해야 문제가 생긴 계층을 좁힐 수 있습니다.
 
-### 프레임워크 경계 바깥의 사실
+### 원인을 좁히는 순서
 
-다음은 프레임워크 콜백의 인자를 그대로 기록한 값이므로 앱이 만들어 낸 것이 아닙니다.
+1. **앱의 입력 조건을 확인합니다.** 값이 `null`이면 `unknownReason`을 봅니다. 세션 ID와 관측 창이 기대한 값인지 확인하고, `capacityEvictions`가 0보다 큰지 확인합니다. 이벤트가 용량 한도로 제거됐다면 계산에 필요한 기록이 부족할 수 있습니다.
+2. **원시 이벤트를 대조합니다.** `capture_failed.reason`, `buffer_lost`의 발생 시점, `capture_result.frameDurationNs`와 센서 시각의 간격을 확인합니다. 원시값이 이상하더라도 요청 설정·콜백 처리·시스템 로그를 함께 확인해야 합니다.
+3. **시계 도메인을 확인합니다.** 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 센서 타임스탬프와 앱의 `atNs`를 직접 비교합니다. 다른 시계의 값을 빼면 의미 없는 차이가 나옵니다.
+4. **프레임워크와 HAL을 추가 자료로 구분합니다.** 앱 기록만으로 두 계층 중 어디가 원인인지 확정할 수 없습니다. 시스템 트레이스와 카메라 서비스 로그가 필요합니다. 팀에서 사용할 구체적인 수집 절차는 아직 정리하지 않았습니다.
 
-- `capture_started`의 `frameNumber`와 `timestamp`
-- `capture_result`의 센서 타임스탬프(`sensorNs`), AE/AF/AWB 상태, `exposureNs`, `iso`, `frameDurationNs`, `focusDiopters`, `zoomRatio`, `cropRegion`
-- `capture_failed`의 `reason`과 `imageCaptured`
-- `buffer_lost`의 `frameNumber`
-- `image_available`의 해상도, 포맷, 스트림 이름
+### 프레임워크에서 받은 값
 
-단, `request_observed`에 담긴 요청 내용은 `onCaptureStarted` 시점에 본 것이지 요청을 제출한 시각의 것이 아닙니다. `Telemetry`가 이 사실을 `observation` 필드에 명시해 둡니다.
+아래 항목은 앱이 계산한 지표가 아니라 콜백을 통해 관측한 정보입니다.
 
-### 앱의 해석
+| 이벤트 | 기록하는 정보 |
+| --- | --- |
+| `capture_started` | `frameNumber`와 `timestamp`를 기록합니다. |
+| `capture_result` | `sensorNs`, AE/AF/AWB 상태, `exposureNs`, `iso`, `frameDurationNs`, `focusDiopters`, `zoomRatio`, `cropRegion`을 기록합니다. |
+| `capture_failed` | `reason`과 `imageCaptured`를 기록합니다. |
+| `buffer_lost` | `frameNumber`를 기록합니다. |
+| `image_available` | 해상도, 포맷, 스트림 이름을 기록합니다. |
 
-다음은 앱이 위 사실에서 계산한 값입니다. 여기서 이상이 보이면 먼저 앱의 규칙을 의심합니다.
+`request_observed`는 **요청을 제출한 시점의 기록이 아닙니다.** `onCaptureStarted`에서 관측한 요청 내용을 담으며, `Telemetry`는 이 구분을 `observation` 필드에 기록합니다.
 
-- `intervalMs`, `resultFps`, `observedResultGap` — 센서 타임스탬프 차이로 계산한 간격·FPS와 결과 프레임 번호 차이로 계산한 gap입니다. `FrameStats`의 주석대로 이것은 관측된 결과 간격이지 HAL의 드롭 횟수도 프리뷰 렌더링 드롭 횟수도 아닙니다.
-- H.x 지표와 상태 판정 전부.
+### 앱에서 계산한 값
 
-### 앱 규칙이 만들 수 있는 증상
+`intervalMs`와 `resultFps`는 센서 타임스탬프 차이로 계산합니다. `observedResultGap`은 관측된 결과 프레임 번호의 차이로 계산합니다. 이 값들은 HAL의 프레임 드롭 횟수나 프리뷰 렌더링 드롭 횟수를 직접 나타내지 않습니다.
 
-| 규칙 | 코드 위치 | 만들 수 있는 증상 |
+H.x 지표와 상태 판정도 앱의 계산 결과입니다. 이 값이 예상과 다르면 아래의 필터와 표본 수 기준부터 확인하세요.
+
+### 세션과 표본 규칙
+
+| 규칙 | 코드 위치 | 결과에 나타나는 영향 |
 | --- | --- | --- |
-| 이미 닫힌 세션의 콜백은 기록하지 않음 | `Telemetry.callback`의 `alive()` 검사 | 닫는 도중의 마지막 프레임들이 이벤트에 없음 |
-| 지표는 같은 세션 ID의 이벤트만 사용 | `CheckEvaluator.evaluate`가 `result.session`을 넘김 | 다른 세션의 콜백이 섞이지 않는 대신, 세션 ID가 어긋나면 지표가 비어 있음 |
-| Auto Check 관측 창의 첫 5프레임을 H.1~H.5 통계에서 제외 | `CheckEvaluator.WARMUP_FRAMES` | 첫 프레임들의 긴 간격이 H.1~H.5에 나타나지 않음. 3A 수렴은 제외 전 프레임 사용 |
-| 워밍업 제외 후 steady 프레임 15개 미만이면 값 null | `MetricExtractor(minSamples = 15)` | 값 대신 `INSUFFICIENT_SAMPLES`가 표시됨. 통계 자체는 남아 있음 |
-| 링 버퍼 18,000개 상한을 넘으면 가장 오래된 이벤트 폐기 | `FlightRecorder.store` | 창의 앞부분이 잘림. 잘렸다는 사실은 `capacityEvictions`로만 알 수 있고, 잘린 창에서 계산된 지표에 별도 표시는 없음 |
-| 보존 기간 30초 | `FlightRecorder(retentionNs)` | 30초보다 오래된 이벤트는 `snapshot()`에 없음 |
-| 라이브 tap은 기록 스레드에서 동기 실행 | `FlightRecorder.listener` | tap에 무거운 작업을 넣으면 기록 경로가 느려지고 측정 대상인 간격 자체가 왜곡됨 |
+| 닫힌 세션의 늦은 콜백은 기록하지 않습니다. | `Telemetry.callback`의 `alive()` | 닫는 도중 도착한 마지막 프레임이 이벤트 목록에 없을 수 있습니다. |
+| 같은 세션 ID의 이벤트만 지표에 사용합니다. | `CheckEvaluator.evaluate`의 `result.session` | 다른 세션은 계산에서 제외합니다. 세션 ID가 어긋나면 지표의 입력이 비게 됩니다. |
+| Auto Check는 첫 결과 프레임 5개를 H.1~H.5 통계에서 제외합니다. | `CheckEvaluator.WARMUP_FRAMES` | 첫 프레임의 긴 간격이 해당 통계에 나타나지 않습니다. 3A 수렴은 제외 전 프레임을 사용합니다. |
+| 워밍업을 제외한 steady 프레임이 15개 미만이면 값을 `null`로 표시합니다. | `MetricExtractor(minSamples = 15)` | `INSUFFICIENT_SAMPLES`로 표시합니다. 수집한 통계 자체는 남아 있습니다. |
 
-### 계층을 좁히는 순서
+### 기록 보존과 실행 스레드
 
-1. **앱 규칙인지 확인합니다.** 값이 null이면 `unknownReason`을 봅니다. `capacityEvictions`가 0보다 크면 창이 잘린 것입니다. 관측 창 범위와 세션 ID가 기대와 맞는지 확인합니다. 의도된 규칙에 따른 결과인지 앱 구현의 오류인지 구분합니다.
-2. **이벤트의 원시값을 봅니다.** `capture_failed`의 `reason`, `buffer_lost`의 발생 시점, `capture_result`의 `frameDurationNs`와 센서 타임스탬프 간격을 직접 봅니다. 이 값들은 프레임워크가 준 것이므로, 원시값 이상만으로 HAL 문제를 확정하지 말고 요청 설정·콜백 처리와 시스템 로그를 함께 확인합니다.
-3. **센서 시계 도메인을 확인합니다.** 센서 타임스탬프는 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 `atNs`와 비교할 수 있습니다. 그렇지 않은 기기에서 두 값을 빼면 의미 없는 차이가 나옵니다.
-4. **프레임워크와 HAL을 나눕니다.** 앱의 관측만으로는 이 둘을 확정할 수 없습니다. 이 단계부터는 시스템 트레이스와 카메라 서비스 로그가 필요하며, 팀에서 쓰는 수집 절차는 확인 필요입니다.
+| 규칙 | 코드 위치 | 결과에 나타나는 영향 |
+| --- | --- | --- |
+| 링 버퍼의 이벤트 상한은 18,000개입니다. | `FlightRecorder.store` | 상한을 넘으면 오래된 이벤트부터 제거합니다. 제거 횟수는 `capacityEvictions`에서 확인합니다. 이 때문에 일부 기록이 빠진 지표에 별도 표시는 하지 않습니다. |
+| 이벤트 보존 기간은 30초입니다. | `FlightRecorder(retentionNs)` | 30초보다 오래된 이벤트는 `snapshot()`에 남지 않습니다. |
+| 라이브 listener는 기록 스레드에서 동기 실행됩니다. | `FlightRecorder.listener` | 무거운 처리를 추가하면 기록 경로가 느려지고 관측 간격에도 영향을 줄 수 있습니다. |

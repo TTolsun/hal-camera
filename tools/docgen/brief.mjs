@@ -12,7 +12,7 @@
 // 집필 LLM 이 쓸 수 있는 곳은 _content/ 아래의 해당 파일 하나뿐입니다.
 import fs from "node:fs";
 import { readBindings, readState, readOmmField, ommChildren, REPO_ROOT, fail } from "./lib.mjs";
-import { OMM_FIELDS, contentPath, inputPath, readContentBlock } from "./model.mjs";
+import { readWritingStyle, OMM_FIELDS, contentPath, inputPath, readContentBlock } from "./model.mjs";
 
 const [page, blockId] = process.argv.slice(2);
 if (!page || !blockId) fail("사용법: node brief.mjs <page> <block-id>");
@@ -50,8 +50,10 @@ sections.push(`## 규칙
 - 코드 위치는 파일 경로와 클래스·함수 이름을 함께 씁니다. 줄 번호만 쓰지 않습니다.
 - 필요하면 저장소의 원본 코드를 직접 읽어 근거를 확인하고, 읽은 파일을 front matter 의 sources 에 모두 적습니다.
 - 구현되지 않은 기능은 제외합니다. 확인되지 않은 내용은 \`확인 필요\` 로 표시합니다.
-- 한국어 완성 문장으로 씁니다. 제목(#)은 쓰지 않습니다. 필요하면 ### 이하의 소제목만 씁니다.
+- 한국어 완성 문장으로 씁니다. 제목(#)은 쓰지 않습니다. 필요하면 ### 이하의 소제목을 쓰되, 페이지에서 블록이 배치되는 제목보다 한 단계 낮게 시작합니다.
 ${(block.brief?.forbid ?? []).map((f) => `- ${f}`).join("\n")}`);
+
+sections.push(`## 공통 집필 규칙\n\n${readWritingStyle()}`);
 
 for (const source of block.based_on ?? []) {
   const parts = [`## 근거: .omm/${source}`];

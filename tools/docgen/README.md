@@ -76,3 +76,7 @@ node tools/docgen/selftest.mjs           # 산문 보존, 재현성, 최신성 �
 - node --test tools/docgen/regression.test.mjs는 임시 복사본에서 줄바꿈·입력 변경·dry-run·마커 오류를 검사합니다. CI는 Windows와 Ubuntu에서 실행합니다.
 - 검토 기록은 node tools/docgen/verify.mjs --accept --reviewer=이름 형식으로 작성자를 명시할 수 있습니다. Codex의 코드 대조 기록은 사람의 승인이나 기기 실측을 뜻하지 않습니다. 자동 sync는 accept를 실행하지 않습니다.
 - Pages PR 빌드는 Jekyll 산출물을 확인하며 배포는 main push에서만 수행합니다. 레이아웃은 Mermaid 11.12.0을 CDN에서 불러와 구조도를 표시합니다.
+
+## 배포 문서의 문체
+
+모든 배포 페이지와 원고에는 [공통 집필 규칙](style/README.md)을 적용합니다. 두 스킬의 원문과 라이선스를 저장소에 고정해 두었으며, `brief.mjs`는 원문 전체를 전달합니다. 규칙이 바뀌면 원고 해시도 바뀌므로 재검토가 필요합니다.

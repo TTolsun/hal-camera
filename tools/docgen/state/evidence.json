@@ -43,9 +43,9 @@
       },
       "accepted": {
         "codeHash": "68ecd78e649749d8",
-        "modelHash": "d37755488cd6cf2a",
+        "modelHash": "79f0562b491b9075",
         "at": "2026-09-10",
-        "commit": "4373a38",
+        "commit": "4e9e8c1",
         "reviewer": "Codex"
       }
     },
@@ -55,9 +55,9 @@
       },
       "accepted": {
         "codeHash": "e3690c6149da4568",
-        "modelHash": "3071f3f5bbd71c2b",
+        "modelHash": "1385e59a2ccaa9fd",
         "at": "2026-09-10",
-        "commit": "4373a38",
+        "commit": "4e9e8c1",
         "reviewer": "Codex"
       }
     },
@@ -67,10 +67,34 @@
       },
       "accepted": {
         "codeHash": "4ffa0953e6377014",
-        "modelHash": "bc51a43f844855f1",
+        "modelHash": "65a937ac32dfb75d",
         "at": "2026-09-10",
-        "commit": "4373a38",
+        "commit": "4e9e8c1",
         "reviewer": "Codex"
+      }
+    },
+    "content:architecture.md/module-roles": {
+      "accepted": {
+        "codeHash": "68ecd78e649749d8",
+        "modelHash": "1a5a9f599ad9ae9a",
+        "at": "2026-09-10",
+        "commit": "4e9e8c1",
+        "reviewer": "Codex"
+      },
+      "observed": {
+        "state": "fresh"
+      }
+    },
+    "content:architecture.md/constraints": {
+      "accepted": {
+        "codeHash": "68ecd78e649749d8",
+        "modelHash": "3958e1bf843ecc8d",
+        "at": "2026-09-10",
+        "commit": "4e9e8c1",
+        "reviewer": "Codex"
+      },
+      "observed": {
+        "state": "fresh"
       }
     }
   }

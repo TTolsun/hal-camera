@@ -19,11 +19,17 @@ export const CONFIDENCE_LABEL = {
 // 최신성 상태. 검증기가 계산해서 저장하고 생성기가 표시합니다.
 export const STATE_LABEL = {
   fresh: "최신",
-  stale: "관련 소스 변경됨 — 재검토 필요",
-  unreviewed: "원본이 갱신됨 — 검토 대기",
+  stale: "관련 소스 변경됨: 재검토 필요",
+  unreviewed: "원본이 갱신됨: 검토 대기",
   unknown: "검증 정보 없음",
   missing: "원본 또는 근거 없음",
 };
+
+export function readWritingStyle() {
+  return ['README.md', 'i-have-adhd.md', 'fluent-korean.md'].map(name =>
+    name + '\n' + fs.readFileSync(repoPath('tools', 'docgen', 'style', name), 'utf8')
+  ).join('\n\n');
+}
 
 // --- front matter ---------------------------------------------------------
 export function splitFrontMatter(text) {
@@ -141,6 +147,7 @@ export function computeHashes(bindings, entry) {
     const file = inputPath(bindings, name);
     modelParts.push(name + "\u0000" + (fs.existsSync(file) ? fs.readFileSync(file, "utf8") : "(missing)"));
   }
+  modelParts.push("writing-style\u0000" + readWritingStyle());
   modelParts.push("brief\u0000" + JSON.stringify(entry.block));
   const factsFile = repoPath("tools", "docgen", "state", "facts.json");
   modelParts.push("facts\u0000" + (fs.existsSync(factsFile) ? fs.readFileSync(factsFile, "utf8") : "(missing)"));
