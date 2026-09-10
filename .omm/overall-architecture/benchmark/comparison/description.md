@@ -1,2 +1,1 @@
 benchmark/RegressionDetector.kt, BaselineManager.kt, ReferenceResolver.kt, ResultPresenter.kt가 비교 조건, 기준 실행 선택, 결과 테이블 모델을 담당합니다. 비교는 측정값 두 개에서 별도로 계산합니다. BenchmarkActivity.finishRun과 toggleBaseline에서 기준 실행을 선택하고 RegressionDetector.compare를 호출합니다. renderResult와 renderCompare가 ResultPresenter 및 ComparePresenter로 테이블을 표시합니다.
-

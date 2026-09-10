@@ -1,8 +1,8 @@
 created: 2026-09-09T16:20:14.267Z
-updated: 2026-09-10T17:23:59.544Z
-update_count: 18
-last_field: diagram
-git_commit: e374ca0
+updated: 2026-09-10T17:26:15.597Z
+update_count: 21
+last_field: todo
+git_commit: 1c965c0
 git_branch: codex/pr27-doc-review
 children:
   - benchmark-metrics
@@ -61,4 +61,6 @@ prev_diagram: "graph LR
 
   \    benchmark-metrics -->|\"유효성·측정값을 schema 3 저장\"| run-json
 
-  \    run-json -->|\"측정값 읽기; 비교 UI 연결은 별도 작업\"| rendered-screens\r\n"
+  \    run-json -->|\"저장 결과와 기준 실행을 비교해 결과·비교 테이블 표시\"| rendered-screens\r
+
+  \r\n"
