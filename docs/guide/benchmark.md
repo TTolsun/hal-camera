@@ -35,4 +35,3 @@ flowchart LR
 </details>
 
 **다음 단계:** [주요 실행 흐름](architecture.md#주요-실행-흐름)을 읽고 측정값이 만들어지는 과정을 확인하세요.
-
