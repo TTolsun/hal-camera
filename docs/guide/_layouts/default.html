@@ -4,32 +4,26 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{{ page.title | escape }} · {{ site.title | escape }}</title>
-  <style>
-    body{max-width:1100px;margin:0 auto;padding:24px;font:16px/1.7 system-ui,sans-serif;color:#172033}nav{display:flex;gap:20px;flex-wrap:wrap;border-bottom:1px solid #ddd;padding-bottom:16px}a{color:#1459a6}pre{overflow:auto;background:#f4f6f8;padding:16px}table{border-collapse:collapse;display:block;overflow:auto}th,td{border:1px solid #ddd;padding:8px;text-align:left}sub{font-size:.8rem}.mermaid{overflow:auto}h2,h3{margin-top:2em}
-    main :not(pre)>code{overflow-wrap:anywhere}
-    details{margin:16px 0;padding:10px 14px;border:1px solid #ddd;border-radius:6px}summary{cursor:pointer;font-weight:600}.doc-evidence{font-size:.875rem;overflow-wrap:anywhere}summary:focus-visible{outline:3px solid #1459a6;outline-offset:2px}
-    button{font:inherit;cursor:pointer;border:1px solid #bac5d3;border-radius:6px;background:#fff;color:#1459a6;padding:6px 12px}
-    button:hover{background:#edf3fa}button:focus-visible{outline:3px solid #1459a6;outline-offset:2px}button:disabled{opacity:.45;cursor:default}
-    .mermaid[role="button"]{cursor:zoom-in}.mermaid:focus-visible{outline:3px solid #1459a6;outline-offset:2px}
-    .diagram-dialog{box-sizing:border-box;width:96vw;max-width:none;height:92dvh;max-height:92dvh;padding:0;border:1px solid #bac5d3;border-radius:10px;color:#172033;background:#fff}
-    .diagram-dialog[open]{display:flex;flex-direction:column}.diagram-dialog::backdrop{background:rgb(0 0 0 / .65)}
-    .diagram-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:12px;border-bottom:1px solid #ddd}
-    .diagram-toolbar h2{font-size:1rem;margin:0 auto 0 0}.diagram-toolbar output{min-width:4em;text-align:center}.diagram-close{margin-left:auto}
-    .diagram-viewport{flex:1;min-height:0;overflow:auto;padding:16px;background:#f4f6f8}
-    .diagram-canvas{width:max-content;min-width:100%;min-height:100%;display:flex;align-items:center;justify-content:center}
-    .diagram-canvas svg{display:block;flex:none;max-width:none!important;background:#fff}
-    @media(max-width:600px){.diagram-toolbar h2{width:100%}.diagram-toolbar{gap:6px;padding:8px}.diagram-toolbar button{padding:6px 8px}}
-  </style>
+  <meta name="description" content="{{ page.description | default: site.description | escape }}">
   <link rel="stylesheet" href="{{ '/assets/docflow-design.css' | relative_url }}">
 </head>
 <body>
-  <nav aria-label="문서 메뉴">
-    <a href="{{ '/' | relative_url }}">소개</a>
-    <a href="{{ '/getting-started.html' | relative_url }}">빠른 시작</a>
-    <a href="{{ '/architecture.html' | relative_url }}">아키텍처</a>
-    <a href="{{ '/troubleshooting.html' | relative_url }}">디버깅</a>
-  </nav>
-  <main>{{ content }}</main>
+  <a class="skip-link" href="#main-content">본문으로 이동</a>
+  <header class="site-header">
+    <a class="brand" href="{{ '/' | relative_url }}">HAL CAMERA</a>
+    <nav class="site-nav" aria-label="문서 메뉴">
+      {% assign nav_paths = '/architecture.html,/benchmark.html,/decisions.html,/evidence.html,/getting-started.html,/troubleshooting.html' | split: ',' %}
+      {% assign nav_labels = 'Architecture,Benchmark,Decisions,Evidence,빠른 시작,디버깅' | split: ',' %}
+      {% for path in nav_paths %}
+      <a href="{{ path | relative_url }}"{% if page.url == path %} aria-current="page"{% endif %}>{{ nav_labels[forloop.index0] }}</a>
+      {% endfor %}
+    </nav>
+  </header>
+  <main id="main-content" class="{% if page.home %}home{% else %}document{% endif %}">
+    {% unless page.home %}<p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>{% endunless %}
+    {{ content }}
+  </main>
+  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog class="diagram-dialog" aria-labelledby="diagram-title">
     <div class="diagram-toolbar">
       <h2 id="diagram-title">그림 크게 보기</h2>
@@ -45,9 +39,6 @@
     </div>
   </dialog>
   <script type="module">
-    document.querySelectorAll('nav a').forEach(link => {
-      if (new URL(link.href).pathname === location.pathname) link.setAttribute('aria-current', 'page');
-    });
     const dialog = document.querySelector('.diagram-dialog');
     const viewport = dialog.querySelector('.diagram-viewport');
     const canvas = dialog.querySelector('.diagram-canvas');
@@ -118,6 +109,8 @@
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: 'strict',
+          theme: 'base',
+          themeVariables: { primaryColor: '#f6f7f8', primaryTextColor: '#18191b', primaryBorderColor: '#c8ccd2', lineColor: '#858b94', secondaryColor: '#ffffff', tertiaryColor: '#ffffff', fontFamily: 'system-ui, sans-serif', fontSize: '16px' },
           // Leave room for multiline nodes and labels on returning edges.
           flowchart: { nodeSpacing: 100, rankSpacing: 120, wrappingWidth: 300 },
         });
