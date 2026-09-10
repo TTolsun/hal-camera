@@ -1,0 +1,12 @@
+created: 2026-09-09T16:22:59.348Z
+updated: 2026-09-09T16:43:19.081Z
+update_count: 13
+last_field: note
+git_commit: 1e3d2a0
+git_branch: main
+children:
+  - check-sequence
+  - engine-lifecycle
+  - incident-window
+  - metric-verdict
+  - validity-gate

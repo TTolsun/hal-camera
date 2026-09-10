@@ -1,0 +1,172 @@
+# HALCamera 개발자 가이드 - 바인딩 매니페스트
+#
+# 소유권: 사람. 추출기, 검증기, 생성기, 집필 프롬프트 조립기는 이 파일을
+# 읽기만 합니다. 문서 목차가 바뀌면 코드가 아니라 이 파일을 고칩니다.
+#
+# 파이프라인
+#   코드 ─ 추출기 ──────────────→ tools/docgen/state/facts.json   (결정론)
+#   코드 ─ LLM 스캔 ────────────→ .omm/<perspective>/            (구조, 근거, 제약)
+#   .omm + facts + brief + _inputs ─ LLM 집필 → docs/guide/_content/<page>/<id>.md
+#   위 원본 전부 ─ 검증기 ──────→ tools/docgen/state/evidence.json (최신성, 검토 여부)
+#   위 원본 전부 ─ 생성기 ──────→ docs/guide/<page>.md 의 마커 블록 (배치만 담당)
+#
+# 블록 kind
+#   status        검증 상태 배지. 검증기가 저장한 값을 표시만 합니다.
+#   omm           .omm/<source>/<field> 를 그대로 배치합니다.
+#   omm-tree      .omm/<source>/ 의 자식 요소와 description 을 목록으로 배치합니다.
+#   omm-concerns  concern + todo 를 "확인 필요" 목록으로 배치합니다.
+#   fact          facts.json 의 값을 표로 배치합니다.
+#   content       LLM 이 집필하고 사람이 검토한 원고를 배치합니다.
+#
+# confidence (근거 수준)
+#   code    코드를 읽어서 확인한 동작
+#   device  실제 기기에서 검증한 동작. _inputs/device-verification.yaml 의 기록이 있어야 합니다.
+#   intent  설계 의도나 추정. 사람이 제공한 근거(_inputs/decisions.md)가 없으면 "확인 필요"로 남깁니다.
+
+version: 2
+
+site:
+  root: docs/guide
+  content_dir: _content
+  inputs_dir: _inputs
+
+# --------------------------------------------------------------------------
+# 원본 정의
+# kind: omm  -> .omm/<name>/. LLM 스캐너가 작성합니다. evidence 는 최신성 검사 입력입니다.
+# kind: fact -> facts.json 의 키. 매 실행마다 다시 계산되므로 evidence 가 필요 없습니다.
+# --------------------------------------------------------------------------
+sources:
+  overall-architecture:
+    kind: omm
+    evidence:
+      - app/src/main/java/dev/halcamera/**/*.kt
+      - app/build.gradle.kts
+      - settings.gradle.kts
+
+  data-flow:
+    kind: omm
+    evidence:
+      - app/src/main/java/dev/halcamera/telemetry/**/*.kt
+      - app/src/main/java/dev/halcamera/benchmark/**/*.kt
+      - app/src/main/java/dev/halcamera/check/**/*.kt
+      - app/src/main/java/dev/halcamera/report/**/*.kt
+
+  state-transitions:
+    kind: omm
+    evidence:
+      - app/src/main/java/dev/halcamera/camera/**/*.kt
+      - app/src/main/java/dev/halcamera/check/**/*.kt
+
+  telemetry-facts:
+    kind: fact
+
+  build-facts:
+    kind: fact
+
+# --------------------------------------------------------------------------
+# 페이지 정의
+# --------------------------------------------------------------------------
+pages:
+  architecture.md:
+    title: 아키텍처 및 코드 구조
+    blocks:
+      - id: status
+        kind: status
+
+      - id: overview
+        kind: content
+        based_on: [overall-architecture, data-flow]
+        confidence: code
+        brief:
+          reader: 코드를 처음 읽는 개발자와, 기능을 수정하기 전에 영향 범위를 알아야 하는 개발자
+          answers:
+            - 앱은 큰 틀에서 어떤 단계로 동작하며, 각 단계의 책임은 무엇인가
+            - 평가 계층이 두 개인 이유와, 지금 어느 쪽이 실제 화면을 구동하는가
+            - 코드를 처음 읽을 때 어느 파일부터 열어야 하는가
+          must_link: [Telemetry, FlightRecorder, CheckEvaluator, MainActivity]
+          forbid:
+            - 설계 결정의 이유를 코드만 보고 추정하지 않습니다. decisions.md 에 없으면 "확인 필요"로 남깁니다.
+            - 기기에서 동작했다는 서술을 하지 않습니다.
+
+      - id: overall-diagram
+        kind: omm
+        source: overall-architecture
+        field: diagram
+        confidence: code
+
+      - id: module-roles
+        kind: omm-tree
+        source: overall-architecture
+        confidence: code
+
+      - id: runtime-flow
+        kind: content
+        based_on: [data-flow]
+        confidence: code
+        brief:
+          reader: 화면에서 바꾼 설정이 어떤 Camera 요청과 결과로 이어지는지 추적해야 하는 HAL 개발자
+          answers:
+            - 사용자 조작 하나가 어떤 순서로 카메라 호출, 콜백 기록, 지표 계산, 화면 표시로 이어지는가
+            - 이벤트 경로와 러너 경로가 왜 따로 있고 어디서 합쳐지는가
+            - 결과가 예상과 다를 때 어느 단계의 출력을 먼저 확인해야 하는가
+          must_link: [FlightRecorder, MetricExtractor, CheckEvaluator]
+          forbid:
+            - 아직 연결되지 않은 벤치마크 갈래(M2 러너)를 동작하는 것처럼 쓰지 않습니다.
+
+      - id: runtime-diagram
+        kind: omm
+        source: data-flow
+        field: diagram
+        confidence: code
+
+      - id: lifecycle-diagram
+        kind: omm
+        source: state-transitions
+        field: diagram
+        confidence: code
+
+      - id: constraints
+        kind: omm
+        source: overall-architecture
+        field: constraint
+        confidence: code
+
+      - id: open-questions
+        kind: omm-concerns
+        source: overall-architecture
+        confidence: intent
+
+  troubleshooting.md:
+    title: 디버깅 및 문제 해결
+    blocks:
+      - id: status
+        kind: status
+
+      - id: build-identity
+        kind: fact
+        source: build-facts
+        confidence: code
+
+      - id: log-tags
+        kind: fact
+        source: telemetry-facts
+        confidence: code
+
+      - id: layer-isolation
+        kind: content
+        based_on: [data-flow, state-transitions]
+        confidence: code
+        brief:
+          reader: 증상이 앱, 프레임워크, HAL 중 어느 계층에서 왔는지 좁혀야 하는 HAL 개발자
+          answers:
+            - 앱이 기록하는 이벤트와 러너 표시 중 무엇이 프레임워크 경계 바깥의 사실이고 무엇이 앱의 해석인가
+            - 세션 ID 필터링, 초기 프레임 제외, INSUFFICIENT_SAMPLES 같은 앱 쪽 규칙이 어떤 증상을 만들 수 있는가
+            - 계층을 좁히기 위해 어떤 순서로 무엇을 확인하는가
+          must_link: [FlightRecorder, capacityEvictions, INSUFFICIENT_SAMPLES]
+          forbid:
+            - 특정 기기에서 재현되었다는 서술을 하지 않습니다. device-verification.yaml 의 기록만 인용합니다.
+
+      - id: open-questions
+        kind: omm-concerns
+        source: data-flow
+        confidence: intent

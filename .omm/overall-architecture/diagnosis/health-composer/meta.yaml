@@ -1,0 +1,9 @@
+created: 2026-09-09T16:16:04.328Z
+updated: 2026-09-09T16:16:04.329Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: health-composer
+children: []
+parentPath:
+  - diagnosis

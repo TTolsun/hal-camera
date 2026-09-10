@@ -1,0 +1,12 @@
+graph LR
+    endpoint-model["CameraEndpoint + LensRoles\napp/src/main/java/dev/halcamera/check/CameraEndpoint.kt"]
+    endpoint-resolver["CameraEndpointResolver\napp/src/main/java/dev/halcamera/check/CameraEndpointResolver.kt"]
+    check-state-machine["AutoCheckRunner\napp/src/main/java/dev/halcamera/check/AutoCheckRunner.kt"]
+    check-evaluator["CheckEvaluator\napp/src/main/java/dev/halcamera/check/CheckEvaluator.kt"]
+    check-result["CheckResult\napp/src/main/java/dev/halcamera/check/CheckResult.kt"]
+
+    endpoint-resolver -->|"emit one endpoint per camera id and physical id"| endpoint-model
+    endpoint-model -->|"LensRoles.checkOrder ranks MAIN, FRONT, ULTRA_WIDE, TELE"| check-state-machine
+    check-state-machine -->|"EndpointResult: launch, still and observe-window timings"| check-evaluator
+    check-evaluator -->|"EndpointEvaluation: states, diagnosis, health, baseline candidate"| check-result
+    check-state-machine -->|"raw millisecond values shown in the L3 detail view"| check-result

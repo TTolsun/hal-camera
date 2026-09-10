@@ -1,0 +1,9 @@
+created: 2026-09-09T16:12:47.984Z
+updated: 2026-09-09T16:12:47.985Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: capture-callbacks
+children: []
+parentPath:
+  - telemetry

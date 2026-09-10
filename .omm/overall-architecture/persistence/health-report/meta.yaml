@@ -1,0 +1,9 @@
+created: 2026-09-09T16:19:09.205Z
+updated: 2026-09-09T16:19:09.206Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: health-report
+children: []
+parentPath:
+  - persistence

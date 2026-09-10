@@ -5,5 +5,7 @@ local.properties
 **/build/
 *.iml
 *.jks
-.omm/
 keystore.properties
+
+# docgen: omm 동기화 전 스냅샷
+tools/docgen/state/omm-backup/

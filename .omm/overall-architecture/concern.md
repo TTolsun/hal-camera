@@ -1,0 +1,6 @@
+- 평가 스택이 두 개 공존합니다. `diagnosis/`(건강 판정, v0.2)는 살아 있고 출시된 화면을 구동합니다. `benchmark/`(측정, v0.3)는 이를 대체할 예정이지만 데이터 계약에서 멈춰 있습니다. 표시용 메타데이터를 `benchmark/MetricInfo.kt`로 옮겨서 명명 의존성은 끊었지만, `BenchmarkEvaluator`와 `BenchmarkModel`이 여전히 `diagnosis/`에서 `MetricExtractor`, `UnknownReason`, `jsonName`을 import합니다. 따라서 M3에서 삭제하려면 이것들을 중립적인 위치로 먼저 옮겨야 합니다.
+- `MainActivity`는 566줄이며 뷰 생성, 권한 처리, 엔진 생명주기, incident export, CPU 샘플링을 한 클래스에 섞어 두었습니다. 가장 큰 파일이면서 가장 테스트하기 어려운 파일입니다.
+- `HealthMonitor`는 스레드 안전하지 않다고 명시되어 있고 warning 유지 상태를 평범한 필드에 보관합니다. 모든 호출이 메인 스레드에서 올 때에만 안전합니다.
+- `BenchmarkEvaluator`는 `notRun("2.7")`을 무조건 반환하고, H.9는 러너가 아직 제공하지 않는 콜백 실패 횟수로 계산합니다. M2 러너가 없기 때문이며, 지금 만들어지는 run JSON은 불완전합니다.
+- 표준 프로파일 ID가 아직 `camera2-standard-v1-draft`입니다. 따라서 이 프로파일로 만든 실행은 모두 `PROFILE_DRAFT` validity flag를 달고 설계상 점수 대상에서 제외됩니다.
+- `IncidentExporter`가 `device.json`에 `appVersion`을 `"0.1.0"`으로 하드코딩하는데, 모듈이 선언한 `versionName`은 `"0.3.0"`입니다.

@@ -1,0 +1,14 @@
+graph LR
+    baseline-store["BaselineStore\napp/src/main/java/dev/halcamera/baseline/BaselineStore.kt"]
+    health-report["HealthReport writer\napp/src/main/java/dev/halcamera/report/HealthReport.kt"]
+    checks-dir["files/checks/*.json\nschema 2, read back by RunSummary and CheckResult"]
+    benchmark-report["BenchmarkReport + codec\napp/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt"]
+    benchmark-store["BenchmarkStore + BenchmarkIndex\napp/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt"]
+
+    baseline-store -->|"previous per-endpoint values the run is judged against"| health-report
+    health-report -->|"write one run JSON per check"| checks-dir
+    benchmark-store -->|"resolve the run file path and read index.json"| benchmark-report
+    benchmark-report -->|"write files/benchmarks/<runId>.json, schema 3"| benchmark-store
+
+    classDef store fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+    class benchmark-store,baseline-store,checks-dir store

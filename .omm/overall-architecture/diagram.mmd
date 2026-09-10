@@ -1,0 +1,28 @@
+graph LR
+    screens["Screens\napp/src/main/java/dev/halcamera/{home,check}/, MainActivity.kt"]
+    camera-engines["Camera Engines\napp/src/main/java/dev/halcamera/camera/"]
+    telemetry["Telemetry & Flight Recorder\napp/src/main/java/dev/halcamera/telemetry/"]
+    check-runner["Auto Check Runner\napp/src/main/java/dev/halcamera/check/"]
+    diagnosis["Diagnosis Engine v0.2\napp/src/main/java/dev/halcamera/diagnosis/"]
+    benchmark["Benchmark Contract v0.3\napp/src/main/java/dev/halcamera/benchmark/"]
+    persistence["Run Persistence\napp/src/main/java/dev/halcamera/{report,baseline}/"]
+    ui-widgets["Custom Views\napp/src/main/java/dev/halcamera/ui/"]
+    platform-camera["Android Camera2 / CameraX\nplatform API"]
+
+    screens -->|"own the preview surface, start and close one engine at a time"| camera-engines
+    camera-engines -->|"openCamera, createCaptureSession, capture"| platform-camera
+    camera-engines -->|"push CaptureCallback and ImageReader events"| telemetry
+    check-runner -->|"drive open / still / close through the Driver interface"| camera-engines
+    telemetry -->|"ring-buffer Event list for one session and time window"| diagnosis
+    check-runner -->|"per-endpoint EndpointResult with launch and still timings"| diagnosis
+    diagnosis -->|"reuse MetricExtractor percentiles and MetricCatalog names"| benchmark
+    diagnosis -->|"MetricState, Diagnosis, Health for the run JSON"| persistence
+    benchmark -->|"BenchmarkMetric, RunValidity, schema 3 run JSON"| persistence
+    screens -->|"read the newest stored run to render without touching the camera"| persistence
+    screens -->|"draw live scope, strip and timeline"| ui-widgets
+    telemetry -->|"synchronous live tap on each recorded event"| ui-widgets
+
+    classDef external fill:#585b70,stroke:#585b70,color:#cdd6f4
+    classDef store fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+    class platform-camera external
+    class persistence store

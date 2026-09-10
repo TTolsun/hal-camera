@@ -1,0 +1,31 @@
+graph LR
+    framework-callbacks["Camera2 callbacks\nCaptureCallback, ImageReader, CameraState"]
+    event-record["Event records\ntelemetry/Telemetry.kt, FlightRecorder.kt"]
+    runner-marks["Step marks and timings\ncheck/AutoCheckRunner.kt"]
+    frame-observations["FrameObservation per result\ndiagnosis/MetricExtractor.kt"]
+    metric-samples["MetricSample per metric id\ndiagnosis/MetricExtractor.kt, check/AutoCheckRunner.kt"]
+    judged-states["MetricState, Diagnosis, Health\ndiagnosis/ThresholdEngine.kt, DiagnosisRules.kt, HealthComposer.kt"]
+    benchmark-metrics["BenchmarkMetric statistics\nbenchmark/BenchmarkEvaluator.kt"]
+    run-json["Run JSON on disk\nfiles/checks/, files/benchmarks/, files/incidents/"]
+    rendered-screens["Rendered result\ncheck/CheckResult.kt, home/RunSummary.kt"]
+
+    framework-callbacks -->|"one Event per callback, tagged with session and elapsedRealtimeNanos"| event-record
+    framework-callbacks -->|"driver reports OPENED, CONFIGURED, FIRST_FRAME, STILL_RECEIVED, CLOSED"| runner-marks
+    event-record -->|"join capture_started, request_observed and image_available by frame and sensor timestamp"| frame-observations
+    frame-observations -->|"aggregate the steady window into H.1 to H.8"| metric-samples
+    event-record -->|"count capture_failed and buffer_lost for H.9"| metric-samples
+    runner-marks -->|"subtract mark pairs into 1.x and 2.x latencies"| metric-samples
+    metric-samples -->|"judge absolutely and relatively against ThresholdTable and the baseline"| judged-states
+    frame-observations -->|"same percentiles, no judgement, statistics only"| benchmark-metrics
+    runner-marks -->|"LaunchCycle and StillSample, supplied by the missing M2 runner"| benchmark-metrics
+    judged-states -->|"HealthReport writes schema 2"| run-json
+    benchmark-metrics -->|"BenchmarkReport writes schema 3"| run-json
+    event-record -->|"IncidentExporter writes events.jsonl into the incident ZIP"| run-json
+    run-json -->|"read back on resume, never recomputed"| rendered-screens
+
+    classDef store fill:#a6e3a1,stroke:#a6e3a1,color:#1e1e2e
+    classDef external fill:#585b70,stroke:#585b70,color:#cdd6f4
+    classDef concern fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e
+    class run-json store
+    class framework-callbacks external
+    class benchmark-metrics concern

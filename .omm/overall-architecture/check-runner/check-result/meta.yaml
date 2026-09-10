@@ -1,0 +1,9 @@
+created: 2026-09-09T16:14:32.147Z
+updated: 2026-09-09T16:14:32.148Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: check-result
+children: []
+parentPath:
+  - check-runner

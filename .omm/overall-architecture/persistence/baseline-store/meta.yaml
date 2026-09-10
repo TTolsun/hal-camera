@@ -1,0 +1,9 @@
+created: 2026-09-09T16:19:37.762Z
+updated: 2026-09-09T16:19:37.763Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: baseline-store
+children: []
+parentPath:
+  - persistence

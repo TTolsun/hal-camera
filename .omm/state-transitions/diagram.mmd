@@ -1,0 +1,15 @@
+graph TD
+    check-sequence["Auto Check step machine\ncheck/AutoCheckRunner.kt"]
+    engine-lifecycle["Camera engine open and close\ncamera/Camera2Engine.kt, CameraXEngine.kt"]
+    incident-window["Incident pre and post window\ntelemetry/FlightRecorder.kt"]
+    metric-verdict["Metric verdict resolution\ndiagnosis/ThresholdEngine.kt, Model.kt"]
+    validity-gate["Run validity gates\nbenchmark/RunValidity.kt"]
+
+    check-sequence -->|"drive open, still and close through the Driver interface"| engine-lifecycle
+    engine-lifecycle -->|"OPENED, CONFIGURED, FIRST_FRAME, STILL_RECEIVED, CLOSED signals"| check-sequence
+    check-sequence -->|"a timeout or error sets failedStep, which becomes hardFailure"| metric-verdict
+    check-sequence -->|"aborted reason and per-step sample counts"| validity-gate
+    incident-window -->|"trigger and finish run beside the sequence, on the same recorder"| check-sequence
+
+    classDef concern fill:#f38ba8,stroke:#f38ba8,color:#1e1e2e
+    class engine-lifecycle concern

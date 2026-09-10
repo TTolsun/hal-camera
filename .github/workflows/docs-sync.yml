@@ -1,0 +1,48 @@
+# omm 동기화.
+#
+# 매일 한 번 낡은 .omm/ perspective 와 원고를 다시 만들어 PR 로 올립니다.
+# 사람의 검토(verify --accept)는 PR 에서 합니다. 이 workflow 는 검토를 대신하지 않습니다.
+#
+# 필요한 설정
+#   - 저장소 secret ANTHROPIC_API_KEY
+#   - Settings > Actions > General 에서 "Allow GitHub Actions to create and approve pull requests" 허용
+#
+# 확인 필요: claude CLI 의 headless 실행 옵션은 tools/docgen/sync.mjs 에 있는 것을
+# 기준으로 했습니다. CLI 버전에 따라 옵션 이름이 다를 수 있으므로 첫 실행은 workflow_dispatch 로
+# 수동 실행해 로그를 확인하세요.
+name: docs-sync
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # 03:00 KST
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: omm 과 claude CLI 설치
+        run: npm install -g oh-my-mermaid @anthropic-ai/claude-code
+      - name: 동기화
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node tools/docgen/sync.mjs
+      - name: PR 생성
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: docs/omm-sync
+          title: "docs: omm 동기화 (${{ github.run_id }})"
+          commit-message: "docs: sync .omm and generated guide pages"
+          body: |
+            자동 동기화 결과입니다. 검토 후 `node tools/docgen/verify.mjs --accept` 를 실행해 검토를 기록하고 커밋해 주세요.
+
+            - 재스캔된 perspective 와 재집필된 원고는 diff 를 확인하세요.
+            - 생성 블록 하단의 근거 줄에서 근거 파일과 근거 수준을 확인하세요.
+          labels: documentation

@@ -1,0 +1,37 @@
+# 개발자 가이드 검사.
+#
+# 두 가지를 확인합니다.
+#   원본 최신성: 관련 코드가 바뀌었는데 .omm/ 이나 원고의 검토가 빠졌는가  (verify --check)
+#   생성 일치:   .omm/ 과 바인딩에서 만든 결과가 docs/guide 와 같은가        (generate --check)
+# 추출기와 검증기가 쓰는 state/ 파일이 커밋된 것과 다르면 그것도 실패입니다.
+#
+# 생성기는 외부 의존성이 없으므로 npm install 이 필요 없습니다.
+name: docs-check
+
+on:
+  pull_request:
+    paths:
+      - "app/**"
+      - "settings.gradle.kts"
+      - ".omm/**"
+      - "docs/guide/**"
+      - "tools/docgen/**"
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: 사실 추출
+        run: node tools/docgen/extract.mjs
+      - name: 원본 최신성 검사
+        run: node tools/docgen/verify.mjs --check
+      - name: 생성 결과 일치 검사
+        run: node tools/docgen/generate.mjs --check
+      - name: 상태 파일 일치 검사
+        run: git diff --exit-code -- tools/docgen/state docs/guide

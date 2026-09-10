@@ -1,0 +1,16 @@
+created: 2026-09-09T16:08:35.012Z
+updated: 2026-09-09T16:41:21.987Z
+update_count: 15
+last_field: note
+git_commit: 1e3d2a0
+git_branch: main
+children:
+  - benchmark
+  - camera-engines
+  - check-runner
+  - diagnosis
+  - persistence
+  - platform-camera
+  - screens
+  - telemetry
+  - ui-widgets

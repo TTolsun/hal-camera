@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "entries": {
+    "omm:overall-architecture": {
+      "observed": {
+        "codeHash": "adc840e84d9b69c6",
+        "modelHash": "036af10ba6cffb42",
+        "state": "unknown",
+        "fileCount": 53
+      }
+    },
+    "omm:data-flow": {
+      "observed": {
+        "codeHash": "446e65ab2ef52037",
+        "modelHash": "9c42b23266b78ea1",
+        "state": "unknown",
+        "fileCount": 32
+      }
+    },
+    "omm:state-transitions": {
+      "observed": {
+        "codeHash": "80a04dff42fefbed",
+        "modelHash": "e7c33188bed87d3b",
+        "state": "unknown",
+        "fileCount": 9
+      }
+    },
+    "content:architecture.md/overview": {
+      "observed": {
+        "codeHash": "adc840e84d9b69c6",
+        "modelHash": "695f76e86a6a4fa1",
+        "state": "unknown",
+        "fileCount": 53
+      }
+    },
+    "content:architecture.md/runtime-flow": {
+      "observed": {
+        "codeHash": "c61ba1540b383ecc",
+        "modelHash": "c9446766e974bcd2",
+        "state": "unknown",
+        "fileCount": 33
+      }
+    },
+    "content:troubleshooting.md/layer-isolation": {
+      "observed": {
+        "codeHash": "31f5d78c4b919ded",
+        "modelHash": "b9464c1c465ec8dd",
+        "state": "unknown",
+        "fileCount": 36
+      }
+    }
+  }
+}
