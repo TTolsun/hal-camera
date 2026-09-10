@@ -1,11 +1,11 @@
-package dev.halcamera.check
+package dev.halcamera.camera
 
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.os.Build
 
 /**
- * Enumerates camera endpoints from the public API only (docs/PRODUCT-v0.2.md 9.3). Hidden ids are never probed.
+ * Enumerates camera endpoints from the public API only (docs/archive/PRODUCT-v0.2.md 9.3). Hidden ids are never probed.
  * Physical cameras behind a logical camera are listed with independentlyOpenable=false and are not checked in v0.2.
  */
 class CameraEndpointResolver(private val manager: CameraManager) {

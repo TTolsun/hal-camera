@@ -2,17 +2,15 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-feature android:name="android.hardware.camera.any" android:required="true" />
-    <application android:theme="@style/AppTheme" android:label="HAL Camera"
+    <application android:theme="@style/AppTheme" android:label="HAL CAM"
         android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="false" android:supportsRtl="true">
-        <!-- The launcher label is shorter than the application label so it fits under the icon. -->
-        <activity android:name=".home.HomeActivity" android:exported="true" android:label="HAL CAM" android:theme="@style/HomeTheme">
+        <!-- LIVE is the launcher since M3: the consumer home it used to open no longer exists. -->
+        <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity" android:exported="false" />
-        <activity android:name=".check.CheckActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".benchmark.BenchmarkActivity" android:exported="false" android:screenOrientation="portrait" />
         <provider android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">

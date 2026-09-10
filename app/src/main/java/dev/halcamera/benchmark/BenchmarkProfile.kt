@@ -1,6 +1,6 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.diagnosis.jsonName
+import dev.halcamera.metrics.jsonName
 
 /**
  * How the camera was launched for the launch metrics. WARM_REOPEN is the only mode in v0.3: the same process

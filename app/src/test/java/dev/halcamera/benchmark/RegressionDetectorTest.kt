@@ -2,7 +2,7 @@ package dev.halcamera.benchmark
 
 import dev.halcamera.benchmark.BenchmarkRunFixture.metric
 import dev.halcamera.benchmark.BenchmarkRunFixture.run
-import dev.halcamera.diagnosis.UnknownReason
+import dev.halcamera.metrics.UnknownReason
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull

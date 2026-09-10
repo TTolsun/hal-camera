@@ -13,6 +13,14 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 class IncidentExporter(private val context: Context) {
+    /**
+     * The version that produced the bundle. This was the literal "0.1.0" for four releases, which made every ZIP
+     * claim to come from the first one: a bundle read months later has to say which build wrote it.
+     */
+    private fun appVersion(): String =
+        try { context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "unknown" }
+        catch (_: Exception) { "unknown" }
+
     fun export(incident: Incident, sessions: Map<String, Map<String, Any?>>): File {
         val directory = File(context.filesDir, "incidents").apply { mkdirs() }
         val destination = File(directory, "${incident.id}.zip")
@@ -57,13 +65,13 @@ class IncidentExporter(private val context: Context) {
                 entry("incident.json", json(summary).toString(2))
                 entry("device.json", json(mapOf("manufacturer" to Build.MANUFACTURER, "model" to Build.MODEL,
                     "sdk" to Build.VERSION.SDK_INT, "release" to Build.VERSION.RELEASE, "fingerprint" to Build.FINGERPRINT,
-                    "appVersion" to "0.1.0", "exportedAtUtc" to utcNow())).toString(2))
+                    "appVersion" to appVersion(), "exportedAtUtc" to utcNow())).toString(2))
                 entry("camera_characteristics.json", json(selectedSessions).toString(2))
                 entry("events.jsonl", incident.events.joinToString("\n", postfix = "\n") { eventJson(it).toString() })
                 entry("capture_requests.jsonl", byKind["request_observed"].orEmpty().joinToString("\n") { eventJson(it).toString() })
                 entry("capture_results.jsonl", results.joinToString("\n") { eventJson(it).toString() })
                 entry("incident.md", """
-                    # HAL Camera · ${incident.id}
+                    # HAL CAM · ${incident.id}
 
                     - Finish: ${incident.finishReason}
                     - Events: ${incident.events.size}

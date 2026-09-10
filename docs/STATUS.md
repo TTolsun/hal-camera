@@ -1,47 +1,46 @@
-# Checkpoint 001 — 작업 상태
+# 작업 상태
 
-2026-09-08 · 사용자 요청에 따라 추가 구현 중단 후 공유.
+2026-09-11 · M3 완료 시점.
 
-## 이번에 공유하는 것
+## 지금 어디까지 왔는가
 
-- 1차 MVP 지표 정의서: 시작·종료 지점, 시계 구분, 조건, 통계, CTS 비교 범위.
-- 초기 아이디어 기반 Android 코드 초안: Camera2/CameraX, metadata, 3A scope, Flight Recorder, ZIP 공유.
-- 컴파일·단위 테스트·lint 결과 원문.
+| 마일스톤 | 상태 |
+|---|---|
+| M1 Data contract | 완료 |
+| M2 Measurement correctness | 완료. Galaxy S25+ 실기기 확인 |
+| M3 Product conversion | 완료 |
+| M4 Developer workflow | 완료. baseline 지정과 vs baseline / vs previous 열을 실기기에서 확인 |
+| M5a Internal score | 미착수. scoring-eligible run 10회가 시작 조건 |
+| M6 History / export | 미착수 |
 
-새 계획이 도착하기 전에 작성된 `app/` 코드는 기존 탐색안입니다. 지표 정의서에서 제안한 성능 시나리오가 이미 구현되었다는 뜻이 아닙니다.
+M4의 내용은 계획보다 앞당겨 M3 2단계에서 함께 구현하고 검증했습니다.
 
-## 실행한 검증
+## M3에서 한 일
 
-`assembleDebug testDebugUnitTest lintDebug` 실행 결과:
+Doctor를 지웠습니다. consumer 홈과 incident 모드, Auto Check와 그 화면, 임계값 엔진과 표, 진단 규칙, health composer, health monitor, v0.2 리포트 작성기, Auto Check baseline store가 사라졌습니다. 모델에 있던 판정 어휘(State, ThresholdBasis, CddApplicability, ConditionEquivalence, HealthLevelV2, CauseLayer, MetricState, Diagnosis, Health)도 함께 지웠습니다.
 
-- APK 생성 성공. 초기 탐색용 APK이며 실기기 동작은 확인하지 않았습니다.
-- FlightRecorderTest: tests=7, failures=0, errors=0.
-- 최종 Lint: 오류 0개. 경고는 첨부 보고서에 보존했습니다.
-- 최종 전체 검증: BUILD SUCCESSFUL (43초).
+LIVE는 측정한 것을 모두 유지하고 판정한 것을 모두 버렸습니다. 건강 배너와 진단 카드 대신 `ui/LiveReadout`이 같은 숫자를 판정 없이 표시합니다. strip에서 경고 색을 뺐고, flight recorder는 더 이상 `health_assessment` 이벤트를 쓰지 않습니다. 하단 버튼은 MARK · SHUTTER · BENCHMARK 세 개이고, MainActivity가 런처가 되었습니다.
 
-초기 검사에서 발견되어 이번 프리뷰 체크포인트를 위해 수정한 오류:
+살아남은 파일은 이름에 맞는 패키지로 옮겼습니다. `check/`의 엔드포인트 두 개는 `camera/`로, `diagnosis/`의 MetricExtractor와 모델 잔여분은 `metrics/`로 갔습니다. `metrics`는 패키지 그래프의 leaf이며 비교도 표시도 알지 못합니다.
 
-1. API 26에서 API 27의 `windowLightNavigationBar`를 참조하는 style 1건.
-2. 이 PC의 `local.properties` SDK 경로 escape 1건. 이 파일은 저장소에서 제외됩니다.
-3. Camera2Interop 실험 API opt-in 표기 3건.
+## 실기기 확인 (Galaxy S25+ · SM-S936N)
 
-사용자가 중간 산출물에 실제 카메라 프리뷰를 요구한 후, 위 빌드 검사 오류만 수정하고 재검증했습니다. 새 성능 시나리오 구현은 진행하지 않았습니다.
-
-ADB 장치 목록이 비어 있어 실기기에서 프리뷰를 직접 관찰하거나 테스트하지 못했습니다. APK에 실제 CameraX/Camera2 preview 경로는 구현되어 있습니다. 사용자가 기기에 설치해 확인할 수 있도록 APK를 제공합니다.
+- 8.2 시작 카드: preflight `device_setup` 경로, CameraX 전환 안내, subject prefill 동작
+- 8.3 진행 화면: 6단계, 시간 예산으로 가중한 진행률, 실시간 interval p50 · stall · frames · thermal
+- 8.4 결과: eligibility 3단계 머리글, p50 / max 열 규칙, `vs baseline`과 `vs previous` 열
+- 7.1: baseline이 없을 때 이전 run 대비 delta만 표시하고 REGRESSED를 붙이지 않음
+- 7.2: Open이 +138 %여도 절대 차이 6 ms가 noise floor 10 ms 미만이라 회귀로 판정하지 않음
+- `SET AS BASELINE` / `CLEAR BASELINE` 전환
 
 ## 아직 하지 않은 것
 
-- 새 계획 기준 Camera2 3개 시나리오와 반복 측정 루프.
-- 녹화 인코더·muxer·frame count 계측.
-- 실기기 권한 거부/중단/회전/전후면 전환/카메라 점유 경쟁 검증.
-- CTS와 동일 기기·동일 조건 대조 측정.
-- GitHub Actions, Google Drive 자동 동기화, Perfetto/AI 연동.
+- 점수(M5). curve 학습에 쓸 정상 조건 scoring-eligible run이 아직 부족합니다.
+- 이력 화면과 CSV export(M6).
+- 녹화(3.x) 지표 전체.
+- 여러 제조사 기기에서의 분포 수집.
+- `docs/guide/architecture.md`와 `.omm/` 아키텍처 문서는 M3에서 지운 클래스를 아직 설명하고 있습니다.
 
-## 다음 한 단계
+## 알려진 제약
 
-`METRICS.md`의 기본 launch 관측 대상, shot-to-shot 제출 정책, 반복/복귀 규칙을 검토해 정의를 고정합니다. 그 다음 First preview 시나리오 하나부터 구현·실기기 검증합니다.
-
-
-## 문서 갱신 — 지표 정의표 v0.2
-
-사용자 원문을 별도 보존하고 METRICS.md를 Camera2/MediaRecorder 중심으로 갱신했다. callback/센서 시각, precapture 포함 여부, 간격 표본 수, drop 추정과 CTS 대응의 충돌은 검토안으로 정리했다. 앱 구현·APK·실기기 검증 상태는 checkpoint-001과 같다. 다음 단계는 정의서 검토이며, 새로운 성능 시나리오는 구현하지 않았다.
+- M2 이전의 run JSON은 기기에 남아 있지 않습니다. 패키지 이름을 `dev.cameradoctor`에서 `dev.halcamera`로 바꾸면서 앱 데이터 경로가 달라졌기 때문입니다.
+- adb로 측정할 때는 USB가 연결되어 있어 모든 run에 `CHARGING` flag가 붙습니다. 비교에는 쓰이지만 점수에서는 제외됩니다.

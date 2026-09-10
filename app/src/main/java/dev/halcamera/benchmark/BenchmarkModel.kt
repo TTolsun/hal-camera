@@ -1,9 +1,9 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.check.CameraEndpoint
-import dev.halcamera.check.LensRole
-import dev.halcamera.diagnosis.UnknownReason
-import dev.halcamera.diagnosis.jsonName
+import dev.halcamera.camera.CameraEndpoint
+import dev.halcamera.camera.LensRole
+import dev.halcamera.metrics.UnknownReason
+import dev.halcamera.metrics.jsonName
 import java.io.File
 
 /**

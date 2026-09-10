@@ -1,8 +1,8 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.check.CameraEndpoint
-import dev.halcamera.check.LensRole
-import dev.halcamera.diagnosis.UnknownReason
+import dev.halcamera.camera.CameraEndpoint
+import dev.halcamera.camera.LensRole
+import dev.halcamera.metrics.UnknownReason
 
 /**
  * Minimal runs for the M4 comparison tests. Only the fields the comparison actually reads are meaningful:

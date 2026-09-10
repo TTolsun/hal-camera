@@ -1,13 +1,17 @@
-package dev.halcamera.diagnosis
+package dev.halcamera.metrics
 
 import dev.halcamera.telemetry.Event
 
 /**
- * Computes the observation metrics H.1 to H.9 (docs/PRODUCT-v0.2.md 4.2) from Telemetry events of one session
- * inside a time window. Pure Kotlin, no Android dependency.
+ * Computes the observation metrics H.1 to H.10 (docs/METRICS.md) from Telemetry events of one session inside a
+ * time window. Pure Kotlin, no Android dependency.
  *
- * Aggregation is chosen by the caller: Auto Check uses p50/p95 over a 10 s window; the live health strip uses the
- * window maximum so a single late frame is visible (spike detection). Both go through the same thresholds.
+ * This is the leaf of the package graph: it turns events into numbers and knows nothing about how they are
+ * compared, judged or displayed. It moved out of `diagnosis` in M3 because that package described a product the
+ * app no longer is, while the extraction itself was never about diagnosis.
+ *
+ * Aggregation is chosen by the caller: a benchmark run uses p50/p95 over the observation window; the LIVE strip
+ * uses the window maximum so a single late frame stays visible.
  */
 class MetricExtractor(private val minSamples: Int = 15) {
 

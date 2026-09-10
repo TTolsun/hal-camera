@@ -1,7 +1,7 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.diagnosis.MetricExtractor
-import dev.halcamera.diagnosis.UnknownReason
+import dev.halcamera.metrics.MetricExtractor
+import dev.halcamera.metrics.UnknownReason
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull

@@ -1,6 +1,10 @@
-package dev.halcamera.check
+package dev.halcamera.camera
 
-/** Capability model from docs/PRODUCT-v0.2.md 9.2. Built from enumeration results; the UI never assumes a lens exists. */
+/**
+ * Capability model from docs/archive/PRODUCT-v0.2.md 9.2. Built from enumeration results; the UI never assumes a lens
+ * exists. It sits in `camera` rather than the deleted `check` package because an endpoint identifies a camera and
+ * has nothing to do with whichever measurement is pointed at it.
+ */
 enum class LensRole { MAIN, ULTRA_WIDE, TELE, FRONT, EXTERNAL, UNKNOWN }
 
 data class CameraEndpoint(
