@@ -42,6 +42,14 @@ test('reviewed LF and CRLF checkouts have identical evidence hashes', () => {
   } finally { for (const [p, bytes] of saved) fs.writeFileSync(file(p), bytes); }
 });
 
+test('writing style changes require manuscript review', () => {
+  change('tools/docgen/style/fluent-korean.md', s => s + '\nUse complete sentences.\n', () => {
+    const r = run('verify.mjs', '--check');
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /content:architecture.md\/overview.*검토 대기/);
+  });
+});
+
 test('human decision edits invalidate manuscripts without changing IDs', () => {
   change('docs/guide/_inputs/decisions.md', s => s + '\nChanged decision rationale.\n', () => {
     const r = run('verify.mjs', '--check');

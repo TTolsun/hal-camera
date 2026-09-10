@@ -100,9 +100,17 @@ pages:
         confidence: code
 
       - id: module-roles
-        kind: omm-tree
-        source: overall-architecture
+        kind: content
+        based_on: [overall-architecture]
         confidence: code
+        brief:
+          reader: 기능을 수정할 패키지와 연결된 클래스를 찾아야 하는 개발자
+          answers:
+            - 각 패키지는 어떤 역할을 하며 변경 시 어떤 의존성을 확인해야 하는가
+            - 실행과 평가 영역, 기록과 저장 영역은 어떻게 나뉘는가
+          must_link: [CameraEngine, BenchmarkActivity, FlightRecorder]
+          forbid:
+            - 구조 영역과 실제 패키지를 일대일 대응으로 단정하지 않습니다.
 
       - id: runtime-flow
         kind: content
@@ -131,10 +139,17 @@ pages:
         confidence: code
 
       - id: constraints
-        kind: omm
-        source: overall-architecture
-        field: constraint
+        kind: content
+        based_on: [overall-architecture]
         confidence: code
+        brief:
+          reader: 측정 기능을 수정하면서 기존 계약을 유지해야 하는 개발자
+          answers:
+            - 카메라 점유와 시계 비교에서 어떤 제약을 지켜야 하는가
+            - 계산 로직과 저장 경계에서 어떤 규칙을 지켜야 하는가
+          must_link: [CameraEngine, ThresholdTable, RegressionRules]
+          forbid:
+            - 원본 constraint의 조건과 예외를 줄이거나 새 설계 의도를 추정하지 않습니다.
 
       - id: open-questions
         kind: omm-concerns
