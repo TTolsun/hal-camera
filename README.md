@@ -35,7 +35,7 @@ Android Studio에서 이 폴더를 엽니다. JDK 17, Android SDK 36, AGP 8.13.2
 
 ## 설치 후 확인
 
-1. Google Drive 체크포인트의 `CameraDoctor-checkpoint-001-preview.apk`를 기기에 내려받아 설치합니다.
+1. Google Drive 체크포인트의 `HALCamera-checkpoint-001-preview.apk`를 기기에 내려받아 설치합니다.
 2. HAL Camera 실행 → 카메라 권한 허용 → 실제 프리뷰 확인.
 3. Camera2 버튼을 눌러 직접 Camera2 프리뷰도 확인합니다.
 4. 실패 시 화면 오류 문구와 기기 모델·Android 버전을 기록합니다.

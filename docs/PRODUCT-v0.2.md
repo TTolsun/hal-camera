@@ -1,4 +1,4 @@
-# Camera Doctor 제품 정의 · 측정 정책 · 구현 계약 v0.2
+# HAL Camera 제품 정의 · 측정 정책 · 구현 계약 v0.2
 
 - 작성일: 2026-09-09
 - 상태: **검토용 초안.** 임계값과 가중치는 제안값이며 사용자 확정 전까지 코드에 상수로 고정하지 않는다.
@@ -24,7 +24,7 @@ metric (측정값)
 
 ### 1.1 한 줄 정의
 
-Camera Doctor는 스마트폰 카메라의 건강 상태를 검사하고, 문제가 생긴 순간을 기록하고 분석하는 앱이다.
+HAL Camera는 스마트폰 카메라의 건강 상태를 검사하고, 문제가 생긴 순간을 기록하고 분석하는 앱이다.
 
 ### 1.2 두 모드
 
@@ -160,7 +160,7 @@ CDD 2.2.7.2는 `Build.VERSION.MEDIA_PERFORMANCE_CLASS`를 선언한 handheld 기
 주의할 점 두 가지가 있다.
 
 1. CTS PerformanceTest 자체는 launch/capture 지연에 대해 assert하지 않고 ReportLog로 보고만 한다 [S2]. 한계값의 출처는 CTS가 아니라 CDD다. 문서와 UI에서 "CTS 기준"이라고 쓰지 않고 "CDD 기준"이라고 쓴다.
-2. Camera Doctor는 ITS 조명 조건을 재현하지 않고, 프리뷰 첫 프레임 정의는 CTS의 YUV 대리 관측과 같지만 해상도, warm-up, 반복 정책은 다를 수 있다. 조건이 같지 않은데 "CDD FAIL"이라고 말하면 사용자는 CDD 위반으로 받아들인다. 따라서 CDD 값은 조건 일치 등급에 따라 다르게 쓴다.
+2. HAL Camera는 ITS 조명 조건을 재현하지 않고, 프리뷰 첫 프레임 정의는 CTS의 YUV 대리 관측과 같지만 해상도, warm-up, 반복 정책은 다를 수 있다. 조건이 같지 않은데 "CDD FAIL"이라고 말하면 사용자는 CDD 위반으로 받아들인다. 따라서 CDD 값은 조건 일치 등급에 따라 다르게 쓴다.
 
 **적용 게이트 (코드 계약)**
 
@@ -553,7 +553,7 @@ L1–L3를 한 박스에 넣지 않는다. 현재 진단 패널의 전체 텍스
 ### 11.2 첫 화면
 
 ```text
-CAMERA DOCTOR
+HAL CAMERA
 
 내 카메라는 건강할까요?
 
@@ -617,11 +617,11 @@ CAMERA HEALTH
 
 ### 11.6 시각 방향 (2026-09-09 사용자 지정)
 
-기준 문서는 [docs/design/DESIGN.md](design/DESIGN.md)다. 아래는 그 토큰을 Camera Doctor의 두 모드에 대응시킨 것이다.
+기준 문서는 [docs/design/DESIGN.md](design/DESIGN.md)다. 아래는 그 토큰을 HAL Camera의 두 모드에 대응시킨 것이다.
 
 **원칙.** 장식 그라데이션과 chrome 그림자를 쓰지 않는다. 상호작용 색은 Action Blue 하나뿐이다. 판정 색(PASS/WARN/FAIL)은 기준 문서에 없으므로 별도로 정의하되, 판정 색은 상태 표시에만 쓰고 버튼에는 쓰지 않는다.
 
-| 역할 | 토큰 | 값 | Camera Doctor 용도 |
+| 역할 | 토큰 | 값 | HAL Camera 용도 |
 |---|---|---:|---|
 | 기본 배경 | `canvas-parchment` | #f5f5f7 | Consumer 화면 배경 |
 | 카드 | `canvas` | #ffffff | 결과 카드, 항목 카드. 1 px `hairline` #e0e0e0 테두리, 모서리 18 px |
@@ -658,7 +658,7 @@ CAMERA HEALTH
 
 ### 12.1 유지하는 것
 
-현재 화면(CameraX/Camera2 전환, 카메라 선택, LIVE 프리뷰, health strip, frame timeline, 3A oscilloscope, MARK INCIDENT, ZIP 공유)은 그대로 Expert 탭이 된다. 3A oscilloscope는 Camera Doctor의 시그니처 화면으로 유지한다.
+현재 화면(CameraX/Camera2 전환, 카메라 선택, LIVE 프리뷰, health strip, frame timeline, 3A oscilloscope, MARK INCIDENT, ZIP 공유)은 그대로 Expert 탭이 된다. 3A oscilloscope는 HAL Camera의 시그니처 화면으로 유지한다.
 
 ### 12.1.1 실시간 health strip의 판정 규칙 (M1 구현 계약)
 
