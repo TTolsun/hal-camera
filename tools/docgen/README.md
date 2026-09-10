@@ -6,7 +6,7 @@
 
 공용 시스템을 사용할 때는 별도로 설치한 엔진 경로를 `DOCFLOW_ENGINE_ROOT`에 지정하고 `node tools/docgen/common.mjs sync`를 실행합니다. `project.json`은 이 앱의 코드 범위·추출기·Qwen·디자인을 연결합니다. 공용 엔진 0.1.0을 사용하며, 비공개 엔진 소스를 이 공개 저장소에 복사하지 않습니다. 기존 명령과 CI 검사는 독립적으로 사용할 수 있습니다.
 
-시각적 형식은 루트 `DESIGN.md`에 따라 Slack 디자인을 적용합니다. `project.json`의 `design.preset`을 `plain`으로 바꾸거나 `custom`과 `stylesheet`를 지정한 후 `node tools/docgen/common.mjs design`을 실행하면 모든 Pages 페이지의 형식이 바뀝니다. 생성 CSS는 `docs/guide/assets/docflow-design.css`이며, 한국어 집필 규칙과 원고 검토 해시에는 영향을 주지 않습니다.
+시각적 형식은 `docs/design/DESIGN.md`의 HAL CAMERA Editorial 규칙을 따릅니다. `project.json`은 `custom` 프리셋과 원본 `docs/design/editorial.css`를 연결합니다. `node tools/docgen/common.mjs design`은 프로젝트 생성기로 원본 경로와 재생성 명령을 표시한 `docs/guide/assets/docflow-design.css`를 생성합니다. `design --check`는 파일을 수정하지 않고 일치 여부를 검사합니다. custom 디자인 생성에는 공용 엔진 설치가 필요하지 않으며, 다른 프리셋과 동기화는 기존 공용 엔진을 사용합니다. 한국어 집필 규칙과 원고 검토 해시는 유지합니다.
 
 ```
 코드 ─ extract.mjs ─────────────→ state/facts.json           (결정론, 매번 재계산)
