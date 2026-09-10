@@ -113,7 +113,11 @@
         const nodes = blocks.map(code => {
           const node = document.createElement('div');
           node.className = 'mermaid';
-          node.textContent = code.textContent;
+          // OMM flowchart labels use literal \n separators; Mermaid needs <br/>.
+          const source = code.textContent;
+          node.textContent = /^\s*(?:flowchart|graph)\s/m.test(source)
+            ? source.replace(/"[^"\r\n]*"/g, label => label.replace(/\\n/g, '<br/>'))
+            : source;
           code.parentElement.replaceWith(node);
           return node;
         });
