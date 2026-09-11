@@ -2,6 +2,9 @@
 based_on: [data-flow]
 confidence: code
 sources:
+  - app/src/main/java/dev/halcamera/MainActivity.kt
+  - app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt
+  - app/src/main/java/dev/halcamera/ui/SelectionPopup.kt
   - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
   - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
   - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
@@ -36,6 +39,8 @@ verifications: []
 
 RESULTS의 행은 저장된 결과로 연결됩니다. 길게 누르면 baseline, 비교, JSON·CSV 내보내기, 삭제 작업을 선택합니다. 삭제 확인 후 파일을 삭제하고 해당 baseline 포인터를 정리합니다. 측정값이 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다.
 
-LIVE의 엔진·카메라·줌 버튼은 현재 선택값을 표시합니다. 버튼을 누르면 현재 항목이 표시된 선택 목록이 열립니다. 사진·동영상도 모드 목록에서 선택하며, 별도의 실행 버튼을 눌러야 촬영이나 녹화를 시작합니다. 벤치마크 카메라와 RESULTS 필터도 현재 선택값을 버튼과 목록에 표시합니다.
+LIVE 상단의 엔진·카메라 버튼은 현재 선택값을 표시합니다. 버튼을 누르면 현재 항목이 표시된 드롭다운 목록이 해당 버튼에 붙어 열립니다. 사진·동영상 모드, 벤치마크 카메라, RESULTS 필터에도 같은 목록을 사용합니다. 아래 공간이 부족하면 버튼 위에 열립니다. 바깥을 누르거나 뒤로 가면 값을 유지하고 닫으며, 화면을 나갈 때에도 목록을 닫습니다. 모드를 고른 뒤 별도의 실행 버튼을 눌러야 촬영이나 녹화를 시작합니다.
+
+줌 버튼은 하단 그래프와 측정값 사이에서 현재 배율을 표시합니다. 원의 지름은 40dp이고 터치 영역은 48dp입니다. 버튼을 누르면 배율 목록이 가로로 펼쳐지며, 선택한 배율을 강조합니다. 마지막 조작 후 기본 3초가 지나면 선택한 원형 버튼 하나로 다시 접힙니다. 접근성 설정에 따라 대기 시간을 늘립니다. TalkBack 사용 중에는 선택하기 전까지 자동으로 접지 않으며, 배율을 선택하면 접습니다. 좁은 창에서는 목록을 가로로 스크롤할 수 있습니다.
 
 LIVE에서 사진을 촬영하면 Camera2의 같은 요청에 YUV와 JPEG 출력을 지정합니다. 센서 타임스탬프가 일치하는 버퍼를 연결해 별도 작업 스레드에서 사진 쌍을 저장합니다. 동영상은 프리뷰·인코더 세션으로 전환하고 종료 후 파일을 앨범에 공개합니다. CameraX 상태에서 미디어 작업을 요청하면 Camera2로 전환합니다.

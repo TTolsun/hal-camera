@@ -24,6 +24,8 @@ import androidx.core.view.WindowCompat
 import dev.halcamera.camera.*
 import dev.halcamera.telemetry.*
 import dev.halcamera.ui.LiveReadout
+import dev.halcamera.ui.ExpandingZoomControl
+import dev.halcamera.ui.showSelectionPopup
 import dev.halcamera.ui.LiveReading
 import dev.halcamera.ui.ScopeView
 import dev.halcamera.ui.StripView
@@ -80,7 +82,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var topBar: LinearLayout
     private lateinit var bottomBar: LinearLayout
     private lateinit var diagnostics: ScrollView
-    private lateinit var zoomButton: Button
+    private lateinit var zoomControl: ExpandingZoomControl
     private lateinit var statusText: TextView
     private lateinit var strip: StripView
     private lateinit var stripText: TextView
@@ -179,6 +181,7 @@ class MainActivity : ComponentActivity() {
         else { setStatus("카메라 접근을 허용하면 측정이 시작됩니다", false); permission.launch(Manifest.permission.CAMERA) }
     }
     override fun onStop() {
+        zoomControl.collapse(animate = false)
         pendingMediaAction = null
         pendingPermissionAction = null
         resumed = false; main.removeCallbacks(tick)
@@ -195,6 +198,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun hasPermission() = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
     private fun restartCamera() {
+        zoomControl.collapse(animate = false)
         if (closing) return
         ready=false; mediaButton.isEnabled=false; reportButton.isEnabled=false
         val old = engine; engine = null
@@ -283,13 +287,13 @@ class MainActivity : ComponentActivity() {
         if (cameraId !in ids) cameraId=ids.firstOrNull().orEmpty()
         engineButton=button("") {
             val engines=listOf("Camera2", "CameraX")
-            selectChoice("카메라 API", engines, engines.indexOf(engineName)) { index ->
+            selectChoice(engineButton, engines, engines.indexOf(engineName)) { index ->
                 pendingMediaAction=null; pendingPermissionAction=null
                 chooseEngine(engines[index])
             }
         }
         cameraButton=button("") {
-            selectChoice("카메라", ids.map(::cameraLabel), ids.indexOf(cameraId)) { index ->
+            selectChoice(cameraButton, ids.map(::cameraLabel), ids.indexOf(cameraId)) { index ->
                 val chosen=ids[index]
                 if(cameraId!=chosen) {
                     pendingMediaAction=null; pendingPermissionAction=null
@@ -299,13 +303,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        zoomButton=button("") {
-            val presets=zoomPresets(zoomRange(manager,cameraId))
-            selectChoice("줌 배율", presets.map(::zoomLabel), presets.indexOf(zoomRatio)) { index ->
-                zoomRatio=presets[index]; engine?.setZoom(zoomRatio); updateCameraChoices()
-            }
-        }
-        listOf(engineButton,cameraButton,zoomButton).forEachIndexed { index, view ->
+        listOf(engineButton,cameraButton).forEachIndexed { index, view ->
             view.background=rounded(glass); view.setTextColor(Color.WHITE)
             controls.addView(view,LinearLayout.LayoutParams(0,dp(48),1f).apply { if(index>0) marginStart=dp(8) })
         }
@@ -332,6 +330,23 @@ class MainActivity : ComponentActivity() {
         stripText=label("PARTIAL —   BUFFER — ms",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono }
         stripBox.addView(stripText,lp(top=2))
         bottomBar.addView(stripBox,lp())
+        zoomControl=ExpandingZoomControl(this) { ratio ->
+            zoomRatio=ratio; engine?.setZoom(ratio)
+        }
+        val zoomViewport=object:HorizontalScrollView(this) {
+            override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+                if(event.actionMasked==MotionEvent.ACTION_DOWN) zoomControl.setTouchInProgress(true)
+                val handled=super.dispatchTouchEvent(event)
+                if(event.actionMasked==MotionEvent.ACTION_UP || event.actionMasked==MotionEvent.ACTION_CANCEL ||
+                    (event.actionMasked==MotionEvent.ACTION_DOWN && !handled)) zoomControl.setTouchInProgress(false)
+                return handled
+            }
+        }.apply {
+            isHorizontalScrollBarEnabled=false
+            overScrollMode=View.OVER_SCROLL_NEVER
+            addView(zoomControl,FrameLayout.LayoutParams(-2,dp(52)))
+        }
+        bottomBar.addView(zoomViewport,LinearLayout.LayoutParams(-2,dp(52)).apply { topMargin=dp(10) })
         metrics=label("FPS —  ·  ISO —  ·  Exp —\nLens —  ·  Zoom —",11,Color.WHITE).apply { gravity=Gravity.CENTER; typeface=dev.halcamera.ui.Look.mono }
         bottomBar.addView(metrics,lp(top=10))
         val mainRow=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL; gravity=Gravity.CENTER_VERTICAL }
@@ -355,7 +370,7 @@ class MainActivity : ComponentActivity() {
         val mediaRow = row()
         bottomBar.addView(mediaRow, lp(top=8))
         modeButton=button("") {
-            selectChoice("촬영 모드", listOf("사진 · YUV + JPEG", "동영상 · 소리 포함"), if(videoMode) 1 else 0) { index ->
+            selectChoice(modeButton, listOf("사진 · YUV + JPEG", "동영상 · 소리 포함"), if(videoMode) 1 else 0) { index ->
                 pendingMediaAction=null; pendingPermissionAction=null
                 videoMode=index==1; updateMediaControls()
             }
@@ -431,13 +446,10 @@ class MainActivity : ComponentActivity() {
         updateCameraChoices()
         updateMediaControls()
     }
-    private fun selectChoice(title:String,items:List<String>,selected:Int,onSelect:(Int)->Unit) {
-        AlertDialog.Builder(this).setTitle(title)
-            .setSingleChoiceItems(items.toTypedArray(),selected) { dialog,index ->
-                dialog.dismiss()
-                // A live session can change while a choice dialog is open.
-                if(!recordingVideo && resumed) onSelect(index)
-            }.setNegativeButton("취소",null).show()
+    private fun selectChoice(anchor:View,items:List<String>,selected:Int,onSelect:(Int)->Unit) {
+        showSelectionPopup(anchor,items,selected) { index ->
+            if(!recordingVideo && resumed) onSelect(index)
+        }
     }
     private fun cameraLabel(id:String):String {
         if(id.isEmpty()) return "카메라 없음"
@@ -453,12 +465,7 @@ class MainActivity : ComponentActivity() {
         engineButton.contentDescription="카메라 API 선택, 현재 $engineName"
         cameraButton.text="${cameraLabel(cameraId)} ▾"
         cameraButton.contentDescription="카메라 선택, 현재 ${cameraLabel(cameraId)}"
-        zoomButton.text="줌 ${zoomLabel(zoomRatio)} ▾"
-        zoomButton.contentDescription="줌 배율 선택, 현재 ${zoomLabel(zoomRatio)}"
-    }
-    private fun zoomLabel(ratio:Float):String {
-        val text=if(ratio==ratio.toInt().toFloat()) "${ratio.toInt()}" else "%.1f".format(Locale.US,ratio)
-        return "${text}×"
+        zoomControl.setChoices(if(cameraId.isEmpty()) listOf(1f) else zoomPresets(zoomRange(manager,cameraId)),zoomRatio)
     }
     private fun updateMediaControls() {
         modeButton.text=if(videoMode) "동영상 ▾" else "사진 ▾"
@@ -470,8 +477,8 @@ class MainActivity : ComponentActivity() {
         mediaButton.isEnabled=ready || recordingVideo
         engineButton.isEnabled=!recordingVideo
         cameraButton.isEnabled=!recordingVideo && cameraId.isNotEmpty()
-        zoomButton.isEnabled=ready && !recordingVideo
-        listOf(engineButton,cameraButton,zoomButton,modeButton,mediaButton).forEach {
+        zoomControl.isEnabled=ready && !recordingVideo
+        listOf(engineButton,cameraButton,modeButton,mediaButton).forEach {
             it.alpha=if(it.isEnabled) 1f else 0.4f
         }
     }
@@ -592,6 +599,7 @@ class MainActivity : ComponentActivity() {
             .setPositiveButton("확인",null).show()
     }
     private fun showDiagnostics(show: Boolean) {
+        if (show) zoomControl.collapse(animate = false)
         diagnostics.visibility = if (show) View.VISIBLE else View.GONE
         panelBack.isEnabled = show
         topBar.importantForAccessibility = if (show) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
