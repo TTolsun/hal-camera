@@ -35,3 +35,5 @@ baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 
 3. `benchmark/BenchmarkRunner.kt`에서 실행 순서와 실패 처리를 읽습니다.
 4. `benchmark/RunAssembler.kt`에서 러너 결과와 이벤트를 결합하는 지점을 확인합니다.
 5. `MainActivity.kt`, `BenchmarkActivity.kt`, `HistoryActivity.kt`에서 화면과 실행 코드의 연결을 확인합니다.
+
+LIVE의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저장하며 GalleryActivity에서 조회합니다. 측정 파일과 미디어 파일의 저장 경로를 구분하려면 아래 모듈 역할을 확인하세요.

@@ -15,6 +15,7 @@ import android.provider.Settings
 import android.view.*
 import android.widget.*
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
@@ -94,11 +95,23 @@ class MainActivity : ComponentActivity() {
     private lateinit var scope: ScopeView
     private lateinit var reportButton: Button
     private lateinit var captureButton: Button
+    private lateinit var recordButton: Button
+    private var recordingVideo = false
+    private var recordingStartedAt = 0L
+    private var pendingMediaAction: (() -> Unit)? = null
+    private var pendingPermissionAction: (() -> Unit)? = null
+    private val mediaPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
+        val action = pendingPermissionAction.also { pendingPermissionAction = null }
+        if (grants.values.all { it }) action?.invoke() else toast("저장하려면 요청한 권한을 허용해 주세요")
+    }
     private lateinit var engineX: Button
     private lateinit var engine2: Button
     private lateinit var pauseButton: Button
     private lateinit var recorderText: TextView
     private lateinit var shareButton: Button
+    private val panelBack = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() = showDiagnostics(false)
+    }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) restartCamera() else setStatus("카메라 권한이 필요합니다 · 측정 패널의 권한 버튼으로 재시도", false)
     }
@@ -116,6 +129,10 @@ class MainActivity : ComponentActivity() {
         override fun run() {
             if (!resumed) return
             val time = nowNs()
+            if (recordingVideo) {
+                val seconds = (SystemClock.elapsedRealtime() - recordingStartedAt) / 1000
+                recordButton.text = "중지 %02d:%02d".format(Locale.US, seconds / 60, seconds % 60)
+            }
             val events = recorder.snapshot(10_000_000_000L)
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
             // The only cursor left is the incident trigger. The other one marked the frames that produced a
@@ -128,7 +145,7 @@ class MainActivity : ComponentActivity() {
             recorder.finish()?.let { export(it) }
             val remaining = recorder.remainingNs()
             reportButton.isEnabled = remaining == null && ready && !paused
-            reportButton.text = if (remaining != null) "${"%.1f".format(Locale.US, remaining/1e9)}s" else MARK_LABEL
+            reportButton.text = if (remaining != null) "저장까지 ${"%.1f".format(Locale.US, remaining/1e9)}s" else "$MARK_LABEL · ZIP 저장"
             val span = events.firstOrNull()?.let { (time-it.atNs)/1e9 } ?: 0.0
             recorderText.text = if (exporting > 0) "ZIP 저장 중…" else if (remaining != null) "기록 중 · 이후 ${"%.1f".format(Locale.US, remaining/1e9)}초 남음" else "30s 순환 버퍼  ·  ${"%.1f".format(Locale.US, span.coerceAtMost(10.0))}s / 10s 사전 기록 준비"
             main.postDelayed(this, 100)
@@ -137,12 +154,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        engineName = savedInstanceState?.getString("engine") ?: "CameraX"
+        engineName = savedInstanceState?.getString("engine") ?: "Camera2"
         cameraId = savedInstanceState?.getString("camera") ?: ""
         paused = savedInstanceState?.getBoolean("paused") ?: false
         zoomRatio = savedInstanceState?.getFloat("zoom") ?: 1f
         manager = getSystemService(CameraManager::class.java)
         buildUi()
+        onBackPressedDispatcher.addCallback(this, panelBack)
         latestFile = incidentFiles().firstOrNull()
         shareButton.isEnabled = latestFile != null
         recorder.record("app", "clock_anchor", values = mapOf("wallTimeMs" to System.currentTimeMillis(), "uptimeMs" to SystemClock.uptimeMillis()))
@@ -158,6 +176,8 @@ class MainActivity : ComponentActivity() {
         else { setStatus("카메라 접근을 허용하면 측정이 시작됩니다", false); permission.launch(Manifest.permission.CAMERA) }
     }
     override fun onStop() {
+        pendingMediaAction = null
+        pendingPermissionAction = null
         resumed = false; main.removeCallbacks(tick)
         telemetry.event(sessionId.ifEmpty { "app" }, "activity_stopped")
         recorder.finish("activity_stopped")?.let { export(it) }
@@ -173,7 +193,7 @@ class MainActivity : ComponentActivity() {
     private fun hasPermission() = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
     private fun restartCamera() {
         if (closing) return
-        ready=false; captureButton.isEnabled=false; reportButton.isEnabled=false
+        ready=false; captureButton.isEnabled=false; reportButton.isEnabled=false; recordButton.isEnabled=false
         val old = engine; engine = null
         if (old != null) {
             closing = true; setStatus("카메라 세션 종료 중…", false)
@@ -185,7 +205,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun openCamera() {
         if (!resumed || destroyed || paused || !hasPermission()) {
-            if (paused) setStatus("PAUSED · ▶ 버튼으로 측정을 재개하세요", false)
+            if (paused) setStatus("일시정지 · 재개 버튼으로 측정을 시작하세요", false)
             return
         }
         if (cameraId.isEmpty()) { setStatus("사용 가능한 카메라가 없습니다", false); return }
@@ -204,7 +224,17 @@ class MainActivity : ComponentActivity() {
         } else {
             val view = TextureView(this)
             previewHost.addView(view, FrameLayout.LayoutParams(-1,-1))
-            Camera2Engine(this, view, cameraId, sessionId, telemetry) { text, ok ->
+            Camera2Engine(this, view, cameraId, sessionId, telemetry, recordingState = { recording ->
+                if (thisSession == sessionId) {
+                    recordingVideo = recording
+                    recordButton.text = if (recording) "중지 00:00" else "동영상 녹화"
+                    recordButton.setTextColor(if (recording) coral else Color.WHITE)
+                    captureButton.isEnabled = ready && !recording
+                    if (recording) recordingStartedAt = SystemClock.elapsedRealtime()
+                    recordButton.isEnabled = recording || ready
+                    window.apply { if (recording || ready) addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+                }
+            }) { text, ok ->
                 if (thisSession == sessionId && resumed && !closing) setStatus(text,ok)
             }
         }
@@ -213,41 +243,57 @@ class MainActivity : ComponentActivity() {
     }
     private fun setStatus(text: String, ok: Boolean) {
         statusText.text=text; statusText.setTextColor(if(ok) mint else muted)
-        ready=ok; captureButton.isEnabled=ok; reportButton.isEnabled=ok && recorder.remainingNs()==null
+        ready=ok; captureButton.isEnabled=ok && !recordingVideo; reportButton.isEnabled=ok && recorder.remainingNs()==null
+        if (ok || recordingVideo) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        recordButton.isEnabled = ok || recordingVideo
+        for (index in 0 until zoomRow.childCount) zoomRow.getChildAt(index).isEnabled = ok && !recordingVideo
         // Re-apply the chosen zoom once the new session is live so engine and camera switches keep the same framing.
         if (ok && !zoomApplied) { zoomApplied = true; if (zoomRatio != 1f) engine?.setZoom(zoomRatio) }
+        if (ok && engine is Camera2Engine) pendingMediaAction?.also { pendingMediaAction = null; main.post { if (resumed && ready) it() } }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun withMediaPermissions(video: Boolean, action: () -> Unit) {
+        val required = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT <= 28) required += Manifest.permission.WRITE_EXTERNAL_STORAGE
+        if (video) required += Manifest.permission.RECORD_AUDIO
+        val missing = required.filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
+        if (missing.isEmpty()) action() else { pendingPermissionAction = action; mediaPermissions.launch(missing.toTypedArray()) }
+    }
+
+    private fun runCamera2Action(action: () -> Unit) {
+        if (engine is Camera2Engine) action() else {
+            pendingMediaAction = action
+            toast("촬영과 녹화를 위해 Camera2로 전환합니다")
+            chooseEngine("Camera2")
+        }
     }
     private fun buildUi() {
         val root=FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
         setContentView(root)
         previewHost=FrameLayout(this).apply { setBackgroundColor(Color.BLACK); contentDescription="실시간 카메라 프리뷰" }
         root.addView(previewHost,FrameLayout.LayoutParams(-1,-1))
-        previewHost.setOnClickListener { if(diagnostics.visibility==View.VISIBLE) diagnostics.visibility=View.GONE }
 
-        // Top: engine selector, camera picker, pause. Kept thin so the preview stays dominant.
+        // Keep camera configuration separate from session and measurement actions.
         topBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; setPadding(dp(12),dp(8),dp(12),dp(10)) }
         topBar.background=GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,intArrayOf(Color.argb(190,0,0,0),Color.TRANSPARENT))
         root.addView(topBar,FrameLayout.LayoutParams(-1,-2,Gravity.TOP))
         val controls=row(); topBar.addView(controls)
-        engineX=button("CameraX") { chooseEngine("CameraX") }
-        engine2=button("Camera2") { chooseEngine("Camera2") }
-        // The engine pills give up a little width to the camera picker beside them, which has to hold a whole
-        // label while these two hold one word each.
-        controls.addView(engineX,LinearLayout.LayoutParams(dp(76),dp(38)))
-        controls.addView(engine2,LinearLayout.LayoutParams(dp(76),dp(38)).apply { marginStart=dp(6) })
+        engineX=button("CameraX") { pendingMediaAction=null; pendingPermissionAction=null; chooseEngine("CameraX") }
+        engine2=button("Camera2") { pendingMediaAction=null; pendingPermissionAction=null; chooseEngine("Camera2") }
+        controls.addView(engine2,LinearLayout.LayoutParams(0,dp(48),1f))
+        controls.addView(engineX,LinearLayout.LayoutParams(0,dp(48),1f).apply { marginStart=dp(8) })
         val ids=try { manager.cameraIdList.toList().sortedBy { manager.getCameraCharacteristics(it)[CameraCharacteristics.LENS_FACING] != CameraCharacteristics.LENS_FACING_BACK } } catch (_:Exception) { emptyList() }
         if (cameraId !in ids) cameraId=ids.firstOrNull().orEmpty()
-        val spinner=Spinner(this).apply { background=rounded(glass); setPadding(dp(8),0,dp(8),0) }
+        val spinner=Spinner(this).apply { background=rounded(glass); setPadding(dp(8),0,dp(8),0); contentDescription="카메라 선택" }
         // "Cam" in front of every entry cost width that the id and the facing both need, and said nothing: this
         // is the camera row.
         val entries=ids.map { id ->
             val facing=manager.getCameraCharacteristics(id)[CameraCharacteristics.LENS_FACING]
             "$id · ${when(facing) { CameraCharacteristics.LENS_FACING_BACK -> "Back"; CameraCharacteristics.LENS_FACING_FRONT -> "Front"; else -> "Ext" }}"
         }
-        // The collapsed view is built here rather than taken from a platform layout. Both stock spinner layouts
-        // carry a minimum height of their own (listPreferredItemHeightSmall, 48dp), and inside this 38dp pill the
-        // label was laid out where the pill could not draw it: the picker looked empty while the dropdown listed
-        // all four cameras. The dropdown keeps the platform layout, where there is room for it.
+        // The selected value remains one line; the dropdown exposes the full camera labels.
         spinner.adapter=object:ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,entries) {
             override fun getView(position:Int,convertView:View?,parent:ViewGroup):View =
                 (convertView as? TextView ?: TextView(this@MainActivity)).apply {
@@ -260,25 +306,24 @@ class MainActivity : ComponentActivity() {
         spinner.onItemSelectedListener=object:AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent:AdapterView<*>?,view:View?,position:Int,id:Long) {
                 val chosen=ids.getOrNull(position) ?: return
-                if(cameraId!=chosen) { recorder.finish("camera_changed")?.let { export(it) }; cameraId=chosen; zoomRatio=1f; restartCamera() }
+                if(cameraId!=chosen) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("camera_changed")?.let { export(it) }; cameraId=chosen; zoomRatio=1f; restartCamera() }
             }
             override fun onNothingSelected(parent:AdapterView<*>?)=Unit
         }
-        controls.addView(spinner,LinearLayout.LayoutParams(0,dp(38),1f).apply { marginStart=dp(6) })
-        pauseButton=button(if(paused) "▶" else "❚❚") {
-            paused=!paused; pauseButton.text=if(paused) "▶" else "❚❚"
-            if(paused) recorder.finish("user_paused")?.let { export(it) }
+        controls.addView(spinner,LinearLayout.LayoutParams(0,dp(48),1.2f).apply { marginStart=dp(8) })
+        val sessionControls=row(); topBar.addView(sessionControls,lp(top=8))
+        pauseButton=button(if(paused) "재개" else "일시정지") {
+            paused=!paused; pauseButton.text=if(paused) "재개" else "일시정지"
+            if(paused) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("user_paused")?.let { export(it) } }
             restartCamera()
         }.apply { background=rounded(glass); setTextColor(Color.WHITE) }
-        controls.addView(pauseButton,LinearLayout.LayoutParams(dp(44),dp(38)).apply { marginStart=dp(6) })
-        // 8.1: the panel toggle keeps a place in the top bar, small, so the bottom row can be the three controls
-        // a camera app has. It shows raw numbers now, which is a reference rather than something to consult first.
-        val panelButton=button("▤") { diagnostics.visibility=if(diagnostics.visibility==View.VISIBLE) View.GONE else View.VISIBLE }
-            .apply { background=rounded(glass); setTextColor(Color.WHITE); contentDescription="측정 패널 열기" }
-        controls.addView(panelButton,LinearLayout.LayoutParams(dp(44),dp(38)).apply { marginStart=dp(6) })
+        sessionControls.addView(pauseButton,LinearLayout.LayoutParams(0,dp(48),1f))
+        val panelButton=button("측정 상세") { showDiagnostics(true) }
+            .apply { background=rounded(glass); setTextColor(Color.WHITE) }
+        sessionControls.addView(panelButton,LinearLayout.LayoutParams(0,dp(48),1f).apply { marginStart=dp(8) })
         statusText=label("INITIALIZING",11,mint,true); topBar.addView(statusText,lp(top=6))
 
-        // Bottom: zoom presets, live numbers, then the three round controls like a stock camera app.
+        // Developer actions lead; photo, video and gallery remain directly accessible below.
         bottomBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER_HORIZONTAL; setPadding(dp(16),dp(14),dp(16),dp(14)) }
         bottomBar.background=GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,intArrayOf(Color.argb(215,0,0,0),Color.TRANSPARENT))
         root.addView(bottomBar,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
@@ -286,7 +331,7 @@ class MainActivity : ComponentActivity() {
         val stripBox=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; background=rounded(glass); setPadding(dp(10),dp(6),dp(10),dp(6)) }
         strip=StripView(this).apply { contentDescription="최근 10초 센서 프레임 간격. 실선은 기준, 점선은 1.5배 임계" }
         stripBox.addView(strip,lp(height=40))
-        stripText=label("START —   PARTIAL —   BUFFER —",10,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono }
+        stripText=label("PARTIAL —   BUFFER — ms",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono }
         stripBox.addView(stripText,lp(top=2))
         bottomBar.addView(stripBox,lp())
         zoomRow=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL; gravity=Gravity.CENTER; background=pill(glass); setPadding(dp(6),dp(4),dp(6),dp(4)) }
@@ -301,20 +346,31 @@ class MainActivity : ComponentActivity() {
             // and after an asynchronous write, by which point lastReading has been replaced many times over and
             // may even belong to a different camera. What the dialog shows has to be the evidence for that ZIP.
             if(recorder.trigger(id)) { markedReadings[id]=lastReading; toast("5초 후 incident ZIP을 저장합니다") }
-        }.apply { setTextColor(Color.WHITE); textSize=11f; setTypeface(typeface,Typeface.BOLD); background=circle(coral); contentDescription="MARK: 직전 10초와 이후 5초를 저장" }
-        captureButton=button("") { engine?.capture() }.apply { background=circle(Color.WHITE,ring=bg); contentDescription="SHUTTER" }
-        // 8.1: the third control is the benchmark, which is what this app is for. It measures the camera the LIVE
-        // screen is showing, so the engine and camera chosen above travel with the intent.
-        val benchButton=button("BENCH\nMARK") {
+        }.apply { setTextColor(Color.WHITE); background=rounded(panel); contentDescription="MARK: 직전 10초와 이후 5초를 ZIP으로 저장" }
+        captureButton=button("사진 촬영") { withMediaPermissions(false) { runCamera2Action { engine?.capture() } } }
+            .apply { setTextColor(Color.WHITE); contentDescription="YUV와 JPEG 사진 두 장 촬영" }
+        val benchButton=button("벤치마크") {
             recorder.finish("benchmark_started")?.let { export(it) }
             startActivity(android.content.Intent(this,dev.halcamera.benchmark.BenchmarkActivity::class.java).apply {
                 putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_ENGINE,engineName)
                 putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_CAMERA_ID,cameraId)
             })
-        }.apply { background=circle(glass); setTextColor(mint); textSize=10f; setTypeface(typeface,Typeface.BOLD); contentDescription="BENCHMARK: 이 카메라로 벤치마크 실행" }
-        mainRow.addView(FrameLayout(this).apply { addView(reportButton,FrameLayout.LayoutParams(dp(60),dp(60),Gravity.CENTER)) },LinearLayout.LayoutParams(0,-2,1f))
-        mainRow.addView(captureButton,LinearLayout.LayoutParams(dp(78),dp(78)))
-        mainRow.addView(FrameLayout(this).apply { addView(benchButton,FrameLayout.LayoutParams(dp(60),dp(60),Gravity.CENTER)) },LinearLayout.LayoutParams(0,-2,1f))
+        }.apply { background=rounded(dev.halcamera.ui.Look.primary); setTextColor(Color.WHITE); contentDescription="이 카메라로 벤치마크 실행" }
+        mainRow.addView(reportButton,LinearLayout.LayoutParams(0,dp(52),1f))
+        mainRow.addView(benchButton,LinearLayout.LayoutParams(0,dp(52),1f).apply { marginStart=dp(8) })
+        val mediaRow = row()
+        bottomBar.addView(mediaRow, lp(top=8))
+        mediaRow.addView(captureButton,LinearLayout.LayoutParams(0,dp(48),1f))
+        recordButton = button("동영상 녹화") {
+            if (recordingVideo) {
+                recordButton.isEnabled = false
+                (engine as? Camera2Engine)?.stopRecording()
+            } else withMediaPermissions(true) { runCamera2Action { (engine as? Camera2Engine)?.startRecording() } }
+        }.apply { setTextColor(Color.WHITE); contentDescription = "소리와 함께 동영상 녹화 시작 또는 중지" }
+        mediaRow.addView(recordButton, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart=dp(8) })
+        mediaRow.addView(button("갤러리") {
+            withMediaPermissions(false) { startActivity(Intent(this, GalleryActivity::class.java)) }
+        }.apply { setTextColor(Color.WHITE) }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart=dp(8) })
 
         // Diagnostics panel: everything that used to be below the preview, now an overlay toggled from the bottom bar.
         diagnostics=ScrollView(this).apply { setBackgroundColor(bg); visibility=View.GONE; isFillViewport=true; isClickable=true }
@@ -322,33 +378,32 @@ class MainActivity : ComponentActivity() {
         diagnostics.addView(body)
         root.addView(diagnostics,FrameLayout.LayoutParams(-1,-1))
         val head=row().apply { gravity=Gravity.CENTER_VERTICAL }; body.addView(head)
-        head.addView(LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; addView(label("HAL CAM",22,Color.WHITE,true)); addView(label("LIVE MEASUREMENTS",10,muted)) },LinearLayout.LayoutParams(0,-2,1f))
-        head.addView(button("닫기") { diagnostics.visibility=View.GONE },LinearLayout.LayoutParams(dp(72),dp(40)))
+        head.addView(label("측정 상세",22,Color.WHITE,true),LinearLayout.LayoutParams(0,-2,1f))
+        head.addView(button("닫기") { showDiagnostics(false) },LinearLayout.LayoutParams(dp(72),dp(48)))
         // 8.1: raw numbers only. The DIAGNOSIS card that used to lead this panel named a rule and a cause layer
         // from a two-second window, which the app could not actually establish; BENCHMARK answers that properly.
-        body.addView(label("00   LIVE READOUT",12,muted,true),lp(top=18))
+        body.addView(label("LIVE READOUT",14,muted,true),lp(top=18))
         body.addView(label("같은 세션의 직전 프레임에서 읽은 값. 기준 p50은 최근 창을 제외한 나머지 프레임의 중앙값",10,muted),lp(top=4))
         readoutCard=label("프레임을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
         body.addView(readoutCard,lp(top=10))
-        body.addView(label("01   3A OSCILLOSCOPE",12,muted,true),lp(top=18))
+        body.addView(label("3A OSCILLOSCOPE",14,muted,true),lp(top=18))
         body.addView(label("최근 10초 · 3A 상태는 단계값, 연속값 그래프는 자동 스케일",10,muted),lp(top=4))
         scope=ScopeView(this).apply { background=rounded(panel); contentDescription="AE, AF, AWB 상태와 노출, ISO, 센서 프레임 간격 그래프" }
         body.addView(scope,lp(height=342,top=10))
-        body.addView(label("02   FRAME CALLBACK TIMELINE",12,muted,true),lp(top=20))
+        body.addView(label("FRAME CALLBACK TIMELINE",14,muted,true),lp(top=20))
         timelineView=dev.halcamera.ui.TimelineView(this).apply { background=rounded(panel); contentDescription="최근 프레임과 세션 평균의 START, PARTIAL, BUFFER 도착 시각 비교" }
         body.addView(timelineView,lp(height=96,top=10))
         timeline=label("프레임 콜백을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
         body.addView(timeline,lp(top=8))
         system=label("APP CPU —  ·  PSS —  ·  THERMAL —",11,muted)
         body.addView(system,lp(top=12))
-        body.addView(label("03   FLIGHT RECORDER",12,muted,true),lp(top=20))
-        body.addView(label("프리뷰 화면의 붉은 $MARK_LABEL 버튼을 누르면 직전 10초 + 이후 5초를 저장합니다.",12,Color.WHITE),lp(top=8))
+        body.addView(label("INCIDENT ZIP",14,muted,true),lp(top=20))
+        body.addView(label("$MARK_LABEL: 직전 10초 + 이후 5초의 이벤트를 저장합니다.",12,Color.WHITE),lp(top=8))
         recorderText=label("30s 순환 버퍼",11,muted); body.addView(recorderText,lp(top=8))
         val exports=row(); body.addView(exports,lp(top=8))
         shareButton=button("최근 ZIP 공유") { latestFile?.let { share(it) } }
         exports.addView(shareButton,LinearLayout.LayoutParams(0,dp(48),1f))
         exports.addView(button("기록 목록") { showIncidents() },LinearLayout.LayoutParams(0,dp(48),1f))
-        body.addView(label("04   설정",12,muted,true),lp(top=20))
         val tools=row(); body.addView(tools,lp(top=8))
         tools.addView(button("권한 / 재시도") {
             if(hasPermission()) restartCamera()
@@ -358,7 +413,7 @@ class MainActivity : ComponentActivity() {
         tools.addView(button("측정 안내") { showNotes() },LinearLayout.LayoutParams(0,dp(48),1f))
         // The baseline reset that used to sit here cleared the Auto Check store. The benchmark baseline is a
         // pointer to one run and is cleared from the result screen, where the run it points at is on the screen.
-        body.addView(label("LOCAL RECORDING · NO IMAGE PIXELS SAVED",10,muted),lp(top=18))
+        body.addView(label("사진 · 동영상: DCIM/HALCamera\nIncident ZIP에는 이미지 픽셀이 포함되지 않습니다",10,muted),lp(top=18))
 
         root.setOnApplyWindowInsetsListener { _,insets ->
             val (l,t,r,b)=if (Build.VERSION.SDK_INT >= 30) {
@@ -383,7 +438,8 @@ class MainActivity : ComponentActivity() {
         for (ratio in presets) {
             val b=button(zoomLabel(ratio,ratio==zoomRatio)) { selectZoom(ratio) }
             b.textSize=12f
-            zoomRow.addView(b,LinearLayout.LayoutParams(dp(42),dp(42)).apply { marginStart=dp(3); marginEnd=dp(3) })
+            b.contentDescription="${ratio}배 줌"
+            zoomRow.addView(b,LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginStart=dp(2); marginEnd=dp(2) })
         }
         styleZoom()
     }
@@ -402,6 +458,7 @@ class MainActivity : ComponentActivity() {
             val ratio=presets.getOrNull(i) ?: continue
             val b=zoomRow.getChildAt(i) as Button
             val selected=ratio==zoomRatio
+            b.isSelected=selected
             b.text=zoomLabel(ratio,selected)
             b.setTextColor(if(selected) bg else Color.WHITE)
             b.background=circle(if(selected) mint else Color.TRANSPARENT)
@@ -414,6 +471,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun styleEngines() {
         for((button,name) in listOf(engineX to "CameraX",engine2 to "Camera2")) {
+            button.isSelected = engineName == name
             button.setTextColor(if(engineName==name) bg else Color.WHITE)
             button.background=rounded(if(engineName==name) mint else glass)
         }
@@ -424,7 +482,7 @@ class MainActivity : ComponentActivity() {
         fun fmt(value:Double?,pattern:String)=value?.let { pattern.format(Locale.US,it) } ?: "—"
         val zoom=num("zoomRatio")?.let { "Zoom ${"%.2f".format(Locale.US,it)}x" } ?: "Zoom —"
         metrics.text="FPS ${fmt(num("resultFps"),"%.1f")}  ·  ISO ${num("iso")?.toInt() ?: "—"}  ·  Exp ${fmt(num("exposureNs")?.div(1e6),"%.2f ms")}\nLens ${fmt(num("focusDiopters"),"%.2f D")}  ·  $zoom"
-        if(frame==null) { timeline.text="수신 중인 프레임 없음"; stripText.text="START —   PARTIAL —   BUFFER —"; return }
+        if(frame==null) { timeline.text="수신 중인 프레임 없음"; stripText.text="PARTIAL —   BUFFER — ms"; return }
         val imageEvents=events.filter { it.session==sessionId && it.kind=="image_available" }
         val matched=frames.asReversed().firstOrNull { r -> r.sensorNs!=null && imageEvents.any { it.sensorNs==r.sensorNs } } ?: frame
         val start=events.lastOrNull { it.session==sessionId && it.kind=="capture_started" && it.frame==matched.frame }
@@ -434,7 +492,8 @@ class MainActivity : ComponentActivity() {
         timeline.text="Frame #${matched.frame} · observed callbacks\nSTART    ${if(start!=null) "+0.00 ms" else "—"}\nPARTIAL  ${offset(matched)}\nBUFFER   ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
         fun ms(e:Event?)=if(e!=null && start!=null) (e.atNs-start.atNs)/1e6 else null
         timelineView.update(matched.frame,ms(matched),ms(image),lastReading?.baselinePartialMs,lastReading?.baselineBufferMs)
-        stripText.text=dev.halcamera.ui.LiveReadout.stripText(matched.frame,ms(matched),ms(image))
+        fun offset(value: Double?) = value?.let { "%+.1f".format(Locale.US,it) } ?: "—"
+        stripText.text="PARTIAL ${offset(ms(matched))}   BUFFER ${offset(ms(image))} ms"
     }
     /**
      * The live numbers, read once per tick and nothing more. The old version of this also recorded a
@@ -524,11 +583,17 @@ class MainActivity : ComponentActivity() {
             .setNegativeButton("닫기",null).show()
     }
     private fun showNotes() {
-        AlertDialog.Builder(this).setTitle("측정 범위 / MVP")
-            .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• *앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 이미지 픽셀, Perfetto, Simpleperf, AI 분석은 이 MVP에 포함하지 않았습니다.")
+        AlertDialog.Builder(this).setTitle("측정 안내")
+            .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• *앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 셔터는 YUV·JPEG 사진 두 장을, RECORD는 소리가 포함된 동영상을 갤러리에 저장합니다. 녹화 중에는 사진 촬영과 줌 변경을 할 수 없습니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
             .setPositiveButton("확인",null).show()
     }
-    private fun label(text:String,size:Int,color:Int,bold:Boolean=false)=TextView(this).apply { this.text=text; textSize=size.toFloat(); setTextColor(color); if(bold) setTypeface(typeface,Typeface.BOLD) }
+    private fun showDiagnostics(show: Boolean) {
+        diagnostics.visibility = if (show) View.VISIBLE else View.GONE
+        panelBack.isEnabled = show
+        topBar.importantForAccessibility = if (show) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+        bottomBar.importantForAccessibility = topBar.importantForAccessibility
+    }
+    private fun label(text:String,size:Int,color:Int,bold:Boolean=false)=TextView(this).apply { this.text=text; textSize=size.coerceAtLeast(12).toFloat(); setTextColor(color); if(bold) setTypeface(typeface,Typeface.BOLD) }
     private fun button(text:String,action:()->Unit)=Button(this).apply { this.text=text; isAllCaps=false; textSize=12f; setTextColor(mint); background=rounded(panel); setPadding(0,0,0,0); minWidth=0; minimumWidth=0; minHeight=0; minimumHeight=0; setOnClickListener { action() } }
     private fun row()=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL }
     private fun rounded(color:Int)=GradientDrawable().apply { setColor(color); cornerRadius=dp(10).toFloat() }
