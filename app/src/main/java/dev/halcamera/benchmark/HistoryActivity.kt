@@ -103,16 +103,16 @@ class HistoryActivity : ComponentActivity() {
             return
         }
         button("BENCHMARK로 돌아가기") { finish() }
-        button("필터 · ${filter.label}") {
-            choose("실행 상태", RunFilter.values().map { it.label }) { filter = RunFilter.values()[it]; pageSize = 50; render() }
+        button("필터 · ${filter.label} ▾") {
+            choose("실행 상태", RunFilter.values().map { it.label }, filter.ordinal) { filter = RunFilter.values()[it]; pageSize = 50; render() }
         }
-        button("Profile · ${profileId ?: "전체"}") {
-            val values = index.runs.map { it.profile.id }.distinct().sorted()
-            choose("Profile", listOf("전체") + values) { profileId = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
+        button("Profile · ${profileId ?: "전체"} ▾") {
+            val values = (index.runs.map { it.profile.id } + listOfNotNull(profileId)).distinct().sorted()
+            choose("Profile", listOf("전체") + values, values.indexOf(profileId) + 1) { profileId = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
-        button("Camera · ${endpointKey ?: "전체"}") {
-            val values = index.runs.map { it.endpoint.key }.distinct().sorted()
-            choose("Camera endpoint", listOf("전체") + values) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
+        button("Camera · ${endpointKey ?: "전체"} ▾") {
+            val values = (index.runs.map { it.endpoint.key } + listOfNotNull(endpointKey)).distinct().sorted()
+            choose("Camera endpoint", listOf("전체") + values, values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
         val runs = visible()
         text("${runs.size}개 실행 · 행을 눌러 결과를 열고, 길게 눌러 작업을 선택합니다.")
@@ -247,8 +247,11 @@ class HistoryActivity : ComponentActivity() {
         }
     }
 
-    private fun choose(title: String, items: List<String>, onSelect: (Int) -> Unit) {
-        AlertDialog.Builder(this).setTitle(title).setItems(items.toTypedArray()) { _, i -> onSelect(i) }.show()
+    private fun choose(title: String, items: List<String>, selected: Int? = null, onSelect: (Int) -> Unit) {
+        val dialog = AlertDialog.Builder(this).setTitle(title).setNegativeButton("취소", null)
+        if (selected == null) dialog.setItems(items.toTypedArray()) { _, i -> onSelect(i) }
+        else dialog.setSingleChoiceItems(items.toTypedArray(), selected) { choice, i -> choice.dismiss(); onSelect(i) }
+        dialog.show()
     }
     private fun text(value: String, size: Int = 14, bold: Boolean = false) {
         body.addView(Look.text(this, value, size, Look.onDark, bold = bold), lp())

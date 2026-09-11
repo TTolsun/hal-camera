@@ -360,7 +360,11 @@ class BenchmarkActivity : ComponentActivity() {
         content.addView(card)
 
         val row = Look.row(this)
-        row.addView(Look.ghostButton(this, "카메라 선택", dark = true) { selectCamera() }, LinearLayout.LayoutParams(0, dp(52), 1f))
+        val cameraLabel = endpoints.getOrNull(selected)?.let { "${roleText(it.role)} · ID ${it.logicalCameraId} ▾" } ?: "카메라 없음"
+        row.addView(Look.ghostButton(this, cameraLabel, dark = true) { selectCamera() }.apply {
+            isEnabled = endpoints.isNotEmpty()
+            contentDescription = "벤치마크 카메라 선택, 현재 $cameraLabel"
+        }, LinearLayout.LayoutParams(0, dp(52), 1f))
         row.addView(Look.ghostButton(this, "닫기", dark = true) { finish() }, LinearLayout.LayoutParams(-2, dp(52)).apply { marginStart = dp(8) })
         actions.addView(row)
         when {
