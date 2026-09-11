@@ -29,6 +29,7 @@ import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -114,9 +115,14 @@ class BenchmarkActivity : ComponentActivity() {
     private var comparison: RunComparison? = null
     private var comparedTo: ComparedTo = ComparedTo.NONE
     private var isBaseline = false
+    private var historyLoading = false
 
     private val requestCamera = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) enumerate() else { cardError = "카메라 권한이 없어 벤치마크를 실행할 수 없습니다."; render() }
+    }
+
+    private val openHistory = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        if (screen == Screen.RESULT && lastFile != null) lastRun?.let { loadHistoryRun(it.runId) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -149,6 +155,13 @@ class BenchmarkActivity : ComponentActivity() {
 
         recorder.listener = { e -> main.post { if (!destroyed) onEvent(e) } }
         render()
+
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (screen == Screen.COMPARE) { screen = Screen.RESULT; render() } else finish()
+            }
+        })
+        intent.getStringExtra(EXTRA_RUN_ID)?.let { loadHistoryRun(it); return }
 
         if (hasPermission()) enumerate() else requestCamera.launch(Manifest.permission.CAMERA)
     }
@@ -244,6 +257,47 @@ class BenchmarkActivity : ComponentActivity() {
             Screen.RESULT -> renderResult()
             Screen.COMPARE -> renderCompare()
         }
+        if (screen == Screen.CARD || screen == Screen.RESULT) {
+            actions.addView(Look.ghostButton(this, "RESULTS · 실행 이력", dark = true) {
+                if (intent.hasExtra(EXTRA_RUN_ID)) finish() else {
+                    captureDraft()
+                    openHistory.launch(Intent(this, HistoryActivity::class.java)
+                        .putExtra("profile", profile.id)
+                        .putExtra("endpoint", endpoints.getOrNull(selected)?.key))
+                }
+            }, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(8) })
+        }
+    }
+
+    private fun loadHistoryRun(id: String) {
+        val previousSummary = lastSummary.takeIf { lastRun?.runId == id }
+        lastRun = null; lastFile = null
+        historyLoading = true
+        screen = Screen.RESULT
+        lastSummary = "실행 기록을 읽고 있습니다."
+        render()
+        io.execute {
+            val result = runCatching {
+                val run = report.read(store.file(id)) ?: error(report.lastReadError ?: "실행을 읽을 수 없습니다.")
+                require(run.runId == id) { "실행 ID와 파일명이 다릅니다." }
+                val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
+                val base = baseline ?: baselines.reference(run)
+                val to = if (baseline != null) ComparedTo.BASELINE else if (base != null) ComparedTo.PREVIOUS else ComparedTo.NONE
+                val cmp = RegressionDetector.compare(base, run)
+                val onBaseline = baselines.isBaseline(run)
+                main.post {
+                    if (destroyed) return@post
+                    historyLoading = false
+                    lastRun = run; lastFile = store.file(id); baseRun = base
+                    comparedTo = to; comparison = cmp; isBaseline = onBaseline
+                    lastSummary = previousSummary ?: "${run.runId}\n${run.validity.flags.joinToString(" · ")}"
+                    render()
+                }
+            }
+            result.exceptionOrNull()?.let { error -> main.post {
+                if (!destroyed) { historyLoading = false; lastSummary = error.message ?: "실행을 읽을 수 없습니다."; render() }
+            } }
+        }
     }
 
     /** 8.2. */
@@ -327,10 +381,10 @@ class BenchmarkActivity : ComponentActivity() {
             card.addView(Look.text(this, "CAMERA BENCHMARK", 19, Look.onDark, bold = true))
             card.addView(Look.text(this, lastSummary.ifBlank { "결과를 만들지 못했습니다." }, 12, Look.onDarkMuted, mono = true), lp(top = 10))
             content.addView(card)
-            actions.addView(Look.primaryButton(this, "새 run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)))
+            if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "새 run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)))
             return
         }
-        val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, deviceName(), roleText(run.endpoint.role))
+        val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, "${run.device.manufacturer} ${run.device.model}", roleText(run.endpoint.role))
         card.addView(wide(Look.text(this, view.render(), 9, Look.onDark, mono = true).also { copyOnTap(it, "result") }))
         card.addView(Look.text(this, lastSummary, 10, Look.onDarkMuted, mono = true), lp(top = 10))
         content.addView(card)
@@ -350,7 +404,7 @@ class BenchmarkActivity : ComponentActivity() {
             LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginStart = dp(8) }
         )
         actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
-        actions.addView(Look.primaryButton(this, "새 run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
+        if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "새 run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
     }
 
     /** 7.3. */
@@ -569,21 +623,29 @@ class BenchmarkActivity : ComponentActivity() {
     private fun toggleBaseline() {
         val run = lastRun ?: return
         io.execute {
-            baselines.toggle(run)
-            val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
-            val base = baseline ?: baselines.reference(run)
-            val to = when {
-                baseline != null -> ComparedTo.BASELINE
-                base != null -> ComparedTo.PREVIOUS
-                else -> ComparedTo.NONE
-            }
-            val cmp = RegressionDetector.compare(base, run)
-            val onBaseline = baselines.isBaseline(run)
-            main.post {
-                if (destroyed) return@post
-                baseRun = base; comparedTo = to; comparison = cmp; isBaseline = onBaseline
-                if (screen == Screen.COMPARE && base == null) screen = Screen.RESULT
-                render()
+            try {
+                store.index()
+                check(store.lastIndexError == null) { "Baseline 파일을 읽을 수 없어 변경할 수 없습니다." }
+                baselines.toggle(run)
+                val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
+                val base = baseline ?: baselines.reference(run)
+                val to = when {
+                    baseline != null -> ComparedTo.BASELINE
+                    base != null -> ComparedTo.PREVIOUS
+                    else -> ComparedTo.NONE
+                }
+                val cmp = RegressionDetector.compare(base, run)
+                val onBaseline = baselines.isBaseline(run)
+                main.post {
+                    if (destroyed) return@post
+                    baseRun = base; comparedTo = to; comparison = cmp; isBaseline = onBaseline
+                    if (screen == Screen.COMPARE && base == null) screen = Screen.RESULT
+                    render()
+                }
+            } catch (e: Exception) {
+                main.post {
+                    if (!destroyed) android.widget.Toast.makeText(this, e.message ?: "Baseline 변경에 실패했습니다.", android.widget.Toast.LENGTH_LONG).show()
+                }
             }
         }
     }
@@ -707,6 +769,7 @@ class BenchmarkActivity : ComponentActivity() {
     companion object {
         /** The engine and camera the LIVE screen was showing (8.1); the benchmark measures what the user was looking at. */
         const val EXTRA_ENGINE = "engine"
+        const val EXTRA_RUN_ID = "run_id"
         const val EXTRA_CAMERA_ID = "camera_id"
         private const val STATS_INTERVAL_MS = 250L
     }

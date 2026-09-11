@@ -58,58 +58,37 @@ incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽�
 
 <!-- omm:begin id=layer-isolation -->
 
-**먼저 앱의 필터와 계산 규칙을 확인한 뒤 원시 이벤트를 대조하세요.** 앱은 프레임워크에서 받은 값과, 그 값으로 계산한 지표를 함께 기록합니다. 둘을 구분해야 문제가 생긴 계층을 좁힐 수 있습니다.
+**먼저 앱의 필터와 계산 규칙을 확인한 뒤 원시 이벤트를 대조하세요.** 프레임워크에서 받은 값과 앱이 계산한 지표를 구분해야 원인 계층을 좁힐 수 있습니다.
 
-### 원인을 좁히는 순서
+1. `unknownReason`, 세션 ID, 관측 창과 표본 수를 확인합니다. `INSUFFICIENT_SAMPLES`는 측정 대상의 고장을 뜻하지 않습니다.
+2. `capture_failed.reason`, `buffer_lost`, `capture_result`의 센서 시각과 `frameDurationNs`를 대조합니다. `request_observed`는 요청 제출 시각이 아닙니다.
+3. 센서 타임스탬프가 REALTIME 소스일 때만 앱 시각과 직접 비교합니다. 다른 시계의 값을 빼면 지연을 해석할 수 없습니다.
+4. 앱 기록만으로 프레임워크와 HAL 중 원인을 확정하지 않습니다. 시스템 트레이스와 카메라 서비스 로그로 추가 확인해야 합니다.
 
-1. **앱의 입력 조건을 확인합니다.** 값이 `null`이면 `unknownReason`을 봅니다. 세션 ID와 관측 창이 기대한 값인지 확인하고, `capacityEvictions`가 0보다 큰지 확인합니다. 이벤트가 용량 한도로 제거됐다면 계산에 필요한 기록이 부족할 수 있습니다.
-2. **원시 이벤트를 대조합니다.** `capture_failed.reason`, `buffer_lost`의 발생 시점, `capture_result.frameDurationNs`와 센서 시각의 간격을 확인합니다. 원시값이 이상하더라도 요청 설정·콜백 처리·시스템 로그를 함께 확인해야 합니다.
-3. **시계 도메인을 확인합니다.** 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 센서 타임스탬프와 앱의 `atNs`를 직접 비교합니다. 다른 시계의 값을 빼면 의미 없는 차이가 나옵니다.
-4. **프레임워크와 HAL을 추가 자료로 구분합니다.** 앱 기록만으로 두 계층 중 어디가 원인인지 확정할 수 없습니다. 시스템 트레이스와 카메라 서비스 로그가 필요합니다. 팀에서 사용할 구체적인 수집 절차는 아직 정리하지 않았습니다.
+### 표본과 보존 규칙
 
-### 프레임워크에서 받은 값
-
-아래 항목은 앱이 계산한 지표가 아니라 콜백을 통해 관측한 정보입니다.
-
-| 이벤트 | 기록하는 정보 |
+| 규칙 | 확인할 코드와 영향 |
 | --- | --- |
-| `capture_started` | `frameNumber`와 `timestamp`를 기록합니다. |
-| `capture_result` | `sensorNs`, AE/AF/AWB 상태, `exposureNs`, `iso`, `frameDurationNs`, `focusDiopters`, `zoomRatio`, `cropRegion`을 기록합니다. |
-| `capture_failed` | `reason`과 `imageCaptured`를 기록합니다. |
-| `buffer_lost` | `frameNumber`를 기록합니다. |
-| `image_available` | 해상도, 포맷, 스트림 이름을 기록합니다. |
+| 닫힌 세션의 콜백을 버립니다. | `Telemetry.callback`의 `alive()`를 확인합니다. |
+| 관측 세션과 시간 창을 선택합니다. | `RunAssembler.observe()`가 관측 시작 이전 결과를 워밍업으로 제외합니다. 고정 5프레임 규칙은 사용하지 않습니다. |
+| 표본이 부족하면 값이 비어 있습니다. | `BenchmarkEvaluator`의 관측 통계는 해당 지표 표본 수가 15개 미만이면 `null`을 반환합니다. 3A 수렴은 워밍업 전 프레임도 사용합니다. |
+| 오래된 이벤트를 제거합니다. | `FlightRecorder` 기본 설정은 30초·18,000개이며 `BenchmarkActivity`는 180초·60,000개로 구성합니다. `capacityEvictions`를 확인합니다. |
+| listener는 동기로 실행합니다. | `FlightRecorder.listener`에 무거운 처리를 추가하면 관측 경로에 영향을 줄 수 있습니다. |
 
-`request_observed`는 **요청을 제출한 시점의 기록이 아닙니다.** `onCaptureStarted`에서 관측한 요청 내용을 담으며, `Telemetry`는 이 구분을 `observation` 필드에 기록합니다.
+`intervalMs`, `resultFps`, `observedResultGap`은 관측값으로 계산한 수치입니다. HAL 내부의 처리 시간이나 화면에 표시된 프레임 수를 직접 측정한 값이 아닙니다.
 
-### 앱에서 계산한 값
+### 이력과 CSV가 예상과 다를 때
 
-`intervalMs`와 `resultFps`는 센서 타임스탬프 차이로 계산합니다. `observedResultGap`은 관측된 결과 프레임 번호의 차이로 계산합니다. 이 값들은 HAL의 프레임 드롭 횟수나 프리뷰 렌더링 드롭 횟수를 직접 나타내지 않습니다.
+RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된 실행을 찾으려면 상태 필터를 `전체`로 바꾸고 profile·camera 필터도 확인합니다. PC의 `tools/aggregate.py`는 기본적으로 점수 산정 가능한 실행만 내보내므로, 앱과 같은 범위를 보려면 `--eligibility comparison_eligible`을 사용합니다.
 
-H.x 지표와 상태 판정도 앱의 계산 결과입니다. 이 값이 예상과 다르면 아래의 필터와 표본 수 기준부터 확인하세요.
-
-### 세션과 표본 규칙
-
-| 규칙 | 코드 위치 | 결과에 나타나는 영향 |
-| --- | --- | --- |
-| 닫힌 세션의 늦은 콜백은 기록하지 않습니다. | `Telemetry.callback`의 `alive()` | 닫는 도중 도착한 마지막 프레임이 이벤트 목록에 없을 수 있습니다. |
-| 같은 세션 ID의 이벤트만 지표에 사용합니다. | `CheckEvaluator.evaluate`의 `result.session` | 다른 세션은 계산에서 제외합니다. 세션 ID가 어긋나면 지표의 입력이 비게 됩니다. |
-| Auto Check는 첫 결과 프레임 5개를 H.1~H.5 통계에서 제외합니다. | `CheckEvaluator.WARMUP_FRAMES` | 첫 프레임의 긴 간격이 해당 통계에 나타나지 않습니다. 3A 수렴은 제외 전 프레임을 사용합니다. |
-| 워밍업을 제외한 steady 프레임이 15개 미만이면 값을 `null`로 표시합니다. | `MetricExtractor(minSamples = 15)` | `INSUFFICIENT_SAMPLES`로 표시합니다. 수집한 통계 자체는 남아 있습니다. |
-
-### 기록 보존과 실행 스레드
-
-| 규칙 | 코드 위치 | 결과에 나타나는 영향 |
-| --- | --- | --- |
-| 링 버퍼의 이벤트 상한은 18,000개입니다. | `FlightRecorder.store` | 상한을 넘으면 오래된 이벤트부터 제거합니다. 제거 횟수는 `capacityEvictions`에서 확인합니다. 이 때문에 일부 기록이 빠진 지표에 별도 표시는 하지 않습니다. |
-| 이벤트 보존 기간은 30초입니다. | `FlightRecorder(retentionNs)` | 30초보다 오래된 이벤트는 `snapshot()`에 남지 않습니다. |
-| 라이브 listener는 기록 스레드에서 동기 실행됩니다. | `FlightRecorder.listener` | 무거운 처리를 추가하면 기록 경로가 느려지고 관측 간격에도 영향을 줄 수 있습니다. |
+손상된 JSON은 목록과 PC 집계에서 별도로 알립니다. CSV 출력 장치의 오류는 입력 파일 오류와 구분하며 작업을 실패로 종료합니다. baseline 파일을 읽을 수 없으면 baseline 변경과 삭제를 중단합니다. 기기 화면·공유·삭제 동작의 실제 검증 기록은 이 문서에서 주장하지 않습니다.
 
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/check/CheckEvaluator.kt`, `app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-10 @ `5474f70` · Codex
+- 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review
 
 </details>
 
@@ -123,16 +102,14 @@ H.x 지표와 상태 판정도 앱의 계산 결과입니다. 이 값이 예상�
 
 다음 항목은 구조 스캔에서 확인한 제약이나 추가 검증이 필요한 사항입니다.
 
-- 촬영 중 프리뷰 stall 2.7은 아직 NOT_RUN입니다.
-- MetricExtractor와 BenchmarkEvaluator가 일부 통계 계산을 나눠 수행하므로 워밍업과 표본 수 기준을 함께 검토해야 합니다.
-- FlightRecorder의 이벤트 상한을 넘으면 오래된 이벤트가 제거됩니다. incident의 capacityEvictions와 incidentTruncated를 확인해야 합니다.
-- FlightRecorder.listener는 기록 스레드에서 동기 실행되므로 무거운 처리는 측정 경로에 영향을 줍니다.
+- 콜백과 파일 작업의 실행 스레드, close 완료와 늦은 신호 처리는 변경 시 함께 검증해야 합니다.
+- RESULTS의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.
+- 촬영 중 프리뷰 stall 지표 2.7은 여전히 NOT_RUN입니다.
 
 **후속 작업**
 
-1. baseline 설정·해제와 이전 실행 선택 시 저장된 측정값과 다시 계산하는 비교 결과를 구분해 검증합니다.
-2. 2.7을 위한 촬영 구간 프레임 관측을 구현합니다.
-3. 원시 이벤트와 표본 부족·조건 불일치 상태를 함께 점검하는 기기 검증 절차를 기록합니다.
+1. RESULTS의 필터·임의 비교·baseline·삭제·공유 동작을 기기에서 검증하고 근거를 남깁니다.
+2. 촬영 중 프리뷰 stall 지표 2.7의 관측·계산 규칙을 구현합니다.
 
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
@@ -158,8 +135,8 @@ H.x 지표와 상태 판정도 앱의 계산 결과입니다. 이 값이 예상�
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.3.1` |
-| `versionCode` | `4` |
+| `versionName` | `0.4.0` |
+| `versionCode` | `5` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |
@@ -183,13 +160,13 @@ H.x 지표와 상태 판정도 앱의 계산 결과입니다. 이 값이 예상�
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.3.1 (versionCode 4)
+- 검증 기준 앱 버전: 0.4.0 (versionCode 5)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-10 @ `5474f70` · Codex |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review |
 
 <!-- omm:end id=status -->
 
@@ -200,6 +177,6 @@ H.x 지표와 상태 판정도 앱의 계산 결과입니다. 이 값이 예상�
 ## 관련 코드
 
 - `app/src/main/java/dev/halcamera/telemetry/`에서 이벤트 기록과 incident 내보내기를 확인합니다.
-- `app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt`에서 지표 계산 규칙을 확인합니다.
+- `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`에서 지표 계산 규칙을 확인합니다.
 
 **다음 단계:** [원인을 좁히는 순서](#원인을-좁히는-순서)의 첫 단계에 따라 문제 실행의 `unknownReason`과 입력 조건을 확인하세요.

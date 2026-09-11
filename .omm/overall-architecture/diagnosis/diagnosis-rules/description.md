@@ -1,3 +1,5 @@
+> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
+
 `app/src/main/java/dev/halcamera/diagnosis/DiagnosisRules.kt` (81 lines). Picks one rule id from the metric states, per `PRODUCT-v0.2.md` chapter 8.
 
 Twelve rules in a fixed priority order, highest first: `hard_failure`, `below_spec`, `pipeline_stall`, `sensor_stall`, `callback_delay`, `cdd_reference_exceeded`, `slower_than_baseline`, `three_a_unstable`, `cadence_change`, `three_a_searching`, `insufficient_evidence`, `normal`. Every rule that matched is kept as a secondary, with the evidence that triggered it, so the report can show why the chosen rule beat the others.

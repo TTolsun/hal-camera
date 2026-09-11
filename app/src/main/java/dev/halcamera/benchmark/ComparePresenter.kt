@@ -58,18 +58,20 @@ object ComparePresenter {
         comparison: RunComparison,
         comparedTo: ComparedTo,
         /** Whether [current] is itself the baseline, which is a different thing from there being none. */
-        currentIsBaseline: Boolean = false
+        currentIsBaseline: Boolean = false,
+        selectedReference: Boolean = false
     ): CompareView {
         val againstBaseline = comparedTo == ComparedTo.BASELINE
         return CompareView(
             titleLine = pad("COMPARE", ROLE + RUN_ID + SUBJECT) + "rule ${comparison.ruleVersion}",
-            baseLine = runLine(if (againstBaseline) "baseline" else "previous", base),
+            baseLine = runLine(if (againstBaseline) "baseline" else if (selectedReference) "selected" else "previous", base),
             currentLine = runLine("current", current),
             identityLine = comparison.identity?.let(ResultPresenter::identityLine),
             conditionLine = ResultPresenter.conditionLine(comparison),
-            baseHeader = if (againstBaseline) "BASELINE" else "PREVIOUS",
+            baseHeader = if (againstBaseline) "BASELINE" else if (selectedReference) "SELECTED" else "PREVIOUS",
             referenceNote = when {
                 againstBaseline -> null
+                selectedReference -> "선택한 run 대비 delta만 표시합니다 · baseline은 변경하지 않습니다"
                 // The baseline has nothing above it to be measured against, so it too falls back to the previous
                 // run. Saying "baseline 없음" on the baseline's own screen contradicts the button beside it.
                 currentIsBaseline -> "이 run이 baseline입니다 · 이전 run 대비 delta만 표시합니다"
@@ -99,16 +101,16 @@ object ComparePresenter {
             val b = base.metric(id)
             val c = current.metric(id)
             if (b?.value == null && c?.value == null) return@mapNotNull null
-            // Unit and category come from whichever side is present; both sides share the metric definition
-            // version, so formatting one against the other cannot disagree.
+            // History permits selecting incompatible contracts. Preserve each side
+            // independently and never report a percentage between different units.
             val shape = c ?: b!!
             val metricComparison = comparison.metric(id)
             CompareRow(
                 label = BenchmarkMetricCatalog.info(id)?.short ?: id,
-                base = ResultPresenter.format(shape, b?.value),
+                base = ResultPresenter.format(b ?: shape, b?.value),
                 current = ResultPresenter.format(shape, c?.value),
-                delta = ResultPresenter.delta(shape, metricComparison),
-                marker = marker(metricComparison, comparedTo)
+                delta = if (b != null && c != null && b.unit != c.unit) "—" else ResultPresenter.delta(shape, metricComparison),
+                marker = if (b != null && c != null && b.unit != c.unit) "단위 다름" else marker(metricComparison, comparedTo)
             )
         }
 

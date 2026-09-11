@@ -2,4 +2,5 @@
     <files-path name="incidents" path="incidents/" />
     <files-path name="checks" path="checks/" />
     <files-path name="benchmarks" path="benchmarks/" />
+    <cache-path name="benchmark_exports" path="benchmark-exports/" />
 </paths>

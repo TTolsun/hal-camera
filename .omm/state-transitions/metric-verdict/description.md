@@ -1,3 +1,5 @@
+> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
+
 `diagnosis/ThresholdEngine.kt` plus `Model.kt`. Not a timeline but a fixed resolution order, and the order is the semantics.
 
 1. No rule for the id: `UNKNOWN(not_measurable)`.

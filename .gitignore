@@ -12,3 +12,5 @@ tools/docgen/state/omm-backup/
 tools/docgen/node_modules/
 tools/docgen/state/sync-transaction/
 tools/docgen/state/.sync-lock
+
+__pycache__/

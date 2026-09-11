@@ -1,7 +1,3 @@
-실행 상태는 AutoCheckRunner와 BenchmarkRunner, CameraEngine의 수명주기, FlightRecorder의 incident 창으로 나뉩니다.
+BenchmarkRunner는 열기·닫기 반복과 추가 관측 세션을 분리합니다. 반복은 OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE, 관측 세션은 WARMUP → OBSERVE → STILL → CLOSE로 진행합니다. 연속 사이클 실패 한도, 관측 세션 실패와 명시적 abort가 조기 종료 조건입니다.
 
-AutoCheckRunner는 엔드포인트별 OPEN → CONFIGURE → FIRST_FRAME → OBSERVE → STILL → CLOSE를 구동합니다. 타임아웃은 현재 엔드포인트 실패를 기록하고 다음 대상으로 진행하며 명시적 abort는 전체 실행을 종료합니다.
-
-BenchmarkRunner는 launchIterations 회의 열기·닫기 사이클 뒤 추가 관측 세션에서 WARMUP → OBSERVE → STILL → CLOSE를 실행합니다. 연속 사이클 실패 한도, 관측 세션 실패, 명시적 abort가 조기 종료 조건입니다.
-
-지표 판정과 RunValidity는 카메라 상태 기계와 구분합니다. 전자는 hard failure·unknown·임계값을, 후자는 기록된 flag를 해석합니다.
+카메라 수명주기, FlightRecorder의 incident 창, validity와 회귀 판정은 서로 다른 상태입니다. HistoryActivity는 목록·두 실행 비교·작업 중 상태를 관리하며 삭제 확인 후 파일과 baseline 포인터를 처리합니다. 기존 AutoCheckRunner·ThresholdEngine 설명은 제거된 v0.2 경로의 이력입니다.

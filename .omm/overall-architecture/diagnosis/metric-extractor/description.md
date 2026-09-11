@@ -1,3 +1,5 @@
+> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
+
 `app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt` (191 lines). Computes the observation metrics H.1 to H.9 from one session's events inside a time window. No Android import.
 
 `frames()` reconstructs a `FrameObservation` per capture result by joining three event kinds: `capture_started` by frame number gives the start timestamp, `request_observed` supplies `afMode` when the result omits it, and `image_available` matched on sensor timestamp gives the buffer arrival. From those it derives `intervalMs` (trusting `FrameTracker`'s value when present), `partialMs` (started to result) and `bufferMs` (started to image). It deliberately seeds `previousSensor` from the last result *before* the window, so the first in-window interval is real rather than missing.

@@ -1,7 +1,5 @@
-- 이벤트 atNs는 elapsedRealtimeNanos 도메인입니다. 센서 시각과의 차이는 REALTIME 타임스탬프 소스가 확인될 때만 해석합니다.
-- MetricExtractor는 같은 세션의 관측 창 안 capture_result를 선택합니다. 연결하는 start/request/image와 직전 센서 시각은 관측 창 밖에서도 사용할 수 있습니다.
-- Auto Check는 관측 창 첫 5프레임을 H.1~H.5 통계에서 제외하고, 제외 후 steady 프레임이 15개 미만이면 표본 부족입니다. H.7의 AF 미지원은 UNSUPPORTED로 남습니다. 3A 수렴은 제외 전 결과에서 계산합니다.
-- 벤치마크는 RunAssembler가 관측 세션 시작부터 프레임을 모으고 관측 시작 이전 프레임 수를 워밍업으로 계산합니다. 고정 5프레임 규칙을 적용하지 않습니다.
-- H.9는 해당 세션·관측 창의 capture_failed와 buffer_lost 개수입니다. 프레임 표본 수 임계값과 별도로 계산합니다.
-- ISO×노출시간 p50의 baseline 대비 비율이 4 초과 또는 1/4 미만이면, 기존 unknownReason이 없는 Auto Check 3A 지표에 CONDITION_MISMATCH를 적용합니다.
-- 저장된 측정값은 비교 결과와 구분합니다. RegressionDetector는 두 실행의 조건과 현재 규칙으로 비교 결과를 계산합니다.
+- atNs는 elapsedRealtimeNanos 도메인이며 센서 시각과 직접 비교하려면 REALTIME 소스가 필요합니다.
+- RunAssembler는 관측 세션의 결과를 모으고 관측 시작 이전 결과 수를 워밍업으로 계산합니다. 3A 수렴은 첫 결과부터 계산합니다.
+- BenchmarkEvaluator의 관측 통계는 각 지표의 표본 수가 15개 미만이면 INSUFFICIENT_SAMPLES를 기록합니다.
+- H.9는 관측 세션·관측 창의 capture_failed와 buffer_lost 개수입니다.
+- RegressionDetector의 환경 차이 규칙은 thermal·절전·충전·노출 부하를 비교합니다. 원본 측정값과 다시 계산한 비교 상태를 구분합니다.

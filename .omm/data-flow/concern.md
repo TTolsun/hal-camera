@@ -1,4 +1,3 @@
-- 촬영 중 프리뷰 stall 2.7은 아직 NOT_RUN입니다.
-- MetricExtractor와 BenchmarkEvaluator가 일부 통계 계산을 나눠 수행하므로 워밍업과 표본 수 기준을 함께 검토해야 합니다.
-- FlightRecorder의 이벤트 상한을 넘으면 오래된 이벤트가 제거됩니다. incident의 capacityEvictions와 incidentTruncated를 확인해야 합니다.
-- FlightRecorder.listener는 기록 스레드에서 동기 실행되므로 무거운 처리는 측정 경로에 영향을 줍니다.
+- 콜백과 파일 작업의 실행 스레드, close 완료와 늦은 신호 처리는 변경 시 함께 검증해야 합니다.
+- RESULTS의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.
+- 촬영 중 프리뷰 stall 지표 2.7은 여전히 NOT_RUN입니다.

@@ -1,3 +1,5 @@
+> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
+
 `app/src/main/java/dev/halcamera/home/HomeActivity.kt`, the launcher activity (`android.intent.category.LAUNCHER`, `HomeTheme`).
 
 Stateless by design: `onResume` calls `render()`, which clears the body `LinearLayout` and rebuilds every view from `RunSummary.load(this)`. There is no view model and no cached state, so a run finished in `CheckActivity` shows up simply by returning here.

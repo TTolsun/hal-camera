@@ -56,7 +56,16 @@ class BenchmarkStore(val dir: File) {
 
     init { dir.mkdirs() }
 
-    fun file(runId: String): File = File(dir, "$runId.json")
+    fun file(runId: String): File {
+        require(runId.isNotBlank() && runId != "index" && runId.none { it == '/' || it == '\\' || it == ':' }) { "Invalid run id" }
+        return File(dir, "$runId.json")
+    }
+
+    fun deleteRun(runId: String): Boolean {
+        val index = index()
+        check(lastIndexError == null) { "Baseline index is unreadable; deletion was cancelled" }
+        return RunDeletion.delete(runId, index, { file(runId).delete() }, ::saveIndex)
+    }
 
     /** Run files newest first. Run ids are timestamps, so name order is time order. Stray .tmp files are ignored. */
     fun files(): List<File> = dir.listFiles()?.filter { it.extension == "json" && it.name != INDEX_NAME }?.sortedByDescending { it.name }.orEmpty()
