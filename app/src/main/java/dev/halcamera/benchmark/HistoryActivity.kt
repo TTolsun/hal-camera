@@ -195,7 +195,7 @@ class HistoryActivity : ComponentActivity() {
                 0 -> open(run)
                 1 -> {
                     if (indexError != null) message("Baseline 파일을 읽을 수 없어 변경할 수 없습니다.")
-                    else if (!run.validity.comparisonEligible) message("비교 가능한 실행만 baseline으로 지정할 수 있습니다.")
+                    else if (!isBaseline && !run.validity.comparisonEligible) message("비교 가능한 실행만 baseline으로 지정할 수 있습니다.")
                     else work({ baselines.toggle(run) }) { reload() }
                 }
                 2 -> { selectedId = run.runId; compareId = null; render() }

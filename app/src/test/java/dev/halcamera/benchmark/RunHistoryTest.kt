@@ -7,6 +7,16 @@ import org.junit.Test
 import java.io.StringWriter
 
 class RunHistoryTest {
+    @Test fun comparisonPreservesDifferentUnitsWithoutAFalsePercentage() {
+        val base = run(metrics = listOf(metric("1.1", 1000.0)))
+        val current = run(metrics = listOf(metric("1.1", 1.0).copy(unit = "s")), metricDefinitionVersion = "future")
+        val view = ComparePresenter.present(base, current, RegressionDetector.compare(base, current),
+            ComparedTo.PREVIOUS, selectedReference = true)
+        assertEquals("1000 ms", view.rows.single().base)
+        assertEquals("1.0 s", view.rows.single().current)
+        assertEquals("—", view.rows.single().delta)
+        assertEquals("단위 다름", view.rows.single().marker)
+    }
     private class Catalog(val entries: Map<String, BenchmarkRun?>) : RunCatalog {
         override fun index() = BenchmarkIndex()
         override fun saveIndex(index: BenchmarkIndex) = Unit

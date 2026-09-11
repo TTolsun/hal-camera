@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import aggregate
@@ -25,6 +26,21 @@ def run(flags=(), schema=4):
 
 
 class AggregateTests(unittest.TestCase):
+    def test_output_failure_is_fatal_and_not_reported_as_a_corrupt_input(self):
+        class FailingWriter:
+            def writerow(self, row):
+                pass
+
+            def writerows(self, rows):
+                raise OSError("disk full")
+
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            (folder / "valid.json").write_text(json.dumps(run()), encoding="utf-8")
+            with patch.object(aggregate.csv, "writer", return_value=FailingWriter()):
+                with self.assertRaisesRegex(OSError, "disk full"):
+                    self.invoke(folder)
+
     def invoke(self, folder, *args):
         output, error = io.StringIO(newline=""), io.StringIO()
         with contextlib.redirect_stdout(output), contextlib.redirect_stderr(error):

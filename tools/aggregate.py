@@ -113,11 +113,14 @@ def main(argv=None):
                         (args.profile and run["profile"]["id"] != args.profile) or (args.endpoint and key != args.endpoint)):
                     skipped += 1
                     continue
-                writer.writerows(rows(run))
-                exported += 1
+                output_rows = list(rows(run))
             except (ValueError, TypeError, AttributeError, OSError) as exc:
                 invalid += 1
                 print(f"Skipped {path.name}: {exc}", file=sys.stderr)
+                continue
+            # Output failures are fatal; they do not make an input report corrupt.
+            writer.writerows(output_rows)
+            exported += 1
     finally:
         if args.output:
             output.close()

@@ -302,6 +302,7 @@ object ResultPresenter {
     fun format(metric: BenchmarkMetric, value: Double?): String {
         if (value == null) return "—"
         if (metric.unit == "count") return value.toInt().toString()
+        if (metric.unit != "ms") return "$value ${metric.unit}"
         val text = if (metric.category == Category.PREVIEW) String.format(Locale.US, "%.1f", value)
         else String.format(Locale.US, "%.0f", value)
         return "$text ms"

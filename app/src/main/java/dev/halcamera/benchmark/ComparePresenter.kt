@@ -101,16 +101,16 @@ object ComparePresenter {
             val b = base.metric(id)
             val c = current.metric(id)
             if (b?.value == null && c?.value == null) return@mapNotNull null
-            // Unit and category come from whichever side is present; both sides share the metric definition
-            // version, so formatting one against the other cannot disagree.
+            // History permits selecting incompatible contracts. Preserve each side
+            // independently and never report a percentage between different units.
             val shape = c ?: b!!
             val metricComparison = comparison.metric(id)
             CompareRow(
                 label = BenchmarkMetricCatalog.info(id)?.short ?: id,
-                base = ResultPresenter.format(shape, b?.value),
+                base = ResultPresenter.format(b ?: shape, b?.value),
                 current = ResultPresenter.format(shape, c?.value),
-                delta = ResultPresenter.delta(shape, metricComparison),
-                marker = marker(metricComparison, comparedTo)
+                delta = if (b != null && c != null && b.unit != c.unit) "—" else ResultPresenter.delta(shape, metricComparison),
+                marker = if (b != null && c != null && b.unit != c.unit) "단위 다름" else marker(metricComparison, comparedTo)
             )
         }
 
