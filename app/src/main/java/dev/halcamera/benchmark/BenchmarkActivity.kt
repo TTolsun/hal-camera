@@ -107,6 +107,7 @@ class BenchmarkActivity : ComponentActivity() {
     private var runSubject = SubjectLabel()
     /** What is currently typed into the card. Null until the fields are shown, when the last run's labels seed them. */
     private var draftSubject: SubjectLabel? = null
+    private var labelsExpanded = false
 
     private var lastRun: BenchmarkRun? = null
     private var lastFile: File? = null
@@ -192,10 +193,16 @@ class BenchmarkActivity : ComponentActivity() {
         preflight()
     }
 
-    private fun selectNext() {
+    private fun selectCamera() {
         if (endpoints.isEmpty() || runner != null) return
-        selected = (selected + 1) % endpoints.size
-        preflight()
+        android.app.AlertDialog.Builder(this)
+            .setTitle("벤치마크 카메라 선택")
+            .setSingleChoiceItems(endpoints.map { "${roleText(it.role)} · ID ${it.logicalCameraId}" }.toTypedArray(), selected) { dialog, index ->
+                dialog.dismiss()
+                if (selected != index) { selected = index; preflight() }
+            }
+            .setNegativeButton("취소", null)
+            .show()
     }
 
     private fun preflight() {
@@ -305,7 +312,7 @@ class BenchmarkActivity : ComponentActivity() {
         progressHeadline = null; progressBar = null; progressStats = null
         val card = Look.card(this, dark = true)
         val state = startCard
-        card.addView(Look.text(this, "STANDARD CAMERA BENCHMARK", 19, Look.onDark, bold = true))
+        card.addView(Look.text(this, "벤치마크", 19, Look.onDark, bold = true))
         if (state == null) {
             card.addView(Look.text(this, cardError ?: "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted), lp(top = 10))
             content.addView(card)
@@ -321,24 +328,44 @@ class BenchmarkActivity : ComponentActivity() {
         // The fields stay while the device cools, so a label typed before the phone got hot is not lost.
         if (state.canStart || state.refreshable) {
             val draft = draftSubject ?: subjectPrefs.last()
-            card.addView(Look.text(this, "Subject build (선택)", 11, Look.onDarkMuted), lp(top = 14))
-            buildInput = input(draft.subjectBuildLabel).also { card.addView(it, lp(top = 4)) }
-            card.addView(Look.text(this, "Subject commit (선택)", 11, Look.onDarkMuted), lp(top = 10))
-            commitInput = input(draft.subjectCommit).also { card.addView(it, lp(top = 4)) }
-            card.addView(Look.text(this, "Note (선택)", 11, Look.onDarkMuted), lp(top = 10))
-            noteInput = input(draft.note).also { card.addView(it, lp(top = 4)) }
+            val fields = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            val hasLabels = listOf(draft.subjectBuildLabel, draft.subjectCommit, draft.note).any { !it.isNullOrBlank() }
+            val savedLabels = Look.text(this, "", 12, Look.onDarkMuted)
+            val toggle = Look.ghostButton(this, "", dark = true) {}.apply {
+                fun updateLabel() { text = if (labelsExpanded) "빌드 정보 접기 ▴" else if (hasLabels) "빌드 정보 편집 ▾" else "빌드 정보 추가 (선택) ▾" }
+                updateLabel()
+                setOnClickListener {
+                    labelsExpanded = !labelsExpanded
+                    fields.visibility = if (labelsExpanded) View.VISIBLE else View.GONE
+                    savedLabels.text = listOfNotNull(buildInput?.text?.toString()?.takeIf { it.isNotBlank() }, commitInput?.text?.toString()?.takeIf { it.isNotBlank() }, noteInput?.text?.toString()?.takeIf { it.isNotBlank() }).joinToString(" · ")
+                    savedLabels.visibility = if (!labelsExpanded && savedLabels.text.isNotBlank()) View.VISIBLE else View.GONE
+                    updateLabel()
+                }
+            }
+            card.addView(toggle, lp(top = 14))
+            savedLabels.text = listOfNotNull(draft.subjectBuildLabel, draft.subjectCommit, draft.note).filter { it.isNotBlank() }.joinToString(" · ")
+            savedLabels.visibility = if (!labelsExpanded && hasLabels) View.VISIBLE else View.GONE
+            card.addView(savedLabels, lp(top = 4))
+            fields.addView(Look.text(this, "Build", 12, Look.onDarkMuted), lp(top = 10))
+            buildInput = input(draft.subjectBuildLabel).also { it.contentDescription = "측정 대상 빌드"; fields.addView(it, lp(top = 4)) }
+            fields.addView(Look.text(this, "Commit", 12, Look.onDarkMuted), lp(top = 10))
+            commitInput = input(draft.subjectCommit).also { it.contentDescription = "측정 대상 커밋"; fields.addView(it, lp(top = 4)) }
+            fields.addView(Look.text(this, "메모", 12, Look.onDarkMuted), lp(top = 10))
+            noteInput = input(draft.note).also { it.contentDescription = "실행 메모"; fields.addView(it, lp(top = 4)) }
+            fields.visibility = if (labelsExpanded) View.VISIBLE else View.GONE
+            card.addView(fields)
         } else {
             buildInput = null; commitInput = null; noteInput = null
         }
         content.addView(card)
 
         val row = Look.row(this)
-        row.addView(Look.ghostButton(this, "카메라 변경", dark = true) { selectNext() }, LinearLayout.LayoutParams(0, dp(52), 1f))
+        row.addView(Look.ghostButton(this, "카메라 선택", dark = true) { selectCamera() }, LinearLayout.LayoutParams(0, dp(52), 1f))
         row.addView(Look.ghostButton(this, "닫기", dark = true) { finish() }, LinearLayout.LayoutParams(-2, dp(52)).apply { marginStart = dp(8) })
         actions.addView(row)
         when {
             state.canStart ->
-                actions.addView(Look.primaryButton(this, "START BENCHMARK") { begin() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
+                actions.addView(Look.primaryButton(this, "벤치마크 시작") { begin() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
             // Without this a card opened at SEVERE never offers START again, however long the device rests.
             state.refreshable ->
                 actions.addView(Look.primaryButton(this, "환경 다시 확인") { recheck() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
@@ -385,7 +412,19 @@ class BenchmarkActivity : ComponentActivity() {
             return
         }
         val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, "${run.device.manufacturer} ${run.device.model}", roleText(run.endpoint.role))
-        card.addView(wide(Look.text(this, view.render(), 9, Look.onDark, mono = true).also { copyOnTap(it, "result") }))
+        card.addView(Look.text(this, "벤치마크 결과", 19, Look.onDark, bold = true))
+        listOfNotNull(view.titleLine, view.subLine, view.eligibilityLine, view.comparisonLine, view.identityLine, view.conditionLine).forEach {
+            card.addView(Look.text(this, it, 12, Look.onDarkMuted), lp(top = 8))
+        }
+        card.addView(Look.text(this, "좌우로 스크롤 · 표를 누르면 복사", 12, Look.onDarkMuted), lp(top = 8))
+        val table = buildString {
+            view.sections.forEach { section ->
+                appendLine(ResultPresenter.headerLine(section))
+                section.rows.forEach { appendLine(ResultPresenter.rowLine(it)) }
+            }
+        }
+        card.addView(wide(Look.text(this, table, 12, Look.onDark, mono = true).also { copyOnTap(it, "result", view.render()) }), lp(top = 8))
+        view.threeALine?.let { card.addView(Look.text(this, it, 12, Look.onDarkMuted), lp(top = 8)) }
         card.addView(Look.text(this, lastSummary, 10, Look.onDarkMuted, mono = true), lp(top = 10))
         content.addView(card)
 
@@ -416,8 +455,17 @@ class BenchmarkActivity : ComponentActivity() {
         if (run == null || base == null || cmp == null) {
             card.addView(Look.text(this, "비교할 run이 없습니다.", 13, Look.onDarkMuted), lp(top = 2))
         } else {
-            val text = ComparePresenter.present(base, run, cmp, comparedTo, isBaseline).render()
-            card.addView(wide(Look.text(this, text, 9, Look.onDark, mono = true).also { copyOnTap(it, "compare") }))
+            val view = ComparePresenter.present(base, run, cmp, comparedTo, isBaseline)
+            card.addView(Look.text(this, "실행 비교", 19, Look.onDark, bold = true))
+            listOfNotNull(view.baseLine, view.currentLine, view.identityLine, view.conditionLine, view.referenceNote).forEach {
+                card.addView(Look.text(this, it.trim().replace(Regex(" {2,}"), " · "), 12, Look.onDarkMuted), lp(top = 8))
+            }
+            card.addView(Look.text(this, "좌우로 스크롤 · 표를 누르면 복사", 12, Look.onDarkMuted), lp(top = 8))
+            val table = buildString {
+                appendLine(ComparePresenter.headerLine(view.baseHeader))
+                view.rows.forEach { appendLine(ComparePresenter.rowLine(it)) }
+            }
+            card.addView(wide(Look.text(this, table, 12, Look.onDark, mono = true).also { copyOnTap(it, "compare", view.render()) }), lp(top = 8))
         }
         content.addView(card)
         actions.addView(Look.ghostButton(this, "결과로 돌아가기", dark = true) { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(-1, dp(52)))
@@ -705,6 +753,7 @@ class BenchmarkActivity : ComponentActivity() {
         setTextColor(Look.onDark)
         setHintTextColor(Look.onDarkMuted)
         textSize = 14f
+        minimumHeight = dp(48)
         typeface = Look.mono
         isSingleLine = true
         inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
@@ -721,7 +770,8 @@ class BenchmarkActivity : ComponentActivity() {
         }
 
     private fun wide(view: View): HorizontalScrollView = HorizontalScrollView(this).apply {
-        isHorizontalScrollBarEnabled = false
+        isHorizontalScrollBarEnabled = true
+        isScrollbarFadingEnabled = false
         addView(view, LinearLayout.LayoutParams(-2, -2))
     }
 
@@ -730,8 +780,8 @@ class BenchmarkActivity : ComponentActivity() {
      * carrying to a PC, and reading them off the screen by hand is error-prone. A tap copies the whole block; a
      * long press copies just the run JSON path when there is one.
      */
-    private fun copyOnTap(view: TextView, label: String): TextView = view.apply {
-        setOnClickListener { copy(label, text.toString()) }
+    private fun copyOnTap(view: TextView, label: String, fullText: String? = null): TextView = view.apply {
+        setOnClickListener { copy(label, fullText ?: text.toString()) }
         setOnLongClickListener {
             val path = lastFile?.absolutePath
             if (path == null) copy(label, text.toString()) else copy("$label path", path)

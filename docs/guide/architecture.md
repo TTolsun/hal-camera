@@ -41,12 +41,14 @@ baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 
 4. `benchmark/RunAssembler.kt`에서 러너 결과와 이벤트를 결합하는 지점을 확인합니다.
 5. `MainActivity.kt`, `BenchmarkActivity.kt`, `HistoryActivity.kt`에서 화면과 실행 코드의 연결을 확인합니다.
 
+LIVE의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저장하며 GalleryActivity에서 조회합니다. 측정 파일과 미디어 파일의 저장 경로를 구분하려면 아래 모듈 역할을 확인하세요.
+
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
 - 근거 파일: `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review
+- 검토 2026-09-11 @ `2a2cb01` · Codex-code-review
 
 </details>
 
@@ -106,12 +108,14 @@ graph LR
 
 `BenchmarkReport`는 schema 4를 쓰고 schema 3·4를 읽습니다. `BenchmarkStore`는 실행 파일과 baseline 인덱스를 관리합니다. 삭제한 실행을 가리키는 포인터는 정리하며, 기존 실행 JSON은 비교 상태가 바뀌어도 다시 쓰지 않습니다.
 
+`camera/MediaLibrary`는 사진 쌍과 동영상을 MediaStore에 저장합니다. `StillPair`와 `YuvPacking`은 버퍼 연결과 YUV 변환을 담당합니다. `GalleryActivity`는 HALCamera 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다.
+
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review
+- 검토 2026-09-11 @ `2a2cb01` · Codex-code-review
 
 </details>
 
@@ -141,12 +145,14 @@ graph LR
 
 RESULTS의 행은 저장된 결과로 연결됩니다. 길게 누르면 baseline, 비교, JSON·CSV 내보내기, 삭제 작업을 선택합니다. 삭제 확인 후 파일을 삭제하고 해당 baseline 포인터를 정리합니다. 측정값이 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다.
 
+LIVE에서 사진을 촬영하면 Camera2의 같은 요청에 YUV와 JPEG 출력을 지정합니다. 센서 타임스탬프가 일치하는 버퍼를 연결해 별도 작업 스레드에서 사진 쌍을 저장합니다. 동영상은 프리뷰·인코더 세션으로 전환하고 종료 후 파일을 앨범에 공개합니다. CameraX 상태에서 미디어 작업을 요청하면 Camera2로 전환합니다.
+
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
 - 근거 파일: `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/BaselineManager.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review
+- 검토 2026-09-11 @ `2a2cb01` · Codex-code-review
 
 </details>
 
@@ -246,12 +252,14 @@ graph LR
 4. 회귀 임계값은 `RegressionRules`에서 관리합니다. baseline은 자동으로 지정하지 않으며 임의의 두 실행을 고르는 동작도 baseline을 바꾸지 않습니다.
 5. 파일 삭제 실패 시 baseline 포인터를 먼저 없애지 않습니다. 포인터 정리 실패 후 남은 잘못된 참조는 `BaselineManager`가 이후 조회에서 정리합니다.
 
+LIVE의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9에서는 저장소 권한을, 녹화에는 마이크 권한을 요청합니다. 벤치마크의 StreamSpec과 메타데이터 전용 내보내기 계약은 유지합니다.
+
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review
+- 검토 2026-09-11 @ `2a2cb01` · Codex-code-review
 
 </details>
 
@@ -303,13 +311,13 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review |
-| 원고 `overview` | 최신 | 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review |
-| 원고 `module-roles` | 최신 | 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review |
-| 원고 `constraints` | 최신 | 검토 2026-09-11 @ `1934f66` · codex-pr39-code-review |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-11 @ `2a2cb01` · Codex-code-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-11 @ `2a2cb01` · Codex-code-review |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-11 @ `2a2cb01` · Codex-code-review |
+| 원고 `overview` | 최신 | 검토 2026-09-11 @ `2a2cb01` · Codex-code-review |
+| 원고 `module-roles` | 최신 | 검토 2026-09-11 @ `2a2cb01` · Codex-code-review |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-11 @ `2a2cb01` · Codex-code-review |
+| 원고 `constraints` | 최신 | 검토 2026-09-11 @ `2a2cb01` · Codex-code-review |
 
 <!-- omm:end id=status -->
 
