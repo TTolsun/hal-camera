@@ -13,6 +13,8 @@ import androidx.activity.OnBackPressedCallback
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import dev.halcamera.R
+import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 import dev.halcamera.ui.showSelectionPopup
 import java.io.File
@@ -104,7 +106,7 @@ class HistoryActivity : ComponentActivity() {
             scroll.post { scroll.scrollTo(0, if (wasComparison) scrollY else 0) }
             return
         }
-        button("BENCHMARK로 돌아가기") { finish() }
+        backButton("벤치마크로 돌아가기") { finish() }
         button("필터 · ${filter.label} ▾") { anchor ->
             showSelectionPopup(anchor, RunFilter.values().map { it.label }, filter.ordinal) { filter = RunFilter.values()[it]; pageSize = 50; render() }
         }
@@ -182,7 +184,7 @@ class HistoryActivity : ComponentActivity() {
         }
         button("기준 / 현재 바꾸기") { val old = selectedId; selectedId = compareId; compareId = old; render() }
         button("CSV EXPORT · 두 실행") { exportCsv(listOf(base, current)) }
-        button("이력으로 돌아가기") { compareId = null; render() }
+        backButton("실행 이력으로 돌아가기") { compareId = null; render() }
         return true
     }
 
@@ -263,6 +265,11 @@ class HistoryActivity : ComponentActivity() {
             isEnabled = enabled && !busy
             minHeight = dp(48)
         }, lp())
+    }
+    private fun backButton(label: String, click: () -> Unit) {
+        body.addView(IconButton(this, R.drawable.ic_action_back, label) { if (!busy) click() }.apply {
+            isEnabled = !busy
+        }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { topMargin = dp(10) })
     }
     private fun message(value: String) = Toast.makeText(this, value, Toast.LENGTH_LONG).show()
     private fun lp() = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) }
