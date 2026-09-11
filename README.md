@@ -22,6 +22,7 @@ Android 카메라의 **launch · preview · capture 성능을 반복 측정하�
 |---|---|
 | **LIVE** (런처) | CameraX / Camera2 전환, 카메라 선택, 실시간 프레임 간격과 콜백 지연 표시. `MARK` 버튼으로 직전 10초와 이후 5초를 incident ZIP으로 저장합니다 |
 | **BENCHMARK** | profile 시작 카드 → 6단계 진행 → 결과 표. `SET AS BASELINE`, `COMPARE`, `EXPORT` |
+| **RESULTS** | 실행 이력을 eligibility·profile·camera로 필터링하고, 임의의 두 실행을 비교하거나 JSON·CSV로 내보냅니다. BENCHMARK의 `RESULTS · 실행 이력`에서 엽니다 |
 
 LIVE는 관측한 숫자만 보여 주며 정상 / 이상을 판정하지 않습니다. 판정은 baseline과 비교할 때에만 성립하고, 그 일은 BENCHMARK가 합니다.
 
@@ -60,6 +61,25 @@ Windows에서 프로젝트 경로에 한글이 있으면 Android Gradle Plugin�
 ## run JSON
 
 run 하나는 `files/benchmarks/<run_id>.json`에 schema 3으로 저장됩니다. 결과 화면의 `EXPORT`로 공유할 수 있습니다. 파일에는 지표값, profile, 기기와 빌드 식별자, 환경값(thermal 시작 · 최고 · 종료, 절전 모드, 충전 상태), validity flag, 그리고 raw 표본이 들어 있습니다. **사진이나 프리뷰 픽셀은 저장하지 않습니다.**
+
+## 실행 이력과 CSV 내보내기
+
+RESULTS는 기본으로 현재 profile과 camera의 **비교 가능한 실행**을 보여 줍니다. 필터를 `전체`로 바꾸면 중단되었거나 비교할 수 없는 실행도 확인할 수 있습니다. 행을 누르면 저장된 결과가 열리고, 길게 누르면 baseline 지정·해제, 비교, JSON·CSV 내보내기, 삭제 메뉴가 나옵니다. 삭제할 때는 실행 ID를 확인하며, baseline으로 지정된 실행을 삭제하면 해당 지정도 해제됩니다.
+
+`COMPARE`에서 첫 번째 실행을 선택한 뒤 다른 행을 누르면 두 실행을 비교합니다. 선택한 기준이 현재 baseline일 때만 회귀 판정을 표시하고, 그 외에는 변화량만 표시합니다. 비교 화면에서 기준과 현재 실행을 바꿀 수 있습니다.
+
+`CSV EXPORT`는 현재 필터에 보이는 모든 실행을 내보냅니다. CSV 한 행은 실행의 지표 하나이며, 형상 정보, 기기·앱 정보, 환경, eligibility, 지표값과 통계가 함께 들어갑니다. 측정값이 없으면 빈 칸으로 남기고, 지표가 없는 중단 실행도 한 행으로 유지합니다. 쉼표·따옴표·줄바꿈을 지원하며, 스프레드시트 수식으로 해석될 수 있는 텍스트에는 작은따옴표를 붙입니다. JSON 원본은 바뀌지 않습니다. Subject build·commit·branch는 다음 실행에서 재사용하고, 실행별 Note는 재사용하지 않습니다.
+
+PC에서는 Python 3 표준 라이브러리만으로 같은 열 형식의 CSV를 만들 수 있습니다. 기본 필터는 **점수 산정 가능한 실행**입니다.
+
+```bash
+python tools/aggregate.py ./runs -o scores.csv
+python tools/aggregate.py ./runs --eligibility comparison_eligible -o comparison.csv
+python tools/aggregate.py ./runs --eligibility all --profile camera2-standard-v1 --endpoint 0 -o all.csv
+python -m unittest discover -s tools/tests -v
+```
+
+스크립트는 폴더 바로 아래의 schema 3·4 benchmark JSON을 읽고 `index.json`은 제외합니다. eligibility는 앱과 같은 validity flag 규칙으로 다시 계산합니다. 알 수 없는 flag가 있으면 비교와 점수 산정 대상에서 제외합니다. 손상된 파일은 파일명과 이유를 표준 오류로 알리고, 읽을 수 있는 실행은 계속 내보낸 뒤 종료 코드 1을 반환합니다. CSV에는 저장 당시의 회귀 판정이나 점수를 재계산해서 넣지 않습니다.
 
 ## 문서
 

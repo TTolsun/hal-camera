@@ -58,18 +58,20 @@ object ComparePresenter {
         comparison: RunComparison,
         comparedTo: ComparedTo,
         /** Whether [current] is itself the baseline, which is a different thing from there being none. */
-        currentIsBaseline: Boolean = false
+        currentIsBaseline: Boolean = false,
+        selectedReference: Boolean = false
     ): CompareView {
         val againstBaseline = comparedTo == ComparedTo.BASELINE
         return CompareView(
             titleLine = pad("COMPARE", ROLE + RUN_ID + SUBJECT) + "rule ${comparison.ruleVersion}",
-            baseLine = runLine(if (againstBaseline) "baseline" else "previous", base),
+            baseLine = runLine(if (againstBaseline) "baseline" else if (selectedReference) "selected" else "previous", base),
             currentLine = runLine("current", current),
             identityLine = comparison.identity?.let(ResultPresenter::identityLine),
             conditionLine = ResultPresenter.conditionLine(comparison),
-            baseHeader = if (againstBaseline) "BASELINE" else "PREVIOUS",
+            baseHeader = if (againstBaseline) "BASELINE" else if (selectedReference) "SELECTED" else "PREVIOUS",
             referenceNote = when {
                 againstBaseline -> null
+                selectedReference -> "선택한 run 대비 delta만 표시합니다 · baseline은 변경하지 않습니다"
                 // The baseline has nothing above it to be measured against, so it too falls back to the previous
                 // run. Saying "baseline 없음" on the baseline's own screen contradicts the button beside it.
                 currentIsBaseline -> "이 run이 baseline입니다 · 이전 run 대비 delta만 표시합니다"

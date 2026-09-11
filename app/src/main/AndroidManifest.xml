@@ -12,6 +12,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".benchmark.BenchmarkActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".benchmark.HistoryActivity" android:exported="false" />
         <provider android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
