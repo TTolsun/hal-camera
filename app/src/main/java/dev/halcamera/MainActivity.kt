@@ -5,9 +5,13 @@ import android.app.AlertDialog
 import android.content.ClipData
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.InsetDrawable
+import android.graphics.drawable.LayerDrawable
+import android.graphics.drawable.RippleDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.os.*
@@ -21,10 +25,13 @@ import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
+import androidx.core.view.ViewCompat
 import dev.halcamera.camera.*
 import dev.halcamera.telemetry.*
 import dev.halcamera.ui.LiveReadout
 import dev.halcamera.ui.ExpandingZoomControl
+import dev.halcamera.ui.ShutterButton
+import dev.halcamera.ui.Look
 import dev.halcamera.ui.showSelectionPopup
 import dev.halcamera.ui.LiveReading
 import dev.halcamera.ui.ScopeView
@@ -48,7 +55,7 @@ class MainActivity : ComponentActivity() {
         const val MARK_LABEL = "MARK"
     }
     private lateinit var timelineView: dev.halcamera.ui.TimelineView
-    // Expert palette from docs/design/DESIGN.md via ui/Look (docs/archive/PRODUCT-v0.2.md 11.6): dark tiles, one blue accent, status colours only for state marks.
+    // Camera UI follows docs/design/APP-UI.md; shared dark surfaces and active states use ui/Look.
     private val bg = dev.halcamera.ui.Look.expertTile
     private val panel = dev.halcamera.ui.Look.expertTile2
     private val mint = dev.halcamera.ui.Look.primaryOnDark
@@ -96,10 +103,14 @@ class MainActivity : ComponentActivity() {
     private lateinit var system: TextView
     private lateinit var scope: ScopeView
     private lateinit var reportButton: Button
-    private lateinit var mediaButton: Button
+    private lateinit var mediaButton: ShutterButton
     private lateinit var modeButton: Button
+    private lateinit var recordingTime: TextView
+    private lateinit var galleryButton: Button
+    private lateinit var benchButton: Button
     private var videoMode = false
     private var recordingVideo = false
+    private var stoppingRecording = false
     private var recordingStartedAt = 0L
     private var pendingMediaAction: (() -> Unit)? = null
     private var pendingPermissionAction: (() -> Unit)? = null
@@ -132,9 +143,9 @@ class MainActivity : ComponentActivity() {
         override fun run() {
             if (!resumed) return
             val time = nowNs()
-            if (recordingVideo) {
+            if (recordingVideo && !stoppingRecording) {
                 val seconds = (SystemClock.elapsedRealtime() - recordingStartedAt) / 1000
-                mediaButton.text = "중지 %02d:%02d".format(Locale.US, seconds / 60, seconds % 60)
+                recordingTime.text = "● REC  %02d:%02d".format(Locale.US, seconds / 60, seconds % 60)
             }
             val events = recorder.snapshot(10_000_000_000L)
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
@@ -234,7 +245,11 @@ class MainActivity : ComponentActivity() {
             Camera2Engine(this, view, cameraId, sessionId, telemetry, recordingState = { recording ->
                 if (thisSession == sessionId) {
                     recordingVideo = recording
-                    if (recording) recordingStartedAt = SystemClock.elapsedRealtime()
+                    if (!recording) stoppingRecording = false
+                    if (recording) {
+                        recordingStartedAt = SystemClock.elapsedRealtime()
+                        recordingTime.text = "● REC  00:00"
+                    }
                     updateMediaControls()
                     window.apply { if (recording || ready) addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
                 }
@@ -278,7 +293,7 @@ class MainActivity : ComponentActivity() {
         previewHost=FrameLayout(this).apply { setBackgroundColor(Color.BLACK); contentDescription="실시간 카메라 프리뷰" }
         root.addView(previewHost,FrameLayout.LayoutParams(-1,-1))
 
-        // Keep camera configuration separate from session and measurement actions.
+        // Samsung-style camera chrome, with explicit current-value selectors and one capture action.
         topBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; setPadding(dp(12),dp(8),dp(12),dp(10)) }
         topBar.background=GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,intArrayOf(Color.argb(190,0,0,0),Color.TRANSPARENT))
         root.addView(topBar,FrameLayout.LayoutParams(-1,-2,Gravity.TOP))
@@ -303,31 +318,30 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        listOf(engineButton,cameraButton).forEachIndexed { index, view ->
-            view.background=rounded(glass); view.setTextColor(Color.WHITE)
-            controls.addView(view,LinearLayout.LayoutParams(0,dp(48),1f).apply { if(index>0) marginStart=dp(8) })
-        }
-        val sessionControls=row(); topBar.addView(sessionControls,lp(top=8))
         pauseButton=button(if(paused) "재개" else "일시정지") {
             paused=!paused; pauseButton.text=if(paused) "재개" else "일시정지"
             if(paused) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("user_paused")?.let { export(it) } }
             restartCamera()
-        }.apply { background=rounded(glass); setTextColor(Color.WHITE) }
-        sessionControls.addView(pauseButton,LinearLayout.LayoutParams(0,dp(48),1f))
+        }
         val panelButton=button("측정 상세") { showDiagnostics(true) }
-            .apply { background=rounded(glass); setTextColor(Color.WHITE) }
-        sessionControls.addView(panelButton,LinearLayout.LayoutParams(0,dp(48),1f).apply { marginStart=dp(8) })
-        statusText=label("INITIALIZING",11,mint,true); topBar.addView(statusText,lp(top=6))
+        listOf(engineButton,pauseButton,panelButton).forEachIndexed { index, view ->
+            view.background=cameraChrome(if(index==0) glass else Color.TRANSPARENT); view.setTextColor(Color.WHITE)
+            controls.addView(view,LinearLayout.LayoutParams(0,dp(48),if(index==0) 1.2f else 1f).apply { if(index>0) marginStart=dp(4) })
+        }
+        statusText=label("카메라 준비 중…",12,muted).apply { gravity=Gravity.CENTER }
+        topBar.addView(statusText,lp(top=4))
 
-        // Developer actions lead; media has one mode selector and one explicit action.
+        // Keep the zoom in the lower preview; group readouts above and capture controls below it.
         bottomBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER_HORIZONTAL; setPadding(dp(16),dp(14),dp(16),dp(14)) }
         bottomBar.background=GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,intArrayOf(Color.argb(215,0,0,0),Color.TRANSPARENT))
         root.addView(bottomBar,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
         // Live strip: interval sparkline with baseline guides, then the callback offsets of the latest matched frame.
-        val stripBox=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; background=rounded(glass); setPadding(dp(10),dp(6),dp(10),dp(6)) }
+        val stripBox=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; background=rounded(glass); setPadding(dp(10),dp(8),dp(10),dp(8)) }
+        metrics=label("FPS —  ·  ISO —  ·  Exp —\nLens —  ·  Zoom —",12,Color.WHITE).apply { gravity=Gravity.CENTER; typeface=Look.mono }
+        stripBox.addView(metrics,lp())
         strip=StripView(this).apply { contentDescription="최근 10초 센서 프레임 간격. 실선은 기준, 점선은 1.5배 임계" }
-        stripBox.addView(strip,lp(height=40))
-        stripText=label("PARTIAL —   BUFFER — ms",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono }
+        stripBox.addView(strip,lp(height=24,top=4))
+        stripText=label("PARTIAL —   BUFFER — ms",12,muted).apply { gravity=Gravity.CENTER; typeface=Look.mono }
         stripBox.addView(stripText,lp(top=2))
         bottomBar.addView(stripBox,lp())
         zoomControl=ExpandingZoomControl(this) { ratio ->
@@ -347,47 +361,59 @@ class MainActivity : ComponentActivity() {
             addView(zoomControl,FrameLayout.LayoutParams(-2,dp(52)))
         }
         bottomBar.addView(zoomViewport,LinearLayout.LayoutParams(-2,dp(52)).apply { topMargin=dp(10) })
-        metrics=label("FPS —  ·  ISO —  ·  Exp —\nLens —  ·  Zoom —",11,Color.WHITE).apply { gravity=Gravity.CENTER; typeface=dev.halcamera.ui.Look.mono }
-        bottomBar.addView(metrics,lp(top=10))
-        val mainRow=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL; gravity=Gravity.CENTER_VERTICAL }
-        bottomBar.addView(mainRow,lp(top=12))
+        val modeRow=FrameLayout(this)
+        bottomBar.addView(modeRow,lp(height=48))
+        modeButton=button("") {
+            selectChoice(modeButton, listOf("사진 · YUV + JPEG", "동영상 · 소리 포함"), if(videoMode) 1 else 0) { index ->
+                pendingMediaAction=null; pendingPermissionAction=null
+                videoMode=index==1; updateMediaControls()
+            }
+        }.apply { background=InsetDrawable(cameraChrome(),0,dp(6),0,dp(6)); setPadding(dp(20),0,dp(20),0); textSize=14f; setTypeface(typeface,Typeface.BOLD) }
+        modeRow.addView(modeButton,FrameLayout.LayoutParams(-2,dp(48),Gravity.CENTER))
+        recordingTime=label("● REC  00:00",14,coral,true).apply { gravity=Gravity.CENTER; typeface=Look.mono; visibility=View.GONE }
+        modeRow.addView(recordingTime,FrameLayout.LayoutParams(-1,-1))
+
+        val captureRow=row().apply { gravity=Gravity.CENTER_VERTICAL }
+        bottomBar.addView(captureRow,lp())
+        galleryButton=button("갤러리") {
+            withMediaPermissions(false) { startActivity(Intent(this, GalleryActivity::class.java)) }
+        }.apply { cameraSideButton(this,R.drawable.ic_gallery); contentDescription="HALCamera 갤러리 열기" }
+        captureRow.addView(galleryButton,LinearLayout.LayoutParams(0,-2,1f))
+        mediaButton=ShutterButton(this).apply {
+            setOnClickListener {
+                if(recordingVideo) {
+                    stoppingRecording=true
+                    recordingTime.text="저장 중…"
+                    updateMediaControls()
+                    (engine as? Camera2Engine)?.stopRecording()
+                } else if(videoMode) {
+                    withMediaPermissions(true) { runCamera2Action { (engine as? Camera2Engine)?.startRecording() } }
+                } else withMediaPermissions(false) { runCamera2Action { engine?.capture() } }
+            }
+        }
+        captureRow.addView(mediaButton,LinearLayout.LayoutParams(dp(72),dp(72)).apply { marginStart=dp(12); marginEnd=dp(12) })
+        cameraSideButton(cameraButton,R.drawable.ic_camera_select)
+        captureRow.addView(cameraButton,LinearLayout.LayoutParams(0,-2,1f))
+
+        val mainRow=row().apply { gravity=Gravity.CENTER_VERTICAL }
+        bottomBar.addView(mainRow,lp())
         reportButton=button(MARK_LABEL) {
             val id="incident_"+SimpleDateFormat("yyyyMMdd_HHmmss_SSS",Locale.US).format(Date())+"_"+UUID.randomUUID().toString().take(8)
             // The reading is captured here, not when the dialog opens. The dialog is at least five seconds later
             // and after an asynchronous write, by which point lastReading has been replaced many times over and
             // may even belong to a different camera. What the dialog shows has to be the evidence for that ZIP.
             if(recorder.trigger(id)) { markedReadings[id]=lastReading; toast("5초 후 incident ZIP을 저장합니다") }
-        }.apply { setTextColor(Color.WHITE); background=rounded(panel); contentDescription="MARK: 직전 10초와 이후 5초를 ZIP으로 저장" }
-        val benchButton=button("벤치마크") {
+        }.apply { setTextColor(Color.WHITE); background=cameraChrome(Color.TRANSPARENT); contentDescription="MARK: 직전 10초와 이후 5초를 ZIP으로 저장" }
+        benchButton=button("벤치마크") {
             recorder.finish("benchmark_started")?.let { export(it) }
             startActivity(android.content.Intent(this,dev.halcamera.benchmark.BenchmarkActivity::class.java).apply {
                 putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_ENGINE,engineName)
                 putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_CAMERA_ID,cameraId)
             })
-        }.apply { background=rounded(dev.halcamera.ui.Look.primary); setTextColor(Color.WHITE); contentDescription="이 카메라로 벤치마크 실행" }
-        mainRow.addView(reportButton,LinearLayout.LayoutParams(0,dp(52),1f))
-        mainRow.addView(benchButton,LinearLayout.LayoutParams(0,dp(52),1f).apply { marginStart=dp(8) })
-        val mediaRow = row()
-        bottomBar.addView(mediaRow, lp(top=8))
-        modeButton=button("") {
-            selectChoice(modeButton, listOf("사진 · YUV + JPEG", "동영상 · 소리 포함"), if(videoMode) 1 else 0) { index ->
-                pendingMediaAction=null; pendingPermissionAction=null
-                videoMode=index==1; updateMediaControls()
-            }
-        }.apply { setTextColor(Color.WHITE) }
-        mediaRow.addView(modeButton,LinearLayout.LayoutParams(0,dp(48),1f))
-        mediaButton = button("") {
-            if (recordingVideo) {
-                mediaButton.isEnabled = false
-                (engine as? Camera2Engine)?.stopRecording()
-            } else if(videoMode) {
-                withMediaPermissions(true) { runCamera2Action { (engine as? Camera2Engine)?.startRecording() } }
-            } else withMediaPermissions(false) { runCamera2Action { engine?.capture() } }
-        }.apply { setTextColor(Color.WHITE) }
-        mediaRow.addView(mediaButton, LinearLayout.LayoutParams(0, dp(48), 1.2f).apply { marginStart=dp(8) })
-        mediaRow.addView(button("갤러리") {
-            withMediaPermissions(false) { startActivity(Intent(this, GalleryActivity::class.java)) }
-        }.apply { setTextColor(Color.WHITE) }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart=dp(8) })
+        }.apply { background=cameraChrome(Color.TRANSPARENT); setTextColor(Color.WHITE); contentDescription="이 카메라로 벤치마크 실행" }
+        listOf(reportButton,benchButton).forEach { it.minHeight=dp(48); it.minimumHeight=dp(48) }
+        mainRow.addView(reportButton,LinearLayout.LayoutParams(0,-2,1f))
+        mainRow.addView(benchButton,LinearLayout.LayoutParams(0,-2,1f).apply { marginStart=dp(8) })
 
         // Diagnostics panel: everything that used to be below the preview, now an overlay toggled from the bottom bar.
         diagnostics=ScrollView(this).apply { setBackgroundColor(bg); visibility=View.GONE; isFillViewport=true; isClickable=true }
@@ -471,14 +497,21 @@ class MainActivity : ComponentActivity() {
         modeButton.text=if(videoMode) "동영상 ▾" else "사진 ▾"
         modeButton.contentDescription="촬영 모드 선택, 현재 ${if(videoMode) "동영상" else "사진"}"
         modeButton.isEnabled=ready && !recordingVideo
-        mediaButton.text=when { recordingVideo -> "중지 00:00"; videoMode -> "녹화 시작"; else -> "사진 촬영" }
-        mediaButton.contentDescription=when { recordingVideo -> "동영상 녹화 중지"; videoMode -> "소리와 함께 동영상 녹화 시작"; else -> "YUV와 JPEG 사진 두 장 촬영" }
-        mediaButton.setTextColor(if(recordingVideo) coral else Color.WHITE)
-        mediaButton.isEnabled=ready || recordingVideo
+        modeButton.visibility=if(recordingVideo) View.INVISIBLE else View.VISIBLE
+        recordingTime.visibility=if(recordingVideo) View.VISIBLE else View.GONE
+        mediaButton.setCaptureState(videoMode,recordingVideo)
+        if(stoppingRecording) {
+            mediaButton.contentDescription="동영상 저장 중"
+            ViewCompat.setStateDescription(mediaButton,"저장 중")
+        }
+        mediaButton.isEnabled=(ready || recordingVideo) && !stoppingRecording
         engineButton.isEnabled=!recordingVideo
         cameraButton.isEnabled=!recordingVideo && cameraId.isNotEmpty()
         zoomControl.isEnabled=ready && !recordingVideo
-        listOf(engineButton,cameraButton,modeButton,mediaButton).forEach {
+        pauseButton.isEnabled=!recordingVideo
+        galleryButton.isEnabled=!recordingVideo
+        benchButton.isEnabled=!recordingVideo
+        listOf(engineButton,cameraButton,modeButton,mediaButton,pauseButton,galleryButton,benchButton).forEach {
             it.alpha=if(it.isEnabled) 1f else 0.4f
         }
     }
@@ -492,7 +525,7 @@ class MainActivity : ComponentActivity() {
         fun num(key:String)= (frame?.values?.get(key) as? Number)?.toDouble()
         fun fmt(value:Double?,pattern:String)=value?.let { pattern.format(Locale.US,it) } ?: "—"
         val zoom=num("zoomRatio")?.let { "Zoom ${"%.2f".format(Locale.US,it)}x" } ?: "Zoom —"
-        metrics.text="FPS ${fmt(num("resultFps"),"%.1f")}  ·  ISO ${num("iso")?.toInt() ?: "—"}  ·  Exp ${fmt(num("exposureNs")?.div(1e6),"%.2f ms")}\nLens ${fmt(num("focusDiopters"),"%.2f D")}  ·  $zoom"
+        metrics.text="FPS ${fmt(num("resultFps"),"%.1f")} · ISO ${num("iso")?.toInt() ?: "—"} · Exp ${fmt(num("exposureNs")?.div(1e6),"%.2fms")}\nLens ${fmt(num("focusDiopters"),"%.2fD")} · $zoom"
         if(frame==null) { timeline.text="수신 중인 프레임 없음"; stripText.text="PARTIAL —   BUFFER — ms"; return }
         val imageEvents=events.filter { it.session==sessionId && it.kind=="image_available" }
         val matched=frames.asReversed().firstOrNull { r -> r.sensorNs!=null && imageEvents.any { it.sensorNs==r.sensorNs } } ?: frame
@@ -607,6 +640,18 @@ class MainActivity : ComponentActivity() {
     }
     private fun label(text:String,size:Int,color:Int,bold:Boolean=false)=TextView(this).apply { this.text=text; textSize=size.coerceAtLeast(12).toFloat(); setTextColor(color); if(bold) setTypeface(typeface,Typeface.BOLD) }
     private fun button(text:String,action:()->Unit)=Button(this).apply { this.text=text; isAllCaps=false; textSize=12f; setTextColor(mint); background=rounded(panel); setPadding(0,0,0,0); minWidth=0; minimumWidth=0; minHeight=0; minimumHeight=0; setOnClickListener { action() } }
+    private fun cameraChrome(fill:Int=glass)=RippleDrawable(ColorStateList.valueOf(0x40FFFFFF),Look.pill(this,fill),Look.pill(this,Color.WHITE))
+    private fun cameraSideButton(view:Button,icon:Int) {
+        view.background=cameraChrome(Color.TRANSPARENT); view.setTextColor(Color.WHITE)
+        view.minHeight=dp(72); view.minimumHeight=dp(72)
+        view.setPadding(0,0,0,0); view.compoundDrawablePadding=dp(4)
+        val symbol=ContextCompat.getDrawable(this,icon) ?: return
+        val circle=LayerDrawable(arrayOf(Look.pill(this,panel),symbol)).apply {
+            setLayerInset(1,dp(12),dp(12),dp(12),dp(12))
+            setBounds(0,0,dp(48),dp(48))
+        }
+        view.setCompoundDrawablesRelative(null,circle,null,null)
+    }
     private fun row()=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL }
     private fun rounded(color:Int)=GradientDrawable().apply { setColor(color); cornerRadius=dp(10).toFloat() }
     private fun lp(height:Int=-2,top:Int=0)=LinearLayout.LayoutParams(-1,if(height<0) height else dp(height)).apply { topMargin=dp(top) }
