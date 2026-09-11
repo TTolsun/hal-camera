@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var topBar: LinearLayout
     private lateinit var bottomBar: LinearLayout
     private lateinit var diagnostics: ScrollView
-    private lateinit var zoomRow: LinearLayout
+    private lateinit var zoomButton: Button
     private lateinit var statusText: TextView
     private lateinit var strip: StripView
     private lateinit var stripText: TextView
@@ -94,8 +94,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var system: TextView
     private lateinit var scope: ScopeView
     private lateinit var reportButton: Button
-    private lateinit var captureButton: Button
-    private lateinit var recordButton: Button
+    private lateinit var mediaButton: Button
+    private lateinit var modeButton: Button
+    private var videoMode = false
     private var recordingVideo = false
     private var recordingStartedAt = 0L
     private var pendingMediaAction: (() -> Unit)? = null
@@ -104,8 +105,8 @@ class MainActivity : ComponentActivity() {
         val action = pendingPermissionAction.also { pendingPermissionAction = null }
         if (grants.values.all { it }) action?.invoke() else toast("저장하려면 요청한 권한을 허용해 주세요")
     }
-    private lateinit var engineX: Button
-    private lateinit var engine2: Button
+    private lateinit var engineButton: Button
+    private lateinit var cameraButton: Button
     private lateinit var pauseButton: Button
     private lateinit var recorderText: TextView
     private lateinit var shareButton: Button
@@ -131,7 +132,7 @@ class MainActivity : ComponentActivity() {
             val time = nowNs()
             if (recordingVideo) {
                 val seconds = (SystemClock.elapsedRealtime() - recordingStartedAt) / 1000
-                recordButton.text = "중지 %02d:%02d".format(Locale.US, seconds / 60, seconds % 60)
+                mediaButton.text = "중지 %02d:%02d".format(Locale.US, seconds / 60, seconds % 60)
             }
             val events = recorder.snapshot(10_000_000_000L)
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
@@ -158,6 +159,7 @@ class MainActivity : ComponentActivity() {
         cameraId = savedInstanceState?.getString("camera") ?: ""
         paused = savedInstanceState?.getBoolean("paused") ?: false
         zoomRatio = savedInstanceState?.getFloat("zoom") ?: 1f
+        videoMode = savedInstanceState?.getBoolean("videoMode") ?: false
         manager = getSystemService(CameraManager::class.java)
         buildUi()
         onBackPressedDispatcher.addCallback(this, panelBack)
@@ -167,6 +169,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("engine", engineName); outState.putString("camera", cameraId); outState.putBoolean("paused", paused); outState.putFloat("zoom", zoomRatio)
+        outState.putBoolean("videoMode", videoMode)
         super.onSaveInstanceState(outState)
     }
     override fun onStart() {
@@ -193,7 +196,7 @@ class MainActivity : ComponentActivity() {
     private fun hasPermission() = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
     private fun restartCamera() {
         if (closing) return
-        ready=false; captureButton.isEnabled=false; reportButton.isEnabled=false; recordButton.isEnabled=false
+        ready=false; mediaButton.isEnabled=false; reportButton.isEnabled=false
         val old = engine; engine = null
         if (old != null) {
             closing = true; setStatus("카메라 세션 종료 중…", false)
@@ -212,7 +215,7 @@ class MainActivity : ComponentActivity() {
         sessionId = UUID.randomUUID().toString()
         val thisSession = sessionId
         zoomApplied = false
-        rebuildZoomRow()
+        updateCameraChoices()
         setStatus("$engineName · 카메라 $cameraId 연결 중…", false)
         previewHost.removeAllViews()
         engine = if (engineName == "CameraX") {
@@ -227,11 +230,8 @@ class MainActivity : ComponentActivity() {
             Camera2Engine(this, view, cameraId, sessionId, telemetry, recordingState = { recording ->
                 if (thisSession == sessionId) {
                     recordingVideo = recording
-                    recordButton.text = if (recording) "중지 00:00" else "동영상 녹화"
-                    recordButton.setTextColor(if (recording) coral else Color.WHITE)
-                    captureButton.isEnabled = ready && !recording
                     if (recording) recordingStartedAt = SystemClock.elapsedRealtime()
-                    recordButton.isEnabled = recording || ready
+                    updateMediaControls()
                     window.apply { if (recording || ready) addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
                 }
             }) { text, ok ->
@@ -239,15 +239,14 @@ class MainActivity : ComponentActivity() {
             }
         }
         try { engine?.start() } catch (e: Exception) { setStatus("시작 실패: ${e.message}",false) }
-        styleEngines()
+        updateCameraChoices()
     }
     private fun setStatus(text: String, ok: Boolean) {
         statusText.text=text; statusText.setTextColor(if(ok) mint else muted)
-        ready=ok; captureButton.isEnabled=ok && !recordingVideo; reportButton.isEnabled=ok && recorder.remainingNs()==null
+        ready=ok; reportButton.isEnabled=ok && recorder.remainingNs()==null
         if (ok || recordingVideo) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        recordButton.isEnabled = ok || recordingVideo
-        for (index in 0 until zoomRow.childCount) zoomRow.getChildAt(index).isEnabled = ok && !recordingVideo
+        updateMediaControls()
         // Re-apply the chosen zoom once the new session is live so engine and camera switches keep the same framing.
         if (ok && !zoomApplied) { zoomApplied = true; if (zoomRatio != 1f) engine?.setZoom(zoomRatio) }
         if (ok && engine is Camera2Engine) pendingMediaAction?.also { pendingMediaAction = null; main.post { if (resumed && ready) it() } }
@@ -280,37 +279,36 @@ class MainActivity : ComponentActivity() {
         topBar.background=GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,intArrayOf(Color.argb(190,0,0,0),Color.TRANSPARENT))
         root.addView(topBar,FrameLayout.LayoutParams(-1,-2,Gravity.TOP))
         val controls=row(); topBar.addView(controls)
-        engineX=button("CameraX") { pendingMediaAction=null; pendingPermissionAction=null; chooseEngine("CameraX") }
-        engine2=button("Camera2") { pendingMediaAction=null; pendingPermissionAction=null; chooseEngine("Camera2") }
-        controls.addView(engine2,LinearLayout.LayoutParams(0,dp(48),1f))
-        controls.addView(engineX,LinearLayout.LayoutParams(0,dp(48),1f).apply { marginStart=dp(8) })
         val ids=try { manager.cameraIdList.toList().sortedBy { manager.getCameraCharacteristics(it)[CameraCharacteristics.LENS_FACING] != CameraCharacteristics.LENS_FACING_BACK } } catch (_:Exception) { emptyList() }
         if (cameraId !in ids) cameraId=ids.firstOrNull().orEmpty()
-        val spinner=Spinner(this).apply { background=rounded(glass); setPadding(dp(8),0,dp(8),0); contentDescription="카메라 선택" }
-        // "Cam" in front of every entry cost width that the id and the facing both need, and said nothing: this
-        // is the camera row.
-        val entries=ids.map { id ->
-            val facing=manager.getCameraCharacteristics(id)[CameraCharacteristics.LENS_FACING]
-            "$id · ${when(facing) { CameraCharacteristics.LENS_FACING_BACK -> "Back"; CameraCharacteristics.LENS_FACING_FRONT -> "Front"; else -> "Ext" }}"
-        }
-        // The selected value remains one line; the dropdown exposes the full camera labels.
-        spinner.adapter=object:ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,entries) {
-            override fun getView(position:Int,convertView:View?,parent:ViewGroup):View =
-                (convertView as? TextView ?: TextView(this@MainActivity)).apply {
-                    text=getItem(position); setTextColor(Color.WHITE); textSize=13f
-                    gravity=Gravity.CENTER_VERTICAL; maxLines=1; ellipsize=android.text.TextUtils.TruncateAt.END
-                    minimumHeight=0; minHeight=0; setPadding(0,0,0,0)
-                }
-        }
-        spinner.setSelection(ids.indexOf(cameraId).coerceAtLeast(0))
-        spinner.onItemSelectedListener=object:AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent:AdapterView<*>?,view:View?,position:Int,id:Long) {
-                val chosen=ids.getOrNull(position) ?: return
-                if(cameraId!=chosen) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("camera_changed")?.let { export(it) }; cameraId=chosen; zoomRatio=1f; restartCamera() }
+        engineButton=button("") {
+            val engines=listOf("Camera2", "CameraX")
+            selectChoice("카메라 API", engines, engines.indexOf(engineName)) { index ->
+                pendingMediaAction=null; pendingPermissionAction=null
+                chooseEngine(engines[index])
             }
-            override fun onNothingSelected(parent:AdapterView<*>?)=Unit
         }
-        controls.addView(spinner,LinearLayout.LayoutParams(0,dp(48),1.2f).apply { marginStart=dp(8) })
+        cameraButton=button("") {
+            selectChoice("카메라", ids.map(::cameraLabel), ids.indexOf(cameraId)) { index ->
+                val chosen=ids[index]
+                if(cameraId!=chosen) {
+                    pendingMediaAction=null; pendingPermissionAction=null
+                    recorder.finish("camera_changed")?.let { export(it) }
+                    cameraId=chosen; zoomRatio=1f
+                    updateCameraChoices(); restartCamera()
+                }
+            }
+        }
+        zoomButton=button("") {
+            val presets=zoomPresets(zoomRange(manager,cameraId))
+            selectChoice("줌 배율", presets.map(::zoomLabel), presets.indexOf(zoomRatio)) { index ->
+                zoomRatio=presets[index]; engine?.setZoom(zoomRatio); updateCameraChoices()
+            }
+        }
+        listOf(engineButton,cameraButton,zoomButton).forEachIndexed { index, view ->
+            view.background=rounded(glass); view.setTextColor(Color.WHITE)
+            controls.addView(view,LinearLayout.LayoutParams(0,dp(48),1f).apply { if(index>0) marginStart=dp(8) })
+        }
         val sessionControls=row(); topBar.addView(sessionControls,lp(top=8))
         pauseButton=button(if(paused) "재개" else "일시정지") {
             paused=!paused; pauseButton.text=if(paused) "재개" else "일시정지"
@@ -323,7 +321,7 @@ class MainActivity : ComponentActivity() {
         sessionControls.addView(panelButton,LinearLayout.LayoutParams(0,dp(48),1f).apply { marginStart=dp(8) })
         statusText=label("INITIALIZING",11,mint,true); topBar.addView(statusText,lp(top=6))
 
-        // Developer actions lead; photo, video and gallery remain directly accessible below.
+        // Developer actions lead; media has one mode selector and one explicit action.
         bottomBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER_HORIZONTAL; setPadding(dp(16),dp(14),dp(16),dp(14)) }
         bottomBar.background=GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,intArrayOf(Color.argb(215,0,0,0),Color.TRANSPARENT))
         root.addView(bottomBar,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
@@ -334,8 +332,6 @@ class MainActivity : ComponentActivity() {
         stripText=label("PARTIAL —   BUFFER — ms",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono }
         stripBox.addView(stripText,lp(top=2))
         bottomBar.addView(stripBox,lp())
-        zoomRow=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL; gravity=Gravity.CENTER; background=pill(glass); setPadding(dp(6),dp(4),dp(6),dp(4)) }
-        bottomBar.addView(zoomRow,LinearLayout.LayoutParams(-2,-2).apply { topMargin=dp(10) })
         metrics=label("FPS —  ·  ISO —  ·  Exp —\nLens —  ·  Zoom —",11,Color.WHITE).apply { gravity=Gravity.CENTER; typeface=dev.halcamera.ui.Look.mono }
         bottomBar.addView(metrics,lp(top=10))
         val mainRow=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL; gravity=Gravity.CENTER_VERTICAL }
@@ -347,8 +343,6 @@ class MainActivity : ComponentActivity() {
             // may even belong to a different camera. What the dialog shows has to be the evidence for that ZIP.
             if(recorder.trigger(id)) { markedReadings[id]=lastReading; toast("5초 후 incident ZIP을 저장합니다") }
         }.apply { setTextColor(Color.WHITE); background=rounded(panel); contentDescription="MARK: 직전 10초와 이후 5초를 ZIP으로 저장" }
-        captureButton=button("사진 촬영") { withMediaPermissions(false) { runCamera2Action { engine?.capture() } } }
-            .apply { setTextColor(Color.WHITE); contentDescription="YUV와 JPEG 사진 두 장 촬영" }
         val benchButton=button("벤치마크") {
             recorder.finish("benchmark_started")?.let { export(it) }
             startActivity(android.content.Intent(this,dev.halcamera.benchmark.BenchmarkActivity::class.java).apply {
@@ -360,14 +354,22 @@ class MainActivity : ComponentActivity() {
         mainRow.addView(benchButton,LinearLayout.LayoutParams(0,dp(52),1f).apply { marginStart=dp(8) })
         val mediaRow = row()
         bottomBar.addView(mediaRow, lp(top=8))
-        mediaRow.addView(captureButton,LinearLayout.LayoutParams(0,dp(48),1f))
-        recordButton = button("동영상 녹화") {
+        modeButton=button("") {
+            selectChoice("촬영 모드", listOf("사진 · YUV + JPEG", "동영상 · 소리 포함"), if(videoMode) 1 else 0) { index ->
+                pendingMediaAction=null; pendingPermissionAction=null
+                videoMode=index==1; updateMediaControls()
+            }
+        }.apply { setTextColor(Color.WHITE) }
+        mediaRow.addView(modeButton,LinearLayout.LayoutParams(0,dp(48),1f))
+        mediaButton = button("") {
             if (recordingVideo) {
-                recordButton.isEnabled = false
+                mediaButton.isEnabled = false
                 (engine as? Camera2Engine)?.stopRecording()
-            } else withMediaPermissions(true) { runCamera2Action { (engine as? Camera2Engine)?.startRecording() } }
-        }.apply { setTextColor(Color.WHITE); contentDescription = "소리와 함께 동영상 녹화 시작 또는 중지" }
-        mediaRow.addView(recordButton, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart=dp(8) })
+            } else if(videoMode) {
+                withMediaPermissions(true) { runCamera2Action { (engine as? Camera2Engine)?.startRecording() } }
+            } else withMediaPermissions(false) { runCamera2Action { engine?.capture() } }
+        }.apply { setTextColor(Color.WHITE) }
+        mediaRow.addView(mediaButton, LinearLayout.LayoutParams(0, dp(48), 1.2f).apply { marginStart=dp(8) })
         mediaRow.addView(button("갤러리") {
             withMediaPermissions(false) { startActivity(Intent(this, GalleryActivity::class.java)) }
         }.apply { setTextColor(Color.WHITE) }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart=dp(8) })
@@ -426,55 +428,57 @@ class MainActivity : ComponentActivity() {
             insets
         }
         root.requestApplyInsets()
-        rebuildZoomRow()
-        styleEngines()
+        updateCameraChoices()
+        updateMediaControls()
     }
-    private fun rebuildZoomRow() {
-        zoomRow.removeAllViews()
-        if (cameraId.isEmpty()) return
-        val range=zoomRange(manager,cameraId)
-        val presets=zoomPresets(range)
-        if (zoomRatio !in presets) zoomRatio = presets.minByOrNull { kotlin.math.abs(it - zoomRatio) } ?: 1f
-        for (ratio in presets) {
-            val b=button(zoomLabel(ratio,ratio==zoomRatio)) { selectZoom(ratio) }
-            b.textSize=12f
-            b.contentDescription="${ratio}배 줌"
-            zoomRow.addView(b,LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginStart=dp(2); marginEnd=dp(2) })
+    private fun selectChoice(title:String,items:List<String>,selected:Int,onSelect:(Int)->Unit) {
+        AlertDialog.Builder(this).setTitle(title)
+            .setSingleChoiceItems(items.toTypedArray(),selected) { dialog,index ->
+                dialog.dismiss()
+                // A live session can change while a choice dialog is open.
+                if(!recordingVideo && resumed) onSelect(index)
+            }.setNegativeButton("취소",null).show()
+    }
+    private fun cameraLabel(id:String):String {
+        if(id.isEmpty()) return "카메라 없음"
+        val facing=manager.getCameraCharacteristics(id)[CameraCharacteristics.LENS_FACING]
+        return "${when(facing) { CameraCharacteristics.LENS_FACING_BACK -> "후면"; CameraCharacteristics.LENS_FACING_FRONT -> "전면"; else -> "외부" }} · $id"
+    }
+    private fun updateCameraChoices() {
+        if(cameraId.isNotEmpty()) {
+            val presets=zoomPresets(zoomRange(manager,cameraId))
+            if(zoomRatio !in presets) zoomRatio=presets.minByOrNull { kotlin.math.abs(it-zoomRatio) } ?: 1f
         }
-        styleZoom()
+        engineButton.text="$engineName ▾"
+        engineButton.contentDescription="카메라 API 선택, 현재 $engineName"
+        cameraButton.text="${cameraLabel(cameraId)} ▾"
+        cameraButton.contentDescription="카메라 선택, 현재 ${cameraLabel(cameraId)}"
+        zoomButton.text="줌 ${zoomLabel(zoomRatio)} ▾"
+        zoomButton.contentDescription="줌 배율 선택, 현재 ${zoomLabel(zoomRatio)}"
     }
-    private fun zoomLabel(ratio:Float,selected:Boolean):String {
-        val text=if(ratio<1f) "%.1f".format(Locale.US,ratio).removePrefix("0") else if(ratio==ratio.toInt().toFloat()) "${ratio.toInt()}" else "%.1f".format(Locale.US,ratio)
-        return if(selected) "${text}x" else text
+    private fun zoomLabel(ratio:Float):String {
+        val text=if(ratio==ratio.toInt().toFloat()) "${ratio.toInt()}" else "%.1f".format(Locale.US,ratio)
+        return "${text}×"
     }
-    private fun selectZoom(ratio:Float) {
-        zoomRatio=ratio
-        engine?.setZoom(ratio)
-        styleZoom()
-    }
-    private fun styleZoom() {
-        val presets=zoomPresets(zoomRange(manager,cameraId))
-        for (i in 0 until zoomRow.childCount) {
-            val ratio=presets.getOrNull(i) ?: continue
-            val b=zoomRow.getChildAt(i) as Button
-            val selected=ratio==zoomRatio
-            b.isSelected=selected
-            b.text=zoomLabel(ratio,selected)
-            b.setTextColor(if(selected) bg else Color.WHITE)
-            b.background=circle(if(selected) mint else Color.TRANSPARENT)
+    private fun updateMediaControls() {
+        modeButton.text=if(videoMode) "동영상 ▾" else "사진 ▾"
+        modeButton.contentDescription="촬영 모드 선택, 현재 ${if(videoMode) "동영상" else "사진"}"
+        modeButton.isEnabled=ready && !recordingVideo
+        mediaButton.text=when { recordingVideo -> "중지 00:00"; videoMode -> "녹화 시작"; else -> "사진 촬영" }
+        mediaButton.contentDescription=when { recordingVideo -> "동영상 녹화 중지"; videoMode -> "소리와 함께 동영상 녹화 시작"; else -> "YUV와 JPEG 사진 두 장 촬영" }
+        mediaButton.setTextColor(if(recordingVideo) coral else Color.WHITE)
+        mediaButton.isEnabled=ready || recordingVideo
+        engineButton.isEnabled=!recordingVideo
+        cameraButton.isEnabled=!recordingVideo && cameraId.isNotEmpty()
+        zoomButton.isEnabled=ready && !recordingVideo
+        listOf(engineButton,cameraButton,zoomButton,modeButton,mediaButton).forEach {
+            it.alpha=if(it.isEnabled) 1f else 0.4f
         }
     }
     private fun chooseEngine(name:String) {
         if(engineName==name) return
         recorder.finish("engine_changed")?.let { export(it) }
-        engineName=name; styleEngines(); restartCamera()
-    }
-    private fun styleEngines() {
-        for((button,name) in listOf(engineX to "CameraX",engine2 to "Camera2")) {
-            button.isSelected = engineName == name
-            button.setTextColor(if(engineName==name) bg else Color.WHITE)
-            button.background=rounded(if(engineName==name) mint else glass)
-        }
+        engineName=name; updateCameraChoices(); restartCamera()
     }
     private fun updateReadings(events:List<Event>,frames:List<Event>,time:Long) {
         val frame=frames.lastOrNull()?.takeIf { time-it.atNs < 1_500_000_000L }
@@ -584,7 +588,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun showNotes() {
         AlertDialog.Builder(this).setTitle("측정 안내")
-            .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• *앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 셔터는 YUV·JPEG 사진 두 장을, RECORD는 소리가 포함된 동영상을 갤러리에 저장합니다. 녹화 중에는 사진 촬영과 줌 변경을 할 수 없습니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
+            .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• *앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 사진·동영상 모드를 선택한 뒤 실행 버튼을 누르면 갤러리에 저장합니다. 사진은 YUV·JPEG 두 장이며 동영상에는 소리가 포함됩니다. 녹화 중에는 엔진·카메라·줌·모드 변경을 할 수 없습니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
             .setPositiveButton("확인",null).show()
     }
     private fun showDiagnostics(show: Boolean) {
@@ -597,8 +601,6 @@ class MainActivity : ComponentActivity() {
     private fun button(text:String,action:()->Unit)=Button(this).apply { this.text=text; isAllCaps=false; textSize=12f; setTextColor(mint); background=rounded(panel); setPadding(0,0,0,0); minWidth=0; minimumWidth=0; minHeight=0; minimumHeight=0; setOnClickListener { action() } }
     private fun row()=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL }
     private fun rounded(color:Int)=GradientDrawable().apply { setColor(color); cornerRadius=dp(10).toFloat() }
-    private fun pill(color:Int)=GradientDrawable().apply { setColor(color); cornerRadius=dp(30).toFloat() }
-    private fun circle(color:Int,ring:Int?=null)=GradientDrawable().apply { shape=GradientDrawable.OVAL; setColor(color); if(ring!=null) setStroke(dp(4),ring) }
     private fun lp(height:Int=-2,top:Int=0)=LinearLayout.LayoutParams(-1,if(height<0) height else dp(height)).apply { topMargin=dp(top) }
     private fun dp(value:Int)=(value*resources.displayMetrics.density).toInt()
     private fun toast(text:String)=Toast.makeText(this,text,Toast.LENGTH_LONG).show()
