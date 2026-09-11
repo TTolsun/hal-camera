@@ -90,7 +90,7 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-11 @ `7994fe2` · Codex-code-review
+- 검토 2026-09-11 @ `b66992c` · Codex-release-review
 
 </details>
 
@@ -137,8 +137,8 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.4.0` |
-| `versionCode` | `5` |
+| `versionName` | `0.5.0` |
+| `versionCode` | `6` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |
@@ -162,13 +162,13 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.4.0 (versionCode 5)
+- 검증 기준 앱 버전: 0.5.0 (versionCode 6)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-11 @ `7994fe2` · Codex-code-review |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-11 @ `7994fe2` · Codex-code-review |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-11 @ `7994fe2` · Codex-code-review |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-11 @ `b66992c` · Codex-release-review |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-11 @ `b66992c` · Codex-release-review |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-11 @ `b66992c` · Codex-release-review |
 
 <!-- omm:end id=status -->
 
