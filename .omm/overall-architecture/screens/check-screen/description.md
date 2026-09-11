@@ -1,3 +1,5 @@
+> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
+
 `app/src/main/java/dev/halcamera/check/CheckActivity.kt` (319 lines). The screen that actually performs a measurement run.
 
 It wires the pieces together: a `TextureView` preview, one `Camera2Engine`, a dedicated `FlightRecorder` tuned for a whole run (120 s retention, 60,000 events, `preNs = 0`, `postNs = 0` because there is no incident window here), an `AutoCheckRunner` it implements `Driver`, `Scheduler` and `Listener` for, then `CheckEvaluator` per endpoint and `HealthReport` to write the result.

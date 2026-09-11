@@ -1,5 +1,1 @@
-The camera's own open and close, observed rather than controlled. `Camera2Engine` runs it on a private `HandlerThread`: open, `configure()` negotiating three streams, `createCaptureSession`, `setRepeatingRequest`, then a close path that sets `active = false`, closes session and device, and funnels every route into a single-shot `finishClose()`.
-
-`CameraXEngine` mirrors the contract through `ProcessCameraProvider.bindToLifecycle` and `unbind`, watching `cameraState` with `observeForever` so the release still completes while the Activity is stopped.
-
-The fragile part is the close callback. `AutoCheckRunner.next()` chains the next endpoint off it, so firing it early leaves two engines contending for the camera, and never firing it stalls the run until the 3 s close timeout. Both engines guard it with a `finished` flag, and both check `active` before recording anything, so callbacks arriving after close are dropped.
+Camera2Engine은 HandlerThread에서 카메라를 열고 세션과 반복 요청을 구성합니다. CameraXEngine은 ProcessCameraProvider를 사용합니다. 두 엔진은 active 상태로 늦은 신호를 걸러 내며 close(done) 완료 후 다음 열기를 진행합니다. BenchmarkRunner의 시간 제한과 close 완료 처리를 함께 확인해야 합니다.

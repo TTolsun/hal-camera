@@ -1,7 +1,1 @@
-`app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt` (140 lines). Run JSON schema 3, split deliberately into two halves.
-
-`BenchmarkReportCodec` is a pure map codec: `toJsonMap` builds a `linkedMapOf` in a fixed key order, `fromJsonMap` reads it back and *requires* `schema_version == 3` rather than guessing at an older file. Because it moves only `Map<String, Any?>`, both directions round-trip in JVM tests — `BenchmarkReportCodecTest` exists for exactly this.
-
-`BenchmarkReport` is the thin file boundary around it and the only place `org.json` touches the benchmark contract. `read()` returns null on any failure instead of throwing, matching the rest of the project's rule that a corrupt file must not break a screen.
-
-Its `value()` converter encodes three conventions: enums serialise lowercase, non-finite doubles become `JSONObject.NULL` rather than the string `NaN`, and nested maps and lists recurse. `newRunId()` is `yyyyMMdd-HHmmss`, which is what makes filename order equal time order in `BenchmarkStore.files()`.
+BenchmarkReportCodec은 schema 4를 쓰고 schema 3·4를 읽는 순수 Map 코덱입니다. kind·측정 계약의 일치와 정식 canonical profile 정의를 검증합니다. BenchmarkReport가 org.json과 파일 입출력을 담당하며 읽기 실패는 null과 lastReadError로 전달합니다. 파일 쓰기는 AtomicFiles를 사용하고 run ID에는 밀리초가 포함됩니다.

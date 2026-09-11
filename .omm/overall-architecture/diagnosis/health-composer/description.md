@@ -1,3 +1,5 @@
+> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
+
 `app/src/main/java/dev/halcamera/diagnosis/HealthComposer.kt` (47 lines). Folds the metric states into one `Health`: a level, a coverage fraction, an optional score and whether that score may be shown.
 
 The level rule is asymmetric on purpose. ISSUE requires a FAIL whose basis is HARD or ABSOLUTE_VALIDATED — a relative or heuristic FAIL stops at WARNING, because "slower than your own baseline" is not the same claim as "below a validated bound". NORMAL additionally requires that at least half the total metric weight actually passed, so a run that measured almost nothing lands in INSUFFICIENT rather than looking healthy.

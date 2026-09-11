@@ -1,7 +1,1 @@
-Stage 5, the durable form. Three destinations under `filesDir`, each versioned so an old file stays readable after the code moves on.
-
-`files/checks/<runId>.json` (schema 2) is the Health Report: header versions, device, environment, endpoints, per-endpoint metric states and diagnosis, composed health, baseline references. `files/benchmarks/<runId>.json` (schema 3) is the benchmark run: profile, measurement contract, compatibility, device, app, subject, environment, validity, baseline and reference pointers, metrics, summary and raw events. `files/incidents/<id>.zip` is the incident bundle: summary, device, characteristics, three JSONL streams and a human-readable Markdown note.
-
-Two habits make these files trustworthy rather than merely present. Nanoseconds are written as decimal strings so precision survives a JavaScript reader, and non-finite doubles are written as null rather than `NaN`. And the incident summary carries an explicit `omitted` map plus `measurementNotes`, naming what is *not* in the bundle — including `halDroppedFrames`, which is present and always null so it cannot be mistaken for zero.
-
-The benchmark writer goes through a pure map codec that refuses any `schema_version` other than 3, rather than guessing at an older file.
+BenchmarkReport는 files/benchmarks/<runId>.json에 schema 4를 기록하고 schema 3·4를 읽습니다. profile, 측정 계약, 기기·앱·subject·환경, validity, 지표와 원시 이벤트를 저장합니다. files/incidents/의 ZIP은 별도의 incident 기록입니다. 현재 앱은 v0.2 HealthReport를 작성하지 않습니다.

@@ -1,3 +1,5 @@
+> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
+
 `app/src/main/java/dev/halcamera/diagnosis/MetricCatalog.kt`. The lookup from metric id to Korean wording, and the one rule about it: an id such as `H.1` is never shown on its own (`PRODUCT-v0.2.md` 11.5).
 
 Each `Info` carries the expert name ("프레임 간격 p50"), the plain-language consumer name ("프레임 속도") and the display unit. Expert views append the id in parentheses; consumer views omit it entirely.

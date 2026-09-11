@@ -2,55 +2,38 @@
 based_on: [data-flow, state-transitions]
 confidence: code
 sources:
-  - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt#Telemetry.callback
-  - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt#FlightRecorder
-  - app/src/main/java/dev/halcamera/check/CheckEvaluator.kt#CheckEvaluator.evaluate
-  - app/src/main/java/dev/halcamera/diagnosis/MetricExtractor.kt#MetricExtractor
+  - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+  - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
+  - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
+  - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
+  - app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt
+  - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
+  - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
 decisions: []
 verifications: []
 ---
-**먼저 앱의 필터와 계산 규칙을 확인한 뒤 원시 이벤트를 대조하세요.** 앱은 프레임워크에서 받은 값과, 그 값으로 계산한 지표를 함께 기록합니다. 둘을 구분해야 문제가 생긴 계층을 좁힐 수 있습니다.
 
-### 원인을 좁히는 순서
+**먼저 앱의 필터와 계산 규칙을 확인한 뒤 원시 이벤트를 대조하세요.** 프레임워크에서 받은 값과 앱이 계산한 지표를 구분해야 원인 계층을 좁힐 수 있습니다.
 
-1. **앱의 입력 조건을 확인합니다.** 값이 `null`이면 `unknownReason`을 봅니다. 세션 ID와 관측 창이 기대한 값인지 확인하고, `capacityEvictions`가 0보다 큰지 확인합니다. 이벤트가 용량 한도로 제거됐다면 계산에 필요한 기록이 부족할 수 있습니다.
-2. **원시 이벤트를 대조합니다.** `capture_failed.reason`, `buffer_lost`의 발생 시점, `capture_result.frameDurationNs`와 센서 시각의 간격을 확인합니다. 원시값이 이상하더라도 요청 설정·콜백 처리·시스템 로그를 함께 확인해야 합니다.
-3. **시계 도메인을 확인합니다.** 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 센서 타임스탬프와 앱의 `atNs`를 직접 비교합니다. 다른 시계의 값을 빼면 의미 없는 차이가 나옵니다.
-4. **프레임워크와 HAL을 추가 자료로 구분합니다.** 앱 기록만으로 두 계층 중 어디가 원인인지 확정할 수 없습니다. 시스템 트레이스와 카메라 서비스 로그가 필요합니다. 팀에서 사용할 구체적인 수집 절차는 아직 정리하지 않았습니다.
+1. `unknownReason`, 세션 ID, 관측 창과 표본 수를 확인합니다. `INSUFFICIENT_SAMPLES`는 측정 대상의 고장을 뜻하지 않습니다.
+2. `capture_failed.reason`, `buffer_lost`, `capture_result`의 센서 시각과 `frameDurationNs`를 대조합니다. `request_observed`는 요청 제출 시각이 아닙니다.
+3. 센서 타임스탬프가 REALTIME 소스일 때만 앱 시각과 직접 비교합니다. 다른 시계의 값을 빼면 지연을 해석할 수 없습니다.
+4. 앱 기록만으로 프레임워크와 HAL 중 원인을 확정하지 않습니다. 시스템 트레이스와 카메라 서비스 로그로 추가 확인해야 합니다.
 
-### 프레임워크에서 받은 값
+### 표본과 보존 규칙
 
-아래 항목은 앱이 계산한 지표가 아니라 콜백을 통해 관측한 정보입니다.
-
-| 이벤트 | 기록하는 정보 |
+| 규칙 | 확인할 코드와 영향 |
 | --- | --- |
-| `capture_started` | `frameNumber`와 `timestamp`를 기록합니다. |
-| `capture_result` | `sensorNs`, AE/AF/AWB 상태, `exposureNs`, `iso`, `frameDurationNs`, `focusDiopters`, `zoomRatio`, `cropRegion`을 기록합니다. |
-| `capture_failed` | `reason`과 `imageCaptured`를 기록합니다. |
-| `buffer_lost` | `frameNumber`를 기록합니다. |
-| `image_available` | 해상도, 포맷, 스트림 이름을 기록합니다. |
+| 닫힌 세션의 콜백을 버립니다. | `Telemetry.callback`의 `alive()`를 확인합니다. |
+| 관측 세션과 시간 창을 선택합니다. | `RunAssembler.observe()`가 관측 시작 이전 결과를 워밍업으로 제외합니다. 고정 5프레임 규칙은 사용하지 않습니다. |
+| 표본이 부족하면 값이 비어 있습니다. | `BenchmarkEvaluator`의 관측 통계는 해당 지표 표본 수가 15개 미만이면 `null`을 반환합니다. 3A 수렴은 워밍업 전 프레임도 사용합니다. |
+| 오래된 이벤트를 제거합니다. | `FlightRecorder` 기본 설정은 30초·18,000개이며 `BenchmarkActivity`는 180초·60,000개로 구성합니다. `capacityEvictions`를 확인합니다. |
+| listener는 동기로 실행합니다. | `FlightRecorder.listener`에 무거운 처리를 추가하면 관측 경로에 영향을 줄 수 있습니다. |
 
-`request_observed`는 **요청을 제출한 시점의 기록이 아닙니다.** `onCaptureStarted`에서 관측한 요청 내용을 담으며, `Telemetry`는 이 구분을 `observation` 필드에 기록합니다.
+`intervalMs`, `resultFps`, `observedResultGap`은 관측값으로 계산한 수치입니다. HAL 내부의 처리 시간이나 화면에 표시된 프레임 수를 직접 측정한 값이 아닙니다.
 
-### 앱에서 계산한 값
+### 이력과 CSV가 예상과 다를 때
 
-`intervalMs`와 `resultFps`는 센서 타임스탬프 차이로 계산합니다. `observedResultGap`은 관측된 결과 프레임 번호의 차이로 계산합니다. 이 값들은 HAL의 프레임 드롭 횟수나 프리뷰 렌더링 드롭 횟수를 직접 나타내지 않습니다.
+RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된 실행을 찾으려면 상태 필터를 `전체`로 바꾸고 profile·camera 필터도 확인합니다. PC의 `tools/aggregate.py`는 기본적으로 점수 산정 가능한 실행만 내보내므로, 앱과 같은 범위를 보려면 `--eligibility comparison_eligible`을 사용합니다.
 
-H.x 지표와 상태 판정도 앱의 계산 결과입니다. 이 값이 예상과 다르면 아래의 필터와 표본 수 기준부터 확인하세요.
-
-### 세션과 표본 규칙
-
-| 규칙 | 코드 위치 | 결과에 나타나는 영향 |
-| --- | --- | --- |
-| 닫힌 세션의 늦은 콜백은 기록하지 않습니다. | `Telemetry.callback`의 `alive()` | 닫는 도중 도착한 마지막 프레임이 이벤트 목록에 없을 수 있습니다. |
-| 같은 세션 ID의 이벤트만 지표에 사용합니다. | `CheckEvaluator.evaluate`의 `result.session` | 다른 세션은 계산에서 제외합니다. 세션 ID가 어긋나면 지표의 입력이 비게 됩니다. |
-| Auto Check는 첫 결과 프레임 5개를 H.1~H.5 통계에서 제외합니다. | `CheckEvaluator.WARMUP_FRAMES` | 첫 프레임의 긴 간격이 해당 통계에 나타나지 않습니다. 3A 수렴은 제외 전 프레임을 사용합니다. |
-| 워밍업을 제외한 steady 프레임이 15개 미만이면 값을 `null`로 표시합니다. | `MetricExtractor(minSamples = 15)` | `INSUFFICIENT_SAMPLES`로 표시합니다. 수집한 통계 자체는 남아 있습니다. |
-
-### 기록 보존과 실행 스레드
-
-| 규칙 | 코드 위치 | 결과에 나타나는 영향 |
-| --- | --- | --- |
-| 링 버퍼의 이벤트 상한은 18,000개입니다. | `FlightRecorder.store` | 상한을 넘으면 오래된 이벤트부터 제거합니다. 제거 횟수는 `capacityEvictions`에서 확인합니다. 이 때문에 일부 기록이 빠진 지표에 별도 표시는 하지 않습니다. |
-| 이벤트 보존 기간은 30초입니다. | `FlightRecorder(retentionNs)` | 30초보다 오래된 이벤트는 `snapshot()`에 남지 않습니다. |
-| 라이브 listener는 기록 스레드에서 동기 실행됩니다. | `FlightRecorder.listener` | 무거운 처리를 추가하면 기록 경로가 느려지고 관측 간격에도 영향을 줄 수 있습니다. |
+손상된 JSON은 목록과 PC 집계에서 별도로 알립니다. CSV 출력 장치의 오류는 입력 파일 오류와 구분하며 작업을 실패로 종료합니다. baseline 파일을 읽을 수 없으면 baseline 변경과 삭제를 중단합니다. 기기 화면·공유·삭제 동작의 실제 검증 기록은 이 문서에서 주장하지 않습니다.

@@ -1,3 +1,5 @@
+> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
+
 `app/src/main/java/dev/halcamera/diagnosis/Model.kt` (141 lines). The code contract from `PRODUCT-v0.2.md` 13.2 — every shared enum and data class the evaluation chain passes around.
 
 Its organising idea is three orthogonal axes rather than one verdict. `State` (PASS / WARN / FAIL / UNKNOWN) says how bad the result is, `ThresholdBasis` (HARD, ABSOLUTE_VALIDATED, ABSOLUTE_REFERENCE, RELATIVE, HEURISTIC) says on what authority it was judged, and `ConditionEquivalence` says how close the measurement conditions were to the reference. Separating them is what lets a report distinguish "fails a validated bound" from "fails a house heuristic".

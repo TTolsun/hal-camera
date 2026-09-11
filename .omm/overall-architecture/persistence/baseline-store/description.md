@@ -1,3 +1,5 @@
+> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
+
 `app/src/main/java/dev/halcamera/baseline/BaselineStore.kt` (40 lines). The v0.2 device baseline, held in `SharedPreferences("baseline")` rather than in a file, per `PRODUCT-v0.2.md` 5.3.
 
 The key is `Build.FINGERPRINT | endpointKey | conditions`, and the fingerprint is stored *inside* the value as well as in the key. `get()` re-checks it and returns null on a mismatch, so a platform update silently invalidates every baseline instead of comparing a new build against numbers from an old one.

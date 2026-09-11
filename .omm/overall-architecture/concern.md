@@ -1,5 +1,3 @@
-- BenchmarkEvaluator는 촬영 중 프리뷰 stall 지표 2.7을 아직 NOT_RUN으로 반환합니다. H.9의 콜백 실패 수는 RunAssembler가 관측 창에서 수집합니다.
-- 결과·비교 UI가 연결되어 있습니다. baseline 설정·해제와 이전 실행 선택 시 비교 결과가 다시 계산되므로 이 경로를 함께 검증해야 합니다.
-- MainActivity는 화면 구성과 엔진 수명주기·권한·incident export를 함께 관리합니다. 콜백 실행 스레드는 변경 시 별도로 검증해야 합니다.
-- HealthMonitor의 상태는 스레드 안전하지 않습니다. 호출 스레드 제약을 유지해야 합니다.
-- 일부 v0.3 로직은 diagnosis의 MetricExtractor와 UnknownReason을 사용하므로 구 평가 계층을 삭제하기 전에 공통 의존성을 분리해야 합니다.
+- 콜백과 파일 작업의 실행 스레드, close 완료와 늦은 신호 처리는 변경 시 함께 검증해야 합니다.
+- RESULTS의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.
+- 촬영 중 프리뷰 stall 지표 2.7은 여전히 NOT_RUN입니다.

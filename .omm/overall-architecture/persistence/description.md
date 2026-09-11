@@ -1,1 +1,1 @@
-앱 내부 파일과 SharedPreferences를 사용합니다. HealthReport는 Auto Check 결과, BenchmarkReport는 schema 3 실행과 이벤트, BenchmarkStore는 실행 인덱스, BaselineManager는 비교 기준 포인터를 다룹니다. 공유는 FileProvider를 통해 사용자가 시작합니다.
+BenchmarkReport는 실행·이벤트를 schema 4로 기록하고 schema 3·4를 읽습니다. BenchmarkStore와 BaselineManager는 실행 파일과 기준 포인터를 관리합니다. SubjectPrefs는 직전 형상 정보를 기억하고 note는 재사용하지 않습니다. HistoryActivity는 JSON·CSV를 FileProvider로 공유합니다. HealthReport와 기존 BaselineStore 하위 항목은 v0.2 이력입니다.

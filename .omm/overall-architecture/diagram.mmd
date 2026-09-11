@@ -1,24 +1,15 @@
 graph LR
-    screens["화면 및 진입점\napp/src/main/java/dev/halcamera/{home,check,benchmark}/"]
-    camera-engines["Camera2Engine / CameraXEngine\napp/src/main/java/dev/halcamera/camera/"]
-    telemetry["Telemetry / FlightRecorder\napp/src/main/java/dev/halcamera/telemetry/"]
-    check-runner["AutoCheckRunner / CheckEvaluator\napp/src/main/java/dev/halcamera/check/"]
-    diagnosis["건강 판정 v0.2\napp/src/main/java/dev/halcamera/diagnosis/"]
-    benchmark["측정·비교 v0.3\napp/src/main/java/dev/halcamera/benchmark/"]
-    persistence["실행·인덱스 저장\napp/src/main/java/dev/halcamera/{report,baseline,benchmark}/"]
-    ui-widgets["Scope / Strip / Timeline\napp/src/main/java/dev/halcamera/ui/"]
-    platform-camera["Android Camera API\nplatform API"]
-    screens -->|"LIVE 엔진을 소유하고 실행 화면 진입"| camera-engines
-    screens -->|"Auto Check 실행"| check-runner
-    screens -->|"BenchmarkActivity 측정 시작"| benchmark
-    camera-engines -->|"open / session / capture"| platform-camera
-    camera-engines -->|"카메라 콜백과 이미지 메타데이터"| telemetry
-    check-runner -->|"Driver 호출"| camera-engines
-    benchmark -->|"프로파일 StreamSpec으로 Driver 호출"| camera-engines
-    telemetry -->|"세션 이벤트와 관측 창"| diagnosis
-    check-runner -->|"EndpointResult와 launchSamples"| diagnosis
-    telemetry -->|"RunAssembler에 원시 이벤트 공급"| benchmark
-    diagnosis -->|"schema 2 건강 결과"| persistence
-    benchmark -->|"schema 3 측정 결과 및 실행 인덱스"| persistence
-    screens -->|"저장 결과 읽기"| persistence
-    telemetry -->|"동기 listener의 라이브 표시"| ui-widgets
+    live["MainActivity · LIVE"] -->|"엔진 선택"| engines["Camera2Engine / CameraXEngine"]
+    live -->|"벤치마크 진입"| benchmark["BenchmarkActivity / BenchmarkRunner"]
+    benchmark -->|"Driver 호출"| engines
+    engines -->|"요청 실행"| platform["Android Camera API"]
+    engines -->|"이벤트 기록"| telemetry["Telemetry / FlightRecorder"]
+    telemetry -->|"관측 표본"| assemble["RunAssembler / BenchmarkEvaluator / RunValidity"]
+    benchmark -->|"실행 시각"| assemble
+    assemble -->|"실행 저장"| files["BenchmarkReport / BenchmarkStore · schema 4"]
+    files -->|"기준 실행 읽기"| comparison["BaselineManager / RegressionDetector"]
+    comparison -->|"비교 표시"| results["ResultPresenter / ComparePresenter"]
+    benchmark -->|"이력 진입"| history["HistoryActivity / RunIndex"]
+    files -->|"목록 읽기"| history
+    history -->|"선택한 두 실행"| comparison
+    history -->|"지표별 내보내기"| csv["BenchmarkCsv · CSV"]

@@ -1,3 +1,5 @@
+> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
+
 `app/src/main/java/dev/halcamera/check/AutoCheckRunner.kt` (205 lines). The Auto Check state machine from `PRODUCT-v0.2.md` chapter 10, and the most carefully isolated class in the project.
 
 One instance runs one check. It visits up to `maxEndpoints` (4) independently openable endpoints and walks each through OPEN, CONFIGURE, FIRST_FRAME, a fixed 10 s OBSERVE, three STILL captures, then CLOSE. Every step except OBSERVE is armed with a timeout (3 s, or 5 s for a still); a timeout records the failed step, jumps to CLOSE, and the *next* endpoint still runs. There is no automatic retry anywhere.

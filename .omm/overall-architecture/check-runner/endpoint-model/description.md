@@ -1,3 +1,5 @@
+> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
+
 `app/src/main/java/dev/halcamera/check/CameraEndpoint.kt` (62 lines). The capability model from `PRODUCT-v0.2.md` 9.2, plus the pure `LensRoles` helpers.
 
 A `CameraEndpoint` is one measurable thing, identified by `key` = logical id, or `logical.physical` when it sits behind a logical camera. It records what the app is allowed to do with it (`independentlyOpenable`, `selectableByZoom`, `exposedToCameraX`) alongside the characteristics a later comparison needs (`equivalentFocalMm`, `timestampSource`, `hardwareLevel`, zoom range). `primary` marks the ones CDD latency requirements actually apply to: a top-level rear MAIN or a FRONT camera, never a physical sub-camera.
