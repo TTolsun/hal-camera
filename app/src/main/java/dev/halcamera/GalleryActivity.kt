@@ -33,6 +33,7 @@ import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import dev.halcamera.ui.GalleryImageView
+import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 import dev.halcamera.ui.showSelectionPopup
 import java.util.Date
@@ -103,14 +104,15 @@ class GalleryActivity : ComponentActivity() {
     private lateinit var detailTitle: TextView
     private lateinit var detailCount: TextView
     private lateinit var detailInfo: TextView
+    private lateinit var infoButton: IconButton
     private lateinit var photo: GalleryImageView
     private lateinit var video: VideoView
     private lateinit var videoController: MediaController
-    private lateinit var play: Button
+    private lateinit var play: IconButton
     private lateinit var loading: TextView
     private lateinit var previous: Button
     private lateinit var next: Button
-    private lateinit var zoom: Button
+    private lateinit var zoom: IconButton
     private lateinit var detailDelete: Button
     private lateinit var detailShare: Button
 
@@ -172,7 +174,7 @@ class GalleryActivity : ComponentActivity() {
     private fun buildAlbum() {
         album = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val header = Look.row(this).apply { setPadding(8.dp, 8.dp, 12.dp, 0) }
-        header.addView(button("‹", "카메라로 돌아가기") { onBackPressedDispatcher.onBackPressed() }, LinearLayout.LayoutParams(48.dp, 48.dp))
+        header.addView(IconButton(this, R.drawable.ic_action_back, "카메라로 돌아가기") { onBackPressedDispatcher.onBackPressed() }, LinearLayout.LayoutParams(48.dp, 48.dp))
         val titles = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             addView(Look.text(context, "HALCamera", 24, Look.onDark, bold = true))
@@ -262,8 +264,8 @@ class GalleryActivity : ComponentActivity() {
         content.addView(empty, FrameLayout.LayoutParams(-1, -1))
         album.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
         selectionBar = Look.row(this).apply { setPadding(16.dp, 4.dp, 16.dp, 8.dp); setBackgroundColor(Look.expertTile) }
-        shareSelection = button("공유") { share(items.filter { it.key in selected }) }
-        deleteSelection = button("삭제") { confirmDelete(items.filter { it.key in selected }) }
+        shareSelection = IconButton(this, R.drawable.ic_action_share, "선택한 항목 공유") { share(items.filter { it.key in selected }) }
+        deleteSelection = IconButton(this, R.drawable.ic_action_delete, "선택한 항목 삭제") { confirmDelete(items.filter { it.key in selected }) }
         selectionBar.addView(shareSelection, LinearLayout.LayoutParams(0, 56.dp, 1f))
         selectionBar.addView(deleteSelection, LinearLayout.LayoutParams(0, 56.dp, 1f))
         album.addView(selectionBar)
@@ -288,17 +290,20 @@ class GalleryActivity : ComponentActivity() {
     private fun buildDetail() {
         detail = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
         val header = Look.row(this).apply { setPadding(8.dp, 8.dp, 8.dp, 4.dp) }
-        header.addView(button("‹", "앨범으로 돌아가기") { closeDetail() }, LinearLayout.LayoutParams(48.dp, 48.dp))
+        header.addView(IconButton(this, R.drawable.ic_action_back, "앨범으로 돌아가기") { closeDetail() }, LinearLayout.LayoutParams(48.dp, 48.dp))
         val titles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         detailTitle = Look.text(this, "", 17, Look.onDark, bold = true)
         detailCount = Look.text(this, "", 13, Look.onDarkMuted)
         titles.addView(detailTitle)
         titles.addView(detailCount)
         header.addView(titles, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = 8.dp })
-        header.addView(button("정보") {
+        infoButton = IconButton(this, R.drawable.ic_action_info, "사진·동영상 정보 보기") {
             infoVisible = !infoVisible
             detailInfo.visibility = if (infoVisible) View.VISIBLE else View.GONE
-        }, LinearLayout.LayoutParams(-2, 48.dp))
+            updateInfoButton()
+        }
+        updateInfoButton()
+        header.addView(infoButton, LinearLayout.LayoutParams(48.dp, 48.dp))
         detail.addView(header)
         val frame = FrameLayout(this)
         photo = GalleryImageView(this, ::page)
@@ -308,8 +313,8 @@ class GalleryActivity : ComponentActivity() {
         videoController = MediaController(this)
         videoController.setAnchorView(video)
         video.setMediaController(videoController)
-        play = button("▶ 재생", "동영상 재생") { startVideo() }.apply { setBackgroundColor(Look.expertTile) }
-        frame.addView(play, FrameLayout.LayoutParams(-2, 56.dp, Gravity.CENTER))
+        play = IconButton(this, R.drawable.ic_action_play, "동영상 재생", filled = true) { startVideo() }
+        frame.addView(play, FrameLayout.LayoutParams(64.dp, 64.dp, Gravity.CENTER))
         loading = Look.text(this, "", 15, Look.onDarkMuted).apply { gravity = Gravity.CENTER; setPadding(16.dp, 16.dp, 16.dp, 16.dp) }
         frame.addView(loading, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM))
         detail.addView(frame, LinearLayout.LayoutParams(-1, 0, 1f))
@@ -318,19 +323,31 @@ class GalleryActivity : ComponentActivity() {
         }
         detail.addView(detailInfo, LinearLayout.LayoutParams(-1, -2))
         val navigation = Look.row(this).apply { setPadding(12.dp, 0, 12.dp, 0) }
-        previous = button("‹ 이전", "이전 사진 또는 동영상") { page(-1) }
-        next = button("다음 ›", "다음 사진 또는 동영상") { page(1) }
-        zoom = button("확대", "사진 확대 또는 원래 크기") { photo.toggleZoom() }
+        previous = IconButton(this, R.drawable.ic_action_back, "이전 사진 또는 동영상") { page(-1) }
+        next = IconButton(this, R.drawable.ic_action_next, "다음 사진 또는 동영상") { page(1) }
+        zoom = IconButton(this, R.drawable.ic_action_zoom_in, "사진 확대") { photo.toggleZoom() }
+        photo.onZoomChanged = { enlarged ->
+            zoom.setIcon(if (enlarged) R.drawable.ic_action_zoom_out else R.drawable.ic_action_zoom_in,
+                if (enlarged) "사진을 원래 크기로" else "사진 확대")
+            zoom.isSelected = enlarged
+            ViewCompat.setStateDescription(zoom, if (enlarged) "확대됨" else "원래 크기")
+        }
         navigation.addView(previous, LinearLayout.LayoutParams(0, 48.dp, 1f))
         navigation.addView(zoom, LinearLayout.LayoutParams(0, 48.dp, 1f))
         navigation.addView(next, LinearLayout.LayoutParams(0, 48.dp, 1f))
         detail.addView(navigation)
         val actions = Look.row(this).apply { setPadding(16.dp, 0, 16.dp, 8.dp); setBackgroundColor(Look.expertTile) }
-        detailShare = button("공유") { currentItem()?.let { share(listOf(it)) } }
-        detailDelete = button("삭제") { currentItem()?.let { confirmDelete(listOf(it)) } }
+        detailShare = IconButton(this, R.drawable.ic_action_share, "사진 또는 동영상 공유") { currentItem()?.let { share(listOf(it)) } }
+        detailDelete = IconButton(this, R.drawable.ic_action_delete, "사진 또는 동영상 삭제") { currentItem()?.let { confirmDelete(listOf(it)) } }
         actions.addView(detailShare, LinearLayout.LayoutParams(0, 56.dp, 1f))
         actions.addView(detailDelete, LinearLayout.LayoutParams(0, 56.dp, 1f))
         detail.addView(actions)
+    }
+
+    private fun updateInfoButton() {
+        infoButton.isSelected = infoVisible
+        infoButton.setIcon(R.drawable.ic_action_info, if (infoVisible) "사진·동영상 정보 숨기기" else "사진·동영상 정보 보기")
+        ViewCompat.setStateDescription(infoButton, if (infoVisible) "펼쳐짐" else "접힘")
     }
 
     private fun applyFilter() {
@@ -356,6 +373,7 @@ class GalleryActivity : ComponentActivity() {
     private fun updateSelection() {
         count.text = if (selectionMode) "${selected.size}개 선택됨" else "사진 ${items.count { !it.video }}장 · 동영상 ${items.count { it.video }}개"
         selectButton.text = if (selectionMode) "취소" else "선택"
+        selectButton.contentDescription = if (selectionMode) "선택 취소" else "사진·동영상 선택"
         selectButton.isEnabled = !deleteBusy && (selectionMode || items.isNotEmpty())
         filterButton.isEnabled = !deleteBusy
         selectionBar.visibility = if (selectionMode) View.VISIBLE else View.GONE
@@ -456,7 +474,7 @@ class GalleryActivity : ComponentActivity() {
             videoPosition = 0
             stopVideo()
             photo.visibility = View.VISIBLE
-            play.text = "▶ 다시 재생"
+            play.setIcon(R.drawable.ic_action_play, "동영상 다시 재생")
             play.visibility = View.VISIBLE
         }
         video.setOnErrorListener { _, _, _ ->
@@ -472,7 +490,7 @@ class GalleryActivity : ComponentActivity() {
         videoController.hide()
         video.stopPlayback()
         video.visibility = View.GONE
-        play.text = "▶ 재생"
+        play.setIcon(R.drawable.ic_action_play, "동영상 재생")
     }
 
     private fun share(media: List<Item>) {
@@ -709,7 +727,7 @@ class GalleryActivity : ComponentActivity() {
         text = label
         contentDescription = description
         isAllCaps = false
-        textSize = if (label == "‹") 32f else 15f
+        textSize = 15f
         setTextColor(Look.onDark)
         val attrs = obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackgroundBorderless))
         background = attrs.getDrawable(0)

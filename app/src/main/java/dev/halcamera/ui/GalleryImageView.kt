@@ -17,8 +17,15 @@ class GalleryImageView(context: Context, private val page: (Int) -> Unit) : Imag
     private var zoom = 1f
     private var fittedScale = 1f
     private var multiplePointers = false
+    private var reportedZoomed = false
+    var onZoomChanged: ((Boolean) -> Unit)? = null
+        set(value) {
+            field = value
+            value?.invoke(zoom > 1.01f)
+        }
     private val scale = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
         override fun onScale(detector: ScaleGestureDetector): Boolean {
+            if (!canZoom()) return false
             val next = (zoom * detector.scaleFactor).coerceIn(1f, 4f)
             transform.postScale(next / zoom, next / zoom, detector.focusX, detector.focusY)
             zoom = next
@@ -30,6 +37,7 @@ class GalleryImageView(context: Context, private val page: (Int) -> Unit) : Imag
         override fun onDown(e: MotionEvent) = true
         override fun onSingleTapConfirmed(e: MotionEvent): Boolean = performClick()
         override fun onDoubleTap(e: MotionEvent): Boolean {
+            if (!canZoom()) return false
             if (zoom > 1.01f) fit() else {
                 zoom = 2.5f
                 transform.postScale(zoom, zoom, e.x, e.y)
@@ -73,6 +81,7 @@ class GalleryImageView(context: Context, private val page: (Int) -> Unit) : Imag
     }
 
     fun toggleZoom() {
+        if (!canZoom()) return
         if (zoom > 1.01f) fit() else {
             zoom = 2.5f
             transform.postScale(zoom, zoom, width / 2f, height / 2f)
@@ -81,10 +90,13 @@ class GalleryImageView(context: Context, private val page: (Int) -> Unit) : Imag
     }
 
     private fun fit() {
+        zoom = 1f
+        transform.reset()
+        imageMatrix = transform
+        reportZoom()
         val image = drawable ?: return
         if (width == 0 || height == 0 || image.intrinsicWidth <= 0 || image.intrinsicHeight <= 0) return
         fittedScale = min(width.toFloat() / image.intrinsicWidth, height.toFloat() / image.intrinsicHeight)
-        zoom = 1f
         transform.setScale(fittedScale, fittedScale)
         transform.postTranslate((width - image.intrinsicWidth * fittedScale) / 2f, (height - image.intrinsicHeight * fittedScale) / 2f)
         imageMatrix = transform
@@ -102,6 +114,18 @@ class GalleryImageView(context: Context, private val page: (Int) -> Unit) : Imag
         }
         transform.postTranslate(offset(bounds.left, bounds.right, width), offset(bounds.top, bounds.bottom, height))
         imageMatrix = transform
+        reportZoom()
+    }
+
+    private fun canZoom() = width > 0 && height > 0 &&
+        (drawable?.intrinsicWidth ?: 0) > 0 && (drawable?.intrinsicHeight ?: 0) > 0
+
+    private fun reportZoom() {
+        val enlarged = zoom > 1.01f
+        if (enlarged != reportedZoomed) {
+            reportedZoomed = enlarged
+            onZoomChanged?.invoke(enlarged)
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {

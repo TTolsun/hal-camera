@@ -33,6 +33,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import dev.halcamera.R
 import dev.halcamera.camera.Camera2Engine
 import dev.halcamera.camera.StreamSpec
 import dev.halcamera.camera.CameraEndpoint
@@ -43,6 +44,7 @@ import dev.halcamera.telemetry.Event
 import dev.halcamera.telemetry.FlightRecorder
 import dev.halcamera.telemetry.Telemetry
 import dev.halcamera.telemetry.nowNs
+import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 import dev.halcamera.ui.showSelectionPopup
 import java.io.File
@@ -312,7 +314,7 @@ class BenchmarkActivity : ComponentActivity() {
         if (state == null) {
             card.addView(Look.text(this, cardError ?: "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted), lp(top = 10))
             content.addView(card)
-            actions.addView(Look.ghostButton(this, "닫기", dark = true) { finish() }, LinearLayout.LayoutParams(-1, dp(52)))
+            actions.addView(IconButton(this, R.drawable.ic_action_close, "벤치마크 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
             return
         }
         card.addView(Look.text(this, state.titleLine, 13, Look.onDarkMuted), lp(top = 6))
@@ -362,7 +364,7 @@ class BenchmarkActivity : ComponentActivity() {
             isEnabled = endpoints.isNotEmpty()
             contentDescription = "벤치마크 카메라 선택, 현재 $cameraLabel"
         }, LinearLayout.LayoutParams(0, dp(52), 1f))
-        row.addView(Look.ghostButton(this, "닫기", dark = true) { finish() }, LinearLayout.LayoutParams(-2, dp(52)).apply { marginStart = dp(8) })
+        row.addView(IconButton(this, R.drawable.ic_action_close, "벤치마크 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
         actions.addView(row)
         when {
             state.canStart ->
@@ -469,7 +471,7 @@ class BenchmarkActivity : ComponentActivity() {
             card.addView(wide(Look.text(this, table, 12, Look.onDark, mono = true).also { copyOnTap(it, "compare", view.render()) }), lp(top = 8))
         }
         content.addView(card)
-        actions.addView(Look.ghostButton(this, "결과로 돌아가기", dark = true) { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(-1, dp(52)))
+        actions.addView(IconButton(this, R.drawable.ic_action_back, "벤치마크 결과로 돌아가기") { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(dp(48), dp(48)))
     }
 
     // ---- run ----

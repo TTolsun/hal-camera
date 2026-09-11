@@ -31,6 +31,7 @@ import dev.halcamera.telemetry.*
 import dev.halcamera.ui.LiveReadout
 import dev.halcamera.ui.ExpandingZoomControl
 import dev.halcamera.ui.ShutterButton
+import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 import dev.halcamera.ui.showSelectionPopup
 import dev.halcamera.ui.LiveReading
@@ -120,7 +121,7 @@ class MainActivity : ComponentActivity() {
     }
     private lateinit var engineButton: Button
     private lateinit var cameraButton: Button
-    private lateinit var pauseButton: Button
+    private lateinit var pauseButton: IconButton
     private lateinit var recorderText: TextView
     private lateinit var shareButton: Button
     private val panelBack = object : OnBackPressedCallback(false) {
@@ -318,32 +319,30 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-        pauseButton=button(if(paused) "재개" else "일시정지") {
-            paused=!paused; pauseButton.text=if(paused) "재개" else "일시정지"
+        pauseButton=IconButton(this,if(paused) R.drawable.ic_action_play else R.drawable.ic_action_pause,if(paused) "프리뷰 재개" else "프리뷰 일시정지") {
+            paused=!paused
+            pauseButton.setIcon(if(paused) R.drawable.ic_action_play else R.drawable.ic_action_pause,if(paused) "프리뷰 재개" else "프리뷰 일시정지")
             if(paused) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("user_paused")?.let { export(it) } }
             restartCamera()
         }
         val panelButton=button("측정 상세") { showDiagnostics(true) }
-        listOf(engineButton,pauseButton,panelButton).forEachIndexed { index, view ->
-            view.background=cameraChrome(if(index==0) glass else Color.TRANSPARENT); view.setTextColor(Color.WHITE)
-            controls.addView(view,LinearLayout.LayoutParams(0,dp(48),if(index==0) 1.2f else 1f).apply { if(index>0) marginStart=dp(4) })
-        }
+        engineButton.apply { background=cameraChrome(glass); setTextColor(Color.WHITE) }
+        panelButton.apply { background=cameraChrome(Color.TRANSPARENT); setTextColor(Color.WHITE); setPadding(dp(12),0,dp(12),0) }
+        controls.addView(engineButton,LinearLayout.LayoutParams(0,dp(48),1f))
+        controls.addView(pauseButton,LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginStart=dp(8) })
+        controls.addView(panelButton,LinearLayout.LayoutParams(-2,dp(48)))
         statusText=label("카메라 준비 중…",12,muted).apply { gravity=Gravity.CENTER }
         topBar.addView(statusText,lp(top=4))
 
-        // Keep the zoom in the lower preview; group readouts above and capture controls below it.
+        // Keep the zoom and shutter positions; expose preview by moving plots into diagnostics.
         bottomBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER_HORIZONTAL; setPadding(dp(16),dp(14),dp(16),dp(14)) }
         bottomBar.background=GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,intArrayOf(Color.argb(215,0,0,0),Color.TRANSPARENT))
         root.addView(bottomBar,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
-        // Live strip: interval sparkline with baseline guides, then the callback offsets of the latest matched frame.
-        val stripBox=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; background=rounded(glass); setPadding(dp(10),dp(8),dp(10),dp(8)) }
-        metrics=label("FPS —  ·  ISO —  ·  Exp —\nLens —  ·  Zoom —",12,Color.WHITE).apply { gravity=Gravity.CENTER; typeface=Look.mono }
-        stripBox.addView(metrics,lp())
-        strip=StripView(this).apply { contentDescription="최근 10초 센서 프레임 간격. 실선은 기준, 점선은 1.5배 임계" }
-        stripBox.addView(strip,lp(height=24,top=4))
-        stripText=label("PARTIAL —   BUFFER — ms",12,muted).apply { gravity=Gravity.CENTER; typeface=Look.mono }
-        stripBox.addView(stripText,lp(top=2))
-        bottomBar.addView(stripBox,lp())
+        metrics=label("FPS —  ·  ISO —  ·  Exp —\nLens —  ·  Zoom —",12,Color.WHITE).apply {
+            gravity=Gravity.CENTER; typeface=Look.mono
+            setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
+        }
+        bottomBar.addView(metrics,lp())
         zoomControl=ExpandingZoomControl(this) { ratio ->
             zoomRatio=ratio; engine?.setZoom(ratio)
         }
@@ -375,10 +374,11 @@ class MainActivity : ComponentActivity() {
 
         val captureRow=row().apply { gravity=Gravity.CENTER_VERTICAL }
         bottomBar.addView(captureRow,lp())
-        galleryButton=button("갤러리") {
+        galleryButton=IconButton(this,R.drawable.ic_gallery,"HALCamera 갤러리 열기",filled=true) {
             withMediaPermissions(false) { startActivity(Intent(this, GalleryActivity::class.java)) }
-        }.apply { cameraSideButton(this,R.drawable.ic_gallery); contentDescription="HALCamera 갤러리 열기" }
-        captureRow.addView(galleryButton,LinearLayout.LayoutParams(0,-2,1f))
+        }
+        val gallerySlot=FrameLayout(this).apply { addView(galleryButton,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.TOP or Gravity.CENTER_HORIZONTAL)) }
+        captureRow.addView(gallerySlot,LinearLayout.LayoutParams(0,dp(72),1f))
         mediaButton=ShutterButton(this).apply {
             setOnClickListener {
                 if(recordingVideo) {
@@ -422,13 +422,20 @@ class MainActivity : ComponentActivity() {
         root.addView(diagnostics,FrameLayout.LayoutParams(-1,-1))
         val head=row().apply { gravity=Gravity.CENTER_VERTICAL }; body.addView(head)
         head.addView(label("측정 상세",22,Color.WHITE,true),LinearLayout.LayoutParams(0,-2,1f))
-        head.addView(button("닫기") { showDiagnostics(false) },LinearLayout.LayoutParams(dp(72),dp(48)))
+        head.addView(IconButton(this,R.drawable.ic_action_close,"측정 상세 닫기") { showDiagnostics(false) },LinearLayout.LayoutParams(dp(48),dp(48)))
         // 8.1: raw numbers only. The DIAGNOSIS card that used to lead this panel named a rule and a cause layer
         // from a two-second window, which the app could not actually establish; BENCHMARK answers that properly.
         body.addView(label("LIVE READOUT",14,muted,true),lp(top=18))
         body.addView(label("같은 세션의 직전 프레임에서 읽은 값. 기준 p50은 최근 창을 제외한 나머지 프레임의 중앙값",10,muted),lp(top=4))
         readoutCard=label("프레임을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
         body.addView(readoutCard,lp(top=10))
+        val stripBox=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; background=rounded(panel); setPadding(dp(12),dp(12),dp(12),dp(12)) }
+        stripBox.addView(label("FRAME INTERVAL · 최근 10초",12,muted,true),lp())
+        strip=StripView(this).apply { contentDescription="최근 10초 센서 프레임 간격. 실선은 기준, 점선은 1.5배 임계" }
+        stripBox.addView(strip,lp(height=40,top=8))
+        stripText=label("PARTIAL —   BUFFER — ms",12,muted).apply { gravity=Gravity.CENTER; typeface=Look.mono }
+        stripBox.addView(stripText,lp(top=8))
+        body.addView(stripBox,lp(top=10))
         body.addView(label("3A OSCILLOSCOPE",14,muted,true),lp(top=18))
         body.addView(label("최근 10초 · 3A 상태는 단계값, 연속값 그래프는 자동 스케일",10,muted),lp(top=4))
         scope=ScopeView(this).apply { background=rounded(panel); contentDescription="AE, AF, AWB 상태와 노출, ISO, 센서 프레임 간격 그래프" }
