@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.ClipData
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Toast
@@ -13,6 +14,7 @@ import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.ui.Look
+import dev.halcamera.ui.showSelectionPopup
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -103,16 +105,16 @@ class HistoryActivity : ComponentActivity() {
             return
         }
         button("BENCHMARK로 돌아가기") { finish() }
-        button("필터 · ${filter.label} ▾") {
-            choose("실행 상태", RunFilter.values().map { it.label }, filter.ordinal) { filter = RunFilter.values()[it]; pageSize = 50; render() }
+        button("필터 · ${filter.label} ▾") { anchor ->
+            showSelectionPopup(anchor, RunFilter.values().map { it.label }, filter.ordinal) { filter = RunFilter.values()[it]; pageSize = 50; render() }
         }
-        button("Profile · ${profileId ?: "전체"} ▾") {
+        button("Profile · ${profileId ?: "전체"} ▾") { anchor ->
             val values = (index.runs.map { it.profile.id } + listOfNotNull(profileId)).distinct().sorted()
-            choose("Profile", listOf("전체") + values, values.indexOf(profileId) + 1) { profileId = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
+            showSelectionPopup(anchor, listOf("전체") + values, values.indexOf(profileId) + 1) { profileId = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
-        button("Camera · ${endpointKey ?: "전체"} ▾") {
+        button("Camera · ${endpointKey ?: "전체"} ▾") { anchor ->
             val values = (index.runs.map { it.endpoint.key } + listOfNotNull(endpointKey)).distinct().sorted()
-            choose("Camera endpoint", listOf("전체") + values, values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
+            showSelectionPopup(anchor, listOf("전체") + values, values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
         val runs = visible()
         text("${runs.size}개 실행 · 행을 눌러 결과를 열고, 길게 눌러 작업을 선택합니다.")
@@ -247,17 +249,17 @@ class HistoryActivity : ComponentActivity() {
         }
     }
 
-    private fun choose(title: String, items: List<String>, selected: Int? = null, onSelect: (Int) -> Unit) {
-        val dialog = AlertDialog.Builder(this).setTitle(title).setNegativeButton("취소", null)
-        if (selected == null) dialog.setItems(items.toTypedArray()) { _, i -> onSelect(i) }
-        else dialog.setSingleChoiceItems(items.toTypedArray(), selected) { choice, i -> choice.dismiss(); onSelect(i) }
-        dialog.show()
+    private fun choose(title: String, items: List<String>, onSelect: (Int) -> Unit) {
+        AlertDialog.Builder(this).setTitle(title).setNegativeButton("취소", null)
+            .setItems(items.toTypedArray()) { _, i -> onSelect(i) }
+            .show()
     }
     private fun text(value: String, size: Int = 14, bold: Boolean = false) {
         body.addView(Look.text(this, value, size, Look.onDark, bold = bold), lp())
     }
-    private fun button(label: String, enabled: Boolean = true, click: () -> Unit) {
-        body.addView(Look.ghostButton(this, label, dark = true) { if (!busy) click() }.apply {
+    private fun button(label: String, enabled: Boolean = true, click: (View) -> Unit) {
+        body.addView(Look.ghostButton(this, label, dark = true) {}.apply {
+            setOnClickListener { if (!busy) click(it) }
             isEnabled = enabled && !busy
             minHeight = dp(48)
         }, lp())

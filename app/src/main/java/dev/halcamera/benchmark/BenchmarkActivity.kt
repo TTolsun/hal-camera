@@ -44,6 +44,7 @@ import dev.halcamera.telemetry.FlightRecorder
 import dev.halcamera.telemetry.Telemetry
 import dev.halcamera.telemetry.nowNs
 import dev.halcamera.ui.Look
+import dev.halcamera.ui.showSelectionPopup
 import java.io.File
 import java.util.concurrent.Executors
 
@@ -193,16 +194,11 @@ class BenchmarkActivity : ComponentActivity() {
         preflight()
     }
 
-    private fun selectCamera() {
+    private fun selectCamera(anchor: View) {
         if (endpoints.isEmpty() || runner != null) return
-        android.app.AlertDialog.Builder(this)
-            .setTitle("벤치마크 카메라 선택")
-            .setSingleChoiceItems(endpoints.map { "${roleText(it.role)} · ID ${it.logicalCameraId}" }.toTypedArray(), selected) { dialog, index ->
-                dialog.dismiss()
-                if (selected != index) { selected = index; preflight() }
-            }
-            .setNegativeButton("취소", null)
-            .show()
+        showSelectionPopup(anchor, endpoints.map { "${roleText(it.role)} · ID ${it.logicalCameraId}" }, selected) { index ->
+            if (runner == null && selected != index) { selected = index; preflight() }
+        }
     }
 
     private fun preflight() {
@@ -361,7 +357,8 @@ class BenchmarkActivity : ComponentActivity() {
 
         val row = Look.row(this)
         val cameraLabel = endpoints.getOrNull(selected)?.let { "${roleText(it.role)} · ID ${it.logicalCameraId} ▾" } ?: "카메라 없음"
-        row.addView(Look.ghostButton(this, cameraLabel, dark = true) { selectCamera() }.apply {
+        row.addView(Look.ghostButton(this, cameraLabel, dark = true) {}.apply {
+            setOnClickListener { selectCamera(it) }
             isEnabled = endpoints.isNotEmpty()
             contentDescription = "벤치마크 카메라 선택, 현재 $cameraLabel"
         }, LinearLayout.LayoutParams(0, dp(52), 1f))
