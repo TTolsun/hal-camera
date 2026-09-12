@@ -4,13 +4,14 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.RippleDrawable
 import android.os.Build
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
-import android.view.animation.AccelerateDecelerateInterpolator
+import android.view.animation.PathInterpolator
 import android.widget.Button
 import androidx.core.view.ViewCompat
 import java.util.Locale
@@ -29,9 +30,10 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
 
     init {
         // Keep the rail visually close to Samsung Camera without shrinking its touch targets.
-        background = InsetDrawable(Look.pill(context, Color.argb(150, 39, 39, 41)), dp(6), dp(8), dp(6), dp(8))
+        background = InsetDrawable(Look.pill(context, Look.cameraGlass), dp(6), dp(8), dp(6), dp(8))
         setPadding(0, 0, 0, 0)
         clipChildren = true
+        isChildrenDrawingOrderEnabled = true
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
     }
 
@@ -46,6 +48,8 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
                     textSize = 12f
                     minWidth = 0; minimumWidth = 0; minHeight = 0; minimumHeight = 0
                     setPadding(0, 0, 0, 0)
+                    stateListAnimator = null
+                    backgroundTintList = null
                     setOnClickListener {
                         if (!this@ExpandingZoomControl.isEnabled) return@setOnClickListener
                         if (!expanded) {
@@ -109,8 +113,8 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
             return
         }
         animator = ValueAnimator.ofFloat(progress, target).apply {
-            duration = 220
-            interpolator = AccelerateDecelerateInterpolator()
+            duration = if (target > progress) 260 else 220
+            interpolator = PathInterpolator(0.2f, 0f, 0f, 1f)
             addUpdateListener {
                 progress = it.animatedValue as Float
                 renderVisibility()
@@ -128,10 +132,11 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
                 else "%.1f".format(Locale.US, ratio).removePrefix("0")
             button.text = if (active) "${number}×" else number
             button.isSelected = active
-            button.setTextColor(if (active) Look.expertTile else Look.onDark)
+            button.setTextColor(if (active) Look.cameraOnSelection else Look.onDark)
+            button.setTypeface(Typeface.DEFAULT, if (active) Typeface.BOLD else Typeface.NORMAL)
             val circle = GradientDrawable().apply {
                 shape = GradientDrawable.OVAL
-                setColor(if (active) Look.primaryOnDark else Color.TRANSPARENT)
+                setColor(if (active) Look.cameraSelection else Color.TRANSPARENT)
             }
             val mask = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.WHITE) }
             // Samsung Camera's selected circle measures 30dp on the reference S25+.
@@ -150,10 +155,25 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
             val active = ratio == selected
             val available = active || (expanded && progress == 1f)
             button.visibility = if (active || progress > 0f) VISIBLE else INVISIBLE
-            button.alpha = if (active) 1f else progress
+            // Let the rail open first, then softly reveal the remaining ratios.
+            button.alpha = if (active) 1f else ((progress - 0.15f) / 0.85f).coerceIn(0f, 1f)
+            val scale = if (active) 1f else 0.92f + 0.08f * progress
+            button.scaleX = scale
+            button.scaleY = scale
             button.isEnabled = isEnabled && available
             button.importantForAccessibility = if (available) IMPORTANT_FOR_ACCESSIBILITY_YES else IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
             if (!available && button.hasFocus()) (getChildAt(ratios.indexOf(selected)))?.requestFocus()
+        }
+    }
+
+    override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int {
+        // Keep the selected circle above the converging labels while folding.
+        val active = ratios.indexOf(selected)
+        if (active < 0) return drawingPosition
+        return when {
+            drawingPosition == childCount - 1 -> active
+            drawingPosition >= active -> drawingPosition + 1
+            else -> drawingPosition
         }
     }
 

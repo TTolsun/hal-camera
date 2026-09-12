@@ -5,6 +5,7 @@ import android.app.RecoverableSecurityException
 import android.content.ClipData
 import android.content.ContentUris
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -45,6 +46,10 @@ import java.util.concurrent.TimeUnit
 
 /** A browsable app album. Android 10+ requires no broad photo-library permission. */
 class GalleryActivity : ComponentActivity() {
+    private companion object {
+        // MediaStore limits each confirmation request to 2000 URIs for target API 36+.
+        const val DELETE_BATCH_SIZE = 2000
+    }
     private data class Item(
         val uri: Uri, val name: String, val video: Boolean, val added: Long,
         val duration: Long, val bytes: Long, val width: Int, val height: Int,
@@ -95,6 +100,8 @@ class GalleryActivity : ComponentActivity() {
     private lateinit var grid: GridView
     private lateinit var adapter: BaseAdapter
     private lateinit var empty: TextView
+    private lateinit var albumTitle: TextView
+    private lateinit var selectAllButton: CheckBox
     private lateinit var count: TextView
     private lateinit var filterButton: Button
     private lateinit var selectButton: Button
@@ -119,7 +126,10 @@ class GalleryActivity : ComponentActivity() {
     private val deletePermission = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
         awaitingDeletePermission = false
         if (result.resultCode == RESULT_OK) {
-            if (deleteBySystem) finishDeletion() else deleteLegacyNext()
+            if (deleteBySystem && Build.VERSION.SDK_INT >= 30) {
+                pendingDelete = ArrayList(pendingDelete.drop(DELETE_BATCH_SIZE))
+                if (pendingDelete.isEmpty()) finishDeletion() else requestSystemDeletion()
+            } else deleteLegacyNext()
         } else {
             deleteBusy = false
             pendingDelete.clear()
@@ -173,15 +183,18 @@ class GalleryActivity : ComponentActivity() {
 
     private fun buildAlbum() {
         album = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        val header = Look.row(this).apply { setPadding(8.dp, 8.dp, 12.dp, 0) }
+        val header = Look.row(this).apply { setPadding(16.dp, 12.dp, 16.dp, 8.dp) }
         header.addView(IconButton(this, R.drawable.ic_action_back, "카메라로 돌아가기") { onBackPressedDispatcher.onBackPressed() }, LinearLayout.LayoutParams(48.dp, 48.dp))
         val titles = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            addView(Look.text(context, "HALCamera", 24, Look.onDark, bold = true))
+            albumTitle = Look.text(context, "HALCamera", 24, Look.onDark, bold = true).apply {
+                accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            }
+            addView(albumTitle)
         }
         count = Look.text(this, "불러오는 중…", 13, Look.onDarkMuted)
         titles.addView(count)
-        header.addView(titles, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = 8.dp })
+        header.addView(titles, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = 12.dp; marginEnd = 12.dp })
         selectButton = button("선택") {
             selectionMode = !selectionMode
             if (!selectionMode) selected.clear()
@@ -201,7 +214,24 @@ class GalleryActivity : ComponentActivity() {
                 applyFilter()
             }
         }
-        album.addView(filterButton, LinearLayout.LayoutParams(-2, 48.dp).apply { marginStart = 12.dp })
+        selectAllButton = CheckBox(this).apply {
+            textSize = 14f
+            setTextColor(Look.onDark)
+            buttonTintList = ColorStateList(
+                arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()),
+                intArrayOf(Look.primaryOnDark, Look.onDarkMuted),
+            )
+            minHeight = 48.dp
+            minimumHeight = 48.dp
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(12.dp, 0, 12.dp, 0)
+            setOnClickListener { toggleSelectAll() }
+        }
+        val filterRow = Look.row(this).apply { setPadding(16.dp, 8.dp, 16.dp, 12.dp) }
+        filterRow.addView(selectAllButton, LinearLayout.LayoutParams(-2, 48.dp))
+        filterRow.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
+        filterRow.addView(filterButton, LinearLayout.LayoutParams(-2, 48.dp).apply { marginStart = 16.dp })
+        album.addView(filterRow, LinearLayout.LayoutParams(-1, -2))
         val content = FrameLayout(this)
         grid = GridView(this).apply {
             numColumns = 3
@@ -263,12 +293,12 @@ class GalleryActivity : ComponentActivity() {
         }
         content.addView(empty, FrameLayout.LayoutParams(-1, -1))
         album.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
-        selectionBar = Look.row(this).apply { setPadding(16.dp, 4.dp, 16.dp, 8.dp); setBackgroundColor(Look.expertTile) }
+        selectionBar = Look.row(this).apply { setPadding(24.dp, 12.dp, 24.dp, 16.dp); setBackgroundColor(Look.expertTile) }
         shareSelection = IconButton(this, R.drawable.ic_action_share, "선택한 항목 공유") { share(items.filter { it.key in selected }) }
         deleteSelection = IconButton(this, R.drawable.ic_action_delete, "선택한 항목 삭제") { confirmDelete(items.filter { it.key in selected }) }
         selectionBar.addView(shareSelection, LinearLayout.LayoutParams(0, 56.dp, 1f))
-        selectionBar.addView(deleteSelection, LinearLayout.LayoutParams(0, 56.dp, 1f))
-        album.addView(selectionBar)
+        selectionBar.addView(deleteSelection, LinearLayout.LayoutParams(0, 56.dp, 1f).apply { marginStart = 24.dp })
+        album.addView(selectionBar, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 8.dp })
         updateSelection()
     }
 
@@ -281,7 +311,7 @@ class GalleryActivity : ComponentActivity() {
         init {
             addView(image, LayoutParams(-1, -1))
             addView(badge, LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.END).apply { setMargins(4.dp, 4.dp, 4.dp, 4.dp) })
-            addView(check, LayoutParams(28.dp, 28.dp, Gravity.TOP or Gravity.END).apply { setMargins(4.dp, 4.dp, 4.dp, 4.dp) })
+            addView(check, LayoutParams(24.dp, 24.dp, Gravity.TOP or Gravity.END).apply { setMargins(8.dp, 8.dp, 8.dp, 8.dp) })
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
             listOf(image, badge, check).forEach { it.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO }
         }
@@ -289,14 +319,14 @@ class GalleryActivity : ComponentActivity() {
 
     private fun buildDetail() {
         detail = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
-        val header = Look.row(this).apply { setPadding(8.dp, 8.dp, 8.dp, 4.dp) }
+        val header = Look.row(this).apply { setPadding(16.dp, 12.dp, 16.dp, 12.dp) }
         header.addView(IconButton(this, R.drawable.ic_action_back, "앨범으로 돌아가기") { closeDetail() }, LinearLayout.LayoutParams(48.dp, 48.dp))
         val titles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         detailTitle = Look.text(this, "", 17, Look.onDark, bold = true)
         detailCount = Look.text(this, "", 13, Look.onDarkMuted)
         titles.addView(detailTitle)
         titles.addView(detailCount)
-        header.addView(titles, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = 8.dp })
+        header.addView(titles, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = 12.dp; marginEnd = 12.dp })
         infoButton = IconButton(this, R.drawable.ic_action_info, "사진·동영상 정보 보기") {
             infoVisible = !infoVisible
             detailInfo.visibility = if (infoVisible) View.VISIBLE else View.GONE
@@ -322,7 +352,7 @@ class GalleryActivity : ComponentActivity() {
             setPadding(20.dp, 8.dp, 20.dp, 8.dp); setTextIsSelectable(true); visibility = View.GONE
         }
         detail.addView(detailInfo, LinearLayout.LayoutParams(-1, -2))
-        val navigation = Look.row(this).apply { setPadding(12.dp, 0, 12.dp, 0) }
+        val navigation = Look.row(this).apply { setPadding(24.dp, 8.dp, 24.dp, 8.dp) }
         previous = IconButton(this, R.drawable.ic_action_back, "이전 사진 또는 동영상") { page(-1) }
         next = IconButton(this, R.drawable.ic_action_next, "다음 사진 또는 동영상") { page(1) }
         zoom = IconButton(this, R.drawable.ic_action_zoom_in, "사진 확대") { photo.toggleZoom() }
@@ -333,15 +363,15 @@ class GalleryActivity : ComponentActivity() {
             ViewCompat.setStateDescription(zoom, if (enlarged) "확대됨" else "원래 크기")
         }
         navigation.addView(previous, LinearLayout.LayoutParams(0, 48.dp, 1f))
-        navigation.addView(zoom, LinearLayout.LayoutParams(0, 48.dp, 1f))
-        navigation.addView(next, LinearLayout.LayoutParams(0, 48.dp, 1f))
+        navigation.addView(zoom, LinearLayout.LayoutParams(0, 48.dp, 1f).apply { marginStart = 16.dp })
+        navigation.addView(next, LinearLayout.LayoutParams(0, 48.dp, 1f).apply { marginStart = 16.dp })
         detail.addView(navigation)
-        val actions = Look.row(this).apply { setPadding(16.dp, 0, 16.dp, 8.dp); setBackgroundColor(Look.expertTile) }
+        val actions = Look.row(this).apply { setPadding(24.dp, 12.dp, 24.dp, 16.dp); setBackgroundColor(Look.expertTile) }
         detailShare = IconButton(this, R.drawable.ic_action_share, "사진 또는 동영상 공유") { currentItem()?.let { share(listOf(it)) } }
         detailDelete = IconButton(this, R.drawable.ic_action_delete, "사진 또는 동영상 삭제") { currentItem()?.let { confirmDelete(listOf(it)) } }
         actions.addView(detailShare, LinearLayout.LayoutParams(0, 56.dp, 1f))
-        actions.addView(detailDelete, LinearLayout.LayoutParams(0, 56.dp, 1f))
-        detail.addView(actions)
+        actions.addView(detailDelete, LinearLayout.LayoutParams(0, 56.dp, 1f).apply { marginStart = 24.dp })
+        detail.addView(actions, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 8.dp })
     }
 
     private fun updateInfoButton() {
@@ -370,15 +400,37 @@ class GalleryActivity : ComponentActivity() {
         updateSelection()
     }
 
+    private fun toggleSelectAll() {
+        if (!selectionMode || deleteBusy || visibleItems.isEmpty()) return
+        if (visibleItems.all { it.key in selected }) selected.clear()
+        else selected.addAll(visibleItems.map { it.key })
+        updateSelection()
+    }
+
     private fun updateSelection() {
-        count.text = if (selectionMode) "${selected.size}개 선택됨" else "사진 ${items.count { !it.video }}장 · 동영상 ${items.count { it.video }}개"
+        albumTitle.text = if (selectionMode) "${selected.size}개 선택됨" else "HALCamera"
+        count.text = if (selectionMode) "총 ${visibleItems.size}개 · ${listOf("전체", "사진", "동영상")[filter]}"
+            else "사진 ${items.count { !it.video }}장 · 동영상 ${items.count { it.video }}개"
+        val allSelected = visibleItems.isNotEmpty() && visibleItems.all { it.key in selected }
+        selectAllButton.visibility = if (selectionMode) View.VISIBLE else View.GONE
+        selectAllButton.isChecked = allSelected
+        selectAllButton.text = if (allSelected) "전체 해제" else "전체 선택"
+        selectAllButton.contentDescription = "${listOf("사진·동영상", "사진", "동영상")[filter]} ${visibleItems.size}개 " + if (allSelected) "전체 선택 해제" else "전체 선택"
+        selectAllButton.isEnabled = selectionMode && visibleItems.isNotEmpty() && !deleteBusy
+        ViewCompat.setStateDescription(selectAllButton, when {
+            allSelected -> "모두 선택됨"
+            selected.isNotEmpty() -> "일부 선택됨, ${selected.size}개"
+            else -> "선택 안 됨"
+        })
         selectButton.text = if (selectionMode) "취소" else "선택"
         selectButton.contentDescription = if (selectionMode) "선택 취소" else "사진·동영상 선택"
-        selectButton.isEnabled = !deleteBusy && (selectionMode || items.isNotEmpty())
+        selectButton.isEnabled = !deleteBusy && (selectionMode || visibleItems.isNotEmpty())
         filterButton.isEnabled = !deleteBusy
         selectionBar.visibility = if (selectionMode) View.VISIBLE else View.GONE
         shareSelection.isEnabled = selected.isNotEmpty() && !deleteBusy
         deleteSelection.isEnabled = selected.isNotEmpty() && !deleteBusy
+        shareSelection.contentDescription = "선택한 ${selected.size}개 공유"
+        deleteSelection.contentDescription = "선택한 ${selected.size}개 삭제"
         if (::detailDelete.isInitialized) { detailDelete.isEnabled = !deleteBusy; detailShare.isEnabled = !deleteBusy }
         adapter.notifyDataSetChanged()
     }
@@ -514,17 +566,7 @@ class GalleryActivity : ComponentActivity() {
             deleteBySystem = true
             deleteBusy = true
             updateSelection()
-            runCatching {
-                val request = MediaStore.createDeleteRequest(contentResolver, media.map { it.uri })
-                awaitingDeletePermission = true
-                deletePermission.launch(IntentSenderRequest.Builder(request.intentSender).build())
-            }.onFailure {
-                deleteBusy = false
-                awaitingDeletePermission = false
-                pendingDelete.clear()
-                updateSelection()
-                toast("삭제 요청을 열지 못했습니다.")
-            }
+            requestSystemDeletion()
         } else {
             AlertDialog.Builder(this).setTitle("${media.size}개를 삭제할까요?")
                 .setMessage(media.take(4).joinToString("\n") { it.name } + if (media.size > 4) "\n외 ${media.size - 4}개" else "")
@@ -537,6 +579,22 @@ class GalleryActivity : ComponentActivity() {
                     updateSelection()
                     deleteLegacyNext()
                 }.show()
+        }
+    }
+
+    @androidx.annotation.RequiresApi(30)
+    private fun requestSystemDeletion() {
+        runCatching {
+            val request = MediaStore.createDeleteRequest(contentResolver, pendingDelete.take(DELETE_BATCH_SIZE).map(Uri::parse))
+            awaitingDeletePermission = true
+            deletePermission.launch(IntentSenderRequest.Builder(request.intentSender).build())
+        }.onFailure {
+            deleteBusy = false
+            awaitingDeletePermission = false
+            pendingDelete.clear()
+            updateSelection()
+            loadMedia()
+            toast("삭제 요청을 열지 못했습니다.")
         }
     }
 
