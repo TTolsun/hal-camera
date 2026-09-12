@@ -2,4 +2,4 @@
 - RunAssembler는 관측 세션의 결과를 모으고 관측 시작 이전 결과 수를 워밍업으로 계산합니다. 3A 수렴은 첫 결과부터 계산합니다.
 - BenchmarkEvaluator의 관측 통계는 각 지표의 표본 수가 15개 미만이면 INSUFFICIENT_SAMPLES를 기록합니다.
 - H.9는 관측 세션·관측 창의 capture_failed와 buffer_lost 개수입니다.
-- RegressionDetector의 환경 차이 규칙은 thermal·절전·충전·노출 부하를 비교합니다. 원본 측정값과 다시 계산한 비교 상태를 구분합니다.
+- RegressionDetector의 환경 차이 규칙: thermal_max가 2단계 이상 다르거나 절전 모드가 다르면 모든 지표가 UNKNOWN(condition_mismatch)이 되고, exposure_load_p50 비율이 4배를 넘거나 1/4 미만이면 H.6~H.8만 막히며, 충전 상태 차이는 판정을 바꾸지 않고 배너로만 표시합니다. 원본 측정값과 다시 계산한 비교 상태를 구분합니다.

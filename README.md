@@ -69,7 +69,7 @@ Windows에서 프로젝트 경로에 한글이 있으면 Android Gradle Plugin�
 
 ## run JSON
 
-run 하나는 `files/benchmarks/<run_id>.json`에 schema 3으로 저장됩니다. 결과 화면의 `EXPORT`로 공유할 수 있습니다. 파일에는 지표값, profile, 기기와 빌드 식별자, 환경값(thermal 시작 · 최고 · 종료, 절전 모드, 충전 상태), validity flag, 그리고 raw 표본이 들어 있습니다. **사진이나 프리뷰 픽셀은 저장하지 않습니다.**
+run 하나는 `files/benchmarks/<run_id>.json`에 schema 4로 저장됩니다(schema 3 파일도 읽습니다). 결과 화면의 `EXPORT`로 공유할 수 있습니다. 파일에는 지표값, profile, 기기와 빌드 식별자, 환경값(thermal 시작 · 최고 · 종료, 절전 모드, 충전 상태), validity flag, 그리고 raw 표본이 들어 있습니다. **사진이나 프리뷰 픽셀은 저장하지 않습니다.**
 
 ## 실행 이력과 CSV 내보내기
 

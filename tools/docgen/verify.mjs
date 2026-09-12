@@ -91,4 +91,11 @@ if (mode === "check" && problems) {
   process.stderr.write(`\n검증 실패: ${problems}개 항목이 최신이 아닙니다. 원본을 재검토한 뒤 'node verify.mjs --accept' 로 기록하세요.\n`);
   process.exit(1);
 }
+// 근거 파일이 없는 항목은 검토로 지울 수 없습니다. 조용히 성공하면 CI에서만 드러납니다.
+if (mode === "accept" && problems) {
+  process.stderr.write(`
+검토 기록 실패: ${problems}개 항목의 원본 또는 인용한 근거 파일이 없습니다. 원고의 sources 를 고친 뒤 다시 실행하세요.
+`);
+  process.exit(1);
+}
 if (mode === "accept") process.stdout.write(`\n검토 기록 완료 (${today}${head ? ` @ ${head}` : ""}).\n`);

@@ -1,1 +1,0 @@
-BenchmarkRunner는 profile의 launchIterations만큼 열기·닫기를 반복한 뒤 별도 관측 세션을 엽니다. 반복은 OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE, 관측 세션은 WARMUP → OBSERVE → STILL → CLOSE입니다. 연속 실패 한도, 관측 세션 실패 또는 abort가 조기 종료 조건입니다. AutoCheckRunner는 M3에서 제거되었습니다.

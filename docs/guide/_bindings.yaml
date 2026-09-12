@@ -49,6 +49,9 @@ sources:
     evidence:
       - app/src/main/java/dev/halcamera/telemetry/**/*.kt
       - app/src/main/java/dev/halcamera/benchmark/**/*.kt
+      - app/src/main/java/dev/halcamera/metrics/**/*.kt
+      - app/src/main/java/dev/halcamera/camera/**/*.kt
+      - app/src/main/java/dev/halcamera/MainActivity.kt
 
   state-transitions:
     kind: omm
@@ -56,6 +59,7 @@ sources:
       - app/src/main/java/dev/halcamera/benchmark/**/*.kt
       - app/src/main/java/dev/halcamera/telemetry/**/*.kt
       - app/src/main/java/dev/halcamera/camera/**/*.kt
+      - app/src/main/java/dev/halcamera/MainActivity.kt
 
   telemetry-facts:
     kind: fact

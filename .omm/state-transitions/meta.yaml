@@ -5,18 +5,6 @@ last_field: context
 git_commit: 8a8701e
 git_branch: codex/pr27-doc-review
 children:
-  - check-sequence
   - engine-lifecycle
   - incident-window
-  - metric-verdict
   - validity-gate
-prev_diagram: |
-  graph LR
-      auto["AutoCheckRunner: 엔드포인트 순회"] --> engine["CameraEngine: open / close"]
-      benchmark["BenchmarkRunner: launch 반복 + 관측 세션"] --> engine
-      engine --> signals["세션별 OPENED / CONFIGURED / FIRST_FRAME / CLOSED"]
-      signals --> auto
-      signals --> benchmark
-      benchmark --> result["Result + 실패 / abort"]
-      result --> validity["RunAssembler / RunValidityEvaluator"]
-      incident["FlightRecorder incident 창"] -. "독립 타임라인" .-> engine

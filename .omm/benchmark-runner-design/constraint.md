@@ -1,7 +1,0 @@
-- 러너는 순수 Kotlin이어야 합니다. `AutoCheckRunner`와 마찬가지로 카메라는 `Driver`로, 시간은 `Scheduler`와 `clock`으로 받아야 JVM 단위 테스트가 가능합니다.
-- 3A 수렴은 별도 단계가 아닙니다. 11회차 open의 첫 result부터 재며, 관측 창과 같은 구간을 씁니다. 화면의 4단계는 값이 확정되는 시점을 표시할 뿐입니다.
-- 첫 회차는 언제나 warm-up입니다. `LaunchCycle.warmup`과 `StillSample.warmup`을 true로 표시해서 넘겨야 하며, 버리는 것이 아니라 `excluded_warmup`에 기록됩니다. 그래서 유효 표본은 실행 9개, 촬영 9개, 간격 8개입니다.
-- 촬영 간격 정책은 `next_shot_policy = image_received`입니다. 이전 이미지를 받은 뒤에 다음 촬영을 제출해야 하며, 고정 지연으로 대신하면 2.5의 정의가 달라집니다.
-- thermal listener는 PREFLIGHT 직후 등록하고 CLOSE 뒤 해제합니다. `RunEnv.thermalMax`는 실행 전체의 최댓값이어야 validity 판정이 성립합니다.
-- UNSUPPORTED이면 run 파일을 만들지 않고 카드에 사유 코드만 보여 줍니다. SUPPORTED였는데 실제 configure가 실패하면 run은 저장하되 `HARD_FAILURE`와 `PREFLIGHT_MISMATCH` flag를 붙입니다.
-- AF 모드 목록에 CONTINUOUS_PICTURE가 없는 고정 초점 카메라는 OFF로 실행하고 `conditions.effective.af_mode`에 기록하며 H.7은 `unsupported`가 됩니다. 이것이 compatibility 판정의 유일한 예외입니다.

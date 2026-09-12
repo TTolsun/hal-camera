@@ -1,9 +1,0 @@
-created: 2026-09-09T16:15:54.149Z
-updated: 2026-09-09T16:15:54.149Z
-update_count: 1
-last_field: description
-kind: nested-class
-title: diagnosis-rules
-children: []
-parentPath:
-  - diagnosis

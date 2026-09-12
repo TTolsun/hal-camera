@@ -1,0 +1,9 @@
+created: 2026-09-09T16:13:52.012Z
+updated: 2026-09-09T16:13:52.013Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: endpoint-model
+children: []
+parentPath:
+  - camera-engines
