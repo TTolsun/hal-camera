@@ -52,6 +52,8 @@ sources:
       - app/src/main/java/dev/halcamera/metrics/**/*.kt
       - app/src/main/java/dev/halcamera/camera/**/*.kt
       - app/src/main/java/dev/halcamera/MainActivity.kt
+      - app/src/main/java/dev/halcamera/cli/**/*.kt
+      - tools/halcam/halcam/**/*.py
 
   state-transitions:
     kind: omm
@@ -60,6 +62,8 @@ sources:
       - app/src/main/java/dev/halcamera/telemetry/**/*.kt
       - app/src/main/java/dev/halcamera/camera/**/*.kt
       - app/src/main/java/dev/halcamera/MainActivity.kt
+      - app/src/main/java/dev/halcamera/cli/**/*.kt
+      - tools/halcam/halcam/**/*.py
 
   telemetry-facts:
     kind: fact

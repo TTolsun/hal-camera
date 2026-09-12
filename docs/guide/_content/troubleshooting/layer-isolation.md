@@ -2,6 +2,8 @@
 based_on: [data-flow, state-transitions]
 confidence: code
 sources:
+  - app/src/main/java/dev/halcamera/cli/CommandStore.kt
+  - tools/halcam/halcam/cli.py
   - app/src/main/java/dev/halcamera/MainActivity.kt
   - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
   - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
@@ -40,3 +42,9 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 손상된 JSON은 목록과 PC 집계에서 별도로 알립니다. CSV 출력 장치의 오류는 입력 파일 오류와 구분하며 작업을 실패로 종료합니다. baseline 파일을 읽을 수 없으면 baseline 변경과 삭제를 중단합니다. 기기 화면·공유·삭제 동작의 실제 검증 기록은 이 문서에서 주장하지 않습니다.
 
 사진·동영상 저장 실패는 벤치마크 비교와 구분해 확인합니다. 사진은 같은 센서 타임스탬프의 YUV·JPEG 버퍼가 모두 있어야 저장됩니다. 녹화 중에는 엔진·카메라·줌·촬영 모드 변경과 일시정지·갤러리·벤치마크를 비활성화합니다. 셔터는 정지 동작을 제공하고 경과 시간은 셔터 아래의 모드 위치에 표시합니다. 정지를 누르면 녹화 종료 처리 동안 셔터를 비활성화하며, 앨범 저장 완료는 별도 알림으로 표시합니다. 녹화 종료 후 사진용 프리뷰로 복귀하며 동영상 모드 선택은 유지합니다. 벤치마크 비교 화면에서 뒤로 가기를 누르면 결과 화면으로 돌아갑니다.
+
+### CLI 작업이 끝나지 않거나 파일이 없을 때
+
+`status --request REQUEST_UUID`로 앱의 상태를 먼저 확인합니다. PC의 대기 시간 종료는 앱 실행 실패를 뜻하지 않습니다. `fetch`는 이미 생성된 파일을 회수하며 촬영을 반복하지 않습니다. `interrupted`는 앱 프로세스가 종료된 미완료 기록이며 자동으로 재실행되지 않습니다.
+
+`BUSY`가 반환되면 현재 UI 또는 CLI 작업이 끝날 때까지 기다립니다. `CLI_DISABLED`는 측정 상세의 ADB CLI 허용 설정을 확인합니다. 카메라·저장소 권한은 앱에서 허용해야 하며 CLI가 자동 부여하지 않습니다. benchmark의 취소·실패 시 partial report와 실행 상태를 함께 확인합니다.

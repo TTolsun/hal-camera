@@ -96,6 +96,38 @@ python -m unittest discover -s tools/tests -v
 
 ## 문서
 
+### PC CLI
+
+Python 3.11 이상과 Android SDK Platform Tools를 준비한 뒤 저장소 루트에서 설치합니다.
+
+```bash
+python -m pip install ./tools/halcam
+halcam devices
+```
+
+기기에서 ADB 연결을 승인하고 HAL CAM의 **Benchmark → ADB CLI 허용**을 켭니다. 카메라 권한을 허용하고 화면 잠금을 해제합니다. Android 8–9에서 사진을 저장하려면 앱의 사진 촬영 경로에서 저장소 권한도 허용해야 합니다. CLI 설정은 초기값이 꺼짐이며, 활성화한 설정은 앱을 다시 실행해도 유지됩니다.
+
+```bash
+halcam --serial DEVICE doctor --json
+halcam --serial DEVICE cameras --json
+halcam --serial DEVICE capture --camera 0 --output ./photos --json
+halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json
+halcam --serial DEVICE status --request REQUEST_UUID --json
+halcam --serial DEVICE fetch REQUEST_UUID --output ./recovered --json
+```
+
+USB와 무선 ADB 연결이 동시에 보이면 같은 기기라도 `--serial`을 지정합니다. `--adb`로 adb 실행 파일 경로를 지정할 수 있습니다. 사진은 YUV에서 변환한 JPEG과 카메라 JPEG을 한 쌍으로 받으며, 벤치마크는 기존 profile의 원본 schema 4 JSON을 받습니다. 파일은 출력 폴더의 요청 ID 하위 폴더에 저장하고 크기와 SHA-256을 검사합니다. CSV가 필요하면 기존 `tools/aggregate.py`를 요청 폴더에 적용합니다.
+
+`--no-wait`은 접수 결과만 반환합니다. `--timeout`은 앱 실행 제한이며 `--wait-timeout`은 PC가 기다리는 시간입니다. PC 대기 종료나 ADB 단절은 앱 작업의 실패를 뜻하지 않습니다. 출력된 요청 ID로 `status`와 `fetch`를 실행하면 작업을 다시 수행하지 않고 상태·파일을 회수할 수 있습니다. `cancel REQUEST_UUID`는 실행 중 요청을 중단하며, 이미 제출한 사진 저장은 실제 완료 결과를 반환할 수 있습니다.
+
+종료 코드는 성공 0, 인자·요청 충돌 2, ADB 연결 3, 실행 조건·호환성 4, 실행·저장 실패 5, 시간 제한 6, 다운로드 7, 응답 형식 8, 취소 130입니다. `--json`에서는 stdout에 JSON 하나를 출력하고 진행 정보는 stderr에 출력합니다. 벤치마크가 정상 완료되면 validity나 회귀 여부 때문에 종료 코드를 실패로 바꾸지 않습니다. 중단된 run은 가능한 경우 partial report도 수집합니다.
+
+명령 기록은 완료 후 최대 24시간·200개를 보관합니다. 정리 대상은 CLI 기록이며 원본 사진이나 benchmark 이력을 삭제하지 않습니다. 기록이 사라진 요청은 자동 재제출하지 않습니다. CLI v1은 Android 사용자 0과 전면 앱을 지원하며 녹화·baseline 변경·이력 삭제 명령은 제공하지 않습니다. 자세한 계약은 [CLI 설계](docs/design/CLI.md), 검증 범위는 [전송 검증](docs/validation/cli-transport.md)을 참고하십시오.
+
+```bash
+python -m unittest discover -s tools/halcam/tests -v
+```
+
 | 문서 | 내용 |
 |---|---|
 | [PLAN-BenchMarker-v0.3.md](docs/PLAN-BenchMarker-v0.3.md) | 현재 제품 계획. 지표, 화면, 비교 규칙, 마일스톤 |

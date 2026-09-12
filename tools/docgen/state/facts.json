@@ -4,8 +4,8 @@
     "build-facts": {
       "applicationId": "dev.halcamera",
       "namespace": "dev.halcamera",
-      "versionName": "0.5.1",
-      "versionCode": "8",
+      "versionName": "0.6.0",
+      "versionCode": "9",
       "minSdk": "26",
       "targetSdk": "36",
       "compileSdk": "36",

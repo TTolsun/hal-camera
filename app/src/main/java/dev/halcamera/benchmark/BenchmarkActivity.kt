@@ -60,6 +60,21 @@ import java.util.concurrent.Executors
  * that what the screen says is testable without a device.
  */
 class BenchmarkActivity : ComponentActivity() {
+    private val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
+    private val benchmarkCli by lazy {
+        BenchmarkController(cli, object : BenchmarkController.Driver {
+            override fun busy() = screen == Screen.RUNNING || runner != null || historyLoading
+            override fun begin(camera: String): Boolean {
+                val index = endpoints.indexOfFirst { it.logicalCameraId == camera && it.physicalCameraId == null }
+                if (index < 0) return false
+                selected = index; preflight()
+                if (startCard?.canStart != true) return false
+                begin(fromCli = true)
+                return runner != null
+            }
+            override fun abort() { runner?.abort("cli") }
+        })
+    }
 
     private enum class Screen { CARD, RUNNING, RESULT, COMPARE }
 
@@ -170,14 +185,20 @@ class BenchmarkActivity : ComponentActivity() {
         if (hasPermission()) enumerate() else requestCamera.launch(Manifest.permission.CAMERA)
     }
 
-    override fun onStop() { runner?.abort("background"); super.onStop() }
+    override fun onStart() {
+        super.onStart()
+        if (intent.getStringExtra("cli_request_id") == cli.active?.id && cli.active != null) cli.continueHandover(benchmarkCli)
+        else cli.attach(benchmarkCli)
+    }
+
+    override fun onStop() { cli.detach(benchmarkCli); runner?.abort("background"); super.onStop() }
 
     override fun onDestroy() {
         destroyed = true
         recorder.listener = null
         ticker?.let { main.removeCallbacks(it) }
         thermal?.stop()
-        io.shutdown()
+        if (runner == null) io.shutdown()
         super.onDestroy()
     }
 
@@ -197,6 +218,7 @@ class BenchmarkActivity : ComponentActivity() {
     }
 
     private fun selectCamera(anchor: View) {
+        if (cli.active != null) return
         if (endpoints.isEmpty() || runner != null) return
         showSelectionPopup(anchor, endpoints.map { "${roleText(it.role)} · ID ${it.logicalCameraId}" }, selected) { index ->
             if (runner == null && selected != index) { selected = index; preflight() }
@@ -254,6 +276,7 @@ class BenchmarkActivity : ComponentActivity() {
     // ---- screens ----
 
     private fun render() {
+        cli.setUiBusy(benchmarkCli, screen == Screen.RUNNING || historyLoading)
         content.removeAllViews()
         actions.removeAllViews()
         when (screen) {
@@ -476,7 +499,8 @@ class BenchmarkActivity : ComponentActivity() {
 
     // ---- run ----
 
-    private fun begin() {
+    private fun begin(fromCli: Boolean = false) {
+        if (!fromCli && cli.active != null) return
         if (runner != null || endpoints.isEmpty()) return
         if (!hasPermission()) { requestCamera.launch(Manifest.permission.CAMERA); return }
         captureDraft()
@@ -542,8 +566,9 @@ class BenchmarkActivity : ComponentActivity() {
                 progressHeadline?.text = ProgressPresenter.headline(phase, iteration, total)
                 progressBar?.text = ProgressPresenter.barLine(ProgressPresenter.percent(phase, iteration, total))
             }
-            override fun onFinished(result: BenchmarkRunner.Result) { if (!destroyed) finishRun(result) }
+            override fun onFinished(result: BenchmarkRunner.Result) { finishRun(result) }
         }
+        if (!benchmarkCli.started()) { thermal?.stop(); thermal = null; return }
         screen = Screen.RUNNING
         render()
         startTicker()
@@ -635,23 +660,37 @@ class BenchmarkActivity : ComponentActivity() {
         // Assembling, writing and then reading the baseline back is far too much work for the main thread; the
         // screen shows the progress card until the result is ready.
         io.execute {
-            val run = RunAssembler.assemble(result, events, profile, context)
-            val file = try { report.write(run, events) } catch (e: Exception) { null }
-            val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
-            val base = baseline ?: baselines.reference(run)
-            val to = when {
-                baseline != null -> ComparedTo.BASELINE
-                base != null -> ComparedTo.PREVIOUS
-                else -> ComparedTo.NONE
-            }
-            val cmp = RegressionDetector.compare(base, run)
-            val onBaseline = baselines.isBaseline(run)
-            main.post {
-                if (destroyed) return@post
-                lastRun = run; lastFile = file; baseRun = base; comparedTo = to; comparison = cmp; isBaseline = onBaseline
-                lastSummary = summary(run, result, file)
-                screen = Screen.RESULT
-                render()
+            try {
+                val run = RunAssembler.assemble(result, events, profile, context)
+                val file = try { report.write(run, events) } catch (e: Exception) { null }
+                benchmarkCli.reportSaved(run, result, file)
+                val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
+                val base = baseline ?: baselines.reference(run)
+                val to = when {
+                    baseline != null -> ComparedTo.BASELINE
+                    base != null -> ComparedTo.PREVIOUS
+                    else -> ComparedTo.NONE
+                }
+                val cmp = RegressionDetector.compare(base, run)
+                val onBaseline = baselines.isBaseline(run)
+                main.post {
+                    if (destroyed) return@post
+                    lastRun = run; lastFile = file; baseRun = base; comparedTo = to; comparison = cmp; isBaseline = onBaseline
+                    lastSummary = summary(run, result, file)
+                    screen = Screen.RESULT
+                    render()
+                }
+            } catch (error: Exception) {
+                benchmarkCli.saveFailed(error.message ?: "Cannot assemble or save report")
+                main.post {
+                    if (!destroyed) {
+                        lastRun = null; lastFile = null
+                        lastSummary = error.message ?: "run JSON 저장에 실패했습니다"
+                        screen = Screen.RESULT; render()
+                    }
+                }
+            } finally {
+                if (destroyed) io.shutdown()
             }
         }
     }

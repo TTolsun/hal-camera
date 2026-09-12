@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "cbc76a290dfa0072",
-        "modelHash": "6337935ec411d3a6",
+        "codeHash": "0987e42142ebcdee",
+        "modelHash": "1b7db91b84024e9b",
         "at": "2026-09-12",
-        "commit": "38b9b5c",
+        "commit": "7e3a7c9",
         "reviewer": "Codex"
       }
     },
@@ -18,10 +18,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "21216eb3e5cd5d14",
-        "modelHash": "03e4080a49829371",
+        "codeHash": "2403620c42e3fafd",
+        "modelHash": "13360e13ecce890d",
         "at": "2026-09-12",
-        "commit": "38b9b5c",
+        "commit": "7e3a7c9",
         "reviewer": "Codex"
       }
     },
@@ -30,10 +30,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "064163adceffaf01",
-        "modelHash": "a3b9ec30a643639a",
+        "codeHash": "655f7642c309e0eb",
+        "modelHash": "0900f5f3f9890c43",
         "at": "2026-09-12",
-        "commit": "38b9b5c",
+        "commit": "7e3a7c9",
         "reviewer": "Codex"
       }
     },
@@ -42,10 +42,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "cbc76a290dfa0072",
-        "modelHash": "91865486a3f1e21f",
+        "codeHash": "0cdfd77d2f6fd011",
+        "modelHash": "213bafd90b8811b1",
         "at": "2026-09-12",
-        "commit": "38b9b5c",
+        "commit": "7e3a7c9",
         "reviewer": "Codex"
       }
     },
@@ -54,10 +54,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e0ad08498b53d02c",
-        "modelHash": "758d71194a81d699",
+        "codeHash": "c0379d70409d2f20",
+        "modelHash": "57a621b4c48fe0e5",
         "at": "2026-09-12",
-        "commit": "38b9b5c",
+        "commit": "7e3a7c9",
         "reviewer": "Codex"
       }
     },
@@ -66,19 +66,19 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "21216eb3e5cd5d14",
-        "modelHash": "35daded5246d1f52",
+        "codeHash": "2403620c42e3fafd",
+        "modelHash": "b1e77c27c073cd5c",
         "at": "2026-09-12",
-        "commit": "38b9b5c",
+        "commit": "7e3a7c9",
         "reviewer": "Codex"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "cbc76a290dfa0072",
-        "modelHash": "c0f231ed2bf270e1",
+        "codeHash": "0987e42142ebcdee",
+        "modelHash": "3785499c67e1aec9",
         "at": "2026-09-12",
-        "commit": "38b9b5c",
+        "commit": "7e3a7c9",
         "reviewer": "Codex"
       },
       "observed": {
@@ -87,10 +87,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "cbc76a290dfa0072",
-        "modelHash": "4ee2f7c89668c2e9",
+        "codeHash": "0987e42142ebcdee",
+        "modelHash": "b312c15285d3ef76",
         "at": "2026-09-12",
-        "commit": "38b9b5c",
+        "commit": "7e3a7c9",
         "reviewer": "Codex"
       },
       "observed": {

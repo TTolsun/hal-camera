@@ -14,3 +14,5 @@ tools/docgen/state/sync-transaction/
 tools/docgen/state/.sync-lock
 
 __pycache__/
+*.egg-info/
+tools/halcam/dist/

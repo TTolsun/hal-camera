@@ -1,0 +1,20 @@
+{
+  "request": {
+    "protocol_version": 1,
+    "request_id": "b616d5cc-7706-4983-b49e-4e4d5c0ef816",
+    "command": "capture",
+    "params": {"camera_id": "0"},
+    "execution_timeout_ms": 30000
+  },
+  "response": {
+    "protocol_version": 1,
+    "request_id": "b616d5cc-7706-4983-b49e-4e4d5c0ef816",
+    "state": "failed",
+    "completed": true,
+    "created_at_ms": 1000,
+    "expires_at_ms": 86401000,
+    "result": null,
+    "error": {"code": "CAPTURE_FAILED", "message": "Storage unavailable"},
+    "artifacts": []
+  }
+}
