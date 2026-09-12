@@ -30,8 +30,14 @@ class BenchmarkController(private val commands: CommandCoordinator, private val 
         }
     }
 
-    fun started() { request?.let { commands.state(it.id, "running") } }
+    fun started(): Boolean = request?.let { commands.state(it.id, "running") } ?: true
     override fun cancel(command: CliCommand) { driver.abort() }
+
+    fun saveFailed(message: String) {
+        val command = request ?: return
+        request = null
+        commands.fail(command.id, "SAVE_FAILED", message)
+    }
 
     fun reportSaved(run: BenchmarkRun, result: BenchmarkRunner.Result, file: File?) {
         val command = request ?: return

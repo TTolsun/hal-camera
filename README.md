@@ -105,7 +105,7 @@ python -m pip install ./tools/halcam
 halcam devices
 ```
 
-기기에서 ADB 연결을 승인하고 HAL CAM의 **측정 상세 → ADB CLI 허용**을 켭니다. 카메라 권한을 허용하고 화면 잠금을 해제합니다. Android 8–9에서 사진을 저장하려면 앱의 사진 촬영 경로에서 저장소 권한도 허용해야 합니다. CLI 설정은 초기값이 꺼짐이며, 활성화한 설정은 앱을 다시 실행해도 유지됩니다.
+기기에서 ADB 연결을 승인하고 HAL CAM의 **Benchmark → ADB CLI 허용**을 켭니다. 카메라 권한을 허용하고 화면 잠금을 해제합니다. Android 8–9에서 사진을 저장하려면 앱의 사진 촬영 경로에서 저장소 권한도 허용해야 합니다. CLI 설정은 초기값이 꺼짐이며, 활성화한 설정은 앱을 다시 실행해도 유지됩니다.
 
 ```bash
 halcam --serial DEVICE doctor --json

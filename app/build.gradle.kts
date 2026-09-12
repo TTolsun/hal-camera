@@ -22,9 +22,9 @@ android {
         applicationId = "dev.halcamera"
         minSdk = 26
         targetSdk = 36
-        versionCode = 8
-        versionName = "0.5.1"
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        versionCode = 9
+        versionName = "0.6.0"
+        testInstrumentationRunner = "dev.halcamera.cli.CliStoreInstrumentation"
     }
     signingConfigs {
         if (hasReleaseKeystore) {
@@ -48,6 +48,7 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     lint { abortOnError = true }
+    sourceSets.getByName("androidTest").assets.srcDir("../tools/halcam/fixtures")
 }
 dependencies {
     implementation("androidx.activity:activity-ktx:1.10.1")

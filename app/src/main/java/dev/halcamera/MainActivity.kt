@@ -55,6 +55,7 @@ class MainActivity : ComponentActivity() {
         LiveController(cli, object : LiveController.Driver {
             override fun busy() = recordingVideo || stoppingRecording || pendingMediaAction != null || pendingPermissionAction != null || (engine as? Camera2Engine)?.mediaBusy == true
             override fun prepare(camera: String) {
+                showDiagnostics(false)
                 cameraId = camera; engineName = "Camera2"; paused = false; zoomRatio = 1f
                 updateCameraChoices(); restartCamera()
             }

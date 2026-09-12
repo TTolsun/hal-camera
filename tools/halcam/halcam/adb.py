@@ -60,8 +60,8 @@ class Adb:
         return self
 
     def installed(self):
-        raw = self.run("shell", "pm", "path", "--user", "0", self.package)
-        if not raw.startswith(b"package:"):
+        raw = self.run("shell", "pm", "list", "packages", "--user", "0", self.package)
+        if f"package:{self.package}".encode() not in raw.splitlines():
             raise CliError("APP_NOT_INSTALLED", f"Install {self.package} for Android user 0")
         user = self.run("shell", "am", "get-current-user").decode().strip()
         if user != "0":
@@ -89,7 +89,7 @@ class Adb:
 
     def launch(self):
         # The app rechecks operation ownership on main before navigating to LIVE.
-        output = self.run("shell", "am", "start", "-W", "-n",
+        output = self.run("shell", "am", "start", "-W", "-f", "0x18000000", "-n",
                           f"{self.package}/dev.halcamera.cli.CliLaunchActivity")
         if b"Error" in output or b"Status: ok" not in output:
             raise CliError("APP_NOT_FOREGROUND", output.decode("utf-8", "replace").strip())

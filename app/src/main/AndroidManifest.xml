@@ -18,6 +18,7 @@
         <activity android:name=".benchmark.HistoryActivity" android:exported="false" />
         <activity android:name=".GalleryActivity" android:exported="false" />
         <activity android:name=".cli.CliLaunchActivity" android:exported="true"
+            android:taskAffinity=""
             android:permission="android.permission.DUMP" android:excludeFromRecents="true"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <provider android:name=".cli.CliProvider" android:authorities="${applicationId}.cli"

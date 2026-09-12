@@ -198,7 +198,7 @@ class BenchmarkActivity : ComponentActivity() {
         recorder.listener = null
         ticker?.let { main.removeCallbacks(it) }
         thermal?.stop()
-        io.shutdown()
+        if (runner == null) io.shutdown()
         super.onDestroy()
     }
 
@@ -566,10 +566,10 @@ class BenchmarkActivity : ComponentActivity() {
                 progressHeadline?.text = ProgressPresenter.headline(phase, iteration, total)
                 progressBar?.text = ProgressPresenter.barLine(ProgressPresenter.percent(phase, iteration, total))
             }
-            override fun onFinished(result: BenchmarkRunner.Result) { if (!destroyed) finishRun(result) }
+            override fun onFinished(result: BenchmarkRunner.Result) { finishRun(result) }
         }
+        if (!benchmarkCli.started()) { thermal?.stop(); thermal = null; return }
         screen = Screen.RUNNING
-        benchmarkCli.started()
         render()
         startTicker()
         runner = BenchmarkRunner(driver, scheduler, ::nowNs, profile, endpoint, runId, BenchmarkRunner.Config(), listener)
@@ -660,24 +660,37 @@ class BenchmarkActivity : ComponentActivity() {
         // Assembling, writing and then reading the baseline back is far too much work for the main thread; the
         // screen shows the progress card until the result is ready.
         io.execute {
-            val run = RunAssembler.assemble(result, events, profile, context)
-            val file = try { report.write(run, events) } catch (e: Exception) { null }
-            benchmarkCli.reportSaved(run, result, file)
-            val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
-            val base = baseline ?: baselines.reference(run)
-            val to = when {
-                baseline != null -> ComparedTo.BASELINE
-                base != null -> ComparedTo.PREVIOUS
-                else -> ComparedTo.NONE
-            }
-            val cmp = RegressionDetector.compare(base, run)
-            val onBaseline = baselines.isBaseline(run)
-            main.post {
-                if (destroyed) return@post
-                lastRun = run; lastFile = file; baseRun = base; comparedTo = to; comparison = cmp; isBaseline = onBaseline
-                lastSummary = summary(run, result, file)
-                screen = Screen.RESULT
-                render()
+            try {
+                val run = RunAssembler.assemble(result, events, profile, context)
+                val file = try { report.write(run, events) } catch (e: Exception) { null }
+                benchmarkCli.reportSaved(run, result, file)
+                val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
+                val base = baseline ?: baselines.reference(run)
+                val to = when {
+                    baseline != null -> ComparedTo.BASELINE
+                    base != null -> ComparedTo.PREVIOUS
+                    else -> ComparedTo.NONE
+                }
+                val cmp = RegressionDetector.compare(base, run)
+                val onBaseline = baselines.isBaseline(run)
+                main.post {
+                    if (destroyed) return@post
+                    lastRun = run; lastFile = file; baseRun = base; comparedTo = to; comparison = cmp; isBaseline = onBaseline
+                    lastSummary = summary(run, result, file)
+                    screen = Screen.RESULT
+                    render()
+                }
+            } catch (error: Exception) {
+                benchmarkCli.saveFailed(error.message ?: "Cannot assemble or save report")
+                main.post {
+                    if (!destroyed) {
+                        lastRun = null; lastFile = null
+                        lastSummary = error.message ?: "run JSON 저장에 실패했습니다"
+                        screen = Screen.RESULT; render()
+                    }
+                }
+            } finally {
+                if (destroyed) io.shutdown()
             }
         }
     }

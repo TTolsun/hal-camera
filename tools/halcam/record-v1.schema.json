@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "HALCamera v1 request status response",
+  "type": "object",
+  "required": [
+    "protocol_version",
+    "request_id",
+    "state",
+    "completed",
+    "created_at_ms",
+    "expires_at_ms",
+    "result",
+    "error",
+    "artifacts"
+  ],
+  "properties": {
+    "protocol_version": {
+      "const": 1
+    },
+    "request_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "state": {
+      "enum": [
+        "accepted",
+        "preparing",
+        "running",
+        "saving",
+        "cancelling",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "interrupted"
+      ]
+    },
+    "completed": {
+      "type": "boolean"
+    },
+    "created_at_ms": {
+      "type": "integer"
+    },
+    "expires_at_ms": {
+      "type": [
+        "integer",
+        "null"
+      ]
+    },
+    "result": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "error": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "required": [
+            "code",
+            "message"
+          ],
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "artifact_id",
+          "name",
+          "mime_type",
+          "size_bytes",
+          "sha256"
+        ],
+        "properties": {
+          "artifact_id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]+$"
+          },
+          "name": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 134217728
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "enum": [
+              "succeeded",
+              "failed",
+              "cancelled",
+              "interrupted"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "completed": {
+            "const": true
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "completed": {
+            "const": false
+          }
+        }
+      }
+    }
+  ]
+}

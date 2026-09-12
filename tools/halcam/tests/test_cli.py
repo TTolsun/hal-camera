@@ -23,6 +23,20 @@ def response(state="succeeded"):
 
 
 class ProtocolTests(unittest.TestCase):
+    def test_missing_package_is_not_a_connection_error(self):
+        adb = Adb()
+        for output in (b"", b"package:dev.halcamera.another\n"):
+            with patch.object(adb, "run", return_value=output), self.assertRaises(CliError) as caught:
+                adb.installed()
+            self.assertEqual(caught.exception.code, "APP_NOT_INSTALLED")
+
+    def test_shared_android_python_contract_fixture(self):
+        fixture = json.loads((Path(__file__).parent.parent / "fixtures" / "protocol-v1.json").read_text())
+        request = fixture["request"]
+        record = validate_request(fixture["response"], identifier(request["request_id"]))
+        self.assertEqual(CliError(record["error"]["code"], record["error"]["message"]).exit_code, 5)
+        self.assertEqual(request["params"], {"camera_id": "0"})
+
     def test_globals_work_before_or_after_subcommands(self):
         for argv in [["--serial", "phone", "capture", "--camera", "0", "--output", "out", "--json"],
                      ["capture", "--serial", "phone", "--camera", "0", "--output", "out", "--json"],

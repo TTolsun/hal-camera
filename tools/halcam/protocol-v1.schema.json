@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/TTolsun/hal-camera/protocol-v1.schema.json",
+  "title": "HALCamera v1 submission contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "request_id",
+    "command",
+    "params",
+    "execution_timeout_ms"
+  ],
+  "properties": {
+    "protocol_version": {
+      "const": 1
+    },
+    "request_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
+    "command": {
+      "enum": [
+        "cameras",
+        "preview",
+        "capture",
+        "benchmark.run"
+      ]
+    },
+    "execution_timeout_ms": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3600000
+    },
+    "params": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "camera_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "profile_id": {
+          "const": "camera2-standard-v1"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "enum": [
+              "cameras"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "camera_id"
+                  ]
+                },
+                {
+                  "required": [
+                    "profile_id"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "enum": [
+              "preview",
+              "capture"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "camera_id"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "profile_id"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "enum": [
+              "benchmark.run"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "camera_id",
+              "profile_id"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

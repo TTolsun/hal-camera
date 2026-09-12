@@ -72,10 +72,11 @@ class CommandCoordinator private constructor(private val context: Context) {
     }
 
     fun hello(): JSONObject {
-        if (!enabled) return CliJson.failure("CLI_DISABLED", "Enable ADB CLI in the app's measurement details")
+        if (!enabled) return CliJson.failure("CLI_DISABLED", "Enable ADB CLI in the app's Benchmark panel")
         val info = context.packageManager.getPackageInfo(context.packageName, 0)
         return CliJson.envelope().put("enabled", true).put("app_version", info.versionName)
             .put("commands", JSONArray(listOf("cameras", "preview", "capture", "benchmark.run")))
+            .put("retention_ms", CommandStore.RETENTION_MS).put("max_completed_requests", CommandStore.MAX_RECORDS)
             .put("camera_permission", permission(Manifest.permission.CAMERA)).put("locked", locked())
             .put("completed", true)
     }
@@ -104,14 +105,15 @@ class CommandCoordinator private constructor(private val context: Context) {
                 if (uiBusy) throw CliFailure("BUSY", "A UI operation is running")
                 if (host?.isBusy() == true) throw CliFailure("BUSY", "A UI operation is running")
                 if (!permission(Manifest.permission.CAMERA)) throw CliFailure("PERMISSION_REQUIRED", "Allow camera access in the app")
-                state(command.id, "preparing")
+                if (!state(command.id, "preparing")) return@post
                 if (command.command == "cameras") {
                     val endpoints = CameraEndpointResolver(context.getSystemService(CameraManager::class.java)).resolve()
                     val cameras = JSONArray(endpoints.map { JSONObject(it.toJsonMap()).put("selectable", it.independentlyOpenable && it.physicalCameraId == null) })
                     complete(command.id, JSONObject().put("cameras", cameras))
                 } else {
                     if (locked()) throw CliFailure("DEVICE_LOCKED", "Unlock the device")
-                    if (command.command == "capture" && Build.VERSION.SDK_INT <= 28 && !permission(Manifest.permission.WRITE_EXTERNAL_STORAGE))
+                    if (command.command == "capture" && Build.VERSION.SDK_INT <= 28 &&
+                        (!permission(Manifest.permission.WRITE_EXTERNAL_STORAGE) || !permission(Manifest.permission.READ_EXTERNAL_STORAGE)))
                         throw CliFailure("PERMISSION_REQUIRED", "Allow storage access for photos on Android 8–9")
                     val cameraIds = context.getSystemService(CameraManager::class.java).cameraIdList
                     if (command.camera !in cameraIds) throw CliFailure("UNSUPPORTED_CAMERA", "Camera is not independently openable")
@@ -122,11 +124,12 @@ class CommandCoordinator private constructor(private val context: Context) {
         return CliJson.publicRecord(record)
     }
 
-    fun state(id: String, value: String) { store.transition(id, value) }
+    fun state(id: String, value: String): Boolean = try { store.transition(id, value); true }
+        catch (error: Exception) { fail(id, "STORE_FAILED", error.message ?: "Cannot persist state"); false }
 
     fun complete(id: String, result: JSONObject, artifacts: List<CliArtifact> = emptyList(), failure: CliFailure? = null) {
         if (store.read(id)?.optString("state") in CliStates.terminal) return
-        state(id, "saving")
+        if (!state(id, "saving")) return
         io.execute {
             try {
                 val files = JSONArray()
@@ -145,22 +148,28 @@ class CommandCoordinator private constructor(private val context: Context) {
                         .put("sha256", hash.digest().joinToString("") { "%02x".format(it.toInt() and 255) })
                         .put("source_uri", artifact.uri.toString()))
                 }
-                val terminal = if (cancellationCode == "EXECUTION_TIMEOUT") "failed" else if (failure?.code == "CANCELLED") "cancelled" else if (failure != null) "failed" else if (cancellationCode == "CANCELLED" && result.optBoolean("cancelled")) "cancelled"
+                val cancellation = cancellationCode
+                val terminal = if (cancellation == "EXECUTION_TIMEOUT") "failed" else if (failure?.code == "CANCELLED") "cancelled" else if (failure != null) "failed" else if (cancellation == "CANCELLED" && result.optBoolean("cancelled")) "cancelled"
                     else "succeeded"
                 store.transition(id, terminal) {
                     it.put("result", result).put("artifacts", files)
-                    if (cancellationCode != null) it.put("cancel_effective", terminal != "succeeded")
-                    val error = if (cancellationCode == "EXECUTION_TIMEOUT") CliFailure("EXECUTION_TIMEOUT", "App execution deadline exceeded")
-                        else failure ?: cancellationCode?.takeIf { terminal != "succeeded" }?.let { code -> CliFailure(code, code) }
+                    if (cancellation != null) it.put("cancel_effective", terminal != "succeeded")
+                    val error = if (cancellation == "EXECUTION_TIMEOUT") CliFailure("EXECUTION_TIMEOUT", "App execution deadline exceeded")
+                        else failure ?: cancellation?.takeIf { terminal != "succeeded" }?.let { code -> CliFailure(code, code) }
                     if (error != null) it.put("error", CliJson.error(error.code, error.message ?: error.code))
                 }
+                store.cleanup()
             } catch (e: Exception) { fail(id, "SAVE_FAILED", e.message ?: "Cannot register artifacts") }
             finally { main.post { release(id) } }
         }
     }
 
     fun fail(id: String, code: String, message: String) {
-        store.transition(id, if (code == "CANCELLED") "cancelled" else "failed") { it.put("error", CliJson.error(code, message)) }
+        try {
+            store.transition(id, if (code == "CANCELLED") "cancelled" else "failed") { it.put("error", CliJson.error(code, message)) }
+        } catch (error: Exception) {
+            store.failInMemory(id, error.message ?: message)
+        }
         main.post { release(id) }
     }
 
@@ -173,7 +182,7 @@ class CommandCoordinator private constructor(private val context: Context) {
 
     private fun cancelWithCode(id: String, code: String) {
         val command = active?.takeIf { it.id == id } ?: return
-        cancellationCode = code
+        if (cancellationCode != "EXECUTION_TIMEOUT") cancellationCode = code
         val current = store.read(id)?.optString("state") ?: return
         if (current in CliStates.terminal) return
         if (current == "saving") return // Submitted saves complete with their actual result.

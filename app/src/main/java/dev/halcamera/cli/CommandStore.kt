@@ -7,6 +7,7 @@ import java.io.File
 
 /** Durable records are written before execution. Never replay unfinished work after process death. */
 class CommandStore(private val directory: File, private val now: () -> Long = System::currentTimeMillis) {
+    private val snapshots = mutableMapOf<String, String>()
     init {
         check(directory.isDirectory || directory.mkdirs()) { "Cannot create command store" }
         directory.listFiles()?.filter { it.name.endsWith(".json") || it.name.endsWith(".json.bak") }
@@ -25,9 +26,13 @@ class CommandStore(private val directory: File, private val now: () -> Long = Sy
 
     @Synchronized fun read(id: String): JSONObject? {
         CliCommand.validateId(id)
+        snapshots[id]?.let { return JSONObject(it) }
         val file = File(directory, "$id.json")
         if (!file.exists() && !File(directory, "$id.json.bak").exists()) return null
-        return try { JSONObject(AtomicFile(file).openRead().bufferedReader().use { it.readText() }) }
+        return try {
+            val text = AtomicFile(file).openRead().bufferedReader().use { it.readText() }
+            JSONObject(text).also { snapshots[id] = text }
+        }
         catch (e: Exception) { throw CliFailure("STORE_FAILED", "Unreadable request record; do not replay $id") }
     }
 
@@ -35,8 +40,14 @@ class CommandStore(private val directory: File, private val now: () -> Long = Sy
         val id = record.getString("request_id")
         CliCommand.validateId(id)
         val atomic = AtomicFile(File(directory, "$id.json"))
-        val stream = atomic.startWrite()
-        try { stream.write(record.toString().toByteArray(Charsets.UTF_8)); atomic.finishWrite(stream) }
+        val stream = try { atomic.startWrite() }
+            catch (e: Exception) { throw CliFailure("STORE_FAILED", "Cannot open request record for writing") }
+        try {
+            val text = record.toString()
+            stream.write(text.toByteArray(Charsets.UTF_8)); atomic.finishWrite(stream)
+            check(atomic.openRead().bufferedReader().use { it.readText() } == text) { "Request write was not published" }
+            snapshots[id] = text
+        }
         catch (e: Exception) { atomic.failWrite(stream); throw CliFailure("STORE_FAILED", "Cannot persist request") }
     }
 
@@ -67,8 +78,19 @@ class CommandStore(private val directory: File, private val now: () -> Long = Sy
         records.forEachIndexed { index, record ->
             if (index >= MAX_RECORDS || record.optLong("expires_at_ms", Long.MAX_VALUE) <= now()) {
                 AtomicFile(File(directory, "${record.getString("request_id")}.json")).delete()
+                snapshots.remove(record.getString("request_id"))
             }
         }
+    }
+
+    /** Disk failure is visible for this process; the last durable record is interrupted on restart. */
+    @Synchronized fun failInMemory(id: String, message: String) {
+        val text = snapshots[id] ?: return
+        val record = JSONObject(text)
+        if (record.optBoolean("completed")) return
+        record.put("state", "failed").put("completed", true).put("durable", false)
+            .put("error", CliJson.error("STORE_FAILED", message)).put("expires_at_ms", now() + RETENTION_MS)
+        snapshots[id] = record.toString()
     }
 
     companion object { const val RETENTION_MS = 86_400_000L; const val MAX_RECORDS = 200 }

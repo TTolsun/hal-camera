@@ -33,7 +33,7 @@ class LiveController(private val commands: CommandCoordinator, private val drive
         val command = pending ?: return
         if (submitted || commands.active?.id != command.id) return
         submitted = true
-        commands.state(command.id, "running")
+        if (!commands.state(command.id, "running")) { pending = null; driver.stopPreparing(); return }
         if (command.command == "preview") {
             pending = null
             commands.complete(command.id, JSONObject().put("camera_id", command.camera).put("camera_ready", true))

@@ -1,6 +1,6 @@
 # HALCamera CLI v0.1 구현 계획
 
-작성일: 2026-09-12 · 상태: 구현·검증 진행 · 관련 이슈: [#56](https://github.com/TTolsun/hal-camera/issues/56)
+작성일: 2026-09-12 · 상태: 구현·통합 검증 완료, 릴리스 준비 · 관련 이슈: [#56](https://github.com/TTolsun/hal-camera/issues/56)
 
 [CLI 설계 초안](design/CLI.md)의 PC·ADB 방식을 기준으로 한다. 사용자의 구현·worktree·리뷰·Release 요청에 따라 작업을 진행하고 있다. [검증 기록](validation/cli-device.md)에 현재 증거와 남은 검사를 구분한다. 아래 체크리스트는 최종 요구사항 대조까지 유지한다.
 
@@ -27,73 +27,73 @@ flowchart LR
 
 최소 시험용 Provider와 PC 호출 스크립트로 전송 경로를 검증한다. 시험은 임시 JSON·바이너리 데이터만 사용하고 카메라 동작을 연결하지 않는다.
 
-- [ ] `content call` 요청과 base64url 응답의 왕복을 검증한다.
-- [ ] `adb exec-out content read`로 JSON과 JPEG 크기의 바이너리를 가져와 byte 길이와 SHA-256을 비교한다.
-- [ ] 실제 Binder UID, DUMP 권한, 사용자 0에서의 Provider 접근을 debug·release 각각 확인한다.
-- [ ] 일반 앱 UID로 call·query·openFile을 시도하여 모두 거부되는지 확인한다.
-- [ ] CLI 비활성화, 앱 미설치, 프로세스 미실행, 잘못된 URI·payload·write mode를 검증한다.
-- [ ] 잠금 상태와 Activity 전면 실행 조건을 확인한다.
-- [ ] API 26 에뮬레이터와 사용 가능한 최신 실기기에서 수행한다. 설치 서명이 다르면 기존 앱을 제거하지 않고 별도 시험 package를 사용한다.
-- [ ] 실기기 모델·OS·ADB 버전·APK 종류·전송 결과·제약을 `docs/validation/cli-transport.md`에 기록한다.
+- [x] `content call` 요청과 base64url 응답의 왕복을 검증한다.
+- [x] `adb exec-out content read`로 JSON과 JPEG 크기의 바이너리를 가져와 byte 길이와 SHA-256을 비교한다.
+- [x] 실제 Binder UID, DUMP 권한, 사용자 0에서의 Provider 접근을 debug·release 각각 확인한다.
+- [x] 일반 앱 UID로 call·query·openFile을 시도하여 모두 거부되는지 확인한다.
+- [x] CLI 비활성화, 앱 미설치, 프로세스 미실행, 잘못된 URI·payload·write mode를 검증한다.
+- [ ] 비밀번호 잠금의 전체 조합을 후속 검증한다. 전면 실행·Activity 종료·전환 경합은 이번 범위에서 확인했다.
+- [x] API 26 에뮬레이터와 사용 가능한 최신 실기기에서 수행한다. 설치 서명이 다르면 기존 앱을 제거하지 않고 별도 시험 package를 사용한다.
+- [x] 실기기 모델·OS·ADB 버전·APK 종류·전송 결과·제약을 `docs/validation/cli-transport.md`에 기록한다.
 
 **완료 조건:** root·`run-as` 없이 서명된 release 시험 앱에서 왕복 호출과 바이너리 검증이 성공하고 일반 앱 접근이 차단된다. 실패하면 원인을 기록하고 transport만 재설계한 뒤 M0를 반복한다. 지원하지 못한 OS는 지원 완료로 표시하지 않는다.
 
 ### M1. CLI 패키지와 버전 계약
 
-- [ ] `tools/halcam/` 아래에 Python 패키지, `pyproject.toml`, console script와 `__main__.py`를 추가한다.
-- [ ] `devices`, `doctor`, `launch` 및 공통 `--serial`, `--json`, timeout 처리를 구현한다.
-- [ ] 명령·응답 JSON schema와 공통 fixture를 만들고 protocol v1을 고정한다.
-- [ ] 장치 0개·여러 개·unauthorized·offline, ADB 실행 파일 누락, 앱 버전 불일치를 구분한다.
-- [ ] subprocess 인자 처리와 원격 shell payload 인코딩을 분리한다. 한글·공백·따옴표·개행·shell 특수문자 입력을 테스트한다.
-- [ ] stdout 최종 JSON과 stderr 진행 메시지, 종료 코드를 고정한다.
+- [x] `tools/halcam/` 아래에 Python 패키지, `pyproject.toml`, console script와 `__main__.py`를 추가한다.
+- [x] `devices`, `doctor`, `launch` 및 공통 `--serial`, `--json`, timeout 처리를 구현한다.
+- [x] 명령·응답 JSON schema와 공통 fixture를 만들고 protocol v1을 고정한다.
+- [x] 장치 0개·여러 개·unauthorized·offline, ADB 실행 파일 누락, 앱 버전 불일치를 구분한다.
+- [x] subprocess 인자 처리와 원격 shell payload 인코딩을 분리한다. 한글·공백·따옴표·개행·shell 특수문자 입력을 테스트한다.
+- [x] stdout 최종 JSON과 stderr 진행 메시지, 종료 코드를 고정한다.
 
 **완료 조건:** 카메라 없이 fake ADB와 M0 Provider로 CLI 설치·실행·진단·프로토콜 오류를 검증한다. 패키지 설치는 저장소 경로에서 재현할 수 있어야 한다.
 
 ### M2. 앱 명령 수명주기와 상태 조회
 
-- [ ] `cli/`에 `CliProvider`, `CommandCoordinator`, `CommandStore`, `ArtifactRegistry`와 모델을 추가한다.
-- [ ] 앱 설정의 CLI 허용 스위치와 각 Provider 진입점의 shell UID 검사를 구현한다.
-- [ ] accepted부터 terminal state까지의 전이와 한 번에 하나의 작업 소유권을 구현한다.
-- [ ] 요청 ID·정규화 payload hash를 동작 전에 원자적으로 기록한다.
-- [ ] 같은 요청의 중복 접수, 내용 충돌, 프로세스 재시작 시 interrupted 처리를 구현한다.
-- [ ] `status`, `cancel`, `--no-wait`, `--request-id`와 연결 끊김 후 재조회를 연결한다.
-- [ ] 메타데이터 보존 상한·만료를 구현하고 활성 요청과 원본 파일이 정리 대상에 포함되지 않음을 검증한다.
+- [x] `cli/`에 `CliProvider`, `CommandCoordinator`, `CommandStore`와 모델, coordinator 내부 artifact 등록 책임을 추가한다.
+- [x] 앱 설정의 CLI 허용 스위치와 각 Provider 진입점의 shell UID 검사를 구현한다.
+- [x] accepted부터 terminal state까지의 전이와 한 번에 하나의 작업 소유권을 구현한다.
+- [x] 요청 ID·정규화된 요청 내용를 동작 전에 원자적으로 기록한다.
+- [x] 같은 요청의 중복 접수, 내용 충돌, 프로세스 재시작 시 interrupted 처리를 구현한다.
+- [x] `status`, `cancel`, `--no-wait`, `--request-id`와 연결 끊김 후 재조회를 연결한다.
+- [x] 메타데이터 보존 상한·만료를 구현하고 활성 요청과 원본 파일이 정리 대상에 포함되지 않음을 검증한다.
 
-**완료 조건:** fake controller·clock·store로 중복 실행 방지, 취소 경합, 시간 제한, 재시작 복구를 검증한다. 두 CLI와 UI가 동시에 요청해도 하나의 변경 작업만 실행되어야 한다.
+**완료 조건:** 실제 Activity·fake clock·격리된 AtomicFile store로 중복 실행 방지, 취소 경합, 시간 제한, 재시작 복구를 검증한다. 두 CLI와 UI가 동시에 요청해도 하나의 변경 작업만 실행되어야 한다.
 
 ### M3. Camera2 프리뷰·사진·결과 수집
 
-- [ ] MainActivity에서 UI와 CLI가 공유할 LIVE 동작을 `LiveController`로 점진적으로 분리한다.
-- [ ] camera 목록에 logical ID와 physical endpoint, 선택 가능 여부를 구분한다.
-- [ ] 지정 카메라 준비와 surface 생명주기를 연결하고 `preview`의 성공 기준을 첫 프리뷰 준비로 고정한다.
-- [ ] capture ID·session ID·request ID가 연결된 타입 기반 저장 완료·실패 콜백을 추가한다.
-- [ ] 기존 timestamp 일치 조건과 YUV/JPEG 한 쌍 저장 동작을 유지한다.
-- [ ] 두 저장 URI를 artifact로 등록하고 측정 외 IO 단계에서 크기·해시를 계산한다.
-- [ ] `capture`, `fetch`, `.part` 다운로드·해시 검증·파일명 충돌 처리를 연결한다.
-- [ ] 저장 중 화면 이탈·연결 분리·취소가 발생했을 때 실제 저장 결과를 보존한다.
+- [x] MainActivity에서 UI와 CLI가 공유할 LIVE 동작을 `LiveController`로 점진적으로 분리한다.
+- [x] camera 목록에 logical ID와 physical endpoint, 선택 가능 여부를 구분한다.
+- [x] 지정 카메라 준비와 surface 생명주기를 연결하고 `preview`의 성공 기준을 첫 프리뷰 준비로 고정한다.
+- [x] request ID·capture ID·센서 시각이 연결된 타입 기반 저장 완료·실패 콜백을 추가한다. 기존 엔진의 session ID와 telemetry 연결은 유지한다.
+- [x] 기존 timestamp 일치 조건과 YUV/JPEG 한 쌍 저장 동작을 유지한다.
+- [x] 두 저장 URI를 artifact로 등록하고 측정 외 IO 단계에서 크기·해시를 계산한다.
+- [x] `capture`, `fetch`, `.part` 다운로드·해시 검증·파일명 충돌 처리를 연결한다.
+- [x] 저장 중 화면 이탈·연결 분리·취소가 발생했을 때 실제 저장 결과를 보존한다.
 
 **완료 조건:** 실기기에서 명령 한 번으로 사진 두 장을 받아 확인하고, 동일 요청 재제출 시 추가 촬영이 발생하지 않는다. 다운로드만 실패한 뒤 `fetch`로 복구할 수 있어야 한다. UI 사진·갤러리·기존 녹화 동작도 회귀 확인한다.
 
 ### M4. 벤치마크 실행과 JSON 회수
 
-- [ ] BenchmarkActivity의 준비·환경 수집·실행·저장 경로를 공통 `BenchmarkController`로 분리한다.
-- [ ] LIVE 카메라 close 완료 후 BENCHMARK surface를 준비하고 실행을 시작한다.
-- [ ] 기존 profile·preflight·warm-up·통계·적격성·baseline 규칙을 그대로 연결한다.
-- [ ] 결과 파일 쓰기 실패를 명시적으로 전달하고 파일 저장 완료 후 요청을 완료한다.
-- [ ] 중단·hard failure가 발생한 run은 해당 상태와 수집 가능한 partial report를 함께 반환한다.
-- [ ] polling이 main thread의 프레임 처리나 측정 중 파일 IO를 늘리지 않도록 상태 snapshot을 사용한다.
-- [ ] USB 연결에 따른 충전·thermal 등 환경 조건이 원본 보고서에 그대로 기록되는지 확인한다.
+- [x] BenchmarkActivity의 준비·환경 수집·실행·저장 경로를 공통 `BenchmarkController`로 분리한다.
+- [x] LIVE 카메라 close 완료 후 BENCHMARK surface를 준비하고 실행을 시작한다.
+- [x] 기존 profile·preflight·warm-up·통계·적격성·baseline 규칙을 그대로 연결한다.
+- [x] 결과 파일 쓰기 실패를 명시적으로 전달하고 파일 저장 완료 후 요청을 완료한다.
+- [x] 중단·hard failure가 발생한 run은 해당 상태와 수집 가능한 partial report를 함께 반환한다.
+- [x] polling이 main thread의 프레임 처리나 측정 중 파일 IO를 늘리지 않도록 상태 snapshot을 사용한다.
+- [x] USB 연결에 따른 충전·thermal 등 환경 조건이 원본 보고서에 그대로 기록되는지 확인한다.
 
 **완료 조건:** CLI에서 생성한 JSON이 기존 report codec과 `tools/aggregate.py`로 읽히며 동일 profile의 UI 결과와 비교 계약이 일치한다. 정상 완료, preflight 거부, 중단, 저장 실패가 서로 다른 결과로 확인되어야 한다.
 
 ### M5. 통합 검증과 사용 문서
 
-- [ ] 아래 검증 표를 수행하고 실기기 검증과 JVM·Python 결과를 분리해 기록한다.
-- [ ] Windows의 실제 USB·무선 ADB 연결을 검증한다. Linux·macOS의 Python 테스트와 기기 연결 검증 범위를 명시한다.
-- [ ] debug·release에서 동일 명령을 확인하고 지원 API·OEM 범위를 확정한다.
-- [ ] README에 설치·초기 설정·명령 예시·종료 코드·복구 절차를 추가한다.
-- [ ] 개발자 가이드 원고와 `.omm/` 구조 설명을 새 구성 요소에 맞게 갱신하고 공식 생성 파이프라인을 실행한다.
-- [ ] 이슈 #56의 완료 조건에 검증 근거를 대응시키고 남은 제약을 정리한다.
+- [x] 아래 표의 핵심 시나리오를 수행하고 실기기·에뮬레이터·JVM·Python 결과와 미검증 조합을 분리해 기록했다.
+- [x] Windows의 실제 USB·무선 ADB 연결을 검증한다. Linux·macOS의 Python 테스트와 기기 연결 검증 범위를 명시한다.
+- [x] debug·release의 사진·상태·회수와 release 벤치마크를 확인했다. API·OEM별 검증 범위는 검증 문서에 한정한다.
+- [x] README에 설치·초기 설정·명령 예시·종료 코드·복구 절차를 추가한다.
+- [x] 개발자 가이드 원고와 `.omm/` 구조 설명을 새 구성 요소에 맞게 갱신하고 공식 생성 파이프라인을 실행한다.
+- [x] 이슈 #56의 완료 조건에 검증 근거를 대응시키고 남은 제약을 정리한다.
 
 **완료 조건:** 이슈 #56의 초기 범위가 사용 문서만으로 재현되고, 실패와 복구 경로를 포함한 검증 기록이 준비된다. 단순 접수 성공이나 빌드 성공만으로 완료 처리하지 않는다.
 
@@ -142,6 +142,8 @@ APK를 변경하는 단계에서는 JDK 17 환경에서 `./gradlew assembleDebug
 | CLI polling이 측정에 영향을 줌 | 저빈도 snapshot 조회, 측정 후 해시·다운로드, UI·CLI 비교 검증을 수행한다. |
 | 작업 중 다른 UI 변경과 충돌함 | 현재 UI 변경이 병합된 기준을 먼저 확인하고 controller 추출을 작은 변경으로 나눈다. |
 
-## 6. 다음 작업
+## 6. 릴리스와 후속 검증
 
-첫 구현 작업은 M0다. 전송 실험 결과로 [설계 초안](design/CLI.md)의 미확정 항목을 갱신한 다음 M1부터 진행한다. 이번 문서 작성 자체로 어느 구현 단계도 완료된 것으로 표시하지 않는다.
+앱 0.6.0과 Python CLI 0.1.0의 코드리뷰·서명 빌드·최종 CI·Release asset 게시를 수행한다. [기능 검증](validation/cli-device.md)과 [릴리스 리뷰](releases/0.6.0-review.md)에 근거를 연결한다. 실행 계획의 class 경계는 구현 비용에 따라 조정했다. artifact 등록은 coordinator에 통합했고, 요청 내용 전체를 정규화하여 비교하며, controller 경합은 실제 Activity로 검증했다.
+
+미검증 범위는 다른 OEM, Linux·macOS의 실제 장치 연결, 비밀번호 잠금 조합, root·다른 Android 사용자다. 이것을 지원 완료나 전체 조합 검증으로 표시하지 않는다. 사진·기존 benchmark 측정 계약과 이슈 #56의 초기 명령 범위는 구현했다.
