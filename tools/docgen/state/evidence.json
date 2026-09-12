@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "5f4b3aeb7b40f94b",
+        "codeHash": "c48c735a442d9af1",
         "modelHash": "9ccc32ded4b27e33",
         "at": "2026-09-12",
-        "commit": "431a787",
-        "reviewer": "Codex"
+        "commit": "9bbe4c7",
+        "reviewer": "baboe"
       }
     },
     "omm:data-flow": {
@@ -21,8 +21,8 @@
         "codeHash": "999a1c4764803fb4",
         "modelHash": "fa05f4f4d031e540",
         "at": "2026-09-12",
-        "commit": "431a787",
-        "reviewer": "Codex"
+        "commit": "9bbe4c7",
+        "reviewer": "baboe"
       }
     },
     "omm:state-transitions": {
@@ -33,8 +33,8 @@
         "codeHash": "f4d91605d19b3fcf",
         "modelHash": "2fd96dd7416fb883",
         "at": "2026-09-12",
-        "commit": "431a787",
-        "reviewer": "Codex"
+        "commit": "9bbe4c7",
+        "reviewer": "baboe"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "5f4b3aeb7b40f94b",
+        "codeHash": "c48c735a442d9af1",
         "modelHash": "f2df9777f27dccac",
         "at": "2026-09-12",
-        "commit": "431a787",
-        "reviewer": "Codex"
+        "commit": "9bbe4c7",
+        "reviewer": "baboe"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "f87cf1d4deff7678",
+        "codeHash": "ce02604208b14026",
         "modelHash": "d0cfe24ee7265d7c",
         "at": "2026-09-12",
-        "commit": "431a787",
-        "reviewer": "Codex"
+        "commit": "9bbe4c7",
+        "reviewer": "baboe"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -69,17 +69,17 @@
         "codeHash": "999a1c4764803fb4",
         "modelHash": "2821304e6c5d0815",
         "at": "2026-09-12",
-        "commit": "431a787",
-        "reviewer": "Codex"
+        "commit": "9bbe4c7",
+        "reviewer": "baboe"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "5f4b3aeb7b40f94b",
+        "codeHash": "c48c735a442d9af1",
         "modelHash": "4f378520443e6972",
         "at": "2026-09-12",
-        "commit": "431a787",
-        "reviewer": "Codex"
+        "commit": "9bbe4c7",
+        "reviewer": "baboe"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "5f4b3aeb7b40f94b",
+        "codeHash": "c48c735a442d9af1",
         "modelHash": "47031d6bae0d75b1",
         "at": "2026-09-12",
-        "commit": "431a787",
-        "reviewer": "Codex"
+        "commit": "9bbe4c7",
+        "reviewer": "baboe"
       },
       "observed": {
         "state": "fresh"

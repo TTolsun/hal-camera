@@ -28,7 +28,9 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
     private val fold = Runnable { collapse() }
 
     init {
-        background = Look.pill(context, Color.argb(150, 39, 39, 41))
+        // Keep the rail visually close to Samsung Camera without shrinking its touch targets.
+        background = InsetDrawable(Look.pill(context, Color.argb(150, 39, 39, 41)), dp(6), dp(8), dp(6), dp(8))
+        setPadding(0, 0, 0, 0)
         clipChildren = true
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
     }
@@ -132,8 +134,10 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
                 setColor(if (active) Look.primaryOnDark else Color.TRANSPARENT)
             }
             val mask = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.WHITE) }
-            // The visible circle is 40dp; each button still has a 48dp touch target.
-            button.background = InsetDrawable(RippleDrawable(ColorStateList.valueOf(0x40FFFFFF), circle, mask), dp(4))
+            // Samsung Camera's selected circle measures 30dp on the reference S25+.
+            // Use a slightly larger 32dp circle inside the unchanged 48dp touch target.
+            button.background = InsetDrawable(RippleDrawable(ColorStateList.valueOf(0x40FFFFFF), circle, mask), dp(8))
+            button.setPadding(0, 0, 0, 0)
             button.contentDescription = "${ratio}배 줌" + if (!expanded && active && ratios.size > 1) ", 배율 펼치기" else ""
             ViewCompat.setStateDescription(button, if (active) "선택됨" else null)
         }
@@ -154,7 +158,7 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val wanted = dp(56) + dp(48) * (ratios.size - 1).coerceAtLeast(0) * progress
+        val wanted = dp(48) + dp(48) * (ratios.size - 1).coerceAtLeast(0) * progress
         setMeasuredDimension(resolveSize(wanted.roundToInt(), widthMeasureSpec), resolveSize(dp(52), heightMeasureSpec))
         val size = MeasureSpec.makeMeasureSpec(dp(48), MeasureSpec.EXACTLY)
         for (index in 0 until childCount) getChildAt(index).measure(size, size)
