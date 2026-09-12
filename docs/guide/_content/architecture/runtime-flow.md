@@ -2,6 +2,10 @@
 based_on: [data-flow]
 confidence: code
 sources:
+  - app/src/main/java/dev/halcamera/cli/CliProvider.kt
+  - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
+  - tools/halcam/halcam/cli.py
+  - tools/halcam/halcam/download.py
   - app/src/main/java/dev/halcamera/MainActivity.kt
   - app/src/main/java/dev/halcamera/GalleryActivity.kt
   - app/src/main/java/dev/halcamera/ui/GalleryImageView.kt
@@ -67,3 +71,9 @@ LIVE에서 사진을 촬영하면 Camera2의 같은 요청에 YUV와 JPEG 출력
 항목을 누르면 앱 내부 상세 화면을 엽니다. `GalleryImageView`는 사진 확대와 이동을 처리하며, 화면에 맞춘 크기에서는 좌우로 쓸어 항목을 넘길 수 있습니다. 이전·다음 아이콘도 제공하고, 동영상은 재생 아이콘을 눌러 시작합니다. 돋보기의 +·−와 접근성 설명은 버튼 클릭뿐 아니라 두 손가락·두 번 누르기로 바뀐 실제 확대 상태에도 맞춰 갱신합니다. 파일명·크기·해상도 등은 정보 아이콘을 펼쳤을 때 표시하며, 아이콘의 선택 상태와 설명도 함께 갱신합니다. 필터·격자 스크롤 위치·열어 둔 항목을 저장해 화면 복귀와 재생성 시 복원합니다.
 
 선택 버튼이나 길게 누르기로 고른 항목은 공유·삭제 아이콘으로 함께 처리합니다. 공유 Intent에는 선택한 URI와 읽기 권한만 전달합니다. 삭제는 확인을 거치며 Android 11 이상에서는 `MediaStore.createDeleteRequest()`의 시스템 확인을 사용합니다.
+
+### CLI 요청과 결과 수집
+
+CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩니다. 요청 ID와 내용을 먼저 저장하고 `LiveController` 또는 `BenchmarkController`가 화면의 카메라·벤치마크 동작을 실행합니다. 사진은 두 이미지의 저장 완료, 벤치마크는 report 파일 쓰기 완료 후 artifact를 등록합니다. 명령 접수와 실제 완료는 서로 다른 상태입니다.
+
+PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 확인합니다. 같은 요청 ID와 같은 내용은 기존 결과를 반환하며 새로운 촬영을 시작하지 않습니다. 원본 파일이 삭제되거나 전송이 끊긴 경우에는 요청 ID로 상태를 확인한 다음 파일 수집을 재시도합니다.

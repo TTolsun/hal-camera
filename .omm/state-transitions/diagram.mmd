@@ -1,4 +1,8 @@
 graph LR
+    accepted["CLI accepted"] --> preparing["preparing"] --> running["running"] --> saving["saving"] --> succeeded["succeeded"]
+    running --> cancelling["cancelling"] --> saving
+    running --> failed["failed / cancelled"]
+    accepted --> interrupted["프로세스 재시작: interrupted"]
     runner["BenchmarkRunner"] -->|"Driver open / still / close"| engine["CameraEngine 수명주기"]
     engine -->|"현재 세션 완료 신호"| runner
     runner -->|"Result와 환경"| validity["RunValidity"]

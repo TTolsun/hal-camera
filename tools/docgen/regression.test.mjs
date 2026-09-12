@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 
 const source = path.resolve(import.meta.dirname, '../..');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hal-docgen-test-'));
-for (const dir of ['tools/docgen', 'docs/guide', '.omm', 'app', 'gradle']) {
+for (const dir of ['tools/docgen', 'tools/halcam/halcam', 'docs/guide', '.omm', 'app', 'gradle']) {
   fs.mkdirSync(path.dirname(path.join(root, dir)), { recursive: true });
   fs.cpSync(path.join(source, dir), path.join(root, dir), { recursive: true, filter: p => !p.includes('omm-backup') && !['build', 'node_modules'].includes(path.basename(p)) });
 }
@@ -35,7 +35,7 @@ pass(run('extract.mjs')); pass(run('verify.mjs', '--accept')); pass(run('generat
 pass(run('verify.mjs', '--check'));
 
 test('reviewed LF and CRLF checkouts have identical evidence hashes', () => {
-  const all = Object.keys(snapshot(root)).filter(p => /\.(kt|kts|md|mmd|yaml|json)$/.test(p));
+  const all = Object.keys(snapshot(root)).filter(p => /\.(kt|kts|py|md|mmd|yaml|json)$/.test(p));
   const saved = new Map(all.map(p => [p, fs.readFileSync(file(p))]));
   try {
     for (const eol of ['\r\n', '\n']) {
@@ -50,6 +50,14 @@ test('writing style changes require manuscript review', () => {
     const r = run('verify.mjs', '--check');
     assert.equal(r.status, 1);
     assert.match(r.stdout, /content:architecture.md\/overview.*검토 대기/);
+  });
+});
+
+test('CLI transport changes invalidate the runtime guide', () => {
+  change('tools/halcam/halcam/cli.py', source => source + '\n# changed protocol\n', () => {
+    const result = run('verify.mjs', '--check');
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, /content:architecture.md\/runtime-flow.*관련 소스 변경됨/);
   });
 });
 

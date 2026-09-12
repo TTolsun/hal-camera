@@ -51,6 +51,33 @@ import java.util.concurrent.Executors
  * compared against a baseline the developer chose, and that is what BENCHMARK does.
  */
 class MainActivity : ComponentActivity() {
+    private val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
+    private val liveCli by lazy {
+        LiveController(cli, object : LiveController.Driver {
+            override fun busy() = recordingVideo || stoppingRecording || pendingMediaAction != null || pendingPermissionAction != null || (engine as? Camera2Engine)?.mediaBusy == true
+            override fun prepare(camera: String) {
+                cameraId = camera; engineName = "Camera2"; paused = false; zoomRatio = 1f
+                updateCameraChoices(); restartCamera()
+            }
+            override fun capture(id: String, done: (Result<PhotoResult>) -> Unit) {
+                val camera = engine as? Camera2Engine
+                if (camera == null) done(Result.failure(IllegalStateException("Camera2 unavailable"))) else camera.capturePhoto(id, done)
+                updateMediaControls()
+            }
+            override fun benchmark(command: dev.halcamera.cli.CliCommand) {
+                val old = engine; engine = null; closing = true; ready = false
+                val open = {
+                    closing = false
+                    if (resumed && cli.active?.id == command.id) {
+                        startActivity(Intent(this@MainActivity, dev.halcamera.benchmark.BenchmarkActivity::class.java)
+                            .putExtra("camera_id", command.camera).putExtra("engine", "Camera2").putExtra("cli_request_id", command.id))
+                    } else cli.fail(command.id, "APP_NOT_FOREGROUND", "App left foreground before benchmark")
+                }
+                if (old == null) open() else old.close { open() }
+            }
+            override fun stopPreparing() { paused = true; restartCamera() }
+        })
+    }
     companion object {
         /** 8.1: one word, because the button records a moment and no longer claims anything about it. */
         const val MARK_LABEL = "MARK"
@@ -159,7 +186,8 @@ class MainActivity : ComponentActivity() {
             if (time-lastSystemNs >= 1_000_000_000L) { sampleSystem(); lastSystemNs=time }
             recorder.finish()?.let { export(it) }
             val remaining = recorder.remainingNs()
-            reportButton.isEnabled = remaining == null && ready && !paused
+            reportButton.isEnabled = remaining == null && ready && !paused && cli.active == null
+            updateMediaControls()
             reportButton.text = if (remaining != null) "저장까지 ${"%.1f".format(Locale.US, remaining/1e9)}s" else "$MARK_LABEL · ZIP 저장"
             val span = events.firstOrNull()?.let { (time-it.atNs)/1e9 } ?: 0.0
             recorderText.text = if (exporting > 0) "ZIP 저장 중…" else if (remaining != null) "기록 중 · 이후 ${"%.1f".format(Locale.US, remaining/1e9)}초 남음" else "30s 순환 버퍼  ·  ${"%.1f".format(Locale.US, span.coerceAtMost(10.0))}s / 10s 사전 기록 준비"
@@ -188,11 +216,13 @@ class MainActivity : ComponentActivity() {
     }
     override fun onStart() {
         super.onStart(); resumed = true
+        cli.attach(liveCli)
         main.post(tick)
         if (hasPermission()) restartCamera()
         else { setStatus("카메라 접근을 허용하면 측정이 시작됩니다", false); permission.launch(Manifest.permission.CAMERA) }
     }
     override fun onStop() {
+        cli.detach(liveCli)
         zoomControl.collapse(animate = false)
         pendingMediaAction = null
         pendingPermissionAction = null
@@ -243,7 +273,9 @@ class MainActivity : ComponentActivity() {
         } else {
             val view = TextureView(this)
             previewHost.addView(view, FrameLayout.LayoutParams(-1,-1))
-            Camera2Engine(this, view, cameraId, sessionId, telemetry, recordingState = { recording ->
+            Camera2Engine(this, view, cameraId, sessionId, telemetry, previewReady = {
+                if (thisSession == sessionId && resumed && !closing) liveCli.previewReady()
+            }, recordingState = { recording ->
                 if (thisSession == sessionId) {
                     recordingVideo = recording
                     if (!recording) stoppingRecording = false
@@ -320,6 +352,7 @@ class MainActivity : ComponentActivity() {
             }
         }
         pauseButton=IconButton(this,if(paused) R.drawable.ic_action_play else R.drawable.ic_action_pause,if(paused) "프리뷰 재개" else "프리뷰 일시정지") {
+            if (cli.active != null) return@IconButton
             paused=!paused
             pauseButton.setIcon(if(paused) R.drawable.ic_action_play else R.drawable.ic_action_pause,if(paused) "프리뷰 재개" else "프리뷰 일시정지")
             if(paused) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("user_paused")?.let { export(it) } }
@@ -344,6 +377,7 @@ class MainActivity : ComponentActivity() {
         }
         bottomBar.addView(metrics,lp())
         zoomControl=ExpandingZoomControl(this) { ratio ->
+            if (cli.active != null) return@ExpandingZoomControl
             zoomRatio=ratio; engine?.setZoom(ratio)
         }
         val zoomViewport=object:HorizontalScrollView(this) {
@@ -375,12 +409,14 @@ class MainActivity : ComponentActivity() {
         val captureRow=row().apply { gravity=Gravity.CENTER_VERTICAL }
         bottomBar.addView(captureRow,lp())
         galleryButton=IconButton(this,R.drawable.ic_gallery,"HALCamera 갤러리 열기",filled=true) {
+            if (cli.active != null) return@IconButton
             withMediaPermissions(false) { startActivity(Intent(this, GalleryActivity::class.java)) }
         }
         val gallerySlot=FrameLayout(this).apply { addView(galleryButton,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.TOP or Gravity.CENTER_HORIZONTAL)) }
         captureRow.addView(gallerySlot,LinearLayout.LayoutParams(0,dp(72),1f))
         mediaButton=ShutterButton(this).apply {
             setOnClickListener {
+                if (cli.active != null) return@setOnClickListener
                 if(recordingVideo) {
                     stoppingRecording=true
                     recordingTime.text="저장 중…"
@@ -423,6 +459,14 @@ class MainActivity : ComponentActivity() {
         val head=row().apply { gravity=Gravity.CENTER_VERTICAL }; body.addView(head)
         head.addView(label("측정 상세",22,Color.WHITE,true),LinearLayout.LayoutParams(0,-2,1f))
         head.addView(IconButton(this,R.drawable.ic_action_close,"측정 상세 닫기") { showDiagnostics(false) },LinearLayout.LayoutParams(dp(48),dp(48)))
+        @Suppress("UseSwitchCompatOrMaterialCode")
+        val cliSwitch = Switch(this).apply {
+            text = "ADB CLI 허용"; textSize = 14f; setTextColor(Look.onDark)
+            minHeight = dp(48); isChecked = cli.enabled
+            setOnCheckedChangeListener { _, checked -> cli.setEnabled(checked) }
+        }
+        body.addView(cliSwitch, lp(top=12))
+        body.addView(label("ADB 연결을 승인한 PC에서 촬영과 벤치마크를 실행할 수 있습니다.",12,muted),lp(top=4))
         // 8.1: raw numbers only. The DIAGNOSIS card that used to lead this panel named a rule and a cause layer
         // from a two-second window, which the app could not actually establish; BENCHMARK answers that properly.
         body.addView(label("LIVE READOUT",14,muted,true),lp(top=18))
@@ -481,7 +525,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun selectChoice(anchor:View,items:List<String>,selected:Int,onSelect:(Int)->Unit) {
         showSelectionPopup(anchor,items,selected) { index ->
-            if(!recordingVideo && resumed) onSelect(index)
+            if(!recordingVideo && resumed && cli.active == null) onSelect(index)
         }
     }
     private fun cameraLabel(id:String):String {
@@ -501,6 +545,7 @@ class MainActivity : ComponentActivity() {
         zoomControl.setChoices(if(cameraId.isEmpty()) listOf(1f) else zoomPresets(zoomRange(manager,cameraId)),zoomRatio)
     }
     private fun updateMediaControls() {
+        cli.setUiBusy(liveCli, recordingVideo || stoppingRecording || pendingMediaAction != null || pendingPermissionAction != null || (engine as? Camera2Engine)?.mediaBusy == true)
         modeButton.text=if(videoMode) "동영상 ▾" else "사진 ▾"
         modeButton.contentDescription="촬영 모드 선택, 현재 ${if(videoMode) "동영상" else "사진"}"
         modeButton.isEnabled=ready && !recordingVideo
@@ -518,6 +563,9 @@ class MainActivity : ComponentActivity() {
         pauseButton.isEnabled=!recordingVideo
         galleryButton.isEnabled=!recordingVideo
         benchButton.isEnabled=!recordingVideo
+        if (cli.active != null) {
+            listOf(mediaButton, engineButton, cameraButton, modeButton, zoomControl, pauseButton, galleryButton, benchButton, reportButton).forEach { it.isEnabled = false }
+        }
         listOf(engineButton,cameraButton,modeButton,mediaButton,pauseButton,galleryButton,benchButton).forEach {
             it.alpha=if(it.isEnabled) 1f else 0.4f
         }
@@ -646,7 +694,7 @@ class MainActivity : ComponentActivity() {
         bottomBar.importantForAccessibility = topBar.importantForAccessibility
     }
     private fun label(text:String,size:Int,color:Int,bold:Boolean=false)=TextView(this).apply { this.text=text; textSize=size.coerceAtLeast(12).toFloat(); setTextColor(color); if(bold) setTypeface(typeface,Typeface.BOLD) }
-    private fun button(text:String,action:()->Unit)=Button(this).apply { this.text=text; isAllCaps=false; textSize=12f; setTextColor(mint); background=rounded(panel); setPadding(0,0,0,0); minWidth=0; minimumWidth=0; minHeight=0; minimumHeight=0; setOnClickListener { action() } }
+    private fun button(text:String,action:()->Unit)=Button(this).apply { this.text=text; isAllCaps=false; textSize=12f; setTextColor(mint); background=rounded(panel); setPadding(0,0,0,0); minWidth=0; minimumWidth=0; minHeight=0; minimumHeight=0; setOnClickListener { if (cli.active == null) action() } }
     private fun cameraChrome(fill:Int=glass)=RippleDrawable(ColorStateList.valueOf(0x40FFFFFF),Look.pill(this,fill),Look.pill(this,Color.WHITE))
     private fun cameraSideButton(view:Button,icon:Int) {
         view.background=cameraChrome(Color.TRANSPARENT); view.setTextColor(Color.WHITE)

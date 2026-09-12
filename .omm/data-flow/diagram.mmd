@@ -1,4 +1,9 @@
 graph LR
+    cli["CLI request JSON"] --> coordinator["CommandCoordinator"]
+    coordinator --> request["CommandStore · 요청 기록"]
+    photo["사진 한 쌍 저장 완료"] --> artifact["artifact 등록 · 크기와 SHA-256"]
+    json --> artifact
+    artifact -->|"읽기 전용 파일"| pc["Python CLI · 검증 후 저장"]
     callbacks["Camera 콜백"] -->|"이벤트 기록"| events["Telemetry / FlightRecorder"]
     callbacks -->|"단계 완료 신호"| marks["BenchmarkRunner.Result"]
     events -->|"프레임 연결"| frames["metrics/MetricExtractor"]

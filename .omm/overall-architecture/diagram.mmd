@@ -1,4 +1,8 @@
 graph LR
+    pc["PC · halcam"] -->|"ADB"| provider["CliProvider · shell 전용"]
+    provider --> commands["CommandCoordinator / CommandStore"]
+    commands -->|"LiveController"| live
+    commands -->|"BenchmarkController"| benchmark
     live["MainActivity · LIVE"] -->|"엔진 선택"| engines["Camera2Engine / CameraXEngine"]
     live -->|"벤치마크 진입"| benchmark["BenchmarkActivity / BenchmarkRunner"]
     benchmark -->|"Driver 호출"| engines

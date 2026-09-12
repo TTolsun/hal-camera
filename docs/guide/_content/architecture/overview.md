@@ -2,6 +2,8 @@
 based_on: [overall-architecture, data-flow]
 confidence: code
 sources:
+  - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
+  - tools/halcam/halcam/cli.py
   - app/src/main/java/dev/halcamera/MainActivity.kt
   - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
   - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
@@ -20,6 +22,7 @@ verifications: []
 
 | 단계 | 담당 코드 | 책임 |
 | --- | --- | --- |
+| CLI 제어 | `CliProvider`, `CommandCoordinator`, `tools/halcam/` | ADB 명령을 실행 경로에 연결하고 요청 상태와 검증 가능한 결과 파일을 반환합니다. |
 | 카메라 구동 | `CameraEngine`, `Camera2Engine`, `CameraXEngine` | 엔진 수명주기와 카메라 요청을 처리합니다. |
 | 콜백 기록 | `Telemetry`, `FlightRecorder` | 세션·프레임·시각·메타데이터를 이벤트로 기록합니다. |
 | 지표 계산 | `BenchmarkRunner`, `RunAssembler`, `BenchmarkEvaluator`, `metrics/MetricExtractor` | 러너의 실행 시각과 콜백을 합쳐 측정값을 만듭니다. |

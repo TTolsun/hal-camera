@@ -32,6 +32,7 @@ class Camera2Engine(
     private val telemetry: Telemetry,
     /** Benchmark profile streams. null keeps the LIVE screen behaviour of picking sizes by pixel budget. */
     private val spec: StreamSpec? = null,
+    private val previewReady: () -> Unit = {},
     private val recordingState: (Boolean) -> Unit = {},
     private val status: (String, Boolean) -> Unit
 ) : CameraEngine {
@@ -48,18 +49,21 @@ class Camera2Engine(
     private var jpeg: ImageReader? = null
     private var finished = false
     private var closeDone: (() -> Unit)? = null
-    private var photoInFlight = false
+    @Volatile private var photoInFlight = false
+    val mediaBusy: Boolean get() = photoInFlight || videoBusy
+    private var previewSeen = false
     private val mediaIo = Executors.newSingleThreadExecutor()
     private val library = MediaLibrary(context)
     private data class YuvFrame(val bytes: ByteArray, val width: Int, val height: Int)
-    private class Photo(val name: String, val rotation: Int) {
+    private class Photo(val name: String, val rotation: Int, val requestId: String?, val done: ((Result<PhotoResult>) -> Unit)?) {
         val pair = StillPair<YuvFrame, ByteArray>()
+        val delivered = java.util.concurrent.atomic.AtomicBoolean(false)
     }
     private var photo: Photo? = null
     private var videoRecorder: MediaRecorder? = null
     private var videoFile: File? = null
     private var videoStarted = false
-    private var videoBusy = false
+    @Volatile private var videoBusy = false
     @Volatile private var zoomRatio = 1f
     private var chars: CameraCharacteristics? = null
     private val callback = telemetry.callback(sessionId) { active }
@@ -202,6 +206,10 @@ class Camera2Engine(
                     val next = if (photo != null) source.acquireNextImage() else source.acquireLatestImage()
                     next?.use { image ->
                         if (active) telemetry.image(sessionId, image.timestamp, image.width, image.height, image.format, stream)
+                        if (active && !previewSeen && format == ImageFormat.YUV_420_888) {
+                            previewSeen = true
+                            main.post { if (active) previewReady() }
+                        }
                         val pending = photo
                         if (active && pending != null) {
                             if (format == ImageFormat.JPEG) {
@@ -217,18 +225,30 @@ class Camera2Engine(
                             photoInFlight = false; report("Camera2 · capture received", true)
                         }
                     }
-                } catch (e: Exception) { photo = null; photoInFlight = false; if (active) { fail(e); report("Capture failed: ${e.message} · retry", true) } }
+                } catch (e: Exception) { photo?.let { deliverPhoto(it, Result.failure(e)) }; photo = null; photoInFlight = false; if (active) { fail(e); report("Capture failed: ${e.message} · retry", true) } }
             }, handler)
         }
     override fun capture() {
+        requestCapture(null, null)
+    }
+    fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit) = requestCapture(requestId, done)
+
+    private fun deliverPhoto(pending: Photo, result: Result<PhotoResult>) {
+        if (pending.delivered.compareAndSet(false, true)) main.post { pending.done?.invoke(result) }
+    }
+
+    private fun requestCapture(requestId: String?, done: ((Result<PhotoResult>) -> Unit)?) {
         handler.post {
-            val camera = device ?: return@post
-            val session = captureSession ?: return@post
-            if (!active || photoInFlight || videoBusy) return@post
+            val camera = device
+            val session = captureSession
+            if (camera == null || session == null || !active || photoInFlight || videoBusy || (done != null && spec != null)) {
+                main.post { done?.invoke(Result.failure(IllegalStateException("Camera not ready or busy"))) }
+                return@post
+            }
             try {
                 val tag = "still-${android.os.SystemClock.elapsedRealtimeNanos()}"
                 val c = chars ?: manager.getCameraCharacteristics(cameraId)
-                val pending = if (spec == null) Photo(library.name(), outputRotation(c)) else null
+                val pending = if (spec == null) Photo(library.name(), outputRotation(c), requestId, done) else null
                 val request = camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
                     addTarget(jpeg!!.surface)
                     if (pending != null) {
@@ -248,11 +268,16 @@ class Camera2Engine(
                 session.capture(request, if (pending == null) callback else photoCallback(pending), handler)
                 handler.postDelayed({
                     if (photoInFlight && active && (pending == null || photo === pending)) {
+                        pending?.let { deliverPhoto(it, Result.failure(IllegalStateException("Capture timed out"))) }
                         photo = null; photoInFlight = false; telemetry.event(sessionId, "capture_timeout")
                         report("Capture timed out (5s) · retry", spec == null)
                     }
                 }, 5000)
-            } catch (e: Exception) { photo = null; photoInFlight = false; fail(e); if (spec == null) report("Capture failed: ${e.message} · retry", true) }
+            } catch (e: Exception) {
+                val pending = photo
+                if (pending != null) deliverPhoto(pending, Result.failure(e)) else main.post { done?.invoke(Result.failure(e)) }
+                photo = null; photoInFlight = false; fail(e); if (spec == null) report("Capture failed: ${e.message} · retry", true)
+            }
         }
     }
 
@@ -267,11 +292,11 @@ class Camera2Engine(
         }
         override fun onCaptureFailed(session: CameraCaptureSession, request: CaptureRequest, failure: CaptureFailure) {
             callback.onCaptureFailed(session, request, failure)
-            if (photo === pending) { photo = null; photoInFlight = false; report("Capture failed · retry", true) }
+            if (photo === pending) { deliverPhoto(pending, Result.failure(IllegalStateException("Capture failed"))); photo = null; photoInFlight = false; report("Capture failed · retry", true) }
         }
         override fun onCaptureBufferLost(session: CameraCaptureSession, request: CaptureRequest, target: Surface, frameNumber: Long) {
             callback.onCaptureBufferLost(session, request, target, frameNumber)
-            if (photo === pending) { photo = null; photoInFlight = false; report("Capture buffer lost · retry", true) }
+            if (photo === pending) { deliverPhoto(pending, Result.failure(IllegalStateException("Capture buffer lost"))); photo = null; photoInFlight = false; report("Capture buffer lost · retry", true) }
         }
     }
 
@@ -299,6 +324,7 @@ class Camera2Engine(
             result.onSuccess { uris ->
                 telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "uris" to uris.map { it.toString() }))
             }
+            deliverPhoto(pending, result.map { PhotoResult(pending.requestId, pending.name, timestamp, it) })
             main.post {
                 if (!active || result.isFailure) {
                     val message = result.fold({ "갤러리에 YUV · JPEG 사진 2장을 저장했습니다" }, { "사진 저장 실패: ${it.message}" })
@@ -438,6 +464,7 @@ class Camera2Engine(
     private fun finishClose() {
         if (finished) return
         finished = true
+        photo?.let { deliverPhoto(it, Result.failure(IllegalStateException("Camera closed before capture completed"))) }
         photo = null
         finishVideo()
         captureSession?.close(); captureSession = null
