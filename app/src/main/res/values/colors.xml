@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Matches Look.ink, the dark surface the expert screens are drawn on. -->
-    <color name="ic_launcher_background">#1d1d1f</color>
+    <color name="ic_launcher_background">#18191b</color>
 </resources>

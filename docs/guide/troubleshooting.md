@@ -83,7 +83,7 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 손상된 JSON은 목록과 PC 집계에서 별도로 알립니다. CSV 출력 장치의 오류는 입력 파일 오류와 구분하며 작업을 실패로 종료합니다. baseline 파일을 읽을 수 없으면 baseline 변경과 삭제를 중단합니다. 기기 화면·공유·삭제 동작의 실제 검증 기록은 이 문서에서 주장하지 않습니다.
 
-사진·동영상 저장 실패는 벤치마크 비교와 구분해 확인합니다. 사진은 같은 센서 타임스탬프의 YUV·JPEG 버퍼가 모두 있어야 저장됩니다. 녹화 중에는 엔진·카메라·줌·촬영 모드 변경과 일시정지·갤러리·벤치마크를 비활성화합니다. 셔터는 정지 동작을 제공하고 경과 시간은 셔터 위에 표시합니다. 정지를 누르면 녹화 종료 처리 동안 셔터를 비활성화하며, 앨범 저장 완료는 별도 알림으로 표시합니다. 녹화 종료 후 사진용 프리뷰로 복귀하며 동영상 모드 선택은 유지합니다. 벤치마크 비교 화면에서 뒤로 가기를 누르면 결과 화면으로 돌아갑니다.
+사진·동영상 저장 실패는 벤치마크 비교와 구분해 확인합니다. 사진은 같은 센서 타임스탬프의 YUV·JPEG 버퍼가 모두 있어야 저장됩니다. 녹화 중에는 엔진·카메라·줌·촬영 모드 변경과 일시정지·갤러리·벤치마크를 비활성화합니다. 셔터는 정지 동작을 제공하고 경과 시간은 셔터 아래의 모드 위치에 표시합니다. 정지를 누르면 녹화 종료 처리 동안 셔터를 비활성화하며, 앨범 저장 완료는 별도 알림으로 표시합니다. 녹화 종료 후 사진용 프리뷰로 복귀하며 동영상 모드 선택은 유지합니다. 벤치마크 비교 화면에서 뒤로 가기를 누르면 결과 화면으로 돌아갑니다.
 
 ### CLI 작업이 끝나지 않거나 파일이 없을 때
 
@@ -96,7 +96,7 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-12 @ `38b9b5c` · Codex
+- 검토 2026-09-12 @ `35a9c65` · Codex
 
 </details>
 
@@ -143,8 +143,8 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.5.1-dev` |
-| `versionCode` | `7` |
+| `versionName` | `0.5.1` |
+| `versionCode` | `8` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |
@@ -168,13 +168,13 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.5.1-dev (versionCode 7)
+- 검증 기준 앱 버전: 0.5.1 (versionCode 8)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-12 @ `38b9b5c` · Codex |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-12 @ `38b9b5c` · Codex |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-12 @ `38b9b5c` · Codex |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-12 @ `35a9c65` · Codex |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-12 @ `35a9c65` · Codex |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-12 @ `35a9c65` · Codex |
 
 <!-- omm:end id=status -->
 

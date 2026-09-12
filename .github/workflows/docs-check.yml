@@ -18,6 +18,7 @@ on:
       - ".omm/**"
       - "docs/guide/**"
       - "tools/docgen/**"
+      - "tools/halcam/**"
   push:
     branches: [main]
 
