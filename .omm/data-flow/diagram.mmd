@@ -5,7 +5,8 @@ graph LR
     frames -->|"관측 표본"| assemble["RunAssembler / BenchmarkEvaluator"]
     marks -->|"실행 시각"| assemble
     assemble -->|"실패와 환경"| validity["RunValidityEvaluator"]
-    validity -->|"측정값과 validity"| json["BenchmarkReport · schema 4 JSON"]
+    validity -->|"측정값과 validity"| score["ScoreComposer · 해당하는 calibration만 적용"]
+    score -->|"적격 내부 점수 또는 null"| json["BenchmarkReport · schema 4 JSON"]
     json -->|"저장 실행 읽기"| compare["BaselineManager / RegressionDetector"]
     compare -->|"다시 계산한 비교"| screen["결과 / COMPARE"]
     json -->|"목록 읽기"| history["HistoryActivity / RunIndex"]

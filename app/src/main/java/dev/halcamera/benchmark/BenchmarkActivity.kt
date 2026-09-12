@@ -416,7 +416,7 @@ class BenchmarkActivity : ComponentActivity() {
         }
         val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, "${run.device.manufacturer} ${run.device.model}", roleText(run.endpoint.role))
         card.addView(Look.text(this, "벤치마크 결과", 19, Look.onDark, bold = true))
-        listOfNotNull(view.titleLine, view.subLine, view.eligibilityLine, view.comparisonLine, view.identityLine, view.conditionLine).forEach {
+        listOfNotNull(view.titleLine, view.subLine, view.eligibilityLine, view.scoreLine, view.comparisonLine, view.identityLine, view.conditionLine).forEach {
             card.addView(Look.text(this, it, 12, Look.onDarkMuted), lp(top = 8))
         }
         card.addView(Look.text(this, "좌우로 스크롤 · 표를 누르면 복사", 12, Look.onDarkMuted), lp(top = 8))

@@ -947,3 +947,12 @@ M2 코드는 PR #14로 main에 들어갔고(리뷰 P1 2건 · P2 2건 반영), G
 | `validity_rule_version` | `validity-v1`에서 `validity-v2`로 올린다 |
 
 측정용 run은 release 빌드로 돌리고 결과는 앱의 `EXPORT`로 꺼내는 것을 기본으로 한다. debug 빌드는 기능 확인과 데이터 복원에 쓴다. 2026-09-10 실기기 검증 run 13개는 모두 debug 빌드에서 나왔고 `app.debuggable`이 없으므로 알 수 없음으로 읽힌다.
+
+
+### 2026-09-12 M5a 내부 점수 초안 (score-v1-draft)
+
+사용자가 밝은 조명을 확인한 뒤 S25+ 후면 메인에서 수집한 release 적격 run 10회로 내부 calibration을 만들었습니다. 이전 10회는 조명 조건 정정에 따라 제외했고, 저조도 3회는 민감도 검증에만 사용했습니다. 지표별 중앙값과 최소 척도를 적용하는 수식, 네 카테고리의 동일 가중치, 3A 가중치 0은 `docs/SCORING.md`에 기록했습니다.
+
+기존 schema 4의 `scoring_rule_version`, `summary.endpoint_score`, `metrics[].score`를 채우므로 JSON 필드와 측정 계약은 변경하지 않습니다. 규칙 버전은 `score-v1-draft`이며, 내부 점수 초안을 구분하기 위해 검증 앱은 0.5.1-dev(versionCode 7)로 올렸습니다. 다른 모델·endpoint·계약과 부적격 run에는 점수를 내지 않습니다.
+
+저조도 점수 중앙값은 낮았지만 정상 범위와 겹쳐 일관된 저하가 확인되지 않았습니다. 발열·카메라 점유 경쟁 실측과 M5b의 다기기 분포도 남아 있으므로 M5 전체 완료나 공개 점수 검증으로 처리하지 않습니다.

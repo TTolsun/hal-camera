@@ -1,1 +1,1 @@
-benchmark/는 profile, 러너, 지표 계산, validity, schema 4 저장, baseline·비교·이력을 제공합니다. BenchmarkActivity는 실행·결과를, HistoryActivity는 목록과 임의 비교를 표시합니다. RunIndex는 raw 이벤트와 표본 배열을 보관하지 않으며 BenchmarkCsv는 지표당 한 행을 작성합니다. 파일 작업과 비교용 파일 읽기는 별도 실행기에서 처리합니다.
+benchmark/는 profile, 러너, 지표 계산, validity, 내부 점수, schema 4 저장, baseline·비교·이력을 제공합니다. ScoreComposer는 검토한 동일 모델·endpoint의 calibration을 적격 release run에만 적용합니다. BenchmarkActivity는 실행·결과를, HistoryActivity는 목록과 임의 비교를 표시합니다. RunIndex는 raw 이벤트와 표본 배열을 보관하지 않으며 BenchmarkCsv는 지표당 한 행을 작성합니다. 파일 작업과 비교용 파일 읽기는 별도 실행기에서 처리합니다.

@@ -6,7 +6,8 @@ graph LR
     engines -->|"이벤트 기록"| telemetry["Telemetry / FlightRecorder"]
     telemetry -->|"관측 표본"| assemble["RunAssembler / BenchmarkEvaluator / RunValidity"]
     benchmark -->|"실행 시각"| assemble
-    assemble -->|"실행 저장"| files["BenchmarkReport / BenchmarkStore · schema 4"]
+    assemble -->|"적격 조건 확인"| score["ScoreComposer · 내부 초안"]
+    score -->|"실행과 해당 점수 저장"| files["BenchmarkReport / BenchmarkStore · schema 4"]
     files -->|"기준 실행 읽기"| comparison["BaselineManager / RegressionDetector"]
     comparison -->|"비교 표시"| results["ResultPresenter / ComparePresenter"]
     benchmark -->|"이력 진입"| history["HistoryActivity / RunIndex"]

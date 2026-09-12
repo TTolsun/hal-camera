@@ -15,4 +15,5 @@ children:
   - regression-rules
   - run-assembler
   - run-validity
+  - score-composer
 parentPath: []
