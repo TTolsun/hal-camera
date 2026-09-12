@@ -9,23 +9,27 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 
-/**
- * Visual tokens from docs/design/DESIGN.md mapped in docs/archive/PRODUCT-v0.2.md 11.6. Consumer screens are light parchment with
- * one Action Blue; expert screens are dark tiles. Status colours are only used for state marks, never for buttons.
- */
+/** Shared HAL-CAMERA-Editorial tokens; platform mappings live in docs/design/DESIGN.md. */
 object Look {
-    val canvas = Color.parseColor("#f5f5f7")
+    val canvas = Color.WHITE
     val card = Color.WHITE
-    val hairline = Color.parseColor("#e0e0e0")
-    val ink = Color.parseColor("#1d1d1f")
-    val inkMuted = Color.parseColor("#7a7a7a")
+    val hairline = Color.parseColor("#e2e4e8")
+    val ink = Color.parseColor("#18191b")
+    val inkMuted = Color.parseColor("#62666d")
     val primary = Color.parseColor("#0066cc")
     val onPrimary = Color.WHITE
-    val expertTile = Color.parseColor("#272729")
-    val expertTile2 = Color.parseColor("#2a2a2c")
-    val expertTile3 = Color.parseColor("#252527")
+    val expertTile = Color.parseColor("#18191b")
+    val expertTile2 = Color.parseColor("#202124")
+    val expertTile3 = Color.parseColor("#303238")
     val onDark = Color.WHITE
-    val onDarkMuted = Color.parseColor("#cccccc")
+    val onDarkMuted = Color.parseColor("#bdc1c7")
+    // Dark camera adaptation of the same Editorial palette.
+    val cameraSurface = expertTile
+    val cameraCard = expertTile2
+    val cameraOutline = expertTile3
+    val cameraGlass = Color.argb(220, 24, 25, 27)
+    val cameraSelection = Color.WHITE
+    val cameraOnSelection = ink
     val primaryOnDark = Color.parseColor("#2997ff")
     val statusPass = Color.parseColor("#34c759")
     val statusWarn = Color.parseColor("#ff9500")
@@ -42,7 +46,7 @@ object Look {
     fun dp(context: Context, v: Int) = (v * context.resources.displayMetrics.density).toInt()
 
     fun cardBackground(context: Context, fill: Int = card, stroke: Int = hairline) = GradientDrawable().apply {
-        setColor(fill); cornerRadius = dp(context, 18).toFloat(); setStroke(dp(context, 1), stroke)
+        setColor(fill); cornerRadius = dp(context, 4).toFloat(); setStroke(dp(context, 1), stroke)
     }
 
     fun pill(context: Context, fill: Int) = GradientDrawable().apply { setColor(fill); cornerRadius = dp(context, 999).toFloat() }
@@ -88,7 +92,7 @@ object Look {
     }
 
     fun primaryButton(context: Context, label: String, action: () -> Unit) = Button(context).apply {
-        text = label; isAllCaps = false; textSize = 17f; setTextColor(onPrimary); background = pill(context, primary)
+        text = label; isAllCaps = false; textSize = 17f; setTextColor(onPrimary); background = cardBackground(context, primary, primary)
         setPadding(dp(context, 24), dp(context, 14), dp(context, 24), dp(context, 14)); stateListAnimator = null
         setOnClickListener { action() }
     }
@@ -96,7 +100,7 @@ object Look {
     fun ghostButton(context: Context, label: String, dark: Boolean = false, action: () -> Unit) = Button(context).apply {
         text = label; isAllCaps = false; textSize = 15f
         setTextColor(if (dark) primaryOnDark else primary)
-        background = GradientDrawable().apply { setColor(if (dark) expertTile2 else Color.parseColor("#fafafc")); cornerRadius = dp(context, 999).toFloat(); setStroke(dp(context, 1), if (dark) expertTile3 else hairline) }
+        background = GradientDrawable().apply { setColor(if (dark) expertTile2 else Color.parseColor("#f6f7f8")); cornerRadius = dp(context, 4).toFloat(); setStroke(dp(context, 1), if (dark) expertTile3 else hairline) }
         setPadding(dp(context, 20), dp(context, 12), dp(context, 20), dp(context, 12)); stateListAnimator = null
         setOnClickListener { action() }
     }

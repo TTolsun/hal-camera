@@ -5,3 +5,5 @@ BenchmarkRunner의 결과와 이벤트는 RunAssembler, BenchmarkEvaluator, RunV
 Home·Auto Check·건강 판정 코드는 M3에서 제거되었고, 이를 설명하던 diagnosis·check-runner·health-report·baseline-store·home-screen·check-screen·run-summary 요소도 이 관점에서 제거했습니다. 공통 지표 추출은 metrics/, endpoint 열거는 camera/에 있습니다.
 
 LIVE는 사진·동영상을 MediaLibrary를 통해 DCIM/HALCamera에 저장하고 GalleryActivity가 해당 앨범을 조회합니다. 이 픽셀 저장 경로는 벤치마크 JSON과 incident ZIP의 메타데이터 경로와 구분합니다.
+
+LIVE는 API 토글과 상태, 핵심 측정값을 표시합니다. ExpandingZoomControl은 선택한 배율에서 펼쳐지고 자동으로 접히며, 사진·동영상 버튼은 직접 선택을 제공합니다. 카메라 선택은 목록 방식을 유지합니다. RecentMediaThumbnail은 완성된 앨범 항목을 백그라운드에서 읽어 RecentMediaButton에 표시합니다. MARK·벤치마크·프리뷰 일시정지는 측정 상세에서 제공합니다.

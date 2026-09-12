@@ -1,6 +1,6 @@
 # 작업 상태
 
-2026-09-12 · HAL CAM 0.5.1-dev / [PR #48](https://github.com/TTolsun/hal-camera/pull/48). M5a 내부 점수 초안을 구현하고 코드 리뷰를 마쳤으며 민감도 검증은 진행 중입니다.
+2026-09-12 · HAL CAM 0.5.1. 촬영 화면과 갤러리의 전체 선택·간격 개선을 반영했습니다. [PR #48](https://github.com/TTolsun/hal-camera/pull/48)의 M5a 내부 점수 초안을 포함하며 민감도 검증은 진행 중입니다.
 
 ## 지금 어디까지 왔는가
 
