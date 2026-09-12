@@ -31,6 +31,8 @@ title: 설계 결정 기록
 
 결정 당시 계획은 M3까지 `diagnosis/`와 `benchmark/`를 함께 유지하는 것입니다. 상세 계획은 [Camera BenchMarker v0.3 계획](https://github.com/TTolsun/hal-camera/blob/main/docs/PLAN-BenchMarker-v0.3.md)에 있습니다.
 
-배경, 검토한 대안, 전환 이유는 아직 기록되지 않았습니다. 현재 코드에서 두 계층이 어떻게 사용되는지는 아키텍처 문서에서 확인하세요.
+배경, 검토한 대안, 전환 이유는 아직 기록되지 않았습니다.
 
-**다음 단계:** [아키텍처 문서의 평가 경로 비교](../architecture.md#두-평가-경로의-차이)를 읽으세요.
+**이후 진행:** M3(PR #35)에서 `check/`, `diagnosis/`, `home/`, `report/`, `baseline/` 패키지를 삭제했습니다. 현재 코드에는 `benchmark/` 측정·비교 경로만 남아 있으며, 계산 로직 중 `MetricExtractor`와 `UnknownReason`은 `metrics/`로 옮겨졌습니다.
+
+**다음 단계:** [아키텍처 문서의 앱의 역할과 평가 경로](../architecture.md#앱의-역할과-평가-경로)를 읽으세요.

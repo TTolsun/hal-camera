@@ -1,0 +1,1 @@
+metrics/는 MetricExtractor와 MetricModel을 포함합니다. MetricExtractor는 한 세션의 이벤트를 관측 창 안에서 FrameObservation으로 재구성하고 H.1~H.10 표본을 계산합니다. MetricModel은 UnknownReason과 MetricSample을 정의합니다. 두 파일은 Android import가 없는 순수 Kotlin이며 benchmark/의 RunAssembler·BenchmarkEvaluator와 ui/LiveReadout이 사용합니다. M3에서 diagnosis/의 계산 부분만 이 패키지로 옮겼고, 판정 어휘(State, MetricState, Health 등)는 코드와 함께 삭제되었습니다.

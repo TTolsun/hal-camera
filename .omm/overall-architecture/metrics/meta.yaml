@@ -1,0 +1,10 @@
+created: 2026-09-12T08:07:20.647Z
+updated: 2026-09-12T08:07:20.647Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: metrics
+children:
+  - metric-extractor
+  - metric-model
+parentPath: []

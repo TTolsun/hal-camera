@@ -1,0 +1,5 @@
+`app/src/main/java/dev/halcamera/camera/CameraEndpoint.kt`(66줄)은 카메라 하나를 식별하는 capability 모델과 순수 `LensRoles` 도우미입니다. 파일 머리글이 밝히듯 삭제된 `check` 패키지가 아니라 `camera`에 있는 이유는, endpoint가 어떤 측정이 향하는지와 무관하게 카메라 자체를 식별하기 때문입니다.
+
+`CameraEndpoint`는 측정 가능한 대상 하나이며 `key`는 논리 ID, 논리 카메라 뒤에 있으면 `logical.physical`입니다. 앱이 그 카메라로 할 수 있는 일(`independentlyOpenable`, `selectableByZoom`, `exposedToCameraX`)과 나중에 비교에 필요한 특성(`equivalentFocalMm`, `timestampSource`, `hardwareLevel`, 줌 범위)을 함께 담습니다. `primary`는 CDD 지연 요구가 실제로 적용되는 대상, 곧 최상위 후면 MAIN 또는 FRONT를 표시하며 물리 하위 카메라는 해당하지 않습니다.
+
+`LensRoles`는 `CameraManager` 없이 테스트할 수 있는 순수 추론입니다. `equivalentFocalMm`은 초점 거리와 센서 물리 크기를 43.27mm 대각선으로 35mm 환산하고, `roleFor`는 20mm 미만을 ULTRA_WIDE, 20~35mm를 MAIN, 그 위를 TELE로 나눕니다. `dedupeMain`은 후면 카메라 중 첫 MAIN만 남기고 나머지 후보를 UNKNOWN으로 내립니다. 여러 후면 렌즈가 같은 대역에 들어올 수 있기 때문입니다. `checkOrder`는 MAIN, FRONT, ULTRA_WIDE, TELE, UNKNOWN, EXTERNAL 순서를 고정하며, 현재는 `BenchmarkActivity.enumerate()`가 이 순서로 정렬한 뒤 `independentlyOpenable`인 endpoint만 벤치마크 후보로 씁니다.

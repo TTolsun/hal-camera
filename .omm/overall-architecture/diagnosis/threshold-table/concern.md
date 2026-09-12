@@ -1,5 +1,0 @@
-> v0.2 이력: 이 경로는 M3에서 제거되었습니다. 아래 내용은 현재 구현의 설명이 아닙니다.
-
-Version `0.2-draft`, and its own header says every number is a proposal until measured on a device. The project notes record only three completed 60-second runs on one handset (Galaxy S25+), which is not enough to confirm the table.
-
-It is also the table the v0.3 pivot moves away from: `benchmark/RegressionRules` replaces the absolute-judgement half with delta thresholds and noise floors, and does not have a `weight` concept at all. Anything depending on `ThresholdTable.rules.weight` — `HealthComposer` coverage and score — has no counterpart on the benchmark side yet, which is exactly why Score is deferred to M5.

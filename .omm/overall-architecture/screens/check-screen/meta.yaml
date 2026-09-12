@@ -1,9 +1,0 @@
-created: 2026-09-09T16:10:49.909Z
-updated: 2026-09-09T16:10:49.910Z
-update_count: 1
-last_field: description
-kind: nested-class
-title: check-screen
-children: []
-parentPath:
-  - screens

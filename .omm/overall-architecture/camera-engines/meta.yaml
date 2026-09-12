@@ -7,5 +7,7 @@ title: camera-engines
 children:
   - camera2-engine
   - camerax-engine
+  - endpoint-model
+  - endpoint-resolver
   - engine-interface
 parentPath: []

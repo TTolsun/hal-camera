@@ -1,3 +1,1 @@
-`device.json` writes `"appVersion" to "0.1.0"` as a literal, while `app/build.gradle.kts` declares `versionName = "0.3.1"` and `versionCode = 3`. Any incident bundle collected today therefore misreports which app produced it.
-
-The fix is to read `BuildConfig` (or the values `AppInfo` already carries in the benchmark layer) instead of the constant.
+0.4.0에서 `device.json`의 `appVersion`이 설치된 패키지의 versionName을 읽도록 고쳐졌습니다(이전에는 "0.1.0" 문자열이 고정되어 있었습니다). 그 이전 버전으로 수집한 incident ZIP은 여전히 잘못된 앱 버전을 담고 있으므로 파일 날짜로 구분해야 합니다.

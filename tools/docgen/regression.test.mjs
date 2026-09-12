@@ -30,6 +30,9 @@ const change = (p, transform, body) => {
   finally { fs.writeFileSync(file(p), original); }
 };
 pass(run('extract.mjs')); pass(run('verify.mjs', '--accept')); pass(run('generate.mjs'));
+// A fixture that starts out stale (e.g. a manuscript citing a deleted file) would fail every later test with an
+// unrelated message; check it here so the real cause is the first thing reported.
+pass(run('verify.mjs', '--check'));
 
 test('reviewed LF and CRLF checkouts have identical evidence hashes', () => {
   const all = Object.keys(snapshot(root)).filter(p => /\.(kt|kts|md|mmd|yaml|json)$/.test(p));

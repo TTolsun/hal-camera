@@ -1,1 +1,1 @@
-ui/는 ScopeView, StripView, TimelineView 및 Look의 공통 시각 설정을 포함합니다. 커스텀 View는 Canvas에 관측 데이터를 그립니다.
+ui/는 ScopeView, StripView, TimelineView와 공통 시각 설정 Look, LIVE 수치를 계산하는 LiveReadout, 그리고 0.5.0에서 추가된 IconButton, ShutterButton, ExpandingZoomControl, SelectionPopup, GalleryImageView를 포함합니다. 커스텀 View는 Canvas에 관측 데이터를 그립니다. LiveReadout은 M3에서 삭제된 HealthMonitor를 대체하며, MainActivity가 넘긴 이벤트 목록에서 판정 없이 관측값(간격, partial, buffer, stall 횟수, 3A 상태)을 읽습니다. 최근 1.5초 안의 마지막 프레임이 현재값이고, 그보다 오래된 프레임이 15개 이상 모이면 그 p50이 기준선입니다.

@@ -48,7 +48,7 @@ LIVE의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저
 
 - 근거 파일: `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-11 @ `b66992c` · Codex-release-review
+- 검토 2026-09-12 @ `7e24d8f` · Claude
 
 </details>
 
@@ -115,7 +115,7 @@ graph LR
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-11 @ `b66992c` · Codex-release-review
+- 검토 2026-09-12 @ `7e24d8f` · Claude
 
 </details>
 
@@ -174,7 +174,7 @@ LIVE에서 사진을 촬영하면 Camera2의 같은 요청에 YUV와 JPEG 출력
 
 - 근거 파일: `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/ui/GalleryImageView.kt`, `app/src/main/java/dev/halcamera/ui/IconButton.kt`, `app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt`, `app/src/main/java/dev/halcamera/ui/SelectionPopup.kt`, `app/src/main/java/dev/halcamera/ui/ShutterButton.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/BaselineManager.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-11 @ `b66992c` · Codex-release-review
+- 검토 2026-09-12 @ `7e24d8f` · Claude
 
 </details>
 
@@ -281,7 +281,7 @@ LIVE의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-11 @ `b66992c` · Codex-release-review
+- 검토 2026-09-12 @ `7e24d8f` · Claude
 
 </details>
 
@@ -295,7 +295,7 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 .\gradlew.bat :app:testDebugUnitTest
 ~~~
 
-`CheckEvaluatorTest`, `AutoCheckRunnerTest`, `MetricExtractorTest`와 `BenchmarkRunner` 관련 테스트에서 단계 전이와 계산 규칙을 확인합니다. 테스트가 통과해도 문서의 조건·예외가 코드와 맞는지 대조해야 합니다. 기기에서의 검증은 별도로 기록합니다.
+`BenchmarkRunnerTest`, `RunAssemblerTest`, `RegressionDetectorTest`, `MetricExtractorTest`에서 단계 전이와 계산 규칙을 확인합니다. 테스트가 통과해도 문서의 조건·예외가 코드와 맞는지 대조해야 합니다. 기기에서의 검증은 별도로 기록합니다.
 
 ## 미완성 기능과 추가 검증
 
@@ -333,13 +333,13 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-11 @ `b66992c` · Codex-release-review |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-11 @ `b66992c` · Codex-release-review |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-11 @ `b66992c` · Codex-release-review |
-| 원고 `overview` | 최신 | 검토 2026-09-11 @ `b66992c` · Codex-release-review |
-| 원고 `module-roles` | 최신 | 검토 2026-09-11 @ `b66992c` · Codex-release-review |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-11 @ `b66992c` · Codex-release-review |
-| 원고 `constraints` | 최신 | 검토 2026-09-11 @ `b66992c` · Codex-release-review |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-12 @ `7e24d8f` · Claude |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-12 @ `7e24d8f` · Claude |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-12 @ `7e24d8f` · Claude |
+| 원고 `overview` | 최신 | 검토 2026-09-12 @ `7e24d8f` · Claude |
+| 원고 `module-roles` | 최신 | 검토 2026-09-12 @ `7e24d8f` · Claude |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-12 @ `7e24d8f` · Claude |
+| 원고 `constraints` | 최신 | 검토 2026-09-12 @ `7e24d8f` · Claude |
 
 <!-- omm:end id=status -->
 
