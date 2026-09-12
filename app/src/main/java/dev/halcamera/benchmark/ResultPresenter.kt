@@ -44,13 +44,15 @@ data class ResultView(
     val sections: List<ResultSection>,
     val threeALine: String?,
     val baselineButton: String,
-    val baselineButtonEnabled: Boolean
+    val baselineButtonEnabled: Boolean,
+    val scoreLine: String? = null
 ) {
     fun render(): String = buildString {
         appendLine("CAMERA BENCHMARK")
         appendLine(titleLine)
         appendLine(subLine)
         appendLine(eligibilityLine)
+        scoreLine?.let { appendLine(it) }
         appendLine()
         appendLine(comparisonLine)
         identityLine?.let { appendLine("                $it") }
@@ -77,6 +79,15 @@ object ResultPresenter {
 
     private val ORDER = listOf(Category.LAUNCH, Category.PREVIEW, Category.CAPTURE, Category.STABILITY)
 
+    fun scoreLine(run: BenchmarkRun): String? {
+        if (run.scoringRuleVersion != ScoreComposer.VERSION || run.endpointScore == null) return null
+        val score = ScoreComposer.compose(run, S25PlusScoreDraft.calibration) ?: return null
+        val categoryText = score.categories.entries.joinToString(" · ") {
+            "${it.key.name} ${String.format(Locale.US, "%.0f", it.value)}"
+        }
+        return "Camera Endpoint Score ${score.total} / 1000\n내부 초안 · ${ScoreComposer.VERSION}\n$categoryText\n동일 모델·카메라의 변화 확인용 · 기기 간 순위 아님"
+    }
+
     fun present(
         run: BenchmarkRun,
         comparison: RunComparison?,
@@ -95,6 +106,7 @@ object ResultPresenter {
                 run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() } ?: "(subject 없음)"
             ).joinToString(" · "),
             eligibilityLine = eligibilityLine(run),
+            scoreLine = scoreLine(run),
             comparisonLine = comparisonLine(run, comparison, comparedTo, isBaseline),
             identityLine = comparison?.identity?.let(::identityLine),
             conditionLine = comparison?.let(::conditionLine),

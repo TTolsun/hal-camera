@@ -1,0 +1,1 @@
+ScoreComposer는 정상 조건의 동일 기기·endpoint·계약에서 얻은 release 측정 10회 이상으로 지표별 중앙값과 척도를 계산합니다. S25PlusScoreDraft는 검토한 실측 calibration을 보관합니다. 적격 run에 16개 지표 점수, 네 카테고리의 평균과 0–1000 내부 Camera Endpoint Score를 계산합니다. 3A는 제외하며 다른 모델·endpoint·계약, 누락 지표와 부적격 환경에는 점수를 내지 않습니다. sensitivity는 유효한 스트레스 측정의 오프라인 검증용이며 정상 적격 점수로 저장하지 않습니다.

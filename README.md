@@ -12,7 +12,7 @@ Android 카메라의 **launch · preview · capture 성능을 반복 측정하�
 | PREVIEW | 프레임 간격 p50 / p95, partial 지연, buffer 지연, jitter |
 | CAPTURE | 촬영 지연, 결과 metadata 지연, 연속 촬영 간격 |
 | STABILITY | stall 횟수, 콜백 실패 횟수, 촬영 중 stall |
-| 3A | AE / AF / AWB 수렴 시간 (M5까지 informational) |
+| 3A | AE / AF / AWB 수렴 시간 (정보용, 점수 가중치 0) |
 
 지표의 시작점과 종료점, 시계 종류, 통계 규칙은 [METRICS.md](docs/METRICS.md)에 정의되어 있습니다.
 
@@ -54,6 +54,10 @@ open 10회 반복 → 3초 warm-up → 10초 관측 → 정지 영상 10장 → 
 - 지표마다 임계 비율과 noise floor가 따로 있습니다. 5 ms가 11 ms로 늘어나면 +120 %이지만 절대 차이가 6 ms이므로 회귀로 보지 않습니다.
 - run은 세 단계로 걸러집니다. 측정 유효 → 비교 가능 → 점수 가능. 충전 중인 run은 비교에는 쓰이지만 점수에서는 빠집니다.
 - thermal, 절전 모드, 충전 상태, 노출 부하가 크게 다르면 비교 시점 조건 차이로 표시합니다.
+
+## 내부 점수 초안
+
+검토한 정상 측정 분포가 있는 Galaxy S25+ (`SM-S936N`) 후면 메인 endpoint `0`에는 `score-v1-draft` Camera Endpoint Score와 카테고리 점수를 표시합니다. release 빌드·적격 환경·동일 측정 계약이 필요하며, 3A는 점수에서 제외합니다. 다른 기기와의 순위를 나타내는 공개 점수는 아닙니다. 계산 규칙과 검증 범위는 [SCORING.md](docs/SCORING.md)를 참고하십시오.
 
 ## 빌드
 
