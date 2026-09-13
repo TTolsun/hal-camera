@@ -160,6 +160,7 @@ test('element prompts isolate code and fields while including only the parent de
   const url = await server(t, (data, res) => {
     const allowed = data.format.properties.updates.items.properties.element.enum;
     assert.equal(allowed.length, 1); seen.push(allowed[0]);
+    assert.equal(data.format.properties.updates.items.properties.text.minLength, 1);
     const prompt = data.messages.at(-1).content;
     if (allowed[0] === 'sync-probe') {
       assert.ok(prompt.includes('## 파일: ' + probeFile));
@@ -237,6 +238,14 @@ test('an element cannot modify its sibling even within the same perspective', as
   const url = await server(t, (_data, res) => reply(res, { updates: [{ ...scan.updates[0], element: 'sync-probe/timer' }] }));
   const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--scan-only']);
   assert.equal(r.code, 1, r.out); assert.match(r.out, /경로·필드·내용/);
+  assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
+});
+
+for (const text of ['', ' \n ']) test('empty scan content is rejected without changing files: ' + JSON.stringify(text), async t => {
+  const f = fixture(t); const before = snapshot(f.root);
+  const url = await server(t, (_data, res) => reply(res, { updates: [{ ...scan.updates[0], text }] }));
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--scan-only']);
+  assert.equal(r.code, 1, r.out); assert.match(r.out, /sync-probe: Qwen 구조 응답.*내용 길이/);
   assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
 });
 

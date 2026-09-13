@@ -56,7 +56,7 @@ test('nested element YAML and nearest-parent inheritance preserve perspective ha
 });
 
 test('element evidence outside the perspective fails before freshness records are written', () => {
-  change('docs/guide/_bindings.yaml', text => text.replace('      .:\n        evidence:', '      .:\n        evidence:\n          - docs/guide/architecture.md'), () => {
+  for (const eol of ['\n', '\r\n']) change('docs/guide/_bindings.yaml', text => text.replace(/\r?\n/g, eol).replace(/(      \.:\r?\n        evidence:)/, '$1\n          - docs/guide/architecture.md'), () => {
     const before = snapshot(file('tools/docgen/state'));
     const r = run('verify.mjs', '--check');
     assert.equal(r.status, 1); assert.match(r.stderr, /overall-architecture.*부분집합.*architecture.md/);

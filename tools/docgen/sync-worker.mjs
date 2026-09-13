@@ -61,13 +61,13 @@ try {
       const started = Date.now();
       const before = snapshot(REPO_ROOT);
       const result = await qwen(input.prompt, schema({ updates: { type: 'array', items: schema({
-        element: { type: 'string', enum: [element.path] }, field: { type: 'string', enum: OMM_FIELDS }, text: { type: 'string' },
+        element: { type: 'string', enum: [element.path] }, field: { type: 'string', enum: OMM_FIELDS }, text: { type: 'string', minLength: 1 },
       }) } }));
       if (!Array.isArray(result.updates)) throw new Error('Qwen 구조 응답에 updates가 없습니다.');
       const seen = new Set();
       for (const update of result.updates) {
         if (!update || update.element !== element.path || !OMM_FIELDS.includes(update.field) || typeof update.text !== 'string' || !update.text.trim()) {
-          throw new Error('Qwen 구조 응답의 경로·필드·내용이 유효하지 않습니다.');
+          throw new Error(`${element.path}: Qwen 구조 응답의 경로·필드·내용이 유효하지 않습니다 (필드: ${JSON.stringify(update?.field)}, 내용 길이: ${typeof update?.text === 'string' ? update.text.length : '문자열 아님'}).`);
         }
         const key = `${update.element}/${update.field}`;
         if (seen.has(key)) throw new Error(`중복 OMM 수정: ${key}`);
