@@ -43,6 +43,149 @@ sources:
       - app/src/main/AndroidManifest.xml
       - app/build.gradle.kts
       - settings.gradle.kts
+    elements:
+      .:
+        evidence:
+          - app/src/main/AndroidManifest.xml
+          - app/build.gradle.kts
+          - settings.gradle.kts
+          - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
+          - app/src/main/java/dev/halcamera/camera/LiveController.kt
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
+      benchmark:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
+          - app/src/main/java/dev/halcamera/benchmark/RunIndex.kt
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
+      benchmark/benchmark-runner:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt
+          - app/src/main/java/dev/halcamera/benchmark/ProfileCompatibility.kt
+          - app/src/main/java/dev/halcamera/benchmark/ThermalTracker.kt
+      benchmark/benchmark-model:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkModel.kt
+          - app/src/main/java/dev/halcamera/benchmark/RunIndex.kt
+      benchmark/benchmark-profile:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkProfile.kt
+          - app/src/main/java/dev/halcamera/benchmark/SubjectPrefs.kt
+      benchmark/benchmark-evaluator:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt
+      benchmark/run-assembler:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
+          - app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt
+      benchmark/run-validity:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/RunValidity.kt
+      benchmark/comparison:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt
+          - app/src/main/java/dev/halcamera/benchmark/BaselineManager.kt
+          - app/src/main/java/dev/halcamera/benchmark/ReferenceResolver.kt
+          - app/src/main/java/dev/halcamera/benchmark/ResultPresenter.kt
+          - app/src/main/java/dev/halcamera/benchmark/ComparePresenter.kt
+      benchmark/regression-rules:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/RegressionRules.kt
+      benchmark/build-identity:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BuildIdentity.kt
+      benchmark/metric-info:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/MetricInfo.kt
+          - app/src/main/java/dev/halcamera/metrics/MetricModel.kt
+      benchmark/score-composer:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt
+          - app/src/main/java/dev/halcamera/benchmark/S25PlusScoreDraft.kt
+      camera-engines:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
+          - app/src/main/java/dev/halcamera/camera/CameraEndpoint.kt
+      camera-engines/engine-interface:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
+      camera-engines/camera2-engine:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+          - app/src/main/java/dev/halcamera/camera/StillPair.kt
+          - app/src/main/java/dev/halcamera/camera/YuvPacking.kt
+          - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+      camera-engines/camerax-engine:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+      camera-engines/endpoint-model:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraEndpoint.kt
+      camera-engines/endpoint-resolver:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt
+      platform-camera:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
+      screens:
+        evidence:
+          - app/src/main/AndroidManifest.xml
+          - app/src/main/java/dev/halcamera/camera/LiveController.kt
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
+      screens/expert-screen:
+        evidence:
+          - app/src/main/java/dev/halcamera/MainActivity.kt
+          - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
+      screens/benchmark-screen:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
+          - app/src/main/java/dev/halcamera/benchmark/ProgressPresenter.kt
+          - app/src/main/java/dev/halcamera/benchmark/StartCardPresenter.kt
+      screens/look-tokens:
+        evidence:
+          - app/src/main/java/dev/halcamera/ui/Look.kt
+      ui-widgets:
+        evidence:
+          - app/src/main/java/dev/halcamera/ui/**/*.kt
+      metrics:
+        evidence:
+          - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
+          - app/src/main/java/dev/halcamera/metrics/MetricModel.kt
+      metrics/metric-extractor:
+        evidence:
+          - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
+      metrics/metric-model:
+        evidence:
+          - app/src/main/java/dev/halcamera/metrics/MetricModel.kt
+      telemetry:
+        evidence:
+          - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+          - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
+          - app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt
+      telemetry/flight-recorder:
+        evidence:
+          - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
+          - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+      telemetry/capture-callbacks:
+        evidence:
+          - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+      telemetry/incident-exporter:
+        evidence:
+          - app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt
+      persistence:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt
+          - app/src/main/java/dev/halcamera/benchmark/BaselineManager.kt
+          - app/src/main/java/dev/halcamera/benchmark/SubjectPrefs.kt
+          - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+      persistence/benchmark-store:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt
+      persistence/benchmark-report:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt
 
   data-flow:
     kind: omm
@@ -54,6 +197,51 @@ sources:
       - app/src/main/java/dev/halcamera/MainActivity.kt
       - app/src/main/java/dev/halcamera/cli/**/*.kt
       - tools/halcam/halcam/**/*.py
+    elements:
+      .:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
+          - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt
+          - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
+          - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+          - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
+      benchmark-metrics:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt
+          - app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt
+      event-record:
+        evidence:
+          - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
+          - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+          - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
+      frame-observations:
+        evidence:
+          - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
+          - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
+      framework-callbacks:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+          - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+          - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+      rendered-screens:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/ResultPresenter.kt
+          - app/src/main/java/dev/halcamera/benchmark/ComparePresenter.kt
+          - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
+          - app/src/main/java/dev/halcamera/camera/LiveController.kt
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
+      run-json:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkModel.kt
+          - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+      runner-marks:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt
+          - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
+          - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
 
   state-transitions:
     kind: omm
@@ -64,6 +252,26 @@ sources:
       - app/src/main/java/dev/halcamera/MainActivity.kt
       - app/src/main/java/dev/halcamera/cli/**/*.kt
       - tools/halcam/halcam/**/*.py
+    elements:
+      .:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt
+          - app/src/main/java/dev/halcamera/cli/CommandStore.kt
+          - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
+          - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
+          - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
+      engine-lifecycle:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+          - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt
+      incident-window:
+        evidence:
+          - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
+      validity-gate:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/RunValidity.kt
+          - app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt
 
   telemetry-facts:
     kind: fact

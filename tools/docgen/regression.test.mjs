@@ -15,6 +15,7 @@ fs.copyFileSync(path.join(source, 'settings.gradle.kts'), path.join(root, 'setti
 const file = p => path.join(root, p);
 const run = (script, ...args) => spawnSync(process.execPath, [file('tools/docgen/' + script), ...args], { cwd: root, encoding: 'utf8' });
 const pass = r => assert.equal(r.status, 0, r.stdout + r.stderr);
+const runCode = code => spawnSync(process.execPath, ['--input-type=module', '-e', code], { cwd: root, encoding: 'utf8' });
 const snapshot = dir => {
   const result = {};
   for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -33,6 +34,68 @@ pass(run('extract.mjs')); pass(run('verify.mjs', '--accept')); pass(run('generat
 // A fixture that starts out stale (e.g. a manuscript citing a deleted file) would fail every later test with an
 // unrelated message; check it here so the real cause is the first thing reported.
 pass(run('verify.mjs', '--check'));
+
+test('nested element YAML and nearest-parent inheritance preserve perspective hashes', () => {
+  const r = runCode(`
+    import assert from 'node:assert/strict';
+    import { parseYaml } from './tools/docgen/yaml-lite.mjs';
+    import { readBindings } from './tools/docgen/lib.mjs';
+    import { collectElements, collectKeys, computeHashes } from './tools/docgen/model.mjs';
+    const b = readBindings(), source = 'overall-architecture';
+    const before = computeHashes(b, collectKeys(b)[0]);
+    b.sources[source].elements = parseYaml('elements:\\n  .:\\n    evidence: [app/src/main/AndroidManifest.xml]\\n  benchmark:\\n    evidence: [app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt]\\n  benchmark/run-validity:\\n    evidence: [app/src/main/java/dev/halcamera/benchmark/RunValidity.kt]\\n').elements;
+    const elements = new Map(collectElements(b, source).map(e => [e.path, e]));
+    assert.deepEqual(elements.get(source + '/camera-engines/engine-interface').evidence, ['app/src/main/AndroidManifest.xml']);
+    assert.deepEqual(elements.get(source + '/benchmark/run-assembler').evidence, ['app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt']);
+    assert.deepEqual(elements.get(source + '/benchmark/run-validity').evidence, ['app/src/main/java/dev/halcamera/benchmark/RunValidity.kt']);
+    assert.equal(elements.get(source + '/benchmark/run-assembler').parent, source + '/benchmark');
+    assert.equal(elements.get(source).parent, null);
+    assert.deepEqual(computeHashes(b, collectKeys(b)[0]), before);
+  `);
+  pass(r);
+});
+
+test('element evidence outside the perspective fails before freshness records are written', () => {
+  change('docs/guide/_bindings.yaml', text => text.replace('      .:\n        evidence:', '      .:\n        evidence:\n          - docs/guide/architecture.md'), () => {
+    const before = snapshot(file('tools/docgen/state'));
+    const r = run('verify.mjs', '--check');
+    assert.equal(r.status, 1); assert.match(r.stderr, /overall-architecture.*부분집합.*architecture.md/);
+    assert.deepEqual(snapshot(file('tools/docgen/state')), before);
+  });
+});
+
+test('misspelled element mapping cannot silently inherit broader evidence', () => {
+  change('docs/guide/_bindings.yaml', text => text.replace('      benchmark/run-validity:', '      benchmark/missing-element:'), () => {
+    const r = run('verify.mjs', '--check');
+    assert.equal(r.status, 1); assert.match(r.stderr, /존재하지 않는 elements 경로.*missing-element/);
+  });
+});
+
+test('all configured elements fit the prompt budget and exclude descendant fields', () => {
+  pass(runCode(`
+    import assert from 'node:assert/strict';
+    import { readBindings } from './tools/docgen/lib.mjs';
+    import { collectElements } from './tools/docgen/model.mjs';
+    import { elementInput } from './tools/docgen/scan-prompt.mjs';
+    const b = readBindings(); let count = 0;
+    for (const [name, source] of Object.entries(b.sources)) if (source.kind === 'omm') {
+      for (const e of collectElements(b, name)) {
+        const input = elementInput(e); assert.ok(input.prompt.length <= 60000, e.path);
+        assert.ok(input.files.length > 0); count++;
+      }
+    }
+    assert.equal(count, 47);
+  `));
+});
+
+test('oversized scan reports element and size without writing or contacting the model', () => {
+  const before = snapshot(root);
+  const r = spawnSync(process.execPath, [file('tools/docgen/sync.mjs'), '--dry-run', '--scan-only', '--force'], {
+    cwd: root, encoding: 'utf8', env: { ...process.env, DOCGEN_MAX_PROMPT_CHARS: '10', DOCGEN_OLLAMA_URL: 'http://127.0.0.1:1' },
+  });
+  assert.equal(r.status, 1); assert.match(r.stderr, /overall-architecture: Qwen 입력 \d+자가 한도 10자를/);
+  assert.deepEqual(snapshot(root), before);
+});
 
 test('reviewed LF and CRLF checkouts have identical evidence hashes', () => {
   const all = Object.keys(snapshot(root)).filter(p => /\.(kt|kts|py|md|mmd|yaml|json)$/.test(p));
