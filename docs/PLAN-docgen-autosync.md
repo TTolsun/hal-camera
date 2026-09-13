@@ -114,7 +114,7 @@ P2에서 `_bindings.yaml`에 넣을 초기 값이다. 요소 이름은 2026-09-1
 | `camera-engines/camerax-engine` | `camera/CameraXEngine.kt` | 6,418자 |
 | `camera-engines/endpoint-model` | `camera/CameraEndpoint.kt` | 3,475자 |
 | `camera-engines/endpoint-resolver` | `camera/CameraEndpointResolver.kt` | 3,652자 |
-| `platform-camera` | `camera/CameraEndpointResolver.kt`, `camera/MediaLibrary.kt` | 6,853자 |
+| `platform-camera` | `camera/CameraEngine.kt` (측정 경계 설명이므로 인터페이스 파일만 둔다) | 3,806자 |
 | `screens/expert-screen` | `MainActivity.kt` | 43,997자 |
 | `screens/benchmark-screen` | `benchmark/BenchmarkActivity.kt`, `benchmark/ProgressPresenter.kt`, `benchmark/StartCardPresenter.kt` | 56,614자 (한도에 가깝다. `ResultPresenter.kt`와 `HistoryActivity.kt`는 별도 요소를 만드는 것을 검토한다) |
 | `screens/look-tokens` | `ui/Look.kt` | 5,803자 |
@@ -122,7 +122,7 @@ P2에서 `_bindings.yaml`에 넣을 초기 값이다. 요소 이름은 2026-09-1
 | `metrics/metric-extractor` | `metrics/MetricExtractor.kt` | 12,075자 |
 | `metrics/metric-model` | `metrics/MetricModel.kt` | 1,365자 |
 | `telemetry/flight-recorder` | `telemetry/FlightRecorder.kt`, `telemetry/Telemetry.kt` | 9,805자 |
-| `telemetry/capture-callbacks` | `telemetry/Telemetry.kt`, `camera/Camera2Engine.kt` | 33,460자 |
+| `telemetry/capture-callbacks` | `telemetry/Telemetry.kt` | 4,918자 |
 | `telemetry/incident-exporter` | `telemetry/IncidentExporter.kt` | 7,220자 |
 | `persistence/benchmark-store` | `benchmark/BenchmarkStore.kt`, `benchmark/BenchmarkCsv.kt` | 6,881자 |
 | `persistence/benchmark-report` | `benchmark/BenchmarkReport.kt` | 8,981자 |
