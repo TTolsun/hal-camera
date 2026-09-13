@@ -5,6 +5,12 @@ export function positiveInt(name, fallback) {
   return value;
 }
 
+function timerMs(name, fallback) {
+  const value = positiveInt(name, fallback);
+  if (value > 2147483647) throw new Error(`${name} must not exceed 2147483647ms`);
+  return value;
+}
+
 export async function qwen(prompt, schema) {
   const endpoint = new URL(process.env.DOCGEN_OLLAMA_URL ?? 'http://127.0.0.1:11434');
   if (endpoint.protocol !== 'http:' || !['127.0.0.1', 'localhost', '[::1]'].includes(endpoint.hostname) ||
@@ -16,8 +22,8 @@ export async function qwen(prompt, schema) {
   if (prompt.length > positiveInt('DOCGEN_MAX_PROMPT_CHARS', 60000)) {
     throw new Error(`Qwen 입력이 너무 큽니다(${prompt.length}자). 근거 범위를 나누거나 컨텍스트 설정을 조정하세요. 입력을 잘라 보내지는 않습니다.`);
   }
-  const timeoutMs = positiveInt('DOCGEN_LLM_TIMEOUT_MS', 1800000);
-  const idleMs = positiveInt('DOCGEN_LLM_IDLE_MS', 120000);
+  const timeoutMs = timerMs('DOCGEN_LLM_TIMEOUT_MS', 1800000);
+  const idleMs = timerMs('DOCGEN_LLM_IDLE_MS', 120000);
   const context = positiveInt('DOCGEN_QWEN_CONTEXT', 32768);
   const numPredict = positiveInt('DOCGEN_QWEN_NUM_PREDICT', 8192);
   const start = Date.now();

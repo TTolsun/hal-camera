@@ -123,6 +123,23 @@ test('invalid transport settings fail before contacting Ollama', async t => {
   assert.equal(requests, 0);
 });
 
+test('timer overflow is rejected before a request and the maximum delay is accepted', async t => {
+  let requests = 0;
+  const url = await server(t, (_data, res) => { requests++; reply(res, { ok: true }); });
+  for (const key of ['DOCGEN_LLM_TIMEOUT_MS', 'DOCGEN_LLM_IDLE_MS']) {
+    for (const value of ['2147483648', String(Number.MAX_SAFE_INTEGER)]) {
+      await t.test(`${key}=${value}`, async sub => {
+        transportEnv(sub, url, { [key]: value });
+        await assert.rejects(qwen('test', {}), new RegExp(`${key} must not exceed 2147483647ms`));
+      });
+    }
+  }
+  assert.equal(requests, 0);
+  transportEnv(t, url, { DOCGEN_LLM_TIMEOUT_MS: '2147483647', DOCGEN_LLM_IDLE_MS: '2147483647' });
+  assert.deepEqual(await qwen('test', {}), { ok: true });
+  assert.equal(requests, 1);
+});
+
 test('local protocol completes scan/write/generate without accepting review', async t => {
   const f = fixture(t); const before = snapshot(f.root);
   const url = await server(t, (data, res) => reply(res, data.format.properties.updates ? scan : { markdown: manuscript('12000') }));
