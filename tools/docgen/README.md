@@ -106,7 +106,9 @@ Windows에서는 위 로컬 설치 경로를 자동으로 찾습니다. 다른 �
 
 클라우드 API 키나 Claude 로그인이 필요하지 않습니다. `DOCGEN_OLLAMA_URL`은 기본값 `http://127.0.0.1:11434`이며 루프백 주소만 허용합니다. 다른 로컬 Qwen을 사용하려면 `DOCGEN_QWEN_MODEL`을 지정합니다. 서버가 꺼졌거나 모델이 없으면 실패하며 다른 제공자로 전환하지 않습니다.
 
-각 모델 호출은 기본 300초 후 중단됩니다(`DOCGEN_LLM_TIMEOUT_MS`). 입력은 기본 60,000자, 컨텍스트는 32,768토큰입니다(`DOCGEN_MAX_PROMPT_CHARS`, `DOCGEN_QWEN_CONTEXT`). 입력을 잘라 보내지 않으므로 넓은 근거 범위가 한도를 넘으면 실패합니다. 큰 모델이나 컨텍스트를 쓰기 전에 메모리 여유를 확인하고, 가능하면 바인딩의 근거 범위를 나눕니다. 현재 스캐너는 기존 OMM 요소의 필드를 갱신하며 새 요소 생성·삭제는 지원하지 않습니다.
+각 모델 호출은 스트리밍 NDJSON 응답을 받아 내용을 이어 붙입니다. 전체 시간 제한은 기본 1,800초입니다(`DOCGEN_LLM_TIMEOUT_MS=1800000`). 요청 시작부터 첫 본문 청크까지, 이후에는 마지막 청크부터 기본 120초 동안 데이터가 없으면 중단합니다(`DOCGEN_LLM_IDLE_MS=120000`). 청크가 계속 도착해도 전체 시간 제한은 연장되지 않습니다. 완료 청크가 없거나 `done_reason`이 `stop`이 아니면 실패합니다.
+
+입력은 기본 60,000자, 컨텍스트는 32,768토큰이며 출력 한도는 8,192토큰입니다(`DOCGEN_MAX_PROMPT_CHARS`, `DOCGEN_QWEN_CONTEXT`, `DOCGEN_QWEN_NUM_PREDICT`). 입력을 잘라 보내지 않으므로 넓은 근거 범위가 한도를 넘으면 실패합니다. 큰 모델이나 컨텍스트를 쓰기 전에 메모리 여유를 확인하고, 가능하면 바인딩의 근거 범위를 나눕니다. 현재 스캐너는 기존 OMM 요소의 필드를 갱신하며 새 요소 생성·삭제는 지원하지 않습니다.
 
 현재 저장소의 세 관점은 코드만 약 31만~41만 자입니다. 따라서 기본 설정에서 해당 관점의 전체 재스캔은 입력 한도로 중단됩니다. 작은 범위의 실행·복구 검증은 완료했지만, 이 저장소 전체의 무인 갱신은 근거 분할을 구현하기 전까지 준비되지 않은 상태입니다. 한도를 올리는 것만으로 정확성이 확보되지는 않습니다.
 
@@ -126,6 +128,8 @@ Windows에서는 위 로컬 설치 경로를 자동으로 찾습니다. 다른 �
 node --test tools/docgen/regression.test.mjs tools/docgen/sync.test.mjs
 $env:DOCGEN_REAL_QWEN = '1'
 node --test --test-name-pattern='real installed Qwen' tools/docgen/sync.test.mjs
+$env:DOCGEN_LONG_STREAM = '1'
+node --test --test-name-pattern='previous 300-second limit' tools/docgen/sync.test.mjs
 ```
 
-기본 CI는 모의 Ollama 응답과 실제 OMM CLI로 오류·복구를 검사합니다. 두 번째 명령은 설치된 Qwen을 실제 호출하므로 명시적으로 실행합니다. 두 검사 모두 임시 테스트 프로젝트를 사용하며 제품 코드나 배포 문서를 테스트용으로 바꾸지 않습니다.
+기본 CI는 모의 Ollama 응답과 실제 OMM CLI로 오류·복구를 검사합니다. `DOCGEN_REAL_QWEN` 검사는 설치된 Qwen으로 전체 파이프라인과 원고 한 건의 `--write-only` 실행을 확인합니다. `DOCGEN_LONG_STREAM` 검사는 모의 서버가 305초 동안 청크를 보내도록 하여 기본 시간 제한에서 응답이 완료되는지 확인합니다. 이 검사는 실제 모델의 장시간 생성 검증과는 별개입니다. 두 선택 검사는 명시적으로 실행하며, 모든 검사는 임시 테스트 프로젝트 또는 모의 서버를 사용하므로 제품 코드나 배포 문서를 테스트용으로 바꾸지 않습니다.
