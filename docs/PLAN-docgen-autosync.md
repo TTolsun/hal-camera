@@ -43,17 +43,19 @@ P1은 P2보다 먼저 한다. P2의 요소별 스캔을 실제 모델로 검증�
 
 파일: `docs/guide/_bindings.yaml`, `tools/docgen/model.mjs`, `tools/docgen/sync-worker.mjs`, `tools/docgen/sync.mjs`, `tools/docgen/verify.mjs`, `tools/docgen/regression.test.mjs`, `tools/docgen/sync-fixture.mjs`, `.github/workflows/docs-check.yml`
 
-- [ ] `yaml-lite.mjs`가 `elements` 아래의 중첩 매핑(요소 경로 키 → `evidence` 목록)을 읽을 수 있는지 확인한다. 안 되면 최소 확장을 한다.
-- [ ] `model.mjs`에 `collectElements(bindings, source)`를 추가한다. 요소 경로, 근거 글롭(상속 포함), 부모 경로를 돌려준다.
-- [ ] `verify.mjs --check`에 부분집합 검사를 추가한다. 요소 근거 파일이 관점 `evidence`에 없으면 실패한다.
-- [ ] `sync-worker.mjs`의 스캔 루프를 관점 단위에서 요소 단위로 바꾼다. 프롬프트는 요소 필드, 부모 `description`, 요소 근거만 포함한다. 허용 요소는 그 요소 하나다.
-- [ ] 기존 파일과 같은 내용의 `updates`는 건너뛴다.
-- [ ] `tools/docgen/state/scan.json`을 추가한다. 성공한 요소의 `codeHash`와 `scannedAt`을 기록하고, 다음 실행에서 해시가 같은 요소는 건너뛴다.
-- [ ] `sync.mjs`의 `outputPolicy`와 `docs-check.yml`의 상태 파일 일치 검사에 `scan.json`을 추가한다.
-- [ ] `_bindings.yaml`에 세 관점의 요소별 근거를 채운다. 시작 표는 아래 3장에 있다.
-- [ ] `regression.test.mjs`에 부분집합 위반, 상속, 한도 초과 메시지 검사를 추가한다. `sync-fixture.mjs`에 요소 두 개짜리 fixture를 둔다.
+- [x] `yaml-lite.mjs`가 `elements` 아래의 중첩 매핑(요소 경로 키 → `evidence` 목록)을 읽을 수 있는지 확인한다. 안 되면 최소 확장을 한다.
+- [x] `model.mjs`에 `collectElements(bindings, source)`를 추가한다. 요소 경로, 근거 글롭(상속 포함), 부모 경로를 돌려준다.
+- [x] `verify.mjs --check`에 부분집합 검사를 추가한다. 요소 근거 파일이 관점 `evidence`에 없으면 실패한다.
+- [x] `sync-worker.mjs`의 스캔 루프를 관점 단위에서 요소 단위로 바꾼다. 프롬프트는 요소 필드, 부모 `description`, 요소 근거만 포함한다. 허용 요소는 그 요소 하나다.
+- [x] 기존 파일과 같은 내용의 `updates`는 건너뛴다.
+- [x] `tools/docgen/state/scan.json`을 추가한다. 성공한 요소의 `codeHash`와 `scannedAt`을 기록하고, 다음 실행에서 해시가 같은 요소는 건너뛴다.
+- [x] `sync.mjs`의 `outputPolicy`와 `docs-check.yml`의 상태 파일 일치 검사에 `scan.json`을 추가한다.
+- [x] `_bindings.yaml`에 세 관점의 요소별 근거를 채운다. 확정 표는 아래 3장에 있다.
+- [x] `regression.test.mjs`에 부분집합 위반, 상속, 한도 초과 메시지 검사를 추가한다. `sync-fixture.mjs`에 요소 두 개짜리 fixture를 둔다.
 
 검증: `node --test tools/docgen/regression.test.mjs tools/docgen/sync.test.mjs`. 실제 Ollama로 `node tools/docgen/sync.mjs --scan-only --force`를 실행해서 모든 요소의 입력 크기와 소요 시간을 로그로 남긴다.
+
+2026-09-13에 47개 요소의 실제 스캔이 363.611초에 완료됐고 최대 입력은 58,434자였습니다. 캐시 재실행은 모델 호출과 파일 변경 없이 완료됐습니다. 세부 조건과 요소별 실측은 [검증 기록](../tools/docgen/validation-qwen.md)에 있습니다.
 
 ### P3. 원고 근거 축소
 
@@ -97,63 +99,63 @@ P1은 P2보다 먼저 한다. P2의 요소별 스캔을 실제 모델로 검증�
 
 | 요소 | 근거 파일/글롭 | 프롬프트 문자 수 |
 | --- | --- | ---: |
-| `.` | `app/src/main/AndroidManifest.xml`, `app/build.gradle.kts`, `settings.gradle.kts`, `cli/CommandCoordinator.kt`, `camera/LiveController.kt`, `benchmark/BenchmarkController.kt` | 27013 |
-| `benchmark` | `benchmark/BenchmarkActivity.kt`, `benchmark/RunIndex.kt`, `benchmark/BenchmarkCsv.kt`, `benchmark/BenchmarkController.kt` | 55864 |
-| `benchmark/benchmark-evaluator` | `benchmark/BenchmarkEvaluator.kt` | 12029 |
-| `benchmark/benchmark-model` | `benchmark/BenchmarkModel.kt`, `benchmark/RunIndex.kt` | 18809 |
-| `benchmark/benchmark-profile` | `benchmark/BenchmarkProfile.kt`, `benchmark/SubjectPrefs.kt` | 10251 |
-| `benchmark/benchmark-runner` | `benchmark/BenchmarkRunner.kt`, `benchmark/ProfileCompatibility.kt`, `benchmark/ThermalTracker.kt` | 32698 |
-| `benchmark/build-identity` | `benchmark/BuildIdentity.kt` | 6006 |
-| `benchmark/comparison` | `benchmark/RegressionDetector.kt`, `benchmark/BaselineManager.kt`, `benchmark/ReferenceResolver.kt`, `benchmark/ResultPresenter.kt`, `benchmark/ComparePresenter.kt` | 42267 |
-| `benchmark/metric-info` | `benchmark/MetricInfo.kt`, `metrics/MetricModel.kt` | 4681 |
-| `benchmark/regression-rules` | `benchmark/RegressionRules.kt` | 4544 |
-| `benchmark/run-assembler` | `benchmark/RunAssembler.kt`, `benchmark/ScoreComposer.kt` | 18198 |
-| `benchmark/run-validity` | `benchmark/RunValidity.kt` | 9554 |
-| `benchmark/score-composer` | `benchmark/ScoreComposer.kt`, `benchmark/S25PlusScoreDraft.kt` | 10418 |
-| `camera-engines` | `camera/CameraEngine.kt`, `camera/CameraEndpoint.kt` | 11633 |
-| `camera-engines/camera2-engine` | `camera/Camera2Engine.kt`, `camera/StillPair.kt`, `camera/YuvPacking.kt`, `camera/MediaLibrary.kt` | 36707 |
-| `camera-engines/camerax-engine` | `camera/CameraXEngine.kt` | 8401 |
-| `camera-engines/endpoint-model` | `camera/CameraEndpoint.kt` | 5256 |
-| `camera-engines/endpoint-resolver` | `camera/CameraEndpointResolver.kt` | 5042 |
-| `camera-engines/engine-interface` | `camera/CameraEngine.kt` | 5964 |
-| `metrics` | `metrics/MetricExtractor.kt`, `metrics/MetricModel.kt` | 15770 |
-| `metrics/metric-extractor` | `metrics/MetricExtractor.kt` | 14466 |
-| `metrics/metric-model` | `metrics/MetricModel.kt` | 2782 |
-| `persistence` | `benchmark/BenchmarkReport.kt`, `benchmark/BenchmarkStore.kt`, `benchmark/BaselineManager.kt`, `benchmark/SubjectPrefs.kt`, `camera/MediaLibrary.kt` | 25255 |
-| `persistence/benchmark-report` | `benchmark/BenchmarkReport.kt` | 9994 |
-| `persistence/benchmark-store` | `benchmark/BenchmarkStore.kt`, `benchmark/BenchmarkCsv.kt` | 7987 |
-| `platform-camera` | `camera/CameraEngine.kt` | 5981 |
-| `screens` | `app/src/main/AndroidManifest.xml`, `camera/LiveController.kt`, `benchmark/BenchmarkController.kt` | 9982 |
-| `screens/benchmark-screen` | `benchmark/BenchmarkActivity.kt`, `benchmark/ProgressPresenter.kt`, `benchmark/StartCardPresenter.kt` | 58365 |
-| `screens/expert-screen` | `MainActivity.kt`, `camera/RecentMediaThumbnail.kt` | 54116 |
-| `screens/look-tokens` | `ui/Look.kt` | 7265 |
-| `telemetry` | `telemetry/Telemetry.kt`, `telemetry/FlightRecorder.kt`, `telemetry/IncidentExporter.kt` | 19958 |
-| `telemetry/capture-callbacks` | `telemetry/Telemetry.kt` | 6699 |
-| `telemetry/flight-recorder` | `telemetry/FlightRecorder.kt`, `telemetry/Telemetry.kt` | 11689 |
-| `telemetry/incident-exporter` | `telemetry/IncidentExporter.kt` | 9268 |
-| `ui-widgets` | `ui/**/*.kt` | 50711 |
+| `.` | `app/src/main/AndroidManifest.xml`, `app/build.gradle.kts`, `settings.gradle.kts`, `cli/CommandCoordinator.kt`, `camera/LiveController.kt`, `benchmark/BenchmarkController.kt` | 27074 |
+| `benchmark` | `benchmark/BenchmarkActivity.kt`, `benchmark/RunIndex.kt`, `benchmark/BenchmarkCsv.kt`, `benchmark/BenchmarkController.kt` | 55925 |
+| `benchmark/benchmark-evaluator` | `benchmark/BenchmarkEvaluator.kt` | 12090 |
+| `benchmark/benchmark-model` | `benchmark/BenchmarkModel.kt`, `benchmark/RunIndex.kt` | 18870 |
+| `benchmark/benchmark-profile` | `benchmark/BenchmarkProfile.kt`, `benchmark/SubjectPrefs.kt` | 10312 |
+| `benchmark/benchmark-runner` | `benchmark/BenchmarkRunner.kt`, `benchmark/ProfileCompatibility.kt`, `benchmark/ThermalTracker.kt` | 32759 |
+| `benchmark/build-identity` | `benchmark/BuildIdentity.kt` | 6067 |
+| `benchmark/comparison` | `benchmark/RegressionDetector.kt`, `benchmark/BaselineManager.kt`, `benchmark/ReferenceResolver.kt`, `benchmark/ResultPresenter.kt`, `benchmark/ComparePresenter.kt` | 42328 |
+| `benchmark/metric-info` | `benchmark/MetricInfo.kt`, `metrics/MetricModel.kt` | 4742 |
+| `benchmark/regression-rules` | `benchmark/RegressionRules.kt` | 4605 |
+| `benchmark/run-assembler` | `benchmark/RunAssembler.kt`, `benchmark/ScoreComposer.kt` | 18259 |
+| `benchmark/run-validity` | `benchmark/RunValidity.kt` | 9615 |
+| `benchmark/score-composer` | `benchmark/ScoreComposer.kt`, `benchmark/S25PlusScoreDraft.kt` | 10479 |
+| `camera-engines` | `camera/CameraEngine.kt`, `camera/CameraEndpoint.kt` | 11694 |
+| `camera-engines/camera2-engine` | `camera/Camera2Engine.kt`, `camera/StillPair.kt`, `camera/YuvPacking.kt`, `camera/MediaLibrary.kt` | 36768 |
+| `camera-engines/camerax-engine` | `camera/CameraXEngine.kt` | 8462 |
+| `camera-engines/endpoint-model` | `camera/CameraEndpoint.kt` | 5317 |
+| `camera-engines/endpoint-resolver` | `camera/CameraEndpointResolver.kt` | 5103 |
+| `camera-engines/engine-interface` | `camera/CameraEngine.kt` | 6025 |
+| `metrics` | `metrics/MetricExtractor.kt`, `metrics/MetricModel.kt` | 15831 |
+| `metrics/metric-extractor` | `metrics/MetricExtractor.kt` | 14527 |
+| `metrics/metric-model` | `metrics/MetricModel.kt` | 2843 |
+| `persistence` | `benchmark/BenchmarkReport.kt`, `benchmark/BenchmarkStore.kt`, `benchmark/BaselineManager.kt`, `benchmark/SubjectPrefs.kt`, `camera/MediaLibrary.kt` | 25316 |
+| `persistence/benchmark-report` | `benchmark/BenchmarkReport.kt` | 10055 |
+| `persistence/benchmark-store` | `benchmark/BenchmarkStore.kt`, `benchmark/BenchmarkCsv.kt` | 8048 |
+| `platform-camera` | `camera/CameraEngine.kt` | 6042 |
+| `screens` | `app/src/main/AndroidManifest.xml`, `camera/LiveController.kt`, `benchmark/BenchmarkController.kt` | 10043 |
+| `screens/benchmark-screen` | `benchmark/BenchmarkActivity.kt`, `benchmark/ProgressPresenter.kt`, `benchmark/StartCardPresenter.kt` | 58426 |
+| `screens/expert-screen` | `MainActivity.kt`, `camera/RecentMediaThumbnail.kt` | 54177 |
+| `screens/look-tokens` | `ui/Look.kt` | 7326 |
+| `telemetry` | `telemetry/Telemetry.kt`, `telemetry/FlightRecorder.kt`, `telemetry/IncidentExporter.kt` | 20019 |
+| `telemetry/capture-callbacks` | `telemetry/Telemetry.kt` | 6760 |
+| `telemetry/flight-recorder` | `telemetry/FlightRecorder.kt`, `telemetry/Telemetry.kt` | 11750 |
+| `telemetry/incident-exporter` | `telemetry/IncidentExporter.kt` | 9329 |
+| `ui-widgets` | `ui/**/*.kt` | 50772 |
 
 ### data-flow
 
 | 요소 | 근거 파일/글롭 | 프롬프트 문자 수 |
 | --- | --- | ---: |
-| `.` | `benchmark/RunAssembler.kt`, `telemetry/Telemetry.kt`, `benchmark/BenchmarkReport.kt`, `cli/CommandCoordinator.kt`, `camera/MediaLibrary.kt`, `camera/RecentMediaThumbnail.kt` | 46853 |
-| `benchmark-metrics` | `benchmark/RunAssembler.kt`, `benchmark/BenchmarkEvaluator.kt`, `benchmark/RegressionDetector.kt` | 30702 |
-| `event-record` | `telemetry/FlightRecorder.kt`, `telemetry/Telemetry.kt`, `camera/CameraEngine.kt` | 15990 |
-| `frame-observations` | `metrics/MetricExtractor.kt`, `telemetry/FlightRecorder.kt` | 19389 |
-| `framework-callbacks` | `camera/Camera2Engine.kt`, `camera/CameraXEngine.kt`, `telemetry/Telemetry.kt` | 43276 |
-| `rendered-screens` | `benchmark/ResultPresenter.kt`, `benchmark/ComparePresenter.kt`, `benchmark/HistoryActivity.kt`, `camera/LiveController.kt`, `benchmark/BenchmarkController.kt` | 45929 |
-| `run-json` | `benchmark/BenchmarkReport.kt`, `benchmark/BenchmarkModel.kt`, `camera/MediaLibrary.kt` | 29180 |
-| `runner-marks` | `benchmark/BenchmarkRunner.kt`, `benchmark/RunAssembler.kt`, `telemetry/Telemetry.kt` | 34250 |
+| `.` | `benchmark/RunAssembler.kt`, `telemetry/Telemetry.kt`, `benchmark/BenchmarkReport.kt`, `cli/CommandCoordinator.kt`, `camera/MediaLibrary.kt`, `camera/RecentMediaThumbnail.kt` | 46914 |
+| `benchmark-metrics` | `benchmark/RunAssembler.kt`, `benchmark/BenchmarkEvaluator.kt`, `benchmark/RegressionDetector.kt` | 30763 |
+| `event-record` | `telemetry/FlightRecorder.kt`, `telemetry/Telemetry.kt`, `camera/CameraEngine.kt` | 16051 |
+| `frame-observations` | `metrics/MetricExtractor.kt`, `telemetry/FlightRecorder.kt` | 19450 |
+| `framework-callbacks` | `camera/Camera2Engine.kt`, `camera/CameraXEngine.kt`, `telemetry/Telemetry.kt` | 43337 |
+| `rendered-screens` | `benchmark/ResultPresenter.kt`, `benchmark/ComparePresenter.kt`, `benchmark/HistoryActivity.kt`, `camera/LiveController.kt`, `benchmark/BenchmarkController.kt` | 45990 |
+| `run-json` | `benchmark/BenchmarkReport.kt`, `benchmark/BenchmarkModel.kt`, `camera/MediaLibrary.kt` | 29241 |
+| `runner-marks` | `benchmark/BenchmarkRunner.kt`, `benchmark/RunAssembler.kt`, `telemetry/Telemetry.kt` | 34311 |
 
 ### state-transitions
 
 | 요소 | 근거 파일/글롭 | 프롬프트 문자 수 |
 | --- | --- | ---: |
-| `.` | `benchmark/BenchmarkRunner.kt`, `cli/CommandStore.kt`, `cli/CommandCoordinator.kt`, `camera/RecentMediaThumbnail.kt`, `benchmark/HistoryActivity.kt` | 57173 |
-| `engine-lifecycle` | `camera/Camera2Engine.kt`, `camera/CameraXEngine.kt`, `benchmark/BenchmarkRunner.kt` | 55960 |
-| `incident-window` | `telemetry/FlightRecorder.kt` | 7143 |
-| `validity-gate` | `benchmark/RunValidity.kt`, `benchmark/RegressionDetector.kt` | 20160 |
+| `.` | `benchmark/BenchmarkRunner.kt`, `cli/CommandStore.kt`, `cli/CommandCoordinator.kt`, `camera/RecentMediaThumbnail.kt`, `benchmark/HistoryActivity.kt` | 57234 |
+| `engine-lifecycle` | `camera/Camera2Engine.kt`, `camera/CameraXEngine.kt`, `benchmark/BenchmarkRunner.kt` | 56021 |
+| `incident-window` | `telemetry/FlightRecorder.kt` | 7204 |
+| `validity-gate` | `benchmark/RunValidity.kt`, `benchmark/RegressionDetector.kt` | 20221 |
 
 ## 4. 하지 않는 것
 

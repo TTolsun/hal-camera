@@ -1,8 +1,103 @@
 # 로컬 Qwen 실행 및 실패 복구 검증
 
+최신 요소별 스캔 결과를 먼저 기록하고, 이전 검증 기록을 뒤에 보존합니다.
+
+## 2026-09-13 P2 요소별 Qwen 스캔 검증
+
+2026-09-13에 [#53](https://github.com/TTolsun/hal-camera/issues/53)의 세 관점, 47개 요소를 실제 로컬 Qwen으로 스캔했습니다. 실행은 종료 코드 0으로 완료됐으며 모든 입력이 60,000자 이하였습니다.
+
+### 실행 조건
+
+- 앱과 기존 OMM 입력은 main `2a4aa99`, 스캔 구현과 바인딩은 `3107073`을 사용했습니다.
+- Windows에서 Node.js 24.18.0, Ollama 0.34.0, `oh-my-mermaid` 0.2.0을 사용했습니다.
+- 모델은 `qwen3.5:4b`이며 digest는 `2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd`입니다.
+- 컨텍스트는 49,152토큰, 출력 한도는 8,192토큰, temperature는 0이며 thinking은 껐습니다. 입력을 잘라 보내지 않았습니다.
+- 별도 저장소 복사본에서 다음 명령을 실행했습니다. 결과 문서와 스캔 캐시는 이 복사본에만 반영했습니다.
+
+```powershell
+$env:DOCGEN_QWEN_CONTEXT = '49152'
+node tools/docgen/sync.mjs --scan-only --force
+```
+
+### 결과
+
+| 관점 | 요소 수 | 최소 입력 | 최대 입력 | 요소 처리 시간 합계 |
+| --- | ---: | ---: | ---: | ---: |
+| overall-architecture | 35 | 2,859자 | 58,434자 | 300.9초 |
+| data-flow | 8 | 15,494자 | 46,914자 | 38.5초 |
+| state-transitions | 4 | 7,214자 | 57,234자 | 22.4초 |
+
+추출·검증·생성·트랜잭션 반영을 포함한 전체 시간은 **363.611초**였습니다. 입력 크기 중앙값은 15,494자였습니다. 요소 처리 시간에는 모델 호출과 해당 요소의 쓰기·검증이 포함됩니다. 아래 수치는 실제 호출 직전 로그에서 얻었으므로 부모 설명이 갱신되기 전의 계획 표와 다를 수 있습니다.
+
+성공한 `scan.json` 기록 47개의 경로와 근거 해시를 실제 바인딩·코드와 대조했고 모두 일치했습니다. 기존 `evidence.json`의 `accepted` 기록도 모두 유지됐습니다. 복사본에서 갱신된 원본과 원고의 상태는 검토 대기로 남았습니다.
+
+이어서 동일한 복사본에서 Ollama 주소를 접속할 수 없는 `http://127.0.0.1:1`로 지정하고 `node tools/docgen/sync.mjs --scan-only`를 실행했습니다. **47개 요소를 모두 건너뛰었으며**, 모델 호출과 파일 변경 없이 **1.210초** 만에 종료 코드 0으로 완료됐습니다.
+
+### 회귀 검사와 해석 범위
+
+기본 테스트는 Windows 로컬에서 71개가 통과했으며 선택 검사 3개는 제외했습니다. `3107073`의 [docs-check 실행](https://github.com/TTolsun/hal-camera/actions/runs/34761481389)은 Windows·Ubuntu 모두 통과했습니다. 이 검사는 상속·부분집합·입력 한도·요소 격리·부분 근거 변경·캐시·동일 내용 무쓰기·실패 및 중단 복구를 포함합니다.
+
+첫 전체 실행은 incident-exporter가 변경하지 않을 필드를 빈 문자열로 반환하여 중단됐고 원본 변경은 0개였습니다. 이후 응답 스키마에 `minLength: 1`을 추가하고 변경이 없으면 빈 배열을 반환하도록 프롬프트를 명시했습니다. 빈 문자열과 공백 응답을 거부하면서 모든 파일을 보존하는 회귀 검사도 추가했습니다. Windows CI에서 발견한 LF 전용 테스트 치환도 LF·CRLF 양쪽을 검사하도록 수정했습니다.
+
+실측은 앞선 실행 뒤 모델이 로드된 상태에서 수행한 한 번의 결과입니다. 전체 363.611초는 단일 모델 응답이 300초를 넘었다는 증거가 아닙니다. 생성 내용의 정확성을 승인하거나 모든 무인 갱신을 검증한 결과도 아닙니다. 넓은 개요 요소는 일부 진입점과 계약 파일을 근거로 사용합니다. 원고 근거 축소와 runner 자동 실행은 후속 이슈에 남아 있습니다. 이 PR의 `scan.json`은 검증 복사본의 미검토 결과를 재사용하지 않도록 빈 상태로 둡니다.
+
+### 요소별 실행 로그 요약
+
+| 요소 | 입력 문자 수 | 처리 시간 |
+| --- | ---: | ---: |
+| `overall-architecture` | 27074 | 41.2초 |
+| `overall-architecture/benchmark` | 55970 | 6.5초 |
+| `overall-architecture/benchmark/benchmark-evaluator` | 12098 | 5.9초 |
+| `overall-architecture/benchmark/benchmark-model` | 18878 | 3.3초 |
+| `overall-architecture/benchmark/benchmark-profile` | 10320 | 4.3초 |
+| `overall-architecture/benchmark/benchmark-runner` | 32767 | 3.8초 |
+| `overall-architecture/benchmark/build-identity` | 6075 | 4.9초 |
+| `overall-architecture/benchmark/comparison` | 42336 | 4.4초 |
+| `overall-architecture/benchmark/metric-info` | 4750 | 1.3초 |
+| `overall-architecture/benchmark/regression-rules` | 4613 | 3.9초 |
+| `overall-architecture/benchmark/run-assembler` | 18267 | 3.0초 |
+| `overall-architecture/benchmark/run-validity` | 9623 | 7.2초 |
+| `overall-architecture/benchmark/score-composer` | 10487 | 5.3초 |
+| `overall-architecture/camera-engines` | 11739 | 10.0초 |
+| `overall-architecture/camera-engines/camera2-engine` | 36768 | 32.3초 |
+| `overall-architecture/camera-engines/camerax-engine` | 8462 | 21.6초 |
+| `overall-architecture/camera-engines/endpoint-model` | 5317 | 31.1초 |
+| `overall-architecture/camera-engines/endpoint-resolver` | 5103 | 19.2초 |
+| `overall-architecture/camera-engines/engine-interface` | 6025 | 17.9초 |
+| `overall-architecture/metrics` | 15876 | 12.5초 |
+| `overall-architecture/metrics/metric-extractor` | 14543 | 2.9초 |
+| `overall-architecture/metrics/metric-model` | 2859 | 2.1초 |
+| `overall-architecture/persistence` | 25361 | 3.8초 |
+| `overall-architecture/persistence/benchmark-report` | 10068 | 2.4초 |
+| `overall-architecture/persistence/benchmark-store` | 8061 | 2.3초 |
+| `overall-architecture/platform-camera` | 6087 | 1.6초 |
+| `overall-architecture/screens` | 10088 | 2.0초 |
+| `overall-architecture/screens/benchmark-screen` | 58434 | 6.8초 |
+| `overall-architecture/screens/expert-screen` | 54185 | 14.1초 |
+| `overall-architecture/screens/look-tokens` | 7334 | 3.0초 |
+| `overall-architecture/telemetry` | 20064 | 2.8초 |
+| `overall-architecture/telemetry/capture-callbacks` | 6765 | 3.8초 |
+| `overall-architecture/telemetry/flight-recorder` | 11755 | 2.3초 |
+| `overall-architecture/telemetry/incident-exporter` | 9334 | 4.4초 |
+| `overall-architecture/ui-widgets` | 50817 | 7.0초 |
+| `data-flow` | 46914 | 5.1초 |
+| `data-flow/benchmark-metrics` | 30206 | 4.1초 |
+| `data-flow/event-record` | 15494 | 4.9초 |
+| `data-flow/frame-observations` | 18893 | 5.6초 |
+| `data-flow/framework-callbacks` | 42780 | 6.1초 |
+| `data-flow/rendered-screens` | 45433 | 4.8초 |
+| `data-flow/run-json` | 28684 | 3.9초 |
+| `data-flow/runner-marks` | 33754 | 4.0초 |
+| `state-transitions` | 57234 | 10.2초 |
+| `state-transitions/engine-lifecycle` | 56031 | 5.7초 |
+| `state-transitions/incident-window` | 7214 | 3.8초 |
+| `state-transitions/validity-gate` | 20231 | 2.7초 |
+
+## 2026-09-11 동기화와 복구 검증
+
 검증일: 2026-09-11 KST. Windows에서 Ollama 0.33.3, `qwen3.5:4b`(로컬 모델 ID `2a654d98e6fb`), Node 24.18.0, OMM 0.2.0을 사용했습니다. 제품 코드는 테스트를 위해 변경하지 않았습니다.
 
-## 실제 모델 실행
+### 실제 모델 실행
 
 임시 프로젝트의 `Probe.OBSERVE_MS`를 `10000L`에서 `12000L`로 변경했습니다. 먼저 실제 Ollama 요청에 1ms 제한을 적용해 실패시켰으며, 실행 전후 모든 원본 파일의 바이트가 같았습니다. 기본 제한으로 재실행한 결과는 다음과 같습니다.
 
@@ -16,7 +111,7 @@
 
 실제 저장소에서도 `sync.mjs`를 실행했습니다. 모든 원본이 최신이어서 모델 호출 없이 0개 파일 변경으로 종료했습니다. 이는 변경 감지 경로의 검증이며, 전체 제품 코드를 재집필한 결과는 아닙니다.
 
-## 오류 주입 검사
+### 오류 주입 검사
 
 `sync.test.mjs`는 모의 Ollama HTTP 서버와 실제 OMM CLI를 사용합니다. 다음 실패에서 원본 보존 또는 복구를 검사합니다.
 
@@ -35,7 +130,7 @@
 
 전원 장애, 파일 시스템 자체 손상, 실제 GitHub self-hosted runner, Windows 작업 스케줄러 등록은 이 검사 범위에 포함하지 않았습니다. 기존 문서 회귀 검사 9개는 별도로 실행합니다.
 
-## 운영 전에 남은 작업
+### 운영 전에 남은 작업
 
 공용 엔진 0.1.0을 별도로 설치하고 `common.mjs sync`로 이 저장소를 실행했습니다. 기존 근거·원고·페이지가 일치하며 0개 파일 변경으로 완료했습니다. 공용 엔진에서는 별도 C++ 코드 경로를 읽는 실제 Qwen 실행도 통과했습니다. Slack 디자인은 네 페이지를 1360px·390px 화면에서 확인했으며, 그림 확대가 정상 동작했습니다.
 
