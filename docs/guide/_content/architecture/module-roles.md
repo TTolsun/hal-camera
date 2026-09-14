@@ -1,10 +1,42 @@
 ---
-based_on: ["overall-architecture"]
-confidence: "code"
-sources: ["app/src/main/java/dev/halcamera/MainActivity.kt","app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt","app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt","app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt","app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt","app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt","app/src/main/java/dev/halcamera/benchmark/RunIndex.kt","app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt","app/src/main/java/dev/halcamera/camera/CameraEngine.kt","app/src/main/java/dev/halcamera/camera/LiveController.kt","app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt","app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt","app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt","app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt"]
+based_on: [overall-architecture]
+confidence: code
+sources:
+  - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
+  - app/src/main/java/dev/halcamera/camera/LiveController.kt
+  - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
+  - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
+  - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
+  - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
+  - app/src/main/java/dev/halcamera/benchmark/RunIndex.kt
+  - app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt
+  - app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt
+  - app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt
+  - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
+  - app/src/main/java/dev/halcamera/MainActivity.kt
+  - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
+  - app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt
 decisions: []
 verifications: []
 ---
-각 패키지는 명확한 책임을 지며 변경 시 해당 클래스의 의존성을 확인해야 합니다. `cli/`와 `tools/halcam/`는 shell 호출자 검사, 영속 요청 상태, artifact 등록을 담당하며 `CommandCoordinator` 와 `CommandStore` 를 통해 요청 ID 와 진행 상태를 관리합니다. `camera/`는 엔진 계약과 구현 (`Camera2Engine`, `CameraXEngine`) 을 제공하며 `LiveController` 는 CLI 명령을 동기화하고 `RecentMediaThumbnail` 은 앨범 썸네일을 별도 스레드에서 읽습니다. `metrics/`는 `MetricExtractor` 가 이벤트를 관측 표본으로 재구성하는 순수 계산 로직만 담당합니다. `benchmark/`는 프로파일, 러너, 지표 계산, 저장 (`BenchmarkReport`, `BenchmarkStore`), 비교 (`RegressionDetector`) 와 이력 화면을 제공하며 `ScoreComposer` 는 스케일링 곡선을 계산합니다. `telemetry/`는 `Telemetry` 가 이벤트를 만들고 `FlightRecorder` 가 원형 버퍼에 보존하며 `IncidentExporter` 는 ZIP 파일을 작성합니다. `ui/`와 `MainActivity.kt` 는 LIVE 관측값과 Canvas 그래프, 카메라 선택 및 권한 처리를 담당합니다.
 
-실행 영역은 카메라 시작/종료 (`openCamera`, `restartCamera`), 녹화 제어, 권한 요청 등 동적 동작을 수행하며 `main` 핸들러와 `Executors`(작업자, IO) 를 통해 관리됩니다. 평가 영역은 센서 이벤트(`image_available`, `capture_result`) 를 기반으로 프레임 간격, ISO, 노출, FPS 등을 실시간으로 계산하고 시각화하는 로직입니다. 기록과 저장 영역은 `recorder`(FlightRecorder 인스턴스), `telemetry`(Telemetry 인스턴스), `IncidentExporter` 및 `File` 관련 로직으로 구성되며 `markedReadings` 맵이 마크 이벤트와 읽기 값을 임시 보관합니다. 벤치마크 실행 시 `CameraEngine` 의 `start()` 호출부터 종료까지가 실행 영역이며, 결과 조립 (`RunAssembler.assemble`) 후 파일 저장 단계가 평가 영역입니다. 기록과 저장 영역은 `BenchmarkStore` 와 `BaselineManager` 가 실행 기록을 관리하며, `HistoryActivity` 는 JSON·CSV 를 FileProvider 로 공유합니다. 사진·동영상은 MediaLibrary 가 MediaStore 의 DCIM/HALCamera 에 저장하며 앱 내부 파일과 구분됩니다.
+**변경할 기능의 패키지부터 여세요.** 아래 경로는 `app/src/main/java/dev/halcamera/`를 기준으로 합니다.
+
+| 영역 | 역할과 수정 시 확인할 내용 |
+| --- | --- |
+| `cli/`와 `tools/halcam/` | shell 호출자 검사, 영속 요청 상태, artifact 등록과 PC 파일 수집을 담당합니다. protocol v1을 변경할 때 양쪽 검증기를 함께 확인합니다. |
+| `camera/` | 엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다. `close(done)` 완료 전에 다음 카메라를 열지 않습니다. |
+| `metrics/` | `MetricExtractor`가 이벤트를 관측 표본과 통계로 바꿉니다. 화면과 회귀 판정을 담당하지 않습니다. |
+| `benchmark/` | profile, 러너, 지표 계산, validity, 내부 점수, 저장, 비교와 이력 화면을 제공합니다. Android 의존성이 있는 Activity·저장 어댑터와 순수 계산 로직을 구분합니다. |
+| `telemetry/` | `Telemetry`가 이벤트를 만들고 `FlightRecorder`가 보존합니다. `IncidentExporter`는 incident ZIP을 작성합니다. listener는 기록 스레드에서 동기 실행됩니다. |
+| `ui/`와 `MainActivity.kt` | LIVE 관측값과 Canvas 그래프, 공통 `Look` 토큰, 카메라 선택과 권한 처리를 제공합니다. |
+
+`BenchmarkActivity`는 실행 완료 후 별도 입출력 스레드에서 조립·저장·비교를 처리하고 `ResultPresenter`와 `ComparePresenter`의 결과를 표시합니다. 시작 카드와 진행률에는 `StartCardPresenter`와 `ProgressPresenter`를 사용합니다.
+
+`HistoryActivity`는 같은 저장소를 읽습니다. `RunIndex`는 이벤트와 표본 배열을 제거한 목록 데이터를 유지하고, 결과를 열 때 원본 JSON을 다시 읽습니다. 파일 읽기·삭제·CSV 생성은 별도 스레드에서 처리합니다. `BenchmarkCsv`는 지표당 한 행을 작성하고 FileProvider로 공유합니다.
+
+`BenchmarkReport`는 schema 4를 쓰고 schema 3·4를 읽습니다. `BenchmarkStore`는 실행 파일과 baseline 인덱스를 관리합니다. 삭제한 실행을 가리키는 포인터는 정리하며, 기존 실행 JSON은 비교 상태가 바뀌어도 다시 쓰지 않습니다.
+
+`camera/MediaLibrary`는 사진 쌍과 동영상을 MediaStore에 저장합니다. `StillPair`와 `YuvPacking`은 버퍼 연결과 YUV 변환을 담당합니다. `GalleryActivity`는 HALCamera 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다.
+
+`camera/RecentMediaThumbnail`은 저장 완료된 앨범 항목의 썸네일을 별도 작업 스레드에서 읽고 `ui/RecentMediaButton`에 전달합니다. 화면을 나가면 관찰을 중단하고 뒤늦은 조회 결과는 반영하지 않습니다.

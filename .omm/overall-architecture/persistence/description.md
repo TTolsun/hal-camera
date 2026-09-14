@@ -1,1 +1,1 @@
-BenchmarkReport 는 실행·이벤트를 schema 4 로 기록하고 schema 3·4 를 읽습니다. BenchmarkStore 와 BaselineManager 는 실행 파일과 기준 포인터를 관리합니다. SubjectPrefs 는 직전 형상 정보를 기억하고 note 는 재사용하지 않습니다. HistoryActivity 는 JSON·CSV 를 FileProvider 로 공유합니다. 사진·동영상은 MediaLibrary 가 MediaStore 의 DCIM/HALCamera 에 저장하며 앱 내부 파일과 구분합니다.
+BenchmarkReport는 실행·이벤트를 schema 4로 기록하고 schema 3·4를 읽습니다. BenchmarkStore와 BaselineManager는 실행 파일과 기준 포인터를 관리합니다. SubjectPrefs는 직전 형상 정보를 기억하고 note는 재사용하지 않습니다. HistoryActivity는 JSON·CSV를 FileProvider로 공유합니다. 사진·동영상은 MediaLibrary가 MediaStore의 DCIM/HALCamera에 저장하며 앱 내부 파일과 구분합니다.

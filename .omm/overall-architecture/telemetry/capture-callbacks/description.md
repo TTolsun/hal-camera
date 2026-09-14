@@ -1,1 +1,7 @@
-Camera2 콜백을 FlightRecorder 로 변환하는 얇은 어댑터이며, 세션별 특성을 저장하는 ConcurrentHashMap 을 포함합니다. callback(sessionId, alive) 은 각 프레임 트래커를 가진 CameraCaptureSession.CaptureCallback 를 생성하며, 모든 오버라이드는 alive() 을 먼저 확인하여 엔진이 닫힌 후 도착한 콜백은 기록하지 않습니다. onCaptureCompleted 는 Trace.beginSection("CD.result") 로 감싸져서 Perfetto trace 에서 동일한 작업이 가시화됩니다. 결과별로 기록하는 값은 전체 계층이 키로 읽는 원본 메타데이터인 ae, af, afMode(결과에서 누락된 경우 요청에 fallback), awb, exposureNs, iso, frameDurationNs, focusDiopters, zoomRatio(API 30+ 전용), cropRegion, 파생값인 intervalMs, resultFps, observedResultGap 입니다. stateName(axis, value) 는 AE, AF, AWB 정수를 공유하는 디코더로 뷰가 아닌 계측 코드에서 사용됩니다.
+`app/src/main/java/dev/halcamera/telemetry/Telemetry.kt` (72 lines). A thin adapter between Camera2 callbacks and `FlightRecorder`, plus a `ConcurrentHashMap` of per-session characteristics.
+
+`callback(sessionId, alive)` builds one `CameraCaptureSession.CaptureCallback` with its own `FrameTracker`. Every override checks `alive()` first, so a callback arriving after the engine was closed records nothing. `onCaptureCompleted` is wrapped in `Trace.beginSection("CD.result")`, which makes the same work visible in a Perfetto trace taken alongside the app.
+
+The values it records per result are the raw metadata the whole metric layer later reads by key: `ae`, `af`, `afMode` (falling back to the request when the result omits it), `awb`, `exposureNs`, `iso`, `frameDurationNs`, `focusDiopters`, `zoomRatio` (API 30+ only), `cropRegion`, plus the derived `intervalMs`, `resultFps` and `observedResultGap`.
+
+`stateName(axis, value)` is the shared decoder for AE, AF and AWB integers, used by the views rather than by the metric code.

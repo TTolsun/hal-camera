@@ -1,1 +1,9 @@
-`app/src/main/java/dev/halcamera/benchmark/BuildIdentity.kt`. 두 실행을 여섯 가지 축으로 비교하여 하나의 "동일한 빌드" 보oleans 을 생성하지 않습니다. 파일 헤더에 명시된 이유는 카메라 HAL 작업에서 가장 중요한 경우인 *동일한* Android 지문과 *다른* 벤더 바이너리의 경우를 숨기려는 것입니다. 단일 보oleans 은 정확히 그 점을 숨깁니다. 축은 시스템 지문, 벤더 지문, 카메라 INFO_VERSION, 앱 버전, 주제 빌드 라벨, 주제 커밋입니다. 시스템 지문과 앱 버전 제외 모든 축은 nullable이며, `both()`는 두 값이 실제로 값을 가지고 있을 때만 동등하다고 판단하여 null 을 생성하는 규칙을 강제합니다. 알 수 없는 것은 결코 일치로 보고되지 않습니다. `sameCameraBuild` 는 UI 가 표시하는 유도된 라인이며, 이는 conjunctive(AND) 로 작동하여 모든 *알려진* 축이 일치할 때만 true, 알려진 축 중 하나라도 다르면 false, 벤더 지문과 INFO_VERSION 이 양쪽 모두에서 알려지지 않았을 때 null 입니다. `sameCameraBuild` 를 "벤더 지문, 아니면 INFO_VERSION" 으로 처리하면 일치하는 벤더 지문이 다른 INFO_VERSION 을 숨길 수 있습니다. 각 실행 JSON 에 저장된 모든 `RunRef` 는 이 비교를 내장하므로, baseline 파일이 존재하지 않아도 실행과 그 기준선 사이의 변경 사항을 보고할 수 있습니다.
+`app/src/main/java/dev/halcamera/benchmark/BuildIdentity.kt`. Compares two runs across six axes instead of producing one "same build" boolean.
+
+The reason is stated in the file header and is the whole point of the app: in camera HAL work the case that matters most is the *same* Android fingerprint with a *different* vendor binary. A single boolean would hide exactly that.
+
+The axes are system fingerprint, vendor fingerprint, camera INFO_VERSION, app version, subject build label and subject commit. Every axis except system fingerprint and app version is nullable, and `both()` enforces the rule that produces those nulls: two values are equal only when both sides actually carry one, with blank counting as missing. An unknown is never reported as a match.
+
+`sameCameraBuild` is the derived line the UI shows, and it is conjunctive rather than a fallback: it is true only when every *known* axis agrees, false as soon as any known axis differs, and null only when neither vendor fingerprint nor INFO_VERSION is known on both sides. Treating it as "vendor fingerprint, else INFO_VERSION" would let a matching vendor fingerprint hide a changed INFO_VERSION.
+
+Every `RunRef` stored in a run JSON embeds this comparison, so a report can state what changed between a run and its baseline without needing the baseline file present.

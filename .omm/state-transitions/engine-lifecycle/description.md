@@ -1,1 +1,1 @@
-Camera2Engine 은 HandlerThread 에서 카메라를 열고 세션과 반복 요청을 구성합니다. CameraXEngine 은 ProcessCameraProvider 를 사용합니다. 두 엔진은 active 상태로 늦은 신호를 걸러 내며 close(done) 완료 후 다음 열기를 진행합니다. BenchmarkRunner 의 시간 제한과 close 완료 처리를 함께 확인해야 합니다.
+Camera2Engine은 HandlerThread에서 카메라를 열고 세션과 반복 요청을 구성합니다. CameraXEngine은 ProcessCameraProvider를 사용합니다. 두 엔진은 active 상태로 늦은 신호를 걸러 내며 close(done) 완료 후 다음 열기를 진행합니다. BenchmarkRunner의 시간 제한과 close 완료 처리를 함께 확인해야 합니다.

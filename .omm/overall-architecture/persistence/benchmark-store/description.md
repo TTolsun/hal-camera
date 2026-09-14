@@ -1,1 +1,1 @@
-BenchmarkStore 는 files/benchmarks/<runId>.json 과 index.json 을 관리합니다. BenchmarkIndex 는 측정 계약·endpoint 별 baseline 포인터를 저장합니다. AtomicFiles 는 임시 파일·flush·fsync·원자적 이동으로 씁니다. deleteRun 은 실행 파일 삭제 성공 후 해당 포인터를 정리하고, 인덱스를 읽지 못하면 삭제를 중단합니다.
+BenchmarkStore는 files/benchmarks/<runId>.json과 index.json을 관리합니다. BenchmarkIndex는 측정 계약·endpoint별 baseline 포인터를 저장합니다. AtomicFiles는 임시 파일·flush·fsync·원자적 이동으로 씁니다. deleteRun은 실행 파일 삭제 성공 후 해당 포인터를 정리하고, 인덱스를 읽지 못하면 삭제를 중단합니다.
