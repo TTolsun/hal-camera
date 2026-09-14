@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
-import { makeFixture, manuscript, runSync, probeFile } from './sync-fixture.mjs';
+import { makeFixture, manuscript, runSync, probeFile, timerFile } from './sync-fixture.mjs';
 import { snapshot, changedFiles, prepareCommit, applyCommit, recover, writeBytes, acquireLock } from './transaction.mjs';
 import { qwen } from './qwen.mjs';
 
@@ -29,6 +29,7 @@ const reply = (res, content, extra = {}) => {
   res.end(packet({ done: true, done_reason: 'stop', eval_count: 42, message: { content: '' }, ...extra }));
 };
 const scan = { updates: [{ element: 'sync-probe', field: 'description', text: 'Probe.OBSERVE_MS는 12000ms입니다.' }] };
+const scanFor = data => ({ updates: [{ ...scan.updates[0], element: data.format.properties.updates.items.properties.element.enum[0] }] });
 function fixture(t, n = 1) { const f = makeFixture(n); t.after(f.cleanup); return f; }
 
 function transportEnv(t, url, extra = {}) {
@@ -142,12 +143,120 @@ test('timer overflow is rejected before a request and the maximum delay is accep
 
 test('local protocol completes scan/write/generate without accepting review', async t => {
   const f = fixture(t); const before = snapshot(f.root);
-  const url = await server(t, (data, res) => reply(res, data.format.properties.updates ? scan : { markdown: manuscript('12000') }));
+  const url = await server(t, (data, res) => reply(res, data.format.properties.updates ? scanFor(data) : { markdown: manuscript('12000') }));
   const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }); assert.equal(r.code, 0, r.out);
   assert.match(fs.readFileSync(path.join(f.root, 'docs/guide/probe.md'), 'utf8'), /12000ms/);
   const accepted = bytes => Object.fromEntries(Object.entries(JSON.parse(bytes).entries).map(([k, v]) => [k, v.accepted]));
   assert.deepEqual(accepted(snapshot(f.root).get('tools/docgen/state/evidence.json')), accepted(before.get('tools/docgen/state/evidence.json')));
   assert.ok(changedFiles(before, snapshot(f.root)).every(p => p.startsWith('.omm/sync-probe/') || p.startsWith('docs/guide/') || p.startsWith('tools/docgen/state/')));
+});
+
+test('element prompts isolate code and fields while including only the parent description', async t => {
+  const f = makeFixture(1, { splitEvidence: true }); t.after(f.cleanup);
+  f.put('.omm/sync-probe/description.md', 'PARENT_DESCRIPTION_ONLY\n');
+  f.put('.omm/sync-probe/note.md', 'PARENT_NOTE_NOT_FOR_CHILD\n');
+  f.put('.omm/sync-probe/timer/note.md', 'CHILD_NOTE_NOT_FOR_PARENT\n');
+  const seen = [];
+  const url = await server(t, (data, res) => {
+    const allowed = data.format.properties.updates.items.properties.element.enum;
+    assert.equal(allowed.length, 1); seen.push(allowed[0]);
+    assert.equal(data.format.properties.updates.items.properties.text.minLength, 1);
+    const prompt = data.messages.at(-1).content;
+    if (allowed[0] === 'sync-probe') {
+      assert.ok(prompt.includes('## 파일: ' + probeFile));
+      assert.ok(!prompt.includes('## 파일: ' + timerFile));
+      assert.ok(!prompt.includes('CHILD_NOTE_NOT_FOR_PARENT'));
+    } else {
+      assert.ok(prompt.includes('## 파일: ' + timerFile));
+      assert.ok(!prompt.includes('## 파일: ' + probeFile));
+      assert.ok(prompt.includes('PARENT_DESCRIPTION_ONLY'));
+      assert.ok(!prompt.includes('PARENT_NOTE_NOT_FOR_CHILD'));
+    }
+    reply(res, { updates: [] });
+  });
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--scan-only']);
+  assert.equal(r.code, 0, r.out); assert.deepEqual(seen, ['sync-probe', 'sync-probe/timer']);
+});
+
+test('scan cache skips unchanged code, selects changed evidence and force rescans all elements', async t => {
+  const f = makeFixture(1, { splitEvidence: true }); t.after(f.cleanup);
+  const seen = [];
+  const url = await server(t, (data, res) => {
+    seen.push(data.format.properties.updates.items.properties.element.enum[0]); reply(res, { updates: [] });
+  });
+  const run = async args => { const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, args); assert.equal(r.code, 0, r.out); };
+  await run(['--scan-only']); assert.deepEqual(seen, ['sync-probe', 'sync-probe/timer']);
+  const cachePath = path.join(f.root, 'tools/docgen/state/scan.json');
+  const first = JSON.parse(fs.readFileSync(cachePath));
+  for (const entry of Object.values(first.entries)) { assert.match(entry.codeHash, /^[a-f0-9]{16}$/); assert.ok(Number.isFinite(Date.parse(entry.scannedAt))); }
+  seen.length = 0;
+  const before = snapshot(f.root);
+  await run(['--scan-only']); assert.deepEqual(seen, []); assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
+  f.put(timerFile, 'package dev.halcamera\nobject Timer { const val OBSERVE_MS = 15000L }\n');
+  await run(['--scan-only']); assert.deepEqual(seen, ['sync-probe/timer']);
+  const next = JSON.parse(fs.readFileSync(cachePath));
+  assert.deepEqual(next.entries['sync-probe'], first.entries['sync-probe']);
+  assert.notEqual(next.entries['sync-probe/timer'].codeHash, first.entries['sync-probe/timer'].codeHash);
+  seen.length = 0;
+  const planned = snapshot(f.root);
+  await run(['--scan-only', '--force', '--dry-run']); assert.deepEqual(seen, []); assert.deepEqual(changedFiles(planned, snapshot(f.root)), []);
+  await run(['--scan-only', '--force']); assert.deepEqual(seen, ['sync-probe', 'sync-probe/timer']);
+});
+
+test('identical updates do not rewrite OMM content or metadata', async t => {
+  const f = fixture(t);
+  const before = snapshot(f.root);
+  const url = await server(t, (data, res) => {
+    const element = data.format.properties.updates.items.properties.element.enum[0];
+    const text = fs.readFileSync(path.join(f.root, '.omm', element, 'description.md'), 'utf8').replace(/\r?\n/g, '\r\n');
+    reply(res, { updates: [{ element, field: 'description', text }] });
+  });
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--scan-only']);
+  assert.equal(r.code, 0, r.out);
+  assert.ok(changedFiles(before, snapshot(f.root)).every(p => !p.startsWith('.omm/')));
+  assert.ok(fs.existsSync(path.join(f.root, 'tools/docgen/state/scan.json')));
+});
+
+test('second element failure preserves prior OMM files and scan history', async t => {
+  const f = fixture(t); const seen = [];
+  f.put('tools/docgen/state/scan.json', JSON.stringify({ schema: 1, entries: {
+    'sync-probe': { codeHash: '0000000000000000', scannedAt: '2026-01-01T00:00:00.000Z' },
+  } }));
+  const url = await server(t, (data, res) => {
+    const element = data.format.properties.updates.items.properties.element.enum[0]; seen.push(element);
+    if (element === 'sync-probe/timer') res.end(packet({ error: 'failed' }));
+    else reply(res, scanFor(data));
+  });
+  const before = snapshot(f.root);
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--scan-only']);
+  assert.equal(r.code, 1, r.out); assert.deepEqual(seen, ['sync-probe', 'sync-probe/timer']);
+  assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
+});
+
+test('an element cannot modify its sibling even within the same perspective', async t => {
+  const f = fixture(t); const before = snapshot(f.root);
+  const url = await server(t, (_data, res) => reply(res, { updates: [{ ...scan.updates[0], element: 'sync-probe/timer' }] }));
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--scan-only']);
+  assert.equal(r.code, 1, r.out); assert.match(r.out, /경로·필드·내용/);
+  assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
+});
+
+for (const text of ['', ' \n ']) test('empty scan content is rejected without changing files: ' + JSON.stringify(text), async t => {
+  const f = fixture(t); const before = snapshot(f.root);
+  const url = await server(t, (_data, res) => reply(res, { updates: [{ ...scan.updates[0], text }] }));
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--scan-only']);
+  assert.equal(r.code, 1, r.out); assert.match(r.out, /sync-probe: Qwen 구조 응답.*내용 길이/);
+  assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
+});
+
+test('write-only never calls the scanner or records a scan', async t => {
+  const f = fixture(t); const before = snapshot(f.root);
+  const url = await server(t, (data, res) => {
+    assert.ok(!data.format.properties.updates); reply(res, { markdown: manuscript('12000') });
+  });
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--write-only']);
+  assert.equal(r.code, 0, r.out);
+  assert.ok(changedFiles(before, snapshot(f.root)).every(p => !p.startsWith('.omm/') && !p.endsWith('/scan.json')));
 });
 
 for (const scenario of ['http', 'timeout', 'idle', 'json', 'truncated', 'incomplete', 'stream-error', 'path', 'validation', 'writer-empty', 'writer-source', 'second-writer', 'marker']) {
@@ -166,7 +275,7 @@ for (const scenario of ['http', 'timeout', 'idle', 'json', 'truncated', 'incompl
       if (data.format.properties.updates) {
         if (scenario === 'path') return reply(res, { updates: [{ ...scan.updates[0], element: '../app' }] });
         if (scenario === 'validation') return reply(res, { updates: [{ ...scan.updates[0], field: 'diagram', text: 'broken diagram [' }] });
-        return reply(res, scan);
+        return reply(res, scanFor(data));
       }
       writes++;
       if (scenario === 'writer-empty' || (scenario === 'second-writer' && writes === 2)) return reply(res, { markdown: '' });
@@ -184,7 +293,7 @@ test('concurrent original edit prevents publication and preserves user text', as
   const f = fixture(t); const before = snapshot(f.root);
   const url = await server(t, (data, res) => {
     f.put(probeFile, '// user edit\n');
-    reply(res, data.format.properties.updates ? scan : { markdown: manuscript('12000') });
+    reply(res, data.format.properties.updates ? scanFor(data) : { markdown: manuscript('12000') });
   });
   const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }); assert.equal(r.code, 1, r.out);
   assert.deepEqual(changedFiles(before, snapshot(f.root)), [probeFile]);
@@ -218,8 +327,12 @@ test('interrupted publish can recover; newer edits block recovery before any wri
 test('recover command handles an interrupted commit and stale lock', async t => {
   const f = fixture(t); const before = snapshot(f.root); const after = new Map(before);
   const target = '.omm/sync-probe/description.md'; after.set(target, Buffer.from('new'));
-  prepareCommit(f.root, before, after, p => p === target);
+  const scanPath = 'tools/docgen/state/scan.json';
+  const scanBytes = Buffer.from(JSON.stringify({ schema: 1, entries: { 'sync-probe': { codeHash: '0123456789abcdef', scannedAt: '2026-01-01T00:00:00.000Z' } } }));
+  after.set(scanPath, scanBytes);
+  prepareCommit(f.root, before, after, p => p === target || p === scanPath);
   writeBytes(f.root, target, Buffer.from('new'));
+  writeBytes(f.root, scanPath, scanBytes);
   f.put('tools/docgen/state/.sync-lock', '2147483647');
   const blocked = await runSync(f.root); assert.equal(blocked.code, 1, blocked.out);
   const r = await runSync(f.root, {}, ['--recover']); assert.equal(r.code, 0, r.out);
@@ -251,7 +364,7 @@ test('remote endpoint and oversized prompt fail without writes', async t => {
   }
 });
 
-test('real installed Qwen completes the same pipeline', { skip: process.env.DOCGEN_REAL_QWEN !== '1', timeout: 3660000 }, async t => {
+test('real installed Qwen completes the same pipeline', { skip: process.env.DOCGEN_REAL_QWEN !== '1', timeout: 5460000 }, async t => {
   const f = fixture(t); const before = snapshot(f.root);
   const failed = await runSync(f.root, { DOCGEN_LLM_TIMEOUT_MS: '1' });
   assert.equal(failed.code, 1, failed.out);

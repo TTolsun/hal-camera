@@ -48,4 +48,5 @@ jobs:
       - name: 생성 결과 일치 검사
         run: node tools/docgen/generate.mjs --check
       - name: 상태 파일 일치 검사
+        # Includes element scan history in tools/docgen/state/scan.json.
         run: git diff --exit-code -- tools/docgen/state docs/guide

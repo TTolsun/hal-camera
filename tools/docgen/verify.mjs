@@ -15,7 +15,7 @@
 //                                   key 를 생략하면 모든 키를 기록합니다.
 import { execFileSync } from "node:child_process";
 import { readBindings, readState, writeState, REPO_ROOT, fail } from "./lib.mjs";
-import { collectKeys, computeHashes, stateOf, STATE_LABEL } from "./model.mjs";
+import { collectKeys, collectElements, computeHashes, stateOf, STATE_LABEL } from "./model.mjs";
 
 const args = process.argv.slice(2);
 const mode = args.includes("--check") ? "check" : args.includes("--accept") ? "accept" : "report";
@@ -33,6 +33,10 @@ function gitShortHead() {
 const bindings = readBindings();
 const state = readState("evidence.json", { schema: 1, entries: {} });
 const keys = collectKeys(bindings);
+// Validate scan bindings before accepting or writing any freshness records.
+try {
+  for (const key of keys.filter(k => k.kind === "omm")) collectElements(bindings, key.source);
+} catch (error) { fail(error.message); }
 
 if (mode === "accept" && targets.length) {
   const known = new Set(keys.map((k) => k.key));

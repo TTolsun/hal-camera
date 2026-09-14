@@ -9,7 +9,7 @@ import { ommCli } from './omm-cli.mjs';
 import { snapshot, changedFiles, copySnapshot, prepareCommit, applyCommit, recover, journalPath, acquireLock } from './transaction.mjs';
 
 function outputPolicy(bindings) {
-  const exact = new Set(['tools/docgen/state/facts.json', 'tools/docgen/state/evidence.json']);
+  const exact = new Set(['tools/docgen/state/facts.json', 'tools/docgen/state/evidence.json', 'tools/docgen/state/scan.json']);
   const prefixes = [];
   for (const [name, source] of Object.entries(bindings.sources)) {
     if (source.kind === 'omm') {

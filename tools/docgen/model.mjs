@@ -5,7 +5,7 @@
 // 저장하고, 생성기는 저장된 결과를 읽어 표시만 합니다.
 import fs from "node:fs";
 import path from "node:path";
-import { globFiles, hashFiles, hashText, repoPath, readOmmField, ommExists, ommChildren } from "./lib.mjs";
+import { globFiles, hashFiles, hashText, repoPath, readOmmField, ommExists, ommChildren, ommFieldPath } from "./lib.mjs";
 import { parseYaml } from "./yaml-lite.mjs";
 
 export const OMM_FIELDS = ["description", "diagram", "constraint", "concern", "context", "todo", "note"];
@@ -105,6 +105,42 @@ export function collectKeys(bindings) {
     }
   }
   return keys;
+}
+
+// Freshness remains perspective-wide; these are the smaller scan units.
+export function collectElements(bindings, source) {
+  const definition = bindings.sources[source];
+  if (!/^[a-z0-9-]+$/.test(source) || definition?.kind !== "omm") throw new Error(`알 수 없는 OMM 관점: ${source}`);
+  const overrides = definition.elements ?? {};
+  if (typeof overrides !== "object" || Array.isArray(overrides)) throw new Error(`${source}: elements는 매핑이어야 합니다.`);
+  const list = [];
+  const paths = new Set();
+  const evidenceList = (value, element) => {
+    if (!Array.isArray(value) || value.some(p => typeof p !== "string" || !p.trim())) {
+      throw new Error(`${element}: evidence는 경로 목록이어야 합니다.`);
+    }
+    return value;
+  };
+  const perspectiveEvidence = evidenceList(definition.evidence ?? [], source);
+  const visit = (relative, parent, inherited) => {
+    const element = relative === "." ? source : `${source}/${relative}`;
+    const configured = Object.hasOwn(overrides, relative);
+    const evidence = configured ? evidenceList(overrides[relative]?.evidence, element) : inherited;
+    paths.add(relative);
+    list.push({ path: element, parent, evidence: [...evidence],
+      fields: OMM_FIELDS.filter(field => fs.existsSync(ommFieldPath(element, field))) });
+    for (const child of ommChildren(element)) visit(relative === "." ? child : `${relative}/${child}`, element, evidence);
+  };
+  if (ommExists(source)) visit(".", null, perspectiveEvidence);
+  for (const key of Object.keys(overrides)) {
+    if (!paths.has(key)) throw new Error(`${source}: 존재하지 않는 elements 경로: ${key}`);
+  }
+  const allowed = new Set(globFiles(perspectiveEvidence));
+  for (const element of list) {
+    const outside = globFiles(element.evidence).filter(file => !allowed.has(file));
+    if (outside.length) throw new Error(`${element.path}: 요소 evidence는 관점 evidence의 부분집합이어야 합니다: ${outside.join(", ")}`);
+  }
+  return list;
 }
 
 function ommModelText(source) {
