@@ -1,12 +1,55 @@
 ---
-based_on: ["data-flow","state-transitions"]
-confidence: "code"
-sources: ["app/src/main/java/dev/halcamera/MainActivity.kt","app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt","app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt","app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt","app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt","app/src/main/java/dev/halcamera/benchmark/RunValidity.kt","app/src/main/java/dev/halcamera/cli/CommandStore.kt","app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt","app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt","app/src/main/java/dev/halcamera/telemetry/Telemetry.kt"]
+based_on: [data-flow, state-transitions]
+confidence: code
+sources:
+  - app/src/main/java/dev/halcamera/cli/CommandStore.kt
+  - tools/halcam/halcam/cli.py
+  - app/src/main/java/dev/halcamera/MainActivity.kt
+  - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+  - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
+  - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
+  - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
+  - app/src/main/java/dev/halcamera/benchmark/RunValidity.kt
+  - app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt
+  - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
+  - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
 decisions: []
 verifications: []
 ---
-앱이 기록하는 이벤트와 러너 표시 중 프레임워크 경계 바깥의 사실은 `FlightRecorder` 가 기록한 원시 이벤트 (`Event.atNs`, `sensorNs`) 와 `BenchmarkEvaluator` 의 계산 결과입니다. `Event.atNs` 는 `Telemetry` 를 통해 주입된 시계로, 앱 시각과 센서 시각 (`sensorNs`) 을 구분하여 기록합니다. `intervalMs`, `resultFps`, `observedResultGap` 은 앱이 계산한 파생값으로, HAL 내부 상태의 직접 측정으로 해석하지 않습니다. 러너 표시 중 `unknownReason` 이 `INSUFFICIENT_SAMPLES` 로 설정된 경우, 이는 프레임워크가 충분한 표본을 수집하지 못했음을 의미하며, 이는 앱 측정이 수행되지 않은 결과입니다.
 
-세션 ID 필터링은 `HistoryActivity.visible()` 에서 특정 실행만 표시하여, 해당 세션의 데이터가 누락되었거나 다른 세션과 혼동되었음을 시사합니다. 초기 프레임 제외는 `MetricExtractor.observe()` 의 `warmupFrames` 로 처리되며, 이는 H.1~H.5 통계에서 제외되지만 3A 수렴에는 포함됩니다. `INSUFFICIENT_SAMPLES` 는 `RunValidityEvaluator.flags` 에서 측정 유효성 (`measurementValid`) 을 false 로 설정하여 앱 UI 에 "실행이 유효하지 않음" 증상을 만듭니다. 이는 프레임워크가 충분한 데이터를 수집하지 못했거나, 앱 측정이 수행되지 않았음을 의미합니다.
+**먼저 앱의 필터와 계산 규칙을 확인한 뒤 원시 이벤트를 대조하세요.** 프레임워크에서 받은 값과 앱이 계산한 지표를 구분해야 원인 계층을 좁힐 수 있습니다.
 
-계층을 좁히기 위해 먼저 `FlightRecorder` 를 통해 전체 이벤트 로그를 확인하여 세션 ID 필터링이 올바르게 적용되었는지 검증합니다. 다음으로 `capture_result`, `image_available`, `capture_started` 등의 이벤트 타입과 시간戳 (`sensorNs`, `atNs`) 을 비교하여 프레임 간격과 처리 지연을 분석합니다. `INSUFFICIENT_SAMPLES` 와 같은 상태가 발생하면 데이터 부족으로 인해 정확한 계산이 불가능함을 알립니다. 이는 프레임 수집이 충분하지 않거나 세션 초기화 중일 수 있음을 시사합니다. 앱 기록만으로 프레임워크와 HAL 중 원인을 확정하지 않으며, 시스템 트레이스와 카메라 서비스 로그로 추가 확인해야 합니다.
+`Event.atNs`는 `FlightRecorder`가 주입받은 시계로 기록한 앱 시각이며, 앱에서는 `elapsedRealtimeNanos`를 사용합니다. 카메라가 제공한 센서 시각은 별도 필드인 `sensorNs`입니다. `intervalMs`, `resultFps`, `observedResultGap`은 앱이 계산한 파생값이므로 HAL 내부 상태의 직접 측정으로 해석하지 않습니다.
+
+1. `unknownReason`, 세션 ID, 관측 창과 표본 수를 확인합니다. `INSUFFICIENT_SAMPLES`는 측정 대상의 고장을 뜻하지 않습니다.
+2. `capture_failed.reason`, `buffer_lost`, `capture_result`의 센서 시각과 `frameDurationNs`를 대조합니다. `request_observed`는 요청 제출 시각이 아닙니다.
+3. 센서 타임스탬프가 REALTIME 소스일 때만 앱 시각과 직접 비교합니다. 다른 시계의 값을 빼면 지연을 해석할 수 없습니다.
+4. 앱 기록만으로 프레임워크와 HAL 중 원인을 확정하지 않습니다. 시스템 트레이스와 카메라 서비스 로그로 추가 확인해야 합니다.
+
+### 표본과 보존 규칙
+
+| 규칙 | 확인할 코드와 영향 |
+| --- | --- |
+| 닫힌 세션의 콜백을 버립니다. | `Telemetry.callback`의 `alive()`를 확인합니다. |
+| 관측 세션과 시간 창을 선택합니다. | `RunAssembler.observe()`가 관측 시작 이전 결과를 워밍업으로 제외합니다. 고정 5프레임 규칙은 사용하지 않습니다. |
+| 표본이 부족하면 값이 비어 있습니다. | `BenchmarkEvaluator`의 관측 통계는 해당 지표 표본 수가 15개 미만이면 `null`을 반환합니다. 3A 수렴은 워밍업 전 프레임도 사용합니다. |
+| 오래된 이벤트를 제거합니다. | `FlightRecorder` 기본 설정은 30초·18,000개이며 `BenchmarkActivity`는 180초·60,000개로 구성합니다. 제거 횟수는 `Incident.capacityEvictions`이며 incident ZIP의 `incident.json`에는 `ringCapacityEvictionsSinceAppStart`(앱 시작 이후 누적)로 기록됩니다. |
+| listener는 동기로 실행합니다. | `FlightRecorder.listener`에 무거운 처리를 추가하면 관측 경로에 영향을 줄 수 있습니다. |
+
+지표의 표본 부족과 실행 전체의 validity는 별도로 계산됩니다. `MetricExtractor`는 워밍업을 제외한 프레임 수와 지표별 가용 데이터로 표본의 `unknownReason`을 정합니다. `RunAssembler`는 `observation.steadyFrames.size`를 `ValidityInputs.observedFrames`로 전달하고, `RunValidityEvaluator`는 이 값이 기본 15개에 미달하거나 시작·촬영 표본이 profile의 기대 개수보다 적으면 실행에 `INSUFFICIENT_SAMPLES` flag를 붙입니다. 이 평가는 개별 지표의 `unknownReason`을 읽지 않습니다.
+
+`intervalMs`, `resultFps`, `observedResultGap`은 관측값으로 계산한 수치입니다. HAL 내부의 처리 시간이나 화면에 표시된 프레임 수를 직접 측정한 값이 아닙니다.
+
+### 이력과 CSV가 예상과 다를 때
+
+RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된 실행을 찾으려면 상태 필터를 `전체`로 바꾸고 profile·camera 필터도 확인합니다. PC의 `tools/aggregate.py`는 기본적으로 점수 산정 가능한 실행만 내보내므로, 앱과 같은 범위를 보려면 `--eligibility comparison_eligible`을 사용합니다.
+
+손상된 JSON은 목록과 PC 집계에서 별도로 알립니다. CSV 출력 장치의 오류는 입력 파일 오류와 구분하며 작업을 실패로 종료합니다. baseline 파일을 읽을 수 없으면 baseline 변경과 삭제를 중단합니다. 기기 화면·공유·삭제 동작의 실제 검증 기록은 이 문서에서 주장하지 않습니다.
+
+사진·동영상 저장 실패는 벤치마크 비교와 구분해 확인합니다. 사진은 같은 센서 타임스탬프의 YUV·JPEG 버퍼가 모두 있어야 저장됩니다. 녹화 중에는 엔진·카메라·줌·촬영 모드 변경과 일시정지·갤러리·벤치마크를 비활성화합니다. 셔터는 정지 동작을 제공하고 경과 시간은 셔터 아래의 모드 위치에 표시합니다. 정지를 누르면 녹화 종료 처리 동안 셔터를 비활성화하며, 앨범 저장 완료는 별도 알림으로 표시합니다. 녹화 종료 후 사진용 프리뷰로 복귀하며 동영상 모드 선택은 유지합니다. 벤치마크 비교 화면에서 뒤로 가기를 누르면 결과 화면으로 돌아갑니다.
+
+### CLI 작업이 끝나지 않거나 파일이 없을 때
+
+`status --request REQUEST_UUID`로 앱의 상태를 먼저 확인합니다. PC의 대기 시간 종료는 앱 실행 실패를 뜻하지 않습니다. `fetch`는 이미 생성된 파일을 회수하며 촬영을 반복하지 않습니다. `interrupted`는 앱 프로세스가 종료된 미완료 기록이며 자동으로 재실행되지 않습니다.
+
+`BUSY`가 반환되면 현재 UI 또는 CLI 작업이 끝날 때까지 기다립니다. `CLI_DISABLED`는 측정 상세의 ADB CLI 허용 설정을 확인합니다. 카메라·저장소 권한은 앱에서 허용해야 하며 CLI가 자동 부여하지 않습니다. benchmark의 취소·실패 시 partial report와 실행 상태를 함께 확인합니다.

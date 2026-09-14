@@ -197,7 +197,7 @@ pages.yml → GitHub Pages 배포
 
 ## 7. 수용 기준
 
-1. `main`에 `RunAssembler.kt`만 바꾸는 commit을 push하면, 45분 안에 `docs/omm-sync` PR이 열리고 `benchmark/run-assembler` 요소와 이를 참조하는 원고만 바뀐다.
+1. `main`에 `RunAssembler.kt`만 바꾸는 commit을 push하면 45분 안에 `docs/omm-sync` PR이 열린다. 실제 바인딩으로 연결된 요소 4개(`overall-architecture/benchmark/run-assembler`, `data-flow`, `data-flow/benchmark-metrics`, `data-flow/runner-marks`)만 재스캔하고 나머지 43개의 스캔 기록을 유지한다. 원고는 기존 관점 기반 최신성 규칙에 따라 관련 5건을 갱신한다. 구조 내용 변경은 재스캔 요소에 한정하며, 부모 등록 메타데이터와 상태·생성 페이지도 함께 검증한다. 이 범위는 공통 근거와 관점 최신성 연결을 확인한 뒤 2026-09-14에 사용자가 승인했다.
 2. 실행 로그의 모든 모델 호출 입력이 60,000자 이하이고 `done_reason: stop`이다.
 3. 그 PR에서 `verify.mjs --accept` 후 `docs-check`가 통과한다.
 4. `node --test tools/docgen/regression.test.mjs tools/docgen/sync.test.mjs`가 Windows와 Ubuntu에서 통과한다.
