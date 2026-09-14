@@ -143,6 +143,8 @@ Windows / Node.js 24.18.0 / local `qwen3.5:4b`, `num_ctx=49152`, default 60,000-
 
 Selecting existing citations and exact `must_link` filenames alone still produced roughly 111,000–318,000 characters per manuscript. The implementation therefore feeds all selected code through bounded evidence-summary calls, then retains the complete existing brief for the final writer. The user approved this extension while keeping manuscript blocks and the input limit unchanged.
 
+Review follow-up: source offsets refer to the LF-normalized UTF-16 string, not on-disk bytes; CRLF carriage returns are intentionally removed. Perspective-wide freshness remains a conservative review alarm as specified by the existing pipeline, while the writer receives selected code and the OMM context refreshed by the scanner. A regression test verifies uncited code changes reflected in that context reach the writer. This does not assert that every uncited implementation detail is supplied to the writer; accepted review records remain unchanged.
+
 The completed `sync.mjs --write-only --force` run took **287.968 seconds**. All **25 calls** (20 evidence summaries and five writers) completed with `done_reason: stop`. Inputs ranged from **7,974 to 56,484 characters**.
 
 | Manuscript | Summary calls | Final writer input | Writer duration |
@@ -157,4 +159,4 @@ The disposable validation checkout received eight output files: five manuscripts
 
 Earlier trials exposed overlong summaries, unsupported source citations, and repeated Markdown sections reaching the output limit. Each trial failed without publishing any output. The final writer uses fixed question fields and a source enum; the program assembles front matter from the binding and existing human evidence metadata. This prevents the model from adding device-verification claims to metadata. Semantic accuracy still requires review against code.
 
-Final local deterministic validation: **79 passed**, with three existing opt-in tests skipped. Coverage includes exact filename selection, `must_link` freshness, complete large-source reconstruction, empty and oversized summaries, citation rejection after summarization, structured answer completeness, preservation of human metadata, and existing transaction recovery. Design generation, extraction, freshness, generated-page equality, and whitespace checks pass. No runtime dependency was added.
+Final local deterministic validation: **81 passed**, with three existing opt-in tests skipped. Coverage includes exact filename selection, `must_link` freshness, complete LF-normalized large-source reconstruction from LF and CRLF files, empty and oversized summaries, citation rejection after summarization, structured answer completeness, preservation of human metadata, and existing transaction recovery. Design generation, extraction, freshness, generated-page equality, and whitespace checks pass. No runtime dependency was added.

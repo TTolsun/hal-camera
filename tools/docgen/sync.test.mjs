@@ -288,6 +288,25 @@ test('writer selects cited files and exact must_link filenames, retaining OMM co
   assert.equal(r.code, 0, r.out);
 });
 
+test('uncited perspective changes reach the writer through refreshed OMM context', async t => {
+  const f = makeFixture(1, { splitEvidence: true }); t.after(f.cleanup);
+  f.put(timerFile, 'object Timer { const val OBSERVE_MS = 15000L }');
+  let written = false;
+  const url = await server(t, (data, res) => {
+    if (data.format.properties.updates) {
+      const element = data.format.properties.updates.items.properties.element.enum[0];
+      return reply(res, { updates: [{ element, field: 'description', text: element.endsWith('/timer') ?
+        'Timer.OBSERVE_MS는 15000ms입니다.' : 'Probe.OBSERVE_MS는 12000ms입니다.' }] });
+    }
+    const prompt = data.messages.at(-1).content;
+    assert.match(prompt, /Timer.OBSERVE_MS는 15000ms입니다/);
+    assert.ok(!prompt.includes('## 파일: ' + timerFile));
+    written = true; reply(res, writer(manuscript('12000')));
+  });
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url });
+  assert.equal(r.code, 0, r.out); assert.equal(written, true);
+});
+
 test('writer rejects empty evidence before contacting the model and preserves files', async t => {
   const f = fixture(t);
   f.put('docs/guide/_content/probe/overview-0.md', manuscript('10000').replace('  - ' + probeFile + '#Probe.OBSERVE_MS', ''));
@@ -299,10 +318,10 @@ test('writer rejects empty evidence before contacting the model and preserves fi
   assert.equal(requests, 0); assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
 });
 
-test('large writer evidence is split without dropping characters and final prompt keeps the full brief', async t => {
+for (const eol of ['\n', '\r\n']) test(`large writer preserves all LF-normalized code for ${JSON.stringify(eol)} checkouts`, async t => {
   const f = fixture(t);
   const source = '/*' + '한국어-0123456789 '.repeat(6000) + '*/\nobject Probe { const val OBSERVE_MS = 12000L }\n';
-  f.put(probeFile, source);
+  f.put(probeFile, source.replace(/\n/g, eol));
   const slices = []; let writes = 0;
   const url = await server(t, (data, res) => {
     const prompt = data.messages.at(-1).content;
