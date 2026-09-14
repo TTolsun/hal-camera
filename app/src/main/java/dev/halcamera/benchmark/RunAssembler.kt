@@ -26,6 +26,7 @@ object RunAssembler {
      * [warmupFrames] are the frames between the first preview frame and the start of the observation window:
      * they are excluded from H.1 - H.5 but still count for the 3A convergence, which is measured from the first
      * result of the observation session (3.2).
+     * [observedFrames] counts the steady frames after warm-up removal and feeds the run validity rules.
      */
     data class ObservationInput(
         val observation: MetricExtractor.Observation?,
