@@ -652,6 +652,7 @@ class BenchmarkActivity : ComponentActivity() {
         val context = RunAssembler.Context(
             exportedAtUtc = BenchmarkReport.utcNow(),
             device = deviceInfo(result.endpoint.logicalCameraId),
+            deviceInstanceId = DeviceInstance.id(this),
             app = appInfo(),
             subject = runSubject,
             env = env,

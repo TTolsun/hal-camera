@@ -100,6 +100,15 @@ class RunAssemblerTest {
     }
 
     @Test
+    fun `optional installation identity survives report round trip without changing measurement contract`() {
+        val run = RunAssembler.assemble(result(), listOf(configuredEvent()) + previewEvents(), profile,
+            context().copy(deviceInstanceId = "synthetic-installation"))
+        val decoded = BenchmarkReportCodec.fromJsonMap(BenchmarkReportCodec.toJsonMap(run))
+        assertEquals("synthetic-installation", decoded.raw["device_instance_id"])
+        assertEquals(run.contract, decoded.contract)
+    }
+
+    @Test
     fun `a draft profile keeps the run out of scoring only`() {
         val draft = profile.copy(id = "camera2-standard-v2-draft")
         val run = RunAssembler.assemble(result(), listOf(configuredEvent()) + previewEvents(), draft, context())

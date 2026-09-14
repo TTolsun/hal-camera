@@ -2,6 +2,11 @@
 based_on: [overall-architecture, data-flow]
 confidence: code
 sources:
+  - app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt
+  - app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt
+  - app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt
+  - app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt
+  - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
   - tools/halcam/halcam/cli.py
   - app/src/main/java/dev/halcamera/MainActivity.kt
@@ -42,3 +47,7 @@ baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 
 5. `MainActivity.kt`, `BenchmarkActivity.kt`, `HistoryActivity.kt`에서 화면과 실행 코드의 연결을 확인합니다.
 
 LIVE의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저장하며 GalleryActivity에서 조회합니다. 측정 파일과 미디어 파일의 저장 경로를 구분하려면 아래 모듈 역할을 확인하세요.
+
+### 반복 측정 프로파일 비교
+
+RESULTS의 반복 측정 비교 메뉴에서 전후 실행 묶음을 고를 수 있습니다. ProfileComparisonActivity는 외부 JSON도 읽으며, 가져온 자료를 로컬 baseline과 분리합니다. 동일 기기의 수정 전후 비교가 기본이며 다른 기기 자료는 별도 모드로 선택합니다.

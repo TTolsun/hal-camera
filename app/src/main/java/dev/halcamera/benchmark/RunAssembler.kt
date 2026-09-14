@@ -18,7 +18,8 @@ object RunAssembler {
         val app: AppInfo,
         val subject: SubjectLabel,
         val env: RunEnv,
-        val compatibility: Compatibility
+        val compatibility: Compatibility,
+        val deviceInstanceId: String? = null
     )
 
     /**
@@ -177,6 +178,7 @@ object RunAssembler {
             referenceRef = null,
             metrics = metrics,
             raw = mapOf(
+                "device_instance_id" to context.deviceInstanceId,
                 "launch_cycles" to result.cycles.map { it.toJsonMap() },
                 "stills" to result.stills.map { it.toJsonMap() },
                 "observation" to rawObservation(obs.observation),
