@@ -4,6 +4,19 @@ name: docs-sync
 
 on:
   workflow_dispatch:
+    inputs:
+      force:
+        description: 'Rescan all elements and rewrite all manuscripts'
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - '.omm/**'
+      - 'docs/guide/_bindings.yaml'
+      - 'tools/docgen/**'
+      - '.github/workflows/docs-sync.yml'
 
 concurrency:
   group: docs-sync
@@ -11,7 +24,7 @@ concurrency:
 
 jobs:
   sync:
-    if: github.ref == 'refs/heads/main' && vars.DOCGEN_LOCAL_RUNNER_ENABLED == 'true'
+    if: github.repository == 'TTolsun/hal-camera' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && vars.DOCGEN_LOCAL_RUNNER_ENABLED == 'true'
     runs-on: [self-hosted, docgen-qwen]
     timeout-minutes: 45
     permissions:
@@ -28,13 +41,18 @@ jobs:
         env:
           DOCGEN_OLLAMA_URL: http://127.0.0.1:11434
           DOCGEN_QWEN_MODEL: qwen3.5:4b
+          DOCGEN_QWEN_CONTEXT: '49152'
+          DOCGEN_LLM_TIMEOUT_MS: '1800000'
+          DOCGEN_FORCE: ${{ inputs.force && 'true' || 'false' }}
           DOCFLOW_ENGINE_ROOT: ${{ vars.DOCFLOW_ENGINE_ROOT }}
         shell: pwsh
         run: |
+          $syncArgs = @()
+          if ($env:DOCGEN_FORCE -eq 'true') { $syncArgs += '--force' }
           if ($env:DOCFLOW_ENGINE_ROOT) {
-            node tools/docgen/common.mjs sync
+            node tools/docgen/common.mjs sync @syncArgs
           } else {
-            node tools/docgen/sync.mjs
+            node tools/docgen/sync.mjs @syncArgs
           }
       - name: PR 생성
         uses: peter-evans/create-pull-request@v7
