@@ -11,7 +11,6 @@ $packageHash = '1150692afa94e71f872017e254ea55b6eece1eece3fe7e3a6d4c93d0a1b85cfc
 $gitExe = 'C:\Program Files\Git\cmd\git.exe'
 if (Test-Path -LiteralPath $runnerRoot) { throw "Runner directory already exists: $runnerRoot. Inspect it before retrying." }
 if (Get-LocalUser -Name $accountName -ErrorAction SilentlyContinue) { throw "Account already exists: $accountName. Inspect it before retrying." }
-if (!(Get-Command pwsh -ErrorAction SilentlyContinue)) { throw 'PowerShell 7 must be installed for all users.' }
 if (!(Test-Path -LiteralPath $gitExe)) { throw 'Git for Windows is required.' }
 $ollama = Invoke-RestMethod -Uri 'http://127.0.0.1:11434/api/tags'
 if (!($ollama.models | Where-Object { $_.name -eq 'qwen3.5:4b' })) { throw 'Install qwen3.5:4b in Ollama first.' }

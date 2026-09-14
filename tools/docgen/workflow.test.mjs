@@ -33,12 +33,15 @@ test('local runner accepts only main push or dispatch with the explicit reposito
 test('only docs-sync uses the local label and it never accepts review automatically', () => {
   assert.deepEqual(workflow.jobs.sync['runs-on'], ['self-hosted', 'docgen-qwen']);
   assert.equal(workflow.jobs.sync['timeout-minutes'], 45);
+  assert.equal(workflow.jobs.sync.defaults.run.shell,
+    'powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File {0}');
   for (const file of fs.readdirSync(directory).filter(name => /\.ya?ml$/.test(name) && name !== 'docs-sync.yml')) {
     assert.ok(!fs.readFileSync(path.join(directory, file), 'utf8').includes('docgen-qwen'), file);
   }
   const steps = workflow.jobs.sync.steps;
   assert.ok(steps.every(step => !step.run?.includes('--accept')));
   const sync = steps.find(step => step.env?.DOCGEN_QWEN_MODEL);
+  assert.ok(steps.every(step => step.shell === undefined));
   assert.equal(sync.env.DOCGEN_QWEN_CONTEXT, '49152');
   assert.equal(sync.env.DOCGEN_LLM_TIMEOUT_MS, '1800000');
   assert.equal(workflow.on.workflow_dispatch.inputs.force.default, false);

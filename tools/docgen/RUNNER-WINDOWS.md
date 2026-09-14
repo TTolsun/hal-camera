@@ -1,6 +1,6 @@
 # Windows 문서 동기화 runner
 
-관리자 PowerShell에서 `tools/docgen/install-runner.ps1`을 실행하면 `hal-docgen` 일반 사용자와 `C:\ProgramData\HALCamera\docgen-runner`의 GitHub runner 서비스를 만듭니다. PowerShell 7, Git for Windows, Git Credential Manager의 저장소 관리 권한, 로컬 Ollama의 `qwen3.5:4b`가 필요합니다.
+관리자 PowerShell에서 `tools/docgen/install-runner.ps1`을 실행하면 `hal-docgen` 일반 사용자와 `C:\ProgramData\HALCamera\docgen-runner`의 GitHub runner 서비스를 만듭니다. Windows PowerShell 5.1, Git for Windows, Git Credential Manager의 저장소 관리 권한, 로컬 Ollama의 `qwen3.5:4b`가 필요합니다. workflow는 기본 Windows PowerShell을 사용하며 해당 프로세스에만 스크립트 실행을 허용합니다. 시스템이나 계정의 실행 정책을 변경하지 않습니다.
 
 1. Ollama가 로그인 시 실행되고 `http://127.0.0.1:11434/api/tags`에 모델이 표시되는지 확인합니다. Windows 설치본의 시작 프로그램을 사용하거나 로그인 작업을 등록합니다.
 2. 관리자 PowerShell에서 `& .\tools\docgen\install-runner.ps1`을 실행합니다. 설치기는 공식 runner 2.337.0의 SHA-256을 검사하며 같은 계정·폴더·runner가 있으면 덮어쓰지 않습니다. Windows 서비스 등록은 `config.cmd --runasservice`로 처리합니다.

@@ -27,6 +27,11 @@ jobs:
     if: github.repository == 'TTolsun/hal-camera' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && vars.DOCGEN_LOCAL_RUNNER_ENABLED == 'true'
     runs-on: [self-hosted, docgen-qwen]
     timeout-minutes: 45
+    defaults:
+      run:
+        # A new service account has no per-user PowerShell policy or pwsh PATH.
+        # Limit script execution to this process; do not change machine policy.
+        shell: powershell -NoProfile -NonInteractive -ExecutionPolicy Bypass -File {0}
     permissions:
       contents: write
       pull-requests: write
@@ -45,7 +50,6 @@ jobs:
           DOCGEN_LLM_TIMEOUT_MS: '1800000'
           DOCGEN_FORCE: ${{ inputs.force && 'true' || 'false' }}
           DOCFLOW_ENGINE_ROOT: ${{ vars.DOCFLOW_ENGINE_ROOT }}
-        shell: pwsh
         run: |
           $syncArgs = @()
           if ($env:DOCGEN_FORCE -eq 'true') { $syncArgs += '--force' }
