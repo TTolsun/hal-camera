@@ -115,6 +115,30 @@ test('idle deadline also covers waiting for headers', async t => {
   await assert.rejects(qwen('test', {}), /유휴 시간 제한 초과/);
 });
 
+test('total deadline covers headers even when the idle budget is longer', async t => {
+  const url = await server(t, () => {});
+  transportEnv(t, url, { DOCGEN_LLM_IDLE_MS: '1000', DOCGEN_LLM_TIMEOUT_MS: '100' });
+  await assert.rejects(qwen('test', {}), /전체 시간 제한 초과/);
+});
+
+test('local transport rejects redirects without contacting their destination', async t => {
+  let destinationRequests = 0;
+  const destination = await server(t, (_data, res) => { destinationRequests++; reply(res, {}); });
+  const url = await server(t, (_data, res) => res.writeHead(307, { Location: destination }).end());
+  transportEnv(t, url);
+  await assert.rejects(qwen('test', {}), /Ollama HTTP 307/);
+  assert.equal(destinationRequests, 0);
+});
+
+test('headers can arrive after 300 seconds within configured deadlines', { skip: process.env.DOCGEN_LONG_HEADERS !== '1', timeout: 330000 }, async t => {
+  const url = await server(t, (_data, res) => {
+    const finish = setTimeout(() => reply(res, { ok: true }), 305000);
+    res.on('close', () => clearTimeout(finish));
+  });
+  transportEnv(t, url, { DOCGEN_LLM_TIMEOUT_MS: '1800000', DOCGEN_LLM_IDLE_MS: '600000' });
+  assert.deepEqual(await qwen('test', {}), { ok: true });
+});
+
 test('stream survives the previous 300-second limit', { skip: process.env.DOCGEN_LONG_STREAM !== '1', timeout: 330000 }, async t => {
   const url = await server(t, (_data, res) => {
     res.write(packet({ done: false, message: { content: '{"ok":true}' } }));
