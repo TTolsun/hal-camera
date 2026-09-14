@@ -11,3 +11,5 @@ LIVE는 API 토글과 상태, 핵심 측정값을 표시합니다. ExpandingZoom
 PC의 tools/halcam Python CLI는 ADB를 통해 shell 전용 CliProvider에 명령을 전달합니다. CommandCoordinator와 CommandStore가 요청 ID·진행 상태·결과 파일 등록을 관리합니다. LiveController는 MainActivity의 실제 카메라를 사용하고 BenchmarkController는 BenchmarkActivity의 기존 실행·보고서 저장 경로를 연결합니다. CLI protocol v1과 benchmark schema 4는 별개의 계약입니다.
 
 앱을 열 때는 투명한 `CliLaunchActivity`가 main thread에서 작업 상태를 다시 확인합니다. 실행 중인 작업이 있으면 LIVE로 전환하지 않습니다. 상태 조회는 `CommandStore`의 메모리 snapshot을 읽으며 파일 기록은 상태 전환 때만 수행합니다.
+
+ProfileComparisonActivity는 RESULTS에서 여는 반복 측정 분석 화면입니다. ProfileLibrary와 ProfileArchive는 외부 JSON 원본을 SHA-256으로 식별해 files/profile-imports에 보관하고 로컬 baseline과 분리합니다. ProfileComparison과 RepeatStatistics는 독립 실행 묶음의 기술 통계와 보정된 양측 순열검정을 계산합니다.

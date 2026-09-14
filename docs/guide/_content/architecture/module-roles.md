@@ -2,6 +2,11 @@
 based_on: [overall-architecture]
 confidence: code
 sources:
+  - app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt
+  - app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt
+  - app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt
+  - app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt
+  - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
   - app/src/main/java/dev/halcamera/camera/LiveController.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
@@ -40,3 +45,7 @@ verifications: []
 `camera/MediaLibrary`는 사진 쌍과 동영상을 MediaStore에 저장합니다. `StillPair`와 `YuvPacking`은 버퍼 연결과 YUV 변환을 담당합니다. `GalleryActivity`는 HALCamera 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다.
 
 `camera/RecentMediaThumbnail`은 저장 완료된 앨범 항목의 썸네일을 별도 작업 스레드에서 읽고 `ui/RecentMediaButton`에 전달합니다. 화면을 나가면 관찰을 중단하고 뒤늦은 조회 결과는 반영하지 않습니다.
+
+### 반복 측정 프로파일 비교
+
+ProfileLibrary와 ProfileArchive는 외부 JSON의 검증·출처·별도 파일 보관을 담당합니다. ProfileComparison은 기기·빌드·계약·환경·중복 검사를, RepeatStatistics는 실행 단위 기술 통계와 순열검정을 담당합니다. ProfileComparisonActivity가 시스템 파일 선택기와 묶음 선택·결과 공유를 연결합니다.

@@ -2,6 +2,11 @@
 based_on: [data-flow]
 confidence: code
 sources:
+  - app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt
+  - app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt
+  - app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt
+  - app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt
+  - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
   - app/src/main/java/dev/halcamera/cli/CliProvider.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
   - tools/halcam/halcam/cli.py
@@ -89,3 +94,7 @@ CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩�
 PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 확인합니다. 같은 요청 ID와 같은 내용은 기존 결과를 반환하며 새로운 촬영을 시작하지 않습니다. 원본 파일이 삭제되거나 전송이 끊긴 경우에는 요청 ID로 상태를 확인한 다음 파일 수집을 재시도합니다.
 
 앱을 열 때는 투명한 `CliLaunchActivity`가 main thread에서 작업 상태를 다시 확인합니다. 실행 중인 작업이 있으면 LIVE로 전환하지 않습니다. 상태 조회는 `CommandStore`의 메모리 snapshot을 읽으며 파일 기록은 상태 전환 때만 수행합니다.
+
+### 반복 측정 프로파일 비교
+
+반복 측정 비교에서는 시스템 문서 선택기로 schema 3·4 JSON을 가져옵니다. 검증을 마친 원본만 files/profile-imports/<sha256>.json에 보관합니다. 전후 묶음의 선택 키와 확인 조건은 preferences에 저장하고, 분석 방법·원본 해시·제외 사유를 포함한 결과는 별도 텍스트 파일에 저장합니다. 기존 baseline 포인터와 로컬 실행 파일은 변경하지 않습니다.
