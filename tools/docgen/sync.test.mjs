@@ -6,15 +6,34 @@ import path from 'node:path';
 import { makeFixture, manuscript, runSync, probeFile, timerFile } from './sync-fixture.mjs';
 import { snapshot, changedFiles, prepareCommit, applyCommit, recover, writeBytes, acquireLock } from './transaction.mjs';
 import { qwen } from './qwen.mjs';
+import { splitFrontMatter, citedFiles } from './model.mjs';
+import { manuscriptSchema, renderManuscript } from './write-evidence.mjs';
+const writer = markdown => { const { meta, body } = splitFrontMatter(markdown); return { sections: { answer_1: body }, sources: citedFiles(meta) }; };
+
+test('structured writer preserves human evidence metadata and requires every requested answer', () => {
+  const key = { block: { based_on: ['sync-probe'], confidence: 'code', brief: { answers: ['First?', 'Second?'] } } };
+  const format = manuscriptSchema(key, [probeFile]);
+  assert.deepEqual(format.properties.sources.items.enum, [probeFile]);
+  const response = { sections: { answer_1: '첫 답변입니다.', answer_2: '두 번째 답변입니다.' }, sources: [probeFile], decisions: ['D-invented'] };
+  const { meta, body } = splitFrontMatter(renderManuscript(key, response, { decisions: ['D-existing'], verifications: [] }));
+  assert.deepEqual(meta.decisions, ['D-existing']); assert.deepEqual(meta.verifications, []);
+  assert.match(body, /첫 답변입니다\.\n\n두 번째 답변입니다\./);
+  for (const sections of [{ answer_1: 'only one' }, { ...response.sections, extra: 'unexpected' },
+    { ...response.sections, answer_2: 'x'.repeat(2501) }, { ...response.sections, answer_2: '---\nconfidence: device' }]) {
+    assert.throws(() => renderManuscript(key, { ...response, sections }), /질문별 답변/);
+  }
+});
 
 async function server(t, handler) {
   const service = http.createServer(async (req, res) => {
+    req.setEncoding('utf8');
     let text = ''; for await (const chunk of req) text += chunk;
     const data = JSON.parse(text);
     assert.equal(data.model, 'qwen3.5:4b'); assert.equal(data.think, false);
     assert.equal(data.tools, undefined); assert.equal(data.truncate, false);
     assert.equal(data.stream, true);
-    handler(data, res);
+    try { handler(data, res); }
+    catch (error) { res.writeHead(500).end(); throw error; }
   });
   await new Promise(r => service.listen(0, '127.0.0.1', r));
   t.after(() => { service.closeAllConnections(); service.close(); });
@@ -143,7 +162,7 @@ test('timer overflow is rejected before a request and the maximum delay is accep
 
 test('local protocol completes scan/write/generate without accepting review', async t => {
   const f = fixture(t); const before = snapshot(f.root);
-  const url = await server(t, (data, res) => reply(res, data.format.properties.updates ? scanFor(data) : { markdown: manuscript('12000') }));
+  const url = await server(t, (data, res) => reply(res, data.format.properties.updates ? scanFor(data) : writer(manuscript('12000'))));
   const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }); assert.equal(r.code, 0, r.out);
   assert.match(fs.readFileSync(path.join(f.root, 'docs/guide/probe.md'), 'utf8'), /12000ms/);
   const accepted = bytes => Object.fromEntries(Object.entries(JSON.parse(bytes).entries).map(([k, v]) => [k, v.accepted]));
@@ -249,10 +268,87 @@ for (const text of ['', ' \n ']) test('empty scan content is rejected without ch
   assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
 });
 
+test('writer selects cited files and exact must_link filenames, retaining OMM context', async t => {
+  const f = makeFixture(1, { splitEvidence: true }); t.after(f.cleanup);
+  f.put('app/src/main/java/dev/halcamera/Unrelated.kt', 'UNRELATED_CODE_SENTINEL');
+  const bindingFile = path.join(f.root, 'docs/guide/_bindings.yaml');
+  f.put('docs/guide/_bindings.yaml', fs.readFileSync(bindingFile, 'utf8')
+    .replace('        brief:', '        brief:\n          must_link: [Timer, ProbeMissing]'));
+  const url = await server(t, (data, res) => {
+    const prompt = data.messages.at(-1).content;
+    assert.match(prompt, /## 근거: .omm\/sync-probe/);
+    assert.match(prompt, /Probe.OBSERVE_MS는 관측 시간을 10000ms로 지정/);
+    assert.ok(prompt.includes('## 파일: ' + probeFile));
+    assert.ok(prompt.includes('## 파일: ' + timerFile));
+    assert.ok(!prompt.includes('UNRELATED_CODE_SENTINEL'));
+    assert.equal(prompt.split('## 파일: ' + probeFile).length, 2);
+    reply(res, writer(manuscript('12000')));
+  });
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--write-only']);
+  assert.equal(r.code, 0, r.out);
+});
+
+test('writer rejects empty evidence before contacting the model and preserves files', async t => {
+  const f = fixture(t);
+  f.put('docs/guide/_content/probe/overview-0.md', manuscript('10000').replace('  - ' + probeFile + '#Probe.OBSERVE_MS', ''));
+  const before = snapshot(f.root);
+  let requests = 0;
+  const url = await server(t, (_data, res) => { requests++; reply(res, {}); });
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--write-only']);
+  assert.notEqual(r.code, 0); assert.match(r.out, /brief.mjs probe.md overview-0/);
+  assert.equal(requests, 0); assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
+});
+
+test('large writer evidence is split without dropping characters and final prompt keeps the full brief', async t => {
+  const f = fixture(t);
+  const source = '/*' + '한국어-0123456789 '.repeat(6000) + '*/\nobject Probe { const val OBSERVE_MS = 12000L }\n';
+  f.put(probeFile, source);
+  const slices = []; let writes = 0;
+  const url = await server(t, (data, res) => {
+    const prompt = data.messages.at(-1).content;
+    assert.ok(prompt.length <= 60000);
+    if (data.format.properties.summary) {
+      const match = prompt.match(/\[문자 (\d+):(\d+)\/(\d+)\]\n([\s\S]*)\n$/);
+      assert.ok(match); assert.equal(Number(match[3]), source.length);
+      assert.ok(match[4] === source.slice(Number(match[1]), Number(match[2])), `slice ${match[1]}:${match[2]} has ${match[4].length} chars, head ${JSON.stringify(match[4].slice(0, 10))}, tail ${JSON.stringify(match[4].slice(-20))}`);
+      slices.push(match[4]);
+      reply(res, { summary: 'Probe.OBSERVE_MS는 12000ms입니다.' });
+    } else {
+      writes++;
+      assert.match(prompt, /## 근거: .omm\/sync-probe/);
+      assert.match(prompt, /## 코드 근거 요약/);
+      assert.match(prompt, /## 현재 원고/);
+      reply(res, writer(manuscript('12000')));
+    }
+  });
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--write-only']);
+  assert.equal(r.code, 0, r.out); assert.equal(writes, 1);
+  assert.ok(slices.length > 1); assert.equal(slices.join(''), source);
+});
+
+for (const summary of ['', 'x'.repeat(4001)]) test(`invalid evidence summary preserves the original: ${summary.length} chars`, async t => {
+  const f = fixture(t); f.put(probeFile, '/*' + 'x'.repeat(70000) + '*/');
+  const before = snapshot(f.root);
+  const url = await server(t, (_data, res) => reply(res, { summary }));
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--write-only']);
+  assert.notEqual(r.code, 0); assert.match(r.out, /요약이 비어 있거나/);
+  assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
+});
+
+test('summarized writer still rejects citations outside the selected evidence', async t => {
+  const f = fixture(t); f.put(probeFile, '/*' + 'x'.repeat(70000) + '*/');
+  const before = snapshot(f.root);
+  const url = await server(t, (data, res) => reply(res, data.format.properties.summary ?
+    { summary: 'Probe의 코드 근거입니다.' } : writer(manuscript('12000').replace(probeFile, 'missing.kt'))));
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--write-only']);
+  assert.notEqual(r.code, 0); assert.match(r.out, /제공되지 않은 코드 근거/);
+  assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
+});
+
 test('write-only never calls the scanner or records a scan', async t => {
   const f = fixture(t); const before = snapshot(f.root);
   const url = await server(t, (data, res) => {
-    assert.ok(!data.format.properties.updates); reply(res, { markdown: manuscript('12000') });
+    assert.ok(!data.format.properties.updates); reply(res, writer(manuscript('12000')));
   });
   const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--write-only']);
   assert.equal(r.code, 0, r.out);
@@ -278,8 +374,8 @@ for (const scenario of ['http', 'timeout', 'idle', 'json', 'truncated', 'incompl
         return reply(res, scanFor(data));
       }
       writes++;
-      if (scenario === 'writer-empty' || (scenario === 'second-writer' && writes === 2)) return reply(res, { markdown: '' });
-      return reply(res, { markdown: scenario === 'writer-source' ? manuscript('12000').replace(probeFile, 'missing.kt') : manuscript('12000') });
+      if (scenario === 'writer-empty' || (scenario === 'second-writer' && writes === 2)) return reply(res, writer(''));
+      return reply(res, writer(scenario === 'writer-source' ? manuscript('12000').replace(probeFile, 'missing.kt') : manuscript('12000')));
     });
     const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url, DOCGEN_LLM_TIMEOUT_MS: scenario === 'timeout' ? '100' : '30000', DOCGEN_LLM_IDLE_MS: '1000' });
     assert.equal(r.code, 1, r.out); assert.deepEqual(changedFiles(before, snapshot(f.root)), [], r.out);
@@ -293,7 +389,7 @@ test('concurrent original edit prevents publication and preserves user text', as
   const f = fixture(t); const before = snapshot(f.root);
   const url = await server(t, (data, res) => {
     f.put(probeFile, '// user edit\n');
-    reply(res, data.format.properties.updates ? scanFor(data) : { markdown: manuscript('12000') });
+    reply(res, data.format.properties.updates ? scanFor(data) : writer(manuscript('12000')));
   });
   const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }); assert.equal(r.code, 1, r.out);
   assert.deepEqual(changedFiles(before, snapshot(f.root)), [probeFile]);

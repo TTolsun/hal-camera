@@ -156,6 +156,12 @@ export function citedFiles(meta) {
   return cited.map((s) => String(s).split("#")[0]).filter(Boolean);
 }
 
+export function linkedFiles(block) {
+  const symbols = new Set(block.brief?.must_link ?? []);
+  return globFiles(['**/*']).filter(file => symbols.has(path.basename(file)) ||
+    symbols.has(path.basename(file, path.extname(file))));
+}
+
 export function computeHashes(bindings, entry) {
   if (entry.kind === "omm") {
     const files = globFiles(entry.evidence);
@@ -169,7 +175,7 @@ export function computeHashes(bindings, entry) {
   const content = readContentBlock(bindings, entry.page, entry.block);
   const basedOn = entry.block.based_on ?? [];
   const globs = basedOn.flatMap((name) => bindings.sources[name]?.evidence ?? []);
-  const files = new Set(globFiles(globs));
+  const files = new Set([...globFiles(globs), ...linkedFiles(entry.block)]);
   const missingCited = [];
   for (const rel of citedFiles(content?.meta)) {
     if (fs.existsSync(repoPath(rel))) files.add(rel);
