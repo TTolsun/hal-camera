@@ -138,8 +138,8 @@ sources:
 ### D. 실행 환경: self-hosted runner와 workflow 트리거
 
 - 개발자 PC(Windows 11, RTX 5070 Laptop 8GB)에 GitHub self-hosted runner를 Windows 서비스로 설치한다. 라벨은 `self-hosted`, `docgen-qwen`이다.
-- Ollama도 서비스로 실행되어 로그인 없이 `127.0.0.1:11434`에 응답해야 한다.
-- 저장소 변수 `DOCGEN_LOCAL_RUNNER_ENABLED=true`를 둔다. 이 변수를 지우면 workflow가 즉시 멈춘다.
+- Ollama는 Windows 시작 프로그램 또는 로그인 작업으로 실행하여 로그인 후 `127.0.0.1:11434`에 응답하게 한다. 현재 PC는 설치본의 시작 프로그램을 사용한다. 로그인 전 무인 실행과 재부팅 검증은 별도 범위이다.
+- 저장소 변수 `DOCGEN_LOCAL_RUNNER_ENABLED=true`를 둔다. 이 변수를 지우면 다음 실행의 작업을 건너뛴다. 이미 시작한 실행은 Actions에서 별도로 취소한다.
 - `docs-sync.yml` 트리거를 `workflow_dispatch`에서 `push: main` + `paths: [app/**, .omm/**, docs/guide/_bindings.yaml, tools/docgen/**]`로 바꾼다. `workflow_dispatch`는 남긴다.
 - 환경 변수는 `DOCGEN_QWEN_CONTEXT=49152`로 둔다. 입력 60,000자는 약 25,000~30,000토큰이고, 출력 8,192토큰을 더해도 49,152 안에 들어온다. 이 크기의 KV 캐시는 8GB VRAM 안에 들어가므로 RAM으로 넘치지 않는다.
 - PR 생성은 기존 `peter-evans/create-pull-request` 단계를 그대로 쓴다. 브랜치 `docs/omm-sync`가 열려 있으면 갱신된다.
