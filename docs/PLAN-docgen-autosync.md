@@ -1,7 +1,7 @@
 # docgen 무인 동기화 계획
 
 - 작성일: 2026-09-12
-- 상태: 초안. 설계는 `docs/design/DOCGEN-AUTOSYNC.md`에 있다. 이 문서는 순서, 작업 단위, 완료 조건만 다룬다.
+- 상태: P1–P5 검증 완료. PR #71 머지로 #51을 닫는다. 설계는 `docs/design/DOCGEN-AUTOSYNC.md`에 있다. 이 문서는 순서, 작업 단위, 완료 조건만 다룬다.
 - 코드 기준: `main` `38b9b5c` (2026-09-12)
 - 추적: GitHub 이슈 라벨 `docgen-autosync`. epic 이슈 하나와 단계별 이슈로 관리한다.
 
@@ -18,7 +18,7 @@
 | P0 | 설계와 계획 문서 (이 문서) | 완료 | 이 PR merge |
 | P1 | 전송 계층: `qwen.mjs` 스트리밍, 유휴 시간 제한, 출력 한도 설정 | 2시간 | `sync.test.mjs` 통과, 실제 Ollama로 원고 1건 생성 |
 | P2 | 근거 분할: `_bindings.yaml` `elements`, 요소 단위 스캔, `scan.json`, CI 부분집합 검사 | 1일 | 관점 3개 모두 요소별 스캔이 60,000자 이하로 실행됨 |
-| P3 | 원고 근거 축소: 인용 파일 + `must_link` 파일만 제공 | 3시간 | 원고 6건 모두 `done_reason: stop`으로 생성됨 |
+| P3 | 원고 근거 축소: 인용 파일 + `must_link` 파일만 제공 | 3시간 | 원고 5건 모두 `done_reason: stop`으로 생성됨 |
 | P4 | 실행 환경: runner 설치, `docs-sync.yml` 트리거 변경, 저장소 변수 | 1시간 + 첫 실행 대기 | `main` push로 PR이 자동 생성됨 |
 | P5 | 검증과 마무리: 수용 기준 확인, README 갱신 | 2시간 | 설계 문서 7장의 기준 5개 모두 확인 |
 
@@ -30,12 +30,12 @@ P1은 P2보다 먼저 한다. P2의 요소별 스캔을 실제 모델로 검증�
 
 파일: `tools/docgen/qwen.mjs`, `tools/docgen/sync.test.mjs`, `tools/docgen/README.md`
 
-- [ ] `stream: true`로 요청하고 NDJSON 본문을 줄 단위로 읽어 `message.content`를 이어 붙인다.
-- [ ] 마지막 청크의 `done`, `done_reason`, `eval_count`로 완료를 판정한다. 판정 규칙은 기존과 같다.
-- [ ] `DOCGEN_LLM_TIMEOUT_MS` 기본값을 1,800,000으로 올리고, `DOCGEN_LLM_IDLE_MS`(기본 120,000)를 추가한다. 유휴 한도를 넘으면 요청을 중단하고 실패한다.
-- [ ] `num_predict`를 `DOCGEN_QWEN_NUM_PREDICT`(기본 8192)로 읽는다.
-- [ ] `sync.test.mjs`의 mock 서버를 스트리밍 응답으로 바꾸고, 유휴 시간 초과 검사를 하나 추가한다.
-- [ ] README의 "로컬 Qwen 실행" 절에서 시간 제한 설명을 갱신한다.
+- [x] `stream: true`로 요청하고 NDJSON 본문을 줄 단위로 읽어 `message.content`를 이어 붙인다.
+- [x] 마지막 청크의 `done`, `done_reason`, `eval_count`로 완료를 판정한다. 판정 규칙은 기존과 같다.
+- [x] `DOCGEN_LLM_TIMEOUT_MS` 기본값을 1,800,000으로 올리고, `DOCGEN_LLM_IDLE_MS`(기본 120,000)를 추가한다. 유휴 한도를 넘으면 요청을 중단하고 실패한다.
+- [x] `num_predict`를 `DOCGEN_QWEN_NUM_PREDICT`(기본 8192)로 읽는다.
+- [x] `sync.test.mjs`의 mock 서버를 스트리밍 응답으로 바꾸고, 유휴 시간 초과 검사를 하나 추가한다.
+- [x] README의 "로컬 Qwen 실행" 절에서 시간 제한 설명을 갱신한다.
 
 검증: `node --test tools/docgen/sync.test.mjs`. 실제 Ollama로 `node tools/docgen/sync.mjs --write-only`를 원고 하나에 실행해서 300초를 넘겨도 완료되는지 확인한다.
 
@@ -72,22 +72,24 @@ P1은 P2보다 먼저 한다. P2의 요소별 스캔을 실제 모델로 검증�
 
 파일: `.github/workflows/docs-sync.yml`, 저장소 설정, 개발자 PC
 
-- [ ] Ollama를 Windows 서비스 또는 로그인 작업으로 등록해서 재부팅 후에도 `127.0.0.1:11434`가 응답하게 한다.
-- [ ] runner 전용 Windows 사용자 계정을 만든다.
-- [ ] Settings > Actions > Runners > New self-hosted runner로 runner를 설치하고, 라벨에 `docgen-qwen`을 추가한 뒤 `config.cmd --runasservice`로 서비스 등록을 한다.
-- [ ] Settings > Variables에 `DOCGEN_LOCAL_RUNNER_ENABLED=true`를 추가한다.
-- [ ] Settings > Actions에서 "Require approval for all outside collaborators"가 켜져 있는지 확인한다.
-- [ ] `docs-sync.yml`에 `push: main` + `paths` 트리거를 추가하고, `DOCGEN_QWEN_CONTEXT=49152`, `DOCGEN_LLM_TIMEOUT_MS=1800000`을 env에 둔다. `workflow_dispatch`는 남긴다.
-- [ ] `workflow_dispatch`로 한 번 수동 실행해서 runner가 잡히고 PR이 열리는지 확인한다.
+- [x] Ollama의 사용자 로그인 시작 항목을 확인하고 `127.0.0.1:11434` 응답을 확인한다. 재부팅 및 로그인 전 실행은 검증하지 않았다.
+- [x] runner 전용 Windows 사용자 계정을 만든다.
+- [x] Settings > Actions > Runners > New self-hosted runner로 runner를 설치하고, 라벨에 `docgen-qwen`을 추가한 뒤 `config.cmd --runasservice`로 서비스 등록을 한다.
+- [x] Settings > Variables에 `DOCGEN_LOCAL_RUNNER_ENABLED=true`를 추가한다.
+- [x] Settings > Actions에서 "Require approval for all outside collaborators"가 켜져 있는지 확인한다.
+- [x] `docs-sync.yml`에 `push: main` + `paths` 트리거를 추가하고, `DOCGEN_QWEN_CONTEXT=49152`, `DOCGEN_LLM_TIMEOUT_MS=1800000`을 env에 둔다. `workflow_dispatch`는 남긴다.
+- [x] `workflow_dispatch`로 한 번 수동 실행해서 runner가 잡히고 PR이 열리는지 확인한다.
 
 검증: `gh run list --workflow docs-sync`에서 성공 기록, `docs/omm-sync` PR 존재.
 
 ### P5. 검증과 마무리
 
-- [ ] `main`에 `RunAssembler.kt`만 바꾸는 작은 commit을 push하고, 설계 문서 7장의 수용 기준 5개를 확인해서 epic 이슈에 기록한다.
-- [ ] `tools/docgen/README.md`의 "알려진 제약"과 "로컬 Qwen 실행" 절을 갱신한다. "전체 무인 갱신은 준비되지 않았다"는 문장을 실측 결과로 바꾼다.
-- [ ] `tools/docgen/validation-qwen.md`에 실행 로그 요약(요소 수, 입력 크기 분포, 총 소요 시간)을 추가한다.
-- [ ] epic 이슈를 닫는다.
+- [x] `main`에 `RunAssembler.kt`만 바꾸는 작은 commit을 push하고, 설계 문서 7장의 수용 기준 5개를 확인해서 epic 이슈에 기록한다.
+- [x] `tools/docgen/README.md`의 "알려진 제약"과 "로컬 Qwen 실행" 절을 갱신한다. "전체 무인 갱신은 준비되지 않았다"는 문장을 실측 결과로 바꾼다.
+- [x] `tools/docgen/validation-qwen.md`에 실행 로그 요약(요소 수, 입력 크기 분포, 총 소요 시간)을 추가한다.
+- epic 이슈 #51은 이 검증 기록을 포함한 PR #71의 머지로 닫는다.
+
+검증: 단일 파일 변경 `143e026`의 실행 34846817274가 5분 37초 안에 PR #71을 생성했습니다. 요소 4개만 재스캔하고 나머지 43개 스캔 기록과 accepted 8개를 보존했으며, 관련 원고 5건을 생성했습니다. 호출 29회 모두 stop, 최대 입력 58,722자였습니다. 코드 대조에서 발견한 오류와 누락은 복원·수정했습니다. 실행 조건, 실패한 첫 시도, runner 차단 확인은 [검증 기록](../tools/docgen/validation-qwen.md)에 있습니다.
 
 ## 3. `elements` 확정 표
 

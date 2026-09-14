@@ -166,3 +166,29 @@ Final local deterministic validation: **81 passed**, with three existing opt-in 
 The installed Qwen weights were copied to a temporary local model alias with `num_gpu=0` and `num_thread=2` to make a single request exceed 300 seconds. A disposable fixture requested a table of 20 Kotlin constants using the P3 structured writer. With context 32,768, default output budget 8,192, total timeout 1,800,000 ms and an explicit stress-test idle timeout of 600,000 ms, `sync.mjs --write-only` completed successfully. The one model call took **300.9 seconds**, used **15,629 input characters**, emitted **915 tokens**, and ended with `done_reason: stop`. The whole pipeline took **301.422 seconds** and published three fixture files. Review status remained stale. The temporary model alias and fixture were removed; the report and candidate are retained in the parent workspace at `reviews/issue52-long-real-1789387890145/`.
 
 This confirms transport and transaction completion, not semantic approval. The generated candidate still contains inaccurate ordinal wording and an unsupported relationship between constants; it is not product documentation. Earlier CPU-only trials exposed an invalid source citation after a 1,209.3-second completed response, and a first-response preparation time over 300 seconds that hit fetch's header deadline. The latter motivated the native HTTP follow-up: configured total and idle timers now cover header waiting without an additional fetch deadline. Ordinary GPU execution retains the default 120-second idle timeout.
+
+## P4 runner 및 P5 선택 갱신 검증 · 2026-09-14
+
+실제 Windows 서비스 runner의 [전체 실행 34843006334](https://github.com/TTolsun/hal-camera/actions/runs/34843006334)은 약 11분 5초에 동기화를 완료했습니다. 스캔 47회·근거 요약 20회·집필 5회 모두 `done_reason: stop`이었고 최대 입력은 58,434자였습니다. 자동 생성한 [PR #66](https://github.com/TTolsun/hal-camera/pull/66)은 코드 대조에서 발견한 오류와 누락을 수정한 뒤 검토 기록·CI를 거쳐 머지했습니다. [Pages 실행 34845194647](https://github.com/TTolsun/hal-camera/actions/runs/34845194647)과 실제 HTML에서도 반영을 확인했습니다.
+
+저장소 변수를 실제 삭제한 상태의 다음 main push는 [실행 34842964171](https://github.com/TTolsun/hal-camera/actions/runs/34842964171)에서 작업을 건너뛰었습니다. 이후 `DOCGEN_LOCAL_RUNNER_ENABLED=true`를 복구했습니다. runner는 비관리자 전용 계정으로 실행되며 Ollama는 사용자 로그인 시작 항목을 사용합니다. 재부팅과 로그인 전 실행은 검증하지 않았습니다.
+
+첫 선택 검증은 `RunAssembler.kt`의 schema 설명만 수정한 `d2249fa`에서 실행했습니다. [실행 34845763411](https://github.com/TTolsun/hal-camera/actions/runs/34845763411)은 예상 요소 4개를 스캔하고 43개를 생략했지만, overview의 세 번째 근거 요약이 4,000자 한도를 넘어서 실패했습니다. 완료 이유는 `stop`이었으므로 출력 종료 여부와 길이 계약은 별도로 검사해야 합니다. 이 실패는 원본 문서와 스캔 기록을 보존했고 PR을 생성하지 않았습니다.
+
+[PR #70](https://github.com/TTolsun/hal-camera/pull/70)에서 길이가 초과된 요약만 같은 원본 코드로 한 번 더 짧게 요청하도록 수정했습니다. 초과 응답을 자르거나 다음 입력에 넣지 않으며, 재시도 후에도 한도를 넘으면 전체 트랜잭션이 실패합니다. 로컬 결정론적 검사 86개가 통과했고 선택 검사 4개는 생략했습니다. Windows·Ubuntu CI와 Pages 빌드도 통과했습니다.
+
+두 번째 검증은 `RunAssembler.kt`의 `observedFrames` KDoc 한 줄만 추가한 `143e026`에서 수행했습니다. [실행 34846817274](https://github.com/TTolsun/hal-camera/actions/runs/34846817274)은 13:02:41 UTC에 생성되어 13:08:18 UTC에 [PR #71](https://github.com/TTolsun/hal-camera/pull/71)을 열었습니다. 5분 37초로 45분 기준을 충족했습니다. 입력 한도 60,000자, 컨텍스트 49,152, 출력 8,192토큰, 전체 제한 1,800초, 유휴 제한 120초를 사용했습니다.
+
+| 검증 항목 | 실측 결과 |
+| --- | --- |
+| 재스캔 요소 | `overall-architecture/benchmark/run-assembler`, `data-flow`, `data-flow/benchmark-metrics`, `data-flow/runner-marks`의 4개 |
+| 나머지 스캔 기록 | 43개가 변경 전과 동일 |
+| 원고 | 기존 관점 최신성 연결에 따른 5건 |
+| 모델 호출 | 스캔 4회 + 근거 요약 20회 + 집필 5회 = 29회, 모두 `stop` |
+| 입력 크기 | 최소 7,974자, 평균 41,387.7자, 최대 58,722자 |
+| 모델 호출 시간 합계 | 311.0초 |
+| 자동 출력 파일 | 17개, 구조 내용 변경은 위 4개 요소에 한정 |
+| 자동 검토 기록 | 기존 `accepted` 8개 모두 보존 |
+| 요약 재시도 | 이번 성공 실행에서는 발생하지 않음. 재시도 경로는 모의 응답으로 검증 |
+
+이 수치는 자동 생성 직후 커밋 `9e01f94`를 `143e026`과 비교한 결과입니다. 실행 로그와 원본 diff는 작업 공간의 `reviews/issue51-success/`, `reviews/issue51-generated-original.patch`에 보존했습니다. 내용 검토에서는 `BenchmarkRun`이 계산한다는 잘못된 주어, `ScoreComposer`의 근거 없는 최소 10회 조건, LIVE 경로의 `LiveController` 오연결, 세션 필터와 이력 필터의 혼동, 기존 CLI·미디어 설명 누락을 발견했습니다. 잘못된 재작성은 이전 검토본으로 복원하고, 코드로 확인한 관측 프레임 수·validity 입력·직렬화 경계만 구조 설명과 실행 흐름 원고에 추가했습니다. 최종 변경 파일 수와 원고 수는 이 검토로 줄어듭니다. 자동 생성 성공은 내용의 정확성 승인과 다릅니다.
