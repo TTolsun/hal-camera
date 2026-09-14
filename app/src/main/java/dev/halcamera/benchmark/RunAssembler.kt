@@ -4,7 +4,8 @@ import dev.halcamera.metrics.MetricExtractor
 import dev.halcamera.telemetry.Event
 
 /**
- * Turns a finished [BenchmarkRunner.Result] plus the recorded events into a [BenchmarkRun] (schema 3).
+ * Turns a finished [BenchmarkRunner.Result] plus the recorded events into a [BenchmarkRun].
+ * [BenchmarkReportCodec] serializes that run using schema 4; file I/O remains outside this assembler.
  * Pure Kotlin so the whole path from raw samples to the stored contract is unit-testable; the Android facts
  * (device, app, thermal, battery) are gathered by [BenchmarkActivity] and passed in.
  */
@@ -26,6 +27,7 @@ object RunAssembler {
      * [warmupFrames] are the frames between the first preview frame and the start of the observation window:
      * they are excluded from H.1 - H.5 but still count for the 3A convergence, which is measured from the first
      * result of the observation session (3.2).
+     * [observedFrames] counts the steady frames after warm-up removal and feeds the run validity rules.
      */
     data class ObservationInput(
         val observation: MetricExtractor.Observation?,

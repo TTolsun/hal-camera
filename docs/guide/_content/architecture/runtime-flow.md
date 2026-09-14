@@ -25,6 +25,8 @@ sources:
   - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt
   - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
+  - app/src/main/java/dev/halcamera/benchmark/RunValidity.kt
+  - app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt
   - app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
@@ -50,6 +52,8 @@ LIVE 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 `Telemetry.callback()`은 `capture_started`, `request_observed`, `capture_result`, `capture_failed`, `buffer_lost`를 기록합니다. 콜백의 `alive()`가 거짓이면 이미 닫힌 세션의 늦은 이벤트를 버립니다. `request_observed`는 요청 제출 시각이 아니라 `onCaptureStarted`에서 관측한 요청 내용입니다.
 
 러너는 API 호출과 완료 신호 사이의 시각 차이를 기록합니다. `RunAssembler`는 관측 세션의 프레임 중 관측 시작 이전에 도착한 프레임 수를 워밍업으로 계산합니다. `MetricExtractor`가 이벤트를 표본으로 연결하고, `BenchmarkEvaluator`가 profile에 따라 초기 반복을 제외하고 통계를 계산합니다. 3A 수렴은 관측 세션의 첫 결과부터 계산합니다.
+
+`RunAssembler.ObservationInput.observedFrames`는 워밍업을 제외한 `steadyFrames`의 수입니다. 이 값은 `RunValidityEvaluator`의 표본 수 검사에 전달됩니다. `RunAssembler`가 구성한 `BenchmarkRun`은 `BenchmarkReportCodec`에서 schema 4로 직렬화하며, 파일 쓰기는 조립기 밖에서 처리합니다.
 
 ### 저장된 실행의 비교와 내보내기
 

@@ -42,8 +42,8 @@
       "scannedAt": "2026-09-14T12:22:53.316Z"
     },
     "overall-architecture/benchmark/run-assembler": {
-      "codeHash": "52bd056302309925",
-      "scannedAt": "2026-09-14T12:22:56.299Z"
+      "codeHash": "609cafbb814a0cf8",
+      "scannedAt": "2026-09-14T13:03:08.161Z"
     },
     "overall-architecture/benchmark/run-validity": {
       "codeHash": "f5892c854b71c79a",
@@ -142,12 +142,12 @@
       "scannedAt": "2026-09-14T12:24:37.053Z"
     },
     "data-flow": {
-      "codeHash": "07f4b73ea1d2cc81",
-      "scannedAt": "2026-09-14T12:24:42.048Z"
+      "codeHash": "8d04c10911d2c8b6",
+      "scannedAt": "2026-09-14T13:03:13.002Z"
     },
     "data-flow/benchmark-metrics": {
-      "codeHash": "0e448ec318853e51",
-      "scannedAt": "2026-09-14T12:24:46.067Z"
+      "codeHash": "3b473d2532dd583f",
+      "scannedAt": "2026-09-14T13:03:16.893Z"
     },
     "data-flow/event-record": {
       "codeHash": "30f0cff7f5c7d3d5",
@@ -170,8 +170,8 @@
       "scannedAt": "2026-09-14T12:25:11.141Z"
     },
     "data-flow/runner-marks": {
-      "codeHash": "3f9089775fc5128d",
-      "scannedAt": "2026-09-14T12:25:15.070Z"
+      "codeHash": "b839febcd3adf2d7",
+      "scannedAt": "2026-09-14T13:03:20.680Z"
     },
     "state-transitions": {
       "codeHash": "9a8ec03003caa675",

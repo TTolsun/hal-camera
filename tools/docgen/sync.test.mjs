@@ -372,10 +372,37 @@ for (const eol of ['\n', '\r\n']) test(`large writer preserves all LF-normalized
 for (const summary of ['', 'x'.repeat(4001)]) test(`invalid evidence summary preserves the original: ${summary.length} chars`, async t => {
   const f = fixture(t); f.put(probeFile, '/*' + 'x'.repeat(70000) + '*/');
   const before = snapshot(f.root);
-  const url = await server(t, (_data, res) => reply(res, { summary }));
+  let requests = 0;
+  const url = await server(t, (_data, res) => { requests++; reply(res, { summary }); });
   const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--write-only']);
   assert.notEqual(r.code, 0); assert.match(r.out, /요약이 비어 있거나/);
+  assert.equal(requests, summary.length ? 2 : 1);
   assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
+});
+
+test('oversized evidence is retried once from the same code and only valid notes reach the writer', async t => {
+  const f = fixture(t); f.put(probeFile, '/*' + 'x'.repeat(70000) + '*/');
+  let firstPrompt; let summaries = 0; let writes = 0;
+  const invalid = 'INVALID'.repeat(600);
+  const url = await server(t, (data, res) => {
+    const prompt = data.messages.at(-1).content;
+    assert.ok(prompt.length <= 60000);
+    assert.ok(!prompt.includes(invalid));
+    if (data.format.properties.summary) {
+      summaries++;
+      if (summaries === 1) { firstPrompt = prompt; return reply(res, { summary: invalid }); }
+      if (summaries === 2) {
+        assert.ok(prompt.startsWith(firstPrompt));
+        assert.match(prompt, /길이 초과 재시도/);
+        assert.match(prompt, /1000자 이하/);
+      }
+      return reply(res, { summary: 'Probe의 코드 근거입니다.' });
+    }
+    writes++; assert.match(prompt, /Probe의 코드 근거입니다/);
+    reply(res, writer(manuscript('12000')));
+  });
+  const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }, ['--write-only']);
+  assert.equal(r.code, 0, r.out); assert.equal(summaries, 3); assert.equal(writes, 1);
 });
 
 test('summarized writer still rejects citations outside the selected evidence', async t => {

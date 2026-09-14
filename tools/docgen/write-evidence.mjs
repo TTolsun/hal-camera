@@ -109,9 +109,19 @@ export async function manuscriptPrompt(plan, invoke, dryRun = false) {
   for (const [i, batch] of plan.batches.entries()) {
     console.log(`    근거 ${i + 1}/${plan.batches.length}: 입력 ${batch.prompt.length}자, 파일 ${batch.files.length}개`);
     if (dryRun) continue;
-    const result = await invoke(batch.prompt, { type: 'object', properties: {
+    const schema = { type: 'object', properties: {
       summary: { type: 'string', minLength: 1, maxLength: plan.maxSummary },
-    }, required: ['summary'], additionalProperties: false });
+    }, required: ['summary'], additionalProperties: false };
+    let result = await invoke(batch.prompt, schema);
+    if (typeof result?.summary === 'string' && result.summary.trim() && result.summary.length > plan.maxSummary) {
+      // Retry once from the original evidence, never from an oversized answer.
+      const prompt = batch.prompt + '\n## 길이 초과 재시도\n' +
+        `이번 응답은 summary를 ${Math.min(1000, Math.floor(plan.maxSummary / 4))}자 이하로 작성하세요. ` +
+        '제목 없이 최대 네 문장으로 핵심 동작·조건·예외와 파일 경로#심볼을 남기세요. 위 원본 코드만 근거로 사용하세요.\n';
+      if (prompt.length > plan.limit) throw new Error(`근거 ${i + 1}: 재시도 입력이 한도 ${plan.limit}자를 넘습니다.`);
+      console.log(`    근거 ${i + 1} 길이 초과 재시도 1/1: 입력 ${prompt.length}자`);
+      result = await invoke(prompt, schema);
+    }
     if (typeof result?.summary !== 'string' || !result.summary.trim() || result.summary.length > plan.maxSummary) {
       throw new Error(`근거 ${i + 1}: 요약이 비어 있거나 ${plan.maxSummary}자 한도를 넘었습니다.`);
     }
