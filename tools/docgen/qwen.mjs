@@ -75,7 +75,7 @@ export async function qwen(prompt, schema) {
       throw new Error(`Qwen 응답이 완성되지 않았습니다 (${final?.done_reason ?? 'empty/error'}).`);
     }
     const result = JSON.parse(content);
-    console.log(`  Qwen ${model}: ${((Date.now() - start) / 1000).toFixed(1)}초, 출력 ${final.eval_count ?? '?'}토큰`);
+    console.log(`  Qwen ${model}: ${((Date.now() - start) / 1000).toFixed(1)}초, 출력 ${final.eval_count ?? '?'}토큰, done_reason: ${final.done_reason}`);
     return result;
   } catch (error) {
     if (controller.signal.aborted) throw controller.signal.reason;

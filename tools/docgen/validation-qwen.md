@@ -137,3 +137,26 @@ node tools/docgen/sync.mjs --scan-only --force
 현재 관점별 코드 근거는 약 31만~41만 자여서 기본 입력 한도 60,000자를 초과합니다. 작은 검증 프로젝트에서 동기화와 복구는 확인했지만, 전체 저장소를 Qwen으로 무인 갱신하는 기능은 아직 준비되지 않았습니다.
 
 다음 작업은 **근거를 파일·요소 단위로 나누고, 변경 전후의 실제 코드와 대조하는 검사 사례를 추가하는 것**입니다. 이때 서로 다른 파일의 계약과 부모·자식 설명이 일치하는지도 검사해야 합니다. 해당 단계가 통과한 뒤 로컬 정기 실행을 등록합니다.
+# P3 manuscript evidence validation · 2026-09-14
+
+Windows / Node.js 24.18.0 / local `qwen3.5:4b`, `num_ctx=49152`, default 60,000-character input limit and 8,192-token output budget were used. The current bindings contain five manuscripts, rather than the six anticipated in issue #54.
+
+Selecting existing citations and exact `must_link` filenames alone still produced roughly 111,000–318,000 characters per manuscript. The implementation therefore feeds all selected code through bounded evidence-summary calls, then retains the complete existing brief for the final writer. The user approved this extension while keeping manuscript blocks and the input limit unchanged.
+
+Review follow-up: source offsets refer to the LF-normalized UTF-16 string, not on-disk bytes; CRLF carriage returns are intentionally removed. Perspective-wide freshness remains a conservative review alarm as specified by the existing pipeline, while the writer receives selected code and the OMM context refreshed by the scanner. A regression test verifies uncited code changes reflected in that context reach the writer. This does not assert that every uncited implementation detail is supplied to the writer; accepted review records remain unchanged.
+
+The completed `sync.mjs --write-only --force` run took **287.968 seconds**. All **25 calls** (20 evidence summaries and five writers) completed with `done_reason: stop`. Inputs ranged from **7,974 to 56,484 characters**.
+
+| Manuscript | Summary calls | Final writer input | Writer duration |
+| --- | ---: | ---: | ---: |
+| architecture/overview | 4 | 37,809 | 7.6 s |
+| architecture/module-roles | 4 | 32,788 | 12.7 s |
+| architecture/runtime-flow | 6 | 37,472 | 22.3 s |
+| architecture/constraints | 2 | 29,926 | 11.5 s |
+| troubleshooting/layer-isolation | 4 | 35,995 | 13.2 s |
+
+The disposable validation checkout received eight output files: five manuscripts, two generated pages, and observed evidence state. Every `accepted` record and every `.omm` file matched the original. Generated prose remains a review candidate and was not copied into the product documentation. A loopback recording proxy forwarded the requests and streamed responses unchanged to the installed Ollama service; it recorded prompt lengths and final completion packets. Local artifacts are in `reviews/issue54-real-write-1789385725373/` in the parent workspace.
+
+Earlier trials exposed overlong summaries, unsupported source citations, and repeated Markdown sections reaching the output limit. Each trial failed without publishing any output. The final writer uses fixed question fields and a source enum; the program assembles front matter from the binding and existing human evidence metadata. This prevents the model from adding device-verification claims to metadata. Semantic accuracy still requires review against code.
+
+Final local deterministic validation: **81 passed**, with three existing opt-in tests skipped. Coverage includes exact filename selection, `must_link` freshness, complete LF-normalized large-source reconstruction from LF and CRLF files, empty and oversized summaries, citation rejection after summarization, structured answer completeness, preservation of human metadata, and existing transaction recovery. Design generation, extraction, freshness, generated-page equality, and whitespace checks pass. No runtime dependency was added.

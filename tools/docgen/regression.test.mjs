@@ -35,6 +35,24 @@ pass(run('extract.mjs')); pass(run('verify.mjs', '--accept')); pass(run('generat
 // unrelated message; check it here so the real cause is the first thing reported.
 pass(run('verify.mjs', '--check'));
 
+test('must_link files outside perspective globs participate in manuscript freshness', () => {
+  pass(runCode(`
+    import fs from 'node:fs';
+    import assert from 'node:assert/strict';
+    import { readBindings } from './tools/docgen/lib.mjs';
+    import { collectKeys, computeHashes } from './tools/docgen/model.mjs';
+    fs.writeFileSync('MustLinkOnly.kt', 'object MustLinkOnly { val value = 1 }');
+    try {
+      const b = readBindings();
+      const k = collectKeys(b).find(k => k.kind === 'content');
+      k.block.brief.must_link = ['MustLinkOnly'];
+      const before = computeHashes(b, k);
+      fs.writeFileSync('MustLinkOnly.kt', 'object MustLinkOnly { val value = 2 }');
+      assert.notEqual(computeHashes(b, k).codeHash, before.codeHash);
+    } finally { fs.unlinkSync('MustLinkOnly.kt'); }
+  `));
+});
+
 test('nested element YAML and nearest-parent inheritance preserve perspective hashes', () => {
   const r = runCode(`
     import assert from 'node:assert/strict';

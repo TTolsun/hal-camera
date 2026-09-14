@@ -61,12 +61,12 @@ P1은 P2보다 먼저 한다. P2의 요소별 스캔을 실제 모델로 검증�
 
 파일: `tools/docgen/sync-worker.mjs`, `tools/docgen/brief.mjs`, `tools/docgen/sync.test.mjs`
 
-- [ ] 원고 근거 파일 집합을 "기존 원고의 `sources` 인용 파일 ∪ `must_link` 심볼과 파일 이름이 일치하는 파일"로 바꾼다.
-- [ ] 집합이 비면 `brief.mjs`로 첫 원고를 쓰라는 메시지와 함께 실패한다.
-- [ ] `based_on` 관점의 `.omm` 필드는 지금처럼 `brief.mjs`가 프롬프트에 넣는다. 변경 없음을 확인한다.
-- [ ] `sync.test.mjs`에 인용 파일만 제공되는지 검사하는 항목을 추가한다.
+- [x] 원고 근거 파일 집합을 "기존 원고의 `sources` 인용 파일 ∪ `must_link` 심볼과 파일 이름이 일치하는 파일"로 바꾼다.
+- [x] 집합이 비면 `brief.mjs`로 첫 원고를 쓰라는 메시지와 함께 실패한다.
+- [x] `based_on` 관점의 `.omm` 필드는 지금처럼 `brief.mjs`가 프롬프트에 넣는다. 변경 없음을 확인한다.
+- [x] `sync.test.mjs`에 인용 파일만 제공되는지 검사하는 항목을 추가한다.
 
-검증: 실제 Ollama로 `node tools/docgen/sync.mjs --write-only --force`를 실행해서 원고 6건이 모두 `done_reason: stop`으로 끝나는지 확인한다.
+검증: 2026-09-14 현재 원고 5건을 실제 Ollama의 `node tools/docgen/sync.mjs --write-only --force`로 287.968초에 생성했습니다. 근거 요약 20회와 집필 5회가 모두 `done_reason: stop`으로 종료되었고 최대 입력은 56,484자였습니다. 파일 선별 후에도 입력이 11만~32만 자여서 사용자 확인에 따라 근거 분할 요약을 추가했습니다. 반복 출력은 질문별 JSON 응답과 프로그램의 front matter 조립으로 해결했습니다. [검증 기록](../tools/docgen/validation-qwen.md)에 조건과 한계를 남겼습니다.
 
 ### P4. 실행 환경
 

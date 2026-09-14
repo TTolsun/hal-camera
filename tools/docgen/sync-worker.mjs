@@ -3,11 +3,12 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { readBindings, readState, writeState, REPO_ROOT, globFiles, readOmmField } from './lib.mjs';
+import { readBindings, readState, writeState, REPO_ROOT, readOmmField } from './lib.mjs';
 import { collectKeys, collectElements, contentPath, splitFrontMatter, computeHashes, stateOf, OMM_FIELDS, citedFiles, readContentBlock } from './model.mjs';
 import { snapshot, changedFiles } from './transaction.mjs';
 import { qwen } from './qwen.mjs';
 import { elementInput } from './scan-prompt.mjs';
+import { manuscriptFiles, manuscriptPlan, manuscriptPrompt, manuscriptSchema, renderManuscript } from './write-evidence.mjs';
 
 const args = new Set(process.argv.slice(2));
 const dryRun = args.has('--dry-run');
@@ -24,7 +25,6 @@ const omm = (...extra) => {
   const r = spawnSync(process.execPath, [cli, ...extra], { cwd: REPO_ROOT, encoding: 'utf8', timeout: 30000 });
   if (r.status !== 0) throw new Error(`omm ${extra[0]} 실패: ${r.stderr || r.stdout || r.error?.message}`);
 };
-const sourceText = files => files.map(file => `\n## 파일: ${file}\n${fs.readFileSync(path.join(REPO_ROOT, file), 'utf8')}`).join('\n');
 const schema = properties => ({ type: 'object', properties, required: Object.keys(properties), additionalProperties: false });
 
 try {
@@ -92,24 +92,21 @@ try {
   console.log('3/4 Qwen 원고 갱신');
   if (!args.has('--scan-only')) for (const k of keys.filter(k => k.kind === 'content' && needs(k))) {
     console.log(`  - ${k.page}/${k.block.id}`);
+    const sourceFiles = manuscriptFiles(bindings, k);
+    const plan = manuscriptPlan(k, runNode('brief.mjs', k.page, k.block.id), sourceFiles);
+    const prompt = await manuscriptPrompt(plan, qwen, dryRun);
     if (dryRun) continue;
-    const sourceFiles = [...new Set([
-      ...globFiles((k.block.based_on ?? []).flatMap(name => bindings.sources[name]?.evidence ?? [])),
-      ...citedFiles(readContentBlock(bindings, k.page, k.block)?.meta),
-    ])];
-    const prompt = runNode('brief.mjs', k.page, k.block.id) + '\n다음 원본 코드를 근거로 사용하세요. 파일 도구는 없습니다.\n' + sourceText(sourceFiles) +
-      '\n응답은 {"markdown":"front matter를 포함한 전체 원고"} JSON입니다.';
-    const result = await qwen(prompt, schema({ markdown: { type: 'string' } }));
-    if (typeof result.markdown !== 'string' || !result.markdown.startsWith('---\n')) throw new Error('Qwen 원고에 front matter가 없습니다.');
-    const { meta, body } = splitFrontMatter(result.markdown);
+    const result = await qwen(prompt, manuscriptSchema(k, sourceFiles));
+    const markdown = renderManuscript(k, result, readContentBlock(bindings, k.page, k.block)?.meta);
+    const { meta, body } = splitFrontMatter(markdown);
     if (!body.trim() || !Array.isArray(meta.based_on) || meta.confidence !== k.block.confidence ||
         JSON.stringify([...meta.based_on].sort()) !== JSON.stringify([...(k.block.based_on ?? [])].sort())) throw new Error('Qwen 원고 계약이 일치하지 않습니다.');
     if (!Array.isArray(meta.sources) || (meta.confidence === 'code' && !meta.sources.length) ||
-        citedFiles(meta).some(p => !sourceFiles.includes(p))) throw new Error('원고가 제공되지 않은 코드 근거를 인용했습니다.');
+        citedFiles(meta).some(p => !sourceFiles.includes(p))) throw new Error(`원고가 제공되지 않은 코드 근거를 인용했습니다: ${citedFiles(meta).filter(p => !sourceFiles.includes(p)).join(', ')}`);
     if (meta.confidence !== 'device' && meta.verifications?.length) throw new Error('코드 원고에 기기 검증 기록을 추가할 수 없습니다.');
     const target = contentPath(bindings, k.page, k.block.id);
     fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, result.markdown.trimEnd() + '\n');
+    fs.writeFileSync(target, markdown);
   }
   console.log('4/4 검증과 문서 생성');
   if (!dryRun) {
