@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "0987e42142ebcdee",
+        "codeHash": "96add99c0f48f75a",
         "modelHash": "2a64b28b31fde966",
         "at": "2026-09-14",
-        "commit": "a83047a",
+        "commit": "d2249fa",
         "reviewer": "Codex"
       }
     },
@@ -18,10 +18,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "2403620c42e3fafd",
+        "codeHash": "639865f94981f6b9",
         "modelHash": "2ea366aa020d6ccb",
         "at": "2026-09-14",
-        "commit": "a83047a",
+        "commit": "d2249fa",
         "reviewer": "Codex"
       }
     },
@@ -30,10 +30,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "655f7642c309e0eb",
+        "codeHash": "d2d3dfc880166347",
         "modelHash": "8c51344f8dc01d53",
         "at": "2026-09-14",
-        "commit": "a83047a",
+        "commit": "d2249fa",
         "reviewer": "Codex"
       }
     },
@@ -42,10 +42,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "0cdfd77d2f6fd011",
+        "codeHash": "6c3392300df804b7",
         "modelHash": "4f4f8384853e394a",
         "at": "2026-09-14",
-        "commit": "a83047a",
+        "commit": "d2249fa",
         "reviewer": "Codex"
       }
     },
@@ -54,10 +54,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "c0379d70409d2f20",
+        "codeHash": "acbb24d1a9ebc819",
         "modelHash": "28bd4ef48924629c",
         "at": "2026-09-14",
-        "commit": "a83047a",
+        "commit": "d2249fa",
         "reviewer": "Codex"
       }
     },
@@ -66,19 +66,19 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "2403620c42e3fafd",
+        "codeHash": "639865f94981f6b9",
         "modelHash": "3cf981a7ca1b06c0",
         "at": "2026-09-14",
-        "commit": "a83047a",
+        "commit": "d2249fa",
         "reviewer": "Codex"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "0987e42142ebcdee",
+        "codeHash": "96add99c0f48f75a",
         "modelHash": "f4c19ed17b05038e",
         "at": "2026-09-14",
-        "commit": "a83047a",
+        "commit": "d2249fa",
         "reviewer": "Codex"
       },
       "observed": {
@@ -87,10 +87,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "0987e42142ebcdee",
+        "codeHash": "96add99c0f48f75a",
         "modelHash": "2d8367481382b8bf",
         "at": "2026-09-14",
-        "commit": "a83047a",
+        "commit": "d2249fa",
         "reviewer": "Codex"
       },
       "observed": {
