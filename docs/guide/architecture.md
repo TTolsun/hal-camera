@@ -20,37 +20,18 @@ nav_order: 4
 
 <!-- omm:begin id=overview -->
 
-**LIVE, BENCHMARK, RESULTS 중 수정할 화면과 연결된 코드를 먼저 확인하세요.** 현재 앱은 카메라 성능을 관측하고, 저장된 실행을 비교하는 단일 Android 앱 모듈입니다. v0.2의 Home·Auto Check·건강 판정 화면은 제거되었습니다.
+앱은 CLI 명령을 받아 `CommandCoordinator`가 요청 ID 와 상태 관리를 수행하고, UI 를 통해 카메라 구동 (`CameraEngine`) 과 콜백 기록 (`Telemetry`, `FlightRecorder`) 을 제어합니다. `BenchmarkRunner` 는 실행 순서와 실패 처리를 담당하며, `RunAssembler` 가 러너 결과와 이벤트를 결합하여 JSON 형식의 실행 결과를 만듭니다. 내부 점수는 `ScoreComposer` 가 검토한 calibration 범위에 맞는 적격 release run 에 대해 계산하고 저장합니다. 최종적으로 `RegressionDetector` 는 기준선과 비교하여 회귀 여부를 판정하며, `BenchmarkReport` 는 schema 4 JSON 으로 저장합니다.
 
-| 단계 | 담당 코드 | 책임 |
-| --- | --- | --- |
-| CLI 제어 | `CliProvider`, `CommandCoordinator`, `tools/halcam/` | ADB 명령을 실행 경로에 연결하고 요청 상태와 검증 가능한 결과 파일을 반환합니다. |
-| 카메라 구동 | `CameraEngine`, `Camera2Engine`, `CameraXEngine` | 엔진 수명주기와 카메라 요청을 처리합니다. |
-| 콜백 기록 | `Telemetry`, `FlightRecorder` | 세션·프레임·시각·메타데이터를 이벤트로 기록합니다. |
-| 지표 계산 | `BenchmarkRunner`, `RunAssembler`, `BenchmarkEvaluator`, `metrics/MetricExtractor` | 러너의 실행 시각과 콜백을 합쳐 측정값을 만듭니다. |
-| 내부 점수 | `ScoreComposer` | 검토한 calibration의 범위에 맞는 적격 release run에 점수와 카테고리 평균을 계산합니다. |
-| 저장·비교·표시 | `BenchmarkReport`, `BaselineManager`, `RegressionDetector`, 각 Activity | JSON 저장과 화면을 구성하고, 현재 기준에 따른 비교 결과를 계산합니다. |
+LIVE 관측은 `FlightRecorder` 의 실시간 리스너를 통해 즉시 이벤트 (`Event`) 를 처리하고 연속적인 흐름을 추적하는 반면, 벤치마크는 `ScoreComposer` 가 정의된 엄격한 조건 (배터리 상태, 열 관리 등) 을 충족하는 '정상 실행'만 평가합니다. 벤치마크는 `FlightRecorder` 의 `snapshot()` 를 통해 특정 시간 창 (`retentionNs`) 의 데이터를 추출하여 분석하며, LIVE 관측은 연속적인 흐름을 추적합니다. 이력은 `BenchmarkStore` 를 통해 로드되며, `RegressionDetector` 가 두 실행의 `MetricComparison` 을 계산하고 `ResultPresenter` 나 `ComparePresenter` 에서 화면에 표시합니다.
 
-`MainActivity`가 런처이며 LIVE에서는 관측한 수치만 표시합니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.
-
-baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 결과 화면은 이전의 비교 가능한 실행 대비 변화량만 표시합니다. 이력에서 임의로 선택한 실행도 실제 baseline이 아닌 한 회귀 판정의 기준이 되지 않습니다.
-
-### 코드를 처음 읽는 순서
-
-1. `camera/CameraEngine.kt`에서 열기·닫기 계약을 확인합니다.
-2. `telemetry/Telemetry.kt`와 `FlightRecorder.kt`에서 이벤트와 보존 방식을 확인합니다.
-3. `benchmark/BenchmarkRunner.kt`에서 실행 순서와 실패 처리를 읽습니다.
-4. `benchmark/RunAssembler.kt`에서 러너 결과와 이벤트를 결합하는 지점을 확인합니다.
-5. `MainActivity.kt`, `BenchmarkActivity.kt`, `HistoryActivity.kt`에서 화면과 실행 코드의 연결을 확인합니다.
-
-LIVE의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저장하며 GalleryActivity에서 조회합니다. 측정 파일과 미디어 파일의 저장 경로를 구분하려면 아래 모듈 역할을 확인하세요.
+코드를 처음 읽을 때는 먼저 `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt` 와 `FlightRecorder.kt` 를 통해 데이터 수집 구조를 이해한 후, 카메라 제어 로직인 `app/src/main/java/dev/halcamera/camera/CameraEngine.kt` 와 UI 진입점인 `app/src/main/java/dev/halcamera/MainActivity.kt` 를 확인해야 합니다. 평가 로직은 `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt` 에서 처리됩니다.
 
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `tools/halcam/halcam/cli.py`
 - 근거 수준: 코드 확인
-- 검토 2026-09-12 @ `7e3a7c9` · Codex
+- 검토 상태: 원본이 갱신됨: 검토 대기
 
 </details>
 
@@ -99,33 +80,16 @@ graph LR
 
 <!-- omm:begin id=module-roles -->
 
-**변경할 기능의 패키지부터 여세요.** 아래 경로는 `app/src/main/java/dev/halcamera/`를 기준으로 합니다.
+각 패키지는 명확한 책임을 지며 변경 시 해당 클래스의 의존성을 확인해야 합니다. `cli/`와 `tools/halcam/`는 shell 호출자 검사, 영속 요청 상태, artifact 등록을 담당하며 `CommandCoordinator` 와 `CommandStore` 를 통해 요청 ID 와 진행 상태를 관리합니다. `camera/`는 엔진 계약과 구현 (`Camera2Engine`, `CameraXEngine`) 을 제공하며 `LiveController` 는 CLI 명령을 동기화하고 `RecentMediaThumbnail` 은 앨범 썸네일을 별도 스레드에서 읽습니다. `metrics/`는 `MetricExtractor` 가 이벤트를 관측 표본으로 재구성하는 순수 계산 로직만 담당합니다. `benchmark/`는 프로파일, 러너, 지표 계산, 저장 (`BenchmarkReport`, `BenchmarkStore`), 비교 (`RegressionDetector`) 와 이력 화면을 제공하며 `ScoreComposer` 는 스케일링 곡선을 계산합니다. `telemetry/`는 `Telemetry` 가 이벤트를 만들고 `FlightRecorder` 가 원형 버퍼에 보존하며 `IncidentExporter` 는 ZIP 파일을 작성합니다. `ui/`와 `MainActivity.kt` 는 LIVE 관측값과 Canvas 그래프, 카메라 선택 및 권한 처리를 담당합니다.
 
-| 영역 | 역할과 수정 시 확인할 내용 |
-| --- | --- |
-| `cli/`와 `tools/halcam/` | shell 호출자 검사, 영속 요청 상태, artifact 등록과 PC 파일 수집을 담당합니다. protocol v1을 변경할 때 양쪽 검증기를 함께 확인합니다. |
-| `camera/` | 엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다. `close(done)` 완료 전에 다음 카메라를 열지 않습니다. |
-| `metrics/` | `MetricExtractor`가 이벤트를 관측 표본과 통계로 바꿉니다. 화면과 회귀 판정을 담당하지 않습니다. |
-| `benchmark/` | profile, 러너, 지표 계산, validity, 내부 점수, 저장, 비교와 이력 화면을 제공합니다. Android 의존성이 있는 Activity·저장 어댑터와 순수 계산 로직을 구분합니다. |
-| `telemetry/` | `Telemetry`가 이벤트를 만들고 `FlightRecorder`가 보존합니다. `IncidentExporter`는 incident ZIP을 작성합니다. listener는 기록 스레드에서 동기 실행됩니다. |
-| `ui/`와 `MainActivity.kt` | LIVE 관측값과 Canvas 그래프, 공통 `Look` 토큰, 카메라 선택과 권한 처리를 제공합니다. |
-
-`BenchmarkActivity`는 실행 완료 후 별도 입출력 스레드에서 조립·저장·비교를 처리하고 `ResultPresenter`와 `ComparePresenter`의 결과를 표시합니다. 시작 카드와 진행률에는 `StartCardPresenter`와 `ProgressPresenter`를 사용합니다.
-
-`HistoryActivity`는 같은 저장소를 읽습니다. `RunIndex`는 이벤트와 표본 배열을 제거한 목록 데이터를 유지하고, 결과를 열 때 원본 JSON을 다시 읽습니다. 파일 읽기·삭제·CSV 생성은 별도 스레드에서 처리합니다. `BenchmarkCsv`는 지표당 한 행을 작성하고 FileProvider로 공유합니다.
-
-`BenchmarkReport`는 schema 4를 쓰고 schema 3·4를 읽습니다. `BenchmarkStore`는 실행 파일과 baseline 인덱스를 관리합니다. 삭제한 실행을 가리키는 포인터는 정리하며, 기존 실행 JSON은 비교 상태가 바뀌어도 다시 쓰지 않습니다.
-
-`camera/MediaLibrary`는 사진 쌍과 동영상을 MediaStore에 저장합니다. `StillPair`와 `YuvPacking`은 버퍼 연결과 YUV 변환을 담당합니다. `GalleryActivity`는 HALCamera 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다.
-
-`camera/RecentMediaThumbnail`은 저장 완료된 앨범 항목의 썸네일을 별도 작업 스레드에서 읽고 `ui/RecentMediaButton`에 전달합니다. 화면을 나가면 관찰을 중단하고 뒤늦은 조회 결과는 반영하지 않습니다.
+실행 영역은 카메라 시작/종료 (`openCamera`, `restartCamera`), 녹화 제어, 권한 요청 등 동적 동작을 수행하며 `main` 핸들러와 `Executors`(작업자, IO) 를 통해 관리됩니다. 평가 영역은 센서 이벤트(`image_available`, `capture_result`) 를 기반으로 프레임 간격, ISO, 노출, FPS 등을 실시간으로 계산하고 시각화하는 로직입니다. 기록과 저장 영역은 `recorder`(FlightRecorder 인스턴스), `telemetry`(Telemetry 인스턴스), `IncidentExporter` 및 `File` 관련 로직으로 구성되며 `markedReadings` 맵이 마크 이벤트와 읽기 값을 임시 보관합니다. 벤치마크 실행 시 `CameraEngine` 의 `start()` 호출부터 종료까지가 실행 영역이며, 결과 조립 (`RunAssembler.assemble`) 후 파일 저장 단계가 평가 영역입니다. 기록과 저장 영역은 `BenchmarkStore` 와 `BaselineManager` 가 실행 기록을 관리하며, `HistoryActivity` 는 JSON·CSV 를 FileProvider 로 공유합니다. 사진·동영상은 MediaLibrary 가 MediaStore 의 DCIM/HALCamera 에 저장하며 앱 내부 파일과 구분됩니다.
 
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/camera/LiveController.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/LiveController.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-12 @ `7e3a7c9` · Codex
+- 검토 상태: 원본이 갱신됨: 검토 대기
 
 </details>
 
@@ -135,70 +99,18 @@ graph LR
 
 <!-- omm:begin id=runtime-flow -->
 
-**실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.** 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.
+사용자 조작이 카메라 호출과 결과 표시로 이어지는 과정은 UI 계층에서 시작되어 Telemetry 콜백을 경유하고, 최종적으로 화면에 표시됩니다. 사용자가 설정을 변경하거나 촬영 버튼을 누르면 `ShutterButton` 또는 `IconButton` 이 해당 동작을 감지하여 `Telemetry.onCaptureStarted()` 와 같은 콜백을 기록합니다. 이 콜백은 `FlightRecorder` 에 이벤트 로그를 남기고 동시에 `BenchmarkRunner` 가 실행 시퀀스를 시작하는 신호로 작용합니다. `BenchmarkRunner` 는 카메라 엔진 (Camera2 또는 CameraX) 을 통해 실제 하드웨어 요청을 생성하고, 캡처 완료 시 `onCaptureCompleted()` 콜백을 발생시킵니다.
 
-### 실행에서 저장까지
+이벤트 경로와 러너 경로는 UI 이벤트 처리와 백그라운드 측정 로직의 분리 및 병렬 실행을 위해 따로 존재합니다. 이벤트 경로는 `FlightRecorder` 와 `Telemetry` 를 통해 원시 신호 (예: `request_observed`, `capture_failed`) 를 기록하며, 이는 실시간 상태 반영에 중점을 둡니다. 러너 경로는 `BenchmarkRunner` 의 내부 상태 기계와 타이머를 통해 측정 세션을 관리하고, `MetricExtractor` 가 이를 가공하여 통계치를 산출합니다. 두 경로는 `RunAssembler` 에서 합쳐지며, 이 클래스는 `FlightRecorder` 의 이벤트 로그와 `BenchmarkRunner` 의 결과 (`Result`) 를 결합하여 최종 실행 기록을 생성합니다.
 
-1. `BenchmarkActivity`가 선택한 카메라와 profile을 사전 확인합니다.
-2. `BenchmarkRunner`가 열기·닫기 반복을 수행합니다. 각 사이클은 OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE로 진행합니다.
-3. 별도 관측 세션에서 WARMUP → OBSERVE → STILL → CLOSE를 진행합니다. profile은 반복 횟수와 관측·촬영 조건을 정합니다.
-4. `RunAssembler`가 러너 결과와 이벤트를 결합해 `BenchmarkEvaluator`와 `RunValidityEvaluator`를 호출합니다. `ScoreComposer`는 calibration의 적용 범위와 적격 조건에 맞는 run에만 내부 점수를 채웁니다.
-5. `BenchmarkReport`가 실행 JSON을 저장합니다. Activity는 baseline 또는 이전 실행을 찾아 비교 결과를 별도로 계산합니다.
-
-`Telemetry.callback()`은 `capture_started`, `request_observed`, `capture_result`, `capture_failed`, `buffer_lost`를 기록합니다. 콜백의 `alive()`가 거짓이면 이미 닫힌 세션의 늦은 이벤트를 버립니다. `request_observed`는 요청 제출 시각이 아니라 `onCaptureStarted`에서 관측한 요청 내용입니다.
-
-러너는 API 호출과 완료 신호 사이의 시각 차이를 기록합니다. `RunAssembler`는 관측 세션의 프레임 중 관측 시작 이전에 도착한 프레임 수를 워밍업으로 계산합니다. `MetricExtractor`가 이벤트를 표본으로 연결하고, `BenchmarkEvaluator`가 profile에 따라 초기 반복을 제외하고 통계를 계산합니다. 3A 수렴은 관측 세션의 첫 결과부터 계산합니다.
-
-### 저장된 실행의 비교와 내보내기
-
-`RegressionDetector`는 두 실행의 측정 계약·endpoint·validity·환경 조건을 확인합니다. baseline 비교에서만 회귀 판정을 표시하며, 이전 실행이나 임의 선택 실행과의 비교는 변화량과 비교 불가 사유를 표시합니다. 단위가 다르면 각 단위를 유지하고 백분율을 표시하지 않습니다.
-
-RESULTS의 행은 저장된 결과로 연결됩니다. 길게 누르면 baseline, 비교, JSON·CSV 내보내기, 삭제 작업을 선택합니다. 삭제 확인 후 파일을 삭제하고 해당 baseline 포인터를 정리합니다. 측정값이 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다.
-
-벤치마크 닫기와 결과·이력 복귀에는 기존 위치의 48dp 아이콘을 사용합니다. 접근성 이름과 길게 누르기 설명에 복귀 대상을 표시하며, 실행·비교·내보내기·필터의 구체적인 작업 이름은 글씨로 유지합니다.
-
-### LIVE에서 선택과 촬영
-
-LIVE 상단에는 배경·테두리 없는 현재 API 버튼과 `Benchmark` 메뉴를 두고, 두 메뉴 사이에 `Camera2 · LIVE`처럼 엔진과 상태를 같은 줄로 표시합니다. 하단은 핵심 측정값 2줄, 줌, 셔터 행, 사진·동영상 모드 순서입니다. MARK·벤치마크·일시정지·그래프는 측정 상세에서 제공합니다. 셔터 행의 왼쪽에는 최근 촬영물 썸네일, 오른쪽에는 카메라 선택 목록을 여는 아이콘을 둡니다.
-
-일시정지·재개·갤러리·측정 패널 닫기처럼 익숙한 동작은 `IconButton`을 사용합니다. 아이콘은 24dp, 터치 영역은 48dp 이상이며 한국어 접근성 이름과 길게 누르기 설명을 제공합니다. API·카메라 ID·모드·줌·필터·선택과 MARK·벤치마크·측정 상세는 현재 값이나 동작의 의미를 확인할 수 있도록 글씨를 유지합니다.
-
-API 버튼은 누를 때마다 Camera2와 CameraX를 전환합니다. 사진·동영상은 각각의 이름을 한 번 눌러 선택합니다. 카메라 버튼, 벤치마크 카메라, RESULTS 필터는 현재 항목이 표시된 목록을 사용합니다. 아래 공간이 부족하면 버튼 위에 열립니다. 바깥을 누르거나 뒤로 가면 값을 유지하고 닫으며, 화면을 나갈 때에도 목록을 닫습니다. 모드를 고른 뒤 중앙 셔터를 눌러야 촬영이나 녹화를 시작합니다.
-
-줌은 현재 배율만 표시하다가 누르면 지원 배율로 펼쳐집니다. 선택 후 3초 동안 추가 조작이 없으면 선택한 배율을 유지한 채 접힙니다. 선택된 흰 원의 지름은 32dp이고 터치 영역은 48dp입니다. 펼침은 260ms, 접힘은 220ms 동안 폭과 투명도·크기가 부드럽게 바뀝니다. 좁은 창에서는 가로 스크롤을 제공하고, 드래그 중에는 자동 접기를 미룹니다. 시스템 접근성 시간 제한을 반영하며 TalkBack에서는 자동 접기 없이 선택을 기다린 뒤 접힙니다. 시스템 애니메이션 비활성화 설정도 따릅니다.
-
-`ShutterButton`은 사진 모드에서 흰 원을, 동영상 모드에서 흰 테두리와 빨간 원을 표시합니다. 녹화 중에는 빨간 정지 사각형으로 바뀌며, 셔터 아래의 모드 위치에는 경과 시간을 표시합니다. 녹화 중에는 엔진·카메라·줌·모드 변경과 일시정지·갤러리·벤치마크를 비활성화합니다. 정지 셔터를 누르면 `저장 중…`을 표시하고, 녹화 종료 처리 동안 셔터를 비활성화해 중복 정지를 막습니다. 앨범 저장 완료는 별도 알림으로 표시합니다.
-
-LIVE에서 사진을 촬영하면 Camera2의 같은 요청에 YUV와 JPEG 출력을 지정합니다. 센서 타임스탬프가 일치하는 버퍼를 연결해 별도 작업 스레드에서 사진 쌍을 저장합니다. 동영상은 프리뷰·인코더 세션으로 전환하고 종료 후 파일을 앨범에 공개합니다. CameraX 상태에서 미디어 작업을 요청하면 Camera2로 전환합니다.
-
-### 갤러리에서 열람과 정리
-
-촬영 화면의 최근 썸네일은 MediaStore에서 HALCamera의 저장 완료 항목만 조회합니다. 파일 저장과 화면 복귀 시 백그라운드에서 갱신하며 항목이 없거나 읽기에 실패하면 갤러리 아이콘을 표시합니다.
-
-`GalleryActivity`는 HALCamera 앨범만 조회해 화면 폭에 따라 3–6열의 정사각형 격자로 표시합니다. 썸네일 간격은 2dp이며, YUV·JPEG와 동영상 재생 시간 표시로 항목을 구별합니다. 전체·사진·동영상 필터는 현재 값 버튼에 붙는 선택 목록을 사용합니다.
-
-항목을 누르면 앱 내부 상세 화면을 엽니다. `GalleryImageView`는 사진 확대와 이동을 처리하며, 화면에 맞춘 크기에서는 좌우로 쓸어 항목을 넘길 수 있습니다. 이전·다음 아이콘도 제공하고, 동영상은 재생 아이콘을 눌러 시작합니다. 돋보기의 +·−와 접근성 설명은 버튼 클릭뿐 아니라 두 손가락·두 번 누르기로 바뀐 실제 확대 상태에도 맞춰 갱신합니다. 파일명·크기·해상도 등은 정보 아이콘을 펼쳤을 때 표시하며, 아이콘의 선택 상태와 설명도 함께 갱신합니다. 필터·격자 스크롤 위치·열어 둔 항목을 저장해 화면 복귀와 재생성 시 복원합니다.
-
-선택 버튼이나 길게 누르기로 고른 항목은 공유·삭제 아이콘으로 함께 처리합니다. 공유 Intent에는 선택한 URI와 읽기 권한만 전달합니다. 삭제는 확인을 거치며 Android 11 이상에서는 `MediaStore.createDeleteRequest()`의 시스템 확인을 사용합니다.
-
-갤러리 상단은 16dp 좌우 여백을 사용하고 제목·버튼 사이를 12dp 띄웁니다. 사진 상세의 탐색 버튼 사이에는 16dp, 공유·삭제 사이에는 24dp 간격을 둡니다. 탐색과 공유·삭제 행의 터치 영역 사이에는 패딩과 행 간격을 합쳐 28dp 여백을 확보합니다. 터치 영역은 48dp 이상을 유지합니다. 선택 체크 표시는 24dp 크기로 썸네일 가장자리에서 8dp 안쪽에 둡니다.
-
-선택 모드에서는 상단 제목에 선택 개수를 크게 표시하고, 전체 선택 체크박스로 현재 필터의 모든 항목을 고르거나 해제합니다. 화면 밖의 항목도 포함합니다. 개별 항목을 해제하면 전체 선택 상태와 개수가 즉시 바뀝니다. 필터를 바꾸거나 선택을 취소하면 기존 선택을 해제합니다. 항목이 없거나 삭제 확인이 진행 중일 때에는 전체 선택을 비활성화합니다. 삭제는 기존 시스템 확인을 거칩니다. 2,000개를 넘는 선택은 2,000개 이하로 나누어 순서대로 시스템 확인을 요청하며, 중간에 취소하면 남은 요청을 중단합니다.
-
-### CLI 요청과 결과 수집
-
-CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩니다. 요청 ID와 내용을 먼저 저장하고 `LiveController` 또는 `BenchmarkController`가 화면의 카메라·벤치마크 동작을 실행합니다. 사진은 두 이미지의 저장 완료, 벤치마크는 report 파일 쓰기 완료 후 artifact를 등록합니다. 명령 접수와 실제 완료는 서로 다른 상태입니다.
-
-PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 확인합니다. 같은 요청 ID와 같은 내용은 기존 결과를 반환하며 새로운 촬영을 시작하지 않습니다. 원본 파일이 삭제되거나 전송이 끊긴 경우에는 요청 ID로 상태를 확인한 다음 파일 수집을 재시도합니다.
-
-앱을 열 때는 투명한 `CliLaunchActivity`가 main thread에서 작업 상태를 다시 확인합니다. 실행 중인 작업이 있으면 LIVE로 전환하지 않습니다. 상태 조회는 `CommandStore`의 메모리 snapshot을 읽으며 파일 기록은 상태 전환 때만 수행합니다.
+결과가 예상과 다를 때는 우선 `FlightRecorder` 의 원시 타임스탬프와 신호 순서를 확인한 후, 이를 바탕으로 `MetricExtractor` 가 생성한 관찰 데이터와 `BenchmarkRunner` 가 계산한 사이클/캡처 샘플을 검증해야 합니다. `RegressionDetector` 는 두 실행 간의 조건 불일치 (예: 열량, 전력 절약 모드) 와 측정값 차이를 분석하여 상태 (`REGRESSED`, `IMPROVED`, `STABLE`) 를 결정하며, `HistoryActivity` 는 이를 화면에 표시하고 CSV/JSON 으로 내보냅니다. 모든 데이터는 `BenchmarkStore` 에 저장되며, `RunAssembler` 가 원시 샘플과 이벤트를 조합하여 최종 실행 기록을 생성합니다.
 
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/ui/GalleryImageView.kt`, `app/src/main/java/dev/halcamera/ui/IconButton.kt`, `app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/SelectionPopup.kt`, `app/src/main/java/dev/halcamera/ui/ShutterButton.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/BaselineManager.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/ui/ShutterButton.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-12 @ `7e3a7c9` · Codex
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -291,37 +203,16 @@ graph LR
 
 <!-- omm:begin id=constraints -->
 
-**카메라 점유, 시계, 계산 로직의 경계를 유지하세요.** 이 규칙을 바꾸면 실행 순서나 측정값의 의미가 달라질 수 있습니다.
+카메라 점유와 시계 비교에서 지켜야 하는 제약은 카메라를 점유하는 `CameraEngine`이 항상 하나여야 한다는 점과, 완료 콜백 호출 전까지 기기를 반환하지 않는다는 것입니다. `BenchmarkRunner`는 `Driver`, `Scheduler`, `clock`을 주입받아 `elapsedRealtimeNanos` 기반의 절대 시간을 사용하며, 센서 시각은 기기에서 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 앱 시각과 직접 비교합니다. 공개 Camera2 API로 카메라를 열거하며 논리 카메라의 물리 endpoint를 독립적으로 열 수 있다고 가정하지 않습니다. `close(done)` 완료 전에 다음 카메라를 열지 않으며, 벤치마크 JSON 과 incident ZIP에는 이미지 픽셀을 저장하지 않습니다.
 
-### 실행과 측정의 제약
-
-1. 카메라를 점유하는 `CameraEngine`은 하나만 유지합니다. `close(done)`은 기기를 실제로 반환한 뒤 완료 콜백을 호출해야 합니다.
-2. 앱의 시각은 `elapsedRealtimeNanos`를 사용합니다. 센서 시각은 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 앱 시각과 직접 비교합니다.
-3. 카메라 열거에는 공개 Camera2 API만 사용합니다. 논리 카메라의 물리 endpoint를 독립적으로 열 수 있다고 가정하지 않습니다.
-4. 벤치마크 JSON과 incident ZIP에는 관측 이벤트·메타데이터를 저장하며 이미지 픽셀을 저장하지 않습니다.
-
-### 계산과 저장의 제약
-
-1. `BenchmarkRunner`는 `Driver`, `Scheduler`, `clock`을 통해 카메라와 시계에 접근합니다. 지표·통계·회귀 계산은 JVM에서 테스트할 수 있으며 Activity와 파일 어댑터는 Android 의존성이 있습니다.
-2. 벤치마크의 `org.json`은 파일 경계에서 사용합니다. `BenchmarkReportCodec`의 데이터 계약은 `Map<String, Any?>`로 전달합니다. schema 4를 쓰되 schema 3도 읽습니다. CLI protocol v1은 별도로 JSON 명령·상태를 정의하며 측정 보고서 schema를 바꾸지 않습니다.
-3. `RunValidity`는 flag 규칙에서 measurement·comparison·scoring eligibility를 계산합니다. 알 수 없는 flag는 비교와 점수 산정을 막습니다. `ScoreComposer`는 release 빌드와 기록된 환경값도 확인하며, calibration과 모델·endpoint·계약이 다르거나 필수 지표가 누락되면 내부 점수를 계산하지 않습니다.
-4. 회귀 임계값은 `RegressionRules`에서 관리합니다. baseline은 자동으로 지정하지 않으며 임의의 두 실행을 고르는 동작도 baseline을 바꾸지 않습니다.
-5. 파일 삭제 실패 시 baseline 포인터를 먼저 없애지 않습니다. 포인터 정리 실패 후 남은 잘못된 참조는 `BaselineManager`가 이후 조회에서 정리합니다.
-
-LIVE의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9에서는 저장소 권한을, 녹화에는 마이크 권한을 요청합니다. 벤치마크의 StreamSpec과 메타데이터 전용 내보내기 계약은 유지합니다.
-
-### CLI의 접근과 완료 경계
-
-`CliProvider`는 각 진입점에서 shell UID 2000과 DUMP 권한을 검사합니다. 호출자 확인 전에는 Binder identity를 해제하지 않습니다. 파일 접근은 CLI 요청이 등록한 artifact ID에 한정하며 임의 경로나 쓰기 모드를 받지 않습니다.
-
-명령은 동작 전에 저장하며 한 번에 하나의 변경 작업을 처리합니다. 사진 저장과 benchmark JSON 쓰기를 마친 뒤 결과 파일을 등록합니다. 프로세스가 종료된 미완료 요청은 재실행하지 않습니다. CLI 기록 정리와 원본 사진·benchmark 이력 삭제는 서로 다른 동작입니다.
+계산 로직과 저장 경계에서 지켜야 하는 규칙은 `BenchmarkRunner`가 JVM 테스트로 검증 가능한 계산 로직을 포함하고, Activity와 파일 어댑터는 Android 의존성을 가지는 것입니다. 벤치마크의 `org.json`은 파일 경계에서 사용하고, `BenchmarkReportCodec`의 데이터 계약은 `Map<String, Any?>`로 전달하며 schema 3도 읽습니다. `RunValidity`는 알 수 없는 flag가 존재하면 비교와 점수 산정을 막고, `ScoreComposer`는 calibration과 모델·endpoint·계약이 다르거나 필수 지표가 누락되면 내부 점수를 계산하지 않습니다. 회귀 임계값은 `RegressionRules`에서 관리하며 baseline은 명시적으로만 지정합니다. CLI의 접근은 shell UID 2000과 DUMP 권한을 검사하고, 파일 접근은 CLI 요청이 등록한 artifact ID에 한정합니다.
 
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-12 @ `7e3a7c9` · Codex
+- 검토 상태: 원본이 갱신됨: 검토 대기
 
 </details>
 
@@ -373,13 +264,13 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
-| 원고 `overview` | 최신 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
-| 원고 `module-roles` | 최신 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
-| 원고 `constraints` | 최신 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
+| 구조 원본 `data-flow` | 원본이 갱신됨: 검토 대기 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
+| 구조 원본 `overall-architecture` | 원본이 갱신됨: 검토 대기 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
+| 구조 원본 `state-transitions` | 원본이 갱신됨: 검토 대기 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
+| 원고 `overview` | 원본이 갱신됨: 검토 대기 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
+| 원고 `module-roles` | 원본이 갱신됨: 검토 대기 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
+| 원고 `runtime-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
+| 원고 `constraints` | 원본이 갱신됨: 검토 대기 | 검토 2026-09-12 @ `7e3a7c9` · Codex |
 
 <!-- omm:end id=status -->
 

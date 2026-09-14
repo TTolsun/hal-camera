@@ -1,4 +1,4 @@
-`app/src/main/java/dev/halcamera/camera/CameraXEngine.kt` (118 lines). The comparison engine, used only from `MainActivity`.
+The comparison engine, used only from `MainActivity`.
 
 It binds `Preview`, `ImageAnalysis` (KEEP_ONLY_LATEST) and `ImageCapture` (MINIMIZE_LATENCY) to the activity lifecycle through `ProcessCameraProvider`. The point of the class is that it feeds the *same* `Telemetry.callback` as Camera2: `Camera2Interop.Extender(builder).setSessionCaptureCallback(...)` attaches the capture callback to the preview use case, so both engines produce identical event kinds and the numbers stay comparable.
 

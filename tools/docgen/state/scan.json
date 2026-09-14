@@ -1,4 +1,193 @@
 {
   "schema": 1,
-  "entries": {}
+  "entries": {
+    "overall-architecture": {
+      "codeHash": "af810bf2be1f2fab",
+      "scannedAt": "2026-09-14T12:22:16.199Z"
+    },
+    "overall-architecture/benchmark": {
+      "codeHash": "2489bfba0b7ad672",
+      "scannedAt": "2026-09-14T12:22:22.286Z"
+    },
+    "overall-architecture/benchmark/benchmark-evaluator": {
+      "codeHash": "05cfac024a937e61",
+      "scannedAt": "2026-09-14T12:22:28.047Z"
+    },
+    "overall-architecture/benchmark/benchmark-model": {
+      "codeHash": "c8b6d24943fc2e46",
+      "scannedAt": "2026-09-14T12:22:31.258Z"
+    },
+    "overall-architecture/benchmark/benchmark-profile": {
+      "codeHash": "208bbb72336b94e1",
+      "scannedAt": "2026-09-14T12:22:35.514Z"
+    },
+    "overall-architecture/benchmark/benchmark-runner": {
+      "codeHash": "174c50584eca1287",
+      "scannedAt": "2026-09-14T12:22:39.023Z"
+    },
+    "overall-architecture/benchmark/build-identity": {
+      "codeHash": "3e55ddf6ea0198be",
+      "scannedAt": "2026-09-14T12:22:43.824Z"
+    },
+    "overall-architecture/benchmark/comparison": {
+      "codeHash": "686d9f65da447257",
+      "scannedAt": "2026-09-14T12:22:48.180Z"
+    },
+    "overall-architecture/benchmark/metric-info": {
+      "codeHash": "71ada1f9e5ce993d",
+      "scannedAt": "2026-09-14T12:22:49.415Z"
+    },
+    "overall-architecture/benchmark/regression-rules": {
+      "codeHash": "efca7f78a47792d9",
+      "scannedAt": "2026-09-14T12:22:53.316Z"
+    },
+    "overall-architecture/benchmark/run-assembler": {
+      "codeHash": "52bd056302309925",
+      "scannedAt": "2026-09-14T12:22:56.299Z"
+    },
+    "overall-architecture/benchmark/run-validity": {
+      "codeHash": "f5892c854b71c79a",
+      "scannedAt": "2026-09-14T12:23:03.479Z"
+    },
+    "overall-architecture/benchmark/score-composer": {
+      "codeHash": "b4fcdd8918ca0536",
+      "scannedAt": "2026-09-14T12:23:06.648Z"
+    },
+    "overall-architecture/camera-engines": {
+      "codeHash": "f789325d241ad30e",
+      "scannedAt": "2026-09-14T12:23:08.785Z"
+    },
+    "overall-architecture/camera-engines/camera2-engine": {
+      "codeHash": "b2734bc4963c846d",
+      "scannedAt": "2026-09-14T12:23:15.399Z"
+    },
+    "overall-architecture/camera-engines/camerax-engine": {
+      "codeHash": "46cb23cb74ca5cec",
+      "scannedAt": "2026-09-14T12:23:19.740Z"
+    },
+    "overall-architecture/camera-engines/endpoint-model": {
+      "codeHash": "9e867b872ec01bd3",
+      "scannedAt": "2026-09-14T12:23:25.645Z"
+    },
+    "overall-architecture/camera-engines/endpoint-resolver": {
+      "codeHash": "cb4ca4bea8b0f23d",
+      "scannedAt": "2026-09-14T12:23:29.401Z"
+    },
+    "overall-architecture/camera-engines/engine-interface": {
+      "codeHash": "3e96cde71a2da85c",
+      "scannedAt": "2026-09-14T12:23:33.022Z"
+    },
+    "overall-architecture/metrics": {
+      "codeHash": "cfdd9fe73720c570",
+      "scannedAt": "2026-09-14T12:23:36.369Z"
+    },
+    "overall-architecture/metrics/metric-extractor": {
+      "codeHash": "fa2c97201d5069e8",
+      "scannedAt": "2026-09-14T12:23:39.190Z"
+    },
+    "overall-architecture/metrics/metric-model": {
+      "codeHash": "380e9d03ff1e62f5",
+      "scannedAt": "2026-09-14T12:23:41.189Z"
+    },
+    "overall-architecture/persistence": {
+      "codeHash": "1b60c0062bf15103",
+      "scannedAt": "2026-09-14T12:23:44.905Z"
+    },
+    "overall-architecture/persistence/benchmark-report": {
+      "codeHash": "fadccea559e7927a",
+      "scannedAt": "2026-09-14T12:23:47.295Z"
+    },
+    "overall-architecture/persistence/benchmark-store": {
+      "codeHash": "be69dac88cb6a7b8",
+      "scannedAt": "2026-09-14T12:23:49.516Z"
+    },
+    "overall-architecture/platform-camera": {
+      "codeHash": "3e96cde71a2da85c",
+      "scannedAt": "2026-09-14T12:23:51.178Z"
+    },
+    "overall-architecture/screens": {
+      "codeHash": "f2b8d4cd835d5715",
+      "scannedAt": "2026-09-14T12:23:53.150Z"
+    },
+    "overall-architecture/screens/benchmark-screen": {
+      "codeHash": "3fb1696e9284ff61",
+      "scannedAt": "2026-09-14T12:23:59.955Z"
+    },
+    "overall-architecture/screens/expert-screen": {
+      "codeHash": "d363d8453e3c2d6a",
+      "scannedAt": "2026-09-14T12:24:13.983Z"
+    },
+    "overall-architecture/screens/look-tokens": {
+      "codeHash": "f582cf22dc8dda03",
+      "scannedAt": "2026-09-14T12:24:16.971Z"
+    },
+    "overall-architecture/telemetry": {
+      "codeHash": "4bbd6cb3cea180ac",
+      "scannedAt": "2026-09-14T12:24:19.750Z"
+    },
+    "overall-architecture/telemetry/capture-callbacks": {
+      "codeHash": "925a4182f8cd6614",
+      "scannedAt": "2026-09-14T12:24:23.529Z"
+    },
+    "overall-architecture/telemetry/flight-recorder": {
+      "codeHash": "f0d642c206fe169d",
+      "scannedAt": "2026-09-14T12:24:25.773Z"
+    },
+    "overall-architecture/telemetry/incident-exporter": {
+      "codeHash": "2bad37f03851511c",
+      "scannedAt": "2026-09-14T12:24:30.133Z"
+    },
+    "overall-architecture/ui-widgets": {
+      "codeHash": "c144ea7fa57d5a35",
+      "scannedAt": "2026-09-14T12:24:37.053Z"
+    },
+    "data-flow": {
+      "codeHash": "07f4b73ea1d2cc81",
+      "scannedAt": "2026-09-14T12:24:42.048Z"
+    },
+    "data-flow/benchmark-metrics": {
+      "codeHash": "0e448ec318853e51",
+      "scannedAt": "2026-09-14T12:24:46.067Z"
+    },
+    "data-flow/event-record": {
+      "codeHash": "30f0cff7f5c7d3d5",
+      "scannedAt": "2026-09-14T12:24:50.913Z"
+    },
+    "data-flow/frame-observations": {
+      "codeHash": "96359e90b288e7f7",
+      "scannedAt": "2026-09-14T12:24:56.425Z"
+    },
+    "data-flow/framework-callbacks": {
+      "codeHash": "ac7469455d443e39",
+      "scannedAt": "2026-09-14T12:25:02.453Z"
+    },
+    "data-flow/rendered-screens": {
+      "codeHash": "e52f9f5128d3fefd",
+      "scannedAt": "2026-09-14T12:25:07.303Z"
+    },
+    "data-flow/run-json": {
+      "codeHash": "cec496d70b490422",
+      "scannedAt": "2026-09-14T12:25:11.141Z"
+    },
+    "data-flow/runner-marks": {
+      "codeHash": "3f9089775fc5128d",
+      "scannedAt": "2026-09-14T12:25:15.070Z"
+    },
+    "state-transitions": {
+      "codeHash": "9a8ec03003caa675",
+      "scannedAt": "2026-09-14T12:25:25.239Z"
+    },
+    "state-transitions/engine-lifecycle": {
+      "codeHash": "f38a4eb154854bf2",
+      "scannedAt": "2026-09-14T12:25:30.932Z"
+    },
+    "state-transitions/incident-window": {
+      "codeHash": "419f6c9be1d9acb4",
+      "scannedAt": "2026-09-14T12:25:34.908Z"
+    },
+    "state-transitions/validity-gate": {
+      "codeHash": "cbfe7b6a59a65f34",
+      "scannedAt": "2026-09-14T12:25:37.567Z"
+    }
+  }
 }

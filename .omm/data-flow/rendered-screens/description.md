@@ -1,1 +1,1 @@
-MainActivity는 LIVE 관측값을 표시합니다. BenchmarkActivity는 실행 완료 또는 이력 파일 로드 후 기준을 선택하고 RegressionDetector의 결과를 ResultPresenter·ComparePresenter로 표시합니다. HistoryActivity는 RunIndex 목록에서 두 실행을 선택하고 같은 비교 규칙을 적용합니다.
+LIVE 화면은 LiveController 를 통해 카메라 준비 및 캡처 결과를 표시합니다. BenchmarkActivity 는 실행 완료 후 ComparePresenter 와 ResultPresenter 로 결과를 표시하며, HistoryActivity 는 RunIndex 목록에서 두 실행을 선택하여 비교 규칙을 적용합니다.

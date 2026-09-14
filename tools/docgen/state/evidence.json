@@ -3,7 +3,7 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "0987e42142ebcdee",
@@ -15,7 +15,7 @@
     },
     "omm:data-flow": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "2403620c42e3fafd",
@@ -27,7 +27,7 @@
     },
     "omm:state-transitions": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "655f7642c309e0eb",
@@ -39,7 +39,7 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "0cdfd77d2f6fd011",
@@ -51,7 +51,7 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "c0379d70409d2f20",
@@ -63,7 +63,7 @@
     },
     "content:troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "2403620c42e3fafd",
@@ -82,7 +82,7 @@
         "reviewer": "Codex"
       },
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       }
     },
     "content:architecture.md/constraints": {
@@ -94,7 +94,7 @@
         "reviewer": "Codex"
       },
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       }
     }
   }
