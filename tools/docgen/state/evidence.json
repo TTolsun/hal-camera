@@ -3,98 +3,98 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "96add99c0f48f75a",
-        "modelHash": "2a64b28b31fde966",
+        "codeHash": "c4073c9e64bde9e2",
+        "modelHash": "e83d3e5308e132ef",
         "at": "2026-09-14",
-        "commit": "d2249fa",
+        "commit": "231ebf2",
         "reviewer": "Codex"
       }
     },
     "omm:data-flow": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "639865f94981f6b9",
+        "codeHash": "70153b16cd28def3",
         "modelHash": "2ea366aa020d6ccb",
         "at": "2026-09-14",
-        "commit": "d2249fa",
+        "commit": "231ebf2",
         "reviewer": "Codex"
       }
     },
     "omm:state-transitions": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "d2d3dfc880166347",
+        "codeHash": "27ee4f70a5d49196",
         "modelHash": "8c51344f8dc01d53",
         "at": "2026-09-14",
-        "commit": "d2249fa",
+        "commit": "231ebf2",
         "reviewer": "Codex"
       }
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6c3392300df804b7",
-        "modelHash": "4f4f8384853e394a",
+        "codeHash": "57f027a06543c293",
+        "modelHash": "9d5328a460a78e68",
         "at": "2026-09-14",
-        "commit": "d2249fa",
+        "commit": "231ebf2",
         "reviewer": "Codex"
       }
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "acbb24d1a9ebc819",
-        "modelHash": "28bd4ef48924629c",
+        "codeHash": "8a60c90789b1411f",
+        "modelHash": "1169bbe9ec313b43",
         "at": "2026-09-14",
-        "commit": "d2249fa",
+        "commit": "231ebf2",
         "reviewer": "Codex"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "639865f94981f6b9",
+        "codeHash": "70153b16cd28def3",
         "modelHash": "3cf981a7ca1b06c0",
         "at": "2026-09-14",
-        "commit": "d2249fa",
+        "commit": "231ebf2",
         "reviewer": "Codex"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "96add99c0f48f75a",
-        "modelHash": "f4c19ed17b05038e",
+        "codeHash": "c4073c9e64bde9e2",
+        "modelHash": "c4239f4a0c6cfef8",
         "at": "2026-09-14",
-        "commit": "d2249fa",
+        "commit": "231ebf2",
         "reviewer": "Codex"
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "96add99c0f48f75a",
-        "modelHash": "2d8367481382b8bf",
+        "codeHash": "c4073c9e64bde9e2",
+        "modelHash": "dbc60e7929d744ae",
         "at": "2026-09-14",
-        "commit": "d2249fa",
+        "commit": "231ebf2",
         "reviewer": "Codex"
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     }
   }
