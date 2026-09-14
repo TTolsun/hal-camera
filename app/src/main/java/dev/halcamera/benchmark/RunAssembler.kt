@@ -4,7 +4,8 @@ import dev.halcamera.metrics.MetricExtractor
 import dev.halcamera.telemetry.Event
 
 /**
- * Turns a finished [BenchmarkRunner.Result] plus the recorded events into a [BenchmarkRun] (schema 3).
+ * Turns a finished [BenchmarkRunner.Result] plus the recorded events into a [BenchmarkRun].
+ * [BenchmarkReportCodec] serializes that run using schema 4; file I/O remains outside this assembler.
  * Pure Kotlin so the whole path from raw samples to the stored contract is unit-testable; the Android facts
  * (device, app, thermal, battery) are gathered by [BenchmarkActivity] and passed in.
  */
