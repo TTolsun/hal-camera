@@ -74,7 +74,7 @@ P1은 P2보다 먼저 한다. P2의 요소별 스캔을 실제 모델로 검증�
 
 - [ ] Ollama를 Windows 서비스 또는 로그인 작업으로 등록해서 재부팅 후에도 `127.0.0.1:11434`가 응답하게 한다.
 - [ ] runner 전용 Windows 사용자 계정을 만든다.
-- [ ] Settings > Actions > Runners > New self-hosted runner로 runner를 설치하고, 라벨에 `docgen-qwen`을 추가한 뒤 `svc.cmd install`로 서비스 등록을 한다.
+- [ ] Settings > Actions > Runners > New self-hosted runner로 runner를 설치하고, 라벨에 `docgen-qwen`을 추가한 뒤 `config.cmd --runasservice`로 서비스 등록을 한다.
 - [ ] Settings > Variables에 `DOCGEN_LOCAL_RUNNER_ENABLED=true`를 추가한다.
 - [ ] Settings > Actions에서 "Require approval for all outside collaborators"가 켜져 있는지 확인한다.
 - [ ] `docs-sync.yml`에 `push: main` + `paths` 트리거를 추가하고, `DOCGEN_QWEN_CONTEXT=49152`, `DOCGEN_LLM_TIMEOUT_MS=1800000`을 env에 둔다. `workflow_dispatch`는 남긴다.

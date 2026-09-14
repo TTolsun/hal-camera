@@ -143,7 +143,7 @@ Windows에서는 위 로컬 설치 경로를 자동으로 찾습니다. 다른 �
 
 ## 자동 실행과 검사 범위
 
-로컬 실행 명령은 Windows 작업 스케줄러에서도 동일합니다. 이번 변경은 작업 스케줄러 등록을 생성하지 않습니다. GitHub의 일반 실행기는 로컬 PC의 Ollama에 접근할 수 없어 기존 클라우드 일일 실행을 제거했습니다. 선택적으로 `docgen-qwen` 레이블을 가진 신뢰할 수 있는 self-hosted runner를 등록하고 저장소 변수 `DOCGEN_LOCAL_RUNNER_ENABLED=true`를 설정하면 main의 `docs-sync`를 수동 실행할 수 있습니다. 이 runner는 PR 트리거로 실행하지 않습니다. PR 검사와 Pages 배포는 기존 GitHub 실행기를 사용합니다.
+`docs-sync`는 `main`의 코드·구조·바인딩·문서 도구 변경과 수동 실행을 지원합니다. 저장소 변수 `DOCGEN_LOCAL_RUNNER_ENABLED=true`와 온라인 `docgen-qwen` runner가 필요합니다. 변수가 없으면 작업은 시작 전에 건너뜁니다. 일반 GitHub-hosted runner는 개발자 PC의 Ollama에 접근할 수 없습니다. 전용 Windows 계정·서비스 설치와 중지 절차는 [RUNNER-WINDOWS.md](RUNNER-WINDOWS.md)를 따릅니다. PR 검사는 기존 GitHub-hosted runner에서 실행하며 문서 동기화는 PR 이벤트를 받지 않습니다.
 
 ```powershell
 node --test tools/docgen/regression.test.mjs tools/docgen/sync.test.mjs
