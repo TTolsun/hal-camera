@@ -9,6 +9,7 @@ sources:
   - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
   - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
   - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
+  - app/src/main/java/dev/halcamera/benchmark/RunValidity.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
   - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
@@ -17,6 +18,8 @@ verifications: []
 ---
 
 **먼저 앱의 필터와 계산 규칙을 확인한 뒤 원시 이벤트를 대조하세요.** 프레임워크에서 받은 값과 앱이 계산한 지표를 구분해야 원인 계층을 좁힐 수 있습니다.
+
+`Event.atNs`는 `FlightRecorder`가 주입받은 시계로 기록한 앱 시각이며, 앱에서는 `elapsedRealtimeNanos`를 사용합니다. 카메라가 제공한 센서 시각은 별도 필드인 `sensorNs`입니다. `intervalMs`, `resultFps`, `observedResultGap`은 앱이 계산한 파생값이므로 HAL 내부 상태의 직접 측정으로 해석하지 않습니다.
 
 1. `unknownReason`, 세션 ID, 관측 창과 표본 수를 확인합니다. `INSUFFICIENT_SAMPLES`는 측정 대상의 고장을 뜻하지 않습니다.
 2. `capture_failed.reason`, `buffer_lost`, `capture_result`의 센서 시각과 `frameDurationNs`를 대조합니다. `request_observed`는 요청 제출 시각이 아닙니다.
@@ -32,6 +35,8 @@ verifications: []
 | 표본이 부족하면 값이 비어 있습니다. | `BenchmarkEvaluator`의 관측 통계는 해당 지표 표본 수가 15개 미만이면 `null`을 반환합니다. 3A 수렴은 워밍업 전 프레임도 사용합니다. |
 | 오래된 이벤트를 제거합니다. | `FlightRecorder` 기본 설정은 30초·18,000개이며 `BenchmarkActivity`는 180초·60,000개로 구성합니다. 제거 횟수는 `Incident.capacityEvictions`이며 incident ZIP의 `incident.json`에는 `ringCapacityEvictionsSinceAppStart`(앱 시작 이후 누적)로 기록됩니다. |
 | listener는 동기로 실행합니다. | `FlightRecorder.listener`에 무거운 처리를 추가하면 관측 경로에 영향을 줄 수 있습니다. |
+
+지표의 표본 부족과 실행 전체의 validity는 별도로 계산됩니다. `MetricExtractor`는 워밍업을 제외한 프레임 수와 지표별 가용 데이터로 표본의 `unknownReason`을 정합니다. `RunAssembler`는 `observation.steadyFrames.size`를 `ValidityInputs.observedFrames`로 전달하고, `RunValidityEvaluator`는 이 값이 기본 15개에 미달하거나 시작·촬영 표본이 profile의 기대 개수보다 적으면 실행에 `INSUFFICIENT_SAMPLES` flag를 붙입니다. 이 평가는 개별 지표의 `unknownReason`을 읽지 않습니다.
 
 `intervalMs`, `resultFps`, `observedResultGap`은 관측값으로 계산한 수치입니다. HAL 내부의 처리 시간이나 화면에 표시된 프레임 수를 직접 측정한 값이 아닙니다.
 

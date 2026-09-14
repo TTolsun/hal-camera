@@ -32,6 +32,8 @@ verifications: []
 
 **실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.** 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.
 
+LIVE 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 동작으로 이어집니다. 벤치마크는 별도 화면인 `BenchmarkActivity`가 준비를 마친 뒤 `BenchmarkRunner.start()`를 호출하여 시작합니다. `Telemetry.callback(...)`이 반환한 Camera2 콜백의 `onCaptureStarted`는 프레임워크 신호를 기록하며, LIVE 셔터와 벤치마크 시작을 연결하는 메서드가 아닙니다.
+
 ### 실행에서 저장까지
 
 1. `BenchmarkActivity`가 선택한 카메라와 profile을 사전 확인합니다.

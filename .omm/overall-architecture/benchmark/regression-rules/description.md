@@ -1,4 +1,4 @@
-`app/src/main/java/dev/halcamera/benchmark/RegressionRules.kt` (62 lines), version `regression-rule-v1`. The only place regression thresholds live, per `PLAN-BenchMarker-v0.3.md` 7.2. M1 fixes the table; the detector that applies it arrives in M4.
+`app/src/main/java/dev/halcamera/benchmark/RegressionRules.kt`, version `regression-rule-v1`. The only place regression thresholds live, per `PLAN-BenchMarker-v0.3.md` 7.2. `RegressionDetector` applies these rules when comparing runs.
 
 Two rule kinds. A LATENCY rule fires REGRESSED only when *both* the relative change reaches its percentage and the absolute change reaches its noise floor in milliseconds, which is what stops a 15 % swing on a 2 ms metric from counting. A COUNT rule has no percentage at all and fires on the absolute change alone — a stall count going from 0 to 2 has no meaningful percentage.
 
