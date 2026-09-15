@@ -13,9 +13,9 @@
 //   2  실행 환경 문제 (Node 버전, 알 수 없는 인자)
 //
 // 단계 (실행 순서대로)
-//   1. 파이프라인 회귀 검사     node --test regression.test.mjs design.test.mjs site.test.mjs
+//   1. 파이프라인 회귀 검사     node --test regression.test.mjs design.test.mjs   (의존성 없음)
 //   2. 의존성 설치              npm ci --prefix tools/docgen --ignore-scripts
-//   3. 동기화 복구 검사          node --test sync.test.mjs workflow.test.mjs   (모델 호출 없음)
+//   3. 동기화 복구·사이트 빌더 검사  node --test sync.test.mjs workflow.test.mjs site.test.mjs   (모델 호출 없음, marked 필요)
 //   4. 디자인 생성 결과 일치      common.mjs design --check
 //   5. 사실 추출                extract.mjs   (state/facts.json 을 다시 씁니다)
 //   6. 원본 최신성 검사          verify.mjs --check
@@ -47,9 +47,9 @@ const node = process.execPath;
 const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 const docgen = (file) => path.join("tools", "docgen", file);
 const steps = [
-  { name: "파이프라인 회귀 검사", cmd: node, args: ["--test", docgen("regression.test.mjs"), docgen("design.test.mjs"), docgen("site.test.mjs")] },
+  { name: "파이프라인 회귀 검사", cmd: node, args: ["--test", docgen("regression.test.mjs"), docgen("design.test.mjs")] },
   { name: "의존성 설치", cmd: npm, args: ["ci", "--prefix", "tools/docgen", "--ignore-scripts"], shell: process.platform === "win32" },
-  { name: "동기화 실패 복구 검사 (모델 호출 없음)", cmd: node, args: ["--test", docgen("sync.test.mjs"), docgen("workflow.test.mjs")] },
+  { name: "동기화 실패 복구·사이트 빌더 검사 (모델 호출 없음)", cmd: node, args: ["--test", docgen("sync.test.mjs"), docgen("workflow.test.mjs"), docgen("site.test.mjs")] },
   { name: "디자인 생성 결과 일치 검사", cmd: node, args: [docgen("common.mjs"), "design", "--check"] },
   { name: "사실 추출", cmd: node, args: [docgen("extract.mjs")] },
   { name: "원본 최신성 검사", cmd: node, args: [docgen("verify.mjs"), "--check"] },
