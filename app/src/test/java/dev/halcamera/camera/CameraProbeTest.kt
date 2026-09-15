@@ -40,7 +40,9 @@ class CameraProbeTest {
         assertEquals("0 ms", ProbeFormat.frameDuration(0L))
         assertEquals("—", ProbeFormat.frameDuration(null))
         assertEquals("66.7 ms", ProbeFormat.stall(66_666_667L))
-        assertEquals(ProbeRow("1920x1080", "16:9 · min 16.7 ms (60.0 fps) · stall 0 ms"), ProbeFormat.streamRow(1920, 1080, 16_666_667L, 0L))
+        assertEquals(ProbeRow("1920x1080", "16:9 · 16.7 ms · 60.0 fps"), ProbeFormat.streamRow(1920, 1080, 16_666_667L, 0L))
+        assertEquals(ProbeRow("4000x3000", "4:3 · 33.3 ms · 30.0 fps · stall 81.2 ms"), ProbeFormat.streamRow(4000, 3000, 33_333_333L, 81_200_000L))
+        assertEquals(ProbeRow("640x480", "4:3 · no min"), ProbeFormat.streamRow(640, 480, 0L, 0L))
     }
 
     @Test
@@ -97,7 +99,7 @@ class CameraProbeTest {
         val all = CameraProbeText.render(snapshot)
         assertTrue(all.contains("######## CAMERA 0 · 0 · 후면 · FULL"))
         assertTrue(all.contains("######## CAMERA 0.3 · 3 · physical · 후면 · LIMITED"))
-        assertTrue(all.contains("4000x3000  4:3 · min 33.3 ms (30.0 fps) · stall 0 ms"))
+        assertTrue(all.contains("4000x3000  4:3 · 33.3 ms · 30.0 fps"))
         assertTrue(all.contains("== ERRORS ==\n!  physical 0/4: unreadable"))
         val one = CameraProbeText.render(snapshot, cameraKey = "0.3")
         assertTrue(one.contains("CAMERA 0.3"))
@@ -117,7 +119,7 @@ class CameraProbeTest {
         val sections = first["sections"] as List<*>
         assertEquals(listOf("IDENTITY", "STREAMS · JPEG"), sections.map { (it as Map<*, *>)["title"] })
         val rows = (sections[1] as Map<*, *>)["rows"] as List<*>
-        assertEquals(mapOf("key" to "4000x3000", "value" to "4:3 · min 33.3 ms (30.0 fps) · stall 0 ms"), rows[0])
+        assertEquals(mapOf("key" to "4000x3000", "value" to "4:3 · 33.3 ms · 30.0 fps"), rows[0])
         assertEquals("0", (cameras[1] as Map<*, *>)["physical_of"])
         assertEquals(listOf("physical 0/4: unreadable"), map["errors"])
     }

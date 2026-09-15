@@ -18,7 +18,7 @@
         <activity android:name=".benchmark.HistoryActivity" android:exported="false" />
         <activity android:name=".benchmark.ProfileComparisonActivity" android:exported="false" />
         <activity android:name=".GalleryActivity" android:exported="false" />
-        <activity android:name=".CameraProbeActivity" android:exported="false" />
+        <activity android:name=".CameraProbeActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".cli.CliLaunchActivity" android:exported="true"
             android:taskAffinity=""
             android:permission="android.permission.DUMP" android:excludeFromRecents="true"

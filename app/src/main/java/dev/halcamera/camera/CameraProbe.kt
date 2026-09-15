@@ -80,9 +80,19 @@ object ProbeFormat {
         else -> String.format(Locale.US, "%.1f µs", ns / 1_000.0)
     }
 
-    /** A stream row: "1920x1080" against "16:9 · min 33.3 ms (30.0 fps) · stall 0 ms". */
-    fun streamRow(width: Int, height: Int, minFrameNs: Long?, stallNs: Long?): ProbeRow =
-        ProbeRow("${width}x$height", "${aspect(width, height)} · min ${frameDuration(minFrameNs)} · stall ${stall(stallNs)}")
+    /**
+     * A stream row: "1920x1080" against "16:9 · 33.3 ms · 30.0 fps", plus "· stall 81.2 ms" only when the HAL
+     * reports one. Kept to one phone line: the earlier "min 33.3 ms (30.0 fps) · stall 0 ms" wrapped every row.
+     */
+    fun streamRow(width: Int, height: Int, minFrameNs: Long?, stallNs: Long?): ProbeRow {
+        val timing = when {
+            minFrameNs == null -> "—"
+            minFrameNs <= 0L -> "no min"
+            else -> String.format(Locale.US, "%.1f ms · %.1f fps", minFrameNs / 1_000_000.0, 1_000_000_000.0 / minFrameNs)
+        }
+        val stall = if (stallNs != null && stallNs > 0L) " · stall ${stall(stallNs)}" else ""
+        return ProbeRow("${width}x$height", "${aspect(width, height)} · $timing$stall")
+    }
 
     /** "4:3", "16:9"; odd sensor crops come out as they are ("1000:563") rather than rounded to a familiar ratio. */
     fun aspect(width: Int, height: Int): String {

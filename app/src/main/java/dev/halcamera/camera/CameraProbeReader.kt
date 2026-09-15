@@ -66,7 +66,13 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
     private fun entry(id: String, physicalOf: String?, c: CameraCharacteristics): CameraProbeEntry {
         val facing = facingLabel(c[CameraCharacteristics.LENS_FACING])
         val level = MetadataNames.name("INFO_SUPPORTED_HARDWARE_LEVEL_", c[CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL])
-        val title = listOfNotNull(if (physicalOf != null) "physical" else null, facing, level).joinToString(" · ")
+        // The same focal-length inference as CameraEndpointResolver, so the picker tells a tele from an ultra-wide.
+        val role = if (c[CameraCharacteristics.LENS_FACING] == CameraCharacteristics.LENS_FACING_BACK) {
+            val focal = c[CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS]?.minOrNull()
+            val size = c[CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE]
+            LensRoles.roleFor(LensRoles.equivalentFocalMm(focal, size?.width, size?.height)).takeIf { it != LensRole.UNKNOWN }?.name
+        } else null
+        val title = listOfNotNull(if (physicalOf != null) "physical" else null, facing, role, level).joinToString(" · ")
         val map = c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
         val sections = ArrayList<ProbeSection>()
         sections += guarded("IDENTITY") { identity(id, physicalOf, c) }
@@ -76,6 +82,7 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
         sections += guarded("CONTROL") { control(c) }
         sections += guarded("PROCESSING") { processing(c) }
         sections += guarded("REQUEST") { request(c) }
+        if (Build.VERSION.SDK_INT >= 28) sections += guarded("SESSION KEYS") { sessionKeys(c) }
         if (Build.VERSION.SDK_INT >= 29) sections += guarded("MANDATORY STREAM COMBINATIONS") { mandatoryCombinations(c) }
         if (map != null) {
             sections += guarded("STREAMS · PRIVATE (SurfaceTexture)") { surfaceTextureStreams(map) }
@@ -239,12 +246,15 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
         rows += ProbeRow("Characteristics keys", c.keys.size.toString())
         rows += ProbeRow("Request keys", c.availableCaptureRequestKeys.size.toString())
         rows += ProbeRow("Result keys", c.availableCaptureResultKeys.size.toString())
-        if (Build.VERSION.SDK_INT >= 28) {
-            rows += ProbeRow("Session keys", ProbeFormat.list(c.availableSessionKeys.map { it.name }))
-            rows += ProbeRow("Physical request keys", ProbeFormat.list(c.availablePhysicalCameraRequestKeys.map { it.name }))
-        }
         return rows
     }
+
+    /** Long on vendor HALs (Snapdragon lists 60+ session keys), so this is its own section and starts folded. */
+    @androidx.annotation.RequiresApi(28)
+    private fun sessionKeys(c: CameraCharacteristics): List<ProbeRow> = listOf(
+        ProbeRow("Session keys", ProbeFormat.list(c.availableSessionKeys.map { it.name })),
+        ProbeRow("Physical request keys", ProbeFormat.list(c.availablePhysicalCameraRequestKeys.map { it.name }))
+    )
 
     private fun surfaceTextureStreams(map: StreamConfigurationMap): List<ProbeRow> {
         val sizes = map.getOutputSizes(SurfaceTexture::class.java).orEmpty()
@@ -387,10 +397,17 @@ object MetadataNames {
 
     fun of(prefix: String, owner: Class<*> = CameraMetadata::class.java): Map<Int, String> = synchronized(cache) {
         cache.getOrPut("${owner.name}#$prefix") {
+            // The last word of the prefix comes back when the remainder is only a number: LEVEL_3, not "3".
+            val lastWord = prefix.trimEnd('_').substringAfterLast('_', "")
             owner.fields
                 .filter { Modifier.isStatic(it.modifiers) && it.type == Int::class.javaPrimitiveType && it.name.startsWith(prefix) }
+                // Range markers such as CONTROL_SCENE_MODE_DEVICE_CUSTOM_START are not values.
+                .filterNot { it.name.endsWith("_START") || it.name.endsWith("_END") }
                 .sortedBy { it.name }
-                .associate { it.getInt(null) to it.name.removePrefix(prefix) }
+                .associate { field ->
+                    val stripped = field.name.removePrefix(prefix)
+                    field.getInt(null) to if (stripped.first().isDigit() && lastWord.isNotEmpty()) "${lastWord}_$stripped" else stripped
+                }
         }
     }
 
