@@ -29,7 +29,7 @@ export function snapshot(root) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
       const rel = prefix + ent.name;
       // A documentation element may legitimately be named "build".
-      const documentation = rel.startsWith('.omm/') || rel.startsWith('docs/');
+      const documentation = rel.startsWith('.omm/') || rel.startsWith('docs/') || rel.startsWith('guide/');
       if (!documentation && (excluded.has(ent.name) || localOnly(ent.name))) continue;
       if (ent.isSymbolicLink()) throw new Error(`Symlink is not supported: ${rel}`);
       if (ent.isDirectory()) walk(path.join(dir, ent.name), rel + '/');

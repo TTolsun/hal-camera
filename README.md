@@ -136,6 +136,35 @@ python -m unittest discover -s tools/halcam/tests -v
 | [design/DESIGN.md](docs/design/DESIGN.md) | 화면 색과 타이포그래피 토큰 |
 | [archive/PRODUCT-v0.2.md](docs/archive/PRODUCT-v0.2.md) | 이전 제품 정의(Camera Doctor). 카메라 열거 절차와 디자인 토큰은 v0.3도 참조합니다 |
 
+### 개발자 가이드 사이트
+
+개발자 가이드의 원고는 `guide/`에, 배포용 정적 사이트는 `docs/`에 있습니다. 사이트는 GitHub Actions나 GitHub 측 Jekyll 빌드 없이 로컬에서 검사·빌드하여 `main`에 커밋합니다. 저장소를 upstream으로 자동 동기화하는 사내 미러도 Pages 설정만으로 같은 사이트를 제공합니다.
+
+| 경로 | 역할 |
+|---|---|
+| `guide/*.md`, `guide/_content/`, `guide/_inputs/` | 원고. 마커 블록은 `tools/docgen/generate.mjs`가 채웁니다 |
+| `guide/_layouts/default.html`, `guide/_config.yml`, `guide/assets/` | 레이아웃, 사이트 설정과 메뉴, 생성된 CSS |
+| `docs/index.html`, `docs/*.html`, `docs/assets/`, `docs/_inputs/`, `docs/.nojekyll` | `tools/docgen/site.mjs`가 만든 배포 산출물. 직접 편집하지 않습니다 |
+| `docs/.site-manifest.json` | 빌더가 만든 파일 목록. 정리와 최신성 검사는 이 목록 안에서만 수행하므로 `docs/`의 다른 문서는 지우지 않습니다 |
+
+Node.js 24 이상이 필요합니다. 절차는 다음 순서로 진행합니다.
+
+1. 검사: `node tools/docgen/docs-check.mjs`. CI(`.github/workflows/docs-check.yml`)와 같은 단계를 같은 순서로 실행합니다. 의존성 설치(`npm ci --prefix tools/docgen --ignore-scripts`)도 이 명령이 수행합니다. 실패하면 종료 코드 1과 실패한 단계 이름을 출력하고 뒤 단계를 실행하지 않습니다. 환경 문제(Node 버전, 인자)는 종료 코드 2입니다.
+2. 빌드: `node tools/docgen/docs-check.mjs --build`. 모든 검사가 통과한 뒤에만 `guide/`를 `docs/`로 빌드합니다. 검사에 실패하면 산출물을 쓰지 않습니다. 빌드만 다시 하려면 `node tools/docgen/site.mjs build`를 실행합니다.
+3. 미리보기: `node tools/docgen/site.mjs serve --base hal-camera`를 실행하고 `http://127.0.0.1:4000/hal-camera/`를 엽니다. `--base`는 배포 URL의 하위 경로를 흉내 냅니다. 사내 GitHub의 경로가 다르면 그 값을 지정하여 CSS·링크가 하위 경로에서도 동작하는지 확인합니다.
+4. 커밋: `guide/`, `docs/`, `tools/docgen/state/`를 함께 커밋합니다. `node tools/docgen/site.mjs check`는 `docs/`가 원고에서 다시 빌드한 결과와 같은지, 내부 링크와 조각(`#id`)이 유효한지, `/`로 시작하는 루트 고정 경로나 `github.io` 도메인이 없는지 검사합니다. CI는 여기에 `git diff --exit-code`를 더해 커밋되지 않은 산출물 변경을 잡습니다.
+5. 동기화: `main`에 머지하면 사내 미러가 upstream을 가져옵니다. 별도의 배포 단계는 없습니다.
+
+Pages 설정은 공개 저장소와 사내 미러 모두 **Settings → Pages → Build and deployment → Source: Deploy from a branch → Branch: `main`, Folder: `/docs`**입니다. `docs/.nojekyll`이 있으므로 GitHub은 Jekyll을 실행하지 않고 파일을 그대로 제공합니다. GitHub.com은 2024년 6월 30일 이후 브랜치 배포도 내부적으로 Actions를 사용하지만, `.nojekyll`이 있으면 사용자 정의 워크플로 없이 배포됩니다([GitHub 안내](https://github.blog/changelog/2024-07-08-pages-legacy-worker-sunset/)).
+
+산출물은 결정론적입니다. 시각이나 환경 정보를 넣지 않으므로 입력이 같으면 다시 빌드해도 차이가 없습니다. 링크와 자산 경로는 모두 상대 경로이며 페이지 깊이에 따라 `./` 또는 `../`를 붙입니다. 구조도는 레이아웃이 `cdn.jsdelivr.net`에서 Mermaid를 불러와 그리므로, 해당 CDN에 접근할 수 없는 네트워크에서는 구조도 자리에 소스 텍스트가 남습니다.
+
+사내 GitHub Enterprise Server에서는 다음 항목을 확인하지 못했습니다. 미러에서 처음 Pages를 켤 때 확인하고 결과를 이 절에 기록하십시오.
+
+- 관리자가 GitHub Pages를 켰는지(Enterprise 설정 → Pages), 그리고 저장소 설정에서 `Deploy from a branch`가 선택 가능한지. GHES는 Actions 없이도 브랜치 배포를 지원하는 것으로 안내되지만 이 저장소에서는 실측하지 않았습니다. 서브도메인 격리 설정에 따라 사이트 URL 형식이 `https://<host>/pages/<org>/<repo>/` 또는 `https://pages.<host>/<org>/<repo>/`로 달라지며, 산출물은 어느 형식이든 상대 경로로 동작합니다.
+- GHES 버전이 `.nojekyll`을 인식하는지. 인식하지 않더라도 산출물에는 Jekyll이 해석할 front matter나 Liquid 문법이 없으므로 Jekyll을 거쳐도 같은 파일이 나와야 하지만, 이 경로는 검증하지 않았습니다.
+- 사내 네트워크에서 `cdn.jsdelivr.net` 접근 여부.
+
 ## 코드 구조
 
 ```

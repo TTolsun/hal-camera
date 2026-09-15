@@ -104,7 +104,7 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-14 @ `ec9297d` · Codex-code-review
+- 검토 2026-09-15 @ `764fb96` · Claude-path-migration
 
 </details>
 
@@ -180,9 +180,9 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-14 @ `ec9297d` · Codex-code-review |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-14 @ `ec9297d` · Codex-code-review |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-14 @ `ec9297d` · Codex-code-review |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-15 @ `764fb96` · Claude-path-migration |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-15 @ `764fb96` · Claude-path-migration |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-15 @ `764fb96` · Claude-path-migration |
 
 <!-- omm:end id=status -->
 
@@ -195,4 +195,4 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 - `app/src/main/java/dev/halcamera/telemetry/`에서 이벤트 기록과 incident 내보내기를 확인합니다.
 - `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`에서 지표 계산 규칙을 확인합니다.
 
-**다음 단계:** [원인을 좁히는 순서](#원인을-좁히는-순서)의 첫 단계에 따라 문제 실행의 `unknownReason`과 입력 조건을 확인하세요.
+**다음 단계:** [문제 발생 시 수집할 정보](#문제-발생-시-수집할-정보)의 첫 단계에 따라 문제 실행의 `unknownReason`과 입력 조건을 확인하세요.

@@ -84,10 +84,10 @@ Android 앱과 문서 사이트는 이 문서를 단일 디자인 기준으로 �
 
 ## 구현과 유지
 
-문서 사이트 구현은 `docs/guide/_layouts/default.html`, `docs/design/editorial.css`, `docs/guide/index.md`에서, 앱의 공용 토큰은 `app/src/main/java/dev/halcamera/ui/Look.kt`에서 관리합니다. 디자인 변경 시 이 공통 기준과 각 플랫폼 매핑을 함께 검토합니다.
+문서 사이트 구현은 `guide/_layouts/default.html`, `docs/design/editorial.css`, `guide/index.md`에서, 앱의 공용 토큰은 `app/src/main/java/dev/halcamera/ui/Look.kt`에서 관리합니다. 디자인 변경 시 이 공통 기준과 각 플랫폼 매핑을 함께 검토합니다.
 
 생성 마커 안의 내용은 기존 docgen 파이프라인으로 갱신합니다. 디자인을 변경한 뒤 생성 결과 검사를 실행하고 넓은 화면과 모바일에서 목차·그림·표·포커스를 확인합니다. 최신성 검사가 실패하면 검토 상태를 유지하고 원고를 재검토합니다.
 
-CSS 원본은 공용 실행기의 custom 프리셋으로 연결합니다. `node tools/docgen/common.mjs design`을 실행하면 사이트의 `docs/guide/assets/docflow-design.css`가 갱신됩니다.
+CSS 원본은 공용 실행기의 custom 프리셋으로 연결합니다. `node tools/docgen/common.mjs design`을 실행하면 사이트의 `guide/assets/docflow-design.css`가 갱신됩니다.
 
 custom CSS는 프로젝트 생성기가 원본 경로와 재생성 명령을 주석으로 붙여 생성합니다. `node tools/docgen/common.mjs design --check`로 생성 결과를 확인하며, 이 경로에는 공용 엔진 설치가 필요하지 않습니다.

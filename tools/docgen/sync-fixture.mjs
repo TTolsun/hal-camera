@@ -19,7 +19,7 @@ export function makeFixture(blocks = 1, { splitEvidence = false } = {}) {
   put('.omm/sync-probe/description.md', 'Probe.OBSERVE_MS는 관측 시간을 10000ms로 지정합니다.\n');
   put('.omm/sync-probe/diagram.mmd', 'graph LR\n  timer["관측 시간"]\n');
   put('.omm/sync-probe/timer/description.md', 'Probe.OBSERVE_MS는 10000ms입니다.\n');
-  let binding = 'version: 2\nsite:\n  root: docs/guide\n  content_dir: _content\n  inputs_dir: _inputs\nsources:\n  sync-probe:\n    kind: omm\n    evidence:\n      - ' + probeFile + '\npages:\n  probe.md:\n    title: 관측 시간\n    blocks:\n      - id: status\n        kind: status\n';
+  let binding = 'version: 2\nsite:\n  root: guide\n  content_dir: _content\n  inputs_dir: _inputs\nsources:\n  sync-probe:\n    kind: omm\n    evidence:\n      - ' + probeFile + '\npages:\n  probe.md:\n    title: 관측 시간\n    blocks:\n      - id: status\n        kind: status\n';
   let page = '# 관측 시간\n\n이 문장은 사람이 관리합니다.\n\n<!-- omm:begin id=status -->\n<!-- omm:end id=status -->\n';
   binding = binding.replace('\npages:', '\n    elements:\n      .:\n        evidence:\n          - ' + probeFile + '\n      timer:\n        evidence:\n          - ' + probeFile + '\npages:');
   if (splitEvidence) {
@@ -31,11 +31,11 @@ export function makeFixture(blocks = 1, { splitEvidence = false } = {}) {
   for (let i = 0; i < blocks; i++) {
     binding += `      - id: overview-${i}\n        kind: content\n        based_on: [sync-probe]\n        confidence: code\n        brief:\n          reader: HAL 개발자\n          answers:\n            - Probe.OBSERVE_MS가 지정하는 관측 시간은 몇 ms인가\n`;
     page += `\n<!-- omm:begin id=overview-${i} -->\n<!-- omm:end id=overview-${i} -->\n`;
-    put(`docs/guide/_content/probe/overview-${i}.md`, manuscript('10000'));
+    put(`guide/_content/probe/overview-${i}.md`, manuscript('10000'));
   }
-  put('docs/guide/_bindings.yaml', binding); put('docs/guide/probe.md', page);
-  put('docs/guide/_inputs/decisions.md', '# 설계 결정\n');
-  put('docs/guide/_inputs/device-verification.yaml', 'records: []\n');
+  put('guide/_bindings.yaml', binding); put('guide/probe.md', page);
+  put('guide/_inputs/decisions.md', '# 설계 결정\n');
+  put('guide/_inputs/device-verification.yaml', 'records: []\n');
   for (const [script, args] of [['extract.mjs', []], ['verify.mjs', ['--accept']], ['generate.mjs', []]]) {
     const r = spawnSync(process.execPath, [path.join(root, 'tools/docgen', script), ...args], { cwd: root, encoding: 'utf8' });
     if (r.status !== 0) throw new Error(r.stdout + r.stderr);

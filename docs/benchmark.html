@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Benchmark · HALCamera 개발자 가이드</title>
+  <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
+  <link rel="stylesheet" href="./assets/docflow-design.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">본문으로 이동</a>
+  <header class="site-header">
+    <a class="brand" href="./index.html">HAL CAMERA</a>
+    <nav class="site-nav" aria-label="문서 메뉴">
+      <a href="./architecture.html">Architecture</a>
+      <a href="./benchmark.html" aria-current="page">Benchmark</a>
+      <a href="./decisions.html">Decisions</a>
+      <a href="./evidence.html">Evidence</a>
+      <a href="./getting-started.html">빠른 시작</a>
+      <a href="./troubleshooting.html">디버깅</a>
+    </nav>
+  </header>
+  <main id="main-content" class="document">
+    <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
+    <h1 lang="en">Measurements with meaning.</h1><p><strong>측정값을 비교하기 전에 실행 조건과 관측 범위를 확인하세요.</strong> HALCamera의 벤치마크는 앱에서 관측한 실행 시각과 카메라 콜백을 바탕으로 결과를 저장하고 기준 실행과 비교합니다.</p>
+<pre><code class="language-mermaid">flowchart LR
+    A[&quot;BenchmarkRunner&lt;br/&gt;실행 시각 + 이벤트&quot;] --&gt; B[&quot;RunAssembler&lt;br/&gt;측정값 + 유효성&quot;]
+    B --&gt; C[&quot;BenchmarkReport&lt;br/&gt;실행 저장&quot;]
+    C --&gt; D[&quot;RegressionDetector&lt;br/&gt;기준 실행과 비교&quot;]
+</code></pre>
+<p>이 그림은 벤치마크 결과가 만들어지는 개념적 순서입니다. 실제 호출은 <code>BenchmarkActivity</code>가 조정합니다.</p>
+<h2 lang="en">Read the result in context.</h2><table>
+<thead>
+<tr>
+<th>확인할 항목</th>
+<th>확인하는 이유</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>실행과 관측 창</td>
+<td>카메라를 다시 여는 반복 측정과 관측 세션은 서로 다른 입력을 만듭니다.</td>
+</tr>
+<tr>
+<td>워밍업과 표본</td>
+<td>관측 시작 전에 도착한 프레임 수를 기준으로 워밍업 표본을 제외합니다.</td>
+</tr>
+<tr>
+<td>기준 실행</td>
+<td>지정한 baseline이 없으면 이전의 적격 실행을 reference로 선택합니다.</td>
+</tr>
+<tr>
+<td>유효성과 비교 상태</td>
+<td>측정 불가와 성능 저하를 구분해야 합니다. 값이 없으면 원인을 먼저 확인합니다.</td>
+</tr>
+</tbody></table>
+<p class="editorial" lang="en">A number is only useful<br>when its context travels with it.</p><h2 lang="en">Follow the implementation.</h2><p>구체적인 실행 순서, 중단 조건, 저장·비교 과정은 <a href="architecture.html#주요-실행-흐름">아키텍처의 주요 실행 흐름</a>에서 확인하세요. 이 페이지는 해당 설명으로 들어가는 요약이며 별도의 실측 결과를 주장하지 않습니다.</p>
+<details>
+<summary>코드 근거를 확인하세요</summary>
+<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/benchmark/</code>에서 <code>BenchmarkRunner.kt</code>, <code>RunAssembler.kt</code>, <code>BenchmarkActivity.kt</code>, <code>RegressionDetector.kt</code>를 확인하세요. 원고의 검토 상태는 아키텍처 문서 끝에 있습니다.</p>
+</details><p><strong>다음 단계:</strong> <a href="architecture.html#주요-실행-흐름">주요 실행 흐름</a>을 읽고 측정값이 만들어지는 과정을 확인하세요.</p>
+
+  </main>
+  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <dialog class="diagram-dialog" aria-labelledby="diagram-title">
+    <div class="diagram-toolbar">
+      <h2 id="diagram-title">그림 크게 보기</h2>
+      <button type="button" data-zoom="out" aria-label="그림 축소">−</button>
+      <output aria-live="polite" aria-label="확대 비율">100%</output>
+      <button type="button" data-zoom="in" aria-label="그림 확대">+</button>
+      <button type="button" data-zoom="fit">화면 맞춤</button>
+      <button type="button" data-zoom="actual">100%</button>
+      <button type="button" class="diagram-close" autofocus>닫기</button>
+    </div>
+    <div class="diagram-viewport" tabindex="0" role="region" aria-label="확대한 그림. 방향키로 스크롤할 수 있습니다.">
+      <div class="diagram-canvas"></div>
+    </div>
+  </dialog>
+  <script type="module">
+    const dialog = document.querySelector('.diagram-dialog');
+    const viewport = dialog.querySelector('.diagram-viewport');
+    const canvas = dialog.querySelector('.diagram-canvas');
+    const zoomLabel = dialog.querySelector('output');
+    const zoomOut = dialog.querySelector('[data-zoom="out"]');
+    const zoomIn = dialog.querySelector('[data-zoom="in"]');
+    let activeDiagram;
+    let scale = 1;
+    let fitting = false;
+
+    function setScale(next) {
+      if (!activeDiagram) return;
+      const previous = scale;
+      scale = Math.max(.01, Math.min(8, next));
+      const { svg, width, height } = activeDiagram;
+      svg.style.width = `${width * scale}px`;
+      svg.style.height = `${height * scale}px`;
+      zoomLabel.value = `${Math.round(scale * 100)}%`;
+      zoomOut.disabled = scale <= .01;
+      zoomIn.disabled = scale >= 8;
+      viewport.scrollLeft = (viewport.scrollLeft + viewport.clientWidth / 2) * scale / previous - viewport.clientWidth / 2;
+      viewport.scrollTop = (viewport.scrollTop + viewport.clientHeight / 2) * scale / previous - viewport.clientHeight / 2;
+    }
+
+    function fitDiagram() {
+      if (!activeDiagram) return;
+      fitting = true;
+      setScale(Math.min((viewport.clientWidth - 32) / activeDiagram.width, (viewport.clientHeight - 32) / activeDiagram.height, 1));
+      viewport.scrollTo(0, 0);
+    }
+
+    function openDiagram(svg, trigger) {
+      if (activeDiagram) return;
+      const { width, height } = svg.viewBox.baseVal;
+      if (!width || !height) return;
+      const placeholder = document.createComment('diagram viewer placeholder');
+      activeDiagram = { svg, width, height, placeholder, trigger, style: svg.getAttribute('style') };
+      svg.replaceWith(placeholder);
+      canvas.append(svg);
+      dialog.showModal();
+      fitDiagram();
+    }
+
+    dialog.querySelector('.diagram-close').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => {
+      if (!activeDiagram) return;
+      const { svg, placeholder, trigger, style } = activeDiagram;
+      if (style === null) svg.removeAttribute('style');
+      else svg.setAttribute('style', style);
+      placeholder.replaceWith(svg);
+      activeDiagram = undefined;
+      trigger.focus({ preventScroll: true });
+    });
+    dialog.querySelectorAll('[data-zoom]').forEach(button => {
+      button.addEventListener('click', () => {
+        const action = button.dataset.zoom;
+        if (action === 'fit') return fitDiagram();
+        fitting = false;
+        setScale(action === 'actual' ? 1 : scale * (action === 'in' ? 1.25 : .8));
+      });
+    });
+    window.addEventListener('resize', () => { if (fitting && dialog.open) fitDiagram(); });
+
+    const blocks = [...document.querySelectorAll('pre > code.language-mermaid')];
+    if (blocks.length) {
+      try {
+        const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.esm.min.mjs');
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'strict',
+          theme: 'base',
+          themeVariables: { primaryColor: '#f6f7f8', primaryTextColor: '#18191b', primaryBorderColor: '#c8ccd2', lineColor: '#858b94', secondaryColor: '#ffffff', tertiaryColor: '#ffffff', fontFamily: 'system-ui, sans-serif', fontSize: '16px' },
+          // Leave room for multiline nodes and labels on returning edges.
+          flowchart: { nodeSpacing: 100, rankSpacing: 120, wrappingWidth: 300 },
+        });
+        const nodes = blocks.map(code => {
+          const node = document.createElement('div');
+          node.className = 'mermaid';
+          // OMM flowchart labels use literal \n separators; Mermaid needs <br/>.
+          const source = code.textContent;
+          node.textContent = /^\s*(?:flowchart|graph)\s/m.test(source)
+            ? source.replace(/"[^"\r\n]*"/g, label => label.replace(/\\n/g, '<br/>'))
+            : source;
+          code.parentElement.replaceWith(node);
+          return node;
+        });
+        await mermaid.run({ nodes });
+        nodes.forEach(node => {
+          const svg = node.querySelector('svg');
+          if (!svg) return;
+          node.tabIndex = 0;
+          node.setAttribute('role', 'button');
+          node.setAttribute('aria-label', '그림 확대');
+          node.setAttribute('aria-haspopup', 'dialog');
+          node.addEventListener('click', event => {
+            if (!event.target.closest('a')) openDiagram(svg, node);
+          });
+          node.addEventListener('keydown', event => {
+            if (event.target === node && (event.key === 'Enter' || event.key === ' ')) {
+              event.preventDefault();
+              openDiagram(svg, node);
+            }
+          });
+        });
+      } catch (error) {
+        console.error('Mermaid rendering failed', error);
+      }
+    }
+  </script>
+</body>
+</html>

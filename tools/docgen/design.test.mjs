@@ -14,7 +14,7 @@ function fixture(t) {
   fs.mkdirSync(path.join(root, 'docs/design'), {recursive: true});
   const design = {preset: 'custom', stylesheet: 'docs/design/editorial.css'};
   const source = path.join(root, design.stylesheet);
-  const target = path.join(root, 'docs/guide/assets/docflow-design.css');
+  const target = path.join(root, 'guide/assets/docflow-design.css');
   fs.writeFileSync(source, '/* Source */\r\nbody { color: black; }\r\n');
   return {root, design, source, target};
 }

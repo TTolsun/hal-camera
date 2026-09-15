@@ -1,11 +1,13 @@
 # 개발자 가이드 검사.
 #
-# 두 가지를 확인합니다.
+# 로컬 진입점 tools/docgen/docs-check.mjs 와 같은 단계를 같은 순서로 실행합니다.
 #   원본 최신성: 관련 코드가 바뀌었는데 .omm/ 이나 원고의 검토가 빠졌는가  (verify --check)
-#   생성 일치:   .omm/ 과 바인딩에서 만든 결과가 docs/guide 와 같은가        (generate --check)
+#   생성 일치:   .omm/ 과 바인딩에서 만든 결과가 guide/ 와 같은가          (generate --check)
+#   사이트 일치: guide/ 에서 빌드한 정적 사이트가 커밋된 docs/ 와 같은가     (site check)
 # 추출기와 검증기가 쓰는 state/ 파일이 커밋된 것과 다르면 그것도 실패입니다.
 #
-# 생성기에는 외부 의존성이 없습니다. 복구 검사는 고정된 OMM CLI를 사용합니다.
+# 이 워크플로는 공개 저장소의 PR 검사용입니다. 배포는 main 의 /docs 를 "Deploy from a branch" 로
+# 제공하므로 Actions 가 없는 사내 미러에서도 같은 산출물을 그대로 씁니다.
 name: docs-check
 
 on:
@@ -16,7 +18,8 @@ on:
       - "gradle/**"
       - ".github/workflows/docs-check.yml"
       - ".omm/**"
-      - "docs/guide/**"
+      - "guide/**"
+      - "docs/**"
       - "tools/docgen/**"
       - "tools/halcam/**"
   push:
@@ -33,20 +36,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: 파이프라인 회귀 검사
-        run: node --test tools/docgen/regression.test.mjs tools/docgen/design.test.mjs
-      - name: 동기화 검사 의존성 설치
-        run: npm ci --prefix tools/docgen --ignore-scripts
-      - name: 동기화 실패 복구 검사 (모델 호출 없음)
-        run: node --test tools/docgen/sync.test.mjs tools/docgen/workflow.test.mjs
-      - name: 디자인 생성 결과 일치 검사
-        run: node tools/docgen/common.mjs design --check
-      - name: 사실 추출
-        run: node tools/docgen/extract.mjs
-      - name: 원본 최신성 검사
-        run: node tools/docgen/verify.mjs --check
-      - name: 생성 결과 일치 검사
-        run: node tools/docgen/generate.mjs --check
-      - name: 상태 파일 일치 검사
-        # Includes element scan history in tools/docgen/state/scan.json.
-        run: git diff --exit-code -- tools/docgen/state docs/guide
+      - name: 문서 검사 (로컬 진입점과 동일)
+        run: node tools/docgen/docs-check.mjs --ci

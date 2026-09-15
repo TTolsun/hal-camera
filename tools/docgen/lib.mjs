@@ -12,7 +12,7 @@ export const OMM_DIR = path.join(REPO_ROOT, ".omm");
 export const repoPath = (...parts) => path.join(REPO_ROOT, ...parts);
 
 export function readBindings() {
-  const file = repoPath("docs", "guide", "_bindings.yaml");
+  const file = repoPath("guide", "_bindings.yaml");
   const parsed = parseYaml(fs.readFileSync(file, "utf8"));
   if (parsed?.version !== 2) {
     throw new Error(`_bindings.yaml 의 version 이 2 가 아닙니다: ${parsed?.version}`);

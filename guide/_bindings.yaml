@@ -6,9 +6,9 @@
 # 파이프라인
 #   코드 ─ 추출기 ──────────────→ tools/docgen/state/facts.json   (결정론)
 #   코드 ─ LLM 스캔 ────────────→ .omm/<perspective>/            (구조, 근거, 제약)
-#   .omm + facts + brief + _inputs ─ LLM 집필 → docs/guide/_content/<page>/<id>.md
+#   .omm + facts + brief + _inputs ─ LLM 집필 → guide/_content/<page>/<id>.md
 #   위 원본 전부 ─ 검증기 ──────→ tools/docgen/state/evidence.json (최신성, 검토 여부)
-#   위 원본 전부 ─ 생성기 ──────→ docs/guide/<page>.md 의 마커 블록 (배치만 담당)
+#   위 원본 전부 ─ 생성기 ──────→ guide/<page>.md 의 마커 블록 (배치만 담당)
 #
 # 블록 kind
 #   status        검증 상태 배지. 검증기가 저장한 값을 표시만 합니다.
@@ -26,7 +26,7 @@
 version: 2
 
 site:
-  root: docs/guide
+  root: guide
   content_dir: _content
   inputs_dir: _inputs
 

@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 
 const source = path.resolve(import.meta.dirname, '../..');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hal-docgen-test-'));
-for (const dir of ['tools/docgen', 'tools/halcam/halcam', 'docs/guide', '.omm', 'app', 'gradle']) {
+for (const dir of ['tools/docgen', 'tools/halcam/halcam', 'guide', '.omm', 'app', 'gradle']) {
   fs.mkdirSync(path.dirname(path.join(root, dir)), { recursive: true });
   fs.cpSync(path.join(source, dir), path.join(root, dir), { recursive: true, filter: p => !p.includes('omm-backup') && !['build', 'node_modules'].includes(path.basename(p)) });
 }
@@ -74,7 +74,7 @@ test('nested element YAML and nearest-parent inheritance preserve perspective ha
 });
 
 test('element evidence outside the perspective fails before freshness records are written', () => {
-  for (const eol of ['\n', '\r\n']) change('docs/guide/_bindings.yaml', text => text.replace(/\r?\n/g, eol).replace(/(      \.:\r?\n        evidence:)/, '$1\n          - docs/guide/architecture.md'), () => {
+  for (const eol of ['\n', '\r\n']) change('guide/_bindings.yaml', text => text.replace(/\r?\n/g, eol).replace(/(      \.:\r?\n        evidence:)/, '$1\n          - guide/architecture.md'), () => {
     const before = snapshot(file('tools/docgen/state'));
     const r = run('verify.mjs', '--check');
     assert.equal(r.status, 1); assert.match(r.stderr, /overall-architecture.*부분집합.*architecture.md/);
@@ -83,7 +83,7 @@ test('element evidence outside the perspective fails before freshness records ar
 });
 
 test('misspelled element mapping cannot silently inherit broader evidence', () => {
-  change('docs/guide/_bindings.yaml', text => text.replace('      benchmark/run-validity:', '      benchmark/missing-element:'), () => {
+  change('guide/_bindings.yaml', text => text.replace('      benchmark/run-validity:', '      benchmark/missing-element:'), () => {
     const r = run('verify.mjs', '--check');
     assert.equal(r.status, 1); assert.match(r.stderr, /존재하지 않는 elements 경로.*missing-element/);
   });
@@ -143,18 +143,18 @@ test('CLI transport changes invalidate the runtime guide', () => {
 });
 
 test('human decision edits invalidate manuscripts without changing IDs', () => {
-  change('docs/guide/_inputs/decisions.md', s => s + '\nChanged decision rationale.\n', () => {
+  change('guide/_inputs/decisions.md', s => s + '\nChanged decision rationale.\n', () => {
     const r = run('verify.mjs', '--check');
     assert.equal(r.status, 1); assert.match(r.stdout, /content:architecture.md\/overview.*검토 대기/);
   });
 });
 
 test('device evidence edits invalidate manuscripts without changing IDs', () => {
-  change('docs/guide/_inputs/device-verification.yaml', s => s + '\n# Corrected verification result\n', () => assert.equal(run('verify.mjs', '--check').status, 1));
+  change('guide/_inputs/device-verification.yaml', s => s + '\n# Corrected verification result\n', () => assert.equal(run('verify.mjs', '--check').status, 1));
 });
 
 test('writing instructions and facts invalidate accepted manuscripts', () => {
-  change('docs/guide/_bindings.yaml', s => s.replace('reader:', 'reader: revised #'), () => assert.equal(run('verify.mjs', '--check').status, 1));
+  change('guide/_bindings.yaml', s => s.replace('reader:', 'reader: revised #'), () => assert.equal(run('verify.mjs', '--check').status, 1));
   change('tools/docgen/state/facts.json', s => s.replace('versionName', 'changedVersionName'), () => assert.equal(run('verify.mjs', '--check').status, 1));
 });
 
@@ -183,10 +183,10 @@ test('missing cited files never retain a fresh observed state', () => {
 
 test('malformed markers cause no partial page writes', () => {
   pass(run('verify.mjs', '--accept')); pass(run('generate.mjs'));
-  change('docs/guide/troubleshooting.md', s => s.replace('<!-- omm:end id=status -->', '<!-- omm:end id=wrong -->'), () => {
-    const before = snapshot(file('docs/guide'));
+  change('guide/troubleshooting.md', s => s.replace('<!-- omm:end id=status -->', '<!-- omm:end id=wrong -->'), () => {
+    const before = snapshot(file('guide'));
     assert.equal(run('generate.mjs').status, 1);
-    assert.deepEqual(snapshot(file('docs/guide')), before);
+    assert.deepEqual(snapshot(file('guide')), before);
   });
 });
 

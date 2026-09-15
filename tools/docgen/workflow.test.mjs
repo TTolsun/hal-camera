@@ -13,7 +13,7 @@ const workflow = parse(fs.readFileSync(path.join(directory, 'docs-sync.yml'), 'u
 test('local runner accepts only main push or dispatch with the explicit repository gate', () => {
   assert.deepEqual(Object.keys(workflow.on).sort(), ['push', 'workflow_dispatch']);
   assert.deepEqual(workflow.on.push.branches, ['main']);
-  for (const expected of ['app/**', '.omm/**', 'docs/guide/_bindings.yaml', 'tools/docgen/**']) {
+  for (const expected of ['app/**', '.omm/**', 'guide/_bindings.yaml', 'tools/docgen/**']) {
     assert.ok(workflow.on.push.paths.includes(expected));
   }
   const enabled = new Function('github', 'vars', `return Boolean(${workflow.jobs.sync.if});`);

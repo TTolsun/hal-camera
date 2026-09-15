@@ -41,7 +41,7 @@ P1은 P2보다 먼저 한다. P2의 요소별 스캔을 실제 모델로 검증�
 
 ### P2. 근거 분할
 
-파일: `docs/guide/_bindings.yaml`, `tools/docgen/model.mjs`, `tools/docgen/sync-worker.mjs`, `tools/docgen/sync.mjs`, `tools/docgen/verify.mjs`, `tools/docgen/regression.test.mjs`, `tools/docgen/sync-fixture.mjs`, `.github/workflows/docs-check.yml`
+파일: `guide/_bindings.yaml`, `tools/docgen/model.mjs`, `tools/docgen/sync-worker.mjs`, `tools/docgen/sync.mjs`, `tools/docgen/verify.mjs`, `tools/docgen/regression.test.mjs`, `tools/docgen/sync-fixture.mjs`, `.github/workflows/docs-check.yml`
 
 - [x] `yaml-lite.mjs`가 `elements` 아래의 중첩 매핑(요소 경로 키 → `evidence` 목록)을 읽을 수 있는지 확인한다. 안 되면 최소 확장을 한다.
 - [x] `model.mjs`에 `collectElements(bindings, source)`를 추가한다. 요소 경로, 근거 글롭(상속 포함), 부모 경로를 돌려준다.
