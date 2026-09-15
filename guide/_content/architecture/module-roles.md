@@ -21,6 +21,9 @@ sources:
   - app/src/main/java/dev/halcamera/MainActivity.kt
   - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
   - app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt
+  - app/src/main/java/dev/halcamera/CameraProbeActivity.kt
+  - app/src/main/java/dev/halcamera/camera/CameraProbe.kt
+  - app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt
 decisions: []
 verifications: []
 ---
@@ -49,3 +52,5 @@ verifications: []
 ### 반복 측정 프로파일 비교
 
 ProfileLibrary와 ProfileArchive는 외부 JSON의 검증·출처·별도 파일 보관을 담당합니다. ProfileComparison은 기기·빌드·계약·환경·중복 검사를, RepeatStatistics는 실행 단위 기술 통계와 순열검정을 담당합니다. ProfileComparisonActivity가 시스템 파일 선택기와 묶음 선택·결과 공유를 연결합니다.
+
+`CameraProbeActivity`(PROBE)는 카메라를 열지 않고 `CameraCharacteristics`를 읽어 표로 보여 줍니다. `camera/CameraProbeReader`가 공개 카메라 ID 전부와 논리 카메라 뒤의 물리 카메라를 섹션 단위로 읽고, `camera/CameraProbe`의 순수 Kotlin 모델과 TXT·JSON 렌더러가 화면과 공유 파일을 만듭니다. enum 값의 이름은 `CameraMetadata` 상수에서 reflection으로 읽으므로 새 API 값도 그대로 이름이 붙습니다. 이 화면은 HAL이 공개한 사양을 보여 줄 뿐 측정하지 않으며, 측정은 BENCHMARK가 담당합니다. 필터에 단어를 넣으면 그 단어가 든 줄만 목록으로 나오고, 항목을 누르면 해당 줄로 이동합니다.
