@@ -80,9 +80,28 @@ object ProbeFormat {
         else -> String.format(Locale.US, "%.1f µs", ns / 1_000.0)
     }
 
-    /** A stream row: "1920x1080" against "min 33.3 ms (30.0 fps) · stall 0 ms". */
+    /** A stream row: "1920x1080" against "16:9 · min 33.3 ms (30.0 fps) · stall 0 ms". */
     fun streamRow(width: Int, height: Int, minFrameNs: Long?, stallNs: Long?): ProbeRow =
-        ProbeRow("${width}x$height", "min ${frameDuration(minFrameNs)} · stall ${stall(stallNs)}")
+        ProbeRow("${width}x$height", "${aspect(width, height)} · min ${frameDuration(minFrameNs)} · stall ${stall(stallNs)}")
+
+    /** "4:3", "16:9"; odd sensor crops come out as they are ("1000:563") rather than rounded to a familiar ratio. */
+    fun aspect(width: Int, height: Int): String {
+        if (width <= 0 || height <= 0) return "—"
+        var a = width; var b = height
+        while (b != 0) { val t = a % b; a = b; b = t }
+        return "${width / a}:${height / a}"
+    }
+
+    /**
+     * Every value the platform defines for an enum, marked present or absent, one per line. The absent ones are
+     * the point of a probe: "no EDOF" is information a plain list of the present modes would leave out. A value
+     * the platform has no name for is vendor-specific and listed after the known ones.
+     */
+    fun inventory(all: Map<Int, String>, present: List<Int>): String {
+        val known = all.entries.sortedBy { it.key }.map { (value, name) -> "${if (value in present) "✓" else "✗"} $name" }
+        val vendor = present.filter { it !in all }.sorted().map { "✓ $it (vendor)" }
+        return list(known + vendor)
+    }
 
     fun list(values: List<String>): String = if (values.isEmpty()) "(none)" else values.joinToString("\n")
 }
@@ -92,7 +111,7 @@ object ProbeFormat {
  * versions. Assumes a monospaced face, as every table in this app does (see [dev.halcamera.ui.Look.mono]).
  */
 object CameraProbeText {
-    private const val MAX_KEY_WIDTH = 26
+    const val MAX_KEY_WIDTH = 26
 
     fun render(snapshot: CameraProbeSnapshot, cameraKey: String? = null): String {
         val out = StringBuilder()

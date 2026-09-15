@@ -7,7 +7,12 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraExtensionCharacteristics
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.CameraMetadata
+import android.hardware.camera2.params.ColorSpaceProfiles
+import android.hardware.camera2.params.DynamicRangeProfiles
+import android.hardware.camera2.params.MandatoryStreamCombination
+import android.hardware.camera2.params.MultiResolutionStreamConfigurationMap
 import android.hardware.camera2.params.StreamConfigurationMap
+import android.media.MediaRecorder
 import android.os.Build
 import android.util.Size
 import java.lang.reflect.Modifier
@@ -23,7 +28,7 @@ import java.util.Locale
  * Every section is read under its own try/catch: a vendor HAL that throws on one key must not hide the rest
  * of the report, and the failure is recorded as a row so the export says which key it was.
  */
-class CameraProbeReader(private val manager: CameraManager) {
+class CameraProbeReader(private val manager: CameraManager, private val extraDevice: List<ProbeRow> = emptyList()) {
 
     fun read(): CameraProbeSnapshot {
         val errors = ArrayList<String>()
@@ -41,7 +46,7 @@ class CameraProbeReader(private val manager: CameraManager) {
         }
         return CameraProbeSnapshot(
             capturedAt = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US).format(Date()),
-            device = device(),
+            device = device() + extraDevice,
             cameras = cameras,
             errors = errors
         )
@@ -53,7 +58,9 @@ class CameraProbeReader(private val manager: CameraManager) {
         ProbeRow("Device", Build.DEVICE),
         ProbeRow("Android", "${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"),
         ProbeRow("Build", Build.DISPLAY),
-        ProbeRow("Security patch", Build.VERSION.SECURITY_PATCH)
+        ProbeRow("Security patch", Build.VERSION.SECURITY_PATCH),
+        ProbeRow("SoC", if (Build.VERSION.SDK_INT >= 31) "${Build.SOC_MANUFACTURER} ${Build.SOC_MODEL}" else Build.HARDWARE),
+        ProbeRow("ABIs", Build.SUPPORTED_ABIS.joinToString(", "))
     )
 
     private fun entry(id: String, physicalOf: String?, c: CameraCharacteristics): CameraProbeEntry {
@@ -69,8 +76,10 @@ class CameraProbeReader(private val manager: CameraManager) {
         sections += guarded("CONTROL") { control(c) }
         sections += guarded("PROCESSING") { processing(c) }
         sections += guarded("REQUEST") { request(c) }
+        if (Build.VERSION.SDK_INT >= 29) sections += guarded("MANDATORY STREAM COMBINATIONS") { mandatoryCombinations(c) }
         if (map != null) {
             sections += guarded("STREAMS · PRIVATE (SurfaceTexture)") { surfaceTextureStreams(map) }
+            sections += guarded("STREAMS · PRIVATE (MediaRecorder)") { mediaRecorderStreams(map) }
             val formats = try { map.outputFormats.toList() } catch (_: Exception) { emptyList() }
             formats.sortedBy { formatName(it) }.forEach { format ->
                 sections += guarded("STREAMS · ${formatName(format)}") { formatStreams(map, format) }
@@ -94,7 +103,7 @@ class CameraProbeReader(private val manager: CameraManager) {
         rows += ProbeRow("Camera ID", id)
         if (physicalOf != null) rows += ProbeRow("Physical camera of", physicalOf)
         rows += ProbeRow("Facing", facingLabel(c[CameraCharacteristics.LENS_FACING]))
-        rows += ProbeRow("Hardware level", MetadataNames.name("INFO_SUPPORTED_HARDWARE_LEVEL_", c[CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL]))
+        rows += ProbeRow("Hardware level", names("INFO_SUPPORTED_HARDWARE_LEVEL_", listOfNotNull(c[CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL]).toIntArray()))
         if (Build.VERSION.SDK_INT >= 28) {
             val physical = c.physicalCameraIds.sorted()
             rows += ProbeRow("Logical multi-camera", if (physical.isEmpty()) "no" else "yes · physical ids ${physical.joinToString()}")
@@ -110,9 +119,9 @@ class CameraProbeReader(private val manager: CameraManager) {
         }
         if (Build.VERSION.SDK_INT >= 31 && physicalOf == null) {
             val extensions = try {
-                manager.getCameraExtensionCharacteristics(id).supportedExtensions.map { MetadataNames.name("EXTENSION_", it, CameraExtensionCharacteristics::class.java) }
-            } catch (e: Exception) { listOf("unreadable: ${e.message}") }
-            rows += ProbeRow("Extensions", ProbeFormat.list(extensions))
+                names("EXTENSION_", manager.getCameraExtensionCharacteristics(id).supportedExtensions.toIntArray(), CameraExtensionCharacteristics::class.java)
+            } catch (e: Exception) { "unreadable: ${e.message}" }
+            rows += ProbeRow("Extensions", extensions)
         }
         if (Build.VERSION.SDK_INT >= 35 && physicalOf == null) {
             val setup = try { manager.isCameraDeviceSetupSupported(id) } catch (_: Exception) { null }
@@ -122,9 +131,10 @@ class CameraProbeReader(private val manager: CameraManager) {
     }
 
     private fun capabilities(c: CameraCharacteristics): List<ProbeRow> {
-        val values = c[CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES]?.toList().orEmpty()
-        return values.map { ProbeRow(MetadataNames.name("REQUEST_AVAILABLE_CAPABILITIES_", it), "yes") }
-            .ifEmpty { listOf(ProbeRow("(none reported)", "")) }
+        val present = c[CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES]?.toList().orEmpty()
+        val all = MetadataNames.of("REQUEST_AVAILABLE_CAPABILITIES_")
+        return all.entries.sortedBy { it.key }.map { (value, name) -> ProbeRow(name, if (value in present) "✓" else "✗") } +
+            present.filter { it !in all }.sorted().map { ProbeRow("$it (vendor)", "✓") }
     }
 
     private fun sensor(c: CameraCharacteristics): List<ProbeRow> {
@@ -244,6 +254,14 @@ class CameraProbeReader(private val manager: CameraManager) {
         }
     }
 
+    private fun mediaRecorderStreams(map: StreamConfigurationMap): List<ProbeRow> {
+        val sizes = map.getOutputSizes(MediaRecorder::class.java).orEmpty()
+        return sizes.sortedWith(bySizeDesc).map { s ->
+            ProbeFormat.streamRow(s.width, s.height,
+                map.getOutputMinFrameDuration(MediaRecorder::class.java, s), map.getOutputStallDuration(MediaRecorder::class.java, s))
+        }
+    }
+
     private fun formatStreams(map: StreamConfigurationMap, format: Int): List<ProbeRow> {
         val sizes = map.getOutputSizes(format).orEmpty()
         val rows = sizes.sortedWith(bySizeDesc).map { s ->
@@ -287,15 +305,63 @@ class CameraProbeReader(private val manager: CameraManager) {
         is DoubleArray -> v.joinToString(", ", "[", "]")
         is BooleanArray -> v.joinToString(", ", "[", "]")
         is ByteArray -> "byte[${v.size}]"
-        is Array<*> -> v.joinToString(", ", "[", "]") { formatValue(it) }
+        is Array<*> -> {
+            // Short scalars stay on one line; a list of long descriptions is unreadable joined by commas.
+            val items = v.map { formatValue(it) }
+            if (items.sumOf { it.length } > 80) items.joinToString("\n") else items.joinToString(", ", "[", "]")
+        }
         is StreamConfigurationMap -> "(see STREAMS sections)"
-        else -> v.toString()
+        else -> formatObject(v)
+    }
+
+    /**
+     * Platform value classes that do not override toString(). Each is named by API level so the reader still
+     * compiles against minSdk; anything else unknown prints its class name instead of an identity hash.
+     */
+    private fun formatObject(v: Any): String {
+        if (Build.VERSION.SDK_INT >= 29 && v is MandatoryStreamCombination) return v.description.toString()
+        if (Build.VERSION.SDK_INT >= 33 && v is DynamicRangeProfiles) {
+            return v.supportedProfiles.sorted().joinToString(", ") { longName(it, DynamicRangeProfiles::class.java) }
+        }
+        if (Build.VERSION.SDK_INT >= 34 && v is ColorSpaceProfiles) {
+            return v.getSupportedColorSpaces(ImageFormat.UNKNOWN).joinToString(", ") { it.name }
+        }
+        if (Build.VERSION.SDK_INT >= 31 && v is MultiResolutionStreamConfigurationMap) {
+            return v.outputFormats.joinToString("\n") { f -> "${formatName(f)}: " + v.getOutputInfo(f).joinToString(", ") { "${it.width}x${it.height}@${it.physicalCameraId}" } }
+        }
+        val text = v.toString()
+        val identity = "${v.javaClass.name}@"
+        return if (text.startsWith(identity)) v.javaClass.simpleName else text
+    }
+
+    /** Value of a `public static final long` on [owner] by name, for classes whose constants are longs. */
+    private fun longName(value: Long, owner: Class<*>): String =
+        owner.fields.firstOrNull { Modifier.isStatic(it.modifiers) && it.type == Long::class.javaPrimitiveType && it.getLong(null) == value }?.name
+            ?: value.toString()
+
+    @androidx.annotation.RequiresApi(29)
+    private fun mandatoryCombinations(c: CameraCharacteristics): List<ProbeRow> {
+        val rows = ArrayList<ProbeRow>()
+        fun add(label: String, combos: Array<MandatoryStreamCombination>?) {
+            if (combos == null) return
+            rows += ProbeRow(label, ProbeFormat.list(combos.map { it.description.toString() }))
+        }
+        add("Regular", c[CameraCharacteristics.SCALER_MANDATORY_STREAM_COMBINATIONS])
+        if (Build.VERSION.SDK_INT >= 30) add("Concurrent", c[CameraCharacteristics.SCALER_MANDATORY_CONCURRENT_STREAM_COMBINATIONS])
+        if (Build.VERSION.SDK_INT >= 31) add("Maximum resolution", c[CameraCharacteristics.SCALER_MANDATORY_MAXIMUM_RESOLUTION_STREAM_COMBINATIONS])
+        if (Build.VERSION.SDK_INT >= 33) {
+            add("Ten-bit output", c[CameraCharacteristics.SCALER_MANDATORY_TEN_BIT_OUTPUT_STREAM_COMBINATIONS])
+            add("Preview stabilization", c[CameraCharacteristics.SCALER_MANDATORY_PREVIEW_STABILIZATION_OUTPUT_STREAM_COMBINATIONS])
+            add("Stream use case", c[CameraCharacteristics.SCALER_MANDATORY_USE_CASE_STREAM_COMBINATIONS])
+        }
+        return rows
     }
 
     // ---- helpers ----
 
-    private fun names(prefix: String, values: IntArray): String =
-        if (values.isEmpty()) "(none)" else values.joinToString(", ") { MetadataNames.name(prefix, it) }
+    /** Every platform value for the enum behind [prefix], marked present or absent (see [ProbeFormat.inventory]). */
+    private fun names(prefix: String, values: IntArray, owner: Class<*> = CameraMetadata::class.java): String =
+        ProbeFormat.inventory(MetadataNames.of(prefix, owner), values.toList())
 
     private fun facingLabel(facing: Int?): String = when (facing) {
         CameraCharacteristics.LENS_FACING_BACK -> "후면"

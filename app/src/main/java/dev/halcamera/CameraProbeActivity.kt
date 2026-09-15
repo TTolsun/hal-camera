@@ -1,10 +1,16 @@
 package dev.halcamera
 
 import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.TextPaint
+import android.text.style.ForegroundColorSpan
+import android.text.style.LeadingMarginSpan
+import android.util.TypedValue
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
@@ -14,6 +20,8 @@ import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.camera.CameraProbeEntry
+import dev.halcamera.camera.ProbeFormat
+import dev.halcamera.camera.ProbeRow
 import dev.halcamera.camera.CameraProbeReader
 import dev.halcamera.camera.CameraProbeSnapshot
 import dev.halcamera.camera.CameraProbeText
@@ -68,12 +76,32 @@ class CameraProbeActivity : ComponentActivity() {
 
     private fun reload() {
         val manager = getSystemService(CameraManager::class.java)
-        work({ CameraProbeReader(manager).read() }) { result ->
+        val display = displayRows()
+        work({ CameraProbeReader(manager, display).read() }) { result ->
             snapshot = result
             error = null
             if (result.camera(cameraKey.orEmpty()) == null) cameraKey = result.cameras.firstOrNull()?.key
             render()
         }
+    }
+
+    /** What the reference probes list under "screen": the preview grade of ProfileCompatibility depends on it. */
+    private fun displayRows(): List<ProbeRow> {
+        val metrics = resources.displayMetrics
+        val (w, h, refresh) = if (Build.VERSION.SDK_INT >= 30) {
+            val bounds = windowManager.currentWindowMetrics.bounds
+            Triple(bounds.width(), bounds.height(), display?.refreshRate ?: 0f)
+        } else {
+            @Suppress("DEPRECATION") val d = windowManager.defaultDisplay
+            val real = android.util.DisplayMetrics().also { @Suppress("DEPRECATION") d.getRealMetrics(it) }
+            Triple(real.widthPixels, real.heightPixels, d.refreshRate)
+        }
+        val inches = Math.hypot((w / metrics.xdpi).toDouble(), (h / metrics.ydpi).toDouble())
+        return listOf(
+            ProbeRow("Display", "${w}x$h px · ${ProbeFormat.aspect(w, h)} · ${String.format(Locale.US, "%.1f", inches)}\""),
+            ProbeRow("Density", "${metrics.densityDpi} dpi · ${String.format(Locale.US, "%.2f", metrics.density)}x"),
+            ProbeRow("Refresh rate", String.format(Locale.US, "%.0f Hz", refresh))
+        )
     }
 
     private fun render() {
@@ -97,22 +125,62 @@ class CameraProbeActivity : ComponentActivity() {
         val exports = Look.row(this)
         exports.addView(Look.ghostButton(this, "TXT 공유", dark = true) { export(snap, "txt") }, LinearLayout.LayoutParams(0, dp(48), 1f))
         exports.addView(Look.ghostButton(this, "JSON 공유", dark = true) { export(snap, "json") }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
+        exports.addView(Look.ghostButton(this, "복사", dark = true) { copy(snap, current) }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
         body.addView(exports, lp())
         text("공유 파일에는 모든 카메라(${cameras.size}개)가 들어갑니다. 이미지 픽셀은 포함되지 않습니다.", 12)
-        section("DEVICE", snap.device.joinToString("\n") { "${it.key.padEnd(16)}${it.value}" })
+        section("DEVICE", snap.device)
         if (current == null) { text("공개된 카메라가 없습니다."); return }
-        current.sections.forEach { s -> section("${s.title} (${s.rows.size})", CameraProbeText.section(s).lines().drop(1).joinToString("\n").trimEnd()) }
-        if (snap.errors.isNotEmpty()) section("ERRORS", snap.errors.joinToString("\n"))
+        current.sections.forEach { section(it.title, it.rows) }
+        if (snap.errors.isNotEmpty()) section("ERRORS", snap.errors.map { ProbeRow("!", it) })
         lastRenderFull = true
         scroll.post { scroll.scrollTo(0, listScrollY) }
     }
 
-    private fun section(title: String, content: String) {
+    private fun section(title: String, rows: List<ProbeRow>) {
         val card = Look.card(this, dark = true)
-        card.addView(Look.text(this, title, 14, Look.onDarkMuted, bold = true))
-        card.addView(Look.text(this, content.ifBlank { "(none)" }, 12, Look.onDark, mono = true).apply { setTextIsSelectable(true) },
+        card.addView(Look.text(this, "$title (${rows.size})", 14, Look.onDarkMuted, bold = true))
+        card.addView(Look.text(this, table(rows), 12, Look.onDark, mono = true).apply { setTextIsSelectable(true) },
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         body.addView(card, lp())
+    }
+
+    /**
+     * The same two columns as [CameraProbeText.section], but a value that wraps on a phone continues under the
+     * value column rather than under the key: each row is a paragraph with a hanging indent of the key column.
+     */
+    private fun table(rows: List<ProbeRow>): CharSequence {
+        if (rows.isEmpty()) return "(none)"
+        val width = rows.maxOf { it.key.length }.coerceAtMost(CameraProbeText.MAX_KEY_WIDTH)
+        val paint = TextPaint().apply { typeface = Look.mono; textSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, 12f, resources.displayMetrics) }
+        val indent = paint.measureText(" ".repeat(width + 2)).toInt()
+        val listIndent = paint.measureText("  ").toInt()
+        val out = SpannableStringBuilder()
+        rows.forEachIndexed { i, row ->
+            if (i > 0) out.append('\n')
+            // A key wider than the column, or a list value, takes its own line: a list squeezed into the value
+            // column on a phone wraps every entry, so it hangs under the key with a shallow indent instead.
+            val lines = row.value.split('\n')
+            val ownLine = row.key.length > width || lines.size > 1
+            val keyStart = out.length
+            out.append(if (ownLine) row.key else row.key.padEnd(width + 2), ForegroundColorSpan(Look.onDarkMuted), 0)
+            if (ownLine) out.append('\n')
+            lines.forEachIndexed { j, line ->
+                if (j > 0) out.append('\n')
+                // A paragraph span has to start at the paragraph, which for a same-line value is the key itself.
+                val start = if (j == 0 && !ownLine) keyStart else out.length
+                out.append(line)
+                val span = if (ownLine) LeadingMarginSpan.Standard(listIndent, listIndent * 2) else LeadingMarginSpan.Standard(0, indent)
+                out.setSpan(span, start, out.length, 0)
+            }
+        }
+        return out
+    }
+
+    /** The camera on screen as text, to the clipboard: the quickest way into a chat or an issue. */
+    private fun copy(snap: CameraProbeSnapshot, camera: CameraProbeEntry?) {
+        val text = CameraProbeText.render(snap, camera?.key)
+        getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("camera-probe", text))
+        if (Build.VERSION.SDK_INT < 33) message("클립보드에 복사했습니다.")
     }
 
     private fun export(snap: CameraProbeSnapshot, kind: String) {
@@ -124,7 +192,7 @@ class CameraProbeActivity : ComponentActivity() {
             val content = if (kind == "json") (json(snap.toJsonMap()) as JSONObject).toString(2) else CameraProbeText.render(snap)
             file.writeText(content, Charsets.UTF_8)
             file
-        }, fail = { message(it.message ?: "내보내기에 실패했습니다."); render() }) { share(it, if (kind == "json") "application/json" else "text/plain") }
+        }, showBusy = false, fail = { message(it.message ?: "내보내기에 실패했습니다.") }) { share(it, if (kind == "json") "application/json" else "text/plain") }
     }
 
     /** org.json stays at the file boundary; the snapshot itself is a Map. */
@@ -148,10 +216,19 @@ class CameraProbeActivity : ComponentActivity() {
         } catch (e: Exception) { message(e.message ?: "내보내기에 실패했습니다.") }
     }
 
-    private fun <T> work(task: () -> T, fail: (Throwable) -> Unit = { error = it.message ?: it.javaClass.simpleName; render() }, done: (T) -> Unit) {
+    /**
+     * One serial worker. [showBusy] replaces the screen with the loading line while the snapshot is read; an
+     * export keeps the list on screen, because the chooser opens over it and a flash to "reading" would be a lie.
+     */
+    private fun <T> work(
+        task: () -> T,
+        showBusy: Boolean = true,
+        fail: (Throwable) -> Unit = { error = it.message ?: it.javaClass.simpleName; render() },
+        done: (T) -> Unit
+    ) {
         if (busy) return
         busy = true
-        render()
+        if (showBusy) render()
         io.execute {
             val result = runCatching(task)
             runOnUiThread {
