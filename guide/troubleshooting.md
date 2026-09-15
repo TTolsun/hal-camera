@@ -32,6 +32,7 @@ nav_order: 7
 
 | 로그 태그 | 선언 위치 |
 | --- | --- |
+| `BasicRecordingRunner` | `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRunner.kt` |
 | `BenchmarkReport` | `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt` |
 | `BenchmarkStore` | `app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt` |
 | `ProfileCompatibility` | `app/src/main/java/dev/halcamera/benchmark/ProfileCompatibility.kt` |
@@ -104,7 +105,7 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-15 @ `2a0776f` · Claude Opus 5 (PR #75)
+- 검토 2026-09-15 @ `99da648` · Claude
 
 </details>
 
@@ -180,9 +181,9 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-15 @ `2a0776f` · Claude Opus 5 (PR #75) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-15 @ `2a0776f` · Claude Opus 5 (PR #75) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-15 @ `2a0776f` · Claude Opus 5 (PR #75) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-15 @ `99da648` · Claude |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-15 @ `99da648` · Claude |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-15 @ `99da648` · Claude |
 
 <!-- omm:end id=status -->
 
