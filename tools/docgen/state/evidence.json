@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "140034324db590cd",
+        "codeHash": "de56a6581625177d",
         "modelHash": "c0769c3c23d63fe8",
         "at": "2026-09-15",
-        "commit": "764fb96",
-        "reviewer": "Claude-path-migration"
+        "commit": "2a0776f",
+        "reviewer": "Claude Opus 5 (PR #75)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "c6887495266877e7",
+        "codeHash": "16793f346aab9331",
         "modelHash": "50be73470c27fe37",
         "at": "2026-09-15",
-        "commit": "764fb96",
-        "reviewer": "Claude-path-migration"
+        "commit": "2a0776f",
+        "reviewer": "Claude Opus 5 (PR #75)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "82d35e1f7a928108",
+        "codeHash": "9ed537db134f9e49",
         "modelHash": "56907a4302752f0c",
         "at": "2026-09-15",
-        "commit": "764fb96",
-        "reviewer": "Claude-path-migration"
+        "commit": "2a0776f",
+        "reviewer": "Claude Opus 5 (PR #75)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "c2c517c83dd101a2",
+        "codeHash": "321dde740f27fd22",
         "modelHash": "5a1e77f5f8b2faa5",
         "at": "2026-09-15",
-        "commit": "764fb96",
-        "reviewer": "Claude-path-migration"
+        "commit": "2a0776f",
+        "reviewer": "Claude Opus 5 (PR #75)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "95dc1049470ea6f5",
+        "codeHash": "4abf083d3bfc9c37",
         "modelHash": "2ee0f076a2051d77",
         "at": "2026-09-15",
-        "commit": "764fb96",
-        "reviewer": "Claude-path-migration"
+        "commit": "2a0776f",
+        "reviewer": "Claude Opus 5 (PR #75)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "c6887495266877e7",
+        "codeHash": "16793f346aab9331",
         "modelHash": "a5063659df41b1fe",
         "at": "2026-09-15",
-        "commit": "764fb96",
-        "reviewer": "Claude-path-migration"
+        "commit": "2a0776f",
+        "reviewer": "Claude Opus 5 (PR #75)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "140034324db590cd",
-        "modelHash": "2e7f05f8606db816",
+        "codeHash": "de56a6581625177d",
+        "modelHash": "ac4a68e58ded475b",
         "at": "2026-09-15",
-        "commit": "764fb96",
-        "reviewer": "Claude-path-migration"
+        "commit": "2a0776f",
+        "reviewer": "Claude Opus 5 (PR #75)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "140034324db590cd",
+        "codeHash": "de56a6581625177d",
         "modelHash": "ef29ea4dab69d9e2",
         "at": "2026-09-15",
-        "commit": "764fb96",
-        "reviewer": "Claude-path-migration"
+        "commit": "2a0776f",
+        "reviewer": "Claude Opus 5 (PR #75)"
       },
       "observed": {
         "state": "fresh"
