@@ -1,19 +1,20 @@
 # docgen — 개발자 가이드 생성 파이프라인
 
-`docs/guide/`의 개발자 가이드를 코드 근거와 검토 기록에 맞춰 유지합니다. 결정론적 생성은 Node만 필요하며, 자동 동기화는 로컬 Ollama의 `qwen3.5:4b`와 OMM CLI 0.2.0을 사용합니다.
+`guide/`의 개발자 가이드를 코드 근거와 검토 기록에 맞춰 유지하고, `docs/`의 정적 사이트를 만듭니다. 결정론적 생성은 Node만 필요하며, 사이트 빌드는 `marked`(npm), 자동 동기화는 로컬 Ollama의 `qwen3.5:4b`와 OMM CLI 0.2.0을 사용합니다.
 
 ## 흐름
 
 공용 시스템을 사용할 때는 별도로 설치한 엔진 경로를 `DOCFLOW_ENGINE_ROOT`에 지정하고 `node tools/docgen/common.mjs sync`를 실행합니다. `project.json`은 이 앱의 코드 범위·추출기·Qwen·디자인을 연결합니다. 공용 엔진 0.1.0을 사용하며, 비공개 엔진 소스를 이 공개 저장소에 복사하지 않습니다. 기존 명령과 CI 검사는 독립적으로 사용할 수 있습니다.
 
-시각적 형식은 `docs/design/DESIGN.md`의 HAL CAMERA Editorial 규칙을 따릅니다. `project.json`은 `custom` 프리셋과 원본 `docs/design/editorial.css`를 연결합니다. `node tools/docgen/common.mjs design`은 프로젝트 생성기로 원본 경로와 재생성 명령을 표시한 `docs/guide/assets/docflow-design.css`를 생성합니다. `design --check`는 파일을 수정하지 않고 일치 여부를 검사합니다. custom 디자인 생성에는 공용 엔진 설치가 필요하지 않으며, 다른 프리셋과 동기화는 기존 공용 엔진을 사용합니다. 한국어 집필 규칙과 원고 검토 해시는 유지합니다.
+시각적 형식은 `docs/design/DESIGN.md`의 HAL CAMERA Editorial 규칙을 따릅니다. `project.json`은 `custom` 프리셋과 원본 `docs/design/editorial.css`를 연결합니다. `node tools/docgen/common.mjs design`은 프로젝트 생성기로 원본 경로와 재생성 명령을 표시한 `guide/assets/docflow-design.css`를 생성합니다. `design --check`는 파일을 수정하지 않고 일치 여부를 검사합니다. custom 디자인 생성에는 공용 엔진 설치가 필요하지 않으며, 다른 프리셋과 동기화는 기존 공용 엔진을 사용합니다. 한국어 집필 규칙과 원고 검토 해시는 유지합니다.
 
 ```
 코드 ─ extract.mjs ─────────────→ state/facts.json           (결정론, 매번 재계산)
 코드 ─ omm-scan (LLM) ──────────→ .omm/<perspective>/        (구조, 근거, 제약)
-.omm + facts + brief + _inputs ─ 집필 (LLM) → docs/guide/_content/<page>/<id>.md
+.omm + facts + brief + _inputs ─ 집필 (LLM) → guide/_content/<page>/<id>.md
 위 원본 전부 ─ verify.mjs ──────→ state/evidence.json        (최신성, 검토 기록)
-위 원본 전부 ─ generate.mjs ────→ docs/guide/<page>.md 의 마커 블록
+위 원본 전부 ─ generate.mjs ────→ guide/<page>.md 의 마커 블록
+guide/ 전체 ─ site.mjs ─────────→ docs/ 정적 사이트 (HTML, assets, _inputs, .nojekyll, .site-manifest.json)
 ```
 
 `sync.mjs`가 임시 복사본을 만들고 `sync-worker.mjs`가 `qwen.mjs`를 통해 모델을 호출합니다. 모델은 JSON 수정안만 반환합니다. 파일이나 셸 도구는 제공하지 않으며, 스크립트가 검증한 결과만 반영합니다. 생성기는 글을 쓰지 않고 코드를 읽지 않습니다.
@@ -23,12 +24,13 @@
 | 영역 | 작성 주체 |
 | --- | --- |
 | `.omm/**` | omm-scan (LLM) |
-| `docs/guide/_content/**` | 집필 (LLM), 사람이 검토 |
+| `guide/_content/**` | 집필 (LLM), 사람이 검토 |
 | `tools/docgen/state/facts.json` | `extract.mjs` |
 | `tools/docgen/state/evidence.json` | `verify.mjs` (검토 기록은 사람이 `--accept` 로) |
 | `tools/docgen/state/scan.json` | `sync.mjs` (성공한 요소 스캔의 근거 해시와 완료 시각) |
-| `docs/guide/*.md` 의 마커 블록 내부 | `generate.mjs` |
-| 마커 바깥 산문, front matter, `_bindings.yaml`, `_inputs/**`, `_config.yml` | 사람 |
+| `guide/*.md` 의 마커 블록 내부 | `generate.mjs` |
+| 마커 바깥 산문, front matter, `_bindings.yaml`, `_inputs/**`, `_config.yml`, `_layouts/**` | 사람 |
+| `docs/*.html`, `docs/assets/**`, `docs/_inputs/**`, `docs/.nojekyll`, `docs/.site-manifest.json` | `site.mjs build` |
 
 ## 명령
 
@@ -39,6 +41,10 @@ node tools/docgen/verify.mjs --check     # CI: 최신이 아니면 실패
 node tools/docgen/verify.mjs --accept    # 검토 완료를 기록 (사람이 실행)
 node tools/docgen/generate.mjs           # 페이지에 반영
 node tools/docgen/generate.mjs --check   # CI: 디스크와 다르면 실패
+node tools/docgen/site.mjs build         # guide/ → docs/ 정적 사이트
+node tools/docgen/site.mjs check         # CI: docs/ 가 빌드 결과와 다르거나 링크가 깨지면 실패
+node tools/docgen/site.mjs serve --base hal-camera   # 하위 경로 아래에서 미리보기
+node tools/docgen/docs-check.mjs [--ci|--build]      # CI 와 같은 순서의 전체 검사 (README 참고)
 node tools/docgen/brief.mjs <page> <id>  # 집필 프롬프트 출력
 node tools/docgen/sync.mjs [--dry-run]   # 낡은 원본을 LLM 으로 재생성
 node tools/docgen/sync.mjs --recover    # 중단된 파일 반영을 실행 전 상태로 복구
@@ -64,7 +70,7 @@ node tools/docgen/selftest.mjs           # 산문 보존, 재현성, 최신성 �
 
 ## 페이지 추가
 
-1. `docs/guide/_bindings.yaml` 의 `pages` 에 페이지와 블록을 정의합니다.
+1. `guide/_bindings.yaml` 의 `pages` 에 페이지와 블록을 정의합니다.
 2. 페이지 파일에 산문과 마커(`<!-- omm:begin id=… -->` / `<!-- omm:end id=… -->`)를 둡니다.
 3. `content` 블록이면 `sync.mjs` 나 `brief.mjs` 로 원고를 만듭니다.
 4. `generate.mjs` 를 실행하고 검토한 뒤 `verify.mjs --accept` 로 기록합니다.
@@ -84,7 +90,8 @@ node tools/docgen/selftest.mjs           # 산문 보존, 재현성, 최신성 �
 - sync --dry-run은 상태 파일을 쓰지 않으며, 변경된 코드에서 다시 최신성을 계산합니다. 실제 스캔 후에는 원고 의존성을 다시 계산합니다.
 - node --test tools/docgen/regression.test.mjs는 임시 복사본에서 줄바꿈·입력 변경·dry-run·마커 오류를 검사합니다. CI는 Windows와 Ubuntu에서 실행합니다.
 - 검토 기록은 node tools/docgen/verify.mjs --accept --reviewer=이름 형식으로 작성자를 명시할 수 있습니다. Codex의 코드 대조 기록은 사람의 승인이나 기기 실측을 뜻하지 않습니다. 자동 sync는 accept를 실행하지 않습니다.
-- Pages PR 빌드는 Jekyll 산출물을 확인하며 배포는 main push에서만 수행합니다. 레이아웃은 Mermaid 11.12.0을 CDN에서 불러와 구조도를 표시합니다.
+- 정적 사이트는 `site.mjs`가 로컬에서 빌드하며 GitHub 측 Jekyll 빌드나 배포 워크플로가 없습니다. `docs-check`는 커밋된 `docs/`가 `guide/`에서 다시 빌드한 결과와 같은지 검사합니다. 레이아웃은 Mermaid 11.12.0을 CDN에서 불러와 구조도를 표시합니다.
+- `site.mjs`는 kramdown GFM 규칙과 같은 헤딩 id(소문자, 단어 문자·하이픈만 유지, 공백은 하이픈)를 만들고 상대 `.md` 링크를 `.html`로 바꿉니다. 헤딩 텍스트를 바꾸면 그 헤딩을 가리키는 조각 링크도 함께 고쳐야 하며, 깨진 조각은 빌드 실패입니다.
 
 ## 배포 문서의 문체
 

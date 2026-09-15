@@ -7,7 +7,7 @@
 
 ## 0. 한 문장
 
-`main`에 코드가 push되면 개발자 PC의 self-hosted runner가 로컬 Qwen으로 `.omm/` 구조와 `_content/` 원고를 갱신하고 PR을 연다. 사람은 PR을 검토하고 `verify.mjs --accept`로 기록한 뒤 merge한다. merge 이후 배포는 기존 `pages.yml`이 처리한다.
+`main`에 코드가 push되면 개발자 PC의 self-hosted runner가 로컬 Qwen으로 `.omm/` 구조와 `_content/` 원고를 갱신하고 PR을 연다. 사람은 PR을 검토하고 `verify.mjs --accept`로 기록한 뒤 merge한다. merge 이후 배포는 `main`의 `/docs`를 Pages 브랜치 배포로 제공한다(#67, `pages.yml` 제거).
 
 ## 1. 현재 상태와 문제
 
@@ -16,7 +16,7 @@
 | 단계 | 담당 | 상태 |
 | --- | --- | --- |
 | 코드와 문서 불일치 검사 | `docs-check.yml` | 동작 중. PR과 `main` push에서 실행된다. |
-| `docs/guide` 배포 | `pages.yml` | 동작 중. `main` push에서 GitHub Pages로 배포된다. |
+| `guide` 배포 | `tools/docgen/site.mjs` | 로컬에서 `docs/`로 빌드하여 커밋한다. Pages는 `main` `/docs` 브랜치 배포다(#67). |
 | 구조와 원고 재작성 | `docs-sync.yml` + `sync.mjs` | 잠들어 있다. `workflow_dispatch` 전용이고 runner가 없다. |
 
 `sync.mjs`를 이 저장소 전체에 실행하면 실패한다. 2026-09-12에 실측한 원인은 다음과 같다.
@@ -55,7 +55,7 @@
                     (A) 근거 분할              (B) 원고 근거 축소
 코드 ──┬── 요소별 evidence ──→ 요소 단위 스캔 ──→ .omm/<perspective>/<element>/
        │                                            │
-       └── 인용 파일 + must_link 파일 ──→ 원고 집필 ─┘──→ docs/guide/_content/<page>/<id>.md
+       └── 인용 파일 + must_link 파일 ──→ 원고 집필 ─┘──→ guide/_content/<page>/<id>.md
                        │
              (C) 스트리밍 전송: qwen.mjs
                        │
@@ -140,7 +140,7 @@ sources:
 - 개발자 PC(Windows 11, RTX 5070 Laptop 8GB)에 GitHub self-hosted runner를 Windows 서비스로 설치한다. 라벨은 `self-hosted`, `docgen-qwen`이다.
 - Ollama는 Windows 시작 프로그램 또는 로그인 작업으로 실행하여 로그인 후 `127.0.0.1:11434`에 응답하게 한다. 현재 PC는 설치본의 시작 프로그램을 사용한다. 로그인 전 무인 실행과 재부팅 검증은 별도 범위이다.
 - 저장소 변수 `DOCGEN_LOCAL_RUNNER_ENABLED=true`를 둔다. 이 변수를 지우면 다음 실행의 작업을 건너뛴다. 이미 시작한 실행은 Actions에서 별도로 취소한다.
-- `docs-sync.yml` 트리거를 `workflow_dispatch`에서 `push: main` + `paths: [app/**, .omm/**, docs/guide/_bindings.yaml, tools/docgen/**]`로 바꾼다. `workflow_dispatch`는 남긴다.
+- `docs-sync.yml` 트리거를 `workflow_dispatch`에서 `push: main` + `paths: [app/**, .omm/**, guide/_bindings.yaml, tools/docgen/**]`로 바꾼다. `workflow_dispatch`는 남긴다.
 - 환경 변수는 `DOCGEN_QWEN_CONTEXT=49152`로 둔다. 입력 60,000자는 약 25,000~30,000토큰이고, 출력 8,192토큰을 더해도 49,152 안에 들어온다. 이 크기의 KV 캐시는 8GB VRAM 안에 들어가므로 RAM으로 넘치지 않는다.
 - PR 생성은 기존 `peter-evans/create-pull-request` 단계를 그대로 쓴다. 브랜치 `docs/omm-sync`가 열려 있으면 갱신된다.
 
@@ -166,14 +166,14 @@ docs-sync.yml (self-hosted, docgen-qwen)
      ├ 요소별 스캔 (A, C)      요소 하나 = 모델 호출 하나
      ├ 원고 집필 (B, C)        stale 원고만
      ├ verify.mjs, generate.mjs
-     └ 트랜잭션 반영           .omm, _content, docs/guide, state/{facts,evidence,scan}.json
+     └ 트랜잭션 반영           .omm, _content, guide, state/{facts,evidence,scan}.json
   3. create-pull-request      브랜치 docs/omm-sync
   │
   ▼
 사람: PR에서 코드와 대조 → verify.mjs --accept --reviewer=이름 → generate.mjs → 커밋 → merge
   │
   ▼
-pages.yml → GitHub Pages 배포
+site.mjs build → docs/ 커밋 → Pages 브랜치 배포 (main /docs)
 ```
 
 ## 5. 남는 수동 단계

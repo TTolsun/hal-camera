@@ -32,4 +32,4 @@ Use short imperative subjects, such as `Fix capture timeout recovery`; prefixes 
 
 ## Configuration & Documentation Safety
 
-Keep `local.properties`, `keystore.properties`, signing keys, and credentials untracked. Do not uninstall an existing app to bypass a signing mismatch. Preserve benchmark stream specifications and metric definitions. Before editing `docs/guide/`, read its scoped `AGENTS.md`; regenerate marked blocks through the documented pipeline.
+Keep `local.properties`, `keystore.properties`, signing keys, and credentials untracked. Do not uninstall an existing app to bypass a signing mismatch. Preserve benchmark stream specifications and metric definitions. Before editing `guide/`, read its scoped `AGENTS.md`; regenerate marked blocks through the documented pipeline and rebuild `docs/` with `node tools/docgen/site.mjs build`. Do not edit the generated HTML in `docs/` by hand.

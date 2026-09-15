@@ -54,7 +54,7 @@ RESULTS의 반복 측정 비교 메뉴에서 전후 실행 묶음을 고를 수 
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-14 @ `ec9297d` · Codex-code-review
+- 검토 2026-09-15 @ `764fb96` · Claude-path-migration
 
 </details>
 
@@ -133,7 +133,7 @@ ProfileLibrary와 ProfileArchive는 외부 JSON의 검증·출처·별도 파일
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/camera/LiveController.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-14 @ `ec9297d` · Codex-code-review
+- 검토 2026-09-15 @ `764fb96` · Claude-path-migration
 
 </details>
 
@@ -214,7 +214,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/ui/GalleryImageView.kt`, `app/src/main/java/dev/halcamera/ui/IconButton.kt`, `app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/SelectionPopup.kt`, `app/src/main/java/dev/halcamera/ui/ShutterButton.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/BaselineManager.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-14 @ `ec9297d` · Codex-code-review
+- 검토 2026-09-15 @ `764fb96` · Claude-path-migration
 
 </details>
 
@@ -341,7 +341,7 @@ LIVE의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-14 @ `ec9297d` · Codex-code-review
+- 검토 2026-09-15 @ `764fb96` · Claude-path-migration
 
 </details>
 
@@ -393,13 +393,13 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-14 @ `ec9297d` · Codex-code-review |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-14 @ `ec9297d` · Codex-code-review |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-14 @ `ec9297d` · Codex-code-review |
-| 원고 `overview` | 최신 | 검토 2026-09-14 @ `ec9297d` · Codex-code-review |
-| 원고 `module-roles` | 최신 | 검토 2026-09-14 @ `ec9297d` · Codex-code-review |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-14 @ `ec9297d` · Codex-code-review |
-| 원고 `constraints` | 최신 | 검토 2026-09-14 @ `ec9297d` · Codex-code-review |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-15 @ `764fb96` · Claude-path-migration |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-15 @ `764fb96` · Claude-path-migration |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-15 @ `764fb96` · Claude-path-migration |
+| 원고 `overview` | 최신 | 검토 2026-09-15 @ `764fb96` · Claude-path-migration |
+| 원고 `module-roles` | 최신 | 검토 2026-09-15 @ `764fb96` · Claude-path-migration |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-15 @ `764fb96` · Claude-path-migration |
+| 원고 `constraints` | 최신 | 검토 2026-09-15 @ `764fb96` · Claude-path-migration |
 
 <!-- omm:end id=status -->
 

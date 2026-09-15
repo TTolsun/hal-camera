@@ -8,9 +8,9 @@
       "accepted": {
         "codeHash": "140034324db590cd",
         "modelHash": "c0769c3c23d63fe8",
-        "at": "2026-09-14",
-        "commit": "ec9297d",
-        "reviewer": "Codex-code-review"
+        "at": "2026-09-15",
+        "commit": "764fb96",
+        "reviewer": "Claude-path-migration"
       }
     },
     "omm:data-flow": {
@@ -20,9 +20,9 @@
       "accepted": {
         "codeHash": "c6887495266877e7",
         "modelHash": "50be73470c27fe37",
-        "at": "2026-09-14",
-        "commit": "ec9297d",
-        "reviewer": "Codex-code-review"
+        "at": "2026-09-15",
+        "commit": "764fb96",
+        "reviewer": "Claude-path-migration"
       }
     },
     "omm:state-transitions": {
@@ -32,9 +32,9 @@
       "accepted": {
         "codeHash": "82d35e1f7a928108",
         "modelHash": "56907a4302752f0c",
-        "at": "2026-09-14",
-        "commit": "ec9297d",
-        "reviewer": "Codex-code-review"
+        "at": "2026-09-15",
+        "commit": "764fb96",
+        "reviewer": "Claude-path-migration"
       }
     },
     "content:architecture.md/overview": {
@@ -43,10 +43,10 @@
       },
       "accepted": {
         "codeHash": "c2c517c83dd101a2",
-        "modelHash": "abaf118ba701b424",
-        "at": "2026-09-14",
-        "commit": "ec9297d",
-        "reviewer": "Codex-code-review"
+        "modelHash": "5a1e77f5f8b2faa5",
+        "at": "2026-09-15",
+        "commit": "764fb96",
+        "reviewer": "Claude-path-migration"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -55,10 +55,10 @@
       },
       "accepted": {
         "codeHash": "95dc1049470ea6f5",
-        "modelHash": "501389971af01eca",
-        "at": "2026-09-14",
-        "commit": "ec9297d",
-        "reviewer": "Codex-code-review"
+        "modelHash": "2ee0f076a2051d77",
+        "at": "2026-09-15",
+        "commit": "764fb96",
+        "reviewer": "Claude-path-migration"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -67,19 +67,19 @@
       },
       "accepted": {
         "codeHash": "c6887495266877e7",
-        "modelHash": "eec16f6cca9a3a51",
-        "at": "2026-09-14",
-        "commit": "ec9297d",
-        "reviewer": "Codex-code-review"
+        "modelHash": "a5063659df41b1fe",
+        "at": "2026-09-15",
+        "commit": "764fb96",
+        "reviewer": "Claude-path-migration"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "140034324db590cd",
-        "modelHash": "cbeef9d171c33e61",
-        "at": "2026-09-14",
-        "commit": "ec9297d",
-        "reviewer": "Codex-code-review"
+        "modelHash": "2e7f05f8606db816",
+        "at": "2026-09-15",
+        "commit": "764fb96",
+        "reviewer": "Claude-path-migration"
       },
       "observed": {
         "state": "fresh"
@@ -88,10 +88,10 @@
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "140034324db590cd",
-        "modelHash": "d3c5816e20b2babc",
-        "at": "2026-09-14",
-        "commit": "ec9297d",
-        "reviewer": "Codex-code-review"
+        "modelHash": "ef29ea4dab69d9e2",
+        "at": "2026-09-15",
+        "commit": "764fb96",
+        "reviewer": "Claude-path-migration"
       },
       "observed": {
         "state": "fresh"

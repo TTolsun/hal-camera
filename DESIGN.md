@@ -2,7 +2,7 @@
 
 Android 앱과 문서 사이트의 공통 시각적 기준은 [HAL CAMERA Editorial 디자인 규칙](docs/design/DESIGN.md)을 따릅니다.
 
-`tools/docgen/project.json`의 `design` 설정은 `custom` 프리셋과 `docs/design/editorial.css`를 연결합니다. 프로젝트 실행기의 `design` 명령은 이 원본으로 `docs/guide/assets/docflow-design.css`를 생성합니다. 생성된 CSS를 직접 편집하지 않습니다.
+`tools/docgen/project.json`의 `design` 설정은 `custom` 프리셋과 `docs/design/editorial.css`를 연결합니다. 프로젝트 실행기의 `design` 명령은 이 원본으로 `guide/assets/docflow-design.css`를 생성합니다. 생성된 CSS를 직접 편집하지 않습니다. 사이트 빌드(`node tools/docgen/site.mjs build`)가 이 파일을 `docs/assets/`로 복사합니다.
 
 앱 공용 토큰은 `app/src/main/java/dev/halcamera/ui/Look.kt`, 화면별 조작은 [APP-UI.md](docs/design/APP-UI.md)에서 관리합니다.
 

@@ -1,6 +1,6 @@
 # 개발자 가이드 집필 규칙
 
-`docs/guide/`에서 GitHub Pages로 배포하는 모든 페이지와 `_content/` 원고에 적용합니다. 아래 두 원문을 모두 읽고 적용합니다.
+`guide/`에서 `docs/` 정적 사이트로 배포하는 모든 페이지와 `_content/` 원고에 적용합니다. 아래 두 원문을 모두 읽고 적용합니다.
 
 - [i-have-adhd 원문](i-have-adhd.md): ayghri/i-have-adhd, 커밋 `6f1f982d0a47c65899af3c5a7450b7098bc65325`에서 가져왔습니다. [MIT 라이선스](i-have-adhd.LICENSE)를 따릅니다.
 - [fluent-korean 원문](fluent-korean.md): snflkd/fluent-korean, 커밋 `ce8683f0eba8cddb91de4dcd151425ff73e60498`에서 가져왔습니다. [MIT 라이선스](fluent-korean.LICENSE)를 따릅니다.

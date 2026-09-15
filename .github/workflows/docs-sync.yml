@@ -14,7 +14,7 @@ on:
     paths:
       - 'app/**'
       - '.omm/**'
-      - 'docs/guide/_bindings.yaml'
+      - 'guide/_bindings.yaml'
       - 'tools/docgen/**'
       - '.github/workflows/docs-sync.yml'
 
@@ -67,5 +67,6 @@ jobs:
           body: |
             로컬 Qwen 동기화 결과입니다. 구조와 원고를 코드에 대조해 검토하세요.
             검토 후 `node tools/docgen/verify.mjs --accept --reviewer=이름`으로 기록하고
-            `node tools/docgen/generate.mjs`로 페이지를 다시 생성한 뒤 함께 커밋하세요.
+            `node tools/docgen/generate.mjs`로 페이지를, `node tools/docgen/site.mjs build`로 docs/ 산출물을
+            다시 생성한 뒤 함께 커밋하세요.
           labels: documentation

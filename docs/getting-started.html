@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>개발 환경 및 빠른 시작 · HALCamera 개발자 가이드</title>
+  <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
+  <link rel="stylesheet" href="./assets/docflow-design.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">본문으로 이동</a>
+  <header class="site-header">
+    <a class="brand" href="./index.html">HAL CAMERA</a>
+    <nav class="site-nav" aria-label="문서 메뉴">
+      <a href="./architecture.html">Architecture</a>
+      <a href="./benchmark.html">Benchmark</a>
+      <a href="./decisions.html">Decisions</a>
+      <a href="./evidence.html">Evidence</a>
+      <a href="./getting-started.html" aria-current="page">빠른 시작</a>
+      <a href="./troubleshooting.html">디버깅</a>
+    </nav>
+  </header>
+  <main id="main-content" class="document">
+    <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
+    <h1 id="개발-환경-및-빠른-시작">개발 환경 및 빠른 시작</h1>
+<p><strong>저장소 루트에서 Gradle Wrapper로 앱을 빌드하세요.</strong> 아래 명령은 Windows PowerShell을 기준으로 작성했습니다.</p>
+<h2 id="실행-전에-준비하세요">실행 전에 준비하세요</h2>
+<p>프로젝트 설정에 맞는 JDK와 Android SDK, <code>adb</code>가 필요합니다. SDK와 JVM 대상 버전은 <a href="troubleshooting.html#앱-버전과-빌드-설정">빌드 정보</a>를 확인하세요.</p>
+<p>Android SDK 경로는 저장소 루트의 <code>local.properties</code>에 설정합니다. 이 파일은 개인 환경 설정이므로 커밋하지 않습니다. 기기에서 USB 디버깅을 켜고 PC의 연결 요청을 허용한 뒤 <code>adb devices</code>로 연결 상태를 확인하세요.</p>
+<h2 id="앱을-빌드하고-실행하세요">앱을 빌드하고 실행하세요</h2>
+<ol>
+<li><p>디버그 APK를 빌드합니다.</p>
+<pre><code class="language-powershell">.\gradlew.bat :app:assembleDebug
+</code></pre>
+</li>
+<li><p>JVM 단위 테스트를 실행합니다.</p>
+<pre><code class="language-powershell">.\gradlew.bat :app:testDebugUnitTest
+</code></pre>
+</li>
+<li><p>연결한 기기에 APK를 설치합니다.</p>
+<pre><code class="language-powershell">adb install -r app/build/outputs/apk/debug/app-debug.apk
+</code></pre>
+</li>
+<li><p>앱을 열고 카메라 권한을 허용합니다. LIVE에서 프리뷰가 나오는지 확인한 뒤 BENCHMARK로 진입합니다.</p>
+</li>
+</ol>
+<p>빌드와 테스트가 통과하면 APK 생성과 JVM 테스트 결과를 확인한 것입니다. 측정 정확성과 기기 동작은 별도로 검증해야 합니다. 관찰 결과는 <a href="_inputs/device-verification.yaml">기기 검증 기록</a>에 남기세요.</p>
+<h2 id="문서를-수정한-뒤-확인하세요">문서를 수정한 뒤 확인하세요</h2>
+<p>문서 도구는 <strong>Node.js 24</strong>를 사용합니다. 생성된 본문의 마커 블록을 직접 고치지 말고, 원고인 <code>guide/_content/</code> 또는 해당 근거를 수정하세요. 마커 바깥의 설명은 페이지에서 수정합니다.</p>
+<ol>
+<li><p>코드에서 사실 정보를 추출하고 원고의 검토 상태를 확인합니다.</p>
+<pre><code class="language-powershell">node tools/docgen/extract.mjs
+node tools/docgen/verify.mjs
+</code></pre>
+</li>
+<li><p>수정한 원고를 페이지에 반영합니다.</p>
+<pre><code class="language-powershell">node tools/docgen/generate.mjs
+</code></pre>
+</li>
+<li><p>문서 도구의 보존·재현성 검사를 실행합니다.</p>
+<pre><code class="language-powershell">node tools/docgen/selftest.mjs
+node --test tools/docgen/regression.test.mjs
+</code></pre>
+</li>
+<li><p>원고와 근거를 대조해 검토한 뒤 변경 사항을 PR로 올립니다. 검토 기록과 배포 절차는 <a href="https://github.com/TTolsun/hal-camera/blob/main/tools/docgen/README.md">문서 도구 안내</a>를 따릅니다.</p>
+</li>
+</ol>
+<p>모든 배포 페이지에는 <a href="https://github.com/TTolsun/hal-camera/blob/main/tools/docgen/style/README.md">공통 집필 규칙</a>을 적용합니다. 조건과 예외는 남기고, 독자가 먼저 할 일을 앞에 씁니다.</p>
+<p><strong>다음 단계:</strong> <a href="architecture.html">아키텍처 문서</a>에서 수정할 기능과 연결된 파일을 찾으세요.</p>
+
+  </main>
+  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <dialog class="diagram-dialog" aria-labelledby="diagram-title">
+    <div class="diagram-toolbar">
+      <h2 id="diagram-title">그림 크게 보기</h2>
+      <button type="button" data-zoom="out" aria-label="그림 축소">−</button>
+      <output aria-live="polite" aria-label="확대 비율">100%</output>
+      <button type="button" data-zoom="in" aria-label="그림 확대">+</button>
+      <button type="button" data-zoom="fit">화면 맞춤</button>
+      <button type="button" data-zoom="actual">100%</button>
+      <button type="button" class="diagram-close" autofocus>닫기</button>
+    </div>
+    <div class="diagram-viewport" tabindex="0" role="region" aria-label="확대한 그림. 방향키로 스크롤할 수 있습니다.">
+      <div class="diagram-canvas"></div>
+    </div>
+  </dialog>
+  <script type="module">
+    const dialog = document.querySelector('.diagram-dialog');
+    const viewport = dialog.querySelector('.diagram-viewport');
+    const canvas = dialog.querySelector('.diagram-canvas');
+    const zoomLabel = dialog.querySelector('output');
+    const zoomOut = dialog.querySelector('[data-zoom="out"]');
+    const zoomIn = dialog.querySelector('[data-zoom="in"]');
+    let activeDiagram;
+    let scale = 1;
+    let fitting = false;
+
+    function setScale(next) {
+      if (!activeDiagram) return;
+      const previous = scale;
+      scale = Math.max(.01, Math.min(8, next));
+      const { svg, width, height } = activeDiagram;
+      svg.style.width = `${width * scale}px`;
+      svg.style.height = `${height * scale}px`;
+      zoomLabel.value = `${Math.round(scale * 100)}%`;
+      zoomOut.disabled = scale <= .01;
+      zoomIn.disabled = scale >= 8;
+      viewport.scrollLeft = (viewport.scrollLeft + viewport.clientWidth / 2) * scale / previous - viewport.clientWidth / 2;
+      viewport.scrollTop = (viewport.scrollTop + viewport.clientHeight / 2) * scale / previous - viewport.clientHeight / 2;
+    }
+
+    function fitDiagram() {
+      if (!activeDiagram) return;
+      fitting = true;
+      setScale(Math.min((viewport.clientWidth - 32) / activeDiagram.width, (viewport.clientHeight - 32) / activeDiagram.height, 1));
+      viewport.scrollTo(0, 0);
+    }
+
+    function openDiagram(svg, trigger) {
+      if (activeDiagram) return;
+      const { width, height } = svg.viewBox.baseVal;
+      if (!width || !height) return;
+      const placeholder = document.createComment('diagram viewer placeholder');
+      activeDiagram = { svg, width, height, placeholder, trigger, style: svg.getAttribute('style') };
+      svg.replaceWith(placeholder);
+      canvas.append(svg);
+      dialog.showModal();
+      fitDiagram();
+    }
+
+    dialog.querySelector('.diagram-close').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => {
+      if (!activeDiagram) return;
+      const { svg, placeholder, trigger, style } = activeDiagram;
+      if (style === null) svg.removeAttribute('style');
+      else svg.setAttribute('style', style);
+      placeholder.replaceWith(svg);
+      activeDiagram = undefined;
+      trigger.focus({ preventScroll: true });
+    });
+    dialog.querySelectorAll('[data-zoom]').forEach(button => {
+      button.addEventListener('click', () => {
+        const action = button.dataset.zoom;
+        if (action === 'fit') return fitDiagram();
+        fitting = false;
+        setScale(action === 'actual' ? 1 : scale * (action === 'in' ? 1.25 : .8));
+      });
+    });
+    window.addEventListener('resize', () => { if (fitting && dialog.open) fitDiagram(); });
+
+    const blocks = [...document.querySelectorAll('pre > code.language-mermaid')];
+    if (blocks.length) {
+      try {
+        const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.esm.min.mjs');
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'strict',
+          theme: 'base',
+          themeVariables: { primaryColor: '#f6f7f8', primaryTextColor: '#18191b', primaryBorderColor: '#c8ccd2', lineColor: '#858b94', secondaryColor: '#ffffff', tertiaryColor: '#ffffff', fontFamily: 'system-ui, sans-serif', fontSize: '16px' },
+          // Leave room for multiline nodes and labels on returning edges.
+          flowchart: { nodeSpacing: 100, rankSpacing: 120, wrappingWidth: 300 },
+        });
+        const nodes = blocks.map(code => {
+          const node = document.createElement('div');
+          node.className = 'mermaid';
+          // OMM flowchart labels use literal \n separators; Mermaid needs <br/>.
+          const source = code.textContent;
+          node.textContent = /^\s*(?:flowchart|graph)\s/m.test(source)
+            ? source.replace(/"[^"\r\n]*"/g, label => label.replace(/\\n/g, '<br/>'))
+            : source;
+          code.parentElement.replaceWith(node);
+          return node;
+        });
+        await mermaid.run({ nodes });
+        nodes.forEach(node => {
+          const svg = node.querySelector('svg');
+          if (!svg) return;
+          node.tabIndex = 0;
+          node.setAttribute('role', 'button');
+          node.setAttribute('aria-label', '그림 확대');
+          node.setAttribute('aria-haspopup', 'dialog');
+          node.addEventListener('click', event => {
+            if (!event.target.closest('a')) openDiagram(svg, node);
+          });
+          node.addEventListener('keydown', event => {
+            if (event.target === node && (event.key === 'Enter' || event.key === ' ')) {
+              event.preventDefault();
+              openDiagram(svg, node);
+            }
+          });
+        });
+      } catch (error) {
+        console.error('Mermaid rendering failed', error);
+      }
+    }
+  </script>
+</body>
+</html>

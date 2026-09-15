@@ -8,16 +8,16 @@ home: true
   <p class="intro" lang="en">Camera systems are complicated.<br>The documentation doesn't have to be.</p>
   <p class="intro">카메라의 구조를 이해하고, 측정의 의미를 확인하고,<br>코드에 근거해 다음 변경을 결정합니다.</p>
   <div class="hero-bottom">
-    <a href="{{ '/getting-started.html' | relative_url }}">처음이라면, 앱 실행부터 <span aria-hidden="true">↗</span></a>
+    <a href="getting-started.html">처음이라면, 앱 실행부터 <span aria-hidden="true">↗</span></a>
     <span class="signature" lang="en">by K.H. Kim</span>
   </div>
 </section>
 
 <nav class="contents" aria-label="문서 목차">
-  <a href="{{ '/architecture.html' | relative_url }}"><span class="number">01</span><span class="name">Architecture</span><span class="description">How the camera system is structured</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="{{ '/benchmark.html' | relative_url }}"><span class="number">02</span><span class="name">Benchmark</span><span class="description">How performance is measured</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="{{ '/decisions.html' | relative_url }}"><span class="number">03</span><span class="name">Decisions</span><span class="description">Why we built it this way</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="{{ '/evidence.html' | relative_url }}"><span class="number">04</span><span class="name">Evidence</span><span class="description">Where the conclusions come from</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="architecture.html"><span class="number">01</span><span class="name">Architecture</span><span class="description">How the camera system is structured</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="benchmark.html"><span class="number">02</span><span class="name">Benchmark</span><span class="description">How performance is measured</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="decisions.html"><span class="number">03</span><span class="name">Decisions</span><span class="description">Why we built it this way</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="evidence.html"><span class="number">04</span><span class="name">Evidence</span><span class="description">Where the conclusions come from</span><span class="arrow" aria-hidden="true">↗</span></a>
 </nav>
 
 <section class="feature" aria-labelledby="architecture-title">
@@ -36,12 +36,12 @@ home: true
     </svg>
     <figcaption>앱의 책임을 요약한 개념도입니다. 콜백 간격은 HAL 내부 처리 시간이나 프리뷰 표시 간격과 같지 않습니다. 구체적인 호출 관계와 코드 근거는 아키텍처 문서에서 확인하세요.</figcaption>
   </figure>
-  <a href="{{ '/architecture.html' | relative_url }}">Explore the architecture <span aria-hidden="true">→</span></a>
+  <a href="architecture.html">Explore the architecture <span aria-hidden="true">→</span></a>
 </section>
 
 <p class="editorial" lang="en">Good measurements should explain<br>the system, not just produce numbers.</p>
 
 <section class="closing" aria-label="문서 작성 원칙">
   <p class="statement" lang="en">Built from the codebase.<br>Designed to stay useful.</p>
-  <div><p>구현, 설계 의도, 기기 검증을 구분합니다.<br>기록되지 않은 이유는 확인이 필요한 상태로 남깁니다.</p><a href="{{ '/evidence.html' | relative_url }}">문서의 근거를 확인하세요 <span aria-hidden="true">→</span></a></div>
+  <div><p>구현, 설계 의도, 기기 검증을 구분합니다.<br>기록되지 않은 이유는 확인이 필요한 상태로 남깁니다.</p><a href="evidence.html">문서의 근거를 확인하세요 <span aria-hidden="true">→</span></a></div>
 </section>

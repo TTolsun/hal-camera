@@ -188,10 +188,10 @@ test('local protocol completes scan/write/generate without accepting review', as
   const f = fixture(t); const before = snapshot(f.root);
   const url = await server(t, (data, res) => reply(res, data.format.properties.updates ? scanFor(data) : writer(manuscript('12000'))));
   const r = await runSync(f.root, { DOCGEN_OLLAMA_URL: url }); assert.equal(r.code, 0, r.out);
-  assert.match(fs.readFileSync(path.join(f.root, 'docs/guide/probe.md'), 'utf8'), /12000ms/);
+  assert.match(fs.readFileSync(path.join(f.root, 'guide/probe.md'), 'utf8'), /12000ms/);
   const accepted = bytes => Object.fromEntries(Object.entries(JSON.parse(bytes).entries).map(([k, v]) => [k, v.accepted]));
   assert.deepEqual(accepted(snapshot(f.root).get('tools/docgen/state/evidence.json')), accepted(before.get('tools/docgen/state/evidence.json')));
-  assert.ok(changedFiles(before, snapshot(f.root)).every(p => p.startsWith('.omm/sync-probe/') || p.startsWith('docs/guide/') || p.startsWith('tools/docgen/state/')));
+  assert.ok(changedFiles(before, snapshot(f.root)).every(p => p.startsWith('.omm/sync-probe/') || p.startsWith('guide/') || p.startsWith('tools/docgen/state/')));
 });
 
 test('element prompts isolate code and fields while including only the parent description', async t => {
@@ -295,8 +295,8 @@ for (const text of ['', ' \n ']) test('empty scan content is rejected without ch
 test('writer selects cited files and exact must_link filenames, retaining OMM context', async t => {
   const f = makeFixture(1, { splitEvidence: true }); t.after(f.cleanup);
   f.put('app/src/main/java/dev/halcamera/Unrelated.kt', 'UNRELATED_CODE_SENTINEL');
-  const bindingFile = path.join(f.root, 'docs/guide/_bindings.yaml');
-  f.put('docs/guide/_bindings.yaml', fs.readFileSync(bindingFile, 'utf8')
+  const bindingFile = path.join(f.root, 'guide/_bindings.yaml');
+  f.put('guide/_bindings.yaml', fs.readFileSync(bindingFile, 'utf8')
     .replace('        brief:', '        brief:\n          must_link: [Timer, ProbeMissing]'));
   const url = await server(t, (data, res) => {
     const prompt = data.messages.at(-1).content;
@@ -333,7 +333,7 @@ test('uncited perspective changes reach the writer through refreshed OMM context
 
 test('writer rejects empty evidence before contacting the model and preserves files', async t => {
   const f = fixture(t);
-  f.put('docs/guide/_content/probe/overview-0.md', manuscript('10000').replace('  - ' + probeFile + '#Probe.OBSERVE_MS', ''));
+  f.put('guide/_content/probe/overview-0.md', manuscript('10000').replace('  - ' + probeFile + '#Probe.OBSERVE_MS', ''));
   const before = snapshot(f.root);
   let requests = 0;
   const url = await server(t, (_data, res) => { requests++; reply(res, {}); });
@@ -428,7 +428,7 @@ test('write-only never calls the scanner or records a scan', async t => {
 for (const scenario of ['http', 'timeout', 'idle', 'json', 'truncated', 'incomplete', 'stream-error', 'path', 'validation', 'writer-empty', 'writer-source', 'second-writer', 'marker']) {
   test(`${scenario} failure preserves every original byte`, async t => {
     const f = fixture(t, 2); let writes = 0;
-    if (scenario === 'marker') f.put('docs/guide/probe.md', '<!-- omm:begin id=status -->\n');
+    if (scenario === 'marker') f.put('guide/probe.md', '<!-- omm:begin id=status -->\n');
     const before = snapshot(f.root);
     const url = await server(t, (data, res) => {
       if (scenario === 'timeout') return;
@@ -467,8 +467,8 @@ test('concurrent original edit prevents publication and preserves user text', as
 
 test('publish write failure rolls back already written files', t => {
   const f = fixture(t); const before = snapshot(f.root); const after = new Map(before);
-  after.set('.omm/sync-probe/description.md', Buffer.from('new')); after.set('docs/guide/new.md', Buffer.from('new'));
-  const allowed = p => p.startsWith('.omm/') || p.startsWith('docs/');
+  after.set('.omm/sync-probe/description.md', Buffer.from('new')); after.set('guide/new.md', Buffer.from('new'));
+  const allowed = p => p.startsWith('.omm/') || p.startsWith('guide/');
   const journal = prepareCommit(f.root, before, after, allowed); let count = 0;
   assert.throws(() => applyCommit(f.root, journal, allowed, (...args) => { if (++count === 2) throw new Error('disk'); writeBytes(...args); }), /disk/);
   assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
@@ -476,15 +476,15 @@ test('publish write failure rolls back already written files', t => {
 
 test('interrupted publish can recover; newer edits block recovery before any writes', t => {
   const f = fixture(t); const before = snapshot(f.root); const after = new Map(before);
-  after.set('.omm/sync-probe/description.md', Buffer.from('new')); after.set('docs/guide/new.md', Buffer.from('new'));
-  const allowed = p => p.startsWith('.omm/') || p.startsWith('docs/');
+  after.set('.omm/sync-probe/description.md', Buffer.from('new')); after.set('guide/new.md', Buffer.from('new'));
+  const allowed = p => p.startsWith('.omm/') || p.startsWith('guide/');
   prepareCommit(f.root, before, after, allowed);
   writeBytes(f.root, '.omm/sync-probe/description.md', Buffer.from('new'));
-  writeBytes(f.root, 'docs/guide/new.md', Buffer.from('user'));
+  writeBytes(f.root, 'guide/new.md', Buffer.from('user'));
   const interrupted = snapshot(f.root);
   assert.throws(() => recover(f.root, allowed), /사용자가 수정/);
   assert.deepEqual(changedFiles(interrupted, snapshot(f.root)), []);
-  writeBytes(f.root, 'docs/guide/new.md', Buffer.from('new'));
+  writeBytes(f.root, 'guide/new.md', Buffer.from('new'));
   assert.equal(recover(f.root, allowed), true);
   assert.deepEqual(changedFiles(before, snapshot(f.root)), []);
   assert.equal(recover(f.root, allowed), false);
@@ -538,7 +538,7 @@ test('real installed Qwen completes the same pipeline', { skip: process.env.DOCG
   const r = await runSync(f.root);
   console.log(r.out); assert.equal(r.code, 0, r.out);
   const model = fs.readFileSync(path.join(f.root, '.omm/sync-probe/description.md'), 'utf8');
-  const page = fs.readFileSync(path.join(f.root, 'docs/guide/probe.md'), 'utf8');
+  const page = fs.readFileSync(path.join(f.root, 'guide/probe.md'), 'utf8');
   assert.match(model, /12000|12,000|12\s*초/); assert.doesNotMatch(model, /10000|10,000|10\s*초/);
   assert.match(fs.readFileSync(path.join(f.root, '.omm/sync-probe/timer/description.md'), 'utf8'), /12000|12,000|12\s*초/);
   assert.match(page, /12000|12,000|12\s*초/); assert.doesNotMatch(page, /10000|10,000|10\s*초/);
@@ -549,6 +549,6 @@ test('real installed Qwen writes one manuscript without scanning', { skip: proce
   const r = await runSync(f.root, {}, ['--write-only']);
   console.log(r.out); assert.equal(r.code, 0, r.out);
   assert.ok(changedFiles(before, snapshot(f.root)).every(p => !p.startsWith('.omm/')));
-  const page = fs.readFileSync(path.join(f.root, 'docs/guide/probe.md'), 'utf8');
+  const page = fs.readFileSync(path.join(f.root, 'guide/probe.md'), 'utf8');
   assert.match(page, /12000|12,000|12\s*초/); assert.doesNotMatch(page, /10000|10,000|10\s*초/);
 });

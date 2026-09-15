@@ -1,7 +1,7 @@
 {
   "version": 1,
   "sourceRoot": ".",
-  "bindings": "docs/guide/_bindings.yaml",
+  "bindings": "guide/_bindings.yaml",
   "stateDir": "tools/docgen/state",
   "styleDir": "tools/docgen/style",
   "factsAdapter": "tools/docgen/extract-project.mjs",

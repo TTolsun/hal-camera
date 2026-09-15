@@ -5,8 +5,8 @@
 // 글을 쓰지 않고, 코드를 읽지 않고, git 을 호출하지 않습니다.
 //
 // 입력: _bindings.yaml, .omm/, state/facts.json, state/evidence.json,
-//       docs/guide/_content/, docs/guide/_inputs/
-// 출력: docs/guide/<page>.md 의 마커 블록 내부만
+//       guide/_content/, guide/_inputs/
+// 출력: guide/<page>.md 의 마커 블록 내부만
 //
 // 두 단계로 동작합니다. 모든 페이지를 메모리에서 만들고 전부 검증한 뒤에야
 // 파일을 씁니다. 어느 한 페이지라도 문제가 있으면 아무것도 쓰지 않습니다.

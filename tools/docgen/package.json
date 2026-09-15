@@ -3,14 +3,21 @@
   "private": true,
   "type": "module",
   "version": "1.0.0",
-  "description": "HALCamera 문서 생성기. Qwen 동기화에만 OMM 의존성이 필요합니다.",
-  "dependencies": { "oh-my-mermaid": "0.2.0" },
+  "description": "HALCamera 문서 생성기와 정적 사이트 빌더. Qwen 동기화에는 OMM, 사이트 빌드에는 marked 가 필요합니다.",
+  "dependencies": {
+    "marked": "18.0.13",
+    "oh-my-mermaid": "0.2.0"
+  },
   "scripts": {
     "extract": "node extract.mjs",
     "verify": "node verify.mjs",
     "generate": "node generate.mjs",
-    "check": "node verify.mjs --check && node generate.mjs --check",
+    "check": "node verify.mjs --check && node generate.mjs --check && node site.mjs check",
     "accept": "node verify.mjs --accept",
-    "test": "node --test regression.test.mjs sync.test.mjs workflow.test.mjs"
+    "site": "node site.mjs build",
+    "site:check": "node site.mjs check",
+    "site:serve": "node site.mjs serve",
+    "docs-check": "node docs-check.mjs",
+    "test": "node --test regression.test.mjs design.test.mjs site.test.mjs sync.test.mjs workflow.test.mjs"
   }
 }
