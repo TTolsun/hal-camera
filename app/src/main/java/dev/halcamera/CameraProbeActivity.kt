@@ -24,6 +24,7 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -111,6 +112,16 @@ class CameraProbeActivity : ComponentActivity() {
             view.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
+        // Back peels the filter off first: after a jump the report is exactly where the user wants to be, so
+        // leaving PROBE for the benchmark card on the first press would throw that position away.
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                when {
+                    query.isNotEmpty() -> { hideKeyboard(); filterBox.setText("") }
+                    else -> finish()
+                }
+            }
+        })
         reload()
     }
 
@@ -149,7 +160,9 @@ class CameraProbeActivity : ComponentActivity() {
         val bar = Look.row(this)
         filterBox = EditText(this).apply {
             setText(query)
-            hint = "필터 · 예: qcamera3, 1920x1080, ✗"
+            // Examples every Camera2 device answers: a format section, a size fragment (matches 1920x1080 as well as
+            // 1440x1080, so a camera without exact 1080p still hits), and the mark for an absent value.
+            hint = "예: JPEG, 1080, ✗"
             setHintTextColor(Look.onDarkMuted)
             setTextColor(Look.onDark)
             typeface = Look.mono
