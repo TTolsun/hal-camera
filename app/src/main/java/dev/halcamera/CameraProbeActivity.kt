@@ -160,8 +160,9 @@ class CameraProbeActivity : ComponentActivity() {
         val bar = Look.row(this)
         filterBox = EditText(this).apply {
             setText(query)
-            // Examples every Camera2 device answers: a format, a size, and the mark for an absent value.
-            hint = "예: JPEG, 1920x1080, ✗"
+            // Examples every Camera2 device answers: a format section, a size fragment (matches 1920x1080 as well as
+            // 1440x1080, so a camera without exact 1080p still hits), and the mark for an absent value.
+            hint = "예: JPEG, 1080, ✗"
             setHintTextColor(Look.onDarkMuted)
             setTextColor(Look.onDark)
             typeface = Look.mono
