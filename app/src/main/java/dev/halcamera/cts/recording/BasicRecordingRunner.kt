@@ -1,4 +1,4 @@
-package dev.halcamera.compat
+package dev.halcamera.cts.recording
 
 import android.annotation.SuppressLint
 import android.graphics.ImageFormat
@@ -23,6 +23,11 @@ import android.util.Range
 import android.util.Size
 import android.view.Surface
 import android.view.SurfaceHolder
+import dev.halcamera.cts.CameraCaseResult
+import dev.halcamera.cts.CaseReport
+import dev.halcamera.cts.Dim
+import dev.halcamera.cts.StepResult
+import dev.halcamera.cts.Verdict
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor

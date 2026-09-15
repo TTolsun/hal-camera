@@ -1,5 +1,7 @@
-package dev.halcamera.compat
+package dev.halcamera.cts.recording
 
+import dev.halcamera.cts.Dim
+import dev.halcamera.cts.Verdict
 /**
  * The decisions of CTS `RecordingTest#testBasicRecording` (platform/cts, tests/camera), separated from the
  * camera and MediaRecorder calls so they run on the JVM. [BasicRecordingRunner] feeds them what CTS reads from

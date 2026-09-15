@@ -1,4 +1,4 @@
-package dev.halcamera.compat
+package dev.halcamera.cts
 
 enum class Verdict { PASS, FAIL, SKIP }
 

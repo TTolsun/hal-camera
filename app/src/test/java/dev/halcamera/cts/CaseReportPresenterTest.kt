@@ -1,5 +1,6 @@
-package dev.halcamera.compat
+package dev.halcamera.cts
 
+import dev.halcamera.cts.recording.BasicRecordingRules
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

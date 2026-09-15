@@ -1,4 +1,4 @@
-package dev.halcamera.compat
+package dev.halcamera.cts
 
 /** Plain-text rendering of a [CaseReport] for the screen and the clipboard. Pure Kotlin, monospace-aligned. */
 object CaseReportPresenter {

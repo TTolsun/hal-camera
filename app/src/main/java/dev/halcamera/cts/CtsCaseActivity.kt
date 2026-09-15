@@ -1,4 +1,4 @@
-package dev.halcamera.compat
+package dev.halcamera.cts
 
 import android.Manifest
 import android.content.ClipData
@@ -31,6 +31,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.R
+import dev.halcamera.cts.recording.BasicRecordingRules
+import dev.halcamera.cts.recording.BasicRecordingRunner
 import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 import java.util.concurrent.CountDownLatch

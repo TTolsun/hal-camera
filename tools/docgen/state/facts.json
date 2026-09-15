@@ -17,7 +17,7 @@
         {
           "tag": "BasicRecordingRunner",
           "sources": [
-            "app/src/main/java/dev/halcamera/compat/BasicRecordingRunner.kt"
+            "app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRunner.kt"
           ]
         },
         {
