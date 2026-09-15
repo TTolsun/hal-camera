@@ -1,6 +1,6 @@
 # 작업 상태
 
-2026-09-12 · HAL CAM 0.6.0. PC에서 ADB로 사진·벤치마크를 실행하고 결과를 회수하는 CLI를 추가했습니다. 0.5.1의 촬영·갤러리 개선을 유지합니다. [PR #48](https://github.com/TTolsun/hal-camera/pull/48)의 M5a 내부 점수 초안을 포함하며 민감도 검증은 진행 중입니다.
+2026-09-16 · HAL CAM 0.7.0. 같은 기기의 수정 전후를 반복 측정 묶음으로 비교하고 외부 JSON을 가져오는 화면([PR #72](https://github.com/TTolsun/hal-camera/pull/72))과, 카메라를 열지 않고 Camera2 HAL이 공개한 사양을 카메라별로 보여 주는 PROBE 화면([PR #75](https://github.com/TTolsun/hal-camera/pull/75))을 추가했습니다. 0.6.0의 PC CLI(0.1.0)와 0.5.1의 촬영·갤러리 개선을 유지합니다. [PR #48](https://github.com/TTolsun/hal-camera/pull/48)의 M5a 내부 점수 초안을 포함하며 민감도 검증은 진행 중입니다.
 
 ## 지금 어디까지 왔는가
 
