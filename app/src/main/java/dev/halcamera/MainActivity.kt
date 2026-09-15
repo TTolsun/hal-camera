@@ -529,6 +529,8 @@ class MainActivity : ComponentActivity() {
         tools.addView(button("카메라 사양") {
             startActivity(Intent(this,CameraProbeActivity::class.java).putExtra(CameraProbeActivity.EXTRA_CAMERA_ID,cameraId))
         }.apply { contentDescription="PROBE: CameraCharacteristics 사양 표" },LinearLayout.LayoutParams(0,dp(48),1f))
+        val cases=row(); body.addView(cases,lp(top=8))
+        cases.addView(button("CTS 케이스 실행") { startActivity(Intent(this,dev.halcamera.cts.CtsCaseActivity::class.java)) }.apply { contentDescription="CTS RecordingTest#testBasicRecording을 앱 안에서 실행" },LinearLayout.LayoutParams(0,dp(48),1f))
         // The baseline reset that used to sit here cleared the Auto Check store. The benchmark baseline is a
         // pointer to one run and is cleared from the result screen, where the run it points at is on the screen.
         body.addView(label("사진 · 동영상: DCIM/HALCamera\nIncident ZIP에는 이미지 픽셀이 포함되지 않습니다",10,muted),lp(top=18))

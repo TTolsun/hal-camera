@@ -15,6 +15,12 @@
     "telemetry-facts": {
       "tags": [
         {
+          "tag": "BasicRecordingRunner",
+          "sources": [
+            "app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRunner.kt"
+          ]
+        },
+        {
           "tag": "BenchmarkReport",
           "sources": [
             "app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt"
