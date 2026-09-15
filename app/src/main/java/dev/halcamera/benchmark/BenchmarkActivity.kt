@@ -295,6 +295,13 @@ class BenchmarkActivity : ComponentActivity() {
                 }
             }, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(8) })
         }
+        if (screen == Screen.CARD) {
+            // The card's verdict comes from the same characteristics; PROBE shows them all without opening the camera.
+            actions.addView(Look.ghostButton(this, "PROBE · 카메라 사양", dark = true) {
+                startActivity(Intent(this, dev.halcamera.CameraProbeActivity::class.java)
+                    .putExtra(dev.halcamera.CameraProbeActivity.EXTRA_CAMERA_ID, endpoints.getOrNull(selected)?.key))
+            }, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(8) })
+        }
     }
 
     private fun loadHistoryRun(id: String) {
