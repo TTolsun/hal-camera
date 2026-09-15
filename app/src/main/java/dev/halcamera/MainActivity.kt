@@ -141,7 +141,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var galleryButton: RecentMediaButton
     private lateinit var cameraShortcut: IconButton
     private var cameraIds = emptyList<String>()
-    private lateinit var benchButton: Button
+    private lateinit var toolsButton: Button
     private var videoMode = false
     private var recordingVideo = false
     private var stoppingRecording = false
@@ -361,16 +361,20 @@ class MainActivity : ComponentActivity() {
             if(paused) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("user_paused")?.let { export(it) } }
             restartCamera()
         }
-        val panelButton=button("Benchmark") { showDiagnostics(true) }
+        // Tools that do not need the open session (Benchmark, PROBE, CTS) live behind one menu; the panel keeps
+        // only what reads the live session. APP-UI.md "도구 메뉴와 독립 화면" is the source of that split.
+        toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: Benchmark, PROBE, CTS" }
+        val panelButton=button("진단") { showDiagnostics(true) }.apply { contentDescription="진단 패널 열기" }
         engineButton.apply { background=cameraChrome(Color.TRANSPARENT); setTextColor(Color.WHITE) }
-        panelButton.apply { background=cameraChrome(Color.TRANSPARENT); setTextColor(Color.WHITE); setPadding(dp(12),0,dp(12),0) }
+        listOf(toolsButton,panelButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
         statusText=label("카메라 준비 중…",12,Look.onDarkMuted).apply {
             gravity=Gravity.CENTER
             maxLines=2
         }
         controls.addView(engineButton,LinearLayout.LayoutParams(0,dp(48),1f))
         controls.addView(statusText,LinearLayout.LayoutParams(0,dp(48),1f))
-        controls.addView(panelButton,LinearLayout.LayoutParams(0,dp(48),1f))
+        controls.addView(toolsButton,LinearLayout.LayoutParams(-2,dp(48)))
+        controls.addView(panelButton,LinearLayout.LayoutParams(-2,dp(48)))
         cameraNotice=label("카메라 준비 중…",12,Look.onDark).apply {
             gravity=Gravity.CENTER
             accessibilityLiveRegion=View.ACCESSIBILITY_LIVE_REGION_POLITE
@@ -455,16 +459,8 @@ class MainActivity : ComponentActivity() {
             // may even belong to a different camera. What the dialog shows has to be the evidence for that ZIP.
             if(recorder.trigger(id)) { markedReadings[id]=lastReading; toast("5초 후 incident ZIP을 저장합니다") }
         }.apply { setTextColor(Color.WHITE); background=cameraChrome(Color.TRANSPARENT); contentDescription="MARK: 직전 10초와 이후 5초를 ZIP으로 저장" }
-        benchButton=button("벤치마크") {
-            recorder.finish("benchmark_started")?.let { export(it) }
-            startActivity(android.content.Intent(this,dev.halcamera.benchmark.BenchmarkActivity::class.java).apply {
-                putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_ENGINE,engineName)
-                putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_CAMERA_ID,cameraId)
-            })
-        }.apply { background=cameraChrome(Color.TRANSPARENT); setTextColor(Color.WHITE); contentDescription="이 카메라로 벤치마크 실행" }
-        listOf(reportButton,benchButton).forEach { it.minHeight=dp(48); it.minimumHeight=dp(48) }
+        reportButton.minHeight=dp(48); reportButton.minimumHeight=dp(48)
         mainRow.addView(reportButton,LinearLayout.LayoutParams(0,-2,1f))
-        mainRow.addView(benchButton,LinearLayout.LayoutParams(0,-2,1f).apply { marginStart=dp(8) })
 
         // Detailed tools and graphs use flat, outlined cards; core readings stay on the preview.
         diagnostics=ScrollView(this).apply { setBackgroundColor(bg); visibility=View.GONE; isFillViewport=true; isClickable=true }
@@ -472,8 +468,8 @@ class MainActivity : ComponentActivity() {
         diagnostics.addView(body)
         root.addView(diagnostics,FrameLayout.LayoutParams(-1,-1))
         val head=row().apply { gravity=Gravity.CENTER_VERTICAL }; body.addView(head)
-        head.addView(label("Benchmark",22,Color.WHITE,true),LinearLayout.LayoutParams(0,-2,1f))
-        head.addView(IconButton(this,R.drawable.ic_action_close,"Benchmark 패널 닫기") { showDiagnostics(false) },LinearLayout.LayoutParams(dp(48),dp(48)))
+        head.addView(label("진단",22,Color.WHITE,true),LinearLayout.LayoutParams(0,-2,1f))
+        head.addView(IconButton(this,R.drawable.ic_action_close,"진단 패널 닫기") { showDiagnostics(false) },LinearLayout.LayoutParams(dp(48),dp(48)))
         val diagnosticControls=row()
         diagnosticControls.addView(cameraButton,LinearLayout.LayoutParams(0,dp(48),1f))
         diagnosticControls.addView(pauseButton,LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginStart=dp(8) })
@@ -526,11 +522,6 @@ class MainActivity : ComponentActivity() {
             else startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:$packageName")))
         },LinearLayout.LayoutParams(0,dp(48),1f))
         tools.addView(button("측정 안내") { showNotes() },LinearLayout.LayoutParams(0,dp(48),1f))
-        tools.addView(button("카메라 사양") {
-            startActivity(Intent(this,CameraProbeActivity::class.java).putExtra(CameraProbeActivity.EXTRA_CAMERA_ID,cameraId))
-        }.apply { contentDescription="PROBE: CameraCharacteristics 사양 표" },LinearLayout.LayoutParams(0,dp(48),1f))
-        val cases=row(); body.addView(cases,lp(top=8))
-        cases.addView(button("CTS 케이스 실행") { startActivity(Intent(this,dev.halcamera.cts.CtsCaseActivity::class.java)) }.apply { contentDescription="CTS RecordingTest#testBasicRecording을 앱 안에서 실행" },LinearLayout.LayoutParams(0,dp(48),1f))
         // The baseline reset that used to sit here cleared the Auto Check store. The benchmark baseline is a
         // pointer to one run and is cleared from the result screen, where the run it points at is on the screen.
         body.addView(label("사진 · 동영상: DCIM/HALCamera\nIncident ZIP에는 이미지 픽셀이 포함되지 않습니다",10,muted),lp(top=18))
@@ -617,11 +608,11 @@ class MainActivity : ComponentActivity() {
         zoomControl.isEnabled=ready && !recordingVideo
         pauseButton.isEnabled=!recordingVideo
         galleryButton.isEnabled=!recordingVideo
-        benchButton.isEnabled=!recordingVideo
+        toolsButton.isEnabled=!recordingVideo && !stoppingRecording && !closing
         if (cli.active != null) {
-            listOf(mediaButton, engineButton, cameraButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, pauseButton, galleryButton, benchButton, reportButton).forEach { it.isEnabled = false }
+            listOf(mediaButton, engineButton, cameraButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, pauseButton, galleryButton, toolsButton, reportButton).forEach { it.isEnabled = false }
         }
-        listOf(engineButton,cameraButton,cameraShortcut,photoModeButton,videoModeButton,mediaButton,pauseButton,galleryButton,benchButton).forEach {
+        listOf(engineButton,cameraButton,cameraShortcut,photoModeButton,videoModeButton,mediaButton,pauseButton,galleryButton,toolsButton).forEach {
             it.alpha=if(it.isEnabled) 1f else 0.4f
         }
     }
@@ -740,6 +731,40 @@ class MainActivity : ComponentActivity() {
         AlertDialog.Builder(this).setTitle("측정 안내")
             .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• *앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 사진·동영상 모드를 선택한 뒤 실행 버튼을 누르면 갤러리에 저장합니다. 사진은 YUV·JPEG 두 장이며 동영상에는 소리가 포함됩니다. 녹화 중에는 엔진·카메라·줌·모드 변경을 할 수 없습니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
             .setPositiveButton("확인",null).show()
+    }
+    private fun showToolsMenu(anchor: View) {
+        if (closing) return
+        showSelectionPopup(anchor, listOf("Benchmark", "PROBE", "CTS"), -1) { index ->
+            when (index) {
+                0 -> openAfterClose("benchmark_started") {
+                    Intent(this, dev.halcamera.benchmark.BenchmarkActivity::class.java)
+                        .putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_ENGINE, engineName)
+                        .putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_CAMERA_ID, cameraId)
+                }
+                // PROBE reads CameraCharacteristics only and never opens a camera, so it starts without waiting for
+                // close(done); onStop closes the LIVE camera as it does for any screen change.
+                1 -> startActivity(Intent(this, CameraProbeActivity::class.java).putExtra(CameraProbeActivity.EXTRA_CAMERA_ID, cameraId))
+                2 -> openAfterClose("cts_started") { Intent(this, dev.halcamera.cts.CtsCaseActivity::class.java) }
+            }
+        }
+    }
+    /**
+     * Benchmark and CTS open their own camera, so the live session must be closed and its close(done) received
+     * before the next screen starts. Same sequence as the CLI benchmark path; onStop's restartCamera() sees
+     * `closing` and stays out of the way, and onStart reopens the camera when the user comes back.
+     */
+    private fun openAfterClose(reason: String, intent: () -> Intent) {
+        if (closing) return
+        recorder.finish(reason)?.let { export(it) }
+        showDiagnostics(false)
+        val old = engine; engine = null; closing = true; ready = false
+        setStatus("카메라 세션 종료 중…", false)
+        updateMediaControls()
+        val open = {
+            closing = false
+            if (resumed && !destroyed) startActivity(intent()) else updateMediaControls()
+        }
+        if (old == null) open() else old.close { open() }
     }
     private fun showDiagnostics(show: Boolean) {
         if (show) zoomControl.collapse(animate = false)

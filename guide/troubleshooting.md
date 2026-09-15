@@ -94,7 +94,7 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 `status --request REQUEST_UUID`로 앱의 상태를 먼저 확인합니다. PC의 대기 시간 종료는 앱 실행 실패를 뜻하지 않습니다. `fetch`는 이미 생성된 파일을 회수하며 촬영을 반복하지 않습니다. `interrupted`는 앱 프로세스가 종료된 미완료 기록이며 자동으로 재실행되지 않습니다.
 
-`BUSY`가 반환되면 현재 UI 또는 CLI 작업이 끝날 때까지 기다립니다. `CLI_DISABLED`는 측정 상세의 ADB CLI 허용 설정을 확인합니다. 카메라·저장소 권한은 앱에서 허용해야 하며 CLI가 자동 부여하지 않습니다. benchmark의 취소·실패 시 partial report와 실행 상태를 함께 확인합니다.
+`BUSY`가 반환되면 현재 UI 또는 CLI 작업이 끝날 때까지 기다립니다. `CLI_DISABLED`는 진단 패널의 ADB CLI 허용 설정을 확인합니다. 카메라·저장소 권한은 앱에서 허용해야 하며 CLI가 자동 부여하지 않습니다. benchmark의 취소·실패 시 partial report와 실행 상태를 함께 확인합니다.
 
 ### 반복 측정 프로파일 비교
 
@@ -105,7 +105,7 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-15 @ `7a016a8` · Claude Opus 5 (release 0.8.0)
+- 검토 2026-09-15 @ `acbf2be` · Claude Opus 5 (issue 79)
 
 </details>
 
@@ -181,9 +181,9 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-15 @ `7a016a8` · Claude Opus 5 (release 0.8.0) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-15 @ `7a016a8` · Claude Opus 5 (release 0.8.0) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-15 @ `7a016a8` · Claude Opus 5 (release 0.8.0) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-15 @ `acbf2be` · Claude Opus 5 (issue 79) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-15 @ `acbf2be` · Claude Opus 5 (issue 79) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-15 @ `acbf2be` · Claude Opus 5 (issue 79) |
 
 <!-- omm:end id=status -->
 
