@@ -45,10 +45,10 @@ LIVE 세션과 무관하게 동작하는 도구는 진단 패널에 두지 않�
 | 항목 | 역할 | 카메라 세션 |
 | --- | --- | --- |
 | `Benchmark` | 선택한 카메라의 반복 실행·비교·RESULTS 이력 | 자기 카메라를 엽니다 |
-| `PROBE` | Camera2 HAL이 공개한 `CameraCharacteristics` 사양 표 | 카메라를 열지 않습니다 |
+| `PROBE` | Camera2 HAL이 공개한 `CameraCharacteristics` 사양 표 | 카메라를 열지 않습니다. 닫기 대기 없이 바로 엽니다 |
 | `CTS` | CTS `RecordingTest#testBasicRecording`을 앱 안에서 실행 | 자기 카메라를 엽니다 |
 
-`Benchmark`와 `CTS`는 자기 카메라를 열기 때문에 LIVE 세션을 닫고 `close(done)` 콜백을 받은 뒤에 화면을 엽니다. 이 대기 때문에 전환이 즉시 일어나지 않을 수 있으며, 그동안 메뉴를 다시 누를 수 없게 합니다. 녹화 중과 저장 중에는 `도구` 메뉴 전체를 비활성화합니다. `PROBE`는 카메라를 열지 않으므로 LIVE 세션을 유지한 채 열 수 있습니다. ADB CLI의 `benchmark` 명령은 이 메뉴를 거치지 않고 같은 닫기 규칙으로 `BenchmarkActivity`를 직접 엽니다.
+`Benchmark`와 `CTS`는 자기 카메라를 열기 때문에 LIVE 세션을 닫고 `close(done)` 콜백을 받은 뒤에 화면을 엽니다. 이 대기 때문에 전환이 즉시 일어나지 않을 수 있으며, 그동안 메뉴를 다시 누를 수 없게 합니다. 녹화 중과 저장 중에는 `도구` 메뉴 전체를 비활성화합니다. `PROBE`는 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 엽니다. 이때 LIVE 카메라는 화면이 가려질 때 평소처럼 닫히고 돌아오면 다시 열립니다. ADB CLI의 `benchmark` 명령은 이 메뉴를 거치지 않고 같은 닫기 규칙으로 `BenchmarkActivity`를 직접 엽니다.
 
 세 화면은 상단에 화면 이름을 글씨로 표시하고 뒤로 가기 아이콘으로 LIVE에 복귀합니다. 화면 사이의 이동(`Benchmark`에서 `PROBE`로 진입하는 경우)은 현재 선택한 카메라를 그대로 넘깁니다.
 
