@@ -9,7 +9,7 @@
         "codeHash": "82f7b79d9c48135f",
         "modelHash": "14c47e9a36a4901b",
         "at": "2026-09-16",
-        "commit": "5444743",
+        "commit": "5636303",
         "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
@@ -21,7 +21,7 @@
         "codeHash": "103edde4bac2493e",
         "modelHash": "752780bdb9786841",
         "at": "2026-09-16",
-        "commit": "5444743",
+        "commit": "5636303",
         "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
@@ -33,7 +33,7 @@
         "codeHash": "9da8d531fb98c55f",
         "modelHash": "d94cc6e88edc271d",
         "at": "2026-09-16",
-        "commit": "5444743",
+        "commit": "5636303",
         "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
@@ -45,7 +45,7 @@
         "codeHash": "79c2054e89d2693c",
         "modelHash": "77192cbf8acc2780",
         "at": "2026-09-16",
-        "commit": "5444743",
+        "commit": "5636303",
         "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
@@ -57,7 +57,7 @@
         "codeHash": "62f24dbf000bae67",
         "modelHash": "34847215d63bf48e",
         "at": "2026-09-16",
-        "commit": "5444743",
+        "commit": "5636303",
         "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
@@ -69,7 +69,7 @@
         "codeHash": "103edde4bac2493e",
         "modelHash": "993bd745e0da8ada",
         "at": "2026-09-16",
-        "commit": "5444743",
+        "commit": "5636303",
         "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
@@ -78,7 +78,7 @@
         "codeHash": "82f7b79d9c48135f",
         "modelHash": "e8ac278b0223025b",
         "at": "2026-09-16",
-        "commit": "5444743",
+        "commit": "5636303",
         "reviewer": "Claude Opus 5 (benchmark split)"
       },
       "observed": {
@@ -90,7 +90,7 @@
         "codeHash": "82f7b79d9c48135f",
         "modelHash": "d2c5bde7f8258948",
         "at": "2026-09-16",
-        "commit": "5444743",
+        "commit": "5636303",
         "reviewer": "Claude Opus 5 (benchmark split)"
       },
       "observed": {
