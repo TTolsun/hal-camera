@@ -25,7 +25,8 @@ class VendoredReportPresenterTest {
         assertEquals("PASS · 1분 23초", VendoredReportPresenter.headline(result(VendoredVerdict.PASS, 83_000)))
         assertEquals("FAIL · 실패 2건 · 45초", VendoredReportPresenter.headline(result(VendoredVerdict.FAIL, 45_400, listOf(failure, failure))))
         assertEquals("SKIP · 이 기기에서는 검사할 것이 없습니다 · 0.8초", VendoredReportPresenter.headline(result(VendoredVerdict.SKIP, 850)))
-        assertEquals("FAIL · 실패 1건 · 12초 · 중단됨", VendoredReportPresenter.headline(result(VendoredVerdict.FAIL, 12_000, listOf(failure), cancelled = true)))
+        assertEquals("중단됨 · 12초 · 실패 1건", VendoredReportPresenter.headline(result(VendoredVerdict.FAIL, 12_000, listOf(failure), cancelled = true)))
+        assertEquals("중단됨 · 12초", VendoredReportPresenter.headline(result(VendoredVerdict.PASS, 12_000, cancelled = true)))
     }
 
     @Test

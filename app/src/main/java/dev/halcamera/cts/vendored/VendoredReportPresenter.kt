@@ -7,14 +7,20 @@ import dev.halcamera.ctsvendor.VendoredVerdict
 object VendoredReportPresenter {
     const val DISCLAIMER = "AOSP CTS 테스트 코드를 앱 안의 JUnit으로 실행한 결과입니다. 공식 판정은 cts-tradefed의 test_result.xml만 인정됩니다."
 
+    /**
+     * A cancelled run leads with 중단됨, not FAIL: the host made the test fail by closing its camera, so the
+     * failure it reports is the cancel itself. The failure text still follows so the reader can confirm that.
+     */
     fun headline(result: VendoredResult): String {
-        val head = when (result.verdict) {
-            VendoredVerdict.PASS -> "PASS"
-            VendoredVerdict.FAIL -> "FAIL · 실패 ${result.failures.size}건"
-            VendoredVerdict.SKIP -> "SKIP · 이 기기에서는 검사할 것이 없습니다"
+        val timed = duration(result.durationMs)
+        if (result.cancelled) {
+            return if (result.failures.isEmpty()) "중단됨 · $timed" else "중단됨 · $timed · 실패 ${result.failures.size}건"
         }
-        val timed = "$head · ${duration(result.durationMs)}"
-        return if (result.cancelled) "$timed · 중단됨" else timed
+        return when (result.verdict) {
+            VendoredVerdict.PASS -> "PASS · $timed"
+            VendoredVerdict.FAIL -> "FAIL · 실패 ${result.failures.size}건 · $timed"
+            VendoredVerdict.SKIP -> "SKIP · 이 기기에서는 검사할 것이 없습니다 · $timed"
+        }
     }
 
     /** "1분 23초" for anything over a minute, "23초" below, "0.8초" under a second. */

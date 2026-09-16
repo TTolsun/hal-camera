@@ -23,8 +23,8 @@ data class VendoredResult(
 
 /**
  * Drives one vendored test method with JUnit's own runner, on the calling thread, and reports through
- * [Listener]. Parameterized creates one instance per adoptShellPerm row; the arguments [VendoredCts] installs
- * leave only the `false` row, so the method runs once, as it does under cts-tradefed with perf-measure on.
+ * [Listener]. Parameterized creates one instance per adoptShellPerm row; the patched CameraParameterizedTestCase
+ * declares only the `false` row, so the method runs once and checks every non-system camera, as under cts-tradefed.
  */
 class VendoredRun(private val test: VendoredTest, private val listener: Listener) {
     interface Listener {
@@ -43,11 +43,11 @@ class VendoredRun(private val test: VendoredTest, private val listener: Listener
         var started = 0
         var skipped = false
         notifier.addListener(object : RunListener() {
-            override fun testStarted(description: Description) { started++; listener.onStarted(description.displayName) }
+            override fun testStarted(description: Description) { started++; listener.onStarted(shortName(description)) }
             override fun testFailure(failure: Failure) {
                 val message = describe(failure)
                 failures += message
-                listener.onFailure(failure.description.displayName, message)
+                listener.onFailure(shortName(failure.description), message)
             }
             override fun testAssumptionFailure(failure: Failure) { skipped = true }
             override fun testIgnored(description: Description) { skipped = true }
@@ -76,6 +76,9 @@ class VendoredRun(private val test: VendoredTest, private val listener: Listener
         notifier.pleaseStop()
         VendoredCts.closeRunningCamera()
     }
+
+    /** "testBasicRecording[0]" rather than JUnit's "testBasicRecording[0](android.hardware.camera2.cts.RecordingTest)". */
+    private fun shortName(description: Description): String = description.methodName ?: description.displayName
 
     private fun describe(failure: Failure): String {
         val error = failure.exception

@@ -193,10 +193,11 @@ class VendoredCaseActivity : Camera2SurfaceViewCtsActivity() {
         if (done != null) {
             headlineView.text = VendoredReportPresenter.headline(done)
             headlineView.setTextColor(
-                when (done.verdict) {
-                    VendoredVerdict.PASS -> Look.statusPass
-                    VendoredVerdict.FAIL -> Look.statusFail
-                    VendoredVerdict.SKIP -> Look.statusUnknown
+                when {
+                    done.cancelled -> Look.statusWarn
+                    done.verdict == VendoredVerdict.PASS -> Look.statusPass
+                    done.verdict == VendoredVerdict.FAIL -> Look.statusFail
+                    else -> Look.statusUnknown
                 }
             )
         }

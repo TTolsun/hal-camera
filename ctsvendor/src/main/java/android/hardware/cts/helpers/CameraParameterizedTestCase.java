@@ -1,3 +1,5 @@
+        // halcamera: the adoptShellPerm=true row is not generated. A normal app has no UiAutomation to adopt
+        // the shell identity with, and only system cameras need it. Upstream adds it unless perf-measure=on.
 /*
  * Copyright 2019 The Android Open Source Project
  *
@@ -56,10 +58,8 @@ public class CameraParameterizedTestCase {
     @Parameters
     public static Iterable<? extends Object> data() {
         List<Boolean> adoptShellPerm = new ArrayList<Boolean>();
-        // Only add adoptShellPerm(true) of camera id is not overridden.
-        if (mPerfMeasure == null || !mPerfMeasure.equals("on")) {
-            adoptShellPerm.add(true);
-        }
+        // halcamera: the adoptShellPerm=true row is not generated. A normal app has no UiAutomation to adopt
+        // the shell identity with, and only system cameras need it. Upstream adds it unless perf-measure=on.
         adoptShellPerm.add(false);
         return adoptShellPerm;
     }

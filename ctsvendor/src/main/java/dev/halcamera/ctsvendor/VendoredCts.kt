@@ -23,16 +23,17 @@ object VendoredCts {
 
     /**
      * Registers the in-app Instrumentation once. Must run before any vendored test class is loaded, because
-     * CameraParameterizedTestCase reads the arguments in a static initializer. `perf-measure=on` limits the
-     * Parameterized rows to adoptShellPerm=false: a normal app cannot adopt the shell identity.
+     * CameraParameterizedTestCase reads the arguments in a static initializer. The arguments stay empty:
+     * `camera-id` would pin every later run to one camera (the value is read once, statically), and
+     * `perf-measure=on` would make RecordingTest record only the largest profile without validating it. The
+     * adoptShellPerm=true row that a normal app cannot run is removed by a patch in CameraParameterizedTestCase.
      */
     @JvmStatic
     fun install(context: Context) {
         if (installed) return
         synchronized(this) {
             if (installed) return
-            val args = Bundle().apply { putString("perf-measure", "on") }
-            InstrumentationRegistry.registerInstance(AppInstrumentation(context.applicationContext), args)
+            InstrumentationRegistry.registerInstance(AppInstrumentation(context.applicationContext), Bundle())
             installed = true
         }
     }

@@ -21,6 +21,7 @@
 4. `CameraTestUtils.java` `BlockingCameraManager.OpenListener`: `openCamera(String, boolean overrideToPortrait, Handler, StateCallback)`은 `@TestApi`이므로 공개 `openCamera(String, StateCallback, Handler)`로 바꾸고, `overrideToPortrait=true` 요청은 `UnsupportedOperationException`을 던집니다. 가져온 테스트 중 true를 넘기는 곳은 없습니다.
 5. `StaticMetadata.java`: `sharedSessionConfigurationPresent()`와 `getSharedSessionConfiguration()`을 제거했습니다. `CameraCharacteristics.SHARED_SESSION_CONFIGURATION`은 `@FlaggedApi`라서 SDK 36 공개 stub에 없습니다.
 6. `CameraUtils.java` `isDeviceFoldable()`: 본문을 `return false`로 바꿨습니다. `DeviceStateManager`가 공개 stub에 없습니다. 접히는 기기에서는 폴더블 전용 검사가 빠집니다.
+7. `CameraParameterizedTestCase.java` `data()`: `adoptShellPerm=true` 행을 만들지 않습니다. 일반 앱에는 shell 권한을 채택할 `UiAutomation`이 없고, 그 행은 시스템 카메라만 검사합니다. 업스트림은 `perf-measure=on` 인수가 있을 때만 이 행을 생략하는데, 그 인수는 `RecordingTest`가 가장 큰 프로파일 하나만 검증 없이 녹화하게 만들므로 쓰지 않습니다(첫 실기기 실행에서 4대 카메라가 16초 만에 PASS로 끝나 발견).
 
 ## 업스트림 의존성을 대신하는 파일
 
@@ -31,7 +32,7 @@
 
 ## 실행 모델
 
-1. `VendoredCts.install(context)`가 `perf-measure=on` 인수를 가진 Instrumentation을 등록합니다. `CameraParameterizedTestCase`는 이 인수가 있으면 `adoptShellPerm=false` 행만 만들므로 shell 권한 채택 경로를 타지 않습니다. 이 인수는 static 초기화에서 읽히므로 테스트 클래스를 로드하기 전에 호출해야 합니다.
+1. `VendoredCts.install(context)`가 빈 인수를 가진 Instrumentation을 등록합니다. 인수는 static 초기화에서 읽히므로 테스트 클래스를 로드하기 전에 호출해야 합니다. `camera-id`를 주면 그 뒤 모든 실행이 한 카메라에 고정되고, `perf-measure=on`을 주면 녹화 테스트가 검증을 건너뛰므로 둘 다 주지 않습니다.
 2. 앱의 `VendoredCaseActivity`는 업스트림 `Camera2SurfaceViewCtsActivity`를 상속하고 `VendoredCts.attachActivity(this)`로 자신을 등록합니다. `ActivityTestRule.getActivity()`는 그 인스턴스를 돌려줍니다.
 3. `VendoredRun`이 `Request.aClass(...).filterWith(메서드 필터)`로 JUnit runner를 만들고 `RunNotifier`로 결과를 받습니다. `VendoredCatalog`는 reflection으로 `@Test` 메서드를 나열하므로, 테스트 클래스를 추가하려면 파일을 복사하고 `VendoredCatalog.classes`에 넣기만 하면 됩니다.
 
