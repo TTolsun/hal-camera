@@ -20,7 +20,8 @@ class JpegReader(width: Int, height: Int, handler: Handler, maxImages: Int = 2) 
     private val queue = LinkedBlockingQueue<Image>()
 
     init {
-        reader.setOnImageAvailableListener({ r -> r.acquireNextImage()?.let { queue.offer(it) } }, handler)
+        // The listener may still fire after close(); acquiring from a closed reader throws, and that must not take the handler thread down.
+        reader.setOnImageAvailableListener({ r -> runCatching { r.acquireNextImage() }.getOrNull()?.let { queue.offer(it) } }, handler)
     }
 
     val surface: Surface get() = reader.surface

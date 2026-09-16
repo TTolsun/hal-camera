@@ -113,7 +113,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-16 @ <code>9199be7</code> · Claude Opus 5 (cts custom cases)</li>
+<li>검토 2026-09-16 @ <code>3df6383</code> · Claude Opus 5 (cts custom cases)</li>
 </ul>
 </details><!-- omm:end id=overview --><h2 id="전체-구조도">전체 구조도</h2>
 <p>그림을 클릭하면 확대 화면이 열립니다. 키보드에서는 Tab으로 그림을 선택한 뒤 Enter 또는 Space를 누르세요.</p>
@@ -194,7 +194,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RunIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCatalog.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/Camera2Ops.kt</code>, <code>app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt</code>, <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbe.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-16 @ <code>9199be7</code> · Claude Opus 5 (cts custom cases)</li>
+<li>검토 2026-09-16 @ <code>3df6383</code> · Claude Opus 5 (cts custom cases)</li>
 </ul>
 </details><!-- omm:end id=module-roles --><h2 id="주요-실행-흐름">주요 실행 흐름</h2>
 <!-- omm:begin id=runtime-flow --><p><strong>실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.</strong> 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.</p>
@@ -239,7 +239,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>tools/halcam/halcam/download.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/GalleryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/ui/GalleryImageView.kt</code>, <code>app/src/main/java/dev/halcamera/ui/IconButton.kt</code>, <code>app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/SelectionPopup.kt</code>, <code>app/src/main/java/dev/halcamera/ui/ShutterButton.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BaselineManager.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-16 @ <code>9199be7</code> · Claude Opus 5 (cts custom cases)</li>
+<li>검토 2026-09-16 @ <code>3df6383</code> · Claude Opus 5 (cts custom cases)</li>
 </ul>
 </details><!-- omm:end id=runtime-flow --><h3 id="이벤트와-결과가-전달되는-경로">이벤트와 결과가 전달되는 경로</h3>
 <!-- omm:begin id=runtime-diagram --><pre><code class="language-mermaid">graph LR
@@ -339,7 +339,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandStore.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/RegressionRules.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-16 @ <code>9199be7</code> · Claude Opus 5 (cts custom cases)</li>
+<li>검토 2026-09-16 @ <code>3df6383</code> · Claude Opus 5 (cts custom cases)</li>
 </ul>
 </details><!-- omm:end id=constraints --><h2 id="변경-후-검증">변경 후 검증</h2>
 <p>Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 확인할 수 있습니다. 저장소 루트에서 실행하세요.</p>
@@ -379,37 +379,37 @@
 <tbody><tr>
 <td>구조 원본 <code>data-flow</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>9199be7</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>3df6383</code> · Claude Opus 5 (cts custom cases)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>overall-architecture</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>9199be7</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>3df6383</code> · Claude Opus 5 (cts custom cases)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>state-transitions</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>9199be7</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>3df6383</code> · Claude Opus 5 (cts custom cases)</td>
 </tr>
 <tr>
 <td>원고 <code>overview</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>9199be7</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>3df6383</code> · Claude Opus 5 (cts custom cases)</td>
 </tr>
 <tr>
 <td>원고 <code>module-roles</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>9199be7</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>3df6383</code> · Claude Opus 5 (cts custom cases)</td>
 </tr>
 <tr>
 <td>원고 <code>runtime-flow</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>9199be7</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>3df6383</code> · Claude Opus 5 (cts custom cases)</td>
 </tr>
 <tr>
 <td>원고 <code>constraints</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>9199be7</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>3df6383</code> · Claude Opus 5 (cts custom cases)</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p>표의 <code>최신</code>은 기록된 근거와 원고가 검토 이후 바뀌지 않았다는 뜻입니다. 모든 기기에서 동작을 검증했다는 뜻은 아닙니다.</p>

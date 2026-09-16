@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "2e6ffb6aee6cb084",
+        "codeHash": "cbc8bbc9d3768e98",
         "modelHash": "5552b3d64942dc2f",
         "at": "2026-09-16",
-        "commit": "9199be7",
+        "commit": "3df6383",
         "reviewer": "Claude Opus 5 (cts custom cases)"
       }
     },
@@ -21,7 +21,7 @@
         "codeHash": "4f27846452ea480f",
         "modelHash": "50be73470c27fe37",
         "at": "2026-09-16",
-        "commit": "9199be7",
+        "commit": "3df6383",
         "reviewer": "Claude Opus 5 (cts custom cases)"
       }
     },
@@ -33,7 +33,7 @@
         "codeHash": "a7259dc00da9139c",
         "modelHash": "53d90e088a325cce",
         "at": "2026-09-16",
-        "commit": "9199be7",
+        "commit": "3df6383",
         "reviewer": "Claude Opus 5 (cts custom cases)"
       }
     },
@@ -42,10 +42,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "01af23dabd15feb4",
+        "codeHash": "bf8013ef8ae1cd83",
         "modelHash": "060e95192a63e1f6",
         "at": "2026-09-16",
-        "commit": "9199be7",
+        "commit": "3df6383",
         "reviewer": "Claude Opus 5 (cts custom cases)"
       }
     },
@@ -57,7 +57,7 @@
         "codeHash": "42ed22f06ed4028d",
         "modelHash": "9764edbb94576306",
         "at": "2026-09-16",
-        "commit": "9199be7",
+        "commit": "3df6383",
         "reviewer": "Claude Opus 5 (cts custom cases)"
       }
     },
@@ -69,16 +69,16 @@
         "codeHash": "4f27846452ea480f",
         "modelHash": "aefde65c58ef7a31",
         "at": "2026-09-16",
-        "commit": "9199be7",
+        "commit": "3df6383",
         "reviewer": "Claude Opus 5 (cts custom cases)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "2e6ffb6aee6cb084",
+        "codeHash": "cbc8bbc9d3768e98",
         "modelHash": "bb267fad72b01fc1",
         "at": "2026-09-16",
-        "commit": "9199be7",
+        "commit": "3df6383",
         "reviewer": "Claude Opus 5 (cts custom cases)"
       },
       "observed": {
@@ -87,10 +87,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "2e6ffb6aee6cb084",
+        "codeHash": "cbc8bbc9d3768e98",
         "modelHash": "03ba7d4edda14659",
         "at": "2026-09-16",
-        "commit": "9199be7",
+        "commit": "3df6383",
         "reviewer": "Claude Opus 5 (cts custom cases)"
       },
       "observed": {

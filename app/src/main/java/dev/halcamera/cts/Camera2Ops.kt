@@ -56,13 +56,22 @@ class Camera2Ops(private val manager: CameraManager, threadName: String) {
         val closed = CountDownLatch(1)
         val ref = AtomicReference<CameraDevice?>()
         val fault = AtomicReference<String?>()
+        // Set once the caller has given up waiting: a device that arrives after that is closed, not leaked.
+        val abandoned = AtomicBoolean(false)
         manager.openCamera(cameraId, object : CameraDevice.StateCallback() {
-            override fun onOpened(camera: CameraDevice) { ref.set(camera); opened.countDown() }
+            override fun onOpened(camera: CameraDevice) {
+                if (abandoned.get()) { Log.w(TAG, "camera $cameraId opened after the wait expired; closing"); camera.close(); return }
+                ref.set(camera); opened.countDown()
+            }
             override fun onClosed(camera: CameraDevice) { closed.countDown() }
             override fun onDisconnected(camera: CameraDevice) { fault.compareAndSet(null, "Camera $cameraId disconnected"); camera.close(); opened.countDown() }
             override fun onError(camera: CameraDevice, code: Int) { fault.compareAndSet(null, "Camera $cameraId error $code"); camera.close(); opened.countDown() }
         }, handler)
-        check(opened.await(CAMERA_OPEN_TIMEOUT_MS, TimeUnit.MILLISECONDS)) { "Timeout waiting for the camera to open" }
+        if (!opened.await(CAMERA_OPEN_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+            abandoned.set(true)
+            ref.getAndSet(null)?.close()
+            error("Timeout waiting for the camera to open")
+        }
         fault.get()?.let { error(it) }
         return OpenedCamera(ref.get()!!, closed, fault)
     }
