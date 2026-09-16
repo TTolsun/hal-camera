@@ -19,7 +19,7 @@ flowchart LR
 | 확인할 항목 | 확인하는 이유 |
 | --- | --- |
 | 카메라 목록 | 공개 ID뿐 아니라 논리 카메라 뒤의 물리 카메라도 `0.2`처럼 별도 항목으로 읽습니다. 앱이 직접 열 수 없는 물리 카메라도 사양은 보입니다. |
-| 섹션 | IDENTITY, CAPABILITIES, STREAMS, SENSOR, LENS, CONTROL, REQUEST, PROCESSING, SESSION KEYS, MANDATORY STREAM COMBINATIONS, HIGH SPEED VIDEO, REPROCESSING INPUTS, ALL CHARACTERISTICS 순서입니다. 섹션 제목을 누르면 접거나 펼칩니다. |
+| 섹션 | IDENTITY, CAPABILITIES, SENSOR, LENS, CONTROL, PROCESSING, REQUEST, SESSION KEYS(API 28 이상), MANDATORY STREAM COMBINATIONS(API 29 이상) 다음에 STREAMS가 출력 형식별로 나뉘어 옵니다(`STREAMS · PRIVATE (SurfaceTexture)`, `STREAMS · PRIVATE (MediaRecorder)`, `STREAMS · JPEG`처럼). 그 뒤에 HIGH SPEED VIDEO, REPROCESSING INPUTS, ALL CHARACTERISTICS입니다. 섹션 제목을 누르면 접거나 펼칩니다. |
 | enum 값의 이름 | `CameraMetadata` 상수에서 reflection으로 읽으므로 새 API 값도 숫자가 아니라 이름으로 표시됩니다. |
 | 읽지 못한 항목 | 카메라나 섹션을 읽지 못하면 빈칸이 아니라 실패 목록에 남깁니다. 내보낸 파일에도 무엇이 빠졌는지 적힙니다. |
 | 필터 | 단어를 넣으면 그 단어가 든 줄만 목록으로 나오고, 항목을 누르면 해당 줄로 이동합니다. 예: `JPEG`, `1080`, `x`. |
