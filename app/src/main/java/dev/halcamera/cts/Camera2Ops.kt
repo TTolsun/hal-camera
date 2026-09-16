@@ -129,6 +129,30 @@ class Camera2Ops(private val manager: CameraManager, threadName: String) {
         return completed.get()!!
     }
 
+    /** One still capture: whether its result completed in time, and the image [reader] delivered for it, if any. */
+    class Still(val resultReceived: Boolean, val image: android.media.Image?, val requestedAtNs: Long, val imageAtNs: Long?)
+
+    /**
+     * CameraTestUtils takePicture + waitForImage: submit [request] once and wait for its result, then for the
+     * image on [reader], each within the CTS budget. A capture failure throws with its reason. The caller
+     * closes the image.
+     */
+    fun captureStill(session: CameraCaptureSession, request: CaptureRequest, reader: JpegReader): Still {
+        val done = CountDownLatch(1)
+        val failure = AtomicReference<String?>()
+        val requestedAt = SystemClock.elapsedRealtimeNanos()
+        session.capture(request, object : CameraCaptureSession.CaptureCallback() {
+            override fun onCaptureCompleted(s: CameraCaptureSession, r: CaptureRequest, result: TotalCaptureResult) { done.countDown() }
+            override fun onCaptureFailed(s: CameraCaptureSession, r: CaptureRequest, f: CaptureFailure) {
+                failure.compareAndSet(null, "Capture failed: reason ${f.reason}, frame ${f.frameNumber}"); done.countDown()
+            }
+        }, handler)
+        val resultReceived = done.await(CAPTURE_RESULT_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        failure.get()?.let { error(it) }
+        val image = reader.next(CAPTURE_IMAGE_TIMEOUT_MS)
+        return Still(resultReceived, image, requestedAt, if (image != null) SystemClock.elapsedRealtimeNanos() else null)
+    }
+
     companion object {
         private const val TAG = "Camera2Ops"
         const val CAMERA_OPEN_TIMEOUT_MS = 3000L

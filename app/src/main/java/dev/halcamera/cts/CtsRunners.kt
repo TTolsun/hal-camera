@@ -1,5 +1,6 @@
 package dev.halcamera.cts
 
+import dev.halcamera.cts.combination.StillPreviewCombinationRunner
 import dev.halcamera.cts.onoff.FastOnOffRunner
 import dev.halcamera.cts.recording.BasicRecordingRunner
 import dev.halcamera.cts.sizes.AllSizeOnOffRunner
@@ -12,6 +13,7 @@ object CtsRunners {
         CtsCatalog.FAST_ON_OFF -> FastOnOffRunner(env)
         CtsCatalog.SWITCHING -> SwitchingRunner(env)
         CtsCatalog.ALL_SIZE_ON_OFF -> AllSizeOnOffRunner(env)
+        CtsCatalog.STILL_PREVIEW_COMBINATION -> StillPreviewCombinationRunner(env)
         else -> throw IllegalArgumentException("unknown CTS case: $caseId")
     }
 }

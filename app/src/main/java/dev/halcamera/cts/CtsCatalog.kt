@@ -1,5 +1,6 @@
 package dev.halcamera.cts
 
+import dev.halcamera.cts.combination.StillPreviewCombinationRules
 import dev.halcamera.cts.onoff.FastOnOffRules
 import dev.halcamera.cts.recording.BasicRecordingRules
 import dev.halcamera.cts.sizes.AllSizeOnOffRules
@@ -25,6 +26,7 @@ object CtsCatalog {
     const val FAST_ON_OFF = "fast_on_off"
     const val SWITCHING = "switching"
     const val ALL_SIZE_ON_OFF = "all_size_on_off"
+    const val STILL_PREVIEW_COMBINATION = "still_preview_combination"
 
     val cases: List<CtsCaseSpec> = listOf(
         CtsCaseSpec(
@@ -68,6 +70,17 @@ object CtsCatalog {
             summary = { cameras ->
                 "카메라 ${cameras}대마다 SurfaceHolder로 보고하는 모든 프리뷰 크기를 큰 것부터 하나씩 열어(열기 → 그 크기의 프리뷰 세션 → 첫 프레임 → 닫기) 확인합니다" +
                     "(크기당 약 2초, 카메라마다 크기 수만큼). 1080p 상한 없이 카메라가 광고한 크기 전부를 대상으로 합니다."
+            }
+        ),
+        CtsCaseSpec(
+            id = STILL_PREVIEW_COMBINATION,
+            source = StillPreviewCombinationRules.SOURCE,
+            title = "정지 영상 × 프리뷰 조합",
+            needsAudio = false,
+            summary = { cameras ->
+                "카메라 ${cameras}대마다 JPEG 크기 전부와 프리뷰 크기(1080p 이하) 전부의 조합을 하나씩 구성해 프리뷰 첫 프레임 뒤 정지 영상을 한 장 찍고, " +
+                    "요청한 크기의 디코딩 가능한 JPEG가 돌아오는지 검사합니다(조합당 약 1초, 카메라마다 수백 조합). " +
+                    "CTS StillCaptureTest#testStillPreviewCombination의 순서와 QCIF 예외를 따르되 AE·AF 수렴은 기다리지 않습니다. 사진은 저장하지 않습니다."
             }
         )
     )
