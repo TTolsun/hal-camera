@@ -31,8 +31,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.R
-import dev.halcamera.cts.recording.BasicRecordingRules
-import dev.halcamera.cts.recording.BasicRecordingRunner
 import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 import java.util.concurrent.CountDownLatch
@@ -40,12 +38,13 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 /**
- * Runs CTS `RecordingTest#testBasicRecording` through [BasicRecordingRunner] and shows one card per camera.
- * The SurfaceView plays the part of Camera2SurfaceViewCtsActivity: the runner resizes its buffer to each
- * video size and waits for surfaceChanged before opening the session. LIVE is stopped while this screen is
- * up, so the camera is free.
+ * Runs one [CtsCatalog] case, chosen by [EXTRA_CASE_ID], through the runner [CtsRunners] builds for it, and
+ * shows one card per camera. The SurfaceView plays the part of Camera2SurfaceViewCtsActivity: a runner resizes
+ * its buffer to each size it needs and waits for surfaceChanged before opening the session. LIVE is stopped
+ * while this screen is up, so the camera is free.
  */
-class CtsCaseActivity : ComponentActivity(), BasicRecordingRunner.PreviewHost, SurfaceHolder.Callback {
+class CtsCaseActivity : ComponentActivity(), CtsRunner.PreviewHost, SurfaceHolder.Callback {
+    private lateinit var spec: CtsCaseSpec
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
     private lateinit var body: LinearLayout
@@ -54,7 +53,7 @@ class CtsCaseActivity : ComponentActivity(), BasicRecordingRunner.PreviewHost, S
     private lateinit var runButton: android.widget.Button
     private lateinit var headlineView: TextView
     private lateinit var results: LinearLayout
-    private var runner: BasicRecordingRunner? = null
+    private var runner: CtsRunner? = null
     private var report: CaseReport? = null
     private var status = "대기 중"
     private val live = LinkedHashMap<String, ArrayList<StepResult>>()
@@ -68,11 +67,14 @@ class CtsCaseActivity : ComponentActivity(), BasicRecordingRunner.PreviewHost, S
     private var waiter: CountDownLatch? = null
 
     private val permissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
-        if (granted.values.all { it }) start() else { status = "카메라와 마이크 권한이 필요합니다"; render() }
+        if (granted.values.all { it }) start() else { status = if (spec.needsAudio) "카메라와 마이크 권한이 필요합니다" else "카메라 권한이 필요합니다"; render() }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        spec = CtsCatalog.byId(intent.getStringExtra(EXTRA_CASE_ID)) ?: run {
+            Toast.makeText(this, "알 수 없는 CTS 케이스입니다", Toast.LENGTH_SHORT).show(); finish(); return
+        }
         val scroll = ScrollView(this).apply { setBackgroundColor(Look.expertTile) }
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         scroll.addView(body)
@@ -99,7 +101,7 @@ class CtsCaseActivity : ComponentActivity(), BasicRecordingRunner.PreviewHost, S
     // ---- run ----
 
     private fun requestAndStart() {
-        val needed = listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO)
+        val needed = (if (spec.needsAudio) listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO) else listOf(Manifest.permission.CAMERA))
             .filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
         if (needed.isEmpty()) start() else permissions.launch(needed.toTypedArray())
     }
@@ -109,18 +111,18 @@ class CtsCaseActivity : ComponentActivity(), BasicRecordingRunner.PreviewHost, S
         synchronized(surfaceLock) { if (!surfaceCreated) { status = "프리뷰 surface를 기다리는 중입니다. 다시 눌러 주세요."; render(); return } }
         report = null; live.clear()
         val metrics = windowBounds()
-        val r = BasicRecordingRunner(
+        val env = CaseEnvironment(
             manager = getSystemService(CameraManager::class.java),
             previewHost = this,
             outputDir = cacheDir,
             windowWidth = metrics.first, windowHeight = metrics.second,
-            listener = object : BasicRecordingRunner.Listener {
+            listener = object : CtsRunner.Listener {
                 override fun onCameraStarted(cameraId: String, index: Int, total: Int) = post {
                     live.getOrPut(cameraId) { ArrayList() }
                     status = "카메라 $cameraId 준비 중 (${index + 1}/$total)"; render()
                 }
-                override fun onProfileStarted(cameraId: String, quality: String, index: Int, total: Int) = post {
-                    status = "카메라 $cameraId · $quality 녹화 중 (프로파일 ${index + 1}/$total)"; render()
+                override fun onProgress(cameraId: String, stage: String, index: Int, total: Int) = post {
+                    status = "카메라 $cameraId · $stage 진행 중 (${index + 1}/$total)"; render()
                 }
                 override fun onStep(cameraId: String, step: StepResult) = post {
                     live.getOrPut(cameraId) { ArrayList() }.add(step); render()
@@ -133,6 +135,7 @@ class CtsCaseActivity : ComponentActivity(), BasicRecordingRunner.PreviewHost, S
                 }
             }
         )
+        val r = CtsRunners.create(spec.id, env)
         runner = r
         status = "시작"
         // A screen-off would stop the activity and cancel the run.
@@ -198,15 +201,15 @@ class CtsCaseActivity : ComponentActivity(), BasicRecordingRunner.PreviewHost, S
     /** Static parts once; the SurfaceView must never be re-parented, or its surface is destroyed mid-run. */
     private fun buildScreen() {
         val head = Look.row(this)
-        head.addView(Look.text(this, "CTS 케이스", 22, Look.onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
+        head.addView(Look.text(this, spec.title, 22, Look.onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
         head.addView(IconButton(this, R.drawable.ic_action_close, "CTS 케이스 화면 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
         body.addView(head)
-        body.addView(Look.text(this, BasicRecordingRules.SOURCE, 14, Look.onDark, mono = true), lp(top = 8))
+        body.addView(Look.text(this, spec.source, 14, Look.onDark, mono = true), lp(top = 8))
         val cameras = runCatching { getSystemService(CameraManager::class.java).cameraIdList.size }.getOrDefault(0)
-        body.addView(Look.text(this, "카메라 ${cameras}대 × CamcorderProfile 최대 ${BasicRecordingRules.PROFILE_ORDER.size}개를 각각 ${BasicRecordingRules.RECORDING_DURATION_MS / 1000}초씩 녹화합니다(약 ${cameras * BasicRecordingRules.PROFILE_ORDER.size * 4 / 60 + 1}분). 길이 오차 ${(BasicRecordingRules.DURATION_MARGIN * 100).toInt()} %, 프레임 드롭률 ${BasicRecordingRules.FRMDRP_RATE_TOLERANCE.toInt()} % 미만을 검사하고 소리도 함께 녹음됩니다.", 12, Look.onDarkMuted), lp(top = 4))
+        body.addView(Look.text(this, spec.summary(cameras), 12, Look.onDarkMuted), lp(top = 4))
         body.addView(Look.text(this, CaseReportPresenter.DISCLAIMER, 11, Look.onDarkMuted), lp(top = 4))
 
-        // The preview keeps its view size; only the buffer is resized per profile, as in the CTS activity.
+        // The preview keeps its view size; only the buffer is resized per step, as in the CTS activity.
         val frame = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
         frame.addView(preview, FrameLayout.LayoutParams(-1, -1))
         body.addView(frame, lp(top = 12).apply { height = dp(180) })
@@ -279,7 +282,7 @@ class CtsCaseActivity : ComponentActivity(), BasicRecordingRunner.PreviewHost, S
         val text = fullText() ?: return
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "HAL CAM CTS case · ${BasicRecordingRules.SOURCE}")
+            putExtra(Intent.EXTRA_SUBJECT, "HAL CAM CTS case · ${spec.source}")
             putExtra(Intent.EXTRA_TEXT, text)
         }
         startActivity(Intent.createChooser(intent, "결과 공유"))
@@ -292,4 +295,8 @@ class CtsCaseActivity : ComponentActivity(), BasicRecordingRunner.PreviewHost, S
 
     private fun dp(v: Int) = Look.dp(this, v)
     private fun lp(top: Int = 0) = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top); gravity = Gravity.START }
+
+    companion object {
+        const val EXTRA_CASE_ID = "case_id"
+    }
 }

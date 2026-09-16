@@ -1,6 +1,6 @@
 # 작업 상태
 
-2026-09-16 · HAL CAM 0.8.1. LIVE 상단을 `API · 상태 · 도구 · 진단`으로 나누어 세션과 무관한 Benchmark·PROBE·CTS를 `도구` 메뉴의 독립 화면으로 옮기고, 세션 의존 항목만 `진단` 패널에 남겼습니다([PR #81](https://github.com/TTolsun/hal-camera/pull/81), [PR #82](https://github.com/TTolsun/hal-camera/pull/82), [릴리스 0.8.1](releases/0.8.1.md)). CTS `RecordingTest#testBasicRecording`을 앱 안에서 실행하는 CTS 케이스 화면([PR #76](https://github.com/TTolsun/hal-camera/pull/76))을 추가하고 PROBE 필터의 예시와 뒤로가기 동작을 다듬었습니다([PR #78](https://github.com/TTolsun/hal-camera/pull/78)). 0.7.0의 반복 측정 비교([PR #72](https://github.com/TTolsun/hal-camera/pull/72))와 PROBE 화면([PR #75](https://github.com/TTolsun/hal-camera/pull/75)), 0.6.0의 PC CLI(0.1.0), 0.5.1의 촬영·갤러리 개선을 유지합니다. [PR #48](https://github.com/TTolsun/hal-camera/pull/48)의 M5a 내부 점수 초안을 포함하며 민감도 검증은 진행 중입니다.
+2026-09-16 · HAL CAM 0.8.1. LIVE 상단을 `API · 상태 · 도구 · 진단`으로 나누어 세션과 무관한 Benchmark·PROBE·CTS를 `도구` 메뉴의 독립 화면으로 옮기고, 세션 의존 항목만 `진단` 패널에 남겼습니다([PR #81](https://github.com/TTolsun/hal-camera/pull/81), [PR #82](https://github.com/TTolsun/hal-camera/pull/82), [릴리스 0.8.1](releases/0.8.1.md)). CTS `RecordingTest#testBasicRecording`을 앱 안에서 실행하는 CTS 케이스 화면([PR #76](https://github.com/TTolsun/hal-camera/pull/76))을 추가하고, 이어서 CTS 화면을 케이스 목록으로 바꾸고 FastOnOff·Switching·AllSizeOnOff·StillPreviewCombination·VideoSnapshot 다섯 케이스를 더했으며(`claude/cts-custom-cases`, Galaxy S25+에서 여섯 케이스 모두 PASS), PROBE 필터의 예시와 뒤로가기 동작을 다듬었습니다([PR #78](https://github.com/TTolsun/hal-camera/pull/78)). 0.7.0의 반복 측정 비교([PR #72](https://github.com/TTolsun/hal-camera/pull/72))와 PROBE 화면([PR #75](https://github.com/TTolsun/hal-camera/pull/75)), 0.6.0의 PC CLI(0.1.0), 0.5.1의 촬영·갤러리 개선을 유지합니다. [PR #48](https://github.com/TTolsun/hal-camera/pull/48)의 M5a 내부 점수 초안을 포함하며 민감도 검증은 진행 중입니다.
 
 ## 지금 어디까지 왔는가
 
@@ -91,6 +91,7 @@ LIVE는 측정한 것을 모두 유지하고 판정한 것을 모두 버렸습�
 - `SET AS BASELINE` / `CLEAR BASELINE` 전환
 - 도구 메뉴(2026-09-16, versionCode 12 로컬 빌드): `도구` 목록 표시, Benchmark·CTS 진입 시 `카메라 세션 종료 중…` 뒤 화면 전환, PROBE 즉시 전환, 녹화 중 `도구` 비활성화, 복귀 시 프리뷰 재시작
 - 반복 측정 비교 실제 자료(2026-09-16): 2026-09-12의 0.5.0 실행 10회를 JSON으로 가져와 A, 0.8.0 CLI 실행 5회를 B로 선택. 확인 미체크 시 검정 보류, 체크 후 19개 지표 검정·7개 유의차, `regression-rule-v1` 판정과 분리 표시. 자세한 수치와 해석 제한은 `docs/PROFILE-COMPARISON.md`
+- CTS 케이스 6종(2026-09-17, Galaxy S25+ SM-S936N · Android 16 · versionCode 15 로컬 빌드, 카메라 4대): 기본 녹화 PASS(카메라 0은 8 PASS 1 SKIP, CIF 프로파일 없음), FastOnOff PASS(첫 프레임 중앙값 표준 366.2 ms · fast reopen 366.8 ms), Switching PASS(round 5회 + HIGH 3초 녹화), AllSizeOnOff PASS(카메라 0 크기 26개, 4080x3060까지), VideoSnapshot PASS(4K 25초 드롭 0, 4080x3060 JPEG 3 MB가 350 ms 뒤 도착), StillPreviewCombination PASS(조합 324·300·264·286개, 약 29분). 조합 케이스 실행 중 `중단`은 완료된 68개 조합까지 `중단됨`으로 표시했고, 케이스 화면을 닫고 LIVE로 돌아오면 프리뷰가 다시 시작됩니다.
 
 ## 아직 하지 않은 것
 
