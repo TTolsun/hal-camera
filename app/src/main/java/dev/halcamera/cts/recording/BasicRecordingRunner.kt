@@ -1,16 +1,11 @@
 package dev.halcamera.cts.recording
 
 import android.graphics.ImageFormat
-import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
-import android.hardware.camera2.CaptureRequest
-import android.hardware.camera2.TotalCaptureResult
-import android.media.CamcorderProfile
 import android.media.MediaRecorder
 import android.os.SystemClock
 import android.util.Log
-import android.util.Range
 import android.util.Size
 import android.view.SurfaceHolder
 import dev.halcamera.cts.Camera2Ops
@@ -21,9 +16,6 @@ import dev.halcamera.cts.Dim
 import dev.halcamera.cts.StepResult
 import dev.halcamera.cts.Verdict
 import java.io.File
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicLong
 
 /**
  * Performs CTS `RecordingTest#testBasicRecording` on the device: for every camera and every CamcorderProfile
@@ -49,7 +41,7 @@ class BasicRecordingRunner(env: CaseEnvironment) : CameraCaseRunner(env, BasicRe
             steps += step(cameraId, "camera", Verdict.SKIP, listOf("CamcorderProfile needs a numeric camera id"))
             return CameraCaseResult(cameraId, steps)
         }
-        val profiles = readProfiles(numericId)
+        val profiles = CamcorderProfiles.read(numericId)
         val info = cameraInfo(cameraId, chars, profiles.keys)
         BasicRecordingRules.cameraSkipReason(info)?.let {
             steps += step(cameraId, "camera", Verdict.SKIP, listOf(it))
@@ -91,18 +83,6 @@ class BasicRecordingRunner(env: CaseEnvironment) : CameraCaseRunner(env, BasicRe
 
     // ---- what CTS reads before recording ----
 
-    @Suppress("DEPRECATION")
-    private fun readProfiles(cameraId: Int): Map<Int, BasicRecordingRules.Profile> {
-        val out = LinkedHashMap<Int, BasicRecordingRules.Profile>()
-        (BasicRecordingRules.PROFILE_ORDER + listOf(BasicRecordingRules.QUALITY_QHD, BasicRecordingRules.QUALITY_2K)).forEach { q ->
-            if (runCatching { CamcorderProfile.hasProfile(cameraId, q) }.getOrDefault(false)) {
-                val p = CamcorderProfile.get(cameraId, q)
-                out[q] = BasicRecordingRules.Profile(q, Dim(p.videoFrameWidth, p.videoFrameHeight), p.videoFrameRate)
-            }
-        }
-        return out
-    }
-
     private fun cameraInfo(cameraId: String, chars: CameraCharacteristics, qualities: Set<Int>): BasicRecordingRules.CameraInfo {
         val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
         val level = chars[CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL]
@@ -133,51 +113,12 @@ class BasicRecordingRunner(env: CaseEnvironment) : CameraCaseRunner(env, BasicRe
         profile: BasicRecordingRules.Profile, preview: Dim
     ): Pair<Verdict, List<String>> {
         val file = File(env.outputDir, "test_video.mp4")
-        file.delete()
-        @Suppress("DEPRECATION")
-        val camcorder = CamcorderProfile.get(info.cameraId.toInt(), profile.quality)
-        recorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
-        recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE)
-        recorder.setProfile(camcorder)
-        recorder.setOutputFile(file.absolutePath)
-        recorder.prepare()
-        val recordingSurface = recorder.surface ?: error("Recording surface must be non-null!")
+        val camcorder = CamcorderProfiles.get(info.cameraId.toInt(), profile.quality)
         val previewSurface = env.previewHost.acquirePreview(preview, Camera2Ops.WAIT_FOR_SURFACE_CHANGE_TIMEOUT_MS)
             ?: error("wait for surface change to $preview timed out")
-        check(previewSurface.isValid && recordingSurface.isValid) { "Both preview and recording surfaces should be valid" }
-
-        val request = camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-            set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, Range(profile.frameRate, profile.frameRate))
-            addTarget(recordingSurface)
-            addTarget(previewSurface)
-        }.build()
-        val frames = AtomicLong(0)
-        var session: Camera2Ops.Session? = null
-        try {
-            session = ops.configure(camera, listOf(previewSurface, recordingSurface), request)
-            val firstStart = CountDownLatch(1)
-            val callback = object : CameraCaptureSession.CaptureCallback() {
-                override fun onCaptureStarted(s: CameraCaptureSession, r: CaptureRequest, timestamp: Long, frameNumber: Long) { firstStart.countDown() }
-                override fun onCaptureCompleted(s: CameraCaptureSession, r: CaptureRequest, result: TotalCaptureResult) { frames.incrementAndGet() }
-            }
-            session.session.setRepeatingRequest(request, callback, ops.handler)
-            // Wait for the first capture start before starting mediaRecorder.
-            check(firstStart.await(Camera2Ops.CAPTURE_RESULT_TIMEOUT_MS, TimeUnit.MILLISECONDS)) { "Timeout waiting for the first capture start" }
-            recorder.start()
+        val recording = CamcorderRecording(ops, camera, recorder, camcorder, file).record(previewSurface) { _, _ ->
             SystemClock.sleep(BasicRecordingRules.RECORDING_DURATION_MS)
-
-            // stopRecording: stop streaming and wait for the session to close, then stop the recorder.
-            check(session.close()) { "Timeout waiting for the session to close" }
-            session = null
-            recorder.stop()
-            recorder.reset()
-        } finally {
-            // On an error path the session is still open: close it so the next profile starts clean.
-            session?.close()
-            recordingSurface.release()
         }
-
-        val recording = RecordingReader.read(file, frames.get())
         val failures = BasicRecordingRules.validate(info.cameraId, info.isLegacy, profile, recording)
         file.delete()
         val summary = BasicRecordingRules.summary(profile, recording)

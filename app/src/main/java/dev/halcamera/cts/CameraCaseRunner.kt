@@ -48,7 +48,9 @@ abstract class CameraCaseRunner(protected val env: CaseEnvironment, private val 
         return out
     }
 
-    protected abstract fun runCamera(cameraId: String): CameraCaseResult
+    /** The body for one camera. A case that overrides [runCameras] instead leaves this alone. */
+    protected open fun runCamera(cameraId: String): CameraCaseResult =
+        throw UnsupportedOperationException("override runCamera or runCameras")
 
     /** Records the step with the listener as it is decided, so the screen fills in while the run continues. */
     protected fun step(cameraId: String, id: String, verdict: Verdict, details: List<String>): StepResult =

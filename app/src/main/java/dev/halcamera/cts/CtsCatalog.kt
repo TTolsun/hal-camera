@@ -2,6 +2,7 @@ package dev.halcamera.cts
 
 import dev.halcamera.cts.onoff.FastOnOffRules
 import dev.halcamera.cts.recording.BasicRecordingRules
+import dev.halcamera.cts.switching.SwitchingRules
 
 /**
  * One entry of the CTS case list. [id] travels in the Intent, [source] is the CTS class#method the case
@@ -21,6 +22,7 @@ data class CtsCaseSpec(
 object CtsCatalog {
     const val BASIC_RECORDING = "basic_recording"
     const val FAST_ON_OFF = "fast_on_off"
+    const val SWITCHING = "switching"
 
     val cases: List<CtsCaseSpec> = listOf(
         CtsCaseSpec(
@@ -43,6 +45,17 @@ object CtsCatalog {
                 "카메라 ${cameras}대마다 표준 열기(열기 → 프리뷰 세션 → 첫 프레임 → 닫기)와 빠른 열기(열기 직후 닫기 → 다시 열기 → 첫 프레임 → 닫기)를 " +
                     "${FastOnOffRules.ITERATIONS}회씩 번갈아 수행합니다(약 ${cameras * FastOnOffRules.ITERATIONS * 3 / 60 + 1}분). " +
                     "첫 프레임 도착과 SENSOR_TIMESTAMP·프레임 번호를 검사하고, 마지막 줄에 두 방식의 첫 프레임 중앙값을 비교합니다."
+            }
+        ),
+        CtsCaseSpec(
+            id = SWITCHING,
+            source = SwitchingRules.SOURCE,
+            title = "카메라 전환",
+            needsAudio = true,
+            summary = { cameras ->
+                "카메라 ${cameras}대를 차례로 열고 첫 프레임을 받은 뒤 닫는 전환을 ${SwitchingRules.DEFAULT_ROUNDS}회 반복하고, " +
+                    "끝에 카메라마다 가장 큰 CamcorderProfile로 ${SwitchingRules.RECORDING_DURATION_MS / 1000}초씩 녹화합니다(약 ${(cameras * SwitchingRules.DEFAULT_ROUNDS * 2 + cameras * 6) / 60 + 1}분). " +
+                    "녹화는 파일·트랙·크기와 길이 오차 ${(SwitchingRules.DURATION_MARGIN * 100).toInt()} %만 검사하며 소리도 함께 녹음됩니다."
             }
         )
     )
