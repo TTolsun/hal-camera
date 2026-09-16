@@ -2,7 +2,7 @@
 
 - 작성일: 2026-09-12
 - 갱신일: 2026-09-16 (상태와 1절 표를 실제 동작에 맞춤)
-- 상태: 운영 중. 3절의 A~D는 모두 `main`에 반영되었다(#52~#55, #71, #88). 실행 계획은 `docs/PLAN-docgen-autosync.md`, 운영 절차는 `tools/docgen/README.md`의 운영 절에 있다.
+- 상태: 운영 중. 3절의 A~D는 모두 `main`에 반영되었다(A #60, B #61, C #59·#65, D #62·#63, 첫 자동 PR #66·#71, 담당 요소 검사 #88). 실행 계획은 `docs/PLAN-docgen-autosync.md`, 운영 절차는 `tools/docgen/README.md`의 운영 절에 있다.
 - 코드 기준: `main` `af240b1` (2026-09-16)
 - 대상 파이프라인: `tools/docgen/` (README의 흐름도 참고)
 
