@@ -2,6 +2,7 @@ package dev.halcamera.cts
 
 import android.graphics.ImageFormat
 import android.hardware.camera2.CameraCharacteristics
+import android.media.MediaRecorder
 import android.util.Size
 import android.view.SurfaceHolder
 import dev.halcamera.cts.recording.BasicRecordingRules
@@ -34,6 +35,27 @@ object CameraFacts {
     fun orderedStillSizes(chars: CameraCharacteristics): List<Dim> =
         chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]?.getOutputSizes(ImageFormat.JPEG).orEmpty().map(::dim)
             .sortedWith(compareByDescending<Dim> { it.area }.thenByDescending { it.width })
+
+    /** What testBasicRecording's StaticMetadata and helpers read for one camera, given the CamcorderProfile [qualities] it has. */
+    fun recordingInfo(cameraId: String, chars: CameraCharacteristics, qualities: Set<Int>, windowWidth: Int, windowHeight: Int): BasicRecordingRules.CameraInfo {
+        val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
+        val previewBound = BasicRecordingRules.previewSizeBound(windowWidth, windowHeight)
+        val videoSizes = map?.getOutputSizes(MediaRecorder::class.java).orEmpty().map(::dim)
+        val privateDurations = HashMap<Dim, Long>()
+        map?.getOutputSizes(ImageFormat.PRIVATE).orEmpty().forEach { s ->
+            runCatching { map?.getOutputMinFrameDuration(ImageFormat.PRIVATE, s) }.getOrNull()?.let { privateDurations[dim(s)] = it }
+        }
+        return BasicRecordingRules.CameraInfo(
+            cameraId = cameraId,
+            hasColorOutput = hasColorOutput(chars),
+            isExternal = isExternal(chars),
+            isLegacy = isLegacy(chars),
+            orderedPreviewSizes = BasicRecordingRules.boundedDescending(previewSizes(chars), previewBound),
+            supportedVideoSizes = BasicRecordingRules.boundedDescending(videoSizes, BasicRecordingRules.videoSizeBound(qualities)),
+            fpsRanges = chars[CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES].orEmpty().map { it.lower to it.upper },
+            privateMinFrameDurationNs = privateDurations
+        )
+    }
 
     fun dim(size: Size) = Dim(size.width, size.height)
 }

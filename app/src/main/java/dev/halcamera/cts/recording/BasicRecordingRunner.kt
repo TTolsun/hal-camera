@@ -1,16 +1,13 @@
 package dev.halcamera.cts.recording
 
-import android.graphics.ImageFormat
-import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
 import android.media.MediaRecorder
 import android.os.SystemClock
 import android.util.Log
-import android.util.Size
-import android.view.SurfaceHolder
 import dev.halcamera.cts.Camera2Ops
 import dev.halcamera.cts.CameraCaseResult
 import dev.halcamera.cts.CameraCaseRunner
+import dev.halcamera.cts.CameraFacts
 import dev.halcamera.cts.CaseEnvironment
 import dev.halcamera.cts.Dim
 import dev.halcamera.cts.StepResult
@@ -42,7 +39,7 @@ class BasicRecordingRunner(env: CaseEnvironment) : CameraCaseRunner(env, BasicRe
             return CameraCaseResult(cameraId, steps)
         }
         val profiles = CamcorderProfiles.read(numericId)
-        val info = cameraInfo(cameraId, chars, profiles.keys)
+        val info = CameraFacts.recordingInfo(cameraId, chars, profiles.keys, env.windowWidth, env.windowHeight)
         BasicRecordingRules.cameraSkipReason(info)?.let {
             steps += step(cameraId, "camera", Verdict.SKIP, listOf(it))
             return CameraCaseResult(cameraId, steps)
@@ -81,31 +78,6 @@ class BasicRecordingRunner(env: CaseEnvironment) : CameraCaseRunner(env, BasicRe
         return CameraCaseResult(cameraId, steps)
     }
 
-    // ---- what CTS reads before recording ----
-
-    private fun cameraInfo(cameraId: String, chars: CameraCharacteristics, qualities: Set<Int>): BasicRecordingRules.CameraInfo {
-        val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
-        val level = chars[CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL]
-        val caps = chars[CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES]?.toSet() ?: emptySet()
-        val previewBound = BasicRecordingRules.previewSizeBound(env.windowWidth, env.windowHeight)
-        val previewSizes = map?.getOutputSizes(SurfaceHolder::class.java).orEmpty().map(::dim)
-        val videoSizes = map?.getOutputSizes(MediaRecorder::class.java).orEmpty().map(::dim)
-        val privateDurations = HashMap<Dim, Long>()
-        map?.getOutputSizes(ImageFormat.PRIVATE).orEmpty().forEach { s ->
-            runCatching { map?.getOutputMinFrameDuration(ImageFormat.PRIVATE, s) }.getOrNull()?.let { privateDurations[dim(s)] = it }
-        }
-        return BasicRecordingRules.CameraInfo(
-            cameraId = cameraId,
-            hasColorOutput = CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_BACKWARD_COMPATIBLE in caps,
-            isExternal = level == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_EXTERNAL,
-            isLegacy = level == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY,
-            orderedPreviewSizes = BasicRecordingRules.boundedDescending(previewSizes, previewBound),
-            supportedVideoSizes = BasicRecordingRules.boundedDescending(videoSizes, BasicRecordingRules.videoSizeBound(qualities)),
-            fpsRanges = chars[CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES].orEmpty().map { it.lower to it.upper },
-            privateMinFrameDurationNs = privateDurations
-        )
-    }
-
     // ---- one profile: prepareRecording, updatePreviewSurfaceWithVideo, startRecording, stopRecording, validateRecording ----
 
     private fun recordAndValidate(
@@ -116,7 +88,7 @@ class BasicRecordingRunner(env: CaseEnvironment) : CameraCaseRunner(env, BasicRe
         val camcorder = CamcorderProfiles.get(info.cameraId.toInt(), profile.quality)
         val previewSurface = env.previewHost.acquirePreview(preview, Camera2Ops.WAIT_FOR_SURFACE_CHANGE_TIMEOUT_MS)
             ?: error("wait for surface change to $preview timed out")
-        val recording = CamcorderRecording(ops, camera, recorder, camcorder, file).record(previewSurface) { _, _ ->
+        val recording = CamcorderRecording(ops, camera, recorder, camcorder, file).record(previewSurface) {
             SystemClock.sleep(BasicRecordingRules.RECORDING_DURATION_MS)
         }
         val failures = BasicRecordingRules.validate(info.cameraId, info.isLegacy, profile, recording)
@@ -124,8 +96,6 @@ class BasicRecordingRunner(env: CaseEnvironment) : CameraCaseRunner(env, BasicRe
         val summary = BasicRecordingRules.summary(profile, recording)
         return if (failures.isEmpty()) Verdict.PASS to listOf(summary) else Verdict.FAIL to (listOf(summary) + failures)
     }
-
-    private fun dim(size: Size) = Dim(size.width, size.height)
 
     companion object {
         private const val TAG = "BasicRecordingRunner"

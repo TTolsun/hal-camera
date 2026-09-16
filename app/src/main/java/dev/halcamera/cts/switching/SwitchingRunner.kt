@@ -85,7 +85,7 @@ class SwitchingRunner(env: CaseEnvironment, private val rounds: Int = SwitchingR
             val surface = env.previewHost.acquirePreview(preview, Camera2Ops.WAIT_FOR_SURFACE_CHANGE_TIMEOUT_MS)
                 ?: error("wait for surface change to $preview timed out")
             val recording = CamcorderRecording(ops, camera.device, recorder, CamcorderProfiles.get(numeric!!, profile!!.quality), file)
-                .record(surface) { _, _ -> sleepUnlessCancelled(SwitchingRules.RECORDING_DURATION_MS) }
+                .record(surface) { sleepUnlessCancelled(SwitchingRules.RECORDING_DURATION_MS) }
             val failures = SwitchingRules.validateRecording(target.id, profile, recording)
             val details = listOf(SwitchingRules.recordingSummary(profile, recording)) + failures
             return step(target.id, SwitchingRules.RECORD_STEP_ID, if (failures.isEmpty()) Verdict.PASS else Verdict.FAIL, details)

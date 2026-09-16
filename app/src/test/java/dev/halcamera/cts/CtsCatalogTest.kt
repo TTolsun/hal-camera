@@ -10,6 +10,7 @@ class CtsCatalogTest {
     @Test
     fun `every case has a unique id and a source`() {
         val ids = CtsCatalog.cases.map { it.id }
+        assertEquals(listOf(CtsCatalog.BASIC_RECORDING, CtsCatalog.FAST_ON_OFF, CtsCatalog.SWITCHING, CtsCatalog.ALL_SIZE_ON_OFF, CtsCatalog.STILL_PREVIEW_COMBINATION, CtsCatalog.VIDEO_SNAPSHOT), ids)
         assertEquals(ids.toSet().size, ids.size)
         CtsCatalog.cases.forEach { assertTrue(it.source, it.source.contains('#')) }
     }

@@ -172,8 +172,9 @@ object BasicRecordingRules {
     /**
      * validateRecording with fixed-fps arguments. Returns the assertion messages that would have failed, in CTS
      * order; the first failure in CTS stops the test, so only the first entry is what CTS would print.
+     * [frameDropTolerance] is the rate in percent; testVideoSnapshot passes its own.
      */
-    fun validate(cameraId: String, isLegacy: Boolean, profile: Profile, rec: Recording): List<String> {
+    fun validate(cameraId: String, isLegacy: Boolean, profile: Profile, rec: Recording, frameDropTolerance: Float = FRMDRP_RATE_TOLERANCE): List<String> {
         val sz = profile.size
         if (!rec.fileExists) return listOf("No video is recorded")
         val recorded = rec.recordedSize ?: return listOf("Cannot find video track!")
@@ -199,8 +200,8 @@ object BasicRecordingRules {
             prev = timestamps[i]
         }
         val frameDropRate = 100f * frameDropCount / timestamps.size
-        if (!(frameDropRate < FRMDRP_RATE_TOLERANCE))
-            return listOf("Camera $cameraId: Video frame drop rate too high: $frameDropRate%, tolerance $FRMDRP_RATE_TOLERANCE%. " +
+        if (!(frameDropRate < frameDropTolerance))
+            return listOf("Camera $cameraId: Video frame drop rate too high: $frameDropRate%, tolerance $frameDropTolerance%. " +
                 "Video size: $sz, expectedDuration [$expectedDurationMs,$expectedDurationMs], expectedFrameDuration $expectedFrameDurationMs, " +
                 "frameDropCnt $frameDropCount, frameCount ${timestamps.size}")
         return emptyList()

@@ -4,6 +4,7 @@ import dev.halcamera.cts.combination.StillPreviewCombinationRules
 import dev.halcamera.cts.onoff.FastOnOffRules
 import dev.halcamera.cts.recording.BasicRecordingRules
 import dev.halcamera.cts.sizes.AllSizeOnOffRules
+import dev.halcamera.cts.snapshot.VideoSnapshotRules
 import dev.halcamera.cts.switching.SwitchingRules
 
 /**
@@ -27,6 +28,7 @@ object CtsCatalog {
     const val SWITCHING = "switching"
     const val ALL_SIZE_ON_OFF = "all_size_on_off"
     const val STILL_PREVIEW_COMBINATION = "still_preview_combination"
+    const val VIDEO_SNAPSHOT = "video_snapshot"
 
     val cases: List<CtsCaseSpec> = listOf(
         CtsCaseSpec(
@@ -81,6 +83,17 @@ object CtsCatalog {
                 "카메라 ${cameras}대마다 JPEG 크기 전부와 프리뷰 크기(1080p 이하) 전부의 조합을 하나씩 구성해 프리뷰 첫 프레임 뒤 정지 영상을 한 장 찍고, " +
                     "요청한 크기의 디코딩 가능한 JPEG가 돌아오는지 검사합니다(조합당 약 1초, 카메라마다 수백 조합). " +
                     "CTS StillCaptureTest#testStillPreviewCombination의 순서와 QCIF 예외를 따르되 AE·AF 수렴은 기다리지 않습니다. 사진은 저장하지 않습니다."
+            }
+        ),
+        CtsCaseSpec(
+            id = VIDEO_SNAPSHOT,
+            source = VideoSnapshotRules.SOURCE,
+            title = "동영상 스냅샷",
+            needsAudio = true,
+            summary = { cameras ->
+                "카메라 ${cameras}대마다 가장 큰 CamcorderProfile로 ${VideoSnapshotRules.RECORDING_DURATION_MS / 1000}초를 녹화하면서 " +
+                    "${VideoSnapshotRules.SNAPSHOT_EARLIEST_MS / 1000}~${VideoSnapshotRules.SNAPSHOT_LATEST_MS / 1000}초 사이의 무작위 시점에 같은 세션으로 JPEG 스냅샷을 한 장 찍습니다" +
+                    "(약 ${cameras * 30 / 60 + 1}분). 동영상은 길이 오차 20 %와 프레임 드롭률 ${VideoSnapshotRules.FRAMEDROP_TOLERANCE.toInt()} % 미만, 스냅샷은 요청한 크기의 디코딩 가능한 JPEG인지 검사하며 소리도 함께 녹음됩니다. 사진과 동영상은 저장하지 않습니다."
             }
         )
     )

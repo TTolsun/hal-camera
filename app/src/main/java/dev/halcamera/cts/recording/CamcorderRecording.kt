@@ -20,8 +20,8 @@ import java.util.concurrent.atomic.AtomicLong
  * (close the session, wait for onClosed, stop the recorder). Returns what MediaExtractor reads back from the
  * file together with the number of completed results; the caller deletes the file when it is done with it.
  *
- * [body] runs between start and stop with the live session and the repeating request, so a case can sleep for
- * its duration or capture a still into the same session. Every failure propagates; the session and the
+ * [body] runs between start and stop with the [Live] session, so a case can sleep for its duration or capture a
+ * still into the same session. Every failure propagates; the session and the
  * recording surface are released on the way out.
  */
 class CamcorderRecording(
@@ -33,7 +33,10 @@ class CamcorderRecording(
 ) {
     val fpsRange: Range<Int> get() = Range(camcorder.videoFrameRate, camcorder.videoFrameRate)
 
-    fun record(previewSurface: Surface, extraOutputs: List<Surface> = emptyList(), body: (session: CameraCaptureSession, repeating: CaptureRequest) -> Unit): BasicRecordingRules.Recording {
+    /** The recording while it runs: the session, its repeating request, and the two surfaces that request targets. */
+    class Live(val session: CameraCaptureSession, val repeating: CaptureRequest, val previewSurface: Surface, val recordingSurface: Surface)
+
+    fun record(previewSurface: Surface, extraOutputs: List<Surface> = emptyList(), body: (live: Live) -> Unit): BasicRecordingRules.Recording {
         file.delete()
         recorder.setAudioSource(MediaRecorder.AudioSource.CAMCORDER)
         recorder.setVideoSource(MediaRecorder.VideoSource.SURFACE)
@@ -61,7 +64,7 @@ class CamcorderRecording(
             // Wait for the first capture start before starting mediaRecorder.
             check(firstStart.await(Camera2Ops.CAPTURE_RESULT_TIMEOUT_MS, TimeUnit.MILLISECONDS)) { "Timeout waiting for the first capture start" }
             recorder.start()
-            body(session.session, request)
+            body(Live(session.session, request, previewSurface, recordingSurface))
 
             // stopRecording: stop streaming and wait for the session to close, then stop the recorder.
             check(session.close()) { "Timeout waiting for the session to close" }
