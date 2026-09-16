@@ -102,7 +102,7 @@ test('all configured elements fit the prompt budget and exclude descendant field
         assert.ok(input.files.length > 0); count++;
       }
     }
-    assert.equal(count, 47);
+    assert.equal(count, 51);
   `));
 });
 
@@ -187,6 +187,35 @@ test('malformed markers cause no partial page writes', () => {
     const before = snapshot(file('guide'));
     assert.equal(run('generate.mjs').status, 1);
     assert.deepEqual(snapshot(file('guide')), before);
+  });
+});
+
+test('a screen without an owning element fails coverage until evidence or an ignore entry names it', () => {
+  pass(run('coverage.mjs', '--check'));
+  const scratch = 'app/src/main/java/dev/halcamera/ScratchActivity.kt';
+  const ignoring = (entry) => s => s.replace(/coverage:\r?\n  ignore: \[\]/, 'coverage:\n  ignore:\n' + entry);
+  fs.writeFileSync(file(scratch), 'class ScratchActivity');
+  try {
+    const missing = run('coverage.mjs', '--check');
+    assert.equal(missing.status, 1, missing.stdout + missing.stderr);
+    assert.match(missing.stdout, /ScratchActivity\.kt\s+누락/);
+    // Naming the file in an element's evidence is the normal fix.
+    change('guide/_bindings.yaml', s => s.replace(/(      screens\/look-tokens:\r?\n        evidence:\r?\n)/, '$1          - ' + scratch + '\n'), () => {
+      pass(run('coverage.mjs', '--check'));
+    });
+    // Documenting the exclusion is the other; a reason is mandatory.
+    change('guide/_bindings.yaml', ignoring('    - path: ' + scratch + '\n      reason: 테스트용 화면'), () => {
+      pass(run('coverage.mjs', '--check'));
+    });
+    change('guide/_bindings.yaml', ignoring('    - path: ' + scratch), () => {
+      assert.equal(run('coverage.mjs', '--check').status, 1);
+    });
+  } finally { fs.unlinkSync(file(scratch)); }
+  // An ignore entry that no longer matches anything is itself a failure, so the list cannot rot.
+  change('guide/_bindings.yaml', ignoring('    - path: app/src/main/java/dev/halcamera/Gone.kt\n      reason: 없는 파일'), () => {
+    const unused = run('coverage.mjs', '--check');
+    assert.equal(unused.status, 1);
+    assert.match(unused.stdout, /불필요한 제외/);
   });
 });
 

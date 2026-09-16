@@ -39,6 +39,8 @@ node tools/docgen/extract.mjs            # 사실 추출
 node tools/docgen/verify.mjs             # 최신성 상태 표
 node tools/docgen/verify.mjs --check     # CI: 최신이 아니면 실패
 node tools/docgen/verify.mjs --accept    # 검토 완료를 기록 (사람이 실행)
+node tools/docgen/coverage.mjs           # 담당 요소 표: *Activity.kt 와 패키지마다 어느 elements evidence 에 속하는지
+node tools/docgen/coverage.mjs --check   # CI: 담당 요소가 없는 화면·패키지가 있으면 실패
 node tools/docgen/generate.mjs           # 페이지에 반영
 node tools/docgen/generate.mjs --check   # CI: 디스크와 다르면 실패
 node tools/docgen/site.mjs build         # guide/ → docs/ 정적 사이트
@@ -67,6 +69,15 @@ node tools/docgen/selftest.mjs           # 산문 보존, 재현성, 최신성 �
 - `code`: 코드를 읽어 확인한 동작
 - `device`: 실제 기기에서 검증한 동작. `_inputs/device-verification.yaml` 의 `V-xxx` 기록이 있어야 합니다.
 - `intent`: 설계 의도나 추정. 이유는 `_inputs/decisions.md` 의 `D-xxx` 에 있는 것만 인용합니다.
+
+## 화면·패키지 추가
+
+`verify.mjs` 는 기존 절이 낡았는지만 봅니다. 새 화면이 통째로 들어와도 기존 문단을 다시 검토하라고만 하므로, `coverage.mjs` 가 반대 방향을 검사합니다. `app/src/main/java/dev/halcamera/` 아래의 모든 `*Activity.kt`(AndroidManifest 의 activity 포함)와 바로 아래 패키지 디렉터리는 `_bindings.yaml` 의 어떤 `sources.*.elements.*.evidence` 에든 들어 있어야 합니다. 관점 전체 evidence 의 넓은 글롭과 원고의 `sources:` 인용은 세지 않습니다. 인용은 문단 하나의 근거이지 요소의 소유가 아니기 때문입니다.
+
+1. `.omm/<perspective>/…/<element>/` 디렉터리를 만들고 `description.md` 와 `meta.yaml` 을 씁니다. 화면이면 `overall-architecture/screens/` 아래가 자리입니다. 부모의 `meta.yaml` `children` 에도 이름을 넣습니다.
+2. `_bindings.yaml` 의 해당 관점 `elements:` 에 요소 경로와 evidence 를 적습니다. 요소 하나의 근거는 Qwen 입력 한도(60,000자) 안이어야 하므로 큰 화면은 하위 요소로 나눕니다(`screens/probe-screen` 과 `screens/probe-screen/probe-model` 처럼).
+3. `node tools/docgen/coverage.mjs --check` 가 통과하는지 봅니다. 문서화하지 않을 파일은 `_bindings.yaml` 의 `coverage.ignore` 에 `path` 와 `reason` 을 함께 적습니다. 대상이 사라진 ignore 항목은 그 자체로 검사 실패입니다.
+4. 요소를 추가하면 그 관점의 `.omm` 모델이 바뀌므로 `verify.mjs --accept` 로 검토를 기록하고 `generate.mjs` 를 실행합니다.
 
 ## 페이지 추가
 

@@ -19,10 +19,11 @@
 //   4. 디자인 생성 결과 일치      common.mjs design --check
 //   5. 사실 추출                extract.mjs   (state/facts.json 을 다시 씁니다)
 //   6. 원본 최신성 검사          verify.mjs --check
-//   7. 생성 결과 일치 검사        generate.mjs --check
-//   8. 사이트 산출물 일치 검사     site.mjs check   (docs/ 가 guide/ 에서 빌드한 결과와 같은지, 내부 링크가 유효한지)
-//   9. (--ci) 상태 파일 일치 검사  git diff --exit-code -- tools/docgen/state guide docs
-//   9. (--build) 사이트 빌드      site.mjs build
+//   7. 담당 요소 검사            coverage.mjs --check   (새 *Activity.kt 와 패키지에 담당 요소가 있는지)
+//   8. 생성 결과 일치 검사        generate.mjs --check
+//   9. 사이트 산출물 일치 검사     site.mjs check   (docs/ 가 guide/ 에서 빌드한 결과와 같은지, 내부 링크가 유효한지)
+//  10. (--ci) 상태 파일 일치 검사  git diff --exit-code -- tools/docgen/state guide docs
+//  10. (--build) 사이트 빌드      site.mjs build
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
@@ -53,6 +54,7 @@ const steps = [
   { name: "디자인 생성 결과 일치 검사", cmd: node, args: [docgen("common.mjs"), "design", "--check"] },
   { name: "사실 추출", cmd: node, args: [docgen("extract.mjs")] },
   { name: "원본 최신성 검사", cmd: node, args: [docgen("verify.mjs"), "--check"] },
+  { name: "담당 요소 검사", cmd: node, args: [docgen("coverage.mjs"), "--check"] },
   { name: "생성 결과 일치 검사", cmd: node, args: [docgen("generate.mjs"), "--check"] },
   { name: "사이트 산출물 일치 검사", cmd: node, args: [docgen("site.mjs"), "check"] },
 ];
