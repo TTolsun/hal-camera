@@ -30,7 +30,7 @@ abstract class CameraCaseRunner(protected val env: CaseEnvironment, private val 
             cameras += runCameras(env.manager.cameraIdList.toList())
         } catch (e: Exception) {
             Log.w(source, "run aborted", e)
-            cameras += CameraCaseResult("-", listOf(StepResult("run", Verdict.FAIL, listOf(describe(e)))))
+            cameras += CameraCaseResult("-", listOf(step("-", "run", Verdict.FAIL, listOf(describe(e)))))
         } finally {
             ops.quit()
         }

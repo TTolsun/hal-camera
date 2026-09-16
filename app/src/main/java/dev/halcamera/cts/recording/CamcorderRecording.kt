@@ -44,16 +44,15 @@ class CamcorderRecording(
         recorder.setOutputFile(file.absolutePath)
         recorder.prepare()
         val recordingSurface = recorder.surface ?: error("Recording surface must be non-null!")
-        check(previewSurface.isValid && recordingSurface.isValid) { "Both preview and recording surfaces should be valid" }
-
-        val request = camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-            set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRange)
-            addTarget(recordingSurface)
-            addTarget(previewSurface)
-        }.build()
         val frames = AtomicLong(0)
         var session: Camera2Ops.Session? = null
         try {
+            check(previewSurface.isValid && recordingSurface.isValid) { "Both preview and recording surfaces should be valid" }
+            val request = camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+                set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, fpsRange)
+                addTarget(recordingSurface)
+                addTarget(previewSurface)
+            }.build()
             session = ops.configure(camera, listOf(previewSurface, recordingSurface) + extraOutputs, request)
             val firstStart = CountDownLatch(1)
             val callback = object : CameraCaptureSession.CaptureCallback() {

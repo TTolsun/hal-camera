@@ -86,10 +86,13 @@ class SwitchingRunner(env: CaseEnvironment, private val rounds: Int = SwitchingR
                 ?: error("wait for surface change to $preview timed out")
             val recording = CamcorderRecording(ops, camera.device, recorder, CamcorderProfiles.get(numeric!!, profile!!.quality), file)
                 .record(surface) { sleepUnlessCancelled(SwitchingRules.RECORDING_DURATION_MS) }
+            if (cancelled.get()) return step(target.id, SwitchingRules.RECORD_STEP_ID, Verdict.SKIP, listOf(CANCELLED))
             val failures = SwitchingRules.validateRecording(target.id, profile, recording)
             val details = listOf(SwitchingRules.recordingSummary(profile, recording)) + failures
             return step(target.id, SwitchingRules.RECORD_STEP_ID, if (failures.isEmpty()) Verdict.PASS else Verdict.FAIL, details)
         } catch (e: Exception) {
+            // A cancel cuts the recording short; MediaRecorder may then refuse to stop, which is not a device fault.
+            if (cancelled.get()) return step(target.id, SwitchingRules.RECORD_STEP_ID, Verdict.SKIP, listOf(CANCELLED, describe(e)))
             Log.w(TAG, "camera ${target.id} recording after switching failed", e)
             return step(target.id, SwitchingRules.RECORD_STEP_ID, Verdict.FAIL, listOf(describe(e)))
         } finally {
@@ -101,5 +104,6 @@ class SwitchingRunner(env: CaseEnvironment, private val rounds: Int = SwitchingR
 
     companion object {
         private const val TAG = "SwitchingRunner"
+        private const val CANCELLED = "Cancelled before the recording finished"
     }
 }

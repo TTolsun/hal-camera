@@ -18,10 +18,15 @@ import java.util.concurrent.TimeUnit
 class JpegReader(width: Int, height: Int, handler: Handler, maxImages: Int = 2) : AutoCloseable {
     private val reader: ImageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, maxImages)
     private val queue = LinkedBlockingQueue<Image>()
+    private val lock = Any()
+    private var closed = false
 
     init {
-        // The listener may still fire after close(); acquiring from a closed reader throws, and that must not take the handler thread down.
-        reader.setOnImageAvailableListener({ r -> runCatching { r.acquireNextImage() }.getOrNull()?.let { queue.offer(it) } }, handler)
+        // Acquire and close exclude each other, so no image is acquired after the drain and lost, and nothing is
+        // acquired from a closed reader (which throws on the handler thread).
+        reader.setOnImageAvailableListener({ r ->
+            synchronized(lock) { if (!closed) runCatching { r.acquireNextImage() }.getOrNull()?.let { queue.offer(it) } }
+        }, handler)
     }
 
     val surface: Surface get() = reader.surface
@@ -30,8 +35,11 @@ class JpegReader(width: Int, height: Int, handler: Handler, maxImages: Int = 2) 
     fun next(timeoutMs: Long): Image? = queue.poll(timeoutMs, TimeUnit.MILLISECONDS)
 
     override fun close() {
-        while (true) { (queue.poll() ?: break).close() }
-        reader.close()
+        synchronized(lock) {
+            closed = true
+            while (true) { (queue.poll() ?: break).close() }
+            reader.close()
+        }
     }
 
     companion object {

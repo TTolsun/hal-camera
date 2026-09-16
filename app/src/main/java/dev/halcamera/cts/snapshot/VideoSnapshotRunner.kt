@@ -10,6 +10,7 @@ import dev.halcamera.cts.CameraCaseResult
 import dev.halcamera.cts.CameraCaseRunner
 import dev.halcamera.cts.CameraFacts
 import dev.halcamera.cts.CaseEnvironment
+import dev.halcamera.cts.Dim
 import dev.halcamera.cts.JpegReader
 import dev.halcamera.cts.StepResult
 import dev.halcamera.cts.Verdict
@@ -104,17 +105,23 @@ class VideoSnapshotRunner(env: CaseEnvironment, private val random: Random = Ran
                 val remaining = VideoSnapshotRules.RECORDING_DURATION_MS - (SystemClock.elapsedRealtimeNanos() - startedAt) / 1_000_000
                 if (remaining > 0) sleepUnlessCancelled(remaining)
             }
+            if (cancelled.get()) {
+                steps += step(cameraId, quality, Verdict.SKIP, listOf(CANCELLED))
+                if (snapshot.requestedAtMs != null) judgeSnapshot(cameraId, snapshotSize, snapshot, steps)
+                return CameraCaseResult(cameraId, steps)
+            }
             val (videoVerdict, videoDetails) = VideoSnapshotRules.judgeVideo(cameraId, info.isLegacy, profile, rec, snapshotSize)
             steps += step(cameraId, quality, videoVerdict, videoDetails)
-            val (stillVerdict, stillDetails) = VideoSnapshotRules.judgeSnapshot(snapshotSize, snapshot)
-            steps += step(cameraId, VideoSnapshotRules.SNAPSHOT_STEP_ID, stillVerdict, stillDetails)
+            judgeSnapshot(cameraId, snapshotSize, snapshot, steps)
         } catch (e: Exception) {
+            // A cancel cuts the recording short; MediaRecorder may then refuse to stop, which is not a device fault.
+            if (cancelled.get()) {
+                steps += step(cameraId, quality, Verdict.SKIP, listOf(CANCELLED, describe(e)))
+                return CameraCaseResult(cameraId, steps)
+            }
             Log.w(TAG, "camera $cameraId video snapshot recording failed", e)
             steps += step(cameraId, quality, Verdict.FAIL, listOf(describe(e)))
-            if (snapshot.requestedAtMs != null) {
-                val (stillVerdict, stillDetails) = VideoSnapshotRules.judgeSnapshot(snapshotSize, snapshot)
-                steps += step(cameraId, VideoSnapshotRules.SNAPSHOT_STEP_ID, stillVerdict, stillDetails)
-            }
+            if (snapshot.requestedAtMs != null) judgeSnapshot(cameraId, snapshotSize, snapshot, steps)
         } finally {
             file.delete()
             recorder?.release()
@@ -124,7 +131,14 @@ class VideoSnapshotRunner(env: CaseEnvironment, private val random: Random = Ran
         return CameraCaseResult(cameraId, steps)
     }
 
+    /** The snapshot row, judged the same way whether the recording ended cleanly or not. */
+    private fun judgeSnapshot(cameraId: String, snapshotSize: Dim, snapshot: Snapshot, steps: MutableList<StepResult>) {
+        val (verdict, details) = VideoSnapshotRules.judgeSnapshot(snapshotSize, snapshot)
+        steps += step(cameraId, VideoSnapshotRules.SNAPSHOT_STEP_ID, verdict, details)
+    }
+
     companion object {
         private const val TAG = "VideoSnapshotRunner"
+        private const val CANCELLED = "Cancelled before the recording finished"
     }
 }

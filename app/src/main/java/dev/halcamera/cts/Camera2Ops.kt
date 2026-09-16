@@ -134,8 +134,9 @@ class Camera2Ops(private val manager: CameraManager, threadName: String) {
             }
         }, handler)
         check(done.await(timeoutMs, TimeUnit.MILLISECONDS)) { "Timeout waiting for the first capture result" }
-        failure.get()?.let { error(it) }
-        return completed.get()!!
+        // A frame that fails after the first one completed is not this wait's concern; only a failure before it is.
+        completed.get()?.let { return it }
+        error(failure.get() ?: "No capture result was completed")
     }
 
     /** One still capture: whether its result completed in time, and the image [reader] delivered for it, if any. */
