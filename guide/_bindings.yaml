@@ -310,6 +310,12 @@ coverage:
 
 # --------------------------------------------------------------------------
 # 페이지 정의
+#
+# 여기 등록한 페이지만 생성기가 마커 블록을 채웁니다. benchmark.md, probe.md, cts.md, decisions.md,
+# evidence.md, getting-started.md, index.md 는 손으로 쓴 요약 페이지이며 등록하지 않습니다.
+# probe.md 와 cts.md 는 screens/probe-screen · screens/cts-screen 요소를 based_on 으로 묶지 않기로
+# 했습니다(#87). 요소 설명은 architecture.md 원고가 담당하고, 두 페이지는 그 요약으로 남깁니다.
+# 페이지를 생성 대상으로 바꾸려면 아래에 등록하고 _content/<page>/ 원고를 만듭니다.
 # --------------------------------------------------------------------------
 pages:
   architecture.md:
