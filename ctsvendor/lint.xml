@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Upstream CTS sources compile against test_current and run only on the Android release they ship
+         with. They are not written for minSdk 26, so API-level and style checks are suppressed for them
+         alone; the app gates entry into this module on Build.VERSION.SDK_INT. Our own code keeps every check. -->
+    <issue id="all">
+        <ignore path="src/main/java/android" />
+        <ignore path="src/main/java/com/android" />
+        <ignore path="src/main/res/layout/surface_view_2.xml" />
+    </issue>
+</lint>

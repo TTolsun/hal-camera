@@ -4,7 +4,7 @@ import dev.halcamera.cts.Dim
 import dev.halcamera.cts.Verdict
 /**
  * The decisions of CTS `RecordingTest#testBasicRecording` (platform/cts, tests/camera), separated from the
- * camera and MediaRecorder calls so they run on the JVM. [BasicRecordingRunner] feeds them what CTS reads from
+ * camera and MediaRecorder calls so they run on the JVM. The Switching and VideoSnapshot runners feed them what CTS reads from
  * the device and performs the recording in between.
  *
  * Constants, skip conditions and assertion messages are kept as CTS has them, so a FAIL here reads against the

@@ -32,7 +32,6 @@ nav_order: 7
 
 | 로그 태그 | 선언 위치 |
 | --- | --- |
-| `BasicRecordingRunner` | `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRunner.kt` |
 | `BenchmarkReport` | `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt` |
 | `BenchmarkStore` | `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt` |
 | `Camera2Ops` | `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt` |
@@ -110,7 +109,7 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-16 @ `d61a614` · KH
+- 검토 2026-09-16 @ `3073e55` · Claude Opus 5 (cts vendored)
 
 </details>
 
@@ -186,9 +185,9 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-16 @ `d61a614` · KH |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-16 @ `d61a614` · KH |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-16 @ `d61a614` · KH |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-16 @ `3073e55` · Claude Opus 5 (cts vendored) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-16 @ `3073e55` · Claude Opus 5 (cts vendored) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-16 @ `3073e55` · Claude Opus 5 (cts vendored) |
 
 <!-- omm:end id=status -->
 
