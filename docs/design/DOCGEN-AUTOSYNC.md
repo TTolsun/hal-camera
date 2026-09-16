@@ -1,8 +1,9 @@
 # docgen 무인 동기화 설계 (로컬 Qwen runner)
 
 - 작성일: 2026-09-12
-- 상태: 초안. 실행 계획은 `docs/PLAN-docgen-autosync.md`에 있습니다.
-- 코드 기준: `main` `38b9b5c` (2026-09-12)
+- 갱신일: 2026-09-16 (상태와 1절 표를 실제 동작에 맞춤)
+- 상태: 운영 중. 3절의 A~D는 모두 `main`에 반영되었다(#52~#55, #71, #88). 실행 계획은 `docs/PLAN-docgen-autosync.md`, 운영 절차는 `tools/docgen/README.md`의 운영 절에 있다.
+- 코드 기준: `main` `af240b1` (2026-09-16)
 - 대상 파이프라인: `tools/docgen/` (README의 흐름도 참고)
 
 ## 0. 한 문장
@@ -11,15 +12,15 @@
 
 ## 1. 현재 상태와 문제
 
-배포와 검사는 이미 자동이다.
+2026-09-16 기준 세 단계가 모두 자동이다. 아래 표는 갱신한 것이고, 그 밑의 실측 표는 설계 당시(2026-09-12)의 문제 기록이다.
 
 | 단계 | 담당 | 상태 |
 | --- | --- | --- |
-| 코드와 문서 불일치 검사 | `docs-check.yml` | 동작 중. PR과 `main` push에서 실행된다. |
+| 코드와 문서 불일치 검사 | `docs-check.yml` | 동작 중. PR과 `main` push에서 GitHub-hosted runner로 실행된다. `main`에 브랜치 보호가 없어 실패한 채 머지할 수 있다. |
 | `guide` 배포 | `tools/docgen/site.mjs` | 로컬에서 `docs/`로 빌드하여 커밋한다. Pages는 `main` `/docs` 브랜치 배포다(#67). |
-| 구조와 원고 재작성 | `docs-sync.yml` + `sync.mjs` | 잠들어 있다. `workflow_dispatch` 전용이고 runner가 없다. |
+| 구조와 원고 재작성 | `docs-sync.yml` + `sync.mjs` | 동작 중. `main` push마다 개발자 PC의 self-hosted runner(`docgen-qwen`)가 실행한다. 정상 경로에서는 재스캔 대상이 없어 PR을 만들지 않으며, 운영 절차는 `tools/docgen/README.md`의 운영 절에 있다. |
 
-`sync.mjs`를 이 저장소 전체에 실행하면 실패한다. 2026-09-12에 실측한 원인은 다음과 같다.
+설계 당시에는 `sync.mjs`를 이 저장소 전체에 실행하면 실패했다. 2026-09-12에 실측한 원인은 다음과 같다.
 
 | 원인 | 실측값 | 현상 |
 | --- | --- | --- |

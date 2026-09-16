@@ -175,3 +175,45 @@ node --test --test-name-pattern='previous 300-second limit' tools/docgen/sync.te
 ```
 
 기본 CI는 모의 Ollama 응답과 실제 OMM CLI로 오류·복구를 검사합니다. `DOCGEN_REAL_QWEN` 검사는 설치된 Qwen으로 전체 파이프라인과 원고 한 건의 `--write-only` 실행을 확인합니다. `DOCGEN_LONG_STREAM` 검사는 모의 서버가 305초 동안 청크를 보내도록 하여 기본 시간 제한에서 응답이 완료되는지 확인합니다. 이 검사는 실제 모델의 장시간 생성 검증과는 별개입니다. 두 선택 검사는 명시적으로 실행하며, 모든 검사는 임시 테스트 프로젝트 또는 모의 서버를 사용하므로 제품 코드나 배포 문서를 테스트용으로 바꾸지 않습니다.
+
+## 운영: 두 workflow의 역할과 PR이 생기는 조건
+
+두 workflow는 역할이 다릅니다. `docs-check.yml`은 모든 PR과 `main` push에서 GitHub-hosted runner로 검사만 하고 파일을 쓰지 않습니다. `docs-sync.yml`은 `main` push에서만 이 PC의 self-hosted runner로 실행되며, `.omm/`과 `guide/_content/`를 쓰는 유일한 자동 경로입니다.
+
+정상 경로에서는 `docs-sync`가 PR을 만들지 않습니다. `verify.mjs`는 커밋 해시가 아니라 파일 내용 해시(`codeHash`, `modelHash`)로 최신성을 판정하므로, PR 안에서 `--accept`까지 마치고 머지하면 `main`의 해시도 같아서 `재스캔 대상 perspective: (없음)`으로 30~40초 만에 끝납니다. 검토 기록의 `@ 커밋` 표기는 참고용 라벨입니다.
+
+`docs-check`가 실패한 PR은 그 PR 안에서 사람이 문서를 고쳐야 합니다. `.omm/`과 `_content/`를 손으로 고치거나 로컬에서 `sync.mjs`를 실행한 뒤 `verify.mjs --accept --reviewer=이름`, `generate.mjs`, `site.mjs build`를 실행하고 그 결과를 같은 PR에 커밋합니다.
+
+`docs-sync`가 실제로 `docs/omm-sync` PR을 여는 경우는 다음 세 가지입니다.
+
+1. `docs-check`가 실패한 채로 머지했을 때. `main`에 브랜치 보호 규칙이 없으므로 빨간 검사를 무시하고 머지할 수 있습니다. 막으려면 GitHub Settings → Branches에서 `docs-check`를 required status check로 지정합니다.
+2. `main`에 직접 push했을 때.
+3. Actions에서 `force=true`로 수동 실행했을 때. 이 경우 전체 요소를 다시 스캔합니다.
+
+즉 자동 PR은 사람이 문서 검토를 빠뜨렸을 때 뒤늦게 메우는 안전망이고, 정상 경로는 PR 안에서 사람이 끝내는 것입니다. 자동 PR의 원고는 4B 모델이 쓴 것이므로 그대로 머지하지 말고 코드와 대조해야 합니다(PR #66에서 실제로 수정했습니다).
+
+## 운영: 이 PC의 구성과 재부팅 절차
+
+2026-09-16 기준 개발자 PC의 구성은 다음과 같습니다.
+
+| 구성 요소 | 실체 | 시작 방식 |
+| --- | --- | --- |
+| runner | Windows 서비스 `actions.runner.TTolsun-hal-camera.halcamera-docgen-windows`, 계정 `hal-docgen`, 폴더 `C:\ProgramData\HALCamera\docgen-runner` | `Automatic`. 부팅 직후 로그인 없이 올라와 GitHub에 `online`으로 표시됩니다 |
+| Ollama | `127.0.0.1:11434`, 모델 `qwen3.5:4b` | 시작 폴더의 `Ollama.lnk`. 사용자가 로그인해야 실행됩니다 |
+| 실행 허용 | 저장소 변수 `DOCGEN_LOCAL_RUNNER_ENABLED=true` | 2026-09-14 설정 |
+
+재부팅 뒤에 사람이 할 일은 Windows에 로그인하는 것 하나입니다. 잠금 화면 상태여도 되지만 로그아웃하면 Ollama가 내려갑니다. 부팅 완료 후 로그인 전 구간에는 runner만 살아 있어서, 그 사이에 낡은 문서를 포함한 push가 들어오면 Ollama 연결 실패로 `docs-sync`가 실패합니다. 재스캔 대상이 없는 정상 경로는 모델을 호출하지 않으므로 이 구간에도 성공합니다. PC가 꺼져 있으면 작업은 큐에서 최대 24시간 대기합니다.
+
+실패한 실행은 두 단계로 복구합니다.
+
+1. Actions → docs-sync에서 실패한 실행을 열고 `Re-run jobs`를 누릅니다. 같은 커밋으로 다시 실행됩니다.
+2. `state/sync-transaction/journal.json`이나 `.sync-lock`이 남아 있으면 먼저 `node tools/docgen/sync.mjs --recover`를 실행합니다(위 "실패와 복구" 참고).
+
+로그인 전 공백까지 없애려면 Ollama를 시작 폴더 대신 시스템 예약 작업(`At startup`)으로 등록해야 합니다. 이 구성은 아직 실측하지 않았습니다.
+
+runner와 Ollama가 살아 있는지는 아래 명령으로 확인합니다.
+
+```bash
+gh api repos/TTolsun/hal-camera/actions/runners --jq '.runners[] | "\(.name) \(.status)"'
+curl -s http://127.0.0.1:11434/api/tags | grep -o 'qwen3.5:4b'
+```
