@@ -2,6 +2,7 @@ package dev.halcamera.cts
 
 import dev.halcamera.cts.onoff.FastOnOffRules
 import dev.halcamera.cts.recording.BasicRecordingRules
+import dev.halcamera.cts.sizes.AllSizeOnOffRules
 import dev.halcamera.cts.switching.SwitchingRules
 
 /**
@@ -23,6 +24,7 @@ object CtsCatalog {
     const val BASIC_RECORDING = "basic_recording"
     const val FAST_ON_OFF = "fast_on_off"
     const val SWITCHING = "switching"
+    const val ALL_SIZE_ON_OFF = "all_size_on_off"
 
     val cases: List<CtsCaseSpec> = listOf(
         CtsCaseSpec(
@@ -56,6 +58,16 @@ object CtsCatalog {
                 "카메라 ${cameras}대를 차례로 열고 첫 프레임을 받은 뒤 닫는 전환을 ${SwitchingRules.DEFAULT_ROUNDS}회 반복하고, " +
                     "끝에 카메라마다 가장 큰 CamcorderProfile로 ${SwitchingRules.RECORDING_DURATION_MS / 1000}초씩 녹화합니다(약 ${(cameras * SwitchingRules.DEFAULT_ROUNDS * 2 + cameras * 6) / 60 + 1}분). " +
                     "녹화는 파일·트랙·크기와 길이 오차 ${(SwitchingRules.DURATION_MARGIN * 100).toInt()} %만 검사하며 소리도 함께 녹음됩니다."
+            }
+        ),
+        CtsCaseSpec(
+            id = ALL_SIZE_ON_OFF,
+            source = AllSizeOnOffRules.SOURCE,
+            title = "모든 크기 켜기·끄기",
+            needsAudio = false,
+            summary = { cameras ->
+                "카메라 ${cameras}대마다 SurfaceHolder로 보고하는 모든 프리뷰 크기를 큰 것부터 하나씩 열어(열기 → 그 크기의 프리뷰 세션 → 첫 프레임 → 닫기) 확인합니다" +
+                    "(크기당 약 2초, 카메라마다 크기 수만큼). 1080p 상한 없이 카메라가 광고한 크기 전부를 대상으로 합니다."
             }
         )
     )
