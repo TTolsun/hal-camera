@@ -159,7 +159,32 @@ sources:
           - app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt
       screens/cts-screen:
         evidence:
-          - app/src/main/java/dev/halcamera/cts/**/*.kt
+          - app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt
+          - app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt
+          - app/src/main/java/dev/halcamera/cts/CtsCatalog.kt
+          - app/src/main/java/dev/halcamera/cts/CtsRunner.kt
+          - app/src/main/java/dev/halcamera/cts/CtsRunners.kt
+          - app/src/main/java/dev/halcamera/cts/CtsCase.kt
+          - app/src/main/java/dev/halcamera/cts/CaseReportPresenter.kt
+      screens/cts-screen/case-runtime:
+        evidence:
+          - app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt
+          - app/src/main/java/dev/halcamera/cts/Camera2Ops.kt
+          - app/src/main/java/dev/halcamera/cts/CameraFacts.kt
+          - app/src/main/java/dev/halcamera/cts/JpegReader.kt
+          - app/src/main/java/dev/halcamera/cts/OpenCycle.kt
+      screens/cts-screen/recording-case:
+        evidence:
+          - app/src/main/java/dev/halcamera/cts/recording/*.kt
+      screens/cts-screen/on-off-cases:
+        evidence:
+          - app/src/main/java/dev/halcamera/cts/onoff/*.kt
+          - app/src/main/java/dev/halcamera/cts/switching/*.kt
+          - app/src/main/java/dev/halcamera/cts/sizes/*.kt
+      screens/cts-screen/capture-cases:
+        evidence:
+          - app/src/main/java/dev/halcamera/cts/combination/*.kt
+          - app/src/main/java/dev/halcamera/cts/snapshot/*.kt
       screens/gallery-screen:
         evidence:
           - app/src/main/java/dev/halcamera/GalleryActivity.kt
