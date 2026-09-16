@@ -22,7 +22,7 @@ class CliStoreInstrumentation : Instrumentation() {
 
     override fun onStart() {
         cleanupProfileHashes?.let { hashes ->
-            val library = dev.halcamera.benchmark.ProfileLibrary(targetContext)
+            val library = dev.halcamera.benchmark.platform.ProfileLibrary(targetContext)
             val fixtures = library.load().entries.filter { it.key.startsWith("import:") && it.sha256 in hashes &&
                 it.run.device.manufacturer == "Synthetic" && it.run.runId.startsWith("SYNTHETIC-") }
             fixtures.forEach(library::deleteImported)
@@ -43,8 +43,8 @@ class CliStoreInstrumentation : Instrumentation() {
             return
         }
         if (exportReports) {
-            val store = dev.halcamera.benchmark.BenchmarkStore(targetContext)
-            val codec = dev.halcamera.benchmark.BenchmarkReport(store)
+            val store = dev.halcamera.benchmark.platform.BenchmarkStore(targetContext)
+            val codec = dev.halcamera.benchmark.platform.BenchmarkReport(store)
             val reports = org.json.JSONArray()
             store.files().take(10).forEach { file ->
                 check(codec.read(file) != null) { "Unreadable report ${file.name}" }

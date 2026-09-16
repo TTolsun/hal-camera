@@ -2,10 +2,10 @@
 based_on: [data-flow]
 confidence: code
 sources:
-  - app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt
-  - app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt
   - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
   - app/src/main/java/dev/halcamera/cli/CliProvider.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
@@ -23,16 +23,18 @@ sources:
   - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
   - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
   - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt
-  - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
-  - app/src/main/java/dev/halcamera/benchmark/RunValidity.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt
-  - app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
   - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
-  - app/src/main/java/dev/halcamera/benchmark/BaselineManager.kt
-  - app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BaselineManager.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/StoreRunCatalog.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt
 decisions: []
 verifications: []
 ---

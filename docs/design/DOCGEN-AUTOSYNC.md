@@ -79,7 +79,7 @@ sources:
     elements:                      # 스캔 단위. 새로 추가한다.
       benchmark/run-assembler:
         evidence:
-          - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
+          - app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt
       screens/expert-screen:
         evidence:
           - app/src/main/java/dev/halcamera/MainActivity.kt

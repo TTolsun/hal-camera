@@ -1,1 +1,1 @@
-Telemetry의 capture_started·request_observed·capture_result·capture_failed·buffer_lost와 이미지 메타데이터가 관측 입력입니다. 지표 정의는 docs/METRICS.md, 표시 이름과 단위는 benchmark/MetricInfo.kt를 확인합니다. HealthMonitor와 Auto Check는 현재 실행 경로에 없습니다.
+Telemetry의 capture_started·request_observed·capture_result·capture_failed·buffer_lost와 이미지 메타데이터가 관측 입력입니다. 지표 정의는 docs/METRICS.md, 표시 이름과 단위는 benchmark/domain/MetricInfo.kt를 확인합니다. HealthMonitor와 Auto Check는 현재 실행 경로에 없습니다.

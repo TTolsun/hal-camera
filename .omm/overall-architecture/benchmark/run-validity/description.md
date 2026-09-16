@@ -1,4 +1,4 @@
-`app/src/main/java/dev/halcamera/benchmark/RunValidity.kt`(규칙 버전 `validity-v2`). `PLAN-BenchMarker-v0.3.md` 5.3에 따라 run 하나에 대해 서로 다른 세 질문에 답합니다. 측정이 유효한가, 비교에 써도 되는가, 기기 간 점수에 넣어도 되는가.
+`app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`(규칙 버전 `validity-v2`). `PLAN-BenchMarker-v0.3.md` 5.3에 따라 run 하나에 대해 서로 다른 세 질문에 답합니다. 측정이 유효한가, 비교에 써도 되는가, 기기 간 점수에 넣어도 되는가.
 
 `ValidityFlag` 14개가 각각 셋 중 무엇을 막는지 선언하며, flag는 그 답으로 묶여 있습니다. ABORTED, HARD_FAILURE, PROFILE_UNSUPPORTED, INSUFFICIENT_SAMPLES는 전부 막습니다. run에 프로파일이 약속한 내용이 없기 때문입니다. CADENCE_NOT_FIXED, THERMAL_HIGH, POWER_SAVE_MODE는 비교와 점수를 막습니다. 측정은 맞지만 다른 run과 견줄 수 없습니다. CHARGING, BATTERY_LOW, PROFILE_DRAFT, DEBUGGABLE_BUILD는 점수만 막습니다. 내부 비교에는 쓰되 기기 간 숫자에서는 뺍니다. DEBUGGABLE_BUILD는 debug 빌드가 자기 오버헤드까지 측정하기 때문에 v2에서 추가되었습니다. PREFLIGHT_MISMATCH, THERMAL_CHANGED, LABEL_MISSING은 정보용입니다.
 

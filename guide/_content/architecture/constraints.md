@@ -2,10 +2,10 @@
 based_on: [overall-architecture]
 confidence: code
 sources:
-  - app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt
-  - app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt
   - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
   - app/src/main/java/dev/halcamera/cli/CliProvider.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
@@ -13,12 +13,15 @@ sources:
   - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
   - app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt
   - app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt
-  - app/src/main/java/dev/halcamera/benchmark/RunValidity.kt
-  - app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt
-  - app/src/main/java/dev/halcamera/benchmark/RegressionRules.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt
 decisions: []
 verifications: []
 ---
@@ -34,7 +37,7 @@ verifications: []
 
 ### 계산과 저장의 제약
 
-1. `BenchmarkRunner`는 `Driver`, `Scheduler`, `clock`을 통해 카메라와 시계에 접근합니다. 지표·통계·회귀 계산은 JVM에서 테스트할 수 있으며 Activity와 파일 어댑터는 Android 의존성이 있습니다.
+1. `BenchmarkRunner`는 `Driver`, `Scheduler`, `clock`을 통해 카메라와 시계에 접근합니다. 지표·통계·회귀 계산은 `benchmark/domain/`과 `metrics/`에 두어 JVM에서 테스트하며, Activity와 `benchmark/platform/`의 파일·기기 어댑터만 Android 의존성을 가집니다. 새 파일에 `android.*` import가 필요하면 `platform/`에 두거나 인터페이스로 주입합니다.
 2. 벤치마크의 `org.json`은 파일 경계에서 사용합니다. `BenchmarkReportCodec`의 데이터 계약은 `Map<String, Any?>`로 전달합니다. schema 4를 쓰되 schema 3도 읽습니다. CLI protocol v1은 별도로 JSON 명령·상태를 정의하며 측정 보고서 schema를 바꾸지 않습니다.
 3. `RunValidity`는 flag 규칙에서 measurement·comparison·scoring eligibility를 계산합니다. 알 수 없는 flag는 비교와 점수 산정을 막습니다. `ScoreComposer`는 release 빌드와 기록된 환경값도 확인하며, calibration과 모델·endpoint·계약이 다르거나 필수 지표가 누락되면 내부 점수를 계산하지 않습니다.
 4. 회귀 임계값은 `RegressionRules`에서 관리합니다. baseline은 자동으로 지정하지 않으며 임의의 두 실행을 고르는 동작도 baseline을 바꾸지 않습니다.

@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8209d22858eb513a",
-        "modelHash": "b8ae875414771dbf",
+        "codeHash": "82f7b79d9c48135f",
+        "modelHash": "14c47e9a36a4901b",
         "at": "2026-09-16",
-        "commit": "b1d610e",
-        "reviewer": "Claude Opus 5 (cli controllers)"
+        "commit": "5636303",
+        "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "4e10a3e61a613476",
-        "modelHash": "50be73470c27fe37",
+        "codeHash": "103edde4bac2493e",
+        "modelHash": "752780bdb9786841",
         "at": "2026-09-16",
-        "commit": "b1d610e",
-        "reviewer": "Claude Opus 5 (cli controllers)"
+        "commit": "5636303",
+        "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "99494ea4f2029cfd",
-        "modelHash": "53d90e088a325cce",
+        "codeHash": "9da8d531fb98c55f",
+        "modelHash": "d94cc6e88edc271d",
         "at": "2026-09-16",
-        "commit": "b1d610e",
-        "reviewer": "Claude Opus 5 (cli controllers)"
+        "commit": "5636303",
+        "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "112fca07efb1b057",
-        "modelHash": "e757e019903fede9",
+        "codeHash": "79c2054e89d2693c",
+        "modelHash": "77192cbf8acc2780",
         "at": "2026-09-16",
-        "commit": "b1d610e",
-        "reviewer": "Claude Opus 5 (cli controllers)"
+        "commit": "5636303",
+        "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "187580a297d77500",
-        "modelHash": "8c14afc57990f5a8",
+        "codeHash": "62f24dbf000bae67",
+        "modelHash": "34847215d63bf48e",
         "at": "2026-09-16",
-        "commit": "b1d610e",
-        "reviewer": "Claude Opus 5 (cli controllers)"
+        "commit": "5636303",
+        "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "4e10a3e61a613476",
-        "modelHash": "8cbb4a9ddae17ab7",
+        "codeHash": "103edde4bac2493e",
+        "modelHash": "993bd745e0da8ada",
         "at": "2026-09-16",
-        "commit": "b1d610e",
-        "reviewer": "Claude Opus 5 (cli controllers)"
+        "commit": "5636303",
+        "reviewer": "Claude Opus 5 (benchmark split)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "8209d22858eb513a",
-        "modelHash": "68b73b12a73742b3",
+        "codeHash": "82f7b79d9c48135f",
+        "modelHash": "e8ac278b0223025b",
         "at": "2026-09-16",
-        "commit": "b1d610e",
-        "reviewer": "Claude Opus 5 (cli controllers)"
+        "commit": "5636303",
+        "reviewer": "Claude Opus 5 (benchmark split)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "8209d22858eb513a",
-        "modelHash": "a866d634cad93bfe",
+        "codeHash": "82f7b79d9c48135f",
+        "modelHash": "d2c5bde7f8258948",
         "at": "2026-09-16",
-        "commit": "b1d610e",
-        "reviewer": "Claude Opus 5 (cli controllers)"
+        "commit": "5636303",
+        "reviewer": "Claude Opus 5 (benchmark split)"
       },
       "observed": {
         "state": "fresh"
