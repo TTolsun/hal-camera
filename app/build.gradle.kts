@@ -57,5 +57,6 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.6.2")
     implementation("androidx.camera:camera-lifecycle:1.6.2")
     implementation("androidx.camera:camera-view:1.6.2")
+    implementation(project(":ctsvendor"))
     testImplementation("junit:junit:4.13.2")
 }
