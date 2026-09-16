@@ -1,4 +1,4 @@
-`app/src/main/java/dev/halcamera/benchmark/BuildIdentity.kt`. Compares two runs across six axes instead of producing one "same build" boolean.
+`app/src/main/java/dev/halcamera/benchmark/domain/BuildIdentity.kt`. Compares two runs across six axes instead of producing one "same build" boolean.
 
 The reason is stated in the file header and is the whole point of the app: in camera HAL work the case that matters most is the *same* Android fingerprint with a *different* vendor binary. A single boolean would hide exactly that.
 

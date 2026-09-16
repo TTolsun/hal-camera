@@ -34,12 +34,15 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import dev.halcamera.R
+import dev.halcamera.benchmark.domain.*
+import dev.halcamera.benchmark.platform.*
 import dev.halcamera.camera.Camera2Engine
 import dev.halcamera.camera.StreamSpec
 import dev.halcamera.camera.CameraEndpoint
 import dev.halcamera.camera.CameraEndpointResolver
 import dev.halcamera.camera.LensRole
 import dev.halcamera.camera.LensRoles
+import dev.halcamera.cli.BenchmarkController
 import dev.halcamera.telemetry.Event
 import dev.halcamera.telemetry.FlightRecorder
 import dev.halcamera.telemetry.Telemetry
@@ -671,7 +674,10 @@ class BenchmarkActivity : ComponentActivity() {
             try {
                 val run = RunAssembler.assemble(result, events, profile, context)
                 val file = try { report.write(run, events) } catch (e: Exception) { null }
-                benchmarkCli.reportSaved(run, result, file)
+                benchmarkCli.reportSaved(
+                    runId = run.runId, aborted = result.aborted, hardFailure = result.hardFailure,
+                    schemaVersion = BenchmarkReportCodec.SCHEMA_VERSION, file = file
+                )
                 val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
                 val base = baseline ?: baselines.reference(run)
                 val to = when {

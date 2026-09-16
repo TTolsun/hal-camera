@@ -4,8 +4,8 @@
     "build-facts": {
       "applicationId": "dev.halcamera",
       "namespace": "dev.halcamera",
-      "versionName": "0.8.0",
-      "versionCode": "11",
+      "versionName": "0.8.1",
+      "versionCode": "12",
       "minSdk": "26",
       "targetSdk": "36",
       "compileSdk": "36",
@@ -23,13 +23,13 @@
         {
           "tag": "BenchmarkReport",
           "sources": [
-            "app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt"
+            "app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt"
           ]
         },
         {
           "tag": "BenchmarkStore",
           "sources": [
-            "app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt"
+            "app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt"
           ]
         },
         {
@@ -47,7 +47,7 @@
         {
           "tag": "ProfileCompatibility",
           "sources": [
-            "app/src/main/java/dev/halcamera/benchmark/ProfileCompatibility.kt"
+            "app/src/main/java/dev/halcamera/benchmark/platform/ProfileCompatibilityChecker.kt"
           ]
         },
         {

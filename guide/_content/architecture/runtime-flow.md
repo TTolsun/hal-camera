@@ -2,10 +2,10 @@
 based_on: [data-flow]
 confidence: code
 sources:
-  - app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt
-  - app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt
   - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
   - app/src/main/java/dev/halcamera/cli/CliProvider.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
@@ -23,16 +23,18 @@ sources:
   - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
   - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
   - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt
-  - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
-  - app/src/main/java/dev/halcamera/benchmark/RunValidity.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt
-  - app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
   - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
-  - app/src/main/java/dev/halcamera/benchmark/BaselineManager.kt
-  - app/src/main/java/dev/halcamera/benchmark/RegressionDetector.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BaselineManager.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/StoreRunCatalog.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt
 decisions: []
 verifications: []
 ---
@@ -65,7 +67,7 @@ RESULTS의 행은 저장된 결과로 연결됩니다. 길게 누르면 baseline
 
 ### LIVE에서 선택과 촬영
 
-LIVE 상단에는 배경·테두리 없는 현재 API 버튼, `도구` 메뉴, `진단` 버튼을 두고, 그 사이에 `Camera2 · LIVE`처럼 엔진과 상태를 같은 줄로 표시합니다. 하단은 핵심 측정값 2줄, 줌, 셔터 행, 사진·동영상 모드 순서입니다. MARK·일시정지·그래프·incident ZIP처럼 열려 있는 세션에서만 의미가 있는 항목은 `진단` 패널에서 제공합니다. 셔터 행의 왼쪽에는 최근 촬영물 썸네일, 오른쪽에는 카메라 선택 목록을 여는 아이콘을 둡니다.
+LIVE 상단은 같은 너비의 세 칸으로 나누어, 왼쪽 칸에 배경·테두리 없는 현재 API 버튼을, 오른쪽 칸에 `도구` 메뉴와 `진단` 버튼을 두고, 가운데 칸에 `Camera2 · LIVE`처럼 엔진과 상태를 같은 줄로 표시하여 상태 문구가 화면 중심선에 놓이게 합니다. 하단은 핵심 측정값 2줄, 줌, 셔터 행, 사진·동영상 모드 순서입니다. MARK·일시정지·그래프·incident ZIP처럼 열려 있는 세션에서만 의미가 있는 항목은 `진단` 패널에서 제공합니다. 셔터 행의 왼쪽에는 최근 촬영물 썸네일, 오른쪽에는 카메라 선택 목록을 여는 아이콘을 둡니다.
 
 `도구` 메뉴는 세션과 무관한 독립 화면 `Benchmark`·`PROBE`·`CTS`를 엽니다. `Benchmark`와 `CTS`는 자기 카메라를 열기 때문에 LIVE 카메라의 `close(done)` 콜백을 받은 뒤에 화면을 열며, 그동안 메뉴를 비활성화합니다. `PROBE`는 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 엽니다. LIVE 카메라는 화면이 가려질 때 평소처럼 닫히고 돌아오면 다시 열립니다. 녹화·저장 중에는 메뉴 전체를 비활성화합니다.
 

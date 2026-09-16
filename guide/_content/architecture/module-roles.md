@@ -2,21 +2,22 @@
 based_on: [overall-architecture]
 confidence: code
 sources:
-  - app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt
-  - app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt
   - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
-  - app/src/main/java/dev/halcamera/camera/LiveController.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
+  - app/src/main/java/dev/halcamera/cli/LiveController.kt
+  - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
   - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
   - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
-  - app/src/main/java/dev/halcamera/benchmark/RunIndex.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt
-  - app/src/main/java/dev/halcamera/benchmark/ScoreComposer.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt
   - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
   - app/src/main/java/dev/halcamera/MainActivity.kt
   - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
@@ -45,10 +46,10 @@ verifications: []
 
 | 영역 | 역할과 수정 시 확인할 내용 |
 | --- | --- |
-| `cli/`와 `tools/halcam/` | shell 호출자 검사, 영속 요청 상태, artifact 등록과 PC 파일 수집을 담당합니다. protocol v1을 변경할 때 양쪽 검증기를 함께 확인합니다. |
+| `cli/`와 `tools/halcam/` | shell 호출자 검사, 영속 요청 상태, artifact 등록과 PC 파일 수집을 담당합니다. 화면 어댑터 `LiveController`와 `BenchmarkController`도 이 패키지에 두어 `camera/`와 `benchmark/`가 `cli/`를 import하지 않게 합니다. `BenchmarkController.reportSaved`는 run ID·중단 사유·schema 버전을 스칼라로 받으므로 `cli/`는 benchmark 타입을 알지 못합니다. protocol v1을 변경할 때 양쪽 검증기를 함께 확인합니다. |
 | `camera/` | 엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다. `close(done)` 완료 전에 다음 카메라를 열지 않습니다. |
 | `metrics/` | `MetricExtractor`가 이벤트를 관측 표본과 통계로 바꿉니다. 화면과 회귀 판정을 담당하지 않습니다. |
-| `benchmark/` | profile, 러너, 지표 계산, validity, 내부 점수, 저장, 비교와 이력 화면을 제공합니다. Android 의존성이 있는 Activity·저장 어댑터와 순수 계산 로직을 구분합니다. |
+| `benchmark/` | 루트에는 `BenchmarkActivity`·`HistoryActivity`·`ProfileComparisonActivity` 세 화면만 둡니다. `benchmark/domain/`은 profile, 러너, 지표 계산, validity, 내부 점수, 비교 규칙, presenter를 담는 순수 Kotlin 층이며 `android.*`·`org.json`·`benchmark/platform/`을 import하지 않습니다. `benchmark/platform/`은 `BenchmarkStore`·`BenchmarkReport`(org.json 파일 경계)·`ProfileLibrary`·`SubjectPrefs`·`ThermalTracker`·`ProfileCompatibilityChecker` 같은 파일·기기 어댑터입니다. 이 방향은 `LayerIsolationTest`가 소스를 읽어 검사하므로 어기면 JVM 테스트가 실패합니다. |
 | `telemetry/` | `Telemetry`가 이벤트를 만들고 `FlightRecorder`가 보존합니다. `IncidentExporter`는 incident ZIP을 작성합니다. listener는 기록 스레드에서 동기 실행됩니다. |
 | `cts/` | CTS 스타일 카메라 케이스를 앱 안에서 실행합니다. `CtsCatalog`가 케이스 목록을 순수 Kotlin으로 정의하고, `CtsRunner` 계약과 `CameraCaseRunner` 기반 클래스, 공통 Camera2 호출 `Camera2Ops` 위에 케이스별 하위 패키지(`recording/`·`onoff/`·`switching/`·`sizes/`·`combination/`·`snapshot/`)가 놓입니다. 각 패키지는 판정을 순수 Kotlin `…Rules`에, 카메라 호출을 `…Runner`에 둡니다. 공식 CTS 판정을 대체하지 않습니다. |
 | `ui/`와 `MainActivity.kt` | LIVE 관측값과 Canvas 그래프, 공통 `Look` 토큰, 카메라 선택과 권한 처리를 제공합니다. |

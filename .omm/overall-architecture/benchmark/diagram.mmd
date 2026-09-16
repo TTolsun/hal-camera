@@ -1,14 +1,14 @@
 graph LR
-    benchmark-profile["BenchmarkProfile\nbenchmark/BenchmarkProfile.kt"]
-    benchmark-model["BenchmarkRun / MeasurementContract\nbenchmark/BenchmarkModel.kt"]
-    benchmark-evaluator["BenchmarkEvaluator / Stats\nbenchmark/BenchmarkEvaluator.kt"]
-    metric-info["표시 이름과 단위\nbenchmark/MetricInfo.kt"]
-    regression-rules["회귀 판정 규칙\nbenchmark/RegressionRules.kt"]
-    run-validity["RunValidityEvaluator\nbenchmark/RunValidity.kt"]
-    build-identity["빌드 식별 비교\nbenchmark/BuildIdentity.kt"]
-    benchmark-runner["BenchmarkRunner\nbenchmark/BenchmarkRunner.kt"]
-    run-assembler["RunAssembler\nbenchmark/RunAssembler.kt"]
-    comparison["baseline·비교·표시 로직\nbenchmark/RegressionDetector.kt, BaselineManager.kt, ResultPresenter.kt"]
+    benchmark-profile["BenchmarkProfile\nbenchmark/domain/BenchmarkProfile.kt"]
+    benchmark-model["BenchmarkRun / MeasurementContract\nbenchmark/domain/BenchmarkModel.kt"]
+    benchmark-evaluator["BenchmarkEvaluator / Stats\nbenchmark/domain/BenchmarkEvaluator.kt"]
+    metric-info["표시 이름과 단위\nbenchmark/domain/MetricInfo.kt"]
+    regression-rules["회귀 판정 규칙\nbenchmark/domain/RegressionRules.kt"]
+    run-validity["RunValidityEvaluator\nbenchmark/domain/RunValidity.kt"]
+    build-identity["빌드 식별 비교\nbenchmark/domain/BuildIdentity.kt"]
+    benchmark-runner["BenchmarkRunner\nbenchmark/domain/BenchmarkRunner.kt"]
+    run-assembler["RunAssembler\nbenchmark/domain/RunAssembler.kt"]
+    comparison["baseline·비교·표시 로직\nbenchmark/domain/RegressionDetector.kt, BaselineManager.kt, ResultPresenter.kt"]
     benchmark-profile -->|"반복 수·워밍업·관측·촬영 조건"| benchmark-runner
     benchmark-runner -->|"cycles / stills / 관측 세션"| run-assembler
     run-assembler -->|"원시 표본과 관측 이벤트로 입력 구성"| benchmark-evaluator
