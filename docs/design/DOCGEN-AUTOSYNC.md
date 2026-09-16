@@ -12,7 +12,7 @@
 
 ## 1. 현재 상태와 문제
 
-2026-09-16 기준 세 단계가 모두 자동이다. 아래 표는 갱신한 것이고, 그 밑의 실측 표는 설계 당시(2026-09-12)의 문제 기록이다.
+2026-09-16 기준 검사와 동기화는 자동이고, 사이트 빌드는 PR 안에서 사람이 실행해 커밋한다. 아래 표는 갱신한 것이고, 그 밑의 실측 표는 설계 당시(2026-09-12)의 문제 기록이다.
 
 | 단계 | 담당 | 상태 |
 | --- | --- | --- |
@@ -154,8 +154,10 @@ sources:
 
 ## 4. 실행 흐름 (변경 후)
 
+이 흐름은 문서 검토 없이 `main`에 도달한 코드 변경을 전제한다. PR 안에서 `docs-check`를 통과시키며 `--accept`까지 마친 변경은 `main`의 근거 해시가 이미 검토 기록과 같으므로, `docs-sync`는 재스캔 대상 없이 끝나고 PR을 만들지 않는다.
+
 ```text
-main push (app/** 변경)
+main push (app/** 변경, 문서 검토가 빠진 경우)
   │
   ▼
 docs-sync.yml (self-hosted, docgen-qwen)
@@ -171,11 +173,14 @@ docs-sync.yml (self-hosted, docgen-qwen)
   3. create-pull-request      브랜치 docs/omm-sync
   │
   ▼
-사람: PR에서 코드와 대조 → verify.mjs --accept --reviewer=이름 → generate.mjs → 커밋 → merge
+사람: PR에서 코드와 대조 → verify.mjs --accept --reviewer=이름 → generate.mjs → site.mjs build
+      → guide/, state/, docs/ 를 같은 PR에 커밋 → docs-check 통과 → merge
   │
   ▼
-site.mjs build → docs/ 커밋 → Pages 브랜치 배포 (main /docs)
+Pages 브랜치 배포 (main /docs)
 ```
+
+`site.mjs build`가 merge 앞에 오는 이유는 `docs-check`의 사이트 산출물 일치 검사가 PR에서 `docs/`와 `guide/` 빌드 결과를 비교하기 때문이다(#67 이후).
 
 ## 5. 남는 수동 단계
 
@@ -198,7 +203,7 @@ site.mjs build → docs/ 커밋 → Pages 브랜치 배포 (main /docs)
 
 ## 7. 수용 기준
 
-1. `main`에 `RunAssembler.kt`만 바꾸는 commit을 push하면 45분 안에 `docs/omm-sync` PR이 열린다. 실제 바인딩으로 연결된 요소 4개(`overall-architecture/benchmark/run-assembler`, `data-flow`, `data-flow/benchmark-metrics`, `data-flow/runner-marks`)만 재스캔하고 나머지 43개의 스캔 기록을 유지한다. 원고는 기존 관점 기반 최신성 규칙에 따라 관련 5건을 갱신한다. 구조 내용 변경은 재스캔 요소에 한정하며, 부모 등록 메타데이터와 상태·생성 페이지도 함께 검증한다. 이 범위는 공통 근거와 관점 최신성 연결을 확인한 뒤 2026-09-14에 사용자가 승인했다.
+1. `main`에 `RunAssembler.kt`만 바꾸는 commit을 문서 검토 없이 push하면 45분 안에 `docs/omm-sync` PR이 열린다(PR 안에서 `--accept`까지 마친 변경은 4절대로 PR이 생기지 않는다). 실제 바인딩으로 연결된 요소 4개(`overall-architecture/benchmark/run-assembler`, `data-flow`, `data-flow/benchmark-metrics`, `data-flow/runner-marks`)만 재스캔하고 나머지 43개의 스캔 기록을 유지한다. 원고는 기존 관점 기반 최신성 규칙에 따라 관련 5건을 갱신한다. 구조 내용 변경은 재스캔 요소에 한정하며, 부모 등록 메타데이터와 상태·생성 페이지도 함께 검증한다. 이 범위는 공통 근거와 관점 최신성 연결을 확인한 뒤 2026-09-14에 사용자가 승인했다.
 2. 실행 로그의 모든 모델 호출 입력이 60,000자 이하이고 `done_reason: stop`이다.
 3. 그 PR에서 `verify.mjs --accept` 후 `docs-check`가 통과한다.
 4. `node --test tools/docgen/regression.test.mjs tools/docgen/sync.test.mjs`가 Windows와 Ubuntu에서 통과한다.

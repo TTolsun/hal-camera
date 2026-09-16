@@ -92,7 +92,7 @@ node tools/docgen/selftest.mjs           # 산문 보존, 재현성, 최신성 �
 - `.omm/` 바로 아래의 디렉터리는 모두 omm CLI 가 perspective 로 인식합니다. 그래서 추출 결과와 검증 상태는 `tools/docgen/state/` 에 둡니다.
 - 생성 원고에는 코드와 다른 주장이나 기존 조건의 누락이 생길 수 있습니다. 실제 PR #66도 코드 대조 후 수정했으며, 자동 실행은 검토 승인과 머지를 수행하지 않습니다.
 - 공통 코드 파일 하나가 여러 요소의 근거일 수 있습니다. 원고 최신성도 `based_on` 관점 전체를 확인하므로, `RunAssembler.kt` 변경은 요소 4개와 원고 5건의 재검토로 이어집니다.
-- 이 PC의 runner는 서비스로 실행되지만 Ollama는 사용자 로그인 시 시작됩니다. 로그인 전 무인 실행과 재부팅 복구는 실측하지 않았습니다.
+- 이 PC의 runner는 서비스로 실행되지만 Ollama는 사용자 로그인 시 시작됩니다. 재부팅 뒤 절차와 실측 여부는 아래 "운영: 이 PC의 구성과 재부팅 절차"에 있습니다.
 
 ## 검증 규칙과 PR 검토
 
@@ -178,7 +178,7 @@ node --test --test-name-pattern='previous 300-second limit' tools/docgen/sync.te
 
 ## 운영: 두 workflow의 역할과 PR이 생기는 조건
 
-두 workflow는 역할이 다릅니다. `docs-check.yml`은 모든 PR과 `main` push에서 GitHub-hosted runner로 검사만 하고 파일을 쓰지 않습니다. `docs-sync.yml`은 `main` push에서만 이 PC의 self-hosted runner로 실행되며, `.omm/`과 `guide/_content/`를 쓰는 유일한 자동 경로입니다.
+두 workflow는 역할이 다릅니다(실행 조건은 위 "자동 실행과 검사 범위" 참고). `docs-check.yml`은 검사만 하고 파일을 쓰지 않습니다. `docs-sync.yml`은 `.omm/`과 `guide/_content/`를 쓰는 유일한 자동 경로입니다.
 
 정상 경로에서는 `docs-sync`가 PR을 만들지 않습니다. `verify.mjs`는 커밋 해시가 아니라 파일 내용 해시(`codeHash`, `modelHash`)로 최신성을 판정하므로, PR 안에서 `--accept`까지 마치고 머지하면 `main`의 해시도 같아서 `재스캔 대상 perspective: (없음)`으로 30~40초 만에 끝납니다. 검토 기록의 `@ 커밋` 표기는 참고용 라벨입니다.
 
@@ -202,7 +202,7 @@ node --test --test-name-pattern='previous 300-second limit' tools/docgen/sync.te
 | Ollama | `127.0.0.1:11434`, 모델 `qwen3.5:4b` | 시작 폴더의 `Ollama.lnk`. 사용자가 로그인해야 실행됩니다 |
 | 실행 허용 | 저장소 변수 `DOCGEN_LOCAL_RUNNER_ENABLED=true` | 2026-09-14 설정 |
 
-재부팅 뒤에 사람이 할 일은 Windows에 로그인하는 것 하나입니다. 잠금 화면 상태여도 되지만 로그아웃하면 Ollama가 내려갑니다. 부팅 완료 후 로그인 전 구간에는 runner만 살아 있어서, 그 사이에 낡은 문서를 포함한 push가 들어오면 Ollama 연결 실패로 `docs-sync`가 실패합니다. 재스캔 대상이 없는 정상 경로는 모델을 호출하지 않으므로 이 구간에도 성공합니다. PC가 꺼져 있으면 작업은 큐에서 최대 24시간 대기합니다.
+재부팅 뒤에 사람이 할 일은 Windows에 로그인하는 것 하나입니다. 잠금 화면 상태여도 되지만 로그아웃하면 Ollama가 내려갑니다. 부팅 완료 후 로그인 전 구간에는 runner만 살아 있어서, 그 사이에 낡은 문서를 포함한 push가 들어오면 Ollama 연결 실패로 `docs-sync`가 실패합니다. 재스캔 대상이 없는 정상 경로는 모델을 호출하지 않으므로 이 구간에도 성공합니다. PC가 꺼져 있으면 작업은 큐에서 최대 24시간 대기합니다. 이 절차는 서비스 시작 유형과 시작 폴더 구성에서 추론한 것이며, 실제 재부팅으로 runner 복귀와 sync 성공을 확인한 기록은 아직 없습니다.
 
 실패한 실행은 두 단계로 복구합니다.
 
