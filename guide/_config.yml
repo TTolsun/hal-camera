@@ -21,6 +21,10 @@ nav:
     label: Architecture
   - path: benchmark.html
     label: Benchmark
+  - path: probe.html
+    label: PROBE
+  - path: cts.html
+    label: CTS
   - path: decisions.html
     label: Decisions
   - path: evidence.html
