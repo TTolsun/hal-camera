@@ -105,7 +105,7 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-16 @ `57e7089` · Claude Opus 5 (PR 92)
+- 검토 2026-09-16 @ `6304d3c` · Claude Opus 5 (PR 92)
 
 </details>
 
@@ -152,8 +152,8 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.8.0` |
-| `versionCode` | `11` |
+| `versionName` | `0.8.1` |
+| `versionCode` | `12` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |
@@ -177,13 +177,13 @@ RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.8.0 (versionCode 11)
+- 검증 기준 앱 버전: 0.8.1 (versionCode 12)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-16 @ `57e7089` · Claude Opus 5 (PR 92) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-16 @ `57e7089` · Claude Opus 5 (PR 92) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-16 @ `57e7089` · Claude Opus 5 (PR 92) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-16 @ `6304d3c` · Claude Opus 5 (PR 92) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-16 @ `6304d3c` · Claude Opus 5 (PR 92) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-16 @ `6304d3c` · Claude Opus 5 (PR 92) |
 
 <!-- omm:end id=status -->
 

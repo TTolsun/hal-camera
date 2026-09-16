@@ -16,6 +16,32 @@
 
 설치가 중간에 실패하면 기존 계정이나 폴더를 자동 삭제하지 않습니다. 설치 로그, GitHub의 runner 등록 상태와 Windows 서비스를 확인한 뒤 해당 설치만 복구합니다. 관리자 권한 없이 설치 스크립트를 실행하면 변경 전에 실패합니다.
 
-자동 동기화는 검토 기록을 승인하지 않습니다. PR 검토 후 `verify.mjs --accept --reviewer=이름`과 `generate.mjs`를 실행합니다. 구조 스캔·원고 계약·파일 반영 중 하나라도 실패하면 기존 파일을 보존하며 복구 절차는 [README](README.md#실패와-복구)에 있습니다.
+자동 동기화는 검토 기록을 승인하지 않습니다. PR 검토 후 `verify.mjs --accept --reviewer=이름`, `generate.mjs`, `site.mjs build`를 실행합니다. 구조 스캔·원고 계약·파일 반영 중 하나라도 실패하면 기존 파일을 보존하며 복구 절차는 [README](README.md#실패와-복구)에 있습니다.
+
+## 운영과 재부팅
+
+2026-09-16 기준 개발자 PC의 구성은 다음과 같습니다.
+
+| 구성 요소 | 실체 | 시작 방식 |
+| --- | --- | --- |
+| runner | Windows 서비스 `actions.runner.TTolsun-hal-camera.halcamera-docgen-windows`, 계정 `hal-docgen`, 폴더 `C:\ProgramData\HALCamera\docgen-runner` | `Automatic`. 부팅 직후 로그인 없이 올라와 GitHub에 `online`으로 표시됩니다 |
+| Ollama | `127.0.0.1:11434`, 모델 `qwen3.5:4b` | 시작 폴더의 `Ollama.lnk`. 사용자가 로그인해야 실행됩니다 |
+| 실행 허용 | 저장소 변수 `DOCGEN_LOCAL_RUNNER_ENABLED=true` | 2026-09-14 설정 |
+
+재부팅 뒤에 사람이 할 일은 Windows에 로그인하는 것 하나입니다. 잠금 화면 상태여도 되지만 로그아웃하면 Ollama가 내려갑니다. 부팅 완료 후 로그인 전 구간에는 runner만 살아 있어서, 그 사이에 낡은 문서를 포함한 push가 들어오면 Ollama 연결 실패로 `docs-sync`가 실패합니다. 재스캔 대상이 없는 정상 경로는 모델을 호출하지 않으므로 이 구간에도 성공합니다. PC가 꺼져 있으면 작업은 큐에서 최대 24시간 대기합니다. 이 절차는 서비스 시작 유형과 시작 폴더 구성에서 추론한 것이며, 실제 재부팅으로 runner 복귀와 sync 성공을 확인한 기록은 아직 없습니다.
+
+실패한 실행은 두 단계로 복구합니다.
+
+1. Actions → docs-sync에서 실패한 실행을 열고 `Re-run jobs`를 누릅니다. 같은 커밋으로 다시 실행됩니다.
+2. `state/sync-transaction/journal.json`이나 `state/.sync-lock`이 남아 있으면 먼저 `node tools/docgen/sync.mjs --recover`를 실행합니다.
+
+로그인 전 공백까지 없애려면 Ollama를 시작 폴더 대신 시스템 예약 작업(`At startup`)으로 등록해야 합니다. 이 구성은 아직 실측하지 않았습니다.
+
+runner와 Ollama가 살아 있는지는 아래 명령으로 확인합니다.
+
+```bash
+gh api repos/TTolsun/hal-camera/actions/runners --jq '.runners[] | "\(.name) \(.status)"'
+curl -s http://127.0.0.1:11434/api/tags | grep -o 'qwen3.5:4b'
+```
 
 공식 기준: [Windows runner 서비스 설치](https://docs.github.com/en/actions/how-tos/manage-runners/self-hosted-runners/configure-the-application?platform=windows), [외부 기여자 승인 정책](https://docs.github.com/en/rest/actions/permissions#set-fork-pr-contributor-approval-permissions-for-a-repository), [Ollama 시작 설정](https://docs.ollama.com/faq).
