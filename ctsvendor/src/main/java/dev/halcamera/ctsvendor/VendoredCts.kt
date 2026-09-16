@@ -1,5 +1,6 @@
 package dev.halcamera.ctsvendor
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Instrumentation
 import android.app.UiAutomation
@@ -12,7 +13,11 @@ import androidx.test.InstrumentationRegistry
  * The process-wide state the vendored CTS sources expect cts-tradefed to have set up: an Instrumentation to
  * take the target context from, the instrumentation arguments, the activity ActivityTestRule would have
  * launched, and the test instance currently running (so the host can pull the camera from under it to abort).
+ *
+ * The activity reference is what ActivityTestRule would have held for the test; the host detaches it in
+ * onDestroy, so it lives no longer than the activity.
  */
+@SuppressLint("StaticFieldLeak")
 object VendoredCts {
     /** Upstream builds this tree with min_sdk 34; below that it calls APIs that do not exist. */
     const val MIN_SDK = 34
@@ -20,6 +25,18 @@ object VendoredCts {
     @Volatile private var installed = false
     @Volatile private var hostActivity: Activity? = null
     @Volatile private var runningTest: Any? = null
+
+    /**
+     * Set by the host when the user stops a run, cleared when the next run starts. The ActivityTestRule
+     * stand-in refuses to hand out the activity while this is set, so a test that is between cameras (no
+     * CameraDevice to close) still fails at its next preview setup instead of running on in the background.
+     */
+    @JvmStatic
+    @Volatile var stopRequested: Boolean = false
+        private set
+
+    @JvmStatic fun requestStop() { stopRequested = true }
+    @JvmStatic fun clearStop() { stopRequested = false }
 
     /**
      * Registers the in-app Instrumentation once. Must run before any vendored test class is loaded, because

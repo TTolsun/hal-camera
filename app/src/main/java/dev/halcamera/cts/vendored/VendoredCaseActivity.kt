@@ -132,7 +132,8 @@ class VendoredCaseActivity : Camera2SurfaceViewCtsActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode != REQUEST_PERMISSIONS) return
-        if (grantResults.all { it == PackageManager.PERMISSION_GRANTED }) start() else { status = "카메라와 마이크 권한이 필요합니다"; render() }
+        val granted = grantResults.isNotEmpty() && grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+        if (granted) start() else { status = "카메라와 마이크 권한이 필요합니다"; render() }
     }
 
     private fun start() {
@@ -155,6 +156,7 @@ class VendoredCaseActivity : Camera2SurfaceViewCtsActivity() {
         // A screen-off would stop the activity and abort the run.
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         render()
+        main.removeCallbacks(ticker)
         main.postDelayed(ticker, 1000)
         Thread({ r.run() }, "cts-vendored").start()
     }

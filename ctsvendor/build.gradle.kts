@@ -23,7 +23,7 @@ android {
 
 dependencies {
     // JUnit 4 runs inside the app: the vendored tests are plain JUnit classes driven by JUnitCore.
-    api("junit:junit:4.13.2")
+    implementation("junit:junit:4.13.2")
     implementation("androidx.annotation:annotation:1.9.1")
     // CameraTestUtils and CameraSessionUtils reference Mockito in helpers other tests use; mockito-android
     // provides the subclass mock maker that works without an instrumentation agent.

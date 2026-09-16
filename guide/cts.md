@@ -36,7 +36,7 @@ flowchart LR
 
 CTS 원문 케이스 목록은 `:ctsvendor` 모듈에 가져온 테스트 클래스의 `@Test` 메서드를 reflection으로 나열합니다. 지금 가져온 클래스는 `android.hardware.camera2.cts.RecordingTest` 하나이고, `testBasicRecording`이 맨 앞에 옵니다. 같은 클래스의 다른 메서드도 목록에 나오지만, `UiAutomation`이나 `@TestApi`가 필요한 메서드는 실행하면 초기화 단계에서 FAIL로 끝납니다. 어떤 메서드가 그런지는 실기기에서 한 번 돌려 봐야 알 수 있으며, 그 목록은 `docs/STATUS.md`에 기록합니다.
 
-가져온 소스는 AOSP `android16-release` 브랜치의 `cts/tests/camera`와 `frameworks/ex/camera2/public`이며, 원본 커밋과 적용한 패치 여섯 건(`@TestApi`·`@FlaggedApi` 호출을 공개 API로 바꾸거나 제거)은 `ctsvendor/UPSTREAM.md`에 있습니다. Android 14(API 34) 아래 기기에서는 이 경로가 비활성화됩니다. 업스트림이 이 파일 집합을 `min_sdk_version 34`로 빌드하기 때문입니다.
+가져온 소스는 AOSP `android16-release` 브랜치의 `cts/tests/camera`와 `frameworks/ex/camera2/public`이며, 원본 커밋과 적용한 패치 일곱 건(`@TestApi`·`@FlaggedApi` 호출을 공개 API로 바꾸거나 제거하고, shell 권한 행을 만들지 않게 한 것)은 `ctsvendor/UPSTREAM.md`에 있습니다. Android 14(API 34) 아래 기기에서는 이 경로가 비활성화됩니다. 업스트림이 이 파일 집합을 `min_sdk_version 34`로 빌드하기 때문입니다.
 
 <h2 lang="en">What one run does.</h2>
 

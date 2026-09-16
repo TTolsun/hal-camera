@@ -25,8 +25,14 @@ data class VendoredResult(
  * Drives one vendored test method with JUnit's own runner, on the calling thread, and reports through
  * [Listener]. Parameterized creates one instance per adoptShellPerm row; the patched CameraParameterizedTestCase
  * declares only the `false` row, so the method runs once and checks every non-system camera, as under cts-tradefed.
+ *
+ * [clock] is elapsed milliseconds; the default is the device clock and tests inject their own.
  */
-class VendoredRun(private val test: VendoredTest, private val listener: Listener) {
+class VendoredRun(
+    private val test: VendoredTest,
+    private val listener: Listener,
+    private val clock: () -> Long = { SystemClock.elapsedRealtime() }
+) {
     interface Listener {
         fun onStarted(displayName: String)
         fun onFailure(displayName: String, message: String)
@@ -36,9 +42,9 @@ class VendoredRun(private val test: VendoredTest, private val listener: Listener
     private val notifier = RunNotifier()
     @Volatile private var stopRequested = false
 
-    /** Blocks until the run ends. */
+    /** Blocks until the run ends. [Listener.onFinished] is delivered on every path, including a crash of the runner itself. */
     fun run() {
-        val request = Request.aClass(Class.forName(test.className)).filterWith(MethodFilter(test.method))
+        VendoredCts.clearStop()
         val failures = ArrayList<String>()
         var started = 0
         var skipped = false
@@ -52,27 +58,33 @@ class VendoredRun(private val test: VendoredTest, private val listener: Listener
             override fun testAssumptionFailure(failure: Failure) { skipped = true }
             override fun testIgnored(description: Description) { skipped = true }
         })
-        val startedAt = SystemClock.elapsedRealtime()
+        val startedAt = clock()
         var stopped = false
         try {
+            val request = Request.aClass(Class.forName(test.className)).filterWith(MethodFilter(test.method))
             request.runner.run(notifier)
         } catch (e: StoppedByUserException) {
             stopped = true
+        } catch (e: Throwable) {
+            // A failure to load or drive the class is a result, not a reason to take the process down.
+            failures += describe(Failure(Description.createSuiteDescription(test.source), e))
         }
         val verdict = when {
             failures.isNotEmpty() -> VendoredVerdict.FAIL
             started == 0 || skipped -> VendoredVerdict.SKIP
             else -> VendoredVerdict.PASS
         }
-        listener.onFinished(VendoredResult(test, verdict, SystemClock.elapsedRealtime() - startedAt, failures, stopped || stopRequested))
+        listener.onFinished(VendoredResult(test, verdict, clock() - startedAt, failures, stopped || stopRequested))
     }
 
     /**
      * JUnit cannot interrupt a test body: [RunNotifier.pleaseStop] takes effect at the next test boundary.
-     * Closing the camera under the running test makes the body fail within its own timeouts.
+     * Closing the camera under the running test makes the body fail within its own timeouts, and the stop
+     * flag makes the next preview setup fail when no camera is open at this moment.
      */
     fun stop() {
         stopRequested = true
+        VendoredCts.requestStop()
         notifier.pleaseStop()
         VendoredCts.closeRunningCamera()
     }
@@ -92,7 +104,7 @@ class VendoredRun(private val test: VendoredTest, private val listener: Listener
 }
 
 /** Keeps every Parameterized row of one method; a suite passes when any child does, as JUnit expects. */
-private class MethodFilter(private val method: String) : Filter() {
+internal class MethodFilter(private val method: String) : Filter() {
     override fun shouldRun(description: Description): Boolean =
         if (description.isTest) description.methodName?.substringBefore('[') == method
         else description.children.any { shouldRun(it) }

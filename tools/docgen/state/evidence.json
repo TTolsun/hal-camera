@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "24e9a85048f05786",
+        "codeHash": "c0fbd0bf3446304b",
         "modelHash": "bdc0bacca17dcf77",
         "at": "2026-09-16",
-        "commit": "c3c1733",
+        "commit": "3073e55",
         "reviewer": "Claude Opus 5 (cts vendored)"
       }
     },
@@ -21,7 +21,7 @@
         "codeHash": "ba36a9363e6243c7",
         "modelHash": "752780bdb9786841",
         "at": "2026-09-16",
-        "commit": "c3c1733",
+        "commit": "3073e55",
         "reviewer": "Claude Opus 5 (cts vendored)"
       }
     },
@@ -33,7 +33,7 @@
         "codeHash": "613048012b19d8bf",
         "modelHash": "d94cc6e88edc271d",
         "at": "2026-09-16",
-        "commit": "c3c1733",
+        "commit": "3073e55",
         "reviewer": "Claude Opus 5 (cts vendored)"
       }
     },
@@ -42,10 +42,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8fd41f375adf3291",
+        "codeHash": "044ccac779707e44",
         "modelHash": "9af8eaa7b180e8c7",
         "at": "2026-09-16",
-        "commit": "c3c1733",
+        "commit": "3073e55",
         "reviewer": "Claude Opus 5 (cts vendored)"
       }
     },
@@ -57,7 +57,7 @@
         "codeHash": "c724dcc6c70a1ab0",
         "modelHash": "f5aafafdf0d4c36a",
         "at": "2026-09-16",
-        "commit": "c3c1733",
+        "commit": "3073e55",
         "reviewer": "Claude Opus 5 (cts vendored)"
       }
     },
@@ -69,16 +69,16 @@
         "codeHash": "ba36a9363e6243c7",
         "modelHash": "8d2e8d724db69181",
         "at": "2026-09-16",
-        "commit": "c3c1733",
+        "commit": "3073e55",
         "reviewer": "Claude Opus 5 (cts vendored)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "24e9a85048f05786",
+        "codeHash": "c0fbd0bf3446304b",
         "modelHash": "01b798d5776759d4",
         "at": "2026-09-16",
-        "commit": "c3c1733",
+        "commit": "3073e55",
         "reviewer": "Claude Opus 5 (cts vendored)"
       },
       "observed": {
@@ -87,10 +87,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "24e9a85048f05786",
+        "codeHash": "c0fbd0bf3446304b",
         "modelHash": "0d5d319783d3746d",
         "at": "2026-09-16",
-        "commit": "c3c1733",
+        "commit": "3073e55",
         "reviewer": "Claude Opus 5 (cts vendored)"
       },
       "observed": {
