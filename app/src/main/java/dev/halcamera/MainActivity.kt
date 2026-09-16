@@ -751,7 +751,7 @@ class MainActivity : ComponentActivity() {
                 // PROBE reads CameraCharacteristics only and never opens a camera, so it starts without waiting for
                 // close(done); onStop closes the LIVE camera as it does for any screen change.
                 1 -> startActivity(Intent(this, CameraProbeActivity::class.java).putExtra(CameraProbeActivity.EXTRA_CAMERA_ID, cameraId))
-                2 -> openAfterClose("cts_started") { Intent(this, dev.halcamera.cts.CtsCaseListActivity::class.java) }
+                2 -> openAfterClose("cts_started") { Intent(this, dev.halcamera.cts.CtsEntryActivity::class.java) }
             }
         }
     }

@@ -25,8 +25,12 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <provider android:name=".cli.CliProvider" android:authorities="${applicationId}.cli"
             android:exported="true" android:permission="android.permission.DUMP" android:grantUriPermissions="false" />
+        <activity android:name=".cts.CtsEntryActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".cts.CtsCaseListActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".cts.CtsCaseActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".cts.vendored.VendoredCtsListActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".cts.vendored.VendoredCaseActivity" android:exported="false" android:screenOrientation="portrait"
+            android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize" />
         <provider android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files" android:exported="false" android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />

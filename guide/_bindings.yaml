@@ -159,6 +159,7 @@ sources:
           - app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt
       screens/cts-screen:
         evidence:
+          - app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt
           - app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt
           - app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt
           - app/src/main/java/dev/halcamera/cts/CtsCatalog.kt
@@ -185,6 +186,9 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/cts/combination/*.kt
           - app/src/main/java/dev/halcamera/cts/snapshot/*.kt
+      screens/cts-screen/vendored-cases:
+        evidence:
+          - app/src/main/java/dev/halcamera/cts/vendored/*.kt
       screens/gallery-screen:
         evidence:
           - app/src/main/java/dev/halcamera/GalleryActivity.kt
