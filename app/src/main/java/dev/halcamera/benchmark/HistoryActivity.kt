@@ -102,7 +102,7 @@ class HistoryActivity : ComponentActivity() {
         showingComparison = compareId != null
         if (!wasComparison) listScrollY = scrollY
         body.removeAllViews()
-        text("RESULTS", 24, true)
+        text("Results", 24, true)
         if (busy) text("실행 기록을 처리하고 있습니다.")
         if (compareId != null && renderComparison()) {
             scroll.post { scroll.scrollTo(0, if (wasComparison) scrollY else 0) }
@@ -125,7 +125,7 @@ class HistoryActivity : ComponentActivity() {
         }
         val runs = visible()
         text("${runs.size}개 실행 · 행을 눌러 결과를 열고, 길게 눌러 작업을 선택합니다.")
-        button("CSV EXPORT · 현재 필터 ${runs.size}개", runs.isNotEmpty()) { exportCsv(runs) }
+        button("CSV export · 현재 필터 ${runs.size}개", runs.isNotEmpty()) { exportCsv(runs) }
         indexError?.let { text("Baseline을 읽지 못했습니다: $it") }
         if (index.unreadableIds.isNotEmpty()) text("읽을 수 없는 파일 ${index.unreadableIds.size}개: ${index.unreadableIds.joinToString()}")
         selectedId?.let { id ->
@@ -177,7 +177,7 @@ class HistoryActivity : ComponentActivity() {
         val comparison = RegressionDetector.compare(base, current)
         val view = ComparePresenter.present(base, current, comparison,
             if (onBaseline) ComparedTo.BASELINE else ComparedTo.PREVIOUS, selectedReference = true)
-        text("COMPARE", 20, true)
+        text("Compare", 20, true)
         text("기준: ${base.runId}\n${base.subject.subjectBuildLabel.orEmpty()} · ${base.subject.subjectCommit.orEmpty()}")
         text("현재: ${current.runId}\n${current.subject.subjectBuildLabel.orEmpty()} · ${current.subject.subjectCommit.orEmpty()}")
         view.identityLine?.let { text(it) }
@@ -185,10 +185,10 @@ class HistoryActivity : ComponentActivity() {
         view.referenceNote?.let { text(it) }
         if (!comparison.sameContract || !comparison.sameEndpoint) text("Profile·측정 계약 또는 camera endpoint가 달라 판정할 수 없습니다.")
         view.rows.forEach { row ->
-            text("${row.label}\n${view.baseHeader}: ${row.base} → CURRENT: ${row.current}\n${row.delta} ${row.marker}")
+            text("${row.label}\n${view.baseHeader}: ${row.base} → Current: ${row.current}\n${row.delta} ${row.marker}")
         }
         button("기준 / 현재 바꾸기") { val old = selectedId; selectedId = compareId; compareId = old; render() }
-        button("CSV EXPORT · 두 실행") { exportCsv(listOf(base, current)) }
+        button("CSV export · 두 실행") { exportCsv(listOf(base, current)) }
         backButton("실행 이력으로 돌아가기") { compareId = null; render() }
         return true
     }
@@ -199,7 +199,7 @@ class HistoryActivity : ComponentActivity() {
 
     private fun menu(run: BenchmarkRun) {
         val isBaseline = pointers.baseline(run.contract.comparisonContractId, run.endpoint.key) == run.runId
-        choose(run.runId, listOf("결과 열기", if (isBaseline) "CLEAR BASELINE" else "SET AS BASELINE", "COMPARE", "EXPORT JSON", "EXPORT CSV", "DELETE")) {
+        choose(run.runId, listOf("결과 열기", if (isBaseline) "Clear baseline" else "Set as baseline", "Compare", "Export JSON", "Export CSV", "Delete")) {
             when (it) {
                 0 -> open(run)
                 1 -> {

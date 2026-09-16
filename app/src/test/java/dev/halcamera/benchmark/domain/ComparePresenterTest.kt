@@ -58,7 +58,7 @@ class ComparePresenterTest {
         assertEquals("164 ms", r.base)
         assertEquals("221 ms", r.current)
         assertEquals("+35%", r.delta)
-        assertEquals("▲ REGRESSED", r.marker)
+        assertEquals("▲ Regressed", r.marker)
     }
 
     @Test fun aChangeBelowTheThresholdIsLeftUnmarked() {
@@ -70,7 +70,7 @@ class ComparePresenterTest {
 
     @Test fun anImprovementIsNamedToo() {
         val faster = run(runId = current.runId, metrics = listOf(metric("2.2", 100.0)))
-        assertEquals("▼ IMPROVED", row("Capture", c = faster).marker)
+        assertEquals("▼ Improved", row("Capture", c = faster).marker)
     }
 
     @Test fun aCountMetricComparesAsACountNotAPercentage() {
@@ -98,11 +98,11 @@ class ComparePresenterTest {
 
     @Test fun aReferenceComparisonIsLabelledAsOne() {
         val v = view(comparedTo = ComparedTo.PREVIOUS)
-        assertEquals("PREVIOUS", v.baseHeader)
+        assertEquals("Previous", v.baseHeader)
         assertTrue(v.baseLine.startsWith("previous"))
         assertTrue(v.referenceNote!!.contains("baseline 없음"))
-        assertTrue(v.render().contains("PREVIOUS"))
-        assertFalse(v.render().contains("REGRESSED"))
+        assertTrue(v.render().contains("Previous"))
+        assertFalse(v.render().contains("Regressed"))
     }
 
     @Test fun theBaselineItselfIsNotDescribedAsHavingNoBaseline() {
@@ -110,15 +110,15 @@ class ComparePresenterTest {
         // comparison. That is not the same situation as having no baseline at all, and the screen said it was
         // while the button next to it read CLEAR BASELINE.
         val v = view(comparedTo = ComparedTo.PREVIOUS, currentIsBaseline = true)
-        assertEquals("PREVIOUS", v.baseHeader)
+        assertEquals("Previous", v.baseHeader)
         assertFalse(v.referenceNote!!.contains("baseline 없음"))
         assertTrue(v.referenceNote!!.startsWith("이 run이 baseline입니다"))
-        assertFalse(v.render().contains("REGRESSED"))
+        assertFalse(v.render().contains("Regressed"))
     }
 
     @Test fun aBaselineComparisonKeepsItsVerdicts() {
         val v = view()
-        assertEquals("BASELINE", v.baseHeader)
+        assertEquals("Baseline", v.baseHeader)
         assertNull(v.referenceNote)
         assertTrue(v.rows.any { it.hasVerdict })
     }
@@ -148,7 +148,7 @@ class ComparePresenterTest {
     }
 
     @Test fun theTitleCarriesTheRuleVersionThatProducedTheVerdicts() {
-        assertTrue(view().titleLine.startsWith("COMPARE"))
+        assertTrue(view().titleLine.startsWith("Compare"))
         assertTrue(view().titleLine.endsWith("rule ${RegressionRules.VERSION}"))
     }
 
@@ -166,8 +166,8 @@ class ComparePresenterTest {
 
     @Test fun theRenderedTableHeadsBothValueColumns() {
         val text = view().render()
-        assertTrue(text.contains("BASELINE"))
-        assertTrue(text.contains("CURRENT"))
-        assertTrue(text.lines().any { it.startsWith("Capture") && it.endsWith("▲ REGRESSED") })
+        assertTrue(text.contains("Baseline"))
+        assertTrue(text.contains("Current"))
+        assertTrue(text.lines().any { it.startsWith("Capture") && it.endsWith("▲ Regressed") })
     }
 }

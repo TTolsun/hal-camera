@@ -48,7 +48,7 @@ data class ResultView(
     val scoreLine: String? = null
 ) {
     fun render(): String = buildString {
-        appendLine("CAMERA BENCHMARK")
+        appendLine("Camera benchmark")
         appendLine(titleLine)
         appendLine(subLine)
         appendLine(eligibilityLine)
@@ -79,11 +79,14 @@ object ResultPresenter {
 
     private val ORDER = listOf(Category.LAUNCH, Category.PREVIEW, Category.CAPTURE, Category.STABILITY)
 
+    /** Category names as the screen prints them: first letter capital, the rest lower, no underscores. */
+    fun categoryLabel(category: Category): String = category.name.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
+
     fun scoreLine(run: BenchmarkRun): String? {
         if (run.scoringRuleVersion != ScoreComposer.VERSION || run.endpointScore == null) return null
         val score = ScoreComposer.compose(run, S25PlusScoreDraft.calibration) ?: return null
         val categoryText = score.categories.entries.joinToString(" · ") {
-            "${it.key.name} ${String.format(Locale.US, "%.0f", it.value)}"
+            "${categoryLabel(it.key)} ${String.format(Locale.US, "%.0f", it.value)}"
         }
         return "Camera Endpoint Score ${score.total} / 1000\n내부 초안 · ${ScoreComposer.VERSION}\n$categoryText\n동일 모델·카메라의 변화 확인용 · 기기 간 순위 아님"
     }
@@ -114,10 +117,10 @@ object ResultPresenter {
             // button reads CLEAR BASELINE by then, so telling the reader to press SET AS BASELINE describes
             // nothing they can do. Being compared against a baseline and being one are separate states.
             hint = if (comparedTo == ComparedTo.BASELINE || isBaseline) null
-            else "[ SET AS BASELINE ]을 누르면 이 run이 기준이 됩니다",
+            else "[ Set as baseline ]을 누르면 이 run이 기준이 됩니다",
             sections = sections,
             threeALine = threeALine(run),
-            baselineButton = if (isBaseline) "CLEAR BASELINE" else "SET AS BASELINE",
+            baselineButton = if (isBaseline) "Clear baseline" else "Set as baseline",
             // Clearing must stay possible even if the run later became ineligible under a changed flag table.
             baselineButtonEnabled = isBaseline || run.validity.comparisonEligible
         )
@@ -142,7 +145,7 @@ object ResultPresenter {
         }
         val thermal = listOf(run.env.thermalStart, run.env.thermalMax, run.env.thermalEnd)
         val thermalText = if (thermal.any { it == null }) null else thermal.joinToString(" → ")
-        val suffix = if (v.comparisonEligible) null else "SET AS BASELINE 비활성"
+        val suffix = if (v.comparisonEligible) null else "Set as baseline 비활성"
         return listOfNotNull(head, thermalText?.let { "thermal $it" }, suffix).joinToString(" · ")
     }
 
@@ -166,8 +169,8 @@ object ResultPresenter {
         comparedTo == ComparedTo.PREVIOUS ->
             if (isBaseline) "이 run이 baseline입니다 · 이전 run ${comparison.baseRunId} 대비 표시"
             else "baseline 없음 · 이전 run ${comparison.baseRunId} 대비 표시"
-        comparison.hasRegression -> "▲ ${comparison.regressedCount} REGRESSED   baseline ${comparison.baseRunId}"
-        else -> "REGRESSED 없음   baseline ${comparison.baseRunId}"
+        comparison.hasRegression -> "▲ ${comparison.regressedCount} Regressed   baseline ${comparison.baseRunId}"
+        else -> "Regressed 없음   baseline ${comparison.baseRunId}"
     }
 
     /**
@@ -210,7 +213,7 @@ object ResultPresenter {
         if (metrics.isEmpty()) return null
         val rows = metrics.map { row(it, comparison?.metric(it.id), comparedTo) }
         return ResultSection(
-            title = category.name.replace('_', ' '),
+            title = categoryLabel(category),
             valueHeader = "p50",
             statHeader = metrics.mapNotNull { statHeader(it) }.firstOrNull().orEmpty(),
             // Abbreviated so the column and its markers fit the card. Which run the delta is against is spelled

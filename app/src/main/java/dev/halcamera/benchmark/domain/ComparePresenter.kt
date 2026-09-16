@@ -6,7 +6,7 @@ data class CompareRow(
     val base: String,
     val current: String,
     val delta: String,
-    /** "▲ REGRESSED", "▼ IMPROVED", the reason a metric could not be judged, or empty for STABLE. */
+    /** "▲ Regressed", "▼ Improved", the reason a metric could not be judged, or empty for STABLE. */
     val marker: String
 ) {
     /** [marker] is a verdict only against a baseline; against a reference it can only carry a reason. */
@@ -19,7 +19,7 @@ data class CompareView(
     val currentLine: String,
     val identityLine: String?,
     val conditionLine: String?,
-    /** Header of the left value column: "BASELINE" or "PREVIOUS". */
+    /** Header of the left value column: "Baseline" or "Previous". */
     val baseHeader: String,
     /** Said only for a reference comparison, where a delta carries no verdict (7.1). */
     val referenceNote: String?,
@@ -63,12 +63,12 @@ object ComparePresenter {
     ): CompareView {
         val againstBaseline = comparedTo == ComparedTo.BASELINE
         return CompareView(
-            titleLine = pad("COMPARE", ROLE + RUN_ID + SUBJECT) + "rule ${comparison.ruleVersion}",
+            titleLine = pad("Compare", ROLE + RUN_ID + SUBJECT) + "rule ${comparison.ruleVersion}",
             baseLine = runLine(if (againstBaseline) "baseline" else if (selectedReference) "selected" else "previous", base),
             currentLine = runLine("current", current),
             identityLine = comparison.identity?.let(ResultPresenter::identityLine),
             conditionLine = ResultPresenter.conditionLine(comparison),
-            baseHeader = if (againstBaseline) "BASELINE" else if (selectedReference) "SELECTED" else "PREVIOUS",
+            baseHeader = if (againstBaseline) "Baseline" else if (selectedReference) "Selected" else "Previous",
             referenceNote = when {
                 againstBaseline -> null
                 selectedReference -> "선택한 run 대비 delta만 표시합니다 · baseline은 변경하지 않습니다"
@@ -119,8 +119,8 @@ object ComparePresenter {
      * metric could not be judged is still worth saying: it explains why the delta itself is not trustworthy.
      */
     private fun marker(comparison: MetricComparison?, comparedTo: ComparedTo): String = when (comparison?.state) {
-        RegressionState.REGRESSED -> if (comparedTo == ComparedTo.BASELINE) "▲ REGRESSED" else ""
-        RegressionState.IMPROVED -> if (comparedTo == ComparedTo.BASELINE) "▼ IMPROVED" else ""
+        RegressionState.REGRESSED -> if (comparedTo == ComparedTo.BASELINE) "▲ Regressed" else ""
+        RegressionState.IMPROVED -> if (comparedTo == ComparedTo.BASELINE) "▼ Improved" else ""
         RegressionState.UNKNOWN -> ResultPresenter.noteFor(comparison, comparedTo)
         else -> ""
     }
@@ -145,7 +145,7 @@ object ComparePresenter {
     private const val DELTA = 8
 
     fun headerLine(baseHeader: String): String =
-        (pad("", LABEL) + right(baseHeader, VALUE) + right("CURRENT", VALUE)).trimEnd()
+        (pad("", LABEL) + right(baseHeader, VALUE) + right("Current", VALUE)).trimEnd()
 
     fun rowLine(row: CompareRow): String =
         (pad(row.label, LABEL) + right(row.base, VALUE) + right(row.current, VALUE) + right(row.delta, DELTA) +

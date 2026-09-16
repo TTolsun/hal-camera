@@ -65,7 +65,7 @@ class CameraProbeActivity : ComponentActivity() {
     private var listScrollY = 0
     private var lastRenderFull = false
     /** Folded section titles; the long ones start folded so STREAMS is a swipe away, not fifteen. */
-    private val collapsed = HashSet<String>().apply { addAll(listOf("ALL CHARACTERISTICS", "MANDATORY STREAM COMBINATIONS", "REQUEST · RESULT KEYS", "SESSION KEYS")) }
+    private val collapsed = HashSet<String>().apply { addAll(listOf("All characteristics", "Mandatory stream combinations", "Request · result keys", "Session keys")) }
     private var query = ""
     /** The sections of the current render, in screen order, for the filter. */
     private var shown: List<ProbeSection> = emptyList()
@@ -96,7 +96,7 @@ class CameraProbeActivity : ComponentActivity() {
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.expertTile) }
         scroll = ScrollView(this)
         val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(16), dp(16), dp(16)) }
-        column.addView(Look.text(this, "PROBE", 24, Look.onDark, bold = true), lp())
+        column.addView(Look.text(this, "Probe", 24, Look.onDark, bold = true), lp())
         column.addView(Look.text(this, "CameraCharacteristics를 읽어 HAL이 공개한 사양을 그대로 표시합니다. 카메라를 열지 않으므로 측정값이 아닙니다. 실제 동작은 BENCHMARK로 확인합니다.", 14, Look.onDark), lp())
         column.addView(IconButton(this, R.drawable.ic_action_back, "돌아가기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { topMargin = dp(10) })
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -348,9 +348,9 @@ class CameraProbeActivity : ComponentActivity() {
         body.addView(exports, lp())
         text("TXT · JSON은 모든 카메라(${cameras.size}개)를 파일로 공유하고, 복사는 현재 카메라를 클립보드에 넣습니다. 이미지 픽셀은 포함되지 않습니다.", 12)
         val sections = ArrayList<ProbeSection>()
-        sections += ProbeSection("DEVICE", snap.device)
+        sections += ProbeSection("Device", snap.device)
         if (current != null) sections += current.sections
-        if (snap.errors.isNotEmpty()) sections += ProbeSection("ERRORS", snap.errors.map { ProbeRow("!", it) })
+        if (snap.errors.isNotEmpty()) sections += ProbeSection("Errors", snap.errors.map { ProbeRow("!", it) })
         shown = sections
         if (current == null) text("공개된 카메라가 없습니다.") else text("섹션 제목을 누르면 접거나 펼칩니다. 아래 필터에 단어를 넣으면 그 단어가 든 줄만 골라 볼 수 있습니다.", 12)
         sections.forEach { section(it.title, it.rows) }

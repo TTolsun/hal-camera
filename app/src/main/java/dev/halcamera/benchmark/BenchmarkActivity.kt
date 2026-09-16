@@ -289,7 +289,7 @@ class BenchmarkActivity : ComponentActivity() {
             Screen.COMPARE -> renderCompare()
         }
         if (screen == Screen.CARD || screen == Screen.RESULT) {
-            actions.addView(Look.ghostButton(this, "RESULTS · 실행 이력", dark = true) {
+            actions.addView(Look.ghostButton(this, "Results · 실행 이력", dark = true) {
                 if (intent.hasExtra(EXTRA_RUN_ID)) finish() else {
                     captureDraft()
                     openHistory.launch(Intent(this, HistoryActivity::class.java)
@@ -300,7 +300,7 @@ class BenchmarkActivity : ComponentActivity() {
         }
         if (screen == Screen.CARD) {
             // The card's verdict comes from the same characteristics; PROBE shows them all without opening the camera.
-            actions.addView(Look.ghostButton(this, "PROBE · 카메라 사양", dark = true) {
+            actions.addView(Look.ghostButton(this, "Probe · 카메라 사양", dark = true) {
                 startActivity(Intent(this, dev.halcamera.CameraProbeActivity::class.java)
                     .putExtra(dev.halcamera.CameraProbeActivity.EXTRA_CAMERA_ID, endpoints.getOrNull(selected)?.key))
             }, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(8) })
@@ -423,7 +423,7 @@ class BenchmarkActivity : ComponentActivity() {
     /** 8.3. */
     private fun renderRunning() {
         val card = Look.card(this, dark = true)
-        card.addView(Look.text(this, "BENCHMARKING", 19, Look.onDark, bold = true))
+        card.addView(Look.text(this, "Benchmarking", 19, Look.onDark, bold = true))
         // The first phase is shown before the runner starts, so the card never appears blank for a frame.
         val first = ProgressPresenter.headline(BenchmarkRunner.Phase.CAMERA_OPEN, 0, profile.launchIterations)
         progressHeadline = Look.text(this, first, 14, Look.onDark, mono = true).also { card.addView(it, lp(top = 10)) }
@@ -441,7 +441,7 @@ class BenchmarkActivity : ComponentActivity() {
         val run = lastRun
         val card = Look.card(this, dark = true)
         if (run == null) {
-            card.addView(Look.text(this, "CAMERA BENCHMARK", 19, Look.onDark, bold = true))
+            card.addView(Look.text(this, "Camera benchmark", 19, Look.onDark, bold = true))
             card.addView(Look.text(this, lastSummary.ifBlank { "결과를 만들지 못했습니다." }, 12, Look.onDarkMuted, mono = true), lp(top = 10))
             content.addView(card)
             if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "새 run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)))
@@ -473,9 +473,9 @@ class BenchmarkActivity : ComponentActivity() {
             LinearLayout.LayoutParams(-1, dp(52))
         )
         val row = Look.row(this)
-        row.addView(action("COMPARE", baseRun != null) { screen = Screen.COMPARE; render() }, LinearLayout.LayoutParams(0, dp(52), 1f))
+        row.addView(action("Compare", baseRun != null) { screen = Screen.COMPARE; render() }, LinearLayout.LayoutParams(0, dp(52), 1f))
         row.addView(
-            action("EXPORT", lastFile != null) { lastFile?.let(::share) },
+            action("Export", lastFile != null) { lastFile?.let(::share) },
             LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginStart = dp(8) }
         )
         actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
