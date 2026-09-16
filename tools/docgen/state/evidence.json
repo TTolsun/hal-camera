@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "0a4b727fd843c758",
+        "codeHash": "9c2244442765afc5",
         "modelHash": "bdc0bacca17dcf77",
         "at": "2026-09-16",
-        "commit": "726842e",
+        "commit": "ac5ad1d",
         "reviewer": "KH"
       }
     },
@@ -21,7 +21,7 @@
         "codeHash": "68d63ab8d2d32ca1",
         "modelHash": "752780bdb9786841",
         "at": "2026-09-16",
-        "commit": "726842e",
+        "commit": "ac5ad1d",
         "reviewer": "KH"
       }
     },
@@ -33,7 +33,7 @@
         "codeHash": "f0f845bb05418dd1",
         "modelHash": "d94cc6e88edc271d",
         "at": "2026-09-16",
-        "commit": "726842e",
+        "commit": "ac5ad1d",
         "reviewer": "KH"
       }
     },
@@ -42,10 +42,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "a457af521770d638",
-        "modelHash": "9af8eaa7b180e8c7",
+        "codeHash": "3bf95d3108a27597",
+        "modelHash": "8285632389bc780a",
         "at": "2026-09-16",
-        "commit": "726842e",
+        "commit": "ac5ad1d",
         "reviewer": "KH"
       }
     },
@@ -55,9 +55,9 @@
       },
       "accepted": {
         "codeHash": "e968b9266d29f221",
-        "modelHash": "f5aafafdf0d4c36a",
+        "modelHash": "702fcec3e6bd58f5",
         "at": "2026-09-16",
-        "commit": "726842e",
+        "commit": "ac5ad1d",
         "reviewer": "KH"
       }
     },
@@ -67,18 +67,18 @@
       },
       "accepted": {
         "codeHash": "68d63ab8d2d32ca1",
-        "modelHash": "8d2e8d724db69181",
+        "modelHash": "c55df502cc6ebd33",
         "at": "2026-09-16",
-        "commit": "726842e",
+        "commit": "ac5ad1d",
         "reviewer": "KH"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "0a4b727fd843c758",
-        "modelHash": "01b798d5776759d4",
+        "codeHash": "9c2244442765afc5",
+        "modelHash": "6a4a2baea5eb4e47",
         "at": "2026-09-16",
-        "commit": "726842e",
+        "commit": "ac5ad1d",
         "reviewer": "KH"
       },
       "observed": {
@@ -87,10 +87,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "0a4b727fd843c758",
-        "modelHash": "0d5d319783d3746d",
+        "codeHash": "9c2244442765afc5",
+        "modelHash": "451d0c336091462a",
         "at": "2026-09-16",
-        "commit": "726842e",
+        "commit": "ac5ad1d",
         "reviewer": "KH"
       },
       "observed": {
