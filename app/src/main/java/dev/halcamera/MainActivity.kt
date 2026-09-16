@@ -25,6 +25,7 @@ import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.ViewCompat
 import dev.halcamera.camera.*
+import dev.halcamera.cli.LiveController
 import dev.halcamera.telemetry.*
 import dev.halcamera.ui.LiveReadout
 import dev.halcamera.ui.ExpandingZoomControl

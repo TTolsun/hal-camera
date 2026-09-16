@@ -172,6 +172,8 @@ camera/     Camera2 / CameraX 엔진, 카메라 엔드포인트 열거
 telemetry/  Telemetry, FlightRecorder(30초 순환 버퍼), incident ZIP
 metrics/    이벤트 → 지표 계산. 화면도 판정도 모르는 leaf
 benchmark/  profile, runner, 통계, 비교 규칙, 저장, 화면
+cli/        ADB 명령 접수·상태 저장, 화면 어댑터(LiveController, BenchmarkController)
+cts/        앱 안에서 실행하는 CTS 카메라 케이스
 ui/         Look 토큰, 그래프 뷰, LIVE 실시간 수치
 ```
 

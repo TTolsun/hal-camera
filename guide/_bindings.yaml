@@ -50,14 +50,14 @@ sources:
           - app/build.gradle.kts
           - settings.gradle.kts
           - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
-          - app/src/main/java/dev/halcamera/camera/LiveController.kt
-          - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
+          - app/src/main/java/dev/halcamera/cli/LiveController.kt
+          - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
       benchmark:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
           - app/src/main/java/dev/halcamera/benchmark/RunIndex.kt
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkCsv.kt
-          - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
+          - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
       benchmark/benchmark-runner:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt
@@ -134,8 +134,8 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
           - app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt
           - app/src/main/AndroidManifest.xml
-          - app/src/main/java/dev/halcamera/camera/LiveController.kt
-          - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
+          - app/src/main/java/dev/halcamera/cli/LiveController.kt
+          - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
       screens/expert-screen:
         evidence:
           - app/src/main/java/dev/halcamera/MainActivity.kt
@@ -249,8 +249,8 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/ResultPresenter.kt
           - app/src/main/java/dev/halcamera/benchmark/ComparePresenter.kt
           - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
-          - app/src/main/java/dev/halcamera/camera/LiveController.kt
-          - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
+          - app/src/main/java/dev/halcamera/cli/LiveController.kt
+          - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
       run-json:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt

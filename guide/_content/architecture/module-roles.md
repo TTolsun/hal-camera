@@ -8,8 +8,8 @@ sources:
   - app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt
   - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
-  - app/src/main/java/dev/halcamera/camera/LiveController.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkController.kt
+  - app/src/main/java/dev/halcamera/cli/LiveController.kt
+  - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
   - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
   - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
@@ -35,7 +35,7 @@ verifications: []
 
 | 영역 | 역할과 수정 시 확인할 내용 |
 | --- | --- |
-| `cli/`와 `tools/halcam/` | shell 호출자 검사, 영속 요청 상태, artifact 등록과 PC 파일 수집을 담당합니다. protocol v1을 변경할 때 양쪽 검증기를 함께 확인합니다. |
+| `cli/`와 `tools/halcam/` | shell 호출자 검사, 영속 요청 상태, artifact 등록과 PC 파일 수집을 담당합니다. 화면 어댑터 `LiveController`와 `BenchmarkController`도 이 패키지에 두어 `camera/`와 `benchmark/`가 `cli/`를 import하지 않게 합니다. `BenchmarkController.reportSaved`는 run ID·중단 사유·schema 버전을 스칼라로 받으므로 `cli/`는 benchmark 타입을 알지 못합니다. protocol v1을 변경할 때 양쪽 검증기를 함께 확인합니다. |
 | `camera/` | 엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다. `close(done)` 완료 전에 다음 카메라를 열지 않습니다. |
 | `metrics/` | `MetricExtractor`가 이벤트를 관측 표본과 통계로 바꿉니다. 화면과 회귀 판정을 담당하지 않습니다. |
 | `benchmark/` | profile, 러너, 지표 계산, validity, 내부 점수, 저장, 비교와 이력 화면을 제공합니다. Android 의존성이 있는 Activity·저장 어댑터와 순수 계산 로직을 구분합니다. |

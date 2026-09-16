@@ -1,11 +1,6 @@
-package dev.halcamera.benchmark
+package dev.halcamera.cli
 
 import android.net.Uri
-import dev.halcamera.cli.CliArtifact
-import dev.halcamera.cli.CliCommand
-import dev.halcamera.cli.CliFailure
-import dev.halcamera.cli.CliHost
-import dev.halcamera.cli.CommandCoordinator
 import org.json.JSONObject
 import java.io.File
 
@@ -39,17 +34,18 @@ class BenchmarkController(private val commands: CommandCoordinator, private val 
         commands.fail(command.id, "SAVE_FAILED", message)
     }
 
-    fun reportSaved(run: BenchmarkRun, result: BenchmarkRunner.Result, file: File?) {
+    /** Completes the command from the persisted outcome; scalar arguments keep this package free of benchmark types. */
+    fun reportSaved(runId: String, aborted: String?, hardFailure: String?, schemaVersion: Int, file: File?) {
         val command = request ?: return
         request = null
         val failure = when {
             file == null -> CliFailure("SAVE_FAILED", "Benchmark report could not be saved")
-            result.aborted != null -> CliFailure("CANCELLED", "Benchmark aborted: ${result.aborted}")
-            result.hardFailure != null -> CliFailure("BENCHMARK_FAILED", "Benchmark failed at ${result.hardFailure}")
+            aborted != null -> CliFailure("CANCELLED", "Benchmark aborted: $aborted")
+            hardFailure != null -> CliFailure("BENCHMARK_FAILED", "Benchmark failed at $hardFailure")
             else -> null
         }
-        commands.complete(command.id, JSONObject().put("run_id", run.runId).put("camera_id", command.camera)
-            .put("cancelled", result.aborted != null).put("report_schema_version", BenchmarkReportCodec.SCHEMA_VERSION),
+        commands.complete(command.id, JSONObject().put("run_id", runId).put("camera_id", command.camera)
+            .put("cancelled", aborted != null).put("report_schema_version", schemaVersion),
             file?.let { listOf(CliArtifact(it.name, "application/json", Uri.fromFile(it))) }.orEmpty(), failure)
     }
 }
