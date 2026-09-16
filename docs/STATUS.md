@@ -1,6 +1,6 @@
 # 작업 상태
 
-2026-09-16 · HAL CAM 0.8.0. LIVE 상단을 `API · 도구 · 진단`으로 나누어 세션과 무관한 Benchmark·PROBE·CTS를 `도구` 메뉴의 독립 화면으로 옮기고, 세션 의존 항목만 `진단` 패널에 남겼습니다([PR #81](https://github.com/TTolsun/hal-camera/pull/81), [PR #82](https://github.com/TTolsun/hal-camera/pull/82)). CTS `RecordingTest#testBasicRecording`을 앱 안에서 실행하는 CTS 케이스 화면([PR #76](https://github.com/TTolsun/hal-camera/pull/76))을 추가하고 PROBE 필터의 예시와 뒤로가기 동작을 다듬었습니다([PR #78](https://github.com/TTolsun/hal-camera/pull/78)). 0.7.0의 반복 측정 비교([PR #72](https://github.com/TTolsun/hal-camera/pull/72))와 PROBE 화면([PR #75](https://github.com/TTolsun/hal-camera/pull/75)), 0.6.0의 PC CLI(0.1.0), 0.5.1의 촬영·갤러리 개선을 유지합니다. [PR #48](https://github.com/TTolsun/hal-camera/pull/48)의 M5a 내부 점수 초안을 포함하며 민감도 검증은 진행 중입니다.
+2026-09-16 · HAL CAM 0.8.1. LIVE 상단을 `API · 상태 · 도구 · 진단`으로 나누어 세션과 무관한 Benchmark·PROBE·CTS를 `도구` 메뉴의 독립 화면으로 옮기고, 세션 의존 항목만 `진단` 패널에 남겼습니다([PR #81](https://github.com/TTolsun/hal-camera/pull/81), [PR #82](https://github.com/TTolsun/hal-camera/pull/82), [릴리스 0.8.1](releases/0.8.1.md)). CTS `RecordingTest#testBasicRecording`을 앱 안에서 실행하는 CTS 케이스 화면([PR #76](https://github.com/TTolsun/hal-camera/pull/76))을 추가하고 PROBE 필터의 예시와 뒤로가기 동작을 다듬었습니다([PR #78](https://github.com/TTolsun/hal-camera/pull/78)). 0.7.0의 반복 측정 비교([PR #72](https://github.com/TTolsun/hal-camera/pull/72))와 PROBE 화면([PR #75](https://github.com/TTolsun/hal-camera/pull/75)), 0.6.0의 PC CLI(0.1.0), 0.5.1의 촬영·갤러리 개선을 유지합니다. [PR #48](https://github.com/TTolsun/hal-camera/pull/48)의 M5a 내부 점수 초안을 포함하며 민감도 검증은 진행 중입니다.
 
 ## 지금 어디까지 왔는가
 
