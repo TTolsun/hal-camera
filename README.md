@@ -171,10 +171,14 @@ Pages 설정은 공개 저장소와 사내 미러 모두 **Settings → Pages �
 camera/     Camera2 / CameraX 엔진, 카메라 엔드포인트 열거
 telemetry/  Telemetry, FlightRecorder(30초 순환 버퍼), incident ZIP
 metrics/    이벤트 → 지표 계산. 화면도 판정도 모르는 leaf
-benchmark/  profile, runner, 통계, 비교 규칙, 저장, 화면
+benchmark/  BENCHMARK·RESULTS·COMPARE 화면(Activity)만 루트에 둔다
+  domain/     profile, runner, 통계, validity, 점수, 비교 규칙, presenter. Android 의존 없음
+  platform/   BenchmarkStore, BenchmarkReport(org.json 경계), ProfileLibrary, ThermalTracker 같은 파일·기기 어댑터
 cli/        ADB 명령 접수·상태 저장, 화면 어댑터(LiveController, BenchmarkController)
 cts/        앱 안에서 실행하는 CTS 카메라 케이스
 ui/         Look 토큰, 그래프 뷰, LIVE 실시간 수치
 ```
+
+`benchmark/domain/`과 `metrics/`에 `android.*`·`org.json` import가 들어오거나 `domain/`이 `platform/`을 참조하면 `LayerIsolationTest`(JVM 테스트)가 실패합니다.
 
 화면은 XML 없이 Kotlin 코드로 만듭니다. 판정과 배치 규칙은 순수 Kotlin 객체에 두어 기기 없이 JVM 테스트로 검증합니다.

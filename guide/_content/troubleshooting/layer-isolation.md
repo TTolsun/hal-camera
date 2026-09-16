@@ -2,10 +2,10 @@
 based_on: [data-flow, state-transitions]
 confidence: code
 sources:
-  - app/src/main/java/dev/halcamera/benchmark/ProfileComparison.kt
-  - app/src/main/java/dev/halcamera/benchmark/RepeatStatistics.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileLibrary.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileArchive.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt
   - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
   - app/src/main/java/dev/halcamera/cli/CommandStore.kt
   - tools/halcam/halcam/cli.py
@@ -13,9 +13,9 @@ sources:
   - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
   - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
   - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
-  - app/src/main/java/dev/halcamera/benchmark/RunAssembler.kt
-  - app/src/main/java/dev/halcamera/benchmark/RunValidity.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt
+  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
   - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
 decisions: []

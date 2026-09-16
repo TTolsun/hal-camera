@@ -32,8 +32,8 @@ Android 사용자 0의 잠금 해제된 전면 앱을 첫 지원 조건으로 �
 | [Camera2Engine](../../app/src/main/java/dev/halcamera/camera/Camera2Engine.kt) | 사진 저장 후 `media_saved` 이벤트와 요청 ID·capture ID·센서 시각·URI가 포함된 완료 결과를 제공한다. |
 | [MediaLibrary](../../app/src/main/java/dev/halcamera/camera/MediaLibrary.kt) | YUV에서 변환한 JPEG과 카메라 JPEG을 저장하고 URI 목록을 반환한다. 저장 실패 시 생성 항목을 정리한다. |
 | [BenchmarkActivity](../../app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt) | 실행 준비·환경 수집·driver 연결·결과 저장을 담당한다. `onStop`에서 실행을 중단하며, 결과 파일 쓰기는 비동기 작업이다. |
-| [BenchmarkRunner](../../app/src/main/java/dev/halcamera/benchmark/BenchmarkRunner.kt) | 순수 Kotlin 상태 머신이다. 기존 순서·타이밍·실패 규칙을 유지한다. |
-| [BenchmarkReport](../../app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt) | schema 4로 결과를 저장하며 schema 3도 읽는다. CLI 프로토콜 버전은 보고서 schema와 분리한다. |
+| [BenchmarkRunner](../../app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt) | 순수 Kotlin 상태 머신이다. 기존 순서·타이밍·실패 규칙을 유지한다. |
+| [BenchmarkReport](../../app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt) | schema 4로 결과를 저장하며 schema 3도 읽는다. CLI 프로토콜 버전은 보고서 schema와 분리한다. |
 | [AndroidManifest](../../app/src/main/AndroidManifest.xml) | MainActivity와 DUMP 권한으로 보호한 CliLaunchActivity를 외부에서 열 수 있다. BenchmarkActivity는 비공개이며 CLI Provider와 기존 공유 Provider를 분리한다. |
 | [aggregate.py](../../tools/aggregate.py) | PC에서 저장된 JSON을 CSV로 변환한다. CLI는 원본 JSON을 수집하고 CSV 변환은 이 도구를 재사용한다. |
 

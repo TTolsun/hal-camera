@@ -23,19 +23,19 @@
         {
           "tag": "BenchmarkReport",
           "sources": [
-            "app/src/main/java/dev/halcamera/benchmark/BenchmarkReport.kt"
+            "app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt"
           ]
         },
         {
           "tag": "BenchmarkStore",
           "sources": [
-            "app/src/main/java/dev/halcamera/benchmark/BenchmarkStore.kt"
+            "app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt"
           ]
         },
         {
           "tag": "ProfileCompatibility",
           "sources": [
-            "app/src/main/java/dev/halcamera/benchmark/ProfileCompatibility.kt"
+            "app/src/main/java/dev/halcamera/benchmark/platform/ProfileCompatibilityChecker.kt"
           ]
         }
       ]

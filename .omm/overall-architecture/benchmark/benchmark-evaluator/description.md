@@ -1,4 +1,4 @@
-`app/src/main/java/dev/halcamera/benchmark/BenchmarkEvaluator.kt` (186 lines). Turns the runner's raw samples into `BenchmarkMetric` statistics, and nothing else: no thresholds, no judgement. Comparison fields stay `UNKNOWN(no_baseline)` inside this evaluator; the separate RegressionDetector implementation applies comparisons.
+`app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt` (186 lines). Turns the runner's raw samples into `BenchmarkMetric` statistics, and nothing else: no thresholds, no judgement. Comparison fields stay `UNKNOWN(no_baseline)` inside this evaluator; the separate RegressionDetector implementation applies comparisons.
 
 RunAssembler supplies these inputs from BenchmarkRunner and recorded events: `LaunchCycle` (one warm-reopen cycle with open, configure, first-started, YUV, preview-total and close milliseconds, plus a warm-up flag) and `StillSample` (submit, image and result timestamps, deriving both latencies).
 
