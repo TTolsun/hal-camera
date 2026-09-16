@@ -16,7 +16,7 @@
 
 M4의 내용은 계획보다 앞당겨 M3 2단계에서 함께 구현하고 검증했습니다.
 
-GitHub의 미완료 이슈는 [M5 #9](https://github.com/TTolsun/hal-camera/issues/9)와 이를 포함하는 [전환 총괄 #4](https://github.com/TTolsun/hal-camera/issues/4)입니다. M1–M4와 M6의 개별 이슈는 종료되었습니다.
+[전환 총괄 #4](https://github.com/TTolsun/hal-camera/issues/4)는 2026-09-16에 Galaxy S25+(Qualcomm) 실제 자료로 동일 기기 수정 전후 비교 흐름을 끝까지 확인하고 종료했습니다. 사용자 결정에 따라 Exynos·MediaTek 기기 검증은 이 epic의 완료 조건에서 제외했으며, 다른 vendor 기기가 준비되면 별도 이슈로 진행합니다. [M5 #9](https://github.com/TTolsun/hal-camera/issues/9)는 목표 변경으로 `not_planned` 종료했고 M1–M4와 M6의 개별 이슈도 종료되었습니다.
 
 ## M3 이후 완료한 일
 
@@ -90,6 +90,7 @@ LIVE는 측정한 것을 모두 유지하고 판정한 것을 모두 버렸습�
 - 7.2: Open이 +138 %여도 절대 차이 6 ms가 noise floor 10 ms 미만이라 회귀로 판정하지 않음
 - `SET AS BASELINE` / `CLEAR BASELINE` 전환
 - 도구 메뉴(2026-09-16, versionCode 12 로컬 빌드): `도구` 목록 표시, Benchmark·CTS 진입 시 `카메라 세션 종료 중…` 뒤 화면 전환, PROBE 즉시 전환, 녹화 중 `도구` 비활성화, 복귀 시 프리뷰 재시작
+- 반복 측정 비교 실제 자료(2026-09-16): 2026-09-12의 0.5.0 실행 10회를 JSON으로 가져와 A, 0.8.0 CLI 실행 5회를 B로 선택. 확인 미체크 시 검정 보류, 체크 후 19개 지표 검정·7개 유의차, `regression-rule-v1` 판정과 분리 표시. 자세한 수치와 해석 제한은 `docs/PROFILE-COMPARISON.md`
 
 ## 아직 하지 않은 것
 
