@@ -674,7 +674,10 @@ class BenchmarkActivity : ComponentActivity() {
             try {
                 val run = RunAssembler.assemble(result, events, profile, context)
                 val file = try { report.write(run, events) } catch (e: Exception) { null }
-                benchmarkCli.reportSaved(run.runId, result.aborted, result.hardFailure, BenchmarkReportCodec.SCHEMA_VERSION, file)
+                benchmarkCli.reportSaved(
+                    runId = run.runId, aborted = result.aborted, hardFailure = result.hardFailure,
+                    schemaVersion = BenchmarkReportCodec.SCHEMA_VERSION, file = file
+                )
                 val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
                 val base = baseline ?: baselines.reference(run)
                 val to = when {

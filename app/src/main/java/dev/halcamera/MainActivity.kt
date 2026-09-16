@@ -366,16 +366,22 @@ class MainActivity : ComponentActivity() {
         // only what reads the live session. APP-UI.md "도구 메뉴와 독립 화면" is the source of that split.
         toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: Benchmark, PROBE, CTS" }
         val panelButton=button("진단") { showDiagnostics(true) }.apply { contentDescription="진단 패널 열기" }
-        engineButton.apply { background=cameraChrome(Color.TRANSPARENT); setTextColor(Color.WHITE) }
-        listOf(toolsButton,panelButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
+        listOf(engineButton,toolsButton,panelButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
         statusText=label("카메라 준비 중…",12,Look.onDarkMuted).apply {
             gravity=Gravity.CENTER
             maxLines=2
         }
-        controls.addView(engineButton,LinearLayout.LayoutParams(0,dp(48),1f))
+        // Three equal columns keep the status text on the screen's centre line: the engine switch hugs the start
+        // edge and 도구·진단 hug the end edge, so both sides mirror each other around the readout.
+        val leadingSlot=row().apply { gravity=Gravity.START or Gravity.CENTER_VERTICAL; addView(engineButton,LinearLayout.LayoutParams(-2,dp(48))) }
+        val trailingSlot=row().apply {
+            gravity=Gravity.END or Gravity.CENTER_VERTICAL
+            addView(toolsButton,LinearLayout.LayoutParams(-2,dp(48)))
+            addView(panelButton,LinearLayout.LayoutParams(-2,dp(48)).apply { marginStart=dp(4) })
+        }
+        controls.addView(leadingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
         controls.addView(statusText,LinearLayout.LayoutParams(0,dp(48),1f))
-        controls.addView(toolsButton,LinearLayout.LayoutParams(-2,dp(48)))
-        controls.addView(panelButton,LinearLayout.LayoutParams(-2,dp(48)))
+        controls.addView(trailingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
         cameraNotice=label("카메라 준비 중…",12,Look.onDark).apply {
             gravity=Gravity.CENTER
             accessibilityLiveRegion=View.ACCESSIBILITY_LIVE_REGION_POLITE
