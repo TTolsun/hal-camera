@@ -192,6 +192,48 @@ node --test --test-name-pattern='previous 300-second limit' tools/docgen/sync.te
 
 즉 자동 PR은 사람이 문서 검토를 빠뜨렸을 때 뒤늦게 메우는 안전망이고, 정상 경로는 PR 안에서 사람이 끝내는 것입니다. 자동 PR의 원고는 4B 모델이 쓴 것이므로 그대로 머지하지 말고 코드와 대조해야 합니다(PR #66에서 실제로 수정했습니다).
 
+위 내용을 한 PR의 흐름으로 그리면 다음과 같습니다. 위쪽 분기는 `docs-check`, 아래쪽 분기는 `docs-sync`입니다.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Dev as 개발자
+    participant PR as PR (feature 브랜치)
+    participant Check as docs-check.yml<br/>GitHub-hosted runner
+    participant Main as main
+    participant Sync as docs-sync.yml<br/>이 PC runner + qwen3.5:4b
+    actor Rev as 검토자
+
+    Dev->>PR: app/ 코드 변경 push
+    PR->>Check: pull_request 트리거
+    Check->>Check: extract → verify/coverage/generate/site --check
+
+    alt 모든 검사 통과 (문서가 이미 최신)
+        Check-->>PR: 통과
+    else 근거 해시 불일치 (문서 재검토 필요)
+        Check-->>PR: 실패 (파일은 쓰지 않음)
+        Dev->>Dev: .omm/·_content/ 수정<br/>(손으로 쓰거나 로컬 sync.mjs)
+        Dev->>Dev: verify --accept --reviewer=이름<br/>→ generate → site build
+        Dev->>PR: guide/·state/·docs/ 함께 push
+        PR->>Check: 재검사
+        Check-->>PR: 통과
+    end
+
+    Dev->>Main: 머지 (브랜치 보호 없음, 실패한 채로도 가능)
+    Main->>Sync: push 트리거<br/>(DOCGEN_LOCAL_RUNNER_ENABLED=true)
+    Sync->>Sync: 임시 복사본에서 근거 해시 재계산
+
+    alt 재스캔 대상 없음 (정상 경로)
+        Sync-->>Main: 30~40초 만에 종료, PR 없음
+    else 낡은 요소 있음 (실패한 채 머지·직접 push·force=true)
+        Sync->>Sync: Qwen 구조 스캔 → 원고 집필 → 검증·생성
+        Sync->>PR: docs/omm-sync PR 생성 (accept는 하지 않음)
+        Rev->>PR: 코드와 대조 검토
+        Rev->>Rev: verify --accept --reviewer=이름<br/>→ generate → site build
+        Rev->>Main: 머지 → 다시 최신
+    end
+```
+
 ## 운영: 이 PC의 구성과 재부팅 절차
 
 2026-09-16 기준 개발자 PC의 구성은 다음과 같습니다.
