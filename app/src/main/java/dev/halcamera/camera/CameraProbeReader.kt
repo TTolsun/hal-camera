@@ -82,6 +82,7 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
         sections += guarded("CONTROL") { control(c) }
         sections += guarded("PROCESSING") { processing(c) }
         sections += guarded("REQUEST") { request(c) }
+        sections += guarded("REQUEST · RESULT KEYS") { requestResultKeys(c) }
         if (Build.VERSION.SDK_INT >= 28) sections += guarded("SESSION KEYS") { sessionKeys(c) }
         if (Build.VERSION.SDK_INT >= 29) sections += guarded("MANDATORY STREAM COMBINATIONS") { mandatoryCombinations(c) }
         if (map != null) {
@@ -243,11 +244,19 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
         rows += ProbeRow("Pipeline max depth", c[CameraCharacteristics.REQUEST_PIPELINE_MAX_DEPTH]?.toString() ?: "—")
         rows += ProbeRow("Partial result count", c[CameraCharacteristics.REQUEST_PARTIAL_RESULT_COUNT]?.toString() ?: "—")
         rows += ProbeRow("Sync max latency", MetadataNames.name("SYNC_MAX_LATENCY_", c[CameraCharacteristics.SYNC_MAX_LATENCY]))
-        rows += ProbeRow("Characteristics keys", c.keys.size.toString())
-        rows += ProbeRow("Request keys", c.availableCaptureRequestKeys.size.toString())
-        rows += ProbeRow("Result keys", c.availableCaptureResultKeys.size.toString())
+        rows += ProbeRow("Key counts", "characteristics ${c.keys.size} · request ${c.availableCaptureRequestKeys.size} · " +
+            "result ${c.availableCaptureResultKeys.size}")
         return rows
     }
+
+    /**
+     * Names only: a characteristics probe knows which keys a CaptureRequest may carry and a CaptureResult will
+     * return, not their values, which exist per request. Long (100+ names each), so its own folded section.
+     */
+    private fun requestResultKeys(c: CameraCharacteristics): List<ProbeRow> = listOf(
+        ProbeRow("Request keys", ProbeFormat.list(c.availableCaptureRequestKeys.map { it.name })),
+        ProbeRow("Result keys", ProbeFormat.list(c.availableCaptureResultKeys.map { it.name }))
+    )
 
     /** Long on vendor HALs (Snapdragon lists 60+ session keys), so this is its own section and starts folded. */
     @androidx.annotation.RequiresApi(28)
