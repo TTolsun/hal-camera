@@ -2,62 +2,31 @@ package dev.halcamera.cts.vendored
 
 import android.content.Intent
 import android.os.Bundle
-import android.view.Gravity
-import android.widget.LinearLayout
-import android.widget.ScrollView
-import androidx.activity.ComponentActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import dev.halcamera.R
+import dev.halcamera.cts.suite.CtsChecklistActivity
+import dev.halcamera.cts.suite.SuiteItem
 import dev.halcamera.ctsvendor.VendoredCatalog
 import dev.halcamera.ctsvendor.VendoredCts
-import dev.halcamera.ctsvendor.VendoredTest
-import dev.halcamera.ui.IconButton
-import dev.halcamera.ui.Look
 
 /**
- * The vendored CTS list: one card per `@Test` method of every class in [VendoredCatalog], grouped by class and
- * tapped to open [VendoredCaseActivity]. Nothing here opens a camera.
+ * The vendored CTS list: a checklist of every `@Test` method of every class in [VendoredCatalog], one group per
+ * class. The ticked methods run one after another through the suite run screen; the › of a row opens
+ * [VendoredCaseActivity] for that method alone. Nothing here opens a camera.
  */
-class VendoredCtsListActivity : ComponentActivity() {
+class VendoredCtsListActivity : CtsChecklistActivity() {
+    override val screenTitle = "CTS 원문 케이스"
+    override val intro = "실행할 테스트 메서드를 고르면 위에서부터 차례로 실행합니다. 각 메서드는 카메라 전부를 차례로 검사하며, 중단은 카메라를 닫아 테스트를 실패시키는 방식입니다. ›를 누르면 메서드 하나만 여는 화면으로 갑니다."
+    override val disclaimer = VendoredReportPresenter.DISCLAIMER
+    override val prefsName = "cts_vendored"
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         VendoredCts.install(this)
-        val scroll = ScrollView(this).apply { setBackgroundColor(Look.expertTile) }
-        val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        scroll.addView(body)
-        setContentView(scroll)
-        ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            view.setPadding(bars.left + dp(16), bars.top + dp(16), bars.right + dp(16), bars.bottom + dp(16))
-            insets
-        }
-
-        val head = Look.row(this)
-        head.addView(Look.text(this, "CTS 원문 케이스", 22, Look.onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
-        head.addView(IconButton(this, R.drawable.ic_action_close, "CTS 원문 케이스 목록 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
-        body.addView(head)
-        body.addView(Look.text(this, "테스트 메서드 하나를 골라 실행합니다. 각 메서드는 카메라 전부를 차례로 검사하며, 중단은 카메라를 닫아 테스트를 실패시키는 방식입니다.", 12, Look.onDarkMuted), lp(top = 4))
-        body.addView(Look.text(this, VendoredReportPresenter.DISCLAIMER, 11, Look.onDarkMuted), lp(top = 4))
-
-        VendoredCatalog.tests().groupBy { it.className }.forEach { (className, tests) ->
-            body.addView(Look.text(this, className, 12, Look.onDarkMuted, mono = true), lp(top = 18))
-            tests.forEach { test ->
-                val card = Look.card(this, dark = true).apply {
-                    isClickable = true; isFocusable = true
-                    contentDescription = "${test.source} 열기"
-                    setOnClickListener { open(test) }
-                }
-                card.addView(Look.text(this, test.method, 16, Look.onDark, bold = true))
-                body.addView(card, lp(top = 8))
-            }
-        }
+        super.onCreate(savedInstanceState)
     }
 
-    private fun open(test: VendoredTest) {
-        startActivity(Intent(this, VendoredCaseActivity::class.java).putExtra(VendoredCaseActivity.EXTRA_TEST_ID, test.id))
+    override fun groups(): List<Group> = VendoredCatalog.tests().groupBy { it.className }.map { (className, tests) ->
+        Group(className.substringAfterLast('.'), className, tests.map { SuiteItem.Vendored(it) })
     }
 
-    private fun dp(v: Int) = Look.dp(this, v)
-    private fun lp(top: Int = 0) = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top); gravity = Gravity.START }
+    override fun singleIntent(item: SuiteItem): Intent =
+        Intent(this, VendoredCaseActivity::class.java).putExtra(VendoredCaseActivity.EXTRA_TEST_ID, (item as SuiteItem.Vendored).test.id)
 }

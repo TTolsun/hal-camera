@@ -7,18 +7,22 @@ title: CTS
 
 ```mermaid
 flowchart LR
-    E["CtsEntryActivity<br/>방식 선택"] --> L["CtsCaseListActivity<br/>커스텀 케이스 목록"]
-    E --> V["VendoredCtsListActivity<br/>CTS 원문 메서드 목록"]
-    L --> A["CtsCaseActivity<br/>SurfaceView · 실행 · 중단"]
-    A --> R["…Runner<br/>Camera2Ops · MediaRecorder · ImageReader"]
+    E["CtsEntryActivity<br/>방식 선택"] --> L["CtsCaseListActivity<br/>커스텀 케이스 체크리스트"]
+    E --> V["VendoredCtsListActivity<br/>CTS 원문 메서드 체크리스트"]
+    L -->|실행| S["CtsSuiteRunActivity<br/>체크한 항목을 차례로 실행"]
+    V -->|실행| S
+    L -->|›| A["CtsCaseActivity<br/>케이스 하나 · SurfaceView · 중단"]
+    S --> R["…Runner<br/>Camera2Ops · MediaRecorder · ImageReader"]
+    A --> R
     R --> J["…Rules<br/>판정 · 순수 Kotlin"]
     J --> P["CaseReportPresenter<br/>카메라 × 단계 PASS · FAIL · SKIP"]
-    V --> H["VendoredCaseActivity<br/>Camera2SurfaceViewCtsActivity 상속"]
-    H --> U["VendoredRun<br/>JUnit runner · RunListener"]
+    V -->|›| H["VendoredCaseActivity<br/>메서드 하나 · Camera2SurfaceViewCtsActivity 상속"]
+    S --> U["VendoredRun<br/>JUnit runner · RunListener"]
+    H --> U
     U --> T["RecordingTest 등<br/>AOSP 원문 · :ctsvendor"]
 ```
 
-이 그림은 두 방식이 각각 진행되는 개념적 순서입니다. 커스텀 케이스의 규칙은 카메라를 모르는 순수 Kotlin이라 JVM 테스트로 검증하고, 러너가 CTS가 기기에서 읽는 값을 채워 넣습니다. 다섯 케이스는 같은 `CtsRunner` 계약을 구현하므로 화면은 케이스를 구분하지 않습니다. CTS 원문 케이스는 코드를 옮기지 않으므로 검사 내용은 AOSP 소스 그대로이고, 앱은 그 코드가 전제하는 instrumentation 대역만 제공합니다.
+이 그림은 두 방식이 각각 진행되는 개념적 순서입니다. 두 목록은 모두 체크리스트이고, 체크한 항목을 `실행`하면 `CtsSuiteRunActivity`가 위에서부터 차례로 돌립니다. 이 화면은 가져온 `Camera2SurfaceViewCtsActivity`를 상속하면서 커스텀 러너의 `PreviewHost`도 구현하므로 SurfaceView 하나로 두 종류를 다 호스트하지만, 목록이 분리되어 있으므로 한 번의 실행에는 한 종류만 들어갑니다. 커스텀 케이스의 규칙은 카메라를 모르는 순수 Kotlin이라 JVM 테스트로 검증하고, 러너가 CTS가 기기에서 읽는 값을 채워 넣습니다. 다섯 케이스는 같은 `CtsRunner` 계약을 구현하므로 화면은 케이스를 구분하지 않습니다. CTS 원문 케이스는 코드를 옮기지 않으므로 검사 내용은 AOSP 소스 그대로이고, 앱은 그 코드가 전제하는 instrumentation 대역만 제공합니다.
 
 <h2 lang="en">Pick a custom case.</h2>
 
@@ -40,11 +44,13 @@ CTS 원문 케이스 목록은 `:ctsvendor` 모듈에 가져온 테스트 클래
 
 <h2 lang="en">What one run does.</h2>
 
-1. LIVE 상단 `도구` 메뉴에서 `CTS`를 고릅니다. LIVE 카메라의 `close(done)` 콜백을 받은 뒤 방식 선택 화면이 열리고, `커스텀 케이스`나 `CTS 원문 케이스`를 누르면 그 목록이 열립니다.
-2. 케이스 카드를 누르면 실행 화면이 열립니다. 커스텀 케이스 카드에는 원본과 한 번 실행할 때 하는 일, 대략의 소요 시간이 적혀 있고, CTS 원문 카드에는 메서드 이름만 있습니다.
-3. `실행`을 누르면 카메라 권한(녹화 케이스는 마이크 권한도)을 확인한 뒤 공개 카메라 전부를 순회합니다. 컬러 출력이 없거나 외장 카메라이면 CTS와 같은 사유로 건너뜁니다.
-4. 단계마다 판정이 결정되는 즉시 카메라 카드에 행이 추가됩니다. `중단`을 누르면 진행 중인 단계를 마친 뒤 멈추고, 완료된 행까지만 표시합니다.
-5. 끝나면 머리글에 카메라 수와 FAIL 수가 나옵니다. `복사`는 보고서를 클립보드에 넣고 `공유`는 같은 텍스트를 다른 앱으로 보냅니다.
+1. LIVE 상단 `도구` 메뉴에서 `CTS`를 고릅니다. LIVE 카메라의 `close(done)` 콜백을 받은 뒤 방식 선택 화면이 열리고, `커스텀 케이스`나 `CTS 원문 케이스`를 누르면 그 체크리스트가 열립니다.
+2. 실행할 항목에 체크합니다. 행마다 제목과 대략의 소요 시간, 원본이 적혀 있고(측정된 적 없는 원문 메서드는 `시간 미상`), 그룹의 `전체 선택`으로 한 번에 고를 수 있습니다. 하단 바에 `선택 N개 · 약 M분`이 갱신되며, 선택은 다음에 열 때 그대로 남아 있습니다.
+3. 하단 바의 `실행`을 누르면 실행 화면이 열리고, 카메라 권한(녹화 항목이 있으면 마이크 권한도)을 확인한 뒤 바로 첫 항목을 시작합니다. 각 항목은 공개 카메라 전부를 순회하며, 컬러 출력이 없거나 외장 카메라이면 CTS와 같은 사유로 건너뜁니다. 한 항목이 카메라를 닫고 결과를 보고한 뒤에야 다음 항목이 시작됩니다.
+4. 항목마다 카드가 하나씩 놓입니다. 실행 중인 카드에는 단계별 판정이 결정되는 즉시 행이 추가되고, 끝난 카드는 `PASS`·`FAIL`·`SKIP`과 소요 시간을 보여 주며 누르면 상세가 펼쳐집니다. `중단`을 누르면 실행 중인 항목만 멈추고(`중단됨`) 나머지는 `실행 안 함`으로 남습니다.
+5. 끝나면 머리글에 `N개 중 PASS a · FAIL b · 소요 시간`이 나옵니다. `복사`는 항목 전체의 보고서를 클립보드에 넣고 `공유`는 같은 텍스트를 다른 앱으로 보냅니다. `다시 실행`은 같은 항목을 처음부터 다시 돌립니다.
+
+항목 하나만 따로 보려면 행의 `›`를 누릅니다. 커스텀 케이스는 `CtsCaseActivity`, CTS 원문은 `VendoredCaseActivity`가 열리며, `실행`·`중단`·`복사`·`공유`의 동작은 아래와 같고 결과 표시만 그 항목 하나에 맞춰져 있습니다.
 
 CTS와 달리 한 단계가 실패해도 나머지 단계와 카메라를 계속 실행합니다. 화면의 SurfaceView가 CTS의 `Camera2SurfaceViewCtsActivity` 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 `surfaceChanged`를 기다린 뒤 세션을 엽니다. 카메라 열기·세션 구성·첫 결과·닫기의 대기 시간은 CTS `CameraTestUtils`와 같은 3초입니다.
 
@@ -76,7 +82,7 @@ CTS 원문 클래스를 추가하려면 테스트마다 코드를 쓰지 않습�
 
 <details>
 <summary>코드 근거를 확인하세요</summary>
-<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cts/</code>에서 <code>CtsEntryActivity.kt</code>(방식 선택), <code>CtsCatalog.kt</code>(케이스 목록), <code>CtsRunner.kt</code>·<code>CameraCaseRunner.kt</code>·<code>Camera2Ops.kt</code>(공통 계약과 Camera2 호출), <code>CtsCaseListActivity.kt</code>·<code>CtsCaseActivity.kt</code>(화면), <code>CaseReportPresenter.kt</code>(보고서), 그리고 <code>onoff/</code>·<code>switching/</code>·<code>sizes/</code>·<code>combination/</code>·<code>snapshot/</code>의 <code>…Rules.kt</code>(판정)와 <code>…Runner.kt</code>(실행), 공유 규칙 <code>recording/BasicRecordingRules.kt</code>를 확인하세요. CTS 원문 경로는 <code>cts/vendored/</code>의 두 화면과 <code>ctsvendor/src/main/java/dev/halcamera/ctsvendor/</code>의 <code>VendoredCts.kt</code>·<code>VendoredRun.kt</code>·<code>VendoredCatalog.kt</code>, 패치 목록 <code>ctsvendor/UPSTREAM.md</code>입니다. JVM 테스트는 <code>app/src/test/java/dev/halcamera/cts/</code>에 있습니다. 원고의 검토 상태는 아키텍처 문서 끝에 있습니다.</p>
+<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cts/</code>에서 <code>CtsEntryActivity.kt</code>(방식 선택), <code>CtsCatalog.kt</code>(케이스 목록), <code>CtsRunner.kt</code>·<code>CameraCaseRunner.kt</code>·<code>Camera2Ops.kt</code>(공통 계약과 Camera2 호출), <code>CtsCaseListActivity.kt</code>·<code>CtsCaseActivity.kt</code>(화면), <code>CaseReportPresenter.kt</code>(보고서), <code>suite/</code>의 <code>CtsChecklistActivity.kt</code>·<code>CtsSuiteRunActivity.kt</code>(체크리스트와 차례 실행)와 <code>SuitePlan.kt</code>·<code>SuiteReport.kt</code>(선택·예상 시간·통합 보고서), 그리고 <code>onoff/</code>·<code>switching/</code>·<code>sizes/</code>·<code>combination/</code>·<code>snapshot/</code>의 <code>…Rules.kt</code>(판정)와 <code>…Runner.kt</code>(실행), 공유 규칙 <code>recording/BasicRecordingRules.kt</code>를 확인하세요. CTS 원문 경로는 <code>cts/vendored/</code>의 두 화면과 <code>ctsvendor/src/main/java/dev/halcamera/ctsvendor/</code>의 <code>VendoredCts.kt</code>·<code>VendoredRun.kt</code>·<code>VendoredCatalog.kt</code>, 패치 목록 <code>ctsvendor/UPSTREAM.md</code>입니다. JVM 테스트는 <code>app/src/test/java/dev/halcamera/cts/</code>에 있습니다. 원고의 검토 상태는 아키텍처 문서 끝에 있습니다.</p>
 </details>
 
 **다음 단계:** 판정에 쓰인 시간 규칙이 어디서 오는지 [Benchmark](benchmark.md)의 측정 범위와 비교해 읽으세요. CTS는 통과·실패를, Benchmark는 얼마나 걸리는지를 답합니다.

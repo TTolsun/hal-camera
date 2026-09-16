@@ -1,0 +1,10 @@
+created: 2026-09-17T12:00:00.000Z
+updated: 2026-09-17T12:00:00.000Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: suite-run
+children: []
+parentPath:
+  - screens
+  - cts-screen
