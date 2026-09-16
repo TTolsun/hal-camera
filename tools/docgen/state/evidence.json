@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "15b12cf0ce9fc377",
+        "codeHash": "8209d22858eb513a",
         "modelHash": "b8ae875414771dbf",
         "at": "2026-09-16",
-        "commit": "10fb588",
+        "commit": "b1d610e",
         "reviewer": "Claude Opus 5 (cli controllers)"
       }
     },
@@ -18,10 +18,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8a9de6d63410772b",
+        "codeHash": "4e10a3e61a613476",
         "modelHash": "50be73470c27fe37",
         "at": "2026-09-16",
-        "commit": "10fb588",
+        "commit": "b1d610e",
         "reviewer": "Claude Opus 5 (cli controllers)"
       }
     },
@@ -30,10 +30,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "13f0e260d0610dcf",
+        "codeHash": "99494ea4f2029cfd",
         "modelHash": "53d90e088a325cce",
         "at": "2026-09-16",
-        "commit": "10fb588",
+        "commit": "b1d610e",
         "reviewer": "Claude Opus 5 (cli controllers)"
       }
     },
@@ -42,10 +42,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "f5c9ab900265b786",
+        "codeHash": "112fca07efb1b057",
         "modelHash": "e757e019903fede9",
         "at": "2026-09-16",
-        "commit": "10fb588",
+        "commit": "b1d610e",
         "reviewer": "Claude Opus 5 (cli controllers)"
       }
     },
@@ -54,10 +54,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "ff69a75a9c07f54d",
-        "modelHash": "1c96b97cb3a84e17",
+        "codeHash": "187580a297d77500",
+        "modelHash": "8c14afc57990f5a8",
         "at": "2026-09-16",
-        "commit": "10fb588",
+        "commit": "b1d610e",
         "reviewer": "Claude Opus 5 (cli controllers)"
       }
     },
@@ -66,19 +66,19 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8a9de6d63410772b",
+        "codeHash": "4e10a3e61a613476",
         "modelHash": "8cbb4a9ddae17ab7",
         "at": "2026-09-16",
-        "commit": "10fb588",
+        "commit": "b1d610e",
         "reviewer": "Claude Opus 5 (cli controllers)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "15b12cf0ce9fc377",
+        "codeHash": "8209d22858eb513a",
         "modelHash": "68b73b12a73742b3",
         "at": "2026-09-16",
-        "commit": "10fb588",
+        "commit": "b1d610e",
         "reviewer": "Claude Opus 5 (cli controllers)"
       },
       "observed": {
@@ -87,10 +87,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "15b12cf0ce9fc377",
+        "codeHash": "8209d22858eb513a",
         "modelHash": "a866d634cad93bfe",
         "at": "2026-09-16",
-        "commit": "10fb588",
+        "commit": "b1d610e",
         "reviewer": "Claude Opus 5 (cli controllers)"
       },
       "observed": {
