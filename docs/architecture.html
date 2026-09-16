@@ -113,7 +113,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-16 @ <code>266533e</code> · Claude Opus 5 (cts custom cases)</li>
+<li>검토 2026-09-16 @ <code>c3c1733</code> · Claude Opus 5 (cts vendored)</li>
 </ul>
 </details><!-- omm:end id=overview --><h2 id="전체-구조도">전체 구조도</h2>
 <p>그림을 클릭하면 확대 화면이 열립니다. 키보드에서는 Tab으로 그림을 선택한 뒤 Enter 또는 Space를 누르세요.</p>
@@ -174,7 +174,11 @@
 </tr>
 <tr>
 <td><code>cts/</code></td>
-<td>CTS 스타일 카메라 케이스를 앱 안에서 실행합니다. <code>CtsCatalog</code>가 케이스 목록을 순수 Kotlin으로 정의하고, <code>CtsRunner</code> 계약과 <code>CameraCaseRunner</code> 기반 클래스, 공통 Camera2 호출 <code>Camera2Ops</code> 위에 케이스별 하위 패키지(<code>recording/</code>·<code>onoff/</code>·<code>switching/</code>·<code>sizes/</code>·<code>combination/</code>·<code>snapshot/</code>)가 놓입니다. 각 패키지는 판정을 순수 Kotlin <code>…Rules</code>에, 카메라 호출을 <code>…Runner</code>에 둡니다. 공식 CTS 판정을 대체하지 않습니다.</td>
+<td>CTS 스타일 카메라 검사를 앱 안에서 실행합니다. <code>CtsEntryActivity</code>에서 두 방식 중 하나를 고릅니다. 커스텀 케이스는 <code>CtsCatalog</code>가 목록을 순수 Kotlin으로 정의하고, <code>CtsRunner</code> 계약과 <code>CameraCaseRunner</code> 기반 클래스, 공통 Camera2 호출 <code>Camera2Ops</code> 위에 케이스별 하위 패키지(<code>onoff/</code>·<code>switching/</code>·<code>sizes/</code>·<code>combination/</code>·<code>snapshot/</code>)가 놓이며, <code>recording/</code>은 녹화 케이스들이 공유하는 규칙과 MediaRecorder 도우미입니다. 각 패키지는 판정을 순수 Kotlin <code>…Rules</code>에, 카메라 호출을 <code>…Runner</code>에 둡니다. <code>vendored/</code>는 <code>:ctsvendor</code> 모듈의 AOSP CTS 테스트를 JUnit으로 실행하는 화면입니다. 어느 쪽도 공식 CTS 판정을 대체하지 않습니다.</td>
+</tr>
+<tr>
+<td><code>ctsvendor/</code> (별도 Gradle 모듈)</td>
+<td>AOSP <code>android16-release</code>의 camera2 CTS 소스(<code>RecordingTest</code>, <code>Camera2SurfaceViewTestCase</code>, <code>CtsCameraUtils</code>, <code>com.android.ex.camera2</code>)를 그대로 두고, instrumentation 없이 돌도록 같은 이름의 <code>androidx.test</code> 대역과 <code>@TestApi</code> 치환 패치를 더한 모듈입니다. <code>VendoredCts</code>가 Instrumentation 대역과 host Activity를 등록하고, <code>VendoredRun</code>이 JUnit runner로 테스트 메서드 하나를 실행하며, <code>VendoredCatalog</code>가 reflection으로 <code>@Test</code> 메서드를 나열합니다. 패치 목록과 재동기화 절차는 <code>ctsvendor/UPSTREAM.md</code>에 있습니다.</td>
 </tr>
 <tr>
 <td><code>ui/</code>와 <code>MainActivity.kt</code></td>
@@ -189,12 +193,13 @@
 <h3 id="반복-측정-프로파일-비교-1">반복 측정 프로파일 비교</h3>
 <p>ProfileLibrary와 ProfileArchive는 외부 JSON의 검증·출처·별도 파일 보관을 담당합니다. ProfileComparison은 기기·빌드·계약·환경·중복 검사를, RepeatStatistics는 실행 단위 기술 통계와 순열검정을 담당합니다. ProfileComparisonActivity가 시스템 파일 선택기와 묶음 선택·결과 공유를 연결합니다.</p>
 <p><code>CameraProbeActivity</code>(PROBE)는 카메라를 열지 않고 <code>CameraCharacteristics</code>를 읽어 표로 보여 줍니다. <code>camera/CameraProbeReader</code>가 공개 카메라 ID 전부와 논리 카메라 뒤의 물리 카메라를 섹션 단위로 읽고, <code>camera/CameraProbe</code>의 순수 Kotlin 모델과 TXT·JSON 렌더러가 화면과 공유 파일을 만듭니다. enum 값의 이름은 <code>CameraMetadata</code> 상수에서 reflection으로 읽으므로 새 API 값도 그대로 이름이 붙습니다. 이 화면은 HAL이 공개한 사양을 보여 줄 뿐 측정하지 않으며, 측정은 BENCHMARK가 담당합니다. 필터에 단어를 넣으면 그 단어가 든 줄만 목록으로 나오고, 항목을 누르면 해당 줄로 이동합니다.</p>
-<p><code>cts/CtsCaseListActivity</code>는 LIVE 상단 <code>도구</code> 메뉴에서 LIVE 카메라를 닫은 뒤 열리는 케이스 목록이고, 항목을 고르면 <code>CtsCaseActivity</code>가 그 케이스 하나를 실행합니다. 화면의 SurfaceView가 CTS의 <code>Camera2SurfaceViewCtsActivity</code> 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 <code>surfaceChanged</code>를 기다린 뒤 세션을 엽니다. 케이스는 여섯 가지입니다. <code>BasicRecordingRunner</code>는 카메라마다 CamcorderProfile을 CTS 순서대로 3초씩 녹화하고 <code>BasicRecordingRules.validate</code>가 길이 오차와 프레임 드롭률을 판정합니다. <code>FastOnOffRunner</code>는 표준 열기와 열자마자 닫는 빠른 열기를 번갈아 5회 수행하고 첫 프레임의 SENSOR_TIMESTAMP를 검사합니다. <code>SwitchingRunner</code>는 카메라를 차례로 5회 순회한 뒤 카메라마다 3초 녹화합니다. <code>AllSizeOnOffRunner</code>는 SurfaceHolder 크기 전부를 하나씩 열고, <code>StillPreviewCombinationRunner</code>는 JPEG 크기와 프리뷰 크기의 모든 조합에서 정지 영상을 한 장 찍으며, <code>VideoSnapshotRunner</code>는 25초 녹화 중 5~20초 사이 무작위 시점에 같은 세션으로 스냅샷을 찍습니다. CTS와 달리 한 단계가 실패해도 나머지를 계속 실행하고, 모든 케이스는 실행 중 중단할 수 있습니다. 케이스를 추가하면 규칙은 순수 Kotlin에 두고 JVM 테스트를 함께 쓰며, <code>CtsCatalog</code>와 <code>CtsRunners</code>에 등록합니다.</p>
+<p><code>cts/CtsEntryActivity</code>는 LIVE 상단 <code>도구</code> 메뉴에서 LIVE 카메라를 닫은 뒤 열리는 선택 화면이고, 커스텀 케이스와 CTS 원문 케이스 중 하나를 고릅니다. 커스텀 케이스는 <code>CtsCaseListActivity</code>의 목록에서 항목을 고르면 <code>CtsCaseActivity</code>가 그 케이스 하나를 실행합니다. 화면의 SurfaceView가 CTS의 <code>Camera2SurfaceViewCtsActivity</code> 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 <code>surfaceChanged</code>를 기다린 뒤 세션을 엽니다. 케이스는 다섯 가지입니다. <code>FastOnOffRunner</code>는 표준 열기와 열자마자 닫는 빠른 열기를 번갈아 5회 수행하고 첫 프레임의 SENSOR_TIMESTAMP를 검사합니다. <code>SwitchingRunner</code>는 카메라를 차례로 5회 순회한 뒤 카메라마다 3초 녹화합니다. <code>AllSizeOnOffRunner</code>는 SurfaceHolder 크기 전부를 하나씩 열고, <code>StillPreviewCombinationRunner</code>는 JPEG 크기와 프리뷰 크기의 모든 조합에서 정지 영상을 한 장 찍으며, <code>VideoSnapshotRunner</code>는 25초 녹화 중 5~20초 사이 무작위 시점에 같은 세션으로 스냅샷을 찍습니다. 녹화 케이스들은 <code>recording/BasicRecordingRules</code>의 길이 오차·프레임 드롭률 판정과 <code>CamcorderRecording</code>을 공유합니다. CTS와 달리 한 단계가 실패해도 나머지를 계속 실행하고, 모든 케이스는 실행 중 중단할 수 있습니다. 케이스를 추가하면 규칙은 순수 Kotlin에 두고 JVM 테스트를 함께 쓰며, <code>CtsCatalog</code>와 <code>CtsRunners</code>에 등록합니다.</p>
+<p>CTS 원문 케이스는 <code>vendored/VendoredCtsListActivity</code>가 <code>:ctsvendor</code> 모듈의 <code>VendoredCatalog</code>에서 <code>@Test</code> 메서드를 나열하고, <code>VendoredCaseActivity</code>가 그 메서드 하나를 실행합니다. 이 Activity는 가져온 <code>Camera2SurfaceViewCtsActivity</code>를 상속해 테스트의 <code>ActivityTestRule</code>이 돌려받는 인스턴스가 되고, 가져온 레이아웃의 SurfaceView를 앱 화면으로 옮겨 붙입니다. <code>VendoredRun</code>은 작업 스레드에서 JUnit runner를 돌리고 <code>RunListener</code>로 결과를 받습니다. <code>RecordingTest#testBasicRecording</code>은 이 경로로만 실행하며, 결과는 메서드 하나에 PASS·FAIL 하나이고 실패 문구는 CTS의 assertion 메시지 그대로입니다. 중단은 실행 중인 테스트가 쥔 <code>mCamera</code>를 닫아 테스트를 실패시키는 방식입니다. JUnit이 실행 중인 본문을 멈출 수단이 없기 때문입니다. <code>VendoredCts.MIN_SDK</code>(34) 아래 기기에서는 선택 화면이 이 경로를 비활성화합니다.</p>
 <details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
-<li>근거 파일: <code>app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/BenchmarkController.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCatalog.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/Camera2Ops.kt</code>, <code>app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt</code>, <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbe.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt</code></li>
+<li>근거 파일: <code>app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/BenchmarkController.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCatalog.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/Camera2Ops.kt</code>, <code>app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt</code>, <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbe.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-16 @ <code>266533e</code> · Claude Opus 5 (cts custom cases)</li>
+<li>검토 2026-09-16 @ <code>c3c1733</code> · Claude Opus 5 (cts vendored)</li>
 </ul>
 </details><!-- omm:end id=module-roles --><h2 id="주요-실행-흐름">주요 실행 흐름</h2>
 <!-- omm:begin id=runtime-flow --><p><strong>실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.</strong> 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.</p>
@@ -239,7 +244,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>tools/halcam/halcam/download.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/GalleryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/ui/GalleryImageView.kt</code>, <code>app/src/main/java/dev/halcamera/ui/IconButton.kt</code>, <code>app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/SelectionPopup.kt</code>, <code>app/src/main/java/dev/halcamera/ui/ShutterButton.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BaselineManager.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/StoreRunCatalog.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-16 @ <code>266533e</code> · Claude Opus 5 (cts custom cases)</li>
+<li>검토 2026-09-16 @ <code>c3c1733</code> · Claude Opus 5 (cts vendored)</li>
 </ul>
 </details><!-- omm:end id=runtime-flow --><h3 id="이벤트와-결과가-전달되는-경로">이벤트와 결과가 전달되는 경로</h3>
 <!-- omm:begin id=runtime-diagram --><pre><code class="language-mermaid">graph LR
@@ -339,7 +344,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandStore.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-16 @ <code>266533e</code> · Claude Opus 5 (cts custom cases)</li>
+<li>검토 2026-09-16 @ <code>c3c1733</code> · Claude Opus 5 (cts vendored)</li>
 </ul>
 </details><!-- omm:end id=constraints --><h2 id="변경-후-검증">변경 후 검증</h2>
 <p>Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 확인할 수 있습니다. 저장소 루트에서 실행하세요.</p>
@@ -379,37 +384,37 @@
 <tbody><tr>
 <td>구조 원본 <code>data-flow</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>266533e</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>c3c1733</code> · Claude Opus 5 (cts vendored)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>overall-architecture</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>266533e</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>c3c1733</code> · Claude Opus 5 (cts vendored)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>state-transitions</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>266533e</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>c3c1733</code> · Claude Opus 5 (cts vendored)</td>
 </tr>
 <tr>
 <td>원고 <code>overview</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>266533e</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>c3c1733</code> · Claude Opus 5 (cts vendored)</td>
 </tr>
 <tr>
 <td>원고 <code>module-roles</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>266533e</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>c3c1733</code> · Claude Opus 5 (cts vendored)</td>
 </tr>
 <tr>
 <td>원고 <code>runtime-flow</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>266533e</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>c3c1733</code> · Claude Opus 5 (cts vendored)</td>
 </tr>
 <tr>
 <td>원고 <code>constraints</code></td>
 <td>최신</td>
-<td>검토 2026-09-16 @ <code>266533e</code> · Claude Opus 5 (cts custom cases)</td>
+<td>검토 2026-09-16 @ <code>c3c1733</code> · Claude Opus 5 (cts vendored)</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p>표의 <code>최신</code>은 기록된 근거와 원고가 검토 이후 바뀌지 않았다는 뜻입니다. 모든 기기에서 동작을 검증했다는 뜻은 아닙니다.</p>
