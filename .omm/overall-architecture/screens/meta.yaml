@@ -6,6 +6,9 @@ kind: nested-class
 title: screens
 children:
   - benchmark-screen
+  - cts-screen
   - expert-screen
+  - gallery-screen
   - look-tokens
+  - probe-screen
 parentPath: []
