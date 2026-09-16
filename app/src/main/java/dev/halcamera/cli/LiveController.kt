@@ -1,9 +1,6 @@
-package dev.halcamera.camera
+package dev.halcamera.cli
 
-import dev.halcamera.cli.CliArtifact
-import dev.halcamera.cli.CliCommand
-import dev.halcamera.cli.CliHost
-import dev.halcamera.cli.CommandCoordinator
+import dev.halcamera.camera.PhotoResult
 import org.json.JSONObject
 
 /** Owns the asynchronous CLI LIVE flow; the Activity supplies its actual preview and engine. */
@@ -52,5 +49,3 @@ class LiveController(private val commands: CommandCoordinator, private val drive
         // A submitted capture completes through its saved-pair callback, even after Activity.stop.
     }
 }
-
-data class PhotoResult(val requestId: String?, val name: String, val sensorTimestamp: Long, val uris: List<android.net.Uri>)
