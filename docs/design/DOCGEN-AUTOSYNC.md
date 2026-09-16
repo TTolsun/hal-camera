@@ -1,8 +1,9 @@
 # docgen 무인 동기화 설계 (로컬 Qwen runner)
 
 - 작성일: 2026-09-12
-- 상태: 초안. 실행 계획은 `docs/PLAN-docgen-autosync.md`에 있습니다.
-- 코드 기준: `main` `38b9b5c` (2026-09-12)
+- 갱신일: 2026-09-16 (상태와 1절 표를 실제 동작에 맞춤)
+- 상태: 운영 중. 3절의 A~D는 모두 `main`에 반영되었다(A #60, B #61, C #59·#65, D #62·#63, 첫 자동 PR #66·#71, 담당 요소 검사 #88). 실행 계획은 `docs/PLAN-docgen-autosync.md`, 운영 절차는 `tools/docgen/README.md`의 운영 절에 있다.
+- 코드 기준: `main` `af240b1` (2026-09-16)
 - 대상 파이프라인: `tools/docgen/` (README의 흐름도 참고)
 
 ## 0. 한 문장
@@ -11,15 +12,15 @@
 
 ## 1. 현재 상태와 문제
 
-배포와 검사는 이미 자동이다.
+2026-09-16 기준 검사와 동기화는 자동이고, 사이트 빌드는 PR 안에서 사람이 실행해 커밋한다. 아래 표는 갱신한 것이고, 그 밑의 실측 표는 설계 당시(2026-09-12)의 문제 기록이다.
 
 | 단계 | 담당 | 상태 |
 | --- | --- | --- |
-| 코드와 문서 불일치 검사 | `docs-check.yml` | 동작 중. PR과 `main` push에서 실행된다. |
+| 코드와 문서 불일치 검사 | `docs-check.yml` | 동작 중. PR과 `main` push에서 GitHub-hosted runner로 실행된다. `main`에 브랜치 보호가 없어 실패한 채 머지할 수 있다. |
 | `guide` 배포 | `tools/docgen/site.mjs` | 로컬에서 `docs/`로 빌드하여 커밋한다. Pages는 `main` `/docs` 브랜치 배포다(#67). |
-| 구조와 원고 재작성 | `docs-sync.yml` + `sync.mjs` | 잠들어 있다. `workflow_dispatch` 전용이고 runner가 없다. |
+| 구조와 원고 재작성 | `docs-sync.yml` + `sync.mjs` | 동작 중. `main` push마다 개발자 PC의 self-hosted runner(`docgen-qwen`)가 실행한다. 정상 경로에서는 재스캔 대상이 없어 PR을 만들지 않으며, 운영 절차는 `tools/docgen/README.md`의 운영 절에 있다. |
 
-`sync.mjs`를 이 저장소 전체에 실행하면 실패한다. 2026-09-12에 실측한 원인은 다음과 같다.
+설계 당시에는 `sync.mjs`를 이 저장소 전체에 실행하면 실패했다. 2026-09-12에 실측한 원인은 다음과 같다.
 
 | 원인 | 실측값 | 현상 |
 | --- | --- | --- |
@@ -153,8 +154,10 @@ sources:
 
 ## 4. 실행 흐름 (변경 후)
 
+이 흐름은 문서 검토 없이 `main`에 도달한 코드 변경을 전제한다. PR 안에서 `docs-check`를 통과시키며 `--accept`까지 마친 변경은 `main`의 근거 해시가 이미 검토 기록과 같으므로, `docs-sync`는 재스캔 대상 없이 끝나고 PR을 만들지 않는다.
+
 ```text
-main push (app/** 변경)
+main push (app/** 변경, 문서 검토가 빠진 경우)
   │
   ▼
 docs-sync.yml (self-hosted, docgen-qwen)
@@ -170,11 +173,14 @@ docs-sync.yml (self-hosted, docgen-qwen)
   3. create-pull-request      브랜치 docs/omm-sync
   │
   ▼
-사람: PR에서 코드와 대조 → verify.mjs --accept --reviewer=이름 → generate.mjs → 커밋 → merge
+사람: PR에서 코드와 대조 → verify.mjs --accept --reviewer=이름 → generate.mjs → site.mjs build
+      → guide/, state/, docs/ 를 같은 PR에 커밋 → docs-check 통과 → merge
   │
   ▼
-site.mjs build → docs/ 커밋 → Pages 브랜치 배포 (main /docs)
+Pages 브랜치 배포 (main /docs)
 ```
+
+`site.mjs build`가 merge 앞에 오는 이유는 `docs-check`의 사이트 산출물 일치 검사가 PR에서 `docs/`와 `guide/` 빌드 결과를 비교하기 때문이다(#67 이후).
 
 ## 5. 남는 수동 단계
 
@@ -197,7 +203,7 @@ site.mjs build → docs/ 커밋 → Pages 브랜치 배포 (main /docs)
 
 ## 7. 수용 기준
 
-1. `main`에 `RunAssembler.kt`만 바꾸는 commit을 push하면 45분 안에 `docs/omm-sync` PR이 열린다. 실제 바인딩으로 연결된 요소 4개(`overall-architecture/benchmark/run-assembler`, `data-flow`, `data-flow/benchmark-metrics`, `data-flow/runner-marks`)만 재스캔하고 나머지 43개의 스캔 기록을 유지한다. 원고는 기존 관점 기반 최신성 규칙에 따라 관련 5건을 갱신한다. 구조 내용 변경은 재스캔 요소에 한정하며, 부모 등록 메타데이터와 상태·생성 페이지도 함께 검증한다. 이 범위는 공통 근거와 관점 최신성 연결을 확인한 뒤 2026-09-14에 사용자가 승인했다.
+1. `main`에 `RunAssembler.kt`만 바꾸는 commit을 문서 검토 없이 push하면 45분 안에 `docs/omm-sync` PR이 열린다(PR 안에서 `--accept`까지 마친 변경은 4절대로 PR이 생기지 않는다). 실제 바인딩으로 연결된 요소 4개(`overall-architecture/benchmark/run-assembler`, `data-flow`, `data-flow/benchmark-metrics`, `data-flow/runner-marks`)만 재스캔하고 나머지 43개의 스캔 기록을 유지한다. 원고는 기존 관점 기반 최신성 규칙에 따라 관련 5건을 갱신한다. 구조 내용 변경은 재스캔 요소에 한정하며, 부모 등록 메타데이터와 상태·생성 페이지도 함께 검증한다. 이 범위는 공통 근거와 관점 최신성 연결을 확인한 뒤 2026-09-14에 사용자가 승인했다.
 2. 실행 로그의 모든 모델 호출 입력이 60,000자 이하이고 `done_reason: stop`이다.
 3. 그 PR에서 `verify.mjs --accept` 후 `docs-check`가 통과한다.
 4. `node --test tools/docgen/regression.test.mjs tools/docgen/sync.test.mjs`가 Windows와 Ubuntu에서 통과한다.
