@@ -106,9 +106,9 @@ flowchart LR
 | PC 패키지 | `tools/halcam/pyproject.toml`, `tools/halcam/halcam/` | CLI, ADB transport, protocol, 다운로드 |
 | PC 테스트 | `tools/halcam/tests/` | fake ADB, 오류·인코딩·파일 무결성·복구 |
 | 앱 명령 | `app/src/main/java/dev/halcamera/cli/` | 호출자 검사, coordinator, 상태 저장, artifacts |
-| LIVE 공유 동작 | `camera/LiveController.kt`, MainActivity | 카메라 생명주기와 CLI·UI 작업 소유권 |
+| LIVE 공유 동작 | `cli/LiveController.kt`, MainActivity | 카메라 생명주기와 CLI·UI 작업 소유권 |
 | 사진 결과 | Camera2Engine, MediaLibrary | 요청과 저장 완료·실패의 연계 |
-| 벤치마크 공유 동작 | `benchmark/BenchmarkController.kt`, BenchmarkActivity | 실행 준비·runner 연결·저장 완료 |
+| 벤치마크 공유 동작 | `cli/BenchmarkController.kt`, BenchmarkActivity | 실행 준비·runner 연결·저장 완료 |
 | 앱 선언·설정 | AndroidManifest, 기존 설정 UI | Provider 선언, CLI 허용 설정 |
 | 검증·안내 | `docs/validation/cli-*.md`, README, 가이드 원고 | 호환성 근거와 설치·사용·복구 절차 |
 
