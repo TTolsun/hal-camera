@@ -65,7 +65,7 @@ class CameraProbeActivity : ComponentActivity() {
     private var listScrollY = 0
     private var lastRenderFull = false
     /** Folded section titles; the long ones start folded so STREAMS is a swipe away, not fifteen. */
-    private val collapsed = HashSet<String>().apply { addAll(listOf("ALL CHARACTERISTICS", "MANDATORY STREAM COMBINATIONS", "SESSION KEYS")) }
+    private val collapsed = HashSet<String>().apply { addAll(listOf("ALL CHARACTERISTICS", "MANDATORY STREAM COMBINATIONS", "REQUEST · RESULT KEYS", "SESSION KEYS")) }
     private var query = ""
     /** The sections of the current render, in screen order, for the filter. */
     private var shown: List<ProbeSection> = emptyList()
@@ -238,9 +238,14 @@ class CameraProbeActivity : ComponentActivity() {
             }
             val label = SpannableStringBuilder().append(hit.text)
             highlight(label, 0)
-            // A key hit alone ("1920x1080") says little; its one-line value is the reason to tap it.
+            // A key hit alone ("1920x1080") says little; its value is the reason to tap it. A list value shows its
+            // first entry and how many more follow, so a key that owns a list does not read as a key with no value.
             val value = rowsByTitle[hit.section]?.getOrNull(hit.row)?.value
-            if (hit.line < 0 && hit.row >= 0 && value != null && '\n' !in value) label.append("  $value", ForegroundColorSpan(Look.onDarkMuted), 0)
+            if (hit.line < 0 && hit.row >= 0 && value != null) {
+                val lines = value.split('\n')
+                val more = if (lines.size > 1) " · 외 ${lines.size - 1}줄" else ""
+                label.append("  ${lines.first()}$more", ForegroundColorSpan(Look.onDarkMuted), 0)
+            }
             val active = hit == activeHit
             val item = Look.text(this, label, 12, Look.onDark, mono = true).apply {
                 minHeight = dp(40)
