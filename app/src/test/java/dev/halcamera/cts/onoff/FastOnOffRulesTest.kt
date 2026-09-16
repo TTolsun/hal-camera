@@ -1,5 +1,6 @@
 package dev.halcamera.cts.onoff
 
+import dev.halcamera.cts.OpenCycle
 import dev.halcamera.cts.Verdict
 import dev.halcamera.cts.onoff.FastOnOffRules.Cycle
 import dev.halcamera.cts.onoff.FastOnOffRules.FrameMeta
@@ -14,11 +15,14 @@ class FastOnOffRulesTest {
     private fun frame(ts: Long? = 1_200_000_000L, frameNumber: Long = 0, realtime: Boolean = true) =
         FrameMeta(ts, frameNumber, realtime, opened, completed)
 
-    private fun standard(firstFrame: Double = 120.0, frame: FrameMeta? = frame(), error: String? = null, closedInTime: Boolean = true) =
-        Cycle(Kind.STANDARD, openMs = 40.0, configureMs = 30.0, firstFrameMs = firstFrame, closeMs = 20.0, closedInTime = closedInTime, frame = frame, error = error)
+    private fun pass(firstFrame: Double? = 120.0, error: String? = null, closedInTime: Boolean = true) =
+        OpenCycle(openMs = 40.0, configureMs = 30.0, firstFrameMs = firstFrame, closeMs = 20.0, closedInTime = closedInTime, error = error)
 
-    private fun fast(firstFrame: Double = 130.0, frame: FrameMeta? = frame(), error: String? = null, fastClosedInTime: Boolean = true) =
-        Cycle(Kind.FAST, openMs = 45.0, configureMs = 30.0, firstFrameMs = firstFrame, closeMs = 20.0, fastOpenMs = 42.0, fastCloseMs = 9.0, fastClosedInTime = fastClosedInTime, frame = frame, error = error)
+    private fun standard(firstFrame: Double = 120.0, frame: FrameMeta? = frame(), error: String? = null, closedInTime: Boolean = true) =
+        Cycle(Kind.STANDARD, pass(firstFrame, error, closedInTime), frame)
+
+    private fun fast(firstFrame: Double = 130.0, frame: FrameMeta? = frame(), fastError: String? = null, fastClosedInTime: Boolean = true) =
+        Cycle(Kind.FAST, pass(firstFrame), frame, fastOpenMs = 42.0, fastCloseMs = 9.0, fastClosedInTime = fastClosedInTime, fastError = fastError)
 
     @Test
     fun `a sound first frame passes and the row shows every timing`() {
@@ -27,7 +31,7 @@ class FastOnOffRulesTest {
         assertEquals(listOf("open 40.0 ms · configure 30.0 ms · first frame 120.0 ms · close 20.0 ms"), details)
         val fast = FastOnOffRules.judge(fast())
         assertEquals(Verdict.PASS, fast.first)
-        assertEquals("fast open 42.0 ms · fast close 9.0 ms · reopen 45.0 ms · configure 30.0 ms · first frame 130.0 ms · close 20.0 ms", fast.second.single())
+        assertEquals("fast open 42.0 ms · fast close 9.0 ms · reopen 40.0 ms · configure 30.0 ms · first frame 130.0 ms · close 20.0 ms", fast.second.single())
     }
 
     @Test
@@ -43,12 +47,20 @@ class FastOnOffRulesTest {
     }
 
     @Test
+    fun `a bad timestamp fails the cycle that carried it`() {
+        val (verdict, details) = FastOnOffRules.judge(standard(frame = frame(ts = null)))
+        assertEquals(Verdict.FAIL, verdict)
+        assertEquals("SENSOR_TIMESTAMP must be present and positive in the first result (got null)", details[1])
+    }
+
+    @Test
     fun `an error fails the cycle and keeps whatever was measured ahead of it`() {
-        val (verdict, details) = FastOnOffRules.judge(Cycle(Kind.STANDARD, openMs = 40.0, error = "IllegalStateException: Timeout waiting for the session to configure"))
+        val (verdict, details) = FastOnOffRules.judge(Cycle(Kind.STANDARD, OpenCycle(openMs = 40.0, error = "IllegalStateException: Timeout waiting for the session to configure")))
         assertEquals(Verdict.FAIL, verdict)
         assertEquals(listOf("open 40.0 ms", "IllegalStateException: Timeout waiting for the session to configure"), details)
-        val nothing = FastOnOffRules.judge(Cycle(Kind.FAST, error = "CameraAccessException: x"))
-        assertEquals(listOf("CameraAccessException: x"), nothing.second)
+        // A fault in the immediate open/close stops the cycle before the reopen; nothing else is reported.
+        val immediate = FastOnOffRules.judge(Cycle(Kind.FAST, fastOpenMs = 42.0, fastError = "CameraAccessException: x"))
+        assertEquals(listOf("fast open 42.0 ms", "CameraAccessException: x"), immediate.second)
     }
 
     @Test
@@ -56,7 +68,9 @@ class FastOnOffRulesTest {
         assertEquals(Verdict.FAIL, FastOnOffRules.judge(standard(closedInTime = false)).first)
         assertTrue(FastOnOffRules.judge(standard(closedInTime = false)).second.contains("Timeout waiting for the camera to close"))
         assertTrue(FastOnOffRules.judge(fast(fastClosedInTime = false)).second.contains("Timeout waiting for the camera to close after the immediate close"))
-        assertTrue(FastOnOffRules.judge(standard(frame = null)).second.contains("No capture result was completed"))
+        val noFrame = FastOnOffRules.judge(Cycle(Kind.STANDARD, OpenCycle(openMs = 40.0, configureMs = 30.0, closeMs = 5.0)))
+        assertEquals(Verdict.FAIL, noFrame.first)
+        assertTrue(noFrame.second.contains("No capture result was completed"))
     }
 
     @Test
@@ -69,7 +83,7 @@ class FastOnOffRulesTest {
 
     @Test
     fun `compare fails when one side never reached a frame`() {
-        val (verdict, details) = FastOnOffRules.compare(listOf(standard(), fast(error = "boom"), fast(error = "boom")))
+        val (verdict, details) = FastOnOffRules.compare(listOf(standard(), fast(fastError = "boom"), fast(fastError = "boom")))
         assertEquals(Verdict.FAIL, verdict)
         assertEquals("Nothing to compare: standard 1 of 1, fast 0 of 2 cycles reached a first frame", details.single())
     }

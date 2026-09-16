@@ -1,6 +1,8 @@
 package dev.halcamera.cts
 
 import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraDevice
+import android.os.SystemClock
 import android.util.Log
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -56,6 +58,54 @@ abstract class CameraCaseRunner(protected val env: CaseEnvironment, private val 
     protected fun sleepUnlessCancelled(ms: Long): Boolean = !cancelLatch.await(ms, TimeUnit.MILLISECONDS)
 
     protected fun characteristics(cameraId: String): CameraCharacteristics = env.manager.getCameraCharacteristics(cameraId)
+
+    /** What [openCycle] measured: the timings, the app clock at onOpened, and the first result when one arrived. */
+    class Pass(val cycle: OpenCycle, val openedAtNs: Long?, val frame: Camera2Ops.FirstFrame?)
+
+    /**
+     * The pass every on/off case performs: open, a preview session on the SurfaceView at [preview], the first
+     * completed result of a TEMPLATE_PREVIEW repeating request, then close. Every failure lands in
+     * [OpenCycle.error]; the camera is always closed before this returns.
+     */
+    protected fun openCycle(cameraId: String, preview: Dim): Pass {
+        var cycle = OpenCycle()
+        var openedAt: Long? = null
+        var frame: Camera2Ops.FirstFrame? = null
+        var camera: Camera2Ops.OpenedCamera? = null
+        var session: Camera2Ops.Session? = null
+        try {
+            val t0 = SystemClock.elapsedRealtimeNanos()
+            camera = ops.open(cameraId)
+            val opened = SystemClock.elapsedRealtimeNanos()
+            openedAt = opened
+            cycle = cycle.copy(openMs = ms(t0, opened))
+            val surface = env.previewHost.acquirePreview(preview, Camera2Ops.WAIT_FOR_SURFACE_CHANGE_TIMEOUT_MS)
+                ?: error("wait for surface change to $preview timed out")
+            val t1 = SystemClock.elapsedRealtimeNanos()
+            session = ops.configure(camera.device, listOf(surface))
+            val t2 = SystemClock.elapsedRealtimeNanos()
+            cycle = cycle.copy(configureMs = ms(t1, t2))
+            val request = camera.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply { addTarget(surface) }.build()
+            val first = ops.startRepeatingAndAwaitFirstFrame(session.session, request)
+            frame = first
+            cycle = cycle.copy(firstFrameMs = ms(t2, first.completedAtNs))
+            // A finally block cannot change a value already returned, so a device fault is folded in before it runs.
+            camera.error?.let { cycle = cycle.copy(error = it) }
+        } catch (e: Exception) {
+            Log.w(source, "camera $cameraId open cycle at $preview failed", e)
+            cycle = cycle.copy(error = describe(e))
+        } finally {
+            session?.close()
+            if (camera != null) {
+                val t3 = SystemClock.elapsedRealtimeNanos()
+                val inTime = camera.close()
+                cycle = cycle.copy(closeMs = ms(t3, SystemClock.elapsedRealtimeNanos()), closedInTime = inTime)
+            }
+        }
+        return Pass(cycle, openedAt, frame)
+    }
+
+    protected fun ms(fromNs: Long, toNs: Long): Double = (toNs - fromNs) / 1e6
 
     protected fun describe(e: Exception): String = "${e.javaClass.simpleName}: ${e.message}"
 }
