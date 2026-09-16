@@ -45,16 +45,19 @@ class LayerIsolationTest {
     }
 
     @Test fun `symbols the domain borrows from camera and telemetry are declared in Android-free files`() {
-        val declaration = Regex("""^(?:(?:data|sealed|enum|value|open|abstract)\s+)*(?:class|interface|object)\s+(\w+)\b""", RegexOption.MULTILINE)
-        val declaringFile = listOf("camera", "telemetry").flatMap(::kotlinFiles).flatMap { file ->
-            declaration.findAll(file.readText()).map { it.groupValues[1] to file }.toList()
-        }.toMap()
+        // A column-0 line declaring the symbol: types, top-level functions (extension receivers included), properties, aliases.
+        fun declares(file: File, symbol: String): Boolean {
+            val declaration = Regex("""^(?![\s/*]).*?\b(?:class|interface|object|fun|val|var|typealias)\s+(?:<[^>]*>\s*)?(?:[\w.<>?]+\.)?$symbol\b""")
+            return file.readLines().any(declaration::containsMatchIn)
+        }
+        val candidates = listOf("camera", "telemetry").flatMap(::kotlinFiles)
         val offenders = kotlinFiles("benchmark/domain").flatMap { file ->
             imports(file).filter { it.startsWith("dev.halcamera.camera.") || it.startsWith("dev.halcamera.telemetry.") }.mapNotNull { imp ->
                 val symbol = imp.substringAfterLast('.')
-                val declared = declaringFile[symbol] ?: return@mapNotNull "${file.relativeTo(root)}: $imp is not a top-level type"
-                val leaked = imports(declared).filter { dep -> androidPrefixes.any(dep::startsWith) }
-                if (leaked.isEmpty()) null else "${file.relativeTo(root)}: $imp comes from ${declared.relativeTo(root)} which imports ${leaked.first()}"
+                val declared = candidates.filter { declares(it, symbol) }
+                if (declared.isEmpty()) return@mapNotNull "${file.relativeTo(root)}: $imp is not declared at the top level of camera/ or telemetry/"
+                val leaked = declared.firstNotNullOfOrNull { d -> imports(d).firstOrNull { dep -> androidPrefixes.any(dep::startsWith) }?.let { d to it } }
+                leaked?.let { (d, dep) -> "${file.relativeTo(root)}: $imp comes from ${d.relativeTo(root)} which imports $dep" }
             }
         }
         assertEquals(emptyList<String>(), offenders)
