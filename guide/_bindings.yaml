@@ -375,7 +375,7 @@ pages:
           reader: 코드를 처음 읽는 개발자와, 기능을 수정하기 전에 영향 범위를 알아야 하는 개발자
           answers:
             - 앱은 큰 틀에서 어떤 단계로 동작하며, 각 단계의 책임은 무엇인가
-            - LIVE 관측과 벤치마크 비교는 어떻게 다르며, 이력은 어디서 여는가
+            - Live 관측과 벤치마크 비교는 어떻게 다르며, 이력은 어디서 여는가
             - 코드를 처음 읽을 때 어느 파일부터 열어야 하는가
           must_link: [Telemetry, FlightRecorder, RunAssembler, MainActivity]
           forbid:
