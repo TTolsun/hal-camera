@@ -1,9 +1,9 @@
 ---
-title: PROBE
+title: Probe
 ---
 <h1 lang="en">What the HAL claims.</h1>
 
-**PROBE는 측정이 아니라 선언입니다.** 카메라를 열지 않고 `CameraCharacteristics`를 읽어, Camera2 HAL이 공개한 사양을 카메라별 표로 보여 줍니다. 여기에 적힌 값은 HAL이 "할 수 있다"고 말한 것이며 실제로 그렇게 동작하는지는 [Benchmark](benchmark.md)가 답합니다.
+**Probe는 측정이 아니라 선언입니다.** 카메라를 열지 않고 `CameraCharacteristics`를 읽어, Camera2 HAL이 공개한 사양을 카메라별 표로 보여 줍니다. 여기에 적힌 값은 HAL이 "할 수 있다"고 말한 것이며 실제로 그렇게 동작하는지는 [Benchmark](benchmark.md)가 답합니다.
 
 ```mermaid
 flowchart LR
@@ -33,7 +33,7 @@ flowchart LR
 
 <h2 lang="en">Where it sits in the app.</h2>
 
-LIVE 상단 `도구` 메뉴에서 열며, 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 열립니다. `Benchmark` 화면에서도 현재 선택한 카메라로 바로 들어갈 수 있습니다. 배치 기준은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)의 "도구 메뉴와 독립 화면"에 있습니다.
+Live 상단 `도구` 메뉴에서 열며, 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 열립니다. `Benchmark` 화면에서도 현재 선택한 카메라로 바로 들어갈 수 있습니다. 배치 기준은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)의 "도구 메뉴와 독립 화면"에 있습니다.
 
 <details>
 <summary>코드 근거를 확인하세요</summary>

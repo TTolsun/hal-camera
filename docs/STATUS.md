@@ -1,6 +1,6 @@
 # 작업 상태
 
-2026-09-17 · HAL CAM 0.9.0. CTS 화면을 케이스 목록으로 바꾸고 FastOnOff·Switching·AllSizeOnOff·StillPreviewCombination·VideoSnapshot 다섯 커스텀 케이스를 더했으며([PR #98](https://github.com/TTolsun/hal-camera/pull/98), Galaxy S25+에서 모두 PASS), 그 위에 AOSP CTS 소스를 그대로 가져와 앱 안의 JUnit으로 실행하는 CTS 원문 경로(`:ctsvendor` 모듈, [PR #100](https://github.com/TTolsun/hal-camera/pull/100))를 추가하고 `testBasicRecording`은 그 경로로 옮겼습니다. PROBE에 request·result key 이름 목록 섹션을 더하고([PR #97](https://github.com/TTolsun/hal-camera/pull/97)), 진단 패널에 앱 정보 다이얼로그를 추가했습니다([PR #99](https://github.com/TTolsun/hal-camera/pull/99), [릴리스 0.9.0](releases/0.9.0.md)). 0.8.1의 `도구` 메뉴 배치([PR #82](https://github.com/TTolsun/hal-camera/pull/82))와 CTS 케이스 화면([PR #76](https://github.com/TTolsun/hal-camera/pull/76)), PROBE 필터 개선([PR #78](https://github.com/TTolsun/hal-camera/pull/78))을 유지합니다. 0.7.0의 반복 측정 비교([PR #72](https://github.com/TTolsun/hal-camera/pull/72))와 PROBE 화면([PR #75](https://github.com/TTolsun/hal-camera/pull/75)), 0.6.0의 PC CLI(0.1.0), 0.5.1의 촬영·갤러리 개선을 유지합니다. [PR #48](https://github.com/TTolsun/hal-camera/pull/48)의 M5a 내부 점수 초안을 포함하며 민감도 검증은 진행 중입니다.
+2026-09-17 · HAL CAM 0.9.0. CTS 화면을 케이스 목록으로 바꾸고 FastOnOff·Switching·AllSizeOnOff·StillPreviewCombination·VideoSnapshot 다섯 커스텀 케이스를 더했으며([PR #98](https://github.com/TTolsun/hal-camera/pull/98), Galaxy S25+에서 모두 PASS), 그 위에 AOSP CTS 소스를 그대로 가져와 앱 안의 JUnit으로 실행하는 CTS 원문 경로(`:ctsvendor` 모듈, [PR #100](https://github.com/TTolsun/hal-camera/pull/100))를 추가하고 `testBasicRecording`은 그 경로로 옮겼습니다. Probe에 request·result key 이름 목록 섹션을 더하고([PR #97](https://github.com/TTolsun/hal-camera/pull/97)), 진단 패널에 앱 정보 다이얼로그를 추가했습니다([PR #99](https://github.com/TTolsun/hal-camera/pull/99), [릴리스 0.9.0](releases/0.9.0.md)). 0.8.1의 `도구` 메뉴 배치([PR #82](https://github.com/TTolsun/hal-camera/pull/82))와 CTS 케이스 화면([PR #76](https://github.com/TTolsun/hal-camera/pull/76)), Probe 필터 개선([PR #78](https://github.com/TTolsun/hal-camera/pull/78))을 유지합니다. 0.7.0의 반복 측정 비교([PR #72](https://github.com/TTolsun/hal-camera/pull/72))와 Probe 화면([PR #75](https://github.com/TTolsun/hal-camera/pull/75)), 0.6.0의 PC CLI(0.1.0), 0.5.1의 촬영·갤러리 개선을 유지합니다. [PR #48](https://github.com/TTolsun/hal-camera/pull/48)의 M5a 내부 점수 초안을 포함하며 민감도 검증은 진행 중입니다.
 
 ## 지금 어디까지 왔는가
 
@@ -12,7 +12,7 @@
 | M4 Developer workflow | 완료. baseline 지정과 vs baseline / vs previous 열을 실기기에서 확인 |
 | M5a Internal score | 내부 점수 초안 구현. 밝은 조건의 release 적격 run 10회로 calibration을 만들고 저조도 3회에 별도 적용. 저조도 효과의 일관성, 발열·점유 경쟁 검증은 미완료 |
 | M5b Public endpoint score | 데이터 확보 대기. 여러 제조사·성능군의 5–10개 기기 분포 필요 |
-| M6 History / export | 완료. RESULTS 필터, 두 run 비교·삭제, JSON·CSV 내보내기, PC 집계, subject 재사용 (PR #39, 이슈 #10 종료) |
+| M6 History / export | 완료. Results 필터, 두 run 비교·삭제, JSON·CSV 내보내기, PC 집계, subject 재사용 (PR #39, 이슈 #10 종료) |
 
 M4의 내용은 계획보다 앞당겨 M3 2단계에서 함께 구현하고 검증했습니다.
 
@@ -21,10 +21,10 @@ M4의 내용은 계획보다 앞당겨 M3 2단계에서 함께 구현하고 검�
 ## M3 이후 완료한 일
 
 - PR #39에서 실행 이력과 CSV 내보내기를 구현했습니다.
-- PR #41–#45에서 LIVE 사진·동영상 저장, 앱 내 갤러리, 촬영 제어와 카메라 선택 UI를 구현하고 개선했습니다. 이 녹화 기능과 아래의 녹화 성능 계측(3.x)은 별도 기능입니다.
+- PR #41–#45에서 Live 사진·동영상 저장, 앱 내 갤러리, 촬영 제어와 카메라 선택 UI를 구현하고 개선했습니다. 이 녹화 기능과 아래의 녹화 성능 계측(3.x)은 별도 기능입니다.
 - PR #46에서 HAL CAM 0.5.0을 릴리스했습니다.
 - PR #47에서 `.omm/`의 Doctor 요소를 제거하고 개발자 가이드와 docgen 근거 검사를 갱신했습니다. 이전 STATUS에 적혀 있던 아키텍처 문서 정리는 완료되었습니다.
-- PR #81·#82에서 LIVE 개발자 진입점을 "현재 세션이 열려 있어야 의미가 있는가"로 나눴습니다. Benchmark·PROBE·CTS는 상단 `도구` 메뉴의 독립 화면이고, READOUT·그래프·MARK·incident는 `진단` 패널입니다. Benchmark·CTS는 LIVE 카메라의 `close(done)` 뒤에 열리며(S25+에서 약 260 ms), PROBE는 대기 없이 엽니다. 배치 기준은 `docs/design/APP-UI.md`에 있습니다.
+- PR #81·#82에서 Live 개발자 진입점을 "현재 세션이 열려 있어야 의미가 있는가"로 나눴습니다. Benchmark·Probe·CTS는 상단 `도구` 메뉴의 독립 화면이고, READOUT·그래프·Mark·incident는 `진단` 패널입니다. Benchmark·CTS는 Live 카메라의 `close(done)` 뒤에 열리며(S25+에서 약 260 ms), Probe는 대기 없이 엽니다. 배치 기준은 `docs/design/APP-UI.md`에 있습니다.
 
 ## M5 현재 데이터와 구현 (2026-09-12)
 
@@ -77,7 +77,7 @@ Galaxy S25+ (`SM-S936N`, Android SDK 36)에서 무선 ADB로 수집했습니다.
 
 Doctor를 지웠습니다. consumer 홈과 incident 모드, Auto Check와 그 화면, 임계값 엔진과 표, 진단 규칙, health composer, health monitor, v0.2 리포트 작성기, Auto Check baseline store가 사라졌습니다. 모델에 있던 판정 어휘(State, ThresholdBasis, CddApplicability, ConditionEquivalence, HealthLevelV2, CauseLayer, MetricState, Diagnosis, Health)도 함께 지웠습니다.
 
-LIVE는 측정한 것을 모두 유지하고 판정한 것을 모두 버렸습니다. 건강 배너와 진단 카드 대신 `ui/LiveReadout`이 같은 숫자를 판정 없이 표시합니다. strip에서 경고 색을 뺐고, flight recorder는 더 이상 `health_assessment` 이벤트를 쓰지 않습니다. 하단 버튼은 MARK · SHUTTER · BENCHMARK 세 개이고, MainActivity가 런처가 되었습니다.
+Live는 측정한 것을 모두 유지하고 판정한 것을 모두 버렸습니다. 건강 배너와 진단 카드 대신 `ui/LiveReadout`이 같은 숫자를 판정 없이 표시합니다. strip에서 경고 색을 뺐고, flight recorder는 더 이상 `health_assessment` 이벤트를 쓰지 않습니다. 하단 버튼은 Mark · SHUTTER · Benchmark 세 개이고, MainActivity가 런처가 되었습니다.
 
 살아남은 파일은 이름에 맞는 패키지로 옮겼습니다. `check/`의 엔드포인트 두 개는 `camera/`로, `diagnosis/`의 MetricExtractor와 모델 잔여분은 `metrics/`로 갔습니다. `metrics`는 패키지 그래프의 leaf이며 비교도 표시도 알지 못합니다.
 
@@ -88,10 +88,10 @@ LIVE는 측정한 것을 모두 유지하고 판정한 것을 모두 버렸습�
 - 8.4 결과: eligibility 3단계 머리글, p50 / max 열 규칙, `vs baseline`과 `vs previous` 열
 - 7.1: baseline이 없을 때 이전 run 대비 delta만 표시하고 REGRESSED를 붙이지 않음
 - 7.2: Open이 +138 %여도 절대 차이 6 ms가 noise floor 10 ms 미만이라 회귀로 판정하지 않음
-- `SET AS BASELINE` / `CLEAR BASELINE` 전환
-- 도구 메뉴(2026-09-16, versionCode 12 로컬 빌드): `도구` 목록 표시, Benchmark·CTS 진입 시 `카메라 세션 종료 중…` 뒤 화면 전환, PROBE 즉시 전환, 녹화 중 `도구` 비활성화, 복귀 시 프리뷰 재시작
+- `Set as baseline` / `Clear baseline` 전환
+- 도구 메뉴(2026-09-16, versionCode 12 로컬 빌드): `도구` 목록 표시, Benchmark·CTS 진입 시 `카메라 세션 종료 중…` 뒤 화면 전환, Probe 즉시 전환, 녹화 중 `도구` 비활성화, 복귀 시 프리뷰 재시작
 - 반복 측정 비교 실제 자료(2026-09-16): 2026-09-12의 0.5.0 실행 10회를 JSON으로 가져와 A, 0.8.0 CLI 실행 5회를 B로 선택. 확인 미체크 시 검정 보류, 체크 후 19개 지표 검정·7개 유의차, `regression-rule-v1` 판정과 분리 표시. 자세한 수치와 해석 제한은 `docs/PROFILE-COMPARISON.md`
-- CTS 케이스 6종(2026-09-17, Galaxy S25+ SM-S936N · Android 16 · versionCode 15 로컬 빌드, 카메라 4대): 기본 녹화 PASS(카메라 0은 8 PASS 1 SKIP, CIF 프로파일 없음), FastOnOff PASS(첫 프레임 중앙값 표준 366.2 ms · fast reopen 366.8 ms), Switching PASS(round 5회 + HIGH 3초 녹화), AllSizeOnOff PASS(카메라 0 크기 26개, 4080x3060까지), VideoSnapshot PASS(4K 25초 드롭 0, 4080x3060 JPEG 3 MB가 350 ms 뒤 도착), StillPreviewCombination PASS(조합 324·300·264·286개, 약 29분). 조합 케이스 실행 중 `중단`은 완료된 68개 조합까지 `중단됨`으로 표시했고, 케이스 화면을 닫고 LIVE로 돌아오면 프리뷰가 다시 시작됩니다.
+- CTS 케이스 6종(2026-09-17, Galaxy S25+ SM-S936N · Android 16 · versionCode 15 로컬 빌드, 카메라 4대): 기본 녹화 PASS(카메라 0은 8 PASS 1 SKIP, CIF 프로파일 없음), FastOnOff PASS(첫 프레임 중앙값 표준 366.2 ms · fast reopen 366.8 ms), Switching PASS(round 5회 + HIGH 3초 녹화), AllSizeOnOff PASS(카메라 0 크기 26개, 4080x3060까지), VideoSnapshot PASS(4K 25초 드롭 0, 4080x3060 JPEG 3 MB가 350 ms 뒤 도착), StillPreviewCombination PASS(조합 324·300·264·286개, 약 29분). 조합 케이스 실행 중 `중단`은 완료된 68개 조합까지 `중단됨`으로 표시했고, 케이스 화면을 닫고 Live로 돌아오면 프리뷰가 다시 시작됩니다.
 - CTS 원문 케이스(2026-09-17, `claude/cts-vendored`): AOSP `android16-release`의 `RecordingTest`를 `:ctsvendor` 모듈로 가져와 앱 안의 JUnit으로 실행하는 경로를 추가하고, 커스텀 `기본 녹화` 케이스는 이 경로로 대체해 제거했습니다. `assembleDebug`·JVM 테스트·lint는 통과했습니다. 실기기(Galaxy S25+, Android 16, versionCode 18 로컬 빌드, 2026-09-17)에서 `testBasicRecording`은 카메라 4대 × CamcorderProfile 7~8개를 3초씩 녹화·검증해 1분 58초 만에 PASS였고(프레임 드롭률 최대 1.1 %), `중단`은 5초 안에 `IllegalStateException: CameraDevice was already closed`로 테스트를 끝내며 `중단됨 · 12초 · 실패 1건`으로 표시됐습니다. 첫 실행에서 `perf-measure=on` 인수 때문에 카메라마다 가장 큰 프로파일 하나만 검증 없이 녹화해 16초 만에 PASS가 나온 문제는 `CameraParameterizedTestCase` 패치로 고쳤습니다. PR #100 merge 뒤 main 빌드(로컬 versionCode 100)로 다시 확인했습니다. `testBasicRecording`은 같은 조건에서 1분 58초에 PASS였고, 중단은 두 경로 모두 2~4초 안에 끝났습니다. 카메라가 열린 채 누르면 닫힌 카메라 때문에 `Wait for a capture start timed out in 3000ms`로, 카메라 0을 닫고 카메라 1을 열기 전에 누르면 `IllegalStateException: stopped by the host`(`Camera2SurfaceViewTestCase.updatePreviewSurface`)로 실패해 `중단됨 · 32초 · 실패 1건`이 표시됐습니다. `RecordingTest`의 나머지 메서드 중 `UiAutomation`·`@TestApi` 때문에 초기화에서 실패하는 목록은 아직 확인하지 않았습니다.
 - CTS 체크리스트(2026-09-17, `claude/cts-suite`, Galaxy S25+ · Android 16 · versionCode 102 로컬 빌드): 커스텀 케이스와 CTS 원문 목록을 체크리스트로 바꾸고 체크한 항목을 `CtsSuiteRunActivity`가 차례로 실행합니다. 커스텀 `빠른 켜기·끄기`+`카메라 전환` 큐는 `2개 중 PASS 2 · FAIL 0 · 1분 5초`(33초 + 31초)로 끝났고, 결과 카드를 누르면 카메라별 표가 펼쳐졌습니다. `다시 실행` 뒤 9초에 `중단`을 누르자 첫 항목이 `중단됨 · 9초`, 둘째 항목이 `실행 안 함`으로 남고 머리글에 `중단됨`이 붙었습니다. 원문 `testBasicRecording` 하나를 체크한 큐는 같은 화면에서 `1개 중 PASS 1 · 1분 57초`로 끝나 단일 화면과 같은 시간이었고, 행의 `›`는 기존 단일 케이스 화면을 그대로 열었습니다. 목록으로 돌아가면 체크 상태가 유지됩니다.
 

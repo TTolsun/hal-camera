@@ -47,7 +47,7 @@ verifications: []
 
 ### 이력과 CSV가 예상과 다를 때
 
-RESULTS는 기본적으로 비교 가능한 실행을 표시합니다. 중단된 실행을 찾으려면 상태 필터를 `전체`로 바꾸고 profile·camera 필터도 확인합니다. PC의 `tools/aggregate.py`는 기본적으로 점수 산정 가능한 실행만 내보내므로, 앱과 같은 범위를 보려면 `--eligibility comparison_eligible`을 사용합니다.
+Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된 실행을 찾으려면 상태 필터를 `전체`로 바꾸고 profile·camera 필터도 확인합니다. PC의 `tools/aggregate.py`는 기본적으로 점수 산정 가능한 실행만 내보내므로, 앱과 같은 범위를 보려면 `--eligibility comparison_eligible`을 사용합니다.
 
 손상된 JSON은 목록과 PC 집계에서 별도로 알립니다. CSV 출력 장치의 오류는 입력 파일 오류와 구분하며 작업을 실패로 종료합니다. baseline 파일을 읽을 수 없으면 baseline 변경과 삭제를 중단합니다. 기기 화면·공유·삭제 동작의 실제 검증 기록은 이 문서에서 주장하지 않습니다.
 

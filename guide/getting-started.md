@@ -31,7 +31,7 @@ Android SDK 경로는 저장소 루트의 `local.properties`에 설정합니다.
    adb install -r app/build/outputs/apk/debug/app-debug.apk
    ~~~
 
-4. 앱을 열고 카메라 권한을 허용합니다. LIVE에서 프리뷰가 나오는지 확인한 뒤 BENCHMARK로 진입합니다.
+4. 앱을 열고 카메라 권한을 허용합니다. Live에서 프리뷰가 나오는지 확인한 뒤 Benchmark로 진입합니다.
 
 빌드와 테스트가 통과하면 APK 생성과 JVM 테스트 결과를 확인한 것입니다. 측정 정확성과 기기 동작은 별도로 검증해야 합니다. 관찰 결과는 [기기 검증 기록](_inputs/device-verification.yaml)에 남기세요.
 
