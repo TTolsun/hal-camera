@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "bedb5f8d18f0b273",
+        "codeHash": "059c5f2d60dbd231",
         "modelHash": "146a796edc87688a",
         "at": "2026-09-17",
-        "commit": "5db0ac5",
+        "commit": "bd36efa",
         "reviewer": "Claude"
       }
     },
@@ -18,10 +18,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6f0da2adf240d745",
+        "codeHash": "61c833e6e636aa64",
         "modelHash": "acb77a7c117a8dc6",
         "at": "2026-09-17",
-        "commit": "5db0ac5",
+        "commit": "bd36efa",
         "reviewer": "Claude"
       }
     },
@@ -30,10 +30,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "43361c2bf365ffc6",
+        "codeHash": "5d2a2901898b25b1",
         "modelHash": "3836ea264704fbae",
         "at": "2026-09-17",
-        "commit": "5db0ac5",
+        "commit": "bd36efa",
         "reviewer": "Claude"
       }
     },
@@ -42,10 +42,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "a5506c1e18fed3d3",
+        "codeHash": "2c5ca1543ba32c0f",
         "modelHash": "cce7173dadaf2155",
         "at": "2026-09-17",
-        "commit": "5db0ac5",
+        "commit": "bd36efa",
         "reviewer": "Claude"
       }
     },
@@ -54,10 +54,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "561cbebef26f39d4",
+        "codeHash": "34da11bf07d4d76a",
         "modelHash": "fa44ef6ad4c4f869",
         "at": "2026-09-17",
-        "commit": "5db0ac5",
+        "commit": "bd36efa",
         "reviewer": "Claude"
       }
     },
@@ -66,19 +66,19 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6f0da2adf240d745",
+        "codeHash": "61c833e6e636aa64",
         "modelHash": "505d21adb1493426",
         "at": "2026-09-17",
-        "commit": "5db0ac5",
+        "commit": "bd36efa",
         "reviewer": "Claude"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "bedb5f8d18f0b273",
+        "codeHash": "059c5f2d60dbd231",
         "modelHash": "b4a0de29ce9cd53e",
         "at": "2026-09-17",
-        "commit": "5db0ac5",
+        "commit": "bd36efa",
         "reviewer": "Claude"
       },
       "observed": {
@@ -87,10 +87,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "bedb5f8d18f0b273",
+        "codeHash": "059c5f2d60dbd231",
         "modelHash": "b1a5f7a9087832e2",
         "at": "2026-09-17",
-        "commit": "5db0ac5",
+        "commit": "bd36efa",
         "reviewer": "Claude"
       },
       "observed": {

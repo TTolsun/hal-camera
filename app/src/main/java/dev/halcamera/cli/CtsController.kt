@@ -40,6 +40,13 @@ class CtsController(private val commands: CommandCoordinator, private val driver
     fun started(): Boolean = request?.let { commands.state(it.id, "running") } ?: true
     override fun cancel(command: CliCommand) { driver.stop() }
 
+    /** The screen went away with the suite still running: nothing will file a report, so end the request now. */
+    fun abandoned() {
+        val command = request ?: return
+        request = null
+        commands.fail(command.id, "CANCELLED", "CTS screen closed before the suite finished")
+    }
+
     fun saveFailed(message: String) {
         val command = request ?: return
         request = null

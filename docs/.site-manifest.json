@@ -4,7 +4,7 @@
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "_inputs/decisions.html": "344b3eda22a253de6679f34f6a2e1499da004c8c139d7c7f3905334990de318e",
     "_inputs/device-verification.yaml": "d66c4205e3c9b54c4453055774654d353e46495c11048432532ce51e2f00f95b",
-    "architecture.html": "016948e3dc511363855254745356b7cd5f6b3704d785850d8819712282ba407f",
+    "architecture.html": "73a3b026f88b3112391f8d2cdf6e446770a95c025320012ca68da8b3911e3ad2",
     "assets/docflow-design.css": "b0ff2b4a86165adbdfd74ada94ecb1a9deee28ffd8fec9dbfebfbef68d860b4d",
     "benchmark.html": "405cae8d5e67177579930a5d7190f7886932765cfd6602880e073dd691b80854",
     "cli.html": "0b565d3e2bf4f73226bcba777f4b5b802bd52a5a0067e141a535e9dd427c0f0a",
@@ -14,6 +14,6 @@
     "getting-started.html": "fbb10daae1227614ac81e51db1ed57227e862cf5d62b8e17d1529465446677f0",
     "index.html": "fd976b1416f1b4cff2b6644e8aa4d2fbe6625c6a1390f4dd78f20c83ce833006",
     "probe.html": "2a01cf1aeca80040acccc8920355156656f37b37f41820e9a6be9e52cef5437d",
-    "troubleshooting.html": "d049cae5ff5a652af4bb6ac705b42b12cf25c727738f8f35430318bbe03d7229"
+    "troubleshooting.html": "8c249cc39dcd5dd76bea9f8739eb130a1bd0888d4b910993f941c62a45f29c52"
   }
 }

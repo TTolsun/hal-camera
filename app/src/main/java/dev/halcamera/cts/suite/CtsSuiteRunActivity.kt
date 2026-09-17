@@ -191,6 +191,8 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
     override fun onDestroy() {
         destroyed = true
         stop()
+        // Once destroyed, the running item's report is dropped, so a CLI request would wait for its timeout.
+        if (running) ctsCli.abandoned()
         io.shutdown()
         VendoredCts.detachActivity(this)
         super.onDestroy()

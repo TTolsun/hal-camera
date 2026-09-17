@@ -156,7 +156,8 @@ class CommandCoordinator private constructor(private val context: Context) {
                 val snapshot = CameraProbeReader(context.getSystemService(CameraManager::class.java)).read()
                 val dir = artifactDir(command.id)
                 val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-                val model = Build.MODEL.replace(Regex("[^A-Za-z0-9._-]"), "_")
+                // halcam accepts one dot in an artifact name, so the model keeps letters, digits, _ and - only.
+                val model = Build.MODEL.replace(Regex("[^A-Za-z0-9_-]"), "_")
                 val json = File(dir, "camera-probe-$model-$stamp.json").apply { writeText((CliJson.of(snapshot.toJsonMap()) as JSONObject).toString(2), Charsets.UTF_8) }
                 val text = File(dir, "camera-probe-$model-$stamp.txt").apply { writeText(CameraProbeText.render(snapshot), Charsets.UTF_8) }
                 complete(command.id, JSONObject().put("captured_at", snapshot.capturedAt).put("camera_count", snapshot.cameras.size)
@@ -242,7 +243,8 @@ class CommandCoordinator private constructor(private val context: Context) {
         if (current in CliStates.terminal) return
         if (current == "saving") return // Submitted saves complete with their actual result.
         if (current == "accepted" || current == "preparing") {
-            host?.cancel(command)
+            // A screenless command never reached the host; telling Live to stop preparing would pause its preview.
+            if (command.command in CliCommand.CAMERA_COMMANDS || command.command == "cts.run") host?.cancel(command)
             fail(id, code, "Operation cancelled before capture")
         } else {
             state(id, "cancelling")
