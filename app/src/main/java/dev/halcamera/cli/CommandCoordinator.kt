@@ -13,8 +13,6 @@ import androidx.core.content.ContextCompat
 import dev.halcamera.camera.CameraEndpointResolver
 import dev.halcamera.camera.CameraProbeReader
 import dev.halcamera.camera.CameraProbeText
-import dev.halcamera.cts.CtsCatalog
-import dev.halcamera.cts.suite.SuiteItem
 import dev.halcamera.cts.suite.SuitePlan
 import dev.halcamera.ctsvendor.VendoredCatalog
 import dev.halcamera.ctsvendor.VendoredCts
@@ -168,14 +166,14 @@ class CommandCoordinator private constructor(private val context: Context) {
     }
 
     /**
-     * The CTS suite checklist as the CLI lists it: every item of both lists with the key `cts.run` takes. The
-     * vendored list needs the in-app Instrumentation installed and exists only from API 34.
+     * The CTS checklist as the CLI lists it: every vendored method with the key `cts.run` takes. The list needs
+     * the in-app Instrumentation installed and is empty below API 34, where the vendored sources cannot run.
      */
     private fun suiteItems(): List<Map<String, Any?>> {
         val vendored = if (Build.VERSION.SDK_INT >= VendoredCts.MIN_SDK) { VendoredCts.install(context); VendoredCatalog.tests() } else emptyList()
         val cameras = context.getSystemService(CameraManager::class.java).cameraIdList.size
-        return SuitePlan.items(CtsCatalog.cases, vendored).map { item ->
-            mapOf("key" to item.key, "kind" to if (item is SuiteItem.Custom) "custom" else "vendored", "title" to item.title,
+        return SuitePlan.items(vendored).map { item ->
+            mapOf("key" to item.key, "class" to item.test.className, "method" to item.test.method, "title" to item.title,
                 "source" to item.source, "needs_audio" to item.needsAudio, "estimate_seconds" to item.estimateSeconds(cameras))
         }
     }

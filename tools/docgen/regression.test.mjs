@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 
 const source = path.resolve(import.meta.dirname, '../..');
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hal-docgen-test-'));
-for (const dir of ['tools/docgen', 'tools/halcam/halcam', 'guide', '.omm', 'app', 'gradle']) {
+for (const dir of ['tools/docgen', 'tools/halcam/halcam', 'guide', '.omm', 'app', 'ctsvendor/src/main/java/dev/halcamera/ctsvendor', 'gradle']) {
   fs.mkdirSync(path.dirname(path.join(root, dir)), { recursive: true });
   fs.cpSync(path.join(source, dir), path.join(root, dir), { recursive: true, filter: p => !p.includes('omm-backup') && !['build', 'node_modules'].includes(path.basename(p)) });
 }
@@ -102,7 +102,7 @@ test('all configured elements fit the prompt budget and exclude descendant field
         assert.ok(input.files.length > 0); count++;
       }
     }
-    assert.equal(count, 58);
+    assert.equal(count, 54);
   `));
 });
 

@@ -225,16 +225,16 @@ class ProbeAndCtsTests(unittest.TestCase):
 
     def test_cts_run_sends_every_case_in_order_and_needs_live(self):
         with patch("sys.stdout", new_callable=io.StringIO):
-            got = self.submitted(["--serial", "phone", "cts", "run", "--case", "custom:fast_on_off",
+            got = self.submitted(["--serial", "phone", "cts", "run", "--case", "vendored:android.hardware.camera2.cts.BurstCaptureTest#testJpegBurst",
                                   "--case", "vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording", "--output", "out"],
                                  status={"protocol_version": 1, "foreground": False, "screen": None, "busy": False})
         self.assertTrue(got["launched"])
         self.assertEqual(got["payload"]["command"], "cts.run")
-        self.assertEqual(got["payload"]["params"], {"cases": ["custom:fast_on_off", "vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording"]})
+        self.assertEqual(got["payload"]["params"], {"cases": ["vendored:android.hardware.camera2.cts.BurstCaptureTest#testJpegBurst", "vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording"]})
         self.assertEqual(got["payload"]["execution_timeout_ms"], 1800000)
 
     def test_cts_run_requires_a_case_and_an_output(self):
-        for argv in (["cts", "run", "--output", "out"], ["cts", "run", "--case", "custom:fast_on_off"], ["cts"], ["probe"]):
+        for argv in (["cts", "run", "--output", "out"], ["cts", "run", "--case", "vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording"], ["cts"], ["probe"]):
             with self.assertRaises(CliError) as caught:
                 parser().parse_args(argv)
             self.assertEqual(caught.exception.code, "INVALID_ARGUMENT")
