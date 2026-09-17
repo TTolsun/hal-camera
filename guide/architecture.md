@@ -54,7 +54,7 @@ Results의 반복 측정 비교 메뉴에서 전후 실행 묶음을 고를 수 
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-17 @ `7a72c49` · Claude
+- 검토 2026-09-17 @ `24db659` · Claude
 
 </details>
 
@@ -72,7 +72,7 @@ graph LR
     provider --> commands["CommandCoordinator / CommandStore"]
     commands -->|"LiveController"| live
     commands -->|"BenchmarkController"| benchmark
-    live["MainActivity · LIVE"] -->|"엔진 선택"| engines["Camera2Engine / CameraXEngine"]
+    live["MainActivity · Live"] -->|"엔진 선택"| engines["Camera2Engine / CameraXEngine"]
     live -->|"벤치마크 진입"| benchmark["BenchmarkActivity / BenchmarkRunner"]
     benchmark -->|"Driver 호출"| engines
     engines -->|"요청 실행"| platform["Android Camera API"]
@@ -141,7 +141,7 @@ CTS 원문 케이스는 `vendored/VendoredCtsListActivity`가 `:ctsvendor` 모�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-17 @ `7a72c49` · Claude
+- 검토 2026-09-17 @ `24db659` · Claude
 
 </details>
 
@@ -224,7 +224,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/ui/GalleryImageView.kt`, `app/src/main/java/dev/halcamera/ui/IconButton.kt`, `app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/SelectionPopup.kt`, `app/src/main/java/dev/halcamera/ui/ShutterButton.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BaselineManager.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/StoreRunCatalog.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-17 @ `7a72c49` · Claude
+- 검토 2026-09-17 @ `24db659` · Claude
 
 </details>
 
@@ -250,7 +250,7 @@ graph LR
     validity -->|"측정값과 validity"| score["ScoreComposer · 해당하는 calibration만 적용"]
     score -->|"적격 내부 점수 또는 null"| json["BenchmarkReport · schema 4 JSON"]
     json -->|"저장 실행 읽기"| compare["BaselineManager / RegressionDetector"]
-    compare -->|"다시 계산한 비교"| screen["결과 / COMPARE"]
+    compare -->|"다시 계산한 비교"| screen["결과 / Compare"]
     json -->|"목록 읽기"| history["HistoryActivity / RunIndex"]
     history -->|"두 실행 선택"| compare
     history -->|"필터 결과"| csv["CSV 내보내기"]
@@ -284,7 +284,7 @@ graph LR
     engine -->|"현재 세션 완료 신호"| runner
     runner -->|"Result와 환경"| validity["RunValidity"]
     validity -->|"비교 가능 여부"| comparison["RegressionDetector"]
-    history["RESULTS 목록 / 비교"] -->|"기준과 현재 선택"| comparison
+    history["Results 목록 / 비교"] -->|"기준과 현재 선택"| comparison
     history -->|"확인 후 삭제"| delete["실행 파일 삭제 / baseline 정리"]
     recorder["FlightRecorder"] -->|"전후 창 보존"| incident["incident 전후 이벤트 창"]
 ```
@@ -351,7 +351,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-17 @ `7a72c49` · Claude
+- 검토 2026-09-17 @ `24db659` · Claude
 
 </details>
 
@@ -403,13 +403,13 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-17 @ `7a72c49` · Claude |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-17 @ `7a72c49` · Claude |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-17 @ `7a72c49` · Claude |
-| 원고 `overview` | 최신 | 검토 2026-09-17 @ `7a72c49` · Claude |
-| 원고 `module-roles` | 최신 | 검토 2026-09-17 @ `7a72c49` · Claude |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-17 @ `7a72c49` · Claude |
-| 원고 `constraints` | 최신 | 검토 2026-09-17 @ `7a72c49` · Claude |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-17 @ `24db659` · Claude |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-17 @ `24db659` · Claude |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-17 @ `24db659` · Claude |
+| 원고 `overview` | 최신 | 검토 2026-09-17 @ `24db659` · Claude |
+| 원고 `module-roles` | 최신 | 검토 2026-09-17 @ `24db659` · Claude |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-17 @ `24db659` · Claude |
+| 원고 `constraints` | 최신 | 검토 2026-09-17 @ `24db659` · Claude |
 
 <!-- omm:end id=status -->
 
