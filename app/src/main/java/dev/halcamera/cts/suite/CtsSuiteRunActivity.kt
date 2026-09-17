@@ -279,11 +279,14 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         render()
     }
 
-    /** Once a second while running: a JUnit body gives no progress of its own, so the elapsed time stands in. */
+    /**
+     * Once a second while running: a JUnit body gives no progress of its own, so the elapsed time stands in. Only
+     * the status line is redrawn; rebuilding the cards would reset a detail table the user has scrolled sideways.
+     */
     private val ticker = object : Runnable {
         override fun run() {
             if (destroyed || !running) return
-            render()
+            renderStatus()
             main.postDelayed(this, 1000)
         }
     }
@@ -327,9 +330,13 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
 
     // ---- screen ----
 
-    private fun render() {
+    private fun renderStatus() {
         val elapsed = if (running && itemStartedAt > 0) " · ${VendoredReportPresenter.duration(SystemClock.elapsedRealtime() - itemStartedAt)}" else ""
         statusView.text = status + elapsed
+    }
+
+    private fun render() {
+        renderStatus()
         runButton.text = when { running -> "중단"; report != null -> "다시 실행"; else -> "실행" }
         val done = report
         headlineView.visibility = if (done == null) View.GONE else View.VISIBLE
