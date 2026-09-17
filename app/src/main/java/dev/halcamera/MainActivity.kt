@@ -510,7 +510,7 @@ class MainActivity : ComponentActivity() {
         scope=ScopeView(this).apply { background=rounded(panel); contentDescription="AE, AF, AWB 상태와 노출, ISO, 센서 프레임 간격 그래프" }
         body.addView(scope,lp(height=342,top=10))
         body.addView(label("Frame callback timeline",14,muted,true),lp(top=20))
-        timelineView=dev.halcamera.ui.TimelineView(this).apply { background=rounded(panel); contentDescription="최근 프레임과 세션 평균의 Start, Partial, BUFFER 도착 시각 비교" }
+        timelineView=dev.halcamera.ui.TimelineView(this).apply { background=rounded(panel); contentDescription="최근 프레임과 세션 평균의 Start, Partial, Buffer 도착 시각 비교" }
         body.addView(timelineView,lp(height=96,top=10))
         timeline=label("프레임 콜백을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
         body.addView(timeline,lp(top=8))

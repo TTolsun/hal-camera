@@ -11,13 +11,13 @@ class CameraProbeTest {
     private val rear = CameraProbeEntry(
         cameraId = "0", physicalOf = null, title = "0 · 후면 · FULL",
         sections = listOf(
-            ProbeSection("IDENTITY", listOf(ProbeRow("Camera ID", "0"), ProbeRow("Hardware level", "FULL"))),
-            ProbeSection("STREAMS · JPEG", listOf(ProbeFormat.streamRow(4000, 3000, 33_333_333L, 0L)))
+            ProbeSection("Identity", listOf(ProbeRow("Camera ID", "0"), ProbeRow("Hardware level", "FULL"))),
+            ProbeSection("Streams · JPEG", listOf(ProbeFormat.streamRow(4000, 3000, 33_333_333L, 0L)))
         )
     )
     private val tele = CameraProbeEntry(
         cameraId = "3", physicalOf = "0", title = "3 · physical · 후면 · LIMITED",
-        sections = listOf(ProbeSection("IDENTITY", listOf(ProbeRow("Physical camera of", "0"))))
+        sections = listOf(ProbeSection("Identity", listOf(ProbeRow("Physical camera of", "0"))))
     )
     private val snapshot = CameraProbeSnapshot(
         capturedAt = "2026-09-16T10:00:00+09:00",
@@ -97,14 +97,14 @@ class CameraProbeTest {
     @Test
     fun `render lists every camera by default and one when a key is given`() {
         val all = CameraProbeText.render(snapshot)
-        assertTrue(all.contains("######## CAMERA 0 · 0 · 후면 · FULL"))
-        assertTrue(all.contains("######## CAMERA 0.3 · 3 · physical · 후면 · LIMITED"))
+        assertTrue(all.contains("######## Camera 0 · 0 · 후면 · FULL"))
+        assertTrue(all.contains("######## Camera 0.3 · 3 · physical · 후면 · LIMITED"))
         assertTrue(all.contains("4000x3000  4:3 · 33.3 ms · 30.0 fps"))
-        assertTrue(all.contains("== ERRORS ==\n!  physical 0/4: unreadable"))
+        assertTrue(all.contains("== Errors ==\n!  physical 0/4: unreadable"))
         val one = CameraProbeText.render(snapshot, cameraKey = "0.3")
-        assertTrue(one.contains("CAMERA 0.3"))
-        assertTrue(!one.contains("CAMERA 0 ·"))
-        assertTrue(one.contains("== DEVICE ==\nModel    SM-S936N"))
+        assertTrue(one.contains("Camera 0.3"))
+        assertTrue(!one.contains("Camera 0 ·"))
+        assertTrue(one.contains("== Device ==\nModel    SM-S936N"))
     }
 
     @Test
@@ -117,7 +117,7 @@ class CameraProbeTest {
         assertEquals("0", first["camera_id"])
         assertNull(first["physical_of"])
         val sections = first["sections"] as List<*>
-        assertEquals(listOf("IDENTITY", "STREAMS · JPEG"), sections.map { (it as Map<*, *>)["title"] })
+        assertEquals(listOf("Identity", "Streams · JPEG"), sections.map { (it as Map<*, *>)["title"] })
         val rows = (sections[1] as Map<*, *>)["rows"] as List<*>
         assertEquals(mapOf("key" to "4000x3000", "value" to "4:3 · 33.3 ms · 30.0 fps"), rows[0])
         assertEquals("0", (cameras[1] as Map<*, *>)["physical_of"])
