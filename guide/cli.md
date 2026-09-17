@@ -51,11 +51,16 @@ halcam --serial DEVICE cameras --json
 | `preview --camera ID` | 지정한 Camera2 논리 카메라의 첫 프리뷰까지 기다립니다. 끝나면 일반 Live 상태입니다. | 상태 JSON |
 | `capture --camera ID --output DIR` | 사진 한 쌍(YUV에서 변환한 JPEG과 카메라 JPEG)을 찍어 PC로 받습니다. | JPEG 2장 |
 | `benchmark run --camera ID --output DIR` | `camera2-standard-v1` profile로 벤치마크를 한 번 실행하고 run JSON을 받습니다. | schema 4 JSON |
+| `probe --output DIR` | 카메라를 열지 않고 모든 카메라의 사양 표를 읽습니다. [Probe](probe.md)의 `JSON`·`TXT` 공유와 같은 파일입니다. 화면이 필요 없습니다. | JSON + TXT |
+| `cts cases` | [CTS](cts.md) 체크리스트의 항목과 `cts run`에 넣을 키를 읽습니다. 화면이 필요 없습니다. | 항목 JSON |
+| `cts run --case KEY … --output DIR` | 고른 항목을 체크리스트 순서로 실행하고 suite 보고서를 받습니다. FAIL 행은 실행 실패가 아니라 결과입니다. | JSON + TXT |
 | `status --request UUID` | 앱을 앞으로 가져오지 않고 요청 상태만 읽습니다. | 상태 JSON |
 | `fetch UUID --output DIR` | 이미 끝난 요청의 파일을 다시 받습니다. 촬영과 측정을 반복하지 않습니다. | 파일 |
 | `cancel UUID` | 실행 중인 요청을 취소합니다. 끝난 요청에는 현재 결과를 돌려줍니다. | 상태 JSON |
 
 `--camera`에는 `cameras` 결과에서 `selectable: true`인 논리 ID만 넣습니다. `0.2` 같은 물리 endpoint key는 `UNSUPPORTED_CAMERA`로 거부됩니다. `benchmark run`의 `--profile`은 현재 `camera2-standard-v1` 하나만 받습니다.
+
+`cts run`의 키는 `cts cases` 결과의 `key` 그대로이며 `custom:fast_on_off`, `vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording`처럼 종류 접두어가 붙습니다. 마이크가 필요한 항목(`needs_audio: true`)은 앱에서 녹음 권한을 먼저 허용해야 하고, CLI는 권한을 대신 요청하지 않습니다. 실행 제한 기본값은 1,800초이며 suite가 길면 `--timeout`으로 올립니다(상한 3,600초).
 
 한 번에 하나의 명령만 실행됩니다. 화면에서 촬영·녹화·벤치마크가 진행 중이면 CLI 명령은 `BUSY`로 돌아오고, 반대로 CLI가 실행 중이면 화면 조작도 같은 규칙을 따릅니다. `--json`을 붙이면 stdout에 최종 JSON 하나만 나오고 진행 메시지는 stderr로 갑니다. 종료 코드의 의미는 [CLI 설계 문서](https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md)의 "시간 제한과 종료 코드"에 있습니다.
 
@@ -72,7 +77,7 @@ halcam --serial DEVICE cameras --json
    adb exec-out content read --uri content://dev.halcamera.cli/v1/status
    ~~~
 
-2. 요청을 만들어 제출합니다. `request_id`는 소문자 UUID여야 하고, `params`에는 `camera_id`와 `profile_id`만 들어갑니다. `execution_timeout_ms`는 preview·capture 30초, benchmark 180초가 기본이며 3,600초를 넘길 수 없습니다.
+2. 요청을 만들어 제출합니다. `request_id`는 소문자 UUID여야 하고, `params`에는 `camera_id`·`profile_id`(카메라 명령) 또는 `cases` 배열(`cts.run`)만 들어갑니다. `execution_timeout_ms`는 preview·capture·probe 30초, benchmark 180초, cts.run 1,800초가 기본이며 3,600초를 넘길 수 없습니다.
 
    ~~~powershell
    $id = [guid]::NewGuid().ToString()
@@ -83,7 +88,7 @@ halcam --serial DEVICE cameras --json
 
    응답은 `Result: Bundle[{halcam_v1=<base64url>}]` 형태입니다. 값을 base64url로 풀면 `state: "accepted"`가 보입니다.
 
-3. 앱을 전면으로 띄웁니다. `status`의 `screen`이 `"live"`가 아니면 실행이 시작되지 않습니다.
+3. 앱을 전면으로 띄웁니다. `status`의 `screen`이 `"live"`가 아니면 실행이 시작되지 않습니다. `cameras`·`probe`·`cts.cases`는 화면 없이 바로 끝나므로 이 단계가 필요 없습니다.
 
    ~~~powershell
    adb shell am start -W -f 0x18000000 -n dev.halcamera/dev.halcamera.cli.CliLaunchActivity
@@ -102,8 +107,6 @@ halcam --serial DEVICE cameras --json
 
 | 기능 | 현재 경로 |
 | --- | --- |
-| [Probe](probe.md) 사양 표 내보내기 | 앱의 `TXT`·`JSON` 공유 |
-| [CTS](cts.md) 케이스·suite 실행 | 앱의 CTS 체크리스트 |
 | baseline 지정, 비교, profile 비교 | Results·Compare 화면. CLI가 받은 run JSON을 화면의 JSON 가져오기로 넣으면 같은 비교를 할 수 있습니다. |
 | 동영상 녹화, 줌, CameraX 엔진 선택 | Live 화면 |
 | incident ZIP 수집 | 진단 패널 |
@@ -116,7 +119,7 @@ halcam --serial DEVICE cameras --json
 
 <details>
 <summary>코드 근거를 확인하세요</summary>
-<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cli/</code>에서 <code>CliProvider.kt</code>(shell 호출자 검사와 URI), <code>CommandCoordinator.kt</code>(요청 저장·artifact 등록), <code>CliCommand.kt</code>(허용 명령·인자 검사), <code>LiveController.kt</code>·<code>BenchmarkController.kt</code>(화면 driver 어댑터)와 <code>tools/halcam/halcam/cli.py</code>(PC 명령 정의), <code>tools/halcam/protocol-v1.schema.json</code>(응답 schema)을 확인하세요. 요청·상태·오류 계약의 원본은 <code>docs/design/CLI.md</code>입니다.</p>
+<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cli/</code>에서 <code>CliProvider.kt</code>(shell 호출자 검사와 URI), <code>CommandCoordinator.kt</code>(요청 저장·artifact 등록·probe·cts.cases), <code>CliCommand.kt</code>(허용 명령·인자 검사), <code>LiveController.kt</code>·<code>BenchmarkController.kt</code>·<code>CtsController.kt</code>(화면 driver 어댑터)와 <code>tools/halcam/halcam/cli.py</code>(PC 명령 정의), <code>tools/halcam/protocol-v1.schema.json</code>(응답 schema)을 확인하세요. 요청·상태·오류 계약의 원본은 <code>docs/design/CLI.md</code>입니다.</p>
 </details>
 
 **다음 단계:** `halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json`으로 run 하나를 받고, [Benchmark](benchmark.md)에서 그 JSON의 validity와 점수를 읽는 방법을 확인하세요.

@@ -30,6 +30,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.R
+import dev.halcamera.cli.CliJson
+import dev.halcamera.cli.CommandCoordinator
+import dev.halcamera.cli.CtsController
 import dev.halcamera.cts.CameraCaseResult
 import dev.halcamera.cts.CaseEnvironment
 import dev.halcamera.cts.CaseReport
@@ -46,6 +49,8 @@ import dev.halcamera.ctsvendor.VendoredRun
 import dev.halcamera.ctsvendor.VendoredTest
 import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
+import org.json.JSONObject
+import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -78,6 +83,21 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
     private val liveFailures = ArrayList<String>()
     private val expanded = HashSet<Int>()
     private var destroyed = false
+
+    // The CLI drives this screen the way it drives Benchmark: Live hands over, the adapter starts the queue and
+    // files the report. Without a CLI request the adapter is only attached, so a CLI status query sees "cts".
+    private val cli by lazy { CommandCoordinator.get(this) }
+    private val ctsCli by lazy {
+        CtsController(cli, object : CtsController.Driver {
+            override fun busy() = running
+            override fun begin(): String? {
+                if (missingPermissions().isNotEmpty()) return "PERMISSION_REQUIRED"
+                start()
+                return null
+            }
+            override fun stop() = this@CtsSuiteRunActivity.stop()
+        })
+    }
 
     // Preview surface state shared with the custom runner thread.
     private val surfaceLock = Object()
@@ -155,11 +175,18 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         body.addView(list, lp(top = 4))
         render()
-        // The user pressed 실행 on the checklist; the surface is the only thing still to wait for.
-        requestAndStart()
+        // The user pressed 실행 on the checklist; the surface is the only thing still to wait for. A CLI request
+        // starts through its adapter instead, so a missing permission is reported rather than asked for.
+        if (intent.getStringExtra("cli_request_id") == null) requestAndStart()
     }
 
-    override fun onStop() { stop(); super.onStop() }
+    override fun onStart() {
+        super.onStart()
+        if (intent.getStringExtra("cli_request_id") == cli.active?.id && cli.active != null) cli.continueHandover(ctsCli)
+        else cli.attach(ctsCli)
+    }
+
+    override fun onStop() { cli.detach(ctsCli); stop(); super.onStop() }
 
     override fun onDestroy() {
         destroyed = true
@@ -171,10 +198,14 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
 
     // ---- run ----
 
-    private fun requestAndStart() {
+    private fun missingPermissions(): List<String> {
         val audio = queue.any { it.needsAudio }
-        val needed = (if (audio) listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO) else listOf(Manifest.permission.CAMERA))
+        return (if (audio) listOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO) else listOf(Manifest.permission.CAMERA))
             .filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
+    }
+
+    private fun requestAndStart() {
+        val needed = missingPermissions()
         if (needed.isEmpty()) start() else requestPermissions(needed.toTypedArray(), REQUEST_PERMISSIONS)
     }
 
@@ -204,6 +235,7 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         val index = entries.size
         if (index >= queue.size || stopRequested) { finishSuite(); return }
         val item = queue[index]
+        if (index == 0) ctsCli.started()
         itemStartedAt = SystemClock.elapsedRealtime()
         liveSteps.clear(); liveFailures.clear()
         status = "${index + 1}/${queue.size} · ${item.title} · 시작"
@@ -262,12 +294,34 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
 
     private fun finishSuite() {
         while (entries.size < queue.size) entries += SuiteEntry.notRun(queue[entries.size])
-        report = SuiteReport(entries.toList(), stopRequested)
+        val finished = SuiteReport(entries.toList(), stopRequested)
+        report = finished
         running = false
         status = if (stopRequested) "중단됨 · 완료된 항목까지만 표시합니다" else "완료"
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         render()
+        if (ctsCli.driving()) file(finished)
     }
+
+    /** The CLI's copy of the report: the JSON map and the same text the 공유 button sends, written off the main thread. */
+    private fun file(finished: SuiteReport) {
+        val id = intent.getStringExtra("cli_request_id") ?: return
+        val device = "${Build.MANUFACTURER} ${Build.MODEL}"
+        val build = "Android ${Build.VERSION.RELEASE} (${Build.DISPLAY})"
+        val app = appVersion()
+        io.execute {
+            try {
+                val dir = cli.artifactDir(id)
+                val json = File(dir, "cts-suite.json").apply {
+                    writeText((CliJson.of(finished.toJsonMap(device, build, app)) as JSONObject).toString(2), Charsets.UTF_8)
+                }
+                val text = File(dir, "cts-suite.txt").apply { writeText(SuiteReportPresenter.fullText(device, build, app, finished), Charsets.UTF_8) }
+                ctsCli.reportSaved(finished.cancelled, finished.passed, finished.failed, finished.skipped, finished.notRun, json, text)
+            } catch (e: Exception) { ctsCli.saveFailed(e.message ?: "Cannot write the suite report") }
+        }
+    }
+
+    private fun appVersion(): String = runCatching { packageManager.getPackageInfo(packageName, 0).versionName ?: "" }.getOrDefault("")
 
     /** Stops the running item; the queue ends when that item reports, and the items after it are marked 실행 안 함. */
     private fun stop() {
@@ -404,7 +458,7 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         SuiteReportPresenter.fullText(
             device = "${Build.MANUFACTURER} ${Build.MODEL}",
             build = "Android ${Build.VERSION.RELEASE} (${Build.DISPLAY})",
-            app = runCatching { packageManager.getPackageInfo(packageName, 0).versionName ?: "" }.getOrDefault(""),
+            app = appVersion(),
             report = it
         )
     }

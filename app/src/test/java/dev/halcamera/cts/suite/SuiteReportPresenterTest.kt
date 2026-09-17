@@ -107,3 +107,33 @@ class SuiteReportPresenterTest {
         assertEquals("[실행 안 함] 동영상 스냅샷 · custom#VideoSnapshot", lines.last())
     }
 }
+
+class SuiteReportJsonTest {
+    private val fast = SuiteItem.Custom(CtsCatalog.byId(CtsCatalog.FAST_ON_OFF)!!)
+    private val basic = SuiteItem.Vendored(VendoredTest("android.hardware.camera2.cts.RecordingTest", "testBasicRecording"))
+
+    @Test
+    fun `json map carries the header, the counts and one entry per item with the screen's outcome names`() {
+        val report = SuiteReport(
+            listOf(
+                SuiteEntry.of(fast, CaseReport(fast.source, listOf(CameraCaseResult("0", listOf(StepResult("open", Verdict.PASS)))), false), 1_500),
+                SuiteEntry.of(basic, VendoredResult(basic.test, VendoredVerdict.FAIL, 5_000, listOf("boom"), false)),
+                SuiteEntry.notRun(fast)
+            ),
+            cancelled = true
+        )
+        val map = report.toJsonMap("samsung SM-S936N", "Android 16 (build)", "0.9.0")
+        assertEquals(SuiteReport.SCHEMA, map["schema"])
+        assertEquals("samsung SM-S936N", map["device"])
+        assertEquals(true, map["cancelled"])
+        assertEquals(1, map["passed"]); assertEquals(1, map["failed"]); assertEquals(1, map["not_run"])
+        assertEquals(6_500L, map["duration_ms"])
+        assertEquals(SuiteReportPresenter.headline(report), map["headline"])
+        @Suppress("UNCHECKED_CAST") val entries = map["entries"] as List<Map<String, Any?>>
+        assertEquals(listOf("custom:fast_on_off", "vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording", "custom:fast_on_off"), entries.map { it["key"] })
+        assertEquals(listOf("PASS", "FAIL", "NOT_RUN"), entries.map { it["outcome"] })
+        assertEquals("RecordingTest#testBasicRecording", entries[1]["source"])
+        assertTrue((entries[1]["detail"] as String).contains("boom"))
+        assertEquals("", entries[2]["detail"])
+    }
+}

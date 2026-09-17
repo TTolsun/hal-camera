@@ -5,6 +5,7 @@ last_field: context
 git_commit: 8a8701e
 git_branch: codex/pr27-doc-review
 children:
+  - cli-request
   - engine-lifecycle
   - incident-window
   - validity-gate
