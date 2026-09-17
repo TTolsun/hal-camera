@@ -97,7 +97,7 @@ Live에서 사진을 촬영하면 Camera2의 같은 요청에 YUV와 JPEG 출력
 
 ### CLI 요청과 결과 수집
 
-CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩니다. 요청 ID와 내용을 먼저 저장하고 `LiveController` 또는 `BenchmarkController`가 화면의 카메라·벤치마크 동작을 실행합니다. 사진은 두 이미지의 저장 완료, 벤치마크는 report 파일 쓰기 완료 후 artifact를 등록합니다. 명령 접수와 실제 완료는 서로 다른 상태입니다.
+CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩니다. 요청 ID와 내용을 먼저 저장하고 `LiveController`, `BenchmarkController`, `CtsController`가 화면의 카메라·벤치마크·CTS suite 동작을 실행합니다. 사진은 두 이미지의 저장 완료, 벤치마크는 report 파일 쓰기 완료, CTS suite는 보고서 JSON·텍스트 쓰기 완료 후 artifact를 등록합니다. `cameras`·`probe`·`cts.cases`는 화면을 거치지 않고 coordinator가 IO 스레드에서 바로 완료하며, probe 파일은 요청별 `files/cli/artifacts/<request_id>/`에 두었다가 기록 정리와 함께 지웁니다. 명령 접수와 실제 완료는 서로 다른 상태입니다.
 
 PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 확인합니다. 같은 요청 ID와 같은 내용은 기존 결과를 반환하며 새로운 촬영을 시작하지 않습니다. 원본 파일이 삭제되거나 전송이 끊긴 경우에는 요청 ID로 상태를 확인한 다음 파일 수집을 재시도합니다.
 

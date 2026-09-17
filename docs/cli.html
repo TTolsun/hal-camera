@@ -93,6 +93,21 @@ halcam --serial DEVICE cameras --json
 <td>schema 4 JSON</td>
 </tr>
 <tr>
+<td><code>probe --output DIR</code></td>
+<td>카메라를 열지 않고 모든 카메라의 사양 표를 읽습니다. <a href="probe.html">Probe</a>의 <code>JSON</code>·<code>TXT</code> 공유와 같은 파일입니다. 화면이 필요 없습니다.</td>
+<td>JSON + TXT</td>
+</tr>
+<tr>
+<td><code>cts cases</code></td>
+<td><a href="cts.html">CTS</a> 체크리스트의 항목과 <code>cts run</code>에 넣을 키를 읽습니다. 화면이 필요 없습니다.</td>
+<td>항목 JSON</td>
+</tr>
+<tr>
+<td><code>cts run --case KEY … --output DIR</code></td>
+<td>고른 항목을 체크리스트 순서로 실행하고 suite 보고서를 받습니다. FAIL 행은 실행 실패가 아니라 결과입니다.</td>
+<td>JSON + TXT</td>
+</tr>
+<tr>
 <td><code>status --request UUID</code></td>
 <td>앱을 앞으로 가져오지 않고 요청 상태만 읽습니다.</td>
 <td>상태 JSON</td>
@@ -109,6 +124,7 @@ halcam --serial DEVICE cameras --json
 </tr>
 </tbody></table>
 <p><code>--camera</code>에는 <code>cameras</code> 결과에서 <code>selectable: true</code>인 논리 ID만 넣습니다. <code>0.2</code> 같은 물리 endpoint key는 <code>UNSUPPORTED_CAMERA</code>로 거부됩니다. <code>benchmark run</code>의 <code>--profile</code>은 현재 <code>camera2-standard-v1</code> 하나만 받습니다.</p>
+<p><code>cts run</code>의 키는 <code>cts cases</code> 결과의 <code>key</code> 그대로이며 <code>custom:fast_on_off</code>, <code>vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording</code>처럼 종류 접두어가 붙습니다. 마이크가 필요한 항목(<code>needs_audio: true</code>)은 앱에서 녹음 권한을 먼저 허용해야 하고, CLI는 권한을 대신 요청하지 않습니다. 실행 제한 기본값은 1,800초이며 suite가 길면 <code>--timeout</code>으로 올립니다(상한 3,600초).</p>
 <p>한 번에 하나의 명령만 실행됩니다. 화면에서 촬영·녹화·벤치마크가 진행 중이면 CLI 명령은 <code>BUSY</code>로 돌아오고, 반대로 CLI가 실행 중이면 화면 조작도 같은 규칙을 따릅니다. <code>--json</code>을 붙이면 stdout에 최종 JSON 하나만 나오고 진행 메시지는 stderr로 갑니다. 종료 코드의 의미는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md">CLI 설계 문서</a>의 &quot;시간 제한과 종료 코드&quot;에 있습니다.</p>
 <p class="editorial" lang="en">The app runs it.<br>The PC only asks and collects.</p><h2 lang="en">No Python? Use adb directly.</h2><p><code>halcam</code>은 ADB 위의 얇은 껍데기입니다. Python이 없는 PC에서는 같은 provider를 <code>adb</code>만으로 부를 수 있습니다. 아래는 PowerShell 예시이며, 요청 JSON을 패딩 없는 base64url로 감싸서 보내는 것이 전부입니다.</p>
 <ol>
@@ -117,7 +133,7 @@ halcam --serial DEVICE cameras --json
 adb exec-out content read --uri content://dev.halcamera.cli/v1/status
 </code></pre>
 </li>
-<li><p>요청을 만들어 제출합니다. <code>request_id</code>는 소문자 UUID여야 하고, <code>params</code>에는 <code>camera_id</code>와 <code>profile_id</code>만 들어갑니다. <code>execution_timeout_ms</code>는 preview·capture 30초, benchmark 180초가 기본이며 3,600초를 넘길 수 없습니다.</p>
+<li><p>요청을 만들어 제출합니다. <code>request_id</code>는 소문자 UUID여야 하고, <code>params</code>에는 <code>camera_id</code>·<code>profile_id</code>(카메라 명령) 또는 <code>cases</code> 배열(<code>cts.run</code>)만 들어갑니다. <code>execution_timeout_ms</code>는 preview·capture·probe 30초, benchmark 180초, cts.run 1,800초가 기본이며 3,600초를 넘길 수 없습니다.</p>
 <pre><code class="language-powershell">$id = [guid]::NewGuid().ToString()
 $json = &#39;{&quot;protocol_version&quot;:1,&quot;request_id&quot;:&quot;&#39; + $id + &#39;&quot;,&quot;command&quot;:&quot;benchmark.run&quot;,&quot;params&quot;:{&quot;camera_id&quot;:&quot;0&quot;,&quot;profile_id&quot;:&quot;camera2-standard-v1&quot;},&quot;execution_timeout_ms&quot;:180000}&#39;
 $arg = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($json)).TrimEnd(&#39;=&#39;).Replace(&#39;+&#39;,&#39;-&#39;).Replace(&#39;/&#39;,&#39;_&#39;)
@@ -125,7 +141,7 @@ adb shell content call --uri content://dev.halcamera.cli --method submit --arg $
 </code></pre>
 <p>응답은 <code>Result: Bundle[{halcam_v1=&lt;base64url&gt;}]</code> 형태입니다. 값을 base64url로 풀면 <code>state: &quot;accepted&quot;</code>가 보입니다.</p>
 </li>
-<li><p>앱을 전면으로 띄웁니다. <code>status</code>의 <code>screen</code>이 <code>&quot;live&quot;</code>가 아니면 실행이 시작되지 않습니다.</p>
+<li><p>앱을 전면으로 띄웁니다. <code>status</code>의 <code>screen</code>이 <code>&quot;live&quot;</code>가 아니면 실행이 시작되지 않습니다. <code>cameras</code>·<code>probe</code>·<code>cts.cases</code>는 화면 없이 바로 끝나므로 이 단계가 필요 없습니다.</p>
 <pre><code class="language-powershell">adb shell am start -W -f 0x18000000 -n dev.halcamera/dev.halcamera.cli.CliLaunchActivity
 </code></pre>
 </li>
@@ -144,14 +160,6 @@ adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/$id/arti
 </tr>
 </thead>
 <tbody><tr>
-<td><a href="probe.html">Probe</a> 사양 표 내보내기</td>
-<td>앱의 <code>TXT</code>·<code>JSON</code> 공유</td>
-</tr>
-<tr>
-<td><a href="cts.html">CTS</a> 케이스·suite 실행</td>
-<td>앱의 CTS 체크리스트</td>
-</tr>
-<tr>
 <td>baseline 지정, 비교, profile 비교</td>
 <td>Results·Compare 화면. CLI가 받은 run JSON을 화면의 JSON 가져오기로 넣으면 같은 비교를 할 수 있습니다.</td>
 </tr>
@@ -168,7 +176,7 @@ adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/$id/arti
 <h2 lang="en">When it does not finish.</h2><p><code>status --request UUID</code>부터 읽으세요. PC의 대기 시간이 끝난 것과 앱의 실행이 실패한 것은 다른 사건입니다. 자주 만나는 상태와 대응은 <a href="troubleshooting.html#cli-작업이-끝나지-않거나-파일이-없을-때">디버깅</a>에 있고, 기기별 검증 결과는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/cli-transport.md">전송 검증 기록</a>에 있습니다.</p>
 <details>
 <summary>코드 근거를 확인하세요</summary>
-<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cli/</code>에서 <code>CliProvider.kt</code>(shell 호출자 검사와 URI), <code>CommandCoordinator.kt</code>(요청 저장·artifact 등록), <code>CliCommand.kt</code>(허용 명령·인자 검사), <code>LiveController.kt</code>·<code>BenchmarkController.kt</code>(화면 driver 어댑터)와 <code>tools/halcam/halcam/cli.py</code>(PC 명령 정의), <code>tools/halcam/protocol-v1.schema.json</code>(응답 schema)을 확인하세요. 요청·상태·오류 계약의 원본은 <code>docs/design/CLI.md</code>입니다.</p>
+<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cli/</code>에서 <code>CliProvider.kt</code>(shell 호출자 검사와 URI), <code>CommandCoordinator.kt</code>(요청 저장·artifact 등록·probe·cts.cases), <code>CliCommand.kt</code>(허용 명령·인자 검사), <code>LiveController.kt</code>·<code>BenchmarkController.kt</code>·<code>CtsController.kt</code>(화면 driver 어댑터)와 <code>tools/halcam/halcam/cli.py</code>(PC 명령 정의), <code>tools/halcam/protocol-v1.schema.json</code>(응답 schema)을 확인하세요. 요청·상태·오류 계약의 원본은 <code>docs/design/CLI.md</code>입니다.</p>
 </details><p><strong>다음 단계:</strong> <code>halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json</code>으로 run 하나를 받고, <a href="benchmark.html">Benchmark</a>에서 그 JSON의 validity와 점수를 읽는 방법을 확인하세요.</p>
 
   </main>

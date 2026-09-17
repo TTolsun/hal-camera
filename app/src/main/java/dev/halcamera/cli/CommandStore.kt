@@ -5,8 +5,15 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
-/** Durable records are written before execution. Never replay unfinished work after process death. */
-class CommandStore(private val directory: File, private val now: () -> Long = System::currentTimeMillis) {
+/**
+ * Durable records are written before execution. Never replay unfinished work after process death. [onExpire]
+ * runs for each record cleanup removes, so files registered for that request go with it.
+ */
+class CommandStore(
+    private val directory: File,
+    private val now: () -> Long = System::currentTimeMillis,
+    private val onExpire: (String) -> Unit = {}
+) {
     private val snapshots = mutableMapOf<String, String>()
     init {
         check(directory.isDirectory || directory.mkdirs()) { "Cannot create command store" }
@@ -79,6 +86,7 @@ class CommandStore(private val directory: File, private val now: () -> Long = Sy
             if (index >= MAX_RECORDS || record.optLong("expires_at_ms", Long.MAX_VALUE) <= now()) {
                 AtomicFile(File(directory, "${record.getString("request_id")}.json")).delete()
                 snapshots.remove(record.getString("request_id"))
+                runCatching { onExpire(record.getString("request_id")) }
             }
         }
     }

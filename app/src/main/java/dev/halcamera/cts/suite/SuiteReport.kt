@@ -53,6 +53,38 @@ data class SuiteReport(val entries: List<SuiteEntry>, val cancelled: Boolean) {
     /** Items never started. The item that was cancelled mid-way is not among them; the headline's 중단됨 covers it. */
     val notRun: Int get() = entries.count { it.outcome == SuiteOutcome.NOT_RUN }
     val durationMs: Long get() = entries.sumOf { it.durationMs }
+
+    /**
+     * The report as the CLI files it: the same entries the screen lists, with the outcome names of the screen
+     * and the detail text under each row. [device], [build] and [app] are the header the shared text carries.
+     */
+    fun toJsonMap(device: String, build: String, app: String): Map<String, Any?> = mapOf(
+        "schema" to SCHEMA,
+        "device" to device,
+        "build" to build,
+        "app" to app,
+        "headline" to SuiteReportPresenter.headline(this),
+        "cancelled" to cancelled,
+        "passed" to passed,
+        "failed" to failed,
+        "skipped" to skipped,
+        "not_run" to notRun,
+        "duration_ms" to durationMs,
+        "entries" to entries.map { entry ->
+            mapOf(
+                "key" to entry.item.key,
+                "title" to entry.item.title,
+                "source" to entry.item.source,
+                "outcome" to entry.outcome.name,
+                "duration_ms" to entry.durationMs,
+                "detail" to entry.detail
+            )
+        }
+    )
+
+    companion object {
+        const val SCHEMA = "cts_suite/1"
+    }
 }
 
 /** Plain-text rendering of a [SuiteReport] for the screen and the clipboard. Pure Kotlin. */

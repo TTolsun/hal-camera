@@ -320,10 +320,16 @@ sources:
       .:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
-          - app/src/main/java/dev/halcamera/cli/CommandStore.kt
-          - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
           - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
           - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
+      cli-request:
+        evidence:
+          - app/src/main/java/dev/halcamera/cli/CommandStore.kt
+          - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
+          - app/src/main/java/dev/halcamera/cli/CliCommand.kt
+          - app/src/main/java/dev/halcamera/cli/LiveController.kt
+          - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
+          - app/src/main/java/dev/halcamera/cli/CtsController.kt
       engine-lifecycle:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt

@@ -16,7 +16,7 @@
 | Android | 앱의 기존 minSdk 26을 유지한다. 실제 지원 선언은 M0 호환성 검증 결과에 따른다. |
 | 연결 | 이미 연결·인증된 USB 또는 무선 ADB를 사용한다. 무선 페어링은 Platform Tools에서 수행한다. |
 | 빌드 | debug와 서명된 release를 모두 목표로 한다. `run-as`나 root를 전제로 하지 않는다. |
-| 기능 | 기기·카메라 목록, 앱 실행, Camera2 프리뷰, 사진 촬영, 기존 profile 벤치마크, 상태 조회, 결과 다운로드, 실행 취소 |
+| 기능 | 기기·카메라 목록, 앱 실행, Camera2 프리뷰, 사진 촬영, 기존 profile 벤치마크, Probe 사양 표 내보내기, CTS suite 목록·실행, 상태 조회, 결과 다운로드, 실행 취소 |
 | 후속 범위 | 녹화, 줌·CameraX 제어, incident 수집, baseline 변경, 이력 삭제, 무인 백그라운드 촬영 |
 
 Android 사용자 0의 잠금 해제된 전면 앱을 첫 지원 조건으로 한다. 다른 Android 사용자·업무 프로필·root adbd 환경은 명시적으로 지원하지 않는다고 안내한다. 기기가 여러 대이면 `--serial`을 필수로 받으며 임의의 기기를 선택하지 않는다.
@@ -115,6 +115,9 @@ halcam --serial DEVICE cameras --json
 halcam --serial DEVICE preview --camera 0
 halcam --serial DEVICE capture --camera 0 --output ./photos
 halcam --serial DEVICE benchmark run --camera 0 --profile camera2-standard-v1 --output ./runs
+halcam --serial DEVICE probe --output ./probe
+halcam --serial DEVICE cts cases --json
+halcam --serial DEVICE cts run --case custom:fast_on_off --case vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording --output ./cts
 halcam --serial DEVICE status --request REQUEST_UUID --json
 halcam --serial DEVICE fetch REQUEST_UUID --output ./recovered
 halcam --serial DEVICE cancel REQUEST_UUID
@@ -129,9 +132,14 @@ halcam --serial DEVICE cancel REQUEST_UUID
 | `preview` | 지정한 Camera2 logical camera의 첫 프리뷰 준비까지 기다린다. 완료 후에는 일반 Live 상태가 된다. |
 | `capture` | 앱을 열고 카메라 준비 후 사진 한 쌍을 저장하고 PC로 수집한다. |
 | `benchmark run` | 기존 preflight를 통과한 profile을 한 번 실행하고 원본 JSON을 수집한다. |
+| `probe` | 카메라를 열지 않고 모든 카메라의 `CameraCharacteristics`를 읽어 Probe 화면이 내보내는 JSON(`camera_probe/1`)과 TXT 두 파일을 수집한다. 앱 화면이 필요 없다. |
+| `cts cases` | CTS suite 체크리스트의 항목을 키(`custom:<id>`, `vendored:<class>#<method>`)·종류·출처·오디오 필요 여부·예상 시간과 함께 반환한다. vendored 항목은 API 34 이상에서만 나온다. |
+| `cts run` | `--case`로 고른 항목을 체크리스트 순서로 `CtsSuiteRunActivity`에서 실행하고 suite 보고서 JSON(`cts_suite/1`)과 공유 텍스트를 수집한다. FAIL 행은 실행 실패가 아니라 결과다. 마이크가 필요한 항목은 RECORD_AUDIO 권한을 미리 허용해야 하며 없으면 `PERMISSION_REQUIRED`로 끝난다. |
 | `status` | 앱을 전면으로 이동시키지 않고 상태를 조회한다. |
 | `fetch` | 이미 생성된 결과를 다시 내려받는다. 촬영·측정을 다시 실행하지 않는다. |
 | `cancel` | 실행 중 요청을 취소한다. 완료된 요청에는 현재 결과를 반환한다. |
+
+`cts run`의 앱 실행 제한 기본값은 1,800초다. 알 수 없는 키는 접수 뒤 `UNKNOWN_CASE`로 실패하고, 실행 중 취소는 화면의 중단과 같아서 진행 중 항목은 `CANCELLED`, 뒤 항목은 `NOT_RUN`으로 기록된 보고서를 `cancelled` 상태와 함께 남긴다. `probe`와 `cts cases`는 앱을 전면으로 가져오지 않는다.
 
 `--camera`는 독립적으로 열 수 있는 logical ID만 허용한다. physical endpoint의 `0.2` 같은 key를 camera ID로 잘못 전달하지 않도록 목록에 `selectable`과 선택 불가 사유를 포함한다. 다른 카메라로 자동 대체하지 않는다.
 
