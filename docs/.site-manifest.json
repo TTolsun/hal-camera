@@ -2,17 +2,17 @@
   "version": 1,
   "files": {
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "_inputs/decisions.html": "a7300dd98963d7034bbb09c04e05f28fb061f846fd9d9168291a5782b6997014",
+    "_inputs/decisions.html": "b0cfd2ed853205656350477608a945f13696b8a2bbb10db50c5c81908a5e1ff5",
     "_inputs/device-verification.yaml": "d66c4205e3c9b54c4453055774654d353e46495c11048432532ce51e2f00f95b",
-    "architecture.html": "a4d982416c5322320349592d30b9d6745880575cc4807ad7c42ef256560f66ff",
+    "architecture.html": "695e5f07023d498d4da34370cb3e8b408ffb1e0eca2c70e6bcfba0cd7f80a6da",
     "assets/docflow-design.css": "b0ff2b4a86165adbdfd74ada94ecb1a9deee28ffd8fec9dbfebfbef68d860b4d",
-    "benchmark.html": "dc4abade9bf4da0a646e0350da92f1715ef9812d96fcb701a45be74181957f3e",
-    "cts.html": "3d93793ac07bd73cae87463446ec5b79a5e7c8d6041a48c5c8f1848c27787e55",
-    "decisions.html": "1475f8cb648c034d51f2cc5ffde262b709e09a3cb0930f7abd987e683bc265f5",
-    "evidence.html": "513df73f8310149dd7f15390892cbc9142cd0642b12ab943f550d7adce699644",
-    "getting-started.html": "610d2b20325a0c170562da191038fa76c0f03063dcfa37b667f39def6b42878b",
-    "index.html": "c4d5714029bf3d22c9e602bbe439b393c80ac7789dd946e8449e5744f2e33651",
-    "probe.html": "20578b7566a29d70289e331e8f2861f4ddec95e41585d3aa0db7f2fff17313f4",
-    "troubleshooting.html": "f1c798466a86335c44e42ca6d2d247c989196402968c64b5cb4903d182916cd0"
+    "benchmark.html": "61e8bb971346221c5b3081145ccf122499b9307fe1570a9c147f7a9ab9a224ef",
+    "cts.html": "1ea50ac6e79d7969ffaa550c7b78a4552f44ba1c2aa7b26ad0830ffa9bb4c381",
+    "decisions.html": "19b9eafe45c9e9bc177aa6d22b27d1290f05270b8647b26b8246c346d764a86c",
+    "evidence.html": "abb07af6521494c0ad20ca67ef635a32e688005c2fe37fb4f6ebf59c4cd06c1e",
+    "getting-started.html": "8a7797ba0dce246749b9f12aa931e27ab8e731e076f2c0d12c07faaf2815b110",
+    "index.html": "050d0b02f4621e4b0ba12444620cbf9d7ce765c8fae7e9f4a957fb52e777be59",
+    "probe.html": "1d679e66f6ef52481242dd55fd48129316b478c9851af9c093d565dc2fa57f66",
+    "troubleshooting.html": "a1e9a40b19378c352d9228a990e1843d5088bd1fc64ada326f811408f4f70e4f"
   }
 }
