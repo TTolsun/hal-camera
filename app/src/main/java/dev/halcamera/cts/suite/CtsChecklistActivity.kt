@@ -94,7 +94,7 @@ abstract class CtsChecklistActivity : ComponentActivity() {
             val everySelected = group.items.all { it.key in selected }
             group.items.forEach { boxes[it.key]?.isChecked = !everySelected }
         }
-        head.addView(all, LinearLayout.LayoutParams(-2, dp(40)))
+        head.addView(all, LinearLayout.LayoutParams(-2, -2))
         block.addView(head)
         if (group.detail.isNotEmpty()) block.addView(Look.text(this, group.detail, 12, Look.onDarkMuted), lp(top = 2))
         groupButtons += group.items to all
@@ -131,7 +131,9 @@ abstract class CtsChecklistActivity : ComponentActivity() {
             setOnClickListener { box.toggle() }
         }
         column.addView(Look.text(this, item.title, 15, Look.onDark, bold = true))
-        column.addView(Look.text(this, "$estimate · ${item.source}", 12, Look.onDarkMuted), lp(top = 2))
+        // A vendored row is titled by its method and grouped under its class, so its source would only repeat both.
+        val line = if (item is SuiteItem.Vendored) estimate else "$estimate · ${item.source}"
+        column.addView(Look.text(this, line, 12, Look.onDarkMuted), lp(top = 2))
         row.addView(column, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(4) })
         row.addView(IconButton(this, R.drawable.ic_action_next, "${item.title} 하나만 여는 화면") { startActivity(singleIntent(item)) }, LinearLayout.LayoutParams(dp(48), dp(48)))
         return row

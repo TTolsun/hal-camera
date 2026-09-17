@@ -50,7 +50,8 @@ data class SuiteReport(val entries: List<SuiteEntry>, val cancelled: Boolean) {
     val passed: Int get() = entries.count { it.outcome == SuiteOutcome.PASS }
     val failed: Int get() = entries.count { it.outcome == SuiteOutcome.FAIL }
     val skipped: Int get() = entries.count { it.outcome == SuiteOutcome.SKIP }
-    val notRun: Int get() = entries.count { it.outcome == SuiteOutcome.NOT_RUN || it.outcome == SuiteOutcome.CANCELLED }
+    /** Items never started. The item that was cancelled mid-way is not among them; the headline's 중단됨 covers it. */
+    val notRun: Int get() = entries.count { it.outcome == SuiteOutcome.NOT_RUN }
     val durationMs: Long get() = entries.sumOf { it.durationMs }
 }
 

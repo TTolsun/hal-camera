@@ -53,9 +53,9 @@ class SuiteReportPresenterTest {
             ),
             cancelled = true
         )
-        assertEquals("3개 중 PASS 1 · FAIL 0 · 실행 안 함 2 · 1분 7초 · 중단됨", SuiteReportPresenter.headline(stopped))
+        assertEquals("3개 중 PASS 1 · FAIL 0 · 실행 안 함 1 · 1분 7초 · 중단됨", SuiteReportPresenter.headline(stopped))
         assertEquals(1, stopped.passed)
-        assertEquals(2, stopped.notRun)
+        assertEquals(1, stopped.notRun)
     }
 
     @Test
