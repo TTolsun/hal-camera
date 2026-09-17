@@ -27,39 +27,9 @@
           ]
         },
         {
-          "tag": "Camera2Ops",
-          "sources": [
-            "app/src/main/java/dev/halcamera/cts/Camera2Ops.kt"
-          ]
-        },
-        {
-          "tag": "FastOnOffRunner",
-          "sources": [
-            "app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRunner.kt"
-          ]
-        },
-        {
           "tag": "ProfileCompatibility",
           "sources": [
             "app/src/main/java/dev/halcamera/benchmark/platform/ProfileCompatibilityChecker.kt"
-          ]
-        },
-        {
-          "tag": "StillPreviewCombinationRunner",
-          "sources": [
-            "app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRunner.kt"
-          ]
-        },
-        {
-          "tag": "SwitchingRunner",
-          "sources": [
-            "app/src/main/java/dev/halcamera/cts/switching/SwitchingRunner.kt"
-          ]
-        },
-        {
-          "tag": "VideoSnapshotRunner",
-          "sources": [
-            "app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRunner.kt"
           ]
         }
       ]

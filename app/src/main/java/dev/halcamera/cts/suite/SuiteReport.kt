@@ -1,9 +1,5 @@
 package dev.halcamera.cts.suite
 
-import dev.halcamera.cts.CameraCaseResult
-import dev.halcamera.cts.CaseReport
-import dev.halcamera.cts.CaseReportPresenter
-import dev.halcamera.cts.Verdict
 import dev.halcamera.cts.vendored.VendoredReportPresenter
 import dev.halcamera.ctsvendor.VendoredResult
 import dev.halcamera.ctsvendor.VendoredVerdict
@@ -18,17 +14,6 @@ enum class SuiteOutcome { PASS, FAIL, SKIP, CANCELLED, NOT_RUN }
 /** One finished line of the suite: the item, its outcome, how long it ran and the detail text under it. */
 data class SuiteEntry(val item: SuiteItem, val outcome: SuiteOutcome, val durationMs: Long, val detail: String) {
     companion object {
-        fun of(item: SuiteItem, report: CaseReport, durationMs: Long): SuiteEntry = SuiteEntry(
-            item,
-            when {
-                report.cancelled -> SuiteOutcome.CANCELLED
-                report.verdict == Verdict.FAIL -> SuiteOutcome.FAIL
-                else -> SuiteOutcome.PASS
-            },
-            durationMs,
-            SuiteReportPresenter.customDetail(report.cameras)
-        )
-
         fun of(item: SuiteItem, result: VendoredResult): SuiteEntry = SuiteEntry(
             item,
             when {
@@ -89,19 +74,8 @@ data class SuiteReport(val entries: List<SuiteEntry>, val cancelled: Boolean) {
 
 /** Plain-text rendering of a [SuiteReport] for the screen and the clipboard. Pure Kotlin. */
 object SuiteReportPresenter {
-    /**
-     * The disclaimer of the kind the items are; the two lists never mix kinds, but a queue that did would name
-     * both. Each single-item screen shows the same sentence for its kind.
-     */
-    fun disclaimer(items: List<SuiteItem>): String {
-        val custom = items.any { it is SuiteItem.Custom }
-        val vendored = items.any { it is SuiteItem.Vendored }
-        return when {
-            custom && !vendored -> CaseReportPresenter.DISCLAIMER
-            vendored && !custom -> VendoredReportPresenter.DISCLAIMER
-            else -> CaseReportPresenter.DISCLAIMER + " " + VendoredReportPresenter.DISCLAIMER
-        }
-    }
+    /** The one sentence every CTS screen repeats: what these results are and are not. */
+    fun disclaimer(): String = VendoredReportPresenter.DISCLAIMER
 
     /** "7개 중 PASS 6 · FAIL 1 · 12분 34초", with SKIP and 실행 안 함 counts only when they are not zero. */
     fun headline(report: SuiteReport): String {
@@ -128,12 +102,7 @@ object SuiteReportPresenter {
         if (entry.outcome == SuiteOutcome.NOT_RUN) entry.item.source
         else "${entry.item.source} · ${VendoredReportPresenter.duration(entry.durationMs)}"
 
-    /** The per-camera table of a custom case, one camera after the other, as the case screen shows it. */
-    fun customDetail(cameras: List<CameraCaseResult>): String = cameras.joinToString("\n\n") { r ->
-        CaseReportPresenter.cameraLine(r) + "\n" + CaseReportPresenter.cameraTable(r)
-    }.trimEnd()
-
-    /** The JUnit failures of a vendored method, numbered as the vendored screen numbers them. */
+    /** The JUnit failures of a vendored method, numbered as the single-method screen numbers them. */
     fun vendoredDetail(failures: List<String>): String = failures.mapIndexed { index, failure ->
         "실패 ${index + 1}\n$failure"
     }.joinToString("\n\n")
@@ -142,7 +111,7 @@ object SuiteReportPresenter {
         append("HAL CAM CTS suite").append('\n')
         append(device).append(" · ").append(build).append(" · app ").append(app).append('\n')
         append(headline(report)).append('\n')
-        append(disclaimer(report.entries.map { it.item })).append('\n')
+        append(disclaimer()).append('\n')
         report.entries.forEach { entry ->
             append('\n').append('[').append(outcomeLabel(entry.outcome)).append("] ").append(entry.item.title)
             append(" · ").append(entryLine(entry)).append('\n')

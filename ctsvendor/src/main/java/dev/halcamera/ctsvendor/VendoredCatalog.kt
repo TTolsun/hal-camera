@@ -1,6 +1,8 @@
 package dev.halcamera.ctsvendor
 
+import android.hardware.camera2.cts.BurstCaptureTest
 import android.hardware.camera2.cts.RecordingTest
+import android.hardware.camera2.cts.StillCaptureTest
 import org.junit.Test
 
 /** One vendored JUnit test method, addressed as the CTS class#method it is upstream. */
@@ -15,7 +17,7 @@ data class VendoredTest(val className: String, val method: String) {
  * all it takes to list every test it declares. [VendoredCts.install] must have run before this is used.
  */
 object VendoredCatalog {
-    val classes: List<Class<*>> = listOf(RecordingTest::class.java)
+    val classes: List<Class<*>> = listOf(RecordingTest::class.java, StillCaptureTest::class.java, BurstCaptureTest::class.java)
 
     /** Methods listed first within their class, in this order; the rest follow alphabetically. */
     private val pinned = listOf("testBasicRecording")

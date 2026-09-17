@@ -28,8 +28,8 @@ data class CliCommand(
         if (command == "cts.run") {
             if (cases.isNullOrEmpty()) throw CliFailure("INVALID_ARGUMENT", "cases must name at least one suite item")
             if (cases.size > MAX_CASES) throw CliFailure("INVALID_ARGUMENT", "cases lists more than $MAX_CASES items")
-            if (cases.any { it.length !in 1..256 || (!it.startsWith(CUSTOM_PREFIX) && !it.startsWith(VENDORED_PREFIX)) })
-                throw CliFailure("INVALID_ARGUMENT", "Each case is a suite key starting with $CUSTOM_PREFIX or $VENDORED_PREFIX")
+            if (cases.any { it.length !in 1..256 || !it.startsWith(VENDORED_PREFIX) })
+                throw CliFailure("INVALID_ARGUMENT", "Each case is a suite key starting with $VENDORED_PREFIX")
             if (cases.toSet().size != cases.size) throw CliFailure("INVALID_ARGUMENT", "cases repeats an item")
         } else if (cases != null) throw CliFailure("INVALID_ARGUMENT", "Unexpected cases")
     }
@@ -38,8 +38,7 @@ data class CliCommand(
         val COMMANDS = listOf("cameras", "preview", "capture", "benchmark.run", "probe", "cts.cases", "cts.run")
         val CAMERA_COMMANDS = setOf("preview", "capture", "benchmark.run")
         const val MAX_CASES = 64
-        /** The suite key prefixes of [dev.halcamera.cts.suite.SuiteItem], repeated so this file stays free of cts types. */
-        const val CUSTOM_PREFIX = "custom:"
+        /** The suite key prefix of [dev.halcamera.cts.suite.SuiteItem], repeated so this file stays free of cts types. */
         const val VENDORED_PREFIX = "vendored:"
 
         fun validateId(id: String) {

@@ -23,15 +23,15 @@ class CliCommandTest {
         assertNull(CliCommand(id, "probe", null, null, 30_000).camera)
         assertNull(CliCommand(id, "cts.cases", null, null, 30_000).cases)
         reject("INVALID_ARGUMENT") { CliCommand(id, "probe", "0", null, 30_000) }
-        reject("INVALID_ARGUMENT") { CliCommand(id, "probe", null, null, 30_000, listOf("custom:fast_on_off")) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "probe", null, null, 30_000, listOf("vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording")) }
         reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000) }
         reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000, emptyList()) }
-        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000, listOf("fast_on_off")) }
-        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000, listOf("custom:a", "custom:a")) }
-        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000, List(CliCommand.MAX_CASES + 1) { "custom:$it" }) }
-        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", "0", null, 30_000, listOf("custom:fast_on_off")) }
-        reject("INVALID_ARGUMENT") { CliCommand(id, "capture", "0", null, 30_000, listOf("custom:fast_on_off")) }
-        val run = CliCommand(id, "cts.run", null, null, 1_800_000, listOf("custom:fast_on_off", "vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording"))
+        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000, listOf("custom:fast_on_off")) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000, listOf("vendored:a", "vendored:a")) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000, List(CliCommand.MAX_CASES + 1) { "vendored:$it" }) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", "0", null, 30_000, listOf("vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording")) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "capture", "0", null, 30_000, listOf("vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording")) }
+        val run = CliCommand(id, "cts.run", null, null, 1_800_000, listOf("vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording", "vendored:android.hardware.camera2.cts.BurstCaptureTest#testJpegBurst"))
         assertEquals(2, run.cases!!.size)
     }
     @Test fun `hello lists every command the coordinator dispatches`() {

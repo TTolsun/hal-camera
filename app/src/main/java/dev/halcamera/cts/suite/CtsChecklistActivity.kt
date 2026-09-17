@@ -132,7 +132,7 @@ abstract class CtsChecklistActivity : ComponentActivity() {
         }
         column.addView(Look.text(this, item.title, 15, Look.onDark, bold = true))
         // A vendored row is titled by its method and grouped under its class, so its source would only repeat both.
-        val line = if (item is SuiteItem.Vendored) estimate else "$estimate · ${item.source}"
+        val line = estimate
         column.addView(Look.text(this, line, 12, Look.onDarkMuted), lp(top = 2))
         row.addView(column, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(4) })
         row.addView(IconButton(this, R.drawable.ic_action_next, "${item.title} 하나만 여는 화면") { startActivity(singleIntent(item)) }, LinearLayout.LayoutParams(dp(48), dp(48)))
