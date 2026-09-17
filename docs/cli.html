@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CLI · HALCamera 개발자 가이드</title>
+  <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
+  <link rel="stylesheet" href="./assets/docflow-design.css">
+</head>
+<body>
+  <a class="skip-link" href="#main-content">본문으로 이동</a>
+  <header class="site-header">
+    <a class="brand" href="./index.html">HAL CAMERA</a>
+    <nav class="site-nav" aria-label="문서 메뉴">
+      <a href="./architecture.html">Architecture</a>
+      <a href="./benchmark.html">Benchmark</a>
+      <a href="./probe.html">PROBE</a>
+      <a href="./cts.html">CTS</a>
+      <a href="./cli.html" aria-current="page">CLI</a>
+      <a href="./decisions.html">Decisions</a>
+      <a href="./evidence.html">Evidence</a>
+      <a href="./getting-started.html">빠른 시작</a>
+      <a href="./troubleshooting.html">디버깅</a>
+    </nav>
+  </header>
+  <main id="main-content" class="document">
+    <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
+    <h1 lang="en">Drive the app from a terminal.</h1><p><strong>CLI는 앱의 기능을 PC로 옮기지 않고, 앱이 하는 일을 PC에서 시작합니다.</strong> ADB로 연결한 PC가 명령을 제출하면 앱이 같은 카메라 엔진·같은 벤치마크 계약으로 실행하고, PC는 결과 JSON과 사진을 회수합니다. 화면에서 실행한 결과와 CLI로 실행한 결과는 같은 파일 형식이며 같은 <a href="benchmark.html">History</a>에 남습니다.</p>
+<pre><code class="language-mermaid">flowchart LR
+    PC[&quot;PC · halcam 또는 adb&quot;] --&gt;|&quot;content call submit&quot;| P[&quot;CliProvider&lt;br/&gt;shell UID 2000만 허용&quot;]
+    P --&gt; C[&quot;CommandCoordinator&lt;br/&gt;요청 저장 · 한 번에 하나&quot;]
+    C --&gt; L[&quot;LiveController&lt;br/&gt;preview · capture&quot;]
+    C --&gt; B[&quot;BenchmarkController&lt;br/&gt;benchmark.run&quot;]
+    L --&gt; A[&quot;artifact 등록&lt;br/&gt;사진 쌍 · run JSON&quot;]
+    B --&gt; A
+    A --&gt;|&quot;content read&quot;| PC
+</code></pre>
+<p>이 그림은 명령 하나가 지나가는 개념적 순서입니다. 앱은 명령을 먼저 저장한 뒤 실행하므로, PC의 연결이 끊겨도 요청 ID로 상태와 파일을 다시 찾을 수 있습니다.</p>
+<h2 lang="en">Turn it on first.</h2><p>CLI는 기본으로 꺼져 있습니다. 앱에서 한 번 켜면 재실행 후에도 유지됩니다.</p>
+<ol>
+<li>앱을 열고 Live 화면 상단의 진단 패널을 엽니다.</li>
+<li><code>ADB CLI 허용</code> 스위치를 켭니다. 카메라 권한이 아직 없다면 Live에서 먼저 허용합니다. CLI는 권한을 대신 요청하지 않습니다.</li>
+<li>PC에서 <code>adb devices</code>로 기기가 <code>device</code> 상태인지 확인합니다. USB와 무선 ADB 모두 쓸 수 있고, 둘 다 연결되어 있으면 <code>--serial</code>이나 <code>-s</code>로 하나를 지정합니다.</li>
+</ol>
+<p>스위치를 끄면 새 명령과 파일 읽기는 <code>CLI_DISABLED</code>로 거부되고, 실행 중인 작업은 취소 절차로 들어갑니다.</p>
+<h2 lang="en">Install halcam.</h2><p><code>tools/halcam/</code>은 Python 표준 라이브러리만 쓰는 패키지입니다. Python 3.11 이상과 Android SDK Platform Tools가 있으면 됩니다.</p>
+<pre><code class="language-powershell">python -m pip install ./tools/halcam
+halcam --serial DEVICE doctor --json
+halcam --serial DEVICE cameras --json
+</code></pre>
+<p><code>doctor</code>는 앱 설치·프로토콜 버전·CLI 허용·카메라 권한·잠금 상태를 한 번에 보고합니다. 여기서 실패하면 아래 명령은 같은 이유로 실패하므로 먼저 해결합니다. 설치 없이 개발 중에는 <code>python -m halcam</code>으로 같은 명령을 실행합니다.</p>
+<h2 lang="en">What you can run.</h2><table>
+<thead>
+<tr>
+<th>명령</th>
+<th>앱에서 하는 일</th>
+<th>결과</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>devices</code></td>
+<td>앱에 접근하지 않고 ADB 연결 목록만 봅니다.</td>
+<td>터미널 출력</td>
+</tr>
+<tr>
+<td><code>doctor</code></td>
+<td>앱 상태를 진단합니다. 설치나 권한을 바꾸지 않습니다.</td>
+<td>진단 JSON</td>
+</tr>
+<tr>
+<td><code>launch</code></td>
+<td>투명한 <code>CliLaunchActivity</code>로 앱을 전면에 띄웁니다. 카메라 준비 완료를 뜻하지 않습니다.</td>
+<td>없음</td>
+</tr>
+<tr>
+<td><code>cameras</code></td>
+<td>논리 카메라와 물리 endpoint 목록을 읽습니다. 카메라를 열지 않습니다.</td>
+<td>카메라 JSON</td>
+</tr>
+<tr>
+<td><code>preview --camera ID</code></td>
+<td>지정한 Camera2 논리 카메라의 첫 프리뷰까지 기다립니다. 끝나면 일반 Live 상태입니다.</td>
+<td>상태 JSON</td>
+</tr>
+<tr>
+<td><code>capture --camera ID --output DIR</code></td>
+<td>사진 한 쌍(YUV에서 변환한 JPEG과 카메라 JPEG)을 찍어 PC로 받습니다.</td>
+<td>JPEG 2장</td>
+</tr>
+<tr>
+<td><code>benchmark run --camera ID --output DIR</code></td>
+<td><code>camera2-standard-v1</code> profile로 벤치마크를 한 번 실행하고 run JSON을 받습니다.</td>
+<td>schema 4 JSON</td>
+</tr>
+<tr>
+<td><code>status --request UUID</code></td>
+<td>앱을 앞으로 가져오지 않고 요청 상태만 읽습니다.</td>
+<td>상태 JSON</td>
+</tr>
+<tr>
+<td><code>fetch UUID --output DIR</code></td>
+<td>이미 끝난 요청의 파일을 다시 받습니다. 촬영과 측정을 반복하지 않습니다.</td>
+<td>파일</td>
+</tr>
+<tr>
+<td><code>cancel UUID</code></td>
+<td>실행 중인 요청을 취소합니다. 끝난 요청에는 현재 결과를 돌려줍니다.</td>
+<td>상태 JSON</td>
+</tr>
+</tbody></table>
+<p><code>--camera</code>에는 <code>cameras</code> 결과에서 <code>selectable: true</code>인 논리 ID만 넣습니다. <code>0.2</code> 같은 물리 endpoint key는 <code>UNSUPPORTED_CAMERA</code>로 거부됩니다. <code>benchmark run</code>의 <code>--profile</code>은 현재 <code>camera2-standard-v1</code> 하나만 받습니다.</p>
+<p>한 번에 하나의 명령만 실행됩니다. 화면에서 촬영·녹화·벤치마크가 진행 중이면 CLI 명령은 <code>BUSY</code>로 돌아오고, 반대로 CLI가 실행 중이면 화면 조작도 같은 규칙을 따릅니다. <code>--json</code>을 붙이면 stdout에 최종 JSON 하나만 나오고 진행 메시지는 stderr로 갑니다. 종료 코드의 의미는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md">CLI 설계 문서</a>의 &quot;시간 제한과 종료 코드&quot;에 있습니다.</p>
+<p class="editorial" lang="en">The app runs it.<br>The PC only asks and collects.</p><h2 lang="en">No Python? Use adb directly.</h2><p><code>halcam</code>은 ADB 위의 얇은 껍데기입니다. Python이 없는 PC에서는 같은 provider를 <code>adb</code>만으로 부를 수 있습니다. 아래는 PowerShell 예시이며, 요청 JSON을 패딩 없는 base64url로 감싸서 보내는 것이 전부입니다.</p>
+<ol>
+<li><p>상태를 읽습니다. <code>enabled</code>가 <code>false</code>면 앱에서 스위치를 켭니다.</p>
+<pre><code class="language-powershell">adb exec-out content read --uri content://dev.halcamera.cli/v1/hello
+adb exec-out content read --uri content://dev.halcamera.cli/v1/status
+</code></pre>
+</li>
+<li><p>요청을 만들어 제출합니다. <code>request_id</code>는 소문자 UUID여야 하고, <code>params</code>에는 <code>camera_id</code>와 <code>profile_id</code>만 들어갑니다. <code>execution_timeout_ms</code>는 preview·capture 30초, benchmark 180초가 기본이며 3,600초를 넘길 수 없습니다.</p>
+<pre><code class="language-powershell">$id = [guid]::NewGuid().ToString()
+$json = &#39;{&quot;protocol_version&quot;:1,&quot;request_id&quot;:&quot;&#39; + $id + &#39;&quot;,&quot;command&quot;:&quot;benchmark.run&quot;,&quot;params&quot;:{&quot;camera_id&quot;:&quot;0&quot;,&quot;profile_id&quot;:&quot;camera2-standard-v1&quot;},&quot;execution_timeout_ms&quot;:180000}&#39;
+$arg = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($json)).TrimEnd(&#39;=&#39;).Replace(&#39;+&#39;,&#39;-&#39;).Replace(&#39;/&#39;,&#39;_&#39;)
+adb shell content call --uri content://dev.halcamera.cli --method submit --arg $arg
+</code></pre>
+<p>응답은 <code>Result: Bundle[{halcam_v1=&lt;base64url&gt;}]</code> 형태입니다. 값을 base64url로 풀면 <code>state: &quot;accepted&quot;</code>가 보입니다.</p>
+</li>
+<li><p>앱을 전면으로 띄웁니다. <code>status</code>의 <code>screen</code>이 <code>&quot;live&quot;</code>가 아니면 실행이 시작되지 않습니다.</p>
+<pre><code class="language-powershell">adb shell am start -W -f 0x18000000 -n dev.halcamera/dev.halcamera.cli.CliLaunchActivity
+</code></pre>
+</li>
+<li><p><code>state</code>가 <code>succeeded</code>가 될 때까지 요청을 읽고, 등록된 파일을 받습니다. artifact ID는 <code>file-0</code>, <code>file-1</code> 순서입니다.</p>
+<pre><code class="language-powershell">adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/$id
+adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/$id/artifacts/file-0 &gt; run.json
+</code></pre>
+</li>
+</ol>
+<p>취소는 <code>--method cancel</code>에 <code>{&quot;protocol_version&quot;:1,&quot;request_id&quot;:&quot;&lt;uuid&gt;&quot;}</code>를 같은 방식으로 넣습니다. <code>halcam</code>이 추가로 하는 일은 응답 JSON의 schema 검사와 파일 크기·SHA-256 대조뿐이므로, 직접 호출할 때는 <code>size_bytes</code>와 <code>sha256</code>을 받은 파일과 비교하세요. Git Bash에서는 <code>content://</code> 경로가 Windows 경로로 바뀌지 않도록 <code>MSYS_NO_PATHCONV=1</code>을 앞에 붙입니다.</p>
+<h2 lang="en">Not on the CLI yet.</h2><table>
+<thead>
+<tr>
+<th>기능</th>
+<th>현재 경로</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="probe.html">PROBE</a> 사양 표 내보내기</td>
+<td>앱의 <code>TXT</code>·<code>JSON</code> 공유</td>
+</tr>
+<tr>
+<td><a href="cts.html">CTS</a> 케이스·suite 실행</td>
+<td>앱의 CTS 체크리스트</td>
+</tr>
+<tr>
+<td>baseline 지정, 비교, profile 비교</td>
+<td>History·COMPARE 화면. CLI가 받은 run JSON을 화면의 JSON 가져오기로 넣으면 같은 비교를 할 수 있습니다.</td>
+</tr>
+<tr>
+<td>동영상 녹화, 줌, CameraX 엔진 선택</td>
+<td>Live 화면</td>
+</tr>
+<tr>
+<td>incident ZIP 수집</td>
+<td>진단 패널</td>
+</tr>
+</tbody></table>
+<p>이 목록은 설계상 &quot;후속 범위&quot;이며 provider의 명령 집합(<code>/v1/hello</code>의 <code>commands</code>)이 늘어나면 이 표도 줄어듭니다.</p>
+<h2 lang="en">When it does not finish.</h2><p><code>status --request UUID</code>부터 읽으세요. PC의 대기 시간이 끝난 것과 앱의 실행이 실패한 것은 다른 사건입니다. 자주 만나는 상태와 대응은 <a href="troubleshooting.html#cli-작업이-끝나지-않거나-파일이-없을-때">디버깅</a>에 있고, 기기별 검증 결과는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/cli-transport.md">전송 검증 기록</a>에 있습니다.</p>
+<details>
+<summary>코드 근거를 확인하세요</summary>
+<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cli/</code>에서 <code>CliProvider.kt</code>(shell 호출자 검사와 URI), <code>CommandCoordinator.kt</code>(요청 저장·artifact 등록), <code>CliCommand.kt</code>(허용 명령·인자 검사), <code>LiveController.kt</code>·<code>BenchmarkController.kt</code>(화면 driver 어댑터)와 <code>tools/halcam/halcam/cli.py</code>(PC 명령 정의), <code>tools/halcam/protocol-v1.schema.json</code>(응답 schema)을 확인하세요. 요청·상태·오류 계약의 원본은 <code>docs/design/CLI.md</code>입니다.</p>
+</details><p><strong>다음 단계:</strong> <code>halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json</code>으로 run 하나를 받고, <a href="benchmark.html">Benchmark</a>에서 그 JSON의 validity와 점수를 읽는 방법을 확인하세요.</p>
+
+  </main>
+  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <dialog class="diagram-dialog" aria-labelledby="diagram-title">
+    <div class="diagram-toolbar">
+      <h2 id="diagram-title">그림 크게 보기</h2>
+      <button type="button" data-zoom="out" aria-label="그림 축소">−</button>
+      <output aria-live="polite" aria-label="확대 비율">100%</output>
+      <button type="button" data-zoom="in" aria-label="그림 확대">+</button>
+      <button type="button" data-zoom="fit">화면 맞춤</button>
+      <button type="button" data-zoom="actual">100%</button>
+      <button type="button" class="diagram-close" autofocus>닫기</button>
+    </div>
+    <div class="diagram-viewport" tabindex="0" role="region" aria-label="확대한 그림. 방향키로 스크롤할 수 있습니다.">
+      <div class="diagram-canvas"></div>
+    </div>
+  </dialog>
+  <script type="module">
+    const dialog = document.querySelector('.diagram-dialog');
+    const viewport = dialog.querySelector('.diagram-viewport');
+    const canvas = dialog.querySelector('.diagram-canvas');
+    const zoomLabel = dialog.querySelector('output');
+    const zoomOut = dialog.querySelector('[data-zoom="out"]');
+    const zoomIn = dialog.querySelector('[data-zoom="in"]');
+    let activeDiagram;
+    let scale = 1;
+    let fitting = false;
+
+    function setScale(next) {
+      if (!activeDiagram) return;
+      const previous = scale;
+      scale = Math.max(.01, Math.min(8, next));
+      const { svg, width, height } = activeDiagram;
+      svg.style.width = `${width * scale}px`;
+      svg.style.height = `${height * scale}px`;
+      zoomLabel.value = `${Math.round(scale * 100)}%`;
+      zoomOut.disabled = scale <= .01;
+      zoomIn.disabled = scale >= 8;
+      viewport.scrollLeft = (viewport.scrollLeft + viewport.clientWidth / 2) * scale / previous - viewport.clientWidth / 2;
+      viewport.scrollTop = (viewport.scrollTop + viewport.clientHeight / 2) * scale / previous - viewport.clientHeight / 2;
+    }
+
+    function fitDiagram() {
+      if (!activeDiagram) return;
+      fitting = true;
+      setScale(Math.min((viewport.clientWidth - 32) / activeDiagram.width, (viewport.clientHeight - 32) / activeDiagram.height, 1));
+      viewport.scrollTo(0, 0);
+    }
+
+    function openDiagram(svg, trigger) {
+      if (activeDiagram) return;
+      const { width, height } = svg.viewBox.baseVal;
+      if (!width || !height) return;
+      const placeholder = document.createComment('diagram viewer placeholder');
+      activeDiagram = { svg, width, height, placeholder, trigger, style: svg.getAttribute('style') };
+      svg.replaceWith(placeholder);
+      canvas.append(svg);
+      dialog.showModal();
+      fitDiagram();
+    }
+
+    dialog.querySelector('.diagram-close').addEventListener('click', () => dialog.close());
+    dialog.addEventListener('close', () => {
+      if (!activeDiagram) return;
+      const { svg, placeholder, trigger, style } = activeDiagram;
+      if (style === null) svg.removeAttribute('style');
+      else svg.setAttribute('style', style);
+      placeholder.replaceWith(svg);
+      activeDiagram = undefined;
+      trigger.focus({ preventScroll: true });
+    });
+    dialog.querySelectorAll('[data-zoom]').forEach(button => {
+      button.addEventListener('click', () => {
+        const action = button.dataset.zoom;
+        if (action === 'fit') return fitDiagram();
+        fitting = false;
+        setScale(action === 'actual' ? 1 : scale * (action === 'in' ? 1.25 : .8));
+      });
+    });
+    window.addEventListener('resize', () => { if (fitting && dialog.open) fitDiagram(); });
+
+    const blocks = [...document.querySelectorAll('pre > code.language-mermaid')];
+    if (blocks.length) {
+      try {
+        const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@11.12.0/dist/mermaid.esm.min.mjs');
+        mermaid.initialize({
+          startOnLoad: false,
+          securityLevel: 'strict',
+          theme: 'base',
+          themeVariables: { primaryColor: '#f6f7f8', primaryTextColor: '#18191b', primaryBorderColor: '#c8ccd2', lineColor: '#858b94', secondaryColor: '#ffffff', tertiaryColor: '#ffffff', fontFamily: 'system-ui, sans-serif', fontSize: '16px' },
+          // Leave room for multiline nodes and labels on returning edges.
+          flowchart: { nodeSpacing: 100, rankSpacing: 120, wrappingWidth: 300 },
+        });
+        const nodes = blocks.map(code => {
+          const node = document.createElement('div');
+          node.className = 'mermaid';
+          // OMM flowchart labels use literal \n separators; Mermaid needs <br/>.
+          const source = code.textContent;
+          node.textContent = /^\s*(?:flowchart|graph)\s/m.test(source)
+            ? source.replace(/"[^"\r\n]*"/g, label => label.replace(/\\n/g, '<br/>'))
+            : source;
+          code.parentElement.replaceWith(node);
+          return node;
+        });
+        await mermaid.run({ nodes });
+        nodes.forEach(node => {
+          const svg = node.querySelector('svg');
+          if (!svg) return;
+          node.tabIndex = 0;
+          node.setAttribute('role', 'button');
+          node.setAttribute('aria-label', '그림 확대');
+          node.setAttribute('aria-haspopup', 'dialog');
+          node.addEventListener('click', event => {
+            if (!event.target.closest('a')) openDiagram(svg, node);
+          });
+          node.addEventListener('keydown', event => {
+            if (event.target === node && (event.key === 'Enter' || event.key === ' ')) {
+              event.preventDefault();
+              openDiagram(svg, node);
+            }
+          });
+        });
+      } catch (error) {
+        console.error('Mermaid rendering failed', error);
+      }
+    }
+  </script>
+</body>
+</html>

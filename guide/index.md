@@ -18,8 +18,9 @@ home: true
   <a href="benchmark.html"><span class="number">02</span><span class="name">Benchmark</span><span class="description">How performance is measured</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="probe.html"><span class="number">03</span><span class="name">PROBE</span><span class="description">What the HAL claims it can do</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="cts.html"><span class="number">04</span><span class="name">CTS</span><span class="description">The same test, run inside the app</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="decisions.html"><span class="number">05</span><span class="name">Decisions</span><span class="description">Why we built it this way</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="evidence.html"><span class="number">06</span><span class="name">Evidence</span><span class="description">Where the conclusions come from</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="cli.html"><span class="number">05</span><span class="name">CLI</span><span class="description">Drive the app from a terminal</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="decisions.html"><span class="number">06</span><span class="name">Decisions</span><span class="description">Why we built it this way</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="evidence.html"><span class="number">07</span><span class="name">Evidence</span><span class="description">Where the conclusions come from</span><span class="arrow" aria-hidden="true">↗</span></a>
 </nav>
 
 <section class="feature" aria-labelledby="architecture-title">
