@@ -9,6 +9,9 @@ import android.os.Build;
 public final class Flags {
     private Flags() {}
 
+    /** Flag name StillCaptureTest names in @RequiresFlagsEnabled; the annotation is inert here (see UPSTREAM.md). */
+    public static final String FLAG_CAMERA_HEIF_GAINMAP = "com.android.internal.camera.flags.camera_heif_gainmap";
+
     /** CameraDevice.CameraDeviceSetup shipped with Android 15. */
     public static boolean cameraDeviceSetup() {
         return Build.VERSION.SDK_INT >= 35;

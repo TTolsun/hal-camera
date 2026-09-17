@@ -24,7 +24,10 @@
         "cameras",
         "preview",
         "capture",
-        "benchmark.run"
+        "benchmark.run",
+        "probe",
+        "cts.cases",
+        "cts.run"
       ]
     },
     "execution_timeout_ms": {
@@ -43,6 +46,18 @@
         },
         "profile_id": {
           "const": "camera2-standard-v1"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^vendored:"
+          }
         }
       }
     }
@@ -53,7 +68,9 @@
         "properties": {
           "command": {
             "enum": [
-              "cameras"
+              "cameras",
+              "probe",
+              "cts.cases"
             ]
           }
         }
@@ -62,6 +79,45 @@
         "properties": {
           "params": {
             "required": [],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "camera_id"
+                  ]
+                },
+                {
+                  "required": [
+                    "profile_id"
+                  ]
+                },
+                {
+                  "required": [
+                    "cases"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "enum": [
+              "cts.run"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "cases"
+            ],
             "not": {
               "anyOf": [
                 {

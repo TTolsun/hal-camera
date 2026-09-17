@@ -24,9 +24,9 @@ class VendoredCtsListActivity : CtsChecklistActivity() {
     }
 
     override fun groups(): List<Group> = VendoredCatalog.tests().groupBy { it.className }.map { (className, tests) ->
-        Group(className.substringAfterLast('.'), className, tests.map { SuiteItem.Vendored(it) })
+        Group(className.substringAfterLast('.'), className, tests.map { SuiteItem(it) })
     }
 
     override fun singleIntent(item: SuiteItem): Intent =
-        Intent(this, VendoredCaseActivity::class.java).putExtra(VendoredCaseActivity.EXTRA_TEST_ID, (item as SuiteItem.Vendored).test.id)
+        Intent(this, VendoredCaseActivity::class.java).putExtra(VendoredCaseActivity.EXTRA_TEST_ID, item.test.id)
 }

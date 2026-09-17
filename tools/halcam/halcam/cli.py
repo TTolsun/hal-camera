@@ -29,20 +29,33 @@ def parser():
     common(root, True)
     root.add_argument("--version", action="version", version=__version__)
     commands = root.add_subparsers(dest="command", required=True)
-    for name in ("devices", "doctor", "launch", "cameras", "preview", "capture", "status", "fetch", "cancel"):
+    for name in ("devices", "doctor", "launch", "cameras", "preview", "capture", "probe", "status", "fetch", "cancel"):
         p = commands.add_parser(name)
         common(p)
         if name in ("preview", "capture"):
             p.add_argument("--camera", required=True)
-        if name in ("cameras", "preview", "capture"):
+        if name in ("cameras", "preview", "capture", "probe"):
             execution_options(p)
         if name == "status":
             p.add_argument("--request")
         if name in ("fetch", "cancel"):
             p.add_argument("request")
-        if name in ("capture", "fetch"):
+        if name in ("capture", "probe", "fetch"):
             p.add_argument("--output", required=True)
             p.add_argument("--transfer-timeout", type=positive, default=60)
+    cts = commands.add_parser("cts")
+    common(cts)
+    cts_commands = cts.add_subparsers(dest="cts_command", required=True)
+    cases = cts_commands.add_parser("cases")
+    common(cases)
+    execution_options(cases)
+    cts_run = cts_commands.add_parser("run")
+    common(cts_run)
+    cts_run.add_argument("--case", action="append", required=True, dest="cases",
+                         help="Suite key from 'cts cases' (vendored:<class>#<method>); repeat for several, run in checklist order")
+    cts_run.add_argument("--output", required=True)
+    cts_run.add_argument("--transfer-timeout", type=positive, default=60)
+    execution_options(cts_run, 1800)
     benchmark = commands.add_parser("benchmark")
     common(benchmark)
     run = benchmark.add_subparsers(dest="benchmark_command", required=True).add_parser("run")
@@ -67,6 +80,18 @@ def execution_options(p, timeout=30):
     p.add_argument("--no-wait", action="store_true")
     p.add_argument("--timeout", type=positive, default=timeout, help="App execution deadline in seconds")
     p.add_argument("--wait-timeout", type=positive, default=None, help="PC waiting deadline; does not cancel app execution")
+
+
+# Commands the app answers without a screen: nothing to bring to the foreground first.
+SCREENLESS = ("cameras", "probe", "cts.cases")
+
+
+def app_command(args):
+    if args.command == "benchmark":
+        return "benchmark.run"
+    if args.command == "cts":
+        return "cts." + args.cts_command
+    return args.command
 
 
 def request_status(adb, rid):
@@ -123,13 +148,14 @@ def execute(args, context):
     rid = identifier(args.request_id) if args.request_id else str(uuid.uuid4())
     context["request_id"] = rid
     print(f"request_id={rid}", file=sys.stderr, flush=True)
-    payload = {"protocol_version": 1, "request_id": rid,
-               "command": "benchmark.run" if args.command == "benchmark" else args.command,
+    payload = {"protocol_version": 1, "request_id": rid, "command": app_command(args),
                "params": {}, "execution_timeout_ms": int(args.timeout * 1000)}
     if hasattr(args, "camera"):
         payload["params"]["camera_id"] = args.camera
     if hasattr(args, "profile"):
         payload["params"]["profile_id"] = args.profile
+    if hasattr(args, "cases"):
+        payload["params"]["cases"] = list(args.cases)
 
     previous = None
     if args.request_id:
@@ -138,7 +164,7 @@ def execute(args, context):
         except CliError as error:
             if error.code != "REQUEST_NOT_FOUND":
                 raise
-    if previous is None and args.command != "cameras":
+    if previous is None and app_command(args) not in SCREENLESS:
         status = raise_app_error(adb.read("/v1/status"))
         if status.get("busy"):
             raise CliError("BUSY", "An app operation is already running", request_id=rid)

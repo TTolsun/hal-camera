@@ -6,7 +6,7 @@
 
 | 저장소 | 브랜치 | 커밋 | 가져온 경로 |
 |---|---|---|---|
-| `platform/cts` | `android16-release` | `d3cf8ecdfe20325e5d0815c9ef527b332b041d61` | `tests/camera/src/android/hardware/camera2/cts/{RecordingTest,Camera2SurfaceViewCtsActivity}.java`, `tests/camera/src/android/hardware/camera2/cts/testcases/Camera2SurfaceViewTestCase.java`, `tests/camera/utils/src/**`, `tests/camera/res/layout/surface_view_2.xml` |
+| `platform/cts` | `android16-release` | `d3cf8ecdfe20325e5d0815c9ef527b332b041d61` | `tests/camera/src/android/hardware/camera2/cts/{RecordingTest,StillCaptureTest,BurstCaptureTest,Camera2SurfaceViewCtsActivity}.java`, `tests/camera/src/android/hardware/camera2/cts/testcases/Camera2SurfaceViewTestCase.java`, `tests/camera/utils/src/**`, `tests/camera/res/layout/surface_view_2.xml` |
 | `platform/frameworks/ex` | `android16-release` | `06933c05c643430497ea48c713db04c0feb70d2e` | `camera2/public/src/com/android/ex/camera2/**` |
 
 이 조합은 업스트림 `tests/camera/Android.bp`의 `cts-camera-performance-tests` 라이브러리(`min_sdk_version: 34`)와 같은 파일 집합에 `CtsCameraUtils`를 더한 것입니다. 그래서 `VendoredCts.MIN_SDK`는 34이고, 앱은 그 아래 기기에서 이 모듈로 진입하지 못하게 막습니다.
@@ -25,6 +25,7 @@
 
 ## 업스트림 의존성을 대신하는 파일
 
+- `android/platform/test/annotations/RequiresFlagsEnabled.java`: `StillCaptureTest#testHeicUltraHdrCapture`가 붙이는 플랫폼 테스트 annotation의 빈 대역입니다. 업스트림은 `CheckFlagsRule`이 플래그가 꺼진 기기에서 메서드를 건너뛰지만 이 모듈에는 그 rule이 없으므로, 테스트 본문의 `isHeicUltraHdrSupported()` 검사만이 실행 여부를 정합니다. `Flags.FLAG_CAMERA_HEIF_GAINMAP` 상수도 이 annotation 인수를 위해 `Flags.java`에 두었습니다.
 - `com/android/compatibility/common/util/MediaUtils.java`: `compatibility-device-util-axt`의 `MediaUtils` 중 `checkCodecForDomain` 하나만 구현했습니다.
 - `com/android/internal/camera/flags/Flags.java`: aconfig가 생성하는 카메라 플래그 클래스 대신, 각 플래그가 공개된 API 레벨 이상이면 true를 돌려줍니다.
 - `androidx/test/InstrumentationRegistry.java`, `androidx/test/rule/ActivityTestRule.java`, `androidx/test/filters/LargeTest.java`: androidx.test 라이브러리를 앱에 넣지 않고, 같은 이름의 클래스로 `VendoredCts`가 등록한 Instrumentation과 host Activity를 돌려줍니다. 이 저장소에 androidx.test 의존성을 추가하면 클래스가 충돌하므로 추가하지 않습니다.

@@ -40,6 +40,7 @@ sources:
     kind: omm
     evidence:
       - app/src/main/java/dev/halcamera/**/*.kt
+      - ctsvendor/src/main/java/dev/halcamera/ctsvendor/*.kt
       - app/src/main/AndroidManifest.xml
       - app/build.gradle.kts
       - settings.gradle.kts
@@ -159,33 +160,8 @@ sources:
           - app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt
       screens/cts-screen:
         evidence:
-          - app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt
-          - app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt
-          - app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt
-          - app/src/main/java/dev/halcamera/cts/CtsCatalog.kt
-          - app/src/main/java/dev/halcamera/cts/CtsRunner.kt
-          - app/src/main/java/dev/halcamera/cts/CtsRunners.kt
-          - app/src/main/java/dev/halcamera/cts/CtsCase.kt
-          - app/src/main/java/dev/halcamera/cts/CaseReportPresenter.kt
-      screens/cts-screen/case-runtime:
-        evidence:
-          - app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt
-          - app/src/main/java/dev/halcamera/cts/Camera2Ops.kt
-          - app/src/main/java/dev/halcamera/cts/CameraFacts.kt
-          - app/src/main/java/dev/halcamera/cts/JpegReader.kt
-          - app/src/main/java/dev/halcamera/cts/OpenCycle.kt
-      screens/cts-screen/recording-case:
-        evidence:
-          - app/src/main/java/dev/halcamera/cts/recording/*.kt
-      screens/cts-screen/on-off-cases:
-        evidence:
-          - app/src/main/java/dev/halcamera/cts/onoff/*.kt
-          - app/src/main/java/dev/halcamera/cts/switching/*.kt
-          - app/src/main/java/dev/halcamera/cts/sizes/*.kt
-      screens/cts-screen/capture-cases:
-        evidence:
-          - app/src/main/java/dev/halcamera/cts/combination/*.kt
-          - app/src/main/java/dev/halcamera/cts/snapshot/*.kt
+          - app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt
+          - ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCatalog.kt
       screens/cts-screen/suite-run:
         evidence:
           - app/src/main/java/dev/halcamera/cts/suite/*.kt
@@ -320,10 +296,16 @@ sources:
       .:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
-          - app/src/main/java/dev/halcamera/cli/CommandStore.kt
-          - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
           - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
           - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
+      cli-request:
+        evidence:
+          - app/src/main/java/dev/halcamera/cli/CommandStore.kt
+          - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
+          - app/src/main/java/dev/halcamera/cli/CliCommand.kt
+          - app/src/main/java/dev/halcamera/cli/LiveController.kt
+          - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
+          - app/src/main/java/dev/halcamera/cli/CtsController.kt
       engine-lifecycle:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt

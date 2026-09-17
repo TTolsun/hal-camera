@@ -65,14 +65,21 @@ class MainActivity : ComponentActivity() {
                 if (camera == null) done(Result.failure(IllegalStateException("Camera2 unavailable"))) else camera.capturePhoto(id, done)
                 updateMediaControls()
             }
-            override fun benchmark(command: dev.halcamera.cli.CliCommand) {
+            override fun benchmark(command: dev.halcamera.cli.CliCommand) = handOver(command) {
+                Intent(this@MainActivity, dev.halcamera.benchmark.BenchmarkActivity::class.java)
+                    .putExtra("camera_id", command.camera).putExtra("engine", "Camera2")
+            }
+            override fun cts(command: dev.halcamera.cli.CliCommand) = handOver(command) {
+                Intent(this@MainActivity, dev.halcamera.cts.suite.CtsSuiteRunActivity::class.java)
+                    .putExtra(dev.halcamera.cts.suite.CtsSuiteRunActivity.EXTRA_KEYS, command.cases.orEmpty().toTypedArray())
+            }
+            /** Closes the Live camera first: the next screen must open a free camera, and close(done) is the only way to know. */
+            private fun handOver(command: dev.halcamera.cli.CliCommand, intent: () -> Intent) {
                 val old = engine; engine = null; closing = true; ready = false
                 val open = {
                     closing = false
-                    if (resumed && cli.active?.id == command.id) {
-                        startActivity(Intent(this@MainActivity, dev.halcamera.benchmark.BenchmarkActivity::class.java)
-                            .putExtra("camera_id", command.camera).putExtra("engine", "Camera2").putExtra("cli_request_id", command.id))
-                    } else cli.fail(command.id, "APP_NOT_FOREGROUND", "App left foreground before benchmark")
+                    if (resumed && cli.active?.id == command.id) startActivity(intent().putExtra("cli_request_id", command.id))
+                    else cli.fail(command.id, "APP_NOT_FOREGROUND", "App left foreground before ${command.command}")
                 }
                 if (old == null) open() else old.close { open() }
             }
@@ -752,7 +759,10 @@ class MainActivity : ComponentActivity() {
                 // PROBE reads CameraCharacteristics only and never opens a camera, so it starts without waiting for
                 // close(done); onStop closes the LIVE camera as it does for any screen change.
                 1 -> startActivity(Intent(this, CameraProbeActivity::class.java).putExtra(CameraProbeActivity.EXTRA_CAMERA_ID, cameraId))
-                2 -> openAfterClose("cts_started") { Intent(this, dev.halcamera.cts.CtsEntryActivity::class.java) }
+                // The CTS list runs AOSP test code that upstream builds with min_sdk 34; below that there is nothing to open.
+                2 -> if (Build.VERSION.SDK_INT >= dev.halcamera.ctsvendor.VendoredCts.MIN_SDK) {
+                    openAfterClose("cts_started") { Intent(this, dev.halcamera.cts.vendored.VendoredCtsListActivity::class.java) }
+                } else toast("CTS 원문 케이스는 Android ${dev.halcamera.ctsvendor.VendoredCts.MIN_SDK} 이상에서만 실행할 수 있습니다")
             }
         }
     }

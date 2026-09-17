@@ -177,5 +177,85 @@ class DownloadTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, "PROTOCOL_ERROR")
 
 
+class ProbeAndCtsTests(unittest.TestCase):
+    """The commands added for Probe and CTS: their argv shapes, the payloads they submit and when the app is launched."""
+
+    def submitted(self, argv, status=None):
+        submitted = {}
+        status = status or {"protocol_version": 1, "foreground": True, "screen": "live", "busy": False}
+
+        def call(method, payload):
+            submitted["method"], submitted["payload"] = method, payload
+            return response("accepted") | {"completed": False, "error": None}
+
+        def read(path):
+            if path == "/v1/status":
+                return status
+            raise CliError("REQUEST_NOT_FOUND", "unknown")
+
+        def launch():
+            submitted["launched"] = True
+            status.update(foreground=True, screen="live")
+
+        with patch.object(Adb, "select", lambda self: self), patch.object(Adb, "installed", lambda self: self), \
+                patch.object(Adb, "hello", lambda self: {"protocol_version": 1, "enabled": True}), \
+                patch.object(Adb, "call", lambda self, m, p: call(m, p)), patch.object(Adb, "read", lambda self, p: read(p)), \
+                patch.object(Adb, "launch", lambda self: launch()), patch("halcam.cli.wait", return_value=response()), \
+                patch("halcam.cli.collect", return_value=[]):
+            self.assertEqual(main(argv + ["--request-id", RID, "--json"]), 0)
+        submitted.setdefault("launched", False)
+        return submitted
+
+    def test_probe_submits_without_camera_and_without_launching(self):
+        with patch("sys.stdout", new_callable=io.StringIO):
+            got = self.submitted(["--serial", "phone", "probe", "--output", "out"],
+                                 status={"protocol_version": 1, "foreground": False, "screen": None, "busy": False})
+        self.assertEqual(got["payload"]["command"], "probe")
+        self.assertEqual(got["payload"]["params"], {})
+        self.assertEqual(got["payload"]["execution_timeout_ms"], 30000)
+        self.assertFalse(got["launched"])
+
+    def test_cts_cases_lists_without_launching(self):
+        with patch("sys.stdout", new_callable=io.StringIO):
+            got = self.submitted(["--serial", "phone", "cts", "cases"],
+                                 status={"protocol_version": 1, "foreground": False, "screen": None, "busy": False})
+        self.assertEqual(got["payload"]["command"], "cts.cases")
+        self.assertEqual(got["payload"]["params"], {})
+        self.assertFalse(got["launched"])
+
+    def test_cts_run_sends_every_case_in_order_and_needs_live(self):
+        with patch("sys.stdout", new_callable=io.StringIO):
+            got = self.submitted(["--serial", "phone", "cts", "run", "--case", "vendored:android.hardware.camera2.cts.BurstCaptureTest#testJpegBurst",
+                                  "--case", "vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording", "--output", "out"],
+                                 status={"protocol_version": 1, "foreground": False, "screen": None, "busy": False})
+        self.assertTrue(got["launched"])
+        self.assertEqual(got["payload"]["command"], "cts.run")
+        self.assertEqual(got["payload"]["params"], {"cases": ["vendored:android.hardware.camera2.cts.BurstCaptureTest#testJpegBurst", "vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording"]})
+        self.assertEqual(got["payload"]["execution_timeout_ms"], 1800000)
+
+    def test_cts_run_requires_a_case_and_an_output(self):
+        for argv in (["cts", "run", "--output", "out"], ["cts", "run", "--case", "vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording"], ["cts"], ["probe"]):
+            with self.assertRaises(CliError) as caught:
+                parser().parse_args(argv)
+            self.assertEqual(caught.exception.code, "INVALID_ARGUMENT")
+
+    def test_text_artifacts_are_accepted_by_the_download_name_filter(self):
+        body = b"HAL CAM CTS suite\n"
+        data = response() | {"artifacts": [{"artifact_id": "file-1", "name": "cts-suite.txt", "mime_type": "text/plain",
+                                            "size_bytes": len(body), "sha256": hashlib.sha256(body).hexdigest()}]}
+
+        class Process:
+            returncode = 0
+            def __init__(self, args, stdout, **kwargs):
+                stdout.write(body)
+            def communicate(self, timeout):
+                return None, b""
+
+        with tempfile.TemporaryDirectory() as tmp, patch("halcam.download.subprocess.Popen", Process):
+            files = collect(Adb(serial="phone"), data, tmp)
+            self.assertTrue(files[0].endswith("cts-suite.txt"))
+            self.assertEqual(Path(files[0]).read_bytes(), body)
+
+
 if __name__ == "__main__":
     unittest.main()

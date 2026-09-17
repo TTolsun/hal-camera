@@ -19,6 +19,24 @@ class CliCommandTest {
         reject("UNSUPPORTED_PROFILE") { CliCommand(id, "benchmark.run", "0", "camera2-fast-v1", 30_000) }
         assertEquals("camera2-standard-v1", CliCommand(id, "benchmark.run", "0", "camera2-standard-v1", 180_000).profile)
     }
+    @Test fun `probe and cts commands take no camera and cts run needs suite keys`() {
+        assertNull(CliCommand(id, "probe", null, null, 30_000).camera)
+        assertNull(CliCommand(id, "cts.cases", null, null, 30_000).cases)
+        reject("INVALID_ARGUMENT") { CliCommand(id, "probe", "0", null, 30_000) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "probe", null, null, 30_000, listOf("vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording")) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000, emptyList()) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000, listOf("custom:fast_on_off")) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000, listOf("vendored:a", "vendored:a")) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", null, null, 30_000, List(CliCommand.MAX_CASES + 1) { "vendored:$it" }) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "cts.run", "0", null, 30_000, listOf("vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording")) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "capture", "0", null, 30_000, listOf("vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording")) }
+        val run = CliCommand(id, "cts.run", null, null, 1_800_000, listOf("vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording", "vendored:android.hardware.camera2.cts.BurstCaptureTest#testJpegBurst"))
+        assertEquals(2, run.cases!!.size)
+    }
+    @Test fun `hello lists every command the coordinator dispatches`() {
+        assertEquals(listOf("cameras", "preview", "capture", "benchmark.run", "probe", "cts.cases", "cts.run"), CliCommand.COMMANDS)
+    }
     @Test fun `ids must have canonical shape and cannot form paths`() {
         listOf("../foo", "1-1-1-1-1", id.uppercase(), "", "$id/extra").forEach { bad ->
             reject("INVALID_ARGUMENT") { CliCommand.validateId(bad) }

@@ -60,6 +60,20 @@ Galaxy S25+ / API 36에서 동일한 release 시험 앱·후면 camera 0·`camer
 
 재현: `assembleDebugAndroidTest`로 시험 APK를 빌드하고 `adb shell am instrument -w dev.halcamera.test/dev.halcamera.cli.CliStoreInstrumentation`을 실행한다. target과 test APK는 같은 키로 서명해야 한다. 별도 package의 시험 빌드는 설치한 test package 이름을 사용한다.
 
+## Probe·CTS 명령 (2026-09-17)
+
+release 서명 로컬 빌드(versionCode 105, 0.9.0 소스 + 이 변경)를 Galaxy S25+ SM-S936N / Android 16에 설치하고, uv가 관리하는 Python 3.14로 `python -m halcam`을 USB ADB로 실행했다.
+
+| 시나리오 | 관측 결과 |
+|---|---|
+| `hello` | `commands`에 `probe`, `cts.cases`, `cts.run`이 추가되어 반환되었다. |
+| `probe --output` | 요청 `e8c41892-e070-4239-b595-165ec0931846`이 화면을 띄우지 않고 성공했다. 카메라 6대, `errors` 없음. `camera-probe-SM-S936N-20260917_230809.json` 363,721 bytes와 같은 이름의 `.txt` 260,299 bytes를 받았고 크기·SHA-256 검증을 통과했다. |
+| `cts cases` | custom 5개와 vendored `RecordingTest` 19개 메서드가 키·종류·오디오 필요 여부·예상 시간(측정되지 않은 vendored 메서드는 `null`)과 함께 반환되었다. |
+| `cts run` 2개 항목 | 요청 `48edcf47-9f55-47ab-a6c6-cdfd6a3aaf0f`: Live에서 `CtsSuiteRunActivity`로 넘어가 `status`가 `screen:"cts", busy:true`를 보였고, `custom:fast_on_off`(34.5초 PASS)와 `vendored:…RecordingTest#testBasicRecording`(118.0초 PASS)이 차례로 끝나 2분 32초 뒤 `succeeded`로 돌아왔다. `cts-suite.json` 6,290 bytes(`cts_suite/1`, `passed: 2`)와 `cts-suite.txt` 5,962 bytes(화면의 공유 텍스트와 같은 내용)를 받았다. |
+| `cts run` 취소 | `custom:still_preview_combination`을 `--no-wait`로 시작해 15초 뒤 `cancel`을 보냈다. 요청은 `cancelled`, `cancel_effective: true`, 오류 `CANCELLED`로 끝났고 `fetch`가 중단 시점까지의 보고서 두 파일을 받았다(종료 코드 130). |
+
+vendored 항목은 RECORD_AUDIO 권한이 이미 허용된 상태에서 실행했다. 권한이 없는 기기에서 `PERMISSION_REQUIRED`로 끝나는 경로와 API 33 이하 기기의 `cts.cases`(vendored 항목 없음)는 실기기로 확인하지 않았다.
+
 ## 검증 범위
 
 PC의 실제 장치 연결은 Windows에서 USB와 무선 ADB로 확인했다. Linux·macOS는 단위 테스트와 wheel 설치 CI 범위다. 다른 OEM, 보조 사용자·업무 프로필, root adbd, 비밀번호 잠금 상태의 전체 조합, 저장 매체의 모든 장애를 검증한 것으로 확대하지 않는다. 연결 끊김·손상 전송·중복 파일은 fake ADB 시험을 포함한다. 실제 사용자 파일 삭제로 오류를 만들지는 않았다.

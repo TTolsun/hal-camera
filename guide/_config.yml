@@ -28,6 +28,8 @@ nav:
     label: Probe
   - path: cts.html
     label: CTS
+  - path: cli.html
+    label: CLI
   - path: decisions.html
     label: Decisions
   - path: evidence.html
