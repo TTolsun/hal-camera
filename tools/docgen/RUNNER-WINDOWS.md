@@ -16,7 +16,7 @@
 
 설치가 중간에 실패하면 기존 계정이나 폴더를 자동 삭제하지 않습니다. 설치 로그, GitHub의 runner 등록 상태와 Windows 서비스를 확인한 뒤 해당 설치만 복구합니다. 관리자 권한 없이 설치 스크립트를 실행하면 변경 전에 실패합니다.
 
-자동 동기화는 검토 기록을 승인하지 않습니다. PR 검토 후 `verify.mjs --accept --reviewer=이름`, `generate.mjs`, `site.mjs build`를 실행합니다. 구조 스캔·원고 계약·파일 반영 중 하나라도 실패하면 기존 파일을 보존하며 복구 절차는 [README](README.md#실패와-복구)에 있습니다.
+자동 동기화는 검토 기록을 승인하지 않습니다. PR 검토 후 `node tools/docgen/docflow.mjs verify --accept --reviewer=이름`, `docflow.mjs generate`, `docflow.mjs site build`를 실행합니다. 구조 스캔·원고 계약·파일 반영 중 하나라도 실패하면 기존 파일을 보존하며 복구 절차는 [README](README.md#실패와-복구)에 있습니다.
 
 ## 운영과 재부팅
 
@@ -33,7 +33,7 @@
 실패한 실행은 두 단계로 복구합니다.
 
 1. Actions → docs-sync에서 실패한 실행을 열고 `Re-run jobs`를 누릅니다. 같은 커밋으로 다시 실행됩니다.
-2. `state/sync-transaction/journal.json`이나 `state/.sync-lock`이 남아 있으면 먼저 `node tools/docgen/sync.mjs --recover`를 실행합니다.
+2. `state/sync-transaction/journal.json`이나 `state/.sync-lock`이 남아 있으면 먼저 `node tools/docgen/docflow.mjs sync --recover`를 실행합니다.
 
 로그인 전 공백까지 없애려면 Ollama를 시작 폴더 대신 시스템 예약 작업(`At startup`)으로 등록해야 합니다. 이 구성은 아직 실측하지 않았습니다.
 

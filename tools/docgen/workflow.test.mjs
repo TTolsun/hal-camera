@@ -3,9 +3,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { ommCli } from './omm-cli.mjs';
+import { pathToFileURL } from 'node:url';
 
-// YAML is already locked as an OMM CLI dependency; no runtime dependency is added.
+// YAML is already locked as an OMM CLI dependency of the engine; no runtime dependency is added.
+const engine = process.env.DOCFLOW_ENGINE_ROOT
+  ? path.resolve(process.env.DOCFLOW_ENGINE_ROOT)
+  : path.join(import.meta.dirname, 'node_modules', '@ttolsun', 'omm-doc-workflow');
+const { ommCli } = await import(pathToFileURL(path.join(engine, 'src', 'omm-cli.mjs')));
 const { parse } = createRequire(ommCli())('yaml');
 const directory = path.resolve(import.meta.dirname, '../../.github/workflows');
 const workflow = parse(fs.readFileSync(path.join(directory, 'docs-sync.yml'), 'utf8'));

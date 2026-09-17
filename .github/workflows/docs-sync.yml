@@ -40,8 +40,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
-      - name: OMM CLI 설치
-        run: npm ci --prefix tools/docgen --ignore-scripts
+      - name: 문서 엔진 설치
+        # npm 은 GitHub git 의존성을 lock 에 git+ssh 로 기록합니다. 러너에는 SSH 키가 없으므로 HTTPS 로 받습니다.
+        run: |
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          npm ci --prefix tools/docgen --ignore-scripts
       - name: 로컬 Qwen 동기화
         env:
           DOCGEN_OLLAMA_URL: http://127.0.0.1:11434
@@ -49,15 +52,10 @@ jobs:
           DOCGEN_QWEN_CONTEXT: '49152'
           DOCGEN_LLM_TIMEOUT_MS: '1800000'
           DOCGEN_FORCE: ${{ inputs.force && 'true' || 'false' }}
-          DOCFLOW_ENGINE_ROOT: ${{ vars.DOCFLOW_ENGINE_ROOT }}
         run: |
           $syncArgs = @()
           if ($env:DOCGEN_FORCE -eq 'true') { $syncArgs += '--force' }
-          if ($env:DOCFLOW_ENGINE_ROOT) {
-            node tools/docgen/common.mjs sync @syncArgs
-          } else {
-            node tools/docgen/sync.mjs @syncArgs
-          }
+          node tools/docgen/docflow.mjs sync @syncArgs
       - name: PR 생성
         uses: peter-evans/create-pull-request@v7
         with:
@@ -66,7 +64,7 @@ jobs:
           commit-message: "docs: sync structures and manuscripts with local Qwen"
           body: |
             로컬 Qwen 동기화 결과입니다. 구조와 원고를 코드에 대조해 검토하세요.
-            검토 후 `node tools/docgen/verify.mjs --accept --reviewer=이름`으로 기록하고
-            `node tools/docgen/generate.mjs`로 페이지를, `node tools/docgen/site.mjs build`로 docs/ 산출물을
+            검토 후 `node tools/docgen/docflow.mjs verify --accept --reviewer=이름`으로 기록하고
+            `node tools/docgen/docflow.mjs generate`로 페이지를, `node tools/docgen/docflow.mjs site build`로 docs/ 산출물을
             다시 생성한 뒤 함께 커밋하세요.
           labels: documentation

@@ -9,7 +9,7 @@
         "codeHash": "afa6f966f052a6f5",
         "modelHash": "146a796edc87688a",
         "at": "2026-09-17",
-        "commit": "902fa67",
+        "commit": "18e0854",
         "reviewer": "Claude"
       }
     },
@@ -21,7 +21,7 @@
         "codeHash": "aa4fb88d2e5bd536",
         "modelHash": "acb77a7c117a8dc6",
         "at": "2026-09-17",
-        "commit": "902fa67",
+        "commit": "18e0854",
         "reviewer": "Claude"
       }
     },
@@ -33,7 +33,7 @@
         "codeHash": "6f7c4a1563278b4f",
         "modelHash": "5d2a941b75c1b9ba",
         "at": "2026-09-17",
-        "commit": "902fa67",
+        "commit": "18e0854",
         "reviewer": "Claude"
       }
     },
@@ -43,9 +43,9 @@
       },
       "accepted": {
         "codeHash": "0b73495317c94002",
-        "modelHash": "cce7173dadaf2155",
+        "modelHash": "5dbb7b258d598b3b",
         "at": "2026-09-17",
-        "commit": "902fa67",
+        "commit": "18e0854",
         "reviewer": "Claude"
       }
     },
@@ -55,9 +55,9 @@
       },
       "accepted": {
         "codeHash": "b89d2d0a9c96ebe8",
-        "modelHash": "f59d909d2c559cbc",
+        "modelHash": "61fc13e360ae0efc",
         "at": "2026-09-17",
-        "commit": "902fa67",
+        "commit": "18e0854",
         "reviewer": "Claude"
       }
     },
@@ -67,18 +67,18 @@
       },
       "accepted": {
         "codeHash": "aa4fb88d2e5bd536",
-        "modelHash": "5ad7672db6420317",
+        "modelHash": "d0d30e225c3ee6b4",
         "at": "2026-09-17",
-        "commit": "902fa67",
+        "commit": "18e0854",
         "reviewer": "Claude"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "afa6f966f052a6f5",
-        "modelHash": "daf8a4d4bc0e1661",
+        "modelHash": "37a04259950e8ab6",
         "at": "2026-09-17",
-        "commit": "902fa67",
+        "commit": "18e0854",
         "reviewer": "Claude"
       },
       "observed": {
@@ -88,9 +88,9 @@
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "afa6f966f052a6f5",
-        "modelHash": "82e3816a6240bf33",
+        "modelHash": "9bb4f2baa5ad193d",
         "at": "2026-09-17",
-        "commit": "902fa67",
+        "commit": "18e0854",
         "reviewer": "Claude"
       },
       "observed": {

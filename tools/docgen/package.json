@@ -2,22 +2,19 @@
   "name": "halcamera-docgen",
   "private": true,
   "type": "module",
-  "version": "1.0.0",
-  "description": "HALCamera 문서 생성기와 정적 사이트 빌더. Qwen 동기화에는 OMM, 사이트 빌드에는 marked 가 필요합니다.",
+  "version": "2.0.0",
+  "description": "HALCamera 문서 파이프라인 진입점. 실제 파이프라인은 공용 엔진 @ttolsun/omm-doc-workflow 이며, 이 패키지는 엔진과 프로젝트 어댑터만 연결합니다.",
   "dependencies": {
-    "marked": "18.0.13",
-    "oh-my-mermaid": "0.2.0"
+    "@ttolsun/omm-doc-workflow": "git+https://github.com/TTolsun/omm-doc-workflow.git#v0.5.0"
   },
   "scripts": {
-    "extract": "node extract.mjs",
-    "verify": "node verify.mjs",
-    "generate": "node generate.mjs",
-    "check": "node verify.mjs --check && node generate.mjs --check && node site.mjs check",
-    "accept": "node verify.mjs --accept",
-    "site": "node site.mjs build",
-    "site:check": "node site.mjs check",
-    "site:serve": "node site.mjs serve",
-    "docs-check": "node docs-check.mjs",
-    "test": "node --test regression.test.mjs design.test.mjs site.test.mjs sync.test.mjs workflow.test.mjs"
+    "check": "node docflow.mjs check",
+    "check:build": "node docflow.mjs check --build",
+    "verify": "node docflow.mjs verify",
+    "accept": "node docflow.mjs verify --accept",
+    "generate": "node docflow.mjs generate",
+    "site": "node docflow.mjs site build",
+    "sync": "node docflow.mjs sync",
+    "test": "node --test regression.test.mjs workflow.test.mjs"
   }
 }

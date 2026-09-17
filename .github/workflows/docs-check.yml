@@ -1,6 +1,7 @@
 # 개발자 가이드 검사.
 #
-# 로컬 진입점 tools/docgen/docs-check.mjs 와 같은 단계를 같은 순서로 실행합니다.
+# 로컬 진입점 `node tools/docgen/docflow.mjs check` 와 같은 단계를 같은 순서로 실행합니다. 파이프라인은 공용 엔진
+# @ttolsun/omm-doc-workflow(tools/docgen/package.json 에 고정)이고, 이 저장소에는 설정과 어댑터만 있습니다.
 #   원본 최신성: 관련 코드가 바뀌었는데 .omm/ 이나 원고의 검토가 빠졌는가  (verify --check)
 #   생성 일치:   .omm/ 과 바인딩에서 만든 결과가 guide/ 와 같은가          (generate --check)
 #   사이트 일치: guide/ 에서 빌드한 정적 사이트가 커밋된 docs/ 와 같은가     (site check)
@@ -36,5 +37,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: 문서 엔진 설치
+        # npm 은 GitHub git 의존성을 lock 에 git+ssh 로 기록합니다. 러너에는 SSH 키가 없으므로 HTTPS 로 받습니다.
+        run: |
+          git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
+          npm ci --prefix tools/docgen --ignore-scripts
+      - name: 저장소 회귀 검사
+        run: npm test --prefix tools/docgen
       - name: 문서 검사 (로컬 진입점과 동일)
-        run: node tools/docgen/docs-check.mjs --ci
+        run: node tools/docgen/docflow.mjs check --ci

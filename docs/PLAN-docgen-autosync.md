@@ -3,6 +3,7 @@
 - 작성일: 2026-09-12
 - 상태: P1–P5 검증 완료. PR #71 머지로 #51을 닫는다. 설계는 `docs/design/DOCGEN-AUTOSYNC.md`에 있다. 이 문서는 순서, 작업 단위, 완료 조건만 다룬다.
 - 코드 기준: `main` `38b9b5c` (2026-09-12)
+- 2026-09-17: 여기 적힌 `tools/docgen/*.mjs` 스크립트는 공용 엔진 `@ttolsun/omm-doc-workflow` 0.5.0으로 옮겼다. 실행 명령은 `node tools/docgen/docflow.mjs <명령>`이다.
 - 추적: GitHub 이슈 라벨 `docgen-autosync`. epic 이슈 하나와 단계별 이슈로 관리한다.
 
 ## 0. 목표 한 문장

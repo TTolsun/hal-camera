@@ -15,3 +15,10 @@ export function renderFact(block, {facts, code, evidenceLine, CONFIDENCE_LABEL})
   }
   return lines.join("\n");
 }
+
+// 최신성 표 앞에 붙는 프로젝트별 설명. 검토가 어느 앱 버전을 기준으로 이루어졌는지 남깁니다.
+export function renderStatus({facts}) {
+  const build = facts["build-facts"] ?? {};
+  const version = build.versionName ? `${build.versionName} (versionCode ${build.versionCode ?? "?"})` : "확인 필요";
+  return `- 검증 기준 앱 버전: ${version}`;
+}
