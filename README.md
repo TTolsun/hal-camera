@@ -20,20 +20,20 @@ Android 카메라의 **launch · preview · capture 성능을 반복 측정하�
 
 | 화면 | 하는 일 |
 |---|---|
-| **LIVE** (런처) | CameraX / Camera2 전환, 카메라 선택, 실시간 프레임 간격과 콜백 지연 표시. `MARK` 버튼으로 직전 10초와 이후 5초를 incident ZIP으로 저장합니다 |
-| **BENCHMARK** | profile 시작 카드 → 6단계 진행 → 결과 표. `SET AS BASELINE`, `COMPARE`, `EXPORT` |
-| **RESULTS** | 실행 이력을 eligibility·profile·camera로 필터링하고, 임의의 두 실행을 비교하거나 JSON·CSV로 내보냅니다. BENCHMARK의 `RESULTS · 실행 이력`에서 엽니다 |
+| **Live** (런처) | CameraX / Camera2 전환, 카메라 선택, 실시간 프레임 간격과 콜백 지연 표시. `Mark` 버튼으로 직전 10초와 이후 5초를 incident ZIP으로 저장합니다 |
+| **Benchmark** | profile 시작 카드 → 6단계 진행 → 결과 표. `Set as baseline`, `Compare`, `Export` |
+| **Results** | 실행 이력을 eligibility·profile·camera로 필터링하고, 임의의 두 실행을 비교하거나 JSON·CSV로 내보냅니다. Benchmark의 `Results · 실행 이력`에서 엽니다 |
 
-LIVE는 관측한 숫자만 보여 주며 정상 / 이상을 판정하지 않습니다. 판정은 baseline과 비교할 때에만 성립하고, 그 일은 BENCHMARK가 합니다.
+Live는 관측한 숫자만 보여 주며 정상 / 이상을 판정하지 않습니다. 판정은 baseline과 비교할 때에만 성립하고, 그 일은 Benchmark가 합니다.
 
 ### 사진과 동영상
 
-- LIVE의 **사진 촬영**을 누르면 **하나의 Camera2 still 요청에 YUV와 JPEG 출력을 함께 지정**합니다. 센서 타임스탬프가 일치하는 두 버퍼를 받아 YUV는 JPEG으로 변환하고, 카메라 JPEG은 원본 바이트로 저장합니다. 파일명은 같은 촬영 식별자에 `_YUV.jpg`, `_JPEG.jpg`를 붙입니다.
-- 현재 LIVE 스트림 선택 기준은 YUV 최대 640×480 픽셀 예산, JPEG 최대 1920×1080 픽셀 예산입니다. 실제 크기는 카메라가 제공하는 목록에서 정하며 두 이미지의 해상도는 다를 수 있습니다. 출력 조합을 거부한 카메라는 상태 메시지를 표시합니다.
+- Live의 **사진 촬영**을 누르면 **하나의 Camera2 still 요청에 YUV와 JPEG 출력을 함께 지정**합니다. 센서 타임스탬프가 일치하는 두 버퍼를 받아 YUV는 JPEG으로 변환하고, 카메라 JPEG은 원본 바이트로 저장합니다. 파일명은 같은 촬영 식별자에 `_YUV.jpg`, `_JPEG.jpg`를 붙입니다.
+- 현재 Live 스트림 선택 기준은 YUV 최대 640×480 픽셀 예산, JPEG 최대 1920×1080 픽셀 예산입니다. 실제 크기는 카메라가 제공하는 목록에서 정하며 두 이미지의 해상도는 다를 수 있습니다. 출력 조합을 거부한 카메라는 상태 메시지를 표시합니다.
 - **동영상 녹화**는 마이크 권한을 요청한 뒤 H.264/AAC MP4 녹화를 시작합니다. **중지**를 누르거나 앱을 나가거나 카메라를 바꾸면 녹화를 종료하고 저장합니다. 너무 짧거나 실패한 녹화는 오류 메시지와 함께 폐기합니다. 녹화 중에는 사진 촬영과 줌 변경을 받지 않습니다.
 - 녹화는 프리뷰와 인코더 출력으로 세션을 다시 구성합니다. 종료 후에는 사진용 프리뷰 세션으로 복귀합니다. CameraX 프리뷰에서 사진 촬영이나 동영상 녹화를 누르면 Camera2로 전환합니다.
 - 저장한 사진과 동영상은 **DCIM/HALCamera** 앨범과 앱의 **갤러리**에서 볼 수 있습니다. Android 10 이상에서는 저장 완료 후 MediaStore에 공개하며 별도 저장소 권한이 필요하지 않습니다. Android 8–9에서는 저장소 권한을 요청합니다.
-- BENCHMARK의 기존 스트림 구성과 JPEG 측정 요청은 유지하며, 벤치마크에서 촬영한 이미지는 갤러리에 저장하지 않습니다. MARK의 incident ZIP에도 이미지 픽셀을 넣지 않습니다.
+- Benchmark의 기존 스트림 구성과 JPEG 측정 요청은 유지하며, 벤치마크에서 촬영한 이미지는 갤러리에 저장하지 않습니다. Mark의 incident ZIP에도 이미지 픽셀을 넣지 않습니다.
 
 ## profile
 
@@ -73,15 +73,15 @@ Windows에서 프로젝트 경로에 한글이 있으면 Android Gradle Plugin�
 
 ## run JSON
 
-run 하나는 `files/benchmarks/<run_id>.json`에 schema 4로 저장됩니다(schema 3 파일도 읽습니다). 결과 화면의 `EXPORT`로 공유할 수 있습니다. 파일에는 지표값, profile, 기기와 빌드 식별자, 환경값(thermal 시작 · 최고 · 종료, 절전 모드, 충전 상태), validity flag, 그리고 raw 표본이 들어 있습니다. **사진이나 프리뷰 픽셀은 저장하지 않습니다.**
+run 하나는 `files/benchmarks/<run_id>.json`에 schema 4로 저장됩니다(schema 3 파일도 읽습니다). 결과 화면의 `Export`로 공유할 수 있습니다. 파일에는 지표값, profile, 기기와 빌드 식별자, 환경값(thermal 시작 · 최고 · 종료, 절전 모드, 충전 상태), validity flag, 그리고 raw 표본이 들어 있습니다. **사진이나 프리뷰 픽셀은 저장하지 않습니다.**
 
 ## 실행 이력과 CSV 내보내기
 
-RESULTS는 기본으로 현재 profile과 camera의 **비교 가능한 실행**을 보여 줍니다. 필터를 `전체`로 바꾸면 중단되었거나 비교할 수 없는 실행도 확인할 수 있습니다. 행을 누르면 저장된 결과가 열리고, 길게 누르면 baseline 지정·해제, 비교, JSON·CSV 내보내기, 삭제 메뉴가 나옵니다. 삭제할 때는 실행 ID를 확인하며, baseline으로 지정된 실행을 삭제하면 해당 지정도 해제됩니다.
+Results는 기본으로 현재 profile과 camera의 **비교 가능한 실행**을 보여 줍니다. 필터를 `전체`로 바꾸면 중단되었거나 비교할 수 없는 실행도 확인할 수 있습니다. 행을 누르면 저장된 결과가 열리고, 길게 누르면 baseline 지정·해제, 비교, JSON·CSV 내보내기, 삭제 메뉴가 나옵니다. 삭제할 때는 실행 ID를 확인하며, baseline으로 지정된 실행을 삭제하면 해당 지정도 해제됩니다.
 
-`COMPARE`에서 첫 번째 실행을 선택한 뒤 다른 행을 누르면 두 실행을 비교합니다. 선택한 기준이 현재 baseline일 때만 회귀 판정을 표시하고, 그 외에는 변화량만 표시합니다. 비교 화면에서 기준과 현재 실행을 바꿀 수 있습니다.
+`Compare`에서 첫 번째 실행을 선택한 뒤 다른 행을 누르면 두 실행을 비교합니다. 선택한 기준이 현재 baseline일 때만 회귀 판정을 표시하고, 그 외에는 변화량만 표시합니다. 비교 화면에서 기준과 현재 실행을 바꿀 수 있습니다.
 
-`CSV EXPORT`는 현재 필터에 보이는 모든 실행을 내보냅니다. CSV 한 행은 실행의 지표 하나이며, 형상 정보, 기기·앱 정보, 환경, eligibility, 지표값과 통계가 함께 들어갑니다. 측정값이 없으면 빈 칸으로 남기고, 지표가 없는 중단 실행도 한 행으로 유지합니다. 쉼표·따옴표·줄바꿈을 지원하며, 스프레드시트 수식으로 해석될 수 있는 텍스트에는 작은따옴표를 붙입니다. JSON 원본은 바뀌지 않습니다. Subject build·commit·branch는 다음 실행에서 재사용하고, 실행별 Note는 재사용하지 않습니다.
+`CSV export`는 현재 필터에 보이는 모든 실행을 내보냅니다. CSV 한 행은 실행의 지표 하나이며, 형상 정보, 기기·앱 정보, 환경, eligibility, 지표값과 통계가 함께 들어갑니다. 측정값이 없으면 빈 칸으로 남기고, 지표가 없는 중단 실행도 한 행으로 유지합니다. 쉼표·따옴표·줄바꿈을 지원하며, 스프레드시트 수식으로 해석될 수 있는 텍스트에는 작은따옴표를 붙입니다. JSON 원본은 바뀌지 않습니다. Subject build·commit·branch는 다음 실행에서 재사용하고, 실행별 Note는 재사용하지 않습니다.
 
 PC에서는 Python 3 표준 라이브러리만으로 같은 열 형식의 CSV를 만들 수 있습니다. 기본 필터는 **점수 산정 가능한 실행**입니다.
 
@@ -171,12 +171,12 @@ Pages 설정은 공개 저장소와 사내 미러 모두 **Settings → Pages �
 camera/     Camera2 / CameraX 엔진, 카메라 엔드포인트 열거
 telemetry/  Telemetry, FlightRecorder(30초 순환 버퍼), incident ZIP
 metrics/    이벤트 → 지표 계산. 화면도 판정도 모르는 leaf
-benchmark/  BENCHMARK·RESULTS·COMPARE 화면(Activity)만 루트에 둔다
+benchmark/  Benchmark·Results·Compare 화면(Activity)만 루트에 둔다
   domain/     profile, runner, 통계, validity, 점수, 비교 규칙, presenter. Android 의존 없음
   platform/   BenchmarkStore, BenchmarkReport(org.json 경계), ProfileLibrary, ThermalTracker 같은 파일·기기 어댑터
 cli/        ADB 명령 접수·상태 저장, 화면 어댑터(LiveController, BenchmarkController)
 cts/        앱 안에서 실행하는 CTS 카메라 케이스
-ui/         Look 토큰, 그래프 뷰, LIVE 실시간 수치
+ui/         Look 토큰, 그래프 뷰, Live 실시간 수치
 ```
 
 `benchmark/domain/`과 `metrics/`에 `android.*`·`org.json` import가 들어오거나 `domain/`이 `platform/`을 참조하면 `LayerIsolationTest`(JVM 테스트)가 실패합니다.

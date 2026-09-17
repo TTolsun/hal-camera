@@ -7,6 +7,6 @@ graph LR
     engine -->|"현재 세션 완료 신호"| runner
     runner -->|"Result와 환경"| validity["RunValidity"]
     validity -->|"비교 가능 여부"| comparison["RegressionDetector"]
-    history["RESULTS 목록 / 비교"] -->|"기준과 현재 선택"| comparison
+    history["Results 목록 / 비교"] -->|"기준과 현재 선택"| comparison
     history -->|"확인 후 삭제"| delete["실행 파일 삭제 / baseline 정리"]
     recorder["FlightRecorder"] -->|"전후 창 보존"| incident["incident 전후 이벤트 창"]

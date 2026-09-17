@@ -68,7 +68,7 @@ flowchart LR
 
 ### 선택 제안
 
-별도 `ContentProvider`를 `content://dev.halcamera.cli`에 추가한다. ADB의 `content call`로 명령을 제출하고 `content read`로 JSON과 파일을 읽는다. 앱 실행에는 `am start`로 여는 투명한 `CliLaunchActivity`를 사용한다. 새 task에서 main thread의 작업 상태를 다시 검사하고, 유휴 상태일 때만 LIVE로 이동한다. 실행 중인 벤치마크는 화면 전환으로 중단하지 않는다. AOSP에는 두 content 명령이 구현되어 있다. API 26 에뮬레이터와 API 36 실기기의 전송 결과는 검증 문서에 기록했다. [AOSP content 명령 구현](https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/cmds/content/src/com/android/commands/content/Content.java)
+별도 `ContentProvider`를 `content://dev.halcamera.cli`에 추가한다. ADB의 `content call`로 명령을 제출하고 `content read`로 JSON과 파일을 읽는다. 앱 실행에는 `am start`로 여는 투명한 `CliLaunchActivity`를 사용한다. 새 task에서 main thread의 작업 상태를 다시 검사하고, 유휴 상태일 때만 Live로 이동한다. 실행 중인 벤치마크는 화면 전환으로 중단하지 않는다. AOSP에는 두 content 명령이 구현되어 있다. API 26 에뮬레이터와 API 36 실기기의 전송 결과는 검증 문서에 기록했다. [AOSP content 명령 구현](https://android.googlesource.com/platform/frameworks/base/+/refs/heads/main/cmds/content/src/com/android/commands/content/Content.java)
 
 | 후보 | 판단 |
 |---|---|
@@ -126,7 +126,7 @@ halcam --serial DEVICE cancel REQUEST_UUID
 | `doctor` | 앱 설치·프로토콜·CLI 허용·권한·사용자·잠금 상태를 진단한다. 앱 설치나 권한 변경을 자동 수행하지 않는다. |
 | `launch` | 앱을 전면으로 연다. 이 명령의 성공은 카메라 준비 완료를 의미하지 않는다. |
 | `cameras` | logical camera와 endpoint 정보를 구분해 반환한다. 카메라를 열어 촬영하지 않는다. |
-| `preview` | 지정한 Camera2 logical camera의 첫 프리뷰 준비까지 기다린다. 완료 후에는 일반 LIVE 상태가 된다. |
+| `preview` | 지정한 Camera2 logical camera의 첫 프리뷰 준비까지 기다린다. 완료 후에는 일반 Live 상태가 된다. |
 | `capture` | 앱을 열고 카메라 준비 후 사진 한 쌍을 저장하고 PC로 수집한다. |
 | `benchmark run` | 기존 preflight를 통과한 profile을 한 번 실행하고 원본 JSON을 수집한다. |
 | `status` | 앱을 전면으로 이동시키지 않고 상태를 조회한다. |
@@ -195,7 +195,7 @@ stateDiagram-v2
 
 사진 성공은 timestamp가 일치하는 두 이미지의 저장과 artifact 등록이 끝났을 때다. 저장 중 취소는 파일을 무조건 삭제하지 않는다. 취소가 실행보다 늦었으면 실제 성공 결과와 `cancel_effective=false`를 반환한다. 벤치마크 취소는 기존 runner의 abort 경로를 거쳐 partial report를 저장한 다음 `cancelled`로 완료한다.
 
-Activity가 전면에서 사라지면 준비 중 요청은 실패하고 실행 중 벤치마크는 중단한다. 이미 제출된 사진은 저장 콜백으로 결과를 확정하며 화면이 닫혔다고 성공 파일을 지우지 않는다. LIVE에서 BENCHMARK로 이동할 때는 기존 카메라의 close 완료와 새 preview surface 준비를 기다린다.
+Activity가 전면에서 사라지면 준비 중 요청은 실패하고 실행 중 벤치마크는 중단한다. 이미 제출된 사진은 저장 콜백으로 결과를 확정하며 화면이 닫혔다고 성공 파일을 지우지 않는다. Live에서 Benchmark로 이동할 때는 기존 카메라의 close 완료와 새 preview surface 준비를 기다린다.
 
 권한이 없으면 `PERMISSION_REQUIRED`로 종료하고 앱에서 허용할 방법을 출력한다. CLI가 권한을 자동 부여하거나 무기한 권한 대화상자를 기다리지 않는다. Android의 백그라운드 카메라 제약을 회피하는 별도 서비스는 v0.1에 포함하지 않는다. [Android 실행 제한](https://developer.android.com/develop/background-work/services/fgs/restrictions-bg-start)
 

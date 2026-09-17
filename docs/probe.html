@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PROBE · HALCamera 개발자 가이드</title>
+  <title>Probe · HALCamera 개발자 가이드</title>
   <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
 </head>
@@ -14,7 +14,7 @@
     <nav class="site-nav" aria-label="문서 메뉴">
       <a href="./architecture.html">Architecture</a>
       <a href="./benchmark.html">Benchmark</a>
-      <a href="./probe.html" aria-current="page">PROBE</a>
+      <a href="./probe.html" aria-current="page">Probe</a>
       <a href="./cts.html">CTS</a>
       <a href="./cli.html">CLI</a>
       <a href="./decisions.html">Decisions</a>
@@ -25,7 +25,7 @@
   </header>
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
-    <h1 lang="en">What the HAL claims.</h1><p><strong>PROBE는 측정이 아니라 선언입니다.</strong> 카메라를 열지 않고 <code>CameraCharacteristics</code>를 읽어, Camera2 HAL이 공개한 사양을 카메라별 표로 보여 줍니다. 여기에 적힌 값은 HAL이 &quot;할 수 있다&quot;고 말한 것이며 실제로 그렇게 동작하는지는 <a href="benchmark.html">Benchmark</a>가 답합니다.</p>
+    <h1 lang="en">What the HAL claims.</h1><p><strong>Probe는 측정이 아니라 선언입니다.</strong> 카메라를 열지 않고 <code>CameraCharacteristics</code>를 읽어, Camera2 HAL이 공개한 사양을 카메라별 표로 보여 줍니다. 여기에 적힌 값은 HAL이 &quot;할 수 있다&quot;고 말한 것이며 실제로 그렇게 동작하는지는 <a href="benchmark.html">Benchmark</a>가 답합니다.</p>
 <pre><code class="language-mermaid">flowchart LR
     A[&quot;CameraManager&lt;br/&gt;공개 카메라 ID 전부&quot;] --&gt; B[&quot;CameraProbeReader&lt;br/&gt;CameraCharacteristics 읽기&quot;]
     B --&gt; C[&quot;CameraProbeSnapshot&lt;br/&gt;순수 Kotlin 모델&quot;]
@@ -65,7 +65,7 @@
 </tr>
 </tbody></table>
 <p class="editorial" lang="en">A capability table is a promise.<br>Measure before you trust it.</p><h2 lang="en">Take it with you.</h2><p><code>TXT</code>와 <code>JSON</code>은 모든 카메라의 사양을 파일로 공유하고, <code>복사</code>는 현재 카메라만 클립보드에 넣습니다. 이미지 픽셀은 포함되지 않습니다. 같은 기기의 빌드 전후를 비교하거나, 다른 기기의 HAL이 무엇을 공개하는지 나란히 볼 때 JSON을 씁니다. Benchmark 결과 JSON과는 별개 파일이며 자동으로 연결되지 않습니다.</p>
-<h2 lang="en">Where it sits in the app.</h2><p>LIVE 상단 <code>도구</code> 메뉴에서 열며, 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 열립니다. <code>Benchmark</code> 화면에서도 현재 선택한 카메라로 바로 들어갈 수 있습니다. 배치 기준은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md">APP-UI.md</a>의 &quot;도구 메뉴와 독립 화면&quot;에 있습니다.</p>
+<h2 lang="en">Where it sits in the app.</h2><p>Live 상단 <code>도구</code> 메뉴에서 열며, 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 열립니다. <code>Benchmark</code> 화면에서도 현재 선택한 카메라로 바로 들어갈 수 있습니다. 배치 기준은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md">APP-UI.md</a>의 &quot;도구 메뉴와 독립 화면&quot;에 있습니다.</p>
 <details>
 <summary>코드 근거를 확인하세요</summary>
 <p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/camera/</code>에서 <code>CameraProbe.kt</code>(모델·TXT·JSON 렌더러), <code>CameraProbeReader.kt</code>(CameraManager 읽기)와 <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>(화면)를 확인하세요. 원고의 검토 상태는 아키텍처 문서 끝에 있습니다.</p>

@@ -31,7 +31,7 @@ Android SDK 경로는 저장소 루트의 `local.properties`에 설정합니다.
    adb install -r app/build/outputs/apk/debug/app-debug.apk
    ~~~
 
-4. 앱을 열고 카메라 권한을 허용합니다. LIVE에서 프리뷰가 나오는지 확인한 뒤 BENCHMARK로 진입합니다.
+4. 앱을 열고 카메라 권한을 허용합니다. Live에서 프리뷰가 나오는지 확인한 뒤 Benchmark로 진입합니다.
 
 PC 터미널에서 촬영과 벤치마크를 시작하려면 앱의 진단 패널에서 `ADB CLI 허용`을 켜고 [CLI](cli.md)를 따르세요. Python이 없는 PC에서 `adb`만으로 같은 명령을 부르는 절차도 그 페이지에 있습니다.
 

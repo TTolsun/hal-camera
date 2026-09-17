@@ -50,7 +50,7 @@ measurement (raw samples, n회 반복)
 - Process cold launch 측정. v1의 launch는 warm reopen이고, cold는 별도 profile(`camera2-cold-launch-v1`)로 v0.4 이후에 정의한다
 - Resource 카테고리의 CPU / memory 지표. thermal과 배터리는 기록만 한다
 - Switch 카테고리(렌즈 전환 지연). v0.4
-- CameraX 벤치마크 프로필. 엔진은 LIVE 비교용으로 유지하고, `camerax-standard-v1`은 METRICS.md 7절의 대리 지표로 v0.4에서 정의한다
+- CameraX 벤치마크 프로필. 엔진은 Live 비교용으로 유지하고, `camerax-standard-v1`은 METRICS.md 7절의 대리 지표로 v0.4에서 정의한다
 - 녹화 지표 3.x
 - Git / CI 메타데이터 자동 주입. v0.3은 수동 입력 필드만 둔다
 - 기기 간 결과를 모으는 서버
@@ -152,7 +152,7 @@ Profile은 측정 조건 전체를 고정한 불변 객체이고, 모든 run JSO
 | warm-up | 마지막 open 후 3초 | 관측 창에서 제외 |
 | observe | 10초 | H.1 – H.10 |
 | still 반복 | 10장, `next_shot_policy = image_received` | 첫 장 warm-up 제외, n = 9. 간격은 8개 |
-| 대상 | 카메라 1개 | LIVE 화면에서 선택한 카메라. 기본은 후면 MAIN |
+| 대상 | 카메라 1개 | Live 화면에서 선택한 카메라. 기본은 후면 MAIN |
 
 ### 3.2 실행 순서와 화면 단계
 
@@ -160,7 +160,7 @@ Runner 내부 상태와 사용자에게 보이는 6단계는 다르다. 화면�
 
 ```text
 runner                                    화면
-PREFLIGHT (3.6, 카메라를 열지 않음)          (카드에서 START 가능 여부로 표시)
+PREFLIGHT (3.6, 카메라를 열지 않음)          (카드에서 Start 가능 여부로 표시)
 LAUNCH_CYCLE ×10                          1 / 6  Camera Open
   OPEN → CONFIGURE → FIRST_FRAME → CLOSE
 OPEN (11번째, 유지)                        2 / 6  First Preview
@@ -447,9 +447,9 @@ data class RunValidity(
 
 | 소비자 | 요구 단계 |
 |---|---|
-| 이력 표시, EXPORT | 없음. 모든 run |
+| 이력 표시, Export | 없음. 모든 run |
 | REFERENCE 자동 선택 | `comparisonEligible` |
-| `SET AS BASELINE` | `comparisonEligible`. 아니면 버튼 비활성 |
+| `Set as baseline` | `comparisonEligible`. 아니면 버튼 비활성 |
 | M5 dataset, PC 집계 기본 필터 | `scoringEligible` |
 
 세 단계는 run 하나의 성질이다. 두 run 사이의 조건 차이(충전 상태가 다름, thermal_max 차이, 노출 부하 비율)는 7.5의 비교 시점 규칙이 따로 다룬다.
@@ -538,7 +538,7 @@ data class BuildIdentityComparison(
 - `env.thermal_max`는 run 동안 `PowerManager.addThermalStatusListener`(API 29)로 받은 최고 상태다. thermal 변화는 시각과 함께 `events`에도 `thermal_status` 이벤트로 넣어 PC에서 throttling 시점을 볼 수 있게 한다. run 중간에 올라갔다가 끝날 때 내려오는 경우가 있으므로 시작값과 끝값만으로는 부족하다.
 - `device.camera_info_version`은 `CameraCharacteristics.INFO_VERSION`(API 28 이상, vendor가 제공하면 문자열)이다. `vendor_fingerprint`는 `getprop ro.vendor.build.fingerprint` 결과이며 읽지 못하면 null이다. 둘 다 "가능하면 HAL 버전" 요구에 대한 현재 공개 API의 최대치다.
 - `subject` 블록의 commit과 branch는 측정 대상 형상의 것이다. 벤치마크 앱의 형상은 `app`에 있다.
-- `metrics[].regression`은 run 시점의 `regression_rule_version`으로 계산해 저장한다. COMPARE 화면은 앱의 현재 rule version으로 다시 계산하고 어느 버전을 썼는지 표시한다. rule을 조정해도 과거 JSON을 다시 쓰지 않는다.
+- `metrics[].regression`은 run 시점의 `regression_rule_version`으로 계산해 저장한다. Compare 화면은 앱의 현재 rule version으로 다시 계산하고 어느 버전을 썼는지 표시한다. rule을 조정해도 과거 JSON을 다시 쓰지 않는다.
 - PC 집계 스크립트의 기본 필터는 `validity.scoring_eligible == true`다. regression 분석용으로는 `comparison_eligible`을 옵션으로 선택한다.
 - `raw.observation.exposure_load_p50`은 `SENSOR_SENSITIVITY × SENSOR_EXPOSURE_TIME`의 관측 창 p50이며 7.5의 조건 비교에 쓴다.
 
@@ -553,8 +553,8 @@ data class BuildIdentityComparison(
 | | BASELINE | REFERENCE |
 |---|---|---|
 | 뜻 | 개발자가 의도적으로 고른 기준 형상 | 직전에 잰 값 |
-| 정하는 방법 | 결과 화면이나 이력에서 `SET AS BASELINE`. **자동 생성 없음** | 같은 `(comparisonContractId, endpoint.key)`의 가장 최근 comparison-eligible run을 자동 선택. 자기 자신 제외 |
-| 해제하는 방법 | 이미 baseline인 run에서는 같은 버튼이 `CLEAR BASELINE`이다. 포인터만 지우고 run 파일은 남긴다 | 해당 없음 |
+| 정하는 방법 | 결과 화면이나 이력에서 `Set as baseline`. **자동 생성 없음** | 같은 `(comparisonContractId, endpoint.key)`의 가장 최근 comparison-eligible run을 자동 선택. 자기 자신 제외 |
+| 해제하는 방법 | 이미 baseline인 run에서는 같은 버튼이 `Clear baseline`이다. 포인터만 지우고 run 파일은 남긴다 | 해당 없음 |
 | 저장 | `files/benchmarks/index.json`에 `(comparisonContractId, endpoint.key)` → run_id 포인터 | 저장하지 않고 조회 시 계산 |
 | regression 상태 | 이것 대비로만 IMPROVED / STABLE / REGRESSED | 상태 없음. delta %만 참고 표시 |
 | 없을 때 | `UNKNOWN(no_baseline)`. 화면에는 reference delta만 | 첫 run이면 표시 없음 |
@@ -564,7 +564,7 @@ data class BuildIdentityComparison(
 - profile.id가 다르면 비교하지 않는다. 모든 지표가 `UNKNOWN(condition_mismatch)`이다.
 - comparison 부적격 run(5.3)은 baseline으로 지정할 수 없고 reference로도 선택되지 않는다.
 - baseline run 파일이 삭제되면 포인터를 지우고 `NO_BASELINE`으로 돌아간다.
-- **baseline 해제는 run 삭제와 별개다.** 기준으로 삼았던 형상이 더 이상 기준이 아니게 되는 일과, 그 측정 결과가 필요 없어지는 일은 다르다. 지정을 무르려고 run 파일을 지워야 한다면 측정 데이터를 잃게 되므로, 이미 baseline인 run의 결과 화면에서는 `SET AS BASELINE`이 `CLEAR BASELINE`으로 바뀌어 포인터만 지운다. 다른 run에 `SET AS BASELINE`을 누르면 포인터는 그대로 덮어써지므로 갱신에는 별도 동작이 필요 없다.
+- **baseline 해제는 run 삭제와 별개다.** 기준으로 삼았던 형상이 더 이상 기준이 아니게 되는 일과, 그 측정 결과가 필요 없어지는 일은 다르다. 지정을 무르려고 run 파일을 지워야 한다면 측정 데이터를 잃게 되므로, 이미 baseline인 run의 결과 화면에서는 `Set as baseline`이 `Clear baseline`으로 바뀌어 포인터만 지운다. 다른 run에 `Set as baseline`을 누르면 포인터는 그대로 덮어써지므로 갱신에는 별도 동작이 필요 없다.
 
 ### 7.2 Regression rule `regression-rule-v1`
 
@@ -606,7 +606,7 @@ v1의 비교와 regression은 대표값(`value`, latency는 p50)만 쓴다. p95 
 
 | 상황 | 판정 | 이유 |
 |---|---|---|
-| 두 run의 `endpoint.key`가 다름 | 모든 지표 `UNKNOWN(condition_mismatch)` | baseline 포인터가 `(contract, endpoint.key)` 키를 쓰므로 결과 화면에서는 생기지 않지만, 7.3 COMPARE가 임의의 두 run을 고를 수 있다. 후면 메인과 초광각을 나란히 놓고 regression을 말할 수는 없다 |
+| 두 run의 `endpoint.key`가 다름 | 모든 지표 `UNKNOWN(condition_mismatch)` | baseline 포인터가 `(contract, endpoint.key)` 키를 쓰므로 결과 화면에서는 생기지 않지만, 7.3 Compare가 임의의 두 run을 고를 수 있다. 후면 메인과 초광각을 나란히 놓고 regression을 말할 수는 없다 |
 | 한쪽이라도 comparison 부적격(5.3) | 모든 지표 `UNKNOWN(condition_mismatch)` | 5.3의 `comparisonEligible`이 곧 "regression 비교에 써도 되는가"이다. 부적격 run으로 IMPROVED나 REGRESSED를 표시하면 그 단계를 나눈 의미가 없다 |
 | 한쪽이라도 `timeout = true` | 해당 지표만 `UNKNOWN(not_measurable)` | timeout일 때 저장된 값은 수렴 시간이 아니라 관측 창 길이다(13장 2026-09-10 M2). 그대로 빼면 창 길이와 수렴 시간을 비교하게 된다 |
 | LATENCY인데 baseline 값이 0 | `delta_pct`는 null, 절대 차이만으로 COUNT와 같은 방식으로 판정 | 0으로 나눌 수 없다. 그렇다고 STABLE로 두면 0 ms에서 40 ms가 된 변화를 놓친다 |
@@ -616,7 +616,7 @@ v1의 비교와 regression은 대표값(`value`, latency는 p50)만 쓴다. p95 
 두 run JSON을 읽어 지표별로 나란히 놓는다. 기본은 baseline 대 최신 run이고, M6의 이력 화면에서 임의의 두 run을 고를 수 있다. 비교 자체는 `RegressionDetector.compare(base, current, rules)` 순수 함수 하나이고 화면은 그 결과를 표로 그린다. 아래 예시는 7.2 표로 검산한 것이다. Open +13 %는 15 % 미만이라 STABLE이고, Jitter +122 %는 절대 차이 3.9 ms가 floor 1 ms를 넘으므로 REGRESSED다.
 
 ```text
-COMPARE                                   rule regression-rule-v1
+Compare                                   rule regression-rule-v1
 baseline  20260909-095100  SW41          BP4A.251205.006   thermal max 1
 current   20260909-101422  SW42_release  BP4A.251205.006   thermal max 1
           Android 동일 · Camera build 다름 · 앱 동일 · subject 다름
@@ -625,9 +625,9 @@ current   20260909-101422  SW42_release  BP4A.251205.006   thermal max 1
 Open                 142 ms      161 ms    +13%
 Configure             38 ms       41 ms     +8%
 First frame          381 ms      419 ms    +10%
-Capture              164 ms      221 ms    +35%  ▲ REGRESSED
+Capture              164 ms      221 ms    +35%  ▲ Regressed
 Interval p50        33.3 ms     33.4 ms      0%
-Jitter               3.2 ms      7.1 ms   +122%  ▲ REGRESSED
+Jitter               3.2 ms      7.1 ms   +122%  ▲ Regressed
 Stalls                   0           0
 ```
 
@@ -658,24 +658,24 @@ Stalls                   0           0
 
 ## 8. 화면 계약
 
-### 8.1 LIVE (`MainActivity`, 런처)
+### 8.1 Live (`MainActivity`, 런처)
 
 지금 화면을 그대로 두고 아래만 바꾼다.
 
 | 기존 | 변경 |
 |---|---|
-| `MARK INCIDENT` / `방금 이상했어요` | `MARK`. 기능은 `FlightRecorder.trigger` 그대로. zip 저장 후 요약 대화상자는 raw 값만 남긴다 |
-| 셔터(원형) | 유지. 접근성 이름 `SHUTTER` |
+| `Mark` / `방금 이상했어요` | `Mark`. 기능은 `FlightRecorder.trigger` 그대로. zip 저장 후 요약 대화상자는 raw 값만 남긴다 |
+| 셔터(원형) | 유지. 접근성 이름 `Shutter` |
 | `검사` | 삭제 |
-| `진단` (패널 토글) | `BENCHMARK` 버튼으로 교체. 패널 토글은 작은 아이콘 버튼으로 우측 상단에 남긴다 |
+| `진단` (패널 토글) | `Benchmark` 버튼으로 교체. 패널 토글은 작은 아이콘 버튼으로 우측 상단에 남긴다 |
 | DIAGNOSIS 카드 | 삭제. 패널에는 raw 지표 표만 남는다 |
 | health strip | 숫자만 표시. 정상 / 주의 / 이상 색과 문구 제거 |
-| CameraX / Camera2 / 카메라 선택 | 유지. 여기서 고른 카메라가 BENCHMARK 대상이다 |
+| CameraX / Camera2 / 카메라 선택 | 유지. 여기서 고른 카메라가 Benchmark 대상이다 |
 
-### 8.2 BENCHMARK 시작 카드 (`BenchmarkActivity`)
+### 8.2 Benchmark 시작 카드 (`BenchmarkActivity`)
 
 ```text
-STANDARD CAMERA BENCHMARK
+Standard camera benchmark
 
 Camera2 · 후면 메인 · 1080p30 · warm reopen
 Profile  camera2-standard-v1        ✓ 이 카메라에서 실행 가능 (device_setup)
@@ -685,17 +685,17 @@ Subject build   [                    ]   (선택, 직전 run 값 미리 채움)
 Subject commit  [          ]             (선택)
 Note            [                    ]   (선택)
 
-[ START BENCHMARK ]
+[ Start benchmark ]
 ```
 
-- 카드를 열 때 3.6 preflight를 먼저 돌린다. 카메라는 열지 않는다. UNSUPPORTED이면 START 대신 사유 코드(`YUV_SIZE` 등)와 "이 profile은 이 카메라에서 실행할 수 없습니다"를 보여 준다.
+- 카드를 열 때 3.6 preflight를 먼저 돌린다. 카메라는 열지 않는다. UNSUPPORTED이면 Start 대신 사유 코드(`YUV_SIZE` 등)와 "이 profile은 이 카메라에서 실행할 수 없습니다"를 보여 준다.
 - CameraX가 선택된 상태에서 들어오면 "Benchmark profile v1은 Camera2 전용입니다. Camera2로 전환합니다"를 표시하고 Camera2로 바꾼다.
 - thermal이 SEVERE 이상이면 v0.2와 같이 시작하지 않는다. MODERATE이면 시작은 하되 "이 run은 비교와 점수에 쓸 수 없습니다(THERMAL_HIGH)"를 카드에 띄운다. 절전 모드가 켜져 있으면 같은 형식으로 `POWER_SAVE_MODE`를 알린다.
 
 ### 8.3 진행
 
 ```text
-BENCHMARKING
+Benchmarking
 
 3 / 6  Preview stability
 ██████████████░░░░░░  72%
@@ -716,7 +716,7 @@ Score 자리는 M5까지 없다. 숫자와 delta만 보인다.
 - 두 번째 통계 열은 **n < 20이면 `max`, n ≥ 20이면 `p95`**다. n = 9의 nearest-rank p95는 max이므로 p95라고 쓰면 사람이 안정된 percentile로 오해한다. JSON에는 둘 다 있다.
 
 ```text
-CAMERA BENCHMARK
+Camera benchmark
 Galaxy S25+ · 후면 메인 · camera2-standard-v1 · warm reopen
 2026-09-09 10:14 · BP4A.251205.006 · SW42_release
 비교 가능 · 점수 가능 · thermal 0 → 1 → 1
@@ -743,32 +743,32 @@ STABILITY
 3A (informational)
   AE / AF / AWB   420 / 610 / 380 ms
 
-[ SET AS BASELINE ]   [ COMPARE ]   [ EXPORT ]
+[ Set as baseline ]   [ Compare ]   [ Export ]
 ```
 
-이 run이 이미 baseline이면 첫 버튼이 `[ CLEAR BASELINE ]`이 된다(7.1).
+이 run이 이미 baseline이면 첫 버튼이 `[ Clear baseline ]`이 된다(7.1).
 
 baseline이 없는 첫 run의 머리글은 다음과 같다.
 
 ```text
 baseline 없음 · 이전 run 20260909-100302 대비 표시
-[ SET AS BASELINE ]을 누르면 이 run이 기준이 됩니다
+[ Set as baseline ]을 누르면 이 run이 기준이 됩니다
 ```
 
 eligibility에 따라 머리글이 달라진다.
 
 ```text
 비교 가능 · 점수 제외 (CHARGING)
-비교 불가 (THERMAL_HIGH, max 3) · SET AS BASELINE 비활성
-측정 무효 (HARD_FAILURE)      · SET AS BASELINE 비활성
+비교 불가 (THERMAL_HIGH, max 3) · Set as baseline 비활성
+측정 무효 (HARD_FAILURE)      · Set as baseline 비활성
 ```
 
 지표 표시 이름은 영문 짧은 이름(`Open`, `First frame`, `Capture`)을 쓴다. 사용자 제안의 화면 예시와 맞추고, 개발자가 CTS 이름과 대응하기 쉽기 때문이다. 안내 문구는 한국어다.
 
-### 8.5 RESULTS 이력 (M6)
+### 8.5 Results 이력 (M6)
 
 ```text
-RESULTS                                 camera2-standard-v1 · 후면 메인   [비교 가능만]
+Results                                 camera2-standard-v1 · 후면 메인   [비교 가능만]
 
 09-09 10:14  SW42_release  a8f29c1   Capture 221 ms   ▲ 1
 09-09 10:03  SW42_release  a8f29c1   Capture 219 ms
@@ -776,7 +776,7 @@ RESULTS                                 camera2-standard-v1 · 후면 메인   [
 09-08 22:40  (subject 없음)           Capture 158 ms   비교 불가 · THERMAL_HIGH
 ```
 
-행을 누르면 결과 화면, 길게 누르면 `SET AS BASELINE` / `COMPARE` / `EXPORT` / `DELETE`다.
+행을 누르면 결과 화면, 길게 누르면 `Set as baseline` / `Compare` / `Export` / `Delete`다.
 
 ---
 
@@ -787,12 +787,12 @@ RESULTS                                 camera2-standard-v1 · 후면 메인   [
 | 단계 | 이름 | 내용 | 완료 기준 | 예상 |
 |---|---|---|---|---:|
 | **M1** | Data contract | `BenchmarkProfile`(launchMode 포함), `BenchmarkModel`(`SubjectLabel`, `RunRef`), `RegressionRules` 표(값은 잠정), `RunValidity`(flag 표 → 세 단계), `BuildIdentity`, `BenchmarkEvaluator`(통계만), `BenchmarkReport`(JSON 3 쓰기 · 읽기, `compatibility` · `env.thermal_max` · `power_save_mode` 포함), `BenchmarkStore`(파일 · index). `MetricExtractor`에 H.10 | 단위 테스트: profile 직렬화, JSON round-trip, 통계 경계(n=9 p95는 max, n=8 간격), 7.2 표의 지표별 경계값, validity flag 표에서 세 boolean 유도(thermal_max 경계 포함), identity 비교의 null 처리. 기존 앱 동작 변화 없음. `assembleDebug testDebugUnitTest lintDebug` 통과 | 약 4시간 |
-| **M2** | Measurement correctness | `ProfileCompatibility`(static + API 35 `CameraDeviceSetup` 경로), `ThermalTracker`, `BenchmarkRunner` 순수 Kotlin(launch 반복 → warm-up → observe → still 반복 → close, timeout과 abort), `Camera2Engine`이 profile 스트림 크기를 받음, 최소 `BenchmarkActivity`(preflight 결과와 method, START, 진행 텍스트, 완료 후 JSON 경로) | **S25+에서 후면 메인 3회, 전면 1회(preflight 통과 확인), 초광각 1회(AF OFF 경로) 완주하고 JSON을 Drive에 저장.** `isCameraDeviceSetupSupported()` 값과 정확 질의 결과 기록. YUV 1080p가 stall을 만들지 확인한 뒤 profile id를 `-draft`에서 확정. warm reopen 값이 v0.2 단일 open 값과 어떻게 다른지, thermal_max가 run 중 어떻게 움직였는지 STATUS에 기록. **밝은 곳과 어두운 곳에서 각각 반복해 `exposure_load_p50`과 2.2 / 2.3 / 2.5의 상관을 확인**하고 7.5에 Capture를 넣을지 결정 | 약 7시간 + 실기기 1시간 |
-| **M3** | Product conversion | 8.1 LIVE 버튼 정리, 런처를 `MainActivity`로, 8.2 – 8.4 화면(p50 / max 표시 규칙, eligibility 머리글), `EXPORT`(JSON 공유). 2.3의 삭제 목록 전부 제거. 앱 label "HAL Camera", versionName 0.3.x | Doctor 클래스 0개. 결과 화면이 eligibility 세 단계와 reference delta를 표시 | 약 5시간 |
-| **M4** | Developer workflow | 명시적 `BaselineStore`(포인터, comparison-eligible만 허용), `ReferenceResolver`, `RegressionDetector`(7.2 표 적용, 7.5 조건 차이, 표시 시점 재계산), 결과 화면의 vs baseline / vs previous 열, 7.4 identity 요약, `SET AS BASELINE`과 `CLEAR BASELINE`, 7.3 COMPARE 화면 | 테스트: 7.2 표 각 행의 경계값, profile 불일치, 7.5 네 조건, 부적격 run 배제, baseline 파일 삭제, baseline 해제 후 `NO_BASELINE` 복귀, identity null 조합 | 약 6시간 |
+| **M2** | Measurement correctness | `ProfileCompatibility`(static + API 35 `CameraDeviceSetup` 경로), `ThermalTracker`, `BenchmarkRunner` 순수 Kotlin(launch 반복 → warm-up → observe → still 반복 → close, timeout과 abort), `Camera2Engine`이 profile 스트림 크기를 받음, 최소 `BenchmarkActivity`(preflight 결과와 method, Start, 진행 텍스트, 완료 후 JSON 경로) | **S25+에서 후면 메인 3회, 전면 1회(preflight 통과 확인), 초광각 1회(AF OFF 경로) 완주하고 JSON을 Drive에 저장.** `isCameraDeviceSetupSupported()` 값과 정확 질의 결과 기록. YUV 1080p가 stall을 만들지 확인한 뒤 profile id를 `-draft`에서 확정. warm reopen 값이 v0.2 단일 open 값과 어떻게 다른지, thermal_max가 run 중 어떻게 움직였는지 STATUS에 기록. **밝은 곳과 어두운 곳에서 각각 반복해 `exposure_load_p50`과 2.2 / 2.3 / 2.5의 상관을 확인**하고 7.5에 Capture를 넣을지 결정 | 약 7시간 + 실기기 1시간 |
+| **M3** | Product conversion | 8.1 Live 버튼 정리, 런처를 `MainActivity`로, 8.2 – 8.4 화면(p50 / max 표시 규칙, eligibility 머리글), `Export`(JSON 공유). 2.3의 삭제 목록 전부 제거. 앱 label "HAL Camera", versionName 0.3.x | Doctor 클래스 0개. 결과 화면이 eligibility 세 단계와 reference delta를 표시 | 약 5시간 |
+| **M4** | Developer workflow | 명시적 `BaselineStore`(포인터, comparison-eligible만 허용), `ReferenceResolver`, `RegressionDetector`(7.2 표 적용, 7.5 조건 차이, 표시 시점 재계산), 결과 화면의 vs baseline / vs previous 열, 7.4 identity 요약, `Set as baseline`과 `Clear baseline`, 7.3 Compare 화면 | 테스트: 7.2 표 각 행의 경계값, profile 불일치, 7.5 네 조건, 부적격 run 배제, baseline 파일 삭제, baseline 해제 후 `NO_BASELINE` 복귀, identity null 조합 | 약 6시간 |
 | **M5a** | Internal score | `ScoreComposer`, 지표별 normalization curve 시제품, 카테고리 점수, **Camera Endpoint Score** 0 – 1000, 3A 카테고리 weight 0, `scoring_rule_version = score-v1-draft`. curve 학습 dataset은 정상 조건의 `scoring_eligible` run만 | **시작 조건: S25+ profile v1 scoring-eligible run이 정상 조건 10회 이상.** 발열 · 저조도 · 카메라 점유 경쟁 run(각 3회 이상)은 curve에 넣지 않고 점수가 실제로 내려가는지 확인하는 sensitivity 검증에만 쓴다 | 데이터 수집 후 약 3시간 |
 | **M5b** | Public endpoint score | 여러 제조사 · 성능군 단말의 scoring-eligible 분포로 curve 확정, `scoring_rule_version = score-v1`. 이름은 Camera Endpoint Score. Device Score는 표준 endpoint 집합 이후 | **release gate: 최소 5 – 10개 기기의 분포.** S25+ 하나로 만든 curve는 S25+ regression score이지 기기 간 benchmark score가 아니다 | 기기 확보 후 약 3시간 |
-| **M6** | History / export / configuration tracking | 8.5 RESULTS 화면(eligibility 필터), `RunIndex`, 임의 두 run COMPARE, run 삭제, CSV export, PC 집계 스크립트(`tools/aggregate.py`: JSON 폴더 → CSV, 기본 `scoring_eligible`, 옵션 `comparison_eligible`), subject 자동 채움(직전 run 값 재사용) | | 약 5시간 |
+| **M6** | History / export / configuration tracking | 8.5 Results 화면(eligibility 필터), `RunIndex`, 임의 두 run Compare, run 삭제, CSV export, PC 집계 스크립트(`tools/aggregate.py`: JSON 폴더 → CSV, 기본 `scoring_eligible`, 옵션 `comparison_eligible`), subject 자동 채움(직전 run 값 재사용) | | 약 5시간 |
 
 M1과 M2는 기존 Doctor 화면과 나란히 존재한다. M3에서 Doctor 코드를 지우기 전까지 앱은 두 흐름을 모두 가지며, 이 상태로 배포하지 않는다.
 
@@ -806,7 +806,7 @@ M2가 끝나면 사용자는 결과 UI 없이도 S25+에서 run을 반복해 raw
 2. 빌드는 Codex toolchain으로 `gradle.bat -p <project> --no-daemon --offline assembleDebug testDebugUnitTest lintDebug`.
 3. merge 전에 cavecrew-reviewer 리뷰. 심각 지적은 같은 브랜치에서 수정 후 merge.
 4. Drive `checkpoints/checkpoint-008-bm-m1-model/`부터 이어서 APK, diff, STATUS, 실기기 JSON을 저장한다.
-5. 실기기 검증은 사용자가 잠금을 풀고 `START BENCHMARK`를 누른다. 결과는 `adb exec-out run-as dev.halcamera cat files/benchmarks/<runId>.json`으로 꺼낸다.
+5. 실기기 검증은 사용자가 잠금을 풀고 `Start benchmark`를 누른다. 결과는 `adb exec-out run-as dev.halcamera cat files/benchmarks/<runId>.json`으로 꺼낸다.
 6. 문서 순서: 이 계획 → 결정 확정 → `PRODUCT-v0.3.md` 승격 → 코드. 규칙(profile, regression rule, validity flag 표)을 바꿀 때는 문서를 먼저 고친다.
 
 ---
@@ -844,7 +844,7 @@ M2가 끝나면 사용자는 결과 UI 없이도 S25+에서 run을 반복해 raw
 |---|---|
 | `docs/PRODUCT-v0.2.md` (Drive, repo) | `docs/archive/PRODUCT-v0.2.md`로 이동. 삭제하지 않는다. 열거 절차(9장), Auto Check 시간 예산(10장), 디자인 토큰(11.6), exposure_load 규칙(6장)은 v0.3 문서가 참조한다 |
 | `docs/METRICS.md`, `METRICS-REVIEW.md` | 유지. H.10 추가, 0.2절에 `launch_mode = warm_reopen` 대응 명시, 0.3절 환경값에 `thermal_max`와 절전 모드 추가, 0.5절에 schema 3 언급 |
-| `docs/design/DESIGN.md` | 유지. Expert 어두운 배경 토큰이 LIVE와 BENCHMARK 화면의 기준 |
+| `docs/design/DESIGN.md` | 유지. Expert 어두운 배경 토큰이 Live와 Benchmark 화면의 기준 |
 | `README.md` | M3에서 제품 정의와 빌드 방법을 HAL Camera 기준으로 다시 쓴다 |
 | Drive `checkpoints/001 – 007` | 그대로 보존 |
 | 기기의 `files/checks/*.json`, `files/incidents/*` | M3 설치 전에 `adb exec-out run-as`로 백업. schema 2 파일은 v0.3 앱이 읽지 않는다 |
@@ -920,7 +920,7 @@ M1은 PR #11(다른 세션, `80fa1ff`)로 main에 들어갔고, 그 PR의 후속
 
 ### 2026-09-10 M2 실기기 측정 반영
 
-M2 코드는 PR #14로 main에 들어갔고(리뷰 P1 2건 · P2 2건 반영), Galaxy S25+에서 run 5개(전면 2회, 후면 메인 3회)를 완주했다. 측정 결과는 Drive `checkpoints/checkpoint-010-bm-m2-runner/DEVICE-RESULTS.md`에 있다.
+M2 코드는 PR #14로 main에 들어갔고(리뷰 P1 2건 · P2 2건 반영), Galaxy S25+에서 run 5개(전면 2회, 후면 메인 3회)를 완주했다. 측정 결과는 Drive `checkpoints/checkpoint-010-bm-m2-runner/DEVICE-Results.md`에 있다.
 
 | 항목 | 결과 |
 |---|---|
@@ -932,7 +932,7 @@ M2 코드는 PR #14로 main에 들어갔고(리뷰 P1 2건 · P2 2건 반영), G
 | 3A timeout | 저조도에서 H.7이 약 13초로 `timeout = true`, 밝은 곳에서는 467 ms. timeout일 때 관측 창 길이가 metric value로 저장되므로 M4의 delta 계산이 이 값을 그대로 쓰면 안 된다 |
 | thermal | 다섯 run 모두 `thermal_start = thermal_max = thermal_end = 0`. 45초 run으로는 발열이 없어 `THERMAL_HIGH`와 `THERMAL_CHANGED`는 실측으로 검증되지 않았다 |
 
-계약에 추가한 것: baseline 해제(`CLEAR BASELINE`, 7.1과 8.4). run을 지우지 않고 기준 지정만 무르는 방법이 없었다. M4 범위이며 이슈 #8에 반영했다.
+계약에 추가한 것: baseline 해제(`Clear baseline`, 7.1과 8.4). run을 지우지 않고 기준 지정만 무르는 방법이 없었다. M4 범위이며 이슈 #8에 반영했다.
 
 ### 2026-09-11 debuggable 빌드 축 추가 (schema 4, validity-v2)
 
@@ -946,7 +946,7 @@ M2 코드는 PR #14로 main에 들어갔고(리뷰 P1 2건 · P2 2건 반영), G
 | `DEBUGGABLE_BUILD` | validity flag를 추가한다. 측정과 비교는 막지 않고 scoring만 막는다. 같은 debug 빌드끼리의 비교는 조건이 같으므로 의미가 있지만, 기기 간 점수에는 debug 빌드의 오버헤드가 섞이면 안 된다 |
 | `validity_rule_version` | `validity-v1`에서 `validity-v2`로 올린다 |
 
-측정용 run은 release 빌드로 돌리고 결과는 앱의 `EXPORT`로 꺼내는 것을 기본으로 한다. debug 빌드는 기능 확인과 데이터 복원에 쓴다. 2026-09-10 실기기 검증 run 13개는 모두 debug 빌드에서 나왔고 `app.debuggable`이 없으므로 알 수 없음으로 읽힌다.
+측정용 run은 release 빌드로 돌리고 결과는 앱의 `Export`로 꺼내는 것을 기본으로 한다. debug 빌드는 기능 확인과 데이터 복원에 쓴다. 2026-09-10 실기기 검증 run 13개는 모두 debug 빌드에서 나왔고 `app.debuggable`이 없으므로 알 수 없음으로 읽힌다.
 
 
 ### 2026-09-12 M5a 내부 점수 초안 (score-v1-draft)

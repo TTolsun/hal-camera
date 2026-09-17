@@ -23,7 +23,7 @@ decisions: []
 verifications: []
 ---
 
-**LIVE, BENCHMARK, RESULTS 중 수정할 화면과 연결된 코드를 먼저 확인하세요.** 현재 앱은 카메라 성능을 관측하고, 저장된 실행을 비교하는 단일 Android 앱 모듈입니다. v0.2의 Home·Auto Check·건강 판정 화면은 제거되었습니다.
+**Live, Benchmark, Results 중 수정할 화면과 연결된 코드를 먼저 확인하세요.** 현재 앱은 카메라 성능을 관측하고, 저장된 실행을 비교하는 단일 Android 앱 모듈입니다. v0.2의 Home·Auto Check·건강 판정 화면은 제거되었습니다.
 
 | 단계 | 담당 코드 | 책임 |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ verifications: []
 | 내부 점수 | `ScoreComposer` | 검토한 calibration의 범위에 맞는 적격 release run에 점수와 카테고리 평균을 계산합니다. |
 | 저장·비교·표시 | `BenchmarkReport`, `BaselineManager`, `RegressionDetector`, 각 Activity | JSON 저장과 화면을 구성하고, 현재 기준에 따른 비교 결과를 계산합니다. |
 
-`MainActivity`가 런처이며 LIVE에서는 관측한 수치만 표시합니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.
+`MainActivity`가 런처이며 Live에서는 관측한 수치만 표시합니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.
 
 baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 결과 화면은 이전의 비교 가능한 실행 대비 변화량만 표시합니다. 이력에서 임의로 선택한 실행도 실제 baseline이 아닌 한 회귀 판정의 기준이 되지 않습니다.
 
@@ -46,8 +46,8 @@ baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 
 4. `benchmark/domain/RunAssembler.kt`에서 러너 결과와 이벤트를 결합하는 지점을 확인합니다.
 5. `MainActivity.kt`, `BenchmarkActivity.kt`, `HistoryActivity.kt`에서 화면과 실행 코드의 연결을 확인합니다.
 
-LIVE의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저장하며 GalleryActivity에서 조회합니다. 측정 파일과 미디어 파일의 저장 경로를 구분하려면 아래 모듈 역할을 확인하세요.
+Live의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저장하며 GalleryActivity에서 조회합니다. 측정 파일과 미디어 파일의 저장 경로를 구분하려면 아래 모듈 역할을 확인하세요.
 
 ### 반복 측정 프로파일 비교
 
-RESULTS의 반복 측정 비교 메뉴에서 전후 실행 묶음을 고를 수 있습니다. ProfileComparisonActivity는 외부 JSON도 읽으며, 가져온 자료를 로컬 baseline과 분리합니다. 동일 기기의 수정 전후 비교가 기본이며 다른 기기 자료는 별도 모드로 선택합니다.
+Results의 반복 측정 비교 메뉴에서 전후 실행 묶음을 고를 수 있습니다. ProfileComparisonActivity는 외부 JSON도 읽으며, 가져온 자료를 로컬 baseline과 분리합니다. 동일 기기의 수정 전후 비교가 기본이며 다른 기기 자료는 별도 모드로 선택합니다.

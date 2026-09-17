@@ -22,7 +22,7 @@ nav:
   - path: benchmark.html
     label: Benchmark
   - path: probe.html
-    label: PROBE
+    label: Probe
   - path: cts.html
     label: CTS
   - path: cli.html

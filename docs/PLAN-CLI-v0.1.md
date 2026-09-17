@@ -63,7 +63,7 @@ flowchart LR
 
 ### M3. Camera2 프리뷰·사진·결과 수집
 
-- [x] MainActivity에서 UI와 CLI가 공유할 LIVE 동작을 `LiveController`로 점진적으로 분리한다.
+- [x] MainActivity에서 UI와 CLI가 공유할 Live 동작을 `LiveController`로 점진적으로 분리한다.
 - [x] camera 목록에 logical ID와 physical endpoint, 선택 가능 여부를 구분한다.
 - [x] 지정 카메라 준비와 surface 생명주기를 연결하고 `preview`의 성공 기준을 첫 프리뷰 준비로 고정한다.
 - [x] request ID·capture ID·센서 시각이 연결된 타입 기반 저장 완료·실패 콜백을 추가한다. 기존 엔진의 session ID와 telemetry 연결은 유지한다.
@@ -77,7 +77,7 @@ flowchart LR
 ### M4. 벤치마크 실행과 JSON 회수
 
 - [x] BenchmarkActivity의 준비·환경 수집·실행·저장 경로를 공통 `BenchmarkController`로 분리한다.
-- [x] LIVE 카메라 close 완료 후 BENCHMARK surface를 준비하고 실행을 시작한다.
+- [x] Live 카메라 close 완료 후 Benchmark surface를 준비하고 실행을 시작한다.
 - [x] 기존 profile·preflight·warm-up·통계·적격성·baseline 규칙을 그대로 연결한다.
 - [x] 결과 파일 쓰기 실패를 명시적으로 전달하고 파일 저장 완료 후 요청을 완료한다.
 - [x] 중단·hard failure가 발생한 run은 해당 상태와 수집 가능한 partial report를 함께 반환한다.
@@ -106,7 +106,7 @@ flowchart LR
 | PC 패키지 | `tools/halcam/pyproject.toml`, `tools/halcam/halcam/` | CLI, ADB transport, protocol, 다운로드 |
 | PC 테스트 | `tools/halcam/tests/` | fake ADB, 오류·인코딩·파일 무결성·복구 |
 | 앱 명령 | `app/src/main/java/dev/halcamera/cli/` | 호출자 검사, coordinator, 상태 저장, artifacts |
-| LIVE 공유 동작 | `cli/LiveController.kt`, MainActivity | 카메라 생명주기와 CLI·UI 작업 소유권 |
+| Live 공유 동작 | `cli/LiveController.kt`, MainActivity | 카메라 생명주기와 CLI·UI 작업 소유권 |
 | 사진 결과 | Camera2Engine, MediaLibrary | 요청과 저장 완료·실패의 연계 |
 | 벤치마크 공유 동작 | `cli/BenchmarkController.kt`, BenchmarkActivity | 실행 준비·runner 연결·저장 완료 |
 | 앱 선언·설정 | AndroidManifest, 기존 설정 UI | Provider 선언, CLI 허용 설정 |

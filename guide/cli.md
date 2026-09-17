@@ -3,7 +3,7 @@ title: CLI
 ---
 <h1 lang="en">Drive the app from a terminal.</h1>
 
-**CLI는 앱의 기능을 PC로 옮기지 않고, 앱이 하는 일을 PC에서 시작합니다.** ADB로 연결한 PC가 명령을 제출하면 앱이 같은 카메라 엔진·같은 벤치마크 계약으로 실행하고, PC는 결과 JSON과 사진을 회수합니다. 화면에서 실행한 결과와 CLI로 실행한 결과는 같은 파일 형식이며 같은 [History](benchmark.md)에 남습니다.
+**CLI는 앱의 기능을 PC로 옮기지 않고, 앱이 하는 일을 PC에서 시작합니다.** ADB로 연결한 PC가 명령을 제출하면 앱이 같은 카메라 엔진·같은 벤치마크 계약으로 실행하고, PC는 결과 JSON과 사진을 회수합니다. 화면에서 실행한 결과와 CLI로 실행한 결과는 같은 파일 형식이며 같은 [Results](benchmark.md)에 남습니다.
 
 ```mermaid
 flowchart LR
@@ -102,9 +102,9 @@ halcam --serial DEVICE cameras --json
 
 | 기능 | 현재 경로 |
 | --- | --- |
-| [PROBE](probe.md) 사양 표 내보내기 | 앱의 `TXT`·`JSON` 공유 |
+| [Probe](probe.md) 사양 표 내보내기 | 앱의 `TXT`·`JSON` 공유 |
 | [CTS](cts.md) 케이스·suite 실행 | 앱의 CTS 체크리스트 |
-| baseline 지정, 비교, profile 비교 | History·COMPARE 화면. CLI가 받은 run JSON을 화면의 JSON 가져오기로 넣으면 같은 비교를 할 수 있습니다. |
+| baseline 지정, 비교, profile 비교 | Results·Compare 화면. CLI가 받은 run JSON을 화면의 JSON 가져오기로 넣으면 같은 비교를 할 수 있습니다. |
 | 동영상 녹화, 줌, CameraX 엔진 선택 | Live 화면 |
 | incident ZIP 수집 | 진단 패널 |
 

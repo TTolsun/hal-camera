@@ -20,7 +20,7 @@ nav_order: 4
 
 <!-- omm:begin id=overview -->
 
-**LIVE, BENCHMARK, RESULTS 중 수정할 화면과 연결된 코드를 먼저 확인하세요.** 현재 앱은 카메라 성능을 관측하고, 저장된 실행을 비교하는 단일 Android 앱 모듈입니다. v0.2의 Home·Auto Check·건강 판정 화면은 제거되었습니다.
+**Live, Benchmark, Results 중 수정할 화면과 연결된 코드를 먼저 확인하세요.** 현재 앱은 카메라 성능을 관측하고, 저장된 실행을 비교하는 단일 Android 앱 모듈입니다. v0.2의 Home·Auto Check·건강 판정 화면은 제거되었습니다.
 
 | 단계 | 담당 코드 | 책임 |
 | --- | --- | --- |
@@ -31,7 +31,7 @@ nav_order: 4
 | 내부 점수 | `ScoreComposer` | 검토한 calibration의 범위에 맞는 적격 release run에 점수와 카테고리 평균을 계산합니다. |
 | 저장·비교·표시 | `BenchmarkReport`, `BaselineManager`, `RegressionDetector`, 각 Activity | JSON 저장과 화면을 구성하고, 현재 기준에 따른 비교 결과를 계산합니다. |
 
-`MainActivity`가 런처이며 LIVE에서는 관측한 수치만 표시합니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.
+`MainActivity`가 런처이며 Live에서는 관측한 수치만 표시합니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.
 
 baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 결과 화면은 이전의 비교 가능한 실행 대비 변화량만 표시합니다. 이력에서 임의로 선택한 실행도 실제 baseline이 아닌 한 회귀 판정의 기준이 되지 않습니다.
 
@@ -43,18 +43,18 @@ baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 
 4. `benchmark/domain/RunAssembler.kt`에서 러너 결과와 이벤트를 결합하는 지점을 확인합니다.
 5. `MainActivity.kt`, `BenchmarkActivity.kt`, `HistoryActivity.kt`에서 화면과 실행 코드의 연결을 확인합니다.
 
-LIVE의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저장하며 GalleryActivity에서 조회합니다. 측정 파일과 미디어 파일의 저장 경로를 구분하려면 아래 모듈 역할을 확인하세요.
+Live의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저장하며 GalleryActivity에서 조회합니다. 측정 파일과 미디어 파일의 저장 경로를 구분하려면 아래 모듈 역할을 확인하세요.
 
 ### 반복 측정 프로파일 비교
 
-RESULTS의 반복 측정 비교 메뉴에서 전후 실행 묶음을 고를 수 있습니다. ProfileComparisonActivity는 외부 JSON도 읽으며, 가져온 자료를 로컬 baseline과 분리합니다. 동일 기기의 수정 전후 비교가 기본이며 다른 기기 자료는 별도 모드로 선택합니다.
+Results의 반복 측정 비교 메뉴에서 전후 실행 묶음을 고를 수 있습니다. ProfileComparisonActivity는 외부 JSON도 읽으며, 가져온 자료를 로컬 baseline과 분리합니다. 동일 기기의 수정 전후 비교가 기본이며 다른 기기 자료는 별도 모드로 선택합니다.
 
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-17 @ `e2c690d` · Claude
+- 검토 2026-09-17 @ `902fa67` · Claude
 
 </details>
 
@@ -72,7 +72,7 @@ graph LR
     provider --> commands["CommandCoordinator / CommandStore"]
     commands -->|"LiveController"| live
     commands -->|"BenchmarkController"| benchmark
-    live["MainActivity · LIVE"] -->|"엔진 선택"| engines["Camera2Engine / CameraXEngine"]
+    live["MainActivity · Live"] -->|"엔진 선택"| engines["Camera2Engine / CameraXEngine"]
     live -->|"벤치마크 진입"| benchmark["BenchmarkActivity / BenchmarkRunner"]
     benchmark -->|"Driver 호출"| engines
     engines -->|"요청 실행"| platform["Android Camera API"]
@@ -114,7 +114,7 @@ graph LR
 | `telemetry/` | `Telemetry`가 이벤트를 만들고 `FlightRecorder`가 보존합니다. `IncidentExporter`는 incident ZIP을 작성합니다. listener는 기록 스레드에서 동기 실행됩니다. |
 | `cts/` | CTS 스타일 카메라 검사를 앱 안에서 실행합니다. `CtsEntryActivity`에서 두 방식 중 하나를 고릅니다. 커스텀 케이스는 `CtsCatalog`가 목록을 순수 Kotlin으로 정의하고, `CtsRunner` 계약과 `CameraCaseRunner` 기반 클래스, 공통 Camera2 호출 `Camera2Ops` 위에 케이스별 하위 패키지(`onoff/`·`switching/`·`sizes/`·`combination/`·`snapshot/`)가 놓이며, `recording/`은 녹화 케이스들이 공유하는 규칙과 MediaRecorder 도우미입니다. 각 패키지는 판정을 순수 Kotlin `…Rules`에, 카메라 호출을 `…Runner`에 둡니다. `vendored/`는 `:ctsvendor` 모듈의 AOSP CTS 테스트를 JUnit으로 실행하는 화면입니다. 어느 쪽도 공식 CTS 판정을 대체하지 않습니다. |
 | `ctsvendor/` (별도 Gradle 모듈) | AOSP `android16-release`의 camera2 CTS 소스(`RecordingTest`, `Camera2SurfaceViewTestCase`, `CtsCameraUtils`, `com.android.ex.camera2`)를 그대로 두고, instrumentation 없이 돌도록 같은 이름의 `androidx.test` 대역과 `@TestApi` 치환 패치를 더한 모듈입니다. `VendoredCts`가 Instrumentation 대역과 host Activity를 등록하고, `VendoredRun`이 JUnit runner로 테스트 메서드 하나를 실행하며, `VendoredCatalog`가 reflection으로 `@Test` 메서드를 나열합니다. 패치 목록과 재동기화 절차는 `ctsvendor/UPSTREAM.md`에 있습니다. |
-| `ui/`와 `MainActivity.kt` | LIVE 관측값과 Canvas 그래프, 공통 `Look` 토큰, 카메라 선택과 권한 처리를 제공합니다. |
+| `ui/`와 `MainActivity.kt` | Live 관측값과 Canvas 그래프, 공통 `Look` 토큰, 카메라 선택과 권한 처리를 제공합니다. |
 
 `BenchmarkActivity`는 실행 완료 후 별도 입출력 스레드에서 조립·저장·비교를 처리하고 `ResultPresenter`와 `ComparePresenter`의 결과를 표시합니다. 시작 카드와 진행률에는 `StartCardPresenter`와 `ProgressPresenter`를 사용합니다.
 
@@ -130,9 +130,9 @@ graph LR
 
 ProfileLibrary와 ProfileArchive는 외부 JSON의 검증·출처·별도 파일 보관을 담당합니다. ProfileComparison은 기기·빌드·계약·환경·중복 검사를, RepeatStatistics는 실행 단위 기술 통계와 순열검정을 담당합니다. ProfileComparisonActivity가 시스템 파일 선택기와 묶음 선택·결과 공유를 연결합니다.
 
-`CameraProbeActivity`(PROBE)는 카메라를 열지 않고 `CameraCharacteristics`를 읽어 표로 보여 줍니다. `camera/CameraProbeReader`가 공개 카메라 ID 전부와 논리 카메라 뒤의 물리 카메라를 섹션 단위로 읽고, `camera/CameraProbe`의 순수 Kotlin 모델과 TXT·JSON 렌더러가 화면과 공유 파일을 만듭니다. enum 값의 이름은 `CameraMetadata` 상수에서 reflection으로 읽으므로 새 API 값도 그대로 이름이 붙습니다. 이 화면은 HAL이 공개한 사양을 보여 줄 뿐 측정하지 않으며, 측정은 BENCHMARK가 담당합니다. 필터에 단어를 넣으면 그 단어가 든 줄만 목록으로 나오고, 항목을 누르면 해당 줄로 이동합니다.
+`CameraProbeActivity`(Probe)는 카메라를 열지 않고 `CameraCharacteristics`를 읽어 표로 보여 줍니다. `camera/CameraProbeReader`가 공개 카메라 ID 전부와 논리 카메라 뒤의 물리 카메라를 섹션 단위로 읽고, `camera/CameraProbe`의 순수 Kotlin 모델과 TXT·JSON 렌더러가 화면과 공유 파일을 만듭니다. enum 값의 이름은 `CameraMetadata` 상수에서 reflection으로 읽으므로 새 API 값도 그대로 이름이 붙습니다. 이 화면은 HAL이 공개한 사양을 보여 줄 뿐 측정하지 않으며, 측정은 Benchmark가 담당합니다. 필터에 단어를 넣으면 그 단어가 든 줄만 목록으로 나오고, 항목을 누르면 해당 줄로 이동합니다.
 
-`cts/CtsEntryActivity`는 LIVE 상단 `도구` 메뉴에서 LIVE 카메라를 닫은 뒤 열리는 선택 화면이고, 커스텀 케이스와 CTS 원문 케이스 중 하나를 고릅니다. 커스텀 케이스는 `CtsCaseListActivity`의 체크리스트에서 항목을 고르고 `실행`을 누르면 `suite/CtsSuiteRunActivity`가 차례로 실행하며, 행의 `›`로 `CtsCaseActivity`를 열면 그 케이스 하나만 실행합니다. 두 목록은 `suite/CtsChecklistActivity`를 공유하고, `SuitePlan`이 선택 순서와 예상 시간을, `SuiteReportPresenter`가 항목별 결과를 모은 보고서를 순수 Kotlin으로 만듭니다. 화면의 SurfaceView가 CTS의 `Camera2SurfaceViewCtsActivity` 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 `surfaceChanged`를 기다린 뒤 세션을 엽니다. 케이스는 다섯 가지입니다. `FastOnOffRunner`는 표준 열기와 열자마자 닫는 빠른 열기를 번갈아 5회 수행하고 첫 프레임의 SENSOR_TIMESTAMP를 검사합니다. `SwitchingRunner`는 카메라를 차례로 5회 순회한 뒤 카메라마다 3초 녹화합니다. `AllSizeOnOffRunner`는 SurfaceHolder 크기 전부를 하나씩 열고, `StillPreviewCombinationRunner`는 JPEG 크기와 프리뷰 크기의 모든 조합에서 정지 영상을 한 장 찍으며, `VideoSnapshotRunner`는 25초 녹화 중 5~20초 사이 무작위 시점에 같은 세션으로 스냅샷을 찍습니다. 녹화 케이스들은 `recording/BasicRecordingRules`의 길이 오차·프레임 드롭률 판정과 `CamcorderRecording`을 공유합니다. CTS와 달리 한 단계가 실패해도 나머지를 계속 실행하고, 모든 케이스는 실행 중 중단할 수 있습니다. 케이스를 추가하면 규칙은 순수 Kotlin에 두고 JVM 테스트를 함께 쓰며, `CtsCatalog`와 `CtsRunners`에 등록합니다.
+`cts/CtsEntryActivity`는 Live 상단 `도구` 메뉴에서 Live 카메라를 닫은 뒤 열리는 선택 화면이고, 커스텀 케이스와 CTS 원문 케이스 중 하나를 고릅니다. 커스텀 케이스는 `CtsCaseListActivity`의 체크리스트에서 항목을 고르고 `실행`을 누르면 `suite/CtsSuiteRunActivity`가 차례로 실행하며, 행의 `›`로 `CtsCaseActivity`를 열면 그 케이스 하나만 실행합니다. 두 목록은 `suite/CtsChecklistActivity`를 공유하고, `SuitePlan`이 선택 순서와 예상 시간을, `SuiteReportPresenter`가 항목별 결과를 모은 보고서를 순수 Kotlin으로 만듭니다. 화면의 SurfaceView가 CTS의 `Camera2SurfaceViewCtsActivity` 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 `surfaceChanged`를 기다린 뒤 세션을 엽니다. 케이스는 다섯 가지입니다. `FastOnOffRunner`는 표준 열기와 열자마자 닫는 빠른 열기를 번갈아 5회 수행하고 첫 프레임의 SENSOR_TIMESTAMP를 검사합니다. `SwitchingRunner`는 카메라를 차례로 5회 순회한 뒤 카메라마다 3초 녹화합니다. `AllSizeOnOffRunner`는 SurfaceHolder 크기 전부를 하나씩 열고, `StillPreviewCombinationRunner`는 JPEG 크기와 프리뷰 크기의 모든 조합에서 정지 영상을 한 장 찍으며, `VideoSnapshotRunner`는 25초 녹화 중 5~20초 사이 무작위 시점에 같은 세션으로 스냅샷을 찍습니다. 녹화 케이스들은 `recording/BasicRecordingRules`의 길이 오차·프레임 드롭률 판정과 `CamcorderRecording`을 공유합니다. CTS와 달리 한 단계가 실패해도 나머지를 계속 실행하고, 모든 케이스는 실행 중 중단할 수 있습니다. 케이스를 추가하면 규칙은 순수 Kotlin에 두고 JVM 테스트를 함께 쓰며, `CtsCatalog`와 `CtsRunners`에 등록합니다.
 
 CTS 원문 케이스는 `vendored/VendoredCtsListActivity`가 `:ctsvendor` 모듈의 `VendoredCatalog`에서 `@Test` 메서드를 체크리스트로 나열하고, 체크한 메서드는 같은 `CtsSuiteRunActivity`가 차례로, 행의 `›`는 `VendoredCaseActivity`가 그 메서드 하나를 실행합니다. 이 Activity는 가져온 `Camera2SurfaceViewCtsActivity`를 상속해 테스트의 `ActivityTestRule`이 돌려받는 인스턴스가 되고, 가져온 레이아웃의 SurfaceView를 앱 화면으로 옮겨 붙입니다. `VendoredRun`은 작업 스레드에서 JUnit runner를 돌리고 `RunListener`로 결과를 받습니다. `RecordingTest#testBasicRecording`은 이 경로로만 실행하며, 결과는 메서드 하나에 PASS·FAIL 하나이고 실패 문구는 CTS의 assertion 메시지 그대로입니다. 중단은 실행 중인 테스트가 쥔 `mCamera`를 닫아 테스트를 실패시키는 방식입니다. JUnit이 실행 중인 본문을 멈출 수단이 없기 때문입니다. `VendoredCts.MIN_SDK`(34) 아래 기기에서는 선택 화면이 이 경로를 비활성화합니다.
 
@@ -141,7 +141,7 @@ CTS 원문 케이스는 `vendored/VendoredCtsListActivity`가 `:ctsvendor` 모�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-17 @ `e2c690d` · Claude
+- 검토 2026-09-17 @ `902fa67` · Claude
 
 </details>
 
@@ -153,7 +153,7 @@ CTS 원문 케이스는 `vendored/VendoredCtsListActivity`가 `:ctsvendor` 모�
 
 **실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.** 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.
 
-LIVE 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 동작으로 이어집니다. 벤치마크는 별도 화면인 `BenchmarkActivity`가 준비를 마친 뒤 `BenchmarkRunner.start()`를 호출하여 시작합니다. `Telemetry.callback(...)`이 반환한 Camera2 콜백의 `onCaptureStarted`는 프레임워크 신호를 기록하며, LIVE 셔터와 벤치마크 시작을 연결하는 메서드가 아닙니다.
+Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 동작으로 이어집니다. 벤치마크는 별도 화면인 `BenchmarkActivity`가 준비를 마친 뒤 `BenchmarkRunner.start()`를 호출하여 시작합니다. `Telemetry.callback(...)`이 반환한 Camera2 콜백의 `onCaptureStarted`는 프레임워크 신호를 기록하며, Live 셔터와 벤치마크 시작을 연결하는 메서드가 아닙니다.
 
 ### 실행에서 저장까지
 
@@ -173,25 +173,25 @@ LIVE 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 `RegressionDetector`는 두 실행의 측정 계약·endpoint·validity·환경 조건을 확인합니다. baseline 비교에서만 회귀 판정을 표시하며, 이전 실행이나 임의 선택 실행과의 비교는 변화량과 비교 불가 사유를 표시합니다. 단위가 다르면 각 단위를 유지하고 백분율을 표시하지 않습니다.
 
-RESULTS의 행은 저장된 결과로 연결됩니다. 길게 누르면 baseline, 비교, JSON·CSV 내보내기, 삭제 작업을 선택합니다. 삭제 확인 후 파일을 삭제하고 해당 baseline 포인터를 정리합니다. 측정값이 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다.
+Results의 행은 저장된 결과로 연결됩니다. 길게 누르면 baseline, 비교, JSON·CSV 내보내기, 삭제 작업을 선택합니다. 삭제 확인 후 파일을 삭제하고 해당 baseline 포인터를 정리합니다. 측정값이 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다.
 
 벤치마크 닫기와 결과·이력 복귀에는 기존 위치의 48dp 아이콘을 사용합니다. 접근성 이름과 길게 누르기 설명에 복귀 대상을 표시하며, 실행·비교·내보내기·필터의 구체적인 작업 이름은 글씨로 유지합니다.
 
-### LIVE에서 선택과 촬영
+### Live에서 선택과 촬영
 
-LIVE 상단은 같은 너비의 세 칸으로 나누어, 왼쪽 칸에 배경·테두리 없는 현재 API 버튼을, 오른쪽 칸에 `도구` 메뉴와 `진단` 버튼을 두고, 가운데 칸에 `Camera2 · LIVE`처럼 엔진과 상태를 같은 줄로 표시하여 상태 문구가 화면 중심선에 놓이게 합니다. 하단은 핵심 측정값 2줄, 줌, 셔터 행, 사진·동영상 모드 순서입니다. MARK·일시정지·그래프·incident ZIP처럼 열려 있는 세션에서만 의미가 있는 항목은 `진단` 패널에서 제공합니다. 셔터 행의 왼쪽에는 최근 촬영물 썸네일, 오른쪽에는 카메라 선택 목록을 여는 아이콘을 둡니다.
+Live 상단은 같은 너비의 세 칸으로 나누어, 왼쪽 칸에 배경·테두리 없는 현재 API 버튼을, 오른쪽 칸에 `도구` 메뉴와 `진단` 버튼을 두고, 가운데 칸에 `Camera2 · Live`처럼 엔진과 상태를 같은 줄로 표시하여 상태 문구가 화면 중심선에 놓이게 합니다. 하단은 핵심 측정값 2줄, 줌, 셔터 행, 사진·동영상 모드 순서입니다. Mark·일시정지·그래프·incident ZIP처럼 열려 있는 세션에서만 의미가 있는 항목은 `진단` 패널에서 제공합니다. 셔터 행의 왼쪽에는 최근 촬영물 썸네일, 오른쪽에는 카메라 선택 목록을 여는 아이콘을 둡니다.
 
-`도구` 메뉴는 세션과 무관한 독립 화면 `Benchmark`·`PROBE`·`CTS`를 엽니다. `Benchmark`와 `CTS`는 자기 카메라를 열기 때문에 LIVE 카메라의 `close(done)` 콜백을 받은 뒤에 화면을 열며, 그동안 메뉴를 비활성화합니다. `PROBE`는 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 엽니다. LIVE 카메라는 화면이 가려질 때 평소처럼 닫히고 돌아오면 다시 열립니다. 녹화·저장 중에는 메뉴 전체를 비활성화합니다.
+`도구` 메뉴는 세션과 무관한 독립 화면 `Benchmark`·`Probe`·`CTS`를 엽니다. `Benchmark`와 `CTS`는 자기 카메라를 열기 때문에 Live 카메라의 `close(done)` 콜백을 받은 뒤에 화면을 열며, 그동안 메뉴를 비활성화합니다. `Probe`는 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 엽니다. Live 카메라는 화면이 가려질 때 평소처럼 닫히고 돌아오면 다시 열립니다. 녹화·저장 중에는 메뉴 전체를 비활성화합니다.
 
-일시정지·재개·갤러리·진단 패널 닫기처럼 익숙한 동작은 `IconButton`을 사용합니다. 아이콘은 24dp, 터치 영역은 48dp 이상이며 한국어 접근성 이름과 길게 누르기 설명을 제공합니다. API·카메라 ID·모드·줌·필터·선택과 MARK·`도구`·`진단`·`Benchmark`·`PROBE`·`CTS`는 현재 값이나 동작의 의미를 확인할 수 있도록 글씨를 유지합니다.
+일시정지·재개·갤러리·진단 패널 닫기처럼 익숙한 동작은 `IconButton`을 사용합니다. 아이콘은 24dp, 터치 영역은 48dp 이상이며 한국어 접근성 이름과 길게 누르기 설명을 제공합니다. API·카메라 ID·모드·줌·필터·선택과 Mark·`도구`·`진단`·`Benchmark`·`Probe`·`CTS`는 현재 값이나 동작의 의미를 확인할 수 있도록 글씨를 유지합니다.
 
-API 버튼은 누를 때마다 Camera2와 CameraX를 전환합니다. 사진·동영상은 각각의 이름을 한 번 눌러 선택합니다. 카메라 버튼, 벤치마크 카메라, RESULTS 필터는 현재 항목이 표시된 목록을 사용합니다. 아래 공간이 부족하면 버튼 위에 열립니다. 바깥을 누르거나 뒤로 가면 값을 유지하고 닫으며, 화면을 나갈 때에도 목록을 닫습니다. 모드를 고른 뒤 중앙 셔터를 눌러야 촬영이나 녹화를 시작합니다.
+API 버튼은 누를 때마다 Camera2와 CameraX를 전환합니다. 사진·동영상은 각각의 이름을 한 번 눌러 선택합니다. 카메라 버튼, 벤치마크 카메라, Results 필터는 현재 항목이 표시된 목록을 사용합니다. 아래 공간이 부족하면 버튼 위에 열립니다. 바깥을 누르거나 뒤로 가면 값을 유지하고 닫으며, 화면을 나갈 때에도 목록을 닫습니다. 모드를 고른 뒤 중앙 셔터를 눌러야 촬영이나 녹화를 시작합니다.
 
 줌은 현재 배율만 표시하다가 누르면 지원 배율로 펼쳐집니다. 선택 후 3초 동안 추가 조작이 없으면 선택한 배율을 유지한 채 접힙니다. 선택된 흰 원의 지름은 32dp이고 터치 영역은 48dp입니다. 펼침은 260ms, 접힘은 220ms 동안 폭과 투명도·크기가 부드럽게 바뀝니다. 좁은 창에서는 가로 스크롤을 제공하고, 드래그 중에는 자동 접기를 미룹니다. 시스템 접근성 시간 제한을 반영하며 TalkBack에서는 자동 접기 없이 선택을 기다린 뒤 접힙니다. 시스템 애니메이션 비활성화 설정도 따릅니다.
 
 `ShutterButton`은 사진 모드에서 흰 원을, 동영상 모드에서 흰 테두리와 빨간 원을 표시합니다. 녹화 중에는 빨간 정지 사각형으로 바뀌며, 셔터 아래의 모드 위치에는 경과 시간을 표시합니다. 녹화 중에는 엔진·카메라·줌·모드 변경과 일시정지·갤러리·`도구` 메뉴를 비활성화합니다. 정지 셔터를 누르면 `저장 중…`을 표시하고, 녹화 종료 처리 동안 셔터를 비활성화해 중복 정지를 막습니다. 앨범 저장 완료는 별도 알림으로 표시합니다.
 
-LIVE에서 사진을 촬영하면 Camera2의 같은 요청에 YUV와 JPEG 출력을 지정합니다. 센서 타임스탬프가 일치하는 버퍼를 연결해 별도 작업 스레드에서 사진 쌍을 저장합니다. 동영상은 프리뷰·인코더 세션으로 전환하고 종료 후 파일을 앨범에 공개합니다. CameraX 상태에서 미디어 작업을 요청하면 Camera2로 전환합니다.
+Live에서 사진을 촬영하면 Camera2의 같은 요청에 YUV와 JPEG 출력을 지정합니다. 센서 타임스탬프가 일치하는 버퍼를 연결해 별도 작업 스레드에서 사진 쌍을 저장합니다. 동영상은 프리뷰·인코더 세션으로 전환하고 종료 후 파일을 앨범에 공개합니다. CameraX 상태에서 미디어 작업을 요청하면 Camera2로 전환합니다.
 
 ### 갤러리에서 열람과 정리
 
@@ -213,7 +213,7 @@ CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩�
 
 PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 확인합니다. 같은 요청 ID와 같은 내용은 기존 결과를 반환하며 새로운 촬영을 시작하지 않습니다. 원본 파일이 삭제되거나 전송이 끊긴 경우에는 요청 ID로 상태를 확인한 다음 파일 수집을 재시도합니다.
 
-앱을 열 때는 투명한 `CliLaunchActivity`가 main thread에서 작업 상태를 다시 확인합니다. 실행 중인 작업이 있으면 LIVE로 전환하지 않습니다. 상태 조회는 `CommandStore`의 메모리 snapshot을 읽으며 파일 기록은 상태 전환 때만 수행합니다.
+앱을 열 때는 투명한 `CliLaunchActivity`가 main thread에서 작업 상태를 다시 확인합니다. 실행 중인 작업이 있으면 Live로 전환하지 않습니다. 상태 조회는 `CommandStore`의 메모리 snapshot을 읽으며 파일 기록은 상태 전환 때만 수행합니다.
 
 ### 반복 측정 프로파일 비교
 
@@ -224,7 +224,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/ui/GalleryImageView.kt`, `app/src/main/java/dev/halcamera/ui/IconButton.kt`, `app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/SelectionPopup.kt`, `app/src/main/java/dev/halcamera/ui/ShutterButton.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BaselineManager.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/StoreRunCatalog.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-17 @ `e2c690d` · Claude
+- 검토 2026-09-17 @ `902fa67` · Claude
 
 </details>
 
@@ -250,7 +250,7 @@ graph LR
     validity -->|"측정값과 validity"| score["ScoreComposer · 해당하는 calibration만 적용"]
     score -->|"적격 내부 점수 또는 null"| json["BenchmarkReport · schema 4 JSON"]
     json -->|"저장 실행 읽기"| compare["BaselineManager / RegressionDetector"]
-    compare -->|"다시 계산한 비교"| screen["결과 / COMPARE"]
+    compare -->|"다시 계산한 비교"| screen["결과 / Compare"]
     json -->|"목록 읽기"| history["HistoryActivity / RunIndex"]
     history -->|"두 실행 선택"| compare
     history -->|"필터 결과"| csv["CSV 내보내기"]
@@ -284,7 +284,7 @@ graph LR
     engine -->|"현재 세션 완료 신호"| runner
     runner -->|"Result와 환경"| validity["RunValidity"]
     validity -->|"비교 가능 여부"| comparison["RegressionDetector"]
-    history["RESULTS 목록 / 비교"] -->|"기준과 현재 선택"| comparison
+    history["Results 목록 / 비교"] -->|"기준과 현재 선택"| comparison
     history -->|"확인 후 삭제"| delete["실행 파일 삭제 / baseline 정리"]
     recorder["FlightRecorder"] -->|"전후 창 보존"| incident["incident 전후 이벤트 창"]
 ```
@@ -334,7 +334,7 @@ graph LR
 4. 회귀 임계값은 `RegressionRules`에서 관리합니다. baseline은 자동으로 지정하지 않으며 임의의 두 실행을 고르는 동작도 baseline을 바꾸지 않습니다.
 5. 파일 삭제 실패 시 baseline 포인터를 먼저 없애지 않습니다. 포인터 정리 실패 후 남은 잘못된 참조는 `BaselineManager`가 이후 조회에서 정리합니다.
 
-LIVE의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9에서는 저장소 권한을, 녹화에는 마이크 권한을 요청합니다. 벤치마크의 StreamSpec과 메타데이터 전용 내보내기 계약은 유지합니다.
+Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9에서는 저장소 권한을, 녹화에는 마이크 권한을 요청합니다. 벤치마크의 StreamSpec과 메타데이터 전용 내보내기 계약은 유지합니다.
 
 ### CLI의 접근과 완료 경계
 
@@ -351,7 +351,7 @@ LIVE의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-17 @ `e2c690d` · Claude
+- 검토 2026-09-17 @ `902fa67` · Claude
 
 </details>
 
@@ -374,12 +374,12 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 다음 항목은 구조 스캔에서 확인한 제약이나 추가 검증이 필요한 사항입니다.
 
 - 콜백과 파일 작업의 실행 스레드, close 완료와 늦은 신호 처리는 변경 시 함께 검증해야 합니다.
-- RESULTS의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.
+- Results의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.
 - 촬영 중 프리뷰 stall 지표 2.7은 여전히 NOT_RUN입니다.
 
 **후속 작업**
 
-1. RESULTS의 필터·임의 비교·baseline·삭제·공유 동작을 기기에서 검증하고 근거를 남깁니다.
+1. Results의 필터·임의 비교·baseline·삭제·공유 동작을 기기에서 검증하고 근거를 남깁니다.
 2. 촬영 중 프리뷰 stall 지표 2.7의 관측·계산 규칙을 구현합니다.
 
 <details class="doc-evidence" markdown="1">
@@ -403,13 +403,13 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-17 @ `e2c690d` · Claude |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-17 @ `e2c690d` · Claude |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-17 @ `e2c690d` · Claude |
-| 원고 `overview` | 최신 | 검토 2026-09-17 @ `e2c690d` · Claude |
-| 원고 `module-roles` | 최신 | 검토 2026-09-17 @ `e2c690d` · Claude |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-17 @ `e2c690d` · Claude |
-| 원고 `constraints` | 최신 | 검토 2026-09-17 @ `e2c690d` · Claude |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-17 @ `902fa67` · Claude |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-17 @ `902fa67` · Claude |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-17 @ `902fa67` · Claude |
+| 원고 `overview` | 최신 | 검토 2026-09-17 @ `902fa67` · Claude |
+| 원고 `module-roles` | 최신 | 검토 2026-09-17 @ `902fa67` · Claude |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-17 @ `902fa67` · Claude |
+| 원고 `constraints` | 최신 | 검토 2026-09-17 @ `902fa67` · Claude |
 
 <!-- omm:end id=status -->
 

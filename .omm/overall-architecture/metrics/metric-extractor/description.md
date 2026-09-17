@@ -4,7 +4,7 @@
 
 `observe()`가 집계합니다. `warmupFrames`는 새 스트림의 첫 프레임들을 간격·partial·버퍼·stall 지표에서 빼되 3A 수렴에는 그대로 씁니다. 3A는 첫 result부터 재기 때문입니다. Galaxy S25+에서는 프레임 #1이 33.3ms 길이인데도 #0 뒤 66.7ms에 도착하는 시작 아티팩트가 있습니다. 벤치마크에서는 `RunAssembler`가 관측 시작 전에 도착한 프레임 수를 세어 이 값을 넘깁니다. 프레임은 간격이 자기 `SENSOR_FRAME_DURATION`의 1.5배와 baseline 간격의 1.5배를 모두 넘으면 stall이며, 자기 길이가 없으면 baseline 비교만 적용합니다.
 
-같은 코드에 집계 모드가 둘 있습니다. PERCENTILE(벤치마크의 p50/p95)과 MAX입니다. MAX 모드는 현재 `MetricExtractorTest`에서만 쓰이며, LIVE의 `LiveReadout`은 기본 PERCENTILE로 기준선을 구하고 최근 창의 최댓값은 직접 계산합니다. `minSamples`(벤치마크는 15) 미만이면 값은 `INSUFFICIENT_SAMPLES`와 함께 null이 되지만 통계는 그대로 보고합니다. H.10은 steady 간격의 모집단 표준편차(ddof = 0)입니다.
+같은 코드에 집계 모드가 둘 있습니다. PERCENTILE(벤치마크의 p50/p95)과 MAX입니다. MAX 모드는 현재 `MetricExtractorTest`에서만 쓰이며, Live의 `LiveReadout`은 기본 PERCENTILE로 기준선을 구하고 최근 창의 최댓값은 직접 계산합니다. `minSamples`(벤치마크는 15) 미만이면 값은 `INSUFFICIENT_SAMPLES`와 함께 null이 되지만 통계는 그대로 보고합니다. H.10은 steady 간격의 모집단 표준편차(ddof = 0)입니다.
 
 AF 처리는 흔한 오독을 피합니다. `CONTROL_AF_STATE` INACTIVE는 "AF가 꺼짐"일 수도 "아직 수렴 전"일 수도 있으므로 `autofocusEnabled`는 관측된 **모드**(0 = OFF, 5 = EDOF)로 판단하고, AF를 돌린 프레임이 없으면 H.7은 실패가 아니라 `UNSUPPORTED`가 됩니다.
 
