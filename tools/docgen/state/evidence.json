@@ -7,9 +7,9 @@
       },
       "accepted": {
         "codeHash": "afa6f966f052a6f5",
-        "modelHash": "6dc4a2f667e00764",
+        "modelHash": "146a796edc87688a",
         "at": "2026-09-17",
-        "commit": "24db659",
+        "commit": "902fa67",
         "reviewer": "Claude"
       }
     },
@@ -21,7 +21,7 @@
         "codeHash": "aa4fb88d2e5bd536",
         "modelHash": "acb77a7c117a8dc6",
         "at": "2026-09-17",
-        "commit": "24db659",
+        "commit": "902fa67",
         "reviewer": "Claude"
       }
     },
@@ -33,7 +33,7 @@
         "codeHash": "6f7c4a1563278b4f",
         "modelHash": "5d2a941b75c1b9ba",
         "at": "2026-09-17",
-        "commit": "24db659",
+        "commit": "902fa67",
         "reviewer": "Claude"
       }
     },
@@ -43,9 +43,9 @@
       },
       "accepted": {
         "codeHash": "0b73495317c94002",
-        "modelHash": "521a222ced82e77c",
+        "modelHash": "cce7173dadaf2155",
         "at": "2026-09-17",
-        "commit": "24db659",
+        "commit": "902fa67",
         "reviewer": "Claude"
       }
     },
@@ -57,7 +57,7 @@
         "codeHash": "b89d2d0a9c96ebe8",
         "modelHash": "f59d909d2c559cbc",
         "at": "2026-09-17",
-        "commit": "24db659",
+        "commit": "902fa67",
         "reviewer": "Claude"
       }
     },
@@ -69,16 +69,16 @@
         "codeHash": "aa4fb88d2e5bd536",
         "modelHash": "5ad7672db6420317",
         "at": "2026-09-17",
-        "commit": "24db659",
+        "commit": "902fa67",
         "reviewer": "Claude"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "afa6f966f052a6f5",
-        "modelHash": "76d14af609cce5c0",
+        "modelHash": "daf8a4d4bc0e1661",
         "at": "2026-09-17",
-        "commit": "24db659",
+        "commit": "902fa67",
         "reviewer": "Claude"
       },
       "observed": {
@@ -88,9 +88,9 @@
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "afa6f966f052a6f5",
-        "modelHash": "95ea83fa8da0726e",
+        "modelHash": "82e3816a6240bf33",
         "at": "2026-09-17",
-        "commit": "24db659",
+        "commit": "902fa67",
         "reviewer": "Claude"
       },
       "observed": {

@@ -24,7 +24,7 @@ M4의 내용은 계획보다 앞당겨 M3 2단계에서 함께 구현하고 검�
 - PR #41–#45에서 Live 사진·동영상 저장, 앱 내 갤러리, 촬영 제어와 카메라 선택 UI를 구현하고 개선했습니다. 이 녹화 기능과 아래의 녹화 성능 계측(3.x)은 별도 기능입니다.
 - PR #46에서 HAL CAM 0.5.0을 릴리스했습니다.
 - PR #47에서 `.omm/`의 Doctor 요소를 제거하고 개발자 가이드와 docgen 근거 검사를 갱신했습니다. 이전 STATUS에 적혀 있던 아키텍처 문서 정리는 완료되었습니다.
-- PR #81·#82에서 Live 개발자 진입점을 "현재 세션이 열려 있어야 의미가 있는가"로 나눴습니다. Benchmark·Probe·CTS는 상단 `도구` 메뉴의 독립 화면이고, READOUT·그래프·Mark·incident는 `진단` 패널입니다. Benchmark·CTS는 Live 카메라의 `close(done)` 뒤에 열리며(S25+에서 약 260 ms), Probe는 대기 없이 엽니다. 배치 기준은 `docs/design/APP-UI.md`에 있습니다.
+- PR #81·#82에서 Live 개발자 진입점을 "현재 세션이 열려 있어야 의미가 있는가"로 나눴습니다. Benchmark·Probe·CTS는 상단 `도구` 메뉴의 독립 화면이고, Readout·그래프·Mark·incident는 `진단` 패널입니다. Benchmark·CTS는 Live 카메라의 `close(done)` 뒤에 열리며(S25+에서 약 260 ms), Probe는 대기 없이 엽니다. 배치 기준은 `docs/design/APP-UI.md`에 있습니다.
 
 ## M5 현재 데이터와 구현 (2026-09-12)
 
@@ -77,7 +77,7 @@ Galaxy S25+ (`SM-S936N`, Android SDK 36)에서 무선 ADB로 수집했습니다.
 
 Doctor를 지웠습니다. consumer 홈과 incident 모드, Auto Check와 그 화면, 임계값 엔진과 표, 진단 규칙, health composer, health monitor, v0.2 리포트 작성기, Auto Check baseline store가 사라졌습니다. 모델에 있던 판정 어휘(State, ThresholdBasis, CddApplicability, ConditionEquivalence, HealthLevelV2, CauseLayer, MetricState, Diagnosis, Health)도 함께 지웠습니다.
 
-Live는 측정한 것을 모두 유지하고 판정한 것을 모두 버렸습니다. 건강 배너와 진단 카드 대신 `ui/LiveReadout`이 같은 숫자를 판정 없이 표시합니다. strip에서 경고 색을 뺐고, flight recorder는 더 이상 `health_assessment` 이벤트를 쓰지 않습니다. 하단 버튼은 Mark · SHUTTER · Benchmark 세 개이고, MainActivity가 런처가 되었습니다.
+Live는 측정한 것을 모두 유지하고 판정한 것을 모두 버렸습니다. 건강 배너와 진단 카드 대신 `ui/LiveReadout`이 같은 숫자를 판정 없이 표시합니다. strip에서 경고 색을 뺐고, flight recorder는 더 이상 `health_assessment` 이벤트를 쓰지 않습니다. 하단 버튼은 Mark · 셔터 · Benchmark 세 개이고, MainActivity가 런처가 되었습니다.
 
 살아남은 파일은 이름에 맞는 패키지로 옮겼습니다. `check/`의 엔드포인트 두 개는 `camera/`로, `diagnosis/`의 MetricExtractor와 모델 잔여분은 `metrics/`로 갔습니다. `metrics`는 패키지 그래프의 leaf이며 비교도 표시도 알지 못합니다.
 
