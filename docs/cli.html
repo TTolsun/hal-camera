@@ -14,7 +14,7 @@
     <nav class="site-nav" aria-label="문서 메뉴">
       <a href="./architecture.html">Architecture</a>
       <a href="./benchmark.html">Benchmark</a>
-      <a href="./probe.html">PROBE</a>
+      <a href="./probe.html">Probe</a>
       <a href="./cts.html">CTS</a>
       <a href="./cli.html" aria-current="page">CLI</a>
       <a href="./decisions.html">Decisions</a>
@@ -25,7 +25,7 @@
   </header>
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
-    <h1 lang="en">Drive the app from a terminal.</h1><p><strong>CLI는 앱의 기능을 PC로 옮기지 않고, 앱이 하는 일을 PC에서 시작합니다.</strong> ADB로 연결한 PC가 명령을 제출하면 앱이 같은 카메라 엔진·같은 벤치마크 계약으로 실행하고, PC는 결과 JSON과 사진을 회수합니다. 화면에서 실행한 결과와 CLI로 실행한 결과는 같은 파일 형식이며 같은 <a href="benchmark.html">History</a>에 남습니다.</p>
+    <h1 lang="en">Drive the app from a terminal.</h1><p><strong>CLI는 앱의 기능을 PC로 옮기지 않고, 앱이 하는 일을 PC에서 시작합니다.</strong> ADB로 연결한 PC가 명령을 제출하면 앱이 같은 카메라 엔진·같은 벤치마크 계약으로 실행하고, PC는 결과 JSON과 사진을 회수합니다. 화면에서 실행한 결과와 CLI로 실행한 결과는 같은 파일 형식이며 같은 <a href="benchmark.html">Results</a>에 남습니다.</p>
 <pre><code class="language-mermaid">flowchart LR
     PC[&quot;PC · halcam 또는 adb&quot;] --&gt;|&quot;content call submit&quot;| P[&quot;CliProvider&lt;br/&gt;shell UID 2000만 허용&quot;]
     P --&gt; C[&quot;CommandCoordinator&lt;br/&gt;요청 저장 · 한 번에 하나&quot;]
@@ -144,7 +144,7 @@ adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/$id/arti
 </tr>
 </thead>
 <tbody><tr>
-<td><a href="probe.html">PROBE</a> 사양 표 내보내기</td>
+<td><a href="probe.html">Probe</a> 사양 표 내보내기</td>
 <td>앱의 <code>TXT</code>·<code>JSON</code> 공유</td>
 </tr>
 <tr>
@@ -153,7 +153,7 @@ adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/$id/arti
 </tr>
 <tr>
 <td>baseline 지정, 비교, profile 비교</td>
-<td>History·COMPARE 화면. CLI가 받은 run JSON을 화면의 JSON 가져오기로 넣으면 같은 비교를 할 수 있습니다.</td>
+<td>Results·Compare 화면. CLI가 받은 run JSON을 화면의 JSON 가져오기로 넣으면 같은 비교를 할 수 있습니다.</td>
 </tr>
 <tr>
 <td>동영상 녹화, 줌, CameraX 엔진 선택</td>
