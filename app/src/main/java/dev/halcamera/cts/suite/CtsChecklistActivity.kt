@@ -146,7 +146,9 @@ abstract class CtsChecklistActivity : ComponentActivity() {
         summaryView = Look.text(this, "", 13, Look.onDark)
         bar.addView(summaryView, LinearLayout.LayoutParams(0, -2, 1f))
         runButton = Look.primaryButton(this, "실행") { run() }
-        bar.addView(runButton, LinearLayout.LayoutParams(-2, dp(48)).apply { marginStart = dp(12) })
+        // Wrap height with a 48dp floor: a fixed 48dp clipped the label at large font scales.
+        runButton.minHeight = dp(48)
+        bar.addView(runButton, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(12) })
         return bar
     }
 

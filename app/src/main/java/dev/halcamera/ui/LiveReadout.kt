@@ -110,7 +110,7 @@ class LiveReadout(
         /** The one-line strip caption under the sparkline. */
         fun stripText(frame: Long?, partialMs: Double?, bufferMs: Double?): String {
             fun short(v: Double?) = v?.let { String.format(Locale.US, "%+.1f", it) } ?: "—"
-            return "#${frame ?: "—"}  START +0  PARTIAL ${short(partialMs)}  BUFFER ${short(bufferMs)} ms"
+            return "#${frame ?: "—"}  Start +0  Partial ${short(partialMs)}  Buffer ${short(bufferMs)} ms"
         }
 
         internal const val LABEL_WIDTH = 18

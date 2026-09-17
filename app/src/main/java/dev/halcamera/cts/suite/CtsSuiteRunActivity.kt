@@ -146,9 +146,9 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         body.addView(statusView, lp(top = 8))
         val actions = Look.row(this)
         runButton = Look.ghostButton(this, "실행", dark = true) { if (running) stop() else requestAndStart() }
-        actions.addView(runButton, LinearLayout.LayoutParams(0, dp(48), 1f))
-        actions.addView(Look.ghostButton(this, "복사", dark = true) { copy() }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
-        actions.addView(Look.ghostButton(this, "공유", dark = true) { share() }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
+        actions.addView(runButton, LinearLayout.LayoutParams(0, -2, 1f))
+        actions.addView(Look.ghostButton(this, "복사", dark = true) { copy() }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
+        actions.addView(Look.ghostButton(this, "공유", dark = true) { share() }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
         body.addView(actions, lp(top = 8))
         headlineView = Look.text(this, "", 19, Look.onDark, bold = true)
         body.addView(headlineView, lp(top = 18))

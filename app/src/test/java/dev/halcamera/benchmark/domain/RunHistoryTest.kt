@@ -60,12 +60,12 @@ class RunHistoryTest {
         val cmp = RegressionDetector.compare(base, current)
         assertTrue(cmp.hasRegression)
         val selected = ComparePresenter.present(base, current, cmp, ComparedTo.PREVIOUS, selectedReference = true)
-        assertEquals("SELECTED", selected.baseHeader)
+        assertEquals("Selected", selected.baseHeader)
         assertTrue(selected.rows.none { it.hasVerdict })
         assertTrue(selected.baseLine.startsWith("selected"))
         assertFalse(selected.referenceNote!!.contains("baseline 없음"))
         val baseline = ComparePresenter.present(base, current, cmp, ComparedTo.BASELINE, selectedReference = true)
-        assertEquals("BASELINE", baseline.baseHeader)
+        assertEquals("Baseline", baseline.baseHeader)
         assertTrue(baseline.rows.any { it.hasVerdict })
     }
 

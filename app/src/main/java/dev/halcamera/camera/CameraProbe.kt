@@ -125,19 +125,19 @@ object CameraProbeText {
 
     fun render(snapshot: CameraProbeSnapshot, cameraKey: String? = null): String {
         val out = StringBuilder()
-        out.appendLine("HAL CAM · CAMERA PROBE")
+        out.appendLine("HAL CAM · Camera probe")
         out.appendLine("captured  ${snapshot.capturedAt}")
         out.appendLine()
-        out.append(section(ProbeSection("DEVICE", snapshot.device)))
+        out.append(section(ProbeSection("Device", snapshot.device)))
         val cameras = if (cameraKey == null) snapshot.cameras else snapshot.cameras.filter { it.key == cameraKey }
         cameras.forEach { camera ->
             out.appendLine()
-            out.appendLine("######## CAMERA ${camera.key} · ${camera.title}")
+            out.appendLine("######## Camera ${camera.key} · ${camera.title}")
             camera.sections.forEach { out.appendLine(); out.append(section(it)) }
         }
         if (snapshot.errors.isNotEmpty()) {
             out.appendLine()
-            out.append(section(ProbeSection("ERRORS", snapshot.errors.map { ProbeRow("!", it) })))
+            out.append(section(ProbeSection("Errors", snapshot.errors.map { ProbeRow("!", it) })))
         }
         return out.toString()
     }

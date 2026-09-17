@@ -81,7 +81,7 @@ class MainActivity : ComponentActivity() {
     }
     companion object {
         /** 8.1: one word, because the button records a moment and no longer claims anything about it. */
-        const val MARK_LABEL = "MARK"
+        const val MARK_LABEL = "Mark"
     }
     private lateinit var timelineView: dev.halcamera.ui.TimelineView
     // Camera UI follows docs/design/APP-UI.md; shared dark surfaces and active states use ui/Look.
@@ -186,7 +186,7 @@ class MainActivity : ComponentActivity() {
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
             // The only cursor left is the incident trigger. The other one marked the frames that produced a
             // WARNING, and there is no longer anything issuing one.
-            val markers = events.filter { it.kind == "incident_trigger" }.map { Triple(it.atNs, "MARK", true) }
+            val markers = events.filter { it.kind == "incident_trigger" }.map { Triple(it.atNs, "Mark", true) }
             scope.update(frames, time, markers)
             updateReadout(events, frames, time)
             updateReadings(events, frames, time)
@@ -306,7 +306,7 @@ class MainActivity : ComponentActivity() {
         updateCameraChoices()
     }
     private fun setStatus(text: String, ok: Boolean) {
-        statusText.text="$engineName · ${if(recordingVideo) "REC" else if(ok) "LIVE" else "대기"}"
+        statusText.text="$engineName · ${if(recordingVideo) "REC" else if(ok) "Live" else "대기"}"
         statusText.setTextColor(Look.onDarkMuted)
         main.removeCallbacks(clearNotice)
         cameraNotice.text = text
@@ -364,7 +364,7 @@ class MainActivity : ComponentActivity() {
         }
         // Tools that do not need the open session (Benchmark, PROBE, CTS) live behind one menu; the panel keeps
         // only what reads the live session. APP-UI.md "도구 메뉴와 독립 화면" is the source of that split.
-        toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: Benchmark, PROBE, CTS" }
+        toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: Benchmark, Probe, CTS" }
         val panelButton=button("진단") { showDiagnostics(true) }.apply { contentDescription="진단 패널 열기" }
         listOf(engineButton,toolsButton,panelButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
         statusText=label("카메라 준비 중…",12,Look.onDarkMuted).apply {
@@ -465,7 +465,7 @@ class MainActivity : ComponentActivity() {
             // and after an asynchronous write, by which point lastReading has been replaced many times over and
             // may even belong to a different camera. What the dialog shows has to be the evidence for that ZIP.
             if(recorder.trigger(id)) { markedReadings[id]=lastReading; toast("5초 후 incident ZIP을 저장합니다") }
-        }.apply { setTextColor(Color.WHITE); background=cameraChrome(Color.TRANSPARENT); contentDescription="MARK: 직전 10초와 이후 5초를 ZIP으로 저장" }
+        }.apply { setTextColor(Color.WHITE); background=cameraChrome(Color.TRANSPARENT); contentDescription="Mark: 직전 10초와 이후 5초를 ZIP으로 저장" }
         reportButton.minHeight=dp(48); reportButton.minimumHeight=dp(48)
         mainRow.addView(reportButton,LinearLayout.LayoutParams(0,-2,1f))
 
@@ -494,29 +494,29 @@ class MainActivity : ComponentActivity() {
         body.addView(label("ADB 연결을 승인한 PC에서 촬영과 벤치마크를 실행할 수 있습니다.",12,muted),lp(top=4))
         // 8.1: raw numbers only. The DIAGNOSIS card that used to lead this panel named a rule and a cause layer
         // from a two-second window, which the app could not actually establish; BENCHMARK answers that properly.
-        body.addView(label("LIVE READOUT",14,muted,true),lp(top=18))
+        body.addView(label("Live readout",14,muted,true),lp(top=18))
         body.addView(label("같은 세션의 직전 프레임에서 읽은 값. 기준 p50은 최근 창을 제외한 나머지 프레임의 중앙값",10,muted),lp(top=4))
         readoutCard=label("프레임을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
         body.addView(readoutCard,lp(top=10))
         val stripBox=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; background=rounded(panel); setPadding(dp(12),dp(12),dp(12),dp(12)) }
-        stripBox.addView(label("FRAME INTERVAL · 최근 10초",12,muted,true),lp())
+        stripBox.addView(label("Frame interval · 최근 10초",12,muted,true),lp())
         strip=StripView(this).apply { contentDescription="최근 10초 센서 프레임 간격. 실선은 기준, 점선은 1.5배 임계" }
         stripBox.addView(strip,lp(height=40,top=8))
-        stripText=label("PARTIAL —   BUFFER — ms",12,muted).apply { gravity=Gravity.CENTER; typeface=Look.mono }
+        stripText=label("Partial —   Buffer — ms",12,muted).apply { gravity=Gravity.CENTER; typeface=Look.mono }
         stripBox.addView(stripText,lp(top=8))
         body.addView(stripBox,lp(top=10))
-        body.addView(label("3A OSCILLOSCOPE",14,muted,true),lp(top=18))
+        body.addView(label("3A oscilloscope",14,muted,true),lp(top=18))
         body.addView(label("최근 10초 · 3A 상태는 단계값, 연속값 그래프는 자동 스케일",10,muted),lp(top=4))
         scope=ScopeView(this).apply { background=rounded(panel); contentDescription="AE, AF, AWB 상태와 노출, ISO, 센서 프레임 간격 그래프" }
         body.addView(scope,lp(height=342,top=10))
-        body.addView(label("FRAME CALLBACK TIMELINE",14,muted,true),lp(top=20))
-        timelineView=dev.halcamera.ui.TimelineView(this).apply { background=rounded(panel); contentDescription="최근 프레임과 세션 평균의 START, PARTIAL, BUFFER 도착 시각 비교" }
+        body.addView(label("Frame callback timeline",14,muted,true),lp(top=20))
+        timelineView=dev.halcamera.ui.TimelineView(this).apply { background=rounded(panel); contentDescription="최근 프레임과 세션 평균의 Start, Partial, Buffer 도착 시각 비교" }
         body.addView(timelineView,lp(height=96,top=10))
         timeline=label("프레임 콜백을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
         body.addView(timeline,lp(top=8))
-        system=label("APP CPU —  ·  PSS —  ·  THERMAL —",11,muted)
+        system=label("App CPU —  ·  PSS —  ·  Thermal —",11,muted)
         body.addView(system,lp(top=12))
-        body.addView(label("INCIDENT ZIP",14,muted,true),lp(top=20))
+        body.addView(label("Incident ZIP",14,muted,true),lp(top=20))
         body.addView(label("$MARK_LABEL: 직전 10초 + 이후 5초의 이벤트를 저장합니다.",12,Color.WHITE),lp(top=8))
         recorderText=label("30s 순환 버퍼",11,muted); body.addView(recorderText,lp(top=8))
         val exports=row(); body.addView(exports,lp(top=8))
@@ -635,18 +635,18 @@ class MainActivity : ComponentActivity() {
         fun fmt(value:Double?,pattern:String)=value?.let { pattern.format(Locale.US,it) } ?: "—"
         val zoom=num("zoomRatio")?.let { "Zoom ${"%.2f".format(Locale.US,it)}x" } ?: "Zoom —"
         metrics.text="FPS ${fmt(num("resultFps"),"%.1f")} · ISO ${num("iso")?.toInt() ?: "—"} · Exp ${fmt(num("exposureNs")?.div(1e6),"%.2fms")}\nLens ${fmt(num("focusDiopters"),"%.2fD")} · $zoom"
-        if(frame==null) { timeline.text="수신 중인 프레임 없음"; stripText.text="PARTIAL —   BUFFER — ms"; return }
+        if(frame==null) { timeline.text="수신 중인 프레임 없음"; stripText.text="Partial —   Buffer — ms"; return }
         val imageEvents=events.filter { it.session==sessionId && it.kind=="image_available" }
         val matched=frames.asReversed().firstOrNull { r -> r.sensorNs!=null && imageEvents.any { it.sensorNs==r.sensorNs } } ?: frame
         val start=events.lastOrNull { it.session==sessionId && it.kind=="capture_started" && it.frame==matched.frame }
         val image=imageEvents.lastOrNull { it.sensorNs==matched.sensorNs }
         fun offset(e:Event?)=if(e!=null && start!=null) "%+.2f ms".format(Locale.US,(e.atNs-start.atNs)/1e6) else "—"
         fun short(e:Event?)=if(e!=null && start!=null) "%+.1f".format(Locale.US,(e.atNs-start.atNs)/1e6) else "—"
-        timeline.text="Frame #${matched.frame} · observed callbacks\nSTART    ${if(start!=null) "+0.00 ms" else "—"}\nPARTIAL  ${offset(matched)}\nBUFFER   ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
+        timeline.text="Frame #${matched.frame} · observed callbacks\nStart    ${if(start!=null) "+0.00 ms" else "—"}\nPartial  ${offset(matched)}\nBuffer   ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
         fun ms(e:Event?)=if(e!=null && start!=null) (e.atNs-start.atNs)/1e6 else null
         timelineView.update(matched.frame,ms(matched),ms(image),lastReading?.baselinePartialMs,lastReading?.baselineBufferMs)
         fun offset(value: Double?) = value?.let { "%+.1f".format(Locale.US,it) } ?: "—"
-        stripText.text="PARTIAL ${offset(ms(matched))}   BUFFER ${offset(ms(image))} ms"
+        stripText.text="Partial ${offset(ms(matched))}   Buffer ${offset(ms(image))} ms"
     }
     /**
      * The live numbers, read once per tick and nothing more. The old version of this also recorded a
@@ -671,7 +671,7 @@ class MainActivity : ComponentActivity() {
         val memory=Debug.MemoryInfo().also { Debug.getMemoryInfo(it) }.totalPss/1024.0
         val thermal=if(Build.VERSION.SDK_INT>=29) getSystemService(PowerManager::class.java).currentThermalStatus else null
         val thermalName=thermal?.let { listOf("NONE","LIGHT","MODERATE","SEVERE","CRITICAL","EMERGENCY","SHUTDOWN").getOrNull(it) ?: "$it" } ?: "N/A"
-        system.text="APP CPU ${"%.1f".format(Locale.US,percent)}%* · PSS ${"%.0f".format(Locale.US,memory)} MB · $thermalName"
+        system.text="App CPU ${"%.1f".format(Locale.US,percent)}%* · PSS ${"%.0f".format(Locale.US,memory)} MB · $thermalName"
         recorder.record("app","system_sample",values=mapOf("appCpuPercentOneCore" to percent,"pssMb" to memory,"thermalStatus" to thermal,"thermalName" to thermalName))
     }
     private fun export(incident:Incident) {
@@ -724,7 +724,7 @@ class MainActivity : ComponentActivity() {
         fun ms(v:Double?)=v?.let { String.format(Locale.US,"%.1f ms",it) } ?: "—"
         val body=if(marked==null) "직전 10초와 이후 5초를 저장했습니다." else listOf(
             "직전 10초와 이후 5초를 저장했습니다.",
-            "MARK을 누른 시점의 값입니다.",
+            "Mark를 누른 시점의 값입니다.",
             "",
             "interval        ${ms(marked.intervalMs)}   (기준 p50 ${ms(marked.intervalRefMs)})",
             "partial         ${ms(marked.partialMs)}   (기준 p50 ${ms(marked.baselinePartialMs)})",
@@ -742,7 +742,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun showToolsMenu(anchor: View) {
         if (closing) return
-        showSelectionPopup(anchor, listOf("Benchmark", "PROBE", "CTS"), -1) { index ->
+        showSelectionPopup(anchor, listOf("Benchmark", "Probe", "CTS"), -1) { index ->
             when (index) {
                 0 -> openAfterClose("benchmark_started") {
                     Intent(this, dev.halcamera.benchmark.BenchmarkActivity::class.java)

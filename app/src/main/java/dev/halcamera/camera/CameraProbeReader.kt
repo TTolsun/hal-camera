@@ -75,29 +75,29 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
         val title = listOfNotNull(if (physicalOf != null) "physical" else null, facing, role, level).joinToString(" · ")
         val map = c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
         val sections = ArrayList<ProbeSection>()
-        sections += guarded("IDENTITY") { identity(id, physicalOf, c) }
-        sections += guarded("CAPABILITIES") { capabilities(c) }
-        sections += guarded("SENSOR") { sensor(c) }
-        sections += guarded("LENS") { lens(c) }
-        sections += guarded("CONTROL") { control(c) }
-        sections += guarded("PROCESSING") { processing(c) }
-        sections += guarded("REQUEST") { request(c) }
-        sections += guarded("REQUEST · RESULT KEYS") { requestResultKeys(c) }
-        if (Build.VERSION.SDK_INT >= 28) sections += guarded("SESSION KEYS") { sessionKeys(c) }
-        if (Build.VERSION.SDK_INT >= 29) sections += guarded("MANDATORY STREAM COMBINATIONS") { mandatoryCombinations(c) }
+        sections += guarded("Identity") { identity(id, physicalOf, c) }
+        sections += guarded("Capabilities") { capabilities(c) }
+        sections += guarded("Sensor") { sensor(c) }
+        sections += guarded("Lens") { lens(c) }
+        sections += guarded("Control") { control(c) }
+        sections += guarded("Processing") { processing(c) }
+        sections += guarded("Request") { request(c) }
+        sections += guarded("Request · result keys") { requestResultKeys(c) }
+        if (Build.VERSION.SDK_INT >= 28) sections += guarded("Session keys") { sessionKeys(c) }
+        if (Build.VERSION.SDK_INT >= 29) sections += guarded("Mandatory stream combinations") { mandatoryCombinations(c) }
         if (map != null) {
-            sections += guarded("STREAMS · PRIVATE (SurfaceTexture)") { surfaceTextureStreams(map) }
-            sections += guarded("STREAMS · PRIVATE (MediaRecorder)") { mediaRecorderStreams(map) }
+            sections += guarded("Streams · PRIVATE (SurfaceTexture)") { surfaceTextureStreams(map) }
+            sections += guarded("Streams · PRIVATE (MediaRecorder)") { mediaRecorderStreams(map) }
             val formats = try { map.outputFormats.toList() } catch (_: Exception) { emptyList() }
             formats.sortedBy { formatName(it) }.forEach { format ->
-                sections += guarded("STREAMS · ${formatName(format)}") { formatStreams(map, format) }
+                sections += guarded("Streams · ${formatName(format)}") { formatStreams(map, format) }
             }
-            sections += guarded("HIGH SPEED VIDEO") { highSpeed(map) }
-            sections += guarded("REPROCESSING INPUTS") { inputs(map) }
+            sections += guarded("High speed video") { highSpeed(map) }
+            sections += guarded("Reprocessing inputs") { inputs(map) }
         } else {
-            sections += ProbeSection("STREAMS", listOf(ProbeRow("!", "SCALER_STREAM_CONFIGURATION_MAP is null")))
+            sections += ProbeSection("Streams", listOf(ProbeRow("!", "SCALER_STREAM_CONFIGURATION_MAP is null")))
         }
-        sections += guarded("ALL CHARACTERISTICS") { rawDump(c) }
+        sections += guarded("All characteristics") { rawDump(c) }
         return CameraProbeEntry(id, physicalOf, "$id · $title", sections)
     }
 

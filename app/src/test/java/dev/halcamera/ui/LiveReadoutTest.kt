@@ -113,7 +113,7 @@ class LiveReadoutTest {
     }
 
     @Test fun theStripCaptionKeepsTheSignOfEachOffset() {
-        assertEquals("#12  START +0  PARTIAL +5.0  BUFFER +9.0 ms", LiveReadout.stripText(12L, 5.0, 9.0))
-        assertEquals("#—  START +0  PARTIAL —  BUFFER — ms", LiveReadout.stripText(null, null, null))
+        assertEquals("#12  Start +0  Partial +5.0  Buffer +9.0 ms", LiveReadout.stripText(12L, 5.0, 9.0))
+        assertEquals("#—  Start +0  Partial —  Buffer — ms", LiveReadout.stripText(null, null, null))
     }
 }
