@@ -28,6 +28,7 @@
         <activity android:name=".cts.CtsEntryActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".cts.CtsCaseListActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".cts.CtsCaseActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".cts.suite.CtsSuiteRunActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".cts.vendored.VendoredCtsListActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".cts.vendored.VendoredCaseActivity" android:exported="false" android:screenOrientation="portrait"
             android:configChanges="keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize" />
