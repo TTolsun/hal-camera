@@ -1,8 +1,9 @@
 # docgen 무인 동기화 설계 (로컬 Qwen runner)
 
 - 작성일: 2026-09-12
-- 갱신일: 2026-09-16 (상태와 1절 표를 실제 동작에 맞춤)
+- 갱신일: 2026-09-17 (파이프라인 코드를 공용 엔진으로 이관)
 - 상태: 운영 중. 3절의 A~D는 모두 `main`에 반영되었다(A #60, B #61, C #59·#65, D #62·#63, 첫 자동 PR #66·#71, 담당 요소 검사 #88). 실행 계획은 `docs/PLAN-docgen-autosync.md`, 운영 절차는 `tools/docgen/README.md`의 운영 절에 있다.
+- 2026-09-17: 이 문서가 설명하는 스크립트(`sync.mjs`, `verify.mjs`, `generate.mjs`, `site.mjs` 등)는 공용 엔진 `@ttolsun/omm-doc-workflow` 0.5.0으로 옮겼다. 저장소에는 `tools/docgen/docflow.mjs` 진입점, `project.json`, 어댑터, `state/`만 남는다. 아래 본문의 `node tools/docgen/<이름>.mjs`는 `node tools/docgen/docflow.mjs <명령>`으로 읽는다.
 - 코드 기준: `main` `af240b1` (2026-09-16)
 - 대상 파이프라인: `tools/docgen/` (README의 흐름도 참고)
 

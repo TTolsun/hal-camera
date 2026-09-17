@@ -1,4 +1,4 @@
-# 사이트 설정. tools/docgen/site.mjs 가 읽습니다. yaml-lite 부분집합만 사용합니다.
+# 사이트 설정. 공용 엔진의 `docflow site` 가 읽습니다. yaml-lite 부분집합만 사용합니다.
 #
 # 원본은 이 디렉터리(guide/)이고 배포 산출물은 docs/ 입니다.
 # 페이지는 이 디렉터리 바로 아래의 *.md 와 _inputs/*.md 이며 _layouts/default.html 로 감쌉니다.
@@ -7,6 +7,9 @@
 title: HALCamera 개발자 가이드
 description: Camera HAL 개발자를 위한 HALCamera 앱 가이드
 lang: ko
+
+# 홈이 아닌 페이지 상단의 표지 문구.
+page_label: HAL CAMERA / Design Documentation
 
 # 배포 대상 경로. 산출물 정리도 이 목록과 매니페스트 안에서만 수행합니다.
 output: docs

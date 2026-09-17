@@ -39,30 +39,30 @@ PC 터미널에서 촬영과 벤치마크를 시작하려면 앱의 진단 패�
 
 ## 문서를 수정한 뒤 확인하세요
 
-문서 도구는 **Node.js 24**를 사용합니다. 생성된 본문의 마커 블록을 직접 고치지 말고, 원고인 `guide/_content/` 또는 해당 근거를 수정하세요. 마커 바깥의 설명은 페이지에서 수정합니다.
+문서 도구는 **Node.js 24**와 공용 엔진 `@ttolsun/omm-doc-workflow`를 사용합니다. 먼저 `npm ci --prefix tools/docgen --ignore-scripts`로 엔진을 설치하세요. 생성된 본문의 마커 블록을 직접 고치지 말고, 원고인 `guide/_content/` 또는 해당 근거를 수정하세요. 마커 바깥의 설명은 페이지에서 수정합니다.
 
 1. 코드에서 사실 정보를 추출하고 원고의 검토 상태를 확인합니다.
 
    ~~~powershell
-   node tools/docgen/extract.mjs
-   node tools/docgen/verify.mjs
+   node tools/docgen/docflow.mjs extract
+   node tools/docgen/docflow.mjs verify
    ~~~
 
 2. 수정한 원고를 페이지에 반영합니다.
 
    ~~~powershell
-   node tools/docgen/generate.mjs
+   node tools/docgen/docflow.mjs generate
    ~~~
 
-3. 문서 도구의 보존·재현성 검사를 실행합니다.
+3. 저장소 회귀 검사와 전체 문서 검사를 실행합니다.
 
    ~~~powershell
-   node tools/docgen/selftest.mjs
-   node --test tools/docgen/regression.test.mjs
+   npm test --prefix tools/docgen
+   node tools/docgen/docflow.mjs check
    ~~~
 
 4. 원고와 근거를 대조해 검토한 뒤 변경 사항을 PR로 올립니다. 검토 기록과 배포 절차는 [문서 도구 안내](https://github.com/TTolsun/hal-camera/blob/main/tools/docgen/README.md)를 따릅니다.
 
-모든 배포 페이지에는 [공통 집필 규칙](https://github.com/TTolsun/hal-camera/blob/main/tools/docgen/style/README.md)을 적용합니다. 조건과 예외는 남기고, 독자가 먼저 할 일을 앞에 씁니다.
+모든 배포 페이지에는 [공통 집필 규칙](https://github.com/TTolsun/omm-doc-workflow/blob/main/style/README.md)을 적용합니다. 조건과 예외는 남기고, 독자가 먼저 할 일을 앞에 씁니다.
 
 **다음 단계:** [아키텍처 문서](architecture.md)에서 수정할 기능과 연결된 파일을 찾으세요.
