@@ -7,9 +7,9 @@
       },
       "accepted": {
         "codeHash": "afa6f966f052a6f5",
-        "modelHash": "d70f5a74a0b10b1a",
+        "modelHash": "ffe1b32136d22cff",
         "at": "2026-09-17",
-        "commit": "e2c690d",
+        "commit": "7a72c49",
         "reviewer": "Claude"
       }
     },
@@ -19,9 +19,9 @@
       },
       "accepted": {
         "codeHash": "aa4fb88d2e5bd536",
-        "modelHash": "752780bdb9786841",
+        "modelHash": "1226d71fdbb3e9ea",
         "at": "2026-09-17",
-        "commit": "e2c690d",
+        "commit": "7a72c49",
         "reviewer": "Claude"
       }
     },
@@ -31,9 +31,9 @@
       },
       "accepted": {
         "codeHash": "6f7c4a1563278b4f",
-        "modelHash": "d94cc6e88edc271d",
+        "modelHash": "74822a726aaa3973",
         "at": "2026-09-17",
-        "commit": "e2c690d",
+        "commit": "7a72c49",
         "reviewer": "Claude"
       }
     },
@@ -43,9 +43,9 @@
       },
       "accepted": {
         "codeHash": "0b73495317c94002",
-        "modelHash": "d18120b11f5e9a1a",
+        "modelHash": "911cfc7788f6586e",
         "at": "2026-09-17",
-        "commit": "e2c690d",
+        "commit": "7a72c49",
         "reviewer": "Claude"
       }
     },
@@ -55,9 +55,9 @@
       },
       "accepted": {
         "codeHash": "b89d2d0a9c96ebe8",
-        "modelHash": "702fcec3e6bd58f5",
+        "modelHash": "70162c2e5e38ca7d",
         "at": "2026-09-17",
-        "commit": "e2c690d",
+        "commit": "7a72c49",
         "reviewer": "Claude"
       }
     },
@@ -67,18 +67,18 @@
       },
       "accepted": {
         "codeHash": "aa4fb88d2e5bd536",
-        "modelHash": "c55df502cc6ebd33",
+        "modelHash": "c91215c1df41f1e9",
         "at": "2026-09-17",
-        "commit": "e2c690d",
+        "commit": "7a72c49",
         "reviewer": "Claude"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "afa6f966f052a6f5",
-        "modelHash": "cca2a9a2fc628903",
+        "modelHash": "eac53dc8ee56ef14",
         "at": "2026-09-17",
-        "commit": "e2c690d",
+        "commit": "7a72c49",
         "reviewer": "Claude"
       },
       "observed": {
@@ -88,9 +88,9 @@
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "afa6f966f052a6f5",
-        "modelHash": "76e49633e80f5905",
+        "modelHash": "15f83541906b91e6",
         "at": "2026-09-17",
-        "commit": "e2c690d",
+        "commit": "7a72c49",
         "reviewer": "Claude"
       },
       "observed": {
