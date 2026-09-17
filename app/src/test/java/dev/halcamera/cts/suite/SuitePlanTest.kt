@@ -2,6 +2,7 @@ package dev.halcamera.cts.suite
 
 import dev.halcamera.ctsvendor.VendoredTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -28,10 +29,11 @@ class SuitePlanTest {
     }
 
     @Test
-    fun `only measured methods carry an estimate and every method may record`() {
+    fun `only measured methods carry an estimate and only recording methods need the microphone`() {
         assertEquals(120, SuiteItem(basic).estimateSeconds(4))
         assertNull(SuiteItem(slowMotion).estimateSeconds(4))
         assertTrue(SuiteItem(slowMotion).needsAudio)
+        assertFalse(SuiteItem(burst).needsAudio)
     }
 
     @Test

@@ -12,8 +12,8 @@ data class SuiteItem(val test: VendoredTest) {
     val title: String get() = test.method
     /** The CTS class#method the item runs. */
     val source: String get() = test.source
-    /** Every vendored method may record; the permission is asked once for the whole run. */
-    val needsAudio: Boolean get() = true
+    /** Only RecordingTest methods record; the permission is asked once for the whole run when any item needs it. */
+    val needsAudio: Boolean get() = test.simpleClass == "RecordingTest"
     /** A rough duration for [cameras] cameras, or null when nobody has measured the method yet. */
     fun estimateSeconds(cameras: Int): Int? = SuitePlan.vendoredSecondsPerCamera[test.method]?.let { it * cameras }
 
