@@ -5,7 +5,7 @@
   "version": "2.0.0",
   "description": "HALCamera 문서 파이프라인 진입점. 실제 파이프라인은 공용 엔진 @ttolsun/omm-doc-workflow 이며, 이 패키지는 엔진과 프로젝트 어댑터만 연결합니다.",
   "dependencies": {
-    "@ttolsun/omm-doc-workflow": "git+https://github.com/TTolsun/omm-doc-workflow.git#v0.5.1"
+    "@ttolsun/omm-doc-workflow": "git+https://github.com/TTolsun/omm-doc-workflow.git#v0.5.2"
   },
   "scripts": {
     "check": "node docflow.mjs check",
