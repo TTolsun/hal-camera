@@ -19,8 +19,8 @@ private typealias Gate = (id: String, c: CameraCharacteristics) -> String?
  * "does not support HEIC"; this says which key it read and what the key holds instead.
  *
  * Each entry mirrors the `continue` conditions of one upstream method at the vendored commit. A method
- * without an entry gets the checks every Camera2SurfaceViewTestCase method shares (color output, external
- * camera). Re-check against the sources when the commit moves.
+ * without an entry gets only the color-output check every method shares. Re-check against the sources when
+ * the commit moves.
  */
 object SkipDiagnosis {
     private const val PKG = "android.hardware.camera2.cts."
@@ -50,10 +50,14 @@ object SkipDiagnosis {
         return lines
     }
 
+    /** The one gate every mapped method shares: the color-output capability. External cameras are a per-method gate. */
     private val common: List<Gate> = listOf(
-        { _, c -> if (!capability(c, CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_BACKWARD_COMPATIBLE)) "REQUEST_AVAILABLE_CAPABILITIES에 BACKWARD_COMPATIBLE 없음(컬러 출력 불가)" else null },
-        { _, c -> if (c.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL) == CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_EXTERNAL) "INFO_SUPPORTED_HARDWARE_LEVEL = EXTERNAL(CamcorderProfile 없음)" else null }
+        { _, c -> if (!capability(c, CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_BACKWARD_COMPATIBLE)) "REQUEST_AVAILABLE_CAPABILITIES에 BACKWARD_COMPATIBLE 없음(컬러 출력 불가)" else null }
     )
+
+    private val notExternal: Gate = { _, c ->
+        if (c.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL) == CameraMetadata.INFO_SUPPORTED_HARDWARE_LEVEL_EXTERNAL) "INFO_SUPPORTED_HARDWARE_LEVEL = EXTERNAL(CamcorderProfile 없음)" else null
+    }
 
     private val gates: Map<String, List<Gate>> = mapOf(
         PKG + "StillCaptureTest#testHeicExif" to listOf(outputFormat("HEIC", ImageFormat.HEIC)),
@@ -125,6 +129,7 @@ object SkipDiagnosis {
      * to. That switch lists HEVC only, so the AV1 method never opens a camera anywhere; the note says so.
      */
     private fun tenBit(mime: String, codecProfiles: List<Pair<Int, String>>, av1: Boolean): List<Gate> = listOf(
+        notExternal,
         { id, _ ->
             val cameraId = id.toIntOrNull()
             when {
