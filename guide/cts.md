@@ -24,10 +24,10 @@ flowchart LR
 | 클래스 | 검사하는 것 | 실기기 확인 |
 | --- | --- | --- |
 | `RecordingTest` | CamcorderProfile 녹화, 동영상 스냅샷, 고속·슬로모션·타임랩스 녹화, 프리뷰 크기별 녹화 등 19개 메서드 | `testBasicRecording` PASS(Galaxy S25+, 1분 58초). 나머지는 아직 돌려 보지 않았습니다. |
-| `StillCaptureTest` | JPEG·HEIC·RAW·DNG 정지 영상, AE/AF 수렴, 줌, 회전, 초점 거리, 프리뷰와 정지 영상 크기 조합, 타임스탬프 등 | 아직 돌려 보지 않았습니다. |
-| `BurstCaptureTest` | JPEG·YUV·RAW 연속 촬영의 프레임 순서와 처리량 | 아직 돌려 보지 않았습니다. |
+| `StillCaptureTest` | JPEG·HEIC·RAW·DNG 정지 영상, AE/AF 수렴, 줌, 회전, 초점 거리, 프리뷰와 정지 영상 크기 조합, 타임스탬프 등 21개 메서드 | 21개 모두 실행, PASS 20 · FAIL 1(Galaxy S25+). `testAeCompensation`이 카메라 0의 노출 시간 범위 초과와 카메라 2의 AE 보정 미적용으로 FAIL했고, 이는 HAL 판정입니다. `testStillPreviewCombination`은 18분 29초가 걸립니다. |
+| `BurstCaptureTest` | JPEG·YUV·RAW 연속 촬영의 프레임 순서와 처리량 3개 메서드 | 3개 모두 PASS(Galaxy S25+). |
 
-`UiAutomation`이나 `@TestApi`가 필요한 메서드는 실행하면 초기화 단계에서 FAIL로 끝납니다. 어떤 메서드가 그런지는 실기기에서 한 번 돌려 봐야 알 수 있으며, 그 목록은 `docs/STATUS.md`에 기록합니다. 측정된 적 없는 메서드는 행에 `시간 미상`으로 표시됩니다.
+`UiAutomation`이나 `@TestApi`가 필요한 메서드는 실행하면 초기화 단계에서 FAIL로 끝납니다. `StillCaptureTest`·`BurstCaptureTest`의 24개 메서드에는 그런 메서드가 없었고, `RecordingTest`의 나머지 18개는 아직 돌려 보지 않았습니다. 결과 목록은 `docs/STATUS.md`의 실기기 확인 절에 있습니다. 측정된 적 없는 메서드는 행에 `시간 미상`으로 표시됩니다.
 
 가져온 소스는 AOSP `android16-release` 브랜치의 `cts/tests/camera`와 `frameworks/ex/camera2/public`이며, 원본 커밋과 적용한 패치(`@TestApi`·`@FlaggedApi` 호출을 공개 API로 바꾸거나 제거하고, shell 권한 행을 만들지 않게 한 것)는 `ctsvendor/UPSTREAM.md`에 있습니다. Android 14(API 34) 아래 기기에서는 `도구` 메뉴의 `CTS`가 안내만 띄우고 열리지 않습니다. 업스트림이 이 파일 집합을 `min_sdk_version 34`로 빌드하기 때문입니다.
 
