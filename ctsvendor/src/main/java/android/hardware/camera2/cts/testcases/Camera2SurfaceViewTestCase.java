@@ -636,6 +636,7 @@ public class Camera2SurfaceViewTestCase extends Camera2ParameterizedTestCase {
     protected void openDevice(String cameraId) throws Exception {
         mCamera = CameraTestUtils.openCamera(
                 mCameraManager, cameraId, mCameraListener, mHandler);
+        dev.halcamera.ctsvendor.VendoredCts.noteCameraOpened(cameraId); // halcamera: a method that opened no camera checked nothing
         mCollector.setCameraId(cameraId);
         mStaticInfo = new StaticMetadata(mCameraManager.getCameraCharacteristics(cameraId),
                 CheckLevel.ASSERT, /*collector*/null);

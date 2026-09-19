@@ -23,6 +23,15 @@ object VendoredReportPresenter {
         }
     }
 
+    /**
+     * The detail block under a result: the skip reasons for a SKIP (with a fallback line when the log held
+     * none, so the verdict does not read as an app bug), the numbered failures otherwise.
+     */
+    fun detail(result: VendoredResult): String = when (result.verdict) {
+        VendoredVerdict.SKIP -> result.skipReasons.ifEmpty { listOf("테스트가 카메라를 하나도 열지 않았습니다. 건너뛴 이유는 logcat에서 읽지 못했습니다") }.joinToString("\n")
+        else -> result.failures.mapIndexed { index, failure -> "실패 ${index + 1}\n$failure" }.joinToString("\n\n")
+    }
+
     /** "1분 23초" for anything over a minute, "23초" below, "0.8초" under a second. */
     fun duration(ms: Long): String {
         val seconds = ms / 1000
@@ -41,6 +50,9 @@ object VendoredReportPresenter {
         append(DISCLAIMER).append('\n')
         result.failures.forEachIndexed { index, failure ->
             append('\n').append("실패 ").append(index + 1).append('\n').append(failure).append('\n')
+        }
+        if (result.verdict == VendoredVerdict.SKIP) {
+            append('\n').append("건너뛴 이유").append('\n').append(detail(result)).append('\n')
         }
     }.trimEnd()
 }

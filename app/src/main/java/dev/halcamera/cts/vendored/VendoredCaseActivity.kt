@@ -204,6 +204,12 @@ class VendoredCaseActivity : Camera2SurfaceViewCtsActivity() {
             )
         }
         results.removeAllViews()
+        if (done != null && done.verdict == VendoredVerdict.SKIP && !done.cancelled) {
+            val card = Look.card(this, dark = true)
+            card.addView(Look.text(this, "건너뛴 이유", 14, Look.statusUnknown, bold = true))
+            card.addView(wide(Look.text(this, VendoredReportPresenter.detail(done), 11, Look.onDark, mono = true)), lp(top = 10))
+            results.addView(card, lp(top = 12))
+        }
         val failures = done?.failures ?: liveFailures
         failures.forEachIndexed { index, failure ->
             val card = Look.card(this, dark = true)

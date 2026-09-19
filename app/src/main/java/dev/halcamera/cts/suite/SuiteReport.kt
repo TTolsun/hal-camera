@@ -38,7 +38,8 @@ data class SuiteEntry(val item: SuiteItem, val outcome: SuiteOutcome, val durati
                 else -> SuiteOutcome.PASS
             },
             result.durationMs,
-            SuiteReportPresenter.vendoredDetail(result.failures)
+            if (result.verdict == VendoredVerdict.SKIP && !result.cancelled) VendoredReportPresenter.detail(result)
+            else SuiteReportPresenter.vendoredDetail(result.failures)
         )
 
         fun notRun(item: SuiteItem): SuiteEntry = SuiteEntry(item, SuiteOutcome.NOT_RUN, 0, "")
