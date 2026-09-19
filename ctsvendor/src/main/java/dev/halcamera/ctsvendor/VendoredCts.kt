@@ -23,6 +23,7 @@ object VendoredCts {
     const val MIN_SDK = 34
 
     @Volatile private var installed = false
+    @Volatile private var app: Context? = null
     @Volatile private var hostActivity: Activity? = null
     @Volatile private var runningTest: Any? = null
 
@@ -50,11 +51,14 @@ object VendoredCts {
         if (installed) return
         synchronized(this) {
             if (installed) return
+            app = context.applicationContext
             InstrumentationRegistry.registerInstance(AppInstrumentation(context.applicationContext), Bundle())
             installed = true
         }
     }
 
+    /** The application context [install] was given; null before install. */
+    @JvmStatic fun appContext(): Context? = app
     @JvmStatic fun currentActivity(): Activity? = hostActivity
     @JvmStatic fun attachActivity(activity: Activity) { hostActivity = activity }
     @JvmStatic fun detachActivity(activity: Activity) { if (hostActivity === activity) hostActivity = null }

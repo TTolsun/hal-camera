@@ -27,7 +27,7 @@ class VendoredRunTest {
     private fun run(test: VendoredTest, opened: Set<String> = setOf("0"), log: List<String> = emptyList()): Pair<Recorder, VendoredResult> {
         DriverFixture.armed = true
         val recorder = Recorder()
-        VendoredRun(test, recorder, { clock.addAndGet(500) }, { opened }, {}, { log }).run()
+        VendoredRun(test, recorder, { clock.addAndGet(500) }, { opened }, {}, { log }, { emptyList() }).run()
         return recorder to recorder.result!!
     }
 
@@ -118,7 +118,7 @@ class VendoredRunTest {
     fun `stop marks the result cancelled and raises the host flag until the next run clears it`() {
         DriverFixture.armed = true
         val recorder = Recorder()
-        val run = VendoredRun(fixture("testWaits"), recorder, { clock.addAndGet(500) }, { setOf("0") }, {}, { emptyList() })
+        val run = VendoredRun(fixture("testWaits"), recorder, { clock.addAndGet(500) }, { setOf("0") }, {}, { emptyList() }, { emptyList() })
         val worker = Thread { run.run() }
         worker.start()
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
@@ -135,5 +135,24 @@ class VendoredRunTest {
 
         run(fixture("testPasses"))
         assertFalse(VendoredCts.stopRequested)
+    }
+}
+
+class SkipDiagnosisTest {
+    @Test
+    fun `fold prints a failure every camera shares once and the rest per camera`() {
+        val lines = SkipDiagnosis.fold(
+            linkedMapOf(
+                "0" to listOf("MediaCodecList에 video/av01 인코더 없음", "REQUEST_AVAILABLE_CAPABILITIES에 RAW 없음"),
+                "1" to listOf("MediaCodecList에 video/av01 인코더 없음"),
+                "2" to listOf("MediaCodecList에 video/av01 인코더 없음", "INFO_SUPPORTED_HARDWARE_LEVEL = LEGACY")
+            )
+        )
+        assertEquals(
+            listOf("모든 카메라: MediaCodecList에 video/av01 인코더 없음", "카메라 0: REQUEST_AVAILABLE_CAPABILITIES에 RAW 없음", "카메라 2: INFO_SUPPORTED_HARDWARE_LEVEL = LEGACY"),
+            lines
+        )
+        assertTrue(SkipDiagnosis.fold(mapOf("0" to emptyList(), "1" to emptyList())).isEmpty())
+        assertTrue(SkipDiagnosis.fold(emptyMap()).isEmpty())
     }
 }
