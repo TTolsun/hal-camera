@@ -74,6 +74,19 @@ release 서명 로컬 빌드(versionCode 105, 0.9.0 소스 + 이 변경)를 Gala
 
 vendored 항목은 RECORD_AUDIO 권한이 이미 허용된 상태에서 실행했다. 권한이 없는 기기에서 `PERMISSION_REQUIRED`로 끝나는 경로와 API 33 이하 기기의 `cts.cases`(vendored 항목 없음)는 실기기로 확인하지 않았다.
 
+## CTS 원문 24개 메서드 (2026-09-17)
+
+PR #108 빌드(versionCode 106, release 서명 로컬 빌드)를 같은 Galaxy S25+에 설치하고 `halcam cts cases`가 돌려준 43개 중 `StillCaptureTest` 21개와 `BurstCaptureTest` 3개를 `halcam cts run --case … ×24 --timeout 3600 --wait-timeout 3600`으로 한 번에 실행했다. 카메라·마이크 권한은 이미 허용된 상태였다.
+
+| 항목 | 관측 결과 |
+|---|---|
+| 요청 | `c6891837-3ad9-4cf9-910f-9d95a59c2d21`, `succeeded`, `passed: 23, failed: 1, skipped: 0, not_run: 0`, 총 24분 33초. `cts-suite.json`·`cts-suite.txt` 수집과 해시 검증 통과. |
+| PASS 23 | `testAePrecaptureTriggerCancelJpegCapture` 11초, `testAeRegions` 63초, `testAfRegions` 44초, `testAllocateBitmap` 19초, `testAwbRegions` 1초, `testBasicRawCapture` 2초, `testBasicRawZslCapture` 2초, `testDynamicDepthCapture` 0초, `testFocalLengths` 8초, `testFullRawCapture` 16초, `testFullRawZSLCapture` 16초, `testHeicExif` 0초, `testHeicUltraHdrCapture` 0초, `testJpegExif` 14초, `testJpegRCapture` 14초, `testPreviewPersistence` 20초, `testStillPreviewCombination` 1,109초, `testTakePicture` 21초, `testTakePictureZsl` 19초, `testTouchForFocus` 27초, `testJpegBurst` 10초, `testYuvBurst` 22초, `testYuvBurstWithStillBokeh` 0초. |
+| FAIL 1 | `StillCaptureTest#testAeCompensation` 36초. JUnit 실패 6건: 카메라 0 "Exposure setting out of bound, value 288808119 is out of range [1246, 213334400]" ×5, 카메라 2 "Exposure compensation ratio exceeds error tolerence: expected(2.000000) observed(1.000000) … value 0.5 is out of range [0.8, 1.2]". CTS assertion 문구 그대로이며 앱 쪽 오류가 아니다. |
+| 직전 단독 실행 | 요청 `9c710619-f083-4c3f-8ff8-a0ad7c098879`: `testTakePicture` 11.6초 PASS, `testJpegBurst` 8.3초 PASS(2개 19초). |
+
+0초로 끝난 메서드는 기기에 검사할 출력 형식(HEIC UltraHDR, DynamicDepth, bokeh)이 없어 본문이 바로 돌아온 경우다. 테스트가 assumption이 아니라 `continue`로 건너뛰므로 SKIP이 아닌 PASS로 기록된다.
+
 ## 검증 범위
 
 PC의 실제 장치 연결은 Windows에서 USB와 무선 ADB로 확인했다. Linux·macOS는 단위 테스트와 wheel 설치 CI 범위다. 다른 OEM, 보조 사용자·업무 프로필, root adbd, 비밀번호 잠금 상태의 전체 조합, 저장 매체의 모든 장애를 검증한 것으로 확대하지 않는다. 연결 끊김·손상 전송·중복 파일은 fake ADB 시험을 포함한다. 실제 사용자 파일 삭제로 오류를 만들지는 않았다.
