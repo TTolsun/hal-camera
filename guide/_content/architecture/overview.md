@@ -1,53 +1,12 @@
 ---
-based_on: [overall-architecture, data-flow]
-confidence: code
-sources:
-  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt
-  - app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
-  - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
-  - tools/halcam/halcam/cli.py
-  - app/src/main/java/dev/halcamera/MainActivity.kt
-  - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
-  - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
-  - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt
-  - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
-  - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt
+based_on: ["overall-architecture","data-flow"]
+confidence: "code"
+sources: ["app/src/main/java/dev/halcamera/MainActivity.kt","app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt","app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt","app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt","app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt","app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt","app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt","app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt","app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt","app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt","app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt","app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt","app/src/main/java/dev/halcamera/camera/CameraEngine.kt","app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt","app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt","app/src/main/java/dev/halcamera/telemetry/Telemetry.kt","tools/halcam/halcam/cli.py"]
 decisions: []
 verifications: []
 ---
+앱은 CLI 명령어를 통해 시작되며, Live 관측과 벤치마크 실행, 결과 저장 및 비교의 세 가지 주요 단계로 동작합니다. `MainActivity`는 카메라 엔진을 제어하고 실시간 데이터를 수집하는 역할을 하며, `Telemetry`와 `FlightRecorder`는 이벤트와 시스템 상태를 기록합니다. `BenchmarkRunner`가 실행 순서를 관리하고, `RunAssembler`는 러너 결과와 이벤트를 결합하여 표준화된 실행 객체를 생성합니다. 저장된 실행은 `BenchmarkReport`로 JSON 파일로 기록되며, `BaselineManager`와 `RegressionDetector`가 기준 실행과 비교 결과를 산출합니다.
 
-**Live, Benchmark, Results 중 수정할 화면과 연결된 코드를 먼저 확인하세요.** 현재 앱은 카메라 성능을 관측하고, 저장된 실행을 비교하는 단일 Android 앱 모듈입니다. v0.2의 Home·Auto Check·건강 판정 화면은 제거되었습니다.
+Live 관측은 현재 카메라 상태를 실시간으로 모니터링하는 과정이며, `MainActivity`에서 수집된 데이터를 UI에 표시합니다. 반면 벤치마크 비교는 저장된 실행 기록을 기반으로 반복 측정을 수행하고 회귀 여부를 분석하는 과정입니다. Live 관측은 `Telemetry`를 통해 데이터를 수집하고, 벤치마크 비교는 `FlightRecorder`와 `RunAssembler`를 사용하여 실행 이력을 기록하고 분석합니다. 이력은 `HistoryActivity`에서 관리되며, `ProfileComparisonActivity`에서 직접 선택된 파일들을 기반으로 분석됩니다.
 
-| 단계 | 담당 코드 | 책임 |
-| --- | --- | --- |
-| CLI 제어 | `CliProvider`, `CommandCoordinator`, `tools/halcam/` | ADB 명령을 실행 경로에 연결하고 요청 상태와 검증 가능한 결과 파일을 반환합니다. |
-| 카메라 구동 | `CameraEngine`, `Camera2Engine`, `CameraXEngine` | 엔진 수명주기와 카메라 요청을 처리합니다. |
-| 콜백 기록 | `Telemetry`, `FlightRecorder` | 세션·프레임·시각·메타데이터를 이벤트로 기록합니다. |
-| 지표 계산 | `BenchmarkRunner`, `RunAssembler`, `BenchmarkEvaluator`, `metrics/MetricExtractor` | 러너의 실행 시각과 콜백을 합쳐 측정값을 만듭니다. |
-| 내부 점수 | `ScoreComposer` | 검토한 calibration의 범위에 맞는 적격 release run에 점수와 카테고리 평균을 계산합니다. |
-| 저장·비교·표시 | `BenchmarkReport`, `BaselineManager`, `RegressionDetector`, 각 Activity | JSON 저장과 화면을 구성하고, 현재 기준에 따른 비교 결과를 계산합니다. |
-
-`MainActivity`가 런처이며 Live에서는 관측한 수치만 표시합니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.
-
-baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 결과 화면은 이전의 비교 가능한 실행 대비 변화량만 표시합니다. 이력에서 임의로 선택한 실행도 실제 baseline이 아닌 한 회귀 판정의 기준이 되지 않습니다.
-
-### 코드를 처음 읽는 순서
-
-1. `camera/CameraEngine.kt`에서 열기·닫기 계약을 확인합니다.
-2. `telemetry/Telemetry.kt`와 `FlightRecorder.kt`에서 이벤트와 보존 방식을 확인합니다.
-3. `benchmark/domain/BenchmarkRunner.kt`에서 실행 순서와 실패 처리를 읽습니다.
-4. `benchmark/domain/RunAssembler.kt`에서 러너 결과와 이벤트를 결합하는 지점을 확인합니다.
-5. `MainActivity.kt`, `BenchmarkActivity.kt`, `HistoryActivity.kt`에서 화면과 실행 코드의 연결을 확인합니다.
-
-Live의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저장하며 GalleryActivity에서 조회합니다. 측정 파일과 미디어 파일의 저장 경로를 구분하려면 아래 모듈 역할을 확인하세요.
-
-### 반복 측정 프로파일 비교
-
-Results의 반복 측정 비교 메뉴에서 전후 실행 묶음을 고를 수 있습니다. ProfileComparisonActivity는 외부 JSON도 읽으며, 가져온 자료를 로컬 baseline과 분리합니다. 동일 기기의 수정 전후 비교가 기본이며 다른 기기 자료는 별도 모드로 선택합니다.
+코드를 처음 읽을 때는 `MainActivity.kt` 파일을 열어야 합니다. 여기서는 앱의 전체 흐름과 각 단계의 책임 (카메라 연결, 데이터 수집, 저장)을 파악할 수 있습니다. 개발자는 먼저 카메라 엔진 관리, 데이터 기록 (`Telemetry`, `FlightRecorder`), 그리고 UI 업데이트가 어떻게 처리되는지 확인해야 하며, 이후 벤치마크 실행과 결과 분석 로직으로 넘어갈 수 있습니다.

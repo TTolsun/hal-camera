@@ -1,1 +1,1 @@
-BenchmarkReportCodec은 schema 4를 쓰고 schema 3·4를 읽는 순수 Map 코덱입니다. kind·측정 계약의 일치와 정식 canonical profile 정의를 검증합니다. BenchmarkReport가 org.json과 파일 입출력을 담당하며 읽기 실패는 null과 lastReadError로 전달합니다. 파일 쓰기는 AtomicFiles를 사용하고 run ID에는 밀리초가 포함됩니다.
+BenchmarkReportCodec 은 schema 4 를 쓰고 schema 3·4 를 읽는 순수 Map 코덱입니다. kind 와 측정 계약의 일치와 정식 canonical profile 정의를 검증합니다. BenchmarkReport 는 org.json 과 파일 입출력을 담당하며 읽기 실패는 null 과 lastReadError 로 전달합니다. 파일 쓰기는 AtomicFiles 를 사용하고 run ID 에는 밀리초가 포함됩니다.

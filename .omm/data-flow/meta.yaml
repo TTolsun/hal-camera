@@ -1,7 +1,7 @@
 created: 2026-09-09T16:20:14.267Z
-updated: 2026-09-10T17:26:15.597Z
-update_count: 21
-last_field: todo
+updated: 2026-09-19T10:05:49.590Z
+update_count: 23
+last_field: diagram
 git_commit: 1c965c0
 git_branch: codex/pr27-doc-review
 children:
@@ -12,3 +12,44 @@ children:
   - rendered-screens
   - run-json
   - runner-marks
+prev_diagram: "graph LR\r
+
+  \    cli[\"CLI request JSON\"] --> coordinator[\"CommandCoordinator\"]\r
+
+  \    coordinator --> request[\"CommandStore · 요청 기록\"]\r
+
+  \    photo[\"사진 한 쌍 저장 완료\"] --> artifact[\"artifact 등록 · 크기와 SHA-256\"]\r
+
+  \    json --> artifact\r
+
+  \    artifact -->|\"읽기 전용 파일\"| pc[\"Python CLI · 검증 후 저장\"]\r
+
+  \    callbacks[\"Camera 콜백\"] -->|\"이벤트 기록\"| events[\"Telemetry /
+  FlightRecorder\"]\r
+
+  \    callbacks -->|\"단계 완료 신호\"| marks[\"BenchmarkRunner.Result\"]\r
+
+  \    events -->|\"프레임 연결\"| frames[\"metrics/MetricExtractor\"]\r
+
+  \    frames -->|\"관측 표본\"| assemble[\"RunAssembler / BenchmarkEvaluator\"]\r
+
+  \    marks -->|\"실행 시각\"| assemble\r
+
+  \    assemble -->|\"실패와 환경\"| validity[\"RunValidityEvaluator\"]\r
+
+  \    validity -->|\"측정값과 validity\"| score[\"ScoreComposer · 해당하는 calibration만
+  적용\"]\r
+
+  \    score -->|\"적격 내부 점수 또는 null\"| json[\"BenchmarkReport · schema 4
+  JSON\"]\r
+
+  \    json -->|\"저장 실행 읽기\"| compare[\"BaselineManager /
+  RegressionDetector\"]\r
+
+  \    compare -->|\"다시 계산한 비교\"| screen[\"결과 / Compare\"]\r
+
+  \    json -->|\"목록 읽기\"| history[\"HistoryActivity / RunIndex\"]\r
+
+  \    history -->|\"두 실행 선택\"| compare\r
+
+  \    history -->|\"필터 결과\"| csv[\"CSV 내보내기\"]\r\n"
