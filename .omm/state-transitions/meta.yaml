@@ -1,7 +1,7 @@
 created: 2026-09-09T16:22:59.348Z
-updated: 2026-09-10T17:18:20.626Z
-update_count: 15
-last_field: context
+updated: 2026-09-19T10:06:38.250Z
+update_count: 16
+last_field: diagram
 git_commit: 8a8701e
 git_branch: codex/pr27-doc-review
 children:
@@ -9,3 +9,29 @@ children:
   - engine-lifecycle
   - incident-window
   - validity-gate
+prev_diagram: "graph LR\r
+
+  \    accepted[\"CLI accepted\"] --> preparing[\"preparing\"] -->
+  running[\"running\"] --> saving[\"saving\"] --> succeeded[\"succeeded\"]\r
+
+  \    running --> cancelling[\"cancelling\"] --> saving\r
+
+  \    running --> failed[\"failed / cancelled\"]\r
+
+  \    accepted --> interrupted[\"프로세스 재시작: interrupted\"]\r
+
+  \    runner[\"BenchmarkRunner\"] -->|\"Driver open / still / close\"|
+  engine[\"CameraEngine 수명주기\"]\r
+
+  \    engine -->|\"현재 세션 완료 신호\"| runner\r
+
+  \    runner -->|\"Result와 환경\"| validity[\"RunValidity\"]\r
+
+  \    validity -->|\"비교 가능 여부\"| comparison[\"RegressionDetector\"]\r
+
+  \    history[\"Results 목록 / 비교\"] -->|\"기준과 현재 선택\"| comparison\r
+
+  \    history -->|\"확인 후 삭제\"| delete[\"실행 파일 삭제 / baseline 정리\"]\r
+
+  \    recorder[\"FlightRecorder\"] -->|\"전후 창 보존\"| incident[\"incident 전후 이벤트
+  창\"]\r\n"

@@ -1,9 +1,1 @@
-`app/src/main/java/dev/halcamera/benchmark/domain/BuildIdentity.kt`. Compares two runs across six axes instead of producing one "same build" boolean.
-
-The reason is stated in the file header and is the whole point of the app: in camera HAL work the case that matters most is the *same* Android fingerprint with a *different* vendor binary. A single boolean would hide exactly that.
-
-The axes are system fingerprint, vendor fingerprint, camera INFO_VERSION, app version, subject build label and subject commit. Every axis except system fingerprint and app version is nullable, and `both()` enforces the rule that produces those nulls: two values are equal only when both sides actually carry one, with blank counting as missing. An unknown is never reported as a match.
-
-`sameCameraBuild` is the derived line the UI shows, and it is conjunctive rather than a fallback: it is true only when every *known* axis agrees, false as soon as any known axis differs, and null only when neither vendor fingerprint nor INFO_VERSION is known on both sides. Treating it as "vendor fingerprint, else INFO_VERSION" would let a matching vendor fingerprint hide a changed INFO_VERSION.
-
-Every `RunRef` stored in a run JSON embeds this comparison, so a report can state what changed between a run and its baseline without needing the baseline file present.
+`app/src/main/java/dev/halcamera/benchmark/domain/BuildIdentity.kt`. 두 실행을 6 개의 축으로 비교하여 하나의 "동일한 빌드" 보oleans 을 생성하지 않습니다. 파일 헤더에 명시된 이유는 카메라 HAL 작업에서 가장 중요한 경우인 *동일한* Android 지문과 *다른* 벤더 바이너리를 구분하는 것이며, 단일 보oleans 은 이를 숨깁니다. 축은 시스템 지문, 벤더 지문, 카메라 INFO_VERSION, 앱 버전, 주제 빌드 라벨, 주제 커밋이며, 시스템 지문과 앱 버전 제외 모든 축은 nullable 입니다. `both()` 는 두 값이 모두 값을 가질 때만 동등하다고 판단하여 null 을 생성합니다. 알 수 없는 것은 매칭으로 보고되지 않습니다. `sameCameraBuild` 는 UI 에서 표시되는 유도된 라인이며, conjunctive 로 작동하여 모든 *알려진* 축이 일치할 때만 true 입니다. 벤더 지문과 INFO_VERSION 중 하나라도 알려지지 않은 경우 null 이 됩니다.
