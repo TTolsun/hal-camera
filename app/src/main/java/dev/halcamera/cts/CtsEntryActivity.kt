@@ -37,12 +37,12 @@ class CtsEntryActivity : ComponentActivity() {
         head.addView(Look.text(this, "CTS", 22, Look.onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
         head.addView(IconButton(this, R.drawable.ic_action_close, "CTS 화면 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
         body.addView(head)
-        body.addView(Look.text(this, "어느 방식으로 검사할지 고릅니다. 두 방식 모두 자기 카메라를 열고 닫으며, 결과는 앱 안에서만 봅니다.", 12, Look.onDarkMuted), lp(top = 4))
+        body.addView(Look.text(this, "앱 내 검사 · 공식 CTS 인증 결과 아님", 12, Look.onDarkMuted), lp(top = 4))
 
         body.addView(
             choice(
                 title = "커스텀 케이스",
-                detail = "CTS 케이스를 이 앱의 Kotlin으로 옮겨 적은 검사입니다. 카메라마다 단계별 PASS·FAIL과 첫 프레임 시간 같은 측정값을 함께 보여 주고, 실행 중에 중단할 수 있습니다.",
+                detail = "CTS 기반 자체 검사 · 카메라별 단계 판정·측정값",
                 enabled = true,
                 reason = null
             ) { startActivity(Intent(this, CtsCaseListActivity::class.java)) },
@@ -52,9 +52,9 @@ class CtsEntryActivity : ComponentActivity() {
         body.addView(
             choice(
                 title = "CTS 원문 케이스",
-                detail = "AOSP CTS의 Java 테스트 코드를 그대로 가져와 앱 안의 JUnit으로 실행합니다. 결과는 테스트 메서드 하나에 PASS·FAIL 하나이며, 실패 메시지는 CTS가 남긴 문장 그대로입니다.",
+                detail = "AOSP CTS 원문 실행 · 메서드별 판정·실패 메시지",
                 enabled = vendoredSupported,
-                reason = if (vendoredSupported) null else "Android ${VendoredCts.MIN_SDK} 이상에서만 실행할 수 있습니다. 이 기기는 API ${Build.VERSION.SDK_INT}입니다."
+                reason = if (vendoredSupported) null else "API ${VendoredCts.MIN_SDK}+ 필요 · 현재 API ${Build.VERSION.SDK_INT}"
             ) { startActivity(Intent(this, VendoredCtsListActivity::class.java)) },
             lp(top = 12)
         )

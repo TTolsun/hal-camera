@@ -50,6 +50,18 @@ class ResultPresenterTest {
         assertNull(ResultPresenter.statHeader(countMetric("H.5", 0)))
     }
 
+    @Test fun standaloneRowsKeepTheirOwnStatisticLabels() {
+        val view = present(run(metrics = listOf(
+            launchMetric("1.1", 142.0, 161.0, n = 9),
+            launchMetric("2.2", 164.0, 190.0, n = 20),
+            windowMetric("H.1", 33.3)
+        )))
+        val rows = view.sections.flatMap { it.rows }
+        assertEquals("max", rows.first { it.label == "Open" }.statLabel)
+        assertEquals("p95", view.sections.first { it.title == "Capture" }.rows.first().statLabel)
+        assertTrue(view.sections.first { it.title == "Preview" }.rows.all { it.statLabel.isEmpty() })
+    }
+
     // ---- number formatting ----
 
     @Test fun cadenceMetricsKeepOneDecimalAndOthersDoNot() {

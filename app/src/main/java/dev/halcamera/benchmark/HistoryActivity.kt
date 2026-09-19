@@ -1,5 +1,7 @@
 package dev.halcamera.benchmark
 
+import dev.halcamera.ui.MetricRows
+
 import android.app.AlertDialog
 import android.content.ClipData
 import android.content.Intent
@@ -36,6 +38,7 @@ class HistoryActivity : ComponentActivity() {
     private var profileId: String? = null
     private var endpointKey: String? = null
     private var selectedId: String? = null
+    private var pickingComparison = false
     private var compareId: String? = null
     private var pageSize = 50
     private var busy = false
@@ -50,6 +53,7 @@ class HistoryActivity : ComponentActivity() {
         profileId = if (savedInstanceState != null) savedInstanceState.getString("profile") else intent.getStringExtra("profile")
         endpointKey = if (savedInstanceState != null) savedInstanceState.getString("endpoint") else intent.getStringExtra("endpoint")
         selectedId = savedInstanceState?.getString("selected")
+        pickingComparison = savedInstanceState?.getBoolean("pickingComparison") ?: false
         compareId = savedInstanceState?.getString("compare")
         scroll = ScrollView(this).apply { setBackgroundColor(Look.expertTile) }
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -63,7 +67,7 @@ class HistoryActivity : ComponentActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (compareId != null) { compareId = null; render() }
-                else if (selectedId != null) { selectedId = null; render() }
+                else if (selectedId != null || pickingComparison) { selectedId = null; pickingComparison = false; render() }
                 else finish()
             }
         })
@@ -77,6 +81,7 @@ class HistoryActivity : ComponentActivity() {
         outState.putString("profile", profileId)
         outState.putString("endpoint", endpointKey)
         outState.putString("selected", selectedId)
+        outState.putBoolean("pickingComparison", pickingComparison)
         outState.putString("compare", compareId)
         super.onSaveInstanceState(outState)
     }
@@ -124,13 +129,20 @@ class HistoryActivity : ComponentActivity() {
             showSelectionPopup(anchor, listOf("전체") + values, values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
         val runs = visible()
-        text("${runs.size}개 실행 · 행을 눌러 결과를 열고, 길게 눌러 작업을 선택합니다.")
+        text("${runs.size}개 실행")
+        if (selectedId == null && !pickingComparison) button("두 실행 비교", runs.size >= 2) {
+            pickingComparison = true; render()
+        }
+        if (pickingComparison && selectedId == null) {
+            text("기준으로 사용할 실행을 선택하세요.")
+            button("비교 선택 취소") { pickingComparison = false; render() }
+        }
         button("CSV export · 현재 필터 ${runs.size}개", runs.isNotEmpty()) { exportCsv(runs) }
         indexError?.let { text("Baseline을 읽지 못했습니다: $it") }
         if (index.unreadableIds.isNotEmpty()) text("읽을 수 없는 파일 ${index.unreadableIds.size}개: ${index.unreadableIds.joinToString()}")
         selectedId?.let { id ->
             text("비교 기준으로 선택: $id\n비교할 다른 실행을 누르세요.")
-            button("선택 취소") { selectedId = null; render() }
+            button("선택 취소") { selectedId = null; pickingComparison = false; render() }
         }
         if (runs.isEmpty()) text("이 조건에 맞는 실행이 없습니다. 필터를 바꾸거나 새 벤치마크를 실행하세요.")
         val byId = index.runs.associateBy { it.runId }
@@ -145,6 +157,10 @@ class HistoryActivity : ComponentActivity() {
                 else -> ""
             }
             val card = Look.card(this, dark = true)
+            if (selectedId == run.runId) {
+                card.background = Look.cardBackground(this, Look.expertTile2, Look.primaryOnDark)
+                androidx.core.view.ViewCompat.setStateDescription(card, "비교 기준으로 선택됨")
+            }
             val label = listOf(
                 run.runId,
                 listOfNotNull(run.subject.subjectBuildLabel ?: "(subject 없음)", run.subject.subjectCommit).joinToString(" · "),
@@ -153,12 +169,20 @@ class HistoryActivity : ComponentActivity() {
                 ResultPresenter.eligibilityLine(run),
                 run.validity.flags.joinToString(" · ")
             ).filter { it.isNotEmpty() }.joinToString("\n")
-            card.addView(Look.text(this, label, 14, Look.onDark, mono = true))
+            val row = Look.row(this)
+            row.addView(Look.text(this, label, 14, Look.onDark, mono = true), LinearLayout.LayoutParams(0, -2, 1f))
+            row.addView(Look.ghostButton(this, "⋮", dark = true) { if (!busy) menu(run) }.apply {
+                contentDescription = "${run.runId} 작업 메뉴"
+                setPadding(0, 0, 0, 0)
+                isEnabled = !busy
+            }, LinearLayout.LayoutParams(dp(48), dp(48)))
+            card.addView(row)
             card.isFocusable = true
             card.contentDescription = label
             card.setOnClickListener {
                 if (!busy) {
-                    if (selectedId == null) open(run)
+                    if (selectedId == null && pickingComparison) { selectedId = run.runId; render() }
+                    else if (selectedId == null) open(run)
                     else if (selectedId != run.runId) { compareId = run.runId; render() }
                     else message("다른 실행을 선택하세요.")
                 }
@@ -184,8 +208,10 @@ class HistoryActivity : ComponentActivity() {
         view.conditionLine?.let { text(it) }
         view.referenceNote?.let { text(it) }
         if (!comparison.sameContract || !comparison.sameEndpoint) text("Profile·측정 계약 또는 camera endpoint가 달라 판정할 수 없습니다.")
-        view.rows.forEach { row ->
-            text("${row.label}\n${view.baseHeader}: ${row.base} → Current: ${row.current}\n${row.delta} ${row.marker}")
+        val regressed = view.rows.filter { it.marker.startsWith("▲") }
+        if (regressed.isNotEmpty()) body.addView(Look.text(this, "▲ ${regressed.size} Regressed", 17, Look.statusFail, bold = true), lp())
+        (regressed + view.rows.filterNot { it.marker.startsWith("▲") }).forEach { row ->
+            body.addView(MetricRows.comparison(this, row, view.baseHeader))
         }
         button("기준 / 현재 바꾸기") { val old = selectedId; selectedId = compareId; compareId = old; render() }
         button("CSV export · 두 실행") { exportCsv(listOf(base, current)) }

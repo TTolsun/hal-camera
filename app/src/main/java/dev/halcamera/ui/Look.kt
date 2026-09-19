@@ -112,4 +112,21 @@ object Look {
     }
 
     fun row(context: Context) = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+
+    /** Secondary information stays available without displacing the primary task. */
+    fun disclosure(context: Context, title: String, content: android.view.View, initiallyExpanded: Boolean = false) = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+        content.visibility = if (initiallyExpanded) android.view.View.VISIBLE else android.view.View.GONE
+        val toggle = ghostButton(context, "$title ${if (initiallyExpanded) "▴" else "▾"}", dark = true) {}
+        toggle.minHeight = dp(context, 48)
+        toggle.setOnClickListener {
+            val expanded = content.visibility != android.view.View.VISIBLE
+            content.visibility = if (expanded) android.view.View.VISIBLE else android.view.View.GONE
+            toggle.text = "$title ${if (expanded) "▴" else "▾"}"
+            androidx.core.view.ViewCompat.setStateDescription(toggle, if (expanded) "펼쳐짐" else "접힘")
+        }
+        androidx.core.view.ViewCompat.setStateDescription(toggle, if (initiallyExpanded) "펼쳐짐" else "접힘")
+        addView(toggle, LinearLayout.LayoutParams(-1, -2))
+        addView(content, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(context, 8) })
+    }
 }

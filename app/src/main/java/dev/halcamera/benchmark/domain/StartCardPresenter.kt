@@ -55,20 +55,20 @@ object StartCardPresenter {
         // 8.2: the profile is Camera2-only, so entering from a CameraX preview switches the engine and says so
         // instead of silently measuring something the LIVE screen was not showing.
         if (engineName != ENGINE_CAMERA2) {
-            notices += "Benchmark profile v1은 Camera2 전용입니다. Camera2로 전환합니다."
+            notices += "Camera2 전용 profile · Camera2로 전환"
         }
         if (thermalStatus != null && thermalStatus in ValidityFlags.THERMAL_MODERATE until THERMAL_SEVERE) {
-            notices += "이 run은 비교와 점수에 쓸 수 없습니다 (THERMAL_HIGH)."
+            notices += "THERMAL_HIGH · 비교·점수 산정 제외"
         }
         if (powerSaveMode == true) {
-            notices += "이 run은 비교와 점수에 쓸 수 없습니다 (POWER_SAVE_MODE)."
+            notices += "POWER_SAVE_MODE · 비교·점수 산정 제외"
         }
         return StartCard(
             titleLine = listOf(ENGINE_CAMERA2, endpointName, conditionLabel(profile), launchModeLabel(profile))
                 .joinToString(" · "),
             profileLine = "Profile  ${profile.id}",
             verdictLine = verdictLine(compatibility),
-            durationLine = "약 ${ESTIMATED_SECONDS}초. 밝은 곳에서 글자나 물건을 향해 폰을 고정하세요.",
+            durationLine = "약 ${ESTIMATED_SECONDS}초 · 밝은 피사체를 향해 기기 고정",
             detailLine = "${profile.launchIterations}회 open · ${profile.observeMs / 1000}초 관측 · ${profile.stillCount}장",
             notices = notices,
             blockedReason = blockedReason(compatibility, thermalStatus),

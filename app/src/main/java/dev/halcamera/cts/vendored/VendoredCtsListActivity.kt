@@ -14,7 +14,7 @@ import dev.halcamera.ctsvendor.VendoredCts
  */
 class VendoredCtsListActivity : CtsChecklistActivity() {
     override val screenTitle = "CTS 원문 케이스"
-    override val intro = "실행할 테스트 메서드를 고르면 위에서부터 차례로 실행합니다. 각 메서드는 카메라 전부를 차례로 검사하며, 중단은 카메라를 닫아 테스트를 실패시키는 방식입니다. ›를 누르면 메서드 하나만 여는 화면으로 갑니다."
+    override val intro = "목록 순서로 실행 · 전체 카메라 대상\n중단 시 현재 테스트 FAIL · › 개별 검사"
     override val disclaimer = VendoredReportPresenter.DISCLAIMER
     override val prefsName = "cts_vendored"
 

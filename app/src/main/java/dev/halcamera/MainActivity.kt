@@ -313,7 +313,7 @@ class MainActivity : ComponentActivity() {
         updateCameraChoices()
     }
     private fun setStatus(text: String, ok: Boolean) {
-        statusText.text="$engineName · ${if(recordingVideo) "REC" else if(ok) "Live" else "대기"}"
+        statusText.text="ID $cameraId · ${if(recordingVideo) "REC" else if(ok) "Live" else "대기"}"
         statusText.setTextColor(Look.onDarkMuted)
         main.removeCallbacks(clearNotice)
         cameraNotice.text = text
@@ -352,7 +352,7 @@ class MainActivity : ComponentActivity() {
 
         // Keep API selection and the live readout visible; detailed measurement tools live in the panel.
         topBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; setPadding(dp(12),dp(8),dp(12),dp(10)) }
-        topBar.background=GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,intArrayOf(Color.argb(190,0,0,0),Color.TRANSPARENT))
+        topBar.background=GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,intArrayOf(Color.argb(140,0,0,0),Color.TRANSPARENT))
         root.addView(topBar,FrameLayout.LayoutParams(-1,-2,Gravity.TOP))
         val controls=row().apply { gravity=Gravity.CENTER_VERTICAL }; topBar.addView(controls)
         cameraIds=try { manager.cameraIdList.toList().sortedBy { manager.getCameraCharacteristics(it)[CameraCharacteristics.LENS_FACING] != CameraCharacteristics.LENS_FACING_BACK } } catch (_:Exception) { emptyList() }
@@ -369,8 +369,7 @@ class MainActivity : ComponentActivity() {
             if(paused) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("user_paused")?.let { export(it) } }
             restartCamera()
         }
-        // Tools that do not need the open session (Benchmark, PROBE, CTS) live behind one menu; the panel keeps
-        // only what reads the live session. APP-UI.md "도구 메뉴와 독립 화면" is the source of that split.
+        // Standalone tools stay in the menu; Mark remains on the live preview.
         toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: Benchmark, Probe, CTS" }
         val panelButton=button("진단") { showDiagnostics(true) }.apply { contentDescription="진단 패널 열기" }
         listOf(engineButton,toolsButton,panelButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
@@ -397,8 +396,13 @@ class MainActivity : ComponentActivity() {
 
         // The zoom rail expands horizontally without moving the shutter or the readout.
         bottomBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER_HORIZONTAL; setPadding(dp(16),dp(14),dp(16),dp(14)) }
-        bottomBar.background=GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,intArrayOf(Color.argb(215,0,0,0),Color.TRANSPARENT))
-        root.addView(bottomBar,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
+        // A single soft scrim spans capture controls and Mark without a separate footer band.
+        val captureChrome=LinearLayout(this).apply {
+            orientation=LinearLayout.VERTICAL
+            background=GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,intArrayOf(Color.argb(180,0,0,0),Color.TRANSPARENT))
+        }
+        root.addView(captureChrome,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
+        captureChrome.addView(bottomBar,LinearLayout.LayoutParams(-1,-2))
         metrics=label("FPS —  ·  ISO —  ·  Exp —\nLens —  ·  Zoom —",12,Look.onDark).apply {
             gravity=Gravity.CENTER
             typeface=Look.mono
@@ -465,7 +469,11 @@ class MainActivity : ComponentActivity() {
         recordingTime=label("● REC  00:00",14,coral,true).apply { gravity=Gravity.CENTER; typeface=Look.mono; visibility=View.GONE }
         modeRow.addView(recordingTime,FrameLayout.LayoutParams(-1,-1))
 
-        val mainRow=row().apply { gravity=Gravity.CENTER_VERTICAL }
+        val mainRow=row().apply {
+            gravity=Gravity.CENTER_VERTICAL
+            setPadding(dp(16),dp(8),dp(16),dp(8))
+            setBackgroundColor(Color.TRANSPARENT)
+        }
         reportButton=button(MARK_LABEL) {
             val id="incident_"+SimpleDateFormat("yyyyMMdd_HHmmss_SSS",Locale.US).format(Date())+"_"+UUID.randomUUID().toString().take(8)
             // The reading is captured here, not when the dialog opens. The dialog is at least five seconds later
@@ -475,12 +483,24 @@ class MainActivity : ComponentActivity() {
         }.apply { setTextColor(Color.WHITE); background=cameraChrome(Color.TRANSPARENT); contentDescription="Mark: 직전 10초와 이후 5초를 ZIP으로 저장" }
         reportButton.minHeight=dp(48); reportButton.minimumHeight=dp(48)
         mainRow.addView(reportButton,LinearLayout.LayoutParams(0,-2,1f))
+        reportButton.setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
+        captureChrome.addView(mainRow,LinearLayout.LayoutParams(-1,-2))
 
         // Detailed tools and graphs use flat, outlined cards; core readings stay on the preview.
         diagnostics=ScrollView(this).apply { setBackgroundColor(bg); visibility=View.GONE; isFillViewport=true; isClickable=true }
         val body=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; setPadding(dp(18),dp(12),dp(18),dp(24)) }
         diagnostics.addView(body)
-        root.addView(diagnostics,FrameLayout.LayoutParams(-1,-1))
+        root.addView(diagnostics,FrameLayout.LayoutParams(-1,0,Gravity.BOTTOM))
+        // Keep the preview and incident action visible while inspecting live graphs.
+        root.addOnLayoutChangeListener { _,_,_,_,_,_,_,_,_ ->
+            val footerHeight=mainRow.height
+            val panelParams=diagnostics.layoutParams as FrameLayout.LayoutParams
+            val panelHeight=((root.height-footerHeight)*0.6f).toInt()
+            if(panelParams.height!=panelHeight || panelParams.bottomMargin!=footerHeight) {
+                panelParams.height=panelHeight; panelParams.bottomMargin=footerHeight
+                diagnostics.layoutParams=panelParams
+            }
+        }
         val head=row().apply { gravity=Gravity.CENTER_VERTICAL }; body.addView(head)
         head.addView(label("진단",22,Color.WHITE,true),LinearLayout.LayoutParams(0,-2,1f))
         head.addView(IconButton(this,R.drawable.ic_action_info,"앱 정보 보기") { dev.halcamera.ui.AboutSheet.show(this) },LinearLayout.LayoutParams(dp(48),dp(48)))
@@ -489,7 +509,6 @@ class MainActivity : ComponentActivity() {
         diagnosticControls.addView(cameraButton,LinearLayout.LayoutParams(0,dp(48),1f))
         diagnosticControls.addView(pauseButton,LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginStart=dp(8) })
         body.addView(diagnosticControls,lp(top=12))
-        body.addView(mainRow,lp(top=12))
 
         @Suppress("UseSwitchCompatOrMaterialCode")
         val cliSwitch = Switch(this).apply {
@@ -497,14 +516,12 @@ class MainActivity : ComponentActivity() {
             minHeight = dp(48); isChecked = cli.enabled
             setOnCheckedChangeListener { _, checked -> cli.setEnabled(checked) }
         }
-        body.addView(cliSwitch, lp(top=12))
-        body.addView(label("ADB 연결을 승인한 PC에서 촬영과 벤치마크를 실행할 수 있습니다.",12,muted),lp(top=4))
         // 8.1: raw numbers only. The DIAGNOSIS card that used to lead this panel named a rule and a cause layer
         // from a two-second window, which the app could not actually establish; BENCHMARK answers that properly.
-        body.addView(label("Live readout",14,muted,true),lp(top=18))
-        body.addView(label("같은 세션의 직전 프레임에서 읽은 값. 기준 p50은 최근 창을 제외한 나머지 프레임의 중앙값",10,muted),lp(top=4))
+        val readoutDetails=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL }
+        readoutDetails.addView(label("직전 프레임 · ref p50: 최근 1.5초를 제외한 세션 표본",12,muted),lp(top=4))
         readoutCard=label("프레임을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
-        body.addView(readoutCard,lp(top=10))
+        readoutDetails.addView(readoutCard,lp(top=10))
         val stripBox=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; background=rounded(panel); setPadding(dp(12),dp(12),dp(12),dp(12)) }
         stripBox.addView(label("Frame interval · 최근 10초",12,muted,true),lp())
         strip=StripView(this).apply { contentDescription="최근 10초 센서 프레임 간격. 실선은 기준, 점선은 1.5배 임계" }
@@ -512,6 +529,7 @@ class MainActivity : ComponentActivity() {
         stripText=label("Partial —   Buffer — ms",12,muted).apply { gravity=Gravity.CENTER; typeface=Look.mono }
         stripBox.addView(stripText,lp(top=8))
         body.addView(stripBox,lp(top=10))
+        body.addView(Look.disclosure(this,"프레임·3A 수치",readoutDetails),lp(top=8))
         body.addView(label("3A oscilloscope",14,muted,true),lp(top=18))
         body.addView(label("최근 10초 · 3A 상태는 단계값, 연속값 그래프는 자동 스케일",10,muted),lp(top=4))
         scope=ScopeView(this).apply { background=rounded(panel); contentDescription="AE, AF, AWB 상태와 노출, ISO, 센서 프레임 간격 그래프" }
@@ -523,6 +541,10 @@ class MainActivity : ComponentActivity() {
         body.addView(timeline,lp(top=8))
         system=label("App CPU —  ·  PSS —  ·  Thermal —",11,muted)
         body.addView(system,lp(top=12))
+        val cliDetails=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL }
+        cliDetails.addView(cliSwitch,lp())
+        cliDetails.addView(label("승인된 ADB 연결에서 촬영·벤치마크 실행",12,muted),lp(top=4))
+        body.addView(Look.disclosure(this,"ADB CLI 설정",cliDetails),lp(top=12))
         body.addView(label("Incident ZIP",14,muted,true),lp(top=20))
         body.addView(label("$MARK_LABEL: 직전 10초 + 이후 5초의 이벤트를 저장합니다.",12,Color.WHITE),lp(top=8))
         recorderText=label("30s 순환 버퍼",11,muted); body.addView(recorderText,lp(top=8))
@@ -547,8 +569,9 @@ class MainActivity : ComponentActivity() {
                 listOf(bars.left,bars.top,bars.right,bars.bottom)
             } else { @Suppress("DEPRECATION") listOf(insets.systemWindowInsetLeft,insets.systemWindowInsetTop,insets.systemWindowInsetRight,insets.systemWindowInsetBottom) }
             topBar.setPadding(dp(12)+l,dp(8)+t,dp(12)+r,dp(10))
-            bottomBar.setPadding(dp(16)+l,dp(14),dp(16)+r,dp(14)+b)
-            body.setPadding(dp(18)+l,dp(12)+t,dp(18)+r,dp(24)+b)
+            bottomBar.setPadding(dp(16)+l,dp(14),dp(16)+r,dp(14))
+            mainRow.setPadding(dp(16)+l,dp(8),dp(16)+r,dp(8)+b)
+            body.setPadding(dp(18)+l,dp(12),dp(18)+r,dp(24))
             insets
         }
         root.requestApplyInsets()
@@ -785,8 +808,7 @@ class MainActivity : ComponentActivity() {
         if (show) zoomControl.collapse(animate = false)
         diagnostics.visibility = if (show) View.VISIBLE else View.GONE
         panelBack.isEnabled = show
-        topBar.importantForAccessibility = if (show) View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS else View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
-        bottomBar.importantForAccessibility = topBar.importantForAccessibility
+        bottomBar.visibility = if (show) View.GONE else View.VISIBLE
     }
     private fun label(text:String,size:Int,color:Int,bold:Boolean=false)=TextView(this).apply { this.text=text; textSize=size.coerceAtLeast(12).toFloat(); setTextColor(color); if(bold) setTypeface(typeface,Typeface.BOLD) }
     private fun button(text:String,action:()->Unit)=Button(this).apply { this.text=text; isAllCaps=false; textSize=12f; setTextColor(Look.onDark); background=cameraChrome(panel,true); backgroundTintList=null; stateListAnimator=null; setPadding(0,0,0,0); minWidth=0; minimumWidth=0; minHeight=0; minimumHeight=0; setOnClickListener { if (cli.active == null) action() } }

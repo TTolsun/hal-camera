@@ -22,8 +22,8 @@ android {
         applicationId = "dev.halcamera"
         minSdk = 26
         targetSdk = 36
-        versionCode = 14
-        versionName = "0.10.0"
+        versionCode = 112
+        versionName = "0.10.1"
         testInstrumentationRunner = "dev.halcamera.cli.CliStoreInstrumentation"
     }
     signingConfigs {

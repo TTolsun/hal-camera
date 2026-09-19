@@ -17,7 +17,8 @@ data class ResultRow(
     val stat: String,
     val delta: String,
     val marker: String,
-    val note: String = ""
+    val note: String = "",
+    val statLabel: String = ""
 )
 
 data class ResultSection(
@@ -239,7 +240,8 @@ object ResultPresenter {
             delta = if (comparedTo == ComparedTo.NONE) "" else delta(metric, comparison),
             // A reference delta carries no state, so it never gets the regression marker (8.4).
             marker = if (comparedTo == ComparedTo.BASELINE) marker(comparison?.state) else "",
-            note = noteFor(comparison, comparedTo)
+            note = noteFor(comparison, comparedTo),
+            statLabel = statHeader(metric).orEmpty()
         )
     }
 

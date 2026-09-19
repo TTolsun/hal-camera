@@ -23,6 +23,8 @@ flowchart LR
 | 기준 실행 | 지정한 baseline이 없으면 이전의 적격 실행을 reference로 선택합니다. |
 | 유효성과 비교 상태 | 측정 불가와 성능 저하를 구분해야 합니다. 값이 없으면 원인을 먼저 확인합니다. |
 
+결과 화면은 회귀 지표를 먼저 표시합니다. `전체 지표`에서 나머지 수치를, `실행 정보·점수`에서 조건과 점수를 확인합니다. Results의 `두 실행 비교`로 기준과 현재 실행을 차례로 고르며, 각 행의 `⋮` 메뉴에서 baseline 지정과 내보내기를 실행합니다.
+
 <p class="editorial" lang="en">A number is only useful<br>when its context travels with it.</p>
 
 <h2 lang="en">Follow the implementation.</h2>
