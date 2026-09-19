@@ -759,10 +759,7 @@ class MainActivity : ComponentActivity() {
                 // PROBE reads CameraCharacteristics only and never opens a camera, so it starts without waiting for
                 // close(done); onStop closes the LIVE camera as it does for any screen change.
                 1 -> startActivity(Intent(this, CameraProbeActivity::class.java).putExtra(CameraProbeActivity.EXTRA_CAMERA_ID, cameraId))
-                // The CTS list runs AOSP test code that upstream builds with min_sdk 34; below that there is nothing to open.
-                2 -> if (Build.VERSION.SDK_INT >= dev.halcamera.ctsvendor.VendoredCts.MIN_SDK) {
-                    openAfterClose("cts_started") { Intent(this, dev.halcamera.cts.vendored.VendoredCtsListActivity::class.java) }
-                } else toast("CTS 원문 케이스는 Android ${dev.halcamera.ctsvendor.VendoredCts.MIN_SDK} 이상에서만 실행할 수 있습니다")
+                2 -> openAfterClose("cts_started") { Intent(this, dev.halcamera.cts.CtsEntryActivity::class.java) }
             }
         }
     }

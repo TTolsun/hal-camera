@@ -1,24 +1,42 @@
 package dev.halcamera.cts.suite
 
+import dev.halcamera.cts.CtsCaseSpec
 import dev.halcamera.ctsvendor.VendoredTest
 
 /**
- * One line of the CTS checklist: a CTS test method vendored from AOSP. [key] is what the checklist stores,
- * the run screen receives and the CLI's `cts.run` takes; it keeps the `vendored:` prefix so a key never
- * reads as a bare method name. Pure Kotlin so the ordering, the keys and the estimates are testable.
+ * One line of the CTS suite checklist: either a case transcribed into Kotlin or a vendored CTS test method.
+ * [key] is what the checklist stores and hands to the run screen; it carries the kind so the two id spaces
+ * never collide. Pure Kotlin so the ordering, the keys and the estimates are testable.
  */
-data class SuiteItem(val test: VendoredTest) {
-    val key: String get() = PREFIX + test.id
-    val title: String get() = test.method
-    /** The CTS class#method the item runs. */
-    val source: String get() = test.source
-    /** Only RecordingTest methods record; the permission is asked once for the whole run when any item needs it. */
-    val needsAudio: Boolean get() = test.simpleClass == "RecordingTest"
-    /** A rough duration for [cameras] cameras, or null when nobody has measured the method yet. */
-    fun estimateSeconds(cameras: Int): Int? = SuitePlan.vendoredSecondsPerCamera[test.method]?.let { it * cameras }
+sealed class SuiteItem {
+    abstract val key: String
+    abstract val title: String
+    /** The CTS class#method the item mirrors or runs. */
+    abstract val source: String
+    abstract val needsAudio: Boolean
+    /** A rough duration for [cameras] cameras, or null when nobody has measured the item yet. */
+    abstract fun estimateSeconds(cameras: Int): Int?
+
+    data class Custom(val spec: CtsCaseSpec) : SuiteItem() {
+        override val key: String get() = CUSTOM_PREFIX + spec.id
+        override val title: String get() = spec.title
+        override val source: String get() = spec.source
+        override val needsAudio: Boolean get() = spec.needsAudio
+        override fun estimateSeconds(cameras: Int): Int = spec.estimateSeconds(cameras)
+    }
+
+    data class Vendored(val test: VendoredTest) : SuiteItem() {
+        override val key: String get() = VENDORED_PREFIX + test.id
+        override val title: String get() = test.method
+        override val source: String get() = test.source
+        /** Only RecordingTest methods record; the permission is asked once for the whole run when any item needs it. */
+        override val needsAudio: Boolean get() = test.simpleClass == "RecordingTest"
+        override fun estimateSeconds(cameras: Int): Int? = SuitePlan.vendoredSecondsPerCamera[test.method]?.let { it * cameras }
+    }
 
     companion object {
-        const val PREFIX = "vendored:"
+        const val CUSTOM_PREFIX = "custom:"
+        const val VENDORED_PREFIX = "vendored:"
     }
 }
 
@@ -27,7 +45,7 @@ data class SuiteEstimate(val knownSeconds: Int, val unknown: Int)
 
 /**
  * The checklist order, the selection resolved back to items, and the estimate line under the list. The run
- * order is the checklist order, whatever order the user ticked the boxes in.
+ * order is the checklist order, custom cases first, whatever order the user ticked the boxes in.
  */
 object SuitePlan {
     /**
@@ -36,7 +54,8 @@ object SuitePlan {
      */
     val vendoredSecondsPerCamera: Map<String, Int> = mapOf("testBasicRecording" to 30)
 
-    fun items(vendored: List<VendoredTest>): List<SuiteItem> = vendored.map { SuiteItem(it) }
+    fun items(custom: List<CtsCaseSpec>, vendored: List<VendoredTest>): List<SuiteItem> =
+        custom.map { SuiteItem.Custom(it) } + vendored.map { SuiteItem.Vendored(it) }
 
     /** The items of [all] whose key is in [keys], in the order of [all]. Unknown keys are dropped. */
     fun select(all: List<SuiteItem>, keys: Collection<String>): List<SuiteItem> = all.filter { it.key in keys }

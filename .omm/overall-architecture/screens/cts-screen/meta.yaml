@@ -5,6 +5,10 @@ last_field: description
 kind: nested-class
 title: cts-screen
 children:
+  - capture-cases
+  - case-runtime
+  - on-off-cases
+  - recording-case
   - suite-run
   - vendored-cases
 parentPath:

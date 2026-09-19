@@ -117,7 +117,7 @@ halcam --serial DEVICE capture --camera 0 --output ./photos
 halcam --serial DEVICE benchmark run --camera 0 --profile camera2-standard-v1 --output ./runs
 halcam --serial DEVICE probe --output ./probe
 halcam --serial DEVICE cts cases --json
-halcam --serial DEVICE cts run --case vendored:android.hardware.camera2.cts.BurstCaptureTest#testJpegBurst --case vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording --output ./cts
+halcam --serial DEVICE cts run --case custom:fast_on_off --case vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording --output ./cts
 halcam --serial DEVICE status --request REQUEST_UUID --json
 halcam --serial DEVICE fetch REQUEST_UUID --output ./recovered
 halcam --serial DEVICE cancel REQUEST_UUID
@@ -133,7 +133,7 @@ halcam --serial DEVICE cancel REQUEST_UUID
 | `capture` | 앱을 열고 카메라 준비 후 사진 한 쌍을 저장하고 PC로 수집한다. |
 | `benchmark run` | 기존 preflight를 통과한 profile을 한 번 실행하고 원본 JSON을 수집한다. |
 | `probe` | 카메라를 열지 않고 모든 카메라의 `CameraCharacteristics`를 읽어 Probe 화면이 내보내는 JSON(`camera_probe/1`)과 TXT 두 파일을 수집한다. 앱 화면이 필요 없다. |
-| `cts cases` | CTS 체크리스트의 항목을 키(`vendored:<class>#<method>`)·클래스·메서드·출처·오디오 필요 여부·예상 시간과 함께 반환한다. 목록은 `:ctsvendor`가 가져온 클래스의 `@Test` 메서드 전부이며 API 34 미만에서는 비어 있다. |
+| `cts cases` | CTS suite 체크리스트의 항목을 키(`custom:<id>`, `vendored:<class>#<method>`)·종류·출처·오디오 필요 여부·예상 시간과 함께 반환한다. vendored 항목은 API 34 이상에서만 나온다. |
 | `cts run` | `--case`로 고른 항목을 체크리스트 순서로 `CtsSuiteRunActivity`에서 실행하고 suite 보고서 JSON(`cts_suite/1`)과 공유 텍스트를 수집한다. FAIL 행은 실행 실패가 아니라 결과다. 마이크가 필요한 항목은 RECORD_AUDIO 권한을 미리 허용해야 하며 없으면 `PERMISSION_REQUIRED`로 끝난다. |
 | `status` | 앱을 전면으로 이동시키지 않고 상태를 조회한다. |
 | `fetch` | 이미 생성된 결과를 다시 내려받는다. 촬영·측정을 다시 실행하지 않는다. |

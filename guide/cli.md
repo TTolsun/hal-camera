@@ -60,7 +60,7 @@ halcam --serial DEVICE cameras --json
 
 `--camera`에는 `cameras` 결과에서 `selectable: true`인 논리 ID만 넣습니다. `0.2` 같은 물리 endpoint key는 `UNSUPPORTED_CAMERA`로 거부됩니다. `benchmark run`의 `--profile`은 현재 `camera2-standard-v1` 하나만 받습니다.
 
-`cts run`의 키는 `cts cases` 결과의 `key` 그대로이며 `vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording`처럼 `vendored:` 접두어와 CTS 클래스#메서드로 이루어집니다. 목록은 앱이 가져온 CTS 클래스(`RecordingTest`, `StillCaptureTest`, `BurstCaptureTest`)의 `@Test` 메서드 전부이고, API 34 미만 기기에서는 비어 있습니다. 마이크가 필요한 항목(`needs_audio: true`)은 앱에서 녹음 권한을 먼저 허용해야 하고, CLI는 권한을 대신 요청하지 않습니다. 실행 제한 기본값은 1,800초이며 suite가 길면 `--timeout`으로 올립니다(상한 3,600초).
+`cts run`의 키는 `cts cases` 결과의 `key` 그대로이며 `custom:fast_on_off`, `vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording`처럼 종류 접두어가 붙습니다. 마이크가 필요한 항목(`needs_audio: true`)은 앱에서 녹음 권한을 먼저 허용해야 하고, CLI는 권한을 대신 요청하지 않습니다. 실행 제한 기본값은 1,800초이며 suite가 길면 `--timeout`으로 올립니다(상한 3,600초).
 
 한 번에 하나의 명령만 실행됩니다. 화면에서 촬영·녹화·벤치마크가 진행 중이면 CLI 명령은 `BUSY`로 돌아오고, 반대로 CLI가 실행 중이면 화면 조작도 같은 규칙을 따릅니다. `--json`을 붙이면 stdout에 최종 JSON 하나만 나오고 진행 메시지는 stderr로 갑니다. 종료 코드의 의미는 [CLI 설계 문서](https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md)의 "시간 제한과 종료 코드"에 있습니다.
 
