@@ -52,7 +52,7 @@ def parser():
     cts_run = cts_commands.add_parser("run")
     common(cts_run)
     cts_run.add_argument("--case", action="append", required=True, dest="cases",
-                         help="Suite key from 'cts cases' (vendored:<class>#<method>); repeat for several, run in checklist order")
+                         help="Suite key from 'cts cases' (custom:… or vendored:…); repeat for several, run in checklist order")
     cts_run.add_argument("--output", required=True)
     cts_run.add_argument("--transfer-timeout", type=positive, default=60)
     execution_options(cts_run, 1800)

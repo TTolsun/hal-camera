@@ -23,10 +23,11 @@ class VendoredRunTest {
 
     private fun fixture(method: String) = VendoredTest(DriverFixture::class.java.name, method)
 
-    private fun run(test: VendoredTest): Pair<Recorder, VendoredResult> {
+    /** The fixture opens no camera, so a run that should read as PASS pretends camera 0 was opened. */
+    private fun run(test: VendoredTest, opened: Set<String> = setOf("0"), log: List<String> = emptyList()): Pair<Recorder, VendoredResult> {
         DriverFixture.armed = true
         val recorder = Recorder()
-        VendoredRun(test, recorder) { clock.addAndGet(500) }.run()
+        VendoredRun(test, recorder, { clock.addAndGet(500) }, { opened }, {}, { log }).run()
         return recorder to recorder.result!!
     }
 
@@ -51,9 +52,58 @@ class VendoredRunTest {
     }
 
     @Test
-    fun `an assumption failure is SKIP`() {
+    fun `an assumption failure is SKIP and its message is the reason`() {
         val (_, result) = run(fixture("testSkips"))
         assertEquals(VendoredVerdict.SKIP, result.verdict)
+        assertEquals(1, result.skipReasons.size)
+        assertTrue(result.skipReasons[0], result.skipReasons[0].contains("armed") || result.skipReasons[0].contains("false"))
+    }
+
+    @Test
+    fun `a pass that opened no camera is SKIP and carries the test's own skip lines as reasons`() {
+        val log = listOf(
+            "Testing HEIC_ULTRAHDR for Camera 0",
+            "Camera 0 does not support HEIC_ULTRAHDR, skipping",
+            "Camera 1 does not support HEIC_ULTRAHDR, skipping",
+            "Camera 0 does not support HEIC_ULTRAHDR, skipping"
+        )
+        val (_, result) = run(fixture("testPasses"), opened = emptySet(), log = log)
+        assertEquals(VendoredVerdict.SKIP, result.verdict)
+        assertEquals(listOf("Camera 0 does not support HEIC_ULTRAHDR, skipping", "Camera 1 does not support HEIC_ULTRAHDR, skipping"), result.skipReasons)
+        assertFalse(result.cancelled)
+
+        val (_, checked) = run(fixture("testPasses"), opened = setOf("1"), log = log)
+        assertEquals(VendoredVerdict.PASS, checked.verdict)
+        assertTrue(checked.skipReasons.isEmpty())
+
+        val (_, failed) = run(fixture("testFails"), opened = emptySet(), log = log)
+        assertEquals(VendoredVerdict.FAIL, failed.verdict)
+        assertTrue(failed.skipReasons.isEmpty())
+    }
+
+    @Test
+    fun `skip log parsing keeps only the run's own lines between its markers and only skip messages`() {
+        val lines = listOf(
+            " 1789654000.100  1234  5678 I StillCaptureTest: Camera 0 does not support dynamic depth, skipping",
+            " 1789654100.000  1234  5678 I HalCamCts: begin run-a",
+            " 1789654100.001  1234  5678 I StillCaptureTest: Testing HEIC exif for Camera 0",
+            " 1789654100.200  1234  5678 I StillCaptureTest: Camera 0 does not support HEIC, skipping",
+            " 1789654100.300  1234  5678 V StillCaptureTest: Device doesn't support STILL_CAPTURE bokeh. Skip the test",
+            "--------- beginning of main",
+            " 1789654100.400  1234  5678 I BurstCaptureTest: Camera 1 does not support HEIC, skipping",
+            " 1789654100.400  1234  5678 I StillCaptureTest: AE/AWB lock is not supported in camera 2. Skip the test.",
+            " 1789654100.500  1234  5678 I HalCamCts: end run-a",
+            " 1789654100.600  1234  5678 I StillCaptureTest: Camera 0 does not support RAW, skipping"
+        )
+        val (messages, complete) = SkipLog.parse(lines, "StillCaptureTest", "run-a")
+        assertTrue(complete)
+        assertEquals(4, messages.size)
+        assertEquals(
+            listOf("Camera 0 does not support HEIC, skipping", "Device doesn't support STILL_CAPTURE bokeh. Skip the test", "AE/AWB lock is not supported in camera 2. Skip the test"),
+            SkipLog.reasons(messages)
+        )
+        assertFalse(SkipLog.parse(lines.dropLast(2), "StillCaptureTest", "run-a").second)
+        assertTrue(SkipLog.parse(lines, "StillCaptureTest", "run-b").first.isEmpty())
     }
 
     @Test
@@ -68,7 +118,7 @@ class VendoredRunTest {
     fun `stop marks the result cancelled and raises the host flag until the next run clears it`() {
         DriverFixture.armed = true
         val recorder = Recorder()
-        val run = VendoredRun(fixture("testWaits"), recorder) { clock.addAndGet(500) }
+        val run = VendoredRun(fixture("testWaits"), recorder, { clock.addAndGet(500) }, { setOf("0") }, {}, { emptyList() })
         val worker = Thread { run.run() }
         worker.start()
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)

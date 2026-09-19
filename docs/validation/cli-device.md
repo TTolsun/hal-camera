@@ -87,6 +87,14 @@ PR #108 빌드(versionCode 106, release 서명 로컬 빌드)를 같은 Galaxy S
 
 0초로 끝난 메서드는 기기에 검사할 출력 형식(HEIC UltraHDR, DynamicDepth, bokeh)이 없어 본문이 바로 돌아온 경우다. 테스트가 assumption이 아니라 `continue`로 건너뛰므로 SKIP이 아닌 PASS로 기록된다.
 
+## RecordingTest 나머지와 SKIP 판정 (2026-09-19)
+
+| 항목 | 관측 결과 |
+|---|---|
+| RecordingTest 18개(versionCode 106) | 요청 `29c59174-8c00-4ad9-b22b-010fb3c1947a`, `cancelled`, `passed: 12, not_run: 5`, 13분 32초. 13번째 항목이 "IllegalStateException: stopped by the host"로 중단되었고 CLI는 취소를 보내지 않았다(화면 조작으로 추정). |
+| 남은 6개 + 0초 항목 6개(versionCode 107) | 요청 `5bfcf796-67ea-4be5-a2c9-b659957c5a93`, `succeeded`, `passed: 4, skipped: 8`, 15분 26초. 카메라를 열지 않은 통과가 SKIP으로 바뀌었으나 이유가 직전 항목의 로그와 섞였다(시각 기준 필터의 1초 여유 때문). |
+| SKIP 이유 재확인(versionCode 108, 마커 방식) | 9개 항목 모두 SKIP, 이유가 각 메서드의 로그와 일치: HEIC·HEIC_ULTRAHDR·dynamic depth는 카메라 0~3 각각 "does not support …, skipping", bokeh는 "Device doesn't support STILL_CAPTURE bokeh. Skip the test", 로그를 남기지 않는 RecordingTest 5개는 카탈로그의 힌트 또는 기본 문구. |
+
 ## 검증 범위
 
 PC의 실제 장치 연결은 Windows에서 USB와 무선 ADB로 확인했다. Linux·macOS는 단위 테스트와 wheel 설치 CI 범위다. 다른 OEM, 보조 사용자·업무 프로필, root adbd, 비밀번호 잠금 상태의 전체 조합, 저장 매체의 모든 장애를 검증한 것으로 확대하지 않는다. 연결 끊김·손상 전송·중복 파일은 fake ADB 시험을 포함한다. 실제 사용자 파일 삭제로 오류를 만들지는 않았다.

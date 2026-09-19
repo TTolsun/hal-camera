@@ -22,8 +22,29 @@ object VendoredCatalog {
     /** Methods listed first within their class, in this order; the rest follow alphabetically. */
     private val pinned = listOf("testBasicRecording")
 
+    /**
+     * `@Test` methods whose upstream body is only `// TODO. Need implement.`: they pass in a millisecond and
+     * check nothing on any device, so the list leaves them out. Re-check the sources when the commit moves.
+     */
+    val unimplemented: Set<String> = setOf(
+        "android.hardware.camera2.cts.RecordingTest#testCameraRecorderOrdering",
+        "android.hardware.camera2.cts.RecordingTest#testMediaCodecRecording",
+        "android.hardware.camera2.cts.RecordingTest#testTimelapseRecording"
+    )
+
+    /**
+     * What a method needs when it skips every camera without a log line of its own (`continue` with no
+     * Log.i). Keyed by class#method; the host shows this as the skip reason when the log held none.
+     */
+    val silentSkipHints: Map<String, String> = mapOf(
+        "android.hardware.camera2.cts.RecordingTest#testBasic10BitRecordingAV1" to "10비트 AV1 CamcorderProfile(AV1ProfileMain10 계열)을 가진 카메라가 없습니다",
+        "android.hardware.camera2.cts.RecordingTest#testBasic10BitRecordingHEVC" to "10비트 HEVC CamcorderProfile을 가진 카메라가 없습니다",
+        "android.hardware.camera2.cts.RecordingTest#testSlowMotionRecording" to "고속 동영상(high speed video)을 지원하는 카메라가 없습니다"
+    )
+
     fun tests(): List<VendoredTest> = classes.flatMap { cls ->
         val names = cls.methods.filter { it.isAnnotationPresent(Test::class.java) }.map { it.name }.distinct()
+            .filter { "${cls.name}#$it" !in unimplemented }
         val (first, rest) = names.partition { it in pinned }
         (first.sortedBy { pinned.indexOf(it) } + rest.sorted()).map { VendoredTest(cls.name, it) }
     }

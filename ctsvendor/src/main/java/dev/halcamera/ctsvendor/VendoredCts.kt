@@ -63,6 +63,17 @@ object VendoredCts {
     @JvmStatic fun attachTest(test: Any) { runningTest = test }
     @JvmStatic fun detachTest(test: Any) { if (runningTest === test) runningTest = null }
 
+    private val opened = java.util.Collections.synchronizedSet(LinkedHashSet<String>())
+
+    /**
+     * Called from the patched Camera2SurfaceViewTestCase.openDevice. A method that skips every camera with
+     * `continue` (no color output, no HEIC, no bokeh, …) still ends as a JUnit pass; the host reads this set
+     * to tell that pass from one that checked something.
+     */
+    @JvmStatic fun noteCameraOpened(cameraId: String) { opened += cameraId }
+    @JvmStatic fun clearOpenedCameras() { opened.clear() }
+    @JvmStatic fun openedCameras(): Set<String> = LinkedHashSet(opened)
+
     /**
      * Closes the CameraDevice the running test holds in its protected `mCamera` field, if any. The test then
      * fails on its next camera call instead of recording on for minutes after the user pressed 중단.

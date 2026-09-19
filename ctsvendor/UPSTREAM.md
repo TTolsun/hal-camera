@@ -23,6 +23,8 @@
 6. `CameraUtils.java` `isDeviceFoldable()`: 본문을 `return false`로 바꿨습니다. `DeviceStateManager`가 공개 stub에 없습니다. 접히는 기기에서는 폴더블 전용 검사가 빠집니다.
 7. `CameraParameterizedTestCase.java` `data()`: `adoptShellPerm=true` 행을 만들지 않습니다. 일반 앱에는 shell 권한을 채택할 `UiAutomation`이 없고, 그 행은 시스템 카메라만 검사합니다. 업스트림은 `perf-measure=on` 인수가 있을 때만 이 행을 생략하는데, 그 인수는 `RecordingTest`가 가장 큰 프로파일 하나만 검증 없이 녹화하게 만들므로 쓰지 않습니다(첫 실기기 실행에서 4대 카메라가 16초 만에 PASS로 끝나 발견).
 
+8. `Camera2SurfaceViewTestCase.java` `openDevice()`: `VendoredCts.noteCameraOpened(cameraId)` 호출을 추가했습니다. 모든 카메라를 `continue`로 건너뛴 메서드는 JUnit에는 통과이지만 검사한 것이 없으므로, 호스트가 이 기록이 비어 있으면 SKIP으로 판정하고 그 이유를 프로세스 자신의 logcat에서 읽어 붙입니다(`VendoredRun`, `SkipLog`).
+
 ## 업스트림 의존성을 대신하는 파일
 
 - `android/platform/test/annotations/RequiresFlagsEnabled.java`: `StillCaptureTest#testHeicUltraHdrCapture`가 붙이는 플랫폼 테스트 annotation의 빈 대역입니다. 업스트림은 `CheckFlagsRule`이 플래그가 꺼진 기기에서 메서드를 건너뛰지만 이 모듈에는 그 rule이 없으므로, 테스트 본문의 `isHeicUltraHdrSupported()` 검사만이 실행 여부를 정합니다. `Flags.FLAG_CAMERA_HEIF_GAINMAP` 상수도 이 annotation 인수를 위해 `Flags.java`에 두었습니다.

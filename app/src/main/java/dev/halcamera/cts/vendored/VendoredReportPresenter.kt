@@ -1,5 +1,6 @@
 package dev.halcamera.cts.vendored
 
+import dev.halcamera.ctsvendor.VendoredCatalog
 import dev.halcamera.ctsvendor.VendoredResult
 import dev.halcamera.ctsvendor.VendoredVerdict
 
@@ -23,6 +24,17 @@ object VendoredReportPresenter {
         }
     }
 
+    /**
+     * The detail block under a result: the skip reasons for a SKIP (with a fallback line when the log held
+     * none, so the verdict does not read as an app bug), the numbered failures otherwise.
+     */
+    fun detail(result: VendoredResult): String = when (result.verdict) {
+        VendoredVerdict.SKIP -> result.skipReasons.ifEmpty {
+            listOf(VendoredCatalog.silentSkipHints[result.test.id] ?: "카메라를 하나도 열지 않고 끝났습니다. 원문이 건너뛴 이유를 로그에 남기지 않았습니다")
+        }.joinToString("\n")
+        else -> result.failures.mapIndexed { index, failure -> "실패 ${index + 1}\n$failure" }.joinToString("\n\n")
+    }
+
     /** "1분 23초" for anything over a minute, "23초" below, "0.8초" under a second. */
     fun duration(ms: Long): String {
         val seconds = ms / 1000
@@ -41,6 +53,9 @@ object VendoredReportPresenter {
         append(DISCLAIMER).append('\n')
         result.failures.forEachIndexed { index, failure ->
             append('\n').append("실패 ").append(index + 1).append('\n').append(failure).append('\n')
+        }
+        if (result.verdict == VendoredVerdict.SKIP) {
+            append('\n').append("건너뛴 이유").append('\n').append(detail(result)).append('\n')
         }
     }.trimEnd()
 }
