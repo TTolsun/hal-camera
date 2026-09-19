@@ -1,5 +1,6 @@
 package dev.halcamera.cts.vendored
 
+import dev.halcamera.ctsvendor.VendoredCatalog
 import dev.halcamera.ctsvendor.VendoredResult
 import dev.halcamera.ctsvendor.VendoredVerdict
 
@@ -28,7 +29,9 @@ object VendoredReportPresenter {
      * none, so the verdict does not read as an app bug), the numbered failures otherwise.
      */
     fun detail(result: VendoredResult): String = when (result.verdict) {
-        VendoredVerdict.SKIP -> result.skipReasons.ifEmpty { listOf("테스트가 카메라를 하나도 열지 않았습니다. 건너뛴 이유는 logcat에서 읽지 못했습니다") }.joinToString("\n")
+        VendoredVerdict.SKIP -> result.skipReasons.ifEmpty {
+            listOf(VendoredCatalog.silentSkipHints[result.test.id] ?: "카메라를 하나도 열지 않고 끝났습니다. 원문이 건너뛴 이유를 로그에 남기지 않았습니다")
+        }.joinToString("\n")
         else -> result.failures.mapIndexed { index, failure -> "실패 ${index + 1}\n$failure" }.joinToString("\n\n")
     }
 

@@ -39,8 +39,10 @@ class VendoredRun(
     private val clock: () -> Long = { SystemClock.elapsedRealtime() },
     /** The cameras the test opened; the default reads the hook the patched openDevice feeds. */
     private val openedCameras: () -> Set<String> = { VendoredCts.openedCameras() },
-    /** The test's log lines written since the run began; the default reads this process's logcat. */
-    private val skipLog: (sinceEpochMs: Long) -> List<String> = { since -> SkipLog.read(test.simpleClass, since) }
+    /** Writes a marker line to the log so the read below can cut the run's lines out; the default is android.util.Log. */
+    private val mark: (message: String) -> Unit = { android.util.Log.i(SkipLog.MARK_TAG, it) },
+    /** The test's log lines between the run's begin and end markers; the default reads this process's logcat. */
+    private val skipLog: (marker: String) -> List<String> = { marker -> SkipLog.read(test.simpleClass, marker) }
 ) {
     interface Listener {
         fun onStarted(displayName: String)
@@ -55,7 +57,8 @@ class VendoredRun(
     fun run() {
         VendoredCts.clearStop()
         VendoredCts.clearOpenedCameras()
-        val beganAtEpochMs = System.currentTimeMillis()
+        val marker = "run-" + java.util.UUID.randomUUID()
+        runCatching { mark("begin $marker") }
         val failures = ArrayList<String>()
         var started = 0
         var skipped = false
@@ -87,7 +90,8 @@ class VendoredRun(
             started == 0 || skipped || checkedNothing -> VendoredVerdict.SKIP
             else -> VendoredVerdict.PASS
         }
-        val reasons = if (verdict == VendoredVerdict.SKIP) runCatching { SkipLog.reasons(skipLog(beganAtEpochMs)) }.getOrDefault(emptyList()) else emptyList()
+        runCatching { mark("end $marker") }
+        val reasons = if (verdict == VendoredVerdict.SKIP) runCatching { SkipLog.reasons(skipLog(marker)) }.getOrDefault(emptyList()) else emptyList()
         listener.onFinished(VendoredResult(test, verdict, clock() - startedAt, failures, stopped || stopRequested, reasons))
     }
 
@@ -123,20 +127,42 @@ class VendoredRun(
  * ending in "skipping" or "Skip the test".
  */
 object SkipLog {
-    /** Lines of [tag] logged at or after [sinceEpochMs], message text only. */
-    fun read(tag: String, sinceEpochMs: Long): List<String> {
-        val process = ProcessBuilder("logcat", "-d", "-v", "epoch", "--pid=" + android.os.Process.myPid(), "-s", "$tag:V")
-            .redirectErrorStream(true).start()
-        val lines = process.inputStream.bufferedReader().use { it.readLines() }
-        process.waitFor()
-        return parse(lines, sinceEpochMs)
+    /** The tag of the begin/end marker lines [VendoredRun] writes around a run. */
+    const val MARK_TAG = "HalCamCts"
+
+    /**
+     * Lines of [tag] between the run's "begin [marker]" and "end [marker]" lines, message text only. logd
+     * delivers a line a moment after Log.i returns, so the dump is retried until the end marker is in it.
+     */
+    fun read(tag: String, marker: String): List<String> {
+        repeat(10) { attempt ->
+            val process = ProcessBuilder("logcat", "-d", "-v", "epoch", "--pid=" + android.os.Process.myPid(), "-s", "$tag:V", "$MARK_TAG:I")
+                .redirectErrorStream(true).start()
+            val lines = process.inputStream.bufferedReader().use { it.readLines() }
+            process.waitFor()
+            val (messages, complete) = parse(lines, tag, marker)
+            if (complete) return messages
+            if (attempt < 9) Thread.sleep(100)
+        }
+        return emptyList()
     }
 
-    /** `-v epoch` lines look like " 1789654089.169  1234  5678 I StillCaptureTest: Camera 0 does not support HEIC, skipping". */
-    fun parse(lines: List<String>, sinceEpochMs: Long): List<String> = lines.mapNotNull { line ->
-        val m = LINE.matchEntire(line.trim()) ?: return@mapNotNull null
-        val at = (m.groupValues[1].toDoubleOrNull() ?: return@mapNotNull null) * 1000
-        if (at + 1000 < sinceEpochMs) null else m.groupValues[2]
+    /**
+     * `-v epoch` lines look like " 1789654089.169  1234  5678 I StillCaptureTest: Camera 0 does not support HEIC, skipping".
+     * Returns the [tag] messages after the begin marker, and whether the end marker was seen.
+     */
+    fun parse(lines: List<String>, tag: String, marker: String): Pair<List<String>, Boolean> {
+        val messages = ArrayList<String>()
+        var inside = false
+        for (line in lines) {
+            val m = LINE.matchEntire(line.trim()) ?: continue
+            val lineTag = m.groupValues[2]; val message = m.groupValues[3]
+            if (lineTag == MARK_TAG) {
+                if (message == "begin $marker") { inside = true; messages.clear() }
+                else if (message == "end $marker") return messages to true
+            } else if (inside && lineTag == tag) messages += message
+        }
+        return messages to false
     }
 
     /** The distinct skip messages, in first-seen order, with the "Camera 0 " subject kept so the reader knows which camera. */
@@ -145,7 +171,7 @@ object SkipLog {
         .map { it.trim().trimEnd('.') }
         .distinct()
 
-    private val LINE = Regex("""^(\d+\.\d+)\s+\d+\s+\d+\s+[VDIWEF]\s+[^:]+:\s?(.*)$""")
+    private val LINE = Regex("""^(\d+\.\d+)\s+\d+\s+\d+\s+[VDIWEF]\s+([^:]+):\s?(.*)$""")
     private val SKIP = Regex("""skipping|skip the test|skip test""", RegexOption.IGNORE_CASE)
 }
 
