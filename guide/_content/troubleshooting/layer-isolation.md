@@ -45,6 +45,10 @@ verifications: []
 
 `intervalMs`, `resultFps`, `observedResultGap`은 관측값으로 계산한 수치입니다. HAL 내부의 처리 시간이나 화면에 표시된 프레임 수를 직접 측정한 값이 아닙니다.
 
+### 화면에서 지표가 보이지 않을 때
+
+Live 진단 패널의 `프레임·3A 수치`를 펼치면 상세 수치를 볼 수 있습니다. 하단 Mark는 직전 10초와 이후 5초를 incident ZIP으로 저장합니다. Benchmark 결과에 회귀가 있으면 해당 지표를 먼저 표시하므로 다른 수치는 `전체 지표`를 펼쳐 확인합니다. 이 배치는 저장된 지표나 CSV의 범위를 바꾸지 않습니다.
+
 ### 이력과 CSV가 예상과 다를 때
 
 Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된 실행을 찾으려면 상태 필터를 `전체`로 바꾸고 profile·camera 필터도 확인합니다. PC의 `tools/aggregate.py`는 기본적으로 점수 산정 가능한 실행만 내보내므로, 앱과 같은 범위를 보려면 `--eligibility comparison_eligible`을 사용합니다.
@@ -57,7 +61,7 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 `status --request REQUEST_UUID`로 앱의 상태를 먼저 확인합니다. PC의 대기 시간 종료는 앱 실행 실패를 뜻하지 않습니다. `fetch`는 이미 생성된 파일을 회수하며 촬영을 반복하지 않습니다. `interrupted`는 앱 프로세스가 종료된 미완료 기록이며 자동으로 재실행되지 않습니다.
 
-`BUSY`가 반환되면 현재 UI 또는 CLI 작업이 끝날 때까지 기다립니다. `CLI_DISABLED`는 진단 패널의 ADB CLI 허용 설정을 확인합니다. 카메라·저장소 권한은 앱에서 허용해야 하며 CLI가 자동 부여하지 않습니다. benchmark의 취소·실패 시 partial report와 실행 상태를 함께 확인합니다.
+`BUSY`가 반환되면 현재 UI 또는 CLI 작업이 끝날 때까지 기다립니다. `CLI_DISABLED`는 진단 패널의 `ADB CLI 설정`을 펼쳐 `ADB CLI 허용`을 확인합니다. 카메라·저장소 권한은 앱에서 허용해야 하며 CLI가 자동 부여하지 않습니다. benchmark의 취소·실패 시 partial report와 실행 상태를 함께 확인합니다.
 
 ### 반복 측정 프로파일 비교
 

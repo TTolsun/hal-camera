@@ -72,8 +72,9 @@ abstract class CtsChecklistActivity : ComponentActivity() {
         head.addView(IconButton(this, R.drawable.ic_action_close, "$screenTitle 목록 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
         body.addView(head)
         body.addView(Look.text(this, intro, 12, Look.onDarkMuted), lp(top = 4))
-        body.addView(Look.text(this, disclaimer, 11, Look.onDarkMuted), lp(top = 4))
+        body.addView(Look.text(this, "앱 내 검사 · 공식 CTS 인증 결과 아님", 12, Look.onDarkMuted), lp(top = 4))
         groups.forEach { body.addView(section(it), lp(top = 20)) }
+        body.addView(Look.disclosure(this, "실행 범위 안내", Look.text(this, disclaimer, 13, Look.onDarkMuted)), lp(top = 16))
         onSelectionChanged()
     }
 

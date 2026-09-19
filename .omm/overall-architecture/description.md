@@ -6,7 +6,7 @@ Home·Auto Check·건강 판정 코드는 M3에서 제거되었고, 이를 설�
 
 Live는 사진·동영상을 MediaLibrary를 통해 DCIM/HALCamera에 저장하고 GalleryActivity가 해당 앨범을 조회합니다. 이 픽셀 저장 경로는 벤치마크 JSON과 incident ZIP의 메타데이터 경로와 구분합니다.
 
-Live는 API 토글과 상태, 핵심 측정값을 표시합니다. ExpandingZoomControl은 선택한 배율에서 펼쳐지고 자동으로 접히며, 사진·동영상 버튼은 직접 선택을 제공합니다. 카메라 선택은 목록 방식을 유지합니다. RecentMediaThumbnail은 완성된 앨범 항목을 백그라운드에서 읽어 RecentMediaButton에 표시합니다. Mark·프리뷰 일시정지·그래프는 진단 패널에서 제공하고, 세션과 무관한 Benchmark·Probe·CTS는 상단 도구 메뉴에서 독립 화면으로 엽니다.
+Live는 API 토글, 카메라 ID·상태와 핵심 측정값을 표시합니다. ExpandingZoomControl은 선택한 배율에서 펼쳐지고 자동으로 접히며, 사진·동영상 버튼은 직접 선택을 제공합니다. 카메라 선택은 목록 방식을 유지합니다. RecentMediaThumbnail은 완성된 앨범 항목을 백그라운드에서 읽어 RecentMediaButton에 표시합니다. 하단에 Mark 작업 행을 고정하고 진단 패널에서는 프리뷰를 유지하며 그래프와 상세 수치를 제공합니다. Benchmark·Probe·CTS는 상단 도구 메뉴에서 독립 화면으로 엽니다.
 
 PC의 tools/halcam Python CLI는 ADB를 통해 shell 전용 CliProvider에 명령을 전달합니다. CommandCoordinator와 CommandStore가 요청 ID·진행 상태·결과 파일 등록을 관리합니다. LiveController는 MainActivity의 실제 카메라를 사용하고 BenchmarkController는 BenchmarkActivity의 기존 실행·보고서 저장 경로를 연결합니다. CLI protocol v1과 benchmark schema 4는 별개의 계약입니다.
 

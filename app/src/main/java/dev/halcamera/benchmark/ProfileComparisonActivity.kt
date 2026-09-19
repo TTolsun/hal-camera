@@ -94,7 +94,7 @@ class ProfileComparisonActivity : ComponentActivity() {
     private fun render() {
         body.removeAllViews()
         text("프로파일 비교", 24)
-        text("기본은 동일 기기 수정 전후 비교입니다. 다른 기기의 자료도 선택할 수 있습니다. 가져온 자료는 기존 baseline과 분리됩니다.")
+        text("반복 실행 A/B 비교 · baseline과 별도 분석")
         if (busy) text("자료를 처리하고 있습니다…")
         button("JSON 파일 가져오기") { picker.launch(arrayOf("*/*")) }
         button("기기 필터 · ${deviceFilter ?: "전체"}") {
@@ -105,19 +105,20 @@ class ProfileComparisonActivity : ComponentActivity() {
                 }.setNegativeButton("취소", null).show()
         }
         button("수정 전 / A 선택 · ${before.size}개") { select(true) }
+        selectionSummary(before)
         button("수정 후 / B 선택 · ${after.size}개") { select(false) }
-        text("선택은 기기 필터를 바꿔도 유지됩니다. 한 묶음은 한 기기·빌드로 구성하고, 같은 원본을 양쪽에 넣지 마세요.")
-        checkbox("다른 기기 간 비교(동일 기기 SW 수정 효과로 해석하지 않음)", options.differentDevices) {
+        selectionSummary(after)
+        if (before.intersect(after).isNotEmpty()) text("A/B에 같은 원본이 포함되어 있습니다. 한쪽에서 제외하세요.")
+        checkbox("다른 기기 간 비교", options.differentDevices) {
             options = options.copy(differentDevices = it, sameDeviceConfirmed = false); persist(); render()
         }
-        if (!options.differentDevices) checkbox("ID가 없거나 재설치된 자료도 모두 같은 물리 기기임을 확인했습니다", options.sameDeviceConfirmed) {
+        if (!options.differentDevices) checkbox("재설치·ID 누락 자료를 포함해 동일 물리 기기임을 확인", options.sameDeviceConfirmed) {
             options = options.copy(sameDeviceConfirmed = it); persist(); render()
         }
-        checkbox("각 실행을 독립적으로 반복했고 장면·조명을 동일하게 유지했습니다", options.independentRunsConfirmed) {
+        checkbox("독립 반복 실행 · 동일 장면·조명 확인", options.independentRunsConfirmed) {
             options = options.copy(independentRunsConfirmed = it); persist(); render()
         }
-        if (options.differentDevices) text("카메라 ID가 같아도 같은 렌즈라는 뜻은 아닙니다. 선택한 카메라의 역할·화각을 원본 정보에서 확인하세요. 기기 간 차이를 SW 수정 효과로 해석할 수 없습니다.")
-        text("기기 ID는 앱 설치 단위입니다. 앱 데이터 삭제 후 달라질 수 있으며, 외부 JSON의 ID는 인증된 하드웨어 식별자가 아닙니다.")
+        if (options.differentDevices) text("기기 간 차이는 SW 수정 효과로 해석할 수 없습니다. 렌즈 역할·화각을 확인하세요.")
         button("선택한 묶음 분석", before.isNotEmpty() && after.isNotEmpty()) {
             val a = entries.filter { it.key in before }; val b = entries.filter { it.key in after }; val selectedOptions = options
             work({
@@ -129,14 +130,28 @@ class ProfileComparisonActivity : ComponentActivity() {
         button("최근 분석 결과 다시 열기") {
             work({ check(library.resultFile.isFile) { "저장된 분석 결과가 없습니다." }; library.resultFile.readText() }) { showResult(it) }
         }
+        body.addView(Look.disclosure(this, "비교 조건·기기 ID 안내", Look.text(this,
+            "묶음별 한 기기·빌드로 구성합니다. 필터를 바꿔도 선택은 유지됩니다.\n\n기기 ID는 앱 설치 단위이며 재설치·데이터 삭제 후 달라질 수 있습니다. 외부 JSON의 ID는 인증된 하드웨어 식별자가 아닙니다.\n\n가져온 자료는 기존 baseline과 분리됩니다. 다른 기기에서는 같은 카메라 ID가 같은 렌즈를 뜻하지 않습니다.",
+            13, Look.onDarkMuted)), lp())
         button("자료 목록 새로고침") { reload() }
-        resultText?.let { text("분석 결과를 저장했습니다. 선택한 원본 해시와 적용한 방법·제외 사유가 결과에 포함됩니다.") }
+        resultText?.let { text("분석 저장 완료 · 원본 해시·방법·제외 사유 포함") }
         button("선택 초기화") { before.clear(); after.clear(); options = ProfileComparison.Options(); persist(); render() }
         errors.forEach { text("확인 필요: $it") }
         text("${visible().size}개 자료 · 아래 행을 눌러 원시 지표를 확인합니다.")
         visible().take(100).forEach { e -> button(e.label + "\n원본 ${e.sha256.take(12)}") { showEntry(e) } }
         if (visible().size > 100) text("목록은 최근 100개까지 표시합니다. 묶음 선택 창에서는 현재 필터의 전체 자료를 선택할 수 있습니다.")
         button("실행 이력으로 돌아가기") { finish() }
+    }
+
+    private fun selectionSummary(keys: Set<String>) {
+        val selected = entries.filter { it.key in keys }
+        if (selected.isEmpty()) return
+        val groups = selected.groupBy { entry ->
+            "${entry.deviceLabel} · ${entry.instanceId?.take(8) ?: "기기 ID 없음"}\n" +
+                "${entry.run.subject.subjectBuildLabel ?: entry.run.device.buildDisplay} · ${entry.run.subject.subjectCommit ?: "commit 없음"}"
+        }
+        text(groups.entries.joinToString("\n") { (identity, runs) -> "$identity · ${runs.size}회" }, 13)
+        if (groups.size > 1) text("여러 기기·빌드가 선택되어 있습니다. 묶음 구성을 확인하세요.", 13)
     }
 
     private fun select(isBefore: Boolean) {

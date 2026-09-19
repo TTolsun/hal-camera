@@ -251,6 +251,7 @@ sources:
   data-flow:
     kind: omm
     evidence:
+      - app/src/main/java/dev/halcamera/ui/MetricRows.kt
       - app/src/main/java/dev/halcamera/telemetry/**/*.kt
       - app/src/main/java/dev/halcamera/benchmark/**/*.kt
       - app/src/main/java/dev/halcamera/metrics/**/*.kt
@@ -289,6 +290,7 @@ sources:
           - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
       rendered-screens:
         evidence:
+          - app/src/main/java/dev/halcamera/ui/MetricRows.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/ComparePresenter.kt
           - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt

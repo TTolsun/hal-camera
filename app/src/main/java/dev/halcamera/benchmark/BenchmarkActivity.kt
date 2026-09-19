@@ -1,5 +1,7 @@
 package dev.halcamera.benchmark
 
+import dev.halcamera.ui.MetricRows
+
 import android.Manifest
 import android.content.ClipData
 import android.content.Intent
@@ -24,7 +26,6 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -54,13 +55,8 @@ import java.io.File
 import java.util.concurrent.Executors
 
 /**
- * The BENCHMARK screen (docs/PLAN-BenchMarker-v0.3.md 8.2 - 8.4 and 7.3): the start card with the preflight
- * verdict and the subject label, the six-phase progress, the result table, and COMPARE against the run the
- * result is measured against.
- *
- * The activity owns the camera, the files and the clock; every layout and verdict rule lives in a pure object
- * ([StartCardPresenter], [ProgressPresenter], [ResultPresenter], [ComparePresenter], [RegressionDetector]) so
- * that what the screen says is testable without a device.
+ * Benchmark setup, progress, results and comparison. The activity owns camera and file I/O;
+ * pure presenters supply measurement values and verdicts, while [MetricRows] lays out wrapping rows.
  */
 class BenchmarkActivity : ComponentActivity() {
     private val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
@@ -449,25 +445,29 @@ class BenchmarkActivity : ComponentActivity() {
         }
         val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, "${run.device.manufacturer} ${run.device.model}", roleText(run.endpoint.role))
         card.addView(Look.text(this, "벤치마크 결과", 19, Look.onDark, bold = true))
-        listOfNotNull(view.titleLine, view.subLine, view.eligibilityLine, view.scoreLine, view.comparisonLine, view.identityLine, view.conditionLine).forEach {
-            card.addView(Look.text(this, it, 12, Look.onDarkMuted), lp(top = 8))
+        card.addView(Look.text(this, "Camera ${run.endpoint.key} · ${run.subject.subjectBuildLabel ?: run.device.buildDisplay}", 13, Look.onDarkMuted), lp(top = 8))
+        val regressed = view.sections.flatMap { it.rows }.filter { it.marker == "▲" }
+        card.addView(Look.text(this, view.comparisonLine, 17,
+            if (regressed.isNotEmpty()) Look.statusFail else Look.onDark, bold = true), lp(top = 12))
+        card.addView(Look.text(this, view.eligibilityLine, 13, Look.onDarkMuted), lp(top = 8))
+        view.conditionLine?.let { card.addView(Look.text(this, it, 13, Look.statusWarn), lp(top = 8)) }
+        regressed.forEach { card.addView(MetricRows.result(this, it)) }
+        val allMetrics = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        view.sections.forEach { section ->
+            allMetrics.addView(Look.text(this, section.title, 15, Look.onDarkMuted, bold = true), lp(top = 12))
+            section.rows.forEach { allMetrics.addView(MetricRows.result(this, it)) }
         }
-        card.addView(Look.text(this, "좌우로 스크롤 · 표를 누르면 복사", 12, Look.onDarkMuted), lp(top = 8))
-        val table = buildString {
-            view.sections.forEach { section ->
-                appendLine(ResultPresenter.headerLine(section))
-                section.rows.forEach { appendLine(ResultPresenter.rowLine(it)) }
-            }
+        view.threeALine?.let { allMetrics.addView(Look.text(this, it, 13, Look.onDarkMuted), lp(top = 8)) }
+        card.addView(Look.disclosure(this, "전체 지표", allMetrics, initiallyExpanded = regressed.isEmpty()), lp(top = 12))
+        val details = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        listOfNotNull(view.titleLine, view.subLine, view.identityLine, view.scoreLine, lastSummary).forEach {
+            details.addView(Look.text(this, it, 12, Look.onDarkMuted), lp(top = 8))
         }
-        card.addView(wide(Look.text(this, table, 12, Look.onDark, mono = true).also { copyOnTap(it, "result", view.render()) }), lp(top = 8))
-        view.threeALine?.let { card.addView(Look.text(this, it, 12, Look.onDarkMuted), lp(top = 8)) }
-        card.addView(Look.text(this, lastSummary, 10, Look.onDarkMuted, mono = true), lp(top = 10))
+        card.addView(Look.disclosure(this, "실행 정보·점수", details), lp(top = 8))
+        card.addView(Look.ghostButton(this, "결과 복사", dark = true) {}.also { copyOnTap(it, "result", view.render()) }, lp(top = 8))
         content.addView(card)
 
-        // SET AS BASELINE is more than twice as long as the other two labels, and a third of the screen is not
-        // enough for it once the pill padding is taken off: on a Galaxy S25+ it was drawn as "SET AS BASELI…"
-        // and COMPARE was broken across two lines. So the long label gets a row of its own and the two short
-        // ones share the row below it.
+        // Give the longer baseline action a full row to avoid truncation.
         actions.addView(
             action(view.baselineButton, view.baselineButtonEnabled) { toggleBaseline() },
             LinearLayout.LayoutParams(-1, dp(52))
@@ -493,15 +493,20 @@ class BenchmarkActivity : ComponentActivity() {
         } else {
             val view = ComparePresenter.present(base, run, cmp, comparedTo, isBaseline)
             card.addView(Look.text(this, "실행 비교", 19, Look.onDark, bold = true))
-            listOfNotNull(view.baseLine, view.currentLine, view.identityLine, view.conditionLine, view.referenceNote).forEach {
-                card.addView(Look.text(this, it.trim().replace(Regex(" {2,}"), " · "), 12, Look.onDarkMuted), lp(top = 8))
+            view.referenceNote?.let { card.addView(Look.text(this, it, 14, Look.onDark), lp(top = 8)) }
+            val regressed = view.rows.filter { it.marker.startsWith("▲") }
+            if (regressed.isNotEmpty()) {
+                card.addView(Look.text(this, "▲ ${regressed.size} Regressed", 17, Look.statusFail, bold = true), lp(top = 12))
+                regressed.forEach { card.addView(MetricRows.comparison(this, it, view.baseHeader)) }
             }
-            card.addView(Look.text(this, "좌우로 스크롤 · 표를 누르면 복사", 12, Look.onDarkMuted), lp(top = 8))
-            val table = buildString {
-                appendLine(ComparePresenter.headerLine(view.baseHeader))
-                view.rows.forEach { appendLine(ComparePresenter.rowLine(it)) }
+            view.conditionLine?.let { card.addView(Look.text(this, it, 13, Look.statusWarn), lp(top = 8)) }
+            val details = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            listOfNotNull(view.baseLine, view.currentLine, view.identityLine).forEach {
+                details.addView(Look.text(this, it.trim().replace(Regex(" {2,}"), " · "), 12, Look.onDarkMuted), lp(top = 8))
             }
-            card.addView(wide(Look.text(this, table, 12, Look.onDark, mono = true).also { copyOnTap(it, "compare", view.render()) }), lp(top = 8))
+            card.addView(Look.disclosure(this, "비교 실행 정보", details), lp(top = 8))
+            view.rows.filterNot { it.marker.startsWith("▲") }.forEach { card.addView(MetricRows.comparison(this, it, view.baseHeader)) }
+            card.addView(Look.ghostButton(this, "비교 결과 복사", dark = true) {}.also { copyOnTap(it, "compare", view.render()) }, lp(top = 8))
         }
         content.addView(card)
         actions.addView(IconButton(this, R.drawable.ic_action_back, "벤치마크 결과로 돌아가기") { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(dp(48), dp(48)))
@@ -824,12 +829,6 @@ class BenchmarkActivity : ComponentActivity() {
             isEnabled = enabled
             alpha = if (enabled) 1f else 0.4f
         }
-
-    private fun wide(view: View): HorizontalScrollView = HorizontalScrollView(this).apply {
-        isHorizontalScrollBarEnabled = true
-        isScrollbarFadingEnabled = false
-        addView(view, LinearLayout.LayoutParams(-2, -2))
-    }
 
     /**
      * Makes a read-only text block copyable. A run id, a file path and the result table are the things worth

@@ -1,5 +1,3 @@
-`app/src/main/java/dev/halcamera/ui/Look.kt` (78 lines). The only place colours, text styles and card/row builders are defined, mapping `docs/design/DESIGN.md` onto the two surfaces described in `PRODUCT-v0.2.md` 11.6.
+ui/Look.kt는 docs/design/DESIGN.md의 색상·글꼴·카드·행 토큰을 Android 화면에 적용합니다. 상태 색상은 판정에 사용하며 버튼의 기본 동작 색상과 구분합니다.
 
-Two palettes: consumer screens are a light parchment canvas (`#f5f5f7`) with white cards and a single Action Blue; expert screens are dark tiles. The rule that shapes the rest of the UI is that status colours (fail red, warn orange) mark states only and are never used for buttons, so a red never means "press me".
-
-It also exposes small builders (`text`, `card`, `row`) that the activities use instead of XML layouts.
+text·card·row 생성 함수와 disclosure를 제공합니다. disclosure는 상세 설명을 접고 펼치며 기본값은 접힘입니다. 토글의 최소 높이는 48dp이고 펼침 상태를 접근성 설명에 반영합니다.

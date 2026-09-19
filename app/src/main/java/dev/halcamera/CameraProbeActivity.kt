@@ -97,7 +97,7 @@ class CameraProbeActivity : ComponentActivity() {
         scroll = ScrollView(this)
         val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(16), dp(16), dp(16)) }
         column.addView(Look.text(this, "Probe", 24, Look.onDark, bold = true), lp())
-        column.addView(Look.text(this, "CameraCharacteristics를 읽어 HAL이 공개한 사양을 그대로 표시합니다. 카메라를 열지 않으므로 측정값이 아닙니다. 실제 동작은 BENCHMARK로 확인합니다.", 14, Look.onDark), lp())
+        column.addView(Look.text(this, "CameraCharacteristics · 정적 사양 조회", 14, Look.onDarkMuted), lp())
         column.addView(IconButton(this, R.drawable.ic_action_back, "돌아가기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { topMargin = dp(10) })
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         column.addView(body)
@@ -346,13 +346,13 @@ class CameraProbeActivity : ComponentActivity() {
         exports.addView(Look.ghostButton(this, "JSON", dark = true) { export(snap, "json") }.apply { contentDescription = "모든 카메라를 JSON 파일로 공유" }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
         exports.addView(Look.ghostButton(this, "복사", dark = true) { copy(snap, current) }.apply { contentDescription = "현재 카메라를 클립보드에 복사" }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
         body.addView(exports, lp())
-        text("TXT · JSON은 모든 카메라(${cameras.size}개)를 파일로 공유하고, 복사는 현재 카메라를 클립보드에 넣습니다. 이미지 픽셀은 포함되지 않습니다.", 12)
+        text("TXT·JSON: 전체 ${cameras.size}개 · 복사: 현재 카메라", 12)
         val sections = ArrayList<ProbeSection>()
         sections += ProbeSection("Device", snap.device)
         if (current != null) sections += current.sections
         if (snap.errors.isNotEmpty()) sections += ProbeSection("Errors", snap.errors.map { ProbeRow("!", it) })
         shown = sections
-        if (current == null) text("공개된 카메라가 없습니다.") else text("섹션 제목을 누르면 접거나 펼칩니다. 아래 필터에 단어를 넣으면 그 단어가 든 줄만 골라 볼 수 있습니다.", 12)
+        if (current == null) text("공개된 카메라가 없습니다.")
         sections.forEach { section(it.title, it.rows) }
         renderHits()
         lastRenderFull = true
