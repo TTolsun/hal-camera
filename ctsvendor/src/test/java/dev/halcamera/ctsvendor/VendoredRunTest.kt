@@ -52,9 +52,11 @@ class VendoredRunTest {
     }
 
     @Test
-    fun `an assumption failure is SKIP`() {
+    fun `an assumption failure is SKIP and its message is the reason`() {
         val (_, result) = run(fixture("testSkips"))
         assertEquals(VendoredVerdict.SKIP, result.verdict)
+        assertEquals(1, result.skipReasons.size)
+        assertTrue(result.skipReasons[0], result.skipReasons[0].contains("armed") || result.skipReasons[0].contains("false"))
     }
 
     @Test

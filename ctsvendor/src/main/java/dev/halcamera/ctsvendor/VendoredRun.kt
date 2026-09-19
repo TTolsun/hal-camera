@@ -62,6 +62,7 @@ class VendoredRun(
         val failures = ArrayList<String>()
         var started = 0
         var skipped = false
+        val assumptions = ArrayList<String>()
         notifier.addListener(object : RunListener() {
             override fun testStarted(description: Description) { started++; listener.onStarted(shortName(description)) }
             override fun testFailure(failure: Failure) {
@@ -69,7 +70,7 @@ class VendoredRun(
                 failures += message
                 listener.onFailure(shortName(failure.description), message)
             }
-            override fun testAssumptionFailure(failure: Failure) { skipped = true }
+            override fun testAssumptionFailure(failure: Failure) { skipped = true; failure.message?.let { assumptions += it } }
             override fun testIgnored(description: Description) { skipped = true }
         })
         val startedAt = clock()
@@ -91,7 +92,8 @@ class VendoredRun(
             else -> VendoredVerdict.PASS
         }
         runCatching { mark("end $marker") }
-        val reasons = if (verdict == VendoredVerdict.SKIP) runCatching { SkipLog.reasons(skipLog(marker)) }.getOrDefault(emptyList()) else emptyList()
+        // An assumption names its own reason; the log lines cover the methods that skip camera by camera.
+        val reasons = if (verdict == VendoredVerdict.SKIP) (assumptions + runCatching { SkipLog.reasons(skipLog(marker)) }.getOrDefault(emptyList())).distinct() else emptyList()
         listener.onFinished(VendoredResult(test, verdict, clock() - startedAt, failures, stopped || stopRequested, reasons))
     }
 
