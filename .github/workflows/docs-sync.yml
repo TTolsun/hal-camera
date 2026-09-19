@@ -56,7 +56,19 @@ jobs:
           $syncArgs = @()
           if ($env:DOCGEN_FORCE -eq 'true') { $syncArgs += '--force' }
           node tools/docgen/docflow.mjs sync @syncArgs
+      - name: 변경 여부 확인
+        # create-pull-request 는 변경이 없으면 기존 PR 브랜치를 base 로 되돌립니다. 재스캔 대상이 없는 실행이
+        # 앞선 실행의 자동 PR 을 비우지 않도록, 실제 변경(줄끝만 다른 파일 제외)이 있을 때만 PR 단계를 실행합니다.
+        id: changes
+        run: |
+          git diff --quiet
+          $modified = $LASTEXITCODE -ne 0
+          $untracked = (git ls-files --others --exclude-standard | Measure-Object).Count -gt 0
+          $changed = ($modified -or $untracked).ToString().ToLower()
+          Write-Output "changed=$changed"
+          Add-Content -Path $env:GITHUB_OUTPUT -Value "changed=$changed"
       - name: PR 생성
+        if: steps.changes.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           branch: docs/omm-sync
