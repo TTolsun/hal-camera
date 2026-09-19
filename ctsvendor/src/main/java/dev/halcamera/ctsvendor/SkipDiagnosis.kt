@@ -9,6 +9,8 @@ import android.media.CamcorderProfile
 import android.media.MediaCodecInfo
 import android.media.MediaCodecList
 import android.media.MediaFormat
+import android.os.Build
+import androidx.annotation.RequiresApi
 
 /** A gate returns the reason it fails for this camera, or null when it passes. */
 private typealias Gate = (id: String, c: CameraCharacteristics) -> String?
@@ -22,6 +24,7 @@ private typealias Gate = (id: String, c: CameraCharacteristics) -> String?
  * without an entry gets only the color-output check every method shares. Re-check against the sources when
  * the commit moves.
  */
+@RequiresApi(Build.VERSION_CODES.TIRAMISU) // DynamicRangeProfiles.getSupportedProfiles (33) is the newest key read; the vendored path itself needs 34.
 object SkipDiagnosis {
     private const val PKG = "android.hardware.camera2.cts."
 

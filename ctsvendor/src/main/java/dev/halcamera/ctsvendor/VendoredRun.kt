@@ -45,7 +45,9 @@ class VendoredRun(
     private val skipLog: (marker: String) -> List<String> = { marker -> SkipLog.read(test.simpleClass, marker) },
     /** The CameraCharacteristics keys the method's gate read and what they hold, camera by camera. */
     private val diagnose: () -> List<String> = {
-        VendoredCts.appContext()?.getSystemService(android.hardware.camera2.CameraManager::class.java)?.let { SkipDiagnosis.explain(test, it) }.orEmpty()
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU)
+            VendoredCts.appContext()?.getSystemService(android.hardware.camera2.CameraManager::class.java)?.let { SkipDiagnosis.explain(test, it) }.orEmpty()
+        else emptyList()
     }
 ) {
     interface Listener {

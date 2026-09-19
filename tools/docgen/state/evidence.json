@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "bf98afb97ad37f8d",
+        "codeHash": "8287c8cc7e900c6d",
         "modelHash": "146a796edc87688a",
         "at": "2026-09-19",
-        "commit": "0fcb233",
+        "commit": "42cc501",
         "reviewer": "Claude"
       }
     },
@@ -21,7 +21,7 @@
         "codeHash": "61c833e6e636aa64",
         "modelHash": "acb77a7c117a8dc6",
         "at": "2026-09-19",
-        "commit": "0fcb233",
+        "commit": "42cc501",
         "reviewer": "Claude"
       }
     },
@@ -33,7 +33,7 @@
         "codeHash": "5d2a2901898b25b1",
         "modelHash": "3836ea264704fbae",
         "at": "2026-09-19",
-        "commit": "0fcb233",
+        "commit": "42cc501",
         "reviewer": "Claude"
       }
     },
@@ -42,10 +42,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "b65ccc349de3ea71",
+        "codeHash": "5305d2d4d6c669ee",
         "modelHash": "5dbb7b258d598b3b",
         "at": "2026-09-19",
-        "commit": "0fcb233",
+        "commit": "42cc501",
         "reviewer": "Claude"
       }
     },
@@ -57,7 +57,7 @@
         "codeHash": "34da11bf07d4d76a",
         "modelHash": "d4113509391064ea",
         "at": "2026-09-19",
-        "commit": "0fcb233",
+        "commit": "42cc501",
         "reviewer": "Claude"
       }
     },
@@ -69,16 +69,16 @@
         "codeHash": "61c833e6e636aa64",
         "modelHash": "2332fde05718a755",
         "at": "2026-09-19",
-        "commit": "0fcb233",
+        "commit": "42cc501",
         "reviewer": "Claude"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "bf98afb97ad37f8d",
+        "codeHash": "8287c8cc7e900c6d",
         "modelHash": "7940e86a72b4658e",
         "at": "2026-09-19",
-        "commit": "0fcb233",
+        "commit": "42cc501",
         "reviewer": "Claude"
       },
       "observed": {
@@ -87,10 +87,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "bf98afb97ad37f8d",
+        "codeHash": "8287c8cc7e900c6d",
         "modelHash": "2d247b769538e63a",
         "at": "2026-09-19",
-        "commit": "0fcb233",
+        "commit": "42cc501",
         "reviewer": "Claude"
       },
       "observed": {
