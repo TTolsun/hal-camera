@@ -109,7 +109,7 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-19 @ `42cc501` · Claude
+- 검토 2026-09-19 @ `260e49c` · Claude
 
 </details>
 
@@ -156,8 +156,8 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.9.0` |
-| `versionCode` | `13` |
+| `versionName` | `0.10.0` |
+| `versionCode` | `14` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |
@@ -181,13 +181,13 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.9.0 (versionCode 13)
+- 검증 기준 앱 버전: 0.10.0 (versionCode 14)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-19 @ `42cc501` · Claude |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-19 @ `42cc501` · Claude |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-19 @ `42cc501` · Claude |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-19 @ `260e49c` · Claude |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-19 @ `260e49c` · Claude |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-19 @ `260e49c` · Claude |
 
 <!-- omm:end id=status -->
 
