@@ -51,15 +51,11 @@ class VendoredSkipPresenterTest {
     private val test = VendoredTest("android.hardware.camera2.cts.StillCaptureTest", "testHeicUltraHdrCapture")
 
     @Test
-    fun `a SKIP shows its own reasons, a silent skipper its hint, and the rest the fallback line`() {
+    fun `a SKIP shows its own reasons, and the rest the fallback line`() {
         val reasons = listOf("Camera 0 does not support HEIC_ULTRAHDR, skipping", "Camera 1 does not support HEIC_ULTRAHDR, skipping")
         val skipped = VendoredResult(test, VendoredVerdict.SKIP, 300, emptyList(), false, reasons)
         assertEquals(reasons.joinToString("\n"), VendoredReportPresenter.detail(skipped))
         assertTrue(VendoredReportPresenter.fullText("d", "b", "0.9.0", skipped).endsWith("건너뛴 이유\n" + reasons.joinToString("\n")))
-
-        val av1 = VendoredTest("android.hardware.camera2.cts.RecordingTest", "testBasic10BitRecordingAV1")
-        val silent = VendoredResult(av1, VendoredVerdict.SKIP, 40, emptyList(), false)
-        assertEquals(VendoredCatalog.silentSkipHints[av1.id], VendoredReportPresenter.detail(silent))
 
         val unknown = VendoredResult(test, VendoredVerdict.SKIP, 40, emptyList(), false)
         assertTrue(VendoredReportPresenter.detail(unknown).startsWith("카메라를 하나도 열지 않고"))

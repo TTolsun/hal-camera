@@ -42,7 +42,13 @@ class VendoredRun(
     /** Writes a marker line to the log so the read below can cut the run's lines out; the default is android.util.Log. */
     private val mark: (message: String) -> Unit = { android.util.Log.i(SkipLog.MARK_TAG, it) },
     /** The test's log lines between the run's begin and end markers; the default reads this process's logcat. */
-    private val skipLog: (marker: String) -> List<String> = { marker -> SkipLog.read(test.simpleClass, marker) }
+    private val skipLog: (marker: String) -> List<String> = { marker -> SkipLog.read(test.simpleClass, marker) },
+    /** The CameraCharacteristics keys the method's gate read and what they hold, camera by camera. */
+    private val diagnose: () -> List<String> = {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU)
+            VendoredCts.appContext()?.getSystemService(android.hardware.camera2.CameraManager::class.java)?.let { SkipDiagnosis.explain(test, it) }.orEmpty()
+        else emptyList()
+    }
 ) {
     interface Listener {
         fun onStarted(displayName: String)
@@ -93,7 +99,10 @@ class VendoredRun(
         }
         runCatching { mark("end $marker") }
         // An assumption names its own reason; the log lines cover the methods that skip camera by camera.
-        val reasons = if (verdict == VendoredVerdict.SKIP) (assumptions + runCatching { SkipLog.reasons(skipLog(marker)) }.getOrDefault(emptyList())).distinct() else emptyList()
+        // Three sources, most specific last: the assumption's own words, the test's skip log lines, then the keys behind them.
+        val reasons = if (verdict == VendoredVerdict.SKIP)
+            (assumptions + runCatching { SkipLog.reasons(skipLog(marker)) }.getOrDefault(emptyList()) + runCatching { diagnose() }.getOrDefault(emptyList())).distinct()
+        else emptyList()
         listener.onFinished(VendoredResult(test, verdict, clock() - startedAt, failures, stopped || stopRequested, reasons))
     }
 
