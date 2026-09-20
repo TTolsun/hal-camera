@@ -1,125 +1,92 @@
 ---
 title: CLI
 ---
-<h1 lang="en">Drive the app from a terminal.</h1>
+<h1 lang="en">Control the camera with adb.</h1>
 
-**CLI는 앱의 기능을 PC로 옮기지 않고, 앱이 하는 일을 PC에서 시작합니다.** ADB로 연결한 PC가 명령을 제출하면 앱이 같은 카메라 엔진·같은 벤치마크 계약으로 실행하고, PC는 결과 JSON과 사진을 회수합니다. 화면에서 실행한 결과와 CLI로 실행한 결과는 같은 파일 형식이며 같은 [Results](benchmark.md)에 남습니다.
+PC에는 `adb`만 있으면 됩니다. HAL CAM APK를 설치하고 앱의 진단 패널에서 **ADB CLI 허용**을 켭니다. 카메라 권한을 허용하고 화면 잠금을 해제합니다. 소리를 포함하여 녹화하려면 마이크 권한도 필요합니다.
 
-```mermaid
-flowchart LR
-    PC["PC · halcam 또는 adb"] -->|"content call submit"| P["CliProvider<br/>shell UID 2000만 허용"]
-    P --> C["CommandCoordinator<br/>요청 저장 · 한 번에 하나"]
-    C --> L["LiveController<br/>preview · capture"]
-    C --> B["BenchmarkController<br/>benchmark.run"]
-    L --> A["artifact 등록<br/>사진 쌍 · run JSON"]
-    B --> A
-    A -->|"content read"| PC
+무선 디버깅 기기는 `adb connect IP:PORT`로 연결합니다. 최초 페어링이 필요하면 기기의 무선 디버깅 화면에서 표시되는 주소와 코드로 `adb pair IP:PAIR_PORT`를 실행합니다. 연결 포트와 페어링 포트는 다를 수 있습니다. 여러 기기가 연결되어 있으면 아래의 모든 명령에 `adb -s IP:PORT`를 사용합니다.
+
+앱에 포함된 스크립트를 기기에 한 번 준비합니다. APK를 업데이트한 뒤에도 같은 명령으로 갱신할 수 있습니다.
+
+```sh
+adb shell "content read --uri content://dev.halcamera.cli/v1/shell > /data/local/tmp/halcam"
 ```
 
-이 그림은 명령 하나가 지나가는 개념적 순서입니다. 앱은 명령을 먼저 저장한 뒤 실행하므로, PC의 연결이 끊겨도 요청 ID로 상태와 파일을 다시 찾을 수 있습니다.
+이후 다음 명령을 사용합니다. 앱 열기, 요청 ID 생성, 완료 대기는 자동으로 처리합니다.
 
-<h2 lang="en">Turn it on first.</h2>
+```sh
+adb shell sh /data/local/tmp/halcam help
+adb shell sh /data/local/tmp/halcam cameras
+adb shell sh /data/local/tmp/halcam preview --camera 0
+adb shell sh /data/local/tmp/halcam capture --camera 0
+adb shell sh /data/local/tmp/halcam record start --camera 0
+adb shell sh /data/local/tmp/halcam record stop
+adb shell sh /data/local/tmp/halcam preview stop
+adb shell sh /data/local/tmp/halcam status
+```
 
-CLI는 기본으로 꺼져 있습니다. 앱에서 한 번 켜면 재실행 후에도 유지됩니다.
+카메라 ID의 기본값은 `0`이며, `cameras`로 사용 가능한 ID를 확인합니다. 사진은 YUV 변환 JPEG과 카메라 JPEG 두 장입니다. 녹화는 MP4이며 `--no-audio`로 무음 녹화를 선택할 수 있습니다. `record start`는 실제 녹화 시작을 확인한 뒤 반환하고, `record stop`은 MP4 저장과 결과 등록까지 기다립니다. 녹화 실행 제한의 기본값은 1시간이며, `--timeout 초`로 줄일 수 있습니다. 제한에 도달하면 녹화를 종료하고 요청에 시간 제한 오류를 기록합니다.
 
-1. 앱을 열고 Live 화면 상단의 진단 패널을 엽니다.
-2. `ADB CLI 설정`을 펼쳐 `ADB CLI 허용` 스위치를 켭니다. 카메라 권한이 아직 없다면 Live에서 먼저 허용합니다. CLI는 권한을 대신 요청하지 않습니다.
-3. PC에서 `adb devices`로 기기가 `device` 상태인지 확인합니다. USB와 무선 ADB 모두 쓸 수 있고, 둘 다 연결되어 있으면 `--serial`이나 `-s`로 하나를 지정합니다.
+결과 파일이 있으면 기기의 `Download/HALCamera-cli/요청ID`에 크기와 SHA-256을 검증한 복사본을 준비하고, PC로 받는 `adb pull` 명령 한 줄을 출력합니다. `adb pull`은 CMD와 PowerShell에서도 바이너리를 그대로 복사합니다. 기기 복사본은 자동으로 삭제하지 않습니다.
 
-스위치를 끄면 새 명령과 파일 읽기는 `CLI_DISABLED`로 거부되고, 실행 중인 작업은 취소 절차로 들어갑니다.
+`--no-wait`은 요청 접수 뒤 바로 반환합니다. 무선 연결이 끊겨도 같은 작업을 다시 실행하지 말고, 재연결 후 `status 요청ID` 또는 `fetch 요청ID`로 확인합니다. ID를 생략하면 스크립트가 마지막으로 제출한 요청을 사용합니다. `cancel 요청ID`로 취소할 수 있으며, 이미 제출한 사진 저장은 완료될 수 있습니다.
 
-<h2 lang="en">Install halcam.</h2>
+`probe`, `cts cases`, `cts run --cases KEY[,KEY...]`도 지원합니다. 벤치마크는 CLI 지원 범위에서 제외하며 앱 화면에서 실행합니다. Python `halcam`은 사진·probe·CTS 파일 수집을 위한 선택 도구입니다. 기본 CLI에 Python이나 pip는 필요하지 않습니다.
 
-`tools/halcam/`은 Python 표준 라이브러리만 쓰는 패키지입니다. Python 3.11 이상과 Android SDK Platform Tools가 있으면 됩니다.
 
-~~~powershell
+
+
+<h2 lang="en">Commands.</h2>
+
+| 명령 | 동작과 결과 |
+| --- | --- |
+| `preview` 또는 `preview start` | Camera2의 첫 프리뷰 프레임까지 기다립니다. 이후에도 프리뷰를 유지합니다. |
+| `preview stop` | 카메라를 닫고 프리뷰를 멈춥니다. |
+| `capture` | 선택한 카메라로 프리뷰를 준비하고 사진 두 장을 저장합니다. |
+| `record start` | 프리뷰를 준비하고 영상 녹화를 시작합니다. 실제 시작을 확인하면 반환합니다. |
+| `record stop` | 현재 CLI 녹화를 끝내고 저장 완료까지 기다립니다. 화면에서 시작한 녹화는 멈추지 않습니다. |
+| `cameras` | 논리 카메라와 물리 endpoint를 조회합니다. `selectable: true`인 논리 ID를 선택합니다. |
+| `probe` | 카메라 사양 JSON과 TXT를 만듭니다. 카메라를 열지 않습니다. |
+| `cts cases` | 실행할 수 있는 CTS 항목의 키와 마이크 필요 여부를 조회합니다. |
+| `cts run --cases KEY[,KEY...]` | 선택 항목을 체크리스트 순서로 실행하고 보고서를 저장합니다. |
+| `status [UUID]` | 지정한 요청이나 마지막 제출 요청을 조회합니다. 제출 기록이 없으면 앱 상태를 표시합니다. |
+| `cancel [UUID]` | 지정한 요청이나 마지막 제출 요청을 취소합니다. |
+| `fetch [UUID]` | 완료된 요청의 파일을 다시 준비하고 `adb pull` 명령을 안내합니다. 촬영을 반복하지 않습니다. |
+
+화면에서 촬영·녹화·벤치마크가 실행 중이면 새 CLI 작업은 `BUSY`로 거부됩니다. CLI 작업 중에는 화면 조작이 제한됩니다. `record stop`과 `cancel`은 기존 작업을 제어하므로 실행 중에도 사용할 수 있습니다.
+
+CTS 키는 `custom:fast_on_off`나 `vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording`과 같이 목록에 나온 값을 그대로 사용합니다. CTS 실행 제한은 기본 1,800초이며 최대 3,600초입니다. 사진·프리뷰·probe는 기본 30초입니다. Android 8–9에서 사진이나 영상을 저장할 때에는 저장소 권한도 필요합니다.
+
+녹화 준비에는 최대 30초를 기다립니다. 화면을 벗어나 녹화가 종료되면 정상적인 `record stop` 완료와 구분하여 오류를 기록합니다. 완료 기록은 최대 24시간·200개를 보관합니다. 프로세스가 종료되면 미완료 요청은 `interrupted`로 바뀌고 자동으로 재실행하지 않습니다. CLI는 Android 사용자 0을 대상으로 합니다.
+
+<h2 lang="en">Direct calls.</h2>
+
+스크립트 없이도 `content call`로 직접 호출할 수 있습니다. 응답의 `json` 값은 사람이 읽을 수 있는 JSON이며 Base64 변환은 필요하지 않습니다. 사진·프리뷰·녹화·CTS 실행 전에 Live 화면을 엽니다.
+
+```sh
+adb shell am start -W -n dev.halcamera/.cli.CliLaunchActivity
+adb shell content call --uri content://dev.halcamera.cli --method capture --extra camera:s:0
+adb shell content call --uri content://dev.halcamera.cli --method record.start --extra camera:s:0 --extra audio:b:false
+adb shell content call --uri content://dev.halcamera.cli --method record.stop
+adb exec-out content read --uri content://dev.halcamera.cli/v1/status
+```
+
+직접 제출한 명령은 접수 결과를 반환합니다. 응답의 `request_id`로 `/v1/requests/UUID`를 읽어 완료를 확인합니다. `--extra request_id:s:UUID`로 같은 ID를 재사용하면 중복 촬영을 막을 수 있고, 다른 인자로 같은 ID를 쓰면 `REQUEST_CONFLICT`가 됩니다. `timeout_ms:l:30000`으로 실행 제한을 지정합니다. 알 수 없는 인자와 잘못된 타입은 거부합니다.
+
+기존 Python 도구의 `submit`·`cancel` Base64 전송은 유지합니다. 지원 명령은 `/v1/hello`에서 확인합니다. `benchmark.run`은 더 이상 접수하지 않습니다.
+
+<h2 lang="en">Optional Python client.</h2>
+
+기존 자동화에서 Python 도구가 필요하면 다음과 같이 설치합니다. 녹화와 프리뷰 종료는 위의 ADB 스크립트를 사용합니다.
+
+```sh
 python -m pip install ./tools/halcam
 halcam --serial DEVICE doctor --json
-halcam --serial DEVICE cameras --json
-~~~
+halcam --serial DEVICE capture --camera 0 --output ./photos --json
+halcam --serial DEVICE probe --output ./probe --json
+```
 
-`doctor`는 앱 설치·프로토콜 버전·CLI 허용·카메라 권한·잠금 상태를 한 번에 보고합니다. 여기서 실패하면 아래 명령은 같은 이유로 실패하므로 먼저 해결합니다. 설치 없이 개발 중에는 `python -m halcam`으로 같은 명령을 실행합니다.
+Python 도구의 `--json`은 stdout에 JSON 하나를 출력하며, `--wait-timeout`은 PC에서 기다리는 시간만 제한합니다. ADB 스크립트는 진행 메시지와 요청별 결과를 출력하고 성공 시 0, 오류 시 1을 반환합니다. 실패하거나 취소된 요청에도 저장된 파일이 있으면 `fetch UUID`로 회수할 수 있습니다. 기계적으로 JSON만 처리하려면 직접 `content read`를 사용합니다.
 
-<h2 lang="en">What you can run.</h2>
-
-| 명령 | 앱에서 하는 일 | 결과 |
-| --- | --- | --- |
-| `devices` | 앱에 접근하지 않고 ADB 연결 목록만 봅니다. | 터미널 출력 |
-| `doctor` | 앱 상태를 진단합니다. 설치나 권한을 바꾸지 않습니다. | 진단 JSON |
-| `launch` | 투명한 `CliLaunchActivity`로 앱을 전면에 띄웁니다. 카메라 준비 완료를 뜻하지 않습니다. | 없음 |
-| `cameras` | 논리 카메라와 물리 endpoint 목록을 읽습니다. 카메라를 열지 않습니다. | 카메라 JSON |
-| `preview --camera ID` | 지정한 Camera2 논리 카메라의 첫 프리뷰까지 기다립니다. 끝나면 일반 Live 상태입니다. | 상태 JSON |
-| `capture --camera ID --output DIR` | 사진 한 쌍(YUV에서 변환한 JPEG과 카메라 JPEG)을 찍어 PC로 받습니다. | JPEG 2장 |
-| `benchmark run --camera ID --output DIR` | `camera2-standard-v1` profile로 벤치마크를 한 번 실행하고 run JSON을 받습니다. | schema 4 JSON |
-| `probe --output DIR` | 카메라를 열지 않고 모든 카메라의 사양 표를 읽습니다. [Probe](probe.md)의 `JSON`·`TXT` 공유와 같은 파일입니다. 화면이 필요 없습니다. | JSON + TXT |
-| `cts cases` | [CTS](cts.md) 체크리스트의 항목과 `cts run`에 넣을 키를 읽습니다. 화면이 필요 없습니다. | 항목 JSON |
-| `cts run --case KEY … --output DIR` | 고른 항목을 체크리스트 순서로 실행하고 suite 보고서를 받습니다. FAIL 행은 실행 실패가 아니라 결과입니다. | JSON + TXT |
-| `status --request UUID` | 앱을 앞으로 가져오지 않고 요청 상태만 읽습니다. | 상태 JSON |
-| `fetch UUID --output DIR` | 이미 끝난 요청의 파일을 다시 받습니다. 촬영과 측정을 반복하지 않습니다. | 파일 |
-| `cancel UUID` | 실행 중인 요청을 취소합니다. 끝난 요청에는 현재 결과를 돌려줍니다. | 상태 JSON |
-
-`--camera`에는 `cameras` 결과에서 `selectable: true`인 논리 ID만 넣습니다. `0.2` 같은 물리 endpoint key는 `UNSUPPORTED_CAMERA`로 거부됩니다. `benchmark run`의 `--profile`은 현재 `camera2-standard-v1` 하나만 받습니다.
-
-`cts run`의 키는 `cts cases` 결과의 `key` 그대로이며 `custom:fast_on_off`, `vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording`처럼 종류 접두어가 붙습니다. 마이크가 필요한 항목(`needs_audio: true`)은 앱에서 녹음 권한을 먼저 허용해야 하고, CLI는 권한을 대신 요청하지 않습니다. 실행 제한 기본값은 1,800초이며 suite가 길면 `--timeout`으로 올립니다(상한 3,600초).
-
-한 번에 하나의 명령만 실행됩니다. 화면에서 촬영·녹화·벤치마크가 진행 중이면 CLI 명령은 `BUSY`로 돌아오고, 반대로 CLI가 실행 중이면 화면 조작도 같은 규칙을 따릅니다. `--json`을 붙이면 stdout에 최종 JSON 하나만 나오고 진행 메시지는 stderr로 갑니다. 종료 코드의 의미는 [CLI 설계 문서](https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md)의 "시간 제한과 종료 코드"에 있습니다.
-
-<p class="editorial" lang="en">The app runs it.<br>The PC only asks and collects.</p>
-
-<h2 lang="en">No Python? Use adb directly.</h2>
-
-`halcam`은 ADB 위의 얇은 껍데기입니다. Python이 없는 PC에서는 같은 provider를 `adb`만으로 부를 수 있습니다. 아래는 PowerShell 예시이며, 요청 JSON을 패딩 없는 base64url로 감싸서 보내는 것이 전부입니다.
-
-1. 상태를 읽습니다. `enabled`가 `false`면 앱에서 스위치를 켭니다.
-
-   ~~~powershell
-   adb exec-out content read --uri content://dev.halcamera.cli/v1/hello
-   adb exec-out content read --uri content://dev.halcamera.cli/v1/status
-   ~~~
-
-2. 요청을 만들어 제출합니다. `request_id`는 소문자 UUID여야 하고, `params`에는 `camera_id`·`profile_id`(카메라 명령) 또는 `cases` 배열(`cts.run`)만 들어갑니다. `execution_timeout_ms`는 preview·capture·probe 30초, benchmark 180초, cts.run 1,800초가 기본이며 3,600초를 넘길 수 없습니다.
-
-   ~~~powershell
-   $id = [guid]::NewGuid().ToString()
-   $json = '{"protocol_version":1,"request_id":"' + $id + '","command":"benchmark.run","params":{"camera_id":"0","profile_id":"camera2-standard-v1"},"execution_timeout_ms":180000}'
-   $arg = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($json)).TrimEnd('=').Replace('+','-').Replace('/','_')
-   adb shell content call --uri content://dev.halcamera.cli --method submit --arg $arg
-   ~~~
-
-   응답은 `Result: Bundle[{halcam_v1=<base64url>}]` 형태입니다. 값을 base64url로 풀면 `state: "accepted"`가 보입니다.
-
-3. 앱을 전면으로 띄웁니다. `status`의 `screen`이 `"live"`가 아니면 실행이 시작되지 않습니다. `cameras`·`probe`·`cts.cases`는 화면 없이 바로 끝나므로 이 단계가 필요 없습니다.
-
-   ~~~powershell
-   adb shell am start -W -f 0x18000000 -n dev.halcamera/dev.halcamera.cli.CliLaunchActivity
-   ~~~
-
-4. `state`가 `succeeded`가 될 때까지 요청을 읽고, 등록된 파일을 받습니다. artifact ID는 `file-0`, `file-1` 순서입니다.
-
-   ~~~powershell
-   adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/$id
-   adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/$id/artifacts/file-0 > run.json
-   ~~~
-
-취소는 `--method cancel`에 `{"protocol_version":1,"request_id":"<uuid>"}`를 같은 방식으로 넣습니다. `halcam`이 추가로 하는 일은 응답 JSON의 schema 검사와 파일 크기·SHA-256 대조뿐이므로, 직접 호출할 때는 `size_bytes`와 `sha256`을 받은 파일과 비교하세요. Git Bash에서는 `content://` 경로가 Windows 경로로 바뀌지 않도록 `MSYS_NO_PATHCONV=1`을 앞에 붙입니다.
-
-<h2 lang="en">Not on the CLI yet.</h2>
-
-| 기능 | 현재 경로 |
-| --- | --- |
-| baseline 지정, 비교, profile 비교 | Results·Compare 화면. CLI가 받은 run JSON을 화면의 JSON 가져오기로 넣으면 같은 비교를 할 수 있습니다. |
-| 동영상 녹화, 줌, CameraX 엔진 선택 | Live 화면 |
-| incident ZIP 수집 | 진단 패널 |
-
-이 목록은 설계상 "후속 범위"이며 provider의 명령 집합(`/v1/hello`의 `commands`)이 늘어나면 이 표도 줄어듭니다.
-
-<h2 lang="en">When it does not finish.</h2>
-
-`status --request UUID`부터 읽으세요. PC의 대기 시간이 끝난 것과 앱의 실행이 실패한 것은 다른 사건입니다. 자주 만나는 상태와 대응은 [디버깅](troubleshooting.md#cli-작업이-끝나지-않거나-파일이-없을-때)에 있고, 기기별 검증 결과는 [전송 검증 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/cli-transport.md)에 있습니다.
-
-<details>
-<summary>코드 근거를 확인하세요</summary>
-<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cli/</code>에서 <code>CliProvider.kt</code>(shell 호출자 검사와 URI), <code>CommandCoordinator.kt</code>(요청 저장·artifact 등록·probe·cts.cases), <code>CliCommand.kt</code>(허용 명령·인자 검사), <code>LiveController.kt</code>·<code>BenchmarkController.kt</code>·<code>CtsController.kt</code>(화면 driver 어댑터)와 <code>tools/halcam/halcam/cli.py</code>(PC 명령 정의), <code>tools/halcam/protocol-v1.schema.json</code>(응답 schema)을 확인하세요. 요청·상태·오류 계약의 원본은 <code>docs/design/CLI.md</code>입니다.</p>
-</details>
-
-**다음 단계:** `halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json`으로 run 하나를 받고, [Benchmark](benchmark.md)에서 그 JSON의 validity와 점수를 읽는 방법을 확인하세요.
+카메라 사양을 확인하려면 [Probe 가이드](probe.md)를 이어서 읽으세요.

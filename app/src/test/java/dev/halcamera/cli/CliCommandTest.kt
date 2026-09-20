@@ -15,9 +15,11 @@ class CliCommandTest {
         reject("INVALID_ARGUMENT") { CliCommand(id, "cameras", "0", null, 30_000) }
         reject("INVALID_ARGUMENT") { CliCommand(id, "capture", "0", "anything", 30_000) }
     }
-    @Test fun `unsupported profile cannot silently select canonical profile`() {
-        reject("UNSUPPORTED_PROFILE") { CliCommand(id, "benchmark.run", "0", "camera2-fast-v1", 30_000) }
-        assertEquals("camera2-standard-v1", CliCommand(id, "benchmark.run", "0", "camera2-standard-v1", 180_000).profile)
+    @Test fun `benchmark is excluded and recording parameters stay scoped`() {
+        reject("INVALID_ARGUMENT") { CliCommand(id, "benchmark.run", "0", "camera2-standard-v1", 180_000) }
+        reject("INVALID_ARGUMENT") { CliCommand(id, "capture", "0", null, 30_000, audio = true) }
+        assertFalse(CliCommand(id, "record.start", "0", null, 30_000, audio = false).audio!!)
+        assertNull(CliCommand(id, "preview.stop", null, null, 30_000).camera)
     }
     @Test fun `probe and cts commands take no camera and cts run needs suite keys`() {
         assertNull(CliCommand(id, "probe", null, null, 30_000).camera)
@@ -35,7 +37,7 @@ class CliCommandTest {
         assertEquals(2, run.cases!!.size)
     }
     @Test fun `hello lists every command the coordinator dispatches`() {
-        assertEquals(listOf("cameras", "preview", "capture", "benchmark.run", "probe", "cts.cases", "cts.run"), CliCommand.COMMANDS)
+        assertEquals(listOf("cameras", "preview", "preview.stop", "capture", "record.start", "probe", "cts.cases", "cts.run"), CliCommand.COMMANDS)
     }
     @Test fun `ids must have canonical shape and cannot form paths`() {
         listOf("../foo", "1-1-1-1-1", id.uppercase(), "", "$id/extra").forEach { bad ->

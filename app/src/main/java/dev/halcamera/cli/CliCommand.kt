@@ -15,7 +15,8 @@ data class CliCommand(
     val camera: String?,
     val profile: String?,
     val timeoutMs: Long,
-    val cases: List<String>? = null
+    val cases: List<String>? = null,
+    val audio: Boolean? = null
 ) {
     init {
         validateId(id)
@@ -23,8 +24,8 @@ data class CliCommand(
         if (timeoutMs !in 1..3_600_000) throw CliFailure("INVALID_ARGUMENT", "Invalid execution timeout")
         if (command in CAMERA_COMMANDS && (camera.isNullOrBlank() || camera.length > 128)) throw CliFailure("INVALID_ARGUMENT", "camera_id is required")
         if (command !in CAMERA_COMMANDS && camera != null) throw CliFailure("INVALID_ARGUMENT", "$command takes no camera_id")
-        if (command == "benchmark.run" && profile != "camera2-standard-v1") throw CliFailure("UNSUPPORTED_PROFILE", "Unsupported benchmark profile")
-        if (command != "benchmark.run" && profile != null) throw CliFailure("INVALID_ARGUMENT", "Unexpected profile_id")
+        if (profile != null) throw CliFailure("INVALID_ARGUMENT", "Unexpected profile_id")
+        if (command != "record.start" && audio != null) throw CliFailure("INVALID_ARGUMENT", "Unexpected audio")
         if (command == "cts.run") {
             if (cases.isNullOrEmpty()) throw CliFailure("INVALID_ARGUMENT", "cases must name at least one suite item")
             if (cases.size > MAX_CASES) throw CliFailure("INVALID_ARGUMENT", "cases lists more than $MAX_CASES items")
@@ -35,8 +36,8 @@ data class CliCommand(
     }
 
     companion object {
-        val COMMANDS = listOf("cameras", "preview", "capture", "benchmark.run", "probe", "cts.cases", "cts.run")
-        val CAMERA_COMMANDS = setOf("preview", "capture", "benchmark.run")
+        val COMMANDS = listOf("cameras", "preview", "preview.stop", "capture", "record.start", "probe", "cts.cases", "cts.run")
+        val CAMERA_COMMANDS = setOf("preview", "capture", "record.start")
         const val MAX_CASES = 64
         /** The suite key prefixes of [dev.halcamera.cts.suite.SuiteItem], repeated so this file stays free of cts types. */
         const val CUSTOM_PREFIX = "custom:"

@@ -8,7 +8,7 @@ Live는 사진·동영상을 MediaLibrary를 통해 DCIM/HALCamera에 저장하�
 
 Live는 API 토글, 카메라 ID·상태와 핵심 측정값을 표시합니다. ExpandingZoomControl은 선택한 배율에서 펼쳐지고 자동으로 접히며, 사진·동영상 버튼은 직접 선택을 제공합니다. 카메라 선택은 목록 방식을 유지합니다. RecentMediaThumbnail은 완성된 앨범 항목을 백그라운드에서 읽어 RecentMediaButton에 표시합니다. 하단에 Mark 작업 행을 고정하고 진단 패널에서는 프리뷰를 유지하며 그래프와 상세 수치를 제공합니다. Benchmark·Probe·CTS는 상단 도구 메뉴에서 독립 화면으로 엽니다.
 
-PC의 tools/halcam Python CLI는 ADB를 통해 shell 전용 CliProvider에 명령을 전달합니다. CommandCoordinator와 CommandStore가 요청 ID·진행 상태·결과 파일 등록을 관리합니다. LiveController는 MainActivity의 실제 카메라를 사용하고 BenchmarkController는 BenchmarkActivity의 기존 실행·보고서 저장 경로를 연결합니다. CLI protocol v1과 benchmark schema 4는 별개의 계약입니다.
+PC의 기본 CLI는 ADB이며 APK의 assets/halcam.sh를 기기에 한 번 준비하여 실행합니다. CliProvider는 직접 명령 인자와 기존 Base64 JSON 전송을 받고 CommandCoordinator와 CommandStore가 요청·결과를 관리합니다. LiveController는 프리뷰 시작·종료, 사진, 녹화를 MainActivity의 Camera2에 연결합니다. 녹화는 실제 시작 콜백과 저장 완료 콜백을 구분합니다. CTS는 기존 화면 인계 경로를 사용하며 benchmark.run은 명령 목록과 검증기에서 제외했습니다. Python tools/halcam은 선택 도구입니다.
 
 앱을 열 때는 투명한 `CliLaunchActivity`가 main thread에서 작업 상태를 다시 확인합니다. 실행 중인 작업이 있으면 Live로 전환하지 않습니다. 상태 조회는 `CommandStore`의 메모리 snapshot을 읽으며 파일 기록은 상태 전환 때만 수행합니다.
 
