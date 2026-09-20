@@ -40,10 +40,14 @@ class ProtocolTests(unittest.TestCase):
     def test_globals_work_before_or_after_subcommands(self):
         for argv in [["--serial", "phone", "capture", "--camera", "0", "--output", "out", "--json"],
                      ["capture", "--serial", "phone", "--camera", "0", "--output", "out", "--json"],
-                     ["--serial", "phone", "benchmark", "run", "--camera", "0", "--output", "out", "--json"]]:
+                     ["--serial", "phone", "cts", "run", "--case", "custom:fast_on_off", "--output", "out", "--json"]]:
             args = parser().parse_args(argv)
             self.assertEqual(args.serial, "phone")
             self.assertTrue(args.json)
+
+    def test_benchmark_is_not_exposed(self):
+        with self.assertRaises(CliError):
+            parser().parse_args(["benchmark", "run", "--camera", "0", "--output", "out"])
 
     def test_request_id_rejects_traversal_and_noncanonical_uuid(self):
         for value in ["../file", "1-1-1-1-1", RID.upper(), "", RID + "/x"]:

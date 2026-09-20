@@ -65,9 +65,28 @@ class MainActivity : ComponentActivity() {
                 if (camera == null) done(Result.failure(IllegalStateException("Camera2 unavailable"))) else camera.capturePhoto(id, done)
                 updateMediaControls()
             }
-            override fun benchmark(command: dev.halcamera.cli.CliCommand) = handOver(command) {
-                Intent(this@MainActivity, dev.halcamera.benchmark.BenchmarkActivity::class.java)
-                    .putExtra("camera_id", command.camera).putExtra("engine", "Camera2")
+            override fun record(audio: Boolean, started: () -> Unit, done: (Result<android.net.Uri>) -> Unit) {
+                videoMode = true
+                val camera = engine as? Camera2Engine
+                if (camera == null) done(Result.failure(IllegalStateException("Camera2 unavailable")))
+                else camera.startRecording(audio, started, done)
+                updateMediaControls()
+            }
+            override fun stopRecording() {
+                stoppingRecording = true
+                (engine as? Camera2Engine)?.stopRecording()
+                updateMediaControls()
+            }
+            override fun stopPreview(done: () -> Unit) {
+                paused = true; ready = false
+                val old = engine; engine = null
+                closing = old != null
+                val closed = {
+                    closing = false
+                    setStatus("일시정지 · 재개 버튼으로 측정을 시작하세요", false)
+                    done()
+                }
+                if (old == null) closed() else old.close(closed)
             }
             override fun cts(command: dev.halcamera.cli.CliCommand) = handOver(command) {
                 Intent(this@MainActivity, dev.halcamera.cts.suite.CtsSuiteRunActivity::class.java)
@@ -543,7 +562,7 @@ class MainActivity : ComponentActivity() {
         body.addView(system,lp(top=12))
         val cliDetails=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL }
         cliDetails.addView(cliSwitch,lp())
-        cliDetails.addView(label("승인된 ADB 연결에서 촬영·벤치마크 실행",12,muted),lp(top=4))
+        cliDetails.addView(label("승인된 ADB 연결에서 프리뷰·사진·동영상 제어",12,muted),lp(top=4))
         body.addView(Look.disclosure(this,"ADB CLI 설정",cliDetails),lp(top=12))
         body.addView(label("Incident ZIP",14,muted,true),lp(top=20))
         body.addView(label("$MARK_LABEL: 직전 10초 + 이후 5초의 이벤트를 저장합니다.",12,Color.WHITE),lp(top=8))
@@ -788,7 +807,7 @@ class MainActivity : ComponentActivity() {
     }
     /**
      * Benchmark and CTS open their own camera, so the live session must be closed and its close(done) received
-     * before the next screen starts. Same sequence as the CLI benchmark path; onStop's restartCamera() sees
+     * before the next screen starts. Same sequence as the CLI CTS path; onStop's restartCamera() sees
      * `closing` and stays out of the way, and onStart reopens the camera when the user comes back.
      */
     private fun openAfterClose(reason: String, intent: () -> Intent) {

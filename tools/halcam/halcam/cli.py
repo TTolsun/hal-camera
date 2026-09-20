@@ -56,15 +56,6 @@ def parser():
     cts_run.add_argument("--output", required=True)
     cts_run.add_argument("--transfer-timeout", type=positive, default=60)
     execution_options(cts_run, 1800)
-    benchmark = commands.add_parser("benchmark")
-    common(benchmark)
-    run = benchmark.add_subparsers(dest="benchmark_command", required=True).add_parser("run")
-    common(run)
-    run.add_argument("--camera", required=True)
-    run.add_argument("--profile", default="camera2-standard-v1")
-    run.add_argument("--output", required=True)
-    run.add_argument("--transfer-timeout", type=positive, default=60)
-    execution_options(run, 180)
     return root
 
 
@@ -87,8 +78,6 @@ SCREENLESS = ("cameras", "probe", "cts.cases")
 
 
 def app_command(args):
-    if args.command == "benchmark":
-        return "benchmark.run"
     if args.command == "cts":
         return "cts." + args.cts_command
     return args.command
@@ -125,7 +114,7 @@ def execute(args, context):
         return {"protocol_version": 1, "devices": adb.devices(), "completed": True}
     adb.select().installed()
     if args.command == "launch":
-        # Opening LIVE must not abort a benchmark that is already active.
+        # Opening LIVE must not abort an operation that is already active.
         status = adb.read("/v1/status")
         if status.get("busy"):
             raise CliError("BUSY", "An app operation is already running")

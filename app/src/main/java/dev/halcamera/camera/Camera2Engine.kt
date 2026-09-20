@@ -64,6 +64,9 @@ class Camera2Engine(
     private var videoFile: File? = null
     private var videoStarted = false
     @Volatile private var videoBusy = false
+    private var videoDone: ((Result<android.net.Uri>) -> Unit)? = null
+    private var videoStopRequested = false
+    private var videoFailure: Exception? = null
     @Volatile private var zoomRatio = 1f
     private var chars: CameraCharacteristics? = null
     private val callback = telemetry.callback(sessionId) { active }
@@ -347,11 +350,15 @@ class Camera2Engine(
     }
 
     @Suppress("DEPRECATION")
-    fun startRecording() {
+    fun startRecording(audio: Boolean = true, started: () -> Unit = {}, done: ((Result<android.net.Uri>) -> Unit)? = null) {
         handler.post {
-            val camera = device ?: return@post
-            if (!active || spec != null || photoInFlight || videoBusy || captureSession == null) return@post
+            val camera = device
+            if (camera == null || !active || spec != null || photoInFlight || videoBusy || captureSession == null) {
+                main.post { done?.invoke(Result.failure(IllegalStateException("Camera is not ready to record"))) }
+                return@post
+            }
             videoBusy = true
+            videoDone = done; videoStopRequested = false; videoFailure = null
             report("녹화를 준비하고 있습니다…", false)
             try {
                 val c = chars ?: error("Camera characteristics unavailable")
@@ -360,27 +367,30 @@ class Camera2Engine(
                 val file = File.createTempFile("hal_recording_", ".mp4", context.cacheDir).also { videoFile = it }
                 val recorder = (if (android.os.Build.VERSION.SDK_INT >= 31) MediaRecorder(context) else MediaRecorder()).also { videoRecorder = it }
                 recorder.apply {
-                    setAudioSource(MediaRecorder.AudioSource.MIC)
+                    if (audio) setAudioSource(MediaRecorder.AudioSource.MIC)
                     setVideoSource(MediaRecorder.VideoSource.SURFACE)
                     setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                     setOutputFile(file.absolutePath)
                     setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-                    setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                    if (audio) setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
                     setVideoSize(size.width, size.height)
                     setVideoFrameRate(30)
                     setVideoEncodingBitRate(10_000_000)
-                    setAudioEncodingBitRate(128_000)
-                    setAudioSamplingRate(44_100)
+                    if (audio) {
+                        setAudioEncodingBitRate(128_000)
+                        setAudioSamplingRate(44_100)
+                    }
                     setOrientationHint(outputRotation(c))
                     setOnErrorListener { _, what, extra -> handler.post {
                         telemetry.event(sessionId, "recording_error", mapOf("what" to what, "extra" to extra))
+                        videoFailure = IllegalStateException("Recorder error $what/$extra")
                         stopRecording()
                     } }
                     prepare()
                 }
                 camera.createCaptureSession(listOf(previewSurface!!, recorder.surface), object : CameraCaptureSession.StateCallback() {
                     override fun onConfigured(session: CameraCaptureSession) {
-                        if (!active) { session.close(); return }
+                        if (!active || videoStopRequested) { session.close(); return }
                         captureSession = session
                         try {
                             val request = camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
@@ -394,12 +404,13 @@ class Camera2Engine(
                             }.build()
                             session.setRepeatingRequest(request, callback, handler)
                             recorder.start(); videoStarted = true
-                            telemetry.event(sessionId, "recording_started", mapOf("size" to size.toString(), "audio" to true))
-                            main.post { if (active) recordingState(true) }
-                            report("REC · 영상과 소리를 녹화하고 있습니다", false)
-                        } catch (e: Exception) { fail(e); session.close() }
+                            telemetry.event(sessionId, "recording_started", mapOf("size" to size.toString(), "audio" to audio))
+                            main.post { if (active) { recordingState(true); started() } }
+                            report(if (audio) "REC · 영상과 소리를 녹화하고 있습니다" else "REC · 영상을 녹화하고 있습니다", false)
+                        } catch (e: Exception) { videoFailure = e; fail(e); session.close() }
                     }
                     override fun onConfigureFailed(session: CameraCaptureSession) {
+                        videoFailure = IllegalStateException("Recording stream configuration rejected")
                         report("녹화 스트림 구성을 지원하지 않습니다", false)
                         session.close()
                     }
@@ -410,6 +421,7 @@ class Camera2Engine(
                     }
                 }, handler)
             } catch (e: Exception) {
+                videoFailure = e
                 finishVideo()
                 report("녹화 준비 실패: ${e.message} · 다시 시도할 수 있습니다", captureSession != null)
             }
@@ -419,6 +431,7 @@ class Camera2Engine(
     fun stopRecording() {
         handler.post {
             if (!videoBusy) return@post
+            videoStopRequested = true
             report("녹화를 저장하고 있습니다…", false)
             captureSession?.close()
         }
@@ -429,6 +442,8 @@ class Camera2Engine(
         val recorder = videoRecorder
         videoRecorder = null
         val file = videoFile; videoFile = null
+        val done = videoDone; videoDone = null
+        val failure = videoFailure; videoFailure = null
         val wasStarted = videoStarted
         val stopped = wasStarted && recorder != null && runCatching { recorder.stop() }.isSuccess
         runCatching { recorder?.reset() }; runCatching { recorder?.release() }
@@ -439,13 +454,20 @@ class Camera2Engine(
                 try {
                     val uri = library.saveVideo(file)
                     telemetry.event(sessionId, "video_saved", mapOf("uri" to uri.toString()))
-                    main.post { android.widget.Toast.makeText(context.applicationContext, "갤러리에 동영상을 저장했습니다", android.widget.Toast.LENGTH_SHORT).show() }
+                    main.post {
+                        done?.invoke(if (failure == null) Result.success(uri) else Result.failure(failure))
+                        android.widget.Toast.makeText(context.applicationContext, "갤러리에 동영상을 저장했습니다", android.widget.Toast.LENGTH_SHORT).show()
+                    }
                 } catch (e: Exception) {
-                    main.post { android.widget.Toast.makeText(context.applicationContext, "동영상 저장 실패: ${e.message}", android.widget.Toast.LENGTH_LONG).show() }
+                    main.post {
+                        done?.invoke(Result.failure(e))
+                        android.widget.Toast.makeText(context.applicationContext, "동영상 저장 실패: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
+                    }
                 } finally { file.delete() }
             }
         } else {
             file?.delete()
+            main.post { done?.invoke(Result.failure(failure ?: IllegalStateException("Recording did not produce a playable video; record for longer before stopping"))) }
             if (wasStarted) main.post { android.widget.Toast.makeText(context.applicationContext, "녹화가 너무 짧거나 실패하여 동영상을 저장하지 못했습니다", android.widget.Toast.LENGTH_LONG).show() }
         }
     }

@@ -26,8 +26,10 @@ class CliProvider : ContentProvider() {
 
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle {
         authorize()
+        val encoded = method == "submit" || method == "cancel"
         val result = json {
             if (!commands.enabled) throw CliFailure("CLI_DISABLED", "Enable ADB CLI in the app")
+            if (!encoded) return@json direct(method, arg, extras)
             require(extras == null || extras.isEmpty) { "Unexpected extras" }
             require(arg != null && arg.length <= 12000 && arg.matches(Regex("[A-Za-z0-9_-]+"))) { "Invalid request encoding" }
             val decoded = Base64.decode(arg, Base64.URL_SAFE or Base64.NO_WRAP)
@@ -43,7 +45,27 @@ class CliProvider : ContentProvider() {
                 else -> throw CliFailure("INVALID_ARGUMENT", "Unknown method")
             }
         }
-        return Bundle().apply { putString("halcam_v1", Base64.encodeToString(result.toString().toByteArray(Charsets.UTF_8), Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)) }
+        return Bundle().apply {
+            if (encoded) putString("halcam_v1", Base64.encodeToString(result.toString().toByteArray(Charsets.UTF_8), Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING))
+            else putString("json", result.toString())
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun direct(method: String, arg: String?, extras: Bundle?): JSONObject {
+        val values = extras?.keySet()?.associateWith { extras.get(it) }.orEmpty()
+        if (method in setOf("hello", "status", "request", "request.cancel", "record.stop")) {
+            require(values.isEmpty()) { "Unexpected extras" }
+            return when (method) {
+                "hello" -> { require(arg == null); commands.hello() }
+                "status" -> { require(arg == null); commands.status() }
+                "request" -> commands.request(requireNotNull(arg) { "Request ID required" })
+                "request.cancel" -> commands.cancel(requireNotNull(arg) { "Request ID required" })
+                else -> commands.stopRecording(arg)
+            }
+        }
+        require(arg == null) { "Use --extra for command options" }
+        return commands.submit(AdbArguments.command(method, values))
     }
 
     private fun json(action: () -> JSONObject): JSONObject = try { action() }
@@ -62,6 +84,22 @@ class CliProvider : ContentProvider() {
                 else requireNotNull(context).contentResolver.openFileDescriptor(source, "r") ?: throw FileNotFoundException("ARTIFACT_MISSING")
             } finally { Binder.restoreCallingIdentity(identity) }
         }
+        if (parts == listOf("v1", "shell")) {
+            return pipe(requireNotNull(context).assets.open("halcam.sh").use { it.readBytes() })
+        }
+        if (parts.size == 4 && parts[0] == "v1" && parts[1] == "requests" && parts[3] == "files") {
+            if (!commands.enabled) throw SecurityException("CLI_DISABLED")
+            val record = commands.request(parts[2])
+            check(record.optBoolean("completed")) { "Request is not complete" }
+            val files = record.getJSONArray("artifacts")
+            val manifest = (0 until files.length()).joinToString("") { i ->
+                val file = files.getJSONObject(i)
+                val name = file.getString("name")
+                require(name.matches(Regex("[A-Za-z0-9_-]+\\.[A-Za-z0-9]+"))) { "Invalid artifact name" }
+                "${file.getString("artifact_id")}\t$name\t${file.getLong("size_bytes")}\t${file.getString("sha256")}\n"
+            }
+            return pipe(manifest.toByteArray(Charsets.UTF_8))
+        }
         val bytes = json {
             if (!commands.enabled) return@json commands.hello()
             when {
@@ -71,6 +109,10 @@ class CliProvider : ContentProvider() {
                 else -> throw CliFailure("INVALID_ARGUMENT", "Unknown URI")
             }
         }.toString().toByteArray(Charsets.UTF_8)
+        return pipe(bytes)
+    }
+
+    private fun pipe(bytes: ByteArray): ParcelFileDescriptor {
         val pipe = ParcelFileDescriptor.createReliablePipe()
         writer.execute {
             try { ParcelFileDescriptor.AutoCloseOutputStream(pipe[1]).use { it.write(bytes) } }

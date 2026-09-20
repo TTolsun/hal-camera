@@ -96,37 +96,40 @@ python -m unittest discover -s tools/tests -v
 
 ## 문서
 
-### PC CLI
+### ADB CLI
 
-Python 3.11 이상과 Android SDK Platform Tools를 준비한 뒤 저장소 루트에서 설치합니다.
+PC에는 `adb`만 있으면 됩니다. HAL CAM APK를 설치하고 앱의 진단 패널에서 **ADB CLI 허용**을 켭니다. 카메라 권한을 허용하고 화면 잠금을 해제합니다. 소리를 포함하여 녹화하려면 마이크 권한도 필요합니다.
 
-```bash
-python -m pip install ./tools/halcam
-halcam devices
+무선 디버깅 기기는 `adb connect IP:PORT`로 연결합니다. 최초 페어링이 필요하면 기기의 무선 디버깅 화면에서 표시되는 주소와 코드로 `adb pair IP:PAIR_PORT`를 실행합니다. 연결 포트와 페어링 포트는 다를 수 있습니다. 여러 기기가 연결되어 있으면 아래의 모든 명령에 `adb -s IP:PORT`를 사용합니다.
+
+앱에 포함된 스크립트를 기기에 한 번 준비합니다. APK를 업데이트한 뒤에도 같은 명령으로 갱신할 수 있습니다.
+
+```sh
+adb shell "content read --uri content://dev.halcamera.cli/v1/shell > /data/local/tmp/halcam"
 ```
 
-기기에서 ADB 연결을 승인하고 HAL CAM의 **Benchmark → ADB CLI 허용**을 켭니다. 카메라 권한을 허용하고 화면 잠금을 해제합니다. Android 8–9에서 사진을 저장하려면 앱의 사진 촬영 경로에서 저장소 권한도 허용해야 합니다. CLI 설정은 초기값이 꺼짐이며, 활성화한 설정은 앱을 다시 실행해도 유지됩니다.
+이후 다음 명령을 사용합니다. 앱 열기, 요청 ID 생성, 완료 대기는 자동으로 처리합니다.
 
-```bash
-halcam --serial DEVICE doctor --json
-halcam --serial DEVICE cameras --json
-halcam --serial DEVICE capture --camera 0 --output ./photos --json
-halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json
-halcam --serial DEVICE status --request REQUEST_UUID --json
-halcam --serial DEVICE fetch REQUEST_UUID --output ./recovered --json
+```sh
+adb shell sh /data/local/tmp/halcam help
+adb shell sh /data/local/tmp/halcam cameras
+adb shell sh /data/local/tmp/halcam preview --camera 0
+adb shell sh /data/local/tmp/halcam capture --camera 0
+adb shell sh /data/local/tmp/halcam record start --camera 0
+adb shell sh /data/local/tmp/halcam record stop
+adb shell sh /data/local/tmp/halcam preview stop
+adb shell sh /data/local/tmp/halcam status
 ```
 
-USB와 무선 ADB 연결이 동시에 보이면 같은 기기라도 `--serial`을 지정합니다. `--adb`로 adb 실행 파일 경로를 지정할 수 있습니다. 사진은 YUV에서 변환한 JPEG과 카메라 JPEG을 한 쌍으로 받으며, 벤치마크는 기존 profile의 원본 schema 4 JSON을 받습니다. 파일은 출력 폴더의 요청 ID 하위 폴더에 저장하고 크기와 SHA-256을 검사합니다. CSV가 필요하면 기존 `tools/aggregate.py`를 요청 폴더에 적용합니다.
+카메라 ID의 기본값은 `0`이며, `cameras`로 사용 가능한 ID를 확인합니다. 사진은 YUV 변환 JPEG과 카메라 JPEG 두 장입니다. 녹화는 MP4이며 `--no-audio`로 무음 녹화를 선택할 수 있습니다. `record start`는 실제 녹화 시작을 확인한 뒤 반환하고, `record stop`은 MP4 저장과 결과 등록까지 기다립니다. 녹화 실행 제한의 기본값은 1시간이며, `--timeout 초`로 줄일 수 있습니다. 제한에 도달하면 녹화를 종료하고 요청에 시간 제한 오류를 기록합니다.
 
-`--no-wait`은 접수 결과만 반환합니다. `--timeout`은 앱 실행 제한이며 `--wait-timeout`은 PC가 기다리는 시간입니다. PC 대기 종료나 ADB 단절은 앱 작업의 실패를 뜻하지 않습니다. 출력된 요청 ID로 `status`와 `fetch`를 실행하면 작업을 다시 수행하지 않고 상태·파일을 회수할 수 있습니다. `cancel REQUEST_UUID`는 실행 중 요청을 중단하며, 이미 제출한 사진 저장은 실제 완료 결과를 반환할 수 있습니다.
+결과 파일이 있으면 기기의 `Download/HALCamera-cli/요청ID`에 크기와 SHA-256을 검증한 복사본을 준비하고, PC로 받는 `adb pull` 명령 한 줄을 출력합니다. `adb pull`은 CMD와 PowerShell에서도 바이너리를 그대로 복사합니다. 기기 복사본은 자동으로 삭제하지 않습니다.
 
-종료 코드는 성공 0, 인자·요청 충돌 2, ADB 연결 3, 실행 조건·호환성 4, 실행·저장 실패 5, 시간 제한 6, 다운로드 7, 응답 형식 8, 취소 130입니다. `--json`에서는 stdout에 JSON 하나를 출력하고 진행 정보는 stderr에 출력합니다. 벤치마크가 정상 완료되면 validity나 회귀 여부 때문에 종료 코드를 실패로 바꾸지 않습니다. 중단된 run은 가능한 경우 partial report도 수집합니다.
+`--no-wait`은 요청 접수 뒤 바로 반환합니다. 무선 연결이 끊겨도 같은 작업을 다시 실행하지 말고, 재연결 후 `status 요청ID` 또는 `fetch 요청ID`로 확인합니다. ID를 생략하면 스크립트가 마지막으로 제출한 요청을 사용합니다. `cancel 요청ID`로 취소할 수 있으며, 이미 제출한 사진 저장은 완료될 수 있습니다.
 
-명령 기록은 완료 후 최대 24시간·200개를 보관합니다. 정리 대상은 CLI 기록이며 원본 사진이나 benchmark 이력을 삭제하지 않습니다. 기록이 사라진 요청은 자동 재제출하지 않습니다. CLI v1은 Android 사용자 0과 전면 앱을 지원하며 녹화·baseline 변경·이력 삭제 명령은 제공하지 않습니다. 자세한 계약은 [CLI 설계](docs/design/CLI.md), 검증 범위는 [전송 검증](docs/validation/cli-transport.md)을 참고하십시오.
+`probe`, `cts cases`, `cts run --cases KEY[,KEY...]`도 지원합니다. 벤치마크는 CLI 지원 범위에서 제외하며 앱 화면에서 실행합니다. Python `halcam`은 사진·probe·CTS 파일 수집을 위한 선택 도구입니다. 기본 CLI에 Python이나 pip는 필요하지 않습니다.
 
-```bash
-python -m unittest discover -s tools/halcam/tests -v
-```
+자세한 사용법은 [CLI 가이드](guide/cli.md)를 참고하세요.
 
 | 문서 | 내용 |
 |---|---|

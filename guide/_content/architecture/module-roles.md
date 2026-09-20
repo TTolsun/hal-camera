@@ -54,7 +54,7 @@ verifications: []
 
 | 영역 | 역할과 수정 시 확인할 내용 |
 | --- | --- |
-| `cli/`와 `tools/halcam/` | shell 호출자 검사, 영속 요청 상태, artifact 등록과 PC 파일 수집을 담당합니다. 화면 어댑터 `LiveController`, `BenchmarkController`, `CtsController`도 이 패키지에 두어 `camera/`와 `benchmark/`가 `cli/`를 import하지 않게 합니다. `BenchmarkController.reportSaved`는 run ID·중단 사유·schema 버전을, `CtsController.reportSaved`는 결과 수와 보고서 파일을 스칼라로 받으므로 `cli/`는 benchmark·cts 결과 타입을 알지 못합니다. `probe`와 `cts.cases`는 화면 없이 `CommandCoordinator`가 직접 처리하며, 이때만 `cli/`가 `camera/CameraProbeReader`와 `cts/` 카탈로그를 읽습니다. protocol v1을 변경할 때 양쪽 검증기를 함께 확인합니다. |
+| `cli/`, `assets/halcam.sh`, `tools/halcam/` | shell 호출자 검사, 영속 요청 상태, artifact 등록과 PC 파일 수집을 담당합니다. 화면 어댑터 `LiveController`, `CtsController`도 이 패키지에 두어 `camera/`와 `benchmark/`가 `cli/`를 import하지 않게 합니다. `LiveController`는 프리뷰·사진·녹화를 연결하고 `CtsController.reportSaved`는 결과 수와 보고서 파일을 스칼라로 받으므로 `cli/`는 benchmark·cts 결과 타입을 알지 못합니다. `probe`와 `cts.cases`는 화면 없이 `CommandCoordinator`가 직접 처리하며, 이때만 `cli/`가 `camera/CameraProbeReader`와 `cts/` 카탈로그를 읽습니다. protocol v1을 변경할 때 양쪽 검증기를 함께 확인합니다. |
 | `camera/` | 엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다. `close(done)` 완료 전에 다음 카메라를 열지 않습니다. |
 | `metrics/` | `MetricExtractor`가 이벤트를 관측 표본과 통계로 바꿉니다. 화면과 회귀 판정을 담당하지 않습니다. |
 | `benchmark/` | 루트에는 `BenchmarkActivity`·`HistoryActivity`·`ProfileComparisonActivity` 세 화면만 둡니다. `benchmark/domain/`은 profile, 러너, 지표 계산, validity, 내부 점수, 비교 규칙, presenter를 담는 순수 Kotlin 층이며 `android.*`·`org.json`·`benchmark/platform/`을 import하지 않습니다. `benchmark/platform/`은 `BenchmarkStore`·`BenchmarkReport`(org.json 파일 경계)·`ProfileLibrary`·`SubjectPrefs`·`ThermalTracker`·`ProfileCompatibilityChecker` 같은 파일·기기 어댑터입니다. 이 방향은 `LayerIsolationTest`가 소스를 읽어 검사하므로 어기면 JVM 테스트가 실패합니다. |

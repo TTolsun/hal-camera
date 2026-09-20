@@ -23,8 +23,9 @@
       "enum": [
         "cameras",
         "preview",
+        "preview.stop",
         "capture",
-        "benchmark.run",
+        "record.start",
         "probe",
         "cts.cases",
         "cts.run"
@@ -44,9 +45,6 @@
           "minLength": 1,
           "maxLength": 128
         },
-        "profile_id": {
-          "const": "camera2-standard-v1"
-        },
         "cases": {
           "type": "array",
           "minItems": 1,
@@ -58,6 +56,9 @@
             "maxLength": 256,
             "pattern": "^(custom|vendored):"
           }
+        },
+        "audio": {
+          "type": "boolean"
         }
       }
     }
@@ -69,6 +70,7 @@
           "command": {
             "enum": [
               "cameras",
+              "preview.stop",
               "probe",
               "cts.cases"
             ]
@@ -88,9 +90,73 @@
                 },
                 {
                   "required": [
-                    "profile_id"
+                    "cases"
                   ]
                 },
+                {
+                  "required": [
+                    "audio"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "enum": [
+              "preview",
+              "capture"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "camera_id"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "cases"
+                  ]
+                },
+                {
+                  "required": [
+                    "audio"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "enum": [
+              "record.start"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "camera_id"
+            ],
+            "not": {
+              "anyOf": [
                 {
                   "required": [
                     "cases"
@@ -127,62 +193,11 @@
                 },
                 {
                   "required": [
-                    "profile_id"
+                    "audio"
                   ]
                 }
               ]
             }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "command": {
-            "enum": [
-              "preview",
-              "capture"
-            ]
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "params": {
-            "required": [
-              "camera_id"
-            ],
-            "not": {
-              "anyOf": [
-                {
-                  "required": [
-                    "profile_id"
-                  ]
-                }
-              ]
-            }
-          }
-        }
-      }
-    },
-    {
-      "if": {
-        "properties": {
-          "command": {
-            "enum": [
-              "benchmark.run"
-            ]
-          }
-        }
-      },
-      "then": {
-        "properties": {
-          "params": {
-            "required": [
-              "camera_id",
-              "profile_id"
-            ]
           }
         }
       }
