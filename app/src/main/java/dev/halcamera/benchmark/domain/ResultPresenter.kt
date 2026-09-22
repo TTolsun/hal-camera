@@ -266,6 +266,18 @@ object ResultPresenter {
      * The three eligibility steps of 5.3 in one line. The blocking flags are named because "비교 불가" alone does
      * not tell the developer whether to re-run in a cooler state or to fix the measurement.
      */
+    /**
+     * The eligibility of a run in two or three words, for the Results list. The full line names the blocking
+     * flags, which is what the result screen needs; a list row only has to say whether this run is worth
+     * opening, so a clean run gets no badge at all.
+     */
+    fun shortStatus(run: BenchmarkRun): String? = when {
+        !run.validity.measurementValid -> "측정 무효"
+        !run.validity.comparisonEligible -> "비교 불가"
+        !run.validity.scoringEligible -> "점수 제외"
+        else -> null
+    }
+
     fun eligibilityLine(run: BenchmarkRun): String {
         val v = run.validity
         val flags = v.flags.mapNotNull { ValidityFlags.byCode(it) }

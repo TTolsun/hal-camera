@@ -366,4 +366,13 @@ class ResultPresenterTest {
         assertNull(keys.single().baseFraction)
         assertEquals(Tone.NEUTRAL, keys.single().tone)
     }
+
+    // ---- Results list badge ----
+
+    @Test fun aCleanRunCarriesNoStatusBadgeInTheList() {
+        assertNull(ResultPresenter.shortStatus(run()))
+        assertEquals("점수 제외", ResultPresenter.shortStatus(run(charging = true, flags = listOf(ValidityFlags.CHARGING))))
+        assertEquals("비교 불가", ResultPresenter.shortStatus(run(thermalMax = 3, flags = listOf(ValidityFlags.THERMAL_HIGH))))
+        assertEquals("측정 무효", ResultPresenter.shortStatus(run(flags = listOf(ValidityFlags.HARD_FAILURE))))
+    }
 }

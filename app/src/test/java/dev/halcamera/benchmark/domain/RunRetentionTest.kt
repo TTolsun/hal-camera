@@ -27,6 +27,17 @@ class RunRetentionTest {
         assertEquals(listOf("02"), RunRetention.toDelete(ids, setOf("01"), 3))
     }
 
+    @Test fun everySliderStopIsTheSameDistanceApart() {
+        // A slider promises that equal travel means equal change; the numeric stops must honour that.
+        val numeric = RunRetention.OPTIONS.filterNot { it == RunRetention.UNLIMITED }
+        assertEquals(RunRetention.STEP, numeric.first())
+        assertEquals(RunRetention.MAX_LIMIT, numeric.last())
+        assertTrue(numeric.zipWithNext().all { (a, b) -> b - a == RunRetention.STEP })
+        // Unlimited is not a number, so it is the one stop past the end rather than a point on the scale.
+        assertEquals(RunRetention.UNLIMITED, RunRetention.OPTIONS.last())
+        assertEquals("∞", RunRetention.tickLabel(RunRetention.UNLIMITED))
+    }
+
     @Test fun aProtectedRunStillCountsTowardTheLimit() {
         // The cap is how much history the developer wants around, not how many deletable files exist.
         assertEquals(listOf("01", "02", "03"), RunRetention.toDelete(ids, setOf("05"), 2))

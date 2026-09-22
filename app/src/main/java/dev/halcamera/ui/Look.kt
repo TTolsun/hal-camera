@@ -94,6 +94,7 @@ object Look {
     fun primaryButton(context: Context, label: String, action: () -> Unit) = Button(context).apply {
         text = label; isAllCaps = false; textSize = 17f; setTextColor(onPrimary); background = cardBackground(context, primary, primary)
         setPadding(dp(context, 24), dp(context, 14), dp(context, 24), dp(context, 14)); stateListAnimator = null
+        minHeight = dp(context, 56); minimumHeight = dp(context, 56)
         setOnClickListener { action() }
     }
 
@@ -102,8 +103,19 @@ object Look {
         setTextColor(if (dark) primaryOnDark else primary)
         background = GradientDrawable().apply { setColor(if (dark) expertTile2 else Color.parseColor("#f6f7f8")); cornerRadius = dp(context, 4).toFloat(); setStroke(dp(context, 1), if (dark) expertTile3 else hairline) }
         setPadding(dp(context, 20), dp(context, 12), dp(context, 20), dp(context, 12)); stateListAnimator = null
+        minHeight = dp(context, 48); minimumHeight = dp(context, 48)
         setOnClickListener { action() }
     }
+
+    /**
+     * Layout params for a button row: the height grows with the text instead of being pinned.
+     *
+     * A pinned height clipped the label as soon as the padding plus the line box exceeded it, which happens
+     * at the default font scale on a 17sp primary button and on every button at a large display size. The
+     * buttons carry their own minimum height, so the tap target is unchanged.
+     */
+    fun buttonParams(width: Int = -1, weight: Float = 0f): LinearLayout.LayoutParams =
+        LinearLayout.LayoutParams(width, LinearLayout.LayoutParams.WRAP_CONTENT, weight)
 
     fun card(context: Context, dark: Boolean = false) = LinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL

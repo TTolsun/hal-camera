@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "64f77a27311d1a05",
-        "modelHash": "65f0967554d5e7a7",
+        "codeHash": "ea29dd01dd7def1e",
+        "modelHash": "745d6f85e3bab272",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "b866a5c466b974b8",
-        "modelHash": "6fb4e0e00d66213d",
+        "codeHash": "bafc71ce47bc38fc",
+        "modelHash": "5e02bdcde9bb7116",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1f2845f9793ee50f",
+        "codeHash": "114eff351a008656",
         "modelHash": "07ff2102a958cd31",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "9decb65f3e56d17b",
-        "modelHash": "463fd1d7e513e4ce",
+        "codeHash": "f11b7b76586daf1f",
+        "modelHash": "9db92647bef6450f",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e1b8ee274f6e6131",
-        "modelHash": "7e933807b18e68c0",
+        "codeHash": "12d90c16ee2d5325",
+        "modelHash": "45f0e427b531a6d4",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "b866a5c466b974b8",
-        "modelHash": "4ce0a5938eb7fd3e",
+        "codeHash": "bafc71ce47bc38fc",
+        "modelHash": "5b4e1667d4fa57b9",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "64f77a27311d1a05",
-        "modelHash": "c2b573fb83195c18",
+        "codeHash": "ea29dd01dd7def1e",
+        "modelHash": "8d923519c6ef9d72",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "64f77a27311d1a05",
-        "modelHash": "0a3fbb941466ac9b",
+        "codeHash": "ea29dd01dd7def1e",
+        "modelHash": "425fe00c7ce5f49a",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       },
       "observed": {
         "state": "fresh"

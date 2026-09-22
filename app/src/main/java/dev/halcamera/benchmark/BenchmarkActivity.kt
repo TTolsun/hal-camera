@@ -120,6 +120,7 @@ class BenchmarkActivity : ComponentActivity() {
     private var ticker: Runnable? = null
     /** Re-runs preflight while the card is blocked on heat, so START returns by itself once the device cools. */
     private var cardRecheck: Runnable? = null
+    private var settingsDialog: android.app.Dialog? = null
     private var firstYuvSeen = false
     private var destroyed = false
     private val envStart = HashMap<String, Any?>()
@@ -199,6 +200,8 @@ class BenchmarkActivity : ComponentActivity() {
         recorder.listener = null
         ticker?.let { main.removeCallbacks(it) }
         cardRecheck?.let { main.removeCallbacks(it) }
+        settingsDialog?.dismiss()
+        settingsDialog = null
         thermal?.stop()
         if (runner == null) io.shutdown()
         super.onDestroy()
@@ -290,16 +293,15 @@ class BenchmarkActivity : ComponentActivity() {
         if (screen == Screen.CARD) {
             val row = Look.row(this)
             row.addView(Look.ghostButton(this, "History", dark = true) { openHistoryScreen() },
-                LinearLayout.LayoutParams(0, dp(48), 1f))
-            row.addView(Look.ghostButton(this, "Settings", dark = true) {}.apply {
-                setOnClickListener { openSettings(it) }
-                contentDescription = "벤치마크 설정, profiling data 한도 ${RunRetention.label(settings.runLimit)}"
-            }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
+                Look.buttonParams(0, 1f))
+            row.addView(Look.ghostButton(this, "Settings", dark = true) { openSettings() }.apply {
+                contentDescription = "벤치마크 설정, 보관 개수 ${RunRetention.label(settings.runLimit)}"
+            }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
             actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
         if (screen == Screen.RESULT) {
             actions.addView(Look.ghostButton(this, "History", dark = true) { openHistoryScreen() },
-                LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(8) })
+                Look.buttonParams().apply { topMargin = dp(8) })
         }
     }
 
@@ -313,22 +315,81 @@ class BenchmarkActivity : ComponentActivity() {
     }
 
     /** Settings → the profiling data limit. Applying a smaller limit prunes immediately, keeping every baseline. */
-    private fun openSettings(anchor: View) {
+    /**
+     * Settings. The limit is an ordered scale, so it is a slider: a five-item list made the reader compare
+     * five near-identical strings to find the one number that differs, while a slider puts the choice on one
+     * axis and shows where the current value sits on it.
+     */
+    private fun openSettings() {
         val options = RunRetention.OPTIONS
-        val labels = options.map { "Profiling data limit · ${RunRetention.label(it)}" }
-        showSelectionPopup(anchor, labels, options.indexOf(settings.runLimit).coerceAtLeast(0)) { index ->
-            settings.runLimit = options[index]
-            io.execute {
-                val deleted = prune()
-                main.post {
-                    if (destroyed) return@post
-                    val suffix = if (deleted == 0) "" else " · 오래된 run ${deleted}개 삭제"
-                    android.widget.Toast.makeText(
-                        this, "Profiling data limit: ${RunRetention.label(settings.runLimit)}$suffix",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                    render()
+        var picked = options.indexOf(settings.runLimit).coerceAtLeast(0)
+
+        // A plain Dialog with the app's own card, not AlertDialog: the platform dialog arrives in the system
+        // theme, so a grey sheet with system buttons would sit on top of this screen's black cards.
+        val card = Look.card(this, dark = true)
+        card.addView(Look.text(this, "Data limit", 19, Look.onDark, bold = true))
+        val value = Look.text(this, RunRetention.label(options[picked]), 30, Look.primaryOnDark, bold = true, mono = true)
+        card.addView(value, lp(top = 10))
+        card.addView(Look.text(this, "보관할 개수입니다. 넘으면 오래된 것부터 지우고 baseline은 남깁니다.", 12, Look.onDarkMuted), lp(top = 4))
+
+        // The horizontal padding is the thumb's own radius: with it removed the thumb is clipped in half at
+        // both ends of the track, so it stays and the tick row is inset to match instead.
+        val bar = android.widget.SeekBar(this).apply {
+            max = options.lastIndex
+            progress = picked
+            setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seek: android.widget.SeekBar, position: Int, fromUser: Boolean) {
+                    picked = position
+                    value.text = RunRetention.label(options[position])
                 }
+                override fun onStartTrackingTouch(seek: android.widget.SeekBar) = Unit
+                override fun onStopTrackingTouch(seek: android.widget.SeekBar) = Unit
+            })
+        }
+        card.addView(bar, lp(top = 16))
+
+        // Only the ends are labelled. Eleven stops will not fit as text, and a label on every other stop
+        // would have to lie about where the thumb lands; the chosen value is already set in large type above.
+        val ticks = Look.row(this).apply { setPadding(bar.paddingLeft, 0, bar.paddingRight, 0) }
+        ticks.addView(
+            Look.text(this, RunRetention.tickLabel(options.first()), 12, Look.onDarkMuted),
+            LinearLayout.LayoutParams(0, -2, 1f)
+        )
+        ticks.addView(Look.text(this, RunRetention.tickLabel(options.last()), 12, Look.onDarkMuted))
+        card.addView(ticks, lp(top = 2))
+
+        // Held in a field so onDestroy can close it: a dialog still showing when the activity goes away
+        // leaks its window, and the CLI can finish this screen while the sheet is open.
+        settingsDialog?.dismiss()
+        val dialog = android.app.Dialog(this).apply {
+            requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+            window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+            setOnDismissListener { settingsDialog = null }
+        }
+        settingsDialog = dialog
+        val actionRow = Look.row(this)
+        actionRow.addView(Look.ghostButton(this, "취소", dark = true) { dialog.dismiss() },
+            Look.buttonParams(0, 1f))
+        actionRow.addView(Look.primaryButton(this, "적용") { applyRunLimit(options[picked]); dialog.dismiss() },
+            Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
+        card.addView(actionRow, lp(top = 18))
+
+        val frame = FrameLayout(this).apply { setPadding(dp(16), 0, dp(16), 0); addView(card) }
+        dialog.setContentView(frame)
+        dialog.show()
+    }
+
+    private fun applyRunLimit(limit: Int) {
+        settings.runLimit = limit
+        io.execute {
+            val deleted = prune()
+            main.post {
+                if (destroyed) return@post
+                val suffix = if (deleted == 0) "" else " · 오래된 run ${deleted}개 삭제"
+                android.widget.Toast.makeText(
+                    this, "Data limit ${RunRetention.label(limit)}$suffix", android.widget.Toast.LENGTH_SHORT
+                ).show()
+                render()
             }
         }
     }
@@ -415,11 +476,11 @@ class BenchmarkActivity : ComponentActivity() {
             setOnClickListener { selectCamera(it) }
             isEnabled = endpoints.isNotEmpty()
             contentDescription = "벤치마크 카메라 선택, 현재 $cameraLabel"
-        }, LinearLayout.LayoutParams(0, dp(52), 1f))
+        }, Look.buttonParams(0, 1f))
         row.addView(IconButton(this, R.drawable.ic_action_close, "벤치마크 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
         actions.addView(row)
         if (state.canStart) {
-            actions.addView(Look.primaryButton(this, "Start benchmark") { begin() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
+            actions.addView(Look.primaryButton(this, "Start benchmark") { begin() }, Look.buttonParams().apply { topMargin = dp(8) })
         } else if (state.refreshable) {
             // A card opened at SEVERE re-checks itself, so START returns without anyone tapping a button while
             // the device rests. The recheck stops the moment the card is replaced or the screen changes.
@@ -472,7 +533,7 @@ class BenchmarkActivity : ComponentActivity() {
             .also { it.maxLines = 1; card.addView(it, lp(top = 4)) }
         progressStats = Look.text(this, "", 12, Look.onDarkMuted, mono = true).also { card.addView(it, lp(top = 10)) }
         content.addView(card)
-        actions.addView(Look.ghostButton(this, "Abort", dark = true) { runner?.abort("user") }, LinearLayout.LayoutParams(-1, dp(52)))
+        actions.addView(Look.ghostButton(this, "Abort", dark = true) { runner?.abort("user") }, Look.buttonParams())
         updateStats()
     }
 
@@ -485,7 +546,7 @@ class BenchmarkActivity : ComponentActivity() {
             card.addView(Look.text(this, "Benchmark result", 19, Look.onDark, bold = true))
             card.addView(Look.text(this, lastSummary.ifBlank { "결과를 만들지 못했습니다." }, 12, Look.onDarkMuted, mono = true), lp(top = 10))
             content.addView(card)
-            if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "New run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)))
+            if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "New run") { preflight() }, Look.buttonParams())
             return
         }
         val endpointName = roleText(run.endpoint.role)
@@ -553,16 +614,16 @@ class BenchmarkActivity : ComponentActivity() {
         // Give the longer baseline action a full row to avoid truncation.
         actions.addView(
             action(view.baselineButton, view.baselineButtonEnabled) { toggleBaseline() },
-            LinearLayout.LayoutParams(-1, dp(52))
+            Look.buttonParams()
         )
         val row = Look.row(this)
-        row.addView(action("Compare", baseRun != null) { screen = Screen.COMPARE; render() }, LinearLayout.LayoutParams(0, dp(52), 1f))
+        row.addView(action("Compare", baseRun != null) { screen = Screen.COMPARE; render() }, Look.buttonParams(0, 1f))
         row.addView(
             action("Export", lastFile != null) { lastFile?.let(::share) },
-            LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginStart = dp(8) }
+            Look.buttonParams(0, 1f).apply { marginStart = dp(8) }
         )
         actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
-        if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "New run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
+        if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "New run") { preflight() }, Look.buttonParams().apply { topMargin = dp(8) })
     }
 
     /** 7.3. A delta chart around a zero line first; rows a chart cannot carry stay as text below it. */
