@@ -104,16 +104,12 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 `BUSY`가 반환되면 현재 UI 또는 CLI 작업이 끝날 때까지 기다립니다. `CLI_DISABLED`는 진단 패널의 `ADB CLI 설정`을 펼쳐 `ADB CLI 허용`을 확인합니다. 카메라·저장소 권한은 앱에서 허용해야 하며 CLI가 자동 부여하지 않습니다. benchmark의 취소·실패 시 partial report와 실행 상태를 함께 확인합니다.
 
-### 반복 측정 프로파일 비교
-
-반복 비교에서 판정이 보류되면 지표별 유효 실행 수와 제외 사유부터 확인합니다. 프레임 수는 독립 실행 수에 포함하지 않습니다. 같은 원본이나 동일 실행 ID의 충돌, 묶음 안의 빌드 혼합, 측정 계약·카메라·환경 불일치는 통계 판정을 제한합니다. 외부 파일의 저장된 점수·판정은 분석에 사용하지 않습니다. 가져오기 실패는 파일별로 알리며, 기존 로컬 기준값은 유지합니다.
-
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-22 @ `b38bc07` · Claude (release 0.12.0)
+- 검토 2026-09-22 @ `dbcb804` · Claude (drop repeat comparison)
 
 </details>
 
@@ -189,9 +185,9 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-22 @ `b38bc07` · Claude (release 0.12.0) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-22 @ `b38bc07` · Claude (release 0.12.0) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-22 @ `b38bc07` · Claude (release 0.12.0) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-22 @ `dbcb804` · Claude (drop repeat comparison) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-22 @ `dbcb804` · Claude (drop repeat comparison) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-22 @ `dbcb804` · Claude (drop repeat comparison) |
 
 <!-- omm:end id=status -->
 

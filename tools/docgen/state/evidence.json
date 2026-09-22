@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "a0c7b7c317b006eb",
-        "modelHash": "afdcbee42d5fc69b",
+        "codeHash": "daa3aa06a4b420ea",
+        "modelHash": "6d43812b492104e5",
         "at": "2026-09-22",
-        "commit": "b38bc07",
-        "reviewer": "Claude (release 0.12.0)"
+        "commit": "dbcb804",
+        "reviewer": "Claude (drop repeat comparison)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "d8bb1183c300e6c0",
-        "modelHash": "f01086c08aa7e51a",
+        "codeHash": "b83deb6b99a52210",
+        "modelHash": "c3c3355261635d98",
         "at": "2026-09-22",
-        "commit": "b38bc07",
-        "reviewer": "Claude (release 0.12.0)"
+        "commit": "dbcb804",
+        "reviewer": "Claude (drop repeat comparison)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "0e3515fe8a2cd910",
+        "codeHash": "3f496d477df0d7d6",
         "modelHash": "07ff2102a958cd31",
         "at": "2026-09-22",
-        "commit": "b38bc07",
-        "reviewer": "Claude (release 0.12.0)"
+        "commit": "dbcb804",
+        "reviewer": "Claude (drop repeat comparison)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e0782f3cc3186e36",
-        "modelHash": "9cc225c66cd8fd87",
+        "codeHash": "dccec14c6f55c242",
+        "modelHash": "6d09bb059afcf371",
         "at": "2026-09-22",
-        "commit": "b38bc07",
-        "reviewer": "Claude (release 0.12.0)"
+        "commit": "dbcb804",
+        "reviewer": "Claude (drop repeat comparison)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "7c8afb240108c21f",
-        "modelHash": "324b5323bcde47a7",
+        "codeHash": "d5e1e2059160a0cf",
+        "modelHash": "e2a0d9bcb04ae63b",
         "at": "2026-09-22",
-        "commit": "b38bc07",
-        "reviewer": "Claude (release 0.12.0)"
+        "commit": "dbcb804",
+        "reviewer": "Claude (drop repeat comparison)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "d8bb1183c300e6c0",
-        "modelHash": "39b5e7e625bb4258",
+        "codeHash": "b83deb6b99a52210",
+        "modelHash": "8dee4614e0e32345",
         "at": "2026-09-22",
-        "commit": "b38bc07",
-        "reviewer": "Claude (release 0.12.0)"
+        "commit": "dbcb804",
+        "reviewer": "Claude (drop repeat comparison)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "a0c7b7c317b006eb",
-        "modelHash": "08762e276ac1d102",
+        "codeHash": "daa3aa06a4b420ea",
+        "modelHash": "e3bbbaaae1aa578e",
         "at": "2026-09-22",
-        "commit": "b38bc07",
-        "reviewer": "Claude (release 0.12.0)"
+        "commit": "dbcb804",
+        "reviewer": "Claude (drop repeat comparison)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "a0c7b7c317b006eb",
-        "modelHash": "4fd11b8a5fdd54d9",
+        "codeHash": "daa3aa06a4b420ea",
+        "modelHash": "8680ba98865fec1a",
         "at": "2026-09-22",
-        "commit": "b38bc07",
-        "reviewer": "Claude (release 0.12.0)"
+        "commit": "dbcb804",
+        "reviewer": "Claude (drop repeat comparison)"
       },
       "observed": {
         "state": "fresh"
