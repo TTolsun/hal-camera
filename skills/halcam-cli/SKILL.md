@@ -68,9 +68,12 @@ adb shell am start -W -n dev.halcamera/.cli.CliLaunchActivity          # 프리�
 adb shell content call --uri content://dev.halcamera.cli --method capture --extra camera:s:0
 adb shell content call --uri content://dev.halcamera.cli --method record.start --extra camera:s:0 --extra audio:b:false
 adb shell content call --uri content://dev.halcamera.cli --method record.stop
+adb shell content call --uri content://dev.halcamera.cli --method cts.run --arg custom:fast_on_off
 adb exec-out content read --uri content://dev.halcamera.cli/v1/status
 adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/REQUEST_ID
 ```
+
+CTS 항목만 `--arg`로 전달하고 `--extra cases:s:...`를 쓰지 않습니다. `--extra`는 값을 `키:타입:값`으로 자르는데 suite 키에는 `custom:`이나 `vendored:` 접두어의 콜론이 있어서, `content`가 `Binding not well formed`로 거부하고 앱에 닿지 않습니다. 여러 항목은 쉼표로 이어 붙이며, 둘을 함께 주면 앱이 거부합니다.
 
 직접 호출은 접수 결과만 반환하므로, 응답의 `request_id`로 `/v1/requests/UUID`를 읽어 `completed`가 `true`가 될 때까지 확인합니다. `--extra request_id:s:UUID`로 같은 ID를 재사용하면 중복 촬영을 막을 수 있고, 같은 ID에 다른 인자를 주면 `REQUEST_CONFLICT`가 됩니다. 실행 제한은 `--extra timeout_ms:l:30000`으로 지정합니다. 알 수 없는 인자와 잘못된 타입은 거부됩니다.
 

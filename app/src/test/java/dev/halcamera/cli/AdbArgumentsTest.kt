@@ -41,4 +41,22 @@ class AdbArgumentsTest {
         val keys = "custom:fast_on_off,vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording"
         assertEquals(keys.split(","), AdbArguments.command("cts.run", mapOf("cases" to keys)).cases)
     }
+
+    @Test fun `cts keys arrive through the call argument because an extra cannot hold a colon`() {
+        val keys = "custom:fast_on_off,vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording"
+        val command = AdbArguments.command("cts.run", emptyMap(), keys)
+        assertEquals(keys.split(","), command.cases)
+        assertEquals(1_800_000L, command.timeoutMs)
+    }
+
+    @Test fun `the call argument belongs to cts run alone and never repeats the extra`() {
+        val invalid = listOf(
+            Triple("capture", emptyMap<String, Any?>(), "custom:fast_on_off"),
+            Triple("cts.run", mapOf<String, Any?>("cases" to "custom:fast_on_off"), "custom:switching")
+        )
+        invalid.forEach { (name, values, arg) ->
+            try { AdbArguments.command(name, values, arg); fail("Accepted $name $arg") }
+            catch (e: CliFailure) { assertEquals("INVALID_ARGUMENT", e.code) }
+        }
+    }
 }
