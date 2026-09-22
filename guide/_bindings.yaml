@@ -63,7 +63,6 @@ sources:
       benchmark/benchmark-screen:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
-          - app/src/main/java/dev/halcamera/ui/MetricBars.kt
       benchmark/benchmark-runner:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
