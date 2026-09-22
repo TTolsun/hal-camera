@@ -15,7 +15,7 @@ class RunHistoryTest {
         assertEquals("1000 ms", view.rows.single().base)
         assertEquals("1.0 s", view.rows.single().current)
         assertEquals("—", view.rows.single().delta)
-        assertEquals("unit differs", view.rows.single().marker)
+        assertEquals("단위 다름", view.rows.single().marker)
     }
     private class Catalog(val entries: Map<String, BenchmarkRun?>) : RunCatalog {
         override fun index() = BenchmarkIndex()
@@ -63,7 +63,7 @@ class RunHistoryTest {
         assertEquals("Selected", selected.baseHeader)
         assertTrue(selected.rows.none { it.hasVerdict })
         assertTrue(selected.baseLine.startsWith("selected"))
-        assertFalse(selected.referenceNote!!.contains("No baseline"))
+        assertFalse(selected.referenceNote!!.contains("baseline 없음"))
         val baseline = ComparePresenter.present(base, current, cmp, ComparedTo.BASELINE, selectedReference = true)
         assertEquals("Baseline", baseline.baseHeader)
         assertTrue(baseline.rows.any { it.hasVerdict })

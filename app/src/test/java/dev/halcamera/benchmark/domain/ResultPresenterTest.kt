@@ -152,7 +152,7 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 170.0)))
         val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
         assertEquals("No baseline · shown vs previous run 20260910-100000-000", v.comparisonLine)
-        assertEquals("[ Set as baseline ] makes this run the reference for future runs", v.hint)
+        assertEquals("[ Set as baseline ]을 누르면 이 run이 기준이 됩니다", v.hint)
     }
 
     @Test fun theFirstRunOfADeviceHasNeitherBaselineNorPrevious() {
@@ -177,7 +177,7 @@ class ResultPresenterTest {
         val previous = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 150.0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 164.0)))
         val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
-        assertEquals("[ Set as baseline ] makes this run the reference for future runs", v.hint)
+        assertEquals("[ Set as baseline ]을 누르면 이 run이 기준이 됩니다", v.hint)
     }
 
     @Test fun theBaselineItselfIsNotDescribedAsHavingNoBaseline() {
@@ -208,10 +208,10 @@ class ResultPresenterTest {
         assertEquals("No verdict   baseline 20260910-100000-000 · no metric met the comparison conditions", v.comparisonLine)
         // The row keeps its delta but says why there is no verdict.
         val row = v.sections.first { it.title == "Capture" }.rows.first()
-        assertEquals("condition mismatch", row.note)
+        assertEquals("조건 불일치", row.note)
         assertEquals("+35%", row.delta)
         assertEquals("", row.marker)
-        assertTrue(v.render(), v.render().contains("condition mismatch"))
+        assertTrue(v.render(), v.render().contains("조건 불일치"))
     }
 
     @Test fun onlyTheMetricsThatCouldNotBeJudgedCarryANote() {
@@ -220,7 +220,7 @@ class ResultPresenterTest {
         val rows = present(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
             .sections.first { it.title == "Launch" }.rows
         assertEquals("", rows.first { it.label == "Open" }.note)
-        assertEquals("not run", rows.first { it.label == "Configure" }.note)
+        assertEquals("미실행", rows.first { it.label == "Configure" }.note)
     }
 
     // ---- pairwise condition banner (7.5) ----
@@ -232,9 +232,9 @@ class ResultPresenterTest {
         val v = present(current, c, ComparedTo.BASELINE)
         // The current run alone is fully eligible, so its own headline says nothing about charging.
         assertEquals("Comparable · scorable · thermal 0 → 1 → 1", v.eligibilityLine)
-        assertEquals("Condition differences: charging state differs", v.conditionLine)
+        assertEquals("비교 시점 조건 차이: 충전 상태 다름", v.conditionLine)
         assertEquals("▲", v.sections.first { it.title == "Capture" }.rows.first().marker)
-        assertTrue(v.render(), v.render().contains("Condition differences: charging state differs"))
+        assertTrue(v.render(), v.render().contains("비교 시점 조건 차이: 충전 상태 다름"))
     }
 
     @Test fun severalConditionDifferencesAreListedTogether() {
@@ -242,7 +242,7 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.7", 400.0)), thermalMax = 3, exposureLoad = 5.0e6,
             flags = listOf(ValidityFlags.THERMAL_HIGH))
         val v = present(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
-        assertEquals("Condition differences: thermal max differs by 2+ levels · exposure load differs by 4x+ (3A excluded)", v.conditionLine)
+        assertEquals("비교 시점 조건 차이: thermal 최고값 2단계 이상 차이 · 노출 부하 4배 이상 차이 (3A 제외)", v.conditionLine)
     }
 
     @Test fun withoutAConditionDifferenceThereIsNoBanner() {
@@ -329,7 +329,7 @@ class ResultPresenterTest {
 
         val first = ResultPresenter.headline(current, null, ComparedTo.NONE, isBaseline = false, endpointName = "Rear main")
         assertEquals("First run", first.text)
-        assertTrue(first.sub, first.sub.startsWith("Set as baseline"))
+        assertTrue(first.sub, first.sub.startsWith("Baseline으로 지정하면"))
 
         val asBaseline = ResultPresenter.headline(current, null, ComparedTo.NONE, isBaseline = true, endpointName = "Rear main")
         assertEquals("This run is the baseline", asBaseline.text)

@@ -73,11 +73,11 @@ object ComparePresenter {
             baseHeader = if (againstBaseline) "Baseline" else if (selectedReference) "Selected" else "Previous",
             referenceNote = when {
                 againstBaseline -> null
-                selectedReference -> "Deltas vs the selected run only · the baseline is not changed"
+                selectedReference -> "선택한 run 대비 delta만 표시합니다 · baseline은 변경하지 않습니다"
                 // The baseline has nothing above it to be measured against, so it too falls back to the previous
-                // run. Saying "no baseline" on the baseline's own screen contradicts the button beside it.
-                currentIsBaseline -> "This run is the baseline · deltas vs the previous run only"
-                else -> "No baseline · deltas vs the previous run only"
+                // run. Saying "baseline 없음" on the baseline's own screen contradicts the button beside it.
+                currentIsBaseline -> "이 run이 baseline입니다 · 이전 run 대비 delta만 표시합니다"
+                else -> "baseline 없음 · 이전 run 대비 delta만 표시합니다"
             },
             rows = rows(base, current, comparison, comparedTo)
         )
@@ -85,7 +85,7 @@ object ComparePresenter {
 
     fun runLine(role: String, run: BenchmarkRun): String =
         pad(role, ROLE) + pad(run.runId, RUN_ID) +
-            pad(run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() } ?: "(no subject)", SUBJECT) +
+            pad(run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() } ?: "(subject 없음)", SUBJECT) +
             pad(run.device.buildDisplay, BUILD) +
             "thermal max ${run.env.thermalMax ?: "—"}"
 
@@ -113,8 +113,11 @@ object ComparePresenter {
                 base = ResultPresenter.format(b ?: shape, b?.value),
                 current = ResultPresenter.format(shape, c?.value),
                 delta = if (unitMismatch) "—" else ResultPresenter.delta(shape, metricComparison),
-                marker = if (unitMismatch) "unit differs" else marker(metricComparison, comparedTo),
-                deltaPct = if (unitMismatch) null else metricComparison?.deltaPct
+                marker = if (unitMismatch) "단위 다름" else marker(metricComparison, comparedTo),
+                // A count metric compares as an absolute difference (7.2), and a percentage of a small count
+                // would dwarf every latency bar on the shared scale, so counts stay out of the chart.
+                deltaPct = if (unitMismatch || RegressionRules.rule(id)?.kind == RuleKind.COUNT) null
+                else metricComparison?.deltaPct
             )
         }
 

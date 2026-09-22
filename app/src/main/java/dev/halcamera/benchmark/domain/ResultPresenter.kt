@@ -137,7 +137,7 @@ object ResultPresenter {
             titleLine = listOf(deviceName, endpointName, run.profile.id, run.profile.launchMode.jsonName.replace('_', ' ')).joinToString(" · "),
             subLine = listOfNotNull(
                 localTime(run.runId), run.device.buildDisplay.takeIf { it.isNotBlank() },
-                run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() } ?: "(no subject)"
+                run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() } ?: "(subject 없음)"
             ).joinToString(" · "),
             eligibilityLine = eligibilityLine(run),
             scoreLine = scoreLine(run),
@@ -148,7 +148,7 @@ object ResultPresenter {
             // button reads CLEAR BASELINE by then, so telling the reader to press SET AS BASELINE describes
             // nothing they can do. Being compared against a baseline and being one are separate states.
             hint = if (comparedTo == ComparedTo.BASELINE || isBaseline) null
-            else "[ Set as baseline ] makes this run the reference for future runs",
+            else "[ Set as baseline ]을 누르면 이 run이 기준이 됩니다",
             sections = sections,
             threeALine = threeALine(run),
             baselineButton = if (isBaseline) "Clear baseline" else "Set as baseline",
@@ -175,23 +175,23 @@ object ResultPresenter {
             !run.validity.measurementValid ->
                 ResultHeadline("Measurement invalid", eligibilityLine(run), Tone.BAD)
             comparison == null || comparedTo == ComparedTo.NONE ->
-                if (isBaseline) ResultHeadline("This run is the baseline", "No earlier run to compare · $endpointName", Tone.NEUTRAL)
-                else ResultHeadline("First run", "Set as baseline to compare future runs · $endpointName", Tone.NEUTRAL)
+                if (isBaseline) ResultHeadline("This run is the baseline", "비교할 이전 run이 없습니다 · $endpointName", Tone.NEUTRAL)
+                else ResultHeadline("First run", "Baseline으로 지정하면 다음 run부터 비교합니다 · $endpointName", Tone.NEUTRAL)
             comparedTo == ComparedTo.PREVIOUS ->
                 ResultHeadline(
                     if (isBaseline) "This run is the baseline" else "No baseline",
-                    "Deltas shown vs previous run ($vs) · no verdict without a baseline",
+                    "이전 run($vs) 대비 표시 · baseline 없이는 판정하지 않습니다",
                     Tone.NEUTRAL
                 )
             comparison.judgedCount == 0 ->
-                ResultHeadline("No verdict", "No metric met the comparison conditions · vs baseline ($vs)", Tone.NEUTRAL)
+                ResultHeadline("No verdict", "비교 조건을 만족하는 지표가 없습니다 · baseline $vs", Tone.NEUTRAL)
             comparison.hasRegression ->
                 ResultHeadline(
                     "${comparison.regressedCount} ${if (comparison.regressedCount == 1) "metric" else "metrics"} degraded",
-                    "vs baseline ($vs) · $endpointName",
+                    "baseline($vs) 대비 · $endpointName",
                     Tone.BAD
                 )
-            else -> ResultHeadline("No degradation", "vs baseline ($vs) · $endpointName", Tone.GOOD)
+            else -> ResultHeadline("No degradation", "baseline($vs) 대비 · $endpointName", Tone.GOOD)
         }
     }
 
@@ -235,8 +235,9 @@ object ResultPresenter {
     ): KeyMetric? {
         if (value == null) return null
         // One shared scale per row: the larger of the two values sits at 80% of the bar, so the tick and the
-        // fill are always both on screen and their order is readable.
-        val scale = maxOf(value, base ?: value) / 0.8
+        // fill are always both on screen and their order is readable. A zero pair would make the scale 0 and
+        // the fraction NaN, so it falls back to an empty bar instead.
+        val scale = (maxOf(value, base ?: value) / 0.8).takeIf { it > 0 } ?: 1.0
         val delta = if (!withDelta || base == null) null else {
             val d = value - base
             val text = if (unit == "fps") String.format(Locale.US, "%+.1f", d) else String.format(Locale.US, "%+.0f", d)
@@ -313,14 +314,14 @@ object ResultPresenter {
      */
     fun conditionLine(comparison: RunComparison): String? {
         if (comparison.conditionMismatches.isEmpty()) return null
-        return "Condition differences: " + comparison.conditionMismatches.joinToString(" · ", transform = ::conditionText)
+        return "비교 시점 조건 차이: " + comparison.conditionMismatches.joinToString(" · ", transform = ::conditionText)
     }
 
     fun conditionText(m: ConditionMismatch): String = when (m) {
-        ConditionMismatch.THERMAL_MAX_DIFFERS -> "thermal max differs by 2+ levels"
-        ConditionMismatch.POWER_SAVE_DIFFERS -> "power save mode differs"
-        ConditionMismatch.CHARGING_DIFFERS -> "charging state differs"
-        ConditionMismatch.EXPOSURE_DIFFERS -> "exposure load differs by 4x+ (3A excluded)"
+        ConditionMismatch.THERMAL_MAX_DIFFERS -> "thermal 최고값 2단계 이상 차이"
+        ConditionMismatch.POWER_SAVE_DIFFERS -> "절전 모드 다름"
+        ConditionMismatch.CHARGING_DIFFERS -> "충전 상태 다름"
+        ConditionMismatch.EXPOSURE_DIFFERS -> "노출 부하 4배 이상 차이 (3A 제외)"
     }
 
     /** 7.4: four axes summarised in one line; the subject axis is dropped when neither side is labelled. */
@@ -385,13 +386,13 @@ object ResultPresenter {
         if (comparison == null || comparedTo == ComparedTo.NONE) return ""
         if (comparison.state != RegressionState.UNKNOWN) return ""
         return when (comparison.unknownReason) {
-            UnknownReason.CONDITION_MISMATCH -> "condition mismatch"
-            UnknownReason.NOT_MEASURABLE -> "not measurable"
-            UnknownReason.INSUFFICIENT_SAMPLES -> "insufficient samples"
-            UnknownReason.NOT_RUN -> "not run"
-            UnknownReason.NO_BASELINE -> "no baseline"
-            UnknownReason.UNSUPPORTED -> "unsupported"
-            UnknownReason.CADENCE_CHANGED -> "cadence changed"
+            UnknownReason.CONDITION_MISMATCH -> "조건 불일치"
+            UnknownReason.NOT_MEASURABLE -> "판정 불가"
+            UnknownReason.INSUFFICIENT_SAMPLES -> "표본 부족"
+            UnknownReason.NOT_RUN -> "미실행"
+            UnknownReason.NO_BASELINE -> "baseline 없음"
+            UnknownReason.UNSUPPORTED -> "미지원"
+            UnknownReason.CADENCE_CHANGED -> "cadence 변경"
             null -> ""
         }
     }

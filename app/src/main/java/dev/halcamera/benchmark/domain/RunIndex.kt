@@ -2,7 +2,7 @@ package dev.halcamera.benchmark.domain
 
 /** Eligibility is derived by the report reader, just as it is for comparison. */
 enum class RunFilter(val label: String) {
-    ALL("All"), COMPARISON("Comparable only"), SCORING("Scorable only");
+    ALL("전체"), COMPARISON("비교 가능만"), SCORING("점수 산정 가능만");
 
     fun accepts(run: BenchmarkRun): Boolean = when (this) {
         ALL -> true

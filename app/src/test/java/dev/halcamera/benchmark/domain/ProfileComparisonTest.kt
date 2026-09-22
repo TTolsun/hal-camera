@@ -38,13 +38,13 @@ class ProfileComparisonTest {
     @Test fun `insufficient runs are inconclusive even if each run contains many frames`() {
         val metric = row(compare(a = group("a", 100.0, 4)))
         assertNull(metric.p)
-        assertTrue(metric.blocked.any { it.contains("not enough valid runs") })
+        assertTrue(metric.blocked.any { it.contains("부족") })
     }
 
     @Test fun `unknown identity requires explicit confirmation and model alone never proves identity`() {
         val blank = group("a", 100.0).map { it.copy(run = it.run.copy(raw = it.run.raw + ("device_instance_id" to "  "))) }
         assertNull(blank.first().instanceId)
-        assertTrue(compare(options = confirmed.copy(sameDeviceConfirmed = false)).problems.any { it.contains("physical device") })
+        assertTrue(compare(options = confirmed.copy(sameDeviceConfirmed = false)).problems.any { it.contains("물리 기기") })
         fun identified(entries: List<ProfileEntry>, id: String) = entries.map { it.copy(run = it.run.copy(raw = it.run.raw + ("device_instance_id" to id))) }
         assertTrue(compare(identified(group("a", 100.0), "id"), identified(group("b", 200.0), "id"),
             confirmed.copy(sameDeviceConfirmed = false)).problems.isEmpty())
@@ -58,7 +58,7 @@ class ProfileComparisonTest {
         assertNull(row(blocked).p)
         assertEquals(200.0, row(blocked).after!!.mean, 0.0)
         assertNotNull(row(compare(b = b, options = confirmed.copy(differentDevices = true))).p)
-        assertTrue(compare(b = b, options = confirmed.copy(differentDevices = true)).render().contains("optics"))
+        assertTrue(compare(b = b, options = confirmed.copy(differentDevices = true)).render().contains("광학계"))
     }
 
     @Test fun `mixed builds and overlapping content or measurement IDs cannot inflate N`() {
@@ -67,7 +67,7 @@ class ProfileComparisonTest {
         val collision = group("b", 200.0).toMutableList().apply { this[0] = this[0].copy(run = this[0].run.copy(runId = a[0].run.runId)) }
         assertNull(row(compare(a, collision)).p)
         val mixed = a.toMutableList().apply { this[0] = this[0].copy(run = this[0].run.copy(subject = SubjectLabel("other"))) }
-        assertTrue(compare(a = mixed).problems.any { it.contains("builds") })
+        assertTrue(compare(a = mixed).problems.any { it.contains("빌드") })
     }
 
     @Test fun `aborted timeout missing values and unknown flags have traceable exclusions`() {
@@ -79,7 +79,7 @@ class ProfileComparisonTest {
         val metric = row(compare(a = a))
         assertEquals(5, metric.before!!.n)
         assertEquals(4, metric.exclusions.size)
-        assertTrue(metric.exclusions.any { it.contains("a-1") && it.contains("aborted") })
+        assertTrue(metric.exclusions.any { it.contains("a-1") && it.contains("중단") })
         assertTrue(metric.exclusions.any { it.contains("FUTURE_FLAG") })
         assertNotNull(metric.p)
     }

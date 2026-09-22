@@ -55,21 +55,21 @@ object StartCardPresenter {
         // 8.2: the profile is Camera2-only, so entering from a CameraX preview switches the engine and says so
         // instead of silently measuring something the LIVE screen was not showing.
         if (engineName != ENGINE_CAMERA2) {
-            notices += "Camera2-only profile · switching to Camera2"
+            notices += "Camera2 전용 profile · Camera2로 전환합니다"
         }
         if (thermalStatus != null && thermalStatus in ValidityFlags.THERMAL_MODERATE until THERMAL_SEVERE) {
-            notices += "THERMAL_HIGH · excluded from comparison and scoring"
+            notices += "THERMAL_HIGH · 비교·점수 산정에서 제외됩니다"
         }
         if (powerSaveMode == true) {
-            notices += "POWER_SAVE_MODE · excluded from comparison and scoring"
+            notices += "POWER_SAVE_MODE · 비교·점수 산정에서 제외됩니다"
         }
         return StartCard(
             titleLine = listOf(ENGINE_CAMERA2, endpointName, conditionLabel(profile), launchModeLabel(profile))
                 .joinToString(" · "),
             profileLine = "Profile  ${profile.id}",
             verdictLine = verdictLine(compatibility),
-            durationLine = "~$ESTIMATED_SECONDS s · Keep the screen on · Aim at a bright subject",
-            detailLine = "${profile.launchIterations}× open · ${profile.observeMs / 1000} s observe · ${profile.stillCount} stills",
+            durationLine = "약 ${ESTIMATED_SECONDS}초 · 화면을 켠 채 유지 · 밝은 피사체를 향해 고정",
+            detailLine = "${profile.launchIterations}× open · ${profile.observeMs / 1000}초 관측 · 사진 ${profile.stillCount}장",
             notices = notices,
             blockedReason = blockedReason(compatibility, thermalStatus),
             refreshable = compatibility.supported
@@ -82,16 +82,16 @@ object StartCardPresenter {
      */
     fun blockedReason(compatibility: Compatibility, thermalStatus: Int?): String? = when {
         !compatibility.supported ->
-            "This profile cannot run on this camera (${compatibility.reasons.joinToString(", ").ifEmpty { "no reason given" }})."
+            "이 profile은 이 카메라에서 실행할 수 없습니다 (${compatibility.reasons.joinToString(", ").ifEmpty { "사유 없음" }})."
         thermalStatus != null && thermalStatus >= THERMAL_SEVERE ->
-            "Device is too hot (SEVERE). Waiting for it to cool down."
+            "기기 온도가 높습니다(SEVERE). 식을 때까지 자동으로 다시 확인합니다."
         else -> null
     }
 
     /** The preflight verdict with the method that produced it: a static-table pass is weaker evidence than an exact query. */
     fun verdictLine(compatibility: Compatibility): String =
-        if (compatibility.supported) "✓ Can run on this camera (${compatibility.method})"
-        else "✗ Cannot run (${compatibility.method})"
+        if (compatibility.supported) "✓ 이 카메라에서 실행 가능 (${compatibility.method})"
+        else "✗ 실행할 수 없음 (${compatibility.method})"
 
     /** "1080p30" from the profile's preview size and fps range; the raw strings when either cannot be parsed. */
     fun conditionLabel(profile: BenchmarkProfile): String {

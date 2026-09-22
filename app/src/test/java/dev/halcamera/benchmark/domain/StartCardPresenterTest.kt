@@ -96,8 +96,8 @@ class StartCardPresenterTest {
     }
 
     @Test fun theVerdictCarriesTheMethodThatProducedIt() {
-        assertEquals("✓ Can run on this camera (device_setup)", card().verdictLine)
-        assertEquals("✗ Cannot run (static_table)", card(compatibility = unsupported).verdictLine)
+        assertEquals("✓ 이 카메라에서 실행 가능 (device_setup)", card().verdictLine)
+        assertEquals("✗ 실행할 수 없음 (static_table)", card(compatibility = unsupported).verdictLine)
     }
 
     @Test fun anUnparsableProfileFallsBackToItsRawStrings() {

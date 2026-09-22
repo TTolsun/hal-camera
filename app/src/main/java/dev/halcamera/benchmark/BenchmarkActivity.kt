@@ -141,7 +141,7 @@ class BenchmarkActivity : ComponentActivity() {
     private var historyLoading = false
 
     private val requestCamera = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) enumerate() else { cardError = "Camera permission is required to run the benchmark."; render() }
+        if (granted) enumerate() else { cardError = "카메라 권한이 없어 벤치마크를 실행할 수 없습니다."; render() }
     }
 
     private val openHistory = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -215,7 +215,7 @@ class BenchmarkActivity : ComponentActivity() {
     private fun enumerate() {
         val manager = getSystemService(CameraManager::class.java)
         endpoints = LensRoles.checkOrder(CameraEndpointResolver(manager).resolve()).filter { it.independentlyOpenable }
-        if (endpoints.isEmpty()) { cardError = "No camera can be opened."; render(); return }
+        if (endpoints.isEmpty()) { cardError = "열 수 있는 카메라가 없습니다."; render(); return }
         // 8.1: the camera chosen on the LIVE screen is the benchmark subject.
         val wanted = intent.getStringExtra(EXTRA_CAMERA_ID)
         selected = endpoints.indexOfFirst { it.logicalCameraId == wanted }.takeIf { it >= 0 } ?: 0
@@ -296,7 +296,7 @@ class BenchmarkActivity : ComponentActivity() {
                 LinearLayout.LayoutParams(0, dp(48), 1f))
             row.addView(Look.ghostButton(this, "Settings", dark = true) {}.apply {
                 setOnClickListener { openSettings(it) }
-                contentDescription = "Benchmark settings, profiling data limit ${RunRetention.label(settings.runLimit)}"
+                contentDescription = "벤치마크 설정, profiling data 한도 ${RunRetention.label(settings.runLimit)}"
             }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
             actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
@@ -325,7 +325,7 @@ class BenchmarkActivity : ComponentActivity() {
                 val deleted = prune()
                 main.post {
                     if (destroyed) return@post
-                    val suffix = if (deleted == 0) "" else " · deleted $deleted old runs"
+                    val suffix = if (deleted == 0) "" else " · 오래된 run ${deleted}개 삭제"
                     android.widget.Toast.makeText(
                         this, "Profiling data limit: ${RunRetention.label(settings.runLimit)}$suffix",
                         android.widget.Toast.LENGTH_SHORT
@@ -350,12 +350,12 @@ class BenchmarkActivity : ComponentActivity() {
         lastRun = null; lastFile = null
         historyLoading = true
         screen = Screen.RESULT
-        lastSummary = "Reading the stored run…"
+        lastSummary = "실행 기록을 읽는 중입니다."
         render()
         io.execute {
             val result = runCatching {
-                val run = report.read(store.file(id)) ?: error(report.lastReadError ?: "Cannot read the run.")
-                require(run.runId == id) { "Run ID and file name differ." }
+                val run = report.read(store.file(id)) ?: error(report.lastReadError ?: "실행을 읽을 수 없습니다.")
+                require(run.runId == id) { "실행 ID와 파일명이 다릅니다." }
                 val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
                 val base = baseline ?: baselines.reference(run)
                 val to = if (baseline != null) ComparedTo.BASELINE else if (base != null) ComparedTo.PREVIOUS else ComparedTo.NONE
@@ -371,7 +371,7 @@ class BenchmarkActivity : ComponentActivity() {
                 }
             }
             result.exceptionOrNull()?.let { error -> main.post {
-                if (!destroyed) { historyLoading = false; lastSummary = error.message ?: "Cannot read the run."; render() }
+                if (!destroyed) { historyLoading = false; lastSummary = error.message ?: "실행을 읽을 수 없습니다."; render() }
             } }
         }
     }
@@ -384,15 +384,15 @@ class BenchmarkActivity : ComponentActivity() {
         val state = startCard
         card.addView(Look.text(this, "Benchmark", 19, Look.onDark, bold = true))
         if (state == null) {
-            card.addView(Look.text(this, cardError ?: "Checking cameras…", 13, Look.onDarkMuted), lp(top = 10))
+            card.addView(Look.text(this, cardError ?: "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted), lp(top = 10))
             content.addView(card)
-            actions.addView(IconButton(this, R.drawable.ic_action_close, "Close benchmark") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
+            actions.addView(IconButton(this, R.drawable.ic_action_close, "벤치마크 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
             return
         }
         card.addView(Look.text(this, state.titleLine, 13, Look.onDarkMuted), lp(top = 6))
         // What the feature does and what the run needs, before any jargon: the profile id and the preflight
         // verdict move into the Details fold below.
-        card.addView(Look.text(this, "Benchmarks the camera.", 15, Look.onDark, bold = true), lp(top = 12))
+        card.addView(Look.text(this, "카메라를 벤치마킹합니다.", 15, Look.onDark, bold = true), lp(top = 12))
         card.addView(Look.text(this, "${state.durationLine}\n${state.detailLine}", 13, Look.onDarkMuted), lp(top = 4))
         card.addView(statusChips(), lp(top = 14))
         state.notices.forEach { card.addView(Look.text(this, "· $it", 12, Look.statusWarn), lp(top = 8)) }
@@ -422,11 +422,11 @@ class BenchmarkActivity : ComponentActivity() {
             savedLabels.visibility = if (!labelsExpanded && hasLabels) View.VISIBLE else View.GONE
             card.addView(savedLabels, lp(top = 4))
             fields.addView(Look.text(this, "Build", 12, Look.onDarkMuted), lp(top = 10))
-            buildInput = input(draft.subjectBuildLabel).also { it.contentDescription = "Build under test"; fields.addView(it, lp(top = 4)) }
+            buildInput = input(draft.subjectBuildLabel).also { it.contentDescription = "측정 대상 빌드"; fields.addView(it, lp(top = 4)) }
             fields.addView(Look.text(this, "Commit", 12, Look.onDarkMuted), lp(top = 10))
-            commitInput = input(draft.subjectCommit).also { it.contentDescription = "Commit under test"; fields.addView(it, lp(top = 4)) }
+            commitInput = input(draft.subjectCommit).also { it.contentDescription = "측정 대상 커밋"; fields.addView(it, lp(top = 4)) }
             fields.addView(Look.text(this, "Note", 12, Look.onDarkMuted), lp(top = 10))
-            noteInput = input(draft.note).also { it.contentDescription = "Run note"; fields.addView(it, lp(top = 4)) }
+            noteInput = input(draft.note).also { it.contentDescription = "실행 메모"; fields.addView(it, lp(top = 4)) }
             fields.visibility = if (labelsExpanded) View.VISIBLE else View.GONE
             card.addView(fields)
         } else {
@@ -435,13 +435,13 @@ class BenchmarkActivity : ComponentActivity() {
         content.addView(card)
 
         val row = Look.row(this)
-        val cameraLabel = endpoints.getOrNull(selected)?.let { "${roleText(it.role)} · ID ${it.logicalCameraId} ▾" } ?: "No camera"
+        val cameraLabel = endpoints.getOrNull(selected)?.let { "${roleText(it.role)} · ID ${it.logicalCameraId} ▾" } ?: "카메라 없음"
         row.addView(Look.ghostButton(this, cameraLabel, dark = true) {}.apply {
             setOnClickListener { selectCamera(it) }
             isEnabled = endpoints.isNotEmpty()
-            contentDescription = "Benchmark camera, current $cameraLabel"
+            contentDescription = "벤치마크 카메라 선택, 현재 $cameraLabel"
         }, LinearLayout.LayoutParams(0, dp(52), 1f))
-        row.addView(IconButton(this, R.drawable.ic_action_close, "Close benchmark") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
+        row.addView(IconButton(this, R.drawable.ic_action_close, "벤치마크 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
         actions.addView(row)
         if (state.canStart) {
             actions.addView(Look.primaryButton(this, "Start benchmark") { begin() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
@@ -508,7 +508,7 @@ class BenchmarkActivity : ComponentActivity() {
         if (run == null) {
             val card = Look.card(this, dark = true)
             card.addView(Look.text(this, "Benchmark result", 19, Look.onDark, bold = true))
-            card.addView(Look.text(this, lastSummary.ifBlank { "No result was produced." }, 12, Look.onDarkMuted, mono = true), lp(top = 10))
+            card.addView(Look.text(this, lastSummary.ifBlank { "결과를 만들지 못했습니다." }, 12, Look.onDarkMuted, mono = true), lp(top = 10))
             content.addView(card)
             if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "New run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)))
             return
@@ -556,8 +556,8 @@ class BenchmarkActivity : ComponentActivity() {
             metricsCard.addView(MeterView(this, k.fraction.toFloat(), k.baseFraction?.toFloat(), k.tone == Tone.BAD), lp(top = 6))
         }
         if (keys.any { it.baseFraction != null }) {
-            val tickName = if (comparedTo == ComparedTo.BASELINE) "baseline" else "previous run"
-            metricsCard.addView(Look.text(this, "Bar = this run · tick = $tickName", 11, Look.onDarkMuted), lp(top = 10))
+            val tickName = if (comparedTo == ComparedTo.BASELINE) "baseline" else "이전 run"
+            metricsCard.addView(Look.text(this, "막대 = 이번 run · 눈금 = $tickName", 11, Look.onDarkMuted), lp(top = 10))
         }
         val regressed = view.sections.flatMap { it.rows }.filter { it.marker == "▲" }
         regressed.forEach { metricsCard.addView(MetricRows.result(this, it)) }
@@ -598,7 +598,7 @@ class BenchmarkActivity : ComponentActivity() {
         val cmp = comparison
         val card = Look.card(this, dark = true)
         if (run == null || base == null || cmp == null) {
-            card.addView(Look.text(this, "No run to compare.", 13, Look.onDarkMuted), lp(top = 2))
+            card.addView(Look.text(this, "비교할 run이 없습니다.", 13, Look.onDarkMuted), lp(top = 2))
         } else {
             val view = ComparePresenter.present(base, run, cmp, comparedTo, isBaseline)
             card.addView(Look.text(this, "Delta vs ${view.baseHeader.lowercase()}", 19, Look.onDark, bold = true))
@@ -643,7 +643,7 @@ class BenchmarkActivity : ComponentActivity() {
             card.addView(Look.ghostButton(this, "Copy comparison", dark = true) {}.also { copyOnTap(it, "compare", view.render()) }, lp(top = 8))
         }
         content.addView(card)
-        actions.addView(IconButton(this, R.drawable.ic_action_back, "Back to benchmark result") { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        actions.addView(IconButton(this, R.drawable.ic_action_back, "벤치마크 결과로 돌아가기") { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(dp(48), dp(48)))
     }
 
     // ---- run ----
@@ -841,7 +841,7 @@ class BenchmarkActivity : ComponentActivity() {
                 main.post {
                     if (!destroyed) {
                         lastRun = null; lastFile = null
-                        lastSummary = error.message ?: "Saving the run JSON failed"
+                        lastSummary = error.message ?: "run JSON 저장에 실패했습니다"
                         screen = Screen.RESULT; render()
                     }
                 }
@@ -853,11 +853,11 @@ class BenchmarkActivity : ComponentActivity() {
 
     /** The measurement facts the result table does not show: sample counts, flags and the file the run went to. */
     private fun summary(run: BenchmarkRun, result: BenchmarkRunner.Result, file: File?): String = buildString {
-        append(file?.absolutePath ?: "Saving the run JSON failed")
+        append(file?.absolutePath ?: "run JSON 저장에 실패했습니다")
         append("\nlaunch n=${result.validLaunchSamples}/${profile.expectedLaunchSamples}")
         append(" · still n=${result.validStillSamples}/${profile.expectedStillSamples}")
         append(" · flags=${run.validity.flags.joinToString(",").ifEmpty { "none" }}")
-        result.aborted?.let { append("\nAborted ($it)") }
+        result.aborted?.let { append("\n중단됨 ($it)") }
         result.hardFailure?.let { append("\nhard failure: $it") }
     }
 
@@ -871,7 +871,7 @@ class BenchmarkActivity : ComponentActivity() {
         io.execute {
             try {
                 store.index()
-                check(store.lastIndexError == null) { "Cannot read the baseline index, so it was not changed." }
+                check(store.lastIndexError == null) { "Baseline 파일을 읽을 수 없어 변경할 수 없습니다." }
                 baselines.toggle(run)
                 val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
                 val base = baseline ?: baselines.reference(run)
@@ -890,7 +890,7 @@ class BenchmarkActivity : ComponentActivity() {
                 }
             } catch (e: Exception) {
                 main.post {
-                    if (!destroyed) android.widget.Toast.makeText(this, e.message ?: "Changing the baseline failed.", android.widget.Toast.LENGTH_LONG).show()
+                    if (!destroyed) android.widget.Toast.makeText(this, e.message ?: "Baseline 변경에 실패했습니다.", android.widget.Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -987,7 +987,7 @@ class BenchmarkActivity : ComponentActivity() {
             ?.setPrimaryClip(ClipData.newPlainText(label, value)) ?: return
         // Android 13 and above shows its own copy confirmation, so a second toast would just repeat it.
         if (Build.VERSION.SDK_INT < 33) {
-            android.widget.Toast.makeText(this, "Copied", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(this, "복사했습니다", android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -997,7 +997,7 @@ class BenchmarkActivity : ComponentActivity() {
             type = "application/json"; putExtra(Intent.EXTRA_STREAM, uri)
             clipData = ClipData.newRawUri("benchmark", uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }, "Share run JSON"))
+        }, "run JSON 공유"))
     }
 
     private fun roleText(r: LensRole) = when (r) {
