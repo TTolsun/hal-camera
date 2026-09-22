@@ -6,6 +6,7 @@ kind: nested-class
 title: benchmark
 children:
   - benchmark-evaluator
+  - benchmark-screen
   - benchmark-model
   - benchmark-profile
   - benchmark-runner
@@ -13,6 +14,7 @@ children:
   - comparison
   - metric-info
   - regression-rules
+  - result-presentation
   - run-assembler
   - run-validity
   - score-composer

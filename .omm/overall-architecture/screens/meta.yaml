@@ -6,6 +6,7 @@ kind: nested-class
 title: screens
 children:
   - benchmark-screen
+  - benchmark-start
   - cts-screen
   - expert-screen
   - gallery-screen

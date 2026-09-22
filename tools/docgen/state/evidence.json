@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "67c93f13f6734c43",
-        "modelHash": "5f30c0b6eb680437",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "codeHash": "aef3a1c5b4b39999",
+        "modelHash": "e224b7a272f66296",
+        "at": "2026-09-22",
+        "commit": "e1b8fa0",
+        "reviewer": "Claude (benchmark UX redesign)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "c10a957412cca259",
+        "codeHash": "b907aa4522527576",
         "modelHash": "f01086c08aa7e51a",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "at": "2026-09-22",
+        "commit": "e1b8fa0",
+        "reviewer": "Claude (benchmark UX redesign)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "d7955960cb729767",
+        "codeHash": "eed42dd006fd7907",
         "modelHash": "07ff2102a958cd31",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "at": "2026-09-22",
+        "commit": "e1b8fa0",
+        "reviewer": "Claude (benchmark UX redesign)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "4da23a2fc79b4fa9",
-        "modelHash": "bf9cf0d9397bcdec",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "codeHash": "563ccc5eb75ed7bb",
+        "modelHash": "6dfe8d339fab3e93",
+        "at": "2026-09-22",
+        "commit": "e1b8fa0",
+        "reviewer": "Claude (benchmark UX redesign)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "dc044b25f508e1f5",
-        "modelHash": "3e1e1d2a34c56382",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "codeHash": "ad094828fa90907d",
+        "modelHash": "7b042b4c9cc6572d",
+        "at": "2026-09-22",
+        "commit": "e1b8fa0",
+        "reviewer": "Claude (benchmark UX redesign)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "c10a957412cca259",
-        "modelHash": "cd460636addb011c",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "codeHash": "b907aa4522527576",
+        "modelHash": "188eec6b6cef2409",
+        "at": "2026-09-22",
+        "commit": "e1b8fa0",
+        "reviewer": "Claude (benchmark UX redesign)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "67c93f13f6734c43",
-        "modelHash": "c000bea1ae530b12",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "codeHash": "aef3a1c5b4b39999",
+        "modelHash": "31b07d680ec29549",
+        "at": "2026-09-22",
+        "commit": "e1b8fa0",
+        "reviewer": "Claude (benchmark UX redesign)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "67c93f13f6734c43",
-        "modelHash": "695e56e22fbc5732",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "codeHash": "aef3a1c5b4b39999",
+        "modelHash": "122abc97124fd757",
+        "at": "2026-09-22",
+        "commit": "e1b8fa0",
+        "reviewer": "Claude (benchmark UX redesign)"
       },
       "observed": {
         "state": "fresh"
