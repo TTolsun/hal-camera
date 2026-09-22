@@ -109,8 +109,10 @@ adb shell sh /data/local/tmp/halcam status
 adb shell content call --uri content://dev.halcamera.cli --method capture --extra camera:s:0
 adb shell content call --uri content://dev.halcamera.cli --method record.start --extra camera:s:0 --extra audio:b:false
 adb shell content call --uri content://dev.halcamera.cli --method record.stop
+adb shell content call --uri content://dev.halcamera.cli --method cts.run --arg custom:fast_on_off
 adb exec-out content read --uri content://dev.halcamera.cli/v1/status
 </code></pre>
+<p>CTS 항목만 <code>--extra</code>가 아니라 <code>--arg</code>로 전달합니다. <code>--extra</code>는 값을 <code>키:타입:값</code>으로 자르는데 suite 키에는 <code>custom:</code>이나 <code>vendored:</code> 접두어의 콜론이 들어 있어서, <code>content</code>가 앱에 닿기 전에 거부하기 때문입니다. 여러 항목은 쉼표로 이어 붙입니다.</p>
 <p>직접 제출한 명령은 접수 결과를 반환합니다. 응답의 <code>request_id</code>로 <code>/v1/requests/UUID</code>를 읽어 완료를 확인합니다. <code>--extra request_id:s:UUID</code>로 같은 ID를 재사용하면 중복 촬영을 막을 수 있고, 다른 인자로 같은 ID를 쓰면 <code>REQUEST_CONFLICT</code>가 됩니다. <code>timeout_ms:l:30000</code>으로 실행 제한을 지정합니다. 알 수 없는 인자와 잘못된 타입은 거부합니다.</p>
 <p>기존 Python 도구의 <code>submit</code>·<code>cancel</code> Base64 전송은 유지합니다. 지원 명령은 <code>/v1/hello</code>에서 확인합니다. <code>benchmark.run</code>은 더 이상 접수하지 않습니다.</p>
 <h2 lang="en">Optional Python client.</h2><p>기존 자동화에서 Python 도구가 필요하면 다음과 같이 설치합니다. 녹화와 프리뷰 종료는 위의 ADB 스크립트를 사용합니다.</p>

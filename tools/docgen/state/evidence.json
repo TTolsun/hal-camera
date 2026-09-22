@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "67c93f13f6734c43",
+        "codeHash": "3f23e190376fd86b",
         "modelHash": "5f30c0b6eb680437",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "at": "2026-09-22",
+        "commit": "e407276",
+        "reviewer": "Claude (user-delegated CLI fix review)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "c10a957412cca259",
+        "codeHash": "38cf78e47ace2d10",
         "modelHash": "f01086c08aa7e51a",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "at": "2026-09-22",
+        "commit": "e407276",
+        "reviewer": "Claude (user-delegated CLI fix review)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "d7955960cb729767",
+        "codeHash": "2c246aa30de6878f",
         "modelHash": "07ff2102a958cd31",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "at": "2026-09-22",
+        "commit": "e407276",
+        "reviewer": "Claude (user-delegated CLI fix review)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "4da23a2fc79b4fa9",
+        "codeHash": "39eb71db8d9d21fa",
         "modelHash": "bf9cf0d9397bcdec",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "at": "2026-09-22",
+        "commit": "e407276",
+        "reviewer": "Claude (user-delegated CLI fix review)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "dc044b25f508e1f5",
+        "codeHash": "db52d748e557b5a2",
         "modelHash": "3e1e1d2a34c56382",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "at": "2026-09-22",
+        "commit": "e407276",
+        "reviewer": "Claude (user-delegated CLI fix review)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "c10a957412cca259",
+        "codeHash": "38cf78e47ace2d10",
         "modelHash": "cd460636addb011c",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "at": "2026-09-22",
+        "commit": "e407276",
+        "reviewer": "Claude (user-delegated CLI fix review)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "67c93f13f6734c43",
+        "codeHash": "3f23e190376fd86b",
         "modelHash": "c000bea1ae530b12",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "at": "2026-09-22",
+        "commit": "e407276",
+        "reviewer": "Claude (user-delegated CLI fix review)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "67c93f13f6734c43",
+        "codeHash": "3f23e190376fd86b",
         "modelHash": "695e56e22fbc5732",
-        "at": "2026-09-20",
-        "commit": "9083094",
-        "reviewer": "Codex (user-delegated release review)"
+        "at": "2026-09-22",
+        "commit": "e407276",
+        "reviewer": "Claude (user-delegated CLI fix review)"
       },
       "observed": {
         "state": "fresh"
