@@ -25,6 +25,17 @@ data class CameraProbeEntry(
     val key: String get() = physicalOf?.let { "$it.$cameraId" } ?: cameraId
 }
 
+/**
+ * The one line that names a camera in the picker and in the exported TXT: the shared label, then PROBE's own
+ * additions. Pure so the composition is testable — [CameraProbeReader] needs a CameraManager and has no JVM test,
+ * and that is how a second id prefix survived here long enough to read "0 · Camera · 0 (Wide · Rear)".
+ */
+object ProbeTitle {
+    fun of(cameraKey: String, role: LensRole, facing: Int?, physical: Boolean, hardwareLevel: String?): String =
+        listOfNotNull(CameraLabel.full(cameraKey, role, facing), if (physical) "physical" else null, hardwareLevel)
+            .joinToString(" · ")
+}
+
 data class CameraProbeSnapshot(
     /** ISO-8601 wall-clock time; the probe has no elapsedRealtime domain because nothing is measured. */
     val capturedAt: String,

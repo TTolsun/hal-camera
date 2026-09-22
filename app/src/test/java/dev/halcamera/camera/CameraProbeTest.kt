@@ -27,6 +27,23 @@ class CameraProbeTest {
     )
 
     @Test
+    fun `the picker line opens with the shared label and never repeats the id`() {
+        assertEquals(
+            "Camera · 0 (Wide · Rear) · LEVEL_3",
+            ProbeTitle.of("0", LensRole.MAIN, CameraLabel.FACING_BACK, physical = false, hardwareLevel = "LEVEL_3")
+        )
+        assertEquals(
+            "Camera · 0.3 (Tele · Rear) · physical · LIMITED",
+            ProbeTitle.of("0.3", LensRole.TELE, CameraLabel.FACING_BACK, physical = true, hardwareLevel = "LIMITED")
+        )
+        // An unreadable hardware level drops out rather than printing an empty trailing segment.
+        assertEquals(
+            "Camera · 1 (Front)",
+            ProbeTitle.of("1", LensRole.FRONT, CameraLabel.FACING_FRONT, physical = false, hardwareLevel = null)
+        )
+    }
+
+    @Test
     fun `physical camera key is prefixed with its logical camera`() {
         assertEquals("0", rear.key)
         assertEquals("0.3", tele.key)

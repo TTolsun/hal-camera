@@ -76,7 +76,7 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
         // hardware level and the physical marker are PROBE's own additions and follow the parenthesis.
         val key = physicalOf?.let { "$it.$id" } ?: id
         val role = roles[key] ?: LensRole.UNKNOWN
-        val title = listOfNotNull(CameraLabel.full(key, role, facing), if (physicalOf != null) "physical" else null, level).joinToString(" · ")
+        val title = ProbeTitle.of(key, role, facing, physical = physicalOf != null, hardwareLevel = level)
         val map = c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
         val sections = ArrayList<ProbeSection>()
         sections += guarded("Identity") { identity(id, physicalOf, c) }
@@ -102,7 +102,8 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
             sections += ProbeSection("Streams", listOf(ProbeRow("!", "SCALER_STREAM_CONFIGURATION_MAP is null")))
         }
         sections += guarded("All characteristics") { rawDump(c) }
-        return CameraProbeEntry(id, physicalOf, "$id · $title", sections)
+        // No id prefix: the label already opens with the key, and prefixing it again read "0 · Camera · 0 (...)".
+        return CameraProbeEntry(id, physicalOf, title, sections)
     }
 
     private fun guarded(title: String, rows: () -> List<ProbeRow>): ProbeSection =
