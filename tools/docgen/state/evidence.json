@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "55f8aafb276e2429",
-        "modelHash": "65f0967554d5e7a7",
+        "codeHash": "7124aadad464f11a",
+        "modelHash": "745d6f85e3bab272",
         "at": "2026-09-22",
-        "commit": "c813277",
-        "reviewer": "Claude (history rows)"
+        "commit": "7d1a8c3",
+        "reviewer": "Claude (benchmark UI polish)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "d50a31d90901246f",
-        "modelHash": "6fb4e0e00d66213d",
+        "codeHash": "7f591acb76f3b5db",
+        "modelHash": "5e02bdcde9bb7116",
         "at": "2026-09-22",
-        "commit": "c813277",
-        "reviewer": "Claude (history rows)"
+        "commit": "7d1a8c3",
+        "reviewer": "Claude (benchmark UI polish)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "3d4d72a103215e10",
+        "codeHash": "db10cc428840c4c0",
         "modelHash": "07ff2102a958cd31",
         "at": "2026-09-22",
-        "commit": "c813277",
-        "reviewer": "Claude (history rows)"
+        "commit": "7d1a8c3",
+        "reviewer": "Claude (benchmark UI polish)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8bc318b1bb012f2c",
-        "modelHash": "463fd1d7e513e4ce",
+        "codeHash": "b9344eed2996576b",
+        "modelHash": "9db92647bef6450f",
         "at": "2026-09-22",
-        "commit": "c813277",
-        "reviewer": "Claude (history rows)"
+        "commit": "7d1a8c3",
+        "reviewer": "Claude (benchmark UI polish)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "4d89174dd341a8df",
-        "modelHash": "7e933807b18e68c0",
+        "codeHash": "2749e9e129893bf1",
+        "modelHash": "45f0e427b531a6d4",
         "at": "2026-09-22",
-        "commit": "c813277",
-        "reviewer": "Claude (history rows)"
+        "commit": "7d1a8c3",
+        "reviewer": "Claude (benchmark UI polish)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "d50a31d90901246f",
-        "modelHash": "4ce0a5938eb7fd3e",
+        "codeHash": "7f591acb76f3b5db",
+        "modelHash": "5b4e1667d4fa57b9",
         "at": "2026-09-22",
-        "commit": "c813277",
-        "reviewer": "Claude (history rows)"
+        "commit": "7d1a8c3",
+        "reviewer": "Claude (benchmark UI polish)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "55f8aafb276e2429",
-        "modelHash": "c2b573fb83195c18",
+        "codeHash": "7124aadad464f11a",
+        "modelHash": "8d923519c6ef9d72",
         "at": "2026-09-22",
-        "commit": "c813277",
-        "reviewer": "Claude (history rows)"
+        "commit": "7d1a8c3",
+        "reviewer": "Claude (benchmark UI polish)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "55f8aafb276e2429",
-        "modelHash": "0a3fbb941466ac9b",
+        "codeHash": "7124aadad464f11a",
+        "modelHash": "425fe00c7ce5f49a",
         "at": "2026-09-22",
-        "commit": "c813277",
-        "reviewer": "Claude (history rows)"
+        "commit": "7d1a8c3",
+        "reviewer": "Claude (benchmark UI polish)"
       },
       "observed": {
         "state": "fresh"
