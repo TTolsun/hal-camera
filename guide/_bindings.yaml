@@ -63,7 +63,6 @@ sources:
       benchmark/benchmark-screen:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
-          - app/src/main/java/dev/halcamera/ui/MetricBars.kt
       benchmark/benchmark-runner:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
@@ -314,9 +313,12 @@ sources:
           - app/src/main/java/dev/halcamera/ui/MetricRows.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/ComparePresenter.kt
-          - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
           - app/src/main/java/dev/halcamera/cli/LiveController.kt
           - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
+      rendered-screens/history-list:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
+          - app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt
       run-json:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/platform/DeviceInstance.kt

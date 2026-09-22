@@ -146,8 +146,8 @@ class HistoryActivity : ComponentActivity() {
             val regression = baseline?.let { RegressionDetector.compare(it, run).regressedCount } ?: 0
             val capture = run.metric("2.2")?.let { ResultPresenter.format(it, it.value) } ?: "—"
             val status = when {
-                baselineId == run.runId -> "★ baseline"
-                regression > 0 -> "▲ $regression"
+                baselineId == run.runId -> "★ Baseline"
+                regression > 0 -> "▲ $regression degraded"
                 else -> ""
             }
             val card = Look.card(this, dark = true)
@@ -155,21 +155,53 @@ class HistoryActivity : ComponentActivity() {
                 card.background = Look.cardBackground(this, Look.expertTile2, Look.primaryOnDark)
                 androidx.core.view.ViewCompat.setStateDescription(card, "비교 기준으로 선택됨")
             }
-            val label = listOf(
-                run.runId,
-                listOfNotNull(run.subject.subjectBuildLabel ?: "(subject 없음)", run.subject.subjectCommit).joinToString(" · "),
-                "${run.profile.id} · ${CameraLabel.full(run.endpoint)}",
-                "Capture $capture  $status",
-                ResultPresenter.eligibilityLine(run),
-                run.validity.flags.joinToString(" · ")
-            ).filter { it.isNotEmpty() }.joinToString("\n")
+            // Two lines, or three when a build label was typed: when the run happened and how it did, then
+            // the numbers. The run id, the profile and the raw validity flags live on the result screen this
+            // row opens.
+            val lines = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+            val head = Look.row(this)
+            head.addView(
+                // A long badge must not wrap the time onto a second line at a large font scale; the time is a
+                // fixed 16 characters, so letting it ellipsize is the right way to lose the argument.
+                Look.text(this, ResultPresenter.localTime(run.runId) ?: run.runId, 15, Look.onDark, bold = true).apply {
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                },
+                LinearLayout.LayoutParams(0, -2, 1f)
+            )
+            // One badge, on the headline row. A verdict outranks an eligibility note: a run that degraded is
+            // worth opening whether or not it also missed scoring, and the result screen carries both.
+            val badge = status.ifEmpty { ResultPresenter.shortStatus(run).orEmpty() }
+            if (badge.isNotEmpty()) {
+                val badgeColor = when {
+                    status.isEmpty() -> Look.statusWarn
+                    baselineId == run.runId -> Look.onDarkMuted
+                    else -> Look.statusFail
+                }
+                head.addView(Look.text(this, badge, 13, badgeColor, bold = true))
+            }
+            lines.addView(head)
+            run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() }?.let {
+                lines.addView(Look.text(this, it, 13, Look.onDarkMuted), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
+            }
+            val facts = "Capture $capture · ${CameraLabel.full(run.endpoint)}"
+            // Proportional, not monospace: nothing lines up between rows, and the mono advance pushed this
+            // line onto a second row behind the ⋮ button.
+            lines.addView(Look.text(this, facts, 13, Look.onDarkMuted), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
+
+            val label = listOfNotNull(
+                ResultPresenter.localTime(run.runId) ?: run.runId,
+                badge.takeIf { it.isNotEmpty() },
+                run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() },
+                facts
+            ).joinToString(" · ")
             val row = Look.row(this)
-            row.addView(Look.text(this, label, 14, Look.onDark, mono = true), LinearLayout.LayoutParams(0, -2, 1f))
+            row.addView(lines, LinearLayout.LayoutParams(0, -2, 1f))
             row.addView(Look.ghostButton(this, "⋮", dark = true) { if (!busy) menu(run) }.apply {
                 contentDescription = "${run.runId} 작업 메뉴"
                 setPadding(0, 0, 0, 0)
                 isEnabled = !busy
-            }, LinearLayout.LayoutParams(dp(48), dp(48)))
+            }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
             card.addView(row)
             card.isFocusable = true
             card.contentDescription = label

@@ -31,6 +31,9 @@ data class KeyMetric(
     val baseFraction: Double?
 )
 
+/** One category of [KeyMetric] bars on the result screen. */
+data class MetricBarSection(val title: String, val bars: List<KeyMetric>)
+
 /**
  * One metric line of the result table. Empty strings are columns this metric does not have.
  * [note] says why a metric has no verdict, so an UNKNOWN row is never indistinguishable from a stable one.
@@ -105,7 +108,56 @@ object ResultPresenter {
     private val ORDER = listOf(Category.LAUNCH, Category.PREVIEW, Category.CAPTURE, Category.STABILITY)
 
     /** Category names as the screen prints them: first letter capital, the rest lower, no underscores. */
-    fun categoryLabel(category: Category): String = category.name.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
+    fun categoryLabel(category: Category): String =
+        if (category == Category.THREE_A) "3A"
+        else category.name.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
+
+    /**
+     * A validity flag in words. The codes are the stored contract and stay in the JSON and the CSV, but on
+     * screen "CHARGING" asks the reader to know the flag table to learn that the phone was plugged in.
+     */
+    fun flagText(code: String): String = when (code) {
+        "ABORTED" -> "실행 중단됨"
+        "HARD_FAILURE" -> "측정 실패"
+        "PROFILE_UNSUPPORTED" -> "이 카메라가 지원하지 않는 설정"
+        "INSUFFICIENT_SAMPLES" -> "표본 부족"
+        "CADENCE_NOT_FIXED" -> "프레임 간격이 고정되지 않음"
+        "THERMAL_HIGH" -> "발열 높음"
+        "POWER_SAVE_MODE" -> "절전 모드"
+        "CHARGING" -> "충전 중"
+        "BATTERY_LOW" -> "배터리 부족"
+        "PROFILE_DRAFT" -> "초안 profile"
+        "DEBUGGABLE_BUILD" -> "디버그 빌드"
+        "PREFLIGHT_MISMATCH" -> "사전 점검과 실제 설정이 다름"
+        "THERMAL_CHANGED" -> "실행 중 발열 단계 변함"
+        "LABEL_MISSING" -> "빌드 이름 없음"
+        else -> code
+    }
+
+    /**
+     * The run's identity as label and value pairs, for the fold under the metrics.
+     *
+     * It replaces seven sentences that repeated each other — the eligibility line named the same flags the
+     * summary listed again as codes — with one row per fact, so a reader can find the one they came for.
+     */
+    fun runFacts(run: BenchmarkRun, deviceName: String, endpointName: String, file: String?): List<Pair<String, String>> {
+        val launch = run.metric("1.1")?.sampleCount ?: 0
+        val still = run.metric("2.2")?.sampleCount ?: 0
+        val thermal = listOfNotNull(run.env.thermalStart, run.env.thermalMax, run.env.thermalEnd)
+        return listOfNotNull(
+            "기기" to deviceName,
+            "카메라" to "$endpointName · ID ${run.endpoint.logicalCameraId}",
+            localTime(run.runId)?.let { "측정 시각" to it },
+            run.device.buildDisplay.takeIf { it.isNotBlank() }?.let { "OS 빌드" to it },
+            "측정 대상" to (run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() } ?: "입력하지 않음"),
+            "표본" to "열기 ${launch}회 · 촬영 ${still}회",
+            thermal.takeIf { it.size == 3 }?.let { "발열 단계" to it.joinToString(" → ") },
+            run.validity.flags.takeIf { it.isNotEmpty() }?.let { flags ->
+                "참고 사항" to flags.joinToString(" · ") { flagText(it) }
+            },
+            file?.let { "파일" to it.substringAfterLast('/').substringAfterLast('\\') }
+        )
+    }
 
     fun scoreLine(run: BenchmarkRun): String? {
         if (run.scoringRuleVersion != ScoreComposer.VERSION || run.endpointScore == null) return null
@@ -195,32 +247,56 @@ object ResultPresenter {
         }
     }
 
-    /** The four metrics the card shows without unfolding anything: launch, first frame, capture, frame rate. */
-    val KEY_METRIC_IDS = listOf("1.1", "1.6", "2.2")
-
-    fun keyMetrics(run: BenchmarkRun, comparison: RunComparison?, comparedTo: ComparedTo): List<KeyMetric> {
+    /**
+     * Every measured metric as a bar, grouped by category, in catalog order.
+     *
+     * The result screen draws these instead of a table behind a fold: a number beside its baseline is the
+     * question the screen exists to answer, and a row of digits answers it worse than a bar does. A metric the
+     * run did not measure is left out rather than drawn as an empty bar.
+     */
+    fun metricBars(run: BenchmarkRun, comparison: RunComparison?, comparedTo: ComparedTo): List<MetricBarSection> {
         val withDelta = comparedTo != ComparedTo.NONE
-        val rows = KEY_METRIC_IDS.mapNotNull { id ->
-            val metric = run.metric(id) ?: return@mapNotNull null
-            val label = when (id) {
-                "1.1" -> "Camera open"
-                "1.6" -> "First frame"
-                "2.2" -> "Still capture"
-                else -> BenchmarkMetricCatalog.info(id)?.short ?: id
+        return (ORDER + Category.THREE_A).mapNotNull { category ->
+            val measured = BenchmarkMetricCatalog.ids.mapNotNull { id ->
+                val info = BenchmarkMetricCatalog.info(id) ?: return@mapNotNull null
+                if (info.category != category) return@mapNotNull null
+                val metric = run.metric(id) ?: return@mapNotNull null
+                val cmp = comparison?.metric(id)
+                // A timed-out 3A metric stores the observation window as its value (plan chapter 13), so a bar
+                // would compare a window against a convergence. It keeps its row and says so instead.
+                if (metric.timeout) {
+                    KeyMetric(info.short, "timeout", "—", null, Tone.NEUTRAL, 0.0, null)
+                } else {
+                    keyMetric(info.short, statLabel(metric, info), metric.value, cmp?.baselineValue, info.unit, cmp, withDelta)
+                }
             }
-            val cmp = comparison?.metric(id)
-            keyMetric(label, "median", metric.value, cmp?.baselineValue, "ms", cmp, withDelta, lowerIsBetter = true)
+            // Frame rate leads the preview section: it is H.1 turned upside down, and "29.8 fps" answers the
+            // question the interval only implies. The verdict still belongs to H.1, whose row follows it.
+            val bars = if (category == Category.PREVIEW) listOfNotNull(frameRate(run, comparison, withDelta)) + measured else measured
+            if (bars.isEmpty()) null else MetricBarSection(categoryLabel(category), bars)
         }
-        // Frame rate is H.1 (preview interval) turned upside down, because "29.8 fps" answers the question the
-        // interval only implies. The verdict still belongs to H.1: a longer interval is a lower rate.
-        val interval = run.metric("H.1")
-        val fps = interval?.value?.takeIf { it > 0 }?.let { 1000.0 / it }
-        val frameRate = if (fps == null) null else {
-            val cmp = comparison?.metric("H.1")
-            val baseFps = cmp?.baselineValue?.takeIf { it > 0 }?.let { 1000.0 / it }
-            keyMetric("Frame rate", "", fps, baseFps, "fps", cmp, withDelta, lowerIsBetter = false)
-        }
-        return rows + listOfNotNull(frameRate)
+    }
+
+    private fun frameRate(run: BenchmarkRun, comparison: RunComparison?, withDelta: Boolean): KeyMetric? {
+        val fps = run.metric("H.1")?.value?.takeIf { it > 0 }?.let { 1000.0 / it } ?: return null
+        val cmp = comparison?.metric("H.1")
+        val baseFps = cmp?.baselineValue?.takeIf { it > 0 }?.let { 1000.0 / it }
+        return keyMetric("Frame rate", "", fps, baseFps, "fps", cmp, withDelta)
+    }
+
+    /**
+     * What the shown number is, when that is not obvious from the metric's name.
+     *
+     * [BenchmarkMetric.value] is the median for every sampled latency ([BenchmarkEvaluator] sets
+     * `value = p50`), so that is what the bar and the number report. This is not [statHeader], which names
+     * the *second* statistic the old table put beside the median — reusing it here labelled a median "max".
+     */
+    private fun statLabel(metric: BenchmarkMetric, info: MetricInfo): String = when {
+        metric.unit == "count" -> ""
+        // "Interval p50" and "Interval p95" already say which statistic they are.
+        info.short.contains("p50") || info.short.contains("p95") -> ""
+        metric.p50 == null -> ""
+        else -> "median"
     }
 
     private fun keyMetric(
@@ -230,8 +306,7 @@ object ResultPresenter {
         base: Double?,
         unit: String,
         cmp: MetricComparison?,
-        withDelta: Boolean,
-        lowerIsBetter: Boolean
+        withDelta: Boolean
     ): KeyMetric? {
         if (value == null) return null
         // One shared scale per row: the larger of the two values sits at 80% of the bar, so the tick and the
@@ -240,8 +315,12 @@ object ResultPresenter {
         val scale = (maxOf(value, base ?: value) / 0.8).takeIf { it > 0 } ?: 1.0
         val delta = if (!withDelta || base == null) null else {
             val d = value - base
-            val text = if (unit == "fps") String.format(Locale.US, "%+.1f", d) else String.format(Locale.US, "%+.0f", d)
-            "$text $unit"
+            when (unit) {
+                "fps" -> String.format(Locale.US, "%+.1f fps", d)
+                // A count difference is already the whole story, and "+3 count" reads as a unit nobody uses.
+                "count" -> String.format(Locale.US, "%+.0f", d)
+                else -> String.format(Locale.US, "%+.0f %s", d, unit)
+            }
         }
         val tone = when {
             !withDelta || cmp == null -> Tone.NEUTRAL
@@ -252,7 +331,12 @@ object ResultPresenter {
         return KeyMetric(
             label = label,
             statLabel = statLabel,
-            valueText = if (unit == "fps") String.format(Locale.US, "%.1f fps", value) else String.format(Locale.US, "%.0f ms", value),
+            valueText = when (unit) {
+                "fps" -> String.format(Locale.US, "%.1f fps", value)
+                "count" -> String.format(Locale.US, "%.0f", value)
+                "ms" -> String.format(Locale.US, "%.0f ms", value)
+                else -> String.format(Locale.US, "%.0f %s", value, unit)
+            },
             deltaText = delta,
             tone = tone,
             fraction = (value / scale).coerceIn(0.0, 1.0),
@@ -266,6 +350,18 @@ object ResultPresenter {
      * The three eligibility steps of 5.3 in one line. The blocking flags are named because "비교 불가" alone does
      * not tell the developer whether to re-run in a cooler state or to fix the measurement.
      */
+    /**
+     * The eligibility of a run in two or three words, for the Results list. The full line names the blocking
+     * flags, which is what the result screen needs; a list row only has to say whether this run is worth
+     * opening, so a clean run gets no badge at all.
+     */
+    fun shortStatus(run: BenchmarkRun): String? = when {
+        !run.validity.measurementValid -> "측정 무효"
+        !run.validity.comparisonEligible -> "비교 불가"
+        !run.validity.scoringEligible -> "점수 제외"
+        else -> null
+    }
+
     fun eligibilityLine(run: BenchmarkRun): String {
         val v = run.validity
         val flags = v.flags.mapNotNull { ValidityFlags.byCode(it) }
