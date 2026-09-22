@@ -86,7 +86,14 @@ CTS 항목만 `--arg`로 전달하고 `--extra cases:s:...`를 쓰지 않습니�
 | `CLI_DISABLED` | 앱의 **ADB CLI 허용** 스위치가 꺼져 있습니다. 사람이 앱에서 켜야 하며 adb로 켤 수 없습니다. |
 | `PERMISSION_REQUIRED` | 카메라 또는 마이크 권한이 없습니다. 앱에서 허용한 뒤 다시 실행합니다. |
 | `BUSY` | 화면이나 다른 CLI 요청이 작업을 소유하고 있습니다. 대기열이 없으므로 `status`로 확인하고 끝난 뒤 다시 제출합니다. `record stop`과 `cancel`은 실행 중에도 받습니다. |
+| `APP_NOT_FOREGROUND` | Live 화면이 앞에 없습니다. 프리뷰·사진·녹화·CTS는 Live를 요구하므로 `CliLaunchActivity`로 앱을 열고 다시 제출합니다. 준비 단계(accepted·preparing)에서 앱이 뒤로 물러나도 같은 코드로 실패합니다. |
+| `DEVICE_LOCKED` | 화면이 잠겨 있습니다. 사람이 잠금을 풀어야 하며 adb로 풀지 않습니다. |
+| `UNSUPPORTED_CAMERA` | `--camera`에 단독으로 열 수 없는 ID를 주었습니다. `cameras`에서 `selectable: true`인 논리 ID를 고릅니다. |
+| `NOT_RECORDING` | 멈출 CLI 녹화가 없습니다. `record start`가 먼저 성공했는지 `status`로 확인합니다. 화면에서 시작한 녹화는 CLI가 멈추지 않습니다. |
+| `RECORDING_INTERRUPTED` | `record stop` 없이 화면을 벗어나 녹화가 끝났습니다. 저장된 MP4가 있으면 `fetch`로 회수하고, 정상 종료와 구분해서 보고합니다. |
+| `EXECUTION_TIMEOUT` | 앱 실행 제한을 넘겨 요청이 failed로 끝났습니다. `--timeout 초`를 늘리거나 작업을 줄여 다시 제출합니다. |
 | `interrupted` | 앱 프로세스가 재시작되어 요청이 끊겼습니다. 자동으로 다시 실행되지 않으므로, 저장된 파일이 있으면 `fetch`로 회수하고 필요하면 새 요청을 제출합니다. |
+| `REQUEST_NOT_FOUND`, `ARTIFACT_EXPIRED` | 기록이 없거나 보존 기간이 지났습니다. 같은 결과를 회수할 방법이 없으므로 새로 실행합니다. |
 | `UNKNOWN_CASE` | CTS 키가 목록에 없습니다. `cts cases` 결과의 `key` 값을 그대로 씁니다. |
 | 응답이 비어 있거나 `Cannot reach HAL CAM` | APK가 설치되어 있지 않거나 provider에 닿지 못한 상태입니다. `adb devices`와 `/v1/hello`를 먼저 확인합니다. |
 

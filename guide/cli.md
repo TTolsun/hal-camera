@@ -58,7 +58,7 @@ adb shell sh /data/local/tmp/halcam status
 
 CTS 키는 `custom:fast_on_off`나 `vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording`과 같이 목록에 나온 값을 그대로 사용합니다. CTS 실행 제한은 기본 1,800초이며 최대 3,600초입니다. 사진·프리뷰·probe는 기본 30초입니다. Android 8–9에서 사진이나 영상을 저장할 때에는 저장소 권한도 필요합니다.
 
-녹화 준비에는 최대 30초를 기다립니다. 화면을 벗어나 녹화가 종료되면 정상적인 `record stop` 완료와 구분하여 오류를 기록합니다. 완료 기록은 최대 24시간·200개를 보관합니다. 프로세스가 종료되면 미완료 요청은 `interrupted`로 바뀌고 자동으로 재실행하지 않습니다. CLI는 Android 사용자 0을 대상으로 합니다.
+녹화 준비에는 최대 30초를 기다립니다. 멈출 CLI 녹화가 없을 때 `record stop`을 호출하면 `NOT_RECORDING`으로 거부합니다. 화면을 벗어나 녹화가 종료되면 `RECORDING_INTERRUPTED`로 기록하여 정상적인 `record stop` 완료와 구분합니다. 완료 기록은 최대 24시간·200개를 보관합니다. 프로세스가 종료되면 미완료 요청은 `interrupted`로 바뀌고 자동으로 재실행하지 않습니다. CLI는 Android 사용자 0을 대상으로 합니다.
 
 <h2 lang="en">Direct calls.</h2>
 

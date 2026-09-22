@@ -103,7 +103,7 @@ adb shell sh /data/local/tmp/halcam status
 </tbody></table>
 <p>화면에서 촬영·녹화·벤치마크가 실행 중이면 새 CLI 작업은 <code>BUSY</code>로 거부됩니다. CLI 작업 중에는 화면 조작이 제한됩니다. <code>record stop</code>과 <code>cancel</code>은 기존 작업을 제어하므로 실행 중에도 사용할 수 있습니다.</p>
 <p>CTS 키는 <code>custom:fast_on_off</code>나 <code>vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording</code>과 같이 목록에 나온 값을 그대로 사용합니다. CTS 실행 제한은 기본 1,800초이며 최대 3,600초입니다. 사진·프리뷰·probe는 기본 30초입니다. Android 8–9에서 사진이나 영상을 저장할 때에는 저장소 권한도 필요합니다.</p>
-<p>녹화 준비에는 최대 30초를 기다립니다. 화면을 벗어나 녹화가 종료되면 정상적인 <code>record stop</code> 완료와 구분하여 오류를 기록합니다. 완료 기록은 최대 24시간·200개를 보관합니다. 프로세스가 종료되면 미완료 요청은 <code>interrupted</code>로 바뀌고 자동으로 재실행하지 않습니다. CLI는 Android 사용자 0을 대상으로 합니다.</p>
+<p>녹화 준비에는 최대 30초를 기다립니다. 멈출 CLI 녹화가 없을 때 <code>record stop</code>을 호출하면 <code>NOT_RECORDING</code>으로 거부합니다. 화면을 벗어나 녹화가 종료되면 <code>RECORDING_INTERRUPTED</code>로 기록하여 정상적인 <code>record stop</code> 완료와 구분합니다. 완료 기록은 최대 24시간·200개를 보관합니다. 프로세스가 종료되면 미완료 요청은 <code>interrupted</code>로 바뀌고 자동으로 재실행하지 않습니다. CLI는 Android 사용자 0을 대상으로 합니다.</p>
 <h2 lang="en">Direct calls.</h2><p>스크립트 없이도 <code>content call</code>로 직접 호출할 수 있습니다. 응답의 <code>json</code> 값은 사람이 읽을 수 있는 JSON이며 Base64 변환은 필요하지 않습니다. 사진·프리뷰·녹화·CTS 실행 전에 Live 화면을 엽니다.</p>
 <pre><code class="language-sh">adb shell am start -W -n dev.halcamera/.cli.CliLaunchActivity
 adb shell content call --uri content://dev.halcamera.cli --method capture --extra camera:s:0
