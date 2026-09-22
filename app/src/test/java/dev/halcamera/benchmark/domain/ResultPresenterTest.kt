@@ -375,4 +375,59 @@ class ResultPresenterTest {
         assertEquals("비교 불가", ResultPresenter.shortStatus(run(thermalMax = 3, flags = listOf(ValidityFlags.THERMAL_HIGH))))
         assertEquals("측정 무효", ResultPresenter.shortStatus(run(flags = listOf(ValidityFlags.HARD_FAILURE))))
     }
+
+    // ---- every metric as a bar ----
+
+    @Test fun theShownNumberIsTheMedianAndSaysSo() {
+        // The value a sampled latency stores is its median (BenchmarkEvaluator sets value = p50), so the row
+        // must not borrow statHeader, which names the second statistic the old table put beside it.
+        val current = run(metrics = listOf(
+            launchMetric("1.1", 142.0, 161.0, n = 9),
+            launchMetric("2.2", 164.0, 190.0, n = 25),
+            windowMetric("H.1", 33.3),
+            countMetric("H.5", 0)
+        ))
+        val bars = ResultPresenter.metricBars(current, null, ComparedTo.NONE).flatMap { it.bars }
+        assertEquals("median", bars.first { it.label == "Open" }.statLabel)
+        assertEquals("median", bars.first { it.label == "Capture" }.statLabel)
+        // These two already name their statistic, and a count has none.
+        assertEquals("", bars.first { it.label == "Interval p50" }.statLabel)
+        assertEquals("", bars.first { it.label == "Stalls" }.statLabel)
+        assertEquals("0", bars.first { it.label == "Stalls" }.valueText)
+    }
+
+    @Test fun barsCoverEveryMeasuredMetricGroupedByCategory() {
+        val current = run(metrics = listOf(
+            launchMetric("1.1", 142.0, 161.0),
+            launchMetric("2.2", 164.0, 190.0),
+            windowMetric("H.1", 33.3)
+        ))
+        val sections = ResultPresenter.metricBars(current, null, ComparedTo.NONE)
+        assertEquals(listOf("Launch", "Preview", "Capture"), sections.map { it.title })
+        // A metric the run did not measure is left out rather than drawn as an empty bar.
+        assertEquals(1, sections.first { it.title == "Launch" }.bars.size)
+    }
+
+    @Test fun aTimedOutThreeAMetricGetsNoBar() {
+        val timedOut = metric("H.7", 1500.0).copy(timeout = true)
+        val bars = ResultPresenter.metricBars(run(metrics = listOf(timedOut)), null, ComparedTo.NONE).flatMap { it.bars }
+        val af = bars.single()
+        assertEquals("timeout", af.statLabel)
+        assertEquals("—", af.valueText)
+        assertEquals(0.0, af.fraction, 0.0)
+    }
+
+    @Test fun runFactsNameFlagsInWordsAndDropTheFilePath() {
+        val charging = run(charging = true, flags = listOf(ValidityFlags.CHARGING, ValidityFlags.LABEL_MISSING))
+        val facts = ResultPresenter.runFacts(charging, "samsung SM-S936N", "Rear main", "/data/files/20260923-013403-785.json")
+        assertEquals("samsung SM-S936N", facts.first { it.first == "기기" }.second)
+        assertEquals("충전 중 · 빌드 이름 없음", facts.first { it.first == "참고 사항" }.second)
+        assertEquals("20260923-013403-785.json", facts.first { it.first == "파일" }.second)
+        assertEquals("SW42", facts.first { it.first == "측정 대상" }.second)
+
+        val unlabelled = run(subject = SubjectLabel())
+        val without = ResultPresenter.runFacts(unlabelled, "samsung SM-S936N", "Rear main", null)
+        assertEquals("입력하지 않음", without.first { it.first == "측정 대상" }.second)
+        assertTrue(without.none { it.first == "파일" })
+    }
 }
