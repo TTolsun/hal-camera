@@ -102,8 +102,6 @@ class BenchmarkActivity : ComponentActivity() {
     private var progressBar: TextView? = null
     private var progressStats: TextView? = null
     private var buildInput: EditText? = null
-    private var commitInput: EditText? = null
-    private var noteInput: EditText? = null
 
     private var screen = Screen.CARD
     private var endpoints: List<CameraEndpoint> = emptyList()
@@ -129,7 +127,6 @@ class BenchmarkActivity : ComponentActivity() {
     private var runSubject = SubjectLabel()
     /** What is currently typed into the card. Null until the fields are shown, when the last run's labels seed them. */
     private var draftSubject: SubjectLabel? = null
-    private var labelsExpanded = false
 
     private var lastRun: BenchmarkRun? = null
     private var lastFile: File? = null
@@ -397,40 +394,18 @@ class BenchmarkActivity : ComponentActivity() {
         card.addView(statusChips(), lp(top = 14))
         state.notices.forEach { card.addView(Look.text(this, "· $it", 12, Look.statusWarn), lp(top = 8)) }
         state.blockedReason?.let { card.addView(Look.text(this, it, 13, Look.statusFail, bold = true), lp(top = 10)) }
-        card.addView(Look.disclosure(this, "Details",
-            Look.text(this, "${state.profileLine}\n${state.verdictLine}", 12, Look.onDarkMuted, mono = true)), lp(top = 10))
 
-        // The fields stay while the device cools, so a label typed before the phone got hot is not lost.
+        // One label, not three. The build under test is the only one anybody typed; a commit and a note were
+        // extra fields to skip past, and the run JSON still carries all three for files written earlier.
         if (state.canStart || state.refreshable) {
             val draft = draftSubject ?: subjectPrefs.last()
-            val fields = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-            val hasLabels = listOf(draft.subjectBuildLabel, draft.subjectCommit, draft.note).any { !it.isNullOrBlank() }
-            val savedLabels = Look.text(this, "", 12, Look.onDarkMuted)
-            val toggle = Look.ghostButton(this, "", dark = true) {}.apply {
-                fun updateLabel() { text = if (labelsExpanded) "Hide build info ▴" else if (hasLabels) "Edit build info ▾" else "Add build info (optional) ▾" }
-                updateLabel()
-                setOnClickListener {
-                    labelsExpanded = !labelsExpanded
-                    fields.visibility = if (labelsExpanded) View.VISIBLE else View.GONE
-                    savedLabels.text = listOfNotNull(buildInput?.text?.toString()?.takeIf { it.isNotBlank() }, commitInput?.text?.toString()?.takeIf { it.isNotBlank() }, noteInput?.text?.toString()?.takeIf { it.isNotBlank() }).joinToString(" · ")
-                    savedLabels.visibility = if (!labelsExpanded && savedLabels.text.isNotBlank()) View.VISIBLE else View.GONE
-                    updateLabel()
-                }
+            buildInput = input(draft.subjectBuildLabel).also {
+                it.contentDescription = "측정 대상 빌드 이름"
+                it.hint = "Build (선택)"
+                card.addView(it, lp(top = 14))
             }
-            card.addView(toggle, lp(top = 14))
-            savedLabels.text = listOfNotNull(draft.subjectBuildLabel, draft.subjectCommit, draft.note).filter { it.isNotBlank() }.joinToString(" · ")
-            savedLabels.visibility = if (!labelsExpanded && hasLabels) View.VISIBLE else View.GONE
-            card.addView(savedLabels, lp(top = 4))
-            fields.addView(Look.text(this, "Build", 12, Look.onDarkMuted), lp(top = 10))
-            buildInput = input(draft.subjectBuildLabel).also { it.contentDescription = "측정 대상 빌드"; fields.addView(it, lp(top = 4)) }
-            fields.addView(Look.text(this, "Commit", 12, Look.onDarkMuted), lp(top = 10))
-            commitInput = input(draft.subjectCommit).also { it.contentDescription = "측정 대상 커밋"; fields.addView(it, lp(top = 4)) }
-            fields.addView(Look.text(this, "Note", 12, Look.onDarkMuted), lp(top = 10))
-            noteInput = input(draft.note).also { it.contentDescription = "실행 메모"; fields.addView(it, lp(top = 4)) }
-            fields.visibility = if (labelsExpanded) View.VISIBLE else View.GONE
-            card.addView(fields)
         } else {
-            buildInput = null; commitInput = null; noteInput = null
+            buildInput = null
         }
         content.addView(card)
 
@@ -482,7 +457,7 @@ class BenchmarkActivity : ComponentActivity() {
 
     /** Keeps what is typed across a re-render; the fields describe the build under test, not this card. */
     private fun captureDraft() {
-        if (buildInput == null && commitInput == null && noteInput == null) return
+        if (buildInput == null) return
         draftSubject = readSubject()
     }
 
@@ -573,7 +548,6 @@ class BenchmarkActivity : ComponentActivity() {
             details.addView(Look.text(this, it, 12, Look.onDarkMuted), lp(top = 8))
         }
         metricsCard.addView(Look.disclosure(this, "Run info · flags · file", details), lp(top = 4))
-        metricsCard.addView(Look.ghostButton(this, "Copy result", dark = true) {}.also { copyOnTap(it, "result", view.render()) }, lp(top = 8))
         content.addView(metricsCard, lp(top = 10))
 
         // Give the longer baseline action a full row to avoid truncation.
@@ -642,7 +616,6 @@ class BenchmarkActivity : ComponentActivity() {
                 details.addView(Look.text(this, it.trim().replace(Regex(" {2,}"), " · "), 12, Look.onDarkMuted), lp(top = 8))
             }
             card.addView(Look.disclosure(this, "Run info", details), lp(top = 10))
-            card.addView(Look.ghostButton(this, "Copy comparison", dark = true) {}.also { copyOnTap(it, "compare", view.render()) }, lp(top = 8))
         }
         content.addView(card)
         actions.addView(IconButton(this, R.drawable.ic_action_back, "벤치마크 결과로 돌아가기") { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(dp(48), dp(48)))
@@ -732,9 +705,9 @@ class BenchmarkActivity : ComponentActivity() {
         fun value(field: EditText?) = field?.text?.toString()?.trim()?.takeIf { it.isNotEmpty() }
         return SubjectLabel(
             subjectBuildLabel = value(buildInput),
-            subjectCommit = value(commitInput),
+            subjectCommit = previous.subjectCommit,
             subjectBranch = previous.subjectBranch,
-            note = value(noteInput)
+            note = null
         )
     }
 
@@ -968,30 +941,6 @@ class BenchmarkActivity : ComponentActivity() {
             isEnabled = enabled
             alpha = if (enabled) 1f else 0.4f
         }
-
-    /**
-     * Makes a read-only text block copyable. A run id, a file path and the result table are the things worth
-     * carrying to a PC, and reading them off the screen by hand is error-prone. A tap copies the whole block; a
-     * long press copies just the run JSON path when there is one.
-     */
-    private fun copyOnTap(view: TextView, label: String, fullText: String? = null): TextView = view.apply {
-        setOnClickListener { copy(label, fullText ?: text.toString()) }
-        setOnLongClickListener {
-            val path = lastFile?.absolutePath
-            if (path == null) copy(label, text.toString()) else copy("$label path", path)
-            true
-        }
-    }
-
-    private fun copy(label: String, value: String) {
-        if (value.isBlank()) return
-        getSystemService(android.content.ClipboardManager::class.java)
-            ?.setPrimaryClip(ClipData.newPlainText(label, value)) ?: return
-        // Android 13 and above shows its own copy confirmation, so a second toast would just repeat it.
-        if (Build.VERSION.SDK_INT < 33) {
-            android.widget.Toast.makeText(this, "복사했습니다", android.widget.Toast.LENGTH_SHORT).show()
-        }
-    }
 
     private fun share(file: File) {
         val uri = FileProvider.getUriForFile(this, "$packageName.files", file)

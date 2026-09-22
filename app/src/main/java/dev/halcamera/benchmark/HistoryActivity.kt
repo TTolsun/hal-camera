@@ -114,15 +114,8 @@ class HistoryActivity : ComponentActivity() {
             return
         }
         backButton("벤치마크로 돌아가기") { finish() }
-        button("반복 측정 비교 · JSON 가져오기") {
-            startActivity(Intent(this, ProfileComparisonActivity::class.java))
-        }
         button("필터 · ${filter.label} ▾") { anchor ->
             showSelectionPopup(anchor, RunFilter.values().map { it.label }, filter.ordinal) { filter = RunFilter.values()[it]; pageSize = 50; render() }
-        }
-        button("Profile · ${profileId ?: "전체"} ▾") { anchor ->
-            val values = (index.runs.map { it.profile.id } + listOfNotNull(profileId)).distinct().sorted()
-            showSelectionPopup(anchor, listOf("전체") + values, values.indexOf(profileId) + 1) { profileId = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
         button("Camera · ${endpointKey ?: "전체"} ▾") { anchor ->
             val values = (index.runs.map { it.endpoint.key } + listOfNotNull(endpointKey)).distinct().sorted()

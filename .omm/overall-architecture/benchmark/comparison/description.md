@@ -1,3 +1,3 @@
-benchmark/domain/RegressionDetector.kt, BaselineManager.kt, ReferenceResolver.kt, ResultPresenter.kt가 비교 조건, 기준 실행 선택, 결과 테이블 모델을 담당합니다. 비교는 측정값 두 개에서 별도로 계산합니다. BenchmarkActivity.finishRun과 toggleBaseline에서 기준 실행을 선택하고 RegressionDetector.compare를 호출합니다. renderResult와 renderCompare는 ResultPresenter 및 ComparePresenter의 모델을 줄바꿈 가능한 지표 행으로 표시합니다. 회귀 지표를 먼저 배치하고 전체 지표·실행 정보는 펼쳐 봅니다. 텍스트 복사는 별도 버튼으로 제공합니다.
+benchmark/domain/RegressionDetector.kt, BaselineManager.kt, ReferenceResolver.kt, StoreRunCatalog.kt가 비교 조건, 기준 실행 선택, 기준 실행 파일 읽기를 담당합니다. 비교는 저장된 판정을 읽지 않고 측정값 두 개에서 다시 계산합니다. BenchmarkActivity.finishRun과 toggleBaseline이 baseline 또는 이전 실행을 고른 뒤 RegressionDetector.compare를 호출하며, 결과·비교 화면의 표시 모델은 result-presentation 요소가 만듭니다.
 
-반복 묶음 비교는 ProfileComparison과 RepeatStatistics가 담당합니다. 전후 각 묶음에 하나의 기기·빌드를 요구하며 그룹 사이의 빌드 변경은 허용합니다. 독립 실행 확인 후 지표별 유효 실행이 각각 5개 이상일 때 양측 평균 차이 순열검정과 Bonferroni 보정을 수행합니다. 자료가 부족하거나 조건이 맞지 않으면 기술 통계와 제외 사유만 표시합니다. ProfileComparisonActivity는 A/B 선택 아래에 기기·설치 ID 앞부분·빌드·commit·실행 수를 요약하며 혼합 묶음과 중복 원본을 알립니다.
+비교 대상은 baseline과 이번 실행, 두 개뿐입니다. 여러 실행을 묶어 통계 검정을 수행하던 반복 측정 비교 화면은 0.13.0에서 제거했습니다. 다기기 분포 수집을 하지 않기로 결정하면서 그 화면의 용도가 사라졌기 때문입니다.

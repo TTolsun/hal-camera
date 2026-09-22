@@ -90,8 +90,6 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt
       benchmark/comparison:
         evidence:
-          - app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt
-          - app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/BaselineManager.kt
           - app/src/main/java/dev/halcamera/benchmark/platform/StoreRunCatalog.kt
@@ -141,7 +139,6 @@ sources:
           - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
       screens:
         evidence:
-          - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
           - app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt
           - app/src/main/AndroidManifest.xml
           - app/src/main/java/dev/halcamera/cli/LiveController.kt
@@ -322,8 +319,7 @@ sources:
           - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
       run-json:
         evidence:
-          - app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt
-          - app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt
+          - app/src/main/java/dev/halcamera/benchmark/platform/DeviceInstance.kt
           - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkModel.kt

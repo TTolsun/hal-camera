@@ -2,11 +2,6 @@
 based_on: [overall-architecture]
 confidence: code
 sources:
-  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt
-  - app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
   - app/src/main/java/dev/halcamera/cli/CliProvider.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
   - app/src/main/java/dev/halcamera/cli/CommandStore.kt
@@ -51,6 +46,3 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 명령은 동작 전에 저장하며 한 번에 하나의 변경 작업을 처리합니다. 사진·MP4 저장, CTS suite 보고서 쓰기를 마친 뒤 결과 파일을 등록합니다. 녹화 시작 응답과 최종 저장 완료를 구분하며, 종료 명령은 활성 녹화 요청을 제어하므로 BUSY 상태에서도 실행합니다. `cts.run`의 항목 키는 접수 시점에 카탈로그와 대조해 알 수 없는 키를 `UNKNOWN_CASE`로 거부하고, 마이크가 필요한 항목의 권한은 요청하지 않고 `PERMISSION_REQUIRED`로 끝냅니다. 프로세스가 종료된 미완료 요청은 재실행하지 않습니다. CLI 기록 정리와 원본 사진·동영상 삭제는 서로 다른 동작입니다. 벤치마크는 CLI 명령 집합에서 제외합니다.
 
-### 반복 측정 프로파일 비교
-
-반복 측정 검정의 표본은 독립 실행입니다. 지표마다 전후 각각 5회 이상이 필요하며 최대 50회씩 선택합니다. 평균 차이의 절댓값을 통계량으로 사용하는 양측 순열검정에 Bonferroni 보정을 적용하며 가족 유의수준은 0.05입니다. 통계적 유의성과 기존 실무 임계값 판정은 별도로 표시합니다. 표본 부족이나 유의차 미검출은 동등성의 증명이 아닙니다. raw.device_instance_id는 앱 설치 단위 UUID로, 구형 파일·재설치 자료의 동일 물리 기기 여부를 자동 보증하지 않습니다.

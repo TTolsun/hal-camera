@@ -2,11 +2,6 @@
 based_on: [data-flow]
 confidence: code
 sources:
-  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt
-  - app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt
-  - app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt
   - app/src/main/java/dev/halcamera/cli/CliProvider.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
   - tools/halcam/halcam/cli.py
@@ -61,7 +56,7 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 `RegressionDetector`는 두 실행의 측정 계약·endpoint·validity·환경 조건을 확인합니다. baseline 비교에서만 회귀 판정을 표시하며, 이전 실행이나 임의 선택 실행과의 비교는 변화량과 비교 불가 사유를 표시합니다. 단위가 다르면 각 단위를 유지하고 백분율을 표시하지 않습니다.
 
-결과 화면은 판정 한 줄을 먼저 표시합니다(`N metrics degraded`, `No degradation`, baseline이 없으면 `First run`). 그 아래에 핵심 지표 네 개(`Camera open`·`First frame`·`Still capture`·`Frame rate`)를 baseline 눈금이 있는 가로 막대로 그리고, 저하 판정이 붙은 나머지 행을 이어서 표시합니다. 전체 지표 표와 실행 정보·flag·파일 경로는 각각 `All metrics`, `Run info` 접힘 아래에 두며, 결과와 비교 텍스트는 복사 버튼으로 제공합니다. 비교 화면은 0 기준선 좌우로 변화율 막대를 그리는 delta 차트를 먼저 표시하고, 백분율이 없는 행(count·단위 불일치)은 글줄로 남깁니다. 벤치마크 화면은 라벨·버튼·지표명·판정 단어를 영어로 쓰고(판정은 `Regressed` 대신 `degraded`), 설명·안내·오류 문장은 한국어로 씁니다.
+결과 화면은 판정 한 줄을 먼저 표시합니다(`N metrics degraded`, `No degradation`, baseline이 없으면 `First run`). 그 아래에 핵심 지표 네 개(`Camera open`·`First frame`·`Still capture`·`Frame rate`)를 baseline 눈금이 있는 가로 막대로 그리고, 저하 판정이 붙은 나머지 행을 이어서 표시합니다. 전체 지표 표와 실행 정보·flag·파일 경로는 각각 `All metrics`, `Run info` 접힘 아래에 둡니다. 결과를 PC로 옮기는 경로는 `Export` 하나이며, 화면 텍스트를 클립보드로 복사하던 버튼은 제거했습니다. 비교 화면은 0 기준선 좌우로 변화율 막대를 그리는 delta 차트를 먼저 표시하고, 백분율이 없는 행(count·단위 불일치)은 글줄로 남깁니다. 벤치마크 화면은 라벨·버튼·지표명·판정 단어를 영어로 쓰고(판정은 `Regressed` 대신 `degraded`), 설명·안내·오류 문장은 한국어로 씁니다.
 
 Results의 행은 저장된 결과로 연결됩니다. `두 실행 비교`를 누르고 기준과 현재 실행을 차례로 고릅니다. 선택한 기준은 테두리로 표시하며 취소나 뒤로 가기로 선택을 해제합니다. 각 행의 `⋮` 메뉴 또는 길게 누르기로 baseline, 비교, JSON·CSV 내보내기, 삭제 작업을 선택합니다. 삭제 확인 후 파일을 삭제하고 해당 baseline 포인터를 정리합니다. 측정값이 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다.
 
@@ -105,6 +100,3 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 앱을 열 때는 투명한 `CliLaunchActivity`가 main thread에서 작업 상태를 다시 확인합니다. 실행 중인 작업이 있으면 Live로 전환하지 않습니다. 상태 조회는 `CommandStore`의 메모리 snapshot을 읽으며 파일 기록은 상태 전환 때만 수행합니다.
 
-### 반복 측정 프로파일 비교
-
-반복 측정 비교에서는 시스템 문서 선택기로 schema 3·4 JSON을 가져옵니다. 검증을 마친 원본만 files/profile-imports/<sha256>.json에 보관합니다. 전후 묶음의 선택 키와 확인 조건은 preferences에 저장하고, 분석 방법·원본 해시·제외 사유를 포함한 결과는 별도 텍스트 파일에 저장합니다. 기존 baseline 포인터와 로컬 실행 파일은 변경하지 않습니다. A/B 선택 아래에 기기·설치 ID 앞부분·빌드·commit·실행 수를 요약하고, 여러 기기·빌드나 같은 원본이 섞이면 경고합니다. 비교 조건과 기기 ID 설명은 펼쳐 봅니다.

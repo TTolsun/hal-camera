@@ -10,38 +10,13 @@ import java.util.UUID
 /** Device tests use real JSONObject and AtomicFile, with a deterministic clock and isolated files. */
 class CliStoreInstrumentation : Instrumentation() {
     private var exportReports = false
-    private var profileChecks = false
-    private var cleanupProfileHashes: Set<String>? = null
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
         exportReports = arguments?.getString("export_reports") == "true"
-        profileChecks = arguments?.getString("profile_checks") == "true"
-        cleanupProfileHashes = arguments?.getString("cleanup_profile_hashes")?.split(",")?.toSet()
         start()
     }
 
     override fun onStart() {
-        cleanupProfileHashes?.let { hashes ->
-            val library = dev.halcamera.benchmark.platform.ProfileLibrary(targetContext)
-            val fixtures = library.load().entries.filter { it.key.startsWith("import:") && it.sha256 in hashes &&
-                it.run.device.manufacturer == "Synthetic" && it.run.runId.startsWith("SYNTHETIC-") }
-            fixtures.forEach(library::deleteImported)
-            if (library.resultFile.isFile) {
-                val sources = Regex("sha256=([a-f0-9]{64})").findAll(library.resultFile.readText()).map { it.groupValues[1] }.toSet()
-                if (sources.isNotEmpty() && sources.all { it in hashes }) check(library.resultFile.delete())
-            }
-            finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "PROFILE_UI_FIXTURES_REMOVED=${fixtures.size}\n") })
-            return
-        }
-        if (profileChecks) {
-            try {
-                val passed = dev.halcamera.benchmark.ProfileImportChecks.run(targetContext)
-                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "PROFILE_IMPORT_CHECKS_PASSED=$passed\n") })
-            } catch (error: Throwable) {
-                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "PROFILE_IMPORT_CHECKS_FAILED=${error.stackTraceToString()}\n") })
-            }
-            return
-        }
         if (exportReports) {
             val store = dev.halcamera.benchmark.platform.BenchmarkStore(targetContext)
             val codec = dev.halcamera.benchmark.platform.BenchmarkReport(store)
