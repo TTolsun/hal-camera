@@ -58,7 +58,7 @@ adb shell sh /data/local/tmp/halcam status
 
 CTS 키는 `custom:fast_on_off`나 `vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording`과 같이 목록에 나온 값을 그대로 사용합니다. CTS 실행 제한은 기본 1,800초이며 최대 3,600초입니다. 사진·프리뷰·probe는 기본 30초입니다. Android 8–9에서 사진이나 영상을 저장할 때에는 저장소 권한도 필요합니다.
 
-녹화 준비에는 최대 30초를 기다립니다. 화면을 벗어나 녹화가 종료되면 정상적인 `record stop` 완료와 구분하여 오류를 기록합니다. 완료 기록은 최대 24시간·200개를 보관합니다. 프로세스가 종료되면 미완료 요청은 `interrupted`로 바뀌고 자동으로 재실행하지 않습니다. CLI는 Android 사용자 0을 대상으로 합니다.
+녹화 준비에는 최대 30초를 기다립니다. 멈출 CLI 녹화가 없을 때 `record stop`을 호출하면 `NOT_RECORDING`으로 거부합니다. 화면을 벗어나 녹화가 종료되면 `RECORDING_INTERRUPTED`로 기록하여 정상적인 `record stop` 완료와 구분합니다. 완료 기록은 최대 24시간·200개를 보관합니다. 프로세스가 종료되면 미완료 요청은 `interrupted`로 바뀌고 자동으로 재실행하지 않습니다. CLI는 Android 사용자 0을 대상으로 합니다.
 
 <h2 lang="en">Direct calls.</h2>
 
@@ -69,8 +69,11 @@ adb shell am start -W -n dev.halcamera/.cli.CliLaunchActivity
 adb shell content call --uri content://dev.halcamera.cli --method capture --extra camera:s:0
 adb shell content call --uri content://dev.halcamera.cli --method record.start --extra camera:s:0 --extra audio:b:false
 adb shell content call --uri content://dev.halcamera.cli --method record.stop
+adb shell content call --uri content://dev.halcamera.cli --method cts.run --arg custom:fast_on_off
 adb exec-out content read --uri content://dev.halcamera.cli/v1/status
 ```
+
+CTS 항목만 `--extra`가 아니라 `--arg`로 전달합니다. `--extra`는 값을 `키:타입:값`으로 자르는데 suite 키에는 `custom:`이나 `vendored:` 접두어의 콜론이 들어 있어서, `content`가 앱에 닿기 전에 거부하기 때문입니다. 여러 항목은 쉼표로 이어 붙입니다.
 
 직접 제출한 명령은 접수 결과를 반환합니다. 응답의 `request_id`로 `/v1/requests/UUID`를 읽어 완료를 확인합니다. `--extra request_id:s:UUID`로 같은 ID를 재사용하면 중복 촬영을 막을 수 있고, 다른 인자로 같은 ID를 쓰면 `REQUEST_CONFLICT`가 됩니다. `timeout_ms:l:30000`으로 실행 제한을 지정합니다. 알 수 없는 인자와 잘못된 타입은 거부합니다.
 
@@ -88,5 +91,7 @@ halcam --serial DEVICE probe --output ./probe --json
 ```
 
 Python 도구의 `--json`은 stdout에 JSON 하나를 출력하며, `--wait-timeout`은 PC에서 기다리는 시간만 제한합니다. ADB 스크립트는 진행 메시지와 요청별 결과를 출력하고 성공 시 0, 오류 시 1을 반환합니다. 실패하거나 취소된 요청에도 저장된 파일이 있으면 `fetch UUID`로 회수할 수 있습니다. 기계적으로 JSON만 처리하려면 직접 `content read`를 사용합니다.
+
+AI 코딩 에이전트에게 이 CLI를 맡기려면 저장소의 `skills/halcam-cli/SKILL.md`를 읽히십시오. 준비 절차와 오류 대응까지 실행 순서대로 정리되어 있으며, 사용법은 [Agents 가이드](coding-agents.md)에 있습니다.
 
 카메라 사양을 확인하려면 [Probe 가이드](probe.md)를 이어서 읽으세요.

@@ -162,7 +162,8 @@ if [ -n "$camera" ]; then
     set -- "$@" --extra "camera:s:$camera"
 fi
 [ -z "$audio" ] || set -- "$@" --extra "audio:b:false"
-[ -z "$cases" ] || set -- "$@" --extra "cases:s:$cases"
+# Suite keys hold colons, which --extra key:type:value cannot carry, so they travel as --arg.
+[ -z "$cases" ] || set -- "$@" --arg "$cases"
 if [ -n "$timeout" ]; then
     case "$timeout" in *[!0-9]*|'') die 'Timeout must be 1–3600 seconds' ;; esac
     timeout=$(echo "$timeout" | sed 's/^0*//')

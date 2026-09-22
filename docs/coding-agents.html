@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Design Documentation · HALCamera 개발자 가이드</title>
+  <title>Agents · HALCamera 개발자 가이드</title>
   <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
 </head>
@@ -17,53 +17,62 @@
       <a href="./probe.html">Probe</a>
       <a href="./cts.html">CTS</a>
       <a href="./cli.html">CLI</a>
-      <a href="./coding-agents.html">Agents</a>
+      <a href="./coding-agents.html" aria-current="page">Agents</a>
       <a href="./decisions.html">Decisions</a>
       <a href="./evidence.html">Evidence</a>
       <a href="./getting-started.html">빠른 시작</a>
       <a href="./troubleshooting.html">디버깅</a>
     </nav>
   </header>
-  <main id="main-content" class="home">
-    
-    <section class="hero" aria-labelledby="hero-title">
-  <p class="eyebrow">Design Documentation / HAL CAMERA</p>
-  <h1 id="hero-title" lang="en">Engineering<br>the invisible.</h1>
-  <p class="intro" lang="en">Camera systems are complicated.<br>The documentation doesn't have to be.</p>
-  <p class="intro">카메라의 구조를 이해하고, 측정의 의미를 확인하고,<br>코드에 근거해 다음 변경을 결정합니다.</p>
-  <div class="hero-bottom">
-    <a href="getting-started.html">처음이라면, 앱 실행부터 <span aria-hidden="true">↗</span></a>
-    <span class="signature" lang="en">by K.H. Kim</span>
-  </div>
-</section><nav class="contents" aria-label="문서 목차">
-  <a href="architecture.html"><span class="number">01</span><span class="name">Architecture</span><span class="description">How the camera system is structured</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="benchmark.html"><span class="number">02</span><span class="name">Benchmark</span><span class="description">How performance is measured</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="probe.html"><span class="number">03</span><span class="name">Probe</span><span class="description">What the HAL claims it can do</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="cts.html"><span class="number">04</span><span class="name">CTS</span><span class="description">The same test, run inside the app</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="cli.html"><span class="number">05</span><span class="name">CLI</span><span class="description">Drive the app from a terminal</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="decisions.html"><span class="number">06</span><span class="name">Decisions</span><span class="description">Why we built it this way</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="evidence.html"><span class="number">07</span><span class="name">Evidence</span><span class="description">Where the conclusions come from</span><span class="arrow" aria-hidden="true">↗</span></a>
-</nav><section class="feature" aria-labelledby="architecture-title">
-  <div class="feature-heading"><h2 id="architecture-title">A system you can follow.</h2><span class="eyebrow">01 / Architecture</span></div>
-  <figure class="hero-figure">
-    <svg viewBox="0 0 1080 390" role="img" aria-labelledby="flow-title flow-desc" xmlns="http://www.w3.org/2000/svg">
-      <title id="flow-title">HALCamera의 카메라 구동과 관측 구조</title>
-      <desc id="flow-desc">HALCamera는 CameraEngine으로 Camera2 또는 CameraX 엔진을 구동합니다. 프레임워크 콜백은 Telemetry와 FlightRecorder에 기록되어 Benchmark의 입력이 됩니다. HAL 내부 처리를 직접 측정하는 구조는 아닙니다.</desc>
-      <defs><marker id="arrow" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7" fill="none" stroke="#858b94"/></marker></defs>
-      <g fill="none" stroke="#c8ccd2" stroke-width="1.2" marker-end="url(#arrow)"><path d="M240 110H365"/><path d="M635 110H755"/><path d="M885 154V248H635"/><path d="M365 282H245"/></g>
-      <g fill="#fff" stroke="#e2e4e8"><rect x="20" y="66" width="220" height="88" rx="3"/><rect x="755" y="66" width="300" height="88" rx="3"/><rect x="365" y="238" width="270" height="88" rx="3"/><rect x="20" y="238" width="225" height="88" rx="3"/></g>
-      <rect x="365" y="66" width="270" height="88" rx="3" fill="#f5f9ff" stroke="#0066cc"/>
-      <g font-family="system-ui,sans-serif" fill="#18191b" font-size="20" text-anchor="middle"><text x="130" y="105">HALCamera</text><text x="500" y="105">CameraEngine</text><text x="905" y="105">Camera2 / CameraX</text><text x="500" y="277">Telemetry</text><text x="132" y="277">Measure &amp; compare</text></g>
-      <g font-family="system-ui,sans-serif" fill="#62666d" font-size="12" text-anchor="middle"><text x="130" y="130">App &amp; runners</text><text x="500" y="130">One active engine</text><text x="905" y="130">Android camera framework</text><text x="500" y="303">FlightRecorder · callback events</text><text x="132" y="303">Benchmark</text><text x="750" y="231">Framework callbacks</text></g>
-      <path d="M20 366H1055" stroke="#e2e4e8"/><text x="20" y="387" font-family="system-ui,sans-serif" fill="#62666d" font-size="11" letter-spacing="1.5">OBSERVATION AT THE APP LAYER</text>
-    </svg>
-    <figcaption>앱의 책임을 요약한 개념도입니다. 콜백 간격은 HAL 내부 처리 시간이나 프리뷰 표시 간격과 같지 않습니다. 구체적인 호출 관계와 코드 근거는 아키텍처 문서에서 확인하세요.</figcaption>
-  </figure>
-  <a href="architecture.html">Explore the architecture <span aria-hidden="true">→</span></a>
-</section><p class="editorial" lang="en">Good measurements should explain<br>the system, not just produce numbers.</p><section class="closing" aria-label="문서 작성 원칙">
-  <p class="statement" lang="en">Built from the codebase.<br>Designed to stay useful.</p>
-  <div><p>구현, 설계 의도, 기기 검증을 구분합니다.<br>기록되지 않은 이유는 확인이 필요한 상태로 남깁니다.</p><a href="evidence.html">문서의 근거를 확인하세요 <span aria-hidden="true">→</span></a></div>
-</section>
+  <main id="main-content" class="document">
+    <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
+    <h1 lang="en">Hand the camera to a coding agent.</h1><p>저장소의 <code>skills/halcam-cli/SKILL.md</code> 한 파일이 에이전트용 운전 지침입니다. 준비 절차, 명령 목록, 결과 파일 회수, 오류 코드 대응을 담고 있으므로, AI 코딩 에이전트에게 이 파일을 읽히면 사람이 매번 <code>adb</code> 사용법을 설명하지 않아도 됩니다. 사람이 읽는 CLI 설명은 <a href="cli.html">CLI 가이드</a>이고, 계약의 원본은 <code>app/src/main/java/dev/halcamera/cli/</code>의 코드입니다. 스킬은 그 둘을 에이전트가 실행할 수 있는 순서로 옮겨 적은 문서입니다.</p>
+<h2 lang="en">Use it.</h2><ol>
+<li>저장소를 clone하고 APK를 기기에 설치합니다.</li>
+<li>Live 화면의 <strong>진단</strong> 버튼으로 진단 패널을 열고 <strong>ADB CLI 허용</strong>을 켭니다. 초기값이 꺼짐이며 adb로는 켤 수 없습니다.</li>
+<li>에이전트를 저장소 루트에서 실행합니다. Claude Code는 <code>.claude/skills/halcam-cli/</code>를 통해 스킬을 인식하며, 그 파일은 본문인 <code>skills/halcam-cli/SKILL.md</code>를 가리킵니다.</li>
+<li>다른 에이전트를 쓴다면 <code>skills/halcam-cli/SKILL.md</code>를 직접 읽히십시오. 저장소의 <code>AGENTS.md</code>에도 같은 경로를 적어 두었습니다.</li>
+</ol>
+<p>에이전트가 먼저 하는 일은 기기에 스크립트를 내려놓는 것입니다. 사람이 손으로 준비하려면 다음 명령을 실행합니다.</p>
+<pre><code class="language-sh">adb shell &quot;content read --uri content://dev.halcamera.cli/v1/shell &gt; /data/local/tmp/halcam&quot;
+adb shell sh /data/local/tmp/halcam help
+</code></pre>
+<h2 lang="en">What it covers.</h2><table>
+<thead>
+<tr>
+<th>주제</th>
+<th>스킬이 알려주는 것</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>준비</td>
+<td>ADB CLI 허용 스위치, 카메라·마이크 권한, 화면 잠금 해제, 스크립트 설치와 갱신</td>
+</tr>
+<tr>
+<td>명령</td>
+<td><code>cameras</code>, <code>preview</code>, <code>capture</code>, <code>record start</code>·<code>stop</code>, <code>probe</code>, <code>cts cases</code>·<code>run</code>, <code>status</code>, <code>cancel</code>, <code>fetch</code>의 용도와 기본 실행 제한</td>
+</tr>
+<tr>
+<td>카메라 선택</td>
+<td><code>cameras</code> 결과에서 <code>selectable: true</code>인 논리 ID만 <code>--camera</code>에 넣는다는 규칙</td>
+</tr>
+<tr>
+<td>결과 파일</td>
+<td>기기의 <code>Download/HALCamera-cli/요청ID</code>와 <code>adb pull</code>, manifest로 크기와 SHA-256을 대조하는 방법</td>
+</tr>
+<tr>
+<td>기계 판독</td>
+<td><code>content call</code>과 <code>content read</code>로 JSON을 직접 주고받는 경로, 요청 ID 재사용으로 중복 촬영을 막는 방법</td>
+</tr>
+<tr>
+<td>오류</td>
+<td><code>CLI_DISABLED</code>, <code>PERMISSION_REQUIRED</code>, <code>BUSY</code>, <code>interrupted</code>, <code>UNKNOWN_CASE</code>의 원인과 다음 행동</td>
+</tr>
+</tbody></table>
+<h2 lang="en">Boundaries.</h2><p>벤치마크는 CLI 계약에서 제외되어 있습니다. 앱은 <code>benchmark.run</code>을 접수하지 않으므로, 측정을 요청받은 에이전트는 우회 경로를 만들지 말고 앱 화면에서 실행해야 한다고 알려야 합니다. 지원 범위의 실제 목록은 언제나 <code>/v1/hello</code>가 원본이며, 작업 명령은 <code>commands</code> 배열에, 상태 조회와 취소 같은 조작은 <code>controls</code> 배열에 들어 있습니다.</p>
+<p>스킬은 사람의 승인을 대신하지 않습니다. ADB CLI 허용 스위치와 런타임 권한은 기기 앞의 사람이 켜야 하고, 에이전트는 그 상태를 읽어 다음 행동을 안내할 뿐입니다. 화면에서 촬영이나 벤치마크가 진행 중이면 새 CLI 작업은 <code>BUSY</code>로 거부되며, 이때 요청을 반복하지 않는 것이 스킬의 규칙입니다.</p>
+<p>명령 집합을 바꿀 때에는 <code>CliCommand.COMMANDS</code>, <code>AdbArguments</code>, <code>app/src/main/assets/halcam.sh</code>, <a href="cli.html">CLI 가이드</a>, <code>skills/halcam-cli/SKILL.md</code>를 함께 갱신합니다. 스킬과 가이드가 어긋나면 코드와 가이드가 원본입니다.</p>
+<p>명령의 자세한 설명과 직접 호출 예시는 <a href="cli.html">CLI 가이드</a>에서 이어서 읽으세요.</p>
 
   </main>
   <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
