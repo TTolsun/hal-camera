@@ -100,8 +100,8 @@ class ScoreComposerTest {
         val decoded = BenchmarkReportCodec.fromJsonMap(BenchmarkReportCodec.toJsonMap(scored))
         assertEquals(scored.endpointScore, decoded.endpointScore)
         assertEquals(scored.metrics.map { it.score }, decoded.metrics.map { it.score })
-        assertTrue(ResultPresenter.scoreLine(decoded)!!.contains("내부 초안"))
-        assertTrue(ResultPresenter.scoreLine(decoded)!!.contains("기기 간 순위 아님"))
+        assertTrue(ResultPresenter.scoreLine(decoded)!!.contains("Internal draft"))
+        assertTrue(ResultPresenter.scoreLine(decoded)!!.contains("not a cross-device ranking"))
         assertNull(ResultPresenter.scoreLine(decoded.copy(app = AppInfo("debug", 1, true))))
         assertNull(ResultPresenter.scoreLine(normal()))
     }

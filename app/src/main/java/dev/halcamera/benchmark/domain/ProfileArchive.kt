@@ -19,13 +19,13 @@ class ProfileArchive(private val directory: File, private val decode: (String) -
         val run = decode(text)
         validate(run)
         val hash = hash(bytes)
-        check(directory.isDirectory || directory.mkdirs()) { "가져오기 저장소를 만들 수 없습니다." }
+        check(directory.isDirectory || directory.mkdirs()) { "Cannot create the import store." }
         val target = File(directory, "$hash.json")
         if (target.exists()) {
-            check(target.readBytes().contentEquals(bytes)) { "저장된 원본이 손상됐습니다." }
+            check(target.readBytes().contentEquals(bytes)) { "The stored original is corrupted." }
             return Imported(target, hash, true)
         }
-        require(files().size < MAX_FILES) { "가져온 자료는 최대 ${MAX_FILES}개까지 보관합니다." }
+        require(files().size < MAX_FILES) { "At most $MAX_FILES imported files are kept." }
         AtomicFiles.write(target, text)
         return Imported(target, hash, false)
     }
@@ -42,7 +42,7 @@ class ProfileArchive(private val directory: File, private val decode: (String) -
             while (true) {
                 val n = input.read(buffer)
                 if (n < 0) break
-                require(output.size().toLong() + n <= MAX_BYTES) { "파일은 16 MiB 이하여야 합니다." }
+                require(output.size().toLong() + n <= MAX_BYTES) { "A file must be 16 MiB or smaller." }
                 output.write(buffer, 0, n)
             }
             return output.toByteArray()
@@ -57,19 +57,19 @@ class ProfileArchive(private val directory: File, private val decode: (String) -
                     if (escaped) escaped = false else if (c == '\\') escaped = true else if (c == '"') quoted = false
                 } else when (c) {
                     '"' -> quoted = true
-                    '{', '[' -> { depth++; require(depth <= 64) { "JSON 중첩이 너무 깊습니다." } }
-                    '}', ']' -> { depth--; require(depth >= 0) { "JSON 구조가 잘못됐습니다." } }
+                    '{', '[' -> { depth++; require(depth <= 64) { "JSON nesting is too deep." } }
+                    '}', ']' -> { depth--; require(depth >= 0) { "Malformed JSON structure." } }
                 }
             }
-            require(depth == 0 && !quoted) { "완성되지 않은 JSON입니다." }
+            require(depth == 0 && !quoted) { "Incomplete JSON." }
         }
         fun validate(run: BenchmarkRun) {
-            require(run.runId.isNotBlank() && run.runId.length <= 200) { "run_id가 없거나 너무 깁니다." }
-            require(run.device.manufacturer.isNotBlank() && run.device.model.isNotBlank() && run.device.fingerprint.isNotBlank()) { "기기 식별 필드가 누락됐습니다." }
-            require(run.app.versionName.isNotBlank() && run.endpoint.logicalCameraId.isNotBlank()) { "앱 버전 또는 카메라 ID가 누락됐습니다." }
-            require(run.metrics.isNotEmpty() && run.metrics.size <= 100 && run.metrics.map { it.id }.distinct().size == run.metrics.size) { "지표가 없거나 중복·과다입니다." }
+            require(run.runId.isNotBlank() && run.runId.length <= 200) { "run_id is missing or too long." }
+            require(run.device.manufacturer.isNotBlank() && run.device.model.isNotBlank() && run.device.fingerprint.isNotBlank()) { "Device identification fields are missing." }
+            require(run.app.versionName.isNotBlank() && run.endpoint.logicalCameraId.isNotBlank()) { "App version or camera ID is missing." }
+            require(run.metrics.isNotEmpty() && run.metrics.size <= 100 && run.metrics.map { it.id }.distinct().size == run.metrics.size) { "Metrics are missing, duplicated, or excessive." }
             require(run.metrics.all { it.id.isNotBlank() && it.unit.isNotBlank() && it.sampleCount >= 0 &&
-                (it.value == null || it.value.isFinite() && it.value in 0.0..1e12) }) { "잘못된 지표 값입니다." }
+                (it.value == null || it.value.isFinite() && it.value in 0.0..1e12) }) { "Invalid metric value." }
         }
     }
 }

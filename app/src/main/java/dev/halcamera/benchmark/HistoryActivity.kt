@@ -108,43 +108,43 @@ class HistoryActivity : ComponentActivity() {
         if (!wasComparison) listScrollY = scrollY
         body.removeAllViews()
         text("Results", 24, true)
-        if (busy) text("실행 기록을 처리하고 있습니다.")
+        if (busy) text("Processing run history…")
         if (compareId != null && renderComparison()) {
             scroll.post { scroll.scrollTo(0, if (wasComparison) scrollY else 0) }
             return
         }
-        backButton("벤치마크로 돌아가기") { finish() }
-        button("반복 측정 비교 · JSON 가져오기") {
+        backButton("Back to benchmark") { finish() }
+        button("Repeat comparison · Import JSON") {
             startActivity(Intent(this, ProfileComparisonActivity::class.java))
         }
-        button("필터 · ${filter.label} ▾") { anchor ->
+        button("Filter · ${filter.label} ▾") { anchor ->
             showSelectionPopup(anchor, RunFilter.values().map { it.label }, filter.ordinal) { filter = RunFilter.values()[it]; pageSize = 50; render() }
         }
-        button("Profile · ${profileId ?: "전체"} ▾") { anchor ->
+        button("Profile · ${profileId ?: "All"} ▾") { anchor ->
             val values = (index.runs.map { it.profile.id } + listOfNotNull(profileId)).distinct().sorted()
-            showSelectionPopup(anchor, listOf("전체") + values, values.indexOf(profileId) + 1) { profileId = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
+            showSelectionPopup(anchor, listOf("All") + values, values.indexOf(profileId) + 1) { profileId = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
-        button("Camera · ${endpointKey ?: "전체"} ▾") { anchor ->
+        button("Camera · ${endpointKey ?: "All"} ▾") { anchor ->
             val values = (index.runs.map { it.endpoint.key } + listOfNotNull(endpointKey)).distinct().sorted()
-            showSelectionPopup(anchor, listOf("전체") + values, values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
+            showSelectionPopup(anchor, listOf("All") + values, values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
         val runs = visible()
-        text("${runs.size}개 실행")
-        if (selectedId == null && !pickingComparison) button("두 실행 비교", runs.size >= 2) {
+        text("${runs.size} runs")
+        if (selectedId == null && !pickingComparison) button("Compare two runs", runs.size >= 2) {
             pickingComparison = true; render()
         }
         if (pickingComparison && selectedId == null) {
-            text("기준으로 사용할 실행을 선택하세요.")
-            button("비교 선택 취소") { pickingComparison = false; render() }
+            text("Pick the run to use as the base.")
+            button("Cancel comparison") { pickingComparison = false; render() }
         }
-        button("CSV export · 현재 필터 ${runs.size}개", runs.isNotEmpty()) { exportCsv(runs) }
-        indexError?.let { text("Baseline을 읽지 못했습니다: $it") }
-        if (index.unreadableIds.isNotEmpty()) text("읽을 수 없는 파일 ${index.unreadableIds.size}개: ${index.unreadableIds.joinToString()}")
+        button("CSV export · ${runs.size} in current filter", runs.isNotEmpty()) { exportCsv(runs) }
+        indexError?.let { text("Cannot read the baseline: $it") }
+        if (index.unreadableIds.isNotEmpty()) text("${index.unreadableIds.size} unreadable files: ${index.unreadableIds.joinToString()}")
         selectedId?.let { id ->
-            text("비교 기준으로 선택: $id\n비교할 다른 실행을 누르세요.")
-            button("선택 취소") { selectedId = null; pickingComparison = false; render() }
+            text("Selected as base: $id\nTap another run to compare.")
+            button("Clear selection") { selectedId = null; pickingComparison = false; render() }
         }
-        if (runs.isEmpty()) text("이 조건에 맞는 실행이 없습니다. 필터를 바꾸거나 새 벤치마크를 실행하세요.")
+        if (runs.isEmpty()) text("No runs match this filter. Change the filter or start a new benchmark.")
         val byId = index.runs.associateBy { it.runId }
         runs.take(pageSize).forEach { run ->
             val baselineId = pointers.baseline(run.contract.comparisonContractId, run.endpoint.key)
@@ -159,11 +159,11 @@ class HistoryActivity : ComponentActivity() {
             val card = Look.card(this, dark = true)
             if (selectedId == run.runId) {
                 card.background = Look.cardBackground(this, Look.expertTile2, Look.primaryOnDark)
-                androidx.core.view.ViewCompat.setStateDescription(card, "비교 기준으로 선택됨")
+                androidx.core.view.ViewCompat.setStateDescription(card, "Selected as comparison base")
             }
             val label = listOf(
                 run.runId,
-                listOfNotNull(run.subject.subjectBuildLabel ?: "(subject 없음)", run.subject.subjectCommit).joinToString(" · "),
+                listOfNotNull(run.subject.subjectBuildLabel ?: "(no subject)", run.subject.subjectCommit).joinToString(" · "),
                 "${run.profile.id} · Camera ${run.endpoint.key} · ${run.endpoint.role}",
                 "Capture $capture  $status",
                 ResultPresenter.eligibilityLine(run),
@@ -172,7 +172,7 @@ class HistoryActivity : ComponentActivity() {
             val row = Look.row(this)
             row.addView(Look.text(this, label, 14, Look.onDark, mono = true), LinearLayout.LayoutParams(0, -2, 1f))
             row.addView(Look.ghostButton(this, "⋮", dark = true) { if (!busy) menu(run) }.apply {
-                contentDescription = "${run.runId} 작업 메뉴"
+                contentDescription = "${run.runId} actions menu"
                 setPadding(0, 0, 0, 0)
                 isEnabled = !busy
             }, LinearLayout.LayoutParams(dp(48), dp(48)))
@@ -184,13 +184,13 @@ class HistoryActivity : ComponentActivity() {
                     if (selectedId == null && pickingComparison) { selectedId = run.runId; render() }
                     else if (selectedId == null) open(run)
                     else if (selectedId != run.runId) { compareId = run.runId; render() }
-                    else message("다른 실행을 선택하세요.")
+                    else message("Pick a different run.")
                 }
             }
             card.setOnLongClickListener { if (!busy) menu(run); true }
             body.addView(card, lp())
         }
-        if (runs.size > pageSize) button("더 보기 · ${runs.size - pageSize}개 남음") { pageSize += 50; render() }
+        if (runs.size > pageSize) button("Show more · ${runs.size - pageSize} remaining") { pageSize += 50; render() }
         scroll.post { scroll.scrollTo(0, if (wasComparison) listScrollY else scrollY) }
     }
 
@@ -202,20 +202,20 @@ class HistoryActivity : ComponentActivity() {
         val view = ComparePresenter.present(base, current, comparison,
             if (onBaseline) ComparedTo.BASELINE else ComparedTo.PREVIOUS, selectedReference = true)
         text("Compare", 20, true)
-        text("기준: ${base.runId}\n${base.subject.subjectBuildLabel.orEmpty()} · ${base.subject.subjectCommit.orEmpty()}")
-        text("현재: ${current.runId}\n${current.subject.subjectBuildLabel.orEmpty()} · ${current.subject.subjectCommit.orEmpty()}")
+        text("Base: ${base.runId}\n${base.subject.subjectBuildLabel.orEmpty()} · ${base.subject.subjectCommit.orEmpty()}")
+        text("Current: ${current.runId}\n${current.subject.subjectBuildLabel.orEmpty()} · ${current.subject.subjectCommit.orEmpty()}")
         view.identityLine?.let { text(it) }
         view.conditionLine?.let { text(it) }
         view.referenceNote?.let { text(it) }
-        if (!comparison.sameContract || !comparison.sameEndpoint) text("Profile·측정 계약 또는 camera endpoint가 달라 판정할 수 없습니다.")
+        if (!comparison.sameContract || !comparison.sameEndpoint) text("No verdict: the profile contract or camera endpoint differs.")
         val regressed = view.rows.filter { it.marker.startsWith("▲") }
-        if (regressed.isNotEmpty()) body.addView(Look.text(this, "▲ ${regressed.size} Regressed", 17, Look.statusFail, bold = true), lp())
+        if (regressed.isNotEmpty()) body.addView(Look.text(this, "▲ ${regressed.size} degraded", 17, Look.statusFail, bold = true), lp())
         (regressed + view.rows.filterNot { it.marker.startsWith("▲") }).forEach { row ->
             body.addView(MetricRows.comparison(this, row, view.baseHeader))
         }
-        button("기준 / 현재 바꾸기") { val old = selectedId; selectedId = compareId; compareId = old; render() }
-        button("CSV export · 두 실행") { exportCsv(listOf(base, current)) }
-        backButton("실행 이력으로 돌아가기") { compareId = null; render() }
+        button("Swap base / current") { val old = selectedId; selectedId = compareId; compareId = old; render() }
+        button("CSV export · two runs") { exportCsv(listOf(base, current)) }
+        backButton("Back to history") { compareId = null; render() }
         return true
     }
 
@@ -225,21 +225,21 @@ class HistoryActivity : ComponentActivity() {
 
     private fun menu(run: BenchmarkRun) {
         val isBaseline = pointers.baseline(run.contract.comparisonContractId, run.endpoint.key) == run.runId
-        choose(run.runId, listOf("결과 열기", if (isBaseline) "Clear baseline" else "Set as baseline", "Compare", "Export JSON", "Export CSV", "Delete")) {
+        choose(run.runId, listOf("Open result", if (isBaseline) "Clear baseline" else "Set as baseline", "Compare", "Export JSON", "Export CSV", "Delete")) {
             when (it) {
                 0 -> open(run)
                 1 -> {
-                    if (indexError != null) message("Baseline 파일을 읽을 수 없어 변경할 수 없습니다.")
-                    else if (!isBaseline && !run.validity.comparisonEligible) message("비교 가능한 실행만 baseline으로 지정할 수 있습니다.")
+                    if (indexError != null) message("Cannot read the baseline index, so it was not changed.")
+                    else if (!isBaseline && !run.validity.comparisonEligible) message("Only a comparable run can be set as baseline.")
                     else work({ baselines.toggle(run) }) { reload() }
                 }
                 2 -> { selectedId = run.runId; compareId = null; render() }
                 3 -> share(store.file(run.runId), "application/json")
                 4 -> exportCsv(listOf(run))
-                5 -> AlertDialog.Builder(this).setTitle("실행을 삭제할까요?")
-                    .setMessage("${run.runId}\n실행 JSON을 삭제합니다.${if (isBaseline) " 이 실행의 baseline 지정도 해제됩니다." else ""}")
-                    .setNegativeButton("취소", null)
-                    .setPositiveButton("삭제") { _, _ -> work({ check(store.deleteRun(run.runId)) { "실행을 삭제하지 못했습니다." } }) { reload() } }
+                5 -> AlertDialog.Builder(this).setTitle("Delete this run?")
+                    .setMessage("${run.runId}\nDeletes the run JSON.${if (isBaseline) " Its baseline pointer is also cleared." else ""}")
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Delete") { _, _ -> work({ check(store.deleteRun(run.runId)) { "Could not delete the run." } }) { reload() } }
                     .show()
             }
         }
@@ -256,15 +256,15 @@ class HistoryActivity : ComponentActivity() {
 
     private fun share(file: File, mime: String) {
         try {
-            check(file.isFile) { "내보낼 파일이 없습니다." }
+            check(file.isFile) { "No file to export." }
             val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
             startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
                 type = mime
                 putExtra(Intent.EXTRA_STREAM, uri)
                 clipData = ClipData.newRawUri("benchmark", uri)
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }, "실행 내보내기"))
-        } catch (e: Exception) { message(e.message ?: "내보내기에 실패했습니다.") }
+            }, "Export run"))
+        } catch (e: Exception) { message(e.message ?: "Export failed.") }
     }
 
     private fun <T> work(task: () -> T, done: (T) -> Unit) {
@@ -277,13 +277,13 @@ class HistoryActivity : ComponentActivity() {
                 if (isDestroyed || isFinishing) return@runOnUiThread
                 busy = false
                 render()
-                result.fold(done) { message(it.message ?: "작업에 실패했습니다.") }
+                result.fold(done) { message(it.message ?: "The operation failed.") }
             }
         }
     }
 
     private fun choose(title: String, items: List<String>, onSelect: (Int) -> Unit) {
-        AlertDialog.Builder(this).setTitle(title).setNegativeButton("취소", null)
+        AlertDialog.Builder(this).setTitle(title).setNegativeButton("Cancel", null)
             .setItems(items.toTypedArray()) { _, i -> onSelect(i) }
             .show()
     }

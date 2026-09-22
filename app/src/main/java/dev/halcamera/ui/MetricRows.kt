@@ -23,7 +23,7 @@ internal object MetricRows {
     )
 
     private fun verdict(marker: String) = when (marker) {
-        "▲" -> "▲ Regressed"
+        "▲" -> "▲ Degraded"
         "▼" -> "▼ Improved"
         else -> marker
     }

@@ -18,7 +18,7 @@ class StartCardPresenterTest {
         engineName: String = "Camera2",
         thermalStatus: Int? = 0,
         powerSaveMode: Boolean? = false
-    ) = StartCardPresenter.present(profile, compatibility, "후면 메인", engineName, thermalStatus, powerSaveMode)
+    ) = StartCardPresenter.present(profile, compatibility, "Rear main", engineName, thermalStatus, powerSaveMode)
 
     // ---- what stops a run ----
 
@@ -92,12 +92,12 @@ class StartCardPresenterTest {
     // ---- what the card says ----
 
     @Test fun theTitleNamesTheEngineCameraConditionAndLaunchMode() {
-        assertEquals("Camera2 · 후면 메인 · 1080p30 · warm reopen", card().titleLine)
+        assertEquals("Camera2 · Rear main · 1080p30 · warm reopen", card().titleLine)
     }
 
     @Test fun theVerdictCarriesTheMethodThatProducedIt() {
-        assertEquals("✓ 이 카메라에서 실행 가능 (device_setup)", card().verdictLine)
-        assertEquals("✗ 실행할 수 없음 (static_table)", card(compatibility = unsupported).verdictLine)
+        assertEquals("✓ Can run on this camera (device_setup)", card().verdictLine)
+        assertEquals("✗ Cannot run (static_table)", card(compatibility = unsupported).verdictLine)
     }
 
     @Test fun anUnparsableProfileFallsBackToItsRawStrings() {
@@ -108,6 +108,6 @@ class StartCardPresenterTest {
     @Test fun aBlockedCardStillDescribesTheProfile() {
         val c = card(compatibility = unsupported)
         assertEquals("Profile  camera2-standard-v1", c.profileLine)
-        assertTrue(c.detailLine.contains("10회 open"))
+        assertTrue(c.detailLine.contains("10× open"))
     }
 }

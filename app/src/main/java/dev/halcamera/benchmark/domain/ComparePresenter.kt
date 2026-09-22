@@ -6,8 +6,10 @@ data class CompareRow(
     val base: String,
     val current: String,
     val delta: String,
-    /** "▲ Regressed", "▼ Improved", the reason a metric could not be judged, or empty for STABLE. */
-    val marker: String
+    /** "▲ Degraded", "▼ Improved", the reason a metric could not be judged, or empty for STABLE. */
+    val marker: String,
+    /** Signed percentage for the delta chart; null when the pair has no percentage (counts, unit mismatch). */
+    val deltaPct: Double? = null
 ) {
     /** [marker] is a verdict only against a baseline; against a reference it can only carry a reason. */
     val hasVerdict: Boolean get() = marker.startsWith("▲") || marker.startsWith("▼")
@@ -71,11 +73,11 @@ object ComparePresenter {
             baseHeader = if (againstBaseline) "Baseline" else if (selectedReference) "Selected" else "Previous",
             referenceNote = when {
                 againstBaseline -> null
-                selectedReference -> "선택한 run 대비 delta만 표시합니다 · baseline은 변경하지 않습니다"
+                selectedReference -> "Deltas vs the selected run only · the baseline is not changed"
                 // The baseline has nothing above it to be measured against, so it too falls back to the previous
-                // run. Saying "baseline 없음" on the baseline's own screen contradicts the button beside it.
-                currentIsBaseline -> "이 run이 baseline입니다 · 이전 run 대비 delta만 표시합니다"
-                else -> "baseline 없음 · 이전 run 대비 delta만 표시합니다"
+                // run. Saying "no baseline" on the baseline's own screen contradicts the button beside it.
+                currentIsBaseline -> "This run is the baseline · deltas vs the previous run only"
+                else -> "No baseline · deltas vs the previous run only"
             },
             rows = rows(base, current, comparison, comparedTo)
         )
@@ -83,7 +85,7 @@ object ComparePresenter {
 
     fun runLine(role: String, run: BenchmarkRun): String =
         pad(role, ROLE) + pad(run.runId, RUN_ID) +
-            pad(run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() } ?: "(subject 없음)", SUBJECT) +
+            pad(run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() } ?: "(no subject)", SUBJECT) +
             pad(run.device.buildDisplay, BUILD) +
             "thermal max ${run.env.thermalMax ?: "—"}"
 
@@ -105,12 +107,14 @@ object ComparePresenter {
             // independently and never report a percentage between different units.
             val shape = c ?: b!!
             val metricComparison = comparison.metric(id)
+            val unitMismatch = b != null && c != null && b.unit != c.unit
             CompareRow(
                 label = BenchmarkMetricCatalog.info(id)?.short ?: id,
                 base = ResultPresenter.format(b ?: shape, b?.value),
                 current = ResultPresenter.format(shape, c?.value),
-                delta = if (b != null && c != null && b.unit != c.unit) "—" else ResultPresenter.delta(shape, metricComparison),
-                marker = if (b != null && c != null && b.unit != c.unit) "단위 다름" else marker(metricComparison, comparedTo)
+                delta = if (unitMismatch) "—" else ResultPresenter.delta(shape, metricComparison),
+                marker = if (unitMismatch) "unit differs" else marker(metricComparison, comparedTo),
+                deltaPct = if (unitMismatch) null else metricComparison?.deltaPct
             )
         }
 
@@ -119,7 +123,7 @@ object ComparePresenter {
      * metric could not be judged is still worth saying: it explains why the delta itself is not trustworthy.
      */
     private fun marker(comparison: MetricComparison?, comparedTo: ComparedTo): String = when (comparison?.state) {
-        RegressionState.REGRESSED -> if (comparedTo == ComparedTo.BASELINE) "▲ Regressed" else ""
+        RegressionState.REGRESSED -> if (comparedTo == ComparedTo.BASELINE) "▲ Degraded" else ""
         RegressionState.IMPROVED -> if (comparedTo == ComparedTo.BASELINE) "▼ Improved" else ""
         RegressionState.UNKNOWN -> ResultPresenter.noteFor(comparison, comparedTo)
         else -> ""

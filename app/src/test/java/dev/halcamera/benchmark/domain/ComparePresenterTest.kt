@@ -58,7 +58,7 @@ class ComparePresenterTest {
         assertEquals("164 ms", r.base)
         assertEquals("221 ms", r.current)
         assertEquals("+35%", r.delta)
-        assertEquals("▲ Regressed", r.marker)
+        assertEquals("▲ Degraded", r.marker)
     }
 
     @Test fun aChangeBelowTheThresholdIsLeftUnmarked() {
@@ -81,7 +81,7 @@ class ComparePresenterTest {
         // Two thermal steps apart makes the pair incomparable (7.5); the delta stays, the verdict does not.
         val hot = run(runId = current.runId, metrics = current.metrics, thermalMax = 3)
         val r = row("Capture", c = hot)
-        assertEquals("조건 불일치", r.marker)
+        assertEquals("condition mismatch", r.marker)
         assertEquals("+35%", r.delta)
     }
 
@@ -100,9 +100,9 @@ class ComparePresenterTest {
         val v = view(comparedTo = ComparedTo.PREVIOUS)
         assertEquals("Previous", v.baseHeader)
         assertTrue(v.baseLine.startsWith("previous"))
-        assertTrue(v.referenceNote!!.contains("baseline 없음"))
+        assertTrue(v.referenceNote!!.contains("No baseline"))
         assertTrue(v.render().contains("Previous"))
-        assertFalse(v.render().contains("Regressed"))
+        assertFalse(v.render().contains("Degraded"))
     }
 
     @Test fun theBaselineItselfIsNotDescribedAsHavingNoBaseline() {
@@ -111,9 +111,9 @@ class ComparePresenterTest {
         // while the button next to it read CLEAR BASELINE.
         val v = view(comparedTo = ComparedTo.PREVIOUS, currentIsBaseline = true)
         assertEquals("Previous", v.baseHeader)
-        assertFalse(v.referenceNote!!.contains("baseline 없음"))
-        assertTrue(v.referenceNote!!.startsWith("이 run이 baseline입니다"))
-        assertFalse(v.render().contains("Regressed"))
+        assertFalse(v.referenceNote!!.contains("No baseline"))
+        assertTrue(v.referenceNote!!.startsWith("This run is the baseline"))
+        assertFalse(v.render().contains("Degraded"))
     }
 
     @Test fun aBaselineComparisonKeepsItsVerdicts() {
@@ -127,7 +127,7 @@ class ComparePresenterTest {
         // The reason a metric could not be judged explains the delta itself, so it survives even without a verdict.
         val hot = run(runId = current.runId, metrics = current.metrics, thermalMax = 3)
         val r = view(c = hot, comparedTo = ComparedTo.PREVIOUS).rows.first { it.label == "Capture" }
-        assertEquals("조건 불일치", r.marker)
+        assertEquals("condition mismatch", r.marker)
         assertFalse(r.hasVerdict)
     }
 
@@ -144,7 +144,7 @@ class ComparePresenterTest {
 
     @Test fun anUnlabeledRunSaysSoRatherThanShowingAnEmptyColumn() {
         val unlabeled = run(runId = base.runId, metrics = base.metrics, subject = SubjectLabel())
-        assertTrue(ComparePresenter.runLine("baseline", unlabeled).contains("(subject 없음)"))
+        assertTrue(ComparePresenter.runLine("baseline", unlabeled).contains("(no subject)"))
     }
 
     @Test fun theTitleCarriesTheRuleVersionThatProducedTheVerdicts() {
@@ -154,20 +154,20 @@ class ComparePresenterTest {
 
     @Test fun theIdentityLineSummarisesTheFourAxes() {
         val line = view().identityLine!!
-        assertTrue(line.contains("Android 동일"))
-        assertTrue(line.contains("subject 다름"))
+        assertTrue(line.contains("Android same"))
+        assertTrue(line.contains("subject differs"))
     }
 
     @Test fun aConditionDifferenceIsShownApartFromTheVerdicts() {
         assertNull(view().conditionLine)
         val charging = run(runId = current.runId, metrics = current.metrics, charging = true)
-        assertTrue(view(c = charging).conditionLine!!.contains("충전 상태 다름"))
+        assertTrue(view(c = charging).conditionLine!!.contains("charging state differs"))
     }
 
     @Test fun theRenderedTableHeadsBothValueColumns() {
         val text = view().render()
         assertTrue(text.contains("Baseline"))
         assertTrue(text.contains("Current"))
-        assertTrue(text.lines().any { it.startsWith("Capture") && it.endsWith("▲ Regressed") })
+        assertTrue(text.lines().any { it.startsWith("Capture") && it.endsWith("▲ Degraded") })
     }
 }

@@ -5,7 +5,7 @@ import java.util.Locale
 data class ProfileEntry(val key: String, val sha256: String, val source: String, val run: BenchmarkRun) {
     val deviceLabel get() = "${run.device.manufacturer} ${run.device.model}"
     val instanceId get() = JsonMaps.s(run.raw["device_instance_id"])?.takeIf { it.isNotBlank() }
-    val label get() = "$deviceLabel · ${instanceId?.take(8) ?: "기기 ID 없음"} · $source\n${run.runId} · ${run.subject.subjectBuildLabel ?: run.device.buildDisplay}\nCamera ${run.endpoint.key} ${run.endpoint.role} · ${run.profile.id}"
+    val label get() = "$deviceLabel · ${instanceId?.take(8) ?: "no device ID"} · $source\n${run.runId} · ${run.subject.subjectBuildLabel ?: run.device.buildDisplay}\nCamera ${run.endpoint.key} ${run.endpoint.role} · ${run.profile.id}"
 }
 
 /** Imports never enter RunCatalog. This comparison cannot set a local baseline or automatic reference. */
@@ -19,38 +19,38 @@ object ProfileComparison {
     data class Result(val before: List<ProfileEntry>, val after: List<ProfileEntry>, val options: Options,
                       val problems: List<String>, val metrics: List<Metric>) {
         fun render(): String = buildString {
-            appendLine(if (options.differentDevices) "선택한 기기 간 지표 비교 · SW 수정 효과 판정 아님" else "동일 기기 수정 전후 반복 측정 비교")
-            appendLine("A ${before.size}개 · B ${after.size}개 · 검정 ${metrics.count { it.p != null }}개 지표 · 보정 후 유의차 ${metrics.count { it.adjustedP != null && it.adjustedP < 0.05 }}개 지표")
-            problems.forEach { appendLine("분석 제한: $it") }
+            appendLine(if (options.differentDevices) "Cross-device metric comparison · not a verdict on a SW change" else "Same-device before/after repeat comparison")
+            appendLine("A ${before.size} · B ${after.size} · ${metrics.count { it.p != null }} metrics tested · ${metrics.count { it.adjustedP != null && it.adjustedP < 0.05 }} significant after correction")
+            problems.forEach { appendLine("Analysis limit: $it") }
             for (m in metrics.sortedBy { it.before == null && it.after == null }) {
-                fun describe(s: RepeatStatistics.Summary?) = s?.let { "n=${it.n}, 평균 ${f(it.mean)}, 중앙값 ${f(it.median)}, 표준편차 ${f(it.sd)}" } ?: "유효 실행 없음"
+                fun describe(s: RepeatStatistics.Summary?) = s?.let { "n=${it.n}, mean ${f(it.mean)}, median ${f(it.median)}, SD ${f(it.sd)}" } ?: "no valid runs"
                 appendLine("\n${m.id} (${m.unit})\nA: ${describe(m.before)}\nB: ${describe(m.after)}")
-                appendLine("차이 B−A: ${f(m.delta)} · 변화율 ${m.deltaPct?.let { f(it) + "%" } ?: "계산 불가(0 기준 또는 값 없음)"}")
+                appendLine("Difference B−A: ${f(m.delta)} · change ${m.deltaPct?.let { f(it) + "%" } ?: "not computable (zero base or missing value)"}")
                 appendLine(when {
-                    m.adjustedP == null -> "유의차 판정 불가: ${m.blocked.joinToString(" · ")}"
-                    m.adjustedP < 0.05 -> "통계적 차이 검출 · 보정 p=${f(m.adjustedP)} (원 p=${f(m.p)})"
-                    else -> "통계적 차이 미검출 · 보정 p=${f(m.adjustedP)} (원 p=${f(m.p)})"
+                    m.adjustedP == null -> "No significance verdict: ${m.blocked.joinToString(" · ")}"
+                    m.adjustedP < 0.05 -> "Statistical difference detected · adjusted p=${f(m.adjustedP)} (raw p=${f(m.p)})"
+                    else -> "No statistical difference detected · adjusted p=${f(m.adjustedP)} (raw p=${f(m.p)})"
                 })
-                appendLine("기존 실무 임계값(${RegressionRules.VERSION}): ${m.practical ?: "판정 불가"} · 통계적 유의성과 별개")
-                m.exclusions.forEach { appendLine("제외: $it") }
+                appendLine("Practical threshold (${RegressionRules.VERSION}): ${m.practical ?: "no verdict"} · independent of statistical significance")
+                m.exclusions.forEach { appendLine("Excluded: $it") }
             }
-            appendLine("\n분석 방법과 가정")
-            appendLine("${RepeatStatistics.VERSION} · 독립 실행 단위 · 양측 순열검정 · Bonferroni 보정 · 가족 유의수준 0.05")
-            appendLine("각 묶음 지표별 최소 ${RepeatStatistics.MIN_RUNS}회, 최대 ${RepeatStatistics.MAX_RUNS}회 · 무작위 검정 ${RepeatStatistics.RESAMPLES}회 · seed ${RepeatStatistics.SEED}")
-            appendLine("가정: 실행 간 독립성, 귀무가설 아래 그룹 교환 가능성. 시간 경과·장면·환경 차이의 영향은 별도로 통제해야 합니다.")
-            appendLine("유의차 미검출은 동등성이나 '차이 없음'의 증명이 아닙니다. 프레임/촬영 개수를 실행 수로 세지 않습니다.")
-            appendLine("최소 5회가 충분한 검정력을 보장하지 않습니다. 예를 들어 20개 지표를 각 5회로 정확 검정하면 보정 p의 최솟값도 0.1587입니다.")
-            appendLine("동일 기기 사용자 확인=${options.sameDeviceConfirmed} · 독립 실행·동일 장면 확인=${options.independentRunsConfirmed}")
-            if (options.differentDevices) appendLine("카메라 ID·역할 일치는 동일 렌즈·화각을 보장하지 않습니다. 기기 간 광학계 차이를 포함한 탐색적 비교입니다.")
-            for ((name, entries) in listOf("수정 전 / A" to before, "수정 후 / B" to after)) {
-                appendLine("\n$name · 선택 ${entries.size}개")
+            appendLine("\nMethod and assumptions")
+            appendLine("${RepeatStatistics.VERSION} · independent-run unit · two-sided permutation test · Bonferroni correction · family-wise significance level 0.05")
+            appendLine("Per metric per group at least ${RepeatStatistics.MIN_RUNS} and at most ${RepeatStatistics.MAX_RUNS} runs · ${RepeatStatistics.RESAMPLES} random resamples · seed ${RepeatStatistics.SEED}")
+            appendLine("Assumptions: independence between runs, group exchangeability under the null hypothesis. Effects of elapsed time, scene, and environment differences must be controlled separately.")
+            appendLine("No significant difference detected is not proof of equivalence or 'no difference'. Frames/shots are not counted as runs.")
+            appendLine("A minimum of 5 runs does not guarantee sufficient statistical power. For example, exact tests of 20 metrics with 5 runs each give a minimum adjusted p of 0.1587.")
+            appendLine("Same-device user confirmation=${options.sameDeviceConfirmed} · independent runs and same scene confirmed=${options.independentRunsConfirmed}")
+            if (options.differentDevices) appendLine("Matching camera ID and role does not guarantee the same lens or field of view. This is an exploratory comparison including cross-device optics differences.")
+            for ((name, entries) in listOf("Before / A" to before, "After / B" to after)) {
+                appendLine("\n$name · ${entries.size} selected")
                 entries.forEach { e ->
                     val r = e.run
                     appendLine(e.label)
                     appendLine("sha256=${e.sha256} · key=${e.key}")
-                    appendLine("기기 설치 ID=${e.instanceId ?: "알 수 없음"} · system=${r.device.fingerprint} · vendor=${r.device.vendorFingerprint ?: "알 수 없음"} · camera INFO=${r.device.cameraInfoVersion ?: "알 수 없음"}")
+                    appendLine("device install ID=${e.instanceId ?: "unknown"} · system=${r.device.fingerprint} · vendor=${r.device.vendorFingerprint ?: "unknown"} · camera INFO=${r.device.cameraInfoVersion ?: "unknown"}")
                     appendLine("app=${r.app.versionName}/${r.app.versionCode} debug=${r.app.debuggable} · subject=${r.subject}")
-                    appendLine("계약=${r.contract.comparisonContractId} · 설정=${r.effectiveConditions} · 환경=${r.env}")
+                    appendLine("contract=${r.contract.comparisonContractId} · conditions=${r.effectiveConditions} · env=${r.env}")
                 }
             }
         }
@@ -63,52 +63,52 @@ object ProfileComparison {
     fun compare(a: List<ProfileEntry>, b: List<ProfileEntry>, options: Options): Result {
         val all = a + b
         val problems = mutableListOf<String>()
-        if (a.isEmpty() || b.isEmpty()) problems += "전·후 실행 묶음을 모두 선택하세요."
-        if (a.size > RepeatStatistics.MAX_RUNS || b.size > RepeatStatistics.MAX_RUNS) problems += "묶음별 최대 50개 실행까지 분석합니다."
-        if (all.map { it.sha256 }.distinct().size != all.size) problems += "동일 원본이 중복되거나 전·후에 겹칩니다."
+        if (a.isEmpty() || b.isEmpty()) problems += "Select both the before and after run groups."
+        if (a.size > RepeatStatistics.MAX_RUNS || b.size > RepeatStatistics.MAX_RUNS) problems += "At most 50 runs per group are analyzed."
+        if (all.map { it.sha256 }.distinct().size != all.size) problems += "The same original is duplicated or appears in both before and after."
         // Different files with the same measurement identity cannot become independent observations.
         if (all.map { listOf(it.instanceId, it.deviceLabel, it.run.runId) }.distinct().size != all.size)
-            problems += "동일 기기·실행 ID의 사본 또는 충돌이 있습니다. 한 원본만 선택하세요."
+            problems += "Copies or collisions with the same device and run ID exist. Select only one original."
         for ((name, entries) in listOf("A" to a, "B" to b)) {
-            if (entries.map { buildKey(it.run) }.distinct().size > 1) problems += "$name 묶음에 여러 기기/빌드가 섞여 있습니다."
-            if (entries.map { it.instanceId }.distinct().size > 1) problems += "$name 묶음의 기기 설치 ID가 서로 다릅니다."
+            if (entries.map { buildKey(it.run) }.distinct().size > 1) problems += "Group $name mixes multiple devices/builds."
+            if (entries.map { it.instanceId }.distinct().size > 1) problems += "Group $name has differing device install IDs."
         }
         if (!options.differentDevices && all.isNotEmpty()) {
-            if (all.map { it.deviceLabel }.distinct().size != 1) problems += "서로 다른 모델입니다. 기기 간 비교 모드를 선택하세요."
+            if (all.map { it.deviceLabel }.distinct().size != 1) problems += "Different models. Select cross-device comparison mode."
             val ids = all.map { it.instanceId }
             if ((ids.any { it == null } || ids.distinct().size != 1) && !options.sameDeviceConfirmed)
-                problems += "동일 물리 기기인지 확인되지 않았습니다. 구형 파일/재설치 자료는 직접 확인하세요."
+                problems += "Not confirmed to be the same physical device. Verify older files or reinstalled data yourself."
         }
-        if (!options.independentRunsConfirmed) problems += "독립 반복 실행과 동일 장면·조명 확인이 필요합니다."
+        if (!options.independentRunsConfirmed) problems += "Confirmation of independent repeated runs and same scene/lighting is required."
         if (all.map { it.run.contract }.distinct().size > 1 || all.map { it.run.profile }.distinct().size > 1)
-            problems += "측정 계약 또는 profile이 다릅니다."
+            problems += "Measurement contract or profile differs."
         if (all.map { listOf(it.run.endpoint.key, it.run.endpoint.role, it.run.endpoint.facing) }.distinct().size > 1)
-            problems += "카메라 ID·역할·방향이 다릅니다. 원시 지표만 열람합니다."
+            problems += "Camera ID, role, or facing differs. Raw metrics only."
         if (all.map { it.run.effectiveConditions }.distinct().size > 1 || all.any { entry ->
                 listOf("af_mode", "fps_range", "preview_size", "yuv_size", "still_size").any { entry.run.effectiveConditions[it].isNullOrBlank() }
             })
-            problems += "실제 카메라 설정이 다르거나 누락됐습니다."
+            problems += "Actual camera conditions differ or are missing."
         val eligible = all.filter { exclusion(it.run) == null }
         if (eligible.any { r -> with(r.run.env) { charging == null || powerSaveMode == null || thermalStart == null || thermalMax == null || thermalEnd == null || rotation == null } })
-            problems += "필수 환경 정보가 누락됐습니다."
+            problems += "Required environment information is missing."
         if (eligible.map { it.run.env.charging }.distinct().size > 1 || eligible.map { it.run.env.powerSaveMode }.distinct().size > 1)
-            problems += "충전 또는 절전 조건이 다릅니다."
-        if (eligible.map { it.run.env.rotation }.distinct().size > 1) problems += "화면 회전 조건이 다릅니다."
+            problems += "Charging or power save conditions differ."
+        if (eligible.map { it.run.env.rotation }.distinct().size > 1) problems += "Screen rotation conditions differ."
         val temperatures = eligible.mapNotNull { it.run.env.thermalMax }
         if (temperatures.isNotEmpty() && temperatures.max() - temperatures.min() >= RegressionDetector.THERMAL_MAX_STEP_DIFF)
-            problems += "발열 단계 차이가 비교 허용 범위를 넘습니다."
+            problems += "Thermal level difference exceeds the comparison tolerance."
         val rows = BenchmarkMetricCatalog.ids.map { id ->
             val reasons = mutableListOf<String>()
             fun values(entries: List<ProfileEntry>, side: String) = entries.mapNotNull { e ->
                 val m = e.run.metrics.singleOrNull { it.id == id }
                 val info = BenchmarkMetricCatalog.info(id)
                 val why = exclusion(e.run) ?: when {
-                    m == null -> "지표 없음 또는 중복"
-                    m.value == null -> "측정값 없음"
-                    !m.value.isFinite() || m.value !in 0.0..1e12 -> "유효 범위 밖 측정값"
-                    m.timeout -> "타임아웃"
-                    m.sampleCount <= 0 -> "샘플 없음"
-                    m.unit != info?.unit || m.category != info.category -> "지표 단위·분류 불일치"
+                    m == null -> "metric missing or duplicated"
+                    m.value == null -> "no value"
+                    !m.value.isFinite() || m.value !in 0.0..1e12 -> "value out of range"
+                    m.timeout -> "timeout"
+                    m.sampleCount <= 0 -> "no samples"
+                    m.unit != info?.unit || m.category != info.category -> "unit or category mismatch"
                     else -> null
                 }
                 if (why != null) { reasons += "$side ${e.run.runId} [${e.sha256.take(8)}]: $why"; null } else m!!.value
@@ -116,11 +116,11 @@ object ProfileComparison {
             val av = values(a, "A").sorted(); val bv = values(b, "B").sorted()
             val sa = RepeatStatistics.summary(av); val sb = RepeatStatistics.summary(bv)
             val blocked = problems.toMutableList()
-            if (av.size < RepeatStatistics.MIN_RUNS || bv.size < RepeatStatistics.MIN_RUNS) blocked += "유효 실행 수 부족(각 5회 이상 필요)"
+            if (av.size < RepeatStatistics.MIN_RUNS || bv.size < RepeatStatistics.MIN_RUNS) blocked += "not enough valid runs (at least 5 per group required)"
             if (id in setOf("H.6", "H.7", "H.8")) {
                 val loads = eligible.map { RegressionDetector.exposureLoad(it.run) }
                 if (loads.any { it == null || !it.isFinite() || it <= 0 } ||
-                    (loads.isNotEmpty() && loads.filterNotNull().max() / loads.filterNotNull().min() > 4)) blocked += "3A 노출 조건 불명 또는 차이"
+                    (loads.isNotEmpty() && loads.filterNotNull().max() / loads.filterNotNull().min() > 4)) blocked += "3A exposure conditions unknown or differ"
             }
             val delta = if (sa != null && sb != null) sb.mean - sa.mean else null
             val p = if (blocked.isEmpty()) RepeatStatistics.pValue(av, bv) else null
@@ -134,16 +134,16 @@ object ProfileComparison {
     }
 
     fun exclusion(run: BenchmarkRun): String? = when {
-        run.aborted != null -> "중단된 실행"
+        run.aborted != null -> "aborted run"
         run.contract.metricDefinitionVersion != MeasurementContract.METRIC_DEFINITION_VERSION ||
-            run.contract.statsMethod != MeasurementContract.STATS_METHOD || run.contract.clock != MeasurementContract.CLOCK -> "지원하지 않는 측정 계약"
-        run.validity.ruleVersion != ValidityFlags.VERSION -> "지원하지 않는 유효성 규칙"
-        !RunValidity.fromJsonMap(run.validity.toJsonMap()).comparisonEligible -> "비교 부적격: ${run.validity.flags.joinToString()}"
-        run.env.powerSaveMode == true -> "절전 모드"
-        run.effectiveConditions["fps_range"]?.let { ProfileCompatibility.normalizeRange(it) != ProfileCompatibility.normalizeRange(run.profile.fpsRange) } == true -> "실제 FPS 범위가 profile과 다릅니다."
-        listOfNotNull(run.env.thermalStart, run.env.thermalMax, run.env.thermalEnd).any { it >= ValidityFlags.THERMAL_MODERATE } -> "높은 발열 단계"
-        !run.compatibility.supported -> "지원되지 않는 구성"
-        run.metrics.map { it.id }.distinct().size != run.metrics.size -> "중복 지표 ID"
+            run.contract.statsMethod != MeasurementContract.STATS_METHOD || run.contract.clock != MeasurementContract.CLOCK -> "unsupported measurement contract"
+        run.validity.ruleVersion != ValidityFlags.VERSION -> "unsupported validity rules"
+        !RunValidity.fromJsonMap(run.validity.toJsonMap()).comparisonEligible -> "not comparison-eligible: ${run.validity.flags.joinToString()}"
+        run.env.powerSaveMode == true -> "power save mode"
+        run.effectiveConditions["fps_range"]?.let { ProfileCompatibility.normalizeRange(it) != ProfileCompatibility.normalizeRange(run.profile.fpsRange) } == true -> "actual FPS range differs from the profile"
+        listOfNotNull(run.env.thermalStart, run.env.thermalMax, run.env.thermalEnd).any { it >= ValidityFlags.THERMAL_MODERATE } -> "high thermal level"
+        !run.compatibility.supported -> "unsupported configuration"
+        run.metrics.map { it.id }.distinct().size != run.metrics.size -> "duplicate metric id"
         else -> null
     }
 }
