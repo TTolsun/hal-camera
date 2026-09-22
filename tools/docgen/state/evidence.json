@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "aef3a1c5b4b39999",
-        "modelHash": "e224b7a272f66296",
+        "codeHash": "3f42de6dc78ed353",
+        "modelHash": "afdcbee42d5fc69b",
         "at": "2026-09-22",
-        "commit": "e1b8fa0",
+        "commit": "33b5795",
         "reviewer": "Claude (benchmark UX redesign)"
       }
     },
@@ -18,10 +18,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "b907aa4522527576",
+        "codeHash": "b386833deaeb227a",
         "modelHash": "f01086c08aa7e51a",
         "at": "2026-09-22",
-        "commit": "e1b8fa0",
+        "commit": "33b5795",
         "reviewer": "Claude (benchmark UX redesign)"
       }
     },
@@ -30,10 +30,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "eed42dd006fd7907",
+        "codeHash": "54260be914619dcc",
         "modelHash": "07ff2102a958cd31",
         "at": "2026-09-22",
-        "commit": "e1b8fa0",
+        "commit": "33b5795",
         "reviewer": "Claude (benchmark UX redesign)"
       }
     },
@@ -42,10 +42,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "563ccc5eb75ed7bb",
-        "modelHash": "6dfe8d339fab3e93",
+        "codeHash": "f4faa4eeff1754d2",
+        "modelHash": "42b87e2c2c8e5dc7",
         "at": "2026-09-22",
-        "commit": "e1b8fa0",
+        "commit": "33b5795",
         "reviewer": "Claude (benchmark UX redesign)"
       }
     },
@@ -54,10 +54,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "ad094828fa90907d",
-        "modelHash": "7b042b4c9cc6572d",
+        "codeHash": "b882af15bf7cfcff",
+        "modelHash": "0ee39f0605752be7",
         "at": "2026-09-22",
-        "commit": "e1b8fa0",
+        "commit": "33b5795",
         "reviewer": "Claude (benchmark UX redesign)"
       }
     },
@@ -66,19 +66,19 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "b907aa4522527576",
+        "codeHash": "b386833deaeb227a",
         "modelHash": "188eec6b6cef2409",
         "at": "2026-09-22",
-        "commit": "e1b8fa0",
+        "commit": "33b5795",
         "reviewer": "Claude (benchmark UX redesign)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "aef3a1c5b4b39999",
-        "modelHash": "31b07d680ec29549",
+        "codeHash": "3f42de6dc78ed353",
+        "modelHash": "8944ce230f847b92",
         "at": "2026-09-22",
-        "commit": "e1b8fa0",
+        "commit": "33b5795",
         "reviewer": "Claude (benchmark UX redesign)"
       },
       "observed": {
@@ -87,10 +87,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "aef3a1c5b4b39999",
-        "modelHash": "122abc97124fd757",
+        "codeHash": "3f42de6dc78ed353",
+        "modelHash": "25daac4e9aa04f5c",
         "at": "2026-09-22",
-        "commit": "e1b8fa0",
+        "commit": "33b5795",
         "reviewer": "Claude (benchmark UX redesign)"
       },
       "observed": {

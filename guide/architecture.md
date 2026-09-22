@@ -54,7 +54,7 @@ Results의 반복 측정 비교 메뉴에서 전후 실행 묶음을 고를 수 
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-22 @ `e1b8fa0` · Claude (benchmark UX redesign)
+- 검토 2026-09-22 @ `33b5795` · Claude (benchmark UX redesign)
 
 </details>
 
@@ -140,7 +140,7 @@ CTS 원문 케이스는 `vendored/VendoredCtsListActivity`가 `:ctsvendor` 모�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/ui/MetricRows.kt`, `app/src/main/java/dev/halcamera/ui/Look.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-22 @ `e1b8fa0` · Claude (benchmark UX redesign)
+- 검토 2026-09-22 @ `33b5795` · Claude (benchmark UX redesign)
 
 </details>
 
@@ -172,7 +172,7 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 `RegressionDetector`는 두 실행의 측정 계약·endpoint·validity·환경 조건을 확인합니다. baseline 비교에서만 회귀 판정을 표시하며, 이전 실행이나 임의 선택 실행과의 비교는 변화량과 비교 불가 사유를 표시합니다. 단위가 다르면 각 단위를 유지하고 백분율을 표시하지 않습니다.
 
-결과 화면은 판정 한 줄을 먼저 표시합니다(`N metrics degraded`, `No degradation`, baseline이 없으면 `First run`). 그 아래에 핵심 지표 네 개(`Camera open`·`First frame`·`Still capture`·`Frame rate`)를 baseline 눈금이 있는 가로 막대로 그리고, 저하 판정이 붙은 나머지 행을 이어서 표시합니다. 전체 지표 표와 실행 정보·flag·파일 경로는 각각 `All metrics`, `Run info` 접힘 아래에 두며, 결과와 비교 텍스트는 복사 버튼으로 제공합니다. 비교 화면은 0 기준선 좌우로 변화율 막대를 그리는 delta 차트를 먼저 표시하고, 백분율이 없는 행(count·단위 불일치)은 글줄로 남깁니다. 벤치마크 화면의 문구는 설명을 포함해 영어이며, 판정 단어는 `Regressed` 대신 `degraded`를 사용합니다.
+결과 화면은 판정 한 줄을 먼저 표시합니다(`N metrics degraded`, `No degradation`, baseline이 없으면 `First run`). 그 아래에 핵심 지표 네 개(`Camera open`·`First frame`·`Still capture`·`Frame rate`)를 baseline 눈금이 있는 가로 막대로 그리고, 저하 판정이 붙은 나머지 행을 이어서 표시합니다. 전체 지표 표와 실행 정보·flag·파일 경로는 각각 `All metrics`, `Run info` 접힘 아래에 두며, 결과와 비교 텍스트는 복사 버튼으로 제공합니다. 비교 화면은 0 기준선 좌우로 변화율 막대를 그리는 delta 차트를 먼저 표시하고, 백분율이 없는 행(count·단위 불일치)은 글줄로 남깁니다. 벤치마크 화면은 라벨·버튼·지표명·판정 단어를 영어로 쓰고(판정은 `Regressed` 대신 `degraded`), 설명·안내·오류 문장은 한국어로 씁니다.
 
 Results의 행은 저장된 결과로 연결됩니다. `두 실행 비교`를 누르고 기준과 현재 실행을 차례로 고릅니다. 선택한 기준은 테두리로 표시하며 취소나 뒤로 가기로 선택을 해제합니다. 각 행의 `⋮` 메뉴 또는 길게 누르기로 baseline, 비교, JSON·CSV 내보내기, 삭제 작업을 선택합니다. 삭제 확인 후 파일을 삭제하고 해당 baseline 포인터를 정리합니다. 측정값이 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다.
 
@@ -225,7 +225,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/ui/GalleryImageView.kt`, `app/src/main/java/dev/halcamera/ui/IconButton.kt`, `app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/SelectionPopup.kt`, `app/src/main/java/dev/halcamera/ui/ShutterButton.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BaselineManager.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/StoreRunCatalog.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-22 @ `e1b8fa0` · Claude (benchmark UX redesign)
+- 검토 2026-09-22 @ `33b5795` · Claude (benchmark UX redesign)
 
 </details>
 
@@ -352,7 +352,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-22 @ `e1b8fa0` · Claude (benchmark UX redesign)
+- 검토 2026-09-22 @ `33b5795` · Claude (benchmark UX redesign)
 
 </details>
 
@@ -404,13 +404,13 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-22 @ `e1b8fa0` · Claude (benchmark UX redesign) |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-22 @ `e1b8fa0` · Claude (benchmark UX redesign) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-22 @ `e1b8fa0` · Claude (benchmark UX redesign) |
-| 원고 `overview` | 최신 | 검토 2026-09-22 @ `e1b8fa0` · Claude (benchmark UX redesign) |
-| 원고 `module-roles` | 최신 | 검토 2026-09-22 @ `e1b8fa0` · Claude (benchmark UX redesign) |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-22 @ `e1b8fa0` · Claude (benchmark UX redesign) |
-| 원고 `constraints` | 최신 | 검토 2026-09-22 @ `e1b8fa0` · Claude (benchmark UX redesign) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-22 @ `33b5795` · Claude (benchmark UX redesign) |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-22 @ `33b5795` · Claude (benchmark UX redesign) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-22 @ `33b5795` · Claude (benchmark UX redesign) |
+| 원고 `overview` | 최신 | 검토 2026-09-22 @ `33b5795` · Claude (benchmark UX redesign) |
+| 원고 `module-roles` | 최신 | 검토 2026-09-22 @ `33b5795` · Claude (benchmark UX redesign) |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-22 @ `33b5795` · Claude (benchmark UX redesign) |
+| 원고 `constraints` | 최신 | 검토 2026-09-22 @ `33b5795` · Claude (benchmark UX redesign) |
 
 <!-- omm:end id=status -->
 
