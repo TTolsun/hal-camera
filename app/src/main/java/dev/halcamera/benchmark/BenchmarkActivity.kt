@@ -291,9 +291,8 @@ class BenchmarkActivity : ComponentActivity() {
             val row = Look.row(this)
             row.addView(Look.ghostButton(this, "History", dark = true) { openHistoryScreen() },
                 LinearLayout.LayoutParams(0, dp(48), 1f))
-            row.addView(Look.ghostButton(this, "Settings", dark = true) {}.apply {
-                setOnClickListener { openSettings(it) }
-                contentDescription = "벤치마크 설정, profiling data 한도 ${RunRetention.label(settings.runLimit)}"
+            row.addView(Look.ghostButton(this, "Settings", dark = true) { openSettings() }.apply {
+                contentDescription = "벤치마크 설정, 보관 개수 ${RunRetention.label(settings.runLimit)}"
             }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
             actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
@@ -313,22 +312,89 @@ class BenchmarkActivity : ComponentActivity() {
     }
 
     /** Settings → the profiling data limit. Applying a smaller limit prunes immediately, keeping every baseline. */
-    private fun openSettings(anchor: View) {
+    /**
+     * Settings. The limit is an ordered scale, so it is a slider: a five-item list made the reader compare
+     * five near-identical strings to find the one number that differs, while a slider puts the choice on one
+     * axis and shows where the current value sits on it.
+     */
+    private fun openSettings() {
         val options = RunRetention.OPTIONS
-        val labels = options.map { "Profiling data limit · ${RunRetention.label(it)}" }
-        showSelectionPopup(anchor, labels, options.indexOf(settings.runLimit).coerceAtLeast(0)) { index ->
-            settings.runLimit = options[index]
-            io.execute {
-                val deleted = prune()
-                main.post {
-                    if (destroyed) return@post
-                    val suffix = if (deleted == 0) "" else " · 오래된 run ${deleted}개 삭제"
-                    android.widget.Toast.makeText(
-                        this, "Profiling data limit: ${RunRetention.label(settings.runLimit)}$suffix",
-                        android.widget.Toast.LENGTH_SHORT
-                    ).show()
-                    render()
+        var picked = options.indexOf(settings.runLimit).coerceAtLeast(0)
+
+        // A plain Dialog with the app's own card, not AlertDialog: the platform dialog arrives in the system
+        // theme, so a grey sheet with system buttons would sit on top of this screen's black cards.
+        val card = Look.card(this, dark = true)
+        card.addView(Look.text(this, "Data limit", 19, Look.onDark, bold = true))
+        val value = Look.text(this, RunRetention.label(options[picked]), 30, Look.primaryOnDark, bold = true, mono = true)
+        card.addView(value, lp(top = 10))
+        card.addView(Look.text(this, "보관할 개수입니다. 넘으면 오래된 것부터 지우고 baseline은 남깁니다.", 12, Look.onDarkMuted), lp(top = 4))
+
+        // The tick labels stand in for the scale, so every stop is readable without dragging to find it.
+        val ticks = Look.row(this)
+        // The end labels sit against the ends of the track, where the thumb actually stops; centring them
+        // inside equal columns would leave both ends floating a half column inward.
+        val tickViews = options.mapIndexed { index, option ->
+            Look.text(this, RunRetention.tickLabel(option), 12, Look.onDarkMuted).apply {
+                gravity = when (index) {
+                    0 -> Gravity.START
+                    options.lastIndex -> Gravity.END
+                    else -> Gravity.CENTER
                 }
+            }
+        }
+        fun highlight(position: Int) {
+            tickViews.forEachIndexed { i, view ->
+                view.setTextColor(if (i == position) Look.onDark else Look.onDarkMuted)
+                view.setTypeface(view.typeface, if (i == position) Typeface.BOLD else Typeface.NORMAL)
+            }
+        }
+        val bar = android.widget.SeekBar(this).apply {
+            max = options.lastIndex
+            progress = picked
+            // Zero the horizontal padding so the thumb travels the full width the tick labels are spread over.
+            setPadding(0, paddingTop, 0, paddingBottom)
+            setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
+                override fun onProgressChanged(seek: android.widget.SeekBar, position: Int, fromUser: Boolean) {
+                    picked = position
+                    value.text = RunRetention.label(options[position])
+                    highlight(position)
+                }
+                override fun onStartTrackingTouch(seek: android.widget.SeekBar) = Unit
+                override fun onStopTrackingTouch(seek: android.widget.SeekBar) = Unit
+            })
+        }
+        card.addView(bar, lp(top = 16))
+        tickViews.forEach { ticks.addView(it, LinearLayout.LayoutParams(0, -2, 1f)) }
+        card.addView(ticks, lp(top = 2))
+        highlight(picked)
+
+        val dialog = android.app.Dialog(this).apply {
+            requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
+            window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+        }
+        val actionRow = Look.row(this)
+        actionRow.addView(Look.ghostButton(this, "취소", dark = true) { dialog.dismiss() },
+            LinearLayout.LayoutParams(0, dp(48), 1f))
+        actionRow.addView(Look.primaryButton(this, "적용") { applyRunLimit(options[picked]); dialog.dismiss() },
+            LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
+        card.addView(actionRow, lp(top = 18))
+
+        val frame = FrameLayout(this).apply { setPadding(dp(16), 0, dp(16), 0); addView(card) }
+        dialog.setContentView(frame)
+        dialog.show()
+    }
+
+    private fun applyRunLimit(limit: Int) {
+        settings.runLimit = limit
+        io.execute {
+            val deleted = prune()
+            main.post {
+                if (destroyed) return@post
+                val suffix = if (deleted == 0) "" else " · 오래된 run ${deleted}개 삭제"
+                android.widget.Toast.makeText(
+                    this, "Data limit ${RunRetention.label(limit)}$suffix", android.widget.Toast.LENGTH_SHORT
+                ).show()
+                render()
             }
         }
     }

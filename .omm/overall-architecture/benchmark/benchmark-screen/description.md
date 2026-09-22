@@ -2,4 +2,4 @@ BenchmarkActivity가 시작 카드·진행·결과·비교 네 화면을 상태 
 
 결과 화면은 판정 한 줄(`N metrics degraded`·`No degradation`·`First run`)을 먼저 표시하고, 핵심 지표 네 개를 ui/MetricBars의 MeterView 막대(baseline 눈금 포함)로 그립니다. 전체 지표 표와 실행 정보·flag·파일 경로는 `All metrics`·`Run info` 접힘 아래에 있습니다. 비교 화면은 DeltaBarView로 0 기준선 좌우에 변화율 막대를 그리고, 백분율이 없는 행은 글줄로 남깁니다. 라벨·버튼·지표명·판정 단어는 영어(판정은 `degraded`), 설명·안내·오류 문장은 한국어입니다.
 
-Settings의 `Profiling data limit`은 BenchmarkPrefs에 저장하고, 저장 직후와 설정 변경 시 RunRetention.toDelete가 한도를 넘는 실행 파일을 오래된 것부터 고릅니다. baseline으로 지정된 실행은 삭제 대상에서 제외하며 기본값은 Unlimited입니다.
+Settings의 `Data limit`은 BenchmarkPrefs에 저장하고, 저장 직후와 설정 변경 시 RunRetention.toDelete가 한도를 넘는 실행 파일을 오래된 것부터 고릅니다. baseline으로 지정된 실행은 삭제 대상에서 제외하며 기본값은 Unlimited입니다. 한도는 순서가 있는 다섯 단계이므로 목록이 아니라 슬라이더로 고릅니다. 앱의 카드와 버튼을 그대로 쓰는 Dialog 위에 현재 값, 다섯 눈금, 취소·적용을 올리며, 시스템 테마로 그려지는 AlertDialog는 쓰지 않습니다.

@@ -154,12 +154,18 @@ class HistoryActivity : ComponentActivity() {
                 card.background = Look.cardBackground(this, Look.expertTile2, Look.primaryOnDark)
                 androidx.core.view.ViewCompat.setStateDescription(card, "비교 기준으로 선택됨")
             }
-            // Three lines, not six: when the run happened and how it did, what was measured, and the numbers.
-            // The run id, the profile and the raw validity flags live on the result screen this row opens.
+            // Two lines, or three when a build label was typed: when the run happened and how it did, then
+            // the numbers. The run id, the profile and the raw validity flags live on the result screen this
+            // row opens.
             val lines = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
             val head = Look.row(this)
             head.addView(
-                Look.text(this, ResultPresenter.localTime(run.runId) ?: run.runId, 15, Look.onDark, bold = true),
+                // A long badge must not wrap the time onto a second line at a large font scale; the time is a
+                // fixed 16 characters, so letting it ellipsize is the right way to lose the argument.
+                Look.text(this, ResultPresenter.localTime(run.runId) ?: run.runId, 15, Look.onDark, bold = true).apply {
+                    maxLines = 1
+                    ellipsize = android.text.TextUtils.TruncateAt.END
+                },
                 LinearLayout.LayoutParams(0, -2, 1f)
             )
             // One badge, on the headline row. A verdict outranks an eligibility note: a run that degraded is

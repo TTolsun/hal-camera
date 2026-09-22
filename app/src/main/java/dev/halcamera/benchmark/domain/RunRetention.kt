@@ -17,6 +17,9 @@ object RunRetention {
 
     fun label(limit: Int): String = if (limit == UNLIMITED) "Unlimited" else limit.toString()
 
+    /** The same value under a slider tick, where "Unlimited" is four times the width of every other stop. */
+    fun tickLabel(limit: Int): String = if (limit == UNLIMITED) "∞" else limit.toString()
+
     /** Run ids to delete, oldest first. [runIdsNewestFirst] is the store's name order, which is time order. */
     fun toDelete(runIdsNewestFirst: List<String>, protected: Set<String>, limit: Int): List<String> {
         if (limit == UNLIMITED || runIdsNewestFirst.size <= limit) return emptyList()
