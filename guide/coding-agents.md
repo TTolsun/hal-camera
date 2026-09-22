@@ -8,7 +8,7 @@ title: Agents
 <h2 lang="en">Use it.</h2>
 
 1. 저장소를 clone하고 APK를 기기에 설치합니다.
-2. 앱의 Benchmark 진단 패널에서 **ADB CLI 허용**을 켭니다. 초기값이 꺼짐이며 adb로는 켤 수 없습니다.
+2. Live 화면의 **진단** 버튼으로 진단 패널을 열고 **ADB CLI 허용**을 켭니다. 초기값이 꺼짐이며 adb로는 켤 수 없습니다.
 3. 에이전트를 저장소 루트에서 실행합니다. Claude Code는 `.claude/skills/halcam-cli/`를 통해 스킬을 인식하며, 그 파일은 본문인 `skills/halcam-cli/SKILL.md`를 가리킵니다.
 4. 다른 에이전트를 쓴다면 `skills/halcam-cli/SKILL.md`를 직접 읽히십시오. 저장소의 `AGENTS.md`에도 같은 경로를 적어 두었습니다.
 
@@ -32,7 +32,7 @@ adb shell sh /data/local/tmp/halcam help
 
 <h2 lang="en">Boundaries.</h2>
 
-벤치마크는 CLI 계약에서 제외되어 있습니다. 앱은 `benchmark.run`을 접수하지 않으므로, 측정을 요청받은 에이전트는 우회 경로를 만들지 말고 앱 화면에서 실행해야 한다고 알려야 합니다. 지원 명령의 실제 목록은 언제나 `/v1/hello`의 `commands` 배열이 원본입니다.
+벤치마크는 CLI 계약에서 제외되어 있습니다. 앱은 `benchmark.run`을 접수하지 않으므로, 측정을 요청받은 에이전트는 우회 경로를 만들지 말고 앱 화면에서 실행해야 한다고 알려야 합니다. 지원 범위의 실제 목록은 언제나 `/v1/hello`가 원본이며, 작업 명령은 `commands` 배열에, 상태 조회와 취소 같은 조작은 `controls` 배열에 들어 있습니다.
 
 스킬은 사람의 승인을 대신하지 않습니다. ADB CLI 허용 스위치와 런타임 권한은 기기 앞의 사람이 켜야 하고, 에이전트는 그 상태를 읽어 다음 행동을 안내할 뿐입니다. 화면에서 촬영이나 벤치마크가 진행 중이면 새 CLI 작업은 `BUSY`로 거부되며, 이때 요청을 반복하지 않는 것이 스킬의 규칙입니다.
 

@@ -29,7 +29,7 @@
     <h1 lang="en">Hand the camera to a coding agent.</h1><p>저장소의 <code>skills/halcam-cli/SKILL.md</code> 한 파일이 에이전트용 운전 지침입니다. 준비 절차, 명령 목록, 결과 파일 회수, 오류 코드 대응을 담고 있으므로, AI 코딩 에이전트에게 이 파일을 읽히면 사람이 매번 <code>adb</code> 사용법을 설명하지 않아도 됩니다. 사람이 읽는 CLI 설명은 <a href="cli.html">CLI 가이드</a>이고, 계약의 원본은 <code>app/src/main/java/dev/halcamera/cli/</code>의 코드입니다. 스킬은 그 둘을 에이전트가 실행할 수 있는 순서로 옮겨 적은 문서입니다.</p>
 <h2 lang="en">Use it.</h2><ol>
 <li>저장소를 clone하고 APK를 기기에 설치합니다.</li>
-<li>앱의 Benchmark 진단 패널에서 <strong>ADB CLI 허용</strong>을 켭니다. 초기값이 꺼짐이며 adb로는 켤 수 없습니다.</li>
+<li>Live 화면의 <strong>진단</strong> 버튼으로 진단 패널을 열고 <strong>ADB CLI 허용</strong>을 켭니다. 초기값이 꺼짐이며 adb로는 켤 수 없습니다.</li>
 <li>에이전트를 저장소 루트에서 실행합니다. Claude Code는 <code>.claude/skills/halcam-cli/</code>를 통해 스킬을 인식하며, 그 파일은 본문인 <code>skills/halcam-cli/SKILL.md</code>를 가리킵니다.</li>
 <li>다른 에이전트를 쓴다면 <code>skills/halcam-cli/SKILL.md</code>를 직접 읽히십시오. 저장소의 <code>AGENTS.md</code>에도 같은 경로를 적어 두었습니다.</li>
 </ol>
@@ -69,7 +69,7 @@ adb shell sh /data/local/tmp/halcam help
 <td><code>CLI_DISABLED</code>, <code>PERMISSION_REQUIRED</code>, <code>BUSY</code>, <code>interrupted</code>, <code>UNKNOWN_CASE</code>의 원인과 다음 행동</td>
 </tr>
 </tbody></table>
-<h2 lang="en">Boundaries.</h2><p>벤치마크는 CLI 계약에서 제외되어 있습니다. 앱은 <code>benchmark.run</code>을 접수하지 않으므로, 측정을 요청받은 에이전트는 우회 경로를 만들지 말고 앱 화면에서 실행해야 한다고 알려야 합니다. 지원 명령의 실제 목록은 언제나 <code>/v1/hello</code>의 <code>commands</code> 배열이 원본입니다.</p>
+<h2 lang="en">Boundaries.</h2><p>벤치마크는 CLI 계약에서 제외되어 있습니다. 앱은 <code>benchmark.run</code>을 접수하지 않으므로, 측정을 요청받은 에이전트는 우회 경로를 만들지 말고 앱 화면에서 실행해야 한다고 알려야 합니다. 지원 범위의 실제 목록은 언제나 <code>/v1/hello</code>가 원본이며, 작업 명령은 <code>commands</code> 배열에, 상태 조회와 취소 같은 조작은 <code>controls</code> 배열에 들어 있습니다.</p>
 <p>스킬은 사람의 승인을 대신하지 않습니다. ADB CLI 허용 스위치와 런타임 권한은 기기 앞의 사람이 켜야 하고, 에이전트는 그 상태를 읽어 다음 행동을 안내할 뿐입니다. 화면에서 촬영이나 벤치마크가 진행 중이면 새 CLI 작업은 <code>BUSY</code>로 거부되며, 이때 요청을 반복하지 않는 것이 스킬의 규칙입니다.</p>
 <p>명령 집합을 바꿀 때에는 <code>CliCommand.COMMANDS</code>, <code>AdbArguments</code>, <code>app/src/main/assets/halcam.sh</code>, <a href="cli.html">CLI 가이드</a>, <code>skills/halcam-cli/SKILL.md</code>를 함께 갱신합니다. 스킬과 가이드가 어긋나면 코드와 가이드가 원본입니다.</p>
 <p>명령의 자세한 설명과 직접 호출 예시는 <a href="cli.html">CLI 가이드</a>에서 이어서 읽으세요.</p>

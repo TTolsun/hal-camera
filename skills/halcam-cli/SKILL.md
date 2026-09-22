@@ -9,7 +9,7 @@ PC에 필요한 것은 `adb` 하나입니다. 명령을 해석하고 완료를 �
 
 ## 1. 준비 (기기마다 한 번, APK를 갱신한 뒤에도 같은 명령)
 
-1. 앱의 Benchmark 진단 패널에서 **ADB CLI 허용**을 켭니다. 초기값이 꺼짐이므로 사람이 직접 켜야 하며, 꺼져 있으면 모든 명령이 `CLI_DISABLED`로 끝납니다.
+1. Live 화면에서 **진단** 버튼을 눌러 진단 패널을 열고 **ADB CLI 허용**을 켭니다. 초기값이 꺼짐이므로 사람이 직접 켜야 하며, 꺼져 있으면 provider에 닿는 모든 명령이 `CLI_DISABLED`로 끝납니다. 스크립트가 자체적으로 처리하는 `help`만 예외입니다.
 2. 카메라 권한을 허용하고 화면 잠금을 해제합니다. 소리를 포함한 녹화에는 마이크 권한도 필요합니다.
 3. 기기에 스크립트를 내려놓습니다.
 
@@ -18,7 +18,7 @@ adb shell "content read --uri content://dev.halcamera.cli/v1/shell > /data/local
 adb shell sh /data/local/tmp/halcam help
 ```
 
-연결 상태는 `adb exec-out content read --uri content://dev.halcamera.cli/v1/hello`로 확인합니다. 응답의 `enabled`, `camera_permission`, `locked`가 준비 상태를 그대로 알려 주며, `commands` 배열이 이 빌드가 접수하는 명령의 전체 목록입니다. 기기가 여러 대이면 모든 명령에 `adb -s SERIAL`을 붙입니다.
+연결 상태는 `adb exec-out content read --uri content://dev.halcamera.cli/v1/hello`로 확인합니다. 응답의 `enabled`, `camera_permission`, `locked`가 준비 상태를 그대로 알려 줍니다. `commands` 배열은 이 빌드가 접수하는 작업 명령이고, 상태 조회와 취소처럼 작업을 만들지 않는 조작은 `controls` 배열(`record.stop`, `status`, `request`, `request.cancel`)에 따로 있습니다. 기기가 여러 대이면 모든 명령에 `adb -s SERIAL`을 붙입니다.
 
 ## 2. 자주 쓰는 명령
 
