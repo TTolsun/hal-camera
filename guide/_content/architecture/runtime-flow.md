@@ -56,7 +56,7 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 `RegressionDetector`는 두 실행의 측정 계약·endpoint·validity·환경 조건을 확인합니다. baseline 비교에서만 회귀 판정을 표시하며, 이전 실행이나 임의 선택 실행과의 비교는 변화량과 비교 불가 사유를 표시합니다. 단위가 다르면 각 단위를 유지하고 백분율을 표시하지 않습니다.
 
-결과 화면은 판정 한 줄을 먼저 표시합니다(`N metrics degraded`, `No degradation`, baseline이 없으면 `First run`). 그 아래에 핵심 지표 네 개(`Camera open`·`First frame`·`Still capture`·`Frame rate`)를 baseline 눈금이 있는 가로 막대로 그리고, 저하 판정이 붙은 나머지 행을 이어서 표시합니다. 전체 지표 표와 실행 정보·flag·파일 경로는 각각 `All metrics`, `Run info` 접힘 아래에 두며, 결과와 비교 텍스트는 복사 버튼으로 제공합니다. 비교 화면은 0 기준선 좌우로 변화율 막대를 그리는 delta 차트를 먼저 표시하고, 백분율이 없는 행(count·단위 불일치)은 글줄로 남깁니다. 벤치마크 화면은 라벨·버튼·지표명·판정 단어를 영어로 쓰고(판정은 `Regressed` 대신 `degraded`), 설명·안내·오류 문장은 한국어로 씁니다.
+결과 화면은 판정 한 줄을 먼저 표시합니다(`N metrics degraded`, `No degradation`, baseline이 없으면 `First run`). 그 아래에 핵심 지표 네 개(`Camera open`·`First frame`·`Still capture`·`Frame rate`)를 baseline 눈금이 있는 가로 막대로 그리고, 저하 판정이 붙은 나머지 행을 이어서 표시합니다. 전체 지표 표와 실행 정보·flag·파일 경로는 각각 `All metrics`, `Run info` 접힘 아래에 둡니다. 결과를 PC로 옮기는 경로는 `Export` 하나이며, 화면 텍스트를 클립보드로 복사하던 버튼은 제거했습니다. 비교 화면은 0 기준선 좌우로 변화율 막대를 그리는 delta 차트를 먼저 표시하고, 백분율이 없는 행(count·단위 불일치)은 글줄로 남깁니다. 벤치마크 화면은 라벨·버튼·지표명·판정 단어를 영어로 쓰고(판정은 `Regressed` 대신 `degraded`), 설명·안내·오류 문장은 한국어로 씁니다.
 
 Results의 행은 저장된 결과로 연결됩니다. `두 실행 비교`를 누르고 기준과 현재 실행을 차례로 고릅니다. 선택한 기준은 테두리로 표시하며 취소나 뒤로 가기로 선택을 해제합니다. 각 행의 `⋮` 메뉴 또는 길게 누르기로 baseline, 비교, JSON·CSV 내보내기, 삭제 작업을 선택합니다. 삭제 확인 후 파일을 삭제하고 해당 baseline 포인터를 정리합니다. 측정값이 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다.
 
