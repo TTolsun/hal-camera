@@ -64,8 +64,7 @@ class CliProvider : ContentProvider() {
                 else -> commands.stopRecording(arg)
             }
         }
-        require(arg == null) { "Use --extra for command options" }
-        return commands.submit(AdbArguments.command(method, values))
+        return commands.submit(AdbArguments.command(method, values, arg))
     }
 
     private fun json(action: () -> JSONObject): JSONObject = try { action() }
