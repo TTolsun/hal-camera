@@ -113,7 +113,7 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/benchmark/domain/ProfileComparison.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RepeatStatistics.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/ProfileLibrary.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ProfileArchive.kt`, `app/src/main/java/dev/halcamera/benchmark/ProfileComparisonActivity.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-22 @ `7148b3a` · Claude (benchmark UX redesign)
+- 검토 2026-09-22 @ `b38bc07` · Claude (release 0.12.0)
 
 </details>
 
@@ -160,8 +160,8 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.11.0` |
-| `versionCode` | `113` |
+| `versionName` | `0.12.0` |
+| `versionCode` | `114` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |
@@ -185,13 +185,13 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.11.0 (versionCode 113)
+- 검증 기준 앱 버전: 0.12.0 (versionCode 114)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-22 @ `7148b3a` · Claude (benchmark UX redesign) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-22 @ `7148b3a` · Claude (benchmark UX redesign) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-22 @ `7148b3a` · Claude (benchmark UX redesign) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-22 @ `b38bc07` · Claude (release 0.12.0) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-22 @ `b38bc07` · Claude (release 0.12.0) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-22 @ `b38bc07` · Claude (release 0.12.0) |
 
 <!-- omm:end id=status -->
 
