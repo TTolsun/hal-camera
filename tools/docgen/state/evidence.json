@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "7124aadad464f11a",
+        "codeHash": "ea29dd01dd7def1e",
         "modelHash": "745d6f85e3bab272",
         "at": "2026-09-22",
-        "commit": "7d1a8c3",
-        "reviewer": "Claude (benchmark UI polish)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "7f591acb76f3b5db",
+        "codeHash": "bafc71ce47bc38fc",
         "modelHash": "5e02bdcde9bb7116",
         "at": "2026-09-22",
-        "commit": "7d1a8c3",
-        "reviewer": "Claude (benchmark UI polish)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "db10cc428840c4c0",
+        "codeHash": "114eff351a008656",
         "modelHash": "07ff2102a958cd31",
         "at": "2026-09-22",
-        "commit": "7d1a8c3",
-        "reviewer": "Claude (benchmark UI polish)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "b9344eed2996576b",
+        "codeHash": "f11b7b76586daf1f",
         "modelHash": "9db92647bef6450f",
         "at": "2026-09-22",
-        "commit": "7d1a8c3",
-        "reviewer": "Claude (benchmark UI polish)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "2749e9e129893bf1",
+        "codeHash": "12d90c16ee2d5325",
         "modelHash": "45f0e427b531a6d4",
         "at": "2026-09-22",
-        "commit": "7d1a8c3",
-        "reviewer": "Claude (benchmark UI polish)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "7f591acb76f3b5db",
+        "codeHash": "bafc71ce47bc38fc",
         "modelHash": "5b4e1667d4fa57b9",
         "at": "2026-09-22",
-        "commit": "7d1a8c3",
-        "reviewer": "Claude (benchmark UI polish)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "7124aadad464f11a",
+        "codeHash": "ea29dd01dd7def1e",
         "modelHash": "8d923519c6ef9d72",
         "at": "2026-09-22",
-        "commit": "7d1a8c3",
-        "reviewer": "Claude (benchmark UI polish)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "7124aadad464f11a",
+        "codeHash": "ea29dd01dd7def1e",
         "modelHash": "425fe00c7ce5f49a",
         "at": "2026-09-22",
-        "commit": "7d1a8c3",
-        "reviewer": "Claude (benchmark UI polish)"
+        "commit": "289d5ee",
+        "reviewer": "Claude (dialog lifecycle)"
       },
       "observed": {
         "state": "fresh"
