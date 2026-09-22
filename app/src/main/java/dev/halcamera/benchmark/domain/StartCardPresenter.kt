@@ -55,21 +55,21 @@ object StartCardPresenter {
         // 8.2: the profile is Camera2-only, so entering from a CameraX preview switches the engine and says so
         // instead of silently measuring something the LIVE screen was not showing.
         if (engineName != ENGINE_CAMERA2) {
-            notices += "Camera2 전용 profile · Camera2로 전환"
+            notices += "Camera2 전용 profile · Camera2로 전환합니다"
         }
         if (thermalStatus != null && thermalStatus in ValidityFlags.THERMAL_MODERATE until THERMAL_SEVERE) {
-            notices += "THERMAL_HIGH · 비교·점수 산정 제외"
+            notices += "THERMAL_HIGH · 비교·점수 산정에서 제외됩니다"
         }
         if (powerSaveMode == true) {
-            notices += "POWER_SAVE_MODE · 비교·점수 산정 제외"
+            notices += "POWER_SAVE_MODE · 비교·점수 산정에서 제외됩니다"
         }
         return StartCard(
             titleLine = listOf(ENGINE_CAMERA2, endpointName, conditionLabel(profile), launchModeLabel(profile))
                 .joinToString(" · "),
             profileLine = "Profile  ${profile.id}",
             verdictLine = verdictLine(compatibility),
-            durationLine = "약 ${ESTIMATED_SECONDS}초 · 밝은 피사체를 향해 기기 고정",
-            detailLine = "${profile.launchIterations}회 open · ${profile.observeMs / 1000}초 관측 · ${profile.stillCount}장",
+            durationLine = "약 ${ESTIMATED_SECONDS}초 · 화면을 켠 채 유지 · 밝은 피사체를 향해 고정",
+            detailLine = "${profile.launchIterations}× open · ${profile.observeMs / 1000}초 관측 · 사진 ${profile.stillCount}장",
             notices = notices,
             blockedReason = blockedReason(compatibility, thermalStatus),
             refreshable = compatibility.supported
@@ -84,7 +84,7 @@ object StartCardPresenter {
         !compatibility.supported ->
             "이 profile은 이 카메라에서 실행할 수 없습니다 (${compatibility.reasons.joinToString(", ").ifEmpty { "사유 없음" }})."
         thermalStatus != null && thermalStatus >= THERMAL_SEVERE ->
-            "기기 온도가 높아(SEVERE) 시작하지 않습니다. 식은 뒤에 다시 시작하세요."
+            "기기 온도가 높습니다(SEVERE). 식을 때까지 자동으로 다시 확인합니다."
         else -> null
     }
 

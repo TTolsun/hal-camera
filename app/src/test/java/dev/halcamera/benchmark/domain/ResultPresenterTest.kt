@@ -28,7 +28,7 @@ class ResultPresenterTest {
         comparison: RunComparison? = null,
         comparedTo: ComparedTo = ComparedTo.NONE,
         isBaseline: Boolean = false
-    ) = ResultPresenter.present(run, comparison, comparedTo, isBaseline, "Galaxy S25+", "후면 메인")
+    ) = ResultPresenter.present(run, comparison, comparedTo, isBaseline, "Galaxy S25+", "Rear main")
 
     // ---- second statistic column (8.4) ----
 
@@ -113,18 +113,18 @@ class ResultPresenterTest {
     // ---- eligibility headline (5.3, 8.4) ----
 
     @Test fun everyEligibilityStepHasItsOwnHeadline() {
-        assertEquals("비교 가능 · 점수 가능 · thermal 0 → 1 → 1", ResultPresenter.eligibilityLine(run()))
+        assertEquals("Comparable · scorable · thermal 0 → 1 → 1", ResultPresenter.eligibilityLine(run()))
 
         val charging = run(charging = true, flags = listOf(ValidityFlags.CHARGING))
-        assertTrue(ResultPresenter.eligibilityLine(charging).startsWith("비교 가능 · 점수 제외 (CHARGING)"))
+        assertTrue(ResultPresenter.eligibilityLine(charging).startsWith("Comparable · excluded from scoring (CHARGING)"))
 
         val hot = run(thermalMax = 3, flags = listOf(ValidityFlags.THERMAL_HIGH))
         val hotLine = ResultPresenter.eligibilityLine(hot)
-        assertTrue(hotLine.startsWith("비교 불가 (THERMAL_HIGH)"))
-        assertTrue(hotLine.endsWith("Set as baseline 비활성"))
+        assertTrue(hotLine.startsWith("Not comparable (THERMAL_HIGH)"))
+        assertTrue(hotLine.endsWith("Set as baseline disabled"))
 
         val broken = run(flags = listOf(ValidityFlags.HARD_FAILURE))
-        assertTrue(ResultPresenter.eligibilityLine(broken).startsWith("측정 무효 (HARD_FAILURE)"))
+        assertTrue(ResultPresenter.eligibilityLine(broken).startsWith("Measurement invalid (HARD_FAILURE)"))
     }
 
     @Test fun anIneligibleRunCannotBeSetAsBaselineButABaselineCanAlwaysBeCleared() {
@@ -143,7 +143,7 @@ class ResultPresenterTest {
         val base = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 221.0)))
         val v = present(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
-        assertEquals("▲ 1 Regressed   baseline 20260910-100000-000", v.comparisonLine)
+        assertEquals("▲ 1 degraded   baseline 20260910-100000-000", v.comparisonLine)
         assertNull(v.hint)
     }
 
@@ -151,13 +151,13 @@ class ResultPresenterTest {
         val previous = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 170.0)))
         val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
-        assertEquals("baseline 없음 · 이전 run 20260910-100000-000 대비 표시", v.comparisonLine)
+        assertEquals("No baseline · shown vs previous run 20260910-100000-000", v.comparisonLine)
         assertEquals("[ Set as baseline ]을 누르면 이 run이 기준이 됩니다", v.hint)
     }
 
     @Test fun theFirstRunOfADeviceHasNeitherBaselineNorPrevious() {
         val v = present(run(metrics = listOf(metric("2.2", 164.0))))
-        assertEquals("baseline 없음 · 비교할 이전 run이 없습니다", v.comparisonLine)
+        assertEquals("No baseline · no earlier run to compare", v.comparisonLine)
         assertNull(v.identityLine)
         assertEquals("", v.sections.first().deltaHeader)
         // There is no delta column, so no row may print anything in it. A dash under an empty header claims the
@@ -188,11 +188,11 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 164.0)))
         val c = RegressionDetector.compare(previous, current)
         val asBaseline = present(current, c, ComparedTo.PREVIOUS, isBaseline = true)
-        assertEquals("이 run이 baseline입니다 · 이전 run 20260910-100000-000 대비 표시", asBaseline.comparisonLine)
-        assertEquals("baseline 없음 · 이전 run 20260910-100000-000 대비 표시", present(current, c, ComparedTo.PREVIOUS).comparisonLine)
+        assertEquals("This run is the baseline · shown vs previous run 20260910-100000-000", asBaseline.comparisonLine)
+        assertEquals("No baseline · shown vs previous run 20260910-100000-000", present(current, c, ComparedTo.PREVIOUS).comparisonLine)
 
         val alone = present(run(metrics = listOf(metric("2.2", 164.0))), isBaseline = true)
-        assertEquals("이 run이 baseline입니다 · 비교할 이전 run이 없습니다", alone.comparisonLine)
+        assertEquals("This run is the baseline · no earlier run to compare", alone.comparisonLine)
     }
 
     // ---- a comparison that did not happen (PR #21 review) ----
@@ -205,7 +205,7 @@ class ResultPresenterTest {
         assertEquals(0, c.judgedCount)
 
         val v = present(current, c, ComparedTo.BASELINE)
-        assertEquals("판정 불가   baseline 20260910-100000-000 · 비교 조건을 만족하는 지표가 없습니다", v.comparisonLine)
+        assertEquals("No verdict   baseline 20260910-100000-000 · no metric met the comparison conditions", v.comparisonLine)
         // The row keeps its delta but says why there is no verdict.
         val row = v.sections.first { it.title == "Capture" }.rows.first()
         assertEquals("조건 불일치", row.note)
@@ -231,7 +231,7 @@ class ResultPresenterTest {
         val c = RegressionDetector.compare(base, current)
         val v = present(current, c, ComparedTo.BASELINE)
         // The current run alone is fully eligible, so its own headline says nothing about charging.
-        assertEquals("비교 가능 · 점수 가능 · thermal 0 → 1 → 1", v.eligibilityLine)
+        assertEquals("Comparable · scorable · thermal 0 → 1 → 1", v.eligibilityLine)
         assertEquals("비교 시점 조건 차이: 충전 상태 다름", v.conditionLine)
         assertEquals("▲", v.sections.first { it.title == "Capture" }.rows.first().marker)
         assertTrue(v.render(), v.render().contains("비교 시점 조건 차이: 충전 상태 다름"))
@@ -258,7 +258,7 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("1.1", 100.0)),
             device = BenchmarkRunFixture.DEVICE.copy(vendorFingerprint = "vendor/other"))
         val v = present(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
-        assertEquals("Android 동일 · Camera build 다름 · 앱 동일 · subject 다름", v.identityLine)
+        assertEquals("Android same · Camera build differs · App same · subject differs", v.identityLine)
     }
 
     @Test fun theSubjectAxisIsDroppedWhenNeitherSideIsLabelled() {
@@ -266,7 +266,7 @@ class ResultPresenterTest {
         val base = run(runId = "20260910-100000-000", metrics = listOf(metric("1.1", 100.0)), subject = unlabeled)
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("1.1", 100.0)), subject = unlabeled)
         val v = present(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
-        assertEquals("Android 동일 · Camera build 동일 · 앱 동일", v.identityLine)
+        assertEquals("Android same · Camera build same · App same", v.identityLine)
     }
 
     // ---- 3A line ----
@@ -285,7 +285,7 @@ class ResultPresenterTest {
             metrics = listOf(launchMetric("1.1", 142.0, 161.0), windowMetric("H.1", 33.3), countMetric("H.5", 0))
         )
         val text = present(current).render()
-        assertTrue(text, text.startsWith("Camera benchmark\nGalaxy S25+ · 후면 메인 · camera2-standard-v1 · warm reopen\n"))
+        assertTrue(text, text.startsWith("Camera benchmark\nGalaxy S25+ · Rear main · camera2-standard-v1 · warm reopen\n"))
         assertTrue(text, text.contains("2026-09-10 11:00"))
         val open = text.lines().first { it.contains("Open") }
         val interval = text.lines().first { it.contains("Interval p50") }
@@ -310,5 +310,60 @@ class ResultPresenterTest {
         val current = run(metrics = listOf(metric("2.2", 164.0), launchMetric("1.1", 142.0, 161.0)))
         val titles = present(current).sections.map { it.title }
         assertEquals(listOf("Launch", "Capture"), titles)
+    }
+
+    // ---- verdict-first headline and key metric bars (mockup v7) ----
+
+    @Test fun theHeadlineLeadsWithTheVerdict() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 221.0)))
+        val c = RegressionDetector.compare(base, current)
+
+        val bad = ResultPresenter.headline(current, c, ComparedTo.BASELINE, isBaseline = false, endpointName = "Rear main")
+        assertEquals("1 metric degraded", bad.text)
+        assertEquals(Tone.BAD, bad.tone)
+        assertTrue(bad.sub, bad.sub.contains("Rear main"))
+
+        val clean = RegressionDetector.compare(base, run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 165.0))))
+        assertEquals(Tone.GOOD, ResultPresenter.headline(current, clean, ComparedTo.BASELINE, false, "Rear main").tone)
+
+        val first = ResultPresenter.headline(current, null, ComparedTo.NONE, isBaseline = false, endpointName = "Rear main")
+        assertEquals("First run", first.text)
+        assertTrue(first.sub, first.sub.startsWith("Baseline으로 지정하면"))
+
+        val asBaseline = ResultPresenter.headline(current, null, ComparedTo.NONE, isBaseline = true, endpointName = "Rear main")
+        assertEquals("This run is the baseline", asBaseline.text)
+
+        val previous = ResultPresenter.headline(current, c, ComparedTo.PREVIOUS, isBaseline = false, endpointName = "Rear main")
+        assertEquals(Tone.NEUTRAL, previous.tone)
+    }
+
+    @Test fun keyMetricsShareOneScaleWithTheBaselineTick() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(
+            launchMetric("1.1", 100.0, 120.0), launchMetric("1.6", 400.0, 420.0),
+            launchMetric("2.2", 480.0, 500.0), windowMetric("H.1", 33.3)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(
+            launchMetric("1.1", 128.0, 140.0), launchMetric("1.6", 412.0, 430.0),
+            launchMetric("2.2", 486.0, 510.0), windowMetric("H.1", 33.6)))
+        val keys = ResultPresenter.keyMetrics(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+
+        assertEquals(listOf("Camera open", "First frame", "Still capture", "Frame rate"), keys.map { it.label })
+        val open = keys.first()
+        assertEquals("128 ms", open.valueText)
+        assertEquals("+28 ms", open.deltaText)
+        // The larger of the two values sits at 80% of the bar, so both the fill and the tick stay on screen.
+        assertEquals(0.8, open.fraction, 1e-9)
+        assertEquals(0.8 * 100.0 / 128.0, open.baseFraction!!, 1e-9)
+        // Frame rate is H.1 upside down: 1000 / 33.6.
+        assertEquals("29.8 fps", keys.last().valueText)
+    }
+
+    @Test fun keyMetricsWithoutAComparisonCarryNoDeltaOrTick() {
+        val current = run(metrics = listOf(launchMetric("1.1", 128.0, 140.0)))
+        val keys = ResultPresenter.keyMetrics(current, null, ComparedTo.NONE)
+        assertEquals(1, keys.size)
+        assertNull(keys.single().deltaText)
+        assertNull(keys.single().baseFraction)
+        assertEquals(Tone.NEUTRAL, keys.single().tone)
     }
 }

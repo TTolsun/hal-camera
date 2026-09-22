@@ -58,7 +58,7 @@ class ComparePresenterTest {
         assertEquals("164 ms", r.base)
         assertEquals("221 ms", r.current)
         assertEquals("+35%", r.delta)
-        assertEquals("▲ Regressed", r.marker)
+        assertEquals("▲ Degraded", r.marker)
     }
 
     @Test fun aChangeBelowTheThresholdIsLeftUnmarked() {
@@ -102,7 +102,7 @@ class ComparePresenterTest {
         assertTrue(v.baseLine.startsWith("previous"))
         assertTrue(v.referenceNote!!.contains("baseline 없음"))
         assertTrue(v.render().contains("Previous"))
-        assertFalse(v.render().contains("Regressed"))
+        assertFalse(v.render().contains("Degraded"))
     }
 
     @Test fun theBaselineItselfIsNotDescribedAsHavingNoBaseline() {
@@ -113,7 +113,7 @@ class ComparePresenterTest {
         assertEquals("Previous", v.baseHeader)
         assertFalse(v.referenceNote!!.contains("baseline 없음"))
         assertTrue(v.referenceNote!!.startsWith("이 run이 baseline입니다"))
-        assertFalse(v.render().contains("Regressed"))
+        assertFalse(v.render().contains("Degraded"))
     }
 
     @Test fun aBaselineComparisonKeepsItsVerdicts() {
@@ -154,8 +154,8 @@ class ComparePresenterTest {
 
     @Test fun theIdentityLineSummarisesTheFourAxes() {
         val line = view().identityLine!!
-        assertTrue(line.contains("Android 동일"))
-        assertTrue(line.contains("subject 다름"))
+        assertTrue(line.contains("Android same"))
+        assertTrue(line.contains("subject differs"))
     }
 
     @Test fun aConditionDifferenceIsShownApartFromTheVerdicts() {
@@ -168,6 +168,6 @@ class ComparePresenterTest {
         val text = view().render()
         assertTrue(text.contains("Baseline"))
         assertTrue(text.contains("Current"))
-        assertTrue(text.lines().any { it.startsWith("Capture") && it.endsWith("▲ Regressed") })
+        assertTrue(text.lines().any { it.startsWith("Capture") && it.endsWith("▲ Degraded") })
     }
 }

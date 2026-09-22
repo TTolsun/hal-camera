@@ -7,6 +7,30 @@ import java.util.Locale
 /** Which run the delta column is measured against (docs/PLAN-BenchMarker-v0.3.md 7.1, 8.4). */
 enum class ComparedTo { BASELINE, PREVIOUS, NONE }
 
+/** How a headline or delta should be coloured; the screen maps GOOD/BAD to its status colours. */
+enum class Tone { GOOD, BAD, NEUTRAL }
+
+/**
+ * The one-line verdict at the top of the result screen. [sub] carries what the verdict was measured against,
+ * so the big line stays a verdict and nothing else.
+ */
+data class ResultHeadline(val text: String, val sub: String, val tone: Tone)
+
+/**
+ * One of the four metrics shown with a bar on the result screen. [fraction] and [baseFraction] are 0..1
+ * positions on a shared scale, so the bar and the baseline tick are comparable by eye; [baseFraction] is null
+ * when there is nothing to compare against.
+ */
+data class KeyMetric(
+    val label: String,
+    val statLabel: String,
+    val valueText: String,
+    val deltaText: String?,
+    val tone: Tone,
+    val fraction: Double,
+    val baseFraction: Double?
+)
+
 /**
  * One metric line of the result table. Empty strings are columns this metric does not have.
  * [note] says why a metric has no verdict, so an UNKNOWN row is never indistinguishable from a stable one.
@@ -89,7 +113,13 @@ object ResultPresenter {
         val categoryText = score.categories.entries.joinToString(" · ") {
             "${categoryLabel(it.key)} ${String.format(Locale.US, "%.0f", it.value)}"
         }
-        return "Camera Endpoint Score ${score.total} / 1000\n내부 초안 · ${ScoreComposer.VERSION}\n$categoryText\n동일 모델·카메라의 변화 확인용 · 기기 간 순위 아님"
+        return "Camera Endpoint Score ${score.total} / 1000\nInternal draft · ${ScoreComposer.VERSION}\n$categoryText\nTracks changes on the same model and camera · not a cross-device ranking"
+    }
+
+    /** The score total alone, for the headline card; null under the same conditions as [scoreLine]. */
+    fun scoreValue(run: BenchmarkRun): Int? {
+        if (run.scoringRuleVersion != ScoreComposer.VERSION || run.endpointScore == null) return null
+        return ScoreComposer.compose(run, S25PlusScoreDraft.calibration)?.total
     }
 
     fun present(
@@ -127,6 +157,109 @@ object ResultPresenter {
         )
     }
 
+    // ---- headline and key metrics ----
+
+    /**
+     * The verdict-first headline. It says one thing in large type — degraded, clean, or why there is no verdict —
+     * and moves everything the verdict was measured against into [ResultHeadline.sub].
+     */
+    fun headline(
+        run: BenchmarkRun,
+        comparison: RunComparison?,
+        comparedTo: ComparedTo,
+        isBaseline: Boolean,
+        endpointName: String
+    ): ResultHeadline {
+        val vs = comparison?.baseRunId?.let { localTime(it) ?: it }
+        return when {
+            !run.validity.measurementValid ->
+                ResultHeadline("Measurement invalid", eligibilityLine(run), Tone.BAD)
+            comparison == null || comparedTo == ComparedTo.NONE ->
+                if (isBaseline) ResultHeadline("This run is the baseline", "비교할 이전 run이 없습니다 · $endpointName", Tone.NEUTRAL)
+                else ResultHeadline("First run", "Baseline으로 지정하면 다음 run부터 비교합니다 · $endpointName", Tone.NEUTRAL)
+            comparedTo == ComparedTo.PREVIOUS ->
+                ResultHeadline(
+                    if (isBaseline) "This run is the baseline" else "No baseline",
+                    "이전 run($vs) 대비 표시 · baseline 없이는 판정하지 않습니다",
+                    Tone.NEUTRAL
+                )
+            comparison.judgedCount == 0 ->
+                ResultHeadline("No verdict", "비교 조건을 만족하는 지표가 없습니다 · baseline $vs", Tone.NEUTRAL)
+            comparison.hasRegression ->
+                ResultHeadline(
+                    "${comparison.regressedCount} ${if (comparison.regressedCount == 1) "metric" else "metrics"} degraded",
+                    "baseline($vs) 대비 · $endpointName",
+                    Tone.BAD
+                )
+            else -> ResultHeadline("No degradation", "baseline($vs) 대비 · $endpointName", Tone.GOOD)
+        }
+    }
+
+    /** The four metrics the card shows without unfolding anything: launch, first frame, capture, frame rate. */
+    val KEY_METRIC_IDS = listOf("1.1", "1.6", "2.2")
+
+    fun keyMetrics(run: BenchmarkRun, comparison: RunComparison?, comparedTo: ComparedTo): List<KeyMetric> {
+        val withDelta = comparedTo != ComparedTo.NONE
+        val rows = KEY_METRIC_IDS.mapNotNull { id ->
+            val metric = run.metric(id) ?: return@mapNotNull null
+            val label = when (id) {
+                "1.1" -> "Camera open"
+                "1.6" -> "First frame"
+                "2.2" -> "Still capture"
+                else -> BenchmarkMetricCatalog.info(id)?.short ?: id
+            }
+            val cmp = comparison?.metric(id)
+            keyMetric(label, "median", metric.value, cmp?.baselineValue, "ms", cmp, withDelta, lowerIsBetter = true)
+        }
+        // Frame rate is H.1 (preview interval) turned upside down, because "29.8 fps" answers the question the
+        // interval only implies. The verdict still belongs to H.1: a longer interval is a lower rate.
+        val interval = run.metric("H.1")
+        val fps = interval?.value?.takeIf { it > 0 }?.let { 1000.0 / it }
+        val frameRate = if (fps == null) null else {
+            val cmp = comparison?.metric("H.1")
+            val baseFps = cmp?.baselineValue?.takeIf { it > 0 }?.let { 1000.0 / it }
+            keyMetric("Frame rate", "", fps, baseFps, "fps", cmp, withDelta, lowerIsBetter = false)
+        }
+        return rows + listOfNotNull(frameRate)
+    }
+
+    private fun keyMetric(
+        label: String,
+        statLabel: String,
+        value: Double?,
+        base: Double?,
+        unit: String,
+        cmp: MetricComparison?,
+        withDelta: Boolean,
+        lowerIsBetter: Boolean
+    ): KeyMetric? {
+        if (value == null) return null
+        // One shared scale per row: the larger of the two values sits at 80% of the bar, so the tick and the
+        // fill are always both on screen and their order is readable. A zero pair would make the scale 0 and
+        // the fraction NaN, so it falls back to an empty bar instead.
+        val scale = (maxOf(value, base ?: value) / 0.8).takeIf { it > 0 } ?: 1.0
+        val delta = if (!withDelta || base == null) null else {
+            val d = value - base
+            val text = if (unit == "fps") String.format(Locale.US, "%+.1f", d) else String.format(Locale.US, "%+.0f", d)
+            "$text $unit"
+        }
+        val tone = when {
+            !withDelta || cmp == null -> Tone.NEUTRAL
+            cmp.state == RegressionState.REGRESSED -> Tone.BAD
+            cmp.state == RegressionState.IMPROVED -> Tone.GOOD
+            else -> Tone.NEUTRAL
+        }
+        return KeyMetric(
+            label = label,
+            statLabel = statLabel,
+            valueText = if (unit == "fps") String.format(Locale.US, "%.1f fps", value) else String.format(Locale.US, "%.0f ms", value),
+            deltaText = delta,
+            tone = tone,
+            fraction = (value / scale).coerceIn(0.0, 1.0),
+            baseFraction = base?.let { (it / scale).coerceIn(0.0, 1.0) }
+        )
+    }
+
     // ---- headline ----
 
     /**
@@ -139,14 +272,14 @@ object ResultPresenter {
         fun codes(select: (ValidityFlag) -> Boolean) =
             flags.filter(select).joinToString(", ") { it.code }.ifEmpty { v.flags.joinToString(", ") }
         val head = when {
-            !v.measurementValid -> "측정 무효 (${codes { it.blocksMeasurement }})"
-            !v.comparisonEligible -> "비교 불가 (${codes { it.blocksComparison }})"
-            !v.scoringEligible -> "비교 가능 · 점수 제외 (${codes { it.blocksScoring }})"
-            else -> "비교 가능 · 점수 가능"
+            !v.measurementValid -> "Measurement invalid (${codes { it.blocksMeasurement }})"
+            !v.comparisonEligible -> "Not comparable (${codes { it.blocksComparison }})"
+            !v.scoringEligible -> "Comparable · excluded from scoring (${codes { it.blocksScoring }})"
+            else -> "Comparable · scorable"
         }
         val thermal = listOf(run.env.thermalStart, run.env.thermalMax, run.env.thermalEnd)
         val thermalText = if (thermal.any { it == null }) null else thermal.joinToString(" → ")
-        val suffix = if (v.comparisonEligible) null else "Set as baseline 비활성"
+        val suffix = if (v.comparisonEligible) null else "Set as baseline disabled"
         return listOfNotNull(head, thermalText?.let { "thermal $it" }, suffix).joinToString(" · ")
     }
 
@@ -161,17 +294,17 @@ object ResultPresenter {
         isBaseline: Boolean = false
     ): String = when {
         comparison == null || comparedTo == ComparedTo.NONE ->
-            if (isBaseline) "이 run이 baseline입니다 · 비교할 이전 run이 없습니다"
-            else "baseline 없음 · 비교할 이전 run이 없습니다"
-        // No metric could be judged: saying "REGRESSED 없음" here would read as a clean result rather than as a
+            if (isBaseline) "This run is the baseline · no earlier run to compare"
+            else "No baseline · no earlier run to compare"
+        // No metric could be judged: saying "no degradation" here would read as a clean result rather than as a
         // comparison that never happened (PR #21 review).
         comparison.judgedCount == 0 && comparedTo == ComparedTo.BASELINE ->
-            "판정 불가   baseline ${comparison.baseRunId} · 비교 조건을 만족하는 지표가 없습니다"
+            "No verdict   baseline ${comparison.baseRunId} · no metric met the comparison conditions"
         comparedTo == ComparedTo.PREVIOUS ->
-            if (isBaseline) "이 run이 baseline입니다 · 이전 run ${comparison.baseRunId} 대비 표시"
-            else "baseline 없음 · 이전 run ${comparison.baseRunId} 대비 표시"
-        comparison.hasRegression -> "▲ ${comparison.regressedCount} Regressed   baseline ${comparison.baseRunId}"
-        else -> "Regressed 없음   baseline ${comparison.baseRunId}"
+            if (isBaseline) "This run is the baseline · shown vs previous run ${comparison.baseRunId}"
+            else "No baseline · shown vs previous run ${comparison.baseRunId}"
+        comparison.hasRegression -> "▲ ${comparison.regressedCount} degraded   baseline ${comparison.baseRunId}"
+        else -> "No degradation   baseline ${comparison.baseRunId}"
     }
 
     /**
@@ -194,15 +327,15 @@ object ResultPresenter {
     /** 7.4: four axes summarised in one line; the subject axis is dropped when neither side is labelled. */
     fun identityLine(id: BuildIdentityComparison): String = listOfNotNull(
         "Android " + same(id.sameSystemFingerprint),
-        "Camera build " + (id.sameCameraBuild?.let(::same) ?: "알 수 없음"),
-        "앱 " + same(id.sameAppVersion),
-        id.sameAppBuild?.let { "앱 빌드 " + same(it) },
+        "Camera build " + (id.sameCameraBuild?.let(::same) ?: "unknown"),
+        "App " + same(id.sameAppVersion),
+        id.sameAppBuild?.let { "App build " + same(it) },
         listOfNotNull(id.sameSubjectLabel, id.sameSubjectCommit).let { axes ->
             if (axes.isEmpty()) null else "subject " + same(axes.all { it })
         }
     ).joinToString(" · ")
 
-    private fun same(v: Boolean) = if (v) "동일" else "다름"
+    private fun same(v: Boolean) = if (v) "same" else "differs"
 
     // ---- table ----
 

@@ -6,8 +6,10 @@ data class CompareRow(
     val base: String,
     val current: String,
     val delta: String,
-    /** "▲ Regressed", "▼ Improved", the reason a metric could not be judged, or empty for STABLE. */
-    val marker: String
+    /** "▲ Degraded", "▼ Improved", the reason a metric could not be judged, or empty for STABLE. */
+    val marker: String,
+    /** Signed percentage for the delta chart; null when the pair has no percentage (counts, unit mismatch). */
+    val deltaPct: Double? = null
 ) {
     /** [marker] is a verdict only against a baseline; against a reference it can only carry a reason. */
     val hasVerdict: Boolean get() = marker.startsWith("▲") || marker.startsWith("▼")
@@ -105,12 +107,17 @@ object ComparePresenter {
             // independently and never report a percentage between different units.
             val shape = c ?: b!!
             val metricComparison = comparison.metric(id)
+            val unitMismatch = b != null && c != null && b.unit != c.unit
             CompareRow(
                 label = BenchmarkMetricCatalog.info(id)?.short ?: id,
                 base = ResultPresenter.format(b ?: shape, b?.value),
                 current = ResultPresenter.format(shape, c?.value),
-                delta = if (b != null && c != null && b.unit != c.unit) "—" else ResultPresenter.delta(shape, metricComparison),
-                marker = if (b != null && c != null && b.unit != c.unit) "단위 다름" else marker(metricComparison, comparedTo)
+                delta = if (unitMismatch) "—" else ResultPresenter.delta(shape, metricComparison),
+                marker = if (unitMismatch) "단위 다름" else marker(metricComparison, comparedTo),
+                // A count metric compares as an absolute difference (7.2), and a percentage of a small count
+                // would dwarf every latency bar on the shared scale, so counts stay out of the chart.
+                deltaPct = if (unitMismatch || RegressionRules.rule(id)?.kind == RuleKind.COUNT) null
+                else metricComparison?.deltaPct
             )
         }
 
@@ -119,7 +126,7 @@ object ComparePresenter {
      * metric could not be judged is still worth saying: it explains why the delta itself is not trustworthy.
      */
     private fun marker(comparison: MetricComparison?, comparedTo: ComparedTo): String = when (comparison?.state) {
-        RegressionState.REGRESSED -> if (comparedTo == ComparedTo.BASELINE) "▲ Regressed" else ""
+        RegressionState.REGRESSED -> if (comparedTo == ComparedTo.BASELINE) "▲ Degraded" else ""
         RegressionState.IMPROVED -> if (comparedTo == ComparedTo.BASELINE) "▼ Improved" else ""
         RegressionState.UNKNOWN -> ResultPresenter.noteFor(comparison, comparedTo)
         else -> ""

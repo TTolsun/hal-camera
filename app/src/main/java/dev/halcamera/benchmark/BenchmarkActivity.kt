@@ -48,8 +48,10 @@ import dev.halcamera.telemetry.Event
 import dev.halcamera.telemetry.FlightRecorder
 import dev.halcamera.telemetry.Telemetry
 import dev.halcamera.telemetry.nowNs
+import dev.halcamera.ui.DeltaBarView
 import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
+import dev.halcamera.ui.MeterView
 import dev.halcamera.ui.showSelectionPopup
 import java.io.File
 import java.util.concurrent.Executors
@@ -89,6 +91,7 @@ class BenchmarkActivity : ComponentActivity() {
     private val report by lazy { BenchmarkReport(store) }
     private val baselines by lazy { BaselineManager(StoreRunCatalog(store, report)) }
     private val subjectPrefs by lazy { SubjectPrefs(this) }
+    private val settings by lazy { BenchmarkPrefs(this) }
 
     private lateinit var preview: TextureView
     private lateinit var content: LinearLayout
@@ -117,6 +120,8 @@ class BenchmarkActivity : ComponentActivity() {
     private val liveStats = LiveFrameStats()
     private var livePhase: BenchmarkRunner.Phase? = null
     private var ticker: Runnable? = null
+    /** Re-runs preflight while the card is blocked on heat, so START returns by itself once the device cools. */
+    private var cardRecheck: Runnable? = null
     private var firstYuvSeen = false
     private var destroyed = false
     private val envStart = HashMap<String, Any?>()
@@ -196,6 +201,7 @@ class BenchmarkActivity : ComponentActivity() {
         destroyed = true
         recorder.listener = null
         ticker?.let { main.removeCallbacks(it) }
+        cardRecheck?.let { main.removeCallbacks(it) }
         thermal?.stop()
         if (runner == null) io.shutdown()
         super.onDestroy()
@@ -284,23 +290,59 @@ class BenchmarkActivity : ComponentActivity() {
             Screen.RESULT -> renderResult()
             Screen.COMPARE -> renderCompare()
         }
-        if (screen == Screen.CARD || screen == Screen.RESULT) {
-            actions.addView(Look.ghostButton(this, "Results · 실행 이력", dark = true) {
-                if (intent.hasExtra(EXTRA_RUN_ID)) finish() else {
-                    captureDraft()
-                    openHistory.launch(Intent(this, HistoryActivity::class.java)
-                        .putExtra("profile", profile.id)
-                        .putExtra("endpoint", endpoints.getOrNull(selected)?.key))
-                }
-            }, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(8) })
-        }
         if (screen == Screen.CARD) {
-            // The card's verdict comes from the same characteristics; PROBE shows them all without opening the camera.
-            actions.addView(Look.ghostButton(this, "Probe · 카메라 사양", dark = true) {
-                startActivity(Intent(this, dev.halcamera.CameraProbeActivity::class.java)
-                    .putExtra(dev.halcamera.CameraProbeActivity.EXTRA_CAMERA_ID, endpoints.getOrNull(selected)?.key))
-            }, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(8) })
+            val row = Look.row(this)
+            row.addView(Look.ghostButton(this, "History", dark = true) { openHistoryScreen() },
+                LinearLayout.LayoutParams(0, dp(48), 1f))
+            row.addView(Look.ghostButton(this, "Settings", dark = true) {}.apply {
+                setOnClickListener { openSettings(it) }
+                contentDescription = "벤치마크 설정, profiling data 한도 ${RunRetention.label(settings.runLimit)}"
+            }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
+            actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
+        if (screen == Screen.RESULT) {
+            actions.addView(Look.ghostButton(this, "History", dark = true) { openHistoryScreen() },
+                LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(8) })
+        }
+    }
+
+    private fun openHistoryScreen() {
+        if (intent.hasExtra(EXTRA_RUN_ID)) finish() else {
+            captureDraft()
+            openHistory.launch(Intent(this, HistoryActivity::class.java)
+                .putExtra("profile", profile.id)
+                .putExtra("endpoint", endpoints.getOrNull(selected)?.key))
+        }
+    }
+
+    /** Settings → the profiling data limit. Applying a smaller limit prunes immediately, keeping every baseline. */
+    private fun openSettings(anchor: View) {
+        val options = RunRetention.OPTIONS
+        val labels = options.map { "Profiling data limit · ${RunRetention.label(it)}" }
+        showSelectionPopup(anchor, labels, options.indexOf(settings.runLimit).coerceAtLeast(0)) { index ->
+            settings.runLimit = options[index]
+            io.execute {
+                val deleted = prune()
+                main.post {
+                    if (destroyed) return@post
+                    val suffix = if (deleted == 0) "" else " · 오래된 run ${deleted}개 삭제"
+                    android.widget.Toast.makeText(
+                        this, "Profiling data limit: ${RunRetention.label(settings.runLimit)}$suffix",
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                    render()
+                }
+            }
+        }
+    }
+
+    /** Deletes over-limit run files, oldest first, never a baseline. Runs on the io thread. */
+    private fun prune(): Int {
+        val limit = settings.runLimit
+        if (limit == RunRetention.UNLIMITED) return 0
+        val protected = store.index().baselines.values.toSet()
+        val doomed = RunRetention.toDelete(store.files().map { it.nameWithoutExtension }, protected, limit)
+        return doomed.count { store.deleteRun(it) }
     }
 
     private fun loadHistoryRun(id: String) {
@@ -308,7 +350,7 @@ class BenchmarkActivity : ComponentActivity() {
         lastRun = null; lastFile = null
         historyLoading = true
         screen = Screen.RESULT
-        lastSummary = "실행 기록을 읽고 있습니다."
+        lastSummary = "실행 기록을 읽는 중입니다."
         render()
         io.execute {
             val result = runCatching {
@@ -337,9 +379,10 @@ class BenchmarkActivity : ComponentActivity() {
     /** 8.2. */
     private fun renderCard() {
         progressHeadline = null; progressBar = null; progressStats = null
+        cardRecheck?.let { main.removeCallbacks(it) }; cardRecheck = null
         val card = Look.card(this, dark = true)
         val state = startCard
-        card.addView(Look.text(this, "벤치마크", 19, Look.onDark, bold = true))
+        card.addView(Look.text(this, "Benchmark", 19, Look.onDark, bold = true))
         if (state == null) {
             card.addView(Look.text(this, cardError ?: "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted), lp(top = 10))
             content.addView(card)
@@ -347,10 +390,15 @@ class BenchmarkActivity : ComponentActivity() {
             return
         }
         card.addView(Look.text(this, state.titleLine, 13, Look.onDarkMuted), lp(top = 6))
-        card.addView(Look.text(this, "${state.profileLine}\n${state.verdictLine}", 12, Look.onDarkMuted, mono = true), lp(top = 8))
-        card.addView(Look.text(this, "${state.durationLine}\n${state.detailLine}", 13, Look.onDark), lp(top = 10))
+        // What the feature does and what the run needs, before any jargon: the profile id and the preflight
+        // verdict move into the Details fold below.
+        card.addView(Look.text(this, "카메라를 벤치마킹합니다.", 15, Look.onDark, bold = true), lp(top = 12))
+        card.addView(Look.text(this, "${state.durationLine}\n${state.detailLine}", 13, Look.onDarkMuted), lp(top = 4))
+        card.addView(statusChips(), lp(top = 14))
         state.notices.forEach { card.addView(Look.text(this, "· $it", 12, Look.statusWarn), lp(top = 8)) }
         state.blockedReason?.let { card.addView(Look.text(this, it, 13, Look.statusFail, bold = true), lp(top = 10)) }
+        card.addView(Look.disclosure(this, "Details",
+            Look.text(this, "${state.profileLine}\n${state.verdictLine}", 12, Look.onDarkMuted, mono = true)), lp(top = 10))
 
         // The fields stay while the device cools, so a label typed before the phone got hot is not lost.
         if (state.canStart || state.refreshable) {
@@ -359,7 +407,7 @@ class BenchmarkActivity : ComponentActivity() {
             val hasLabels = listOf(draft.subjectBuildLabel, draft.subjectCommit, draft.note).any { !it.isNullOrBlank() }
             val savedLabels = Look.text(this, "", 12, Look.onDarkMuted)
             val toggle = Look.ghostButton(this, "", dark = true) {}.apply {
-                fun updateLabel() { text = if (labelsExpanded) "빌드 정보 접기 ▴" else if (hasLabels) "빌드 정보 편집 ▾" else "빌드 정보 추가 (선택) ▾" }
+                fun updateLabel() { text = if (labelsExpanded) "Hide build info ▴" else if (hasLabels) "Edit build info ▾" else "Add build info (optional) ▾" }
                 updateLabel()
                 setOnClickListener {
                     labelsExpanded = !labelsExpanded
@@ -377,7 +425,7 @@ class BenchmarkActivity : ComponentActivity() {
             buildInput = input(draft.subjectBuildLabel).also { it.contentDescription = "측정 대상 빌드"; fields.addView(it, lp(top = 4)) }
             fields.addView(Look.text(this, "Commit", 12, Look.onDarkMuted), lp(top = 10))
             commitInput = input(draft.subjectCommit).also { it.contentDescription = "측정 대상 커밋"; fields.addView(it, lp(top = 4)) }
-            fields.addView(Look.text(this, "메모", 12, Look.onDarkMuted), lp(top = 10))
+            fields.addView(Look.text(this, "Note", 12, Look.onDarkMuted), lp(top = 10))
             noteInput = input(draft.note).also { it.contentDescription = "실행 메모"; fields.addView(it, lp(top = 4)) }
             fields.visibility = if (labelsExpanded) View.VISIBLE else View.GONE
             card.addView(fields)
@@ -395,19 +443,41 @@ class BenchmarkActivity : ComponentActivity() {
         }, LinearLayout.LayoutParams(0, dp(52), 1f))
         row.addView(IconButton(this, R.drawable.ic_action_close, "벤치마크 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
         actions.addView(row)
-        when {
-            state.canStart ->
-                actions.addView(Look.primaryButton(this, "벤치마크 시작") { begin() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
-            // Without this a card opened at SEVERE never offers START again, however long the device rests.
-            state.refreshable ->
-                actions.addView(Look.primaryButton(this, "환경 다시 확인") { recheck() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
+        if (state.canStart) {
+            actions.addView(Look.primaryButton(this, "Start benchmark") { begin() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
+        } else if (state.refreshable) {
+            // A card opened at SEVERE re-checks itself, so START returns without anyone tapping a button while
+            // the device rests. The recheck stops the moment the card is replaced or the screen changes.
+            val r = Runnable {
+                if (!destroyed && screen == Screen.CARD && runner == null) { captureDraft(); refreshCard(); render() }
+            }
+            cardRecheck = r
+            main.postDelayed(r, RECHECK_INTERVAL_MS)
         }
     }
 
-    private fun recheck() {
-        captureDraft()
-        refreshCard()
-        render()
+    /** The thermal and battery state at a glance, in the same pill shape the LIVE screen uses for status. */
+    private fun statusChips(): LinearLayout {
+        val row = Look.row(this)
+        fun chip(label: String, color: Int) = Look.text(this, label, 12, color, bold = true).apply {
+            background = Look.cardBackground(this@BenchmarkActivity, Look.expertTile2, Look.expertTile3)
+            setPadding(dp(12), dp(6), dp(12), dp(6))
+        }
+        val thermal = currentThermalStatus()
+        if (thermal != null) {
+            val (label, color) = when {
+                thermal >= StartCardPresenter.THERMAL_SEVERE -> "Thermal severe" to Look.statusFail
+                thermal >= ValidityFlags.THERMAL_MODERATE -> "Thermal moderate" to Look.statusWarn
+                thermal >= 1 -> "Thermal light" to Look.statusWarn
+                else -> "Thermal OK" to Look.statusPass
+            }
+            row.addView(chip(label, color))
+        }
+        batteryPercent()?.let {
+            row.addView(chip("Battery $it%", Look.onDarkMuted),
+                LinearLayout.LayoutParams(-2, -2).apply { marginStart = if (row.childCount > 0) dp(8) else 0 })
+        }
+        return row
     }
 
     /** Keeps what is typed across a re-render; the fields describe the build under test, not this card. */
@@ -427,45 +497,84 @@ class BenchmarkActivity : ComponentActivity() {
             .also { it.maxLines = 1; card.addView(it, lp(top = 4)) }
         progressStats = Look.text(this, "", 12, Look.onDarkMuted, mono = true).also { card.addView(it, lp(top = 10)) }
         content.addView(card)
-        actions.addView(Look.ghostButton(this, "중단", dark = true) { runner?.abort("user") }, LinearLayout.LayoutParams(-1, dp(52)))
+        actions.addView(Look.ghostButton(this, "Abort", dark = true) { runner?.abort("user") }, LinearLayout.LayoutParams(-1, dp(52)))
         updateStats()
     }
 
-    /** 8.4. */
+    /** 8.4. The verdict leads, four key metrics follow with bars, and everything else folds (mockup v7). */
     private fun renderResult() {
         progressHeadline = null; progressBar = null; progressStats = null
         val run = lastRun
-        val card = Look.card(this, dark = true)
         if (run == null) {
-            card.addView(Look.text(this, "Camera benchmark", 19, Look.onDark, bold = true))
+            val card = Look.card(this, dark = true)
+            card.addView(Look.text(this, "Benchmark result", 19, Look.onDark, bold = true))
             card.addView(Look.text(this, lastSummary.ifBlank { "결과를 만들지 못했습니다." }, 12, Look.onDarkMuted, mono = true), lp(top = 10))
             content.addView(card)
-            if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "새 run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)))
+            if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "New run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)))
             return
         }
-        val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, "${run.device.manufacturer} ${run.device.model}", roleText(run.endpoint.role))
-        card.addView(Look.text(this, "벤치마크 결과", 19, Look.onDark, bold = true))
-        card.addView(Look.text(this, "Camera ${run.endpoint.key} · ${run.subject.subjectBuildLabel ?: run.device.buildDisplay}", 13, Look.onDarkMuted), lp(top = 8))
-        val regressed = view.sections.flatMap { it.rows }.filter { it.marker == "▲" }
-        card.addView(Look.text(this, view.comparisonLine, 17,
-            if (regressed.isNotEmpty()) Look.statusFail else Look.onDark, bold = true), lp(top = 12))
-        card.addView(Look.text(this, view.eligibilityLine, 13, Look.onDarkMuted), lp(top = 8))
+        val endpointName = roleText(run.endpoint.role)
+        val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, "${run.device.manufacturer} ${run.device.model}", endpointName)
+
+        // Headline card: the verdict, what it was measured against, and the score.
+        val head = ResultPresenter.headline(run, comparison, comparedTo, isBaseline, endpointName)
+        val card = Look.card(this, dark = true)
+        val headColor = when (head.tone) {
+            Tone.BAD -> Look.statusFail
+            Tone.GOOD -> Look.statusPass
+            Tone.NEUTRAL -> Look.onDark
+        }
+        card.addView(Look.text(this, head.text, 21, headColor, bold = true))
+        card.addView(Look.text(this, head.sub, 13, Look.onDarkMuted), lp(top = 6))
         view.conditionLine?.let { card.addView(Look.text(this, it, 13, Look.statusWarn), lp(top = 8)) }
-        regressed.forEach { card.addView(MetricRows.result(this, it)) }
+        ResultPresenter.scoreValue(run)?.let { total ->
+            val scoreRow = Look.row(this)
+            scoreRow.addView(Look.text(this, total.toString(), 30, Look.onDark, bold = true, mono = true))
+            scoreRow.addView(Look.text(this, "/ 1000 · Camera Endpoint Score · internal draft", 12, Look.onDarkMuted),
+                LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
+            card.addView(scoreRow, lp(top = 12))
+        }
+        content.addView(card)
+
+        // Metrics card: the four key bars, any degraded row the bars do not carry, then the folds.
+        val metricsCard = Look.card(this, dark = true)
+        val keys = ResultPresenter.keyMetrics(run, comparison, comparedTo)
+        keys.forEachIndexed { i, k ->
+            val top = Look.row(this)
+            val label = if (k.statLabel.isBlank()) k.label else "${k.label} · ${k.statLabel}"
+            top.addView(Look.text(this, label, 13, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
+            top.addView(Look.text(this, k.valueText, 15, if (k.tone == Tone.BAD) Look.statusFail else Look.onDark, bold = true, mono = true))
+            k.deltaText?.let {
+                val deltaColor = when (k.tone) {
+                    Tone.BAD -> Look.statusFail
+                    Tone.GOOD -> Look.primaryOnDark
+                    Tone.NEUTRAL -> Look.onDarkMuted
+                }
+                top.addView(Look.text(this, it, 12, deltaColor, bold = true), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
+            }
+            metricsCard.addView(top, lp(top = if (i == 0) 0 else 14))
+            metricsCard.addView(MeterView(this, k.fraction.toFloat(), k.baseFraction?.toFloat(), k.tone == Tone.BAD), lp(top = 6))
+        }
+        if (keys.any { it.baseFraction != null }) {
+            val tickName = if (comparedTo == ComparedTo.BASELINE) "baseline" else "이전 run"
+            metricsCard.addView(Look.text(this, "막대 = 이번 run · 눈금 = $tickName", 11, Look.onDarkMuted), lp(top = 10))
+        }
+        val regressed = view.sections.flatMap { it.rows }.filter { it.marker == "▲" }
+        regressed.forEach { metricsCard.addView(MetricRows.result(this, it)) }
         val allMetrics = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         view.sections.forEach { section ->
             allMetrics.addView(Look.text(this, section.title, 15, Look.onDarkMuted, bold = true), lp(top = 12))
             section.rows.forEach { allMetrics.addView(MetricRows.result(this, it)) }
         }
         view.threeALine?.let { allMetrics.addView(Look.text(this, it, 13, Look.onDarkMuted), lp(top = 8)) }
-        card.addView(Look.disclosure(this, "전체 지표", allMetrics, initiallyExpanded = regressed.isEmpty()), lp(top = 12))
+        metricsCard.addView(Look.disclosure(this, "All metrics", allMetrics), lp(top = 12))
         val details = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        listOfNotNull(view.titleLine, view.subLine, view.identityLine, view.scoreLine, lastSummary).forEach {
+        listOfNotNull(view.titleLine, view.subLine, view.eligibilityLine, view.identityLine, view.hint, view.scoreLine, lastSummary).forEach {
             details.addView(Look.text(this, it, 12, Look.onDarkMuted), lp(top = 8))
         }
-        card.addView(Look.disclosure(this, "실행 정보·점수", details), lp(top = 8))
-        card.addView(Look.ghostButton(this, "결과 복사", dark = true) {}.also { copyOnTap(it, "result", view.render()) }, lp(top = 8))
-        content.addView(card)
+        metricsCard.addView(Look.disclosure(this, "Run info · flags · file", details), lp(top = 4))
+        metricsCard.addView(Look.ghostButton(this, "Copy result", dark = true) {}.also { copyOnTap(it, "result", view.render()) }, lp(top = 8))
+        content.addView(metricsCard, lp(top = 10))
 
         // Give the longer baseline action a full row to avoid truncation.
         actions.addView(
@@ -479,10 +588,10 @@ class BenchmarkActivity : ComponentActivity() {
             LinearLayout.LayoutParams(0, dp(52), 1f).apply { marginStart = dp(8) }
         )
         actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
-        if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "새 run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
+        if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "New run") { preflight() }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(8) })
     }
 
-    /** 7.3. */
+    /** 7.3. A delta chart around a zero line first; rows a chart cannot carry stay as text below it. */
     private fun renderCompare() {
         val run = lastRun
         val base = baseRun
@@ -492,21 +601,48 @@ class BenchmarkActivity : ComponentActivity() {
             card.addView(Look.text(this, "비교할 run이 없습니다.", 13, Look.onDarkMuted), lp(top = 2))
         } else {
             val view = ComparePresenter.present(base, run, cmp, comparedTo, isBaseline)
-            card.addView(Look.text(this, "실행 비교", 19, Look.onDark, bold = true))
-            view.referenceNote?.let { card.addView(Look.text(this, it, 14, Look.onDark), lp(top = 8)) }
+            card.addView(Look.text(this, "Delta vs ${view.baseHeader.lowercase()}", 19, Look.onDark, bold = true))
+            view.referenceNote?.let { card.addView(Look.text(this, it, 13, Look.onDarkMuted), lp(top = 6)) }
             val regressed = view.rows.filter { it.marker.startsWith("▲") }
             if (regressed.isNotEmpty()) {
-                card.addView(Look.text(this, "▲ ${regressed.size} Regressed", 17, Look.statusFail, bold = true), lp(top = 12))
-                regressed.forEach { card.addView(MetricRows.comparison(this, it, view.baseHeader)) }
+                card.addView(Look.text(this, "▲ ${regressed.size} degraded", 17, Look.statusFail, bold = true), lp(top = 10))
             }
             view.conditionLine?.let { card.addView(Look.text(this, it, 13, Look.statusWarn), lp(top = 8)) }
+
+            // The chart: one shared percentage scale, degraded grows right, improved grows left.
+            val charted = view.rows.filter { it.deltaPct != null }
+            if (charted.isNotEmpty()) {
+                card.addView(Look.text(this, "◀ Improved · Degraded ▶", 11, Look.onDarkMuted), lp(top = 12))
+                // An informational outlier (a 3A metric can move by thousands of percent) must not flatten
+                // every judged bar, so the shared scale caps at 100% and larger deltas saturate.
+                val maxPct = charted.maxOf { kotlin.math.abs(it.deltaPct!!) }.coerceIn(1.0, 100.0)
+                charted.forEach { row ->
+                    val line = Look.row(this)
+                    val degraded = row.marker.startsWith("▲")
+                    val valueColor = when {
+                        degraded -> Look.statusFail
+                        row.marker.startsWith("▼") -> Look.primaryOnDark
+                        else -> Look.onDarkMuted
+                    }
+                    line.addView(Look.text(this, row.label, 12, Look.onDarkMuted),
+                        LinearLayout.LayoutParams(dp(96), -2))
+                    line.addView(DeltaBarView(this, row.deltaPct!!.toFloat(), maxPct.toFloat(), degraded),
+                        LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(4); marginEnd = dp(8) })
+                    line.addView(Look.text(this, row.delta, 12, valueColor, bold = true, mono = true).apply {
+                        gravity = Gravity.END
+                    }, LinearLayout.LayoutParams(dp(56), -2))
+                    card.addView(line, lp(top = 8))
+                }
+            }
+
+            // Rows without a percentage (counts, unit changes, unknowns) keep their textual form.
+            view.rows.filter { it.deltaPct == null }.forEach { card.addView(MetricRows.comparison(this, it, view.baseHeader)) }
             val details = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
             listOfNotNull(view.baseLine, view.currentLine, view.identityLine).forEach {
                 details.addView(Look.text(this, it.trim().replace(Regex(" {2,}"), " · "), 12, Look.onDarkMuted), lp(top = 8))
             }
-            card.addView(Look.disclosure(this, "비교 실행 정보", details), lp(top = 8))
-            view.rows.filterNot { it.marker.startsWith("▲") }.forEach { card.addView(MetricRows.comparison(this, it, view.baseHeader)) }
-            card.addView(Look.ghostButton(this, "비교 결과 복사", dark = true) {}.also { copyOnTap(it, "compare", view.render()) }, lp(top = 8))
+            card.addView(Look.disclosure(this, "Run info", details), lp(top = 10))
+            card.addView(Look.ghostButton(this, "Copy comparison", dark = true) {}.also { copyOnTap(it, "compare", view.render()) }, lp(top = 8))
         }
         content.addView(card)
         actions.addView(IconButton(this, R.drawable.ic_action_back, "벤치마크 결과로 돌아가기") { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(dp(48), dp(48)))
@@ -679,6 +815,9 @@ class BenchmarkActivity : ComponentActivity() {
             try {
                 val run = RunAssembler.assemble(result, events, profile, context)
                 val file = try { report.write(run, events) } catch (e: Exception) { null }
+                // The limit is applied right after the new file lands, so the store never grows past it by more
+                // than the run that was just measured.
+                if (file != null) prune()
                 benchmarkCli.reportSaved(
                     runId = run.runId, aborted = result.aborted, hardFailure = result.hardFailure,
                     schemaVersion = BenchmarkReportCodec.SCHEMA_VERSION, file = file
@@ -864,8 +1003,8 @@ class BenchmarkActivity : ComponentActivity() {
     }
 
     private fun roleText(r: LensRole) = when (r) {
-        LensRole.MAIN -> "후면 메인"; LensRole.ULTRA_WIDE -> "후면 초광각"; LensRole.TELE -> "후면 망원"
-        LensRole.FRONT -> "전면"; LensRole.EXTERNAL -> "외부"; LensRole.UNKNOWN -> "기타"
+        LensRole.MAIN -> "Rear main"; LensRole.ULTRA_WIDE -> "Rear ultra wide"; LensRole.TELE -> "Rear tele"
+        LensRole.FRONT -> "Front"; LensRole.EXTERNAL -> "External"; LensRole.UNKNOWN -> "Other"
     }
 
     private fun lp(top: Int = 0) = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top) }
@@ -877,5 +1016,7 @@ class BenchmarkActivity : ComponentActivity() {
         const val EXTRA_RUN_ID = "run_id"
         const val EXTRA_CAMERA_ID = "camera_id"
         private const val STATS_INTERVAL_MS = 250L
+        /** How often a heat-blocked card re-runs preflight; SEVERE→cool takes tens of seconds, so 5 s is enough. */
+        private const val RECHECK_INTERVAL_MS = 5_000L
     }
 }

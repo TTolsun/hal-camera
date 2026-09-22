@@ -55,10 +55,15 @@ sources:
           - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
       benchmark:
         evidence:
-          - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt
           - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
+          - app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt
+          - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkPrefs.kt
+      benchmark/benchmark-screen:
+        evidence:
+          - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
+          - app/src/main/java/dev/halcamera/ui/MetricBars.kt
       benchmark/benchmark-runner:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
@@ -91,6 +96,8 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/domain/BaselineManager.kt
           - app/src/main/java/dev/halcamera/benchmark/platform/StoreRunCatalog.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/ReferenceResolver.kt
+      benchmark/result-presentation:
+        evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/ComparePresenter.kt
       benchmark/regression-rules:
@@ -146,6 +153,8 @@ sources:
       screens/benchmark-screen:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
+      screens/benchmark-start:
+        evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/ProgressPresenter.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt
       screens/look-tokens:
@@ -200,7 +209,22 @@ sources:
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
       ui-widgets:
         evidence:
-          - app/src/main/java/dev/halcamera/ui/**/*.kt
+          - app/src/main/java/dev/halcamera/ui/AboutSheet.kt
+          - app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt
+          - app/src/main/java/dev/halcamera/ui/GalleryImageView.kt
+          - app/src/main/java/dev/halcamera/ui/IconButton.kt
+          - app/src/main/java/dev/halcamera/ui/LiveReadout.kt
+          - app/src/main/java/dev/halcamera/ui/Look.kt
+          - app/src/main/java/dev/halcamera/ui/MetricRows.kt
+          - app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt
+          - app/src/main/java/dev/halcamera/ui/ScopeView.kt
+          - app/src/main/java/dev/halcamera/ui/SelectionPopup.kt
+          - app/src/main/java/dev/halcamera/ui/ShutterButton.kt
+          - app/src/main/java/dev/halcamera/ui/StripView.kt
+          - app/src/main/java/dev/halcamera/ui/TimelineView.kt
+      ui-widgets/metric-bars:
+        evidence:
+          - app/src/main/java/dev/halcamera/ui/MetricBars.kt
       metrics:
         evidence:
           - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt

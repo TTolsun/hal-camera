@@ -209,7 +209,7 @@ class HistoryActivity : ComponentActivity() {
         view.referenceNote?.let { text(it) }
         if (!comparison.sameContract || !comparison.sameEndpoint) text("Profile·측정 계약 또는 camera endpoint가 달라 판정할 수 없습니다.")
         val regressed = view.rows.filter { it.marker.startsWith("▲") }
-        if (regressed.isNotEmpty()) body.addView(Look.text(this, "▲ ${regressed.size} Regressed", 17, Look.statusFail, bold = true), lp())
+        if (regressed.isNotEmpty()) body.addView(Look.text(this, "▲ ${regressed.size} degraded", 17, Look.statusFail, bold = true), lp())
         (regressed + view.rows.filterNot { it.marker.startsWith("▲") }).forEach { row ->
             body.addView(MetricRows.comparison(this, row, view.baseHeader))
         }

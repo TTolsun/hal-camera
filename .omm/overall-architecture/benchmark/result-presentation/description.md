@@ -1,0 +1,3 @@
+ResultPresenter와 ComparePresenter는 완료된 run과 RunComparison을 화면 모델로 바꾸는 순수 Kotlin 레이어입니다. ResultPresenter.headline은 판정 한 줄(`N metrics degraded`·`No degradation`·`First run` 등)과 색 톤을 결정하고, keyMetrics는 핵심 지표 네 개(`Camera open`·`First frame`·`Still capture`·H.1을 뒤집은 `Frame rate`)를 공유 스케일의 막대 분율과 baseline 눈금 위치로 계산합니다. 기존 표 모델(sections·eligibilityLine·comparisonLine)은 `All metrics` 접힘과 복사 텍스트에 그대로 쓰입니다.
+
+ComparePresenter는 두 run을 나란히 놓은 비교 모델을 만들며, CompareRow.deltaPct가 있으면 화면이 0 기준선 delta 차트로 그리고 없으면(count·단위 불일치·판정 불가) 글줄로 남깁니다. 판정 단어는 `degraded`·`Improved`이며 `Regressed`는 쓰지 않습니다. 두 presenter 모두 Android 의존성이 없어 JVM 테스트(ResultPresenterTest·ComparePresenterTest)로 검증합니다.
