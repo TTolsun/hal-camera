@@ -574,41 +574,52 @@ class BenchmarkActivity : ComponentActivity() {
 
         // Metrics card: the four key bars, any degraded row the bars do not carry, then the folds.
         val metricsCard = Look.card(this, dark = true)
-        val keys = ResultPresenter.keyMetrics(run, comparison, comparedTo)
-        keys.forEachIndexed { i, k ->
-            val top = Look.row(this)
-            val label = if (k.statLabel.isBlank()) k.label else "${k.label} · ${k.statLabel}"
-            top.addView(Look.text(this, label, 13, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
-            top.addView(Look.text(this, k.valueText, 15, if (k.tone == Tone.BAD) Look.statusFail else Look.onDark, bold = true, mono = true))
-            k.deltaText?.let {
-                val deltaColor = when (k.tone) {
-                    Tone.BAD -> Look.statusFail
-                    Tone.GOOD -> Look.primaryOnDark
-                    Tone.NEUTRAL -> Look.onDarkMuted
+        // Every metric is a bar, grouped by category. The table behind an "All metrics" fold is gone: a number
+        // next to its baseline is what this screen is for, and a bar answers that faster than a row of digits.
+        val sections = ResultPresenter.metricBars(run, comparison, comparedTo)
+        var anyBaseline = false
+        sections.forEachIndexed { sectionIndex, section ->
+            metricsCard.addView(
+                Look.text(this, section.title, 13, Look.onDarkMuted, bold = true),
+                lp(top = if (sectionIndex == 0) 0 else 20)
+            )
+            section.bars.forEachIndexed { i, k ->
+                if (k.baseFraction != null) anyBaseline = true
+                val top = Look.row(this)
+                val label = if (k.statLabel.isBlank()) k.label else "${k.label} · ${k.statLabel}"
+                top.addView(Look.text(this, label, 13, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
+                top.addView(Look.text(this, k.valueText, 15, if (k.tone == Tone.BAD) Look.statusFail else Look.onDark, bold = true, mono = true))
+                k.deltaText?.let {
+                    val deltaColor = when (k.tone) {
+                        Tone.BAD -> Look.statusFail
+                        Tone.GOOD -> Look.primaryOnDark
+                        Tone.NEUTRAL -> Look.onDarkMuted
+                    }
+                    top.addView(Look.text(this, it, 12, deltaColor, bold = true), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
                 }
-                top.addView(Look.text(this, it, 12, deltaColor, bold = true), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
+                metricsCard.addView(top, lp(top = if (i == 0) 8 else 14))
+                metricsCard.addView(MeterView(this, k.fraction.toFloat(), k.baseFraction?.toFloat(), k.tone == Tone.BAD), lp(top = 6))
             }
-            metricsCard.addView(top, lp(top = if (i == 0) 0 else 14))
-            metricsCard.addView(MeterView(this, k.fraction.toFloat(), k.baseFraction?.toFloat(), k.tone == Tone.BAD), lp(top = 6))
         }
-        if (keys.any { it.baseFraction != null }) {
+        if (anyBaseline) {
             val tickName = if (comparedTo == ComparedTo.BASELINE) "baseline" else "이전 run"
-            metricsCard.addView(Look.text(this, "막대 = 이번 run · 눈금 = $tickName", 11, Look.onDarkMuted), lp(top = 10))
+            metricsCard.addView(Look.text(this, "막대 = 이번 run · 눈금 = $tickName", 11, Look.onDarkMuted), lp(top = 12))
         }
-        val regressed = view.sections.flatMap { it.rows }.filter { it.marker == "▲" }
-        regressed.forEach { metricsCard.addView(MetricRows.result(this, it)) }
-        val allMetrics = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        view.sections.forEach { section ->
-            allMetrics.addView(Look.text(this, section.title, 15, Look.onDarkMuted, bold = true), lp(top = 12))
-            section.rows.forEach { allMetrics.addView(MetricRows.result(this, it)) }
-        }
-        view.threeALine?.let { allMetrics.addView(Look.text(this, it, 13, Look.onDarkMuted), lp(top = 8)) }
-        metricsCard.addView(Look.disclosure(this, "All metrics", allMetrics), lp(top = 12))
+        // Label and value pairs, not seven sentences that repeated each other: the eligibility line named the
+        // same flags the summary printed again as codes, and neither said what a code meant.
         val details = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        listOfNotNull(view.titleLine, view.subLine, view.eligibilityLine, view.identityLine, view.hint, view.scoreLine, lastSummary).forEach {
-            details.addView(Look.text(this, it, 12, Look.onDarkMuted), lp(top = 8))
+        ResultPresenter.runFacts(run, "${run.device.manufacturer} ${run.device.model}", endpointName, lastFile?.name)
+            .forEachIndexed { i, (label, fact) ->
+                val factRow = Look.row(this)
+                factRow.addView(Look.text(this, label, 12, Look.onDarkMuted), LinearLayout.LayoutParams(dp(76), -2))
+                factRow.addView(Look.text(this, fact, 12, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
+                details.addView(factRow, lp(top = if (i == 0) 4 else 8))
+            }
+        ResultPresenter.scoreValue(run)?.let {
+            details.addView(Look.text(this, "점수는 같은 기기·카메라의 변화를 보기 위한 내부 초안입니다. 기기 간 순위가 아닙니다.",
+                11, Look.onDarkMuted), lp(top = 12))
         }
-        metricsCard.addView(Look.disclosure(this, "Run info · flags · file", details), lp(top = 4))
+        metricsCard.addView(Look.disclosure(this, "실행 정보", details), lp(top = 4))
         content.addView(metricsCard, lp(top = 10))
 
         // Give the longer baseline action a full row to avoid truncation.

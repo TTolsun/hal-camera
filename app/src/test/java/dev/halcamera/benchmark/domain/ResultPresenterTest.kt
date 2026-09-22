@@ -338,33 +338,40 @@ class ResultPresenterTest {
         assertEquals(Tone.NEUTRAL, previous.tone)
     }
 
-    @Test fun keyMetricsShareOneScaleWithTheBaselineTick() {
+    @Test fun barsShareOneScaleWithTheBaselineTick() {
         val base = run(runId = "20260910-100000-000", metrics = listOf(
             launchMetric("1.1", 100.0, 120.0), launchMetric("1.6", 400.0, 420.0),
             launchMetric("2.2", 480.0, 500.0), windowMetric("H.1", 33.3)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(
             launchMetric("1.1", 128.0, 140.0), launchMetric("1.6", 412.0, 430.0),
             launchMetric("2.2", 486.0, 510.0), windowMetric("H.1", 33.6)))
-        val keys = ResultPresenter.keyMetrics(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+        val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+            .flatMap { it.bars }
 
-        assertEquals(listOf("Camera open", "First frame", "Still capture", "Frame rate"), keys.map { it.label })
-        val open = keys.first()
+        val open = bars.first { it.label == "Open" }
         assertEquals("128 ms", open.valueText)
         assertEquals("+28 ms", open.deltaText)
         // The larger of the two values sits at 80% of the bar, so both the fill and the tick stay on screen.
         assertEquals(0.8, open.fraction, 1e-9)
         assertEquals(0.8 * 100.0 / 128.0, open.baseFraction!!, 1e-9)
-        // Frame rate is H.1 upside down: 1000 / 33.6.
-        assertEquals("29.8 fps", keys.last().valueText)
     }
 
-    @Test fun keyMetricsWithoutAComparisonCarryNoDeltaOrTick() {
+    @Test fun frameRateLeadsThePreviewSectionAsHOneUpsideDown() {
+        val current = run(metrics = listOf(windowMetric("H.1", 33.6)))
+        val preview = ResultPresenter.metricBars(current, null, ComparedTo.NONE).single { it.title == "Preview" }
+        // 1000 / 33.6, and it comes before the interval row it is derived from.
+        assertEquals("Frame rate", preview.bars.first().label)
+        assertEquals("29.8 fps", preview.bars.first().valueText)
+        assertEquals("Interval p50", preview.bars[1].label)
+    }
+
+    @Test fun barsWithoutAComparisonCarryNoDeltaOrTick() {
         val current = run(metrics = listOf(launchMetric("1.1", 128.0, 140.0)))
-        val keys = ResultPresenter.keyMetrics(current, null, ComparedTo.NONE)
-        assertEquals(1, keys.size)
-        assertNull(keys.single().deltaText)
-        assertNull(keys.single().baseFraction)
-        assertEquals(Tone.NEUTRAL, keys.single().tone)
+        val bars = ResultPresenter.metricBars(current, null, ComparedTo.NONE).flatMap { it.bars }
+        assertEquals(1, bars.size)
+        assertNull(bars.single().deltaText)
+        assertNull(bars.single().baseFraction)
+        assertEquals(Tone.NEUTRAL, bars.single().tone)
     }
 
     // ---- Results list badge ----
@@ -374,5 +381,60 @@ class ResultPresenterTest {
         assertEquals("점수 제외", ResultPresenter.shortStatus(run(charging = true, flags = listOf(ValidityFlags.CHARGING))))
         assertEquals("비교 불가", ResultPresenter.shortStatus(run(thermalMax = 3, flags = listOf(ValidityFlags.THERMAL_HIGH))))
         assertEquals("측정 무효", ResultPresenter.shortStatus(run(flags = listOf(ValidityFlags.HARD_FAILURE))))
+    }
+
+    // ---- every metric as a bar ----
+
+    @Test fun theShownNumberIsTheMedianAndSaysSo() {
+        // The value a sampled latency stores is its median (BenchmarkEvaluator sets value = p50), so the row
+        // must not borrow statHeader, which names the second statistic the old table put beside it.
+        val current = run(metrics = listOf(
+            launchMetric("1.1", 142.0, 161.0, n = 9),
+            launchMetric("2.2", 164.0, 190.0, n = 25),
+            windowMetric("H.1", 33.3),
+            countMetric("H.5", 0)
+        ))
+        val bars = ResultPresenter.metricBars(current, null, ComparedTo.NONE).flatMap { it.bars }
+        assertEquals("median", bars.first { it.label == "Open" }.statLabel)
+        assertEquals("median", bars.first { it.label == "Capture" }.statLabel)
+        // These two already name their statistic, and a count has none.
+        assertEquals("", bars.first { it.label == "Interval p50" }.statLabel)
+        assertEquals("", bars.first { it.label == "Stalls" }.statLabel)
+        assertEquals("0", bars.first { it.label == "Stalls" }.valueText)
+    }
+
+    @Test fun barsCoverEveryMeasuredMetricGroupedByCategory() {
+        val current = run(metrics = listOf(
+            launchMetric("1.1", 142.0, 161.0),
+            launchMetric("2.2", 164.0, 190.0),
+            windowMetric("H.1", 33.3)
+        ))
+        val sections = ResultPresenter.metricBars(current, null, ComparedTo.NONE)
+        assertEquals(listOf("Launch", "Preview", "Capture"), sections.map { it.title })
+        // A metric the run did not measure is left out rather than drawn as an empty bar.
+        assertEquals(1, sections.first { it.title == "Launch" }.bars.size)
+    }
+
+    @Test fun aTimedOutThreeAMetricGetsNoBar() {
+        val timedOut = metric("H.7", 1500.0).copy(timeout = true)
+        val bars = ResultPresenter.metricBars(run(metrics = listOf(timedOut)), null, ComparedTo.NONE).flatMap { it.bars }
+        val af = bars.single()
+        assertEquals("timeout", af.statLabel)
+        assertEquals("—", af.valueText)
+        assertEquals(0.0, af.fraction, 0.0)
+    }
+
+    @Test fun runFactsNameFlagsInWordsAndDropTheFilePath() {
+        val charging = run(charging = true, flags = listOf(ValidityFlags.CHARGING, ValidityFlags.LABEL_MISSING))
+        val facts = ResultPresenter.runFacts(charging, "samsung SM-S936N", "Rear main", "/data/files/20260923-013403-785.json")
+        assertEquals("samsung SM-S936N", facts.first { it.first == "기기" }.second)
+        assertEquals("충전 중 · 빌드 이름 없음", facts.first { it.first == "참고 사항" }.second)
+        assertEquals("20260923-013403-785.json", facts.first { it.first == "파일" }.second)
+        assertEquals("SW42", facts.first { it.first == "측정 대상" }.second)
+
+        val unlabelled = run(subject = SubjectLabel())
+        val without = ResultPresenter.runFacts(unlabelled, "samsung SM-S936N", "Rear main", null)
+        assertEquals("입력하지 않음", without.first { it.first == "측정 대상" }.second)
+        assertTrue(without.none { it.first == "파일" })
     }
 }

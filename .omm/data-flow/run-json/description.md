@@ -2,4 +2,4 @@ BenchmarkReport는 files/benchmarks/<runId>.json에 schema 4를 기록하고 sch
 
 사진·동영상은 앱 내부 실행 JSON과 별도로 DCIM/HALCamera 앨범에 저장합니다. Android 10 이상에서는 IS_PENDING을 사용하고, 사진 쌍 저장 중 실패하면 생성한 두 항목을 삭제합니다.
 
-새 실행에는 raw.device_instance_id가 선택적으로 추가됩니다. 외부 schema 3·4 JSON은 ProfileArchive가 별도 files/profile-imports/<sha256>.json에 원문을 보관합니다. 같은 바이트는 중복으로 처리하고 run_id가 같은 다른 바이트는 별도 원본으로 보관합니다. 이 파일은 BenchmarkStore와 baseline 인덱스에 넣지 않습니다.
+새 실행에는 raw.device_instance_id가 선택적으로 추가됩니다. 실행 JSON은 기기 안에서만 만들어지며, 외부 JSON을 별도 archive에 보관하던 경로는 0.13.0에서 제거했습니다. files/benchmarks의 실행 파일과 baseline 인덱스가 저장의 전부입니다.
