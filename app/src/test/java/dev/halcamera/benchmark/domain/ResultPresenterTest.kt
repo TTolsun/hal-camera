@@ -338,33 +338,40 @@ class ResultPresenterTest {
         assertEquals(Tone.NEUTRAL, previous.tone)
     }
 
-    @Test fun keyMetricsShareOneScaleWithTheBaselineTick() {
+    @Test fun barsShareOneScaleWithTheBaselineTick() {
         val base = run(runId = "20260910-100000-000", metrics = listOf(
             launchMetric("1.1", 100.0, 120.0), launchMetric("1.6", 400.0, 420.0),
             launchMetric("2.2", 480.0, 500.0), windowMetric("H.1", 33.3)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(
             launchMetric("1.1", 128.0, 140.0), launchMetric("1.6", 412.0, 430.0),
             launchMetric("2.2", 486.0, 510.0), windowMetric("H.1", 33.6)))
-        val keys = ResultPresenter.keyMetrics(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+        val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+            .flatMap { it.bars }
 
-        assertEquals(listOf("Camera open", "First frame", "Still capture", "Frame rate"), keys.map { it.label })
-        val open = keys.first()
+        val open = bars.first { it.label == "Open" }
         assertEquals("128 ms", open.valueText)
         assertEquals("+28 ms", open.deltaText)
         // The larger of the two values sits at 80% of the bar, so both the fill and the tick stay on screen.
         assertEquals(0.8, open.fraction, 1e-9)
         assertEquals(0.8 * 100.0 / 128.0, open.baseFraction!!, 1e-9)
-        // Frame rate is H.1 upside down: 1000 / 33.6.
-        assertEquals("29.8 fps", keys.last().valueText)
     }
 
-    @Test fun keyMetricsWithoutAComparisonCarryNoDeltaOrTick() {
+    @Test fun frameRateLeadsThePreviewSectionAsHOneUpsideDown() {
+        val current = run(metrics = listOf(windowMetric("H.1", 33.6)))
+        val preview = ResultPresenter.metricBars(current, null, ComparedTo.NONE).single { it.title == "Preview" }
+        // 1000 / 33.6, and it comes before the interval row it is derived from.
+        assertEquals("Frame rate", preview.bars.first().label)
+        assertEquals("29.8 fps", preview.bars.first().valueText)
+        assertEquals("Interval p50", preview.bars[1].label)
+    }
+
+    @Test fun barsWithoutAComparisonCarryNoDeltaOrTick() {
         val current = run(metrics = listOf(launchMetric("1.1", 128.0, 140.0)))
-        val keys = ResultPresenter.keyMetrics(current, null, ComparedTo.NONE)
-        assertEquals(1, keys.size)
-        assertNull(keys.single().deltaText)
-        assertNull(keys.single().baseFraction)
-        assertEquals(Tone.NEUTRAL, keys.single().tone)
+        val bars = ResultPresenter.metricBars(current, null, ComparedTo.NONE).flatMap { it.bars }
+        assertEquals(1, bars.size)
+        assertNull(bars.single().deltaText)
+        assertNull(bars.single().baseFraction)
+        assertEquals(Tone.NEUTRAL, bars.single().tone)
     }
 
     // ---- Results list badge ----

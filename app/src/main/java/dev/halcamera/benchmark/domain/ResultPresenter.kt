@@ -247,34 +247,6 @@ object ResultPresenter {
         }
     }
 
-    /** The four metrics the card shows without unfolding anything: launch, first frame, capture, frame rate. */
-    val KEY_METRIC_IDS = listOf("1.1", "1.6", "2.2")
-
-    fun keyMetrics(run: BenchmarkRun, comparison: RunComparison?, comparedTo: ComparedTo): List<KeyMetric> {
-        val withDelta = comparedTo != ComparedTo.NONE
-        val rows = KEY_METRIC_IDS.mapNotNull { id ->
-            val metric = run.metric(id) ?: return@mapNotNull null
-            val label = when (id) {
-                "1.1" -> "Camera open"
-                "1.6" -> "First frame"
-                "2.2" -> "Still capture"
-                else -> BenchmarkMetricCatalog.info(id)?.short ?: id
-            }
-            val cmp = comparison?.metric(id)
-            keyMetric(label, "median", metric.value, cmp?.baselineValue, "ms", cmp, withDelta, lowerIsBetter = true)
-        }
-        // Frame rate is H.1 (preview interval) turned upside down, because "29.8 fps" answers the question the
-        // interval only implies. The verdict still belongs to H.1: a longer interval is a lower rate.
-        val interval = run.metric("H.1")
-        val fps = interval?.value?.takeIf { it > 0 }?.let { 1000.0 / it }
-        val frameRate = if (fps == null) null else {
-            val cmp = comparison?.metric("H.1")
-            val baseFps = cmp?.baselineValue?.takeIf { it > 0 }?.let { 1000.0 / it }
-            keyMetric("Frame rate", "", fps, baseFps, "fps", cmp, withDelta, lowerIsBetter = false)
-        }
-        return rows + listOfNotNull(frameRate)
-    }
-
     /**
      * Every measured metric as a bar, grouped by category, in catalog order.
      *
@@ -285,7 +257,7 @@ object ResultPresenter {
     fun metricBars(run: BenchmarkRun, comparison: RunComparison?, comparedTo: ComparedTo): List<MetricBarSection> {
         val withDelta = comparedTo != ComparedTo.NONE
         return (ORDER + Category.THREE_A).mapNotNull { category ->
-            val bars = BenchmarkMetricCatalog.ids.mapNotNull { id ->
+            val measured = BenchmarkMetricCatalog.ids.mapNotNull { id ->
                 val info = BenchmarkMetricCatalog.info(id) ?: return@mapNotNull null
                 if (info.category != category) return@mapNotNull null
                 val metric = run.metric(id) ?: return@mapNotNull null
@@ -295,12 +267,21 @@ object ResultPresenter {
                 if (metric.timeout) {
                     KeyMetric(info.short, "timeout", "—", null, Tone.NEUTRAL, 0.0, null)
                 } else {
-                    keyMetric(info.short, statLabel(metric, info), metric.value, cmp?.baselineValue,
-                        info.unit, cmp, withDelta, lowerIsBetter = true)
+                    keyMetric(info.short, statLabel(metric, info), metric.value, cmp?.baselineValue, info.unit, cmp, withDelta)
                 }
             }
+            // Frame rate leads the preview section: it is H.1 turned upside down, and "29.8 fps" answers the
+            // question the interval only implies. The verdict still belongs to H.1, whose row follows it.
+            val bars = if (category == Category.PREVIEW) listOfNotNull(frameRate(run, comparison, withDelta)) + measured else measured
             if (bars.isEmpty()) null else MetricBarSection(categoryLabel(category), bars)
         }
+    }
+
+    private fun frameRate(run: BenchmarkRun, comparison: RunComparison?, withDelta: Boolean): KeyMetric? {
+        val fps = run.metric("H.1")?.value?.takeIf { it > 0 }?.let { 1000.0 / it } ?: return null
+        val cmp = comparison?.metric("H.1")
+        val baseFps = cmp?.baselineValue?.takeIf { it > 0 }?.let { 1000.0 / it }
+        return keyMetric("Frame rate", "", fps, baseFps, "fps", cmp, withDelta)
     }
 
     /**
@@ -325,8 +306,7 @@ object ResultPresenter {
         base: Double?,
         unit: String,
         cmp: MetricComparison?,
-        withDelta: Boolean,
-        lowerIsBetter: Boolean
+        withDelta: Boolean
     ): KeyMetric? {
         if (value == null) return null
         // One shared scale per row: the larger of the two values sits at 80% of the bar, so the tick and the
