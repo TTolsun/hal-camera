@@ -120,6 +120,7 @@ class BenchmarkActivity : ComponentActivity() {
     private var ticker: Runnable? = null
     /** Re-runs preflight while the card is blocked on heat, so START returns by itself once the device cools. */
     private var cardRecheck: Runnable? = null
+    private var settingsDialog: android.app.Dialog? = null
     private var firstYuvSeen = false
     private var destroyed = false
     private val envStart = HashMap<String, Any?>()
@@ -199,6 +200,8 @@ class BenchmarkActivity : ComponentActivity() {
         recorder.listener = null
         ticker?.let { main.removeCallbacks(it) }
         cardRecheck?.let { main.removeCallbacks(it) }
+        settingsDialog?.dismiss()
+        settingsDialog = null
         thermal?.stop()
         if (runner == null) io.shutdown()
         super.onDestroy()
@@ -355,10 +358,15 @@ class BenchmarkActivity : ComponentActivity() {
         ticks.addView(Look.text(this, RunRetention.tickLabel(options.last()), 12, Look.onDarkMuted))
         card.addView(ticks, lp(top = 2))
 
+        // Held in a field so onDestroy can close it: a dialog still showing when the activity goes away
+        // leaks its window, and the CLI can finish this screen while the sheet is open.
+        settingsDialog?.dismiss()
         val dialog = android.app.Dialog(this).apply {
             requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
             window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+            setOnDismissListener { settingsDialog = null }
         }
+        settingsDialog = dialog
         val actionRow = Look.row(this)
         actionRow.addView(Look.ghostButton(this, "취소", dark = true) { dialog.dismiss() },
             Look.buttonParams(0, 1f))
