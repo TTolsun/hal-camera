@@ -16,7 +16,6 @@
         </activity>
         <activity android:name=".benchmark.BenchmarkActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".benchmark.HistoryActivity" android:exported="false" />
-        <activity android:name=".benchmark.ProfileComparisonActivity" android:exported="false" />
         <activity android:name=".GalleryActivity" android:exported="false" />
         <activity android:name=".CameraProbeActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".cli.CliLaunchActivity" android:exported="true"

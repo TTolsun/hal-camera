@@ -6,4 +6,4 @@ RecentMediaThumbnail은 MediaStore 변경과 촬영 화면 복귀 시 HALCamera�
 
 CLI 요청은 직접 명령 인자 또는 기존 base64url JSON으로 들어오며 shell UID·CLI 허용 설정·프로토콜 검사를 거칩니다. CommandStore는 동작 전 요청을 저장하고, 저장 완료 콜백 이후 CommandCoordinator가 artifact 크기·SHA-256·원본 URI를 기록합니다. PC에는 원본 URI를 제외한 결과를 반환하고, 등록된 artifact ID로 읽기 전용 파일을 전달합니다. ADB 스크립트는 files manifest의 이름·크기·SHA-256을 확인하고 기기의 Download/HALCamera-cli/요청ID에 파일을 준비한 뒤 adb pull 명령을 안내합니다. Python CLI도 검증한 임시 파일만 최종 파일로 공개합니다.
 
-외부 benchmark JSON은 시스템 문서 선택기에서 ProfileArchive로 들어갑니다. 형식·크기·계약을 검사한 원본만 SHA-256 이름으로 별도 저장합니다. ProfileLibrary는 로컬 기록과 가져온 자료의 출처를 구별하고 ProfileComparison은 선택한 독립 실행을 비교합니다. 선택 키는 preferences에, 분석 방법·원본 해시·제외 사유를 포함한 결과는 내부 텍스트 파일에 저장합니다.
+벤치마크 실행 JSON은 기기 안에서만 만들어집니다. 외부 JSON을 가져와 별도 archive에 보관하던 경로는 0.13.0에서 제거했으므로, files/benchmarks의 실행과 baseline 포인터가 비교의 전부입니다.

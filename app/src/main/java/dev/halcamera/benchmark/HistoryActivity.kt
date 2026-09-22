@@ -114,9 +114,6 @@ class HistoryActivity : ComponentActivity() {
             return
         }
         backButton("벤치마크로 돌아가기") { finish() }
-        button("반복 측정 비교 · JSON 가져오기") {
-            startActivity(Intent(this, ProfileComparisonActivity::class.java))
-        }
         button("필터 · ${filter.label} ▾") { anchor ->
             showSelectionPopup(anchor, RunFilter.values().map { it.label }, filter.ordinal) { filter = RunFilter.values()[it]; pageSize = 50; render() }
         }

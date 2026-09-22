@@ -12,4 +12,4 @@ PC의 기본 CLI는 ADB이며 APK의 assets/halcam.sh를 기기에 한 번 준�
 
 앱을 열 때는 투명한 `CliLaunchActivity`가 main thread에서 작업 상태를 다시 확인합니다. 실행 중인 작업이 있으면 Live로 전환하지 않습니다. 상태 조회는 `CommandStore`의 메모리 snapshot을 읽으며 파일 기록은 상태 전환 때만 수행합니다.
 
-ProfileComparisonActivity는 Results에서 여는 반복 측정 분석 화면입니다. ProfileLibrary와 ProfileArchive는 외부 JSON 원본을 SHA-256으로 식별해 files/profile-imports에 보관하고 로컬 baseline과 분리합니다. ProfileComparison과 RepeatStatistics는 독립 실행 묶음의 기술 통계와 보정된 양측 순열검정을 계산합니다.
+벤치마크 비교는 baseline과 이번 실행, 두 개 사이에서만 이루어집니다. 여러 실행을 묶어 순열검정을 수행하던 ProfileComparisonActivity와 외부 JSON archive(ProfileLibrary, ProfileArchive)는 0.13.0에서 제거했습니다. 다기기 분포 수집을 하지 않기로 결정해 그 경로의 용도가 사라졌기 때문입니다. 실행 JSON의 device_instance_id는 DeviceInstance가 계속 채웁니다.
