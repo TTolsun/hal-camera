@@ -613,7 +613,9 @@ class BenchmarkActivity : ComponentActivity() {
             val charted = view.rows.filter { it.deltaPct != null }
             if (charted.isNotEmpty()) {
                 card.addView(Look.text(this, "◀ Improved · Degraded ▶", 11, Look.onDarkMuted), lp(top = 12))
-                val maxPct = charted.maxOf { kotlin.math.abs(it.deltaPct!!) }.coerceAtLeast(1.0)
+                // An informational outlier (a 3A metric can move by thousands of percent) must not flatten
+                // every judged bar, so the shared scale caps at 100% and larger deltas saturate.
+                val maxPct = charted.maxOf { kotlin.math.abs(it.deltaPct!!) }.coerceIn(1.0, 100.0)
                 charted.forEach { row ->
                     val line = Look.row(this)
                     val degraded = row.marker.startsWith("▲")
