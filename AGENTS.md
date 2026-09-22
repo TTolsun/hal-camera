@@ -18,6 +18,8 @@ Use JDK 17 and Android SDK 36. Run from this repository root; Windows users subs
 - `python -m unittest discover -s tools/halcam/tests -v`: test the Python CLI (Python 3.11+).
 - `python -m unittest discover -s tools/tests -v`: test aggregation utilities.
 
+To drive the app from a terminal, follow `.claude/skills/halcam-cli/SKILL.md` (setup, commands, artifacts, error codes); the contract itself lives in `guide/cli.md` and `app/src/main/java/dev/halcamera/cli/`.
+
 ## Coding Style & Architecture
 
 Use official Kotlin style, four-space indentation, `PascalCase` types, `camelCase` members, and `UPPER_SNAKE_CASE` constants. Match filenames to primary types and reuse `ui/Look` tokens. Layouts are constructed in Kotlin. Dispatch UI updates to the main thread and close camera buffers promptly.
