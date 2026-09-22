@@ -18,7 +18,7 @@ data class CameraProbeEntry(
     val cameraId: String,
     /** The logical camera this physical camera sits behind, or null for a camera that is listed by itself. */
     val physicalOf: String?,
-    /** One-line label for pickers: "0 · 후면 · FULL". */
+    /** One-line label for pickers: "Camera · 0 (Wide · Rear) · FULL", built by [CameraLabel]. */
     val title: String,
     val sections: List<ProbeSection>
 ) {
@@ -132,7 +132,7 @@ object CameraProbeText {
         val cameras = if (cameraKey == null) snapshot.cameras else snapshot.cameras.filter { it.key == cameraKey }
         cameras.forEach { camera ->
             out.appendLine()
-            out.appendLine("######## Camera ${camera.key} · ${camera.title}")
+            out.appendLine("######## ${camera.title}")
             camera.sections.forEach { out.appendLine(); out.append(section(it)) }
         }
         if (snapshot.errors.isNotEmpty()) {

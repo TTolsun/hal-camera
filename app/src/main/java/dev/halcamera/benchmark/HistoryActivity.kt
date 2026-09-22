@@ -17,6 +17,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.R
 import dev.halcamera.benchmark.domain.*
+import dev.halcamera.camera.CameraLabel
 import dev.halcamera.benchmark.platform.*
 import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
@@ -117,9 +118,9 @@ class HistoryActivity : ComponentActivity() {
         button("필터 · ${filter.label} ▾") { anchor ->
             showSelectionPopup(anchor, RunFilter.values().map { it.label }, filter.ordinal) { filter = RunFilter.values()[it]; pageSize = 50; render() }
         }
-        button("Camera · ${endpointKey ?: "전체"} ▾") { anchor ->
+        button("${endpointKey?.let(CameraLabel::short) ?: "Camera · 전체"} ▾") { anchor ->
             val values = (index.runs.map { it.endpoint.key } + listOfNotNull(endpointKey)).distinct().sorted()
-            showSelectionPopup(anchor, listOf("전체") + values, values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
+            showSelectionPopup(anchor, listOf("Camera · 전체") + values.map(CameraLabel::short), values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
         val runs = visible()
         text("${runs.size}개 실행")
@@ -157,7 +158,7 @@ class HistoryActivity : ComponentActivity() {
             val label = listOf(
                 run.runId,
                 listOfNotNull(run.subject.subjectBuildLabel ?: "(subject 없음)", run.subject.subjectCommit).joinToString(" · "),
-                "${run.profile.id} · Camera ${run.endpoint.key} · ${run.endpoint.role}",
+                "${run.profile.id} · ${CameraLabel.full(run.endpoint)}",
                 "Capture $capture  $status",
                 ResultPresenter.eligibilityLine(run),
                 run.validity.flags.joinToString(" · ")

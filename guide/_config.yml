@@ -19,15 +19,16 @@ exclude:
   - AGENTS.md
 
 # 상단 메뉴. 경로는 사이트 루트 기준이며 빌더가 페이지 깊이에 맞춰 상대 경로로 바꿉니다.
+# 도구 세 가지는 앱의 `도구` 메뉴와 같은 Probe, CTS, Benchmark 순서로 배치합니다.
 nav:
   - path: architecture.html
     label: Architecture
-  - path: benchmark.html
-    label: Benchmark
   - path: probe.html
     label: Probe
   - path: cts.html
     label: CTS
+  - path: benchmark.html
+    label: Benchmark
   - path: cli.html
     label: CLI
   - path: coding-agents.html

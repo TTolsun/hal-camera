@@ -57,7 +57,7 @@ open 10회 반복 → 3초 warm-up → 10초 관측 → 정지 영상 10장 → 
 
 ## 내부 점수 초안
 
-검토한 정상 측정 분포가 있는 Galaxy S25+ (`SM-S936N`) 후면 메인 endpoint `0`에는 `score-v1-draft` Camera Endpoint Score와 카테고리 점수를 표시합니다. release 빌드·적격 환경·동일 측정 계약이 필요하며, 3A는 점수에서 제외합니다. 다른 기기와의 순위를 나타내는 공개 점수는 아닙니다. 계산 규칙과 검증 범위는 [SCORING.md](docs/SCORING.md)를 참고하십시오.
+검토한 정상 측정 분포가 있는 Galaxy S25+ (`SM-S936N`)의 `Camera · 0 (Wide · Rear)` endpoint에는 `score-v1-draft` Camera Endpoint Score와 카테고리 점수를 표시합니다. release 빌드·적격 환경·동일 측정 계약이 필요하며, 3A는 점수에서 제외합니다. 다른 기기와의 순위를 나타내는 공개 점수는 아닙니다. 계산 규칙과 검증 범위는 [SCORING.md](docs/SCORING.md)를 참고하십시오.
 
 ## 빌드
 

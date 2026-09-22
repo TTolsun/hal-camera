@@ -168,6 +168,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var galleryButton: RecentMediaButton
     private lateinit var cameraShortcut: IconButton
     private var cameraIds = emptyList<String>()
+    /** Logical id to endpoint, so [cameraLabel] can name the lens without re-reading CameraCharacteristics. */
+    private var cameraEndpoints = emptyMap<String, CameraEndpoint>()
     private lateinit var toolsButton: Button
     private var videoMode = false
     private var recordingVideo = false
@@ -300,7 +302,7 @@ class MainActivity : ComponentActivity() {
         val thisSession = sessionId
         zoomApplied = false
         updateCameraChoices()
-        setStatus("$engineName · 카메라 $cameraId 연결 중…", false)
+        setStatus("$engineName · ${CameraLabel.short(cameraId)} 연결 중…", false)
         previewHost.removeAllViews()
         engine = if (engineName == "CameraX") {
             val view = PreviewView(this).apply { implementationMode = PreviewView.ImplementationMode.COMPATIBLE; scaleType = PreviewView.ScaleType.FILL_CENTER }
@@ -332,7 +334,8 @@ class MainActivity : ComponentActivity() {
         updateCameraChoices()
     }
     private fun setStatus(text: String, ok: Boolean) {
-        statusText.text="ID $cameraId · ${if(recordingVideo) "REC" else if(ok) "Live" else "대기"}"
+        // The centre column is one line between two button groups, so it carries the short label only.
+        statusText.text="${CameraLabel.short(cameraId)} · ${if(recordingVideo) "REC" else if(ok) "Live" else "대기"}"
         statusText.setTextColor(Look.onDarkMuted)
         main.removeCallbacks(clearNotice)
         cameraNotice.text = text
@@ -375,6 +378,8 @@ class MainActivity : ComponentActivity() {
         root.addView(topBar,FrameLayout.LayoutParams(-1,-2,Gravity.TOP))
         val controls=row().apply { gravity=Gravity.CENTER_VERTICAL }; topBar.addView(controls)
         cameraIds=try { manager.cameraIdList.toList().sortedBy { manager.getCameraCharacteristics(it)[CameraCharacteristics.LENS_FACING] != CameraCharacteristics.LENS_FACING_BACK } } catch (_:Exception) { emptyList() }
+        // Logical endpoints only: the picker lists what LIVE can open, and physical ids belong to PROBE.
+        cameraEndpoints=try { CameraEndpointResolver(manager).resolve().filter { it.physicalCameraId==null }.associateBy { it.logicalCameraId } } catch (_:Exception) { emptyMap() }
         if (cameraId !in cameraIds) cameraId=cameraIds.firstOrNull().orEmpty()
         engineButton=button("") {
             pendingMediaAction=null; pendingPermissionAction=null
@@ -389,7 +394,7 @@ class MainActivity : ComponentActivity() {
             restartCamera()
         }
         // Standalone tools stay in the menu; Mark remains on the live preview.
-        toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: Benchmark, Probe, CTS" }
+        toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: Probe, CTS, Benchmark" }
         val panelButton=button("진단") { showDiagnostics(true) }.apply { contentDescription="진단 패널 열기" }
         listOf(engineButton,toolsButton,panelButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
         statusText=label("카메라 준비 중…",12,Look.onDarkMuted).apply {
@@ -622,10 +627,13 @@ class MainActivity : ComponentActivity() {
         videoMode=video
         updateMediaControls()
     }
+    /**
+     * "Camera · 0 (Wide · Rear)". The roles come from the shared enumeration so LIVE names a lens exactly as
+     * BENCHMARK, PROBE and the run history do; an id the resolver did not reach still gets the short label.
+     */
     private fun cameraLabel(id:String):String {
         if(id.isEmpty()) return "카메라 없음"
-        val facing=manager.getCameraCharacteristics(id)[CameraCharacteristics.LENS_FACING]
-        return "${when(facing) { CameraCharacteristics.LENS_FACING_BACK -> "후면"; CameraCharacteristics.LENS_FACING_FRONT -> "전면"; else -> "외부" }} · $id"
+        return cameraEndpoints[id]?.let(CameraLabel::full) ?: CameraLabel.short(id)
     }
     private fun updateCameraChoices() {
         if(cameraId.isNotEmpty()) {
@@ -791,22 +799,24 @@ class MainActivity : ComponentActivity() {
     }
     private fun showToolsMenu(anchor: View) {
         if (closing) return
-        showSelectionPopup(anchor, listOf("Benchmark", "Probe", "CTS"), -1) { index ->
+        // PROBE, CTS, BENCHMARK is the order a developer meets the tools in: read what the HAL claims, check whether
+        // it passes, then measure how long it takes. The guide's tabs carry the same order.
+        showSelectionPopup(anchor, listOf("Probe", "CTS", "Benchmark"), -1) { index ->
             when (index) {
-                0 -> openAfterClose("benchmark_started") {
+                // PROBE reads CameraCharacteristics only and never opens a camera, so it starts without waiting for
+                // close(done); onStop closes the LIVE camera as it does for any screen change.
+                0 -> startActivity(Intent(this, CameraProbeActivity::class.java).putExtra(CameraProbeActivity.EXTRA_CAMERA_ID, cameraId))
+                1 -> openAfterClose("cts_started") { Intent(this, dev.halcamera.cts.CtsEntryActivity::class.java) }
+                2 -> openAfterClose("benchmark_started") {
                     Intent(this, dev.halcamera.benchmark.BenchmarkActivity::class.java)
                         .putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_ENGINE, engineName)
                         .putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_CAMERA_ID, cameraId)
                 }
-                // PROBE reads CameraCharacteristics only and never opens a camera, so it starts without waiting for
-                // close(done); onStop closes the LIVE camera as it does for any screen change.
-                1 -> startActivity(Intent(this, CameraProbeActivity::class.java).putExtra(CameraProbeActivity.EXTRA_CAMERA_ID, cameraId))
-                2 -> openAfterClose("cts_started") { Intent(this, dev.halcamera.cts.CtsEntryActivity::class.java) }
             }
         }
     }
     /**
-     * Benchmark and CTS open their own camera, so the live session must be closed and its close(done) received
+     * CTS and Benchmark open their own camera, so the live session must be closed and its close(done) received
      * before the next screen starts. Same sequence as the CLI CTS path; onStop's restartCamera() sees
      * `closing` and stays out of the way, and onStart reopens the camera when the user comes back.
      */

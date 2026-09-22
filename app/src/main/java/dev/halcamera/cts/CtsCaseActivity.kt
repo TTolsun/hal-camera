@@ -31,6 +31,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.R
+import dev.halcamera.camera.CameraLabel
 import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 import java.util.concurrent.CountDownLatch
@@ -119,10 +120,10 @@ class CtsCaseActivity : ComponentActivity(), CtsRunner.PreviewHost, SurfaceHolde
             listener = object : CtsRunner.Listener {
                 override fun onCameraStarted(cameraId: String, index: Int, total: Int) = post {
                     live.getOrPut(cameraId) { ArrayList() }
-                    status = "카메라 $cameraId 준비 중 (${index + 1}/$total)"; render()
+                    status = "${CameraLabel.short(cameraId)} 준비 중 (${index + 1}/$total)"; render()
                 }
                 override fun onProgress(cameraId: String, stage: String, index: Int, total: Int) = post {
-                    status = "카메라 $cameraId · $stage 진행 중 (${index + 1}/$total)"; render()
+                    status = "${CameraLabel.short(cameraId)} · $stage 진행 중 (${index + 1}/$total)"; render()
                 }
                 override fun onStep(cameraId: String, step: StepResult) = post {
                     live.getOrPut(cameraId) { ArrayList() }.add(step); render()

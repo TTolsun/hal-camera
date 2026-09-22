@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "64f77a27311d1a05",
-        "modelHash": "65f0967554d5e7a7",
+        "codeHash": "f3d8aab88128b0a4",
+        "modelHash": "bfe3019b80318653",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "7f6c67c",
+        "reviewer": "Claude (tool order, camera labels)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "b866a5c466b974b8",
+        "codeHash": "0722d01dbd9ab53c",
         "modelHash": "6fb4e0e00d66213d",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "7f6c67c",
+        "reviewer": "Claude (tool order, camera labels)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1f2845f9793ee50f",
+        "codeHash": "c94c514cc59cd970",
         "modelHash": "07ff2102a958cd31",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "7f6c67c",
+        "reviewer": "Claude (tool order, camera labels)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "9decb65f3e56d17b",
-        "modelHash": "463fd1d7e513e4ce",
+        "codeHash": "b559c1579f5a0049",
+        "modelHash": "02f0c8b8b41dbe7d",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "7f6c67c",
+        "reviewer": "Claude (tool order, camera labels)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e1b8ee274f6e6131",
-        "modelHash": "7e933807b18e68c0",
+        "codeHash": "5d3c687c6095eb0f",
+        "modelHash": "af1655e7f66fc5fb",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "7f6c67c",
+        "reviewer": "Claude (tool order, camera labels)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "b866a5c466b974b8",
+        "codeHash": "0722d01dbd9ab53c",
         "modelHash": "4ce0a5938eb7fd3e",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "7f6c67c",
+        "reviewer": "Claude (tool order, camera labels)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "64f77a27311d1a05",
-        "modelHash": "c2b573fb83195c18",
+        "codeHash": "f3d8aab88128b0a4",
+        "modelHash": "385abc8b1fa5d4b8",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "7f6c67c",
+        "reviewer": "Claude (tool order, camera labels)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "64f77a27311d1a05",
-        "modelHash": "0a3fbb941466ac9b",
+        "codeHash": "f3d8aab88128b0a4",
+        "modelHash": "4ba8fced5439f901",
         "at": "2026-09-22",
-        "commit": "52cc74f",
-        "reviewer": "Claude (trim benchmark controls)"
+        "commit": "7f6c67c",
+        "reviewer": "Claude (tool order, camera labels)"
       },
       "observed": {
         "state": "fresh"

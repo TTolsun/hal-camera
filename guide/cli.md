@@ -94,4 +94,4 @@ Python 도구의 `--json`은 stdout에 JSON 하나를 출력하며, `--wait-time
 
 AI 코딩 에이전트에게 이 CLI를 맡기려면 저장소의 `skills/halcam-cli/SKILL.md`를 읽히십시오. 준비 절차와 오류 대응까지 실행 순서대로 정리되어 있으며, 사용법은 [Agents 가이드](coding-agents.md)에 있습니다.
 
-카메라 사양을 확인하려면 [Probe 가이드](probe.md)를 이어서 읽으세요.
+이 CLI를 AI 코딩 에이전트에게 맡기는 방법은 [Agents 가이드](coding-agents.md)에 이어집니다.

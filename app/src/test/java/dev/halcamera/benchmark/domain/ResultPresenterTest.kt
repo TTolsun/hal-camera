@@ -28,7 +28,7 @@ class ResultPresenterTest {
         comparison: RunComparison? = null,
         comparedTo: ComparedTo = ComparedTo.NONE,
         isBaseline: Boolean = false
-    ) = ResultPresenter.present(run, comparison, comparedTo, isBaseline, "Galaxy S25+", "Rear main")
+    ) = ResultPresenter.present(run, comparison, comparedTo, isBaseline, "Galaxy S25+", "Camera · 0 (Wide · Rear)")
 
     // ---- second statistic column (8.4) ----
 
@@ -285,7 +285,7 @@ class ResultPresenterTest {
             metrics = listOf(launchMetric("1.1", 142.0, 161.0), windowMetric("H.1", 33.3), countMetric("H.5", 0))
         )
         val text = present(current).render()
-        assertTrue(text, text.startsWith("Camera benchmark\nGalaxy S25+ · Rear main · camera2-standard-v1 · warm reopen\n"))
+        assertTrue(text, text.startsWith("Camera benchmark\nGalaxy S25+ · Camera · 0 (Wide · Rear) · camera2-standard-v1 · warm reopen\n"))
         assertTrue(text, text.contains("2026-09-10 11:00"))
         val open = text.lines().first { it.contains("Open") }
         val interval = text.lines().first { it.contains("Interval p50") }
@@ -319,22 +319,22 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 221.0)))
         val c = RegressionDetector.compare(base, current)
 
-        val bad = ResultPresenter.headline(current, c, ComparedTo.BASELINE, isBaseline = false, endpointName = "Rear main")
+        val bad = ResultPresenter.headline(current, c, ComparedTo.BASELINE, isBaseline = false, endpointName = "Camera · 0 (Wide · Rear)")
         assertEquals("1 metric degraded", bad.text)
         assertEquals(Tone.BAD, bad.tone)
-        assertTrue(bad.sub, bad.sub.contains("Rear main"))
+        assertTrue(bad.sub, bad.sub.contains("Camera · 0 (Wide · Rear)"))
 
         val clean = RegressionDetector.compare(base, run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 165.0))))
-        assertEquals(Tone.GOOD, ResultPresenter.headline(current, clean, ComparedTo.BASELINE, false, "Rear main").tone)
+        assertEquals(Tone.GOOD, ResultPresenter.headline(current, clean, ComparedTo.BASELINE, false, "Camera · 0 (Wide · Rear)").tone)
 
-        val first = ResultPresenter.headline(current, null, ComparedTo.NONE, isBaseline = false, endpointName = "Rear main")
+        val first = ResultPresenter.headline(current, null, ComparedTo.NONE, isBaseline = false, endpointName = "Camera · 0 (Wide · Rear)")
         assertEquals("First run", first.text)
         assertTrue(first.sub, first.sub.startsWith("Baseline으로 지정하면"))
 
-        val asBaseline = ResultPresenter.headline(current, null, ComparedTo.NONE, isBaseline = true, endpointName = "Rear main")
+        val asBaseline = ResultPresenter.headline(current, null, ComparedTo.NONE, isBaseline = true, endpointName = "Camera · 0 (Wide · Rear)")
         assertEquals("This run is the baseline", asBaseline.text)
 
-        val previous = ResultPresenter.headline(current, c, ComparedTo.PREVIOUS, isBaseline = false, endpointName = "Rear main")
+        val previous = ResultPresenter.headline(current, c, ComparedTo.PREVIOUS, isBaseline = false, endpointName = "Camera · 0 (Wide · Rear)")
         assertEquals(Tone.NEUTRAL, previous.tone)
     }
 

@@ -33,14 +33,20 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
     fun read(): CameraProbeSnapshot {
         val errors = ArrayList<String>()
         val ids = try { manager.cameraIdList.toList() } catch (e: Exception) { errors += "cameraIdList: ${e.message}"; emptyList() }
+        // Lens roles come from the shared enumeration rather than from a second inference here. Only that one applies
+        // LensRoles.dedupeMain across the rear cameras, so inferring locally would let PROBE call two lenses Wide
+        // while LIVE and BENCHMARK call one of them Wide and the other unplaced.
+        val roles = try {
+            CameraEndpointResolver(manager).resolve().associate { it.key to it.role }
+        } catch (e: Exception) { errors += "endpoint roles: ${e.message}"; emptyMap() }
         val cameras = ArrayList<CameraProbeEntry>()
         ids.forEach { id ->
             val chars = try { manager.getCameraCharacteristics(id) } catch (e: Exception) { errors += "camera $id: ${e.message}"; return@forEach }
-            cameras += entry(id, null, chars)
+            cameras += entry(id, null, chars, roles)
             if (Build.VERSION.SDK_INT >= 28) {
                 chars.physicalCameraIds.filter { it !in ids }.sorted().forEach { pid ->
                     val pc = try { manager.getCameraCharacteristics(pid) } catch (e: Exception) { errors += "physical $id/$pid: ${e.message}"; return@forEach }
-                    cameras += entry(pid, id, pc)
+                    cameras += entry(pid, id, pc, roles)
                 }
             }
         }
@@ -63,16 +69,14 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
         ProbeRow("ABIs", Build.SUPPORTED_ABIS.joinToString(", "))
     )
 
-    private fun entry(id: String, physicalOf: String?, c: CameraCharacteristics): CameraProbeEntry {
-        val facing = facingLabel(c[CameraCharacteristics.LENS_FACING])
+    private fun entry(id: String, physicalOf: String?, c: CameraCharacteristics, roles: Map<String, LensRole>): CameraProbeEntry {
+        val facing = c[CameraCharacteristics.LENS_FACING]
         val level = MetadataNames.name("INFO_SUPPORTED_HARDWARE_LEVEL_", c[CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL])
-        // The same focal-length inference as CameraEndpointResolver, so the picker tells a tele from an ultra-wide.
-        val role = if (c[CameraCharacteristics.LENS_FACING] == CameraCharacteristics.LENS_FACING_BACK) {
-            val focal = c[CameraCharacteristics.LENS_INFO_AVAILABLE_FOCAL_LENGTHS]?.minOrNull()
-            val size = c[CameraCharacteristics.SENSOR_INFO_PHYSICAL_SIZE]
-            LensRoles.roleFor(LensRoles.equivalentFocalMm(focal, size?.width, size?.height)).takeIf { it != LensRole.UNKNOWN }?.name
-        } else null
-        val title = listOfNotNull(if (physicalOf != null) "physical" else null, facing, role, level).joinToString(" · ")
+        // The shared label carries the id, so PROBE names a camera the same way LIVE, BENCHMARK and CTS do. The
+        // hardware level and the physical marker are PROBE's own additions and follow the parenthesis.
+        val key = physicalOf?.let { "$it.$id" } ?: id
+        val role = roles[key] ?: LensRole.UNKNOWN
+        val title = listOfNotNull(CameraLabel.full(key, role, facing), if (physicalOf != null) "physical" else null, level).joinToString(" · ")
         val map = c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
         val sections = ArrayList<ProbeSection>()
         sections += guarded("Identity") { identity(id, physicalOf, c) }
@@ -382,12 +386,9 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
     private fun names(prefix: String, values: IntArray, owner: Class<*> = CameraMetadata::class.java): String =
         ProbeFormat.inventory(MetadataNames.of(prefix, owner), values.toList())
 
-    private fun facingLabel(facing: Int?): String = when (facing) {
-        CameraCharacteristics.LENS_FACING_BACK -> "후면"
-        CameraCharacteristics.LENS_FACING_FRONT -> "전면"
-        CameraCharacteristics.LENS_FACING_EXTERNAL -> "외부"
-        else -> "facing ${facing ?: "—"}"
-    }
+    /** Same three words the camera label uses, so the Identity row and the picker never disagree. */
+    private fun facingLabel(facing: Int?): String =
+        CameraLabel.facing(LensRole.UNKNOWN, facing) ?: "facing ${facing ?: "—"}"
 
     private fun formatName(format: Int): String =
         MetadataNames.of("", ImageFormat::class.java)[format]

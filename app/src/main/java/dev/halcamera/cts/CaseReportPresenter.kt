@@ -1,5 +1,7 @@
 package dev.halcamera.cts
 
+import dev.halcamera.camera.CameraLabel
+
 /** Plain-text rendering of a [CaseReport] for the screen and the clipboard. Pure Kotlin, monospace-aligned. */
 object CaseReportPresenter {
     const val DISCLAIMER = "CTS 케이스를 앱 안에 옮긴 자체 실행입니다. 공식 판정은 cts-tradefed의 test_result.xml만 인정됩니다."
@@ -11,7 +13,7 @@ object CaseReportPresenter {
     }
 
     fun cameraLine(r: CameraCaseResult): String =
-        "ID ${r.cameraId} · PASS ${r.passed} FAIL ${r.failed} SKIP ${r.skipped}"
+        "${CameraLabel.short(r.cameraId)} · PASS ${r.passed} FAIL ${r.failed} SKIP ${r.skipped}"
 
     /** One row per step: verdict then step id; every detail line follows, indented. */
     fun cameraTable(r: CameraCaseResult): String = buildString {

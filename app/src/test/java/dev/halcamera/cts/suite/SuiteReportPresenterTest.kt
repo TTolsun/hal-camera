@@ -68,7 +68,7 @@ class SuiteReportPresenterTest {
     fun `details reuse the per-camera table and the numbered failures`() {
         val custom = SuiteReportPresenter.customDetail(listOf(CameraCaseResult("0", listOf(StepResult("open", Verdict.PASS, listOf("first frame 120 ms")))), CameraCaseResult("1", listOf(StepResult("open", Verdict.FAIL)))))
         assertEquals(
-            listOf("ID 0 · PASS 1 FAIL 0 SKIP 0", "PASS  open", "      first frame 120 ms", "", "ID 1 · PASS 0 FAIL 1 SKIP 0", "FAIL  open"),
+            listOf("Camera · 0 · PASS 1 FAIL 0 SKIP 0", "PASS  open", "      first frame 120 ms", "", "Camera · 1 · PASS 0 FAIL 1 SKIP 0", "FAIL  open"),
             custom.split('\n')
         )
         assertEquals("", SuiteReportPresenter.vendoredDetail(emptyList()))
@@ -99,7 +99,7 @@ class SuiteReportPresenterTest {
         assertEquals(CaseReportPresenter.DISCLAIMER + " " + VendoredReportPresenter.DISCLAIMER, lines[3])
         assertEquals("", lines[4])
         assertEquals("[PASS] 빠른 켜기·끄기 · custom#FastOnOff · 1분 2초", lines[5])
-        assertEquals("ID 0 · PASS 1 FAIL 0 SKIP 0", lines[6])
+        assertEquals("Camera · 0 · PASS 1 FAIL 0 SKIP 0", lines[6])
         assertEquals("PASS  open", lines[7])
         assertEquals("", lines[8])
         assertEquals("[FAIL] testBasicRecording · RecordingTest#testBasicRecording · 45초", lines[9])

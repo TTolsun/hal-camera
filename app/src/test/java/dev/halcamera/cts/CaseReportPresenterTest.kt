@@ -22,7 +22,7 @@ class CaseReportPresenterTest {
 
     @Test
     fun `camera line carries the three counts`() {
-        assertEquals("ID 0 · PASS 1 FAIL 1 SKIP 1", CaseReportPresenter.cameraLine(CameraCaseResult("0", listOf(pass, fail, skip))))
+        assertEquals("Camera · 0 · PASS 1 FAIL 1 SKIP 1", CaseReportPresenter.cameraLine(CameraCaseResult("0", listOf(pass, fail, skip))))
     }
 
     @Test
@@ -46,7 +46,7 @@ class CaseReportPresenterTest {
         assertEquals("FAIL · 카메라 1대, FAIL 1", lines[2])
         assertEquals(CaseReportPresenter.DISCLAIMER, lines[3])
         assertEquals("", lines[4])
-        assertEquals("ID 0 · PASS 1 FAIL 1 SKIP 0", lines[5])
+        assertEquals("Camera · 0 · PASS 1 FAIL 1 SKIP 0", lines[5])
         assertTrue(text.endsWith("      Camera 0: Video duration doesn't match"))
     }
 }

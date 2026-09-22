@@ -18,7 +18,7 @@ class StartCardPresenterTest {
         engineName: String = "Camera2",
         thermalStatus: Int? = 0,
         powerSaveMode: Boolean? = false
-    ) = StartCardPresenter.present(profile, compatibility, "Rear main", engineName, thermalStatus, powerSaveMode)
+    ) = StartCardPresenter.present(profile, compatibility, "Camera · 0 (Wide · Rear)", engineName, thermalStatus, powerSaveMode)
 
     // ---- what stops a run ----
 
@@ -92,7 +92,7 @@ class StartCardPresenterTest {
     // ---- what the card says ----
 
     @Test fun theTitleNamesTheEngineCameraConditionAndLaunchMode() {
-        assertEquals("Camera2 · Rear main · 1080p30 · warm reopen", card().titleLine)
+        assertEquals("Camera2 · Camera · 0 (Wide · Rear) · 1080p30 · warm reopen", card().titleLine)
     }
 
     @Test fun theVerdictCarriesTheMethodThatProducedIt() {

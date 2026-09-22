@@ -29,6 +29,7 @@ import androidx.core.content.FileProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.widget.doAfterTextChanged
+import dev.halcamera.camera.CameraLabel
 import dev.halcamera.camera.CameraProbeEntry
 import dev.halcamera.camera.CameraProbeReader
 import dev.halcamera.camera.CameraProbeSnapshot
@@ -216,8 +217,9 @@ class CameraProbeActivity : ComponentActivity() {
         if (query.isEmpty() || snapshot == null || busy) { hitsBox.visibility = View.GONE; return }
         hitsBox.visibility = View.VISIBLE
         val all = hits()
-        val camera = snapshot?.camera(cameraKey.orEmpty())?.cameraId ?: "—"
-        hitHeader.text = "${all.size}개 일치 · Camera $camera" + if (all.size > MAX_HITS) " · 앞 ${MAX_HITS}개 표시" else ""
+        // The key, not cameraId: a physical camera's cameraId is a different camera's id in the picker above.
+        val camera = snapshot?.camera(cameraKey.orEmpty())?.key.orEmpty()
+        hitHeader.text = "${all.size}개 일치 · ${CameraLabel.short(camera)}" + if (all.size > MAX_HITS) " · 앞 ${MAX_HITS}개 표시" else ""
         if (all.isEmpty()) {
             hitList.addView(Look.text(this, "일치하는 줄이 없습니다. 다른 카메라를 고르거나 단어를 줄여 보세요.", 12, Look.onDarkMuted).apply { setPadding(dp(12), dp(10), dp(12), dp(10)) })
             return
@@ -336,7 +338,7 @@ class CameraProbeActivity : ComponentActivity() {
         val cameras = snap.cameras
         val current = snap.camera(cameraKey.orEmpty()) ?: cameras.firstOrNull()
         if (cameras.isNotEmpty()) {
-            button("Camera · ${current?.title ?: "—"} ▾") { anchor ->
+            button("${current?.title ?: CameraLabel.short("—")} ▾") { anchor ->
                 showSelectionPopup(anchor, cameras.map { it.title }, cameras.indexOf(current)) { cameraKey = cameras[it].key; render() }
             }
         }
