@@ -89,4 +89,6 @@ halcam --serial DEVICE probe --output ./probe --json
 
 Python 도구의 `--json`은 stdout에 JSON 하나를 출력하며, `--wait-timeout`은 PC에서 기다리는 시간만 제한합니다. ADB 스크립트는 진행 메시지와 요청별 결과를 출력하고 성공 시 0, 오류 시 1을 반환합니다. 실패하거나 취소된 요청에도 저장된 파일이 있으면 `fetch UUID`로 회수할 수 있습니다. 기계적으로 JSON만 처리하려면 직접 `content read`를 사용합니다.
 
+AI 코딩 에이전트에게 이 CLI를 맡기려면 저장소의 `skills/halcam-cli/SKILL.md`를 읽히십시오. 준비 절차와 오류 대응까지 실행 순서대로 정리되어 있으며, 사용법은 [Agents 가이드](coding-agents.md)에 있습니다.
+
 카메라 사양을 확인하려면 [Probe 가이드](probe.md)를 이어서 읽으세요.

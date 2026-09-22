@@ -30,6 +30,8 @@ nav:
     label: CTS
   - path: cli.html
     label: CLI
+  - path: coding-agents.html
+    label: Agents
   - path: decisions.html
     label: Decisions
   - path: evidence.html
