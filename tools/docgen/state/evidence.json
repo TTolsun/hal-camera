@@ -8,9 +8,9 @@
       "accepted": {
         "codeHash": "1672fe757b9863d4",
         "modelHash": "bac079bc1e26ef85",
-        "at": "2026-09-22",
-        "commit": "ebd2b1b",
-        "reviewer": "Claude (merge main, align benchmark docs)"
+        "at": "2026-09-23",
+        "commit": "d735e3d",
+        "reviewer": "Claude (doc-code audit)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "5d3a1112de557916",
+        "codeHash": "c842694069d739be",
         "modelHash": "49203ddfad5b0f1b",
-        "at": "2026-09-22",
-        "commit": "ebd2b1b",
-        "reviewer": "Claude (merge main, align benchmark docs)"
+        "at": "2026-09-23",
+        "commit": "d735e3d",
+        "reviewer": "Claude (doc-code audit)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "4af909a8a9a37922",
+        "codeHash": "746e01fe500a588e",
         "modelHash": "07ff2102a958cd31",
-        "at": "2026-09-22",
-        "commit": "ebd2b1b",
-        "reviewer": "Claude (merge main, align benchmark docs)"
+        "at": "2026-09-23",
+        "commit": "d735e3d",
+        "reviewer": "Claude (doc-code audit)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "fb69022a288fbca3",
+        "codeHash": "281a133feff0611d",
         "modelHash": "91311e3eefd81bc5",
-        "at": "2026-09-22",
-        "commit": "ebd2b1b",
-        "reviewer": "Claude (merge main, align benchmark docs)"
+        "at": "2026-09-23",
+        "commit": "d735e3d",
+        "reviewer": "Claude (doc-code audit)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e9bfa4cf7141178b",
+        "codeHash": "c842694069d739be",
         "modelHash": "860c4b5a7e31770d",
-        "at": "2026-09-22",
-        "commit": "ebd2b1b",
-        "reviewer": "Claude (merge main, align benchmark docs)"
+        "at": "2026-09-23",
+        "commit": "d735e3d",
+        "reviewer": "Claude (doc-code audit)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "5d3a1112de557916",
+        "codeHash": "bb3779d35a508cf0",
         "modelHash": "86389658167cf2b7",
-        "at": "2026-09-22",
-        "commit": "ebd2b1b",
-        "reviewer": "Claude (merge main, align benchmark docs)"
+        "at": "2026-09-23",
+        "commit": "d735e3d",
+        "reviewer": "Claude (doc-code audit)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "1672fe757b9863d4",
         "modelHash": "298ff3b5a453e8c8",
-        "at": "2026-09-22",
-        "commit": "ebd2b1b",
-        "reviewer": "Claude (merge main, align benchmark docs)"
+        "at": "2026-09-23",
+        "commit": "d735e3d",
+        "reviewer": "Claude (doc-code audit)"
       },
       "observed": {
         "state": "fresh"
@@ -89,9 +89,9 @@
       "accepted": {
         "codeHash": "1672fe757b9863d4",
         "modelHash": "3c48e646bd971d27",
-        "at": "2026-09-22",
-        "commit": "ebd2b1b",
-        "reviewer": "Claude (merge main, align benchmark docs)"
+        "at": "2026-09-23",
+        "commit": "d735e3d",
+        "reviewer": "Claude (doc-code audit)"
       },
       "observed": {
         "state": "fresh"

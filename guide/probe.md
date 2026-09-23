@@ -23,7 +23,7 @@ flowchart LR
 | enum 값의 이름 | `CameraMetadata` 상수에서 reflection으로 읽으므로 새 API 값도 숫자가 아니라 이름으로 표시됩니다. |
 | 읽지 못한 항목 | 카메라나 섹션을 읽지 못하면 빈칸이 아니라 실패 목록에 남깁니다. 내보낸 파일에도 무엇이 빠졌는지 적힙니다. |
 | key 이름 목록 | REQUEST · RESULT KEYS와 SESSION KEYS는 값이 아니라 key 이름의 목록입니다. 사양 표는 어떤 key를 요청에 넣을 수 있고 결과로 돌려받는지만 알고, 그 값은 요청마다 정해지므로 여기에 없습니다. |
-| 필터 | 단어를 넣으면 그 단어가 든 줄만 목록으로 나오고, 항목을 누르면 해당 줄로 이동합니다. 값이 여러 줄인 항목은 첫 줄과 남은 줄 수만 보입니다. 예: `JPEG`, `1080`, `x`. |
+| 필터 | 단어를 넣으면 그 단어가 든 줄만 목록으로 나오고, 항목을 누르면 해당 줄로 이동합니다. 값이 여러 줄인 항목은 첫 줄과 남은 줄 수만 보입니다. 예: `JPEG`, `1080`, `✗`. |
 
 <p class="editorial" lang="en">A capability table is a promise.<br>Measure before you trust it.</p>
 
