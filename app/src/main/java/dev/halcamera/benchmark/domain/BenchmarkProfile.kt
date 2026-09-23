@@ -133,7 +133,7 @@ data class BenchmarkProfile(
             recordCodec = "h264",
             recordBitrate = 10_000_000,
             recordFps = 30,
-            recordDurationMs = 8_000,
+            recordDurationMs = 9_000,
             recordIterations = 5,
             recordAudio = false
         )

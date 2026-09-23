@@ -47,13 +47,13 @@ class RecordMetricsTest {
         RecordMetrics.cadence(RecordMetrics.frames(events, session, tag), expected)
 
     @Test
-    fun `a steady eight second recording reports thirty fps, no anomaly and almost no jitter`() {
-        val c = cadence(recording(8.0))
+    fun `a steady nine second recording reports thirty fps, no anomaly and almost no jitter`() {
+        val c = cadence(recording(9.0))
         assertEquals(0, c.anomalyCount)
         assertNull(c.anomalyUnknownReason)
-        // Eight seconds of recording is 240 frames spanning 7.97 s of sensor time, and the three-second
-        // start-up skip leaves four complete windows. The trailing 0.97 s is dropped.
-        assertEquals(4, c.windows)
+        // Nine seconds of recording is 270 frames spanning 8.97 s of sensor time, and the three-second
+        // start-up skip leaves five complete windows. The trailing 0.97 s is dropped.
+        assertEquals(5, c.windows)
         assertEquals(30.0, c.windowFpsP50!!, 0.001)
         assertEquals(30.0, c.windowFpsMin!!, 0.001)
         assertEquals(0.0, c.jitterStdDevMs!!, 0.001)
@@ -64,7 +64,7 @@ class RecordMetricsTest {
 
     @Test
     fun `one long interval is counted as one anomaly`() {
-        val c = cadence(recording(8.0, anomalyAt = 100))
+        val c = cadence(recording(9.0, anomalyAt = 100))
         // 80 ms is above 1.5 x 33.3 ms, so exactly one interval crosses the line.
         assertEquals(1, c.anomalyCount)
         assertTrue("the long interval widens the jitter", c.jitterStdDevMs!! > 0.0)
@@ -76,13 +76,13 @@ class RecordMetricsTest {
     @Test
     fun `an interval just under the ratio is not an anomaly`() {
         // 1.4 x the reference interval: slow, but not what METRICS.md 3.2 counts.
-        val c = cadence(recording(8.0, anomalyAt = 100, anomalyNs = (frameNs * 1.4).toLong()))
+        val c = cadence(recording(9.0, anomalyAt = 100, anomalyNs = (frameNs * 1.4).toLong()))
         assertEquals(0, c.anomalyCount)
     }
 
     @Test
     fun `a missing result is excluded from the comparison instead of counted as an anomaly`() {
-        val c = cadence(recording(8.0, dropAt = 100))
+        val c = cadence(recording(9.0, dropAt = 100))
         // The pair across the hole has non-consecutive frame numbers, so it is not compared at all: a result
         // the measurement lost is not evidence that the camera was late.
         assertEquals(0, c.anomalyCount)
@@ -93,7 +93,7 @@ class RecordMetricsTest {
     @Test
     fun `a changed frame duration leaves 3 point 2 not measurable instead of reporting zero`() {
         // Every frame runs at 66.7 ms, so no segment matches the profile's 33.3 ms reference.
-        val c = cadence(recording(8.0, durationAfter = 0))
+        val c = cadence(recording(9.0, durationAfter = 0))
         assertNull(c.anomalyCount)
         assertEquals(UnknownReason.CADENCE_CHANGED, c.anomalyUnknownReason)
         assertEquals(0, c.comparedIntervals)
@@ -104,7 +104,7 @@ class RecordMetricsTest {
 
     @Test
     fun `only the segment at the reference duration is judged`() {
-        val c = cadence(recording(8.0, durationAfter = 120))
+        val c = cadence(recording(9.0, durationAfter = 120))
         assertEquals(0, c.anomalyCount)
         // Frames 0 to 119 are judged; the rest run at another duration and are left out of the count.
         assertTrue("the changed segment is not compared", c.comparedIntervals < c.intervals.size)
@@ -132,9 +132,9 @@ class RecordMetricsTest {
 
     @Test
     fun `frames are selected by request tag, not by time`() {
-        val mine = recording(8.0)
-        val preview = recording(8.0, eventTag = "record-prep-0")
-        val nextCycle = recording(8.0, eventTag = "record-1")
+        val mine = recording(9.0)
+        val preview = recording(9.0, eventTag = "record-prep-0")
+        val nextCycle = recording(9.0, eventTag = "record-1")
         val all = (preview + mine + nextCycle).sortedBy { it.atNs }
         assertEquals(RecordMetrics.frames(mine, session, tag).size, RecordMetrics.frames(all, session, tag).size)
         assertEquals(0, RecordMetrics.frames(all, "other-session", tag).size)
@@ -142,11 +142,11 @@ class RecordMetricsTest {
 
     @Test
     fun `a profile without a fixed recording rate does not judge 3 point 2 against a guess`() {
-        val c = cadence(recording(8.0), expected = null)
+        val c = cadence(recording(9.0), expected = null)
         assertNull(c.anomalyCount)
         assertEquals(UnknownReason.CADENCE_CHANGED, c.anomalyUnknownReason)
         // The measurements that do not need a reference are still reported.
-        assertEquals(4, c.windows)
+        assertEquals(5, c.windows)
         assertEquals(0.0, c.jitterStdDevMs!!, 0.001)
     }
 

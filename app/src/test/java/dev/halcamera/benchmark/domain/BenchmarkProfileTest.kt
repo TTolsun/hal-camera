@@ -70,7 +70,7 @@ class BenchmarkProfileTest {
             recordFps = null, recordDurationMs = null, recordIterations = null, recordAudio = null))
         assertEquals("1920x1080", v2.recordSize)
         assertEquals(30, v2.recordFps)
-        assertEquals(8_000L, v2.recordDurationMs)
+        assertEquals(9_000L, v2.recordDurationMs)
         assertEquals(5, v2.recordIterations)
         assertEquals(false, v2.recordAudio)
         // Five cycles minus the warm-up cycle. Below the ten repetitions of METRICS.md 0.2 by decision (3.2).
@@ -94,7 +94,7 @@ class BenchmarkProfileTest {
         val v2 = BenchmarkProfile.CAMERA2_STANDARD_V2
         // v1 baselines are stored under this key, so it must not gain a record segment.
         assertFalse(p.conditionsKey.contains("record="))
-        assertTrue(v2.conditionsKey.contains("record=h264@1920x1080/30fps/8000ms x5"))
+        assertTrue(v2.conditionsKey.contains("record=h264@1920x1080/30fps/9000ms x5"))
         assertNotEquals(p.conditionsKey, v2.conditionsKey)
         assertNotEquals(v2.conditionsKey, v2.copy(recordDurationMs = 6_000).conditionsKey)
     }

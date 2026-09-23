@@ -8,7 +8,7 @@
 
 ## 1. 한 문단 요약
 
-벤치마크의 관측 세션이 STILL을 끝낸 뒤 같은 `CameraDevice` 위에서 CaptureSession을 프리뷰와 `MediaRecorder` 표면으로 다시 구성하고, 정해진 횟수만큼 짧은 녹화를 반복한 다음 카메라를 닫는다. 녹화 구간의 `capture_started`와 `capture_result`는 `record-<n>` 태그로 구분하므로 기존 1.x·2.x·H.x의 관측 창과 섞이지 않는다. 지표 계산은 `MetricExtractor`에 순수 Kotlin 함수로 추가하고, 결과는 새 `RECORD` 카테고리로 보고한다.
+벤치마크의 관측 세션이 STILL을 끝낸 뒤 같은 `CameraDevice` 위에서 CaptureSession을 프리뷰와 `MediaRecorder` 표면으로 다시 구성하고, 정해진 횟수만큼 짧은 녹화를 반복한 다음 카메라를 닫는다. 녹화 구간의 `capture_started`와 `capture_result`는 `record-<n>` 태그로 구분하므로 기존 1.x·2.x·H.x의 관측 창과 섞이지 않는다. 지표 계산은 `metrics` 패키지에 순수 Kotlin으로 추가하고, 결과는 새 `RECORD` 카테고리로 보고한다.
 
 ## 2. 현재 코드가 녹화를 막고 있는 지점
 
@@ -39,19 +39,19 @@
 
 점수 체계와의 연결이 이 기능의 목적 중 하나이므로 A안으로 확정했다. 기존 `camera2-standard-v1` run 파일은 계속 읽히고 v1끼리는 계속 비교되지만, v2로 전환한 뒤에는 기기마다 baseline을 다시 측정해야 한다.
 
-### 3.2 녹화 반복 횟수와 길이 (확정: 5회 × 8초)
+### 3.2 녹화 반복 횟수와 길이 (확정: 5회 × 9초)
 
 METRICS.md 0.2절의 기본 반복은 10회이지만, 녹화는 한 회마다 세션 재구성과 파일 종료가 필요하므로 시간 예산이 크게 늘어난다.
 
 | 안 | 녹화 구간 소요 | 3.1·3.6의 유효 표본 | 판단 |
 |---|---:|---:|---|
-| 10회 × 8초 | 약 90초 | 9 | 0.2절의 기본값을 지키지만 run 전체가 2분을 넘는다 |
-| 5회 × 8초 | 약 45초 | 4 | 확정. run 전체는 약 75초이다 |
-| 3회 × 8초 | 약 27초 | 2 | p50과 p95가 사실상 최소·최대여서 통계로 쓰기 어렵다 |
+| 10회 × 9초 | 약 100초 | 9 | 0.2절의 기본값을 지키지만 run 전체가 2분을 넘는다 |
+| 5회 × 9초 | 약 50초 | 4 | 확정. run 전체는 약 80초이다 |
+| 3회 × 9초 | 약 30초 | 2 | p50과 p95가 사실상 최소·최대여서 통계로 쓰기 어렵다 |
 
-5회 × 8초로 확정했으며, 유효 표본이 4개라는 사실과 그때의 p95가 최대값이라는 사실을 결과 화면과 JSON에 그대로 표시한다.
+5회 × 9초로 확정했으며, 유효 표본이 4개라는 사실과 그때의 p95가 최대값이라는 사실을 결과 화면과 JSON에 그대로 표시한다.
 
-녹화 길이 8초는 3.4가 요구하는 3초의 건너뛰기 구간 뒤에 완전한 1초 창을 남기기 위한 값이다. 처음에는 창이 5개 남는다고 적었으나 5단계 구현에서 4개임을 확인했다. 30 fps로 8초를 녹화하면 결과는 240개이고 첫 결과부터 마지막 결과까지의 센서 시간은 7.967초이므로, 3초를 건너뛰면 완전한 창은 4개이고 남는 0.967초는 버려진다. 창을 5개 확보하려면 9초가 필요하며 녹화 구간이 약 45초에서 약 50초로 늘어난다. 8초를 유지하기로 했으므로 3.4의 창 통계는 창 4개 위에서 계산한다.
+녹화 길이는 3.4가 요구하는 3초의 건너뛰기 구간 뒤에 완전한 1초 창 5개를 남기도록 정했다. 처음에는 8초로 적었으나 5단계 구현에서 8초로는 창이 4개뿐임을 확인했다. 30 fps로 8초를 녹화하면 결과는 240개이고 첫 결과부터 마지막 결과까지의 센서 시간이 7.967초이므로, 3초를 건너뛰면 4.967초만 남아 창이 4개가 된다. 9초로 올리면 결과 270개에 센서 시간 8.967초이므로 창 5개가 남는다. 사용자 확인을 거쳐 2026-09-24에 9초로 확정했고, 그 대가로 녹화 구간이 약 45초에서 약 50초로, run 전체가 약 75초에서 약 80초로 늘었다.
 
 ### 3.3 녹화 지표를 점수에 언제 넣을 것인가 (확정: 처음에는 가중치 0)
 
@@ -67,11 +67,11 @@ v1의 모든 값을 그대로 유지하고 녹화 필드 일곱 개를 더한다
 | `recordCodec` | `h264` | `MediaRecorder.VideoEncoder.H264`. 기기 간 지원 폭이 가장 넓다 |
 | `recordBitrate` | `10000000` | Live 녹화와 같은 값 |
 | `recordFps` | `30` | profile의 `fpsRange`와 같다. 3.2의 `T_ref`는 여기에서 나온다 |
-| `recordDurationMs` | `8000` | 3.2절 참고 |
+| `recordDurationMs` | `9000` | 3.2절 참고 |
 | `recordIterations` | `5` | 3.2절 참고 |
 | `recordAudio` | `false` | 오디오는 3장 어느 지표에도 쓰이지 않는다. 마이크 권한이 거부되면 run 전체가 실패하므로 조건에서 제외한다 |
 
-`conditionsKey`에도 `record=h264@1920x1080/30fps/8000ms×5` 형태로 포함한다. profile 필드는 비교 계약의 일부이므로 `BenchmarkProfile.fromJsonMap`에서 누락 시 예외를 던지는 기존 규칙을 그대로 따른다.
+`conditionsKey`에도 `record=h264@1920x1080/30fps/9000ms x5` 형태로 포함한다. profile 필드는 비교 계약의 일부이므로 `BenchmarkProfile.fromJsonMap`에서 누락 시 예외를 던지는 기존 규칙을 그대로 따른다.
 
 preflight(`ProfileCompatibility`)는 카메라를 열지 않고 `recordSize`가 `MediaRecorder` 출력 크기 목록에 있는지만 확인한다. 실제 스트림 조합 지원 여부는 열어 보기 전에는 알 수 없으므로, 구성 실패는 preflight가 아니라 실행 중 실패로 처리한다(9절).
 
@@ -88,7 +88,7 @@ OBSERVE 10 s                                 3 / 7  Preview Stability
   (같은 창에서 3A 수렴 계산)                    4 / 7  3A Response
 STILL ×10                                    5 / 7  Still Capture
 RECORD_CYCLE ×5                              6 / 7  Recording
-  PREPARE -> START -> RUN 8 s -> STOP
+  PREPARE -> START -> RUN 9 s -> STOP
 CLOSE                                        7 / 7  Camera Close
 ```
 
@@ -98,7 +98,7 @@ RECORD를 STILL 뒤에 두는 이유는 세 가지이다.
 2. 녹화가 실패해도 이미 확보한 1.x·2.x·H.x 표본이 남는다. 반대 순서였다면 녹화 실패가 run 전체를 버리게 만든다.
 3. `CameraDevice`를 다시 열지 않으므로 warm reopen이라는 조건 이름이 흐려지지 않는다.
 
-시간 예산은 기존 약 25–30초에 녹화 약 45초가 더해져 약 75초이다. 시작 카드의 안내 문구와 `ProgressPresenter`의 단계별 가중치를 함께 고친다.
+시간 예산은 기존 약 25–30초에 녹화 약 50초가 더해져 약 80초이다. 시작 카드의 안내 문구와 `ProgressPresenter`의 단계별 가중치를 함께 고친다.
 
 ## 6. 녹화 사이클 하나의 절차와 이벤트
 
@@ -114,7 +114,7 @@ RECORD를 STILL 뒤에 두는 이유는 세 가지이다.
    record_started          start()가 정상 반환한 직후
 5. (녹화 대상 repeating)    TEMPLATE_RECORD, target = preview + recorder, tag = "record-<n>"
    capture_started         tag가 "record-<n>"인 첫 진입                        <- 3.1 끝점
-6. (8초 유지)              이 구간의 capture_result가 3.2 · 3.4 · 3.7의 모집단이다
+6. (9초 유지)              이 구간의 capture_result가 3.2 · 3.4 · 3.7의 모집단이다
 7. (repeating 중단)        stopRepeating(). CTS RecordingTest와 같은 순서이다
    record_stop_call        MediaRecorder.stop() 호출 직전                      <- 3.6 시작점
    record_stopped          stop()이 정상 반환한 직후                            <- 3.6 끝점
