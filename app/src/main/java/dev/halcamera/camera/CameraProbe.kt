@@ -18,11 +18,22 @@ data class CameraProbeEntry(
     val cameraId: String,
     /** The logical camera this physical camera sits behind, or null for a camera that is listed by itself. */
     val physicalOf: String?,
-    /** One-line label for pickers: "0 · 후면 · FULL". */
+    /** One-line label for pickers: "Camera · 0 (Wide · Rear) · FULL", built by [CameraLabel]. */
     val title: String,
     val sections: List<ProbeSection>
 ) {
     val key: String get() = physicalOf?.let { "$it.$cameraId" } ?: cameraId
+}
+
+/**
+ * The one line that names a camera in the picker and in the exported TXT: the shared label, then PROBE's own
+ * additions. Pure so the composition is testable — [CameraProbeReader] needs a CameraManager and has no JVM test,
+ * and that is how a second id prefix survived here long enough to read "0 · Camera · 0 (Wide · Rear)".
+ */
+object ProbeTitle {
+    fun of(cameraKey: String, role: LensRole, facing: Int?, physical: Boolean, hardwareLevel: String?): String =
+        listOfNotNull(CameraLabel.full(cameraKey, role, facing), if (physical) "physical" else null, hardwareLevel)
+            .joinToString(" · ")
 }
 
 data class CameraProbeSnapshot(
@@ -132,7 +143,7 @@ object CameraProbeText {
         val cameras = if (cameraKey == null) snapshot.cameras else snapshot.cameras.filter { it.key == cameraKey }
         cameras.forEach { camera ->
             out.appendLine()
-            out.appendLine("######## Camera ${camera.key} · ${camera.title}")
+            out.appendLine("######## ${camera.title}")
             camera.sections.forEach { out.appendLine(); out.append(section(it)) }
         }
         if (snapshot.errors.isNotEmpty()) {

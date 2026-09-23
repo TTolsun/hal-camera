@@ -34,11 +34,11 @@ M4의 내용은 계획보다 앞당겨 M3 2단계에서 함께 구현하고 검�
 - PR #41–#45에서 Live 사진·동영상 저장, 앱 내 갤러리, 촬영 제어와 카메라 선택 UI를 구현하고 개선했습니다. 이 녹화 기능과 아래의 녹화 성능 계측(3.x)은 별도 기능입니다.
 - PR #46에서 HAL CAM 0.5.0을 릴리스했습니다.
 - PR #47에서 `.omm/`의 Doctor 요소를 제거하고 개발자 가이드와 docgen 근거 검사를 갱신했습니다. 이전 STATUS에 적혀 있던 아키텍처 문서 정리는 완료되었습니다.
-- PR #81·#82에서 Live 개발자 진입점을 "현재 세션이 열려 있어야 의미가 있는가"로 나눴습니다. Benchmark·Probe·CTS는 상단 `도구` 메뉴의 독립 화면이고, Readout·그래프·Mark·incident는 `진단` 패널입니다. Benchmark·CTS는 Live 카메라의 `close(done)` 뒤에 열리며(S25+에서 약 260 ms), Probe는 대기 없이 엽니다. 배치 기준은 `docs/design/APP-UI.md`에 있습니다.
+- PR #81·#82에서 Live 개발자 진입점을 "현재 세션이 열려 있어야 의미가 있는가"로 나눴습니다. Probe·CTS·Benchmark는 상단 `도구` 메뉴의 독립 화면이고, Readout·그래프·Mark·incident는 `진단` 패널입니다. CTS·Benchmark는 Live 카메라의 `close(done)` 뒤에 열리며(S25+에서 약 260 ms), Probe는 대기 없이 엽니다. 배치 기준은 `docs/design/APP-UI.md`에 있습니다.
 
 ## M5 현재 데이터와 구현 (2026-09-12)
 
-Galaxy S25+ (`SM-S936N`, Android SDK 36)에서 무선 ADB로 수집했습니다. 측정 앱은 0.5.0 release(`app.debuggable=false`)이며, 기기 빌드는 `BP4A.251205.006.S936NKSSCCZH2`, profile은 `camera2-standard-v1`, endpoint는 후면 메인 `0`입니다.
+Galaxy S25+ (`SM-S936N`, Android SDK 36)에서 무선 ADB로 수집했습니다. 측정 앱은 0.5.0 release(`app.debuggable=false`)이며, 기기 빌드는 `BP4A.251205.006.S936NKSSCCZH2`, profile은 `camera2-standard-v1`, endpoint는 `Camera · 0 (Wide · Rear)`입니다.
 
 | 데이터 | 횟수 | 용도 |
 |---|---:|---|
@@ -66,11 +66,11 @@ Galaxy S25+ (`SM-S936N`, Android SDK 36)에서 무선 ADB로 수집했습니다.
 - 현재 `tools/aggregate.py`의 플래그 규칙으로 재평가하면 적격 측정은 3회입니다. 나머지 10회에는 `CHARGING`이 있으며, 그중 7회에는 `PROFILE_DRAFT`도 있습니다.
 - 적격 3회는 아래와 같습니다. 모두 `camera2-standard-v1`, thermal 최고값 0, 비충전, 절전 해제 상태입니다. `LABEL_MISSING`은 정보용 플래그이므로 적격 여부를 막지 않습니다.
 
-| run_id | endpoint | 역할 |
-|---|---|---|
-| `20260910-085923-916` | `0` | 후면 메인 |
-| `20260910-210231-192` | `3` | 전면 |
-| `20260910-212705-261` | `2` | 초광각 |
+| run_id | endpoint |
+|---|---|
+| `20260910-085923-916` | `Camera · 0 (Wide · Rear)` |
+| `20260910-210231-192` | `Camera · 3 (Front)` |
+| `20260910-212705-261` | `Camera · 2 (UWide · Rear)` |
 
 세 측정은 앱 0.3.0의 `validity-v1` 기록으로 `app.debuggable`이 없습니다. 따라서 플래그상 적격이라는 사실만으로 release 빌드의 정상 조건 학습 데이터라고 확정하지 않습니다. 서로 다른 endpoint의 측정도 같은 endpoint의 반복 분포로 합치지 않습니다.
 

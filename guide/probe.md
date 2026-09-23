@@ -3,7 +3,7 @@ title: Probe
 ---
 <h1 lang="en">What the HAL claims.</h1>
 
-**Probe는 측정이 아니라 선언입니다.** 카메라를 열지 않고 `CameraCharacteristics`를 읽어, Camera2 HAL이 공개한 사양을 카메라별 표로 보여 줍니다. 여기에 적힌 값은 HAL이 "할 수 있다"고 말한 것이며 실제로 그렇게 동작하는지는 [Benchmark](benchmark.md)가 답합니다.
+**Probe는 측정이 아니라 선언입니다.** 카메라를 열지 않고 `CameraCharacteristics`를 읽어, Camera2 HAL이 공개한 사양을 카메라별 표로 보여 줍니다. 여기에 적힌 값은 HAL이 "할 수 있다"고 말한 것입니다. 그 선언대로 통과하는지는 [CTS](cts.md)가, 실제로 얼마나 걸리는지는 [Benchmark](benchmark.md)가 답합니다. 앱의 `도구` 메뉴와 이 문서의 탭이 모두 Probe, CTS, Benchmark 순서인 이유가 여기에 있습니다.
 
 ```mermaid
 flowchart LR
@@ -18,12 +18,12 @@ flowchart LR
 
 | 확인할 항목 | 확인하는 이유 |
 | --- | --- |
-| 카메라 목록 | 공개 ID뿐 아니라 논리 카메라 뒤의 물리 카메라도 `0.2`처럼 별도 항목으로 읽습니다. 앱이 직접 열 수 없는 물리 카메라도 사양은 보입니다. |
+| 카메라 목록 | 항목 이름은 앱 전체가 함께 쓰는 `Camera · 0 (Wide · Rear)` 표기이며, 뒤에 하드웨어 레벨이 붙습니다. 공개 ID뿐 아니라 논리 카메라 뒤의 물리 카메라도 `Camera · 0.2 (UWide · Rear)`처럼 별도 항목으로 읽습니다. 앱이 직접 열 수 없는 물리 카메라도 사양은 보입니다. |
 | 섹션 | IDENTITY, CAPABILITIES, SENSOR, LENS, CONTROL, PROCESSING, REQUEST, REQUEST · RESULT KEYS, SESSION KEYS(API 28 이상), MANDATORY STREAM COMBINATIONS(API 29 이상) 다음에 STREAMS가 출력 형식별로 나뉘어 옵니다(`STREAMS · PRIVATE (SurfaceTexture)`, `STREAMS · PRIVATE (MediaRecorder)`, `STREAMS · JPEG`처럼). 그 뒤에 HIGH SPEED VIDEO, REPROCESSING INPUTS, ALL CHARACTERISTICS입니다. 섹션 제목을 누르면 접거나 펼칩니다. |
 | enum 값의 이름 | `CameraMetadata` 상수에서 reflection으로 읽으므로 새 API 값도 숫자가 아니라 이름으로 표시됩니다. |
 | 읽지 못한 항목 | 카메라나 섹션을 읽지 못하면 빈칸이 아니라 실패 목록에 남깁니다. 내보낸 파일에도 무엇이 빠졌는지 적힙니다. |
 | key 이름 목록 | REQUEST · RESULT KEYS와 SESSION KEYS는 값이 아니라 key 이름의 목록입니다. 사양 표는 어떤 key를 요청에 넣을 수 있고 결과로 돌려받는지만 알고, 그 값은 요청마다 정해지므로 여기에 없습니다. |
-| 필터 | 단어를 넣으면 그 단어가 든 줄만 목록으로 나오고, 항목을 누르면 해당 줄로 이동합니다. 값이 여러 줄인 항목은 첫 줄과 남은 줄 수만 보입니다. 예: `JPEG`, `1080`, `x`. |
+| 필터 | 단어를 넣으면 그 단어가 든 줄만 목록으로 나오고, 항목을 누르면 해당 줄로 이동합니다. 값이 여러 줄인 항목은 첫 줄과 남은 줄 수만 보입니다. 예: `JPEG`, `1080`, `✗`. |
 
 <p class="editorial" lang="en">A capability table is a promise.<br>Measure before you trust it.</p>
 
@@ -33,11 +33,11 @@ flowchart LR
 
 <h2 lang="en">Where it sits in the app.</h2>
 
-Live 상단 `도구` 메뉴에서 열며, 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 열립니다. `Benchmark` 화면에서도 현재 선택한 카메라로 바로 들어갈 수 있습니다. 배치 기준은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)의 "도구 메뉴와 독립 화면"에 있습니다.
+Live 상단 `도구` 메뉴의 첫 항목이며, 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 열립니다. Live에서 고른 카메라 ID를 초기값으로 받고 화면 안에서 다시 고를 수 있습니다. 다른 도구로 옮길 때에는 Live로 돌아가 `도구` 메뉴를 다시 사용합니다. 배치 기준은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)의 "도구 메뉴와 독립 화면"에 있습니다.
 
 <details>
 <summary>코드 근거를 확인하세요</summary>
 <p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/camera/</code>에서 <code>CameraProbe.kt</code>(모델·TXT·JSON 렌더러), <code>CameraProbeReader.kt</code>(CameraManager 읽기)와 <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>(화면)를 확인하세요. 원고의 검토 상태는 아키텍처 문서 끝에 있습니다.</p>
 </details>
 
-**다음 단계:** 사양 표에서 본 스트림 조합이 실제로 어떤 시간에 열리고 첫 프레임을 내는지 [Benchmark](benchmark.md)로 확인하세요.
+**다음 단계:** 사양 표에서 본 스트림 조합이 실제로 열리고 판정을 통과하는지 [CTS](cts.md)로 확인하세요.

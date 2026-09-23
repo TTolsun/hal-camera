@@ -9,14 +9,14 @@ import org.junit.Test
 class CameraProbeTest {
 
     private val rear = CameraProbeEntry(
-        cameraId = "0", physicalOf = null, title = "0 · 후면 · FULL",
+        cameraId = "0", physicalOf = null, title = "Camera · 0 (Wide · Rear) · FULL",
         sections = listOf(
             ProbeSection("Identity", listOf(ProbeRow("Camera ID", "0"), ProbeRow("Hardware level", "FULL"))),
             ProbeSection("Streams · JPEG", listOf(ProbeFormat.streamRow(4000, 3000, 33_333_333L, 0L)))
         )
     )
     private val tele = CameraProbeEntry(
-        cameraId = "3", physicalOf = "0", title = "3 · physical · 후면 · LIMITED",
+        cameraId = "3", physicalOf = "0", title = "Camera · 0.3 (Tele · Rear) · physical · LIMITED",
         sections = listOf(ProbeSection("Identity", listOf(ProbeRow("Physical camera of", "0"))))
     )
     private val snapshot = CameraProbeSnapshot(
@@ -25,6 +25,23 @@ class CameraProbeTest {
         cameras = listOf(rear, tele),
         errors = listOf("physical 0/4: unreadable")
     )
+
+    @Test
+    fun `the picker line opens with the shared label and never repeats the id`() {
+        assertEquals(
+            "Camera · 0 (Wide · Rear) · LEVEL_3",
+            ProbeTitle.of("0", LensRole.MAIN, CameraLabel.FACING_BACK, physical = false, hardwareLevel = "LEVEL_3")
+        )
+        assertEquals(
+            "Camera · 0.3 (Tele · Rear) · physical · LIMITED",
+            ProbeTitle.of("0.3", LensRole.TELE, CameraLabel.FACING_BACK, physical = true, hardwareLevel = "LIMITED")
+        )
+        // An unreadable hardware level drops out rather than printing an empty trailing segment.
+        assertEquals(
+            "Camera · 1 (Front)",
+            ProbeTitle.of("1", LensRole.FRONT, CameraLabel.FACING_FRONT, physical = false, hardwareLevel = null)
+        )
+    }
 
     @Test
     fun `physical camera key is prefixed with its logical camera`() {
@@ -97,13 +114,13 @@ class CameraProbeTest {
     @Test
     fun `render lists every camera by default and one when a key is given`() {
         val all = CameraProbeText.render(snapshot)
-        assertTrue(all.contains("######## Camera 0 · 0 · 후면 · FULL"))
-        assertTrue(all.contains("######## Camera 0.3 · 3 · physical · 후면 · LIMITED"))
+        assertTrue(all.contains("######## Camera · 0 (Wide · Rear) · FULL"))
+        assertTrue(all.contains("######## Camera · 0.3 (Tele · Rear) · physical · LIMITED"))
         assertTrue(all.contains("4000x3000  4:3 · 33.3 ms · 30.0 fps"))
         assertTrue(all.contains("== Errors ==\n!  physical 0/4: unreadable"))
         val one = CameraProbeText.render(snapshot, cameraKey = "0.3")
-        assertTrue(one.contains("Camera 0.3"))
-        assertTrue(!one.contains("Camera 0 ·"))
+        assertTrue(one.contains("Camera · 0.3 (Tele · Rear)"))
+        assertTrue(!one.contains("Camera · 0 ("))
         assertTrue(one.contains("== Device ==\nModel    SM-S936N"))
     }
 

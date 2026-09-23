@@ -40,8 +40,8 @@ import dev.halcamera.benchmark.platform.*
 import dev.halcamera.camera.Camera2Engine
 import dev.halcamera.camera.StreamSpec
 import dev.halcamera.camera.CameraEndpoint
+import dev.halcamera.camera.CameraLabel
 import dev.halcamera.camera.CameraEndpointResolver
-import dev.halcamera.camera.LensRole
 import dev.halcamera.camera.LensRoles
 import dev.halcamera.cli.BenchmarkController
 import dev.halcamera.telemetry.Event
@@ -225,7 +225,7 @@ class BenchmarkActivity : ComponentActivity() {
     private fun selectCamera(anchor: View) {
         if (cli.active != null) return
         if (endpoints.isEmpty() || runner != null) return
-        showSelectionPopup(anchor, endpoints.map { "${roleText(it.role)} · ID ${it.logicalCameraId}" }, selected) { index ->
+        showSelectionPopup(anchor, endpoints.map(CameraLabel::full), selected) { index ->
             if (runner == null && selected != index) { selected = index; preflight() }
         }
     }
@@ -257,7 +257,7 @@ class BenchmarkActivity : ComponentActivity() {
         startCard = StartCardPresenter.present(
             profile = profile,
             compatibility = compatibility,
-            endpointName = roleText(endpoint.role),
+            endpointName = CameraLabel.full(endpoint),
             engineName = engineName,
             thermalStatus = currentThermalStatus(),
             powerSaveMode = getSystemService(PowerManager::class.java)?.isPowerSaveMode
@@ -471,7 +471,7 @@ class BenchmarkActivity : ComponentActivity() {
         content.addView(card)
 
         val row = Look.row(this)
-        val cameraLabel = endpoints.getOrNull(selected)?.let { "${roleText(it.role)} · ID ${it.logicalCameraId} ▾" } ?: "카메라 없음"
+        val cameraLabel = endpoints.getOrNull(selected)?.let { "${CameraLabel.full(it)} ▾" } ?: "카메라 없음"
         row.addView(Look.ghostButton(this, cameraLabel, dark = true) {}.apply {
             setOnClickListener { selectCamera(it) }
             isEnabled = endpoints.isNotEmpty()
@@ -549,7 +549,7 @@ class BenchmarkActivity : ComponentActivity() {
             if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "New run") { preflight() }, Look.buttonParams())
             return
         }
-        val endpointName = roleText(run.endpoint.role)
+        val endpointName = CameraLabel.full(run.endpoint)
         val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, "${run.device.manufacturer} ${run.device.model}", endpointName)
 
         // Headline card: the verdict, what it was measured against, and the score.
@@ -1021,11 +1021,6 @@ class BenchmarkActivity : ComponentActivity() {
             clipData = ClipData.newRawUri("benchmark", uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }, "run JSON 공유"))
-    }
-
-    private fun roleText(r: LensRole) = when (r) {
-        LensRole.MAIN -> "Rear main"; LensRole.ULTRA_WIDE -> "Rear ultra wide"; LensRole.TELE -> "Rear tele"
-        LensRole.FRONT -> "Front"; LensRole.EXTERNAL -> "External"; LensRole.UNKNOWN -> "Other"
     }
 
     private fun lp(top: Int = 0) = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top) }

@@ -109,7 +109,7 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-22 @ `403fff3` · Claude (all metric bars)
+- 검토 2026-09-23 @ `f167211` · Claude (split expert-screen)
 
 </details>
 
@@ -185,9 +185,9 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-22 @ `403fff3` · Claude (all metric bars) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-22 @ `403fff3` · Claude (all metric bars) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-22 @ `403fff3` · Claude (all metric bars) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-23 @ `f167211` · Claude (split expert-screen) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-23 @ `f167211` · Claude (split expert-screen) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-23 @ `f167211` · Claude (split expert-screen) |
 
 <!-- omm:end id=status -->
 

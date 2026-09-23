@@ -145,7 +145,12 @@ sources:
       screens/expert-screen:
         evidence:
           - app/src/main/java/dev/halcamera/MainActivity.kt
+      # MainActivity 하나만으로도 스캔 입력이 6만 자 한도에 가깝습니다. 최근 촬영물 조회는 화면 배치와 별개의
+      # 주제이므로 하위 요소로 내려, 둘 다 한도 안에서 스캔되게 합니다.
+      screens/expert-screen/recent-media:
+        evidence:
           - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
+          - app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt
       screens/benchmark-screen:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
@@ -270,15 +275,46 @@ sources:
 
   data-flow:
     kind: omm
+    # 요소가 근거로 삼은 파일과 원고가 인용한 파일의 합집합입니다. 예전에는 telemetry/·benchmark/·camera/·cli/를
+    # 통째로 잡았는데, 그러면 이 관점과 무관한 파일 하나를 고쳐도 원고 전체가 재검토 대상이 되었습니다.
+    # 새로 생긴 파일은 coverage --check 가 담당 요소 없음으로 잡아내므로, 그때 elements 와 이 목록에 함께 적습니다.
     evidence:
-      - app/src/main/java/dev/halcamera/ui/MetricRows.kt
-      - app/src/main/java/dev/halcamera/telemetry/**/*.kt
-      - app/src/main/java/dev/halcamera/benchmark/**/*.kt
-      - app/src/main/java/dev/halcamera/metrics/**/*.kt
-      - app/src/main/java/dev/halcamera/camera/**/*.kt
+      - app/src/main/java/dev/halcamera/GalleryActivity.kt
       - app/src/main/java/dev/halcamera/MainActivity.kt
-      - app/src/main/java/dev/halcamera/cli/**/*.kt
-      - tools/halcam/halcam/**/*.py
+      - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
+      - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkModel.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/ComparePresenter.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt
+      - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt
+      - app/src/main/java/dev/halcamera/benchmark/platform/DeviceInstance.kt
+      - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+      - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
+      - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+      - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+      - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
+      - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
+      - app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt
+      - app/src/main/java/dev/halcamera/cli/CliProvider.kt
+      - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
+      - app/src/main/java/dev/halcamera/cli/CommandStore.kt
+      - app/src/main/java/dev/halcamera/cli/CtsController.kt
+      - app/src/main/java/dev/halcamera/cli/LiveController.kt
+      - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
+      - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
+      - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+      - app/src/main/java/dev/halcamera/ui/MetricRows.kt
+      - tools/halcam/halcam/cli.py
+      - tools/halcam/halcam/download.py
     elements:
       .:
         evidence:
@@ -334,13 +370,29 @@ sources:
 
   state-transitions:
     kind: omm
+    # data-flow 와 같은 규칙입니다: 요소 근거와 원고 인용의 합집합만 적습니다.
     evidence:
-      - app/src/main/java/dev/halcamera/benchmark/**/*.kt
-      - app/src/main/java/dev/halcamera/telemetry/**/*.kt
-      - app/src/main/java/dev/halcamera/camera/**/*.kt
       - app/src/main/java/dev/halcamera/MainActivity.kt
-      - app/src/main/java/dev/halcamera/cli/**/*.kt
-      - tools/halcam/halcam/**/*.py
+      - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
+      - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt
+      - app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt
+      - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+      - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+      - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
+      - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
+      - app/src/main/java/dev/halcamera/cli/CliCommand.kt
+      - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
+      - app/src/main/java/dev/halcamera/cli/CommandStore.kt
+      - app/src/main/java/dev/halcamera/cli/CtsController.kt
+      - app/src/main/java/dev/halcamera/cli/LiveController.kt
+      - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
+      - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
+      - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+      - tools/halcam/halcam/cli.py
     elements:
       .:
         evidence:

@@ -21,8 +21,8 @@ Android 카메라의 **launch · preview · capture 성능을 반복 측정하�
 | 화면 | 하는 일 |
 |---|---|
 | **Live** (런처) | CameraX / Camera2 전환, 카메라 선택, 실시간 프레임 간격과 콜백 지연 표시. `Mark` 버튼으로 직전 10초와 이후 5초를 incident ZIP으로 저장합니다 |
-| **Benchmark** | profile 시작 카드 → 6단계 진행 → 결과 표. `Set as baseline`, `Compare`, `Export` |
-| **Results** | 실행 이력을 eligibility·profile·camera로 필터링하고, 임의의 두 실행을 비교하거나 JSON·CSV로 내보냅니다. Benchmark의 `Results · 실행 이력`에서 엽니다 |
+| **Benchmark** | profile 시작 카드 → 6단계 진행 → 지표별 막대 결과. `Set as baseline`, `Compare`, `Export`, `History` |
+| **Results** | 실행 이력을 eligibility·profile·camera로 필터링하고, 임의의 두 실행을 비교하거나 JSON·CSV로 내보냅니다. Benchmark의 `History` 버튼으로 엽니다(열린 화면의 제목은 `Results`입니다) |
 
 Live는 관측한 숫자만 보여 주며 정상 / 이상을 판정하지 않습니다. 판정은 baseline과 비교할 때에만 성립하고, 그 일은 Benchmark가 합니다.
 
@@ -57,7 +57,7 @@ open 10회 반복 → 3초 warm-up → 10초 관측 → 정지 영상 10장 → 
 
 ## 내부 점수 초안
 
-검토한 정상 측정 분포가 있는 Galaxy S25+ (`SM-S936N`) 후면 메인 endpoint `0`에는 `score-v1-draft` Camera Endpoint Score와 카테고리 점수를 표시합니다. release 빌드·적격 환경·동일 측정 계약이 필요하며, 3A는 점수에서 제외합니다. 다른 기기와의 순위를 나타내는 공개 점수는 아닙니다. 계산 규칙과 검증 범위는 [SCORING.md](docs/SCORING.md)를 참고하십시오.
+검토한 정상 측정 분포가 있는 Galaxy S25+ (`SM-S936N`)의 `Camera · 0 (Wide · Rear)` endpoint에는 `score-v1-draft` Camera Endpoint Score와 카테고리 점수를 표시합니다. release 빌드·적격 환경·동일 측정 계약이 필요하며, 3A는 점수에서 제외합니다. 다른 기기와의 순위를 나타내는 공개 점수는 아닙니다. 계산 규칙과 검증 범위는 [SCORING.md](docs/SCORING.md)를 참고하십시오.
 
 ## 빌드
 
@@ -176,7 +176,7 @@ telemetry/  Telemetry, FlightRecorder(30초 순환 버퍼), incident ZIP
 metrics/    이벤트 → 지표 계산. 화면도 판정도 모르는 leaf
 benchmark/  Benchmark·Results·Compare 화면(Activity)만 루트에 둔다
   domain/     profile, runner, 통계, validity, 점수, 비교 규칙, presenter. Android 의존 없음
-  platform/   BenchmarkStore, BenchmarkReport(org.json 경계), ProfileLibrary, ThermalTracker 같은 파일·기기 어댑터
+  platform/   BenchmarkStore, BenchmarkReport(org.json 경계), DeviceInstance, ThermalTracker 같은 파일·기기 어댑터
 cli/        ADB 명령 접수·상태 저장, 화면 어댑터(LiveController, BenchmarkController)
 cts/        앱 안에서 실행하는 CTS 카메라 케이스
 ui/         Look 토큰, 그래프 뷰, Live 실시간 수치

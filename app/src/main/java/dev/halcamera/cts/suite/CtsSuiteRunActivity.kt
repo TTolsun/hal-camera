@@ -30,6 +30,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.R
+import dev.halcamera.camera.CameraLabel
 import dev.halcamera.cli.CliJson
 import dev.halcamera.cli.CommandCoordinator
 import dev.halcamera.cli.CtsController
@@ -258,10 +259,10 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
             listener = object : CtsRunner.Listener {
                 override fun onCameraStarted(cameraId: String, index: Int, total: Int) = post {
                     liveSteps.getOrPut(cameraId) { ArrayList() }
-                    status = "${prefix(item)} · 카메라 $cameraId 준비 중 (${index + 1}/$total)"; render()
+                    status = "${prefix(item)} · ${CameraLabel.short(cameraId)} 준비 중 (${index + 1}/$total)"; render()
                 }
                 override fun onProgress(cameraId: String, stage: String, index: Int, total: Int) = post {
-                    status = "${prefix(item)} · 카메라 $cameraId · $stage (${index + 1}/$total)"; render()
+                    status = "${prefix(item)} · ${CameraLabel.short(cameraId)} · $stage (${index + 1}/$total)"; render()
                 }
                 override fun onStep(cameraId: String, step: StepResult) = post {
                     liveSteps.getOrPut(cameraId) { ArrayList() }.add(step); render()
