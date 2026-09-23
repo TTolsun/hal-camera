@@ -31,7 +31,14 @@ object BenchmarkMetricCatalog {
         MetricInfo("2.7", Category.STABILITY, "Capture stalls", "count"),
         MetricInfo("H.6", Category.THREE_A, "AE", "ms"),
         MetricInfo("H.7", Category.THREE_A, "AF", "ms"),
-        MetricInfo("H.8", Category.THREE_A, "AWB", "ms")
+        MetricInfo("H.8", Category.THREE_A, "AWB", "ms"),
+        // The RECORD stage (METRICS.md 3). Steady fps is the one metric in the whole table whose larger value is
+        // the better one, and the only one whose unit is not milliseconds or a count.
+        MetricInfo("3.1", Category.RECORD, "Record start", "ms"),
+        MetricInfo("3.4", Category.RECORD, "Steady fps", "fps"),
+        MetricInfo("3.6", Category.RECORD, "Record stop", "ms"),
+        MetricInfo("3.7", Category.RECORD, "Record jitter", "ms"),
+        MetricInfo("3.2", Category.RECORD, "Interval anomalies", "count")
     ).associateBy { it.id }
 
     fun info(id: String): MetricInfo? = infos[id]

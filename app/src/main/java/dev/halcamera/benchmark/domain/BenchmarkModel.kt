@@ -47,7 +47,7 @@ data class MeasurementContract(
     }
 }
 
-enum class Category { LAUNCH, PREVIEW, CAPTURE, STABILITY, THREE_A, RESOURCE, SWITCH }
+enum class Category { LAUNCH, PREVIEW, CAPTURE, STABILITY, THREE_A, RECORD, RESOURCE, SWITCH }
 
 enum class RegressionState { IMPROVED, STABLE, REGRESSED, UNKNOWN }
 

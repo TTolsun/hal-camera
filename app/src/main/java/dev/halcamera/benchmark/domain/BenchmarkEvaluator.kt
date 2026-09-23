@@ -1,6 +1,7 @@
 package dev.halcamera.benchmark.domain
 
 import dev.halcamera.metrics.MetricExtractor
+import dev.halcamera.metrics.RecordCadence
 import dev.halcamera.metrics.UnknownReason
 
 /** One warm-reopen launch cycle as measured by the runner (M2). Millisecond values are null when the step did not complete. */
@@ -106,7 +107,25 @@ object BenchmarkMetrics {
     val CAPTURE = listOf("2.2", "2.3", "2.5")
     val STABILITY = listOf("H.5", "H.9", "2.7")
     val THREE_A = listOf("H.6", "H.7", "H.8")
-    val ALL: List<String> = LAUNCH + PREVIEW + CAPTURE + STABILITY + THREE_A
+    /** Only a profile with a RECORD stage reports these (docs/PLAN-Recording-v0.1.md). */
+    val RECORD = listOf("3.1", "3.4", "3.6", "3.7", "3.2")
+    val ALL: List<String> = LAUNCH + PREVIEW + CAPTURE + STABILITY + THREE_A + RECORD
+}
+
+/**
+ * One recording cycle as the evaluator sees it: what the runner timed around the two calls, and what the
+ * extractor recomputed from that cycle's frames. [cadence] is null when the cycle produced no frames at all.
+ */
+data class RecordSample(
+    val iteration: Int,
+    val warmup: Boolean,
+    val failed: Boolean,
+    val startToCallbackMs: Double?,
+    val stopLatencyMs: Double?,
+    val cadence: RecordCadence?
+) {
+    /** A cycle counts towards the metrics only when it ran to the end; a failed one keeps its marks for the log. */
+    val usable: Boolean get() = !warmup && !failed
 }
 
 /**
@@ -121,7 +140,10 @@ class BenchmarkEvaluator(private val profile: BenchmarkProfile) {
         val observation: MetricExtractor.Observation?,
         val callbackFailures: Int,
         /** Set when the endpoint never reached the observation window; H.x then become NOT_RUN. */
-        val observed: Boolean = observation != null
+        val observed: Boolean = observation != null,
+        val records: List<RecordSample> = emptyList(),
+        /** The camera refused the recording stream combination; the 3.x metrics are unsupported, not missing. */
+        val recordUnsupported: Boolean = false
     )
 
     fun evaluate(input: Input): List<BenchmarkMetric> {
@@ -163,8 +185,59 @@ class BenchmarkEvaluator(private val profile: BenchmarkProfile) {
         out += notRun("2.7")
 
         for (id in BenchmarkMetrics.THREE_A) out += threeA(id, obs, input.observed)
+        // A profile without a RECORD stage reports no 3.x entries at all, rather than five NOT_RUN ones: its run
+        // files must stay exactly what they were before the stage existed, so v1 runs keep comparing with v1 runs.
+        if (profile.records) out += recordMetrics(input)
         return out
     }
+
+    /**
+     * The five RECORD metrics. 3.1 and 3.6 are the runner's two latencies aggregated over the cycles; 3.2, 3.4
+     * and 3.7 come from each cycle's cadence and are aggregated the same way, so one bad cycle moves the median
+     * instead of being averaged away.
+     */
+    private fun recordMetrics(input: Input): List<BenchmarkMetric> {
+        if (input.recordUnsupported) return BenchmarkMetrics.RECORD.map { unsupported(it) }
+        if (input.records.isEmpty()) return BenchmarkMetrics.RECORD.map { notRun(it) }
+        val usable = input.records.filter { it.usable }
+        val warm = input.records.filter { it.warmup }
+        val enough = usable.size >= ValidityFlags.MIN_RECORD_CYCLES
+
+        fun cycles(id: String, pick: (RecordSample) -> Double?): BenchmarkMetric {
+            val xs = usable.mapNotNull(pick)
+            val m = bounded(id, xs, warm.mapNotNull(pick))
+            return if (enough && xs.isNotEmpty()) m
+            else m.copy(value = null, unknownReason = if (xs.isEmpty()) UnknownReason.NOT_MEASURABLE else UnknownReason.INSUFFICIENT_SAMPLES)
+        }
+
+        val out = ArrayList<BenchmarkMetric>(BenchmarkMetrics.RECORD.size)
+        out += cycles("3.1") { it.startToCallbackMs }
+        out += cycles("3.4") { it.cadence?.windowFpsP50 }
+        out += cycles("3.6") { it.stopLatencyMs }
+        out += cycles("3.7") { it.cadence?.jitterStdDevMs }
+
+        // 3.2 is a count over the whole stage, like H.5 over the observation window. Cycles whose cadence was not
+        // fixed contribute no count and no comparisons: adding their zero would read as "no anomaly observed".
+        val counted = usable.mapNotNull { s -> s.cadence?.anomalyCount?.let { it to s.cadence.comparedIntervals } }
+        out += when {
+            counted.isEmpty() -> BenchmarkMetric(
+                id = "3.2", category = category("3.2"), unit = "count",
+                value = null, p50 = null, p95 = null, min = null, max = null, sampleCount = 0,
+                samples = null, excludedWarmup = null,
+                unknownReason = if (usable.any { it.cadence != null }) UnknownReason.CADENCE_CHANGED else UnknownReason.NOT_MEASURABLE
+            )
+            !enough -> count("3.2", counted.sumOf { it.first }, counted.sumOf { it.second })
+                .copy(value = null, unknownReason = UnknownReason.INSUFFICIENT_SAMPLES)
+            else -> count("3.2", counted.sumOf { it.first }, counted.sumOf { it.second })
+        }
+        return out
+    }
+
+    private fun unsupported(id: String) = BenchmarkMetric(
+        id = id, category = category(id), unit = unit(id),
+        value = null, p50 = null, p95 = null, min = null, max = null, sampleCount = 0,
+        samples = null, excludedWarmup = null, unknownReason = UnknownReason.UNSUPPORTED
+    )
 
     // Display metadata comes from the benchmark package's own catalog, so metrics stays free of display concerns.
     private fun category(id: String) = BenchmarkMetricCatalog.info(id)?.category ?: Category.RESOURCE

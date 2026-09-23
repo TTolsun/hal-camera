@@ -33,7 +33,7 @@ class MeasuredScoreSensitivityTest(private val sample: Sample) {
         )
         val scored = ScoreComposer.apply(input, S25PlusScoreDraft.calibration)
         val encoded = BenchmarkReportCodec.toJsonMap(scored)
-        assertEquals(4, encoded["schema_version"])
+        assertEquals(BenchmarkReportCodec.SCHEMA_VERSION, encoded["schema_version"])
         val restored = BenchmarkReportCodec.fromJsonMap(encoded)
         assertEquals(scored, restored)
         for (run in listOf(scored, restored)) {

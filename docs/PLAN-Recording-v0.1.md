@@ -18,7 +18,7 @@
 | `BenchmarkRunner.Driver` | `open` · `still` · `close` 세 개뿐이다 | `prepareRecord` · `startRecord` · `stopRecord`를 추가한다 |
 | `BenchmarkRunner.Step` · `Phase` | STILL 다음이 바로 CLOSE이고 화면은 6단계이다 | RECORD 단계와 7번째 화면 단계를 추가한다 |
 | `BenchmarkProfile` | 녹화 조건을 담는 필드가 없다 | 녹화 크기·코덱·비트레이트·fps·길이·반복 필드를 추가한다 |
-| `RegressionDetector` | `Direction.HIGHER_IS_BETTER`가 선언만 되어 있고 쓰이지 않는다 | 3.4 `steady_fps`가 첫 사용처이므로 방향 처리를 실제로 구현한다 |
+| `RegressionDetector` | `Direction.HIGHER_IS_BETTER`를 판정 함수는 이미 처리하지만 규칙 표에 그 방향을 쓰는 지표가 하나도 없다 | 3.4 `steady_fps`가 첫 사용처이므로 규칙을 더하고 경계값을 테스트로 고정한다 |
 | `ResultPresenter` | 카테고리 순서가 LAUNCH · PREVIEW · CAPTURE · STABILITY · 3A로 고정되어 있고, 소수점 표기는 PREVIEW만 예외이다 | RECORD 카테고리를 순서에 넣고 `fps` 단위의 표기 규칙을 정한다 |
 
 ## 3. 확정된 결정 사항
@@ -189,13 +189,19 @@ data class RecordCadence(
 | `BenchmarkMetricCatalog` | `3.1 Record start / ms`, `3.4 Steady fps / fps`, `3.6 Record stop / ms`, `3.7 Record jitter / ms`, `3.2 Interval anomalies / count` |
 | `BenchmarkMetrics` | `RECORD = listOf("3.1", "3.4", "3.6", "3.7", "3.2")`를 `ALL`에 추가 |
 | `BenchmarkRunner.Result` | `records: List<RecordCycle>` 추가 |
-| `BenchmarkEvaluator.Input` | `records` 추가. 사이클이 없으면 다섯 지표 모두 `NOT_RUN` |
-| `MeasurementContract` | `METRIC_DEFINITION_VERSION`을 `metrics-0.3`에서 `metrics-0.4`로 올린다 |
+| `BenchmarkEvaluator.Input` | `records`와 `recordUnsupported` 추가. 사이클이 없으면 다섯 지표 모두 `NOT_RUN`, 조합이 거부되었으면 `UNSUPPORTED` |
+| `MeasurementContract` | **바꾸지 않는다.** 아래 설명 참고 |
 | `BenchmarkReportCodec` | `SCHEMA_VERSION` 4에서 5로, `READABLE_SCHEMA_VERSIONS`를 `3..5`로 |
 | run JSON | `raw.record`에 사이클별 원시값을 담는다. `profile`에는 4절의 녹화 필드가 들어간다 |
 | `ValidityFlags` | `RECORD_NOT_MEASURED` 추가(측정 무효 아님 · 사내 비교 가능 · 교차 기기 점수 제외). `VERSION`을 `validity-v3`으로 올린다 |
-| `ScoreComposer` | 카테고리 다섯 개. RECORD 가중치는 3.3절의 확정대로 0에서 시작하고 `score-v2-draft`로 표기한다 |
-| `BenchmarkCsv` | 새 지표 다섯 개의 열을 더한다 |
+| `ScoreComposer` | 카테고리는 네 개 그대로 두고 v1·v2 두 profile을 모두 채점 대상으로 인정한다. 아래 설명 참고 |
+| `BenchmarkCsv` | **바꾸지 않는다.** CSV는 run과 지표의 조합마다 한 행이므로 새 지표가 행으로 저장된다 |
+
+**`METRIC_DEFINITION_VERSION`을 올리지 않는 이유.** 처음에는 `metrics-0.4`로 올리기로 적었으나 구현하면서 그 판단을 뒤집었다. 이 값은 비교 계약 id의 구성 요소이고, 규약은 "어떤 지표의 계산이 바뀔 때" 올리도록 정해져 있다. 녹화 지표는 id를 새로 더할 뿐 기존 스무 개의 계산을 하나도 바꾸지 않는다. 그런데도 버전을 올리면 새 앱이 저장한 v1 run의 계약 id가 예전 v1 run과 달라져서, v1끼리의 비교와 기존 baseline이 전부 끊긴다. 3.1절에서 감수하기로 한 비용은 v2로 전환할 때 baseline을 다시 잡는 것이지 v1 이력을 잃는 것이 아니므로, 버전은 `metrics-0.3`으로 둔다.
+
+같은 이유로 evaluator는 녹화하는 profile에서만 3.x 항목을 내보낸다. v1 run의 지표 목록이 예전과 정확히 같아야 하기 때문이다.
+
+**점수의 가중치 0을 구현하는 방법.** `ScoreComposer.floors`와 `categories`에 RECORD를 넣지 않는 것이 곧 가중치 0이다. 3A·RESOURCE·SWITCH가 이미 그런 방식으로 제외되어 있다. 계산이 전혀 바뀌지 않으므로 `VERSION`도 `score-v1-draft` 그대로 둔다. 다만 v1 profile만 채점하도록 못박혀 있던 검사는 canonical profile 전체로 넓혔다. calibration은 계약 id로 묶여 있으므로, v1에서 학습한 calibration이 v2 run을 채점하는 일은 여전히 일어나지 않고 기기마다 calibration을 다시 만들어야 한다.
 
 ## 9. 실패 처리
 
@@ -225,7 +231,7 @@ data class RecordCadence(
 | 3.4 | LATENCY | **HIGHER_IS_BETTER** | 5 % | 1 fps |
 | 3.2 | COUNT | LOWER_IS_BETTER | — | 2 |
 
-3.4는 `HIGHER_IS_BETTER`의 첫 사용처이다. `RegressionDetector`가 지금은 이 방향을 구현하지 않으므로 함께 구현하고, 값이 내려갈 때 REGRESSED가 되는지 단위 테스트로 고정한다.
+3.4는 `HIGHER_IS_BETTER`의 첫 사용처이다. `RegressionDetector.state`는 이미 두 방향을 모두 처리하고 있었으므로 규칙만 더했고, 값이 내려갈 때 REGRESSED가 되는지를 경계값과 함께 단위 테스트로 고정했다.
 
 ## 11. 테스트 계획
 

@@ -25,7 +25,12 @@ object ScoreComposer {
     const val MIN_NORMAL_RUNS = 10
 
     // Fixed scoring floors, independent of later changes to the regression rule table.
-    // 2.7 is not measured by this profile; 3A, RESOURCE and SWITCH have zero weight.
+    // 2.7 is not measured by this profile; 3A, RECORD, RESOURCE and SWITCH have zero weight.
+    //
+    // RECORD carries no floor and is absent from [categories] on purpose: that is what a weight of zero means
+    // here, the same way 3A has had it since the draft. The recording metrics enter the score only once the
+    // sensitivity work of issue #123 has a calibration for them (docs/PLAN-Recording-v0.1.md 3.3), so a v2 run
+    // and a v1 run are scored on the same sixteen metrics and their totals stay on one axis.
     val floors = linkedMapOf(
         "1.1" to 10.0, "1.2" to 5.0, "1.3" to 10.0, "1.8" to 10.0,
         "1.6" to 10.0, "1.7" to 5.0,
@@ -84,7 +89,7 @@ object ScoreComposer {
             run.device.manufacturer != calibration.manufacturer || run.device.model != calibration.model ||
             run.endpoint.key != calibration.endpointKey ||
             run.contract.comparisonContractId != calibration.contractId ||
-            run.profile != BenchmarkProfile.CAMERA2_STANDARD_V1) return null
+            !scorable(run.profile)) return null
         if (run.metrics.map { it.id }.distinct().size != run.metrics.size) return null
         val scores = linkedMapOf<String, Double>()
         for (curve in calibration.curves) {
@@ -99,9 +104,18 @@ object ScoreComposer {
         return EndpointScore(grouped.values.average().roundToInt().coerceIn(0, 1000), grouped, scores)
     }
 
+    /**
+     * A confirmed profile of this app. Both canonical profiles are scorable on the same sixteen metrics, but a
+     * calibration still only ever scores runs of the profile it was learned on: the contract id carries the
+     * profile id, so a v1 calibration never scores a v2 run and a device needs a fresh calibration after the
+     * switch, exactly as it needs a fresh baseline.
+     */
+    private fun scorable(profile: BenchmarkProfile): Boolean =
+        !profile.isDraft && BenchmarkProfile.canonical(profile.id) == profile
+
     private fun validCalibration(c: ScoreCalibration): Boolean =
         c.manufacturer.isNotBlank() && c.model.isNotBlank() && c.endpointKey.isNotBlank() &&
-            c.contractId == MeasurementContract.forProfile(BenchmarkProfile.CAMERA2_STANDARD_V1).comparisonContractId &&
+            c.contractId in BenchmarkProfile.CANONICAL.values.map { MeasurementContract.forProfile(it).comparisonContractId } &&
             c.normalRunIds.size >= MIN_NORMAL_RUNS && c.normalRunIds.all { it.isNotBlank() } &&
             c.normalRunIds.distinct().size == c.normalRunIds.size &&
             c.curves.size == floors.size && c.curves.map { it.metricId }.toSet() == floors.keys &&
@@ -116,7 +130,7 @@ object ScoreComposer {
     private fun trainingEligible(run: BenchmarkRun): Boolean =
         RunValidity.fromJsonMap(run.validity.toJsonMap()).scoringEligible &&
             run.aborted == null && run.compatibility.supported && run.app.debuggable == false &&
-            run.profile == BenchmarkProfile.CAMERA2_STANDARD_V1 &&
+            scorable(run.profile) &&
             run.contract == MeasurementContract.forProfile(run.profile) &&
             run.env.charging == false && run.env.powerSaveMode == false &&
             run.env.batteryStart?.let { it >= ValidityFlags.BATTERY_LOW_PCT } == true &&
