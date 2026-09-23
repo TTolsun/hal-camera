@@ -64,7 +64,10 @@ object StartCardPresenter {
             notices += "POWER_SAVE_MODE · 비교·점수 산정에서 제외됩니다"
         }
         return StartCard(
-            titleLine = listOf(ENGINE_CAMERA2, endpointName, conditionLabel(profile), launchModeLabel(profile))
+            // No engine name: the profile is Camera2-only, so this always read "Camera2" and told the reader
+            // nothing. It also collided with the camera label right after it — "Camera2 · Camera · 0 (Wide ·
+            // Rear)" reads as one phrase. Entering from a CameraX preview is announced in notices instead.
+            titleLine = listOf(endpointName, conditionLabel(profile), launchModeLabel(profile))
                 .joinToString(" · "),
             profileLine = "Profile  ${profile.id}",
             verdictLine = verdictLine(compatibility),
