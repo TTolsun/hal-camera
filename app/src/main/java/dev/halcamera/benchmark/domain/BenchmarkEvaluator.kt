@@ -95,11 +95,7 @@ data class Stats(val p50: Double?, val p95: Double?, val min: Double?, val max: 
         )
 
         /** Population standard deviation (ddof = 0), the definition METRICS.md 3.7 uses for jitter. */
-        fun stdDev(xs: List<Double>): Double? {
-            if (xs.isEmpty()) return null
-            val mean = xs.average()
-            return kotlin.math.sqrt(xs.sumOf { (it - mean) * (it - mean) } / xs.size)
-        }
+        fun stdDev(xs: List<Double>): Double? = MetricExtractor.stdDev(xs)
     }
 }
 

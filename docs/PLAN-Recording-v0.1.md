@@ -49,7 +49,9 @@ METRICS.md 0.2절의 기본 반복은 10회이지만, 녹화는 한 회마다 �
 | 5회 × 8초 | 약 45초 | 4 | 확정. run 전체는 약 75초이다 |
 | 3회 × 8초 | 약 27초 | 2 | p50과 p95가 사실상 최소·최대여서 통계로 쓰기 어렵다 |
 
-5회 × 8초로 확정했으며, 유효 표본이 4개라는 사실과 그때의 p95가 최대값이라는 사실을 결과 화면과 JSON에 그대로 표시한다. 녹화 길이 8초는 3.4가 요구하는 3초의 건너뛰기 구간 뒤에 완전한 1초 창 5개를 남기기 위한 값이다.
+5회 × 8초로 확정했으며, 유효 표본이 4개라는 사실과 그때의 p95가 최대값이라는 사실을 결과 화면과 JSON에 그대로 표시한다.
+
+녹화 길이 8초는 3.4가 요구하는 3초의 건너뛰기 구간 뒤에 완전한 1초 창을 남기기 위한 값이다. 처음에는 창이 5개 남는다고 적었으나 5단계 구현에서 4개임을 확인했다. 30 fps로 8초를 녹화하면 결과는 240개이고 첫 결과부터 마지막 결과까지의 센서 시간은 7.967초이므로, 3초를 건너뛰면 완전한 창은 4개이고 남는 0.967초는 버려진다. 창을 5개 확보하려면 9초가 필요하며 녹화 구간이 약 45초에서 약 50초로 늘어난다. 8초를 유지하기로 했으므로 3.4의 창 통계는 창 4개 위에서 계산한다.
 
 ### 3.3 녹화 지표를 점수에 언제 넣을 것인가 (확정: 처음에는 가중치 0)
 
@@ -126,28 +128,26 @@ RECORD를 STILL 뒤에 두는 이유는 세 가지이다.
 
 ## 7. 지표 계산 규칙
 
-계산은 모두 `MetricExtractor`에 순수 Kotlin으로 추가한다. Android와 `org.json` import를 넣지 않으며 `LayerIsolationTest`가 이를 검사한다.
+계산은 `metrics` 패키지에 순수 Kotlin으로 추가한다. Android와 `org.json` import를 넣지 않으며 `LayerIsolationTest`가 이를 검사한다. 녹화 cadence는 `MetricExtractor`를 더 키우는 대신 같은 패키지의 `RecordMetrics`에 두었다. 프리뷰 관측 창과 녹화 사이클은 모집단을 고르는 방식이 다르기 때문이다. 프리뷰는 시각 구간으로 자르고 녹화는 request 태그로 고른다. 두 곳에서 같은 통계를 쓰는 표준편차는 `MetricExtractor.stdDev` 하나로 합쳤다.
 
 ### 7.1 입력
 
+3.1과 3.6은 runner가 기록한 `RecordCycle`의 마크에서 나오고, 나머지 세 개는 이벤트에서 다시 계산한다. `RecordCadence`에는 사이클의 성공·실패나 warm-up 여부가 들어가지 않는다. `metrics` 패키지는 패키지 그래프의 leaf이므로 `benchmark` 패키지의 개념을 알지 못하며, 두 쪽을 합치는 일은 6단계의 evaluator가 맡는다.
+
 ```kotlin
-/** 한 녹화 사이클에서 뽑은 관측값. frames는 tag가 "record-<n>"인 capture_result만 담는다. */
-data class RecordObservation(
-    val iteration: Int,
-    val warmup: Boolean,
-    val startToCallbackMs: Double?,   // 3.1
-    val stopLatencyMs: Double?,       // 3.6
+/** 한 녹화 사이클의 cadence. frames는 tag가 "record-<n>"인 capture_result만 담는다. */
+data class RecordCadence(
+    val frames: Int,
     val intervals: List<Double>,      // 유효 인접 간격, ms
-    val comparedIntervals: Int,       // 유효 비교 개수 (프레임 번호가 연속인 쌍)
+    val comparedIntervals: Int,       // 고정 cadence 구간에서 비교한 개수
     val excludedIntervals: Int,       // 결과 누락 등으로 제외한 쌍
     val anomalyCount: Int?,           // 3.2. 고정 cadence 구간이 없으면 null
+    val anomalyUnknownReason: UnknownReason?,
     val windowFpsP50: Double?,        // 3.4
     val windowFpsMin: Double?,        // 3.4
     val windows: Int,
     val jitterStdDevMs: Double?,      // 3.7
-    val jitterP95Ms: Double?,         // 3.7
-    val failed: Boolean,
-    val failureReason: String?
+    val jitterP95Ms: Double?          // 3.7
 )
 ```
 
