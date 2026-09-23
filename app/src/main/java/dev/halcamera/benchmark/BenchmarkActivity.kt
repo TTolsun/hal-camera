@@ -38,6 +38,7 @@ import dev.halcamera.R
 import dev.halcamera.benchmark.domain.*
 import dev.halcamera.benchmark.platform.*
 import dev.halcamera.camera.Camera2Engine
+import dev.halcamera.camera.RecordSpec
 import dev.halcamera.camera.StreamSpec
 import dev.halcamera.camera.CameraEndpoint
 import dev.halcamera.camera.CameraLabel
@@ -727,7 +728,8 @@ class BenchmarkActivity : ComponentActivity() {
             preview = ProfileCompatibilityChecker.size(profile.previewSize) ?: Size(1920, 1080),
             yuv = ProfileCompatibilityChecker.size(profile.yuvSize) ?: Size(1920, 1080),
             jpeg = ProfileCompatibilityChecker.size(profile.stillSize) ?: Size(1920, 1080),
-            fpsRange = ProfileCompatibilityChecker.fpsRange(profile.fpsRange) ?: Range(30, 30)
+            fpsRange = ProfileCompatibilityChecker.fpsRange(profile.fpsRange) ?: Range(30, 30),
+            record = recordSpec(profile)
         )
         val scheduler = object : BenchmarkRunner.Scheduler {
             override fun after(delayMs: Long, action: () -> Unit): Any {
@@ -749,20 +751,16 @@ class BenchmarkActivity : ComponentActivity() {
                 }
             }
             override fun still(session: String) { engine?.capture() }
-            // The engine has no benchmark recording path yet, so the only honest answer is that this camera
-            // cannot record under these conditions. Unreachable while the screen runs camera2-standard-v1,
-            // which has no RECORD stage (docs/PLAN-Recording-v0.1.md 13, step 4).
+            // The engine answers through telemetry events, which onEvent turns into runner signals, exactly as
+            // it does for open, configure and capture.
             override fun prepareRecord(session: String, iteration: Int) {
-                recorder.record(session, "record_configure_failed", values = mapOf("reason" to "engine_record_path_missing"))
-                runner?.signal(session, BenchmarkRunner.Signal.RECORD_UNSUPPORTED, detail = "record_configure_failed")
+                val e = engine
+                if (e == null) recorder.record(session, "record_configure_failed", values = mapOf("reason" to "engine_gone"))
+                else e.prepareBenchmarkRecording(iteration)
             }
-            override fun startRecord(session: String) {
-                runner?.signal(session, BenchmarkRunner.Signal.ERROR, detail = "record_start_unavailable")
-            }
-            override fun stopRecord(session: String) {
-                runner?.signal(session, BenchmarkRunner.Signal.ERROR, detail = "record_stop_unavailable")
-            }
-            override fun abortRecord(session: String) = Unit
+            override fun startRecord(session: String) { engine?.startBenchmarkRecording() }
+            override fun stopRecord(session: String) { engine?.stopBenchmarkRecording() }
+            override fun abortRecord(session: String) { engine?.abortBenchmarkRecording() }
             override fun close(session: String) {
                 val e = engine; engine = null
                 // Camera2Engine records "closed" too; a second CLOSED signal for the same session is ignored.
@@ -787,6 +785,22 @@ class BenchmarkActivity : ComponentActivity() {
         startTicker()
         runner = BenchmarkRunner(driver, scheduler, ::nowNs, profile, endpoint, runId, BenchmarkRunner.Config(), listener)
             .also { it.start() }
+    }
+
+    /**
+     * The recorder conditions the engine must configure, or null for a profile without a RECORD stage. A size
+     * the profile names but this build cannot parse is not silently replaced: the stage is left out, and the
+     * run then reports the 3.x metrics as not measured rather than measuring them under other conditions.
+     */
+    private fun recordSpec(profile: BenchmarkProfile): RecordSpec? {
+        val size = profile.recordSize?.let { ProfileCompatibilityChecker.size(it) } ?: return null
+        return RecordSpec(
+            size = size,
+            codec = profile.recordCodec ?: return null,
+            bitrate = profile.recordBitrate ?: return null,
+            fps = profile.recordFps ?: return null,
+            audio = profile.recordAudio ?: false
+        )
     }
 
     private fun readSubject(): SubjectLabel {
@@ -828,7 +842,22 @@ class BenchmarkActivity : ComponentActivity() {
             "configure_requested" -> r.mark(s, "configure_call", e.atNs)
             "session_configured" -> r.signal(s, BenchmarkRunner.Signal.CONFIGURED, e.atNs)
             "repeating_submit" -> r.mark(s, "repeating_call", e.atNs)
-            "capture_started" -> if (s == r.currentSession) r.firstStarted(s, e.atNs)
+            "capture_started" -> {
+                if (s == r.currentSession) r.firstStarted(s, e.atNs)
+                // The recording requests carry this cycle's tag; the first of them is the end point of 3.1.
+                (e.values["requestTag"] as? String)?.takeIf { it.startsWith("record-") }
+                    ?.let { r.recordFrameStarted(s, it, e.atNs) }
+            }
+            // record_prepare_call is left to the runner, which marks it when it calls the driver; the engine
+            // records it too, for the event log, but only the two calls 3.1 and 3.6 measure need the engine's time.
+            "record_configured" -> r.signal(s, BenchmarkRunner.Signal.RECORD_READY, e.atNs)
+            "record_configure_failed" -> r.signal(s, BenchmarkRunner.Signal.RECORD_UNSUPPORTED, e.atNs, e.kind)
+            "record_start_call" -> r.recordMark(s, RecordCycle.START_CALL_MARK, e.atNs)
+            "record_started" -> r.signal(s, BenchmarkRunner.Signal.RECORD_STARTED, e.atNs)
+            "record_stop_call" -> r.recordMark(s, RecordCycle.STOP_CALL_MARK, e.atNs)
+            "record_stopped" -> r.signal(s, BenchmarkRunner.Signal.RECORD_STOPPED, e.atNs)
+            "record_failed" -> r.signal(s, BenchmarkRunner.Signal.ERROR, e.atNs,
+                (e.values["reason"] as? String)?.let { "record_failed:$it" } ?: e.kind)
             // The engine records capture_submit right before CameraCaptureSession.capture(), which is the
             // submission time METRICS.md asks for, and the tag ties every still callback to its request.
             "capture_submit" -> (e.values["requestTag"] as? String)?.let { r.stillSubmitted(s, it, e.atNs) }

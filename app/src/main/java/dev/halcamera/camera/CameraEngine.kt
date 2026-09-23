@@ -67,5 +67,33 @@ data class StreamSpec(
     val preview: android.util.Size,
     val yuv: android.util.Size,
     val jpeg: android.util.Size,
-    val fpsRange: android.util.Range<Int>?
+    val fpsRange: android.util.Range<Int>?,
+    /** Recording conditions of the RECORD stage; null for a profile without one. */
+    val record: RecordSpec? = null
 )
+
+/**
+ * Exactly how the benchmark recorder is configured (docs/PLAN-Recording-v0.1.md 4). Like [StreamSpec] these are
+ * profile conditions, not preferences: an unavailable size or codec fails the recording cycle rather than being
+ * swapped for something the device does support, because 3.x values measured under other conditions are not
+ * comparable with the ones stored under the same profile id.
+ */
+data class RecordSpec(
+    val size: android.util.Size,
+    val codec: String,
+    val bitrate: Int,
+    val fps: Int,
+    val audio: Boolean
+) {
+    companion object {
+        /**
+         * Request tag of the recording requests of one cycle. Defined here because both sides need it and must
+         * agree: the engine sets it on the requests, and the benchmark domain filters events by it to tell a
+         * recording frame from the preview frames before it. A second spelling would silently measure nothing.
+         */
+        fun tag(iteration: Int): String = "record-$iteration"
+
+        /** Tag of the preview-only requests submitted while the recorder is being prepared. Never a 3.x sample. */
+        fun prepareTag(iteration: Int): String = "record-prep-$iteration"
+    }
+}

@@ -82,7 +82,8 @@ data class RecordCycle(
         const val STOP_CALL_MARK = "record_stop_call"
         const val STOP_MARK = "record_stopped"
 
-        fun tag(iteration: Int): String = "record-$iteration"
+        /** One definition, shared with the engine that sets the tag on the requests. */
+        fun tag(iteration: Int): String = dev.halcamera.camera.RecordSpec.tag(iteration)
     }
 }
 
