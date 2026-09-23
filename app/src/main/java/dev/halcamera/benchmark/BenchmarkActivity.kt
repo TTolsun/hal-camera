@@ -82,6 +82,9 @@ class BenchmarkActivity : ComponentActivity() {
     private val main = Handler(Looper.getMainLooper())
     private val recorder = FlightRecorder(::nowNs, retentionNs = 180_000_000_000L, maxEvents = 60_000, preNs = 0, postNs = 0)
     private val telemetry = Telemetry(recorder)
+    // Still v1: CAMERA2_STANDARD_V2 is defined but the runner has no RECORD stage yet, and a run that stored the
+    // v2 conditions without ever recording would claim a measurement it did not make. The switch happens when
+    // the stage lands (docs/PLAN-Recording-v0.1.md 13).
     private val profile = BenchmarkProfile.CAMERA2_STANDARD_V1
 
     // Writing a run file and reading the baseline and reference runs back are hundreds of kilobytes of JSON each;

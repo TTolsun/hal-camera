@@ -59,6 +59,46 @@ class BenchmarkProfileTest {
         assertNotEquals(p.conditionsKey, p.copy(yuvSize = "1280x720").conditionsKey)
     }
 
+    @Test fun theRecordingProfileKeepsEveryStandardConditionAndAddsTheRecordingOnes() {
+        val v2 = BenchmarkProfile.CAMERA2_STANDARD_V2
+        assertFalse(v2.isDraft)
+        assertEquals("camera2-standard-v2", v2.id)
+        assertTrue(v2.records)
+        assertFalse(p.records)
+        // Everything v1 fixes stays fixed: a v2 run measures the same launch, preview and capture conditions.
+        assertEquals(p, v2.copy(id = p.id, recordSize = null, recordCodec = null, recordBitrate = null,
+            recordFps = null, recordDurationMs = null, recordIterations = null, recordAudio = null))
+        assertEquals("1920x1080", v2.recordSize)
+        assertEquals(30, v2.recordFps)
+        assertEquals(8_000L, v2.recordDurationMs)
+        assertEquals(5, v2.recordIterations)
+        assertEquals(false, v2.recordAudio)
+        // Five cycles minus the warm-up cycle. Below the ten repetitions of METRICS.md 0.2 by decision (3.2).
+        assertEquals(4, v2.expectedRecordSamples)
+        assertEquals(0, p.expectedRecordSamples)
+        assertEquals(v2, BenchmarkProfile.canonical("camera2-standard-v2"))
+        assertEquals(p, BenchmarkProfile.canonical("camera2-standard-v1"))
+    }
+
+    @Test fun recordingConditionsSurviveTheJsonRoundTripAndAreAllOrNothing() {
+        val v2 = BenchmarkProfile.CAMERA2_STANDARD_V2
+        assertEquals(v2, BenchmarkProfile.fromJsonMap(v2.toJsonMap()))
+        // A v1 file carries no record keys at all and must keep reading as a non-recording profile.
+        assertEquals(p, BenchmarkProfile.fromJsonMap(p.toJsonMap().filterKeys { !it.startsWith("record_") }))
+        val half = v2.toJsonMap() - "record_fps"
+        try { BenchmarkProfile.fromJsonMap(half); fail("a partial record block must be rejected") }
+        catch (e: IllegalArgumentException) { assertTrue(e.message!!.contains("record_fps")) }
+    }
+
+    @Test fun theRecordSegmentOfTheConditionsKeyAppearsOnlyForRecordingProfiles() {
+        val v2 = BenchmarkProfile.CAMERA2_STANDARD_V2
+        // v1 baselines are stored under this key, so it must not gain a record segment.
+        assertFalse(p.conditionsKey.contains("record="))
+        assertTrue(v2.conditionsKey.contains("record=h264@1920x1080/30fps/8000ms x5"))
+        assertNotEquals(p.conditionsKey, v2.conditionsKey)
+        assertNotEquals(v2.conditionsKey, v2.copy(recordDurationMs = 6_000).conditionsKey)
+    }
+
     @Test fun contractIdCombinesProfileAndMetricDefinition() {
         val c = MeasurementContract.forProfile(p)
         assertEquals("camera2-standard-v1|metrics-0.3|nearest_rank|elapsedRealtimeNanos", c.comparisonContractId)

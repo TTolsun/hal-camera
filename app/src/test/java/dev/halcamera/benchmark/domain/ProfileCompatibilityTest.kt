@@ -13,18 +13,20 @@ import org.junit.Test
 class ProfileCompatibilityTest {
 
     private val profile = BenchmarkProfile.CAMERA2_STANDARD_V1
+    private val recording = BenchmarkProfile.CAMERA2_STANDARD_V2
 
     private fun inputs(
         previewSizes: List<String> = listOf("1920x1080", "1280x720"),
         yuvSizes: List<String> = listOf("1920x1080", "640x480"),
         jpegSizes: List<String> = listOf("4000x3000", "1920x1080"),
+        recordSizes: List<String> = listOf("1920x1080", "1280x720"),
         fpsRanges: List<String> = listOf("[10, 30]", "[30, 30]"),
         displayWidth: Int? = 1440,
         displayHeight: Int? = 3120,
         previewMin: Long? = 33_333_333L,
         yuvMin: Long? = 33_333_333L
     ) = ProfileCompatibility.Inputs(
-        previewSizes, yuvSizes, jpegSizes, fpsRanges, hardwareLevel = 3,
+        previewSizes, yuvSizes, jpegSizes, recordSizes, fpsRanges, hardwareLevel = 3,
         displayWidth = displayWidth, displayHeight = displayHeight,
         previewMinFrameDurationNs = previewMin, yuvMinFrameDurationNs = yuvMin
     )
@@ -94,6 +96,20 @@ class ProfileCompatibilityTest {
     @Test
     fun `a landscape display of the same pixels is judged the same way`() {
         assertTrue(ProfileCompatibility.evaluateStatic(profile, inputs(displayWidth = 3120, displayHeight = 1440)).supported)
+    }
+
+    @Test
+    fun `a recording profile also needs its record size in the MediaRecorder list`() {
+        assertTrue(ProfileCompatibility.evaluateStatic(recording, inputs()).supported)
+        val missing = ProfileCompatibility.evaluateStatic(recording, inputs(recordSizes = listOf("1280x720")))
+        assertFalse(missing.supported)
+        assertEquals(listOf(ProfileCompatibility.REASON_RECORD_SIZE), missing.reasons)
+    }
+
+    @Test
+    fun `a profile that does not record ignores the MediaRecorder list entirely`() {
+        // camera2-standard-v1 never configures a recording stream, so an empty list is not a reason to refuse it.
+        assertTrue(ProfileCompatibility.evaluateStatic(profile, inputs(recordSizes = emptyList())).supported)
     }
 
     @Test
