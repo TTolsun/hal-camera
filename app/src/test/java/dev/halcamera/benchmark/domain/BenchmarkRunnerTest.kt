@@ -47,9 +47,17 @@ internal class FakeDriver : BenchmarkRunner.Driver {
     val opens = ArrayList<String>()
     val closes = ArrayList<String>()
     var stills = 0
+    val recordPrepares = ArrayList<Int>()
+    var recordStarts = 0
+    var recordStops = 0
+    var recordAborts = 0
 
     override fun open(endpoint: CameraEndpoint, session: String) { opens += session }
     override fun still(session: String) { stills++ }
+    override fun prepareRecord(session: String, iteration: Int) { recordPrepares += iteration }
+    override fun startRecord(session: String) { recordStarts++ }
+    override fun stopRecord(session: String) { recordStops++ }
+    override fun abortRecord(session: String) { recordAborts++ }
     override fun close(session: String) { closes += session }
 }
 

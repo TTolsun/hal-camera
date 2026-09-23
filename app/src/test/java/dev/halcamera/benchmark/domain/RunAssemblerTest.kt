@@ -55,13 +55,16 @@ class RunAssemblerTest {
     private fun result(
         cycles: List<LaunchCycle> = goodCycles(),
         stills: List<StillSample> = goodStills(),
+        records: List<RecordCycle> = emptyList(),
         aborted: String? = null,
-        hardFailure: String? = null
+        hardFailure: String? = null,
+        recordUnsupported: Boolean = false
     ) = BenchmarkRunner.Result(
-        runId = "20260910-120000-000", endpoint = endpoint, cycles = cycles, stills = stills,
+        runId = "20260910-120000-000", endpoint = endpoint, cycles = cycles, stills = stills, records = records,
         observeSession = session, observeFirstFrameNs = firstFrameNs,
         observeStartNs = observeStartNs, observeEndNs = observeEndNs,
-        hardFailure = hardFailure, aborted = aborted, sessions = listOf(session)
+        hardFailure = hardFailure, aborted = aborted, recordUnsupported = recordUnsupported,
+        sessions = listOf(session)
     )
 
     private fun goodCycles() = (0 until profile.launchIterations).map { i ->

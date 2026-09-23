@@ -41,6 +41,51 @@ data class StillSample(
     )
 }
 
+/**
+ * One recording cycle of the RECORD stage (docs/PLAN-Recording-v0.1.md 6). The two latencies are measured by the
+ * runner from the marks the engine reports; the cadence metrics (3.2, 3.4, 3.7) are recomputed from the events
+ * between [START_MARK] and [STOP_MARK] instead of being carried here, the same way the observation window is.
+ *
+ * A failed cycle keeps its marks: a recording that started and then failed to stop still says something about
+ * where it broke, and the failure reason is what the result screen shows instead of a number.
+ */
+data class RecordCycle(
+    val iteration: Int,
+    val warmup: Boolean,
+    /** 3.1 record_start_to_camera_callback. Null when no record-tagged capture ever started. */
+    val startToCallbackMs: Double?,
+    /** 3.6 record_stop_latency. Null when stop() did not return normally. */
+    val stopLatencyMs: Double?,
+    val failed: Boolean = false,
+    val failureReason: String? = null,
+    val timestampsNs: Map<String, Long> = emptyMap()
+) {
+    /** The request tag of this cycle's recording requests; the engine sets it and the extractor filters by it. */
+    val requestTag: String get() = tag(iteration)
+
+    val startedNs: Long? get() = timestampsNs[START_MARK]
+    val stoppedNs: Long? get() = timestampsNs[STOP_MARK] ?: timestampsNs[STOP_CALL_MARK]
+
+    fun toJsonMap(): Map<String, Any?> = mapOf(
+        "iteration" to iteration, "warmup" to warmup, "request_tag" to requestTag,
+        "start_to_callback_ms" to startToCallbackMs, "stop_latency_ms" to stopLatencyMs,
+        "failed" to failed, "failure_reason" to failureReason,
+        "timestamps_ns" to timestampsNs.mapValues { it.value.toString() }
+    )
+
+    companion object {
+        const val PREPARE_CALL_MARK = "record_prepare_call"
+        const val READY_MARK = "record_ready"
+        const val START_CALL_MARK = "record_start_call"
+        const val START_MARK = "record_started"
+        const val FIRST_STARTED_MARK = "record_first_started"
+        const val STOP_CALL_MARK = "record_stop_call"
+        const val STOP_MARK = "record_stopped"
+
+        fun tag(iteration: Int): String = "record-$iteration"
+    }
+}
+
 /** Nearest-rank statistics (METRICS.md 0.2). With n = 9 the p95 is the maximum; the UI labels it accordingly. */
 data class Stats(val p50: Double?, val p95: Double?, val min: Double?, val max: Double?, val n: Int) {
     companion object {

@@ -749,6 +749,20 @@ class BenchmarkActivity : ComponentActivity() {
                 }
             }
             override fun still(session: String) { engine?.capture() }
+            // The engine has no benchmark recording path yet, so the only honest answer is that this camera
+            // cannot record under these conditions. Unreachable while the screen runs camera2-standard-v1,
+            // which has no RECORD stage (docs/PLAN-Recording-v0.1.md 13, step 4).
+            override fun prepareRecord(session: String, iteration: Int) {
+                recorder.record(session, "record_configure_failed", values = mapOf("reason" to "engine_record_path_missing"))
+                runner?.signal(session, BenchmarkRunner.Signal.RECORD_UNSUPPORTED, detail = "record_configure_failed")
+            }
+            override fun startRecord(session: String) {
+                runner?.signal(session, BenchmarkRunner.Signal.ERROR, detail = "record_start_unavailable")
+            }
+            override fun stopRecord(session: String) {
+                runner?.signal(session, BenchmarkRunner.Signal.ERROR, detail = "record_stop_unavailable")
+            }
+            override fun abortRecord(session: String) = Unit
             override fun close(session: String) {
                 val e = engine; engine = null
                 // Camera2Engine records "closed" too; a second CLOSED signal for the same session is ignored.

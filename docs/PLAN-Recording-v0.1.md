@@ -203,11 +203,13 @@ data class RecordObservation(
 |---|---|
 | `onConfigureFailed` (녹화 스트림 조합 미지원) | 재시도하지 않고 남은 사이클을 모두 건너뛴 뒤 CLOSE로 간다. 다섯 지표는 `unsupported`, run에는 `RECORD_NOT_MEASURED`를 붙인다. 같은 조합이 다음 사이클에서 성공할 이유가 없으므로 5회를 반복하지 않는다 |
 | `prepare()` · `start()` 예외 | 해당 사이클만 실패로 기록하고 다음 사이클을 시작한다 |
-| 3.1의 `capture_started`가 오지 않음 (5초) | 해당 사이클 실패. 녹화를 중단하고 다음 사이클로 간다 |
+| 3.1의 `capture_started`가 오지 않음 | 사이클을 `record_first_frame_missing`으로 실패 처리하되 녹화 길이는 끝까지 채우고 `stop()`을 정상 호출한다. 중간에 끊으면 `MediaRecorder`와 파일이 다음 사이클로 새기 때문이며, 어차피 중단하려면 같은 `stop()`을 불러야 한다 |
 | `stop()` 예외 또는 10초 초과 | 해당 사이클 실패. `MediaRecorder`를 `reset()`·`release()`하고 세션을 복구한 뒤 다음 사이클로 간다 |
-| 사이클 연속 실패가 `maxConsecutiveFailures`에 도달 | 기존 launch 사이클과 같은 규칙으로 run을 끝낸다 |
+| 사이클 연속 실패가 `maxConsecutiveFailures`에 도달 | 남은 사이클을 건너뛰고 CLOSE로 간다. run 자체는 중단하지 않는다 |
 | 녹화 중 `abort` | 진행 중인 사이클을 실패로 닫고 CLOSE로 간다. 이미 끝난 사이클의 값은 보존한다 |
 | 유효 사이클이 `MIN_RECORD_CYCLES`(3) 미만 | 다섯 지표에 `insufficient_samples`를 붙인다 |
+
+녹화 단계의 실패는 어느 경우에도 run의 `hard_failure`나 `aborted`를 설정하지 않는다. 이 단계가 시작되는 시점에는 1.x·2.x·H.x의 표본이 모두 확보되어 있으므로, 녹화기가 열리지 않았다는 이유로 run 전체를 무효로 만들면 멀쩡한 측정을 함께 버리게 된다. 실패는 `RecordCycle.failure_reason`과 run 수준의 `RECORD_NOT_MEASURED` flag로만 남긴다. 사용자가 직접 누른 `abort`는 예외이며, 기존 규칙대로 run을 중단 상태로 표시한다.
 
 파일은 `cacheDir`에 만들고 사이클이 끝나면 삭제한다. 갤러리에 저장하지 않는다. 측정 중 저장소가 부족해지면 사이클 실패로 기록한다.
 
