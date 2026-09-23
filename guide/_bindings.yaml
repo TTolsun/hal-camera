@@ -145,7 +145,12 @@ sources:
       screens/expert-screen:
         evidence:
           - app/src/main/java/dev/halcamera/MainActivity.kt
+      # MainActivity 하나만으로도 스캔 입력이 6만 자 한도에 가깝습니다. 최근 촬영물 조회는 화면 배치와 별개의
+      # 주제이므로 하위 요소로 내려, 둘 다 한도 안에서 스캔되게 합니다.
+      screens/expert-screen/recent-media:
+        evidence:
           - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
+          - app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt
       screens/benchmark-screen:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
