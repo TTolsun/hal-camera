@@ -25,6 +25,32 @@ class ProgressPresenterTest {
         assertEquals("6 / 6  Camera Close", ProgressPresenter.headline(Phase.CAMERA_CLOSE, 10, 10))
     }
 
+    @Test fun aRecordingRunCountsToSevenAndNamesTheExtraPhase() {
+        assertEquals("6 / 7  Recording", ProgressPresenter.headline(Phase.RECORDING, 0, 0, records = true))
+        assertEquals("7 / 7  Camera Close", ProgressPresenter.headline(Phase.CAMERA_CLOSE, 0, 0, records = true))
+        assertEquals("1 / 7  Camera Open  3/10", ProgressPresenter.headline(Phase.CAMERA_OPEN, 2, 10, records = true))
+    }
+
+    @Test fun aRunWithoutARecordStageIsUnchangedByTheNewPhase() {
+        // camera2-standard-v1 never enters RECORDING, so its screen must still count to six and keep its weights.
+        assertEquals("5 / 6  Still Capture", ProgressPresenter.headline(Phase.STILL_CAPTURE, 0, 0))
+        assertEquals(82, ProgressPresenter.percent(Phase.STILL_CAPTURE, 0, 0))
+        assertEquals(98, ProgressPresenter.percent(Phase.CAMERA_CLOSE, 0, 0))
+    }
+
+    @Test fun theRecordingPhaseTakesTheLargestShareOfTheBar() {
+        val beforeRecording = ProgressPresenter.percent(Phase.RECORDING, 0, 0, records = true)
+        val atClose = ProgressPresenter.percent(Phase.CAMERA_CLOSE, 0, 0, records = true)
+        // Recording is the longest phase of the run, so the bar must not jump to the end when it starts.
+        assertTrue(beforeRecording < 40)
+        assertTrue(atClose - beforeRecording > 50)
+        // The still phase now ends earlier than it would in a six-phase run, because more time follows it.
+        assertTrue(
+            ProgressPresenter.percent(Phase.STILL_CAPTURE, 0, 0, records = true) <
+                ProgressPresenter.percent(Phase.STILL_CAPTURE, 0, 0)
+        )
+    }
+
     // ---- bar ----
 
     @Test fun theBarIsWeightedByTheTimeBudgetNotByPhaseCount() {

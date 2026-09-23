@@ -38,10 +38,24 @@ object StartCardPresenter {
     const val ENGINE_CAMERA2 = "Camera2"
 
     /**
-     * Wall-clock length of one run. The plan's 3.3 budget estimated 25 - 30 s; the M2 device check on a Galaxy
-     * S25+ measured 45 s, so the card states the measured number rather than the estimate.
+     * Wall-clock length of a run without a RECORD stage. The plan's 3.3 budget estimated 25 - 30 s; the M2
+     * device check on a Galaxy S25+ measured 45 s, so the card states the measured number rather than the
+     * estimate.
      */
     const val ESTIMATED_SECONDS = 45
+
+    /**
+     * Session reconfiguration, recorder preparation and the file close around one recording, on top of the
+     * recording itself. An estimate until a device run measures it (docs/PLAN-Recording-v0.1.md 13, step 8).
+     */
+    const val RECORD_CYCLE_OVERHEAD_MS = 1000L
+
+    /** What the card promises the developer before they commit to standing still for it. */
+    fun estimatedSeconds(profile: BenchmarkProfile): Int {
+        val duration = profile.recordDurationMs ?: return ESTIMATED_SECONDS
+        val iterations = profile.recordIterations ?: return ESTIMATED_SECONDS
+        return ESTIMATED_SECONDS + ((duration + RECORD_CYCLE_OVERHEAD_MS) * iterations / 1000).toInt()
+    }
 
     fun present(
         profile: BenchmarkProfile,
@@ -71,8 +85,13 @@ object StartCardPresenter {
                 .joinToString(" · "),
             profileLine = "Profile  ${profile.id}",
             verdictLine = verdictLine(compatibility),
-            durationLine = "약 ${ESTIMATED_SECONDS}초 · 화면을 켠 채 유지 · 밝은 피사체를 향해 고정",
-            detailLine = "${profile.launchIterations}× open · ${profile.observeMs / 1000}초 관측 · 사진 ${profile.stillCount}장",
+            durationLine = "약 ${estimatedSeconds(profile)}초 · 화면을 켠 채 유지 · 밝은 피사체를 향해 고정",
+            detailLine = listOfNotNull(
+                "${profile.launchIterations}× open",
+                "${profile.observeMs / 1000}초 관측",
+                "사진 ${profile.stillCount}장",
+                if (!profile.records) null else "녹화 ${profile.recordDurationMs!! / 1000}초 ${profile.recordIterations}회"
+            ).joinToString(" · "),
             notices = notices,
             blockedReason = blockedReason(compatibility, thermalStatus),
             refreshable = compatibility.supported

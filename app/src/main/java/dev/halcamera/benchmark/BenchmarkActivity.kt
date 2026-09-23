@@ -531,7 +531,7 @@ class BenchmarkActivity : ComponentActivity() {
         val card = Look.card(this, dark = true)
         card.addView(Look.text(this, "Benchmarking", 19, Look.onDark, bold = true))
         // The first phase is shown before the runner starts, so the card never appears blank for a frame.
-        val first = ProgressPresenter.headline(BenchmarkRunner.Phase.CAMERA_OPEN, 0, profile.launchIterations)
+        val first = ProgressPresenter.headline(BenchmarkRunner.Phase.CAMERA_OPEN, 0, profile.launchIterations, profile.records)
         progressHeadline = Look.text(this, first, 14, Look.onDark, mono = true).also { card.addView(it, lp(top = 10)) }
         progressBar = Look.text(this, ProgressPresenter.barLine(0), 13, Look.primaryOnDark, mono = true)
             .also { it.maxLines = 1; card.addView(it, lp(top = 4)) }
@@ -774,8 +774,8 @@ class BenchmarkActivity : ComponentActivity() {
                 // launch cycles that came before and are measured separately.
                 if (phase != livePhase && phase == BenchmarkRunner.Phase.FIRST_PREVIEW) liveStats.reset()
                 livePhase = phase
-                progressHeadline?.text = ProgressPresenter.headline(phase, iteration, total)
-                progressBar?.text = ProgressPresenter.barLine(ProgressPresenter.percent(phase, iteration, total))
+                progressHeadline?.text = ProgressPresenter.headline(phase, iteration, total, profile.records)
+                progressBar?.text = ProgressPresenter.barLine(ProgressPresenter.percent(phase, iteration, total, profile.records))
             }
             override fun onFinished(result: BenchmarkRunner.Result) { finishRun(result) }
         }

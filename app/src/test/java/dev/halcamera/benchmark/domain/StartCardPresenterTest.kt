@@ -110,4 +110,16 @@ class StartCardPresenterTest {
         assertEquals("Profile  camera2-standard-v1", c.profileLine)
         assertTrue(c.detailLine.contains("10× open"))
     }
+
+    @Test fun aRecordingProfileNamesTheStageAndCostsTheTimeItTakes() {
+        val v2 = BenchmarkProfile.CAMERA2_STANDARD_V2
+        // 45 s for everything v1 measures, plus five cycles of nine seconds and their overhead.
+        assertEquals(95, StartCardPresenter.estimatedSeconds(v2))
+        assertEquals(45, StartCardPresenter.estimatedSeconds(BenchmarkProfile.CAMERA2_STANDARD_V1))
+        val c = StartCardPresenter.present(v2, supported, "Camera · 0 (Wide · Rear)", "Camera2", 0, false)
+        assertTrue(c.durationLine.contains("약 95초"))
+        assertTrue(c.detailLine.contains("녹화 9초 5회"))
+        // A profile without the stage says nothing about recording.
+        assertTrue(!card(compatibility = supported).detailLine.contains("녹화"))
+    }
 }

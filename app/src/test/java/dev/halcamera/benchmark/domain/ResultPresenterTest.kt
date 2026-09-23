@@ -415,6 +415,40 @@ class ResultPresenterTest {
         assertEquals(1, sections.first { it.title == "Launch" }.bars.size)
     }
 
+    @Test fun theRecordingMetricsGetTheirOwnSectionAfterStability() {
+        val current = run(metrics = listOf(
+            launchMetric("1.1", 142.0, 161.0),
+            countMetric("H.5", 0),
+            launchMetric("3.1", 55.0, 61.0),
+            windowMetric("3.4", 30.0),
+            launchMetric("3.6", 302.0, 340.0),
+            windowMetric("3.7", 0.42),
+            countMetric("3.2", 1)
+        ))
+        val sections = ResultPresenter.metricBars(current, null, ComparedTo.NONE)
+        assertEquals(listOf("Launch", "Stability", "Record"), sections.map { it.title })
+        assertEquals(
+            listOf("Record start", "Steady fps", "Record stop", "Record jitter", "Interval anomalies"),
+            sections.first { it.title == "Record" }.bars.map { it.label }
+        )
+    }
+
+    @Test fun theRecordingNumbersKeepTheDigitsThatDistinguishThem() {
+        // A frame rate needs the tenth that separates a steady window from one that lost a frame.
+        assertEquals("30.0 fps", ResultPresenter.format(windowMetric("3.4", 30.0), 30.0))
+        assertEquals("29.0 fps", ResultPresenter.format(windowMetric("3.4", 29.0), 29.0))
+        // Jitter is a fraction of a millisecond, so whole milliseconds would print every value as 0.
+        assertEquals("0.4 ms", ResultPresenter.format(windowMetric("3.7", 0.42), 0.42))
+        // The two latencies are hundreds of milliseconds, where a decimal is noise.
+        assertEquals("55 ms", ResultPresenter.format(launchMetric("3.1", 55.0, 61.0), 55.0))
+        assertEquals("302 ms", ResultPresenter.format(launchMetric("3.6", 302.0, 340.0), 302.0))
+        assertEquals("1", ResultPresenter.format(countMetric("3.2", 1), 1.0))
+    }
+
+    @Test fun aRunThatRecordedNothingSaysSoInWords() {
+        assertEquals("녹화 측정이 부족함", ResultPresenter.flagText("RECORD_NOT_MEASURED"))
+    }
+
     @Test fun aTimedOutThreeAMetricGetsNoBar() {
         val timedOut = metric("H.7", 1500.0).copy(timeout = true)
         val bars = ResultPresenter.metricBars(run(metrics = listOf(timedOut)), null, ComparedTo.NONE).flatMap { it.bars }

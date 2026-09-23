@@ -105,7 +105,7 @@ object ResultPresenter {
     /** Below this sample count nearest-rank p95 is just max, and calling it p95 suggests a stable percentile (8.4). */
     const val P95_MIN_SAMPLES = 20
 
-    private val ORDER = listOf(Category.LAUNCH, Category.PREVIEW, Category.CAPTURE, Category.STABILITY)
+    private val ORDER = listOf(Category.LAUNCH, Category.PREVIEW, Category.CAPTURE, Category.STABILITY, Category.RECORD)
 
     /** Category names as the screen prints them: first letter capital, the rest lower, no underscores. */
     fun categoryLabel(category: Category): String =
@@ -128,6 +128,7 @@ object ResultPresenter {
         "BATTERY_LOW" -> "배터리 부족"
         "PROFILE_DRAFT" -> "초안 profile"
         "DEBUGGABLE_BUILD" -> "디버그 빌드"
+        "RECORD_NOT_MEASURED" -> "녹화 측정이 부족함"
         "PREFLIGHT_MISMATCH" -> "사전 점검과 실제 설정이 다름"
         "THERMAL_CHANGED" -> "실행 중 발열 단계 변함"
         "LABEL_MISSING" -> "빌드 이름 없음"
@@ -544,15 +545,29 @@ object ResultPresenter {
 
     // ---- formatting ----
 
-    /** Cadence metrics need the tenth of a millisecond that separates 33.3 from 33.4; the rest do not. */
+    /**
+     * Cadence metrics need the tenth of a millisecond that separates 33.3 from 33.4; the rest do not. Recording
+     * jitter is such a metric even though its category is RECORD: it is a fraction of a millisecond, and
+     * rounding it to whole milliseconds would print every value as 0.
+     *
+     * A frame rate keeps one decimal for the same reason in the other direction: 29.8 and 30.0 are the
+     * difference between a steady recording and one that dropped a frame in a window.
+     */
     fun format(metric: BenchmarkMetric, value: Double?): String {
         if (value == null) return "—"
-        if (metric.unit == "count") return value.toInt().toString()
-        if (metric.unit != "ms") return "$value ${metric.unit}"
-        val text = if (metric.category == Category.PREVIEW) String.format(Locale.US, "%.1f", value)
-        else String.format(Locale.US, "%.0f", value)
-        return "$text ms"
+        return when (metric.unit) {
+            "count" -> value.toInt().toString()
+            "fps" -> String.format(Locale.US, "%.1f fps", value)
+            "ms" -> {
+                val fine = metric.category == Category.PREVIEW || metric.id in FINE_MS_METRICS
+                String.format(Locale.US, if (fine) "%.1f" else "%.0f", value) + " ms"
+            }
+            else -> "$value ${metric.unit}"
+        }
     }
+
+    /** Millisecond metrics outside PREVIEW that are still small enough to need a decimal. */
+    private val FINE_MS_METRICS = setOf("3.7")
 
     // ---- monospace layout ----
 
