@@ -229,6 +229,7 @@ sources:
       metrics:
         evidence:
           - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
+          - app/src/main/java/dev/halcamera/metrics/RecordMetrics.kt
           - app/src/main/java/dev/halcamera/metrics/MetricModel.kt
       metrics/metric-extractor:
         evidence:

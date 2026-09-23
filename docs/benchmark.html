@@ -56,9 +56,16 @@
 <td>유효성과 비교 상태</td>
 <td>측정 불가와 성능 저하를 구분해야 합니다. 값이 없으면 원인을 먼저 확인합니다.</td>
 </tr>
+<tr>
+<td>profile 이름</td>
+<td><code>camera2-standard-v1</code>과 <code>camera2-standard-v2</code>는 서로 비교되지 않습니다. v2는 녹화 측정을 포함하는 대신 기기마다 baseline을 다시 잡아야 합니다.</td>
+</tr>
 </tbody></table>
 <p>측정 대상 카메라는 앱 전체가 함께 쓰는 표기로 적습니다. 카메라 선택 버튼, Results의 각 행, 시작·결과 화면의 제목 줄에는 <code>Camera · 0 (Wide · Rear)</code>를 쓰고, Results 필터 버튼처럼 칸이 좁은 자리에는 <code>Camera · 0</code>으로 줄입니다. 규칙 전문은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md">APP-UI.md</a>의 &quot;카메라를 부르는 이름&quot;에 있습니다.</p>
 <p>baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 결과 화면은 이전의 비교 가능한 실행 대비 변화량만 표시하며, 이력에서 임의로 고른 실행도 실제 baseline이 아닌 한 회귀 판정의 기준이 되지 않습니다.</p>
+<h2 lang="en">Recording is measured last.</h2><p>실행은 사진 촬영을 마친 뒤 같은 카메라를 연 채로 짧은 녹화를 반복합니다. <code>camera2-standard-v2</code>는 9초짜리 녹화를 다섯 번 하고 첫 회는 워밍업으로 제외하므로, 녹화 지표의 유효 표본은 네 개입니다. 표본이 네 개일 때 p95는 사실상 최대값이며 화면은 그 사실을 그대로 적습니다.</p>
+<p>녹화를 마지막에 두는 이유는 세 가지입니다. 녹화는 캡처 세션을 다시 구성하므로, 먼저 실행하면 프리뷰 관측 창과 촬영 지연에 그 영향이 섞입니다. 녹화가 실패해도 앞에서 얻은 실행·프리뷰·촬영 표본이 남습니다. 그리고 카메라를 다시 열지 않으므로 warm reopen이라는 조건이 흐려지지 않습니다.</p>
+<p>녹화가 약속한 만큼 측정되지 않으면 실행에 <code>녹화 측정이 부족함</code> flag가 붙습니다. 이 실행은 측정 자체가 무효는 아니며 사내 비교에도 쓸 수 있지만, 지표 수가 다른 점수는 같은 숫자가 아니므로 교차 기기 점수에서는 빠집니다. 카메라가 녹화 스트림 조합을 거부하면 남은 회차를 시도하지 않습니다. 같은 조합이 다음 회차에서 성공할 이유가 없기 때문입니다.</p>
 <h2 lang="en">The verdict comes first.</h2><p>결과 화면은 판정 한 줄을 먼저 표시합니다. 문구는 <code>N metrics degraded</code>, <code>No degradation</code>이며 baseline이 없으면 <code>First run</code>입니다. 그 아래에는 측정한 모든 항목을 카테고리별로 묶어 baseline 눈금이 있는 가로 막대로 그립니다. 숫자만 나열하던 <code>All metrics</code> 접힘은 없앴습니다. 값과 기준을 나란히 읽는 것이 이 화면의 목적인데, 숫자 행은 막대보다 그 일을 못 하기 때문입니다.</p>
 <table>
 <thead>
@@ -73,7 +80,7 @@
 </tr>
 <tr>
 <td>지표 막대</td>
-<td><code>Launch</code>·<code>Preview</code>·<code>Capture</code>·<code>Stability</code>·<code>3A</code> 순서로 묶어, 측정한 항목을 빠짐없이 그립니다.</td>
+<td><code>Launch</code>·<code>Preview</code>·<code>Capture</code>·<code>Stability</code>·<code>Record</code>·<code>3A</code> 순서로 묶어, 측정한 항목을 빠짐없이 그립니다.</td>
 </tr>
 <tr>
 <td><code>실행 정보</code> 접힘</td>
@@ -84,6 +91,7 @@
 <td>결과를 PC로 옮기는 유일한 경로입니다. 화면 텍스트를 클립보드로 복사하던 버튼은 제거했습니다.</td>
 </tr>
 </tbody></table>
+<p><code>Record</code> 묶음의 숫자는 단위가 서로 다릅니다. <code>Steady fps</code>는 클수록 좋은 유일한 지표이므로 값이 내려갈 때 저하로 판정하며, <code>Interval anomalies</code>는 개수입니다. <code>Record jitter</code>와 <code>Steady fps</code>는 소수 한 자리를 유지합니다. 29.8 fps는 창 하나에서 프레임을 놓쳤다는 뜻이고, jitter는 1밀리초보다 작아서 정수로 자르면 모든 값이 0으로 찍히기 때문입니다.</p>
 <p>막대 옆 숫자는 표본의 <strong>중앙값</strong>이며, 캡션 <code>median</code>이 그 사실을 적습니다. 이름에 이미 통계가 들어 있는 <code>Interval p50</code>·<code>Interval p95</code>와 개수 지표에는 캡션을 붙이지 않습니다. <code>Preview</code> 묶음은 <code>Frame rate</code>가 먼저 오고 그 간격 행이 뒤따릅니다. <code>Frame rate</code>는 <code>H.1</code>을 뒤집은 값이며, 판정 자체는 <code>H.1</code> 행이 가집니다.</p>
 <p>3A 항목이 관측 창 안에 수렴하지 못하면 값 대신 <code>timeout</code>을 적고 막대를 비웁니다. 이때 저장된 값은 수렴 시각이 아니라 관측 창의 길이이므로, 막대를 그리면 창과 수렴을 견주는 그림이 됩니다.</p>
 <p><code>실행 정보</code>의 validity flag는 저장된 코드가 아니라 뜻으로 적습니다(<code>충전 중</code>, <code>빌드 이름 없음</code>). 코드는 계약이므로 JSON과 CSV에는 그대로 남고, 화면에서만 풀어 씁니다.</p>
@@ -125,7 +133,7 @@
 <h2 lang="en">Follow the implementation.</h2><p>구체적인 실행 순서, 중단 조건, 측정값이 만들어지는 과정은 <a href="architecture.html#주요-실행-흐름">아키텍처의 주요 실행 흐름</a>에서 확인하세요. 이 페이지는 결과를 읽는 방법을 다루며 별도의 실측 결과를 주장하지 않습니다.</p>
 <details>
 <summary>코드 근거를 확인하세요</summary>
-<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/benchmark/</code>에서 <code>BenchmarkRunner.kt</code>, <code>RunAssembler.kt</code>, <code>BenchmarkActivity.kt</code>, <code>RegressionDetector.kt</code>를 확인하세요. 결과 화면과 비교 화면의 구성은 <code>domain/ResultPresenter.kt</code>·<code>domain/ComparePresenter.kt</code>·<code>ui/MetricBars.kt</code>, Results 이력은 <code>HistoryActivity.kt</code>·<code>domain/BaselineManager.kt</code>·<code>platform/StoreRunCatalog.kt</code>, 보관 한도는 <code>domain/RunRetention.kt</code>에 있습니다. 원고의 검토 상태는 아키텍처 문서 끝에 있습니다.</p>
+<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/benchmark/</code>에서 <code>BenchmarkRunner.kt</code>, <code>RunAssembler.kt</code>, <code>BenchmarkActivity.kt</code>, <code>RegressionDetector.kt</code>를 확인하세요. 결과 화면과 비교 화면의 구성은 <code>domain/ResultPresenter.kt</code>·<code>domain/ComparePresenter.kt</code>·<code>ui/MetricBars.kt</code>, Results 이력은 <code>HistoryActivity.kt</code>·<code>domain/BaselineManager.kt</code>·<code>platform/StoreRunCatalog.kt</code>, 보관 한도는 <code>domain/RunRetention.kt</code>에 있습니다. 녹화 단계는 <code>BenchmarkRunner.kt</code>의 RECORD 단계와 <code>camera/Camera2Engine.kt</code>의 벤치마크 녹화 경로가 실행하고, 지표 계산은 <code>metrics/RecordMetrics.kt</code>에 있습니다. 원고의 검토 상태는 아키텍처 문서 끝에 있습니다.</p>
 </details><p><strong>다음 단계:</strong> 같은 측정을 터미널에서 반복하려면 <a href="cli.html">CLI</a>를 읽으세요. 벤치마크 실행 자체는 CLI 명령 집합에서 제외되어 있으며, 그 이유도 그 페이지에 있습니다.</p>
 
   </main>

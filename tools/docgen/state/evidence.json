@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "49806ff2ed76595f",
-        "modelHash": "ae38d565a8044adc",
+        "codeHash": "f12d90e6e7c88ff5",
+        "modelHash": "7542ec9d427fcda6",
         "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "commit": "6719fad",
+        "reviewer": "Claude (recording metrics)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "211591832c2b2829",
-        "modelHash": "49203ddfad5b0f1b",
+        "codeHash": "2cf68caad44d99ec",
+        "modelHash": "2ca33f437ba5aa05",
         "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "commit": "6719fad",
+        "reviewer": "Claude (recording metrics)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "746e01fe500a588e",
-        "modelHash": "07ff2102a958cd31",
+        "codeHash": "d13158b562b5f609",
+        "modelHash": "8a5ba1a88d1e6bd7",
         "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "commit": "6719fad",
+        "reviewer": "Claude (recording metrics)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8cc0876ab4166bbb",
-        "modelHash": "9d5934fbf5cf171a",
+        "codeHash": "5e90c8033ad05601",
+        "modelHash": "7f89ef6bbd446285",
         "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "commit": "6719fad",
+        "reviewer": "Claude (recording metrics)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "211591832c2b2829",
-        "modelHash": "aa9fc312013b9654",
+        "codeHash": "2cf68caad44d99ec",
+        "modelHash": "2dfe23547a3916ab",
         "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "commit": "6719fad",
+        "reviewer": "Claude (recording metrics)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "24b709b2bedc00da",
-        "modelHash": "183767b1eaf5f039",
+        "codeHash": "baf7d719ee26a33a",
+        "modelHash": "881d62e8e21fb13e",
         "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "commit": "6719fad",
+        "reviewer": "Claude (recording metrics)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "49806ff2ed76595f",
-        "modelHash": "d2fc80ef9ac841b9",
+        "codeHash": "f12d90e6e7c88ff5",
+        "modelHash": "5809304f9c886c9d",
         "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "commit": "6719fad",
+        "reviewer": "Claude (recording metrics)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "49806ff2ed76595f",
-        "modelHash": "174b5c1d449f1f05",
+        "codeHash": "f12d90e6e7c88ff5",
+        "modelHash": "3479de2ade74ead1",
         "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "commit": "6719fad",
+        "reviewer": "Claude (recording metrics)"
       },
       "observed": {
         "state": "fresh"
