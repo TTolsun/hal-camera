@@ -109,7 +109,7 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-23 @ `345eb55` · Claude (release 0.13.0)
+- 검토 2026-09-23 @ `cc122ec` · Claude (start card title)
 
 </details>
 
@@ -185,9 +185,9 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-23 @ `345eb55` · Claude (release 0.13.0) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-23 @ `345eb55` · Claude (release 0.13.0) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-23 @ `345eb55` · Claude (release 0.13.0) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-23 @ `cc122ec` · Claude (start card title) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-23 @ `cc122ec` · Claude (start card title) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-23 @ `cc122ec` · Claude (start card title) |
 
 <!-- omm:end id=status -->
 

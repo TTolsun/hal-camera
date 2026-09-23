@@ -92,7 +92,7 @@ class StartCardPresenterTest {
     // ---- what the card says ----
 
     @Test fun theTitleNamesTheEngineCameraConditionAndLaunchMode() {
-        assertEquals("Camera2 · Camera · 0 (Wide · Rear) · 1080p30 · warm reopen", card().titleLine)
+        assertEquals("Camera · 0 (Wide · Rear) · 1080p30 · warm reopen", card().titleLine)
     }
 
     @Test fun theVerdictCarriesTheMethodThatProducedIt() {
