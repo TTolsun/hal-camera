@@ -88,7 +88,7 @@ incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽�
 
 ### 화면에서 지표가 보이지 않을 때
 
-Live 진단 패널의 `프레임·3A 수치`를 펼치면 상세 수치를 볼 수 있습니다. 하단 Mark는 직전 10초와 이후 5초를 incident ZIP으로 저장합니다. Benchmark 결과 화면은 판정을 먼저 표시하고 모든 측정 항목을 카테고리별 막대로 보여 줍니다. 막대 옆 숫자는 표본의 중앙값이며, 표본 수와 validity flag는 `실행 정보` 접힘에 있습니다. 이 배치는 저장된 지표나 CSV의 범위를 바꾸지 않습니다.
+Live 진단 패널의 `프레임·3A 수치`를 펼치면 상세 수치를 볼 수 있습니다. 하단 Mark는 직전 10초와 이후 5초를 incident ZIP으로 저장합니다. Benchmark 결과 화면은 판정을 먼저 표시하고 모든 측정 항목을 카테고리별 막대로 보여 줍니다. 막대 옆 숫자는 표본의 중앙값이며, 표본 수와 validity flag는 `실행 정보` 접힘에 있습니다. 막대 길이는 같은 카테고리에서 단위가 같은 지표끼리 공유하는 축을 기준으로 그리므로 이웃 행과 길이를 견줄 수 있으며, 그 카테고리에서 단위가 혼자인 지표는 자체 축을 쓰기 때문에 다른 행과 길이를 견줄 수 없습니다. 이 배치는 저장된 지표나 CSV의 범위를 바꾸지 않습니다.
 
 ### 이력과 CSV가 예상과 다를 때
 
@@ -109,7 +109,7 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-24 @ `decabc7` · Claude (UI review #140)
+- 검토 2026-09-24 @ `12030a5` · Claude (UI review #137)
 
 </details>
 
@@ -185,9 +185,9 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-24 @ `decabc7` · Claude (UI review #140) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-24 @ `decabc7` · Claude (UI review #140) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-24 @ `decabc7` · Claude (UI review #140) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-24 @ `12030a5` · Claude (UI review #137) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-24 @ `12030a5` · Claude (UI review #137) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-24 @ `12030a5` · Claude (UI review #137) |
 
 <!-- omm:end id=status -->
 
