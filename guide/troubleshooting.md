@@ -109,7 +109,7 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-24 @ `74498d8` · Claude (UI review #138)
+- 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1)
 
 </details>
 
@@ -156,8 +156,8 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.13.0` |
-| `versionCode` | `133` |
+| `versionName` | `0.13.1` |
+| `versionCode` | `145` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |
@@ -181,13 +181,13 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.13.0 (versionCode 133)
+- 검증 기준 앱 버전: 0.13.1 (versionCode 145)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-24 @ `74498d8` · Claude (UI review #138) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-24 @ `74498d8` · Claude (UI review #138) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-24 @ `74498d8` · Claude (UI review #138) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
 
 <!-- omm:end id=status -->
 
