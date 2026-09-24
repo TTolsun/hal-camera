@@ -111,7 +111,10 @@ class BenchmarkEvaluatorTest {
 
     @Test fun orderAndCategoriesMatchTheCatalog() {
         val ms = evaluator.evaluate(BenchmarkEvaluator.Input(cycles(), stills(), observation(), 2))
-        assertEquals(BenchmarkMetrics.ALL, ms.map { it.id })
+        // camera2-standard-v1 has no RECORD stage, so it reports the twenty ids it always did and none of the
+        // 3.x ones: a run file written for this profile must stay what it was (BenchmarkEvaluatorRecordTest
+        // covers the recording profile).
+        assertEquals(BenchmarkMetrics.ALL - BenchmarkMetrics.RECORD.toSet(), ms.map { it.id })
         // RESOURCE is the fallback for an id missing from MetricCatalog; every benchmark id must be catalogued.
         assertTrue(ms.none { it.category == Category.RESOURCE })
         val h9 = ms.first { it.id == "H.9" }

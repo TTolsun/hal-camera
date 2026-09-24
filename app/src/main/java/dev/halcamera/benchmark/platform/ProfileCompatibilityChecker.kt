@@ -8,6 +8,7 @@ import android.hardware.camera2.CameraDevice
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.params.OutputConfiguration
 import android.hardware.camera2.params.SessionConfiguration
+import android.media.MediaRecorder
 import android.os.Build
 import android.util.Log
 import android.util.Range
@@ -35,11 +36,16 @@ class ProfileCompatibilityChecker(
         }
         val static = ProfileCompatibility.evaluateStatic(profile, inputs)
         if (!static.supported) return static
-        val exact = exactQuery(profile, cameraId) ?: return static
+        val exact = exactQuery(profile, cameraId)
+        // A recording profile configures two different sessions during a run, so both are asked about. The
+        // record answer never rescues an observation session the platform already rejected.
+        val exactRecord = if (!profile.records) null else exactRecordQuery(profile, cameraId)
+        if (exact == null && exactRecord == null) return static
+        val supported = exact != false && exactRecord != false
         return static.copy(
             method = ProfileCompatibility.METHOD_DEVICE_SETUP,
-            supported = exact,
-            reasons = if (exact) emptyList() else listOf(ProfileCompatibility.REASON_STREAM_COMBINATION)
+            supported = supported,
+            reasons = if (supported) emptyList() else listOf(ProfileCompatibility.REASON_STREAM_COMBINATION)
         )
     }
 
@@ -73,18 +79,52 @@ class ProfileCompatibilityChecker(
         }
     }
 
+    /**
+     * The same exact query for the session the RECORD stage configures: preview plus the MediaRecorder stream,
+     * with the profile's fps range as a session parameter. Null when the profile does not record or this device
+     * has no CameraDeviceSetup for the camera.
+     */
+    @SuppressLint("NewApi")
+    fun exactRecordQuery(profile: BenchmarkProfile, cameraId: String): Boolean? {
+        if (Build.VERSION.SDK_INT < 35 || !profile.records) return null
+        return try {
+            if (!manager.isCameraDeviceSetupSupported(cameraId)) return null
+            val setup = manager.getCameraDeviceSetup(cameraId)
+            val preview = size(profile.previewSize) ?: return null
+            val record = size(profile.recordSize ?: return null) ?: return null
+            val outputs = listOf(
+                OutputConfiguration(preview, SurfaceTexture::class.java),
+                OutputConfiguration(record, MediaRecorder::class.java)
+            )
+            val executor = Executor { it.run() }
+            val configuration = SessionConfiguration(SessionConfiguration.SESSION_REGULAR, outputs, executor, NoopSessionCallback)
+            fpsRange(profile.fpsRange)?.let { range ->
+                val request = setup.createCaptureRequest(CameraDevice.TEMPLATE_RECORD)
+                request.set(android.hardware.camera2.CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, range)
+                configuration.sessionParameters = request.build()
+            }
+            setup.isSessionConfigurationSupported(configuration)
+        } catch (e: Exception) {
+            Log.w(TAG, "CameraDeviceSetup record query failed for $cameraId: ${e.message}")
+            null
+        }
+    }
+
     private fun inputs(profile: BenchmarkProfile, cameraId: String): ProfileCompatibility.Inputs {
         val chars = manager.getCameraCharacteristics(cameraId)
         val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
         val previewSizes = map?.getOutputSizes(SurfaceTexture::class.java).orEmpty()
         val yuvSizes = map?.getOutputSizes(ImageFormat.YUV_420_888).orEmpty()
         val jpegSizes = map?.getOutputSizes(ImageFormat.JPEG).orEmpty()
+        // Only read for a recording profile: the list is not free and a non-recording profile never looks at it.
+        val recordSizes = if (!profile.records) emptyList() else map?.getOutputSizes(MediaRecorder::class.java).orEmpty().toList()
         val preview = size(profile.previewSize)
         val yuv = size(profile.yuvSize)
         return ProfileCompatibility.Inputs(
             previewSizes = previewSizes.map { it.toString() },
             yuvSizes = yuvSizes.map { it.toString() },
             jpegSizes = jpegSizes.map { it.toString() },
+            recordSizes = recordSizes.map { it.toString() },
             fpsRanges = chars[CameraCharacteristics.CONTROL_AE_AVAILABLE_TARGET_FPS_RANGES].orEmpty().map { it.toString() },
             hardwareLevel = chars[CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL],
             displayWidth = displayWidth,

@@ -29,18 +29,40 @@ data class BenchmarkProfile(
     val warmupMs: Long,
     val observeMs: Long,
     val stillCount: Int,
-    val excludeFirst: Boolean
+    val excludeFirst: Boolean,
+    /**
+     * Recording conditions of the RECORD stage (docs/PLAN-Recording-v0.1.md chapter 4). All seven are null in a
+     * profile that does not record: camera2-standard-v1 predates the stage and its stored runs carry no record
+     * keys at all, so an absent key means "this profile never recorded" rather than a value to guess. Either all
+     * seven are present or none is; [fromJsonMap] rejects anything in between.
+     */
+    val recordSize: String? = null,
+    val recordCodec: String? = null,
+    val recordBitrate: Int? = null,
+    val recordFps: Int? = null,
+    val recordDurationMs: Long? = null,
+    val recordIterations: Int? = null,
+    val recordAudio: Boolean? = null
 ) {
     /** Draft profiles may still change; their runs are never used for scoring (3.5). */
     val isDraft: Boolean get() = id.endsWith("-draft")
 
-    /** Stable-order condition string, used for logs and as part of stored keys. */
+    /** True when this profile drives the RECORD stage, which is what the 3.x metrics are measured from. */
+    val records: Boolean get() = recordSize != null
+
+    /**
+     * Stable-order condition string, used for logs and as part of stored keys. The record segment is appended
+     * only when the profile records, so the key of camera2-standard-v1 stays what it was and the baselines
+     * stored under it keep matching.
+     */
     val conditionsKey: String
-        get() = listOf(
+        get() = (listOf(
             "engine=$engine", "preview=$previewSize", "yuv=$yuvSize", "still=$stillFormat@$stillSize", "fps=$fpsRange",
             "zsl=${if (zsl) "on" else "off"}", "trigger=${if (trigger) "on" else "off"}", "af=$afMode",
             "launch=${launchMode.jsonName}"
-        ).joinToString(",")
+        ) + if (!records) emptyList()
+        else listOf("record=$recordCodec@$recordSize/${recordFps}fps/${recordDurationMs}ms x$recordIterations",
+            "record_audio=${if (recordAudio == true) "on" else "off"}")).joinToString(",")
 
     private val excluded: Int get() = if (excludeFirst) 1 else 0
 
@@ -51,12 +73,22 @@ data class BenchmarkProfile(
     /** Valid shot-to-shot intervals: (captures - 1) intervals minus the warm-up interval (METRICS.md 2.5 note). */
     val expectedShotToShotSamples: Int get() = (stillCount - 1) - excluded
 
+    /**
+     * Valid recording samples for 3.1 and 3.6: cycles minus the warm-up cycle, 0 when the profile does not
+     * record. With the confirmed five cycles this is 4, which is below the ten repetitions METRICS.md 0.2 asks
+     * for; the count is reported as it is rather than padded (docs/PLAN-Recording-v0.1.md 3.2).
+     */
+    val expectedRecordSamples: Int get() = ((recordIterations ?: 0) - excluded).coerceAtLeast(0)
+
     fun toJsonMap(): Map<String, Any?> = mapOf(
         "id" to id, "engine" to engine, "preview_size" to previewSize, "yuv_size" to yuvSize,
         "still_format" to stillFormat, "still_size" to stillSize, "fps_range" to fpsRange,
         "zsl" to zsl, "trigger" to trigger, "af_mode" to afMode, "launch_mode" to launchMode.jsonName,
         "launch_iterations" to launchIterations, "warmup_ms" to warmupMs, "observe_ms" to observeMs,
-        "still_count" to stillCount, "exclude_first" to excludeFirst
+        "still_count" to stillCount, "exclude_first" to excludeFirst,
+        "record_size" to recordSize, "record_codec" to recordCodec, "record_bitrate" to recordBitrate,
+        "record_fps" to recordFps, "record_duration_ms" to recordDurationMs,
+        "record_iterations" to recordIterations, "record_audio" to recordAudio
     )
 
     companion object {
@@ -86,10 +118,32 @@ data class BenchmarkProfile(
         )
 
         /**
+         * The standard profile plus the RECORD stage (docs/PLAN-Recording-v0.1.md). Every v1 condition is kept
+         * unchanged and seven recording conditions are added, so a v2 run measures everything a v1 run measures
+         * and the 3.x metrics on top. The id is a new one rather than a changed v1 because the profile fields
+         * are the comparison contract (3.5): v1 and v2 runs are never compared, and a device that had a
+         * baseline under v1 needs a new baseline under v2.
+         *
+         * Recording is 1080p H.264 at the profile's own 30 fps with no audio track: no metric in METRICS.md
+         * chapter 3 reads the audio track, and a denied microphone permission would fail the whole run.
+         */
+        val CAMERA2_STANDARD_V2 = CAMERA2_STANDARD_V1.copy(
+            id = "camera2-standard-v2",
+            recordSize = "1920x1080",
+            recordCodec = "h264",
+            recordBitrate = 10_000_000,
+            recordFps = 30,
+            recordDurationMs = 9_000,
+            recordIterations = 5,
+            recordAudio = false
+        )
+
+        /**
          * Profiles this app defines, by id. A stored run whose profile id is a confirmed (non-draft) canonical id
          * must carry exactly this definition, otherwise the file is rejected (BenchmarkReportCodec).
          */
-        val CANONICAL: Map<String, BenchmarkProfile> = listOf(CAMERA2_STANDARD_V1).associateBy { it.id }
+        val CANONICAL: Map<String, BenchmarkProfile> =
+            listOf(CAMERA2_STANDARD_V1, CAMERA2_STANDARD_V2).associateBy { it.id }
 
         fun canonical(id: String): BenchmarkProfile? = CANONICAL[id]
 
@@ -116,6 +170,31 @@ data class BenchmarkProfile(
             observeMs = JsonMaps.reqLong(m, "observe_ms", "profile"),
             stillCount = JsonMaps.reqInt(m, "still_count", "profile"),
             excludeFirst = JsonMaps.reqBoolean(m, "exclude_first", "profile")
+        ).let { base ->
+            // The record keys are optional as a group, never one by one: a file that carries some of them has
+            // either been edited or was written by a half-finished version, and reading it as a non-recording
+            // profile would silently turn a v2 run into a v1-shaped one.
+            val present = RECORD_KEYS.filter { m[it] != null }
+            if (present.isEmpty()) base
+            else {
+                require(present.size == RECORD_KEYS.size) {
+                    "profile record conditions are incomplete: missing ${(RECORD_KEYS - present.toSet()).joinToString(", ")}"
+                }
+                base.copy(
+                    recordSize = JsonMaps.reqString(m, "record_size", "profile"),
+                    recordCodec = JsonMaps.reqString(m, "record_codec", "profile"),
+                    recordBitrate = JsonMaps.reqInt(m, "record_bitrate", "profile"),
+                    recordFps = JsonMaps.reqInt(m, "record_fps", "profile"),
+                    recordDurationMs = JsonMaps.reqLong(m, "record_duration_ms", "profile"),
+                    recordIterations = JsonMaps.reqInt(m, "record_iterations", "profile"),
+                    recordAudio = JsonMaps.reqBoolean(m, "record_audio", "profile")
+                )
+            }
+        }
+
+        private val RECORD_KEYS = listOf(
+            "record_size", "record_codec", "record_bitrate", "record_fps",
+            "record_duration_ms", "record_iterations", "record_audio"
         )
     }
 }

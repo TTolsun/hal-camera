@@ -27,13 +27,17 @@ data class RegressionRule(
  * [VERSION] (7.2). The detector that applies these rules arrives in M4; M1 only fixes the table.
  */
 object RegressionRules {
-    const val VERSION = "regression-rule-v1"
+    const val VERSION = "regression-rule-v2"
 
     private fun latency(id: String, pct: Double, floorMs: Double) =
         RegressionRule(id, RuleKind.LATENCY, Direction.LOWER_IS_BETTER, pct, floorMs)
 
     private fun count(id: String, floor: Int) =
         RegressionRule(id, RuleKind.COUNT, Direction.LOWER_IS_BETTER, null, floor.toDouble())
+
+    /** A rate: the only shape in the table where the larger value is the better one. [floor] is in fps. */
+    private fun rate(id: String, pct: Double, floor: Double) =
+        RegressionRule(id, RuleKind.LATENCY, Direction.HIGHER_IS_BETTER, pct, floor)
 
     val rules: Map<String, RegressionRule> = listOf(
         latency("1.1", 15.0, 10.0),
@@ -55,7 +59,14 @@ object RegressionRules {
         latency("H.8", 30.0, 200.0),
         count("H.5", 2),
         count("2.7", 2),
-        count("H.9", 1)
+        count("H.9", 1),
+        // The RECORD stage. 3.6 gets the widest floor of the table because MediaRecorder.stop() finalizes the
+        // file and takes hundreds of milliseconds even when nothing is wrong.
+        latency("3.1", 15.0, 10.0),
+        latency("3.6", 15.0, 20.0),
+        latency("3.7", 20.0, 1.0),
+        rate("3.4", 5.0, 1.0),
+        count("3.2", 2)
     ).associateBy { it.metricId }
 
     fun rule(metricId: String): RegressionRule? = rules[metricId]

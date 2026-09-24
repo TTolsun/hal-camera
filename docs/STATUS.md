@@ -1,5 +1,24 @@
 # 작업 상태
 
+2026-09-24에 녹화(3.x) 지표를 구현했습니다([이슈 #122](https://github.com/TTolsun/hal-camera/issues/122)). 벤치마크 시퀀스의 사진 촬영 뒤에 RECORD 단계가 붙어, 9초짜리 녹화를 다섯 번 반복하고 3.1·3.2·3.4·3.6·3.7 다섯 지표를 계산합니다. 3.3은 `MediaRecorder`로 인코더 쪽 프레임 수를 얻을 수 없으므로 `not_measurable`을 유지하고, 3.5는 별도 시나리오로 남겼습니다. 설계와 결정 근거는 [PLAN-Recording-v0.1.md](PLAN-Recording-v0.1.md)에 있습니다.
+
+이 변경으로 profile이 `camera2-standard-v2`가 되었습니다. v1으로 저장된 실행 파일은 계속 읽히고 v1끼리도 계속 비교되지만, v2와는 비교되지 않으므로 기기마다 baseline과 calibration을 다시 만들어야 합니다. run JSON은 schema 5이고 validity flag 표는 `validity-v3`, 회귀 규칙은 `regression-rule-v2`입니다. 점수 체계는 건드리지 않았습니다. RECORD 카테고리의 가중치를 0으로 두었으므로 계산과 `score-v1-draft`라는 이름이 그대로입니다. 녹화 지표를 점수에 넣는 일은 [이슈 #123](https://github.com/TTolsun/hal-camera/issues/123)의 민감도 검증 뒤로 미뤘습니다.
+
+실기기 확인(2026-09-24, Galaxy S25+ `SM-S936N` · Android 16 · `BP4A.251205.006.S936NKSSCCZH2` · versionCode 140 로컬 release 빌드): 카메라 4대에 run을 한 번씩 돌려 RECORD 단계가 끝까지 도는 것을 확인했습니다. 시작 카드는 약 95초를 안내하고 `녹화 9초 5회`를 적으며, 진행 화면은 `6 / 7 Recording`을 표시합니다.
+
+| 카메라 | 3.1 record start | 3.4 steady fps | 3.6 record stop | 3.7 jitter | 3.2 anomalies |
+|---|---:|---:|---:|---:|---:|
+| 0 (Wide · Rear) | 186 ms | 30.0 fps | 122 ms | 0.0 ms | 0 |
+| 1 (Front) | 179 ms | 30.0 fps | 120 ms | 0.0 ms | 0 |
+| 3 (Front) | 209 ms | 30.0 fps | 128 ms | 0.0 ms | 0 |
+| 2 (UWide · Rear) | 190 ms | 30.0 fps | 124 ms | 0.0 ms | 0 |
+
+3.4는 네 대 모두 정확히 30.0 fps였고 3.2는 0이므로, 고정 cadence 구간 판정이 의도대로 동작합니다. 3.1은 179–209 ms, 3.6은 120–128 ms 범위입니다. 3.7은 0.0 ms로 표시되는데, 센서 timestamp의 간격이 그만큼 규칙적이라는 뜻입니다. 소수점 아래 자릿수는 화면에서 확인할 수 없으므로 원시값은 run JSON의 `raw.record[].jitter_stddev_ms`를 봐야 합니다. 카메라 2는 고정 초점이라 3A에 AF가 없는데, 이는 profile이 허용한 예외입니다.
+
+이번 확인에서 결함을 하나 찾아 고쳤습니다. 결과 화면의 막대는 `ResultPresenter.format`이 아니라 `keyMetric`이라는 별도 경로로 숫자를 만들고 있었고, 그쪽에는 소수점 규칙이 없어서 `Record jitter`가 `0 ms`로 찍혔습니다. 두 경로를 `formatValue` 하나로 합쳤습니다. 단위 테스트는 `format`만 검사하고 있었기 때문에 통과한 상태였습니다.
+
+이 확인은 USB로 연결한 채 수행했으므로 네 run 모두 `CHARGING` flag가 붙어 점수 산정에서는 제외됩니다. 기능 확인이 목적이었고 점수용 자료 수집은 아닙니다.
+
 0.13.0은 벤치마크 기능을 줄였습니다. 반복 측정 비교 화면을 제거했고(다기기 분포 수집을 하지 않기로 결정하면서 여러 실행을 묶어 순열검정을 수행하는 화면과 외부 JSON 가져오기의 용도가 사라졌습니다), 시작 카드의 `Details` 접힘과 Build·Commit·메모 입력 세 칸, 결과·비교 화면의 복사 버튼, Results의 Profile 필터를 함께 없앴습니다. 조작점은 58개에서 35개로 줄었고 벤치마크 비교는 baseline과 이번 실행, 두 개 사이에서만 이루어집니다.
 
 결과 화면은 모든 측정 항목을 카테고리별 막대로 그립니다. 숫자 표를 담고 있던 `All metrics` 접힘을 없앴고, 막대 옆 숫자는 표본의 중앙값입니다. 실행 정보 접힘은 서로 반복되던 문장 일곱 개 대신 라벨·값 아홉 줄이며 validity flag를 코드가 아니라 뜻으로 적습니다. Results 목록의 각 행은 monospace 여섯 줄에서 시각·뱃지·수치 두 줄로 바뀌었고, `Data limit`은 등간격 슬라이더로 고릅니다.
@@ -113,7 +132,8 @@ Live는 측정한 것을 모두 유지하고 판정한 것을 모두 버렸습�
 ## 아직 하지 않은 것
 
 - 점수(M5)의 민감도 검증과 공개 기준 확정. 내부 초안은 구현했으며 위 검증 결과와 남은 작업을 참고하십시오.
-- 녹화(3.x) 지표 전체.
+- 녹화(3.x) 지표의 비충전 상태 측정. 기능 확인은 끝났으나 네 run 모두 `CHARGING`이라 점수용 자료가 아닙니다.
+- 3.3 encoder drop(`MediaCodec` 전환이 필요함)과 3.5 장시간 drift(10분 녹화 별도 시나리오).
 - 여러 제조사 기기에서의 분포 수집.
 
 ## 알려진 제약

@@ -69,7 +69,7 @@ class BenchmarkReportCodecTest {
         assertEquals(null, back.app.debuggable)
     }
 
-    @Test fun topLevelKeysFollowSchema4() {
+    @Test fun topLevelKeysFollowTheSchema() {
         val r = run()
         val m = BenchmarkReportCodec.toJsonMap(r)
         val required = listOf(
@@ -79,10 +79,10 @@ class BenchmarkReportCodecTest {
             "metrics", "summary", "raw", "events"
         )
         for (k in required) assertTrue(k, m.containsKey(k))
-        assertEquals(4, m["schema_version"])
+        assertEquals(5, m["schema_version"])
         assertEquals("benchmark", m["kind"])
         assertEquals("camera2-standard-v1|metrics-0.3|nearest_rank|elapsedRealtimeNanos", m["comparison_contract_id"])
-        assertEquals("regression-rule-v1", m["regression_rule_version"])
+        assertEquals(RegressionRules.VERSION, m["regression_rule_version"])
         @Suppress("UNCHECKED_CAST") val summary = m["summary"] as Map<String, Any?>
         assertEquals(r.metrics.size, summary["unknown"])
         assertEquals(null, summary["endpoint_score"])

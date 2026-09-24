@@ -31,7 +31,18 @@ object BenchmarkMetricCatalog {
         MetricInfo("2.7", Category.STABILITY, "Capture stalls", "count"),
         MetricInfo("H.6", Category.THREE_A, "AE", "ms"),
         MetricInfo("H.7", Category.THREE_A, "AF", "ms"),
-        MetricInfo("H.8", Category.THREE_A, "AWB", "ms")
+        MetricInfo("H.8", Category.THREE_A, "AWB", "ms"),
+        // The RECORD stage (METRICS.md 3). Every name carries the prefix so the rows pair with the preview rows
+        // that measure the same thing on the other stream: Stalls and Record stalls are both intervals past 1.5
+        // times the reference, Jitter and Record jitter are both the deviation of those intervals. Record fps is
+        // the one metric in the whole table whose larger value is the better one, and the only one whose unit is
+        // neither milliseconds nor a count; the three-second skip behind it is explained in the guide, not in
+        // a label that has room for two words.
+        MetricInfo("3.1", Category.RECORD, "Record start", "ms"),
+        MetricInfo("3.4", Category.RECORD, "Record fps", "fps"),
+        MetricInfo("3.6", Category.RECORD, "Record stop", "ms"),
+        MetricInfo("3.7", Category.RECORD, "Record jitter", "ms"),
+        MetricInfo("3.2", Category.RECORD, "Record stalls", "count")
     ).associateBy { it.id }
 
     fun info(id: String): MetricInfo? = infos[id]

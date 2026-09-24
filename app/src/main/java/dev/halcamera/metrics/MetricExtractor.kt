@@ -161,10 +161,7 @@ class MetricExtractor(private val minSamples: Int = 15) {
             convergence("H.8", frames, insufficient) { it.awb == 2 || it.awb == 3 }
         )
         // H.10: population standard deviation (ddof = 0) of the steady intervals, the METRICS.md 3.7 definition applied to preview.
-        val jitter = if (intervals.isEmpty()) null else {
-            val mean = intervals.average()
-            kotlin.math.sqrt(intervals.sumOf { (it - mean) * (it - mean) } / intervals.size)
-        }
+        val jitter = stdDev(intervals)
         return Observation(frames, samples, intervalP50, durationP50, partialP50, percentile(loads, 0.5),
             stalledFrames.size, worstStall, worstPartial, aeStable && afStable && awbStable, afSupported, last,
             steadyFrames = steady, intervalJitterMs = jitter)
@@ -185,6 +182,17 @@ class MetricExtractor(private val minSamples: Int = 15) {
     }
 
     companion object {
+        /**
+         * Population standard deviation (ddof = 0), the definition METRICS.md 3.7 uses for jitter. Lives here
+         * because preview jitter (H.10) and recording jitter (3.7) are the same statistic over different
+         * frames, and two spellings of it would eventually drift apart.
+         */
+        fun stdDev(xs: List<Double>): Double? {
+            if (xs.isEmpty()) return null
+            val mean = xs.average()
+            return kotlin.math.sqrt(xs.sumOf { (it - mean) * (it - mean) } / xs.size)
+        }
+
         /** Nearest-rank percentile as defined in METRICS.md 0.2: ceil(p × n)-th of the sorted values. */
         fun percentile(xs: List<Double>, p: Double): Double? {
             if (xs.isEmpty()) return null

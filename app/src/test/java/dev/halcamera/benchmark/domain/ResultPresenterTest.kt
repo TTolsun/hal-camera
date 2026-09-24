@@ -415,6 +415,70 @@ class ResultPresenterTest {
         assertEquals(1, sections.first { it.title == "Launch" }.bars.size)
     }
 
+    @Test fun theRecordingMetricsGetTheirOwnSectionAfterStability() {
+        val current = run(metrics = listOf(
+            launchMetric("1.1", 142.0, 161.0),
+            countMetric("H.5", 0),
+            launchMetric("3.1", 55.0, 61.0),
+            windowMetric("3.4", 30.0),
+            launchMetric("3.6", 302.0, 340.0),
+            windowMetric("3.7", 0.42),
+            countMetric("3.2", 1)
+        ))
+        val sections = ResultPresenter.metricBars(current, null, ComparedTo.NONE)
+        assertEquals(listOf("Launch", "Stability", "Record"), sections.map { it.title })
+        assertEquals(
+            listOf("Record start", "Record fps", "Record stop", "Record jitter", "Record stalls"),
+            sections.first { it.title == "Record" }.bars.map { it.label }
+        )
+    }
+
+    @Test fun theRecordingNumbersKeepTheDigitsThatDistinguishThem() {
+        // A frame rate needs the tenth that separates a steady window from one that lost a frame.
+        assertEquals("30.0 fps", ResultPresenter.format(windowMetric("3.4", 30.0), 30.0))
+        assertEquals("29.0 fps", ResultPresenter.format(windowMetric("3.4", 29.0), 29.0))
+        // Jitter is a fraction of a millisecond, so whole milliseconds would print every value as 0.
+        assertEquals("0.4 ms", ResultPresenter.format(windowMetric("3.7", 0.42), 0.42))
+        // The two latencies are hundreds of milliseconds, where a decimal is noise.
+        assertEquals("55 ms", ResultPresenter.format(launchMetric("3.1", 55.0, 61.0), 55.0))
+        assertEquals("302 ms", ResultPresenter.format(launchMetric("3.6", 302.0, 340.0), 302.0))
+        assertEquals("1", ResultPresenter.format(countMetric("3.2", 1), 1.0))
+    }
+
+    @Test fun theBarsPrintTheSameDigitsAsTheRows() {
+        // The bars had their own copy of the formatter, so the decimal rule reached only the rows and recording
+        // jitter printed as "0 ms" on the device while this file's format() test was green (2026-09-24).
+        val run = run(metrics = listOf(
+            windowMetric("3.7", 0.42),
+            windowMetric("H.1", 33.3),
+            windowMetric("3.4", 30.0),
+            launchMetric("3.1", 186.0, 201.0),
+            countMetric("3.2", 0)
+        ))
+        val bars = ResultPresenter.metricBars(run, null, ComparedTo.NONE).flatMap { it.bars }.associateBy { it.label }
+        assertEquals("0.4 ms", bars.getValue("Record jitter").valueText)
+        assertEquals("33.3 ms", bars.getValue("Interval p50").valueText)
+        assertEquals("30.0 fps", bars.getValue("Record fps").valueText)
+        assertEquals("186 ms", bars.getValue("Record start").valueText)
+        assertEquals("0", bars.getValue("Record stalls").valueText)
+        // Every bar agrees with the row for the same metric.
+        for (metric in run.metrics) {
+            val label = BenchmarkMetricCatalog.info(metric.id)!!.short
+            assertEquals(label, ResultPresenter.format(metric, metric.value), bars.getValue(label).valueText)
+        }
+    }
+
+    @Test fun aJitterDeltaKeepsTheFractionThatIsTheWholePoint() {
+        val base = run(metrics = listOf(windowMetric("3.7", 0.40)), runId = "20260924-000000-000")
+        val current = run(metrics = listOf(windowMetric("3.7", 0.75)))
+        val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+        assertEquals("+0.4 ms", bars.flatMap { it.bars }.single().deltaText)
+    }
+
+    @Test fun aRunThatRecordedNothingSaysSoInWords() {
+        assertEquals("녹화 측정이 부족함", ResultPresenter.flagText("RECORD_NOT_MEASURED"))
+    }
+
     @Test fun aTimedOutThreeAMetricGetsNoBar() {
         val timedOut = metric("H.7", 1500.0).copy(timeout = true)
         val bars = ResultPresenter.metricBars(run(metrics = listOf(timedOut)), null, ComparedTo.NONE).flatMap { it.bars }

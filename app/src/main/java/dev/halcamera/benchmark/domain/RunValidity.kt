@@ -14,7 +14,7 @@ data class ValidityFlag(
 
 object ValidityFlags {
     /** Bumped whenever a flag is added or a column of the table changes. Stored in every run's validity block. */
-    const val VERSION = "validity-v2"
+    const val VERSION = "validity-v3"
 
     // Measurement invalid: the run does not contain what the profile promised.
     val ABORTED = ValidityFlag("ABORTED", true, true, true)
@@ -31,6 +31,13 @@ object ValidityFlags {
     val PROFILE_DRAFT = ValidityFlag("PROFILE_DRAFT", false, false, true)
     /** A debuggable build measures its own overhead as well, so its numbers never leave this device. */
     val DEBUGGABLE_BUILD = ValidityFlag("DEBUGGABLE_BUILD", false, false, true)
+    /**
+     * The profile has a RECORD stage but it did not deliver what the profile promised, so the 3.x metrics are
+     * missing or short. Everything measured before the stage is intact and still comparable in house, which is
+     * why this does not invalidate the measurement; a cross-device score covering fewer metrics than another
+     * device's would not be the same number, so scoring is blocked (docs/PLAN-Recording-v0.1.md 9).
+     */
+    val RECORD_NOT_MEASURED = ValidityFlag("RECORD_NOT_MEASURED", false, false, true)
     // Informational only.
     val PREFLIGHT_MISMATCH = ValidityFlag("PREFLIGHT_MISMATCH", false, false, false)
     val THERMAL_CHANGED = ValidityFlag("THERMAL_CHANGED", false, false, false)
@@ -39,7 +46,7 @@ object ValidityFlags {
     val all: List<ValidityFlag> = listOf(
         ABORTED, HARD_FAILURE, PROFILE_UNSUPPORTED, INSUFFICIENT_SAMPLES,
         CADENCE_NOT_FIXED, THERMAL_HIGH, POWER_SAVE_MODE,
-        CHARGING, BATTERY_LOW, PROFILE_DRAFT, DEBUGGABLE_BUILD,
+        CHARGING, BATTERY_LOW, PROFILE_DRAFT, DEBUGGABLE_BUILD, RECORD_NOT_MEASURED,
         PREFLIGHT_MISMATCH, THERMAL_CHANGED, LABEL_MISSING
     )
 
@@ -50,6 +57,12 @@ object ValidityFlags {
     const val BATTERY_LOW_PCT = 20
     /** MetricExtractor's minimum observation sample count. */
     const val MIN_OBSERVED_FRAMES = 15
+
+    /**
+     * Fewest usable recording cycles for a 3.x value. With the profile's five cycles minus the warm-up one the
+     * stage promises four, so three still gives a median worth reading while two would be a midpoint of a pair.
+     */
+    const val MIN_RECORD_CYCLES = 3
 }
 
 /**
@@ -106,6 +119,9 @@ data class ValidityInputs(
     val observedFrames: Int,
     val expectedLaunchSamples: Int,
     val expectedStillSamples: Int,
+    /** Usable recording cycles and what the profile promised; both 0 for a profile without a RECORD stage. */
+    val recordSamples: Int = 0,
+    val expectedRecordSamples: Int = 0,
     val cadenceFixed: Boolean?,
     val thermalStart: Int?,
     val thermalMax: Int?,
@@ -136,6 +152,10 @@ object RunValidityEvaluator {
         if (x.charging == true) out += ValidityFlags.CHARGING
         if (x.batteryStart != null && x.batteryStart < ValidityFlags.BATTERY_LOW_PCT) out += ValidityFlags.BATTERY_LOW
         if (x.profileDraft) out += ValidityFlags.PROFILE_DRAFT
+        // Only a profile that promised recordings can miss them. INSUFFICIENT_SAMPLES is not used here on
+        // purpose: that flag invalidates the measurement, and everything measured before the RECORD stage is
+        // intact even when no cycle succeeded.
+        if (x.expectedRecordSamples > 0 && x.recordSamples < x.expectedRecordSamples) out += ValidityFlags.RECORD_NOT_MEASURED
         if (x.debuggableBuild == true) out += ValidityFlags.DEBUGGABLE_BUILD
         if (x.thermalStart != null && x.thermalEnd != null && x.thermalStart != x.thermalEnd) out += ValidityFlags.THERMAL_CHANGED
         if (!x.subjectLabeled) out += ValidityFlags.LABEL_MISSING

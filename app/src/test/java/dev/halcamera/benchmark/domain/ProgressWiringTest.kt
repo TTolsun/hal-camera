@@ -120,6 +120,12 @@ class ProgressWiringTest {
 
     @Test fun allSixPhasesReachTheScreen() {
         runToEnd()
-        assertEquals(BenchmarkRunner.Phase.values().toSet(), phaseOf.keys)
+        // RECORDING belongs to a profile with a RECORD stage; camera2-standard-v1 has none, so a run of it
+        // reaches the other six and the headline counts to six (BenchmarkRunnerRecordTest covers the seventh).
+        assertEquals(
+            BenchmarkRunner.Phase.values().toSet() - BenchmarkRunner.Phase.RECORDING,
+            phaseOf.keys
+        )
+        assertTrue(shown.all { it.headline.contains(" / 6  ") })
     }
 }

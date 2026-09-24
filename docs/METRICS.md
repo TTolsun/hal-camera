@@ -121,6 +121,8 @@ run 하나당 JSON 파일 하나. 그래프와 비교는 PC에서 한다. 각 �
 
 ## 3. Recording performance
 
+구현 상태 (2026-09-24): 3.1·3.2·3.4·3.6·3.7을 `camera2-standard-v2` profile의 RECORD 단계로 구현했다. 3.3은 `not_measurable`을 유지하고 3.5는 별도 시나리오로 남겨 두었다. 설계와 결정 근거는 [PLAN-Recording-v0.1.md](PLAN-Recording-v0.1.md)에 있고, 계산은 `app/src/main/java/dev/halcamera/metrics/RecordMetrics.kt`, 실행 순서는 `benchmark/domain/BenchmarkRunner.kt`의 RECORD 단계와 `camera/Camera2Engine.kt`의 벤치마크 녹화 경로에 있다. 아래 표의 정의는 구현과 대조했으며 바뀐 곳이 없다. 실기기 확인은 아직 하지 않았다.
+
 `MediaRecorder` 사용을 기본으로 한다. 인코더 쪽 프레임 수는 `MediaRecorder`로는 얻을 수 없으므로, 3.3의 인코더 쪽 drop은 `MediaCodec` 직접 사용 시에만 측정한다. MVP에서는 **카메라 센서 간격 이상**만 집계하고 실제 camera/encoder drop 개수는 `not_measurable`로 둔다. 간격으로 추정한 값은 실제 손실 개수와 다르므로 기본 JSON에 drop 확정값으로 내보내지 않는다.
 
 | id | 지표 | 시작점 | 끝점 | 조건 |
@@ -209,7 +211,7 @@ run 하나당 JSON 파일 하나. 그래프와 비교는 PC에서 한다. 각 �
 - [ ] `res`: `가로x세로` 통일 제안. MP 표기는 화면 보조값만
 - [ ] 2.5: 10장/8개 유효 간격 유지 또는 11장/9개 유효 간격 선택
 - [ ] 1.4: 실제 SurfaceTexture listener 소유 구조 적용. 현재 TextureView 프리뷰를 해당 계측으로 오인하지 않음
-- [ ] 3.1: recorder start→새 녹화 repeating 제출 순서의 장치 호환성과 측정 이름 확정
+- [x] 3.1: recorder start→새 녹화 repeating 제출 순서를 측정 조건으로 고정했다(2026-09-24). `MediaRecorder.start()`가 정상 반환한 뒤에 녹화 대상 repeating request를 제출하고, 그 request의 첫 `onCaptureStarted`를 끝점으로 삼는다. 장치 호환성은 실기기 확인에서 판단한다
 
 
 ## 출처와 해석

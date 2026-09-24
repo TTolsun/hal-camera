@@ -50,7 +50,7 @@ class Camera2Engine(
     private var finished = false
     private var closeDone: (() -> Unit)? = null
     @Volatile private var photoInFlight = false
-    val mediaBusy: Boolean get() = photoInFlight || videoBusy
+    val mediaBusy: Boolean get() = photoInFlight || videoBusy || benchRecording
     private var previewSeen = false
     private val mediaIo = Executors.newSingleThreadExecutor()
     private val library = MediaLibrary(context)
@@ -67,6 +67,13 @@ class Camera2Engine(
     private var videoDone: ((Result<android.net.Uri>) -> Unit)? = null
     private var videoStopRequested = false
     private var videoFailure: Exception? = null
+    // The benchmark RECORD stage keeps its own recorder: the LIVE one picks its own size, records audio and
+    // saves to the gallery, none of which a measurement may do (docs/PLAN-Recording-v0.1.md 4 and 6).
+    private var benchRecorder: MediaRecorder? = null
+    private var benchFile: File? = null
+    private var benchIteration = -1
+    private var benchStarted = false
+    @Volatile private var benchRecording = false
     @Volatile private var zoomRatio = 1f
     private var chars: CameraCharacteristics? = null
     private val callback = telemetry.callback(sessionId) { active }
@@ -428,6 +435,176 @@ class Camera2Engine(
         }
     }
 
+    // ---- Benchmark RECORD stage (docs/PLAN-Recording-v0.1.md 6) ----
+    //
+    // The four calls below are what BenchmarkRunner.Driver needs, and they report nothing directly: every step
+    // becomes a telemetry event, and BenchmarkActivity turns those events into runner signals, exactly as the
+    // open, configure and capture steps already do. That keeps the measured moments on the engine's own thread,
+    // right beside the call they time.
+
+    /**
+     * Reconfigure the session with the recorder stream and prepare the recorder, without starting it. Emits
+     * `record_configured` when the session is ready, `record_configure_failed` when the camera refuses the
+     * combination (which ends the whole stage), or `record_failed` for anything else.
+     */
+    @Suppress("DEPRECATION")
+    fun prepareBenchmarkRecording(iteration: Int) {
+        handler.post {
+            val values = mapOf("iteration" to iteration)
+            telemetry.event(sessionId, "record_prepare_call", values)
+            val camera = device
+            val recordSpec = spec?.record
+            if (camera == null || !active || recordSpec == null) {
+                telemetry.event(sessionId, "record_configure_failed",
+                    values + mapOf("reason" to if (recordSpec == null) "no_record_spec" else "camera_not_ready"))
+                return@post
+            }
+            releaseBenchRecorder()
+            benchIteration = iteration
+            try {
+                val c = chars ?: error("Camera characteristics unavailable")
+                val encoder = videoEncoder(recordSpec.codec) ?: error("unsupported codec ${recordSpec.codec}")
+                val file = File.createTempFile("hal_bench_", ".mp4", context.cacheDir).also { benchFile = it }
+                val recorder = (if (android.os.Build.VERSION.SDK_INT >= 31) MediaRecorder(context) else MediaRecorder())
+                    .also { benchRecorder = it }
+                recorder.apply {
+                    // No audio track: no metric in METRICS.md chapter 3 reads it, and a denied microphone
+                    // permission would fail a run that has nothing to do with audio.
+                    setVideoSource(MediaRecorder.VideoSource.SURFACE)
+                    setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                    setOutputFile(file.absolutePath)
+                    setVideoEncoder(encoder)
+                    setVideoSize(recordSpec.size.width, recordSpec.size.height)
+                    setVideoFrameRate(recordSpec.fps)
+                    setVideoEncodingBitRate(recordSpec.bitrate)
+                    setOrientationHint(outputRotation(c))
+                    setOnErrorListener { _, what, extra ->
+                        handler.post {
+                            telemetry.event(sessionId, "record_failed",
+                                values + mapOf("reason" to "recorder_error", "what" to what, "extra" to extra))
+                        }
+                    }
+                    prepare()
+                }
+                benchRecording = true
+                val streams = mapOf("record" to recordSpec.size.toString(), "codec" to recordSpec.codec,
+                    "bitrate" to recordSpec.bitrate, "fps" to recordSpec.fps)
+                camera.createCaptureSession(listOf(previewSurface!!, recorder.surface), object : CameraCaptureSession.StateCallback() {
+                    override fun onConfigured(session: CameraCaptureSession) {
+                        if (!active) { session.close(); return }
+                        captureSession = session
+                        try {
+                            // Preview only until MediaRecorder.start() has returned: 3.1 measures from that call
+                            // to the first capture of a recording request, so no recording request may exist yet.
+                            session.setRepeatingRequest(recordRequest(camera, c, recorder.surface, false), callback, handler)
+                            telemetry.event(sessionId, "record_configured", values + streams)
+                        } catch (e: Exception) {
+                            telemetry.event(sessionId, "record_failed", values + mapOf("reason" to e.toString()))
+                        }
+                    }
+                    override fun onConfigureFailed(session: CameraCaptureSession) {
+                        session.close()
+                        telemetry.event(sessionId, "record_configure_failed", values + streams + mapOf("reason" to "rejected"))
+                    }
+                }, handler)
+            } catch (e: Exception) {
+                releaseBenchRecorder()
+                telemetry.event(sessionId, "record_failed", values + mapOf("reason" to e.toString()))
+            }
+        }
+    }
+
+    /**
+     * Start the recorder and only then submit the recording requests. `record_start_call` is recorded in the
+     * instruction before MediaRecorder.start(), which is the start point METRICS.md 3.1 asks for; the end point
+     * is the first `capture_started` carrying this cycle's tag.
+     */
+    fun startBenchmarkRecording() {
+        handler.post {
+            val camera = device
+            val session = captureSession
+            val recorder = benchRecorder
+            val values = mapOf("iteration" to benchIteration)
+            if (camera == null || session == null || recorder == null || !active) {
+                telemetry.event(sessionId, "record_failed", values + mapOf("reason" to "not_prepared"))
+                return@post
+            }
+            try {
+                val c = chars ?: error("Camera characteristics unavailable")
+                telemetry.event(sessionId, "record_start_call", values)
+                recorder.start()
+                benchStarted = true
+                telemetry.event(sessionId, "record_started", values)
+                session.setRepeatingRequest(recordRequest(camera, c, recorder.surface, true), callback, handler)
+            } catch (e: Exception) {
+                telemetry.event(sessionId, "record_failed", values + mapOf("reason" to e.toString()))
+            }
+        }
+    }
+
+    /**
+     * Stop the recording requests, then the recorder. The order is the one AOSP `RecordingTest.stopRecording`
+     * uses and it is part of the measured condition: `record_stop_call` to `record_stopped` is 3.6, and nothing
+     * but MediaRecorder.stop() happens in between.
+     */
+    fun stopBenchmarkRecording() {
+        handler.post {
+            val recorder = benchRecorder
+            val values = mapOf("iteration" to benchIteration)
+            if (recorder == null || !benchStarted) {
+                telemetry.event(sessionId, "record_failed", values + mapOf("reason" to "not_started"))
+                releaseBenchRecorder()
+                return@post
+            }
+            runCatching { captureSession?.stopRepeating() }
+            telemetry.event(sessionId, "record_stop_call", values)
+            val stopped = runCatching { recorder.stop() }
+            if (stopped.isSuccess) telemetry.event(sessionId, "record_stopped", values)
+            else telemetry.event(sessionId, "record_failed",
+                values + mapOf("reason" to "stop_failed", "message" to stopped.exceptionOrNull().toString()))
+            releaseBenchRecorder()
+        }
+    }
+
+    /** Release whatever a failed cycle still holds. Reports nothing: the runner already knows why it failed. */
+    fun abortBenchmarkRecording() {
+        handler.post { runCatching { captureSession?.stopRepeating() }; releaseBenchRecorder() }
+    }
+
+    /**
+     * The recording request. [recording] decides the targets: before the recorder has started only the preview
+     * is fed, afterwards the recorder surface joins and the request carries the cycle's tag so the extractor can
+     * tell recording frames from the preview frames that came before them.
+     */
+    private fun recordRequest(camera: CameraDevice, c: CameraCharacteristics, recorderSurface: Surface, recording: Boolean): CaptureRequest =
+        camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+            addTarget(previewSurface!!)
+            if (recording) addTarget(recorderSurface)
+            set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
+            set(CaptureRequest.CONTROL_AF_MODE, afMode(c))
+            spec?.fpsRange?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, it) }
+            applyZoom(this, c)
+            setTag(if (recording) RecordSpec.tag(benchIteration) else RecordSpec.prepareTag(benchIteration))
+        }.build()
+
+    private fun videoEncoder(codec: String): Int? = when (codec.lowercase(java.util.Locale.US)) {
+        "h264" -> MediaRecorder.VideoEncoder.H264
+        "h265", "hevc" -> MediaRecorder.VideoEncoder.HEVC
+        else -> null
+    }
+
+    /** Idempotent: every failure path and the camera close call it, and the measurement keeps no video file. */
+    private fun releaseBenchRecorder() {
+        val recorder = benchRecorder
+        benchRecorder = null
+        benchStarted = false
+        benchRecording = false
+        runCatching { recorder?.reset() }
+        runCatching { recorder?.release() }
+        benchFile?.delete()
+        benchFile = null
+    }
+
     fun stopRecording() {
         handler.post {
             if (!videoBusy) return@post
@@ -489,6 +666,7 @@ class Camera2Engine(
         photo?.let { deliverPhoto(it, Result.failure(IllegalStateException("Camera closed before capture completed"))) }
         photo = null
         finishVideo()
+        releaseBenchRecorder()
         captureSession?.close(); captureSession = null
         yuv?.close(); yuv = null
         jpeg?.close(); jpeg = null

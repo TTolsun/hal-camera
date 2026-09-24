@@ -18,8 +18,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.text.InputType
-import android.util.Range
-import android.util.Size
 import android.view.Gravity
 import android.view.TextureView
 import android.view.View
@@ -38,7 +36,6 @@ import dev.halcamera.R
 import dev.halcamera.benchmark.domain.*
 import dev.halcamera.benchmark.platform.*
 import dev.halcamera.camera.Camera2Engine
-import dev.halcamera.camera.StreamSpec
 import dev.halcamera.camera.CameraEndpoint
 import dev.halcamera.camera.CameraLabel
 import dev.halcamera.camera.CameraEndpointResolver
@@ -82,7 +79,10 @@ class BenchmarkActivity : ComponentActivity() {
     private val main = Handler(Looper.getMainLooper())
     private val recorder = FlightRecorder(::nowNs, retentionNs = 180_000_000_000L, maxEvents = 60_000, preNs = 0, postNs = 0)
     private val telemetry = Telemetry(recorder)
-    private val profile = BenchmarkProfile.CAMERA2_STANDARD_V1
+    // v2 measures everything v1 measured and the RECORD stage on top. Runs stored under v1 stay readable and
+    // keep comparing with each other, but a device needs a new baseline and a new calibration under v2, because
+    // the profile id is part of the comparison contract (docs/PLAN-Recording-v0.1.md 3.1).
+    private val profile = BenchmarkProfile.CAMERA2_STANDARD_V2
 
     // Writing a run file and reading the baseline and reference runs back are hundreds of kilobytes of JSON each;
     // doing that on the main thread would freeze the screen exactly when the result is supposed to appear.
@@ -527,7 +527,7 @@ class BenchmarkActivity : ComponentActivity() {
         val card = Look.card(this, dark = true)
         card.addView(Look.text(this, "Benchmarking", 19, Look.onDark, bold = true))
         // The first phase is shown before the runner starts, so the card never appears blank for a frame.
-        val first = ProgressPresenter.headline(BenchmarkRunner.Phase.CAMERA_OPEN, 0, profile.launchIterations)
+        val first = ProgressPresenter.headline(BenchmarkRunner.Phase.CAMERA_OPEN, 0, profile.launchIterations, profile.records)
         progressHeadline = Look.text(this, first, 14, Look.onDark, mono = true).also { card.addView(it, lp(top = 10)) }
         progressBar = Look.text(this, ProgressPresenter.barLine(0), 13, Look.primaryOnDark, mono = true)
             .also { it.maxLines = 1; card.addView(it, lp(top = 4)) }
@@ -720,12 +720,7 @@ class BenchmarkActivity : ComponentActivity() {
         }.also { it.start() }
 
         val runId = BenchmarkReport.newRunId()
-        val spec = StreamSpec(
-            preview = ProfileCompatibilityChecker.size(profile.previewSize) ?: Size(1920, 1080),
-            yuv = ProfileCompatibilityChecker.size(profile.yuvSize) ?: Size(1920, 1080),
-            jpeg = ProfileCompatibilityChecker.size(profile.stillSize) ?: Size(1920, 1080),
-            fpsRange = ProfileCompatibilityChecker.fpsRange(profile.fpsRange) ?: Range(30, 30)
-        )
+        val spec = StreamSpecs.of(profile)
         val scheduler = object : BenchmarkRunner.Scheduler {
             override fun after(delayMs: Long, action: () -> Unit): Any {
                 val r = Runnable { action() }; main.postDelayed(r, delayMs); return r
@@ -746,6 +741,16 @@ class BenchmarkActivity : ComponentActivity() {
                 }
             }
             override fun still(session: String) { engine?.capture() }
+            // The engine answers through telemetry events, which onEvent turns into runner signals, exactly as
+            // it does for open, configure and capture.
+            override fun prepareRecord(session: String, iteration: Int) {
+                val e = engine
+                if (e == null) recorder.record(session, "record_configure_failed", values = mapOf("reason" to "engine_gone"))
+                else e.prepareBenchmarkRecording(iteration)
+            }
+            override fun startRecord(session: String) { engine?.startBenchmarkRecording() }
+            override fun stopRecord(session: String) { engine?.stopBenchmarkRecording() }
+            override fun abortRecord(session: String) { engine?.abortBenchmarkRecording() }
             override fun close(session: String) {
                 val e = engine; engine = null
                 // Camera2Engine records "closed" too; a second CLOSED signal for the same session is ignored.
@@ -759,8 +764,8 @@ class BenchmarkActivity : ComponentActivity() {
                 // launch cycles that came before and are measured separately.
                 if (phase != livePhase && phase == BenchmarkRunner.Phase.FIRST_PREVIEW) liveStats.reset()
                 livePhase = phase
-                progressHeadline?.text = ProgressPresenter.headline(phase, iteration, total)
-                progressBar?.text = ProgressPresenter.barLine(ProgressPresenter.percent(phase, iteration, total))
+                progressHeadline?.text = ProgressPresenter.headline(phase, iteration, total, profile.records)
+                progressBar?.text = ProgressPresenter.barLine(ProgressPresenter.percent(phase, iteration, total, profile.records))
             }
             override fun onFinished(result: BenchmarkRunner.Result) { finishRun(result) }
         }
@@ -811,7 +816,26 @@ class BenchmarkActivity : ComponentActivity() {
             "configure_requested" -> r.mark(s, "configure_call", e.atNs)
             "session_configured" -> r.signal(s, BenchmarkRunner.Signal.CONFIGURED, e.atNs)
             "repeating_submit" -> r.mark(s, "repeating_call", e.atNs)
-            "capture_started" -> if (s == r.currentSession) r.firstStarted(s, e.atNs)
+            "capture_started" -> {
+                if (s == r.currentSession) r.firstStarted(s, e.atNs)
+                // The recording requests carry this cycle's tag; the first of them is the end point of 3.1.
+                (e.values["requestTag"] as? String)?.takeIf { it.startsWith("record-") }
+                    ?.let { r.recordFrameStarted(s, it, e.atNs) }
+            }
+            // record_prepare_call is left to the runner, which marks it when it calls the driver; the engine
+            // records it too, for the event log, but only the two calls 3.1 and 3.6 measure need the engine's time.
+            "record_configured" -> r.signal(s, BenchmarkRunner.Signal.RECORD_READY, e.atNs)
+            "record_configure_failed" -> r.signal(s, BenchmarkRunner.Signal.RECORD_UNSUPPORTED, e.atNs, e.kind)
+            "record_start_call" -> r.recordMark(s, RecordCycle.START_CALL_MARK, e.atNs)
+            "record_started" -> r.signal(s, BenchmarkRunner.Signal.RECORD_STARTED, e.atNs)
+            "record_stop_call" -> r.recordMark(s, RecordCycle.STOP_CALL_MARK, e.atNs)
+            "record_stopped" -> r.signal(s, BenchmarkRunner.Signal.RECORD_STOPPED, e.atNs)
+            // Not an ERROR signal: a recorder error is posted asynchronously and may name a cycle the stage has
+            // already left, so the runner decides whether it still belongs to anything.
+            "record_failed" -> r.recordFailed(
+                s, (e.values["iteration"] as? Number)?.toInt(),
+                (e.values["reason"] as? String)?.let { "record_failed:$it" } ?: e.kind, e.atNs
+            )
             // The engine records capture_submit right before CameraCaptureSession.capture(), which is the
             // submission time METRICS.md asks for, and the tag ties every still callback to its request.
             "capture_submit" -> (e.values["requestTag"] as? String)?.let { r.stillSubmitted(s, it, e.atNs) }

@@ -105,7 +105,7 @@ object ResultPresenter {
     /** Below this sample count nearest-rank p95 is just max, and calling it p95 suggests a stable percentile (8.4). */
     const val P95_MIN_SAMPLES = 20
 
-    private val ORDER = listOf(Category.LAUNCH, Category.PREVIEW, Category.CAPTURE, Category.STABILITY)
+    private val ORDER = listOf(Category.LAUNCH, Category.PREVIEW, Category.CAPTURE, Category.STABILITY, Category.RECORD)
 
     /** Category names as the screen prints them: first letter capital, the rest lower, no underscores. */
     fun categoryLabel(category: Category): String =
@@ -128,6 +128,7 @@ object ResultPresenter {
         "BATTERY_LOW" -> "배터리 부족"
         "PROFILE_DRAFT" -> "초안 profile"
         "DEBUGGABLE_BUILD" -> "디버그 빌드"
+        "RECORD_NOT_MEASURED" -> "녹화 측정이 부족함"
         "PREFLIGHT_MISMATCH" -> "사전 점검과 실제 설정이 다름"
         "THERMAL_CHANGED" -> "실행 중 발열 단계 변함"
         "LABEL_MISSING" -> "빌드 이름 없음"
@@ -267,7 +268,8 @@ object ResultPresenter {
                 if (metric.timeout) {
                     KeyMetric(info.short, "timeout", "—", null, Tone.NEUTRAL, 0.0, null)
                 } else {
-                    keyMetric(info.short, statLabel(metric, info), metric.value, cmp?.baselineValue, info.unit, cmp, withDelta)
+                    keyMetric(info.short, statLabel(metric, info), metric.value, cmp?.baselineValue, info.unit,
+                        cmp, withDelta, fine(info.id, info.category))
                 }
             }
             // Frame rate leads the preview section: it is H.1 turned upside down, and "29.8 fps" answers the
@@ -306,7 +308,8 @@ object ResultPresenter {
         base: Double?,
         unit: String,
         cmp: MetricComparison?,
-        withDelta: Boolean
+        withDelta: Boolean,
+        fine: Boolean = false
     ): KeyMetric? {
         if (value == null) return null
         // One shared scale per row: the larger of the two values sits at 80% of the bar, so the tick and the
@@ -319,6 +322,8 @@ object ResultPresenter {
                 "fps" -> String.format(Locale.US, "%+.1f fps", d)
                 // A count difference is already the whole story, and "+3 count" reads as a unit nobody uses.
                 "count" -> String.format(Locale.US, "%+.0f", d)
+                // A change of a fraction of a millisecond is the whole point of a jitter row; "+0 ms" is not.
+                "ms" -> String.format(Locale.US, if (fine) "%+.1f ms" else "%+.0f ms", d)
                 else -> String.format(Locale.US, "%+.0f %s", d, unit)
             }
         }
@@ -331,12 +336,7 @@ object ResultPresenter {
         return KeyMetric(
             label = label,
             statLabel = statLabel,
-            valueText = when (unit) {
-                "fps" -> String.format(Locale.US, "%.1f fps", value)
-                "count" -> String.format(Locale.US, "%.0f", value)
-                "ms" -> String.format(Locale.US, "%.0f ms", value)
-                else -> String.format(Locale.US, "%.0f %s", value, unit)
-            },
+            valueText = formatValue(value, unit, fine),
             deltaText = delta,
             tone = tone,
             fraction = (value / scale).coerceIn(0.0, 1.0),
@@ -544,15 +544,39 @@ object ResultPresenter {
 
     // ---- formatting ----
 
-    /** Cadence metrics need the tenth of a millisecond that separates 33.3 from 33.4; the rest do not. */
+    /**
+     * Cadence metrics need the tenth of a millisecond that separates 33.3 from 33.4; the rest do not. Recording
+     * jitter is such a metric even though its category is RECORD: it is a fraction of a millisecond, and
+     * rounding it to whole milliseconds would print every value as 0.
+     *
+     * A frame rate keeps one decimal for the same reason in the other direction: 29.8 and 30.0 are the
+     * difference between a steady recording and one that dropped a frame in a window.
+     */
     fun format(metric: BenchmarkMetric, value: Double?): String {
         if (value == null) return "—"
-        if (metric.unit == "count") return value.toInt().toString()
-        if (metric.unit != "ms") return "$value ${metric.unit}"
-        val text = if (metric.category == Category.PREVIEW) String.format(Locale.US, "%.1f", value)
-        else String.format(Locale.US, "%.0f", value)
-        return "$text ms"
+        return formatValue(value, metric.unit, fine(metric.id, metric.category))
     }
+
+    /**
+     * One formatter for both places a measured number is printed: the bars and the monospace rows. They had
+     * separate copies, and the decimal rule reached only one of them, so recording jitter printed as "0 ms" on
+     * the screen while the test of the other copy was green (device check, 2026-09-24).
+     */
+    internal fun formatValue(value: Double, unit: String, fine: Boolean): String = when (unit) {
+        "count" -> String.format(Locale.US, "%.0f", value)
+        "fps" -> String.format(Locale.US, "%.1f fps", value)
+        "ms" -> String.format(Locale.US, if (fine) "%.1f ms" else "%.0f ms", value)
+        // A unit this app does not define comes from a run written by another version; it is printed as stored
+        // rather than rounded to a precision this version invented for it.
+        else -> "$value $unit"
+    }
+
+    /** True for the millisecond metrics whose values are small enough that a whole millisecond hides them. */
+    internal fun fine(id: String, category: Category): Boolean =
+        category == Category.PREVIEW || id in FINE_MS_METRICS
+
+    /** Millisecond metrics outside PREVIEW that are still small enough to need a decimal. */
+    private val FINE_MS_METRICS = setOf("3.7")
 
     // ---- monospace layout ----
 

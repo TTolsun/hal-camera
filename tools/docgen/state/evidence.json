@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "49806ff2ed76595f",
-        "modelHash": "ae38d565a8044adc",
-        "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "codeHash": "4909f79e2577d568",
+        "modelHash": "7542ec9d427fcda6",
+        "at": "2026-09-24",
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "211591832c2b2829",
-        "modelHash": "49203ddfad5b0f1b",
-        "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "codeHash": "777aa41251a3a325",
+        "modelHash": "2ca33f437ba5aa05",
+        "at": "2026-09-24",
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "746e01fe500a588e",
-        "modelHash": "07ff2102a958cd31",
-        "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "codeHash": "aaf4024732868af7",
+        "modelHash": "cc4554cedf7f18c9",
+        "at": "2026-09-24",
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8cc0876ab4166bbb",
-        "modelHash": "9d5934fbf5cf171a",
-        "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "codeHash": "60209b6e2f305e28",
+        "modelHash": "7f89ef6bbd446285",
+        "at": "2026-09-24",
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "211591832c2b2829",
-        "modelHash": "aa9fc312013b9654",
-        "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "codeHash": "777aa41251a3a325",
+        "modelHash": "2dfe23547a3916ab",
+        "at": "2026-09-24",
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "24b709b2bedc00da",
-        "modelHash": "183767b1eaf5f039",
-        "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "codeHash": "3475831b26f6566b",
+        "modelHash": "c6508c376bfec4ef",
+        "at": "2026-09-24",
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "49806ff2ed76595f",
-        "modelHash": "d2fc80ef9ac841b9",
-        "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "codeHash": "4909f79e2577d568",
+        "modelHash": "5809304f9c886c9d",
+        "at": "2026-09-24",
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "49806ff2ed76595f",
-        "modelHash": "174b5c1d449f1f05",
-        "at": "2026-09-23",
-        "commit": "cc122ec",
-        "reviewer": "Claude (start card title)"
+        "codeHash": "4909f79e2577d568",
+        "modelHash": "3479de2ade74ead1",
+        "at": "2026-09-24",
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       },
       "observed": {
         "state": "fresh"

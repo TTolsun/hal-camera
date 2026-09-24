@@ -50,10 +50,16 @@ class LiveFrameStats {
     }
 }
 
-/** The six-phase progress screen of 8.3. Pure, so the phase weights and the bar are testable without a device. */
+/**
+ * The progress screen of 8.3. Pure, so the phase weights and the bar are testable without a device.
+ *
+ * A run has six phases, or seven when the profile records: RECORDING is skipped entirely for a profile without
+ * a RECORD stage, so a camera2-standard-v1 run still counts to six and its bar keeps the weights it had.
+ */
 object ProgressPresenter {
 
     const val PHASE_COUNT = 6
+    const val RECORDING_PHASE_COUNT = 7
 
     /**
      * The bar is deliberately short. U+2588 is absent from Roboto Mono, so every cell is drawn by a fallback
@@ -77,22 +83,30 @@ object ProgressPresenter {
         BenchmarkRunner.Phase.PREVIEW_STABILITY to 10.0,
         BenchmarkRunner.Phase.THREE_A to 0.0,
         BenchmarkRunner.Phase.STILL_CAPTURE to 4.0,
+        // Five cycles of eight seconds plus the session reconfiguration and file close of each
+        // (docs/PLAN-Recording-v0.1.md 5), which makes it the longest phase of the run.
+        BenchmarkRunner.Phase.RECORDING to 45.0,
         BenchmarkRunner.Phase.CAMERA_CLOSE to 0.5
     )
 
-    private val TOTAL_SECONDS = PHASE_SECONDS.values.sum()
+    /** The phases a run actually goes through, in order. */
+    private fun phases(records: Boolean): List<BenchmarkRunner.Phase> =
+        BenchmarkRunner.Phase.values().filter { records || it != BenchmarkRunner.Phase.RECORDING }
 
     /** "1 / 6  Camera Open  3/10" — the launch cycle counter only appears while the launch cycles are running. */
-    fun headline(phase: BenchmarkRunner.Phase, iteration: Int, total: Int): String {
-        val step = phase.ordinal + 1
+    fun headline(phase: BenchmarkRunner.Phase, iteration: Int, total: Int, records: Boolean = false): String {
+        val visible = phases(records)
+        val step = visible.indexOf(phase) + 1
         val suffix = if (countsLaunchCycles(phase, total)) "  ${iteration + 1}/$total" else ""
-        return "$step / $PHASE_COUNT  ${phaseText(phase)}$suffix"
+        return "$step / ${visible.size}  ${phaseText(phase)}$suffix"
     }
 
-    fun percent(phase: BenchmarkRunner.Phase, iteration: Int, total: Int): Int {
-        val before = BenchmarkRunner.Phase.values().takeWhile { it != phase }.sumOf { PHASE_SECONDS[it] ?: 0.0 }
+    fun percent(phase: BenchmarkRunner.Phase, iteration: Int, total: Int, records: Boolean = false): Int {
+        val visible = phases(records)
+        val totalSeconds = visible.sumOf { PHASE_SECONDS[it] ?: 0.0 }
+        val before = visible.takeWhile { it != phase }.sumOf { PHASE_SECONDS[it] ?: 0.0 }
         val elapsed = before + (PHASE_SECONDS[phase] ?: 0.0) * launchFraction(phase, iteration, total)
-        return ((elapsed / TOTAL_SECONDS) * 100).roundToInt().coerceIn(0, 100)
+        return ((elapsed / totalSeconds) * 100).roundToInt().coerceIn(0, 100)
     }
 
     /**
@@ -135,6 +149,7 @@ object ProgressPresenter {
         BenchmarkRunner.Phase.PREVIEW_STABILITY -> "Preview Stability"
         BenchmarkRunner.Phase.THREE_A -> "3A Response"
         BenchmarkRunner.Phase.STILL_CAPTURE -> "Still Capture"
+        BenchmarkRunner.Phase.RECORDING -> "Recording"
         BenchmarkRunner.Phase.CAMERA_CLOSE -> "Camera Close"
     }
 }

@@ -68,6 +68,7 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/ProfileCompatibility.kt
           - app/src/main/java/dev/halcamera/benchmark/platform/ProfileCompatibilityChecker.kt
+          - app/src/main/java/dev/halcamera/benchmark/platform/StreamSpecs.kt
           - app/src/main/java/dev/halcamera/benchmark/platform/ThermalTracker.kt
       benchmark/benchmark-model:
         evidence:
@@ -229,6 +230,7 @@ sources:
       metrics:
         evidence:
           - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
+          - app/src/main/java/dev/halcamera/metrics/RecordMetrics.kt
           - app/src/main/java/dev/halcamera/metrics/MetricModel.kt
       metrics/metric-extractor:
         evidence:
@@ -411,6 +413,8 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
           - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+      runner-sequence:
+        evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
       incident-window:
         evidence:

@@ -1,11 +1,13 @@
 package dev.halcamera.benchmark.domain
 
 import dev.halcamera.metrics.MetricExtractor
+import dev.halcamera.metrics.RecordMetrics
+import dev.halcamera.metrics.jsonName
 import dev.halcamera.telemetry.Event
 
 /**
  * Turns a finished [BenchmarkRunner.Result] plus the recorded events into a [BenchmarkRun].
- * [BenchmarkReportCodec] serializes that run using schema 4; file I/O remains outside this assembler.
+ * [BenchmarkReportCodec] serializes that run using schema 5; file I/O remains outside this assembler.
  * Pure Kotlin so the whole path from raw samples to the stored contract is unit-testable; the Android facts
  * (device, app, thermal, battery) are gathered by [dev.halcamera.benchmark.BenchmarkActivity] and passed in.
  */
@@ -61,6 +63,50 @@ object RunAssembler {
             observedFrames = observation.steadyFrames.size,
             cadenceFixed = cadenceFixed(events, session, start, end, profile)
         )
+    }
+
+    /**
+     * One [RecordSample] per recording cycle: the runner's two latencies, plus the cadence recomputed from that
+     * cycle's frames. The frames are picked by the cycle's request tag rather than by its time window, so a late
+     * result of the previous cycle can never be counted here (docs/PLAN-Recording-v0.1.md 7).
+     */
+    fun records(result: BenchmarkRunner.Result, events: List<Event>, profile: BenchmarkProfile): List<RecordSample> {
+        val session = result.observeSession ?: return emptyList()
+        val expectedMs = profile.recordFps?.takeIf { it > 0 }?.let { 1000.0 / it }
+        return result.records.map { cycle ->
+            val frames = RecordMetrics.frames(events, session, cycle.requestTag)
+            RecordSample(
+                iteration = cycle.iteration,
+                warmup = cycle.warmup,
+                failed = cycle.failed,
+                startToCallbackMs = cycle.startToCallbackMs,
+                stopLatencyMs = cycle.stopLatencyMs,
+                cadence = if (frames.isEmpty()) null else RecordMetrics.cadence(frames, expectedMs)
+            )
+        }
+    }
+
+    /** raw.record of the run JSON: one entry per cycle, keeping what the aggregated metrics cannot show. */
+    fun rawRecords(cycles: List<RecordCycle>, samples: List<RecordSample>): List<Map<String, Any?>> {
+        val byIteration = samples.associateBy { it.iteration }
+        return cycles.map { cycle ->
+            val cadence = byIteration[cycle.iteration]?.cadence
+            cycle.toJsonMap() + mapOf(
+                "frames" to cadence?.frames,
+                "intervals" to cadence?.intervals?.size,
+                "compared_intervals" to cadence?.comparedIntervals,
+                "excluded_intervals" to cadence?.excludedIntervals,
+                "anomaly_count" to cadence?.anomalyCount,
+                "anomaly_unknown_reason" to cadence?.anomalyUnknownReason?.jsonName,
+                // The window minimum is kept per cycle: the aggregated 3.4 reports the median of the cycle
+                // medians, which cannot show that one window inside one cycle dropped.
+                "window_fps_p50" to cadence?.windowFpsP50,
+                "window_fps_min" to cadence?.windowFpsMin,
+                "windows" to cadence?.windows,
+                "jitter_stddev_ms" to cadence?.jitterStdDevMs,
+                "jitter_p95_ms" to cadence?.jitterP95Ms
+            )
+        }
     }
 
     /** Expected interval of a fixed fps range, ms. Null when the profile does not pin a single fps. */
@@ -130,10 +176,12 @@ object RunAssembler {
         context: Context
     ): BenchmarkRun {
         val obs = observe(result, events, profile)
+        val records = records(result, events, profile)
         val metrics = BenchmarkEvaluator(profile).evaluate(
             BenchmarkEvaluator.Input(
                 cycles = result.cycles, stills = result.stills, observation = obs.observation,
-                callbackFailures = obs.callbackFailures, observed = result.observed && obs.observation != null
+                callbackFailures = obs.callbackFailures, observed = result.observed && obs.observation != null,
+                records = records, recordUnsupported = result.recordUnsupported
             )
         )
         val validity = RunValidityEvaluator.evaluate(
@@ -148,6 +196,8 @@ object RunAssembler {
                 observedFrames = obs.observedFrames,
                 expectedLaunchSamples = profile.expectedLaunchSamples,
                 expectedStillSamples = profile.expectedStillSamples,
+                recordSamples = records.count { it.usable },
+                expectedRecordSamples = profile.expectedRecordSamples,
                 cadenceFixed = obs.cadenceFixed,
                 thermalStart = context.env.thermalStart,
                 thermalMax = context.env.thermalMax,
@@ -182,6 +232,9 @@ object RunAssembler {
                 "launch_cycles" to result.cycles.map { it.toJsonMap() },
                 "stills" to result.stills.map { it.toJsonMap() },
                 "observation" to rawObservation(obs.observation),
+                // Absent, not empty, for a profile without a RECORD stage: its run files stay what they were.
+                "record" to if (!profile.records) null else rawRecords(result.records, records),
+                "record_unsupported" to if (!profile.records) null else result.recordUnsupported,
                 "hard_failure" to result.hardFailure,
                 "sessions" to result.sessions,
                 "observe_session" to result.observeSession,

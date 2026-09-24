@@ -13,10 +13,18 @@ import java.io.File
  * promoted to the current contract.
  */
 object BenchmarkReportCodec {
-    const val SCHEMA_VERSION = 4
+    const val SCHEMA_VERSION = 5
 
-    /** Schema 3 files are still read: schema 4 only added the optional app.debuggable field, which reads back as null. */
-    val READABLE_SCHEMA_VERSIONS = 3..4
+    /**
+     * Older files are still read: schema 4 only added the optional app.debuggable field, which reads back as
+     * null, and schema 5 only adds the profile's recording conditions, the 3.x metrics and raw.record, all of
+     * which a run without a RECORD stage simply does not carry.
+     *
+     * The version is raised rather than left at 4 so that an older build refuses a recording run outright. It
+     * would otherwise read camera2-standard-v2 as an unknown profile, skip the canonical check that protects
+     * every other file, and show a run whose 3.x metrics it cannot name.
+     */
+    val READABLE_SCHEMA_VERSIONS = 3..5
     const val KIND = "benchmark"
 
     fun toJsonMap(run: BenchmarkRun): Map<String, Any?> = linkedMapOf(

@@ -10,7 +10,12 @@ import dev.halcamera.camera.CameraEndpoint
  * The sequence is a warm reopen (METRICS.md 0.2 `warm_sequence`), not a process cold launch:
  *
  *     LAUNCH_CYCLE x launchIterations   OPEN -> CONFIGURE -> FIRST_FRAME -> CYCLE_CLOSE
- *     OPEN (one more, kept open)        WARMUP -> OBSERVE -> STILL x stillCount -> CLOSE
+ *     OPEN (one more, kept open)        WARMUP -> OBSERVE -> STILL x stillCount -> RECORD x recordIterations -> CLOSE
+ *
+ * The RECORD stage only runs for a profile that records (docs/PLAN-Recording-v0.1.md). It comes last on purpose:
+ * recording reconfigures the capture session, so running it earlier would put a reconfiguration inside the
+ * window H.1 - H.10 and 2.x are measured from, and a recorder that fails would take the samples already
+ * collected with it.
  *
  * The extra open is the observation session: its launch timings are not part of the launch metrics, because the
  * profile promises exactly [BenchmarkProfile.launchIterations] comparable cycles and this one is followed by a
@@ -37,28 +42,57 @@ class BenchmarkRunner(
         val firstFrameTimeoutMs: Long = 5000,
         val stillTimeoutMs: Long = 5000,
         val closeTimeoutMs: Long = 5000,
+        /** Reconfiguring the session and preparing the recorder; longer than a plain configure because both happen. */
+        val recordPrepareTimeoutMs: Long = 10_000,
+        val recordStartTimeoutMs: Long = 5000,
+        /** MediaRecorder.stop() flushes and finalizes the file, which is the slowest call of the stage. */
+        val recordStopTimeoutMs: Long = 10_000,
         /** Consecutive failed launch cycles after which the run is aborted instead of retrying forever. */
         val maxConsecutiveFailures: Int = 3
     )
 
     /** Runner steps. The screen shows [Phase] instead; several steps map to one phase. */
-    enum class Step { IDLE, OPEN, CONFIGURE, FIRST_FRAME, CYCLE_CLOSE, WARMUP, OBSERVE, STILL, CLOSE, DONE, ABORTED }
+    enum class Step {
+        IDLE, OPEN, CONFIGURE, FIRST_FRAME, CYCLE_CLOSE, WARMUP, OBSERVE, STILL,
+        RECORD_PREPARE, RECORD_START, RECORD_RUN, RECORD_STOP,
+        CLOSE, DONE, ABORTED
+    }
 
-    /** The six phases of the progress screen (3.2). */
-    enum class Phase { CAMERA_OPEN, FIRST_PREVIEW, PREVIEW_STABILITY, THREE_A, STILL_CAPTURE, CAMERA_CLOSE }
+    /** The phases of the progress screen (3.2). RECORDING only appears for a profile that records. */
+    enum class Phase { CAMERA_OPEN, FIRST_PREVIEW, PREVIEW_STABILITY, THREE_A, STILL_CAPTURE, RECORDING, CAMERA_CLOSE }
 
     /**
      * Camera-side events the runner reacts to. Timestamps are elapsedRealtimeNanos. Still callbacks are not
      * signals: they carry a request tag or a sensor timestamp and go through [stillSubmitted], [stillImage] and
      * [stillResult] so each callback lands on the request it belongs to.
+     *
+     * RECORD_UNSUPPORTED is separate from ERROR because it is answered once for the whole stage: a session the
+     * camera refuses to configure will refuse it again, so the remaining cycles are skipped rather than retried.
      */
-    enum class Signal { OPENED, CONFIGURED, FIRST_FRAME, CLOSED, ERROR }
+    enum class Signal {
+        OPENED, CONFIGURED, FIRST_FRAME, CLOSED, ERROR,
+        RECORD_READY, RECORD_STARTED, RECORD_STOPPED, RECORD_UNSUPPORTED
+    }
 
     interface Driver {
         /** Open [endpoint] with the profile's streams and start repeating. Must report OPENED, CONFIGURED, FIRST_FRAME. */
         fun open(endpoint: CameraEndpoint, session: String)
         /** Submit one JPEG still. Must report STILL_RECEIVED or ERROR. */
         fun still(session: String)
+        /**
+         * Reconfigure the session with the recorder stream and prepare the recorder, without starting it.
+         * Must report RECORD_READY, RECORD_UNSUPPORTED (the combination is refused) or ERROR.
+         */
+        fun prepareRecord(session: String, iteration: Int)
+        /**
+         * Start the recorder, then submit the recording requests tagged [RecordCycle.tag]. Must report
+         * RECORD_STARTED or ERROR, and must mark [RecordCycle.START_CALL_MARK] right before MediaRecorder.start().
+         */
+        fun startRecord(session: String)
+        /** Stop repeating, then the recorder. Must report RECORD_STOPPED or ERROR. */
+        fun stopRecord(session: String)
+        /** Release whatever a failed cycle still holds and restore the preview session. Reports nothing. */
+        fun abortRecord(session: String)
         /** Close the camera. Must report CLOSED. */
         fun close(session: String)
     }
@@ -85,6 +119,7 @@ class BenchmarkRunner(
         val endpoint: CameraEndpoint,
         val cycles: List<LaunchCycle>,
         val stills: List<StillSample>,
+        val records: List<RecordCycle>,
         val observeSession: String?,
         val observeFirstFrameNs: Long?,
         val observeStartNs: Long?,
@@ -92,11 +127,14 @@ class BenchmarkRunner(
         /** Name of the step that failed, null when every step completed. */
         val hardFailure: String?,
         val aborted: String?,
+        /** The camera refused the recording stream combination, so the 3.x metrics are unsupported here. */
+        val recordUnsupported: Boolean,
         val sessions: List<String>
     ) {
         val observed: Boolean get() = observeStartNs != null && observeEndNs != null
         val validLaunchSamples: Int get() = cycles.count { !it.warmup && !it.failed }
         val validStillSamples: Int get() = stills.count { !it.warmup && it.imageNs != null }
+        val validRecordSamples: Int get() = records.count { !it.warmup && !it.failed }
     }
 
     var step = Step.IDLE
@@ -116,6 +154,10 @@ class BenchmarkRunner(
     private var hardFailure: String? = null
     private var aborted: String? = null
     private var stillIndex = 0
+    private val records = mutableListOf<PendingRecord>()
+    private var recordIndex = 0
+    private var recordUnsupported = false
+    private var consecutiveRecordFailures = 0
     private var observeSession: String? = null
     private var observeFirstFrameNs: Long? = null
     private var observeStartNs: Long? = null
@@ -139,6 +181,15 @@ class BenchmarkRunner(
             Step.IDLE -> { cancelTimer(); finish() }
             // Already closing: its timer must survive, otherwise a camera that never reports CLOSED hangs the run.
             Step.CYCLE_CLOSE, Step.CLOSE -> Unit
+            // The cycle in flight is closed as failed and the recorder released, but the stage does not mark the
+            // run hard-failed: the abort already says why it stopped, and the finished cycles keep their values.
+            Step.RECORD_PREPARE, Step.RECORD_START, Step.RECORD_RUN, Step.RECORD_STOP -> {
+                cancelTimer()
+                current()?.fail("aborted")
+                driver.abortRecord(session)
+                recordIndex++
+                enter(Step.CLOSE)
+            }
             else -> { cancelTimer(); if (hardFailure == null) hardFailure = step.name; enter(Step.CLOSE) }
         }
     }
@@ -158,8 +209,60 @@ class BenchmarkRunner(
                 Step.CLOSE -> { marks["closed"] = atNs; finish() }
                 else -> Unit
             }
+            Signal.RECORD_READY -> if (step == Step.RECORD_PREPARE) {
+                current()?.marks?.put(RecordCycle.READY_MARK, atNs); enter(Step.RECORD_START)
+            }
+            Signal.RECORD_STARTED -> if (step == Step.RECORD_START) {
+                current()?.marks?.put(RecordCycle.START_MARK, atNs); enter(Step.RECORD_RUN)
+            }
+            Signal.RECORD_STOPPED -> if (step == Step.RECORD_STOP) {
+                current()?.marks?.put(RecordCycle.STOP_MARK, atNs); recordDone()
+            }
+            Signal.RECORD_UNSUPPORTED -> if (onRecordStep) {
+                recordUnsupported = true
+                recordFailure(detail ?: "record_unsupported", atNs)
+            }
             Signal.ERROR -> onFailure(detail ?: step.name, atNs)
         }
+    }
+
+    /**
+     * The engine marks a moment of the current recording cycle, the same way [mark] does for a launch cycle:
+     * the runner never guesses when MediaRecorder.start() or stop() was actually called, because the engine
+     * posts those calls to its own thread and METRICS.md 3.1 and 3.6 measure from just before the call.
+     */
+    fun recordMark(session: String, name: String, atNs: Long = clock()) {
+        if (session != this.session) return
+        current()?.marks?.putIfAbsent(name, atNs)
+    }
+
+    /**
+     * The engine could not record. Ignored unless the stage is still on the cycle this names, because a
+     * MediaRecorder error is delivered asynchronously and can arrive long after the call that caused it: after
+     * the stage moved to the next cycle, where it would fail a cycle that is doing fine, or after the whole
+     * stage is over, where an ordinary ERROR would set hardFailure and throw away a run whose launch, preview
+     * and capture samples are all complete — the one thing the RECORD stage must never do.
+     */
+    fun recordFailed(session: String, iteration: Int?, reason: String?, atNs: Long = clock()) {
+        if (session != this.session || !onRecordStep) return
+        val p = current() ?: return
+        if (iteration != null && iteration != p.index) return
+        recordFailure(reason ?: "record_failed", atNs)
+    }
+
+    /**
+     * A capture started for a recording request (3.1 end point). Matched by tag so a capture of the previous
+     * cycle, or a preview capture submitted while the recorder was being prepared, is never taken for this one.
+     */
+    fun recordFrameStarted(session: String, tag: String?, atNs: Long = clock()) {
+        if (session != this.session || tag == null) return
+        val p = current() ?: return
+        if (tag != RecordCycle.tag(p.index)) return
+        // Only a capture that started after MediaRecorder.start() answers 3.1; an earlier one would report a
+        // latency the recorder had no part in.
+        val startCall = p.marks[RecordCycle.START_CALL_MARK] ?: return
+        if (atNs < startCall) return
+        p.marks.putIfAbsent(RecordCycle.FIRST_STARTED_MARK, atNs)
     }
 
     /**
@@ -265,9 +368,74 @@ class BenchmarkRunner(
                 }
             }
             Step.STILL -> { stillIndex = 0; progress(); submitStill() }
+            // The record steps arm their timeout before calling the driver, not after. A driver that answers
+            // synchronously (a refused combination is known without waiting for the camera) would otherwise
+            // have already moved the runner on by the time the arm ran, leaving a timer for a step that is over.
+            Step.RECORD_PREPARE -> {
+                records += PendingRecord(recordIndex, profile.excludeFirst && recordIndex == 0)
+                progress()
+                current()!!.marks[RecordCycle.PREPARE_CALL_MARK] = clock()
+                arm(config.recordPrepareTimeoutMs)
+                driver.prepareRecord(session, recordIndex)
+            }
+            Step.RECORD_START -> { progress(); arm(config.recordStartTimeoutMs); driver.startRecord(session) }
+            Step.RECORD_RUN -> {
+                progress()
+                timer = scheduler.after(profile.recordDurationMs ?: 0L) { enter(Step.RECORD_STOP) }
+            }
+            Step.RECORD_STOP -> {
+                progress()
+                // A cycle whose recording requests never started answers nothing for 3.1, but the recorder still
+                // has to be stopped: leaving it running would leak the file and the session into the next cycle.
+                current()?.let { if (it.marks[RecordCycle.FIRST_STARTED_MARK] == null) it.fail("record_first_frame_missing") }
+                arm(config.recordStopTimeoutMs)
+                driver.stopRecord(session)
+            }
             Step.CLOSE -> { progress(); marks["close_call"] = clock(); driver.close(session); armClose { finish() } }
             else -> Unit
         }
+    }
+
+    private fun current(): PendingRecord? = records.lastOrNull()
+
+    private val onRecordStep: Boolean
+        get() = step == Step.RECORD_PREPARE || step == Step.RECORD_START ||
+            step == Step.RECORD_RUN || step == Step.RECORD_STOP
+
+    /** Enters the RECORD stage, or goes straight to CLOSE for a profile that does not record. */
+    private fun startRecordingOrClose() {
+        if (aborted != null || !profile.records || recordUnsupported) { enter(Step.CLOSE); return }
+        val total = profile.recordIterations ?: 0
+        if (recordIndex >= total) enter(Step.CLOSE) else enter(Step.RECORD_PREPARE)
+    }
+
+    /**
+     * A recording cycle failed. Unlike a launch failure this never sets [hardFailure] or [aborted]: by the time
+     * the RECORD stage runs, every sample the launch, preview and capture metrics need is already collected, and
+     * marking the run hard-failed would throw all of them away over a recorder that would not start
+     * (docs/PLAN-Recording-v0.1.md 9). The stage records its own failure instead.
+     */
+    private fun recordFailure(reason: String, atNs: Long) {
+        cancelTimer()
+        val p = current()
+        p?.marks?.putIfAbsent("failure", atNs)
+        p?.fail(reason)
+        driver.abortRecord(session)
+        consecutiveRecordFailures++
+        val giveUp = recordUnsupported || consecutiveRecordFailures >= config.maxConsecutiveFailures
+        closeRecordCycle(giveUp)
+    }
+
+    private fun recordDone() {
+        cancelTimer()
+        if (current()?.failed == true) { driver.abortRecord(session); consecutiveRecordFailures++ }
+        else consecutiveRecordFailures = 0
+        closeRecordCycle(consecutiveRecordFailures >= config.maxConsecutiveFailures)
+    }
+
+    private fun closeRecordCycle(giveUp: Boolean) {
+        recordIndex++
+        if (giveUp) enter(Step.CLOSE) else startRecordingOrClose()
     }
 
     private fun progress() {
@@ -276,6 +444,7 @@ class BenchmarkRunner(
             Step.CYCLE_CLOSE -> Phase.CAMERA_OPEN
             Step.WARMUP, Step.OBSERVE -> Phase.PREVIEW_STABILITY
             Step.STILL -> Phase.STILL_CAPTURE
+            Step.RECORD_PREPARE, Step.RECORD_START, Step.RECORD_RUN, Step.RECORD_STOP -> Phase.RECORDING
             else -> Phase.CAMERA_CLOSE
         }
         val iteration = if (onObservationSession) profile.launchIterations else cycleIndex
@@ -285,6 +454,8 @@ class BenchmarkRunner(
     /** A timeout or a camera error. Inside a launch cycle it fails that cycle; anywhere else it ends the run. */
     private fun onFailure(reason: String, atNs: Long) {
         if (step == Step.DONE || step == Step.ABORTED) return
+        // A recording failure is the stage's own business and must not mark the whole run hard-failed.
+        if (onRecordStep) { recordFailure(reason, atNs); return }
         marks["failure"] = atNs
         if (hardFailure == null) hardFailure = reason
         when (step) {
@@ -341,11 +512,11 @@ class BenchmarkRunner(
         arm(config.stillTimeoutMs)
     }
 
-    /** Moves on to the next capture, or to CLOSE when the profile's captures are done. */
+    /** Moves on to the next capture, or to the RECORD stage when the profile's captures are done. */
     private fun stillAdvance() {
         cancelTimer()
         stillIndex++
-        if (aborted != null || stillIndex >= profile.stillCount) enter(Step.CLOSE) else submitStill()
+        if (aborted != null || stillIndex >= profile.stillCount) startRecordingOrClose() else submitStill()
     }
 
     /** One still capture while the run is in flight; [StillSample] is the immutable form stored in the result. */
@@ -358,6 +529,35 @@ class BenchmarkRunner(
         var closed = false
 
         fun toSample() = StillSample(index, warmup, submitNs, imageNs, resultNs)
+    }
+
+    /** One recording cycle while the run is in flight; [RecordCycle] is the immutable form stored in the result. */
+    private class PendingRecord(val index: Int, val warmup: Boolean) {
+        val marks = LinkedHashMap<String, Long>()
+        var failed = false
+        var failureReason: String? = null
+
+        /** The first reason wins: it is the one that explains the rest. */
+        fun fail(reason: String) {
+            if (!failed) { failed = true; failureReason = reason }
+        }
+
+        private fun ms(a: String, b: String): Double? {
+            val x = marks[a]; val y = marks[b]
+            return if (x != null && y != null) (y - x) / 1e6 else null
+        }
+
+        fun toCycle() = RecordCycle(
+            iteration = index,
+            warmup = warmup,
+            startToCallbackMs = ms(RecordCycle.START_CALL_MARK, RecordCycle.FIRST_STARTED_MARK),
+            // A stop latency only means something when stop() returned normally; after a failure the engine has
+            // usually reset the recorder already and the observed value describes the cleanup, not the call.
+            stopLatencyMs = if (failed) null else ms(RecordCycle.STOP_CALL_MARK, RecordCycle.STOP_MARK),
+            failed = failed,
+            failureReason = failureReason,
+            timestampsNs = marks.toMap()
+        )
     }
 
     private fun arm(ms: Long) {
@@ -382,9 +582,11 @@ class BenchmarkRunner(
         listener.onFinished(
             Result(
                 runId = runId, endpoint = endpoint, cycles = cycles.toList(), stills = stills.map { it.toSample() },
+                records = records.map { it.toCycle() },
                 observeSession = observeSession, observeFirstFrameNs = observeFirstFrameNs,
                 observeStartNs = observeStartNs, observeEndNs = observeEndNs,
-                hardFailure = hardFailure, aborted = aborted, sessions = sessions.toList()
+                hardFailure = hardFailure, aborted = aborted, recordUnsupported = recordUnsupported,
+                sessions = sessions.toList()
             )
         )
     }
