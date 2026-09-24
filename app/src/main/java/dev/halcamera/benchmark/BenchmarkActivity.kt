@@ -18,8 +18,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
 import android.text.InputType
-import android.util.Range
-import android.util.Size
 import android.view.Gravity
 import android.view.TextureView
 import android.view.View
@@ -38,8 +36,6 @@ import dev.halcamera.R
 import dev.halcamera.benchmark.domain.*
 import dev.halcamera.benchmark.platform.*
 import dev.halcamera.camera.Camera2Engine
-import dev.halcamera.camera.RecordSpec
-import dev.halcamera.camera.StreamSpec
 import dev.halcamera.camera.CameraEndpoint
 import dev.halcamera.camera.CameraLabel
 import dev.halcamera.camera.CameraEndpointResolver
@@ -724,13 +720,7 @@ class BenchmarkActivity : ComponentActivity() {
         }.also { it.start() }
 
         val runId = BenchmarkReport.newRunId()
-        val spec = StreamSpec(
-            preview = ProfileCompatibilityChecker.size(profile.previewSize) ?: Size(1920, 1080),
-            yuv = ProfileCompatibilityChecker.size(profile.yuvSize) ?: Size(1920, 1080),
-            jpeg = ProfileCompatibilityChecker.size(profile.stillSize) ?: Size(1920, 1080),
-            fpsRange = ProfileCompatibilityChecker.fpsRange(profile.fpsRange) ?: Range(30, 30),
-            record = recordSpec(profile)
-        )
+        val spec = StreamSpecs.of(profile)
         val scheduler = object : BenchmarkRunner.Scheduler {
             override fun after(delayMs: Long, action: () -> Unit): Any {
                 val r = Runnable { action() }; main.postDelayed(r, delayMs); return r
@@ -785,22 +775,6 @@ class BenchmarkActivity : ComponentActivity() {
         startTicker()
         runner = BenchmarkRunner(driver, scheduler, ::nowNs, profile, endpoint, runId, BenchmarkRunner.Config(), listener)
             .also { it.start() }
-    }
-
-    /**
-     * The recorder conditions the engine must configure, or null for a profile without a RECORD stage. A size
-     * the profile names but this build cannot parse is not silently replaced: the stage is left out, and the
-     * run then reports the 3.x metrics as not measured rather than measuring them under other conditions.
-     */
-    private fun recordSpec(profile: BenchmarkProfile): RecordSpec? {
-        val size = profile.recordSize?.let { ProfileCompatibilityChecker.size(it) } ?: return null
-        return RecordSpec(
-            size = size,
-            codec = profile.recordCodec ?: return null,
-            bitrate = profile.recordBitrate ?: return null,
-            fps = profile.recordFps ?: return null,
-            audio = profile.recordAudio ?: false
-        )
     }
 
     private fun readSubject(): SubjectLabel {

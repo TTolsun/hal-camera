@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "a870db285267dd49",
+        "codeHash": "4909f79e2577d568",
         "modelHash": "7542ec9d427fcda6",
         "at": "2026-09-24",
-        "commit": "12128c5",
-        "reviewer": "Claude (runner-sequence split)"
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "dfb4759506d4aec6",
+        "codeHash": "777aa41251a3a325",
         "modelHash": "2ca33f437ba5aa05",
         "at": "2026-09-24",
-        "commit": "12128c5",
-        "reviewer": "Claude (runner-sequence split)"
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "d13158b562b5f609",
+        "codeHash": "aaf4024732868af7",
         "modelHash": "cc4554cedf7f18c9",
         "at": "2026-09-24",
-        "commit": "12128c5",
-        "reviewer": "Claude (runner-sequence split)"
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "54cfb11b88a3e5e0",
+        "codeHash": "60209b6e2f305e28",
         "modelHash": "7f89ef6bbd446285",
         "at": "2026-09-24",
-        "commit": "12128c5",
-        "reviewer": "Claude (runner-sequence split)"
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "dfb4759506d4aec6",
+        "codeHash": "777aa41251a3a325",
         "modelHash": "2dfe23547a3916ab",
         "at": "2026-09-24",
-        "commit": "12128c5",
-        "reviewer": "Claude (runner-sequence split)"
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "0fd984e7374f4cc8",
+        "codeHash": "3475831b26f6566b",
         "modelHash": "c6508c376bfec4ef",
         "at": "2026-09-24",
-        "commit": "12128c5",
-        "reviewer": "Claude (runner-sequence split)"
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "a870db285267dd49",
+        "codeHash": "4909f79e2577d568",
         "modelHash": "5809304f9c886c9d",
         "at": "2026-09-24",
-        "commit": "12128c5",
-        "reviewer": "Claude (runner-sequence split)"
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "a870db285267dd49",
+        "codeHash": "4909f79e2577d568",
         "modelHash": "3479de2ade74ead1",
         "at": "2026-09-24",
-        "commit": "12128c5",
-        "reviewer": "Claude (runner-sequence split)"
+        "commit": "ae12616",
+        "reviewer": "Claude (stream spec extraction)"
       },
       "observed": {
         "state": "fresh"
