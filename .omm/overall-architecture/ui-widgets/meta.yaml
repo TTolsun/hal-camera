@@ -5,5 +5,6 @@ last_field: description
 kind: nested-class
 title: ui-widgets
 children:
+  - frame-timeline
   - metric-bars
 parentPath: []

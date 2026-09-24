@@ -7,9 +7,9 @@
       },
       "accepted": {
         "codeHash": "7dd7bcaf74a42288",
-        "modelHash": "7542ec9d427fcda6",
+        "modelHash": "a4e8d7e101417972",
         "at": "2026-09-24",
-        "commit": "3fd5566",
+        "commit": "69b75fa",
         "reviewer": "Claude (UI review #136)"
       }
     },
@@ -21,7 +21,7 @@
         "codeHash": "777aa41251a3a325",
         "modelHash": "2ca33f437ba5aa05",
         "at": "2026-09-24",
-        "commit": "3fd5566",
+        "commit": "69b75fa",
         "reviewer": "Claude (UI review #136)"
       }
     },
@@ -33,7 +33,7 @@
         "codeHash": "aaf4024732868af7",
         "modelHash": "cc4554cedf7f18c9",
         "at": "2026-09-24",
-        "commit": "3fd5566",
+        "commit": "69b75fa",
         "reviewer": "Claude (UI review #136)"
       }
     },
@@ -43,9 +43,9 @@
       },
       "accepted": {
         "codeHash": "b87695e45ddb07c2",
-        "modelHash": "7f89ef6bbd446285",
+        "modelHash": "e8a00c6a6e1a6411",
         "at": "2026-09-24",
-        "commit": "3fd5566",
+        "commit": "69b75fa",
         "reviewer": "Claude (UI review #136)"
       }
     },
@@ -57,7 +57,7 @@
         "codeHash": "777aa41251a3a325",
         "modelHash": "2dfe23547a3916ab",
         "at": "2026-09-24",
-        "commit": "3fd5566",
+        "commit": "69b75fa",
         "reviewer": "Claude (UI review #136)"
       }
     },
@@ -69,16 +69,16 @@
         "codeHash": "3475831b26f6566b",
         "modelHash": "c6508c376bfec4ef",
         "at": "2026-09-24",
-        "commit": "3fd5566",
+        "commit": "69b75fa",
         "reviewer": "Claude (UI review #136)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "7dd7bcaf74a42288",
-        "modelHash": "5809304f9c886c9d",
+        "modelHash": "b8374b5dbf3dd555",
         "at": "2026-09-24",
-        "commit": "3fd5566",
+        "commit": "69b75fa",
         "reviewer": "Claude (UI review #136)"
       },
       "observed": {
@@ -88,9 +88,9 @@
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "7dd7bcaf74a42288",
-        "modelHash": "3479de2ade74ead1",
+        "modelHash": "6bbf41c7aee042c4",
         "at": "2026-09-24",
-        "commit": "3fd5566",
+        "commit": "69b75fa",
         "reviewer": "Claude (UI review #136)"
       },
       "observed": {
