@@ -40,21 +40,51 @@ class TimelineView(context: Context) : View(context) {
             val end = buffer ?: partial ?: return
             paint.color = if (worse) late else color; paint.strokeWidth = 1.5f * d
             canvas.drawLine(x(0.0), y, x(end), y, paint)
-            fun dot(ms: Double, text: String) {
-                canvas.drawCircle(x(ms), y, 3.5f * d, paint)
-                paint.textAlign = Paint.Align.CENTER; paint.textSize = 9 * d
-                canvas.drawText(text, x(ms), y + 14 * d, paint)
-                paint.textAlign = Paint.Align.LEFT
-            }
-            dot(0.0, "0")
-            partial?.let { dot(it, String.format(Locale.US, "%.1f", it)) }
-            buffer?.let { dot(it, String.format(Locale.US, "%.1f", it)) }
+            val stops = listOfNotNull(
+                0.0 to "0",
+                partial?.let { it to String.format(Locale.US, "%.1f", it) },
+                buffer?.let { it to String.format(Locale.US, "%.1f", it) }
+            ).sortedBy { it.first }.map { x(it.first) to it.second }
+            stops.forEach { canvas.drawCircle(it.first, y, 3.5f * d, paint) }
+            drawStopLabels(canvas, stops, y)
         }
         val worse = nowPartial != null && typicalPartial != null && nowPartial!! > typicalPartial!! * 1.3 && nowPartial!! - typicalPartial!! > 10.0
         row(height * 0.32f, frame?.let { "#$it" } ?: "Now", nowPartial, nowBuffer, ink, worse)
         row(height * 0.72f, "Typical", typicalPartial, typicalBuffer, muted, false)
         paint.color = muted; paint.textSize = 9 * d; paint.textAlign = Paint.Align.RIGHT
         canvas.drawText("START · PARTIAL · BUFFER (ms)", right, 10 * d, paint)
+        paint.textAlign = Paint.Align.LEFT
+    }
+
+    /**
+     * Value labels under a row's dots. PARTIAL and BUFFER routinely land within a few milliseconds of each
+     * other, and two labels centred on their own dots then overlap into one unreadable run of digits
+     * ("62.7" over "67.5" reads as "62.767.5"). Neighbours whose boxes would touch are merged into a single
+     * "62.7 / 67.5" drawn between them, so the numbers stay legible without growing the row.
+     */
+    private fun drawStopLabels(canvas: Canvas, stops: List<Pair<Float, String>>, y: Float) {
+        if (stops.isEmpty()) return
+        val d = resources.displayMetrics.density
+        paint.textSize = 9 * d
+        paint.textAlign = Paint.Align.CENTER
+        val gap = 4 * d
+        var index = 0
+        while (index < stops.size) {
+            var last = index
+            var right = stops[index].first + paint.measureText(stops[index].second) / 2
+            while (last + 1 < stops.size) {
+                val (nextX, nextText) = stops[last + 1]
+                val half = paint.measureText(nextText) / 2
+                if (nextX - half >= right + gap) break
+                right = maxOf(right, nextX + half)
+                last++
+            }
+            val text = (index..last).joinToString(" / ") { stops[it].second }
+            val half = paint.measureText(text) / 2
+            val centre = (stops[index].first + stops[last].first) / 2
+            canvas.drawText(text, centre.coerceIn(half, width - half), y + 14 * d, paint)
+            index = last + 1
+        }
         paint.textAlign = Paint.Align.LEFT
     }
 }

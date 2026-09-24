@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "4909f79e2577d568",
-        "modelHash": "7542ec9d427fcda6",
+        "codeHash": "7dd7bcaf74a42288",
+        "modelHash": "a4e8d7e101417972",
         "at": "2026-09-24",
-        "commit": "ae12616",
-        "reviewer": "Claude (stream spec extraction)"
+        "commit": "69b75fa",
+        "reviewer": "Claude (UI review #136)"
       }
     },
     "omm:data-flow": {
@@ -21,8 +21,8 @@
         "codeHash": "777aa41251a3a325",
         "modelHash": "2ca33f437ba5aa05",
         "at": "2026-09-24",
-        "commit": "ae12616",
-        "reviewer": "Claude (stream spec extraction)"
+        "commit": "69b75fa",
+        "reviewer": "Claude (UI review #136)"
       }
     },
     "omm:state-transitions": {
@@ -33,8 +33,8 @@
         "codeHash": "aaf4024732868af7",
         "modelHash": "cc4554cedf7f18c9",
         "at": "2026-09-24",
-        "commit": "ae12616",
-        "reviewer": "Claude (stream spec extraction)"
+        "commit": "69b75fa",
+        "reviewer": "Claude (UI review #136)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "60209b6e2f305e28",
-        "modelHash": "7f89ef6bbd446285",
+        "codeHash": "b87695e45ddb07c2",
+        "modelHash": "e8a00c6a6e1a6411",
         "at": "2026-09-24",
-        "commit": "ae12616",
-        "reviewer": "Claude (stream spec extraction)"
+        "commit": "69b75fa",
+        "reviewer": "Claude (UI review #136)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -57,8 +57,8 @@
         "codeHash": "777aa41251a3a325",
         "modelHash": "2dfe23547a3916ab",
         "at": "2026-09-24",
-        "commit": "ae12616",
-        "reviewer": "Claude (stream spec extraction)"
+        "commit": "69b75fa",
+        "reviewer": "Claude (UI review #136)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -69,17 +69,17 @@
         "codeHash": "3475831b26f6566b",
         "modelHash": "c6508c376bfec4ef",
         "at": "2026-09-24",
-        "commit": "ae12616",
-        "reviewer": "Claude (stream spec extraction)"
+        "commit": "69b75fa",
+        "reviewer": "Claude (UI review #136)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "4909f79e2577d568",
-        "modelHash": "5809304f9c886c9d",
+        "codeHash": "7dd7bcaf74a42288",
+        "modelHash": "b8374b5dbf3dd555",
         "at": "2026-09-24",
-        "commit": "ae12616",
-        "reviewer": "Claude (stream spec extraction)"
+        "commit": "69b75fa",
+        "reviewer": "Claude (UI review #136)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "4909f79e2577d568",
-        "modelHash": "3479de2ade74ead1",
+        "codeHash": "7dd7bcaf74a42288",
+        "modelHash": "6bbf41c7aee042c4",
         "at": "2026-09-24",
-        "commit": "ae12616",
-        "reviewer": "Claude (stream spec extraction)"
+        "commit": "69b75fa",
+        "reviewer": "Claude (UI review #136)"
       },
       "observed": {
         "state": "fresh"

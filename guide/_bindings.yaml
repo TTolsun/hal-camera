@@ -223,6 +223,8 @@ sources:
           - app/src/main/java/dev/halcamera/ui/SelectionPopup.kt
           - app/src/main/java/dev/halcamera/ui/ShutterButton.kt
           - app/src/main/java/dev/halcamera/ui/StripView.kt
+      ui-widgets/frame-timeline:
+        evidence:
           - app/src/main/java/dev/halcamera/ui/TimelineView.kt
       ui-widgets/metric-bars:
         evidence:

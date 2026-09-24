@@ -482,8 +482,13 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         startActivity(Intent.createChooser(intent, "결과 공유"))
     }
 
+    // A step line runs past the screen edge ("fast close 11." with the digits after the point still to come),
+    // and a measurement that looks cut off is read as a measurement that ended there. The bar alone is too
+    // brief to catch, so the clipped edge fades: the row is visibly unfinished for as long as it is scrollable.
     private fun wide(view: TextView): HorizontalScrollView = HorizontalScrollView(this).apply {
-        isHorizontalScrollBarEnabled = false
+        isHorizontalScrollBarEnabled = true
+        isHorizontalFadingEdgeEnabled = true
+        setFadingEdgeLength(dp(24))
         addView(view, LinearLayout.LayoutParams(-2, -2))
     }
 
