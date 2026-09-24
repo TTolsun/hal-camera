@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "7dd7bcaf74a42288",
-        "modelHash": "a4e8d7e101417972",
+        "codeHash": "c0937b819347549f",
+        "modelHash": "2143ed2d1826e6f8",
         "at": "2026-09-24",
-        "commit": "69b75fa",
-        "reviewer": "Claude (UI review #136)"
+        "commit": "decabc7",
+        "reviewer": "Claude (UI review #140)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "777aa41251a3a325",
+        "codeHash": "2f3b3745cfa0d593",
         "modelHash": "2ca33f437ba5aa05",
         "at": "2026-09-24",
-        "commit": "69b75fa",
-        "reviewer": "Claude (UI review #136)"
+        "commit": "decabc7",
+        "reviewer": "Claude (UI review #140)"
       }
     },
     "omm:state-transitions": {
@@ -33,8 +33,8 @@
         "codeHash": "aaf4024732868af7",
         "modelHash": "cc4554cedf7f18c9",
         "at": "2026-09-24",
-        "commit": "69b75fa",
-        "reviewer": "Claude (UI review #136)"
+        "commit": "decabc7",
+        "reviewer": "Claude (UI review #140)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "b87695e45ddb07c2",
-        "modelHash": "e8a00c6a6e1a6411",
+        "codeHash": "2bbd5b6da00552d7",
+        "modelHash": "11ea3d256c894137",
         "at": "2026-09-24",
-        "commit": "69b75fa",
-        "reviewer": "Claude (UI review #136)"
+        "commit": "decabc7",
+        "reviewer": "Claude (UI review #140)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "777aa41251a3a325",
+        "codeHash": "2f3b3745cfa0d593",
         "modelHash": "2dfe23547a3916ab",
         "at": "2026-09-24",
-        "commit": "69b75fa",
-        "reviewer": "Claude (UI review #136)"
+        "commit": "decabc7",
+        "reviewer": "Claude (UI review #140)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "3475831b26f6566b",
+        "codeHash": "3025ec2908ced10d",
         "modelHash": "c6508c376bfec4ef",
         "at": "2026-09-24",
-        "commit": "69b75fa",
-        "reviewer": "Claude (UI review #136)"
+        "commit": "decabc7",
+        "reviewer": "Claude (UI review #140)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "7dd7bcaf74a42288",
-        "modelHash": "b8374b5dbf3dd555",
+        "codeHash": "c0937b819347549f",
+        "modelHash": "eaac20f21599cc8d",
         "at": "2026-09-24",
-        "commit": "69b75fa",
-        "reviewer": "Claude (UI review #136)"
+        "commit": "decabc7",
+        "reviewer": "Claude (UI review #140)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "7dd7bcaf74a42288",
-        "modelHash": "6bbf41c7aee042c4",
+        "codeHash": "c0937b819347549f",
+        "modelHash": "b782ad76910c779b",
         "at": "2026-09-24",
-        "commit": "69b75fa",
-        "reviewer": "Claude (UI review #136)"
+        "commit": "decabc7",
+        "reviewer": "Claude (UI review #140)"
       },
       "observed": {
         "state": "fresh"
