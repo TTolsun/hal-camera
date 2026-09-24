@@ -54,6 +54,8 @@ class CtsCaseActivity : ComponentActivity(), CtsRunner.PreviewHost, SurfaceHolde
     private lateinit var runButton: android.widget.Button
     private lateinit var headlineView: TextView
     private lateinit var results: LinearLayout
+    /** Covers the surface while nothing runs, so a closed camera's last frame does not stay on screen. */
+    private lateinit var previewCover: TextView
     private var runner: CtsRunner? = null
     private var report: CaseReport? = null
     private var status = "대기 중"
@@ -213,6 +215,14 @@ class CtsCaseActivity : ComponentActivity(), CtsRunner.PreviewHost, SurfaceHolde
         // The preview keeps its view size; only the buffer is resized per step, as in the CTS activity.
         val frame = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
         frame.addView(preview, FrameLayout.LayoutParams(-1, -1))
+        // A closed camera leaves its last frame on the surface, so the case ends with a still picture of
+        // whatever it last pointed at sitting under the results. The cover hides the surface whenever nothing
+        // is running; the surface itself is left alone because the runner holds it.
+        previewCover = Look.text(this, "", 12, Look.onDarkMuted).apply {
+            gravity = Gravity.CENTER
+            setBackgroundColor(Color.BLACK)
+        }
+        frame.addView(previewCover, FrameLayout.LayoutParams(-1, -1))
         body.addView(frame, lp(top = 12).apply { height = dp(180) })
 
         statusView = Look.text(this, status, 13, Look.onDarkMuted)
@@ -231,6 +241,8 @@ class CtsCaseActivity : ComponentActivity(), CtsRunner.PreviewHost, SurfaceHolde
 
     private fun render() {
         statusView.text = status
+        previewCover.visibility = if (runner != null) android.view.View.GONE else android.view.View.VISIBLE
+        previewCover.text = if (report == null) "실행을 시작하면 프리뷰가 여기에 나옵니다" else "실행이 끝나 카메라를 닫았습니다"
         runButton.text = if (runner != null) "중단" else "실행"
         val done = report
         headlineView.visibility = if (done == null) android.view.View.GONE else android.view.View.VISIBLE

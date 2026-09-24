@@ -140,6 +140,8 @@ class MainActivity : ComponentActivity() {
     private var lastSystemNs = 0L
     private lateinit var manager: CameraManager
     private lateinit var previewHost: FrameLayout
+    /** Sits over the frozen frame while the preview is paused. */
+    private lateinit var pausedOverlay: TextView
     private lateinit var topBar: LinearLayout
     private lateinit var bottomBar: LinearLayout
     private lateinit var diagnostics: ScrollView
@@ -165,6 +167,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var videoModeButton: Button
     private lateinit var modeControls: LinearLayout
     private lateinit var recordingTime: TextView
+    /** The same two controls as the capture row, kept in the panel header while the panel covers it. */
+    private lateinit var panelRecordingTime: TextView
+    private lateinit var panelStopButton: IconButton
     private lateinit var galleryButton: RecentMediaButton
     private lateinit var cameraShortcut: IconButton
     private var cameraIds = emptyList<String>()
@@ -208,7 +213,9 @@ class MainActivity : ComponentActivity() {
             val time = nowNs()
             if (recordingVideo && !stoppingRecording) {
                 val seconds = (SystemClock.elapsedRealtime() - recordingStartedAt) / 1000
-                recordingTime.text = "● REC  %02d:%02d".format(Locale.US, seconds / 60, seconds % 60)
+                val elapsed = "● REC  %02d:%02d".format(Locale.US, seconds / 60, seconds % 60)
+                recordingTime.text = elapsed
+                panelRecordingTime.text = elapsed
             }
             val events = recorder.snapshot(10_000_000_000L)
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
@@ -371,6 +378,16 @@ class MainActivity : ComponentActivity() {
         setContentView(root)
         previewHost=FrameLayout(this).apply { setBackgroundColor(Color.BLACK); contentDescription="실시간 카메라 프리뷰" }
         root.addView(previewHost,FrameLayout.LayoutParams(-1,-1))
+        // A paused preview keeps its last frame, which looks exactly like a preview that has stopped updating
+        // on its own. The scrim says which of the two it is, over the frame rather than above it in the top
+        // bar, because that frame is what raises the question.
+        pausedOverlay=label("일시정지됨\n재개 버튼을 누르면 측정을 다시 시작합니다",14,Look.onDark).apply {
+            gravity=Gravity.CENTER
+            setBackgroundColor(Color.argb(150,0,0,0))
+            visibility=View.GONE
+            setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
+        }
+        root.addView(pausedOverlay,FrameLayout.LayoutParams(-1,-1))
 
         // Keep API selection and the live readout visible; detailed measurement tools live in the panel.
         topBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; setPadding(dp(12),dp(8),dp(12),dp(10)) }
@@ -464,12 +481,8 @@ class MainActivity : ComponentActivity() {
         mediaButton=ShutterButton(this).apply {
             setOnClickListener {
                 if (cli.active != null) return@setOnClickListener
-                if(recordingVideo) {
-                    stoppingRecording=true
-                    recordingTime.text="저장 중…"
-                    updateMediaControls()
-                    (engine as? Camera2Engine)?.stopRecording()
-                } else if(videoMode) {
+                if(recordingVideo) stopRecording()
+                else if(videoMode) {
                     withMediaPermissions(true) { runCamera2Action { (engine as? Camera2Engine)?.startRecording() } }
                 } else withMediaPermissions(false) { runCamera2Action { engine?.capture() } }
             }
@@ -527,6 +540,13 @@ class MainActivity : ComponentActivity() {
         }
         val head=row().apply { gravity=Gravity.CENTER_VERTICAL }; body.addView(head)
         head.addView(label("진단",22,Color.WHITE,true),LinearLayout.LayoutParams(0,-2,1f))
+        // The panel hides the capture controls, which is where the stop button and the elapsed time live. A
+        // recording that cannot be stopped without first closing a panel is the wrong trade for looking at the
+        // frame numbers while it runs, so both follow the recording up here.
+        panelRecordingTime=label("● REC  00:00",13,coral,true).apply { typeface=Look.mono; visibility=View.GONE }
+        head.addView(panelRecordingTime,LinearLayout.LayoutParams(-2,-2).apply { marginEnd=dp(8) })
+        panelStopButton=IconButton(this,R.drawable.ic_action_stop,"녹화 정지") { stopRecording() }.apply { visibility=View.GONE }
+        head.addView(panelStopButton,LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginEnd=dp(4) })
         head.addView(IconButton(this,R.drawable.ic_action_info,"앱 정보 보기") { dev.halcamera.ui.AboutSheet.show(this) },LinearLayout.LayoutParams(dp(48),dp(48)))
         head.addView(IconButton(this,R.drawable.ic_action_close,"진단 패널 닫기") { showDiagnostics(false) },LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginStart=dp(4) })
         val diagnosticControls=row()
@@ -659,8 +679,13 @@ class MainActivity : ComponentActivity() {
             button.contentDescription=if(index==0) "사진 모드, YUV와 JPEG 두 장 저장" else "동영상 모드, 소리 포함"
             ViewCompat.setStateDescription(button,if(selected) "선택됨" else null)
         }
+        pausedOverlay.visibility=if(paused) View.VISIBLE else View.GONE
         modeControls.visibility=if(recordingVideo) View.INVISIBLE else View.VISIBLE
         recordingTime.visibility=if(recordingVideo) View.VISIBLE else View.GONE
+        panelRecordingTime.visibility=recordingTime.visibility
+        panelStopButton.visibility=recordingTime.visibility
+        panelStopButton.isEnabled=recordingVideo && !stoppingRecording
+        panelStopButton.alpha=if(panelStopButton.isEnabled) 1f else 0.4f
         mediaButton.setCaptureState(videoMode,recordingVideo)
         if(stoppingRecording) {
             mediaButton.contentDescription="동영상 저장 중"
@@ -832,6 +857,15 @@ class MainActivity : ComponentActivity() {
             if (resumed && !destroyed) startActivity(intent()) else updateMediaControls()
         }
         if (old == null) open() else old.close { open() }
+    }
+    /** Ends the recording and says so on both stop buttons, whichever one the user reached. */
+    private fun stopRecording() {
+        if (!recordingVideo || stoppingRecording) return
+        stoppingRecording = true
+        recordingTime.text = "저장 중…"
+        panelRecordingTime.text = "저장 중…"
+        updateMediaControls()
+        (engine as? Camera2Engine)?.stopRecording()
     }
     private fun showDiagnostics(show: Boolean) {
         if (show) zoomControl.collapse(animate = false)

@@ -71,6 +71,8 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
     private lateinit var runButton: Button
     private lateinit var headlineView: TextView
     private lateinit var list: LinearLayout
+    /** Covers the surface while nothing runs, so a closed camera's last frame does not stay on screen. */
+    private lateinit var previewCover: TextView
     private val entries = ArrayList<SuiteEntry>()
     private var report: SuiteReport? = null
     private var running = false
@@ -161,6 +163,15 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         // The preview keeps its frame; each item resizes only the buffer, as in the CTS activity.
         val frame = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
         frame.addView(preview, FrameLayout.LayoutParams(-1, -1))
+        // A closed camera leaves its last frame on the surface, so the run ends with a still picture of
+        // whatever the last item pointed at — a front camera for most of them — sitting under the results for
+        // as long as the screen is open. The cover hides the surface whenever nothing is running; the surface
+        // itself is left alone because the vendored tests hold it.
+        previewCover = Look.text(this, "", 12, Look.onDarkMuted).apply {
+            gravity = Gravity.CENTER
+            setBackgroundColor(Color.BLACK)
+        }
+        frame.addView(previewCover, FrameLayout.LayoutParams(-1, -1))
         body.addView(frame, lp(top = 12).apply { height = dp(180) })
 
         statusView = Look.text(this, status, 13, Look.onDarkMuted)
@@ -394,6 +405,8 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
 
     private fun render() {
         renderStatus()
+        previewCover.visibility = if (running) View.GONE else View.VISIBLE
+        previewCover.text = if (report == null) "실행을 시작하면 프리뷰가 여기에 나옵니다" else "실행이 끝나 카메라를 닫았습니다"
         runButton.text = when { running -> "중단"; report != null -> "다시 실행"; else -> "실행" }
         val done = report
         headlineView.visibility = if (done == null) View.GONE else View.VISIBLE
