@@ -856,8 +856,12 @@ class BenchmarkActivity : ComponentActivity() {
             "record_started" -> r.signal(s, BenchmarkRunner.Signal.RECORD_STARTED, e.atNs)
             "record_stop_call" -> r.recordMark(s, RecordCycle.STOP_CALL_MARK, e.atNs)
             "record_stopped" -> r.signal(s, BenchmarkRunner.Signal.RECORD_STOPPED, e.atNs)
-            "record_failed" -> r.signal(s, BenchmarkRunner.Signal.ERROR, e.atNs,
-                (e.values["reason"] as? String)?.let { "record_failed:$it" } ?: e.kind)
+            // Not an ERROR signal: a recorder error is posted asynchronously and may name a cycle the stage has
+            // already left, so the runner decides whether it still belongs to anything.
+            "record_failed" -> r.recordFailed(
+                s, (e.values["iteration"] as? Number)?.toInt(),
+                (e.values["reason"] as? String)?.let { "record_failed:$it" } ?: e.kind, e.atNs
+            )
             // The engine records capture_submit right before CameraCaptureSession.capture(), which is the
             // submission time METRICS.md asks for, and the tag ties every still callback to its request.
             "capture_submit" -> (e.values["requestTag"] as? String)?.let { r.stillSubmitted(s, it, e.atNs) }

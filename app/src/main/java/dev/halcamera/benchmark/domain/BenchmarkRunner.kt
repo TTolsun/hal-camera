@@ -237,6 +237,20 @@ class BenchmarkRunner(
     }
 
     /**
+     * The engine could not record. Ignored unless the stage is still on the cycle this names, because a
+     * MediaRecorder error is delivered asynchronously and can arrive long after the call that caused it: after
+     * the stage moved to the next cycle, where it would fail a cycle that is doing fine, or after the whole
+     * stage is over, where an ordinary ERROR would set hardFailure and throw away a run whose launch, preview
+     * and capture samples are all complete — the one thing the RECORD stage must never do.
+     */
+    fun recordFailed(session: String, iteration: Int?, reason: String?, atNs: Long = clock()) {
+        if (session != this.session || !onRecordStep) return
+        val p = current() ?: return
+        if (iteration != null && iteration != p.index) return
+        recordFailure(reason ?: "record_failed", atNs)
+    }
+
+    /**
      * A capture started for a recording request (3.1 end point). Matched by tag so a capture of the previous
      * cycle, or a preview capture submitted while the recorder was being prepared, is never taken for this one.
      */

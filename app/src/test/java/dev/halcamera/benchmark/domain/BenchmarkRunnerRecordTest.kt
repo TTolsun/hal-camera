@@ -309,6 +309,40 @@ class BenchmarkRunnerRecordTest {
     }
 
     @Test
+    fun `a recorder error that arrives after the stage is over does not touch the run`() {
+        val r = runner()
+        runToRecordStage(r)
+        repeat(recordIterations) { completeRecord(r, it) }
+        // The MediaRecorder of the last cycle reports its error only now, while the camera is closing.
+        r.recordFailed(r.currentSession, recordIterations - 1, "record_failed:recorder_error", clock.ns)
+        completeClose(r)
+
+        val result = listener.result!!
+        assertNull("a late recorder error must not mark the run hard-failed", result.hardFailure)
+        assertNull(result.aborted)
+        assertEquals(BenchmarkRunner.Step.DONE, r.step)
+        // The run stays complete: every cycle kept its values and nothing was cut short.
+        assertEquals(profile.expectedRecordSamples, result.validRecordSamples)
+        assertEquals(recordIterations, driver.recordStops)
+    }
+
+    @Test
+    fun `a recorder error naming an earlier cycle does not fail the one in flight`() {
+        val r = runner()
+        runToRecordStage(r)
+        completeRecord(r, 0)
+        // Cycle 1 is preparing when cycle 0's recorder finally reports its error.
+        r.recordFailed(r.currentSession, 0, "record_failed:recorder_error", clock.ns)
+        repeat(recordIterations - 1) { completeRecord(r, it + 1) }
+        completeClose(r)
+
+        val result = listener.result!!
+        assertTrue("no cycle was failed by another cycle's error", result.records.none { it.failed })
+        assertEquals(0, driver.recordAborts)
+        assertEquals(profile.expectedRecordSamples, result.validRecordSamples)
+    }
+
+    @Test
     fun `an abort during recording keeps the cycles that finished`() {
         val r = runner()
         runToRecordStage(r)
