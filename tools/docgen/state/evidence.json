@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "f12d90e6e7c88ff5",
+        "codeHash": "a870db285267dd49",
         "modelHash": "7542ec9d427fcda6",
-        "at": "2026-09-23",
-        "commit": "6719fad",
-        "reviewer": "Claude (recording metrics)"
+        "at": "2026-09-24",
+        "commit": "821ddfd",
+        "reviewer": "Claude (record metric names)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "2cf68caad44d99ec",
+        "codeHash": "dfb4759506d4aec6",
         "modelHash": "2ca33f437ba5aa05",
-        "at": "2026-09-23",
-        "commit": "6719fad",
-        "reviewer": "Claude (recording metrics)"
+        "at": "2026-09-24",
+        "commit": "821ddfd",
+        "reviewer": "Claude (record metric names)"
       }
     },
     "omm:state-transitions": {
@@ -32,9 +32,9 @@
       "accepted": {
         "codeHash": "d13158b562b5f609",
         "modelHash": "8a5ba1a88d1e6bd7",
-        "at": "2026-09-23",
-        "commit": "6719fad",
-        "reviewer": "Claude (recording metrics)"
+        "at": "2026-09-24",
+        "commit": "821ddfd",
+        "reviewer": "Claude (record metric names)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "5e90c8033ad05601",
+        "codeHash": "54cfb11b88a3e5e0",
         "modelHash": "7f89ef6bbd446285",
-        "at": "2026-09-23",
-        "commit": "6719fad",
-        "reviewer": "Claude (recording metrics)"
+        "at": "2026-09-24",
+        "commit": "821ddfd",
+        "reviewer": "Claude (record metric names)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "2cf68caad44d99ec",
+        "codeHash": "dfb4759506d4aec6",
         "modelHash": "2dfe23547a3916ab",
-        "at": "2026-09-23",
-        "commit": "6719fad",
-        "reviewer": "Claude (recording metrics)"
+        "at": "2026-09-24",
+        "commit": "821ddfd",
+        "reviewer": "Claude (record metric names)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "baf7d719ee26a33a",
+        "codeHash": "0fd984e7374f4cc8",
         "modelHash": "881d62e8e21fb13e",
-        "at": "2026-09-23",
-        "commit": "6719fad",
-        "reviewer": "Claude (recording metrics)"
+        "at": "2026-09-24",
+        "commit": "821ddfd",
+        "reviewer": "Claude (record metric names)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "f12d90e6e7c88ff5",
+        "codeHash": "a870db285267dd49",
         "modelHash": "5809304f9c886c9d",
-        "at": "2026-09-23",
-        "commit": "6719fad",
-        "reviewer": "Claude (recording metrics)"
+        "at": "2026-09-24",
+        "commit": "821ddfd",
+        "reviewer": "Claude (record metric names)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "f12d90e6e7c88ff5",
+        "codeHash": "a870db285267dd49",
         "modelHash": "3479de2ade74ead1",
-        "at": "2026-09-23",
-        "commit": "6719fad",
-        "reviewer": "Claude (recording metrics)"
+        "at": "2026-09-24",
+        "commit": "821ddfd",
+        "reviewer": "Claude (record metric names)"
       },
       "observed": {
         "state": "fresh"

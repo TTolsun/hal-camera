@@ -162,7 +162,9 @@ data class RecordCadence(
 3. 그 구간에서 간격이 `1.5 × T_ref`를 넘은 횟수를 센다.
 4. `T_ref`와 일치하는 구간이 하나도 없으면 `anomalyCount = null`이고 `unknown_reason = cadence_changed`이다. 0으로 적지 않는다.
 
-이 값은 실제 손실 개수가 아니므로 JSON과 화면 모두 "간격 이상 횟수"로만 적는다. 원인층은 `unattributed`이다.
+이 값은 실제 손실 개수가 아니므로 원인층은 `unattributed`이다.
+
+화면 이름은 `Record stalls`이다. 처음에는 손실로 읽히지 않도록 `Interval anomalies`로 적었으나, 프리뷰에서 똑같은 계산을 하는 H.5가 이미 `Stalls`라는 이름을 쓰고 있어서 같은 개념에 두 이름이 생기는 문제가 더 컸다. 두 지표 모두 손실 개수가 아니라는 주의는 이름이 아니라 가이드 문서가 진다.
 
 ### 7.4 3.4 `steady_fps`
 
@@ -186,7 +188,7 @@ data class RecordCadence(
 | 대상 | 변경 |
 |---|---|
 | `Category` | `RECORD` 추가 |
-| `BenchmarkMetricCatalog` | `3.1 Record start / ms`, `3.4 Steady fps / fps`, `3.6 Record stop / ms`, `3.7 Record jitter / ms`, `3.2 Interval anomalies / count` |
+| `BenchmarkMetricCatalog` | `3.1 Record start / ms`, `3.4 Record fps / fps`, `3.6 Record stop / ms`, `3.7 Record jitter / ms`, `3.2 Record stalls / count` |
 | `BenchmarkMetrics` | `RECORD = listOf("3.1", "3.4", "3.6", "3.7", "3.2")`를 `ALL`에 추가 |
 | `BenchmarkRunner.Result` | `records: List<RecordCycle>` 추가 |
 | `BenchmarkEvaluator.Input` | `records`와 `recordUnsupported` 추가. 사이클이 없으면 다섯 지표 모두 `NOT_RUN`, 조합이 거부되었으면 `UNSUPPORTED` |

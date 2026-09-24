@@ -42,7 +42,7 @@ class RegressionRulesTest {
         assertEquals(20.0, r("3.7").deltaPct!!, 0.0); assertEquals(1.0, r("3.7").noiseFloor, 0.0)
         assertEquals(2.0, r("3.2").noiseFloor, 0.0)
         assertEquals(RuleKind.COUNT, r("3.2").kind)
-        // Steady fps is the one metric whose larger value is the better one.
+        // Record fps is the one metric whose larger value is the better one.
         assertEquals(Direction.HIGHER_IS_BETTER, r("3.4").direction)
         assertEquals(5.0, r("3.4").deltaPct!!, 0.0); assertEquals(1.0, r("3.4").noiseFloor, 0.0)
         assertEquals(

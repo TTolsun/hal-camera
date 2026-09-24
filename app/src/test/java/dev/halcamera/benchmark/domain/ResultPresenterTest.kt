@@ -428,7 +428,7 @@ class ResultPresenterTest {
         val sections = ResultPresenter.metricBars(current, null, ComparedTo.NONE)
         assertEquals(listOf("Launch", "Stability", "Record"), sections.map { it.title })
         assertEquals(
-            listOf("Record start", "Steady fps", "Record stop", "Record jitter", "Interval anomalies"),
+            listOf("Record start", "Record fps", "Record stop", "Record jitter", "Record stalls"),
             sections.first { it.title == "Record" }.bars.map { it.label }
         )
     }
@@ -458,9 +458,9 @@ class ResultPresenterTest {
         val bars = ResultPresenter.metricBars(run, null, ComparedTo.NONE).flatMap { it.bars }.associateBy { it.label }
         assertEquals("0.4 ms", bars.getValue("Record jitter").valueText)
         assertEquals("33.3 ms", bars.getValue("Interval p50").valueText)
-        assertEquals("30.0 fps", bars.getValue("Steady fps").valueText)
+        assertEquals("30.0 fps", bars.getValue("Record fps").valueText)
         assertEquals("186 ms", bars.getValue("Record start").valueText)
-        assertEquals("0", bars.getValue("Interval anomalies").valueText)
+        assertEquals("0", bars.getValue("Record stalls").valueText)
         // Every bar agrees with the row for the same metric.
         for (metric in run.metrics) {
             val label = BenchmarkMetricCatalog.info(metric.id)!!.short
