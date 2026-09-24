@@ -8,6 +8,8 @@ import android.view.View
 /**
  * The horizontal value bar under a key metric on the result screen. The fill is this run, the tick is the
  * baseline on the same scale, so whether the run moved past its baseline is visible without reading a number.
+ * That scale is shared by every row of the same unit in the section, so the fills also rank the rows against
+ * each other; ResultPresenter.metricBars computes both fractions.
  */
 internal class MeterView(
     context: Context,

@@ -351,9 +351,70 @@ class ResultPresenterTest {
         val open = bars.first { it.label == "Open" }
         assertEquals("128 ms", open.valueText)
         assertEquals("+28 ms", open.deltaText)
-        // The larger of the two values sits at 80% of the bar, so both the fill and the tick stay on screen.
-        assertEquals(0.8, open.fraction, 1e-9)
-        assertEquals(0.8 * 100.0 / 128.0, open.baseFraction!!, 1e-9)
+        // The largest millisecond value of the section — First frame, 412 ms — sits at 80% of the bar, and every
+        // other Launch row is measured against it, so both the fill and the tick stay on screen.
+        val scale = 412.0 / 0.8
+        assertEquals(128.0 / scale, open.fraction, 1e-9)
+        assertEquals(100.0 / scale, open.baseFraction!!, 1e-9)
+        assertEquals(0.8, bars.first { it.label == "First frame" }.fraction, 1e-9)
+        assertFalse(open.ownScale)
+    }
+
+    @Test fun barsOfOneUnitInOneSectionRankEachOtherByLength() {
+        // #137: every row scaled itself against its own baseline, so an 11 ms bar and a 561 ms bar in the same
+        // section were both drawn at 80% and the column claimed the two numbers were alike.
+        val current = run(metrics = listOf(
+            launchMetric("1.1", 11.0, 14.0),
+            launchMetric("1.2", 212.0, 230.0),
+            launchMetric("1.6", 561.0, 590.0)
+        ))
+        val launch = ResultPresenter.metricBars(current, null, ComparedTo.NONE).single { it.title == "Launch" }
+        val bars = launch.bars.associateBy { it.label }
+        assertEquals(0.8, bars.getValue("First frame").fraction, 1e-9)
+        assertEquals(0.8 * 11.0 / 561.0, bars.getValue("Open").fraction, 1e-9)
+        assertEquals(0.8 * 212.0 / 561.0, bars.getValue("Configure").fraction, 1e-9)
+        assertTrue(launch.bars.none { it.ownScale })
+    }
+
+    @Test fun aUnitWithOneRowInItsSectionKeepsItsOwnScale() {
+        // A frame rate on the millisecond axis would draw a 30 fps recording shorter than its own start latency,
+        // so the two units stay apart and the note under the card says the fps bar compares with nothing.
+        val current = run(metrics = listOf(
+            launchMetric("3.1", 186.0, 201.0),
+            windowMetric("3.4", 30.0),
+            launchMetric("3.6", 302.0, 340.0),
+            countMetric("3.2", 1)
+        ))
+        val sections = ResultPresenter.metricBars(current, null, ComparedTo.NONE)
+        val record = sections.single { it.title == "Record" }.bars.associateBy { it.label }
+        assertTrue(record.getValue("Record fps").ownScale)
+        assertEquals(0.8, record.getValue("Record fps").fraction, 1e-9)
+        assertTrue(record.getValue("Record stalls").ownScale)
+        assertFalse(record.getValue("Record start").ownScale)
+        assertEquals(0.8 * 186.0 / 302.0, record.getValue("Record start").fraction, 1e-9)
+        assertTrue(ResultPresenter.barScaleNote(sections)!!.contains("자체 스케일"))
+    }
+
+    @Test fun theScaleNoteSaysHowFarALengthMayBeCompared() {
+        val shared = ResultPresenter.metricBars(
+            run(metrics = listOf(launchMetric("1.1", 11.0, 14.0), launchMetric("1.6", 561.0, 590.0))),
+            null, ComparedTo.NONE
+        )
+        // Nothing stands alone here, so the note only names the rule and does not warn about a lone unit.
+        assertEquals("막대 길이는 같은 묶음 안에서 단위가 같은 지표끼리 비교됩니다", ResultPresenter.barScaleNote(shared))
+        assertNull(ResultPresenter.barScaleNote(emptyList()))
+    }
+
+    @Test fun aBaselineFarAboveThisRunKeepsItsTickOnTheTrack() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(
+            launchMetric("1.1", 900.0, 950.0), launchMetric("1.6", 120.0, 140.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(
+            launchMetric("1.1", 120.0, 140.0), launchMetric("1.6", 130.0, 150.0)))
+        val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+            .flatMap { it.bars }
+        // The shared scale counts the ticks too, so a baseline nobody came close to still fits inside the bar.
+        assertEquals(0.8, bars.first { it.label == "Open" }.baseFraction!!, 1e-9)
+        assertTrue(bars.all { (it.baseFraction ?: 0.0) <= 0.8 + 1e-9 && it.fraction <= 0.8 + 1e-9 })
     }
 
     @Test fun frameRateLeadsThePreviewSectionAsHOneUpsideDown() {

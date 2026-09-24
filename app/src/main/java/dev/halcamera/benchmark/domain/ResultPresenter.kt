@@ -17,9 +17,13 @@ enum class Tone { GOOD, BAD, NEUTRAL }
 data class ResultHeadline(val text: String, val sub: String, val tone: Tone)
 
 /**
- * One of the four metrics shown with a bar on the result screen. [fraction] and [baseFraction] are 0..1
- * positions on a shared scale, so the bar and the baseline tick are comparable by eye; [baseFraction] is null
- * when there is nothing to compare against.
+ * One of the metrics shown with a bar on the result screen. [fraction] and [baseFraction] are 0..1 positions on
+ * the scale that every bar of the same unit in the same section shares, so the baseline tick and the bars of the
+ * neighbouring rows are both comparable by eye; [baseFraction] is null when there is nothing to compare against.
+ *
+ * [ownScale] marks a row whose unit appears once in its section — a frame rate among intervals, a stall count
+ * among latencies. Its length shares a scale with nobody, so it says nothing about the rows around it, and the
+ * screen has to admit that rather than let the bar imply otherwise.
  */
 data class KeyMetric(
     val label: String,
@@ -28,7 +32,8 @@ data class KeyMetric(
     val deltaText: String?,
     val tone: Tone,
     val fraction: Double,
-    val baseFraction: Double?
+    val baseFraction: Double?,
+    val ownScale: Boolean = false
 )
 
 /** One category of [KeyMetric] bars on the result screen. */
@@ -254,6 +259,12 @@ object ResultPresenter {
      * The result screen draws these instead of a table behind a fold: a number beside its baseline is the
      * question the screen exists to answer, and a row of digits answers it worse than a bar does. A metric the
      * run did not measure is left out rather than drawn as an empty bar.
+     *
+     * Every bar of the same unit inside a section shares one scale. While each bar scaled itself against its own
+     * baseline, an 11 ms row and a 561 ms row were drawn the same length, which is the opposite of what a column
+     * of bars promises the eye (#137). The sharing stops at the section and at the unit: a frame rate and a
+     * millisecond do not belong on one axis, and Preview's 33 ms intervals would vanish beside Capture's
+     * hundreds of milliseconds.
      */
     fun metricBars(run: BenchmarkRun, comparison: RunComparison?, comparedTo: ComparedTo): List<MetricBarSection> {
         val withDelta = comparedTo != ComparedTo.NONE
@@ -265,26 +276,64 @@ object ResultPresenter {
                 val cmp = comparison?.metric(id)
                 // A timed-out 3A metric stores the observation window as its value (plan chapter 13), so a bar
                 // would compare a window against a convergence. It keeps its row and says so instead.
-                if (metric.timeout) {
-                    KeyMetric(info.short, "timeout", "—", null, Tone.NEUTRAL, 0.0, null)
-                } else {
-                    keyMetric(info.short, statLabel(metric, info), metric.value, cmp?.baselineValue, info.unit,
-                        cmp, withDelta, fine(info.id, info.category))
-                }
+                if (metric.timeout) BarInput(info.short, "timeout", null, null, info.unit, null, false)
+                else BarInput(info.short, statLabel(metric, info), metric.value ?: return@mapNotNull null,
+                    cmp?.baselineValue, info.unit, cmp, fine(info.id, info.category))
             }
             // Frame rate leads the preview section: it is H.1 turned upside down, and "29.8 fps" answers the
             // question the interval only implies. The verdict still belongs to H.1, whose row follows it.
-            val bars = if (category == Category.PREVIEW) listOfNotNull(frameRate(run, comparison, withDelta)) + measured else measured
-            if (bars.isEmpty()) null else MetricBarSection(categoryLabel(category), bars)
+            val inputs = if (category == Category.PREVIEW) listOfNotNull(frameRate(run, comparison)) + measured else measured
+            if (inputs.isEmpty()) return@mapNotNull null
+            val scales = scales(inputs)
+            val drawn = inputs.filter { it.value != null }.groupingBy { it.unit }.eachCount()
+            MetricBarSection(categoryLabel(category), inputs.map { input ->
+                bar(input, scales[input.unit] ?: 1.0, ownScale = (drawn[input.unit] ?: 0) < 2, withDelta = withDelta)
+            })
         }
     }
 
-    private fun frameRate(run: BenchmarkRun, comparison: RunComparison?, withDelta: Boolean): KeyMetric? {
+    /**
+     * What the lengths on the metrics card mean, for the card to print under them.
+     *
+     * A column of bars invites a comparison between its rows, so the screen has to say how far that comparison
+     * reaches instead of leaving the reader to infer a rule the bars do not follow (#137).
+     */
+    fun barScaleNote(sections: List<MetricBarSection>): String? {
+        val bars = sections.flatMap { it.bars }
+        if (bars.isEmpty()) return null
+        val shared = "막대 길이는 같은 묶음 안에서 단위가 같은 지표끼리 비교됩니다"
+        if (bars.none { it.ownScale }) return shared
+        return "$shared · 단위가 혼자인 지표는 자체 스케일이라 다른 행과 길이를 비교할 수 없습니다"
+    }
+
+    private fun frameRate(run: BenchmarkRun, comparison: RunComparison?): BarInput? {
         val fps = run.metric("H.1")?.value?.takeIf { it > 0 }?.let { 1000.0 / it } ?: return null
         val cmp = comparison?.metric("H.1")
         val baseFps = cmp?.baselineValue?.takeIf { it > 0 }?.let { 1000.0 / it }
-        return keyMetric("Frame rate", "", fps, baseFps, "fps", cmp, withDelta)
+        return BarInput("Frame rate", "", fps, baseFps, "fps", cmp, false)
     }
+
+    /** A bar before its section's scale is known. [value] is null only for a timed-out row, which draws no fill. */
+    private class BarInput(
+        val label: String,
+        val statLabel: String,
+        val value: Double?,
+        val base: Double?,
+        val unit: String,
+        val cmp: MetricComparison?,
+        val fine: Boolean
+    )
+
+    /**
+     * One scale per unit in a section: the largest value or baseline tick of the group sits at 80% of the bar,
+     * so however far the two runs are apart, no fill and no tick can be pushed off the track. A group whose
+     * values are all zero would make the scale 0 and every fraction NaN, so it falls back to empty bars.
+     */
+    private fun scales(inputs: List<BarInput>): Map<String, Double> =
+        inputs.filter { it.value != null }.groupBy { it.unit }.mapValues { (_, group) ->
+            val top = group.maxOf { maxOf(it.value!!, it.base ?: it.value!!) }
+            (top / 0.8).takeIf { it > 0 } ?: 1.0
+        }
 
     /**
      * What the shown number is, when that is not obvious from the metric's name.
@@ -301,30 +350,20 @@ object ResultPresenter {
         else -> "median"
     }
 
-    private fun keyMetric(
-        label: String,
-        statLabel: String,
-        value: Double?,
-        base: Double?,
-        unit: String,
-        cmp: MetricComparison?,
-        withDelta: Boolean,
-        fine: Boolean = false
-    ): KeyMetric? {
-        if (value == null) return null
-        // One shared scale per row: the larger of the two values sits at 80% of the bar, so the tick and the
-        // fill are always both on screen and their order is readable. A zero pair would make the scale 0 and
-        // the fraction NaN, so it falls back to an empty bar instead.
-        val scale = (maxOf(value, base ?: value) / 0.8).takeIf { it > 0 } ?: 1.0
+    private fun bar(input: BarInput, scale: Double, ownScale: Boolean, withDelta: Boolean): KeyMetric {
+        val value = input.value
+            ?: return KeyMetric(input.label, input.statLabel, "—", null, Tone.NEUTRAL, 0.0, null)
+        val base = input.base
+        val cmp = input.cmp
         val delta = if (!withDelta || base == null) null else {
             val d = value - base
-            when (unit) {
+            when (input.unit) {
                 "fps" -> String.format(Locale.US, "%+.1f fps", d)
                 // A count difference is already the whole story, and "+3 count" reads as a unit nobody uses.
                 "count" -> String.format(Locale.US, "%+.0f", d)
                 // A change of a fraction of a millisecond is the whole point of a jitter row; "+0 ms" is not.
-                "ms" -> String.format(Locale.US, if (fine) "%+.1f ms" else "%+.0f ms", d)
-                else -> String.format(Locale.US, "%+.0f %s", d, unit)
+                "ms" -> String.format(Locale.US, if (input.fine) "%+.1f ms" else "%+.0f ms", d)
+                else -> String.format(Locale.US, "%+.0f %s", d, input.unit)
             }
         }
         val tone = when {
@@ -334,13 +373,14 @@ object ResultPresenter {
             else -> Tone.NEUTRAL
         }
         return KeyMetric(
-            label = label,
-            statLabel = statLabel,
-            valueText = formatValue(value, unit, fine),
+            label = input.label,
+            statLabel = input.statLabel,
+            valueText = formatValue(value, input.unit, input.fine),
             deltaText = delta,
             tone = tone,
             fraction = (value / scale).coerceIn(0.0, 1.0),
-            baseFraction = base?.let { (it / scale).coerceIn(0.0, 1.0) }
+            baseFraction = base?.let { (it / scale).coerceIn(0.0, 1.0) },
+            ownScale = ownScale
         )
     }
 
