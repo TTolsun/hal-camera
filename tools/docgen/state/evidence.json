@@ -9,8 +9,8 @@
         "codeHash": "a870db285267dd49",
         "modelHash": "7542ec9d427fcda6",
         "at": "2026-09-24",
-        "commit": "821ddfd",
-        "reviewer": "Claude (record metric names)"
+        "commit": "12128c5",
+        "reviewer": "Claude (runner-sequence split)"
       }
     },
     "omm:data-flow": {
@@ -21,8 +21,8 @@
         "codeHash": "dfb4759506d4aec6",
         "modelHash": "2ca33f437ba5aa05",
         "at": "2026-09-24",
-        "commit": "821ddfd",
-        "reviewer": "Claude (record metric names)"
+        "commit": "12128c5",
+        "reviewer": "Claude (runner-sequence split)"
       }
     },
     "omm:state-transitions": {
@@ -31,10 +31,10 @@
       },
       "accepted": {
         "codeHash": "d13158b562b5f609",
-        "modelHash": "8a5ba1a88d1e6bd7",
+        "modelHash": "cc4554cedf7f18c9",
         "at": "2026-09-24",
-        "commit": "821ddfd",
-        "reviewer": "Claude (record metric names)"
+        "commit": "12128c5",
+        "reviewer": "Claude (runner-sequence split)"
       }
     },
     "content:architecture.md/overview": {
@@ -45,8 +45,8 @@
         "codeHash": "54cfb11b88a3e5e0",
         "modelHash": "7f89ef6bbd446285",
         "at": "2026-09-24",
-        "commit": "821ddfd",
-        "reviewer": "Claude (record metric names)"
+        "commit": "12128c5",
+        "reviewer": "Claude (runner-sequence split)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -57,8 +57,8 @@
         "codeHash": "dfb4759506d4aec6",
         "modelHash": "2dfe23547a3916ab",
         "at": "2026-09-24",
-        "commit": "821ddfd",
-        "reviewer": "Claude (record metric names)"
+        "commit": "12128c5",
+        "reviewer": "Claude (runner-sequence split)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -67,10 +67,10 @@
       },
       "accepted": {
         "codeHash": "0fd984e7374f4cc8",
-        "modelHash": "881d62e8e21fb13e",
+        "modelHash": "c6508c376bfec4ef",
         "at": "2026-09-24",
-        "commit": "821ddfd",
-        "reviewer": "Claude (record metric names)"
+        "commit": "12128c5",
+        "reviewer": "Claude (runner-sequence split)"
       }
     },
     "content:architecture.md/module-roles": {
@@ -78,8 +78,8 @@
         "codeHash": "a870db285267dd49",
         "modelHash": "5809304f9c886c9d",
         "at": "2026-09-24",
-        "commit": "821ddfd",
-        "reviewer": "Claude (record metric names)"
+        "commit": "12128c5",
+        "reviewer": "Claude (runner-sequence split)"
       },
       "observed": {
         "state": "fresh"
@@ -90,8 +90,8 @@
         "codeHash": "a870db285267dd49",
         "modelHash": "3479de2ade74ead1",
         "at": "2026-09-24",
-        "commit": "821ddfd",
-        "reviewer": "Claude (record metric names)"
+        "commit": "12128c5",
+        "reviewer": "Claude (runner-sequence split)"
       },
       "observed": {
         "state": "fresh"

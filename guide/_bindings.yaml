@@ -412,6 +412,8 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
           - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+      runner-sequence:
+        evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
       incident-window:
         evidence:
