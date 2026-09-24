@@ -31,8 +31,11 @@ data class CameraProbeEntry(
  * and that is how a second id prefix survived here long enough to read "0 · Camera · 0 (Wide · Rear)".
  */
 object ProbeTitle {
-    fun of(cameraKey: String, role: LensRole, facing: Int?, physical: Boolean, hardwareLevel: String?): String =
-        listOfNotNull(CameraLabel.full(cameraKey, role, facing), if (physical) "physical" else null, hardwareLevel)
+    fun of(
+        cameraKey: String, role: LensRole, facing: Int?, physical: Boolean, hardwareLevel: String?,
+        equivalentFocalMm: Double? = null
+    ): String =
+        listOfNotNull(CameraLabel.full(cameraKey, role, facing, equivalentFocalMm), if (physical) "physical" else null, hardwareLevel)
             .joinToString(" · ")
 }
 

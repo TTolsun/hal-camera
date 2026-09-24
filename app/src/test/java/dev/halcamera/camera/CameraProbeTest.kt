@@ -41,6 +41,11 @@ class CameraProbeTest {
             "Camera · 1 (Front)",
             ProbeTitle.of("1", LensRole.FRONT, CameraLabel.FACING_FRONT, physical = false, hardwareLevel = null)
         )
+        // PROBE's picker holds the front cameras' field of view too, so its list separates them as LIVE's does.
+        assertEquals(
+            "Camera · 3 (Front · 14 mm) · LIMITED",
+            ProbeTitle.of("3", LensRole.FRONT, CameraLabel.FACING_FRONT, physical = false, hardwareLevel = "LIMITED", equivalentFocalMm = 13.8)
+        )
     }
 
     @Test
