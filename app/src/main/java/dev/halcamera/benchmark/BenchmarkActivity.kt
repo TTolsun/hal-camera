@@ -605,6 +605,11 @@ class BenchmarkActivity : ComponentActivity() {
             val tickName = if (comparedTo == ComparedTo.BASELINE) "baseline" else "이전 run"
             metricsCard.addView(Look.text(this, "막대 = 이번 run · 눈금 = $tickName", 11, Look.onDarkMuted), lp(top = 12))
         }
+        // How far a length may be compared. Without it the reader has to guess the rule from the bars, and the
+        // guess a column of bars invites — every row on one axis — is not the rule a mixed-unit section follows.
+        ResultPresenter.barScaleNote(sections)?.let {
+            metricsCard.addView(Look.text(this, it, 11, Look.onDarkMuted), lp(top = if (anyBaseline) 4 else 12))
+        }
         // Label and value pairs, not seven sentences that repeated each other: the eligibility line named the
         // same flags the summary printed again as codes, and neither said what a code meant.
         val details = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
