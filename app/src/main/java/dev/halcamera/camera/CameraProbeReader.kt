@@ -35,18 +35,20 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
         val ids = try { manager.cameraIdList.toList() } catch (e: Exception) { errors += "cameraIdList: ${e.message}"; emptyList() }
         // Lens roles come from the shared enumeration rather than from a second inference here. Only that one applies
         // LensRoles.dedupeMain across the rear cameras, so inferring locally would let PROBE call two lenses Wide
-        // while LIVE and BENCHMARK call one of them Wide and the other unplaced.
-        val roles = try {
-            CameraEndpointResolver(manager).resolve().associate { it.key to it.role }
+        // while LIVE and BENCHMARK call one of them Wide and the other unplaced. The whole endpoint is kept rather
+        // than the role alone because the title also carries the 35 mm equivalent for the cameras the role leaves
+        // unnamed, and that figure is computed by the same enumeration.
+        val endpoints = try {
+            CameraEndpointResolver(manager).resolve().associateBy { it.key }
         } catch (e: Exception) { errors += "endpoint roles: ${e.message}"; emptyMap() }
         val cameras = ArrayList<CameraProbeEntry>()
         ids.forEach { id ->
             val chars = try { manager.getCameraCharacteristics(id) } catch (e: Exception) { errors += "camera $id: ${e.message}"; return@forEach }
-            cameras += entry(id, null, chars, roles)
+            cameras += entry(id, null, chars, endpoints)
             if (Build.VERSION.SDK_INT >= 28) {
                 chars.physicalCameraIds.filter { it !in ids }.sorted().forEach { pid ->
                     val pc = try { manager.getCameraCharacteristics(pid) } catch (e: Exception) { errors += "physical $id/$pid: ${e.message}"; return@forEach }
-                    cameras += entry(pid, id, pc, roles)
+                    cameras += entry(pid, id, pc, endpoints)
                 }
             }
         }
@@ -69,14 +71,18 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
         ProbeRow("ABIs", Build.SUPPORTED_ABIS.joinToString(", "))
     )
 
-    private fun entry(id: String, physicalOf: String?, c: CameraCharacteristics, roles: Map<String, LensRole>): CameraProbeEntry {
+    private fun entry(id: String, physicalOf: String?, c: CameraCharacteristics, endpoints: Map<String, CameraEndpoint>): CameraProbeEntry {
         val facing = c[CameraCharacteristics.LENS_FACING]
         val level = MetadataNames.name("INFO_SUPPORTED_HARDWARE_LEVEL_", c[CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL])
         // The shared label carries the id, so PROBE names a camera the same way LIVE, BENCHMARK and CTS do. The
         // hardware level and the physical marker are PROBE's own additions and follow the parenthesis.
         val key = physicalOf?.let { "$it.$id" } ?: id
-        val role = roles[key] ?: LensRole.UNKNOWN
-        val title = ProbeTitle.of(key, role, facing, physical = physicalOf != null, hardwareLevel = level)
+        val endpoint = endpoints[key]
+        val role = endpoint?.role ?: LensRole.UNKNOWN
+        val title = ProbeTitle.of(
+            key, role, facing, physical = physicalOf != null, hardwareLevel = level,
+            equivalentFocalMm = endpoint?.equivalentFocalMm
+        )
         val map = c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
         val sections = ArrayList<ProbeSection>()
         sections += guarded("Identity") { identity(id, physicalOf, c) }

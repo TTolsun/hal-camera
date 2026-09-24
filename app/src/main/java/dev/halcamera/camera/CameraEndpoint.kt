@@ -1,5 +1,7 @@
 package dev.halcamera.camera
 
+import java.util.Locale
+
 /**
  * Capability model from docs/archive/PRODUCT-v0.2.md 9.2. Built from enumeration results; the UI never assumes a lens
  * exists. It sits in `camera` rather than the deleted `check` package because an endpoint identifies a camera and
@@ -53,12 +55,12 @@ object CameraLabel {
     fun short(cameraKey: String): String = if (cameraKey.isEmpty()) "Camera · —" else "Camera · $cameraKey"
 
     /** "Camera · 0 (Wide · Rear)", falling back to [short] when the enumeration placed neither lens nor facing. */
-    fun full(cameraKey: String, role: LensRole, facing: Int?): String {
-        val qualifier = listOfNotNull(lens(role), facing(role, facing)).joinToString(" · ")
+    fun full(cameraKey: String, role: LensRole, facing: Int?, equivalentFocalMm: Double? = null): String {
+        val qualifier = listOfNotNull(lens(role), facing(role, facing), angle(role, equivalentFocalMm)).joinToString(" · ")
         return if (qualifier.isEmpty()) short(cameraKey) else "${short(cameraKey)} ($qualifier)"
     }
 
-    fun full(endpoint: CameraEndpoint): String = full(endpoint.key, endpoint.role, endpoint.facing)
+    fun full(endpoint: CameraEndpoint): String = full(endpoint.key, endpoint.role, endpoint.facing, endpoint.equivalentFocalMm)
 
     /** Null when the role carries no lens: a front or external camera's lens is never inferred, and UNKNOWN failed. */
     fun lens(role: LensRole): String? = when (role) {
@@ -79,6 +81,22 @@ object CameraLabel {
         FACING_EXTERNAL -> "External"
         else -> if (role == LensRole.FRONT) "Front" else null
     }
+
+    /**
+     * The 35 mm equivalent, and only for the roles [lens] leaves unnamed. A phone with two front cameras listed
+     * them as "Camera · 1 (Front)" and "Camera · 3 (Front)", so the id was the only difference and the picker
+     * could not say which one was the wider lens. The same applies to the rear camera [LensRoles.dedupeMain]
+     * demotes to UNKNOWN, which is exactly the camera that lost its name to another one.
+     *
+     * The number is printed rather than turned into a lens name because the enumeration deliberately refuses to
+     * infer a front lens — the 20/35 mm bands were chosen for rear modules — and because two front cameras can
+     * share a band while still differing in field of view. The number separates them either way, and it is a
+     * value the HAL reported rather than a role this app decided on. Rounded to the millimetre: the picker row is
+     * narrow, and PROBE's "35mm equivalent" keeps the exact figure.
+     */
+    fun angle(role: LensRole, equivalentFocalMm: Double?): String? =
+        if (lens(role) != null || equivalentFocalMm == null) null
+        else String.format(Locale.US, "%.0f mm", equivalentFocalMm)
 }
 
 /**

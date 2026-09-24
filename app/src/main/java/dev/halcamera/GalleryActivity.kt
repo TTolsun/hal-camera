@@ -33,6 +33,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
+import dev.halcamera.ui.GalleryCount
 import dev.halcamera.ui.GalleryImageView
 import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
@@ -203,7 +204,7 @@ class GalleryActivity : ComponentActivity() {
         header.addView(selectButton, LinearLayout.LayoutParams(-2, 48.dp))
         album.addView(header, LinearLayout.LayoutParams(-1, -2))
         filterButton = button("전체 ▾") {
-            showSelectionPopup(filterButton, listOf("전체", "사진", "동영상"), filter) {
+            showSelectionPopup(filterButton, GalleryCount.filterNames, filter) {
                 rememberGrid()
                 filter = it
                 gridPosition = 0
@@ -383,7 +384,7 @@ class GalleryActivity : ComponentActivity() {
     private fun applyFilter() {
         visibleItems = items.filter { filter == 0 || (filter == 1 && !it.video) || (filter == 2 && it.video) }
         filterButton.text = listOf("전체 ▾", "사진 ▾", "동영상 ▾")[filter]
-        filterButton.contentDescription = "미디어 종류, ${listOf("전체", "사진", "동영상")[filter]}"
+        filterButton.contentDescription = "미디어 종류, ${GalleryCount.filterNames[filter]}"
         adapter.notifyDataSetChanged()
         empty.text = if (items.isEmpty()) "아직 사진이나 동영상이 없습니다.\n카메라에서 촬영하면 여기에 표시됩니다." else "${if (filter == 1) "사진" else "동영상"}이 없습니다."
         empty.visibility = if (visibleItems.isEmpty()) View.VISIBLE else View.GONE
@@ -409,8 +410,8 @@ class GalleryActivity : ComponentActivity() {
 
     private fun updateSelection() {
         albumTitle.text = if (selectionMode) "${selected.size}개 선택됨" else "HALCamera"
-        count.text = if (selectionMode) "총 ${visibleItems.size}개 · ${listOf("전체", "사진", "동영상")[filter]}"
-            else "사진 ${items.count { !it.video }}장 · 동영상 ${items.count { it.video }}개"
+        // Both modes count visibleItems: the subtitle describes the grid, and the grid is what the filter left.
+        count.text = GalleryCount.text(visibleItems.count { !it.video }, visibleItems.count { it.video }, filter, selectionMode)
         val allSelected = visibleItems.isNotEmpty() && visibleItems.all { it.key in selected }
         selectAllButton.visibility = if (selectionMode) View.VISIBLE else View.GONE
         selectAllButton.isChecked = allSelected
