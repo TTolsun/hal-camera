@@ -6,9 +6,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.hardware.camera2.CameraManager
+import android.graphics.text.LineBreaker
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
+import android.text.Layout
 import android.text.SpannableStringBuilder
 import android.text.TextPaint
 import android.text.style.BackgroundColorSpan
@@ -383,7 +385,16 @@ class CameraProbeActivity : ComponentActivity() {
             tableTitle = title
             val (content, offsets) = table(rows)
             lines = offsets
-            view = Look.text(this, content, 12, Look.onDark, mono = true).apply { setTextIsSelectable(true) }
+            // A value column is laid out by a hanging indent, and the balanced strategy measures a paragraph as a
+            // whole before that indent narrows the lines it falls on: "10.00 diopters" lost its last letter past
+            // the edge and "-0.086577885" broke mid-number into "-0.0865" and "77885", which reads as two values
+            // that were never measured. The simple strategy breaks line by line against the width each line
+            // actually has, and hyphenation has nothing to offer a table of identifiers and figures.
+            view = Look.text(this, content, 12, Look.onDark, mono = true).apply {
+                setTextIsSelectable(true)
+                breakStrategy = LineBreaker.BREAK_STRATEGY_SIMPLE
+                hyphenationFrequency = Layout.HYPHENATION_FREQUENCY_NONE
+            }
             card.addView(view, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
         body.addView(card, lp())

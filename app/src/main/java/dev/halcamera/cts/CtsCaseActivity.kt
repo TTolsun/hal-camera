@@ -289,8 +289,12 @@ class CtsCaseActivity : ComponentActivity(), CtsRunner.PreviewHost, SurfaceHolde
         startActivity(Intent.createChooser(intent, "결과 공유"))
     }
 
+    // Same reason as the suite screen: a step line that runs past the edge has to look unfinished, or the
+    // number it was cut in the middle of is read as the whole value.
     private fun wide(view: TextView): HorizontalScrollView = HorizontalScrollView(this).apply {
-        isHorizontalScrollBarEnabled = false
+        isHorizontalScrollBarEnabled = true
+        isHorizontalFadingEdgeEnabled = true
+        setFadingEdgeLength(dp(24))
         addView(view, LinearLayout.LayoutParams(-2, -2))
     }
 
