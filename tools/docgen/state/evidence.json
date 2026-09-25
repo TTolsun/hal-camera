@@ -96,6 +96,42 @@
       "observed": {
         "state": "fresh"
       }
+    },
+    "omm:ui-camera-label": {
+      "observed": {
+        "state": "fresh"
+      },
+      "accepted": {
+        "codeHash": "50f8d9ff0212902a",
+        "modelHash": "2d342dce363f7e74",
+        "at": "2026-09-25",
+        "commit": "d056b82",
+        "reviewer": "Claude (omm ui perspectives, code-checked)"
+      }
+    },
+    "omm:ui-tool-handoff": {
+      "observed": {
+        "state": "fresh"
+      },
+      "accepted": {
+        "codeHash": "81124241bad11818",
+        "modelHash": "9480bc0d85e4f8e5",
+        "at": "2026-09-25",
+        "commit": "d056b82",
+        "reviewer": "Claude (omm ui perspectives, code-checked)"
+      }
+    },
+    "omm:ui-zoom": {
+      "observed": {
+        "state": "fresh"
+      },
+      "accepted": {
+        "codeHash": "9534e96976f87bbb",
+        "modelHash": "1be8e0e862e701f9",
+        "at": "2026-09-25",
+        "commit": "d056b82",
+        "reviewer": "Claude (omm ui perspectives, code-checked)"
+      }
     }
   }
 }
