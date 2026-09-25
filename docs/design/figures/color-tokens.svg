@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="470" viewBox="0 0 760 470" role="img" font-family="Inter, -apple-system, 'Segoe UI', 'Noto Sans KR', sans-serif">
+  <title>HAL CAMERA Editorial 색상 토큰</title>
+  <desc>밝은 화면과 어두운 화면에서 쓰는 배경, 보조 표면, 본문, 보조문, 선, 강조 색상과 앱의 의미 색상을 견본으로 보여준다.</desc>
+  <rect width="760" height="470" rx="8" fill="#ffffff"/>
+
+  <!-- Light -->
+  <text x="40" y="40" font-size="14" font-weight="600" fill="#18191b">밝은 화면 · 문서 사이트와 앱 공통</text>
+  <rect x="40" y="56" width="320" height="112" rx="4" fill="#ffffff" stroke="#e2e4e8"/>
+  <rect x="56" y="72" width="288" height="30" rx="4" fill="#f6f7f8"/>
+  <text x="68" y="92" font-size="12" fill="#18191b" font-family="ui-monospace, Consolas, monospace">docflow.mjs check --build</text>
+  <text x="56" y="130" font-size="14" fill="#18191b">본문 문장</text>
+  <text x="140" y="130" font-size="14" fill="#0066cc">링크</text>
+  <text x="56" y="152" font-size="12" fill="#62666d">보조문과 코드 근거</text>
+
+  <g font-size="12">
+    <rect x="40" y="186" width="20" height="20" rx="3" fill="#ffffff" stroke="#c9ccd1"/>
+    <text x="70" y="200" fill="#18191b">배경</text><text x="360" y="200" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#ffffff</text>
+    <rect x="40" y="214" width="20" height="20" rx="3" fill="#f6f7f8" stroke="#c9ccd1"/>
+    <text x="70" y="228" fill="#18191b">보조 표면 · 코드와 그림 배경</text><text x="360" y="228" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#f6f7f8</text>
+    <rect x="40" y="242" width="20" height="20" rx="3" fill="#18191b" stroke="#c9ccd1"/>
+    <text x="70" y="256" fill="#18191b">본문</text><text x="360" y="256" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#18191b</text>
+    <rect x="40" y="270" width="20" height="20" rx="3" fill="#62666d" stroke="#c9ccd1"/>
+    <text x="70" y="284" fill="#18191b">보조문</text><text x="360" y="284" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#62666d</text>
+    <rect x="40" y="298" width="20" height="20" rx="3" fill="#e2e4e8" stroke="#c9ccd1"/>
+    <text x="70" y="312" fill="#18191b">선 · 1px</text><text x="360" y="312" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#e2e4e8</text>
+    <rect x="40" y="326" width="20" height="20" rx="3" fill="#0066cc" stroke="#c9ccd1"/>
+    <text x="70" y="340" fill="#18191b">강조 · 링크, 포커스, 대표 노드</text><text x="360" y="340" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#0066cc</text>
+  </g>
+
+  <!-- Dark -->
+  <text x="400" y="40" font-size="14" font-weight="600" fill="#18191b">어두운 화면 · 앱</text>
+  <rect x="400" y="56" width="320" height="112" rx="4" fill="#18191b" stroke="#303238"/>
+  <rect x="416" y="72" width="288" height="30" rx="4" fill="#202124"/>
+  <text x="428" y="92" font-size="12" fill="#ffffff" font-family="ui-monospace, Consolas, monospace">30.0 fps · ISO 100</text>
+  <text x="416" y="130" font-size="14" fill="#ffffff">본문 문장</text>
+  <text x="500" y="130" font-size="12" fill="#2997ff">작은 강조 글씨</text>
+  <text x="416" y="152" font-size="12" fill="#bdc1c7">보조문과 측정 단위</text>
+
+  <g font-size="12">
+    <rect x="400" y="186" width="20" height="20" rx="3" fill="#18191b" stroke="#c9ccd1"/>
+    <text x="430" y="200" fill="#18191b">배경 · 밝은 화면의 본문색을 반전</text><text x="720" y="200" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#18191b</text>
+    <rect x="400" y="214" width="20" height="20" rx="3" fill="#202124" stroke="#c9ccd1"/>
+    <text x="430" y="228" fill="#18191b">보조 표면</text><text x="720" y="228" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#202124</text>
+    <rect x="400" y="242" width="20" height="20" rx="3" fill="#ffffff" stroke="#c9ccd1"/>
+    <text x="430" y="256" fill="#18191b">본문</text><text x="720" y="256" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#ffffff</text>
+    <rect x="400" y="270" width="20" height="20" rx="3" fill="#bdc1c7" stroke="#c9ccd1"/>
+    <text x="430" y="284" fill="#18191b">보조문</text><text x="720" y="284" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#bdc1c7</text>
+    <rect x="400" y="298" width="20" height="20" rx="3" fill="#303238" stroke="#c9ccd1"/>
+    <text x="430" y="312" fill="#18191b">선 · 1dp</text><text x="720" y="312" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#303238</text>
+    <rect x="400" y="326" width="20" height="20" rx="3" fill="#2997ff" stroke="#c9ccd1"/>
+    <text x="430" y="340" fill="#18191b">강조 · 작은 글씨용 밝은 톤</text><text x="720" y="340" fill="#62666d" text-anchor="end" font-family="ui-monospace, Consolas, monospace">#2997ff</text>
+  </g>
+
+  <!-- Semantic -->
+  <line x1="40" y1="372" x2="720" y2="372" stroke="#e2e4e8"/>
+  <text x="40" y="400" font-size="14" font-weight="600" fill="#18191b">의미 색상 · 강조색으로 쓰지 않음</text>
+  <g font-size="12">
+    <rect x="40" y="418" width="20" height="20" rx="3" fill="#000000" stroke="#c9ccd1"/>
+    <text x="70" y="432" fill="#18191b">카메라 영상</text><text x="70" y="452" fill="#62666d" font-family="ui-monospace, Consolas, monospace">#000000</text>
+    <rect x="210" y="418" width="20" height="20" rx="3" fill="#34c759" stroke="#c9ccd1"/>
+    <text x="240" y="432" fill="#18191b">통과 · statusPass</text><text x="240" y="452" fill="#62666d" font-family="ui-monospace, Consolas, monospace">#34c759</text>
+    <rect x="390" y="418" width="20" height="20" rx="3" fill="#ff9500" stroke="#c9ccd1"/>
+    <text x="420" y="432" fill="#18191b">경고 · statusWarn</text><text x="420" y="452" fill="#62666d" font-family="ui-monospace, Consolas, monospace">#ff9500</text>
+    <rect x="570" y="418" width="20" height="20" rx="3" fill="#ff3b30" stroke="#c9ccd1"/>
+    <text x="600" y="432" fill="#18191b">실패·녹화 · statusFail</text><text x="600" y="452" fill="#62666d" font-family="ui-monospace, Consolas, monospace">#ff3b30</text>
+  </g>
+</svg>
