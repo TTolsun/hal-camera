@@ -96,7 +96,7 @@ Galaxy S25+(SM-S936N, Android 16)에서 0.13.1 빌드의 사진 모드를 캡처
 
 ## 도구 메뉴와 독립 화면
 
-Benchmark는 메인 프리뷰에 별도 버튼을 두지 않고 상단 `도구` 메뉴에서 엽니다. 메뉴는 `SelectionPopup` 목록으로 `Probe`·`CTS`·`Benchmark`를 표시합니다. 각 기능은 독립 화면(`CameraProbeActivity`, `CtsEntryActivity`, `BenchmarkActivity`)을 엽니다. Probe와 Benchmark는 현재 카메라 ID를 초기값으로 받으며 자체 카메라 선택을 제공합니다. CTS는 커스텀 케이스와 AOSP 원문 중 경로를 고른 뒤 체크리스트에서 실행할 항목을 선택합니다.
+Benchmark는 메인 프리뷰에 별도 버튼을 두지 않고 상단 `도구` 메뉴에서 엽니다. 메뉴는 `ui/SelectionPopup.kt`의 `showActionPopup` 목록으로 `Probe`·`CTS`·`Benchmark`를 표시합니다. 값을 고르는 목록이 아니라 이동할 곳의 목록이므로 라디오 버튼을 붙이지 않습니다. 각 기능은 독립 화면(`CameraProbeActivity`, `CtsEntryActivity`, `BenchmarkActivity`)을 엽니다. Probe와 Benchmark는 현재 카메라 ID를 초기값으로 받으며 자체 카메라 선택을 제공합니다. CTS는 커스텀 케이스와 AOSP 원문 중 경로를 고른 뒤 체크리스트에서 실행할 항목을 선택합니다.
 
 목록의 순서는 개발자가 하나의 질문에서 다음 질문으로 넘어가는 순서를 따릅니다. Probe는 HAL이 무엇을 할 수 있다고 선언하는지, CTS는 그 선언대로 통과하는지, Benchmark는 실제로 얼마나 걸리는지를 답합니다. 문서 사이트의 탭도 같은 순서를 사용하므로, 앱에서 본 차례와 문서에서 읽는 차례가 어긋나지 않습니다.
 
