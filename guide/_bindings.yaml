@@ -427,8 +427,10 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt
 
   # 화면 조작 규칙. 위 세 관점은 코드 구조를 그리므로 화면에서 무엇이 어떤 순서로 바뀌는지는 담지 않습니다.
-  # diagram_type 이 관점 단위라서 그림 종류마다 관점을 하나씩 둡니다. 설계 의도는 docs/design/APP-UI.md 가,
-  # 코드가 실제로 하는 일은 이 관점들이 맡습니다. 둘이 어긋나면 어느 쪽이 틀렸는지 사람이 판단합니다.
+  # diagram_type 이 관점 단위라서 그림 종류마다 관점을 하나씩 둡니다. docs/design/APP-UI.md 에 같은 그림의
+  # 사본이 있으며(<!-- omm-copy: ... -->), regression.test.mjs 가 두 그림이 같은지 확인합니다.
+  # qwen3.5:4b 는 2026-09-25 시험에서 세 요소 모두 코드의 값 변경(3초→5초, 1mm→0.1mm, Probe 대기)을
+  # 반영하지 못하고 형식 검사만 통과했습니다. 재검토 때 그림을 코드와 직접 대조합니다.
   ui-camera-label:
     kind: omm
     diagram_type: flow

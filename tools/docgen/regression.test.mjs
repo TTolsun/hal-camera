@@ -223,6 +223,18 @@ test('a screen without an owning element fails coverage until evidence or an ign
   });
 });
 
+// APP-UI.md sits outside guide/, so the generator cannot place .omm diagrams there. Its copies are marked with
+// <!-- omm-copy: <source> --> and must match the .omm diagram, or a redrawn .omm figure leaves a stale design doc.
+test('design doc diagram copies match their .omm source', () => {
+  const doc = fs.readFileSync(path.join(source, 'docs/design/APP-UI.md'), 'utf8').replace(/\r\n/g, '\n');
+  const copies = [...doc.matchAll(/<!-- omm-copy: ([a-z0-9-]+) -->\n```mermaid\n([\s\S]*?)```/g)];
+  assert.deepEqual(copies.map(m => m[1]).sort(), ['ui-camera-label', 'ui-tool-handoff', 'ui-zoom']);
+  for (const [, name, copy] of copies) {
+    const original = fs.readFileSync(path.join(source, '.omm', name, 'diagram.mmd'), 'utf8').replace(/\r\n/g, '\n');
+    assert.equal(copy.trim(), original.trim(), `docs/design/APP-UI.md 의 ${name} 사본을 .omm/${name}/diagram.mmd 와 같게 고치세요.`);
+  }
+});
+
 test.after(() => {
   const parent = path.resolve(os.tmpdir());
   if (path.dirname(path.resolve(root)) !== parent || !path.basename(root).startsWith('hal-docgen-test-')) throw new Error('Unsafe fixture path');
