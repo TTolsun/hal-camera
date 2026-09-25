@@ -71,20 +71,27 @@ jobs:
         # qwen3.5:4b 는 코드의 값 변경을 놓친 채 형식 검사만 통과할 수 있습니다(2026-09-25 시험). 검토자가 원본을 코드와
         # 직접 대조하도록, 검토 이후 바뀐 근거 코드를 PR 본문에 싣습니다. --dry-run 이라 작업본을 바꾸지 않습니다.
         if: steps.changes.outputs.changed == 'true'
+        env:
+          # 문구는 모두 env 에 둡니다. run 은 BOM 없는 .ps1 로 Windows PowerShell 5.1 이 읽으므로 한글 리터럴이 깨질 수 있고,
+          # workflow.test.mjs 는 자동 경로의 run 에 검토 기록 명령이 없는지 검사합니다.
+          BODY_INTRO: |
+            로컬 Qwen 동기화 결과입니다. 구조와 원고를 코드에 대조해 검토하세요.
+            로컬 모델은 코드의 값 변경을 놓친 채 형식 검사만 통과할 수 있으므로, 아래 diff 와 원본의 값·조건·순서를 직접 대조합니다.
+            검토 후 `node tools/docgen/docflow.mjs verify --accept --reviewer=이름`으로 기록하고
+            `node tools/docgen/docflow.mjs generate`로 페이지를, `node tools/docgen/docflow.mjs site build`로 docs/ 산출물을
+            다시 생성한 뒤 함께 커밋하세요.
+          BODY_SUMMARY: 검토 이후 바뀐 근거 코드 (verify --changes)
+          BODY_CLIPPED: … (PR 본문 한도 때문에 생략했습니다. 로컬에서 verify --changes 로 전체를 확인하세요)
         run: |
           [Console]::OutputEncoding = [Text.Encoding]::UTF8
           $changes = (node tools/docgen/docflow.mjs verify --changes --dry-run | Out-String).Trim()
           $limit = 50000
-          if ($changes.Length -gt $limit) { $changes = $changes.Substring(0, $limit) + "`n… (PR 본문 한도 때문에 생략. 로컬에서 verify --changes 로 전체를 확인하세요)" }
+          if ($changes.Length -gt $limit) { $changes = $changes.Substring(0, $limit) + "`n" + $env:BODY_CLIPPED }
           $fence = '```'
           $body = @(
-            '로컬 Qwen 동기화 결과입니다. 구조와 원고를 코드에 대조해 검토하세요.'
-            '로컬 모델은 코드의 값 변경을 놓친 채 형식 검사만 통과할 수 있으므로, 아래 diff 와 원본의 값·조건·순서를 직접 대조합니다.'
-            '검토 후 `node tools/docgen/docflow.mjs verify --accept --reviewer=이름`으로 기록하고'
-            '`node tools/docgen/docflow.mjs generate`로 페이지를, `node tools/docgen/docflow.mjs site build`로 docs/ 산출물을'
-            '다시 생성한 뒤 함께 커밋하세요.'
+            $env:BODY_INTRO.Trim()
             ''
-            '<details><summary>검토 이후 바뀐 근거 코드 (verify --changes)</summary>'
+            "<details><summary>$($env:BODY_SUMMARY)</summary>"
             ''
             "${fence}diff"
             $changes
