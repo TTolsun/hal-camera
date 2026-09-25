@@ -27,9 +27,9 @@ object RunRetention {
      */
     val OPTIONS: List<Int> = (STEP..MAX_LIMIT step STEP).toList() + UNLIMITED
 
-    fun label(limit: Int): String = if (limit == UNLIMITED) "Unlimited" else limit.toString()
+    fun label(limit: Int): String = if (limit == UNLIMITED) "무제한" else limit.toString()
 
-    /** The same value under a slider tick, where "Unlimited" is four times the width of every other stop. */
+    /** The same value under a slider tick, where the word would be several times the width of every other stop. */
     fun tickLabel(limit: Int): String = if (limit == UNLIMITED) "∞" else limit.toString()
 
     /** Run ids to delete, oldest first. [runIdsNewestFirst] is the store's name order, which is time order. */

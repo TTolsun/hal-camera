@@ -81,7 +81,7 @@ object AboutSheet {
 
         root.addView(Look.row(context).apply {
             gravity = Gravity.END
-            addView(Look.ghostButton(context, "Close") { dialog.dismiss() })
+            addView(Look.ghostButton(context, "닫기") { dialog.dismiss() })
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = d })
 
         dialog.show()

@@ -92,7 +92,7 @@ Live 진단 패널의 `프레임·3A 수치`를 펼치면 상세 수치를 볼 �
 
 ### 이력과 CSV가 예상과 다를 때
 
-Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된 실행을 찾으려면 상태 필터를 `전체`로 바꾸고 profile·camera 필터도 확인합니다. PC의 `tools/aggregate.py`는 기본적으로 점수 산정 가능한 실행만 내보내므로, 앱과 같은 범위를 보려면 `--eligibility comparison_eligible`을 사용합니다.
+실행 기록은 기본적으로 비교 가능한 실행을 표시합니다. 중단된 실행을 찾으려면 상태 필터를 `전체`로 바꾸고 profile·camera 필터도 확인합니다. PC의 `tools/aggregate.py`는 기본적으로 점수 산정 가능한 실행만 내보내므로, 앱과 같은 범위를 보려면 `--eligibility comparison_eligible`을 사용합니다.
 
 손상된 JSON은 목록과 PC 집계에서 별도로 알립니다. CSV 출력 장치의 오류는 입력 파일 오류와 구분하며 작업을 실패로 종료합니다. baseline 파일을 읽을 수 없으면 baseline 변경과 삭제를 중단합니다. 기기 화면·공유·삭제 동작의 실제 검증 기록은 이 문서에서 주장하지 않습니다.
 
@@ -109,7 +109,7 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-25 @ `b58140a` · Claude (issue #139)
+- 검토 2026-09-25 @ `a87d97f` · Claude (issue #139)
 
 </details>
 
@@ -124,12 +124,12 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 다음 항목은 구조 스캔에서 확인한 제약이나 추가 검증이 필요한 사항입니다.
 
 - 콜백과 파일 작업의 실행 스레드, close 완료와 늦은 신호 처리는 변경 시 함께 검증해야 합니다.
-- Results의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.
+- 실행 기록의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.
 - 촬영 중 프리뷰 stall 지표 2.7은 여전히 NOT_RUN입니다.
 
 **후속 작업**
 
-1. Results의 필터·임의 비교·baseline·삭제·공유 동작을 기기에서 검증하고 근거를 남깁니다.
+1. 실행 기록의 필터·임의 비교·baseline·삭제·공유 동작을 기기에서 검증하고 근거를 남깁니다.
 2. 촬영 중 프리뷰 stall 지표 2.7의 관측·계산 규칙을 구현합니다.
 
 <details class="doc-evidence" markdown="1">
@@ -185,9 +185,9 @@ Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-25 @ `b58140a` · Claude (issue #139) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-25 @ `b58140a` · Claude (issue #139) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-25 @ `b58140a` · Claude (issue #139) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-25 @ `a87d97f` · Claude (issue #139) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-25 @ `a87d97f` · Claude (issue #139) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-25 @ `a87d97f` · Claude (issue #139) |
 
 <!-- omm:end id=status -->
 

@@ -1,6 +1,6 @@
 graph LR
     live["MainActivity · Live"] -->|"벤치마크 진입"| benchmark["BenchmarkActivity"]
-    benchmark -->|"이력 진입"| history["HistoryActivity · Results"]
+    benchmark -->|"이력 진입"| history["HistoryActivity · 실행 기록"]
     history -->|"저장 실행"| benchmark
     live -->|"공통 스타일"| look["ui/Look"]
     benchmark -->|"공통 스타일"| look

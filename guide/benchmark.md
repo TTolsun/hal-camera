@@ -24,7 +24,7 @@ flowchart LR
 | 유효성과 비교 상태 | 측정 불가와 성능 저하를 구분해야 합니다. 값이 없으면 원인을 먼저 확인합니다. |
 | profile 이름 | `camera2-standard-v1`과 `camera2-standard-v2`는 서로 비교되지 않습니다. v2는 녹화 측정을 포함하는 대신 기기마다 baseline을 다시 잡아야 합니다. |
 
-측정 대상 카메라는 앱 전체가 함께 쓰는 표기로 적습니다. 카메라 선택 버튼, Results의 각 행, 시작·결과 화면의 제목 줄에는 `Camera · 0 (Wide · Rear)`를 쓰고, Results 필터 버튼처럼 칸이 좁은 자리에는 `Camera · 0`으로 줄입니다. 규칙 전문은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)의 "카메라를 부르는 이름"에 있습니다.
+측정 대상 카메라는 앱 전체가 함께 쓰는 표기로 적습니다. 카메라 선택 버튼, 실행 기록의 각 행, 시작·결과 화면의 제목 줄에는 `Camera · 0 (Wide · Rear)`를 쓰고, 실행 기록 필터 버튼처럼 칸이 좁은 자리에는 `Camera · 0`으로 줄입니다. 규칙 전문은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)의 "카메라를 부르는 이름"에 있습니다.
 
 baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 결과 화면은 이전의 비교 가능한 실행 대비 변화량만 표시하며, 이력에서 임의로 고른 실행도 실제 baseline이 아닌 한 회귀 판정의 기준이 되지 않습니다.
 
@@ -44,8 +44,8 @@ baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 
 | --- | --- |
 | 판정 한 줄 | 저하된 지표의 개수, 또는 비교 기준이 없다는 사실을 먼저 알립니다. |
 | 지표 막대 | `Launch`·`Preview`·`Capture`·`Stability`·`Record`·`3A` 순서로 묶어, 측정한 항목을 빠짐없이 그립니다. |
-| `실행 정보` 접힘 | 기기, 카메라, 시각, OS 빌드, subject, 표본 수, 발열, 비고, 파일을 라벨과 값 한 쌍씩 표시합니다. 비교 화면의 같은 자리는 `Run info`라는 이름을 씁니다. |
-| `Export` | 결과를 PC로 옮기는 유일한 경로입니다. 화면 텍스트를 클립보드로 복사하던 버튼은 제거했습니다. |
+| `실행 정보` 접힘 | 기기, 카메라, 시각, OS 빌드, subject, 표본 수, 발열, 비고, 파일을 라벨과 값 한 쌍씩 표시합니다. 비교 화면의 같은 자리도 같은 이름을 씁니다. |
+| `내보내기` | 결과를 PC로 옮기는 유일한 경로입니다. 화면 텍스트를 클립보드로 복사하던 버튼은 제거했습니다. |
 
 `Record` 묶음의 이름은 프리뷰의 같은 측정과 짝을 이루도록 접두어를 붙였습니다. `Stalls`와 `Record stalls`는 둘 다 프레임 간격이 기준의 1.5배를 넘은 횟수이고, `Jitter`와 `Record jitter`는 둘 다 그 간격의 편차입니다. 측정 대상이 프리뷰냐 녹화냐만 다릅니다. 두 이름 모두 실제로 프레임을 잃은 개수가 아니며, 원인을 단정하지 않습니다.
 
@@ -61,13 +61,13 @@ baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 
 
 비교 화면은 0 기준선 좌우로 변화율 막대를 그리는 delta 차트를 먼저 표시하고, 백분율을 계산할 수 없는 행(count 지표, 단위가 다른 행)은 글줄로 남깁니다.
 
-화면의 언어는 역할에 따라 나뉩니다. 라벨·버튼·지표명·판정 단어는 영어로 쓰고(판정은 `Regressed`가 아니라 `degraded`입니다), 설명·안내·오류 문장은 한국어로 씁니다.
+화면의 언어는 역할에 따라 나뉩니다. 버튼·메뉴·화면 제목과 설명·안내·오류 문장은 앱의 다른 화면처럼 한국어로 씁니다. 지표명·판정 단어·상태 칩은 영어로 씁니다(판정은 `Regressed`가 아니라 `degraded`입니다). 이 이름들은 run JSON과 CLI 출력에 같은 철자로 남으므로, 화면과 파일을 오가며 같은 값을 찾을 수 있어야 하기 때문입니다. `baseline`도 같은 이유로 버튼 안에서 원어를 유지합니다(`baseline으로 지정`).
 
 <p class="editorial" lang="en">A number is only useful<br>when its context travels with it.</p>
 
-<h2 lang="en">Work through Results.</h2>
+<h2 lang="en">Work through the run history.</h2>
 
-Results의 각 행은 실행 하나이며 두 줄로 적습니다. 첫 줄은 실행 시각이고, 오른쪽 끝에 배지가 붙을 수 있습니다. 둘째 줄은 `Capture 1.20 s · Camera · 0 (Wide · Rear)`처럼 사실만 적습니다. 빌드 이름을 입력한 실행에는 그 줄이 하나 더 붙습니다. run id, profile, 원본 flag는 행이 아니라 행을 눌러 여는 결과 화면에 있습니다.
+실행 기록의 각 행은 실행 하나이며 두 줄로 적습니다. 첫 줄은 실행 시각이고, 오른쪽 끝에 배지가 붙을 수 있습니다. 둘째 줄은 `Capture 1.20 s · Camera · 0 (Wide · Rear)`처럼 사실만 적습니다. 빌드 이름을 입력한 실행에는 그 줄이 하나 더 붙습니다. run id, profile, 원본 flag는 행이 아니라 행을 눌러 여는 결과 화면에 있습니다.
 
 | 배지 | 뜻 |
 | --- | --- |
@@ -82,9 +82,9 @@ Results의 각 행은 실행 하나이며 두 줄로 적습니다. 첫 줄은 �
 2. 각 행의 `⋮` 메뉴 또는 길게 누르기로 baseline 지정, 비교, JSON·CSV 내보내기, 삭제를 선택합니다.
 3. 삭제는 확인을 거친 뒤 파일을 지우고 해당 baseline 포인터를 정리합니다.
 
-닫기와 결과·이력 복귀는 다른 화면과 마찬가지로 화면 제목 왼쪽의 48dp 뒤로 가기 아이콘으로 처리하며, 접근성 이름과 길게 누르기 설명에 복귀 대상을 적습니다. 실행 중에는 이 아이콘을 표시하지 않고 `Abort`로만 중단합니다. 실행·비교·내보내기·필터처럼 구체적인 작업 이름은 아이콘으로 줄이지 않고 글씨로 유지합니다.
+닫기와 결과·이력 복귀는 다른 화면과 마찬가지로 화면 제목 왼쪽의 48dp 뒤로 가기 아이콘으로 처리하며, 접근성 이름과 길게 누르기 설명에 복귀 대상을 적습니다. 실행 중에는 이 아이콘을 표시하지 않고 `중단`으로만 멈춥니다. 실행·비교·내보내기·필터처럼 구체적인 작업 이름은 아이콘으로 줄이지 않고 글씨로 유지합니다.
 
-저장 직후에는 설정의 `Data limit`이 적용됩니다. 한도를 넘는 실행 파일을 오래된 것부터 지우며 baseline으로 지정한 실행은 지우지 않습니다. 한도는 슬라이더로 고르고 10부터 100까지 10 단위이며, 그 끝에 `∞`로 표시하는 Unlimited가 한 칸 더 있습니다. 기본값은 Unlimited입니다. 눈금 간격을 일정하게 둔 이유는, 슬라이더가 "같은 거리는 같은 변화"를 약속하기 때문입니다.
+저장 직후에는 `설정`의 `보관 개수`가 적용됩니다. 한도를 넘는 실행 파일을 오래된 것부터 지우며 baseline으로 지정한 실행은 지우지 않습니다. 한도는 슬라이더로 고르고 10부터 100까지 10 단위이며, 그 끝에 `∞`로 표시하는 `무제한`이 한 칸 더 있습니다. 기본값은 `무제한`입니다. 눈금 간격을 일정하게 둔 이유는, 슬라이더가 "같은 거리는 같은 변화"를 약속하기 때문입니다.
 
 <h2 lang="en">Follow the implementation.</h2>
 
@@ -92,7 +92,7 @@ Results의 각 행은 실행 하나이며 두 줄로 적습니다. 첫 줄은 �
 
 <details>
 <summary>코드 근거를 확인하세요</summary>
-<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/benchmark/</code>에서 <code>BenchmarkRunner.kt</code>, <code>RunAssembler.kt</code>, <code>BenchmarkActivity.kt</code>, <code>RegressionDetector.kt</code>를 확인하세요. 결과 화면과 비교 화면의 구성은 <code>domain/ResultPresenter.kt</code>·<code>domain/ComparePresenter.kt</code>·<code>ui/MetricBars.kt</code>, Results 이력은 <code>HistoryActivity.kt</code>·<code>domain/BaselineManager.kt</code>·<code>platform/StoreRunCatalog.kt</code>, 보관 한도는 <code>domain/RunRetention.kt</code>에 있습니다. 녹화 단계는 <code>BenchmarkRunner.kt</code>의 RECORD 단계와 <code>camera/Camera2Engine.kt</code>의 벤치마크 녹화 경로가 실행하고, 지표 계산은 <code>metrics/RecordMetrics.kt</code>에 있습니다. 원고의 검토 상태는 아키텍처 문서 끝에 있습니다.</p>
+<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/benchmark/</code>에서 <code>BenchmarkRunner.kt</code>, <code>RunAssembler.kt</code>, <code>BenchmarkActivity.kt</code>, <code>RegressionDetector.kt</code>를 확인하세요. 결과 화면과 비교 화면의 구성은 <code>domain/ResultPresenter.kt</code>·<code>domain/ComparePresenter.kt</code>·<code>ui/MetricBars.kt</code>, 실행 기록은 <code>HistoryActivity.kt</code>·<code>domain/BaselineManager.kt</code>·<code>platform/StoreRunCatalog.kt</code>, 보관 한도는 <code>domain/RunRetention.kt</code>에 있습니다. 녹화 단계는 <code>BenchmarkRunner.kt</code>의 RECORD 단계와 <code>camera/Camera2Engine.kt</code>의 벤치마크 녹화 경로가 실행하고, 지표 계산은 <code>metrics/RecordMetrics.kt</code>에 있습니다. 원고의 검토 상태는 아키텍처 문서 끝에 있습니다.</p>
 </details>
 
 **다음 단계:** 같은 측정을 터미널에서 반복하려면 [CLI](cli.md)를 읽으세요. 벤치마크 실행 자체는 CLI 명령 집합에서 제외되어 있으며, 그 이유도 그 페이지에 있습니다.

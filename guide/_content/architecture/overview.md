@@ -18,7 +18,7 @@ decisions: []
 verifications: []
 ---
 
-**Live, Benchmark, Results 중 수정할 화면과 연결된 코드를 먼저 확인하세요.** 현재 앱은 카메라 성능을 관측하고, 저장된 실행을 비교하는 단일 Android 앱 모듈입니다. v0.2의 Home·Auto Check·건강 판정 화면은 제거되었습니다.
+**Live, Benchmark, 실행 기록 중 수정할 화면과 연결된 코드를 먼저 확인하세요.** 현재 앱은 카메라 성능을 관측하고, 저장된 실행을 비교하는 단일 Android 앱 모듈입니다. v0.2의 Home·Auto Check·건강 판정 화면은 제거되었습니다.
 
 | 단계 | 담당 코드 | 책임 |
 | --- | --- | --- |

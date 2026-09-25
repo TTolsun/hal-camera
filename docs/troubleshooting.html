@@ -155,7 +155,7 @@
 <h3 id="화면에서-지표가-보이지-않을-때">화면에서 지표가 보이지 않을 때</h3>
 <p>Live 진단 패널의 <code>프레임·3A 수치</code>를 펼치면 상세 수치를 볼 수 있습니다. 하단 Mark는 직전 10초와 이후 5초를 incident ZIP으로 저장합니다. Benchmark 결과 화면은 판정을 먼저 표시하고 모든 측정 항목을 카테고리별 막대로 보여 줍니다. 막대 옆 숫자는 표본의 중앙값이며, 표본 수와 validity flag는 <code>실행 정보</code> 접힘에 있습니다. 막대 길이는 같은 카테고리에서 단위가 같은 지표끼리 공유하는 축을 기준으로 그리므로 이웃 행과 길이를 견줄 수 있으며, 그 카테고리에서 단위가 혼자인 지표는 자체 축을 쓰기 때문에 다른 행과 길이를 견줄 수 없습니다. 이 배치는 저장된 지표나 CSV의 범위를 바꾸지 않습니다.</p>
 <h3 id="이력과-csv가-예상과-다를-때">이력과 CSV가 예상과 다를 때</h3>
-<p>Results는 기본적으로 비교 가능한 실행을 표시합니다. 중단된 실행을 찾으려면 상태 필터를 <code>전체</code>로 바꾸고 profile·camera 필터도 확인합니다. PC의 <code>tools/aggregate.py</code>는 기본적으로 점수 산정 가능한 실행만 내보내므로, 앱과 같은 범위를 보려면 <code>--eligibility comparison_eligible</code>을 사용합니다.</p>
+<p>실행 기록은 기본적으로 비교 가능한 실행을 표시합니다. 중단된 실행을 찾으려면 상태 필터를 <code>전체</code>로 바꾸고 profile·camera 필터도 확인합니다. PC의 <code>tools/aggregate.py</code>는 기본적으로 점수 산정 가능한 실행만 내보내므로, 앱과 같은 범위를 보려면 <code>--eligibility comparison_eligible</code>을 사용합니다.</p>
 <p>손상된 JSON은 목록과 PC 집계에서 별도로 알립니다. CSV 출력 장치의 오류는 입력 파일 오류와 구분하며 작업을 실패로 종료합니다. baseline 파일을 읽을 수 없으면 baseline 변경과 삭제를 중단합니다. 기기 화면·공유·삭제 동작의 실제 검증 기록은 이 문서에서 주장하지 않습니다.</p>
 <p>사진·동영상 저장 실패는 벤치마크 비교와 구분해 확인합니다. 사진은 같은 센서 타임스탬프의 YUV·JPEG 버퍼가 모두 있어야 저장됩니다. 녹화 중에는 엔진·카메라·줌·촬영 모드 변경과 일시정지·갤러리·벤치마크를 비활성화합니다. 셔터는 정지 동작을 제공하고 경과 시간은 셔터 아래의 모드 위치에 표시합니다. 진단 패널은 촬영 조작부를 가리므로, 녹화 중에 패널을 열면 정지 버튼과 경과 시간이 패널 머리글에 함께 나타나 패널을 닫지 않고도 녹화를 끝낼 수 있습니다. 정지를 누르면 녹화 종료 처리 동안 셔터를 비활성화하며, 앨범 저장 완료는 사진 저장과 같은 위치의 안내 문구로 표시합니다. 저장이 끝나기 전에 카메라가 닫혔다면 안내 문구를 표시할 곳이 없으므로 토스트로 알립니다. 녹화 종료 후 사진용 프리뷰로 복귀하며 동영상 모드 선택은 유지합니다. 벤치마크 비교 화면에서 뒤로 가기를 누르면 결과 화면으로 돌아갑니다.</p>
 <h3 id="cli-작업이-끝나지-않거나-파일이-없을-때">CLI 작업이 끝나지 않거나 파일이 없을 때</h3>
@@ -165,19 +165,19 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandStore.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-25 @ <code>b58140a</code> · Claude (issue #139)</li>
+<li>검토 2026-09-25 @ <code>a87d97f</code> · Claude (issue #139)</li>
 </ul>
 </details><!-- omm:end id=layer-isolation --><h2 id="증상별-절차와-알려진-제약">증상별 절차와 알려진 제약</h2>
 <p>개별 증상에 대한 재현·분석 절차는 아직 정리하지 않았습니다. 먼저 위의 계층 구분 순서를 적용하고, 확인한 조건과 결과를 기록하세요.</p>
 <!-- omm:begin id=open-questions --><p>다음 항목은 구조 스캔에서 확인한 제약이나 추가 검증이 필요한 사항입니다.</p>
 <ul>
 <li>콜백과 파일 작업의 실행 스레드, close 완료와 늦은 신호 처리는 변경 시 함께 검증해야 합니다.</li>
-<li>Results의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.</li>
+<li>실행 기록의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.</li>
 <li>촬영 중 프리뷰 stall 지표 2.7은 여전히 NOT_RUN입니다.</li>
 </ul>
 <p><strong>후속 작업</strong></p>
 <ol>
-<li>Results의 필터·임의 비교·baseline·삭제·공유 동작을 기기에서 검증하고 근거를 남깁니다.</li>
+<li>실행 기록의 필터·임의 비교·baseline·삭제·공유 동작을 기기에서 검증하고 근거를 남깁니다.</li>
 <li>촬영 중 프리뷰 stall 지표 2.7의 관측·계산 규칙을 구현합니다.</li>
 </ol>
 <details class="doc-evidence">
@@ -254,17 +254,17 @@
 <tbody><tr>
 <td>구조 원본 <code>data-flow</code></td>
 <td>최신</td>
-<td>검토 2026-09-25 @ <code>b58140a</code> · Claude (issue #139)</td>
+<td>검토 2026-09-25 @ <code>a87d97f</code> · Claude (issue #139)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>state-transitions</code></td>
 <td>최신</td>
-<td>검토 2026-09-25 @ <code>b58140a</code> · Claude (issue #139)</td>
+<td>검토 2026-09-25 @ <code>a87d97f</code> · Claude (issue #139)</td>
 </tr>
 <tr>
 <td>원고 <code>layer-isolation</code></td>
 <td>최신</td>
-<td>검토 2026-09-25 @ <code>b58140a</code> · Claude (issue #139)</td>
+<td>검토 2026-09-25 @ <code>a87d97f</code> · Claude (issue #139)</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p><code>코드 확인</code>과 실제 기기 검증은 서로 다른 근거입니다. 표의 검토 기록만으로 특정 기기에서 재현됐다고 판단하지 않습니다.</p>

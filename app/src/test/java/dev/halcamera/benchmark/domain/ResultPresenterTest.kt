@@ -121,7 +121,7 @@ class ResultPresenterTest {
         val hot = run(thermalMax = 3, flags = listOf(ValidityFlags.THERMAL_HIGH))
         val hotLine = ResultPresenter.eligibilityLine(hot)
         assertTrue(hotLine.startsWith("Not comparable (THERMAL_HIGH)"))
-        assertTrue(hotLine.endsWith("Set as baseline disabled"))
+        assertTrue(hotLine.endsWith("baseline 지정 불가"))
 
         val broken = run(flags = listOf(ValidityFlags.HARD_FAILURE))
         assertTrue(ResultPresenter.eligibilityLine(broken).startsWith("Measurement invalid (HARD_FAILURE)"))
@@ -130,10 +130,10 @@ class ResultPresenterTest {
     @Test fun anIneligibleRunCannotBeSetAsBaselineButABaselineCanAlwaysBeCleared() {
         val hot = run(thermalMax = 3, flags = listOf(ValidityFlags.THERMAL_HIGH))
         assertFalse(present(hot).baselineButtonEnabled)
-        assertEquals("Set as baseline", present(hot).baselineButton)
+        assertEquals("baseline으로 지정", present(hot).baselineButton)
 
         val cleared = present(hot, isBaseline = true)
-        assertEquals("Clear baseline", cleared.baselineButton)
+        assertEquals("baseline 해제", cleared.baselineButton)
         assertTrue(cleared.baselineButtonEnabled)
     }
 
@@ -152,7 +152,7 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 170.0)))
         val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
         assertEquals("No baseline · shown vs previous run 20260910-100000-000", v.comparisonLine)
-        assertEquals("[ Set as baseline ]을 누르면 이 run이 기준이 됩니다", v.hint)
+        assertEquals("[ baseline으로 지정 ]을 누르면 이 run이 기준이 됩니다", v.hint)
     }
 
     @Test fun theFirstRunOfADeviceHasNeitherBaselineNorPrevious() {
@@ -171,13 +171,13 @@ class ResultPresenterTest {
         // The button reads CLEAR BASELINE at this point, so a hint naming SET AS BASELINE points at nothing.
         // Being measured against a baseline and being one are separate states, and only the first was checked.
         val alone = present(run(metrics = listOf(metric("2.2", 164.0))), isBaseline = true)
-        assertEquals("Clear baseline", alone.baselineButton)
+        assertEquals("baseline 해제", alone.baselineButton)
         assertNull(alone.hint)
 
         val previous = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 150.0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 164.0)))
         val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
-        assertEquals("[ Set as baseline ]을 누르면 이 run이 기준이 됩니다", v.hint)
+        assertEquals("[ baseline으로 지정 ]을 누르면 이 run이 기준이 됩니다", v.hint)
     }
 
     @Test fun theBaselineItselfIsNotDescribedAsHavingNoBaseline() {

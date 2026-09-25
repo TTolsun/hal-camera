@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "11aa16c4fbc373e2",
-        "modelHash": "6abf69d21ae243c6",
+        "codeHash": "0aa7da881284f48b",
+        "modelHash": "fb9369e20779e89f",
         "at": "2026-09-25",
-        "commit": "b58140a",
+        "commit": "a87d97f",
         "reviewer": "Claude (issue #139)"
       }
     },
@@ -18,10 +18,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "7266a65a9cb5c843",
-        "modelHash": "2ca33f437ba5aa05",
+        "codeHash": "2a21c7c15f7c6f5b",
+        "modelHash": "11e6321ea977ef38",
         "at": "2026-09-25",
-        "commit": "b58140a",
+        "commit": "a87d97f",
         "reviewer": "Claude (issue #139)"
       }
     },
@@ -30,10 +30,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8cce0a9c9d49a16d",
-        "modelHash": "8ace5101a616a568",
+        "codeHash": "2a5259c958aff1fc",
+        "modelHash": "ec08c1d2fa5f7953",
         "at": "2026-09-25",
-        "commit": "b58140a",
+        "commit": "a87d97f",
         "reviewer": "Claude (issue #139)"
       }
     },
@@ -42,10 +42,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "74c83d307327656d",
-        "modelHash": "fdb27015d43e248b",
+        "codeHash": "d0bf1a4b92ad49d6",
+        "modelHash": "29e22200063ec349",
         "at": "2026-09-25",
-        "commit": "b58140a",
+        "commit": "a87d97f",
         "reviewer": "Claude (issue #139)"
       }
     },
@@ -54,10 +54,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "7266a65a9cb5c843",
-        "modelHash": "19b7f5ff7fc2479e",
+        "codeHash": "2a21c7c15f7c6f5b",
+        "modelHash": "7e723f24d5b147c3",
         "at": "2026-09-25",
-        "commit": "b58140a",
+        "commit": "a87d97f",
         "reviewer": "Claude (issue #139)"
       }
     },
@@ -66,19 +66,19 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "692e5a7fdf90844f",
-        "modelHash": "21b91cdad474505e",
+        "codeHash": "2b253d3ec7b167e5",
+        "modelHash": "9b63d2ae379a8b51",
         "at": "2026-09-25",
-        "commit": "b58140a",
+        "commit": "a87d97f",
         "reviewer": "Claude (issue #139)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "11aa16c4fbc373e2",
-        "modelHash": "9f4e86fe37b74186",
+        "codeHash": "0aa7da881284f48b",
+        "modelHash": "834c564221ba5809",
         "at": "2026-09-25",
-        "commit": "b58140a",
+        "commit": "a87d97f",
         "reviewer": "Claude (issue #139)"
       },
       "observed": {
@@ -87,10 +87,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "11aa16c4fbc373e2",
-        "modelHash": "63d26639d60845db",
+        "codeHash": "0aa7da881284f48b",
+        "modelHash": "e4f10d03107520f9",
         "at": "2026-09-25",
-        "commit": "b58140a",
+        "commit": "a87d97f",
         "reviewer": "Claude (issue #139)"
       },
       "observed": {

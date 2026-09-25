@@ -110,7 +110,7 @@ class HistoryActivity : ComponentActivity() {
             scroll.post { scroll.scrollTo(0, if (wasComparison) scrollY else 0) }
             return
         }
-        titleBar("Results", 24, "벤치마크로 돌아가기") { finish() }
+        titleBar("실행 기록", 24, "벤치마크로 돌아가기") { finish() }
         if (busy) text("실행 기록을 처리하고 있습니다.")
         button("필터 · ${filter.label} ▾") { anchor ->
             showSelectionPopup(anchor, RunFilter.values().map { it.label }, filter.ordinal) { filter = RunFilter.values()[it]; pageSize = 50; render() }
@@ -128,7 +128,7 @@ class HistoryActivity : ComponentActivity() {
             text("기준으로 사용할 실행을 선택하세요.")
             button("비교 선택 취소") { pickingComparison = false; render() }
         }
-        button("CSV export · 현재 필터 ${runs.size}개", runs.isNotEmpty()) { exportCsv(runs) }
+        button("CSV 내보내기 · 현재 필터 ${runs.size}개", runs.isNotEmpty()) { exportCsv(runs) }
         indexError?.let { text("Baseline을 읽지 못했습니다: $it") }
         if (index.unreadableIds.isNotEmpty()) text("읽을 수 없는 파일 ${index.unreadableIds.size}개: ${index.unreadableIds.joinToString()}")
         selectedId?.let { id ->
@@ -224,7 +224,7 @@ class HistoryActivity : ComponentActivity() {
         val comparison = RegressionDetector.compare(base, current)
         val view = ComparePresenter.present(base, current, comparison,
             if (onBaseline) ComparedTo.BASELINE else ComparedTo.PREVIOUS, selectedReference = true)
-        titleBar("Compare", 20, "실행 이력으로 돌아가기") { compareId = null; render() }
+        titleBar("비교", 20, "실행 이력으로 돌아가기") { compareId = null; render() }
         if (busy) text("실행 기록을 처리하고 있습니다.")
         text("기준: ${base.runId}\n${base.subject.subjectBuildLabel.orEmpty()} · ${base.subject.subjectCommit.orEmpty()}")
         text("현재: ${current.runId}\n${current.subject.subjectBuildLabel.orEmpty()} · ${current.subject.subjectCommit.orEmpty()}")
@@ -238,7 +238,7 @@ class HistoryActivity : ComponentActivity() {
             body.addView(MetricRows.comparison(this, row, view.baseHeader))
         }
         button("기준 / 현재 바꾸기") { val old = selectedId; selectedId = compareId; compareId = old; render() }
-        button("CSV export · 두 실행") { exportCsv(listOf(base, current)) }
+        button("CSV 내보내기 · 두 실행") { exportCsv(listOf(base, current)) }
         return true
     }
 
@@ -248,7 +248,7 @@ class HistoryActivity : ComponentActivity() {
 
     private fun menu(run: BenchmarkRun) {
         val isBaseline = pointers.baseline(run.contract.comparisonContractId, run.endpoint.key) == run.runId
-        choose(run.runId, listOf("결과 열기", if (isBaseline) "Clear baseline" else "Set as baseline", "Compare", "Export JSON", "Export CSV", "Delete")) {
+        choose(run.runId, listOf("결과 열기", if (isBaseline) "baseline 해제" else "baseline으로 지정", "비교", "JSON 내보내기", "CSV 내보내기", "삭제")) {
             when (it) {
                 0 -> open(run)
                 1 -> {
