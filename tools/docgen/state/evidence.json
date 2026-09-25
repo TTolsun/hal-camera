@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "062c3c11a11d9bab",
+        "codeHash": "ade93a2051ab790c",
         "modelHash": "4e339f5ed7e457ef",
         "at": "2026-09-25",
-        "commit": "34e3452",
-        "reviewer": "Claude (issue #139)"
+        "commit": "65620ed",
+        "reviewer": "Claude (issue #152)"
       }
     },
     "omm:data-flow": {
@@ -18,11 +18,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "44d4889e9529fa66",
+        "codeHash": "6267a750ddd07026",
         "modelHash": "11e6321ea977ef38",
         "at": "2026-09-25",
-        "commit": "34e3452",
-        "reviewer": "Claude (issue #139)"
+        "commit": "65620ed",
+        "reviewer": "Claude (issue #152)"
       }
     },
     "omm:state-transitions": {
@@ -30,11 +30,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "04c822a8ed1d5b1c",
+        "codeHash": "8f0d11e19793d818",
         "modelHash": "ec08c1d2fa5f7953",
         "at": "2026-09-25",
-        "commit": "34e3452",
-        "reviewer": "Claude (issue #139)"
+        "commit": "65620ed",
+        "reviewer": "Claude (issue #152)"
       }
     },
     "content:architecture.md/overview": {
@@ -42,11 +42,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "003de0ea753fdc8c",
+        "codeHash": "754c54441e0ffb1f",
         "modelHash": "aefa3340ad7ef3e3",
         "at": "2026-09-25",
-        "commit": "34e3452",
-        "reviewer": "Claude (issue #139)"
+        "commit": "65620ed",
+        "reviewer": "Claude (issue #152)"
       }
     },
     "content:architecture.md/runtime-flow": {
@@ -54,11 +54,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "44d4889e9529fa66",
+        "codeHash": "6267a750ddd07026",
         "modelHash": "27da447cd5fb358e",
         "at": "2026-09-25",
-        "commit": "34e3452",
-        "reviewer": "Claude (issue #139)"
+        "commit": "65620ed",
+        "reviewer": "Claude (issue #152)"
       }
     },
     "content:troubleshooting.md/layer-isolation": {
@@ -66,20 +66,20 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "b2b89d2e21a76515",
+        "codeHash": "4c9874fb7620730f",
         "modelHash": "9b63d2ae379a8b51",
         "at": "2026-09-25",
-        "commit": "34e3452",
-        "reviewer": "Claude (issue #139)"
+        "commit": "65620ed",
+        "reviewer": "Claude (issue #152)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "062c3c11a11d9bab",
+        "codeHash": "ade93a2051ab790c",
         "modelHash": "2b6e9eb45ac8d706",
         "at": "2026-09-25",
-        "commit": "34e3452",
-        "reviewer": "Claude (issue #139)"
+        "commit": "65620ed",
+        "reviewer": "Claude (issue #152)"
       },
       "observed": {
         "state": "fresh"
@@ -87,11 +87,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "062c3c11a11d9bab",
+        "codeHash": "ade93a2051ab790c",
         "modelHash": "6ef28a3da5c7a212",
         "at": "2026-09-25",
-        "commit": "34e3452",
-        "reviewer": "Claude (issue #139)"
+        "commit": "65620ed",
+        "reviewer": "Claude (issue #152)"
       },
       "observed": {
         "state": "fresh"
@@ -105,8 +105,8 @@
         "codeHash": "50f8d9ff0212902a",
         "modelHash": "2d342dce363f7e74",
         "at": "2026-09-25",
-        "commit": "34e3452",
-        "reviewer": "Claude (issue #139)"
+        "commit": "65620ed",
+        "reviewer": "Claude (issue #152)"
       }
     },
     "omm:ui-tool-handoff": {
@@ -114,11 +114,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "68b44c6bb8953941",
+        "codeHash": "0a31bee962375e0f",
         "modelHash": "9480bc0d85e4f8e5",
         "at": "2026-09-25",
-        "commit": "34e3452",
-        "reviewer": "Claude (issue #139)"
+        "commit": "65620ed",
+        "reviewer": "Claude (issue #152)"
       }
     },
     "omm:ui-zoom": {
@@ -129,8 +129,8 @@
         "codeHash": "9534e96976f87bbb",
         "modelHash": "1be8e0e862e701f9",
         "at": "2026-09-25",
-        "commit": "34e3452",
-        "reviewer": "Claude (issue #139)"
+        "commit": "65620ed",
+        "reviewer": "Claude (issue #152)"
       }
     }
   }

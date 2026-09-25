@@ -592,7 +592,10 @@ class MainActivity : ComponentActivity() {
         body.addView(timelineView,lp(height=96,top=10))
         timeline=label("프레임 콜백을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
         body.addView(timeline,lp(top=8))
-        system=label("App CPU —  ·  PSS —  ·  Thermal —",11,muted)
+        // The CPU value carries its own scale: a footnote mark pointed at a dialog nobody had opened, and 150% reads
+        // as a fault unless the line itself says one core is 100%. With the scale the three values no longer fit
+        // one line on a phone, so the break is placed here instead of leaving one word to wrap on its own.
+        system=label("App CPU — (1코어=100%)\nPSS —  ·  Thermal —",11,muted)
         body.addView(system,lp(top=12))
         val cliDetails=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL }
         cliDetails.addView(cliSwitch,lp())
@@ -762,7 +765,7 @@ class MainActivity : ComponentActivity() {
         val memory=Debug.MemoryInfo().also { Debug.getMemoryInfo(it) }.totalPss/1024.0
         val thermal=if(Build.VERSION.SDK_INT>=29) getSystemService(PowerManager::class.java).currentThermalStatus else null
         val thermalName=thermal?.let { listOf("NONE","LIGHT","MODERATE","SEVERE","CRITICAL","EMERGENCY","SHUTDOWN").getOrNull(it) ?: "$it" } ?: "N/A"
-        system.text="App CPU ${"%.1f".format(Locale.US,percent)}%* · PSS ${"%.0f".format(Locale.US,memory)} MB · Thermal $thermalName"
+        system.text="App CPU ${"%.1f".format(Locale.US,percent)}% (1코어=100%)\nPSS ${"%.0f".format(Locale.US,memory)} MB · Thermal $thermalName"
         recorder.record("app","system_sample",values=mapOf("appCpuPercentOneCore" to percent,"pssMb" to memory,"thermalStatus" to thermal,"thermalName" to thermalName))
     }
     private fun export(incident:Incident) {
@@ -832,7 +835,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun showNotes() {
         AlertDialog.Builder(this).setTitle("측정 안내")
-            .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• *앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 사진·동영상 모드를 선택한 뒤 실행 버튼을 누르면 갤러리에 저장합니다. 사진은 YUV·JPEG 두 장이며 동영상에는 소리가 포함됩니다. 녹화 중에는 엔진·카메라·줌·모드 변경을 할 수 없습니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
+            .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• 앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 사진·동영상 모드를 선택한 뒤 실행 버튼을 누르면 갤러리에 저장합니다. 사진은 YUV·JPEG 두 장이며 동영상에는 소리가 포함됩니다. 녹화 중에는 엔진·카메라·줌·모드 변경을 할 수 없습니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
             .setPositiveButton("확인",null).show()
     }
     private fun showToolsMenu(anchor: View) {
