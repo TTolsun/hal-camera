@@ -276,6 +276,116 @@ graph LR
 
 세션, Surface, 버퍼의 소유권과 해제 시점은 **확인 필요**입니다. 구현을 수정하기 전에 `CameraEngine`의 단일 점유 규칙과 `close(done)` 완료 조건부터 확인하세요.
 
+## 화면 조작 규칙
+
+위의 그림들은 코드가 어떤 순서로 호출되는지를 보여 줍니다. 이 절의 세 그림은 화면에서 무엇이 어떤 조건으로 바뀌는지를 보여 주며, 코드가 바뀌면 문서 동기화가 다시 그립니다. 조작 규칙의 설계 의도는 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)에 있습니다. 두 문서가 어긋나면 코드와 설계 중 어느 쪽이 틀렸는지 확인하세요.
+
+### 카메라 이름을 적는 방법
+
+같은 카메라를 모든 화면이 같은 이름으로 부르도록 `CameraLabel`이 괄호 안의 세 칸을 채우는 순서입니다.
+
+<!-- omm:begin id=camera-label-diagram -->
+
+```mermaid
+flowchart TD
+    K["카메라 키<br/>0, 1, 0.2"] --> L{"렌즈 역할이<br/>MAIN · ULTRA_WIDE · TELE인가?"}
+    L -->|예| L1["렌즈 칸<br/>Wide · UWide · Tele"]
+    L -->|"아니오: FRONT · EXTERNAL · UNKNOWN"| L0["렌즈 칸 비움"]
+    L1 --> F{"HAL이 LENS_FACING을<br/>보고했는가?"}
+    L0 --> F
+    F -->|예| F1["방향 칸<br/>Rear · Front · External"]
+    F -->|아니오| F0["역할이 FRONT면 Front<br/>아니면 방향 칸 비움"]
+    F1 --> A{"렌즈 칸이 비었고<br/>35mm 환산값이 있는가?"}
+    F0 --> A
+    A -->|예| A1["화각 칸<br/>26 mm, 1mm 단위 반올림"]
+    A -->|아니오| A0["화각 칸 비움"]
+    A1 --> J{"채운 칸이<br/>하나라도 있는가?"}
+    A0 --> J
+    J -->|예| FULL["전체 형태<br/>Camera · 0 (Wide · Rear)<br/>Camera · 1 (Front · 26 mm)"]
+    J -->|아니오| SHORT["축약 형태<br/>Camera · 0"]
+```
+
+<details class="doc-evidence" markdown="1">
+<summary>근거와 검토 정보</summary>
+
+- 근거: `.omm/ui-camera-label/diagram`
+- 근거 수준: 코드 확인
+
+</details>
+
+<!-- omm:end id=camera-label-diagram -->
+
+### 도구 화면으로 넘어가는 순서
+
+`CTS`와 `Benchmark`는 Live 카메라가 닫힌 뒤에 열리고, `Probe`는 기다리지 않고 바로 열립니다.
+
+<!-- omm:begin id=tool-handoff-diagram -->
+
+```mermaid
+sequenceDiagram
+    actor U as 개발자
+    participant L as Live 화면
+    participant E as Live 카메라 엔진
+    participant T as 도구 화면
+    Note over L: 녹화 중, 녹화 저장 중, 세션 종료 중에는 도구 버튼이 비활성화됨
+    U->>L: 도구 → Probe
+    L->>T: CameraProbeActivity를 바로 시작
+    Note over L,E: 화면이 가려지면 onStop이 평소처럼 카메라를 닫음
+    U->>L: 도구 → CTS 또는 Benchmark
+    L->>L: 진행 중인 incident를 마무리하고 진단 패널을 닫음
+    L->>L: closing을 켜고 "카메라 세션 종료 중…" 표시
+    L->>E: close(done)
+    E-->>L: done
+    L->>T: CtsEntryActivity 또는 BenchmarkActivity 시작
+    T->>T: 자기 카메라를 엶
+    U->>T: 뒤로 가기
+    T-->>L: Live 복귀, onStart가 카메라를 다시 엶
+```
+
+<details class="doc-evidence" markdown="1">
+<summary>근거와 검토 정보</summary>
+
+- 근거: `.omm/ui-tool-handoff/diagram`
+- 근거 수준: 코드 확인
+
+</details>
+
+<!-- omm:end id=tool-handoff-diagram -->
+
+### 줌 컨트롤의 상태
+
+줌 컨트롤이 펼쳐지고 접히는 조건입니다. 접근성 설정에 따라 달라지는 조건은 그림의 메모에 모았습니다.
+
+<!-- omm:begin id=zoom-diagram -->
+
+```mermaid
+stateDiagram-v2
+    state "접힘: 현재 배율만 표시" as Folded
+    state "펼침: 지원 배율 모두 표시" as Open
+    [*] --> Folded
+    Folded --> Open : 현재 배율 누름, 지원 배율 2개 이상, 260ms
+    Open --> Open : 배율 선택 또는 포커스, 접기 타이머 재시작
+    Open --> Folded : 마지막 조작 후 3초, 220ms
+    Open --> Folded : TalkBack 사용 중 배율 선택 즉시
+    Open --> Folded : 비활성화 또는 진단 패널 열기, 애니메이션 없음
+    note right of Open
+        가로 드래그 중에는 접기 타이머를 멈춤
+        TalkBack이 켜져 있으면 자동 접기 없음
+        3초는 API 29 이상에서 접근성 권장 시간으로 늘어날 수 있음
+        시스템 애니메이션이 꺼져 있으면 즉시 바뀜
+    end note
+```
+
+<details class="doc-evidence" markdown="1">
+<summary>근거와 검토 정보</summary>
+
+- 근거: `.omm/ui-zoom/diagram`
+- 근거 수준: 코드 확인
+
+</details>
+
+<!-- omm:end id=zoom-diagram -->
+
 ## 변경 시 지켜야 할 제약
 
 <!-- omm:begin id=constraints -->
@@ -365,6 +475,9 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 | 구조 원본 `data-flow` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
 | 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
 | 구조 원본 `state-transitions` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
+| 구조 원본 `ui-camera-label` | 검증 정보 없음 | — |
+| 구조 원본 `ui-tool-handoff` | 검증 정보 없음 | — |
+| 구조 원본 `ui-zoom` | 검증 정보 없음 | — |
 | 원고 `overview` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
 | 원고 `module-roles` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
 | 원고 `runtime-flow` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
