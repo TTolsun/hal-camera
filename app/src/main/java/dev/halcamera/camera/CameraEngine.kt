@@ -14,6 +14,21 @@ interface CameraEngine {
     fun close(done: () -> Unit)
 }
 
+/**
+ * The LIVE media surface an engine may offer beyond [CameraEngine]'s preview contract: gallery stills and
+ * video recording. LIVE and the CLI check for this interface instead of a concrete engine class, so which
+ * engine records is a capability of the instance, not a hard-coded type. Camera2Engine implements it;
+ * CameraXEngine does not yet, and LIVE switches to Camera2 when a media action needs it.
+ */
+interface MediaCapture {
+    /** True while a still pair or a recording is in flight; LIVE and the CLI report BUSY from it. */
+    val mediaBusy: Boolean
+    /** One YUV + JPEG still pair saved through MediaLibrary. [done] is called on the main thread. */
+    fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit)
+    fun startRecording(audio: Boolean = true, started: () -> Unit = {}, done: ((Result<android.net.Uri>) -> Unit)? = null)
+    fun stopRecording()
+}
+
 /** Zoom ratio range reported by the camera characteristics. Below API 30 only digital zoom >= 1x is available. */
 fun zoomRange(manager: CameraManager, id: String): Pair<Float, Float> {
     val c = try { manager.getCameraCharacteristics(id) } catch (_: Exception) { return 1f to 1f }

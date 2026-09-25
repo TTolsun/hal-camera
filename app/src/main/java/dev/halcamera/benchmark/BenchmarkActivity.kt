@@ -5,18 +5,14 @@ import dev.halcamera.ui.MetricRows
 import android.Manifest
 import android.content.ClipData
 import android.content.Intent
-import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
-import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
-import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.PowerManager
 import android.text.InputType
 import android.view.Gravity
 import android.view.TextureView
@@ -90,6 +86,7 @@ class BenchmarkActivity : ComponentActivity() {
     private val baselines by lazy { BaselineManager(StoreRunCatalog(store, report)) }
     private val subjectPrefs by lazy { SubjectPrefs(this) }
     private val settings by lazy { BenchmarkPrefs(this) }
+    private val probe = EnvironmentProbe(this)
 
     private lateinit var preview: TextureView
     private lateinit var header: LinearLayout
@@ -261,8 +258,8 @@ class BenchmarkActivity : ComponentActivity() {
             compatibility = compatibility,
             endpointName = CameraLabel.full(endpoint),
             engineName = engineName,
-            thermalStatus = currentThermalStatus(),
-            powerSaveMode = getSystemService(PowerManager::class.java)?.isPowerSaveMode
+            thermalStatus = probe.thermalStatus(),
+            powerSaveMode = probe.powerSaveMode()
         )
         // The card said Camera2 would be used, so the app is on Camera2 from here and says so only once.
         engineName = StartCardPresenter.ENGINE_CAMERA2
@@ -276,9 +273,6 @@ class BenchmarkActivity : ComponentActivity() {
             "frame_budget_ok" to compatibility.frameBudgetOk, "device_setup_supported" to deviceSetupSupported
         ))
     }
-
-    private fun currentThermalStatus(): Int? =
-        if (Build.VERSION.SDK_INT >= 29) getSystemService(PowerManager::class.java)?.currentThermalStatus else null
 
     // ---- screens ----
 
@@ -506,7 +500,7 @@ class BenchmarkActivity : ComponentActivity() {
             background = Look.cardBackground(this@BenchmarkActivity, Look.expertTile2, Look.expertTile3)
             setPadding(dp(12), dp(6), dp(12), dp(6))
         }
-        val thermal = currentThermalStatus()
+        val thermal = probe.thermalStatus()
         if (thermal != null) {
             val (label, color) = when {
                 thermal >= StartCardPresenter.THERMAL_SEVERE -> "Thermal severe" to Look.statusFail
@@ -516,7 +510,7 @@ class BenchmarkActivity : ComponentActivity() {
             }
             row.addView(chip(label, color))
         }
-        batteryPercent()?.let {
+        probe.batteryPercent()?.let {
             row.addView(chip("Battery $it%", Look.onDarkMuted),
                 LinearLayout.LayoutParams(-2, -2).apply { marginStart = if (row.childCount > 0) dp(8) else 0 })
         }
@@ -723,7 +717,7 @@ class BenchmarkActivity : ComponentActivity() {
         // Each run file carries only its own events. The recorder keeps 180 s, which is long enough for two runs.
         recorder.clear()
         recordPreflight(endpoint)
-        envStart.clear(); envStart += environment()
+        envStart.clear(); envStart += probe.environment()
         liveStats.reset()
         livePhase = null
         thermal = ThermalTracker(this) { status ->
@@ -872,7 +866,7 @@ class BenchmarkActivity : ComponentActivity() {
         ticker?.let { main.removeCallbacks(it) }
         val thermalEnd = thermal?.stop()
         val events = recorder.snapshot()
-        val endEnv = environment()
+        val endEnv = probe.environment()
         val env = RunEnv(
             thermalStart = thermal?.start, thermalMax = thermal?.max, thermalEnd = thermalEnd,
             batteryStart = envStart["battery_pct"] as? Int, batteryEnd = endEnv["battery_pct"] as? Int,
@@ -882,9 +876,9 @@ class BenchmarkActivity : ComponentActivity() {
         thermal = null
         val context = RunAssembler.Context(
             exportedAtUtc = BenchmarkReport.utcNow(),
-            device = deviceInfo(result.endpoint.logicalCameraId),
+            device = probe.deviceInfo(result.endpoint.logicalCameraId),
             deviceInstanceId = DeviceInstance.id(this),
-            app = appInfo(),
+            app = probe.appInfo(),
             subject = runSubject,
             env = env,
             compatibility = compatibility
@@ -978,53 +972,7 @@ class BenchmarkActivity : ComponentActivity() {
         }
     }
 
-    // ---- environment and identity ----
-
-    private fun environment(): Map<String, Any?> = mapOf(
-        "battery_pct" to batteryPercent(),
-        "charging" to getSystemService(BatteryManager::class.java)?.isCharging,
-        "power_save" to getSystemService(PowerManager::class.java)?.isPowerSaveMode,
-        "rotation" to rotation()
-    )
-
-    @Suppress("DEPRECATION")
-    private fun rotation(): Int = if (Build.VERSION.SDK_INT >= 30) display?.rotation ?: 0 else windowManager.defaultDisplay.rotation
-
-    private fun batteryPercent(): Int? =
-        getSystemService(BatteryManager::class.java)?.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)?.takeIf { it > 0 }
-
-    private fun deviceName(): String = "${Build.MANUFACTURER} ${Build.MODEL}"
-
-    private fun deviceInfo(cameraId: String): DeviceInfo = DeviceInfo(
-        manufacturer = Build.MANUFACTURER, model = Build.MODEL, buildDisplay = Build.DISPLAY,
-        buildIncremental = Build.VERSION.INCREMENTAL, fingerprint = Build.FINGERPRINT,
-        vendorFingerprint = systemProperty("ro.vendor.build.fingerprint"),
-        sdk = Build.VERSION.SDK_INT,
-        securityPatch = if (Build.VERSION.SDK_INT >= 23) Build.VERSION.SECURITY_PATCH else null,
-        cameraInfoVersion = cameraInfoVersion(cameraId)
-    )
-
-    private fun appInfo(): AppInfo {
-        val info = packageManager.getPackageInfo(packageName, 0)
-        @Suppress("DEPRECATION")
-        val code = if (Build.VERSION.SDK_INT >= 28) info.longVersionCode.toInt() else info.versionCode
-        // Without this every run stores app.debuggable = null, which drops DEBUGGABLE_BUILD from the validity
-        // flags and leaves BuildIdentity.sameAppBuild permanently unknown.
-        val debuggable = (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) != 0
-        return AppInfo(info.versionName ?: "", code, debuggable)
-    }
-
-    private fun cameraInfoVersion(cameraId: String): String? = if (Build.VERSION.SDK_INT < 28) null else try {
-        getSystemService(CameraManager::class.java).getCameraCharacteristics(cameraId)[CameraCharacteristics.INFO_VERSION]
-    } catch (_: Exception) { null }
-
-    /** getprop through a subprocess: SystemProperties is not public API and the vendor fingerprint has no getter. */
-    private fun systemProperty(key: String): String? = try {
-        val process = ProcessBuilder("/system/bin/getprop", key).redirectErrorStream(true).start()
-        val value = process.inputStream.bufferedReader().use { it.readLine() }?.trim()
-        process.waitFor()
-        value?.takeIf { it.isNotEmpty() }
-    } catch (_: Exception) { null }
+    // Environment and identity readings live in EnvironmentProbe (benchmark/platform).
 
     // ---- small view helpers ----
 

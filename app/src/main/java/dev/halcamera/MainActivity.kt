@@ -55,27 +55,27 @@ class MainActivity : ComponentActivity() {
     private val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
     private val liveCli by lazy {
         LiveController(cli, object : LiveController.Driver {
-            override fun busy() = recordingVideo || stoppingRecording || pendingMediaAction != null || pendingPermissionAction != null || (engine as? Camera2Engine)?.mediaBusy == true
+            override fun busy() = recordingVideo || stoppingRecording || pendingMediaAction != null || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true
             override fun prepare(camera: String) {
                 showDiagnostics(false)
                 cameraId = camera; engineName = "Camera2"; paused = false; zoomRatio = 1f
                 updateCameraChoices(); restartCamera()
             }
             override fun capture(id: String, done: (Result<PhotoResult>) -> Unit) {
-                val camera = engine as? Camera2Engine
-                if (camera == null) done(Result.failure(IllegalStateException("Camera2 unavailable"))) else camera.capturePhoto(id, done)
+                val camera = engine as? MediaCapture
+                if (camera == null) done(Result.failure(IllegalStateException("Media capture unavailable; switch to Camera2"))) else camera.capturePhoto(id, done)
                 updateMediaControls()
             }
             override fun record(audio: Boolean, started: () -> Unit, done: (Result<android.net.Uri>) -> Unit) {
                 videoMode = true
-                val camera = engine as? Camera2Engine
-                if (camera == null) done(Result.failure(IllegalStateException("Camera2 unavailable")))
+                val camera = engine as? MediaCapture
+                if (camera == null) done(Result.failure(IllegalStateException("Media capture unavailable; switch to Camera2")))
                 else camera.startRecording(audio, started, done)
                 updateMediaControls()
             }
             override fun stopRecording() {
                 stoppingRecording = true
-                (engine as? Camera2Engine)?.stopRecording()
+                (engine as? MediaCapture)?.stopRecording()
                 updateMediaControls()
             }
             override fun stopPreview(done: () -> Unit) {
@@ -363,7 +363,7 @@ class MainActivity : ComponentActivity() {
         updateMediaControls()
         // Re-apply the chosen zoom once the new session is live so engine and camera switches keep the same framing.
         if (ok && !zoomApplied) { zoomApplied = true; if (zoomRatio != 1f) engine?.setZoom(zoomRatio) }
-        if (ok && engine is Camera2Engine) pendingMediaAction?.also { pendingMediaAction = null; main.post { if (resumed && ready) it() } }
+        if (ok && engine is MediaCapture) pendingMediaAction?.also { pendingMediaAction = null; main.post { if (resumed && ready) it() } }
     }
 
     @Suppress("DEPRECATION")
@@ -375,8 +375,8 @@ class MainActivity : ComponentActivity() {
         if (missing.isEmpty()) action() else { pendingPermissionAction = action; mediaPermissions.launch(missing.toTypedArray()) }
     }
 
-    private fun runCamera2Action(action: () -> Unit) {
-        if (engine is Camera2Engine) action() else {
+    private fun runMediaCaptureAction(action: () -> Unit) {
+        if (engine is MediaCapture) action() else {
             pendingMediaAction = action
             toast("촬영과 녹화를 위해 Camera2로 전환합니다")
             chooseEngine("Camera2")
@@ -492,8 +492,8 @@ class MainActivity : ComponentActivity() {
                 if (cli.active != null) return@setOnClickListener
                 if(recordingVideo) stopRecording()
                 else if(videoMode) {
-                    withMediaPermissions(true) { runCamera2Action { (engine as? Camera2Engine)?.startRecording() } }
-                } else withMediaPermissions(false) { runCamera2Action { engine?.capture() } }
+                    withMediaPermissions(true) { runMediaCaptureAction { (engine as? MediaCapture)?.startRecording() } }
+                } else withMediaPermissions(false) { runMediaCaptureAction { engine?.capture() } }
             }
         }
         captureRow.addView(mediaButton,LinearLayout.LayoutParams(dp(72),dp(72)).apply { marginStart=dp(12); marginEnd=dp(12) })
@@ -681,7 +681,7 @@ class MainActivity : ComponentActivity() {
         zoomControl.setChoices(if(cameraId.isEmpty()) listOf(1f) else zoomPresets(zoomRange(manager,cameraId)),zoomRatio)
     }
     private fun updateMediaControls() {
-        cli.setUiBusy(liveCli, recordingVideo || stoppingRecording || pendingMediaAction != null || pendingPermissionAction != null || (engine as? Camera2Engine)?.mediaBusy == true)
+        cli.setUiBusy(liveCli, recordingVideo || stoppingRecording || pendingMediaAction != null || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true)
         listOf(photoModeButton,videoModeButton).forEachIndexed { index, button ->
             val selected=(index==1)==videoMode
             button.isSelected=selected
@@ -881,7 +881,7 @@ class MainActivity : ComponentActivity() {
         recordingTime.text = "저장 중…"
         panelRecordingTime.text = "저장 중…"
         updateMediaControls()
-        (engine as? Camera2Engine)?.stopRecording()
+        (engine as? MediaCapture)?.stopRecording()
     }
     private fun showDiagnostics(show: Boolean) {
         if (show) zoomControl.collapse(animate = false)
