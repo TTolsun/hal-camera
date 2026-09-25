@@ -346,10 +346,11 @@ class MainActivity : ComponentActivity() {
         // The centre column is one line between two button groups, so it carries the short label only.
         statusText.text="${CameraLabel.short(cameraId)} · ${if(recordingVideo) "REC" else if(ok) "Live" else "대기"}"
         statusText.setTextColor(Look.onDarkMuted)
-        // A save notice stays for its 2.5 s even when a routine ok status follows it. Stopping a recording rebuilds
-        // the preview session, and its "LIVE" report used to arrive right after the video notice and hide it.
+        // A save notice stays for its 2.5 s even when the engine's "· LIVE" report follows it. Stopping a recording
+        // rebuilds the preview session, and that report used to arrive right after the video notice and hide it.
+        // Only that one routine report waits; a failure or any other notice still replaces the save notice.
         val saved = ok && text.contains("저장했습니다")
-        if (!(ok && savedNoticeShown && !saved)) {
+        if (!(savedNoticeShown && ok && text.endsWith("· LIVE"))) {
             main.removeCallbacks(clearNotice)
             savedNoticeShown = saved
             cameraNotice.text = text
