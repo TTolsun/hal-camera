@@ -29,7 +29,6 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import dev.halcamera.R
 import dev.halcamera.camera.CameraLabel
 import dev.halcamera.cli.CliJson
 import dev.halcamera.cli.CommandCoordinator
@@ -48,7 +47,6 @@ import dev.halcamera.ctsvendor.VendoredCts
 import dev.halcamera.ctsvendor.VendoredResult
 import dev.halcamera.ctsvendor.VendoredRun
 import dev.halcamera.ctsvendor.VendoredTest
-import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 import org.json.JSONObject
 import java.io.File
@@ -153,10 +151,7 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
             insets
         }
 
-        val head = Look.row(this)
-        head.addView(Look.text(this, "CTS 실행", 22, Look.onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
-        head.addView(IconButton(this, R.drawable.ic_action_close, "CTS 실행 화면 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
-        body.addView(head)
+        body.addView(Look.titleBar(this, "CTS 실행", 22, "이전 화면으로 돌아가기") { finish() })
         body.addView(Look.text(this, "${queue.size}개 항목을 위에서부터 차례로 실행합니다. 화면을 나가면 실행이 중단됩니다.", 12, Look.onDarkMuted), lp(top = 4))
         body.addView(Look.text(this, SuiteReportPresenter.disclaimer(queue), 11, Look.onDarkMuted), lp(top = 4))
 

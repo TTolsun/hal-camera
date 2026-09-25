@@ -67,10 +67,7 @@ abstract class CtsChecklistActivity : ComponentActivity() {
             insets
         }
 
-        val head = Look.row(this)
-        head.addView(Look.text(this, screenTitle, 22, Look.onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
-        head.addView(IconButton(this, R.drawable.ic_action_close, "$screenTitle 목록 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
-        body.addView(head)
+        body.addView(Look.titleBar(this, screenTitle, 22, "이전 화면으로 돌아가기") { finish() })
         body.addView(Look.text(this, intro, 12, Look.onDarkMuted), lp(top = 4))
         body.addView(Look.text(this, "앱 내 검사 · 공식 CTS 인증 결과 아님", 12, Look.onDarkMuted), lp(top = 4))
         groups.forEach { body.addView(section(it), lp(top = 20)) }

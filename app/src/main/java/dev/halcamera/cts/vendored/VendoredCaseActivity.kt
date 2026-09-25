@@ -26,14 +26,12 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import dev.halcamera.R
 import dev.halcamera.ctsvendor.VendoredCatalog
 import dev.halcamera.ctsvendor.VendoredCts
 import dev.halcamera.ctsvendor.VendoredResult
 import dev.halcamera.ctsvendor.VendoredRun
 import dev.halcamera.ctsvendor.VendoredTest
 import dev.halcamera.ctsvendor.VendoredVerdict
-import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 
 /**
@@ -84,10 +82,7 @@ class VendoredCaseActivity : Camera2SurfaceViewCtsActivity() {
             insets
         }
 
-        val head = Look.row(this)
-        head.addView(Look.text(this, test.method, 22, Look.onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
-        head.addView(IconButton(this, R.drawable.ic_action_close, "CTS 테스트 화면 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
-        body.addView(head)
+        body.addView(Look.titleBar(this, test.method, 22, "이전 화면으로 돌아가기") { finish() })
         body.addView(Look.text(this, test.className, 12, Look.onDark, mono = true), lp(top = 8))
         body.addView(Look.text(this, "카메라 전부를 차례로 검사합니다. 녹화 테스트는 카메라마다 CamcorderProfile 하나에 몇 초씩 걸리므로 수 분이 걸릴 수 있습니다.", 12, Look.onDarkMuted), lp(top = 4))
         body.addView(Look.text(this, VendoredReportPresenter.DISCLAIMER, 11, Look.onDarkMuted), lp(top = 4))

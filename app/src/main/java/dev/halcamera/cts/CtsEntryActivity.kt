@@ -9,10 +9,8 @@ import android.widget.ScrollView
 import androidx.activity.ComponentActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import dev.halcamera.R
 import dev.halcamera.cts.vendored.VendoredCtsListActivity
 import dev.halcamera.ctsvendor.VendoredCts
-import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 
 /**
@@ -33,10 +31,7 @@ class CtsEntryActivity : ComponentActivity() {
             insets
         }
 
-        val head = Look.row(this)
-        head.addView(Look.text(this, "CTS", 22, Look.onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
-        head.addView(IconButton(this, R.drawable.ic_action_close, "CTS 화면 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
-        body.addView(head)
+        body.addView(Look.titleBar(this, "CTS", 22, "카메라로 돌아가기") { finish() })
         body.addView(Look.text(this, "앱 내 검사 · 공식 CTS 인증 결과 아님", 12, Look.onDarkMuted), lp(top = 4))
 
         body.addView(

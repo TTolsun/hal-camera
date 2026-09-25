@@ -32,7 +32,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import dev.halcamera.R
 import dev.halcamera.benchmark.domain.*
 import dev.halcamera.benchmark.platform.*
 import dev.halcamera.camera.Camera2Engine
@@ -46,7 +45,6 @@ import dev.halcamera.telemetry.FlightRecorder
 import dev.halcamera.telemetry.Telemetry
 import dev.halcamera.telemetry.nowNs
 import dev.halcamera.ui.DeltaBarView
-import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 import dev.halcamera.ui.MeterView
 import dev.halcamera.ui.showSelectionPopup
@@ -94,6 +92,7 @@ class BenchmarkActivity : ComponentActivity() {
     private val settings by lazy { BenchmarkPrefs(this) }
 
     private lateinit var preview: TextureView
+    private lateinit var header: LinearLayout
     private lateinit var content: LinearLayout
     private lateinit var actions: LinearLayout
 
@@ -166,6 +165,9 @@ class BenchmarkActivity : ComponentActivity() {
         }
         root.addView(panel, FrameLayout.LayoutParams(-1, -1))
 
+        // The title and the way out sit at the top left as on every other screen; the cards stay at the bottom.
+        header = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        panel.addView(header, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
         // Short content sits at the bottom like the M2 card; a long result table scrolls instead of being cut off.
         val scroll = ScrollView(this).apply { isFillViewport = true }
         content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.BOTTOM }
@@ -282,8 +284,16 @@ class BenchmarkActivity : ComponentActivity() {
 
     private fun render() {
         cli.setUiBusy(benchmarkCli, screen == Screen.RUNNING || historyLoading)
+        header.removeAllViews()
         content.removeAllViews()
         actions.removeAllViews()
+        // RUNNING has no back icon: Abort is its way out, and a stray tap must not end a run.
+        when (screen) {
+            Screen.CARD, Screen.RESULT -> header.addView(Look.titleBar(this, "Benchmark", 22,
+                if (intent.hasExtra(EXTRA_RUN_ID)) "실행 이력으로 돌아가기" else "카메라로 돌아가기") { finish() })
+            Screen.COMPARE -> header.addView(Look.titleBar(this, "Compare", 22, "벤치마크 결과로 돌아가기") { screen = Screen.RESULT; render() })
+            Screen.RUNNING -> Unit
+        }
         when (screen) {
             Screen.CARD -> renderCard()
             Screen.RUNNING -> renderRunning()
@@ -440,14 +450,12 @@ class BenchmarkActivity : ComponentActivity() {
         cardRecheck?.let { main.removeCallbacks(it) }; cardRecheck = null
         val card = Look.card(this, dark = true)
         val state = startCard
-        card.addView(Look.text(this, "Benchmark", 19, Look.onDark, bold = true))
         if (state == null) {
-            card.addView(Look.text(this, cardError ?: "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted), lp(top = 10))
+            card.addView(Look.text(this, cardError ?: "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted))
             content.addView(card)
-            actions.addView(IconButton(this, R.drawable.ic_action_close, "벤치마크 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
             return
         }
-        card.addView(Look.text(this, state.titleLine, 13, Look.onDarkMuted), lp(top = 6))
+        card.addView(Look.text(this, state.titleLine, 13, Look.onDarkMuted))
         // What the feature does and what the run needs, before any jargon: the profile id and the preflight
         // verdict move into the Details fold below.
         card.addView(Look.text(this, "카메라를 벤치마킹합니다.", 15, Look.onDark, bold = true), lp(top = 12))
@@ -477,7 +485,6 @@ class BenchmarkActivity : ComponentActivity() {
             isEnabled = endpoints.isNotEmpty()
             contentDescription = "벤치마크 카메라 선택, 현재 $cameraLabel"
         }, Look.buttonParams(0, 1f))
-        row.addView(IconButton(this, R.drawable.ic_action_close, "벤치마크 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
         actions.addView(row)
         if (state.canStart) {
             actions.addView(Look.primaryButton(this, "Start benchmark") { begin() }, Look.buttonParams().apply { topMargin = dp(8) })
@@ -695,7 +702,6 @@ class BenchmarkActivity : ComponentActivity() {
             card.addView(Look.disclosure(this, "Run info", details), lp(top = 10))
         }
         content.addView(card)
-        actions.addView(IconButton(this, R.drawable.ic_action_back, "벤치마크 결과로 돌아가기") { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(dp(48), dp(48)))
     }
 
     // ---- run ----
