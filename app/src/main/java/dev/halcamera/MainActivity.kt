@@ -5,11 +5,9 @@ import android.app.AlertDialog
 import android.content.ClipData
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.RippleDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.os.*
@@ -28,6 +26,7 @@ import dev.halcamera.camera.*
 import dev.halcamera.cli.LiveController
 import dev.halcamera.telemetry.*
 import dev.halcamera.ui.LiveReadout
+import dev.halcamera.ui.DiagnosticsPanel
 import dev.halcamera.ui.ExpandingZoomControl
 import dev.halcamera.ui.RecentMediaButton
 import dev.halcamera.ui.ShutterButton
@@ -118,6 +117,8 @@ class MainActivity : ComponentActivity() {
     private val coral = dev.halcamera.ui.Look.statusFail
     private val glass = Look.cameraGlass
     private val main = Handler(Looper.getMainLooper())
+    /** Buttons refuse taps while an ADB command drives the camera. */
+    private val widgets by lazy { dev.halcamera.ui.CameraWidgets(this) { cli.active == null } }
     private val cameraWorker = Executors.newSingleThreadExecutor()
     private val io = Executors.newSingleThreadExecutor()
     private val recorder = FlightRecorder(::nowNs)
@@ -532,10 +533,27 @@ class MainActivity : ComponentActivity() {
         reportButton.setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
         captureChrome.addView(mainRow,LinearLayout.LayoutParams(-1,-2))
 
-        // Detailed tools and graphs use flat, outlined cards; core readings stay on the preview.
-        diagnostics=ScrollView(this).apply { setBackgroundColor(bg); visibility=View.GONE; isFillViewport=true; isClickable=true }
-        val body=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; setPadding(dp(18),dp(12),dp(18),dp(24)) }
-        diagnostics.addView(body)
+        val panelView=DiagnosticsPanel(this,widgets,cameraButton,pauseButton,MARK_LABEL,object : DiagnosticsPanel.Actions {
+            override fun close() = showDiagnostics(false)
+            override fun stopRecording() = this@MainActivity.stopRecording()
+            override fun about() = dev.halcamera.ui.AboutSheet.show(this@MainActivity)
+            override fun shareLatest() { latestFile?.let { share(it) } }
+            override fun incidents() = showIncidents()
+            override fun retryPermission() {
+                if(hasPermission()) restartCamera()
+                else if(shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) permission.launch(Manifest.permission.CAMERA)
+                else startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:$packageName")))
+            }
+            override fun notes() = showNotes()
+            override var cliEnabled: Boolean
+                get() = cli.enabled
+                set(value) = cli.setEnabled(value)
+        })
+        diagnostics=panelView.view; panelRecordingTime=panelView.recordingTime; panelStopButton=panelView.stopButton
+        readoutCard=panelView.readoutCard; strip=panelView.strip; stripText=panelView.stripText; scope=panelView.scope
+        timelineView=panelView.timelineView; timeline=panelView.timeline; system=panelView.system
+        recorderText=panelView.recorderText; shareButton=panelView.shareButton
+        val body=panelView.body
         root.addView(diagnostics,FrameLayout.LayoutParams(-1,0,Gravity.BOTTOM))
         // Keep the preview and incident action visible while inspecting live graphs.
         root.addOnLayoutChangeListener { _,_,_,_,_,_,_,_,_ ->
@@ -547,77 +565,6 @@ class MainActivity : ComponentActivity() {
                 diagnostics.layoutParams=panelParams
             }
         }
-        val head=row().apply { gravity=Gravity.CENTER_VERTICAL }; body.addView(head)
-        head.addView(label("진단",22,Color.WHITE,true),LinearLayout.LayoutParams(0,-2,1f))
-        // The panel hides the capture controls, which is where the stop button and the elapsed time live. A
-        // recording that cannot be stopped without first closing a panel is the wrong trade for looking at the
-        // frame numbers while it runs, so both follow the recording up here.
-        panelRecordingTime=label("● REC  00:00",13,coral,true).apply { typeface=Look.mono; visibility=View.GONE }
-        head.addView(panelRecordingTime,LinearLayout.LayoutParams(-2,-2).apply { marginEnd=dp(8) })
-        panelStopButton=IconButton(this,R.drawable.ic_action_stop,"녹화 정지") { stopRecording() }.apply { visibility=View.GONE }
-        head.addView(panelStopButton,LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginEnd=dp(4) })
-        head.addView(IconButton(this,R.drawable.ic_action_info,"앱 정보 보기") { dev.halcamera.ui.AboutSheet.show(this) },LinearLayout.LayoutParams(dp(48),dp(48)))
-        head.addView(IconButton(this,R.drawable.ic_action_close,"진단 패널 닫기") { showDiagnostics(false) },LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginStart=dp(4) })
-        val diagnosticControls=row()
-        diagnosticControls.addView(cameraButton,LinearLayout.LayoutParams(0,dp(48),1f))
-        diagnosticControls.addView(pauseButton,LinearLayout.LayoutParams(dp(48),dp(48)).apply { marginStart=dp(8) })
-        body.addView(diagnosticControls,lp(top=12))
-
-        @Suppress("UseSwitchCompatOrMaterialCode")
-        val cliSwitch = Switch(this).apply {
-            text = "ADB CLI 허용"; textSize = 14f; setTextColor(Look.onDark)
-            minHeight = dp(48); isChecked = cli.enabled
-            setOnCheckedChangeListener { _, checked -> cli.setEnabled(checked) }
-        }
-        // 8.1: raw numbers only. The DIAGNOSIS card that used to lead this panel named a rule and a cause layer
-        // from a two-second window, which the app could not actually establish; BENCHMARK answers that properly.
-        val readoutDetails=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL }
-        readoutDetails.addView(label("직전 프레임 · ref p50: 최근 1.5초를 제외한 세션 표본",12,muted),lp(top=4))
-        readoutCard=label("프레임을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
-        readoutDetails.addView(readoutCard,lp(top=10))
-        val stripBox=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; background=rounded(panel); setPadding(dp(12),dp(12),dp(12),dp(12)) }
-        stripBox.addView(label("Frame interval · 최근 10초",12,muted,true),lp())
-        strip=StripView(this).apply { contentDescription="최근 10초 센서 프레임 간격. 실선은 기준, 점선은 1.5배 임계" }
-        stripBox.addView(strip,lp(height=40,top=8))
-        stripText=label("Partial —   Buffer — ms",12,muted).apply { gravity=Gravity.CENTER; typeface=Look.mono }
-        stripBox.addView(stripText,lp(top=8))
-        body.addView(stripBox,lp(top=10))
-        body.addView(Look.disclosure(this,"프레임·3A 수치",readoutDetails),lp(top=8))
-        body.addView(label("3A oscilloscope",14,muted,true),lp(top=18))
-        body.addView(label("최근 10초 · 3A 상태는 단계값, 연속값 그래프는 자동 스케일",10,muted),lp(top=4))
-        scope=ScopeView(this).apply { background=rounded(panel); contentDescription="AE, AF, AWB 상태와 노출, ISO, 센서 프레임 간격 그래프" }
-        body.addView(scope,lp(height=342,top=10))
-        body.addView(label("Frame callback timeline",14,muted,true),lp(top=20))
-        timelineView=dev.halcamera.ui.TimelineView(this).apply { background=rounded(panel); contentDescription="최근 프레임과 세션 평균의 Start, Partial, Buffer 도착 시각 비교" }
-        body.addView(timelineView,lp(height=96,top=10))
-        timeline=label("프레임 콜백을 기다리는 중…",12,Color.WHITE).apply { typeface=dev.halcamera.ui.Look.mono; setPadding(dp(12),dp(14),dp(12),dp(14)); background=rounded(panel) }
-        body.addView(timeline,lp(top=8))
-        // The CPU value carries its own scale: a footnote mark pointed at a dialog nobody had opened, and 150% reads
-        // as a fault unless the line itself says one core is 100%. With the scale the three values no longer fit
-        // one line on a phone, so the break is placed here instead of leaving one word to wrap on its own.
-        system=label("App CPU — (1코어=100%)\nPSS —  ·  Thermal —",11,muted)
-        body.addView(system,lp(top=12))
-        val cliDetails=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL }
-        cliDetails.addView(cliSwitch,lp())
-        cliDetails.addView(label("승인된 ADB 연결에서 프리뷰·사진·동영상 제어",12,muted),lp(top=4))
-        body.addView(Look.disclosure(this,"ADB CLI 설정",cliDetails),lp(top=12))
-        body.addView(label("Incident ZIP",14,muted,true),lp(top=20))
-        body.addView(label("$MARK_LABEL: 직전 10초 + 이후 5초의 이벤트를 저장합니다.",12,Color.WHITE),lp(top=8))
-        recorderText=label("30s 순환 버퍼",11,muted); body.addView(recorderText,lp(top=8))
-        val exports=row(); body.addView(exports,lp(top=8))
-        shareButton=button("최근 ZIP 공유") { latestFile?.let { share(it) } }
-        exports.addView(shareButton,LinearLayout.LayoutParams(0,dp(48),1f))
-        exports.addView(button("기록 목록") { showIncidents() },LinearLayout.LayoutParams(0,dp(48),1f))
-        val tools=row(); body.addView(tools,lp(top=8))
-        tools.addView(button("권한 / 재시도") {
-            if(hasPermission()) restartCamera()
-            else if(shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) permission.launch(Manifest.permission.CAMERA)
-            else startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:$packageName")))
-        },LinearLayout.LayoutParams(0,dp(48),1f))
-        tools.addView(button("측정 안내") { showNotes() },LinearLayout.LayoutParams(0,dp(48),1f))
-        // The baseline reset that used to sit here cleared the Auto Check store. The benchmark baseline is a
-        // pointer to one run and is cleared from the result screen, where the run it points at is on the screen.
-        body.addView(label("사진 · 동영상: DCIM/HALCamera\nIncident ZIP에는 이미지 픽셀이 포함되지 않습니다",10,muted),lp(top=18))
 
         root.setOnApplyWindowInsetsListener { _,insets ->
             val (l,t,r,b)=if (Build.VERSION.SDK_INT >= 30) {
@@ -889,12 +836,12 @@ class MainActivity : ComponentActivity() {
         panelBack.isEnabled = show
         bottomBar.visibility = if (show) View.GONE else View.VISIBLE
     }
-    private fun label(text:String,size:Int,color:Int,bold:Boolean=false)=TextView(this).apply { this.text=text; textSize=size.coerceAtLeast(12).toFloat(); setTextColor(color); if(bold) setTypeface(typeface,Typeface.BOLD) }
-    private fun button(text:String,action:()->Unit)=Button(this).apply { this.text=text; isAllCaps=false; textSize=12f; setTextColor(Look.onDark); background=cameraChrome(panel,true); backgroundTintList=null; stateListAnimator=null; setPadding(0,0,0,0); minWidth=0; minimumWidth=0; minHeight=0; minimumHeight=0; setOnClickListener { if (cli.active == null) action() } }
-    private fun cameraChrome(fill:Int=glass,outlined:Boolean=false)=RippleDrawable(ColorStateList.valueOf(0x40FFFFFF),GradientDrawable().apply { setColor(fill); cornerRadius=dp(4).toFloat(); if(outlined) setStroke(dp(1),Look.cameraOutline) },rounded(Color.WHITE))
-    private fun row()=LinearLayout(this).apply { orientation=LinearLayout.HORIZONTAL }
-    private fun rounded(color:Int)=GradientDrawable().apply { setColor(color); cornerRadius=dp(4).toFloat(); setStroke(dp(1),Look.cameraOutline) }
-    private fun lp(height:Int=-2,top:Int=0)=LinearLayout.LayoutParams(-1,if(height<0) height else dp(height)).apply { topMargin=dp(top) }
-    private fun dp(value:Int)=(value*resources.displayMetrics.density).toInt()
+    private fun label(text:String,size:Int,color:Int,bold:Boolean=false)=widgets.label(text,size,color,bold)
+    private fun button(text:String,action:()->Unit)=widgets.button(text,action)
+    private fun cameraChrome(fill:Int=glass,outlined:Boolean=false)=widgets.chrome(fill,outlined)
+    private fun row()=widgets.row()
+    private fun rounded(color:Int)=widgets.rounded(color)
+    private fun lp(height:Int=-2,top:Int=0)=widgets.lp(height,top)
+    private fun dp(value:Int)=widgets.dp(value)
     private fun toast(text:String)=Toast.makeText(this,text,Toast.LENGTH_LONG).show()
 }
