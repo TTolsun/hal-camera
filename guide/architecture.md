@@ -475,9 +475,9 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 | 구조 원본 `data-flow` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
 | 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
 | 구조 원본 `state-transitions` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
-| 구조 원본 `ui-camera-label` | 검증 정보 없음 | — |
-| 구조 원본 `ui-tool-handoff` | 검증 정보 없음 | — |
-| 구조 원본 `ui-zoom` | 검증 정보 없음 | — |
+| 구조 원본 `ui-camera-label` | 최신 | 검토 2026-09-25 @ `d056b82` · Claude (omm ui perspectives, code-checked) |
+| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-09-25 @ `d056b82` · Claude (omm ui perspectives, code-checked) |
+| 구조 원본 `ui-zoom` | 최신 | 검토 2026-09-25 @ `d056b82` · Claude (omm ui perspectives, code-checked) |
 | 원고 `overview` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
 | 원고 `module-roles` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
 | 원고 `runtime-flow` | 최신 | 검토 2026-09-24 @ `92f1369` · Claude (release 0.13.1) |
