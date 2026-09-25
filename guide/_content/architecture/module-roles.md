@@ -6,6 +6,8 @@ sources:
   - app/src/main/java/dev/halcamera/cli/LiveController.kt
   - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
   - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
+  - app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt
+  - app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
   - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
   - app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt

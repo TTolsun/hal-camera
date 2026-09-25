@@ -63,13 +63,13 @@ class MainActivity : ComponentActivity() {
             }
             override fun capture(id: String, done: (Result<PhotoResult>) -> Unit) {
                 val camera = engine as? MediaCapture
-                if (camera == null) done(Result.failure(IllegalStateException("Camera2 unavailable"))) else camera.capturePhoto(id, done)
+                if (camera == null) done(Result.failure(IllegalStateException("Media capture unavailable; switch to Camera2"))) else camera.capturePhoto(id, done)
                 updateMediaControls()
             }
             override fun record(audio: Boolean, started: () -> Unit, done: (Result<android.net.Uri>) -> Unit) {
                 videoMode = true
                 val camera = engine as? MediaCapture
-                if (camera == null) done(Result.failure(IllegalStateException("Camera2 unavailable")))
+                if (camera == null) done(Result.failure(IllegalStateException("Media capture unavailable; switch to Camera2")))
                 else camera.startRecording(audio, started, done)
                 updateMediaControls()
             }
@@ -375,7 +375,7 @@ class MainActivity : ComponentActivity() {
         if (missing.isEmpty()) action() else { pendingPermissionAction = action; mediaPermissions.launch(missing.toTypedArray()) }
     }
 
-    private fun runCamera2Action(action: () -> Unit) {
+    private fun runMediaCaptureAction(action: () -> Unit) {
         if (engine is MediaCapture) action() else {
             pendingMediaAction = action
             toast("촬영과 녹화를 위해 Camera2로 전환합니다")
@@ -492,8 +492,8 @@ class MainActivity : ComponentActivity() {
                 if (cli.active != null) return@setOnClickListener
                 if(recordingVideo) stopRecording()
                 else if(videoMode) {
-                    withMediaPermissions(true) { runCamera2Action { (engine as? MediaCapture)?.startRecording() } }
-                } else withMediaPermissions(false) { runCamera2Action { engine?.capture() } }
+                    withMediaPermissions(true) { runMediaCaptureAction { (engine as? MediaCapture)?.startRecording() } }
+                } else withMediaPermissions(false) { runMediaCaptureAction { engine?.capture() } }
             }
         }
         captureRow.addView(mediaButton,LinearLayout.LayoutParams(dp(72),dp(72)).apply { marginStart=dp(12); marginEnd=dp(12) })

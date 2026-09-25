@@ -76,9 +76,8 @@ class Camera2Engine(
         override val camera: CameraDevice? get() = device
         override val cameraActive: Boolean get() = active
         override val previewSurface: Surface? get() = this@Camera2Engine.previewSurface
-        override var session: CameraCaptureSession?
-            get() = captureSession
-            set(value) { captureSession = value }
+        override val session: CameraCaptureSession? get() = captureSession
+        override fun onSessionConfigured(session: CameraCaptureSession) { captureSession = session }
         override val characteristics: CameraCharacteristics? get() = chars
         override val captureCallback: CameraCaptureSession.CaptureCallback get() = callback
         override fun orientationHint(chars: CameraCharacteristics): Int = outputRotation(chars)

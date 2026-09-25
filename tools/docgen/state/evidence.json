@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1d46989aac182204",
+        "codeHash": "b42c2ee12b069e5f",
         "modelHash": "4e339f5ed7e457ef",
         "at": "2026-09-25",
-        "commit": "65620ed",
+        "commit": "1d5ed8a",
         "reviewer": "Claude (SOLID refactor)"
       }
     },
@@ -18,10 +18,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "67571d3bd30b1c03",
+        "codeHash": "a25efaa01b0cfd24",
         "modelHash": "11e6321ea977ef38",
         "at": "2026-09-25",
-        "commit": "65620ed",
+        "commit": "1d5ed8a",
         "reviewer": "Claude (SOLID refactor)"
       }
     },
@@ -30,10 +30,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "c6ed0db6ec18877b",
+        "codeHash": "af81d386c2498dec",
         "modelHash": "ec08c1d2fa5f7953",
         "at": "2026-09-25",
-        "commit": "65620ed",
+        "commit": "1d5ed8a",
         "reviewer": "Claude (SOLID refactor)"
       }
     },
@@ -42,10 +42,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "2bc5a69f4f64e4f4",
+        "codeHash": "da4f8c0197b5a34c",
         "modelHash": "aefa3340ad7ef3e3",
         "at": "2026-09-25",
-        "commit": "65620ed",
+        "commit": "1d5ed8a",
         "reviewer": "Claude (SOLID refactor)"
       }
     },
@@ -54,10 +54,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "67571d3bd30b1c03",
+        "codeHash": "a25efaa01b0cfd24",
         "modelHash": "27da447cd5fb358e",
         "at": "2026-09-25",
-        "commit": "65620ed",
+        "commit": "1d5ed8a",
         "reviewer": "Claude (SOLID refactor)"
       }
     },
@@ -66,19 +66,19 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "3ccfbea478b75143",
+        "codeHash": "6ee6fb99c29e99bc",
         "modelHash": "9b63d2ae379a8b51",
         "at": "2026-09-25",
-        "commit": "65620ed",
+        "commit": "1d5ed8a",
         "reviewer": "Claude (SOLID refactor)"
       }
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "1d46989aac182204",
-        "modelHash": "b507776a69565b60",
+        "codeHash": "b42c2ee12b069e5f",
+        "modelHash": "85deb1b71267851c",
         "at": "2026-09-25",
-        "commit": "65620ed",
+        "commit": "1d5ed8a",
         "reviewer": "Claude (SOLID refactor)"
       },
       "observed": {
@@ -87,10 +87,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "1d46989aac182204",
+        "codeHash": "b42c2ee12b069e5f",
         "modelHash": "6ef28a3da5c7a212",
         "at": "2026-09-25",
-        "commit": "65620ed",
+        "commit": "1d5ed8a",
         "reviewer": "Claude (SOLID refactor)"
       },
       "observed": {
@@ -105,7 +105,7 @@
         "codeHash": "50f8d9ff0212902a",
         "modelHash": "2d342dce363f7e74",
         "at": "2026-09-25",
-        "commit": "65620ed",
+        "commit": "1d5ed8a",
         "reviewer": "Claude (SOLID refactor)"
       }
     },
@@ -114,10 +114,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "49909d68f4811ae6",
+        "codeHash": "fdefd0bae187937c",
         "modelHash": "9480bc0d85e4f8e5",
         "at": "2026-09-25",
-        "commit": "65620ed",
+        "commit": "1d5ed8a",
         "reviewer": "Claude (SOLID refactor)"
       }
     },
@@ -129,7 +129,7 @@
         "codeHash": "9534e96976f87bbb",
         "modelHash": "1be8e0e862e701f9",
         "at": "2026-09-25",
-        "commit": "65620ed",
+        "commit": "1d5ed8a",
         "reviewer": "Claude (SOLID refactor)"
       }
     }

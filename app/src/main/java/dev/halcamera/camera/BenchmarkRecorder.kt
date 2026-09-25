@@ -36,8 +36,9 @@ class BenchmarkRecorder(
         val camera: CameraDevice?
         val cameraActive: Boolean
         val previewSurface: Surface?
-        /** The engine's current capture session; a successful prepare replaces it with the recording session. */
-        var session: CameraCaptureSession?
+        val session: CameraCaptureSession?
+        /** A successful prepare replaces the engine's capture session with the recording session. */
+        fun onSessionConfigured(session: CameraCaptureSession)
         val characteristics: CameraCharacteristics?
         /** The engine's one telemetry callback. Shared because its FrameTracker carries per-session frame state. */
         val captureCallback: CameraCaptureSession.CaptureCallback
@@ -107,7 +108,7 @@ class BenchmarkRecorder(
                 camera.createCaptureSession(listOf(host.previewSurface!!, recorder.surface), object : CameraCaptureSession.StateCallback() {
                     override fun onConfigured(session: CameraCaptureSession) {
                         if (!host.cameraActive) { session.close(); return }
-                        host.session = session
+                        host.onSessionConfigured(session)
                         try {
                             // Preview only until MediaRecorder.start() has returned: 3.1 measures from that call
                             // to the first capture of a recording request, so no recording request may exist yet.
