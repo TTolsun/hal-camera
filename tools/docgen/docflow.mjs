@@ -10,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-const REQUIRED_VERSION = '0.6.1';
+const REQUIRED_VERSION = '0.7.0';
 const root = path.resolve(import.meta.dirname, '../..');
 const args = process.argv.slice(2);
 const command = args.shift();
