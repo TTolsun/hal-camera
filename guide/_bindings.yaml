@@ -426,6 +426,42 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt
 
+  # 화면 조작 규칙. 위 세 관점은 코드 구조를 그리므로 화면에서 무엇이 어떤 순서로 바뀌는지는 담지 않습니다.
+  # diagram_type 이 관점 단위라서 그림 종류마다 관점을 하나씩 둡니다. 설계 의도는 docs/design/APP-UI.md 가,
+  # 코드가 실제로 하는 일은 이 관점들이 맡습니다. 둘이 어긋나면 어느 쪽이 틀렸는지 사람이 판단합니다.
+  ui-camera-label:
+    kind: omm
+    diagram_type: flow
+    evidence:
+      - app/src/main/java/dev/halcamera/camera/CameraEndpoint.kt
+      - app/src/test/java/dev/halcamera/camera/CameraLabelTest.kt
+    elements:
+      .:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraEndpoint.kt
+          - app/src/test/java/dev/halcamera/camera/CameraLabelTest.kt
+
+  # MainActivity 하나가 근거라 screens/expert-screen 과 같은 입력 한도(6만 자)를 공유합니다.
+  ui-tool-handoff:
+    kind: omm
+    diagram_type: sequence
+    evidence:
+      - app/src/main/java/dev/halcamera/MainActivity.kt
+    elements:
+      .:
+        evidence:
+          - app/src/main/java/dev/halcamera/MainActivity.kt
+
+  ui-zoom:
+    kind: omm
+    diagram_type: state
+    evidence:
+      - app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt
+    elements:
+      .:
+        evidence:
+          - app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt
+
   telemetry-facts:
     kind: fact
 
@@ -513,6 +549,24 @@ pages:
       - id: lifecycle-diagram
         kind: omm
         source: state-transitions
+        field: diagram
+        confidence: code
+
+      - id: camera-label-diagram
+        kind: omm
+        source: ui-camera-label
+        field: diagram
+        confidence: code
+
+      - id: tool-handoff-diagram
+        kind: omm
+        source: ui-tool-handoff
+        field: diagram
+        confidence: code
+
+      - id: zoom-diagram
+        kind: omm
+        source: ui-zoom
         field: diagram
         confidence: code
 

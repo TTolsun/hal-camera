@@ -761,7 +761,7 @@ class MainActivity : ComponentActivity() {
         val memory=Debug.MemoryInfo().also { Debug.getMemoryInfo(it) }.totalPss/1024.0
         val thermal=if(Build.VERSION.SDK_INT>=29) getSystemService(PowerManager::class.java).currentThermalStatus else null
         val thermalName=thermal?.let { listOf("NONE","LIGHT","MODERATE","SEVERE","CRITICAL","EMERGENCY","SHUTDOWN").getOrNull(it) ?: "$it" } ?: "N/A"
-        system.text="App CPU ${"%.1f".format(Locale.US,percent)}%* · PSS ${"%.0f".format(Locale.US,memory)} MB · $thermalName"
+        system.text="App CPU ${"%.1f".format(Locale.US,percent)}%* · PSS ${"%.0f".format(Locale.US,memory)} MB · Thermal $thermalName"
         recorder.record("app","system_sample",values=mapOf("appCpuPercentOneCore" to percent,"pssMb" to memory,"thermalStatus" to thermal,"thermalName" to thermalName))
     }
     private fun export(incident:Incident) {
@@ -785,7 +785,7 @@ class MainActivity : ComponentActivity() {
         AlertDialog.Builder(this).setTitle("Incident ZIP · ${files.size}개")
             .setItems(files.map { "${it.name}\n${it.length()/1024} KB" }.toTypedArray()) { _,index ->
                 val file=files[index]
-                AlertDialog.Builder(this).setTitle(file.name).setItems(arrayOf("공유 / Google Drive","다른 위치에 저장","삭제")) { _,action ->
+                AlertDialog.Builder(this).setTitle(file.name).setItems(arrayOf("공유","다른 위치에 저장","삭제")) { _,action ->
                     when(action) {
                         0 -> share(file)
                         1 -> { saveFile=file; saveDocument.launch(file.name) }
@@ -793,7 +793,7 @@ class MainActivity : ComponentActivity() {
                             if(file.delete()) { latestFile=incidentFiles().firstOrNull(); shareButton.isEnabled=latestFile!=null; toast("삭제했습니다") }
                         }.show()
                     }
-                }.show()
+                }.setNegativeButton("취소",null).show()
             }.setNegativeButton("닫기",null).show()
     }
     private fun share(file:File) {
@@ -803,7 +803,7 @@ class MainActivity : ComponentActivity() {
             clipData=ClipData.newRawUri("incident",uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        startActivity(Intent.createChooser(intent,"Incident 공유 · Google Drive 선택"))
+        startActivity(Intent.createChooser(intent,"Incident 공유"))
     }
     /**
      * 8.1: the dialog after a MARK keeps raw values only. It used to open with a verdict sentence and evidence
@@ -816,9 +816,13 @@ class MainActivity : ComponentActivity() {
             "직전 10초와 이후 5초를 저장했습니다.",
             "Mark를 누른 시점의 값입니다.",
             "",
-            "interval        ${ms(marked.intervalMs)}   (기준 p50 ${ms(marked.intervalRefMs)})",
-            "partial         ${ms(marked.partialMs)}   (기준 p50 ${ms(marked.baselinePartialMs)})",
-            "stall (10s)     ${marked.stalls}회"
+            // The dialog body is proportional, so padding with spaces never lined the columns up; one value per line
+            // reads the same on every font.
+            "interval: ${ms(marked.intervalMs)}",
+            "  기준 p50: ${ms(marked.intervalRefMs)}",
+            "partial: ${ms(marked.partialMs)}",
+            "  기준 p50: ${ms(marked.baselinePartialMs)}",
+            "stall (10s): ${marked.stalls}회"
         ).joinToString("\n")
         AlertDialog.Builder(this).setTitle(file.name)
             .setMessage(body)
