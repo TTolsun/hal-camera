@@ -42,20 +42,20 @@
 ```mermaid
 flowchart TD
     K["카메라 키<br/>0, 1, 0.2"] --> L{"렌즈 역할이<br/>MAIN · ULTRA_WIDE · TELE인가?"}
-    L -- 예 --> L1["렌즈 칸<br/>Wide · UWide · Tele"]
-    L -- "아니오<br/>FRONT · EXTERNAL · UNKNOWN" --> L0["렌즈 칸 비움"]
+    L -->|예| L1["렌즈 칸<br/>Wide · UWide · Tele"]
+    L -->|"아니오: FRONT · EXTERNAL · UNKNOWN"| L0["렌즈 칸 비움"]
     L1 --> F{"HAL이 LENS_FACING을<br/>보고했는가?"}
     L0 --> F
-    F -- 예 --> F1["방향 칸<br/>Rear · Front · External"]
-    F -- 아니오 --> F0["역할이 FRONT면 Front<br/>아니면 방향 칸 비움"]
+    F -->|예| F1["방향 칸<br/>Rear · Front · External"]
+    F -->|아니오| F0["역할이 FRONT면 Front<br/>아니면 방향 칸 비움"]
     F1 --> A{"렌즈 칸이 비었고<br/>35mm 환산값이 있는가?"}
     F0 --> A
-    A -- 예 --> A1["화각 칸<br/>26 mm, 1mm 단위 반올림"]
-    A -- 아니오 --> A0["화각 칸 비움"]
+    A -->|예| A1["화각 칸<br/>26 mm, 1mm 단위 반올림"]
+    A -->|아니오| A0["화각 칸 비움"]
     A1 --> J{"채운 칸이<br/>하나라도 있는가?"}
     A0 --> J
-    J -- 예 --> FULL["전체 형태<br/>Camera · 0 (Wide · Rear)<br/>Camera · 1 (Front · 26 mm)"]
-    J -- 아니오 --> SHORT["축약 형태<br/>Camera · 0"]
+    J -->|예| FULL["전체 형태<br/>Camera · 0 (Wide · Rear)<br/>Camera · 1 (Front · 26 mm)"]
+    J -->|아니오| SHORT["축약 형태<br/>Camera · 0"]
 ```
 
 화각을 덧붙이는 이유는 전면 카메라가 목록에서 id 말고는 구별되지 않았기 때문입니다. Galaxy S25+의 `Camera · 1`과 `Camera · 3`은 초점 거리 3.3mm인 전면 렌즈 하나를 센서 크롭만 달리해 노출한 것이고(35mm 환산 약 26mm와 30mm), 전면에 렌즈 추론을 적용해도 두 값이 모두 `Wide` 구간(20–35mm)에 들어가 구분되지 않습니다. 그래서 렌즈 이름을 새로 지어내는 대신 HAL이 보고한 수치를 그대로 적어 `Camera · 1 (Front · 26 mm)`과 `Camera · 3 (Front · 30 mm)`으로 갈라 둡니다. 이름이 아니라 보고값이므로 앱이 판단을 보태지 않는다는 원칙도 지켜집니다. 같은 규칙이 후면에도 적용됩니다. `LensRoles.dedupeMain`이 두 번째 `Wide` 후보를 `UNKNOWN`으로 내리면 그 카메라도 이름을 잃으므로 화각을 받습니다. 반올림하지 않은 값은 PROBE의 `35mm equivalent` 행에 그대로 남습니다.
@@ -101,13 +101,13 @@ sequenceDiagram
     participant L as Live 화면
     participant E as Live 카메라 엔진
     participant T as 도구 화면
-    Note over L: 녹화 중과 저장 중에는 도구 메뉴 전체가 비활성화됨
+    Note over L: 녹화 중, 녹화 저장 중, 세션 종료 중에는 도구 버튼이 비활성화됨
     U->>L: 도구 → Probe
     L->>T: CameraProbeActivity를 바로 시작
     Note over L,E: 화면이 가려지면 onStop이 평소처럼 카메라를 닫음
     U->>L: 도구 → CTS 또는 Benchmark
     L->>L: 진행 중인 incident를 마무리하고 진단 패널을 닫음
-    L->>L: "카메라 세션 종료 중…" 표시, 메뉴 재진입 막음
+    L->>L: closing을 켜고 "카메라 세션 종료 중…" 표시
     L->>E: close(done)
     E-->>L: done
     L->>T: CtsEntryActivity 또는 BenchmarkActivity 시작
@@ -135,11 +135,11 @@ stateDiagram-v2
     state "접힘: 현재 배율만 표시" as Folded
     state "펼침: 지원 배율 모두 표시" as Open
     [*] --> Folded
-    Folded --> Open: 현재 배율 누름, 지원 배율 2개 이상, 260ms
-    Open --> Open: 배율 선택 또는 포커스, 접기 타이머 재시작
-    Open --> Folded: 마지막 조작 후 3초, 220ms
-    Open --> Folded: TalkBack 사용 중 배율 선택 즉시
-    Open --> Folded: 비활성화 또는 진단 패널 열기, 애니메이션 없음
+    Folded --> Open : 현재 배율 누름, 지원 배율 2개 이상, 260ms
+    Open --> Open : 배율 선택 또는 포커스, 접기 타이머 재시작
+    Open --> Folded : 마지막 조작 후 3초, 220ms
+    Open --> Folded : TalkBack 사용 중 배율 선택 즉시
+    Open --> Folded : 비활성화 또는 진단 패널 열기, 애니메이션 없음
     note right of Open
         가로 드래그 중에는 접기 타이머를 멈춤
         TalkBack이 켜져 있으면 자동 접기 없음
