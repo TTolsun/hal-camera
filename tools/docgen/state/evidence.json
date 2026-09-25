@@ -6,13 +6,13 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6bb871451754b31f",
+        "codeHash": "cce5344bf13d08ae",
         "modelHash": "4e339f5ed7e457ef",
         "at": "2026-09-25",
-        "commit": "180df6a",
-        "reviewer": "Claude (SOLID refactor)",
+        "commit": "2d3e67a",
+        "reviewer": "Claude (release 0.13.2)",
         "files": {
-          "app/build.gradle.kts": "da2e27e266b622a2d483f2b703459f8da1d8a354",
+          "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "4321584606ee41959ca2e9f93874675fa8be090d",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
@@ -148,8 +148,8 @@
         "codeHash": "f8fa7ba8377d6be0",
         "modelHash": "11e6321ea977ef38",
         "at": "2026-09-25",
-        "commit": "180df6a",
-        "reviewer": "Claude (SOLID refactor)",
+        "commit": "2d3e67a",
+        "reviewer": "Claude (release 0.13.2)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "88c2db92a3ada4340cc2e1eec2b915f6b6773af8",
@@ -198,8 +198,8 @@
         "codeHash": "b0d058e6b02afa7d",
         "modelHash": "ec08c1d2fa5f7953",
         "at": "2026-09-25",
-        "commit": "180df6a",
-        "reviewer": "Claude (SOLID refactor)",
+        "commit": "2d3e67a",
+        "reviewer": "Claude (release 0.13.2)",
         "files": {
           "app/src/main/java/dev/halcamera/MainActivity.kt": "88c2db92a3ada4340cc2e1eec2b915f6b6773af8",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "86992f02a14179f86b6fc12edc3a5cb5457773a4",
@@ -230,13 +230,13 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "65a0aa1ce28e5982",
-        "modelHash": "aefa3340ad7ef3e3",
+        "codeHash": "ba38575f6e1383fe",
+        "modelHash": "20cdf33ee89d5449",
         "at": "2026-09-25",
-        "commit": "180df6a",
-        "reviewer": "Claude (SOLID refactor)",
+        "commit": "2d3e67a",
+        "reviewer": "Claude (release 0.13.2)",
         "files": {
-          "app/build.gradle.kts": "da2e27e266b622a2d483f2b703459f8da1d8a354",
+          "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "4321584606ee41959ca2e9f93874675fa8be090d",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
@@ -372,10 +372,10 @@
       },
       "accepted": {
         "codeHash": "f8fa7ba8377d6be0",
-        "modelHash": "27da447cd5fb358e",
+        "modelHash": "a53fe28f1f2b7de1",
         "at": "2026-09-25",
-        "commit": "180df6a",
-        "reviewer": "Claude (SOLID refactor)",
+        "commit": "2d3e67a",
+        "reviewer": "Claude (release 0.13.2)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "88c2db92a3ada4340cc2e1eec2b915f6b6773af8",
@@ -422,10 +422,10 @@
       },
       "accepted": {
         "codeHash": "54809af29ce7b969",
-        "modelHash": "9b63d2ae379a8b51",
+        "modelHash": "09b303738f2a2164",
         "at": "2026-09-25",
-        "commit": "180df6a",
-        "reviewer": "Claude (SOLID refactor)",
+        "commit": "2d3e67a",
+        "reviewer": "Claude (release 0.13.2)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "88c2db92a3ada4340cc2e1eec2b915f6b6773af8",
@@ -469,13 +469,13 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "6bb871451754b31f",
-        "modelHash": "85deb1b71267851c",
+        "codeHash": "cce5344bf13d08ae",
+        "modelHash": "6b34cb5a9a8e8142",
         "at": "2026-09-25",
-        "commit": "180df6a",
-        "reviewer": "Claude (SOLID refactor)",
+        "commit": "2d3e67a",
+        "reviewer": "Claude (release 0.13.2)",
         "files": {
-          "app/build.gradle.kts": "da2e27e266b622a2d483f2b703459f8da1d8a354",
+          "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "4321584606ee41959ca2e9f93874675fa8be090d",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
@@ -608,13 +608,13 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "6bb871451754b31f",
-        "modelHash": "6ef28a3da5c7a212",
+        "codeHash": "cce5344bf13d08ae",
+        "modelHash": "57123ccbd557cd80",
         "at": "2026-09-25",
-        "commit": "180df6a",
-        "reviewer": "Claude (SOLID refactor)",
+        "commit": "2d3e67a",
+        "reviewer": "Claude (release 0.13.2)",
         "files": {
-          "app/build.gradle.kts": "da2e27e266b622a2d483f2b703459f8da1d8a354",
+          "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "4321584606ee41959ca2e9f93874675fa8be090d",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
@@ -753,8 +753,8 @@
         "codeHash": "50f8d9ff0212902a",
         "modelHash": "2d342dce363f7e74",
         "at": "2026-09-25",
-        "commit": "180df6a",
-        "reviewer": "Claude (SOLID refactor)",
+        "commit": "2d3e67a",
+        "reviewer": "Claude (release 0.13.2)",
         "files": {
           "app/src/main/java/dev/halcamera/camera/CameraEndpoint.kt": "e6b4cba31e14ee2af51744094c6f986141190528",
           "app/src/test/java/dev/halcamera/camera/CameraLabelTest.kt": "0a2f97f5f40567ea0dd764a052152af72d89b1d1"
@@ -769,8 +769,8 @@
         "codeHash": "2a7aa2bf82da8aac",
         "modelHash": "9480bc0d85e4f8e5",
         "at": "2026-09-25",
-        "commit": "180df6a",
-        "reviewer": "Claude (SOLID refactor)",
+        "commit": "2d3e67a",
+        "reviewer": "Claude (release 0.13.2)",
         "files": {
           "app/src/main/java/dev/halcamera/MainActivity.kt": "88c2db92a3ada4340cc2e1eec2b915f6b6773af8"
         }
@@ -784,8 +784,8 @@
         "codeHash": "9534e96976f87bbb",
         "modelHash": "1be8e0e862e701f9",
         "at": "2026-09-25",
-        "commit": "180df6a",
-        "reviewer": "Claude (SOLID refactor)",
+        "commit": "2d3e67a",
+        "reviewer": "Claude (release 0.13.2)",
         "files": {
           "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "1290cc70ac730da3d1ca336e948808e93711caff"
         }
