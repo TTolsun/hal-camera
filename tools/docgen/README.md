@@ -60,6 +60,7 @@ node tools/docgen/docflow.mjs check [--ci|--build]   # CI 와 같은 순서의 �
 node tools/docgen/docflow.mjs extract                # 사실 추출
 node tools/docgen/docflow.mjs verify                 # 최신성 상태 표
 node tools/docgen/docflow.mjs verify --check         # CI: 최신이 아니면 실패
+node tools/docgen/docflow.mjs verify --changes              # 재검토할 항목의 근거 코드가 검토 이후 어떻게 바뀌었는지 diff 로 표시
 node tools/docgen/docflow.mjs verify --accept --reviewer=이름   # 검토 완료를 기록 (사람이 실행)
 node tools/docgen/docflow.mjs coverage [--check]     # 담당 요소 표. --check 는 담당 없는 화면·패키지가 있으면 실패
 node tools/docgen/docflow.mjs generate [--check]     # 페이지에 반영. --check 는 디스크와 다르면 실패
@@ -80,7 +81,7 @@ npm test --prefix tools/docgen                       # 이 저장소의 회귀 �
 | 상태 | 뜻 |
 | --- | --- |
 | 최신 | 검토 이후 관련 코드도 원본도 바뀌지 않음 |
-| 관련 소스 변경됨 — 재검토 필요 | 근거 파일이 바뀜. `sync` 로 재생성하거나 직접 고친 뒤 `--accept` |
+| 관련 소스 변경됨 — 재검토 필요 | 근거 파일이 바뀜. `verify --changes` 로 바뀐 줄을 보고, 원본을 직접 고치거나 `sync` 로 재생성한 뒤 `--accept` |
 | 원본이 갱신됨 — 검토 대기 | `.omm/` 이나 원고가 바뀌었고 아직 사람이 검토하지 않음 |
 | 검증 정보 없음 | 한 번도 `--accept` 하지 않음 |
 
@@ -90,6 +91,7 @@ npm test --prefix tools/docgen                       # 이 저장소의 회귀 �
 - 원고 최신성에는 `based_on` 관점의 모든 `.omm` 필드와 코드 근거, 원고 자신, 바인딩의 집필 지침, facts, 두 사람 입력 파일(`_inputs/`)의 내용, `must_link` 파일, 엔진의 집필 규칙 원문이 포함됩니다. 인용 ID가 같아도 입력 파일 내용이 바뀌면 재검토 대상입니다.
 - 공통 코드 파일 하나가 여러 요소의 근거일 수 있습니다. 예를 들어 `RunAssembler.kt` 변경은 요소 4개와 원고 5건의 재검토로 이어집니다.
 - 검토 기록의 `accepted`는 사람이 `--accept --reviewer=이름`으로만 남깁니다. 자동 동기화는 이 값을 바꾸지 않으며, Codex의 코드 대조 기록은 사람의 승인이나 기기 실측을 뜻하지 않습니다.
+- 재검토는 `verify --changes`로 시작합니다. 엔진 0.6.0부터 `--accept`가 근거 파일마다 git blob 해시를 남기므로, 어느 파일의 어느 줄이 바뀌었는지 diff로 보여 줍니다. `sync`가 원본을 다시 썼더라도 이 diff와 원본의 값·조건·순서를 직접 대조합니다. 2026-09-25 시험에서 `qwen3.5:4b`는 세 그림의 값 변경(3초→5초 등)을 하나도 반영하지 못한 채 형식 검사를 통과했습니다.
 - `--accept`는 git이 아니라 파일시스템을 걸으며 해시하므로, untracked 파일이 있는 tree에서 실행하면 CI가 모든 항목을 stale로 판정합니다. 깨끗한 worktree에서 실행합니다.
 
 ## 근거 수준
@@ -175,7 +177,7 @@ node tools/docgen/docflow.mjs sync
 
 정상 경로에서는 `docs-sync`가 PR을 만들지 않습니다. `verify`는 커밋 해시가 아니라 파일 내용 해시(`codeHash`, `modelHash`)로 최신성을 판정하므로, PR 안에서 `--accept`까지 마치고 머지하면 `main`의 해시도 같아서 `재스캔 대상 perspective: (없음)`으로 30~40초 만에 끝납니다. 검토 기록의 `@ 커밋` 표기는 참고용 라벨입니다.
 
-`docs-check`가 실패한 PR은 그 PR 안에서 사람이 문서를 고쳐야 합니다. `.omm/`과 `_content/`를 손으로 고치거나 로컬에서 `sync`를 실행한 뒤 `verify --accept --reviewer=이름`, `generate`, `site build`를 실행하고 그 결과를 같은 PR에 커밋합니다.
+`docs-check`가 실패한 PR은 그 PR 안에서 사람이 문서를 고쳐야 합니다. 먼저 `verify --changes`로 바뀐 근거 코드를 확인합니다. 그다음 `.omm/`과 `_content/`를 손으로 고치거나 로컬에서 `sync`를 실행한 뒤 `verify --accept --reviewer=이름`, `generate`, `site build`를 실행하고 그 결과를 같은 PR에 커밋합니다.
 
 `docs-sync`가 실제로 `docs/omm-sync` PR을 여는 경우는 다음 세 가지입니다.
 
