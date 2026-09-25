@@ -125,6 +125,16 @@ object Look {
 
     fun row(context: Context) = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
 
+    /**
+     * The title row every screen below LIVE opens with: the back icon to the left of the name, as in the gallery.
+     * One place and one symbol, so the way out is never looked for twice. The row is returned so a screen can add
+     * trailing controls after the title.
+     */
+    fun titleBar(context: Context, title: CharSequence, sizeSp: Int, backLabel: String, onBack: () -> Unit) = row(context).apply {
+        addView(IconButton(context, dev.halcamera.R.drawable.ic_action_back, backLabel) { onBack() }, LinearLayout.LayoutParams(dp(context, 48), dp(context, 48)))
+        addView(text(context, title, sizeSp, onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(context, 12) })
+    }
+
     /** Secondary information stays available without displacing the primary task. */
     fun disclosure(context: Context, title: String, content: android.view.View, initiallyExpanded: Boolean = false) = LinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL

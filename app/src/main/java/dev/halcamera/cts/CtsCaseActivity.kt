@@ -30,9 +30,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import dev.halcamera.R
 import dev.halcamera.camera.CameraLabel
-import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -203,10 +201,7 @@ class CtsCaseActivity : ComponentActivity(), CtsRunner.PreviewHost, SurfaceHolde
 
     /** Static parts once; the SurfaceView must never be re-parented, or its surface is destroyed mid-run. */
     private fun buildScreen() {
-        val head = Look.row(this)
-        head.addView(Look.text(this, spec.title, 22, Look.onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
-        head.addView(IconButton(this, R.drawable.ic_action_close, "CTS 케이스 화면 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
-        body.addView(head)
+        body.addView(Look.titleBar(this, spec.title, 22, "이전 화면으로 돌아가기") { finish() })
         body.addView(Look.text(this, spec.source, 14, Look.onDark, mono = true), lp(top = 8))
         val cameras = runCatching { getSystemService(CameraManager::class.java).cameraIdList.size }.getOrDefault(0)
         body.addView(Look.text(this, spec.summary(cameras), 12, Look.onDarkMuted), lp(top = 4))

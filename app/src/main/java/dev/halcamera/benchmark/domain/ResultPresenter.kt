@@ -206,10 +206,10 @@ object ResultPresenter {
             // button reads CLEAR BASELINE by then, so telling the reader to press SET AS BASELINE describes
             // nothing they can do. Being compared against a baseline and being one are separate states.
             hint = if (comparedTo == ComparedTo.BASELINE || isBaseline) null
-            else "[ Set as baseline ]을 누르면 이 run이 기준이 됩니다",
+            else "[ baseline으로 지정 ]을 누르면 이 run이 기준이 됩니다",
             sections = sections,
             threeALine = threeALine(run),
-            baselineButton = if (isBaseline) "Clear baseline" else "Set as baseline",
+            baselineButton = if (isBaseline) "baseline 해제" else "baseline으로 지정",
             // Clearing must stay possible even if the run later became ineligible under a changed flag table.
             baselineButtonEnabled = isBaseline || run.validity.comparisonEligible
         )
@@ -415,7 +415,7 @@ object ResultPresenter {
         }
         val thermal = listOf(run.env.thermalStart, run.env.thermalMax, run.env.thermalEnd)
         val thermalText = if (thermal.any { it == null }) null else thermal.joinToString(" → ")
-        val suffix = if (v.comparisonEligible) null else "Set as baseline disabled"
+        val suffix = if (v.comparisonEligible) null else "baseline 지정 불가"
         return listOfNotNull(head, thermalText?.let { "thermal $it" }, suffix).joinToString(" · ")
     }
 

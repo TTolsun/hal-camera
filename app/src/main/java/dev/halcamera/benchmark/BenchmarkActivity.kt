@@ -32,7 +32,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import dev.halcamera.R
 import dev.halcamera.benchmark.domain.*
 import dev.halcamera.benchmark.platform.*
 import dev.halcamera.camera.Camera2Engine
@@ -46,7 +45,6 @@ import dev.halcamera.telemetry.FlightRecorder
 import dev.halcamera.telemetry.Telemetry
 import dev.halcamera.telemetry.nowNs
 import dev.halcamera.ui.DeltaBarView
-import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
 import dev.halcamera.ui.MeterView
 import dev.halcamera.ui.showSelectionPopup
@@ -94,6 +92,7 @@ class BenchmarkActivity : ComponentActivity() {
     private val settings by lazy { BenchmarkPrefs(this) }
 
     private lateinit var preview: TextureView
+    private lateinit var header: LinearLayout
     private lateinit var content: LinearLayout
     private lateinit var actions: LinearLayout
 
@@ -166,6 +165,9 @@ class BenchmarkActivity : ComponentActivity() {
         }
         root.addView(panel, FrameLayout.LayoutParams(-1, -1))
 
+        // The title and the way out sit at the top left as on every other screen; the cards stay at the bottom.
+        header = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        panel.addView(header, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
         // Short content sits at the bottom like the M2 card; a long result table scrolls instead of being cut off.
         val scroll = ScrollView(this).apply { isFillViewport = true }
         content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.BOTTOM }
@@ -282,8 +284,16 @@ class BenchmarkActivity : ComponentActivity() {
 
     private fun render() {
         cli.setUiBusy(benchmarkCli, screen == Screen.RUNNING || historyLoading)
+        header.removeAllViews()
         content.removeAllViews()
         actions.removeAllViews()
+        // RUNNING has no back icon: Abort is its way out, and a stray tap must not end a run.
+        when (screen) {
+            Screen.CARD, Screen.RESULT -> header.addView(Look.titleBar(this, "Benchmark", 22,
+                if (intent.hasExtra(EXTRA_RUN_ID)) "실행 이력으로 돌아가기" else "카메라로 돌아가기") { finish() })
+            Screen.COMPARE -> header.addView(Look.titleBar(this, "비교", 22, "벤치마크 결과로 돌아가기") { screen = Screen.RESULT; render() })
+            Screen.RUNNING -> Unit
+        }
         when (screen) {
             Screen.CARD -> renderCard()
             Screen.RUNNING -> renderRunning()
@@ -292,15 +302,15 @@ class BenchmarkActivity : ComponentActivity() {
         }
         if (screen == Screen.CARD) {
             val row = Look.row(this)
-            row.addView(Look.ghostButton(this, "History", dark = true) { openHistoryScreen() },
+            row.addView(Look.ghostButton(this, "실행 기록", dark = true) { openHistoryScreen() },
                 Look.buttonParams(0, 1f))
-            row.addView(Look.ghostButton(this, "Settings", dark = true) { openSettings() }.apply {
+            row.addView(Look.ghostButton(this, "설정", dark = true) { openSettings() }.apply {
                 contentDescription = "벤치마크 설정, 보관 개수 ${RunRetention.label(settings.runLimit)}"
             }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
             actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
         if (screen == Screen.RESULT) {
-            actions.addView(Look.ghostButton(this, "History", dark = true) { openHistoryScreen() },
+            actions.addView(Look.ghostButton(this, "실행 기록", dark = true) { openHistoryScreen() },
                 Look.buttonParams().apply { topMargin = dp(8) })
         }
     }
@@ -327,7 +337,7 @@ class BenchmarkActivity : ComponentActivity() {
         // A plain Dialog with the app's own card, not AlertDialog: the platform dialog arrives in the system
         // theme, so a grey sheet with system buttons would sit on top of this screen's black cards.
         val card = Look.card(this, dark = true)
-        card.addView(Look.text(this, "Data limit", 19, Look.onDark, bold = true))
+        card.addView(Look.text(this, "보관 개수", 19, Look.onDark, bold = true))
         val value = Look.text(this, RunRetention.label(options[picked]), 30, Look.primaryOnDark, bold = true, mono = true)
         card.addView(value, lp(top = 10))
         card.addView(Look.text(this, "보관할 개수입니다. 넘으면 오래된 것부터 지우고 baseline은 남깁니다.", 12, Look.onDarkMuted), lp(top = 4))
@@ -387,7 +397,7 @@ class BenchmarkActivity : ComponentActivity() {
                 if (destroyed) return@post
                 val suffix = if (deleted == 0) "" else " · 오래된 run ${deleted}개 삭제"
                 android.widget.Toast.makeText(
-                    this, "Data limit ${RunRetention.label(limit)}$suffix", android.widget.Toast.LENGTH_SHORT
+                    this, "보관 개수 ${RunRetention.label(limit)}$suffix", android.widget.Toast.LENGTH_SHORT
                 ).show()
                 render()
             }
@@ -440,14 +450,12 @@ class BenchmarkActivity : ComponentActivity() {
         cardRecheck?.let { main.removeCallbacks(it) }; cardRecheck = null
         val card = Look.card(this, dark = true)
         val state = startCard
-        card.addView(Look.text(this, "Benchmark", 19, Look.onDark, bold = true))
         if (state == null) {
-            card.addView(Look.text(this, cardError ?: "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted), lp(top = 10))
+            card.addView(Look.text(this, cardError ?: "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted))
             content.addView(card)
-            actions.addView(IconButton(this, R.drawable.ic_action_close, "벤치마크 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
             return
         }
-        card.addView(Look.text(this, state.titleLine, 13, Look.onDarkMuted), lp(top = 6))
+        card.addView(Look.text(this, state.titleLine, 13, Look.onDarkMuted))
         // What the feature does and what the run needs, before any jargon: the profile id and the preflight
         // verdict move into the Details fold below.
         card.addView(Look.text(this, "카메라를 벤치마킹합니다.", 15, Look.onDark, bold = true), lp(top = 12))
@@ -462,7 +470,7 @@ class BenchmarkActivity : ComponentActivity() {
             val draft = draftSubject ?: subjectPrefs.last()
             buildInput = input(draft.subjectBuildLabel).also {
                 it.contentDescription = "측정 대상 빌드 이름"
-                it.hint = "Build (선택)"
+                it.hint = "빌드 이름 (선택)"
                 card.addView(it, lp(top = 14))
             }
         } else {
@@ -477,10 +485,9 @@ class BenchmarkActivity : ComponentActivity() {
             isEnabled = endpoints.isNotEmpty()
             contentDescription = "벤치마크 카메라 선택, 현재 $cameraLabel"
         }, Look.buttonParams(0, 1f))
-        row.addView(IconButton(this, R.drawable.ic_action_close, "벤치마크 닫기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { marginStart = dp(8) })
         actions.addView(row)
         if (state.canStart) {
-            actions.addView(Look.primaryButton(this, "Start benchmark") { begin() }, Look.buttonParams().apply { topMargin = dp(8) })
+            actions.addView(Look.primaryButton(this, "벤치마크 시작") { begin() }, Look.buttonParams().apply { topMargin = dp(8) })
         } else if (state.refreshable) {
             // A card opened at SEVERE re-checks itself, so START returns without anyone tapping a button while
             // the device rests. The recheck stops the moment the card is replaced or the screen changes.
@@ -525,7 +532,7 @@ class BenchmarkActivity : ComponentActivity() {
     /** 8.3. */
     private fun renderRunning() {
         val card = Look.card(this, dark = true)
-        card.addView(Look.text(this, "Benchmarking", 19, Look.onDark, bold = true))
+        card.addView(Look.text(this, "벤치마크 실행 중", 19, Look.onDark, bold = true))
         // The first phase is shown before the runner starts, so the card never appears blank for a frame.
         val first = ProgressPresenter.headline(BenchmarkRunner.Phase.CAMERA_OPEN, 0, profile.launchIterations, profile.records)
         progressHeadline = Look.text(this, first, 14, Look.onDark, mono = true).also { card.addView(it, lp(top = 10)) }
@@ -533,7 +540,7 @@ class BenchmarkActivity : ComponentActivity() {
             .also { it.maxLines = 1; card.addView(it, lp(top = 4)) }
         progressStats = Look.text(this, "", 12, Look.onDarkMuted, mono = true).also { card.addView(it, lp(top = 10)) }
         content.addView(card)
-        actions.addView(Look.ghostButton(this, "Abort", dark = true) { runner?.abort("user") }, Look.buttonParams())
+        actions.addView(Look.ghostButton(this, "중단", dark = true) { runner?.abort("user") }, Look.buttonParams())
         updateStats()
     }
 
@@ -543,10 +550,10 @@ class BenchmarkActivity : ComponentActivity() {
         val run = lastRun
         if (run == null) {
             val card = Look.card(this, dark = true)
-            card.addView(Look.text(this, "Benchmark result", 19, Look.onDark, bold = true))
+            card.addView(Look.text(this, "벤치마크 결과", 19, Look.onDark, bold = true))
             card.addView(Look.text(this, lastSummary.ifBlank { "결과를 만들지 못했습니다." }, 12, Look.onDarkMuted, mono = true), lp(top = 10))
             content.addView(card)
-            if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "New run") { preflight() }, Look.buttonParams())
+            if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "다시 실행") { preflight() }, Look.buttonParams())
             return
         }
         val endpointName = CameraLabel.full(run.endpoint)
@@ -633,13 +640,13 @@ class BenchmarkActivity : ComponentActivity() {
             Look.buttonParams()
         )
         val row = Look.row(this)
-        row.addView(action("Compare", baseRun != null) { screen = Screen.COMPARE; render() }, Look.buttonParams(0, 1f))
+        row.addView(action("비교", baseRun != null) { screen = Screen.COMPARE; render() }, Look.buttonParams(0, 1f))
         row.addView(
-            action("Export", lastFile != null) { lastFile?.let(::share) },
+            action("내보내기", lastFile != null) { lastFile?.let(::share) },
             Look.buttonParams(0, 1f).apply { marginStart = dp(8) }
         )
         actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
-        if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "New run") { preflight() }, Look.buttonParams().apply { topMargin = dp(8) })
+        if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "다시 실행") { preflight() }, Look.buttonParams().apply { topMargin = dp(8) })
     }
 
     /** 7.3. A delta chart around a zero line first; rows a chart cannot carry stay as text below it. */
@@ -692,10 +699,9 @@ class BenchmarkActivity : ComponentActivity() {
             listOfNotNull(view.baseLine, view.currentLine, view.identityLine).forEach {
                 details.addView(Look.text(this, it.trim().replace(Regex(" {2,}"), " · "), 12, Look.onDarkMuted), lp(top = 8))
             }
-            card.addView(Look.disclosure(this, "Run info", details), lp(top = 10))
+            card.addView(Look.disclosure(this, "실행 정보", details), lp(top = 10))
         }
         content.addView(card)
-        actions.addView(IconButton(this, R.drawable.ic_action_back, "벤치마크 결과로 돌아가기") { screen = Screen.RESULT; render() }, LinearLayout.LayoutParams(dp(48), dp(48)))
     }
 
     // ---- run ----

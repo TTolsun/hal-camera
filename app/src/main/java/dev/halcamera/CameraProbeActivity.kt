@@ -99,9 +99,8 @@ class CameraProbeActivity : ComponentActivity() {
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.expertTile) }
         scroll = ScrollView(this)
         val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(16), dp(16), dp(16)) }
-        column.addView(Look.text(this, "Probe", 24, Look.onDark, bold = true), lp())
+        column.addView(Look.titleBar(this, "Probe", 24, "카메라로 돌아가기") { finish() }, lp())
         column.addView(Look.text(this, "CameraCharacteristics · 정적 사양 조회", 14, Look.onDarkMuted), lp())
-        column.addView(IconButton(this, R.drawable.ic_action_back, "돌아가기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)).apply { topMargin = dp(10) })
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         column.addView(body)
         scroll.addView(column)

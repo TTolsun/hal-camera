@@ -633,7 +633,10 @@ class Camera2Engine(
                     telemetry.event(sessionId, "video_saved", mapOf("uri" to uri.toString()))
                     main.post {
                         done?.invoke(if (failure == null) Result.success(uri) else Result.failure(failure))
-                        android.widget.Toast.makeText(context.applicationContext, "갤러리에 동영상을 저장했습니다", android.widget.Toast.LENGTH_SHORT).show()
+                        // Same place as the photo notice: a toast at the bottom covered the photo/video mode buttons.
+                        // Only a camera already closed has no notice line left, so that case keeps the toast.
+                        if (active) status("갤러리에 동영상을 저장했습니다", true)
+                        else android.widget.Toast.makeText(context.applicationContext, "갤러리에 동영상을 저장했습니다", android.widget.Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
                     main.post {

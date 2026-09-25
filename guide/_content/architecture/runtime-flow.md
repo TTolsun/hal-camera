@@ -29,7 +29,7 @@ verifications: []
 
 **실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.** 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.
 
-이 절은 데이터가 지나가는 경로만 설명합니다. 각 화면을 어떻게 읽고 조작하는지는 해당 화면을 담당하는 문서에 있습니다. 결과 화면과 Results 이력은 [Benchmark](benchmark.md), 사양 표는 [Probe](probe.md), 케이스 실행과 판정은 [CTS](cts.md), ADB 명령의 사용법은 [CLI](cli.md)에서 확인하세요. 배치·간격·애니메이션·접근성 문구 같은 앱의 조작 규칙은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)가 관리합니다.
+이 절은 데이터가 지나가는 경로만 설명합니다. 각 화면을 어떻게 읽고 조작하는지는 해당 화면을 담당하는 문서에 있습니다. 결과 화면과 실행 기록은 [Benchmark](benchmark.md), 사양 표는 [Probe](probe.md), 케이스 실행과 판정은 [CTS](cts.md), ADB 명령의 사용법은 [CLI](cli.md)에서 확인하세요. 배치·간격·애니메이션·접근성 문구 같은 앱의 조작 규칙은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)가 관리합니다.
 
 Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 동작으로 이어집니다. 벤치마크는 별도 화면인 `BenchmarkActivity`가 준비를 마친 뒤 `BenchmarkRunner.start()`를 호출하여 시작합니다. `Telemetry.callback(...)`이 반환한 Camera2 콜백의 `onCaptureStarted`는 프레임워크 신호를 기록하며, Live 셔터와 벤치마크 시작을 연결하는 메서드가 아닙니다.
 
@@ -39,7 +39,7 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 2. `BenchmarkRunner`가 열기·닫기 반복을 수행합니다. 각 사이클은 OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE로 진행합니다.
 3. 별도 관측 세션에서 WARMUP → OBSERVE → STILL → CLOSE를 진행합니다. profile은 반복 횟수와 관측·촬영 조건을 정합니다.
 4. `RunAssembler`가 러너 결과와 이벤트를 결합해 `BenchmarkEvaluator`와 `RunValidityEvaluator`를 호출합니다. `ScoreComposer`는 calibration의 적용 범위와 적격 조건에 맞는 run에만 내부 점수를 채웁니다.
-5. `BenchmarkReport`가 실행 JSON을 저장합니다. Activity는 baseline 또는 이전 실행을 찾아 비교 결과를 별도로 계산합니다. 저장 직후 `RunRetention`이 설정된 `Data limit`을 적용해 한도를 넘는 실행 파일을 오래된 것부터 삭제하며, baseline으로 지정된 실행은 삭제하지 않습니다(기본값은 Unlimited).
+5. `BenchmarkReport`가 실행 JSON을 저장합니다. Activity는 baseline 또는 이전 실행을 찾아 비교 결과를 별도로 계산합니다. 저장 직후 `RunRetention`이 설정된 `보관 개수`를 적용해 한도를 넘는 실행 파일을 오래된 것부터 삭제하며, baseline으로 지정된 실행은 삭제하지 않습니다(기본값은 Unlimited).
 
 `Telemetry.callback()`은 `capture_started`, `request_observed`, `capture_result`, `capture_failed`, `buffer_lost`를 기록합니다. 콜백의 `alive()`가 거짓이면 이미 닫힌 세션의 늦은 이벤트를 버립니다. `request_observed`는 요청 제출 시각이 아니라 `onCaptureStarted`에서 관측한 요청 내용입니다.
 
@@ -51,7 +51,7 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 `RegressionDetector`는 두 실행의 측정 계약·endpoint·validity·환경 조건을 확인합니다. baseline 비교에서만 회귀 판정을 표시하며, 이전 실행이나 임의 선택 실행과의 비교는 변화량과 비교 불가 사유를 표시합니다. 단위가 다르면 각 단위를 유지하고 백분율을 표시하지 않습니다.
 
-측정값이 파일로 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다. 저장된 JSON에는 비교 결과가 들어 있지 않으며, 결과 화면과 Results 이력은 파일을 읽은 뒤 현재 기준으로 비교를 새로 계산합니다. 기준을 고르는 방법과 결과를 읽는 방법은 [Benchmark](benchmark.md)에 있습니다.
+측정값이 파일로 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다. 저장된 JSON에는 비교 결과가 들어 있지 않으며, 결과 화면과 실행 기록은 파일을 읽은 뒤 현재 기준으로 비교를 새로 계산합니다. 기준을 고르는 방법과 결과를 읽는 방법은 [Benchmark](benchmark.md)에 있습니다.
 
 ### Live에서 촬영과 저장
 

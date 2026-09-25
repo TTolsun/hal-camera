@@ -33,6 +33,7 @@ import dev.halcamera.ui.RecentMediaButton
 import dev.halcamera.ui.ShutterButton
 import dev.halcamera.ui.IconButton
 import dev.halcamera.ui.Look
+import dev.halcamera.ui.showActionPopup
 import dev.halcamera.ui.showSelectionPopup
 import dev.halcamera.ui.LiveReading
 import dev.halcamera.ui.ScopeView
@@ -147,7 +148,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var diagnostics: ScrollView
     private lateinit var zoomControl: ExpandingZoomControl
     private lateinit var cameraNotice: TextView
-    private val clearNotice = Runnable { if (ready) cameraNotice.visibility = View.GONE }
+    private var savedNoticeShown = false
+    private val clearNotice = Runnable { savedNoticeShown = false; if (ready) cameraNotice.visibility = View.GONE }
     private lateinit var recentMedia: RecentMediaThumbnail
     private lateinit var statusText: TextView
     private lateinit var strip: StripView
@@ -269,7 +271,7 @@ class MainActivity : ComponentActivity() {
         cli.detach(liveCli)
         zoomControl.collapse(animate = false)
         recentMedia.stop()
-        main.removeCallbacks(clearNotice)
+        main.removeCallbacks(clearNotice); savedNoticeShown = false
         pendingMediaAction = null
         pendingPermissionAction = null
         resumed = false; main.removeCallbacks(tick)
@@ -344,10 +346,17 @@ class MainActivity : ComponentActivity() {
         // The centre column is one line between two button groups, so it carries the short label only.
         statusText.text="${CameraLabel.short(cameraId)} · ${if(recordingVideo) "REC" else if(ok) "Live" else "대기"}"
         statusText.setTextColor(Look.onDarkMuted)
-        main.removeCallbacks(clearNotice)
-        cameraNotice.text = text
-        cameraNotice.visibility = if ((!ok && !recordingVideo) || text.contains("실패") || text.contains("저장했습니다")) View.VISIBLE else View.GONE
-        if (ok && text.contains("저장했습니다")) main.postDelayed(clearNotice, 2500)
+        // A save notice stays for its 2.5 s even when the engine's "· LIVE" report follows it. Stopping a recording
+        // rebuilds the preview session, and that report used to arrive right after the video notice and hide it.
+        // Only that one routine report waits; a failure or any other notice still replaces the save notice.
+        val saved = ok && text.contains("저장했습니다")
+        if (!(savedNoticeShown && ok && text.endsWith("· LIVE"))) {
+            main.removeCallbacks(clearNotice)
+            savedNoticeShown = saved
+            cameraNotice.text = text
+            cameraNotice.visibility = if ((!ok && !recordingVideo) || text.contains("실패") || saved) View.VISIBLE else View.GONE
+            if (saved) main.postDelayed(clearNotice, 2500)
+        }
         ready=ok; reportButton.isEnabled=ok && recorder.remainingNs()==null
         if (ok || recordingVideo) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -830,7 +839,7 @@ class MainActivity : ComponentActivity() {
         if (closing) return
         // PROBE, CTS, BENCHMARK is the order a developer meets the tools in: read what the HAL claims, check whether
         // it passes, then measure how long it takes. The guide's tabs carry the same order.
-        showSelectionPopup(anchor, listOf("Probe", "CTS", "Benchmark"), -1) { index ->
+        showActionPopup(anchor, listOf("Probe", "CTS", "Benchmark")) { index ->
             when (index) {
                 // PROBE reads CameraCharacteristics only and never opens a camera, so it starts without waiting for
                 // close(done); onStop closes the LIVE camera as it does for any screen change.

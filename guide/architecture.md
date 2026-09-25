@@ -20,7 +20,7 @@ nav_order: 4
 
 <!-- omm:begin id=overview -->
 
-**Live, Benchmark, Results 중 수정할 화면과 연결된 코드를 먼저 확인하세요.** 현재 앱은 카메라 성능을 관측하고, 저장된 실행을 비교하는 단일 Android 앱 모듈입니다. v0.2의 Home·Auto Check·건강 판정 화면은 제거되었습니다.
+**Live, Benchmark, 실행 기록 중 수정할 화면과 연결된 코드를 먼저 확인하세요.** 현재 앱은 카메라 성능을 관측하고, 저장된 실행을 비교하는 단일 Android 앱 모듈입니다. v0.2의 Home·Auto Check·건강 판정 화면은 제거되었습니다.
 
 | 단계 | 담당 코드 | 책임 |
 | --- | --- | --- |
@@ -50,7 +50,7 @@ Live의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-25 @ `c0bee19` · Claude (issue #141)
+- 검토 2026-09-25 @ `34e3452` · Claude (issue #139)
 
 </details>
 
@@ -126,7 +126,7 @@ graph LR
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/ui/MetricRows.kt`, `app/src/main/java/dev/halcamera/ui/Look.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-25 @ `c0bee19` · Claude (issue #141)
+- 검토 2026-09-25 @ `34e3452` · Claude (issue #139)
 
 </details>
 
@@ -138,7 +138,7 @@ graph LR
 
 **실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.** 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.
 
-이 절은 데이터가 지나가는 경로만 설명합니다. 각 화면을 어떻게 읽고 조작하는지는 해당 화면을 담당하는 문서에 있습니다. 결과 화면과 Results 이력은 [Benchmark](benchmark.md), 사양 표는 [Probe](probe.md), 케이스 실행과 판정은 [CTS](cts.md), ADB 명령의 사용법은 [CLI](cli.md)에서 확인하세요. 배치·간격·애니메이션·접근성 문구 같은 앱의 조작 규칙은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)가 관리합니다.
+이 절은 데이터가 지나가는 경로만 설명합니다. 각 화면을 어떻게 읽고 조작하는지는 해당 화면을 담당하는 문서에 있습니다. 결과 화면과 실행 기록은 [Benchmark](benchmark.md), 사양 표는 [Probe](probe.md), 케이스 실행과 판정은 [CTS](cts.md), ADB 명령의 사용법은 [CLI](cli.md)에서 확인하세요. 배치·간격·애니메이션·접근성 문구 같은 앱의 조작 규칙은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)가 관리합니다.
 
 Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 동작으로 이어집니다. 벤치마크는 별도 화면인 `BenchmarkActivity`가 준비를 마친 뒤 `BenchmarkRunner.start()`를 호출하여 시작합니다. `Telemetry.callback(...)`이 반환한 Camera2 콜백의 `onCaptureStarted`는 프레임워크 신호를 기록하며, Live 셔터와 벤치마크 시작을 연결하는 메서드가 아닙니다.
 
@@ -148,7 +148,7 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 2. `BenchmarkRunner`가 열기·닫기 반복을 수행합니다. 각 사이클은 OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE로 진행합니다.
 3. 별도 관측 세션에서 WARMUP → OBSERVE → STILL → CLOSE를 진행합니다. profile은 반복 횟수와 관측·촬영 조건을 정합니다.
 4. `RunAssembler`가 러너 결과와 이벤트를 결합해 `BenchmarkEvaluator`와 `RunValidityEvaluator`를 호출합니다. `ScoreComposer`는 calibration의 적용 범위와 적격 조건에 맞는 run에만 내부 점수를 채웁니다.
-5. `BenchmarkReport`가 실행 JSON을 저장합니다. Activity는 baseline 또는 이전 실행을 찾아 비교 결과를 별도로 계산합니다. 저장 직후 `RunRetention`이 설정된 `Data limit`을 적용해 한도를 넘는 실행 파일을 오래된 것부터 삭제하며, baseline으로 지정된 실행은 삭제하지 않습니다(기본값은 Unlimited).
+5. `BenchmarkReport`가 실행 JSON을 저장합니다. Activity는 baseline 또는 이전 실행을 찾아 비교 결과를 별도로 계산합니다. 저장 직후 `RunRetention`이 설정된 `보관 개수`를 적용해 한도를 넘는 실행 파일을 오래된 것부터 삭제하며, baseline으로 지정된 실행은 삭제하지 않습니다(기본값은 Unlimited).
 
 `Telemetry.callback()`은 `capture_started`, `request_observed`, `capture_result`, `capture_failed`, `buffer_lost`를 기록합니다. 콜백의 `alive()`가 거짓이면 이미 닫힌 세션의 늦은 이벤트를 버립니다. `request_observed`는 요청 제출 시각이 아니라 `onCaptureStarted`에서 관측한 요청 내용입니다.
 
@@ -160,7 +160,7 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 `RegressionDetector`는 두 실행의 측정 계약·endpoint·validity·환경 조건을 확인합니다. baseline 비교에서만 회귀 판정을 표시하며, 이전 실행이나 임의 선택 실행과의 비교는 변화량과 비교 불가 사유를 표시합니다. 단위가 다르면 각 단위를 유지하고 백분율을 표시하지 않습니다.
 
-측정값이 파일로 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다. 저장된 JSON에는 비교 결과가 들어 있지 않으며, 결과 화면과 Results 이력은 파일을 읽은 뒤 현재 기준으로 비교를 새로 계산합니다. 기준을 고르는 방법과 결과를 읽는 방법은 [Benchmark](benchmark.md)에 있습니다.
+측정값이 파일로 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다. 저장된 JSON에는 비교 결과가 들어 있지 않으며, 결과 화면과 실행 기록은 파일을 읽은 뒤 현재 기준으로 비교를 새로 계산합니다. 기준을 고르는 방법과 결과를 읽는 방법은 [Benchmark](benchmark.md)에 있습니다.
 
 ### Live에서 촬영과 저장
 
@@ -187,7 +187,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-25 @ `c0bee19` · Claude (issue #141)
+- 검토 2026-09-25 @ `34e3452` · Claude (issue #139)
 
 </details>
 
@@ -247,7 +247,7 @@ graph LR
     engine -->|"현재 세션 완료 신호"| runner
     runner -->|"Result와 환경"| validity["RunValidity"]
     validity -->|"비교 가능 여부"| comparison["RegressionDetector"]
-    history["Results 목록 / 비교"] -->|"기준과 현재 선택"| comparison
+    history["실행 기록 목록 / 비교"] -->|"기준과 현재 선택"| comparison
     history -->|"확인 후 삭제"| delete["실행 파일 삭제 / baseline 정리"]
     recorder["FlightRecorder"] -->|"전후 창 보존"| incident["incident 전후 이벤트 창"]
 ```
@@ -420,7 +420,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-25 @ `c0bee19` · Claude (issue #141)
+- 검토 2026-09-25 @ `34e3452` · Claude (issue #139)
 
 </details>
 
@@ -443,12 +443,12 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 다음 항목은 구조 스캔에서 확인한 제약이나 추가 검증이 필요한 사항입니다.
 
 - 콜백과 파일 작업의 실행 스레드, close 완료와 늦은 신호 처리는 변경 시 함께 검증해야 합니다.
-- Results의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.
+- 실행 기록의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.
 - 촬영 중 프리뷰 stall 지표 2.7은 여전히 NOT_RUN입니다.
 
 **후속 작업**
 
-1. Results의 필터·임의 비교·baseline·삭제·공유 동작을 기기에서 검증하고 근거를 남깁니다.
+1. 실행 기록의 필터·임의 비교·baseline·삭제·공유 동작을 기기에서 검증하고 근거를 남깁니다.
 2. 촬영 중 프리뷰 stall 지표 2.7의 관측·계산 규칙을 구현합니다.
 
 <details class="doc-evidence" markdown="1">
@@ -472,16 +472,16 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-25 @ `c0bee19` · Claude (issue #141) |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-25 @ `c0bee19` · Claude (issue #141) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-25 @ `c0bee19` · Claude (issue #141) |
-| 구조 원본 `ui-camera-label` | 최신 | 검토 2026-09-25 @ `c0bee19` · Claude (issue #141) |
-| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-09-25 @ `c0bee19` · Claude (issue #141) |
-| 구조 원본 `ui-zoom` | 최신 | 검토 2026-09-25 @ `c0bee19` · Claude (issue #141) |
-| 원고 `overview` | 최신 | 검토 2026-09-25 @ `c0bee19` · Claude (issue #141) |
-| 원고 `module-roles` | 최신 | 검토 2026-09-25 @ `c0bee19` · Claude (issue #141) |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-25 @ `c0bee19` · Claude (issue #141) |
-| 원고 `constraints` | 최신 | 검토 2026-09-25 @ `c0bee19` · Claude (issue #141) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-25 @ `34e3452` · Claude (issue #139) |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-25 @ `34e3452` · Claude (issue #139) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-25 @ `34e3452` · Claude (issue #139) |
+| 구조 원본 `ui-camera-label` | 최신 | 검토 2026-09-25 @ `34e3452` · Claude (issue #139) |
+| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-09-25 @ `34e3452` · Claude (issue #139) |
+| 구조 원본 `ui-zoom` | 최신 | 검토 2026-09-25 @ `34e3452` · Claude (issue #139) |
+| 원고 `overview` | 최신 | 검토 2026-09-25 @ `34e3452` · Claude (issue #139) |
+| 원고 `module-roles` | 최신 | 검토 2026-09-25 @ `34e3452` · Claude (issue #139) |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-25 @ `34e3452` · Claude (issue #139) |
+| 원고 `constraints` | 최신 | 검토 2026-09-25 @ `34e3452` · Claude (issue #139) |
 
 <!-- omm:end id=status -->
 

@@ -1,4 +1,4 @@
-현재 앱은 MainActivity의 Live, BenchmarkActivity의 벤치마크 실행·결과, HistoryActivity의 Results로 구성됩니다. Camera2Engine과 CameraXEngine이 카메라를 구동하고 Telemetry와 FlightRecorder가 콜백을 기록합니다.
+현재 앱은 MainActivity의 Live, BenchmarkActivity의 벤치마크 실행·결과, HistoryActivity의 실행 기록으로 구성됩니다. Camera2Engine과 CameraXEngine이 카메라를 구동하고 Telemetry와 FlightRecorder가 콜백을 기록합니다.
 
 BenchmarkRunner의 결과와 이벤트는 RunAssembler, BenchmarkEvaluator, RunValidityEvaluator를 거쳐 schema 5 실행 JSON이 됩니다. BenchmarkReport는 schema 3부터 5까지 읽습니다. BaselineManager와 RegressionDetector가 비교를 수행하고, 이력의 임의 선택 비교는 실제 baseline이 아닌 경우 변화량만 표시합니다. RunIndex는 목록 데이터를 줄여 보관하며 BenchmarkCsv와 tools/aggregate.py가 지표별 CSV를 작성합니다.
 
