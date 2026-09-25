@@ -1,0 +1,18 @@
+sequenceDiagram
+    actor U as 개발자
+    participant L as Live 화면
+    participant E as Live 카메라 엔진
+    participant T as 도구 화면
+    Note over L: 녹화 중, 녹화 저장 중, 세션 종료 중에는 도구 버튼이 비활성화됨
+    U->>L: 도구 → Probe
+    L->>T: CameraProbeActivity를 바로 시작
+    Note over L,E: 화면이 가려지면 onStop이 평소처럼 카메라를 닫음
+    U->>L: 도구 → CTS 또는 Benchmark
+    L->>L: 진행 중인 incident를 마무리하고 진단 패널을 닫음
+    L->>L: closing을 켜고 "카메라 세션 종료 중…" 표시
+    L->>E: close(done)
+    E-->>L: done
+    L->>T: CtsEntryActivity 또는 BenchmarkActivity 시작
+    T->>T: 자기 카메라를 엶
+    U->>T: 뒤로 가기
+    T-->>L: Live 복귀, onStart가 카메라를 다시 엶

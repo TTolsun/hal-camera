@@ -1,0 +1,15 @@
+stateDiagram-v2
+    state "접힘: 현재 배율만 표시" as Folded
+    state "펼침: 지원 배율 모두 표시" as Open
+    [*] --> Folded
+    Folded --> Open : 현재 배율 누름, 지원 배율 2개 이상, 260ms
+    Open --> Open : 배율 선택 또는 포커스, 접기 타이머 재시작
+    Open --> Folded : 마지막 조작 후 3초, 220ms
+    Open --> Folded : TalkBack 사용 중 배율 선택 즉시
+    Open --> Folded : 비활성화 또는 진단 패널 열기, 애니메이션 없음
+    note right of Open
+        가로 드래그 중에는 접기 타이머를 멈춤
+        TalkBack이 켜져 있으면 자동 접기 없음
+        3초는 API 29 이상에서 접근성 권장 시간으로 늘어날 수 있음
+        시스템 애니메이션이 꺼져 있으면 즉시 바뀜
+    end note
