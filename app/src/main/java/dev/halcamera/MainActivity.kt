@@ -449,8 +449,8 @@ class MainActivity : ComponentActivity() {
         controlBar=LiveControlBar(this,object : LiveControlBar.Host {
             override fun controlsChanged(controls: LiveControls) { (engine as? LiveTuning)?.setControls(controls) }
             override fun needsCamera2():Boolean {
-                if(recordingVideo) return false
-                toast("플래시·AF/AE 잠금·EV는 Camera2에서 동작하므로 Camera2로 전환한 뒤 적용합니다"); chooseEngine("Camera2"); return true
+                if(recordingVideo) { toast("촬영 설정을 바꾸려면 녹화를 마쳐 주세요"); return false }
+                toast("촬영 설정을 위해 Camera2로 전환합니다"); chooseEngine("Camera2"); return true
             }
             override fun notice(text: String) = toast(text)
         })

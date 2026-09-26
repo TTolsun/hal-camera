@@ -33,12 +33,11 @@ class CtsEntryActivity : ComponentActivity() {
 
         body.addView(Look.titleBar(this, "CTS · 동작 검증", 22, "이전 화면으로 돌아가기") { finish() })
         body.addView(Look.text(this, "앱 내 검사 · 공식 CTS 인증 결과 아님", 12, Look.onDarkMuted), lp(top = 4))
-        body.addView(Look.text(this, "어떤 검사를 실행할까요?", 20, Look.onDark, bold = true), lp(top = 24))
 
         body.addView(
             choice(
                 title = "커스텀 케이스",
-                detail = "카메라별로 문제를 좁힐 때\nCTS 기반 자체 검사로 단계별 판정과 측정값을 확인합니다.",
+                detail = "단계별 판정 · 측정값",
                 enabled = true,
                 reason = null
             ) { startActivity(Intent(this, CtsCaseListActivity::class.java)) },
@@ -48,7 +47,7 @@ class CtsEntryActivity : ComponentActivity() {
         body.addView(
             choice(
                 title = "CTS 원문 케이스",
-                detail = "AOSP 테스트를 재현할 때\n원문 메서드를 실행하고 판정과 실패 메시지를 확인합니다.",
+                detail = "AOSP 원문 실행 · 실패 메시지",
                 enabled = vendoredSupported,
                 reason = if (vendoredSupported) null else "API ${VendoredCts.MIN_SDK}+ 필요 · 현재 API ${Build.VERSION.SDK_INT}"
             ) { startActivity(Intent(this, VendoredCtsListActivity::class.java)) },
@@ -65,9 +64,8 @@ class CtsEntryActivity : ComponentActivity() {
             alpha = if (enabled) 1f else 0.5f
             if (enabled) setOnClickListener { open() }
         }
-        card.addView(Look.text(this, title, 17, Look.onDark, bold = true))
+        card.addView(Look.text(this, if (enabled) "$title  ›" else title, 17, Look.onDark, bold = true))
         card.addView(Look.text(this, detail, 12, Look.onDarkMuted), lp(top = 6))
-        if (enabled) card.addView(Look.text(this, "검사 항목 선택  ›", 14, Look.primaryOnDark), lp(top = 16))
         if (reason != null) card.addView(Look.text(this, reason, 12, Look.statusWarn), lp(top = 6))
         return card
     }

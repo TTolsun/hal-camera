@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
+import android.view.KeyEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -31,6 +32,8 @@ class EvRuler(context: Context, private val onChange: (Int) -> Unit) : View(cont
     /** Scale position in steps, fractional while dragging. */
     private var position = 0f
     private var dragging = false
+    val isInteracting: Boolean get() = dragging
+    var onInteraction: ((Boolean) -> Unit)? = null
     private var wholeTicks = emptySet<Int>()
     private val spacing get() = Look.dp(context, if (step < 0.2) 9 else 20).toFloat()
 
@@ -70,6 +73,9 @@ class EvRuler(context: Context, private val onChange: (Int) -> Unit) : View(cont
 
     private fun label(i: Int) = dev.halcamera.camera.LiveControlText.ev(i * step)
 
+    fun adjustBy(steps: Int) = select(index + steps)
+    fun resetValue() = select(0)
+
     private fun select(i: Int) {
         val next = i.coerceIn(range)
         position = next.toFloat()
@@ -84,7 +90,7 @@ class EvRuler(context: Context, private val onChange: (Int) -> Unit) : View(cont
     override fun onTouchEvent(event: MotionEvent): Boolean {
         gestures.onTouchEvent(event)
         when (event.actionMasked) {
-            MotionEvent.ACTION_DOWN -> { lastX = event.x; dragging = true; parent?.requestDisallowInterceptTouchEvent(true) }
+            MotionEvent.ACTION_DOWN -> { lastX = event.x; dragging = true; onInteraction?.invoke(true); parent?.requestDisallowInterceptTouchEvent(true) }
             MotionEvent.ACTION_MOVE -> {
                 // The scale follows the finger like a physical dial: dragging left brings the brighter side under the mark.
                 position = (position - (event.x - lastX) / spacing).coerceIn(range.first.toFloat(), range.last.toFloat())
@@ -93,7 +99,10 @@ class EvRuler(context: Context, private val onChange: (Int) -> Unit) : View(cont
                 if (nearest != index) { index = nearest; onChange(nearest); performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK) }
                 invalidate()
             }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { dragging = false; select(position.roundToInt()) }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                dragging = false; select(position.roundToInt()); onInteraction?.invoke(false)
+                parent?.requestDisallowInterceptTouchEvent(false)
+            }
         }
         return true
     }
@@ -130,8 +139,17 @@ class EvRuler(context: Context, private val onChange: (Int) -> Unit) : View(cont
     override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
         super.onInitializeAccessibilityNodeInfo(info)
         info.className = android.widget.SeekBar::class.java.name
+        info.rangeInfo = AccessibilityNodeInfo.RangeInfo.obtain(AccessibilityNodeInfo.RangeInfo.RANGE_TYPE_FLOAT,
+            (range.first * step).toFloat(), (range.last * step).toFloat(), (index * step).toFloat())
         if (index < range.last) info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_FORWARD)
         if (index > range.first) info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_SCROLL_BACKWARD)
+    }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean = when (keyCode) {
+        KeyEvent.KEYCODE_DPAD_LEFT -> { adjustBy(-1); true }
+        KeyEvent.KEYCODE_DPAD_RIGHT -> { adjustBy(1); true }
+        KeyEvent.KEYCODE_MOVE_HOME -> { resetValue(); true }
+        else -> super.onKeyDown(keyCode, event)
     }
 
     override fun performAccessibilityAction(action: Int, arguments: Bundle?): Boolean = when (action) {

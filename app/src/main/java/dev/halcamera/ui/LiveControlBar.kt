@@ -8,6 +8,9 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.RippleDrawable
+import android.graphics.drawable.InsetDrawable
+import android.os.Build
+import android.view.accessibility.AccessibilityManager
 import android.view.Gravity
 import android.view.View
 import android.widget.Button
@@ -64,7 +67,14 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     private val ev = QuickButton(context) { tap { toggleRuler() } }
     private val ruler = EvRuler(context) { index ->
         controls = controls.copy(evIndex = index); host.controlsChanged(controls); render(); scheduleFold()
-    }.apply { visibility = View.GONE }
+    }.apply {
+        visibility = View.GONE
+    }
+    private val evPanel = Look.row(context).apply {
+        visibility = View.GONE
+        background = Look.cardBackground(context, Look.cameraGlass, Look.cameraOutline)
+    }
+    private val accessibility = context.getSystemService(AccessibilityManager::class.java)
     private val fold = Runnable { closePanels() }
 
     /** The buttons stay folded behind [handle] until asked for, so the preview is not covered by controls not in use. */
@@ -72,25 +82,45 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     private val rows = FrameLayout(context).apply { visibility = View.GONE }
     private val handle = TextView(context).apply {
         textSize = 12f; setTextColor(Look.onDark); gravity = Gravity.CENTER
-        background = Look.pill(context, Look.cameraGlass)
+        background = InsetDrawable(Look.pill(context, Look.cameraGlass), 0, dp(8), 0, dp(8))
+        minimumHeight = dp(48)
+        isFocusable = true
         compoundDrawablePadding = dp(4)
         setOnClickListener { setExpanded(!expanded) }
     }
 
     init {
         view.gravity = Gravity.CENTER_HORIZONTAL
-        // A 32dp pill inside a 48dp touch target.
-        view.addView(FrameLayout(context).apply {
-            addView(handle, FrameLayout.LayoutParams(-2, dp(32), Gravity.CENTER))
-            setOnClickListener { setExpanded(!expanded) }
-            // The pill is the accessible control; the frame only widens the touch target.
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }, LinearLayout.LayoutParams(-2, dp(48)))
-        rows.addView(mainRow, FrameLayout.LayoutParams(-1, dp(56)))
-        rows.addView(flashRow, FrameLayout.LayoutParams(-1, dp(72)))
+        view.addView(handle, LinearLayout.LayoutParams(-2, -2))
+        rows.addView(mainRow, FrameLayout.LayoutParams(-1, -2))
+        rows.addView(flashRow, FrameLayout.LayoutParams(-1, -2))
         view.addView(rows, LinearLayout.LayoutParams(-1, -2))
-        view.addView(ruler, LinearLayout.LayoutParams(-1, dp(64)).apply { topMargin = dp(2) })
-        listOf(flash, afLock, aeLock, ev).forEach { mainRow.addView(it, LinearLayout.LayoutParams(0, dp(56), 1f)) }
+        ruler.onInteraction = { touching -> if (touching) view.removeCallbacks(fold) else scheduleFold() }
+        listOf("−" to -1, "+" to 1, "0" to 0).forEach { (label, delta) ->
+            if (delta == 1) evPanel.addView(ruler, LinearLayout.LayoutParams(0, dp(64), 1f))
+            evPanel.addView(Button(context).apply {
+                text = label; textSize = 14f; isAllCaps = false
+                setTextColor(Look.onDark)
+                minWidth = 0; minimumWidth = 0
+                setPadding(0, 0, 0, 0)
+                backgroundTintList = null
+                background = Look.touchBackground(context, Color.TRANSPARENT, Color.TRANSPARENT)
+                stateListAnimator = null
+                setOnClickListener {
+                    if (enabled) { if (delta == 0) ruler.resetValue() else ruler.adjustBy(delta); scheduleFold() }
+                }
+                contentDescription = when (delta) { -1 -> "노출 보정 한 단계 낮추기"; 1 -> "노출 보정 한 단계 높이기"; else -> "노출 보정 EV 0으로 초기화" }
+                tooltipText = contentDescription
+            }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        }
+        view.addView(evPanel, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
+        listOf(flash, afLock, aeLock, ev).forEach { button ->
+            mainRow.addView(button, LinearLayout.LayoutParams(0, dp(48), 1f))
+        }
+        view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+            override fun onViewAttachedToWindow(v: View) = Unit
+            override fun onViewDetachedFromWindow(v: View) { view.removeCallbacks(fold) }
+        })
         render()
     }
 
@@ -98,7 +128,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         expanded = open
         if (!open) closePanels()
         rows.visibility = if (open) View.VISIBLE else View.GONE
-        if (open) { rows.alpha = 0f; rows.translationY = -dp(8).toFloat(); rows.animate().alpha(1f).translationY(0f).setDuration(160).start() }
+        if (open && android.animation.ValueAnimator.areAnimatorsEnabled()) { rows.alpha = 0f; rows.translationY = -dp(8).toFloat(); rows.animate().alpha(1f).translationY(0f).setDuration(160).start() }
         render()
     }
 
@@ -148,14 +178,16 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             val button = QuickButton(context) { flashRow.visibility = View.GONE; mainRow.visibility = View.VISIBLE; update(controls.copy(flash = mode)) }
             button.show(icon = flashIcon(mode), text = null, active = mode == controls.flash, locked = false, available = true,
                 description = "${mode.label}${if (mode == controls.flash) ", 선택됨" else ""}")
-            option.addView(button, LinearLayout.LayoutParams(dp(56), dp(56)))
+            option.addView(button, LinearLayout.LayoutParams(dp(48), dp(48)))
             option.addView(TextView(context).apply {
                 text = mode.label.removePrefix("Flash ").replaceFirstChar { it.uppercase() }
                 textSize = 11f; gravity = Gravity.CENTER
                 setTextColor(if (mode == controls.flash) Look.onDark else Look.onDarkMuted)
+                setShadowLayer(dp(2).toFloat(), 0f, 0f, Color.BLACK)
+                setOnClickListener { button.performClick() }
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            }, LinearLayout.LayoutParams(-2, dp(16)))
-            flashRow.addView(option, LinearLayout.LayoutParams(0, dp(72), 1f))
+            }, LinearLayout.LayoutParams(-2, -2))
+            flashRow.addView(option, LinearLayout.LayoutParams(0, -2, 1f))
         }
         mainRow.visibility = View.INVISIBLE
         flashRow.visibility = View.VISIBLE
@@ -181,16 +213,23 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         scheduleFold()
     }
 
-    private fun scheduleFold() { view.removeCallbacks(fold); view.postDelayed(fold, 4000) }
+    private fun scheduleFold() {
+        view.removeCallbacks(fold)
+        if (ruler.isInteracting || accessibility.isTouchExplorationEnabled) return
+        val timeout = if (Build.VERSION.SDK_INT >= 29) accessibility.getRecommendedTimeoutMillis(4000, AccessibilityManager.FLAG_CONTENT_CONTROLS) else 4000
+        view.postDelayed(fold, timeout.toLong())
+    }
 
     private fun closePanels() {
         view.removeCallbacks(fold)
         flashRow.visibility = View.GONE
         mainRow.visibility = View.VISIBLE
+        evPanel.visibility = View.GONE
         if (ruler.visibility != View.GONE) { ruler.visibility = View.GONE; render() }
     }
 
     private fun render() {
+        evPanel.visibility = ruler.visibility
         val suffix = if (!camera2) ". Camera2에서만 사용할 수 있습니다" else ""
         flash.show(flashIcon(controls.flash), null, controls.flash != FlashMode.OFF, false, camera2 && support.flash,
             "플래시, 현재 ${controls.flash.label}$suffix")
@@ -201,7 +240,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         val evText = if (controls.evIndex == 0) null else support.evLabel(controls.evIndex).removePrefix("EV ")
         ev.show(if (evText == null) R.drawable.ic_exposure else null, evText,
             controls.evIndex != 0 || ruler.visibility == View.VISIBLE, false, camera2 && support.evRange != null,
-            "노출 보정, 현재 ${support.evLabel(controls.evIndex)}$suffix")
+            "노출 보정, 현재 ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "조절기 접기" else "조절기 펼치기"}$suffix")
         // Dim while the bar is off (camera not ready, recording being saved, a CLI command running), as MainActivity
         // dims every other Live control, so a tap that does nothing never looks like one that should.
         listOf(flash, afLock, aeLock, ev).forEach { it.isEnabled = enabled; if (!enabled) it.alpha = 0.4f }
@@ -211,7 +250,8 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             "AF lock".takeIf { controls.afLock }, "AE lock".takeIf { controls.aeLock },
             support.evLabel(controls.evIndex).takeIf { controls.evIndex != 0 },
         )
-        handle.text = if (expanded) "" else on.joinToString(" · ")
+        handle.text = if (expanded) "촬영 설정 접기" else on.joinToString(" · ").ifEmpty { "Flash · AF · AE · EV" }
+        ViewCompat.setStateDescription(handle, if (expanded) "펼쳐짐" else "접힘")
         val chevron = ContextCompat.getDrawable(context, if (expanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down)!!
             .mutate().apply { setBounds(0, 0, dp(18), dp(18)) }
         handle.setCompoundDrawablesRelative(null, null, chevron, null)

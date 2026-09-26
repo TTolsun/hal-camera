@@ -31,7 +31,7 @@ nav_order: 4
 | 내부 점수 | `ScoreComposer` | 검토한 calibration의 범위에 맞는 적격 release run에 점수와 카테고리 평균을 계산합니다. |
 | 저장·비교·표시 | `BenchmarkReport`, `BaselineManager`, `RegressionDetector`, 각 Activity | JSON 저장과 화면을 구성하고, 현재 기준에 따른 비교 결과를 계산합니다. |
 
-`MainActivity`가 런처이며 Live에서는 관측한 수치와 프리뷰를 표시하고 Mark 작업 행을 고정합니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.
+`MainActivity`가 런처이며 앱을 열면 바로 Live 프리뷰를 표시합니다. Live에서는 관측한 수치와 이벤트 ZIP 저장 행을 고정합니다. 도구 메뉴에서 여는 선택적인 `WorkbenchActivity`는 기기 식별 정보와 검사 목적별 진입점을 모읍니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.
 
 baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 결과 화면은 이전의 비교 가능한 실행 대비 변화량만 표시합니다. 이력에서 임의로 선택한 실행도 실제 baseline이 아닌 한 회귀 판정의 기준이 되지 않습니다.
 
@@ -48,9 +48,9 @@ Live의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/WorkbenchActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked)
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -126,7 +126,7 @@ graph LR
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/ui/Look.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked)
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -187,7 +187,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked)
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -420,7 +420,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked)
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -472,16 +472,16 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked) |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-26 @ `7ff7279` · Claude (Compare/Baseline naming, code-checked) |
+| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked) |
+| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked) |
+| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-26 @ `7ff7279` · Claude (Compare/Baseline naming, code-checked) |
 | 구조 원본 `ui-camera-label` | 최신 | 검토 2026-09-25 @ `fffbc89` · K.H. Kim |
-| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-09-26 @ `85af618` · Claude (Live controls review fixes, code-checked) |
+| 구조 원본 `ui-tool-handoff` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-26 @ `85af618` · Claude (Live controls review fixes, code-checked) |
 | 구조 원본 `ui-zoom` | 최신 | 검토 2026-09-25 @ `fffbc89` · K.H. Kim |
-| 원고 `overview` | 최신 | 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked) |
-| 원고 `module-roles` | 최신 | 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked) |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked) |
-| 원고 `constraints` | 최신 | 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked) |
+| 원고 `overview` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked) |
+| 원고 `module-roles` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked) |
+| 원고 `runtime-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked) |
+| 원고 `constraints` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked) |
 
 <!-- omm:end id=status -->
 

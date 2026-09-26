@@ -5,3 +5,5 @@ cts/suite/CtsChecklistActivity는 추상 화면입니다. 그룹마다 제목·�
 검사 출처와 결과 단위를 짧게 표시하고 전체 면책 설명은 목록 아래에서 펼쳐 봅니다. 공식 CTS 판정을 대체하지 않는다는 안내와 원문 테스트 중단 시 FAIL 처리 설명은 유지합니다.
 
 cts/suite/CtsSuiteRunActivity는 EXTRA_KEYS로 받은 항목을 위에서부터 하나씩 실행합니다. 가져온 Camera2SurfaceViewCtsActivity를 상속해 원문 테스트의 ActivityTestRule이 돌려받는 인스턴스가 되는 동시에 CtsRunner.PreviewHost를 구현하므로, 원문 onCreate가 만든 SurfaceView 하나를 두 종류의 러너가 순서대로 씁니다. 커스텀 항목은 CtsRunners가 만든 러너를 io 스레드에서, 원문 항목은 VendoredRun을 cts-suite-vendored 스레드에서 돌리고, 각 항목이 카메라를 닫고 보고한 뒤에야 다음 항목을 시작합니다. 화면이 열리면 권한 확인 뒤 자동으로 시작하고, 항목마다 대기·실행 중·결과 카드가 놓이며 결과 카드를 누르면 카메라별 표나 JUnit 실패 문구가 펼쳐집니다. 중단은 실행 중인 항목만 멈추고(커스텀은 cancel, 원문은 카메라 닫기) 나머지는 실행 안 함으로 남깁니다. cts/suite/SuiteReportPresenter가 결과(PASS·FAIL·SKIP·중단됨·실행 안 함)를 세어 머리글(N개 중 PASS a · FAIL b · 소요 시간)과 복사·공유 텍스트를 만들며, 면책 문구는 항목 종류에 맞는 것을 고릅니다.
+
+실행 화면의 안내는 검사 개수, 화면을 나갈 때 중단된다는 조건, 공식 CTS 인증이 아니라는 짧은 문구만 표시합니다. 복사·공유는 실행이 끝나 보고서가 준비되면 활성화하고, 보고서 본문에는 항목 종류에 맞는 전체 안내를 유지합니다.

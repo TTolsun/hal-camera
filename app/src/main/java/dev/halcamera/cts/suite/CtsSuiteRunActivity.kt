@@ -67,6 +67,8 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
     private val io = Executors.newSingleThreadExecutor()
     private lateinit var statusView: TextView
     private lateinit var runButton: Button
+    private lateinit var copyButton: Button
+    private lateinit var shareButton: Button
     private lateinit var headlineView: TextView
     private lateinit var list: LinearLayout
     /** Covers the surface while nothing runs, so a closed camera's last frame does not stay on screen. */
@@ -152,8 +154,8 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         }
 
         body.addView(Look.titleBar(this, "CTS 실행", 22, "이전 화면으로 돌아가기") { finish() })
-        body.addView(Look.text(this, "${queue.size}개 항목을 위에서부터 차례로 실행합니다. 화면을 나가면 실행이 중단됩니다.", 12, Look.onDarkMuted), lp(top = 4))
-        body.addView(Look.text(this, SuiteReportPresenter.disclaimer(queue), 11, Look.onDarkMuted), lp(top = 4))
+        body.addView(Look.text(this, "${queue.size}개 검사 · 화면을 나가면 중단", 12, Look.onDarkMuted), lp(top = 4))
+        body.addView(Look.text(this, "앱 내 검사 · 공식 CTS 인증 결과 아님", 11, Look.onDarkMuted), lp(top = 4))
 
         // The preview keeps its frame; each item resizes only the buffer, as in the CTS activity.
         val frame = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
@@ -174,8 +176,10 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         val actions = Look.row(this)
         runButton = Look.ghostButton(this, "실행", dark = true) { if (running) stop() else requestAndStart() }
         actions.addView(runButton, LinearLayout.LayoutParams(0, -2, 1f))
-        actions.addView(Look.ghostButton(this, "복사", dark = true) { copy() }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
-        actions.addView(Look.ghostButton(this, "공유", dark = true) { share() }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
+        copyButton = Look.ghostButton(this, "복사", dark = true) { copy() }
+        shareButton = Look.ghostButton(this, "공유", dark = true) { share() }
+        actions.addView(copyButton, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
+        actions.addView(shareButton, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
         body.addView(actions, lp(top = 8))
         headlineView = Look.text(this, "", 19, Look.onDark, bold = true)
         body.addView(headlineView, lp(top = 18))
@@ -403,6 +407,10 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         previewCover.visibility = if (running) View.GONE else View.VISIBLE
         previewCover.text = if (report == null) "실행을 시작하면 프리뷰가 여기에 나옵니다" else "실행이 끝나 카메라를 닫았습니다"
         runButton.text = when { running -> "중단"; report != null -> "다시 실행"; else -> "실행" }
+        listOf(copyButton, shareButton).forEach {
+            it.isEnabled = !running && report != null
+            it.alpha = if (it.isEnabled) 1f else 0.4f
+        }
         val done = report
         headlineView.visibility = if (done == null) View.GONE else View.VISIBLE
         if (done != null) {

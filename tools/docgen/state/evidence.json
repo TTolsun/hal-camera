@@ -3,7 +3,7 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "1921c3dac125c0ac",
@@ -148,7 +148,7 @@
     },
     "omm:data-flow": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "be1772c253e9bef1",
@@ -197,7 +197,7 @@
     },
     "omm:state-transitions": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "3cb943ec5d9e3999",
@@ -232,7 +232,7 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "bc7df8d4756b5d8b",
@@ -379,7 +379,7 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "be1772c253e9bef1",
@@ -428,7 +428,7 @@
     },
     "content:troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "63b1dbae8b4c84c7",
@@ -618,7 +618,7 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       }
     },
     "content:architecture.md/constraints": {
@@ -763,7 +763,7 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       }
     },
     "omm:ui-camera-label": {
@@ -784,7 +784,7 @@
     },
     "omm:ui-tool-handoff": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "4560cf6db4e004b6",
