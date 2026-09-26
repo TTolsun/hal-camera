@@ -45,19 +45,17 @@ internal class MeterView(
 /**
  * One row of the compare screen's delta chart: a bar growing right (degraded) or left (improved) from a
  * centre zero line. [pct] is the metric's signed delta and [maxPct] the largest magnitude on the screen, so
- * every row shares one scale.
+ * every row shares one scale. [color] carries the row's verdict, which the caller maps from its tone.
  */
 internal class DeltaBarView(
     context: Context,
     private val pct: Float,
     private val maxPct: Float,
-    degraded: Boolean
+    color: Int
 ) : View(context) {
 
-    private val zero = Paint().apply { color = Look.expertTile3 }
-    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = if (degraded) Look.statusFail else Look.primaryOnDark
-    }
+    private val zero = Paint().apply { this.color = Look.expertTile3 }
+    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), Look.dp(context, 14))

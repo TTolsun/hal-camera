@@ -109,7 +109,7 @@ Live 진단 패널의 `프레임·3A 수치`를 펼치면 상세 수치를 볼 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-26 @ `199267e` · Claude (compare chart wording fix, device-checked)
+- 검토 2026-09-26 @ `802d716` · Claude (delta colours by verdict, code-checked)
 
 </details>
 
@@ -185,9 +185,9 @@ Live 진단 패널의 `프레임·3A 수치`를 펼치면 상세 수치를 볼 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-26 @ `199267e` · Claude (compare chart wording fix, device-checked) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-26 @ `802d716` · Claude (delta colours by verdict, code-checked) |
 | 구조 원본 `state-transitions` | 최신 | 검토 2026-09-26 @ `199267e` · Claude (compare chart wording fix, device-checked) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-26 @ `199267e` · Claude (compare chart wording fix, device-checked) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-26 @ `802d716` · Claude (delta colours by verdict, code-checked) |
 
 <!-- omm:end id=status -->
 

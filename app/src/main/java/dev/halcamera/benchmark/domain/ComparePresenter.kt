@@ -13,6 +13,17 @@ data class CompareRow(
 ) {
     /** [marker] is a verdict only against a baseline; against a reference it can only carry a reason. */
     val hasVerdict: Boolean get() = marker.startsWith("▲") || marker.startsWith("▼")
+
+    /**
+     * How the chart colours this row. Only a verdict gets a colour: a change that was not judged, including every
+     * row against a run picked by hand, is NEUTRAL. The chart used to draw those in the app's action blue, which
+     * read as "improved" (an informational AE +78% looked like good news) and as something to press.
+     */
+    val tone: Tone get() = when {
+        marker.startsWith("▲") -> Tone.BAD
+        marker.startsWith("▼") -> Tone.GOOD
+        else -> Tone.NEUTRAL
+    }
 }
 
 data class CompareView(

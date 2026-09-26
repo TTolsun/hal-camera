@@ -34,6 +34,16 @@ class ComparePresenterTest {
 
     // ---- rows ----
 
+    @Test fun onlyAVerdictColoursARowAndAHandPickedReferenceHasNone() {
+        val judged = view().rows
+        assertEquals(Tone.BAD, judged.first { it.label == "Capture" }.tone)
+        assertTrue(judged.filter { !it.hasVerdict }.all { it.tone == Tone.NEUTRAL })
+        val picked = ComparePresenter.present(base, current, RegressionDetector.compare(base, current),
+            ComparedTo.PREVIOUS, selectedReference = true).rows
+        assertTrue(picked.all { it.tone == Tone.NEUTRAL })
+        assertEquals(Tone.GOOD, CompareRow("Open", "", "", "", "▼ Improved").tone)
+    }
+
     @Test fun rowsFollowTheCatalogOrder() {
         assertEquals(listOf("Open", "Capture", "Stalls"), view().rows.map { it.label })
     }

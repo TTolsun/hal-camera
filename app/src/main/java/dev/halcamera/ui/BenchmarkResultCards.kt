@@ -74,12 +74,7 @@ object BenchmarkResultCards {
                 top.addView(Look.text(context, label, 13, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
                 top.addView(Look.text(context, k.valueText, 15, if (k.tone == Tone.BAD) Look.statusFail else Look.onDark, bold = true, mono = true))
                 k.deltaText?.let {
-                    val deltaColor = when (k.tone) {
-                        Tone.BAD -> Look.statusFail
-                        Tone.GOOD -> Look.primaryOnDark
-                        Tone.NEUTRAL -> Look.onDarkMuted
-                    }
-                    top.addView(Look.text(context, it, 12, deltaColor, bold = true), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
+                    top.addView(Look.text(context, it, 12, deltaColor(k.tone), bold = true), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
                 }
                 metricsCard.addView(top, lp(if (i == 0) 8 else 14))
                 metricsCard.addView(MeterView(context, k.fraction.toFloat(), k.baseFraction?.toFloat(), k.tone == Tone.BAD), lp(6))
@@ -152,16 +147,11 @@ object BenchmarkResultCards {
             val maxPct = charted.maxOf { kotlin.math.abs(it.deltaPct!!) }.coerceIn(1.0, 100.0)
             charted.forEach { row ->
                 val line = Look.row(context)
-                val degraded = row.marker.startsWith("▲")
-                val valueColor = when {
-                    degraded -> Look.statusFail
-                    row.marker.startsWith("▼") -> Look.primaryOnDark
-                    else -> Look.onDarkMuted
-                }
+                val color = deltaColor(row.tone)
                 line.addView(Look.text(context, row.label, 12, Look.onDarkMuted), LinearLayout.LayoutParams(dp(96), -2))
-                line.addView(DeltaBarView(context, row.deltaPct!!.toFloat(), maxPct.toFloat(), degraded),
+                line.addView(DeltaBarView(context, row.deltaPct!!.toFloat(), maxPct.toFloat(), color),
                     LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(4); marginEnd = dp(8) })
-                line.addView(Look.text(context, row.delta, 12, valueColor, bold = true, mono = true).apply {
+                line.addView(Look.text(context, row.delta, 12, color, bold = true, mono = true).apply {
                     gravity = Gravity.END
                 }, LinearLayout.LayoutParams(dp(56), -2))
                 card.addView(line, lp(8))
@@ -176,5 +166,16 @@ object BenchmarkResultCards {
         }
         card.addView(Look.disclosure(context, "실행 정보", details), lp(10))
         content.addView(card)
+    }
+
+    /**
+     * One colour per verdict for every delta on the result and compare cards: red degraded, green improved, grey
+     * not judged. Blue is left to what can be pressed; improved deltas used to be blue, and so did every unjudged
+     * bar, so a bar's colour could not tell an improvement from a change nobody had judged.
+     */
+    private fun deltaColor(tone: Tone): Int = when (tone) {
+        Tone.BAD -> Look.statusFail
+        Tone.GOOD -> Look.statusPass
+        Tone.NEUTRAL -> Look.onDarkMuted
     }
 }
