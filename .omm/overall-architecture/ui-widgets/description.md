@@ -3,3 +3,5 @@ ui/는 ScopeView, StripView와 공통 시각 설정 Look, Live 수치를 계산�
 앱과 문서 사이트는 docs/design/DESIGN.md의 HAL-CAMERA-Editorial을 공통 기준으로 사용하며 Look은 Android의 밝은 화면과 어두운 화면에 대응하는 토큰을 제공합니다.
 
 Look.disclosure는 세부 설명을 접고 펼치며 접근성 상태를 제공합니다. MetricRows는 ResultRow·CompareRow를 화면 폭에 맞춰 줄바꿈하는 행으로 표시합니다. 값·max/p95·변화량·판정 사유를 유지하고, 판정은 색과 글씨로 구별합니다. 계산은 domain presenter에 남깁니다.
+
+진단 패널의 배치(DiagnosticsPanel)와 Live 화면이 함께 쓰는 라벨·버튼 생성기(CameraWidgets)는 screens/expert-screen/diagnostics-panel 요소가, ShutterButton과 ExpandingZoomControl의 상세는 capture-controls 하위 요소가 설명합니다.

@@ -152,6 +152,11 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
           - app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt
+      # 진단 패널의 배치는 MainActivity 에서 옮겼습니다(입력 한도). 동작은 MainActivity 에 남아 있습니다.
+      screens/expert-screen/diagnostics-panel:
+        evidence:
+          - app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt
+          - app/src/main/java/dev/halcamera/ui/CameraWidgets.kt
       screens/benchmark-screen:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
@@ -212,7 +217,6 @@ sources:
       ui-widgets:
         evidence:
           - app/src/main/java/dev/halcamera/ui/AboutSheet.kt
-          - app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt
           - app/src/main/java/dev/halcamera/ui/GalleryImageView.kt
           - app/src/main/java/dev/halcamera/ui/IconButton.kt
           - app/src/main/java/dev/halcamera/ui/LiveReadout.kt
@@ -221,8 +225,12 @@ sources:
           - app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt
           - app/src/main/java/dev/halcamera/ui/ScopeView.kt
           - app/src/main/java/dev/halcamera/ui/SelectionPopup.kt
-          - app/src/main/java/dev/halcamera/ui/ShutterButton.kt
           - app/src/main/java/dev/halcamera/ui/StripView.kt
+      # 촬영 조작 두 파일은 ui-widgets 입력이 6만 자 한도에 가까워 하위 요소로 내렸습니다.
+      ui-widgets/capture-controls:
+        evidence:
+          - app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt
+          - app/src/main/java/dev/halcamera/ui/ShutterButton.kt
       ui-widgets/frame-timeline:
         evidence:
           - app/src/main/java/dev/halcamera/ui/TimelineView.kt
