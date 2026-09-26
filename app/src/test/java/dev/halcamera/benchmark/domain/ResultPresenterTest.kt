@@ -549,6 +549,10 @@ class ResultPresenterTest {
         assertEquals("-0.3 ms · -3%", delta(10.3, 10.0))
         assertEquals("+28 ms · +28%", delta(100.0, 128.0))
         assertEquals("0 ms · 0%", delta(100.0, 100.0))
+        // Seen on a Galaxy S25+: Open 10.00 → 10.04 ms printed "+0.04 ms · 0%", decimals spent on noise.
+        assertEquals("0 ms · 0%", delta(10.0, 10.04))
+        // Record jitter of hundredths of a millisecond printed "0.0 ms · -18%"; the percentage now speaks alone.
+        assertEquals("-18%", delta(0.011, 0.009, id = "3.7"))
     }
 
     @Test fun aCountDeltaStaysAbsoluteBecauseAPercentageOfASmallCountMisleads() {

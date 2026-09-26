@@ -421,18 +421,24 @@ object ResultPresenter {
         val cmp = input.cmp
         val delta = if (!withDelta || base == null) null else {
             val d = value - base
-            val absolute = when (input.unit) {
-                "fps" -> "${signedAmount(d, 1)} fps"
-                // A count difference is already the whole story, and "+3 count" reads as a unit nobody uses.
-                "count" -> String.format(Locale.US, "%+.0f", d)
-                // A change of a fraction of a millisecond is the whole point of a jitter row; "+0 ms" is not.
-                "ms" -> "${signedAmount(d, if (input.fine) 1 else 0)} ms"
-                else -> "${signedAmount(d, 0)} ${input.unit}"
-            }
             // The percentage the compare chart drew, so dropping that chart loses nothing. A count has none: a
             // percentage of a small count says more about the count than about the change (7.2).
             val pct = if (input.unit == "count" || base <= 0.0) null else (value - base) / base * 100.0
-            if (pct == null) absolute else "$absolute · ${percent(pct)}"
+            // Extra decimals only when the percentage says something moved; otherwise "+0.04 ms · 0%" dresses up noise.
+            val moved = pct != null && kotlin.math.abs(pct) >= 0.5
+            val amount = when (input.unit) {
+                "fps" -> signedAmount(d, 1, moved)?.let { "$it fps" }
+                // A count difference is already the whole story, and "+3 count" reads as a unit nobody uses.
+                "count" -> String.format(Locale.US, "%+.0f", d)
+                // A change of a fraction of a millisecond is the whole point of a jitter row; "+0 ms" is not.
+                "ms" -> signedAmount(d, if (input.fine) 1 else 0, moved)?.let { "$it ms" }
+                else -> signedAmount(d, 0, moved)?.let { "$it ${input.unit}" }
+            }
+            when {
+                pct == null -> amount
+                amount == null -> percent(pct)
+                else -> "$amount · ${percent(pct)}"
+            }
         }
         val tone = when {
             !withDelta || !judged || cmp == null -> Tone.NEUTRAL
@@ -455,15 +461,22 @@ object ResultPresenter {
     }
 
     /**
-     * A signed change with as many decimals as it takes to show it, up to two. "-0 ms" beside "-5%" read as a
-     * contradiction once the percentage sat next to it (10.3 ms to 10.0 ms); it now reads "-0.3 ms". A change too
-     * small even for two decimals is printed as an unsigned zero.
+     * A signed change for the delta line, or null when it should be left out.
+     *
+     * "-0 ms" beside "-5%" read as a contradiction once the percentage sat next to it (10.3 ms to 10.0 ms). When
+     * the percentage shows a change ([moved]), the amount takes more decimals, up to two, until it shows too
+     * ("-0.3 ms"); if even that rounds to zero, as a record jitter of hundredths of a millisecond does, the amount
+     * is dropped and the percentage speaks alone. When nothing moved, a zero is printed unsigned.
      */
-    private fun signedAmount(d: Double, decimals: Int): String {
+    private fun signedAmount(d: Double, decimals: Int, moved: Boolean): String? {
+        fun zero(places: Int) = kotlin.math.abs(d) < 0.5 * Math.pow(10.0, -places.toDouble())
         var places = decimals
-        while (places < 2 && kotlin.math.abs(d) < 0.5 * Math.pow(10.0, -places.toDouble())) places++
-        return if (kotlin.math.abs(d) < 0.5 * Math.pow(10.0, -places.toDouble())) String.format(Locale.US, "%.${decimals}f", 0.0)
-        else String.format(Locale.US, "%+.${places}f", d)
+        if (moved) while (places < 2 && zero(places)) places++
+        return when {
+            !zero(places) -> String.format(Locale.US, "%+.${places}f", d)
+            moved -> null
+            else -> String.format(Locale.US, "%.${decimals}f", 0.0)
+        }
     }
 
     /** "+4%", "-19%", and "0%" rather than "-0%" for a change that rounds away. */
