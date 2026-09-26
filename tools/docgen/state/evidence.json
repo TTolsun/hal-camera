@@ -152,10 +152,10 @@
       },
       "accepted": {
         "codeHash": "be1772c253e9bef1",
-        "modelHash": "70ef83fe07885f99",
+        "modelHash": "0b7819b5ef5ad04f",
         "at": "2026-09-26",
-        "commit": "e7732f0",
-        "reviewer": "Claude (sub-ms delta unit, device-checked)",
+        "commit": "729adec",
+        "reviewer": "Claude (split rendered-screens element, code-checked)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "7075f68903c8c5355046f5da7465e17e309e78ed",
@@ -236,10 +236,10 @@
       },
       "accepted": {
         "codeHash": "bc7df8d4756b5d8b",
-        "modelHash": "8535a3d34a39f725",
+        "modelHash": "f46f020e24a6f87c",
         "at": "2026-09-26",
-        "commit": "f26058e",
-        "reviewer": "Claude (legend median line, device-checked)",
+        "commit": "729adec",
+        "reviewer": "Claude (split rendered-screens element, code-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -383,10 +383,10 @@
       },
       "accepted": {
         "codeHash": "be1772c253e9bef1",
-        "modelHash": "17234ad645f971f4",
+        "modelHash": "bf235c8f1f47f4bb",
         "at": "2026-09-26",
-        "commit": "e7732f0",
-        "reviewer": "Claude (sub-ms delta unit, device-checked)",
+        "commit": "729adec",
+        "reviewer": "Claude (split rendered-screens element, code-checked)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "7075f68903c8c5355046f5da7465e17e309e78ed",
@@ -432,10 +432,10 @@
       },
       "accepted": {
         "codeHash": "63b1dbae8b4c84c7",
-        "modelHash": "a174f4f02b883175",
+        "modelHash": "6d600a1d36f1aa4b",
         "at": "2026-09-26",
-        "commit": "e7732f0",
-        "reviewer": "Claude (sub-ms delta unit, device-checked)",
+        "commit": "729adec",
+        "reviewer": "Claude (split rendered-screens element, code-checked)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "7075f68903c8c5355046f5da7465e17e309e78ed",

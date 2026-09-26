@@ -50,7 +50,7 @@ Live의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked)
+- 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked)
 
 </details>
 
@@ -187,7 +187,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-26 @ `e7732f0` · Claude (sub-ms delta unit, device-checked)
+- 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked)
 
 </details>
 
@@ -472,15 +472,15 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-26 @ `e7732f0` · Claude (sub-ms delta unit, device-checked) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked) |
 | 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked) |
 | 구조 원본 `state-transitions` | 최신 | 검토 2026-09-26 @ `7ff7279` · Claude (Compare/Baseline naming, code-checked) |
 | 구조 원본 `ui-camera-label` | 최신 | 검토 2026-09-25 @ `fffbc89` · K.H. Kim |
 | 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-09-26 @ `85af618` · Claude (Live controls review fixes, code-checked) |
 | 구조 원본 `ui-zoom` | 최신 | 검토 2026-09-25 @ `fffbc89` · K.H. Kim |
-| 원고 `overview` | 최신 | 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked) |
+| 원고 `overview` | 최신 | 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked) |
 | 원고 `module-roles` | 최신 | 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked) |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-26 @ `e7732f0` · Claude (sub-ms delta unit, device-checked) |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-26 @ `729adec` · Claude (split rendered-screens element, code-checked) |
 | 원고 `constraints` | 최신 | 검토 2026-09-26 @ `f26058e` · Claude (legend median line, device-checked) |
 
 <!-- omm:end id=status -->

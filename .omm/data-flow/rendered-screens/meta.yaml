@@ -6,4 +6,5 @@ kind: nested-class
 title: rendered-screens
 children:
   - history-list
+  - cli-bridge
 parentPath: []
