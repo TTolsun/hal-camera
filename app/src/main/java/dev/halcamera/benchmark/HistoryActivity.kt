@@ -141,8 +141,9 @@ class HistoryActivity : ComponentActivity() {
         // run of its camera, sat at the very bottom with a grey badge, and nobody could tell which run it was.
         val (baselineRuns, otherRuns) = pointers.baselinesFirst(runs)
         if (baselineRuns.isNotEmpty()) {
-            // Each heading carries its own count: the total above them counts both groups.
-            heading("Baseline · ${baselineRuns.size}개")
+            // Each heading carries its own count: the total above them counts both groups. One baseline per camera
+            // is the usual case, so "1개" would only be noise; a count appears once cameras are listed together.
+            heading(if (baselineRuns.size == 1) "Baseline" else "Baseline · ${baselineRuns.size}개")
             baselineRuns.forEach { runRow(it, byId) }
             if (otherRuns.isNotEmpty()) heading("다른 실행 · ${otherRuns.size}개")
         }
@@ -183,19 +184,11 @@ class HistoryActivity : ComponentActivity() {
         // One badge, on the headline row. A verdict outranks an eligibility note: a run that degraded is
         // worth opening whether or not it also missed scoring, and the result screen carries both.
         val badge = status.ifEmpty { ResultPresenter.shortStatus(run).orEmpty() }
-        if (badge.isNotEmpty()) {
-            if (baselineId == run.runId) {
-                // A chip, as for the thermal and battery state on the start card, not grey text. Not blue either:
-                // blue on this screen means something can be pressed, and a filled blue badge read as a button.
-                // No blue border for the same reason; the comparison pick already uses one.
-                head.addView(Look.text(this, badge, 13, Look.onDark, bold = true).apply {
-                    background = Look.cardBackground(this@HistoryActivity, Look.expertTile2, Look.expertTile3)
-                    setPadding(dp(10), dp(4), dp(10), dp(4))
-                })
-            } else {
-                val badgeColor = if (status.isEmpty()) Look.statusWarn else Look.statusFail
-                head.addView(Look.text(this, badge, 13, badgeColor, bold = true))
-            }
+        // A baseline row shows no badge: it only ever appears under the Baseline heading, which already says so,
+        // and a bordered chip beside the ⋮ button read as another button. The spoken label below keeps the word.
+        if (badge.isNotEmpty() && baselineId != run.runId) {
+            val badgeColor = if (status.isEmpty()) Look.statusWarn else Look.statusFail
+            head.addView(Look.text(this, badge, 13, badgeColor, bold = true))
         }
         lines.addView(head)
         run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() }?.let {
