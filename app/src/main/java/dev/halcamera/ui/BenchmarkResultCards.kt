@@ -58,7 +58,12 @@ object BenchmarkResultCards {
         }
         card.addView(Look.text(context, head.text, 21, headColor, bold = true))
         card.addView(Look.text(context, head.sub, 13, Look.onDarkMuted), lp(6))
-        view.conditionLine?.let { card.addView(Look.text(context, it, 13, Look.statusWarn), lp(8)) }
+        // One line per condition difference under a short title. Run together after "비교 시점 조건 차이:" the items
+        // wrapped wherever the card ran out ("노출 부하" / "4배 이상 차이").
+        comparison?.conditionMismatches?.takeIf { it.isNotEmpty() }?.let { mismatches ->
+            val lines = listOf("비교 시점 조건 차이") + mismatches.map { "· ${ResultPresenter.conditionText(it)}" }
+            card.addView(Look.text(context, lines.joinToString("\n"), 13, Look.statusWarn), lp(8))
+        }
         ResultPresenter.scoreValue(run)?.let { total ->
             val scoreRow = Look.row(context)
             scoreRow.addView(Look.text(context, total.toString(), 30, Look.onDark, bold = true, mono = true))

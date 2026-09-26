@@ -266,6 +266,10 @@ object ResultPresenter {
      * The verdict-first headline. It says one thing in large type — degraded, clean, or why there is no verdict —
      * and moves everything the verdict was measured against into [ResultHeadline.sub].
      */
+    /**
+     * The camera sits on its own line under what the verdict was measured against. Run on after " · " it wrapped
+     * in the middle of its own name ("… · Camera ·" / "0 (Wide · Rear)").
+     */
     fun headline(
         run: BenchmarkRun,
         comparison: RunComparison?,
@@ -280,8 +284,8 @@ object ResultPresenter {
             !run.validity.measurementValid ->
                 ResultHeadline("Measurement invalid", eligibilityLine(run), Tone.BAD)
             comparison == null || comparedTo == ComparedTo.NONE ->
-                if (isBaseline) ResultHeadline("This run is the baseline", "비교할 이전 run이 없습니다 · $endpointName", Tone.NEUTRAL)
-                else ResultHeadline("First run", "Baseline으로 지정하면 다음 run부터 비교합니다 · $endpointName", Tone.NEUTRAL)
+                if (isBaseline) ResultHeadline("This run is the baseline", "비교할 이전 run이 없습니다\n$endpointName", Tone.NEUTRAL)
+                else ResultHeadline("First run", "Baseline으로 지정하면 다음 run부터 비교합니다\n$endpointName", Tone.NEUTRAL)
             selectedReference && comparedTo != ComparedTo.BASELINE ->
                 ResultHeadline("Selected run", "선택한 run($vs) 대비 표시 · baseline이 아니면 판정하지 않습니다", Tone.NEUTRAL)
             comparedTo == ComparedTo.PREVIOUS ->
@@ -295,10 +299,10 @@ object ResultPresenter {
             comparison.hasRegression ->
                 ResultHeadline(
                     "${comparison.regressedCount} ${if (comparison.regressedCount == 1) "metric" else "metrics"} degraded",
-                    "baseline($vs) 대비 · $endpointName",
+                    "baseline($vs) 대비\n$endpointName",
                     Tone.BAD
                 )
-            else -> ResultHeadline("No degradation", "baseline($vs) 대비 · $endpointName", Tone.GOOD)
+            else -> ResultHeadline("No degradation", "baseline($vs) 대비\n$endpointName", Tone.GOOD)
         }
     }
 
