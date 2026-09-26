@@ -127,7 +127,8 @@ class HistoryActivity : ComponentActivity() {
             ghost("두 실행 비교", runs.size >= 2) { pickingComparison = true; render() }, Look.buttonParams(0, 1f)
         )
         listActions.addView(
-            ghost("CSV 내보내기", runs.isNotEmpty()) { exportCsv(runs) }.apply {
+            // "목록" says what goes into the file: every run listed below, not one run and not the screen.
+            ghost("목록 CSV 내보내기", runs.isNotEmpty()) { exportCsv(runs) }.apply {
                 contentDescription = "현재 필터의 실행 ${runs.size}개를 CSV로 내보내기"
             },
             Look.buttonParams(0, 1f).apply { if (listActions.childCount > 0) marginStart = dp(8) }
