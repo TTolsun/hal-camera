@@ -72,16 +72,22 @@ object BenchmarkResultCards {
         // a number next to its baseline is what this screen is for, and a bar answers that faster than a row of digits.
         val metricsCard = Look.card(context, dark = true)
         val sections = ResultPresenter.metricBars(run, comparison, comparedTo, reference, selectedReference)
-        // One legend line at the top instead of "· median" on every row and a paragraph about scales under the last
-        // one: the reader needs the key before the bars, not after them.
-        val tickName = when {
-            comparedTo == ComparedTo.NONE -> null
-            comparedTo == ComparedTo.BASELINE -> "baseline"
-            selectedReference -> "선택한 run"
-            else -> "이전 run"
+        // One legend line at the top, before the bars it explains. The keys are drawn with the bar itself, a piece of
+        // fill and a tick on a track, not with "━" and "│", which looked like neither and read as punctuation.
+        val legend = Look.row(context)
+        fun key(view: android.view.View, widthDp: Int, label: String) {
+            legend.addView(view, LinearLayout.LayoutParams(dp(widthDp), -2).apply {
+                if (legend.childCount > 0) marginStart = dp(12)
+            })
+            legend.addView(Look.text(context, label, 11, Look.onDarkMuted), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(6) })
         }
-        val legend = listOfNotNull("시간 값 = median", "━ 이번 run", tickName?.let { "│ $it" }).joinToString(" · ")
-        metricsCard.addView(Look.text(context, legend, 11, Look.onDarkMuted))
+        if (comparedTo != ComparedTo.NONE) {
+            key(MeterView(context, 1f, null, false), 20, "이번 run")
+            key(MeterView(context, 0f, 0.5f, false), 12, ResultPresenter.referenceName(comparedTo, selectedReference))
+        }
+        legend.addView(android.view.View(context), LinearLayout.LayoutParams(0, 1, 1f))
+        legend.addView(Look.text(context, "값: 중앙값", 11, Look.onDarkMuted))
+        metricsCard.addView(legend)
         sections.forEach { section ->
             metricsCard.addView(Look.text(context, section.title, 13, Look.onDarkMuted, bold = true), lp(16))
             section.bars.forEach { k ->
