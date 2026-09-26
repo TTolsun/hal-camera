@@ -1,0 +1,10 @@
+created: 2026-09-26T00:00:00.000Z
+updated: 2026-09-26T00:00:00.000Z
+update_count: 1
+last_field: description
+kind: nested-class
+title: live-controls
+children: []
+parentPath:
+  - screens
+  - expert-screen
