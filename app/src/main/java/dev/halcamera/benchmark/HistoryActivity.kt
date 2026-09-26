@@ -141,9 +141,10 @@ class HistoryActivity : ComponentActivity() {
         // run of its camera, sat at the very bottom with a grey badge, and nobody could tell which run it was.
         val (baselineRuns, otherRuns) = pointers.baselinesFirst(runs)
         if (baselineRuns.isNotEmpty()) {
-            text("Baseline", 13, bold = true)
+            // Each heading carries its own count: the total above them counts both groups.
+            heading("Baseline · ${baselineRuns.size}개")
             baselineRuns.forEach { runRow(it, byId) }
-            if (otherRuns.isNotEmpty()) text("다른 실행", 13, bold = true)
+            if (otherRuns.isNotEmpty()) heading("다른 실행 · ${otherRuns.size}개")
         }
         otherRuns.take(pageSize).forEach { runRow(it, byId) }
         if (otherRuns.size > pageSize) button("더 보기 · ${otherRuns.size - pageSize}개 남음") { pageSize += 50; render() }
@@ -161,7 +162,6 @@ class HistoryActivity : ComponentActivity() {
             else -> ""
         }
         val card = Look.card(this, dark = true)
-        if (baselineId == run.runId) card.background = Look.cardBackground(this, Look.expertTile2, Look.primary)
         if (selectedId == run.runId) {
             card.background = Look.cardBackground(this, Look.expertTile2, Look.primaryOnDark)
             androidx.core.view.ViewCompat.setStateDescription(card, "비교 기준으로 선택됨")
@@ -185,10 +185,12 @@ class HistoryActivity : ComponentActivity() {
         val badge = status.ifEmpty { ResultPresenter.shortStatus(run).orEmpty() }
         if (badge.isNotEmpty()) {
             if (baselineId == run.runId) {
-                // Filled, not grey text: this is the run every other row in the list is judged against.
-                head.addView(Look.text(this, badge, 13, Look.onPrimary, bold = true).apply {
-                    background = Look.pill(this@HistoryActivity, Look.primary)
-                    setPadding(dp(10), dp(3), dp(10), dp(3))
+                // A chip, as for the thermal and battery state on the start card, not grey text. Not blue either:
+                // blue on this screen means something can be pressed, and a filled blue badge read as a button.
+                // No blue border for the same reason; the comparison pick already uses one.
+                head.addView(Look.text(this, badge, 13, Look.onDark, bold = true).apply {
+                    background = Look.cardBackground(this@HistoryActivity, Look.expertTile2, Look.expertTile3)
+                    setPadding(dp(10), dp(4), dp(10), dp(4))
                 })
             } else {
                 val badgeColor = if (status.isEmpty()) Look.statusWarn else Look.statusFail
@@ -325,6 +327,13 @@ class HistoryActivity : ComponentActivity() {
             .setItems(items.toTypedArray()) { _, i -> onSelect(i) }
             .show()
     }
+    /** A list section title, marked as a heading so TalkBack can jump between sections. */
+    private fun heading(value: String) {
+        val view = Look.text(this, value, 17, Look.onDark, bold = true)
+        ViewCompat.setAccessibilityHeading(view, true)
+        body.addView(view, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(20) })
+    }
+
     private fun text(value: String, size: Int = 14, bold: Boolean = false) {
         body.addView(Look.text(this, value, size, Look.onDark, bold = bold), lp())
     }

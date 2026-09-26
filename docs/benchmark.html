@@ -100,7 +100,7 @@
 <p>비교 화면은 0 기준선 좌우로 변화율 막대를 그리는 delta 차트를 먼저 표시하고, 백분율을 계산할 수 없는 행(count 지표, 단위가 다른 행)은 글줄로 남깁니다.</p>
 <p>화면의 언어는 역할에 따라 나뉩니다. 버튼·메뉴·화면 제목과 설명·안내·오류 문장은 앱의 다른 화면처럼 한국어로 씁니다. 지표명·판정 단어·상태 칩은 영어로 씁니다(판정은 <code>Regressed</code>가 아니라 <code>degraded</code>입니다). 이 이름들은 run JSON과 CLI 출력에 같은 철자로 남으므로, 화면과 파일을 오가며 같은 값을 찾을 수 있어야 하기 때문입니다. <code>baseline</code>도 같은 이유로 버튼 안에서 원어를 유지합니다(<code>baseline으로 지정</code>).</p>
 <p class="editorial" lang="en">A number is only useful<br>when its context travels with it.</p><h2 lang="en">Work through the run history.</h2><p>실행 기록의 각 행은 실행 하나이며 두 줄로 적습니다. 첫 줄은 실행 시각이고, 오른쪽 끝에 배지가 붙을 수 있습니다. 둘째 줄은 <code>Capture 1.20 s · Camera · 0 (Wide · Rear)</code>처럼 사실만 적습니다. 빌드 이름을 입력한 실행에는 그 줄이 하나 더 붙습니다. run id, profile, 원본 flag는 행이 아니라 행을 눌러 여는 결과 화면에 있습니다.</p>
-<p>baseline인 실행은 시간순 목록에서 빼내 <code>Baseline</code> 제목 아래 맨 위에 두고, 나머지는 <code>다른 실행</code> 아래에 최신순으로 이어집니다. baseline은 대개 그 카메라에서 가장 오래된 실행이라 최신순 목록의 맨 끝에 놓이는데, 회색 배지만으로는 어느 실행이 기준인지 찾기 어려웠기 때문입니다. baseline 행은 진한 파란 테두리와 채운 파란 배지로 표시합니다. 필터와 카메라 선택은 baseline 행에도 똑같이 적용됩니다.</p>
+<p>baseline인 실행은 시간순 목록에서 빼내 <code>Baseline · N개</code> 제목 아래 맨 위에 두고, 나머지는 <code>다른 실행 · N개</code> 아래에 최신순으로 이어집니다. 위쪽의 <code>N개 실행</code>은 두 묶음을 합친 개수이므로, 제목마다 자기 묶음의 개수를 따로 적습니다. 두 제목은 접근성 제목으로 지정되어 있어 TalkBack에서 제목 단위로 이동할 수 있습니다. baseline은 대개 그 카메라에서 가장 오래된 실행이라 최신순 목록의 맨 끝에 놓이는데, 회색 배지만으로는 어느 실행이 기준인지 찾기 어려웠기 때문입니다. <code>★ Baseline</code> 배지는 시작 카드의 발열·배터리 칩과 같은 모양의 칩으로 그립니다. 이 화면에서 파란색은 누를 수 있는 요소를 뜻하므로 배지와 테두리에 파란색을 쓰지 않습니다. 필터와 카메라 선택은 baseline 행에도 똑같이 적용됩니다.</p>
 <table>
 <thead>
 <tr>
@@ -110,7 +110,7 @@
 </thead>
 <tbody><tr>
 <td><code>★ Baseline</code></td>
-<td>이 실행이 현재 baseline입니다. 다른 배지와 달리 파란 바탕에 흰 글자로 채웁니다.</td>
+<td>이 실행이 현재 baseline입니다. 다른 배지와 달리 테두리가 있는 칩으로 표시합니다.</td>
 </tr>
 <tr>
 <td><code>▲ N degraded</code></td>
