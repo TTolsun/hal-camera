@@ -302,7 +302,10 @@ class BenchmarkActivity : ComponentActivity() {
             }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
             actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
-        if (screen == Screen.RESULT) {
+        // A result opened from run history already returns there through the back arrow, and this button did
+        // exactly the same (openHistoryScreen finishes in that case). It stays after a fresh run, where the back
+        // arrow leads to the camera and this is the short way to the history.
+        if (screen == Screen.RESULT && !intent.hasExtra(EXTRA_RUN_ID)) {
             actions.addView(Look.ghostButton(this, "실행 기록", dark = true) { openHistoryScreen() },
                 Look.buttonParams().apply { topMargin = dp(8) })
         }
