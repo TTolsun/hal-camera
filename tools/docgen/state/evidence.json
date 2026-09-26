@@ -7,10 +7,10 @@
       },
       "accepted": {
         "codeHash": "d730fc57a31ac21f",
-        "modelHash": "2ce86f24782bcbe9",
+        "modelHash": "ba246aadd2b219e6",
         "at": "2026-09-26",
-        "commit": "85af618",
-        "reviewer": "Claude (Live controls review fixes, code-checked)",
+        "commit": "d726b42",
+        "reviewer": "Claude (live-controls element split, code-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -238,10 +238,10 @@
       },
       "accepted": {
         "codeHash": "de0b4dc223119749",
-        "modelHash": "f9754ea2c54331a8",
+        "modelHash": "c7e5267edef65db8",
         "at": "2026-09-26",
-        "commit": "85af618",
-        "reviewer": "Claude (Live controls review fixes, code-checked)",
+        "commit": "d726b42",
+        "reviewer": "Claude (live-controls element split, code-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -484,10 +484,10 @@
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "d730fc57a31ac21f",
-        "modelHash": "90c75c23b37904ed",
+        "modelHash": "7d13af3477e8fe53",
         "at": "2026-09-26",
-        "commit": "85af618",
-        "reviewer": "Claude (Live controls review fixes, code-checked)",
+        "commit": "d726b42",
+        "reviewer": "Claude (live-controls element split, code-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -630,10 +630,10 @@
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "d730fc57a31ac21f",
-        "modelHash": "dcc627a0b03304b5",
+        "modelHash": "aeed12f9b1a777d9",
         "at": "2026-09-26",
-        "commit": "85af618",
-        "reviewer": "Claude (Live controls review fixes, code-checked)",
+        "commit": "d726b42",
+        "reviewer": "Claude (live-controls element split, code-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
