@@ -140,13 +140,16 @@ abstract class CtsChecklistActivity : ComponentActivity() {
     // ---- bottom bar ----
 
     private fun buildBar(): View {
-        val bar = Look.row(this).apply { background = Look.cardBackground(this@CtsChecklistActivity, Look.expertTile2, Look.expertTile3) }
+        val bar = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = Look.cardBackground(this@CtsChecklistActivity, Look.expertTile2, Look.expertTile3)
+        }
         summaryView = Look.text(this, "", 13, Look.onDark)
-        bar.addView(summaryView, LinearLayout.LayoutParams(0, -2, 1f))
-        runButton = Look.primaryButton(this, "실행") { run() }
+        bar.addView(summaryView, LinearLayout.LayoutParams(-1, -2))
+        runButton = Look.primaryButton(this, "선택한 검사 실행") { run() }
         // Wrap height with a 48dp floor: a fixed 48dp clipped the label at large font scales.
         runButton.minHeight = dp(48)
-        bar.addView(runButton, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(12) })
+        bar.addView(runButton, Look.buttonParams().apply { topMargin = dp(8) })
         return bar
     }
 
@@ -154,6 +157,7 @@ abstract class CtsChecklistActivity : ComponentActivity() {
         val chosen = SuitePlan.select(items, selected)
         summaryView.text = SuitePlan.summaryLine(chosen, cameras)
         runButton.isEnabled = chosen.isNotEmpty()
+        runButton.text = if (chosen.isEmpty()) "검사 항목을 선택하세요" else "선택한 ${chosen.size}개 검사 실행"
         runButton.alpha = if (chosen.isEmpty()) 0.5f else 1f
         runButton.contentDescription = if (chosen.isEmpty()) "실행, 항목을 먼저 고르세요" else "선택한 ${chosen.size}개 실행"
         groupButtons.forEach { (groupItems, button) ->

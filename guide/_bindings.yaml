@@ -178,6 +178,12 @@ sources:
       screens/look-tokens:
         evidence:
           - app/src/main/java/dev/halcamera/ui/Look.kt
+          - app/src/main/java/dev/halcamera/ui/DeviceIdentity.kt
+      screens/workbench-screen:
+        evidence:
+          - app/src/main/java/dev/halcamera/WorkbenchActivity.kt
+          - app/src/main/java/dev/halcamera/ui/DeviceIdentity.kt
+          - app/src/main/AndroidManifest.xml
       screens/probe-screen:
         evidence:
           - app/src/main/java/dev/halcamera/CameraProbeActivity.kt

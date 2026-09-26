@@ -83,7 +83,8 @@ class DiagnosticsPanel(
         head.addView(IconButton(context, R.drawable.ic_action_info, "앱 정보 보기") { actions.about() }, LinearLayout.LayoutParams(w.dp(48), w.dp(48)))
         head.addView(IconButton(context, R.drawable.ic_action_close, "진단 패널 닫기") { actions.close() }, LinearLayout.LayoutParams(w.dp(48), w.dp(48)).apply { marginStart = w.dp(4) })
         val controls = w.row()
-        controls.addView(cameraButton, LinearLayout.LayoutParams(0, w.dp(48), 1f))
+        cameraButton.minimumHeight = w.dp(48)
+        controls.addView(cameraButton, Look.buttonParams(0, 1f))
         controls.addView(pauseButton, LinearLayout.LayoutParams(w.dp(48), w.dp(48)).apply { marginStart = w.dp(8) })
         body.addView(controls, w.lp(top = 12))
 
@@ -114,12 +115,12 @@ class DiagnosticsPanel(
         body.addView(recorderText, w.lp(top = 8))
         val exports = w.row()
         body.addView(exports, w.lp(top = 8))
-        exports.addView(shareButton, LinearLayout.LayoutParams(0, w.dp(48), 1f))
-        exports.addView(w.button("기록 목록") { actions.incidents() }, LinearLayout.LayoutParams(0, w.dp(48), 1f))
+        exports.addView(shareButton.apply { minimumHeight = w.dp(48) }, Look.buttonParams(0, 1f))
+        exports.addView(w.button("ZIP 기록") { actions.incidents() }.apply { minimumHeight = w.dp(48) }, Look.buttonParams(0, 1f))
         val tools = w.row()
         body.addView(tools, w.lp(top = 8))
-        tools.addView(w.button("권한 / 재시도") { actions.retryPermission() }, LinearLayout.LayoutParams(0, w.dp(48), 1f))
-        tools.addView(w.button("측정 안내") { actions.notes() }, LinearLayout.LayoutParams(0, w.dp(48), 1f))
+        tools.addView(w.button("카메라 다시 연결") { actions.retryPermission() }.apply { minimumHeight = w.dp(48) }, Look.buttonParams(0, 1f))
+        tools.addView(w.button("측정 안내") { actions.notes() }.apply { minimumHeight = w.dp(48) }, Look.buttonParams(0, 1f))
         // The baseline reset that used to sit here cleared the Auto Check store. The benchmark baseline is a pointer
         // to one run and is cleared from the result screen, where the run it points at is on the screen.
         body.addView(w.label("사진 · 동영상: DCIM/HALCamera\nIncident ZIP에는 이미지 픽셀이 포함되지 않습니다", 10, muted), w.lp(top = 18))

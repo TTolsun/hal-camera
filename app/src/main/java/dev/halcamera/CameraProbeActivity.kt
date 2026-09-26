@@ -99,7 +99,7 @@ class CameraProbeActivity : ComponentActivity() {
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.expertTile) }
         scroll = ScrollView(this)
         val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(16), dp(16), dp(16)) }
-        column.addView(Look.titleBar(this, "Probe", 24, "카메라로 돌아가기") { finish() }, lp())
+        column.addView(Look.titleBar(this, "Probe · 사양 확인", 24, "이전 화면으로 돌아가기") { finish() }, lp())
         column.addView(Look.text(this, "CameraCharacteristics · 정적 사양 조회", 14, Look.onDarkMuted), lp())
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         column.addView(body)
@@ -345,9 +345,9 @@ class CameraProbeActivity : ComponentActivity() {
         }
         // Short labels: three 15sp buttons share one row, and "JSON 공유" was cut to "JSON" on a 360dp phone.
         val exports = Look.row(this)
-        exports.addView(Look.ghostButton(this, "TXT", dark = true) { export(snap, "txt") }.apply { contentDescription = "모든 카메라를 TXT 파일로 공유" }, LinearLayout.LayoutParams(0, dp(48), 1f))
-        exports.addView(Look.ghostButton(this, "JSON", dark = true) { export(snap, "json") }.apply { contentDescription = "모든 카메라를 JSON 파일로 공유" }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
-        exports.addView(Look.ghostButton(this, "복사", dark = true) { copy(snap, current) }.apply { contentDescription = "현재 카메라를 클립보드에 복사" }, LinearLayout.LayoutParams(0, dp(48), 1f).apply { marginStart = dp(8) })
+        exports.addView(Look.ghostButton(this, "TXT", dark = true) { export(snap, "txt") }.apply { contentDescription = "모든 카메라를 TXT 파일로 공유" }, Look.buttonParams(0, 1f))
+        exports.addView(Look.ghostButton(this, "JSON", dark = true) { export(snap, "json") }.apply { contentDescription = "모든 카메라를 JSON 파일로 공유" }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
+        exports.addView(Look.ghostButton(this, "복사", dark = true) { copy(snap, current) }.apply { contentDescription = "현재 카메라를 클립보드에 복사" }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
         body.addView(exports, lp())
         text("TXT·JSON: 전체 ${cameras.size}개 · 복사: 현재 카메라", 12)
         val sections = ArrayList<ProbeSection>()
@@ -372,7 +372,8 @@ class CameraProbeActivity : ComponentActivity() {
         val open = title !in collapsed
         val card = Look.card(this, dark = true)
         val header = Look.text(this, "${if (open) "▾" else "▸"} $title (${rows.size})", 14, Look.onDarkMuted, bold = true).apply {
-            minHeight = dp(32)
+            minHeight = dp(48)
+            gravity = android.view.Gravity.CENTER_VERTICAL
             isClickable = true; isFocusable = true
             contentDescription = "$title 섹션 ${if (open) "접기" else "펼치기"}"
             setOnClickListener { if (open) collapsed += title else collapsed -= title; render() }

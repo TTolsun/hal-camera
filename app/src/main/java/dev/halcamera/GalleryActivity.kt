@@ -185,7 +185,7 @@ class GalleryActivity : ComponentActivity() {
     private fun buildAlbum() {
         album = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val header = Look.row(this).apply { setPadding(16.dp, 12.dp, 16.dp, 8.dp) }
-        header.addView(IconButton(this, R.drawable.ic_action_back, "카메라로 돌아가기") { onBackPressedDispatcher.onBackPressed() }, LinearLayout.LayoutParams(48.dp, 48.dp))
+        header.addView(IconButton(this, R.drawable.ic_action_back, "이전 화면으로 돌아가기") { onBackPressedDispatcher.onBackPressed() }, LinearLayout.LayoutParams(48.dp, 48.dp))
         val titles = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             albumTitle = Look.text(context, "HALCamera", 24, Look.onDark, bold = true).apply {
@@ -201,7 +201,7 @@ class GalleryActivity : ComponentActivity() {
             if (!selectionMode) selected.clear()
             updateSelection()
         }
-        header.addView(selectButton, LinearLayout.LayoutParams(-2, 48.dp))
+        header.addView(selectButton, Look.buttonParams(-2))
         album.addView(header, LinearLayout.LayoutParams(-1, -2))
         filterButton = button("전체 ▾") {
             showSelectionPopup(filterButton, GalleryCount.filterNames, filter) {
@@ -229,9 +229,9 @@ class GalleryActivity : ComponentActivity() {
             setOnClickListener { toggleSelectAll() }
         }
         val filterRow = Look.row(this).apply { setPadding(16.dp, 8.dp, 16.dp, 12.dp) }
-        filterRow.addView(selectAllButton, LinearLayout.LayoutParams(-2, 48.dp))
+        filterRow.addView(selectAllButton, Look.buttonParams(-2))
         filterRow.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
-        filterRow.addView(filterButton, LinearLayout.LayoutParams(-2, 48.dp).apply { marginStart = 16.dp })
+        filterRow.addView(filterButton, Look.buttonParams(-2).apply { marginStart = 16.dp })
         album.addView(filterRow, LinearLayout.LayoutParams(-1, -2))
         val content = FrameLayout(this)
         grid = GridView(this).apply {
