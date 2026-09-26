@@ -21,7 +21,7 @@ Android 카메라의 **launch · preview · capture 성능을 반복 측정하�
 | 화면 | 하는 일 |
 |---|---|
 | **Live** (런처) | CameraX / Camera2 전환, 카메라 선택, 실시간 프레임 간격과 콜백 지연 표시. `Mark` 버튼으로 직전 10초와 이후 5초를 incident ZIP으로 저장합니다 |
-| **Benchmark** | profile 시작 카드 → 6단계 진행 → 지표별 막대 결과. `baseline으로 지정`, `비교`, `내보내기`, `실행 기록` |
+| **Benchmark** | profile 시작 카드 → 6단계 진행 → 지표별 막대 결과(baseline 눈금과 변화량으로 비교). `baseline으로 지정`, `내보내기`, `실행 기록` |
 | **실행 기록** | 실행 이력을 eligibility·profile·camera로 필터링하고, 임의의 두 실행을 비교하거나 JSON·CSV로 내보냅니다. Benchmark의 `실행 기록` 버튼으로 엽니다 |
 
 Live는 관측한 숫자만 보여 주며 정상 / 이상을 판정하지 않습니다. 판정은 baseline과 비교할 때에만 성립하고, 그 일은 Benchmark가 합니다.

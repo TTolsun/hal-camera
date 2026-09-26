@@ -80,14 +80,22 @@ object BenchmarkResultCards {
                 val top = Look.row(context)
                 val label = if (k.statLabel.isBlank()) k.label else "${k.label} · ${k.statLabel}"
                 top.addView(Look.text(context, label, 13, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
-                top.addView(Look.text(context, k.valueText, 15, if (k.tone == Tone.BAD) Look.statusFail else Look.onDark, bold = true, mono = true))
-                k.deltaText?.let {
-                    top.addView(Look.text(context, it, 12, deltaColor(k.tone), bold = true), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
-                }
+                top.addView(Look.text(context, k.valueText, 15, if (k.tone == Tone.BAD) Look.statusFail else Look.onDark, bold = true, mono = true),
+                    LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
                 metricsCard.addView(top, lp(if (i == 0) 8 else 14))
                 metricsCard.addView(MeterView(context, k.fraction.toFloat(), k.baseFraction?.toFloat(), k.tone == Tone.BAD), lp(6))
-                // Why this row has no verdict or no fill; the removed compare chart said it beside the row.
-                k.note?.let { metricsCard.addView(Look.text(context, it, 11, Look.onDarkMuted), lp(4)) }
+                // The change and the reason a row was not judged sit under the bar, not beside the value. With the
+                // percentage added, "First frame · median 542 ms +20 ms · +4%" ran the name into the value on a
+                // Galaxy S25+ at the default font size.
+                if (k.deltaText != null || k.note != null) {
+                    val under = Look.row(context)
+                    under.addView(Look.text(context, k.note.orEmpty(), 11, Look.onDarkMuted), LinearLayout.LayoutParams(0, -2, 1f))
+                    k.deltaText?.let {
+                        under.addView(Look.text(context, it, 12, deltaColor(k.tone), bold = true),
+                            LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
+                    }
+                    metricsCard.addView(under, lp(4))
+                }
             }
         }
         if (anyBaseline) {
@@ -110,7 +118,7 @@ object BenchmarkResultCards {
         // screen that used to hold them is gone.
         val role = when {
             comparedTo == ComparedTo.BASELINE -> "baseline"
-            selectedReference -> "기준"
+            selectedReference -> "선택한 run"
             else -> "이전 run"
         }
         val referenceFacts = reference?.takeIf { comparedTo != ComparedTo.NONE }

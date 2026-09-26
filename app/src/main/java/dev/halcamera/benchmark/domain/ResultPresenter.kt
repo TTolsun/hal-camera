@@ -173,16 +173,20 @@ object ResultPresenter {
     /**
      * The run the ticks stand for, as label and value pairs for the same 실행 정보 fold. The compare screen
      * carried these; with that screen gone, the result card is the only place they can live.
+     *
+     * The labels stay short ("기준 run", "기준 OS") and [role] — baseline, 이전 run, 선택한 run — leads the first
+     * value instead: "baseline 발열" wrapped in the 76dp label column on a Galaxy S25+.
      */
     fun referenceFacts(reference: BenchmarkRun, comparison: RunComparison?, role: String): List<Pair<String, String>> {
         val thermal = listOfNotNull(reference.env.thermalStart, reference.env.thermalMax, reference.env.thermalEnd)
         return listOfNotNull(
-            role to listOfNotNull(
+            "기준 run" to listOfNotNull(
+                role,
                 localTime(reference.runId) ?: reference.runId,
                 reference.subject.subjectBuildLabel?.takeIf { it.isNotBlank() }
             ).joinToString(" · "),
-            reference.device.buildDisplay.takeIf { it.isNotBlank() }?.let { "$role OS" to it },
-            thermal.takeIf { it.size == 3 }?.let { "$role 발열" to it.joinToString(" → ") },
+            reference.device.buildDisplay.takeIf { it.isNotBlank() }?.let { "기준 OS" to it },
+            thermal.takeIf { it.size == 3 }?.let { "기준 발열" to it.joinToString(" → ") },
             comparison?.identity?.let { "빌드 비교" to identityLine(it) }
         )
     }

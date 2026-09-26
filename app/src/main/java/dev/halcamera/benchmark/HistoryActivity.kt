@@ -120,7 +120,7 @@ class HistoryActivity : ComponentActivity() {
             showSelectionPopup(anchor, listOf("Camera · 전체") + values.map(CameraLabel::short), values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
         val runs = visible()
-        // The list actions share one row, as 비교 and 내보내기 do on the result screen: two full-width buttons and a
+        // The list actions share one row: two full-width buttons and a
         // count line pushed the first run to the middle of the screen. The count now sits on the list headings.
         val listActions = Look.row(this)
         // Half-width buttons: the ghost button's 20dp side padding wrapped "목록 CSV 내보내기" onto two lines on a

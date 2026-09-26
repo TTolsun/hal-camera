@@ -606,8 +606,11 @@ class ResultPresenterTest {
         val reference = run(runId = "20260910-100000-000", subject = SubjectLabel("SW41", "9c01d2e"))
         val current = run(runId = "20260910-110000-000")
         val facts = ResultPresenter.referenceFacts(reference, RegressionDetector.compare(reference, current), "baseline")
-        assertEquals("baseline", facts.first().first)
+        assertEquals("기준 run", facts.first().first)
+        assertTrue(facts.first().second.startsWith("baseline · "))
         assertTrue(facts.first().second.contains("SW41"))
+        // Every label fits the fold's narrow label column; the kind of reference lives in the value.
+        assertTrue(facts.all { it.first.length <= 6 })
     }
 
     @Test fun aRunThatRecordedNothingSaysSoInWords() {
