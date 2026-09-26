@@ -696,9 +696,13 @@ object ResultPresenter {
     internal fun formatValue(value: Double, unit: String, fine: Boolean): String = when (unit) {
         "count" -> String.format(Locale.US, "%.0f", value)
         "fps" -> String.format(Locale.US, "%.1f fps", value)
-        // A jitter of hundredths of a millisecond printed "0.0 ms" beside a -19% change; below 0.1 ms the value
-        // keeps two decimals so it can be read at all.
-        "ms" -> String.format(Locale.US, if (fine && kotlin.math.abs(value) < 0.1) "%.2f ms" else if (fine) "%.1f ms" else "%.0f ms", value)
+        // A preview jitter of a few microseconds printed "0.0 ms", then "0.00 ms", beside a -19% change. Below
+        // 0.1 ms the value is shown in microseconds, the unit a HAL developer reads sensor jitter in anyway.
+        "ms" -> when {
+            fine && kotlin.math.abs(value) < 0.1 -> String.format(Locale.US, "%.0f µs", value * 1000.0)
+            fine -> String.format(Locale.US, "%.1f ms", value)
+            else -> String.format(Locale.US, "%.0f ms", value)
+        }
         // A unit this app does not define comes from a run written by another version; it is printed as stored
         // rather than rounded to a precision this version invented for it.
         else -> "$value $unit"

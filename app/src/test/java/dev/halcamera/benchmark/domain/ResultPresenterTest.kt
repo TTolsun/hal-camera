@@ -459,11 +459,13 @@ class ResultPresenterTest {
         assertTrue(BenchmarkMetricCatalog.ids.all { BenchmarkMetricCatalog.info(it)!!.span.isNotBlank() })
     }
 
-    @Test fun aValueBelowATenthOfAMillisecondKeepsTwoDecimals() {
-        // Seen on a Galaxy S25+: preview jitter printed "0.0 ms" beside a -19% change.
-        val bars = ResultPresenter.metricBars(run(metrics = listOf(windowMetric("H.10", 0.021))), null, ComparedTo.NONE)
-            .flatMap { it.bars }
-        assertEquals("0.02 ms", bars.single().valueText)
+    @Test fun aValueBelowATenthOfAMillisecondIsShownInMicroseconds() {
+        // Seen on a Galaxy S25+: preview jitter printed "0.0 ms", then "0.00 ms", beside a -19% change.
+        fun shown(v: Double) = ResultPresenter.metricBars(run(metrics = listOf(windowMetric("H.10", v))), null, ComparedTo.NONE)
+            .flatMap { it.bars }.single().valueText
+        assertEquals("3 µs", shown(0.0031))
+        assertEquals("21 µs", shown(0.021))
+        assertEquals("0.4 ms", shown(0.40))
     }
 
     @Test fun anUnchangedCountShowsNoDelta() {
