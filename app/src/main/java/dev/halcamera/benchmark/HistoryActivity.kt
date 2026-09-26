@@ -258,8 +258,9 @@ class HistoryActivity : ComponentActivity() {
         ).joinToString(" · ")
         text("${who("기준", base)}\n${who("현재", current)}")
         if (!comparison.sameContract || !comparison.sameEndpoint) text("Profile·측정 계약 또는 camera endpoint가 달라 판정할 수 없습니다.")
-        // The same delta chart as the result screen's 비교. Only a baseline reference is judged, so bars against a
-        // run picked here stay neutral and show direction and size, as they do against the previous run.
+        // The same delta chart as the result screen's 비교. Only a baseline reference is judged, so against a run
+        // picked here no bar turns red and the values stay grey: the bars show direction and size, as they do
+        // against the previous run.
         BenchmarkResultCards.addCompare(
             this, body, current, base, comparison,
             if (onBaseline) ComparedTo.BASELINE else ComparedTo.PREVIOUS,
