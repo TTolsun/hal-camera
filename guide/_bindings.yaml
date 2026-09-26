@@ -160,6 +160,10 @@ sources:
       screens/benchmark-screen:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
+      # 결과·비교 카드의 배치는 BenchmarkActivity 에서 옮겼습니다(입력 한도). 버튼과 동작은 BenchmarkActivity 에 남아 있습니다.
+      screens/benchmark-screen/result-cards:
+        evidence:
+          - app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt
       screens/benchmark-start:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/ProgressPresenter.kt
