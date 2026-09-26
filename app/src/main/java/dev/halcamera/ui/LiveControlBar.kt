@@ -87,8 +87,8 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }, LinearLayout.LayoutParams(-2, dp(48)))
         rows.addView(mainRow, FrameLayout.LayoutParams(-1, dp(56)))
-        rows.addView(flashRow, FrameLayout.LayoutParams(-1, dp(56)))
-        view.addView(rows, LinearLayout.LayoutParams(-1, dp(56)))
+        rows.addView(flashRow, FrameLayout.LayoutParams(-1, dp(72)))
+        view.addView(rows, LinearLayout.LayoutParams(-1, -2))
         view.addView(ruler, LinearLayout.LayoutParams(-1, dp(64)).apply { topMargin = dp(2) })
         listOf(flash, afLock, aeLock, ev).forEach { mainRow.addView(it, LinearLayout.LayoutParams(0, dp(56), 1f)) }
         render()
@@ -148,14 +148,14 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             val button = QuickButton(context) { flashRow.visibility = View.GONE; mainRow.visibility = View.VISIBLE; update(controls.copy(flash = mode)) }
             button.show(icon = flashIcon(mode), text = null, active = mode == controls.flash, locked = false, available = true,
                 description = "${mode.label}${if (mode == controls.flash) ", 선택됨" else ""}")
-            option.addView(button, LinearLayout.LayoutParams(dp(48), dp(40)))
+            option.addView(button, LinearLayout.LayoutParams(dp(56), dp(56)))
             option.addView(TextView(context).apply {
                 text = mode.label.removePrefix("Flash ").replaceFirstChar { it.uppercase() }
                 textSize = 11f; gravity = Gravity.CENTER
                 setTextColor(if (mode == controls.flash) Look.onDark else Look.onDarkMuted)
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }, LinearLayout.LayoutParams(-2, dp(16)))
-            flashRow.addView(option, LinearLayout.LayoutParams(0, dp(56), 1f))
+            flashRow.addView(option, LinearLayout.LayoutParams(0, dp(72), 1f))
         }
         mainRow.visibility = View.INVISIBLE
         flashRow.visibility = View.VISIBLE
@@ -202,7 +202,9 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         ev.show(if (evText == null) R.drawable.ic_exposure else null, evText,
             controls.evIndex != 0 || ruler.visibility == View.VISIBLE, false, camera2 && support.evRange != null,
             "노출 보정, 현재 ${support.evLabel(controls.evIndex)}$suffix")
-        listOf(flash, afLock, aeLock, ev).forEach { it.isEnabled = enabled }
+        // Dim while the bar is off (camera not ready, recording being saved, a CLI command running), as MainActivity
+        // dims every other Live control, so a tap that does nothing never looks like one that should.
+        listOf(flash, afLock, aeLock, ev).forEach { it.isEnabled = enabled; if (!enabled) it.alpha = 0.4f }
         // Folded, the handle names whatever is on: a hidden lock or EV step must never change pictures unseen.
         val on = listOfNotNull(
             controls.flash.takeIf { it != FlashMode.OFF }?.label,
@@ -235,16 +237,20 @@ class LiveControlBar(private val context: Context, private val host: Host) {
          * names, which wrapped to a second line; the incident ZIP keeps the raw values.
          */
 
-        /** AE and AF as the camera reports them now. A held AF lock reads as its outcome; the button's padlock says it is held. */
-        fun stateLine(ae: Int?, af: Int?): String =
-            "AE " + when (ae) { null -> "—"; 0 -> "Idle"; 1 -> "Searching"; 2 -> "OK"; 3 -> "Locked"; 4 -> "Flash needed"; 5 -> "Metering"; else -> "#$ae" } +
-                " · AF " + when (af) { null -> "—"; 0 -> "Idle"; 1, 3 -> "Scanning"; 2, 4 -> "Focused"; 5 -> "No focus"; 6 -> "Unfocused"; else -> "#$af" }
+        fun aeState(ae: Int?): String =
+            "AE " + when (ae) { null -> "—"; 0 -> "Idle"; 1 -> "Searching"; 2 -> "OK"; 3 -> "Locked"; 4 -> "Flash needed"; 5 -> "Metering"; else -> "#$ae" }
 
-        /** The applied EV only when it differs from the EV button, and the flash state only while a flash mode is on. */
-        fun appliedExtras(evApplied: Int?, flashState: Int?, controls: LiveControls, support: LiveControlSupport): List<String> = listOfNotNull(
-            evApplied?.takeIf { it != controls.evIndex }?.let { "${support.evLabel(it)} applied" },
-            if (controls.flash != FlashMode.OFF) "Flash " + when (flashState) { null -> "—"; 0 -> "Off"; 1 -> "Charging"; 2 -> "Ready"; 3 -> "Fired"; 4 -> "Partial"; else -> "#$flashState" } else null,
-        )
+        /** A held AF lock reads as its outcome; the button's padlock already says it is held. */
+        fun afState(af: Int?): String =
+            "AF " + when (af) { null -> "—"; 0 -> "Idle"; 1, 3 -> "Scanning"; 2, 4 -> "Focused"; 5 -> "No focus"; 6 -> "Unfocused"; else -> "#$af" }
+
+        /** Only while a flash mode is on: it is the one applied value the flash button cannot show. */
+        fun flashState(state: Int?, controls: LiveControls): String? = if (controls.flash == FlashMode.OFF) null else
+            "Flash " + when (state) { null -> "—"; 0 -> "Off"; 1 -> "Charging"; 2 -> "Ready"; 3 -> "Fired"; 4 -> "Partial"; else -> "#$state" }
+
+        /** The applied EV only when it differs from the EV button. */
+        fun evApplied(applied: Int?, controls: LiveControls, support: LiveControlSupport): String? =
+            applied?.takeIf { it != controls.evIndex }?.let { "${support.evLabel(it)} applied" }
     }
 }
 

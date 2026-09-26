@@ -84,12 +84,17 @@ object LiveControlText {
 
 /**
  * Waits for the AE precapture sequence to finish, following the Camera2 contract for CONTROL_AE_STATE: after the
- * trigger the state passes through PRECAPTURE and leaves it once metering is done. A device may also skip straight
- * to a settled state, and a device without AE state reports null; both count as done so the still is never
- * held back by a state the device does not report. The caller adds a timeout for a sequence that never settles.
+ * trigger the state passes through PRECAPTURE and leaves it once metering is done. A device without AE state
+ * reports null, which counts as done so the still is never held back by a state the device does not report.
+ *
+ * A settled state before any PRECAPTURE is not trusted at once: some HALs still report the pre-trigger state on
+ * the trigger's own result and enter PRECAPTURE a frame or two later, and firing then skips the pre-flash metering.
+ * Only [SETTLED_RESULTS] settled results in a row, with no PRECAPTURE among them, count as a device that skips the
+ * sequence. The caller adds a timeout for a sequence that never settles.
  */
 class PrecaptureWatch {
     private var sawPrecapture = false
+    private var settledInRow = 0
 
     /**
      * Feed the AE state of the trigger's own result and of every result after it; results arrive in frame order,
@@ -99,10 +104,14 @@ class PrecaptureWatch {
         if (aeState == null) return true
         if (aeState == AE_STATE_PRECAPTURE) { sawPrecapture = true; return false }
         if (sawPrecapture) return true
-        return aeState == AE_STATE_CONVERGED || aeState == AE_STATE_FLASH_REQUIRED || aeState == AE_STATE_LOCKED
+        val settled = aeState == AE_STATE_CONVERGED || aeState == AE_STATE_FLASH_REQUIRED || aeState == AE_STATE_LOCKED
+        settledInRow = if (settled) settledInRow + 1 else 0
+        return settledInRow >= SETTLED_RESULTS
     }
 
     companion object {
+        /** About 100 ms at 30 fps: long enough for a late PRECAPTURE, short against the 3 s timeout. */
+        const val SETTLED_RESULTS = 3
         // CaptureResult.CONTROL_AE_STATE_* values, copied so this class stays free of android imports.
         const val AE_STATE_CONVERGED = 2
         const val AE_STATE_LOCKED = 3

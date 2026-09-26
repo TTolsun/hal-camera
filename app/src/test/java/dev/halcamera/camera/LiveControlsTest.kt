@@ -75,10 +75,21 @@ class LiveControlsTest {
     }
 
     @Test
-    fun `precapture accepts a settled state when the device skips PRECAPTURE, and a null state`() {
-        assertTrue(PrecaptureWatch().onResult(PrecaptureWatch.AE_STATE_FLASH_REQUIRED))
-        assertTrue(PrecaptureWatch().onResult(PrecaptureWatch.AE_STATE_CONVERGED))
+    fun `precapture accepts a settled state only after three in a row, and a null state at once`() {
+        val skipper = PrecaptureWatch()
+        assertFalse(skipper.onResult(PrecaptureWatch.AE_STATE_FLASH_REQUIRED))
+        assertFalse(skipper.onResult(PrecaptureWatch.AE_STATE_CONVERGED))
+        assertTrue(skipper.onResult(PrecaptureWatch.AE_STATE_CONVERGED))
         assertTrue(PrecaptureWatch().onResult(null))
         assertFalse(PrecaptureWatch().onResult(1)) // SEARCHING before any PRECAPTURE: keep waiting
+    }
+
+    @Test
+    fun `a PRECAPTURE that arrives a frame late is still waited for`() {
+        val late = PrecaptureWatch()
+        assertFalse(late.onResult(PrecaptureWatch.AE_STATE_CONVERGED)) // trigger result still shows the old state
+        assertFalse(late.onResult(PrecaptureWatch.AE_STATE_PRECAPTURE))
+        assertFalse(late.onResult(PrecaptureWatch.AE_STATE_PRECAPTURE))
+        assertTrue(late.onResult(PrecaptureWatch.AE_STATE_CONVERGED))
     }
 }

@@ -71,6 +71,8 @@ class Camera2Engine(
     /** One queued zoom submission at a time: a fast drag merges into the ratio that is current when it runs. */
     private val zoomQueued = java.util.concurrent.atomic.AtomicBoolean(false)
     @Volatile private var controls = LiveControls()
+    @Volatile private var requestedControls = LiveControls()
+    private val controlsQueued = java.util.concurrent.atomic.AtomicBoolean(false)
     /** The LIVE recorder's surface while a recording session is up; repeating requests then use the record template. */
     private var recorderSurface: Surface? = null
     /** Called with every LIVE repeating result; the flash precapture waits on it. Camera thread only. */
@@ -230,14 +232,15 @@ class Camera2Engine(
      * current zoom and controls when it configures, so a skipped input is not lost. A session closed under us by
      * a stop that raced the input is logged, not reported as a camera failure.
      */
-    private fun withLiveSession(kind: String, submit: (CameraDevice, CameraCaptureSession, CameraCharacteristics) -> Unit) {
+    /** Returns whether [submit] ran to the end, so a caller waiting on its result knows none will come. */
+    private fun withLiveSession(kind: String, submit: (CameraDevice, CameraCaptureSession, CameraCharacteristics) -> Unit): Boolean {
         val camera = device; val session = captureSession; val c = chars
-        if (camera == null || session == null || c == null || !active || spec != null) return
-        if (videoBusy && (recorderSurface == null || videoStopRequested)) { telemetry.event(sessionId, "request_deferred", mapOf("for" to kind)); return }
-        try { submit(camera, session, c) }
-        catch (e: IllegalStateException) { telemetry.event(sessionId, "request_skipped", mapOf("for" to kind, "reason" to e.toString())) }
-        catch (e: CameraAccessException) { telemetry.event(sessionId, "request_skipped", mapOf("for" to kind, "reason" to e.toString())) }
-        catch (e: Exception) { fail(e) }
+        if (camera == null || session == null || c == null || !active || spec != null) return false
+        if (videoBusy && (recorderSurface == null || videoStopRequested)) { telemetry.event(sessionId, "request_deferred", mapOf("for" to kind)); return false }
+        return try { submit(camera, session, c); true }
+        catch (e: IllegalStateException) { telemetry.event(sessionId, "request_skipped", mapOf("for" to kind, "reason" to e.toString())); false }
+        catch (e: CameraAccessException) { telemetry.event(sessionId, "request_skipped", mapOf("for" to kind, "reason" to e.toString())); false }
+        catch (e: Exception) { fail(e); false }
     }
     private fun submitRepeating(kind: String, values: Map<String, Any?>) = withLiveSession(kind) { camera, session, c ->
         telemetry.event(sessionId, kind, values + mapOf("api" to "setRepeatingRequest", "recording" to (recorderSurface != null)))
@@ -255,12 +258,21 @@ class Camera2Engine(
     }
     /** A new session (recording start or stop) may not keep the old AF state, so a held lock is taken again. */
     private fun relockFocus() { if (spec == null && controls.afLock) sendAfTrigger(true) }
+    /**
+     * Coalesced like [setZoom]: dragging the EV dial across 0.1 EV steps calls this once per step, and every call
+     * that lands before the queued one runs only replaces [requestedControls]. An AF lock toggled on and off within
+     * one turn therefore sends no trigger, which matches the final state.
+     */
     override fun setControls(next: LiveControls) {
+        requestedControls = next
+        if (!controlsQueued.compareAndSet(false, true)) return
         handler.post {
+            controlsQueued.set(false)
             val old = controls
-            controls = next
-            submitRepeating("controls_set", mapOf("evIndex" to next.evIndex, "aeLock" to next.aeLock, "afLock" to next.afLock, "flash" to next.flash.name))
-            if (old.afLock != next.afLock) sendAfTrigger(next.afLock)
+            val now = requestedControls
+            controls = now
+            submitRepeating("controls_set", mapOf("evIndex" to now.evIndex, "aeLock" to now.aeLock, "afLock" to now.afLock, "flash" to now.flash.name))
+            if (old.afLock != now.afLock) sendAfTrigger(now.afLock)
         }
     }
     /** API 30+ uses CONTROL_ZOOM_RATIO (ultra-wide below 1x possible). Older devices crop the active array, so only >= 1x. */
@@ -365,7 +377,8 @@ class Camera2Engine(
         precaptureFinish = finish
         report("플래시 측광 중…", false)
         telemetry.event(sessionId, "precapture_trigger", mapOf("flash" to controls.flash.name))
-        withLiveSession("precapture_trigger") { camera, session, c ->
+        // A trigger that could not be sent has no result to wait for: shoot now rather than after the 3 s timeout.
+        val sent = withLiveSession("precapture_trigger") { camera, session, c ->
             session.capture(previewRequest(camera, c, aeTrigger = CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START), object : CameraCaptureSession.CaptureCallback() {
                 override fun onCaptureStarted(s: CameraCaptureSession, r: CaptureRequest, timestamp: Long, frameNumber: Long) =
                     callback.onCaptureStarted(s, r, timestamp, frameNumber)
@@ -380,6 +393,7 @@ class Camera2Engine(
                 }
             }, handler)
         }
+        if (!sent) { finish("trigger_not_sent"); return }
         handler.postDelayed({ if (!finished) { telemetry.event(sessionId, "precapture_timeout"); finish("timeout") } }, 3000)
     }
 

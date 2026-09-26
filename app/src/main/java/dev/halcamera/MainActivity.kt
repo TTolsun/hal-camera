@@ -697,14 +697,22 @@ class MainActivity : ComponentActivity() {
         val frame=frames.lastOrNull()?.takeIf { time-it.atNs < 1_500_000_000L }
         fun num(key:String)= (frame?.values?.get(key) as? Number)?.toDouble()
         fun fmt(value:Double?,pattern:String)=value?.let { pattern.format(Locale.US,it) } ?: "—"
-        // Two lines at most over the preview: the measurement, then the camera's AE/AF state. Values the screen already
-        // shows are left out (the zoom rail's ratio, the buttons' EV), and the extras below join line 2 in priority order
-        // only while they fit its width. Lens position and everything else stay in the incident ZIP.
-        val extras=LiveControlBar.appliedExtras(num("evApplied")?.toInt(),num("flashState")?.toInt(),controlBar.controls,controlBar.support)+listOfNotNull(
-            num("zoomRatio")?.takeIf { kotlin.math.abs(it-zoomRatio) > 0.01*zoomRatio }?.let { "Zoom ${"%.2f".format(Locale.US,it)}x applied" },
+        // Two lines at most over the preview: the measurement, then the camera's state. Values the screen already shows
+        // are left out (the zoom rail's ratio, the buttons' EV), and the extras join line 2 in priority order only while
+        // they fit its width. With a flash mode on, the flash state leads, since no button can show it. An applied EV or
+        // zoom that differs from the request appears only once the last ten results all differ, not for the few frames
+        // the pipeline lags behind every change. Lens position and everything else stay in the incident ZIP.
+        val recent=frames.takeLast(10)
+        fun differs(key:String,want:Double,tolerance:Double)=recent.size==10 &&
+            recent.all { e -> (e.values[key] as? Number)?.toDouble()?.let { kotlin.math.abs(it-want)>tolerance } == true }
+        val controls=controlBar.controls
+        val extras=listOfNotNull(
+            LiveControlBar.afState(num("af")?.toInt()),
+            LiveControlBar.evApplied(num("evApplied")?.toInt()?.takeIf { differs("evApplied",controls.evIndex.toDouble(),0.5) },controls,controlBar.support),
+            num("zoomRatio")?.takeIf { differs("zoomRatio",zoomRatio.toDouble(),0.01*zoomRatio) }?.let { "Zoom ${"%.2f".format(Locale.US,it)}x applied" },
             frame?.values?.get("physicalId")?.let { "Phys $it" })
         val room=(metrics.width-metrics.paddingLeft-metrics.paddingRight).toFloat()
-        var state=LiveControlBar.stateLine(num("ae")?.toInt(),num("af")?.toInt())
+        var state=listOfNotNull(LiveControlBar.aeState(num("ae")?.toInt()),LiveControlBar.flashState(num("flashState")?.toInt(),controls)).joinToString(" · ")
         for(extra in extras) { val next="$state · $extra"; if(room>0f && metrics.paint.measureText(next)<=room) state=next else break }
         metrics.text="FPS ${fmt(num("resultFps"),"%.1f")} · ISO ${num("iso")?.toInt() ?: "—"} · Exp ${fmt(num("exposureNs")?.div(1e6),"%.2fms")}\n$state"
         if(frame==null) { timeline.text="수신 중인 프레임 없음"; stripText.text="Partial —   Buffer — ms"; return }
