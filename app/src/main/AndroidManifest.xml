@@ -7,13 +7,14 @@
     <uses-feature android:name="android.hardware.camera.any" android:required="true" />
     <application android:theme="@style/AppTheme" android:label="HAL CAM"
         android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round" android:allowBackup="false" android:supportsRtl="true">
-        <!-- LIVE is the launcher since M3: the consumer home it used to open no longer exists. -->
+        <!-- Launch directly into the camera preview; the workbench is an optional tool destination. -->
         <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".WorkbenchActivity" android:exported="false" />
         <activity android:name=".benchmark.BenchmarkActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".benchmark.HistoryActivity" android:exported="false" />
         <activity android:name=".GalleryActivity" android:exported="false" />

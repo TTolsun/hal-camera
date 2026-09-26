@@ -235,7 +235,7 @@ class MainActivity : ComponentActivity() {
             val remaining = recorder.remainingNs()
             reportButton.isEnabled = remaining == null && ready && !paused && cli.active == null
             updateMediaControls()
-            reportButton.text = if (remaining != null) "저장까지 ${"%.1f".format(Locale.US, remaining/1e9)}s" else "$MARK_LABEL · ZIP 저장"
+            reportButton.text = if (remaining != null) "저장까지 ${"%.1f".format(Locale.US, remaining/1e9)}s" else "이벤트 저장 · ZIP"
             val span = events.firstOrNull()?.let { (time-it.atNs)/1e9 } ?: 0.0
             recorderText.text = if (exporting > 0) "ZIP 저장 중…" else if (remaining != null) "기록 중 · 이후 ${"%.1f".format(Locale.US, remaining/1e9)}초 남음" else "30s 순환 버퍼  ·  ${"%.1f".format(Locale.US, span.coerceAtMost(10.0))}s / 10s 사전 기록 준비"
             main.postDelayed(this, 100)
@@ -427,7 +427,7 @@ class MainActivity : ComponentActivity() {
             restartCamera()
         }
         // Standalone tools stay in the menu; Mark remains on the live preview.
-        toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: Probe, CTS, Benchmark" }
+        toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: 사양 확인, 동작 검증, 성능 측정, 실행 기록, 작업실" }
         val panelButton=button("진단") { showDiagnostics(true) }.apply { contentDescription="진단 패널 열기" }
         listOf(engineButton,toolsButton,panelButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
         statusText=label("카메라 준비 중…",12,Look.onDarkMuted).apply {
@@ -449,8 +449,8 @@ class MainActivity : ComponentActivity() {
         controlBar=LiveControlBar(this,object : LiveControlBar.Host {
             override fun controlsChanged(controls: LiveControls) { (engine as? LiveTuning)?.setControls(controls) }
             override fun needsCamera2():Boolean {
-                if(recordingVideo) return false
-                toast("플래시·AF/AE 잠금·EV는 Camera2에서 동작하므로 Camera2로 전환한 뒤 적용합니다"); chooseEngine("Camera2"); return true
+                if(recordingVideo) { toast("촬영 설정을 바꾸려면 녹화를 마쳐 주세요"); return false }
+                toast("촬영 설정을 위해 Camera2로 전환합니다"); chooseEngine("Camera2"); return true
             }
             override fun notice(text: String) = toast(text)
         })
@@ -547,6 +547,7 @@ class MainActivity : ComponentActivity() {
             if(recorder.trigger(id)) { markedReadings[id]=lastReading; toast("5초 후 incident ZIP을 저장합니다") }
         }.apply { setTextColor(Color.WHITE); background=cameraChrome(Color.TRANSPARENT); contentDescription="Mark: 직전 10초와 이후 5초를 ZIP으로 저장" }
         reportButton.minHeight=dp(48); reportButton.minimumHeight=dp(48)
+        reportButton.contentDescription="문제 시점 기록: 직전 10초와 이후 5초의 이벤트를 ZIP으로 저장"
         mainRow.addView(reportButton,LinearLayout.LayoutParams(0,-2,1f))
         reportButton.setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
         captureChrome.addView(mainRow,LinearLayout.LayoutParams(-1,-2))
@@ -828,7 +829,7 @@ class MainActivity : ComponentActivity() {
         if (closing) return
         // PROBE, CTS, BENCHMARK is the order a developer meets the tools in: read what the HAL claims, check whether
         // it passes, then measure how long it takes. The guide's tabs carry the same order.
-        showActionPopup(anchor, listOf("Probe", "CTS", "Benchmark")) { index ->
+        showActionPopup(anchor, listOf("Probe · 사양 확인", "CTS · 동작 검증", "Benchmark · 성능 측정", "실행 기록 · 비교", "작업실로 이동")) { index ->
             when (index) {
                 // PROBE reads CameraCharacteristics only and never opens a camera, so it starts without waiting for
                 // close(done); onStop closes the LIVE camera as it does for any screen change.
@@ -838,6 +839,10 @@ class MainActivity : ComponentActivity() {
                     Intent(this, dev.halcamera.benchmark.BenchmarkActivity::class.java)
                         .putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_ENGINE, engineName)
                         .putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_CAMERA_ID, cameraId)
+                }
+                3 -> startActivity(Intent(this, dev.halcamera.benchmark.HistoryActivity::class.java))
+                4 -> openAfterClose("workbench_opened") {
+                    Intent(this, WorkbenchActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 }
             }
         }

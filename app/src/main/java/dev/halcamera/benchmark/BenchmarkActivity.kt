@@ -27,6 +27,8 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.benchmark.domain.*
 import dev.halcamera.benchmark.platform.*
 import dev.halcamera.camera.Camera2Engine
@@ -160,6 +162,12 @@ class BenchmarkActivity : ComponentActivity() {
             )
         }
         root.addView(panel, FrameLayout.LayoutParams(-1, -1))
+        ViewCompat.setOnApplyWindowInsetsListener(panel) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val keyboard = insets.getInsets(WindowInsetsCompat.Type.ime())
+            view.setPadding(bars.left + dp(20), bars.top + dp(16), bars.right + dp(20), maxOf(bars.bottom, keyboard.bottom) + dp(16))
+            insets
+        }
 
         // The title and the way out sit at the top left as on every other screen; the cards stay at the bottom.
         header = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -283,7 +291,7 @@ class BenchmarkActivity : ComponentActivity() {
         // RUNNING has no back icon: Abort is its way out, and a stray tap must not end a run.
         when (screen) {
             Screen.CARD, Screen.RESULT -> header.addView(Look.titleBar(this, "Benchmark", 22,
-                if (intent.hasExtra(EXTRA_RUN_ID)) "실행 이력으로 돌아가기" else "카메라로 돌아가기") { finish() })
+                if (intent.hasExtra(EXTRA_RUN_ID)) "실행 이력으로 돌아가기" else "이전 화면으로 돌아가기") { finish() })
             Screen.RUNNING -> Unit
         }
         when (screen) {
@@ -295,10 +303,10 @@ class BenchmarkActivity : ComponentActivity() {
             val row = Look.row(this)
             row.addView(Look.ghostButton(this, "실행 기록", dark = true) { openHistoryScreen() },
                 Look.buttonParams(0, 1f))
-            row.addView(Look.ghostButton(this, "설정", dark = true) { openSettings() }.apply {
+            row.addView(Look.ghostButton(this, "보관 개수", dark = true) { openSettings() }.apply {
                 contentDescription = "벤치마크 설정, 최대 보관 개수 ${RunRetention.label(settings.runLimit)}"
             }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
-            actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
+            header.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
         }
         // A result opened from run history already returns there through the back arrow, and this button did
         // exactly the same (openHistoryScreen finishes in that case). It stays after a fresh run, where the back

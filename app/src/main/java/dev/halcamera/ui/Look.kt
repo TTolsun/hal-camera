@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
+import android.content.res.ColorStateList
 import android.view.Gravity
 import android.widget.Button
 import android.widget.LinearLayout
@@ -51,6 +53,11 @@ object Look {
 
     fun pill(context: Context, fill: Int) = GradientDrawable().apply { setColor(fill); cornerRadius = dp(context, 999).toFloat() }
 
+    fun touchBackground(context: Context, fill: Int, stroke: Int) = RippleDrawable(
+        ColorStateList.valueOf(Color.argb(48, 128, 170, 220)),
+        cardBackground(context, fill, stroke), cardBackground(context, Color.WHITE, Color.WHITE)
+    )
+
     /**
      * A typeface whose digits and letters all occupy one cell, which is what every table in this app assumes:
      * the presenters align their columns with [String.padEnd] and the result is only a table if the face is
@@ -92,7 +99,8 @@ object Look {
     }
 
     fun primaryButton(context: Context, label: String, action: () -> Unit) = Button(context).apply {
-        text = label; isAllCaps = false; textSize = 17f; setTextColor(onPrimary); background = cardBackground(context, primary, primary)
+        text = label; isAllCaps = false; textSize = 17f; setTextColor(onPrimary); background = touchBackground(context, primary, primary)
+        backgroundTintList = null
         setPadding(dp(context, 24), dp(context, 14), dp(context, 24), dp(context, 14)); stateListAnimator = null
         minHeight = dp(context, 56); minimumHeight = dp(context, 56)
         setOnClickListener { action() }
@@ -101,7 +109,8 @@ object Look {
     fun ghostButton(context: Context, label: String, dark: Boolean = false, action: () -> Unit) = Button(context).apply {
         text = label; isAllCaps = false; textSize = 15f
         setTextColor(if (dark) primaryOnDark else primary)
-        background = GradientDrawable().apply { setColor(if (dark) expertTile2 else Color.parseColor("#f6f7f8")); cornerRadius = dp(context, 4).toFloat(); setStroke(dp(context, 1), if (dark) expertTile3 else hairline) }
+        background = touchBackground(context, if (dark) expertTile2 else Color.parseColor("#f6f7f8"), if (dark) expertTile3 else hairline)
+        backgroundTintList = null
         setPadding(dp(context, 20), dp(context, 12), dp(context, 20), dp(context, 12)); stateListAnimator = null
         minHeight = dp(context, 48); minimumHeight = dp(context, 48)
         setOnClickListener { action() }
@@ -132,7 +141,12 @@ object Look {
      */
     fun titleBar(context: Context, title: CharSequence, sizeSp: Int, backLabel: String, onBack: () -> Unit) = row(context).apply {
         addView(IconButton(context, dev.halcamera.R.drawable.ic_action_back, backLabel) { onBack() }, LinearLayout.LayoutParams(dp(context, 48), dp(context, 48)))
-        addView(text(context, title, sizeSp, onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(context, 12) })
+        val heading = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(text(context, title, sizeSp, onDark, bold = true))
+            addView(text(context, DeviceIdentity.label(context), 12, onDarkMuted))
+        }
+        addView(heading, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(context, 12) })
     }
 
     /** Secondary information stays available without displacing the primary task. */

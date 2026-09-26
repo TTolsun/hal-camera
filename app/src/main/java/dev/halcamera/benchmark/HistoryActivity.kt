@@ -33,7 +33,7 @@ class HistoryActivity : ComponentActivity() {
     private var index = RunIndex(emptyList(), emptyList())
     private var pointers = BenchmarkIndex()
     private var indexError: String? = null
-    private var filter = RunFilter.COMPARISON
+    private var filter = RunFilter.ALL
     private var profileId: String? = null
     private var endpointKey: String? = null
     private var selectedId: String? = null
@@ -48,7 +48,7 @@ class HistoryActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        filter = RunFilter.values().firstOrNull { it.name == savedInstanceState?.getString("filter") } ?: RunFilter.COMPARISON
+        filter = RunFilter.values().firstOrNull { it.name == savedInstanceState?.getString("filter") } ?: RunFilter.ALL
         profileId = if (savedInstanceState != null) savedInstanceState.getString("profile") else intent.getStringExtra("profile")
         endpointKey = if (savedInstanceState != null) savedInstanceState.getString("endpoint") else intent.getStringExtra("endpoint")
         selectedId = savedInstanceState?.getString("selected")
@@ -110,15 +110,21 @@ class HistoryActivity : ComponentActivity() {
             scroll.post { scroll.scrollTo(0, if (wasComparison) scrollY else 0) }
             return
         }
-        titleBar("실행 기록", 24, "벤치마크로 돌아가기") { finish() }
+        titleBar("실행 기록", 24, "이전 화면으로 돌아가기") { finish() }
         if (busy) text("실행 기록을 처리하고 있습니다.")
-        button("필터 · ${filter.label} ▾") { anchor ->
+        val filters = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        button("측정 상태 · ${filter.label} ▾", parent = filters) { anchor ->
             showSelectionPopup(anchor, RunFilter.values().map { it.label }, filter.ordinal) { filter = RunFilter.values()[it]; pageSize = 50; render() }
         }
-        button("${endpointKey?.let(CameraLabel::short) ?: "Camera · 전체"} ▾") { anchor ->
+        button("${endpointKey?.let(CameraLabel::short) ?: "Camera · 전체"} ▾", parent = filters) { anchor ->
             val values = (index.runs.map { it.endpoint.key } + listOfNotNull(endpointKey)).distinct().sorted()
             showSelectionPopup(anchor, listOf("Camera · 전체") + values.map(CameraLabel::short), values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
+        profileId?.let { filters.addView(Look.text(this, "Profile · $it", 12, Look.onDarkMuted), lp()) }
+        button("필터 초기화", parent = filters) {
+            filter = RunFilter.ALL; profileId = null; endpointKey = null; pageSize = 50; render()
+        }
+        body.addView(Look.disclosure(this, "필터 · ${filter.label} · ${endpointKey?.let(CameraLabel::short) ?: "모든 카메라"}", filters), lp())
         val runs = visible()
         // The list actions share one row: two full-width buttons and a
         // count line pushed the first run to the middle of the screen. The count now sits on the list headings.
@@ -151,7 +157,13 @@ class HistoryActivity : ComponentActivity() {
             text("Baseline: $picked\n비교 대상(Compare)을 선택하세요.")
             button("선택 취소") { selectedId = null; pickingComparison = false; render() }
         }
-        if (runs.isEmpty()) text("이 조건에 맞는 실행이 없습니다. 필터를 바꾸거나 새 벤치마크를 실행하세요.")
+        if (runs.isEmpty()) {
+            text(if (index.runs.isEmpty()) "아직 저장된 실행이 없습니다. 첫 측정을 시작해 보세요." else "이 조건에 맞는 실행이 없습니다. 필터를 초기화하면 다른 실행을 볼 수 있습니다.")
+            if (index.runs.isNotEmpty()) button("필터 초기화") {
+                filter = RunFilter.ALL; profileId = null; endpointKey = null; pageSize = 50; render()
+            }
+            button("새 벤치마크") { startActivity(Intent(this, BenchmarkActivity::class.java)) }
+        }
         val byId = index.runs.associateBy { it.runId }
         // Baselines lead the list under their own heading. In a newest-first list a baseline, usually the oldest
         // run of its camera, sat at the very bottom with a grey badge, and nobody could tell which run it was.
@@ -353,8 +365,8 @@ class HistoryActivity : ComponentActivity() {
             isEnabled = enabled && !busy
             minHeight = dp(48)
         }
-    private fun button(label: String, enabled: Boolean = true, click: (View) -> Unit) {
-        body.addView(ghost(label, enabled, click), lp())
+    private fun button(label: String, enabled: Boolean = true, parent: LinearLayout = body, click: (View) -> Unit) {
+        parent.addView(ghost(label, enabled, click), lp())
     }
     private fun titleBar(title: String, sizeSp: Int, backLabel: String, click: () -> Unit) {
         body.addView(Look.titleBar(this, title, sizeSp, backLabel) { if (!busy) click() }.apply {
