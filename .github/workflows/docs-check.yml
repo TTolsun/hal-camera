@@ -11,18 +11,11 @@
 # 제공하므로 Actions 가 없는 사내 미러에서도 같은 산출물을 그대로 씁니다.
 name: docs-check
 
+#
+# main 의 브랜치 보호가 check (ubuntu-latest)·check (windows-latest) 를 필수 검사로 요구합니다. 경로 필터를 두면
+# 필터에 걸리지 않는 PR 에서는 검사가 시작되지 않아 머지가 계속 대기하므로, 모든 PR 에서 실행합니다.
 on:
   pull_request:
-    paths:
-      - "app/**"
-      - "settings.gradle.kts"
-      - "gradle/**"
-      - ".github/workflows/docs-check.yml"
-      - ".omm/**"
-      - "guide/**"
-      - "docs/**"
-      - "tools/docgen/**"
-      - "tools/halcam/**"
   push:
     branches: [main]
 

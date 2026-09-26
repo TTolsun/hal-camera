@@ -46,6 +46,7 @@ jobs:
           git config --global url."https://github.com/".insteadOf "ssh://git@github.com/"
           npm ci --prefix tools/docgen --ignore-scripts
       - name: 로컬 Qwen 동기화
+        id: sync
         env:
           DOCGEN_OLLAMA_URL: http://127.0.0.1:11434
           DOCGEN_QWEN_MODEL: qwen3.5:4b
@@ -101,10 +102,35 @@ jobs:
           [IO.File]::WriteAllText((Join-Path $env:RUNNER_TEMP 'omm-sync-body.md'), $body, (New-Object Text.UTF8Encoding $false))
       - name: PR 생성
         if: steps.changes.outputs.changed == 'true'
+        id: pr
         uses: peter-evans/create-pull-request@v7
         with:
           branch: docs/omm-sync
           title: "docs: local Qwen sync (${{ github.run_id }})"
           commit-message: "docs: sync structures and manuscripts with local Qwen"
           body-path: ${{ runner.temp }}/omm-sync-body.md
-          labels: documentation
+          # needs-review 가 붙은 열린 PR 이 검토 대기 목록입니다. 머지되면 검토 완료, 닫히면 반려입니다.
+          labels: |
+            documentation
+            needs-review
+      - name: 실행 요약
+        # 실행마다 검토할 것이 있는지를 실행 요약과 notice 한 줄로 남깁니다. 대부분의 실행은 코드 PR 에서 문서 검토를
+        # 마친 뒤라 재스캔 대상이 없으므로, 로그를 열지 않고도 "검토할 것 없음"과 "문서 PR 검토 대기"를 구별합니다.
+        if: always()
+        env:
+          SYNC_OUTCOME: ${{ steps.sync.outcome }}
+          CHANGED: ${{ steps.changes.outputs.changed }}
+          PR_NUMBER: ${{ steps.pr.outputs.pull-request-number }}
+          PR_URL: ${{ steps.pr.outputs.pull-request-url }}
+          MSG_NOOP: 변경 없음 · 검토할 것 없음 (코드 PR에서 검토한 문서가 최신입니다)
+          MSG_REVIEW: '문서 PR #{0} 검토 대기: {1}'
+          MSG_NO_PR: 문서가 바뀌었지만 PR을 만들지 못했습니다 · 로그를 확인하세요
+          MSG_FAIL: 동기화 실패 · 원본은 바뀌지 않았습니다 · 로그를 확인하세요
+        run: |
+          [Console]::OutputEncoding = [Text.Encoding]::UTF8
+          if ($env:SYNC_OUTCOME -ne 'success') { $line = $env:MSG_FAIL }
+          elseif ($env:CHANGED -ne 'true') { $line = $env:MSG_NOOP }
+          elseif ($env:PR_NUMBER) { $line = $env:MSG_REVIEW -f $env:PR_NUMBER, $env:PR_URL }
+          else { $line = $env:MSG_NO_PR }
+          Write-Output "::notice title=docs-sync::$line"
+          [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, "$line`n", (New-Object Text.UTF8Encoding $false))

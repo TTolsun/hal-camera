@@ -177,15 +177,22 @@ node tools/docgen/docflow.mjs sync
 
 정상 경로에서는 `docs-sync`가 PR을 만들지 않습니다. `verify`는 커밋 해시가 아니라 파일 내용 해시(`codeHash`, `modelHash`)로 최신성을 판정하므로, PR 안에서 `--accept`까지 마치고 머지하면 `main`의 해시도 같아서 `재스캔 대상 perspective: (없음)`으로 30~40초 만에 끝납니다. 검토 기록의 `@ 커밋` 표기는 참고용 라벨입니다.
 
+`main`의 브랜치 보호는 `check (ubuntu-latest)`와 `check (windows-latest)`를 필수 검사로 요구합니다. 그래서 `docs-check`가 실패한 PR은 머지 버튼이 막히고, `gh pr merge`도 `--admin` 없이는 거부됩니다. 필수 검사가 시작되지 않는 PR이 생기지 않도록 `docs-check`는 경로 필터 없이 모든 PR에서 실행합니다. 보호 규칙은 GitHub Settings → Branches에서 확인합니다.
+
 `docs-check`가 실패한 PR은 그 PR 안에서 사람이 문서를 고쳐야 합니다. 먼저 `verify --changes`로 바뀐 근거 코드를 확인합니다. 그다음 `.omm/`과 `_content/`를 손으로 고치거나 로컬에서 `sync`를 실행한 뒤 `verify --accept --reviewer=이름`, `generate`, `site build`를 실행하고 그 결과를 같은 PR에 커밋합니다.
 
 `docs-sync`가 실제로 `docs/omm-sync` PR을 여는 경우는 다음 세 가지입니다.
 
-1. `docs-check`가 실패한 채로 머지했을 때. `main`에 브랜치 보호 규칙이 없으므로 빨간 검사를 무시하고 머지할 수 있습니다. 막으려면 GitHub Settings → Branches에서 `docs-check`를 required status check로 지정합니다.
+1. 관리자가 필수 검사를 우회해 `docs-check`가 실패한 PR을 머지했을 때.
 2. `main`에 직접 push했을 때.
 3. Actions에서 `force=true`로 수동 실행했을 때. 이 경우 전체 요소를 다시 스캔합니다.
 
-즉 자동 PR은 사람이 문서 검토를 빠뜨렸을 때 뒤늦게 메우는 안전망이고, 정상 경로는 PR 안에서 사람이 끝내는 것입니다. 자동 PR의 원고는 4B 모델이 쓴 것이므로 그대로 머지하지 말고 코드와 대조해야 합니다(PR #66에서 실제로 수정했습니다).
+즉 자동 PR은 사람이 문서 검토를 빠뜨렸을 때 뒤늦게 메우는 안전망이고, 정상 경로는 PR 안에서 사람이 끝내는 것입니다. 자동 PR의 원고는 4B 모델이 쓴 것이므로 그대로 머지하지 말고 코드와 대조해야 합니다. 지금까지 Qwen이 쓴 세 번의 결과(#66, #71, #117)는 모두 코드와 다른 설명이나 기존 내용의 누락이 있어 고치거나 닫았습니다.
+
+검토 상태는 두 곳에서 확인합니다.
+
+- 실행 요약: `docs-sync`의 마지막 단계가 실행마다 한 줄을 실행 요약과 notice로 남깁니다. `변경 없음 · 검토할 것 없음`, `문서 PR #N 검토 대기`, `문서가 바뀌었지만 PR을 만들지 못했습니다`, `동기화 실패` 가운데 하나입니다. 로그를 열지 않고도 그 실행에 검토할 것이 있는지 알 수 있습니다.
+- `needs-review` 라벨: 자동 PR에는 `documentation`과 `needs-review` 라벨이 붙습니다. 열려 있는 `needs-review` PR이 검토 대기 목록이고(`gh pr list --label needs-review`), 머지된 PR은 검토 완료, 머지하지 않고 닫은 PR은 반려입니다. 요소별 검토 기록은 지금처럼 `verify` 표의 `검토 날짜 @ 커밋`에 남습니다.
 
 위 내용을 한 PR의 흐름으로 그리면 다음과 같습니다. 위쪽 분기는 `docs-check`, 아래쪽 분기는 `docs-sync`입니다.
 
@@ -214,15 +221,15 @@ sequenceDiagram
         Check-->>PR: 통과
     end
 
-    Dev->>Main: 머지 (브랜치 보호 없음, 실패한 채로도 가능)
+    Dev->>Main: 머지 (docs-check 필수 검사 통과 후)
     Main->>Sync: push 트리거<br/>(DOCGEN_LOCAL_RUNNER_ENABLED=true)
     Sync->>Sync: 임시 복사본에서 근거 해시 재계산
 
     alt 재스캔 대상 없음 (정상 경로)
-        Sync-->>Main: 30~40초 만에 종료, PR 없음
-    else 낡은 요소 있음 (실패한 채 머지·직접 push·force=true)
+        Sync-->>Main: 30~40초 만에 종료, PR 없음<br/>실행 요약: 검토할 것 없음
+    else 낡은 요소 있음 (관리자 우회 머지·직접 push·force=true)
         Sync->>Sync: Qwen 구조 스캔 → 원고 집필 → 검증·생성
-        Sync->>PR: docs/omm-sync PR 생성 (accept는 하지 않음)
+        Sync->>PR: docs/omm-sync PR 생성<br/>(needs-review 라벨, accept는 하지 않음)
         Rev->>PR: 코드와 대조 검토
         Rev->>Rev: verify --accept --reviewer=이름<br/>→ generate → site build
         Rev->>Main: 머지 → 다시 최신
