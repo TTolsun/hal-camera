@@ -41,38 +41,3 @@ internal class MeterView(
         }
     }
 }
-
-/**
- * One row of the compare screen's delta chart: a bar growing right (degraded) or left (improved) from a
- * centre zero line. [pct] is the metric's signed delta and [maxPct] the largest magnitude on the screen, so
- * every row shares one scale.
- */
-internal class DeltaBarView(
-    context: Context,
-    private val pct: Float,
-    private val maxPct: Float,
-    degraded: Boolean
-) : View(context) {
-
-    private val zero = Paint().apply { color = Look.expertTile3 }
-    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = if (degraded) Look.statusFail else Look.primaryOnDark
-    }
-
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), Look.dp(context, 14))
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        val w = width.toFloat()
-        val centre = w / 2f
-        canvas.drawRect(centre - 0.5f, 0f, centre + 0.5f, height.toFloat(), zero)
-        if (maxPct <= 0f) return
-        val extent = (kotlin.math.abs(pct) / maxPct).coerceIn(0f, 1f) * (w / 2f - Look.dp(context, 2))
-        val top = height * 0.15f
-        val bottom = height * 0.85f
-        val r = Look.dp(context, 2).toFloat()
-        if (pct >= 0f) canvas.drawRoundRect(centre, top, centre + extent, bottom, r, r, fill)
-        else canvas.drawRoundRect(centre - extent, top, centre, bottom, r, r, fill)
-    }
-}

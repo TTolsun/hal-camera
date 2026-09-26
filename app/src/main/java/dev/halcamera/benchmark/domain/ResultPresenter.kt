@@ -33,7 +33,12 @@ data class KeyMetric(
     val tone: Tone,
     val fraction: Double,
     val baseFraction: Double?,
-    val ownScale: Boolean = false
+    val ownScale: Boolean = false,
+    /**
+     * Why the row carries no verdict or no bar, in a word or two: a condition mismatch, a unit that changed, a
+     * metric only the reference measured. The compare chart used to say this; the bars have to say it now.
+     */
+    val note: String? = null
 )
 
 /** One category of [KeyMetric] bars on the result screen. */
@@ -165,6 +170,23 @@ object ResultPresenter {
         )
     }
 
+    /**
+     * The run the ticks stand for, as label and value pairs for the same 실행 정보 fold. The compare screen
+     * carried these; with that screen gone, the result card is the only place they can live.
+     */
+    fun referenceFacts(reference: BenchmarkRun, comparison: RunComparison?, role: String): List<Pair<String, String>> {
+        val thermal = listOfNotNull(reference.env.thermalStart, reference.env.thermalMax, reference.env.thermalEnd)
+        return listOfNotNull(
+            role to listOfNotNull(
+                localTime(reference.runId) ?: reference.runId,
+                reference.subject.subjectBuildLabel?.takeIf { it.isNotBlank() }
+            ).joinToString(" · "),
+            reference.device.buildDisplay.takeIf { it.isNotBlank() }?.let { "$role OS" to it },
+            thermal.takeIf { it.size == 3 }?.let { "$role 발열" to it.joinToString(" → ") },
+            comparison?.identity?.let { "빌드 비교" to identityLine(it) }
+        )
+    }
+
     fun scoreLine(run: BenchmarkRun): String? {
         if (run.scoringRuleVersion != ScoreComposer.VERSION || run.endpointScore == null) return null
         val score = ScoreComposer.compose(run, S25PlusScoreDraft.calibration) ?: return null
@@ -226,7 +248,9 @@ object ResultPresenter {
         comparison: RunComparison?,
         comparedTo: ComparedTo,
         isBaseline: Boolean,
-        endpointName: String
+        endpointName: String,
+        /** Run history's 두 실행 비교: the reference was picked by hand, not found as a baseline or previous run. */
+        selectedReference: Boolean = false
     ): ResultHeadline {
         val vs = comparison?.baseRunId?.let { localTime(it) ?: it }
         return when {
@@ -235,6 +259,8 @@ object ResultPresenter {
             comparison == null || comparedTo == ComparedTo.NONE ->
                 if (isBaseline) ResultHeadline("This run is the baseline", "비교할 이전 run이 없습니다 · $endpointName", Tone.NEUTRAL)
                 else ResultHeadline("First run", "Baseline으로 지정하면 다음 run부터 비교합니다 · $endpointName", Tone.NEUTRAL)
+            selectedReference && comparedTo != ComparedTo.BASELINE ->
+                ResultHeadline("Selected run", "선택한 run($vs) 대비 표시 · baseline이 아니면 판정하지 않습니다", Tone.NEUTRAL)
             comparedTo == ComparedTo.PREVIOUS ->
                 ResultHeadline(
                     if (isBaseline) "This run is the baseline" else "No baseline",
@@ -257,8 +283,9 @@ object ResultPresenter {
      * Every measured metric as a bar, grouped by category, in catalog order.
      *
      * The result screen draws these instead of a table behind a fold: a number beside its baseline is the
-     * question the screen exists to answer, and a row of digits answers it worse than a bar does. A metric the
-     * run did not measure is left out rather than drawn as an empty bar.
+     * question the screen exists to answer, and a row of digits answers it worse than a bar does. A metric
+     * neither run measured is left out. One only the reference measured keeps its row with the reference tick
+     * and no fill: this card is the only comparison view now, and the compare chart it replaced listed such rows.
      *
      * Every bar of the same unit inside a section shares one scale. While each bar scaled itself against its own
      * baseline, an 11 ms row and a 561 ms row were drawn the same length, which is the opposite of what a column
@@ -266,28 +293,51 @@ object ResultPresenter {
      * millisecond do not belong on one axis, and Preview's 33 ms intervals would vanish beside Capture's
      * hundreds of milliseconds.
      */
-    fun metricBars(run: BenchmarkRun, comparison: RunComparison?, comparedTo: ComparedTo): List<MetricBarSection> {
+    fun metricBars(
+        run: BenchmarkRun,
+        comparison: RunComparison?,
+        comparedTo: ComparedTo,
+        /** The run the ticks stand for; only needed to notice a metric whose unit changed between the two. */
+        reference: BenchmarkRun? = null
+    ): List<MetricBarSection> {
         val withDelta = comparedTo != ComparedTo.NONE
+        // Colour is a verdict, and only a baseline is judged against (7.1). Against the previous run or a run
+        // picked in history the bars stay neutral, as the compare chart did; they used to turn red there too.
+        val judged = comparedTo == ComparedTo.BASELINE
         return (ORDER + Category.THREE_A).mapNotNull { category ->
             val measured = BenchmarkMetricCatalog.ids.mapNotNull { id ->
                 val info = BenchmarkMetricCatalog.info(id) ?: return@mapNotNull null
                 if (info.category != category) return@mapNotNull null
-                val metric = run.metric(id) ?: return@mapNotNull null
+                val metric = run.metric(id)
                 val cmp = comparison?.metric(id)
-                // A timed-out 3A metric stores the observation window as its value (plan chapter 13), so a bar
-                // would compare a window against a convergence. It keeps its row and says so instead.
-                if (metric.timeout) BarInput(info.short, "timeout", null, null, info.unit, null, false)
-                else BarInput(info.short, statLabel(metric, info), metric.value ?: return@mapNotNull null,
-                    cmp?.baselineValue, info.unit, cmp, fine(info.id, info.category))
+                val refMetric = reference?.metric(id)
+                when {
+                    metric?.value == null -> {
+                        // Only the reference measured it. Dropping the row would hide that this run lost a metric.
+                        val base = cmp?.baselineValue?.takeIf { withDelta } ?: return@mapNotNull null
+                        BarInput(info.short, "", null, base, info.unit, cmp, fine(info.id, info.category),
+                            note = "이번 run에서 측정되지 않음")
+                    }
+                    // A timed-out 3A metric stores the observation window as its value (plan chapter 13), so a bar
+                    // would compare a window against a convergence. It keeps its row and says so instead.
+                    metric.timeout -> BarInput(info.short, "timeout", null, null, info.unit, null, false)
+                    // History can pair runs of different contracts; a tick in another unit would be a lie.
+                    refMetric != null && refMetric.unit != metric.unit ->
+                        BarInput(info.short, statLabel(metric, info), metric.value, null, info.unit, null,
+                            fine(info.id, info.category), note = "단위 다름")
+                    else -> BarInput(info.short, statLabel(metric, info), metric.value,
+                        cmp?.baselineValue, info.unit, cmp, fine(info.id, info.category))
+                }
             }
             // Frame rate leads the preview section: it is H.1 turned upside down, and "29.8 fps" answers the
             // question the interval only implies. The verdict still belongs to H.1, whose row follows it.
             val inputs = if (category == Category.PREVIEW) listOfNotNull(frameRate(run, comparison)) + measured else measured
             if (inputs.isEmpty()) return@mapNotNull null
             val scales = scales(inputs)
-            val drawn = inputs.filter { it.value != null }.groupingBy { it.unit }.eachCount()
+            val drawn = inputs.filter { it.value != null || it.base != null }.groupingBy { it.unit }.eachCount()
             MetricBarSection(categoryLabel(category), inputs.map { input ->
-                bar(input, scales[input.unit] ?: 1.0, ownScale = (drawn[input.unit] ?: 0) < 2, withDelta = withDelta)
+                bar(input, scales[input.unit] ?: 1.0, ownScale = (drawn[input.unit] ?: 0) < 2, withDelta = withDelta,
+                    judged = judged, comparedTo = comparedTo)
             })
         }
     }
@@ -321,7 +371,8 @@ object ResultPresenter {
         val base: Double?,
         val unit: String,
         val cmp: MetricComparison?,
-        val fine: Boolean
+        val fine: Boolean,
+        val note: String? = null
     )
 
     /**
@@ -330,8 +381,8 @@ object ResultPresenter {
      * values are all zero would make the scale 0 and every fraction NaN, so it falls back to empty bars.
      */
     private fun scales(inputs: List<BarInput>): Map<String, Double> =
-        inputs.filter { it.value != null }.groupBy { it.unit }.mapValues { (_, group) ->
-            val top = group.maxOf { maxOf(it.value!!, it.base ?: it.value!!) }
+        inputs.filter { it.value != null || it.base != null }.groupBy { it.unit }.mapValues { (_, group) ->
+            val top = group.maxOf { maxOf(it.value ?: 0.0, it.base ?: 0.0) }
             (top / 0.8).takeIf { it > 0 } ?: 1.0
         }
 
@@ -350,14 +401,23 @@ object ResultPresenter {
         else -> "median"
     }
 
-    private fun bar(input: BarInput, scale: Double, ownScale: Boolean, withDelta: Boolean): KeyMetric {
+    private fun bar(
+        input: BarInput,
+        scale: Double,
+        ownScale: Boolean,
+        withDelta: Boolean,
+        judged: Boolean,
+        comparedTo: ComparedTo
+    ): KeyMetric {
         val value = input.value
-            ?: return KeyMetric(input.label, input.statLabel, "—", null, Tone.NEUTRAL, 0.0, null)
+            ?: return KeyMetric(input.label, input.statLabel, "—", null, Tone.NEUTRAL, 0.0,
+                input.base?.let { (it / scale).coerceIn(0.0, 1.0) }, ownScale = input.base != null && ownScale,
+                note = input.note)
         val base = input.base
         val cmp = input.cmp
         val delta = if (!withDelta || base == null) null else {
             val d = value - base
-            when (input.unit) {
+            val absolute = when (input.unit) {
                 "fps" -> String.format(Locale.US, "%+.1f fps", d)
                 // A count difference is already the whole story, and "+3 count" reads as a unit nobody uses.
                 "count" -> String.format(Locale.US, "%+.0f", d)
@@ -365,13 +425,18 @@ object ResultPresenter {
                 "ms" -> String.format(Locale.US, if (input.fine) "%+.1f ms" else "%+.0f ms", d)
                 else -> String.format(Locale.US, "%+.0f %s", d, input.unit)
             }
+            // The percentage the compare chart drew, so dropping that chart loses nothing. A count has none: a
+            // percentage of a small count says more about the count than about the change (7.2).
+            val pct = if (input.unit == "count" || base <= 0.0) null else (value - base) / base * 100.0
+            if (pct == null) absolute else "$absolute · ${percent(pct)}"
         }
         val tone = when {
-            !withDelta || cmp == null -> Tone.NEUTRAL
+            !withDelta || !judged || cmp == null -> Tone.NEUTRAL
             cmp.state == RegressionState.REGRESSED -> Tone.BAD
             cmp.state == RegressionState.IMPROVED -> Tone.GOOD
             else -> Tone.NEUTRAL
         }
+        val note = input.note ?: if (withDelta) noteFor(cmp, comparedTo).takeIf { it.isNotEmpty() } else null
         return KeyMetric(
             label = input.label,
             statLabel = input.statLabel,
@@ -380,9 +445,14 @@ object ResultPresenter {
             tone = tone,
             fraction = (value / scale).coerceIn(0.0, 1.0),
             baseFraction = base?.let { (it / scale).coerceIn(0.0, 1.0) },
-            ownScale = ownScale
+            ownScale = ownScale,
+            note = note
         )
     }
+
+    /** "+4%", "-19%", and "0%" rather than "-0%" for a change that rounds away. */
+    private fun percent(pct: Double): String =
+        if (kotlin.math.abs(pct) < 0.5) "0%" else String.format(Locale.US, "%+.0f%%", pct)
 
     // ---- headline ----
 

@@ -1,6 +1,6 @@
 package dev.halcamera.benchmark
 
-import dev.halcamera.ui.MetricRows
+import dev.halcamera.ui.BenchmarkResultCards
 
 import android.app.AlertDialog
 import android.content.ClipData
@@ -249,21 +249,26 @@ class HistoryActivity : ComponentActivity() {
         val current = index.runs.find { it.runId == compareId } ?: return false
         val onBaseline = pointers.baseline(current.contract.comparisonContractId, current.endpoint.key) == base.runId
         val comparison = RegressionDetector.compare(base, current)
-        val view = ComparePresenter.present(base, current, comparison,
-            if (onBaseline) ComparedTo.BASELINE else ComparedTo.PREVIOUS, selectedReference = true)
         titleBar("비교", 20, "실행 이력으로 돌아가기") { compareId = null; render() }
         if (busy) text("실행 기록을 처리하고 있습니다.")
-        text("기준: ${base.runId}\n${base.subject.subjectBuildLabel.orEmpty()} · ${base.subject.subjectCommit.orEmpty()}")
-        text("현재: ${current.runId}\n${current.subject.subjectBuildLabel.orEmpty()} · ${current.subject.subjectCommit.orEmpty()}")
-        view.identityLine?.let { text(it) }
-        view.conditionLine?.let { text(it) }
-        view.referenceNote?.let { text(it) }
+        // Which run is which, in the time the list shows. Old runs may carry a commit typed on a start card that no
+        // longer asks for one; it is still worth showing when it is there.
+        fun who(role: String, run: BenchmarkRun) = listOfNotNull(
+            "$role: ${ResultPresenter.localTime(run.runId) ?: run.runId}",
+            run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() },
+            run.subject.subjectCommit?.takeIf { it.isNotBlank() }
+        ).joinToString(" · ")
+        text("${who("기준", base)}\n${who("현재", current)}")
         if (!comparison.sameContract || !comparison.sameEndpoint) text("Profile·측정 계약 또는 camera endpoint가 달라 판정할 수 없습니다.")
-        val regressed = view.rows.filter { it.marker.startsWith("▲") }
-        if (regressed.isNotEmpty()) body.addView(Look.text(this, "▲ ${regressed.size} degraded", 17, Look.statusFail, bold = true), lp())
-        (regressed + view.rows.filterNot { it.marker.startsWith("▲") }).forEach { row ->
-            body.addView(MetricRows.comparison(this, row, view.baseHeader))
-        }
+        // The same bars and reference ticks as a run's result screen, with the picked run as the tick. Comparing
+        // two runs used to be a column of text rows here and a percentage chart behind the result screen's 비교;
+        // one picture of a comparison is enough, and this one carries everything the other two showed.
+        BenchmarkResultCards.addResult(
+            this, body, current, comparison,
+            if (onBaseline) ComparedTo.BASELINE else ComparedTo.PREVIOUS,
+            pointers.isBaseline(current), fileName = null,
+            reference = base, selectedReference = !onBaseline
+        )
         button("기준 / 현재 바꾸기") { val old = selectedId; selectedId = compareId; compareId = old; render() }
         button("CSV 내보내기 · 두 실행") { exportCsv(listOf(base, current)) }
         return true

@@ -4,6 +4,7 @@ import dev.halcamera.benchmark.domain.BenchmarkRunFixture.metric
 import dev.halcamera.benchmark.domain.BenchmarkRunFixture.run
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -350,7 +351,7 @@ class ResultPresenterTest {
 
         val open = bars.first { it.label == "Open" }
         assertEquals("128 ms", open.valueText)
-        assertEquals("+28 ms", open.deltaText)
+        assertEquals("+28 ms · +28%", open.deltaText)
         // The largest millisecond value of the section — First frame, 412 ms — sits at 80% of the bar, and every
         // other Launch row is measured against it, so both the fill and the tick stay on screen.
         val scale = 412.0 / 0.8
@@ -533,7 +534,68 @@ class ResultPresenterTest {
         val base = run(metrics = listOf(windowMetric("3.7", 0.40)), runId = "20260924-000000-000")
         val current = run(metrics = listOf(windowMetric("3.7", 0.75)))
         val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
-        assertEquals("+0.4 ms", bars.flatMap { it.bars }.single().deltaText)
+        assertEquals("+0.4 ms · +87%", bars.flatMap { it.bars }.single().deltaText)
+    }
+
+    // ---- the bars are the only comparison view: nothing the removed compare chart showed may go missing ----
+
+    @Test fun aCountDeltaStaysAbsoluteBecauseAPercentageOfASmallCountMisleads() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("H.5", 2.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.5", 3.0)))
+        val bar = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+            .flatMap { it.bars }.single()
+        assertEquals("+1", bar.deltaText)
+    }
+
+    @Test fun aMetricOnlyTheReferenceMeasuredKeepsItsRowWithTheTick() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("1.1", 100.0), metric("2.2", 164.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("1.1", 104.0)))
+        val cmp = RegressionDetector.compare(base, current)
+        val capture = ResultPresenter.metricBars(current, cmp, ComparedTo.BASELINE)
+            .flatMap { it.bars }.single { it.label == "Capture" }
+        assertEquals("—", capture.valueText)
+        assertEquals(0.0, capture.fraction, 0.0)
+        assertNotNull(capture.baseFraction)
+        assertEquals("이번 run에서 측정되지 않음", capture.note)
+        // Without a reference there is nothing to keep: a metric this run did not measure is still left out.
+        assertTrue(ResultPresenter.metricBars(current, null, ComparedTo.NONE).flatMap { it.bars }.none { it.label == "Capture" })
+    }
+
+    @Test fun onlyABaselineColoursABarAPreviousOrPickedRunLeavesItNeutral() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 221.0)))
+        val cmp = RegressionDetector.compare(base, current)
+        fun tone(to: ComparedTo) = ResultPresenter.metricBars(current, cmp, to).flatMap { it.bars }.single().tone
+        assertEquals(Tone.BAD, tone(ComparedTo.BASELINE))
+        assertEquals(Tone.NEUTRAL, tone(ComparedTo.PREVIOUS))
+    }
+
+    @Test fun aUnitThatChangedBetweenTheRunsDrawsNoTickAndSaysWhy() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0).copy(unit = "us")))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 170.0)))
+        val bar = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.PREVIOUS, base)
+            .flatMap { it.bars }.single()
+        assertNull(bar.baseFraction)
+        assertNull(bar.deltaText)
+        assertEquals("단위 다름", bar.note)
+    }
+
+    @Test fun aRunPickedInHistoryIsNamedAsSuchAndIsNotJudged() {
+        val picked = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 221.0)))
+        val head = ResultPresenter.headline(current, RegressionDetector.compare(picked, current), ComparedTo.PREVIOUS,
+            isBaseline = false, endpointName = "Camera · 0", selectedReference = true)
+        assertEquals("Selected run", head.text)
+        assertTrue(head.sub.startsWith("선택한 run("))
+        assertEquals(Tone.NEUTRAL, head.tone)
+    }
+
+    @Test fun theReferenceRunsFactsFollowThisRunsInTheFold() {
+        val reference = run(runId = "20260910-100000-000", subject = SubjectLabel("SW41", "9c01d2e"))
+        val current = run(runId = "20260910-110000-000")
+        val facts = ResultPresenter.referenceFacts(reference, RegressionDetector.compare(reference, current), "baseline")
+        assertEquals("baseline", facts.first().first)
+        assertTrue(facts.first().second.contains("SW41"))
     }
 
     @Test fun aRunThatRecordedNothingSaysSoInWords() {

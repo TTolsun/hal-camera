@@ -67,7 +67,7 @@ class BenchmarkActivity : ComponentActivity() {
         })
     }
 
-    private enum class Screen { CARD, RUNNING, RESULT, COMPARE }
+    private enum class Screen { CARD, RUNNING, RESULT }
 
     private val main = Handler(Looper.getMainLooper())
     private val recorder = FlightRecorder(::nowNs, retentionNs = 180_000_000_000L, maxEvents = 60_000, preNs = 0, postNs = 0)
@@ -177,7 +177,7 @@ class BenchmarkActivity : ComponentActivity() {
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (screen == Screen.COMPARE) { screen = Screen.RESULT; render() } else finish()
+                finish()
             }
         })
         intent.getStringExtra(EXTRA_RUN_ID)?.let { loadHistoryRun(it); return }
@@ -284,14 +284,12 @@ class BenchmarkActivity : ComponentActivity() {
         when (screen) {
             Screen.CARD, Screen.RESULT -> header.addView(Look.titleBar(this, "Benchmark", 22,
                 if (intent.hasExtra(EXTRA_RUN_ID)) "실행 이력으로 돌아가기" else "카메라로 돌아가기") { finish() })
-            Screen.COMPARE -> header.addView(Look.titleBar(this, "비교", 22, "벤치마크 결과로 돌아가기") { screen = Screen.RESULT; render() })
             Screen.RUNNING -> Unit
         }
         when (screen) {
             Screen.CARD -> renderCard()
             Screen.RUNNING -> renderRunning()
             Screen.RESULT -> renderResult()
-            Screen.COMPARE -> renderCompare()
         }
         if (screen == Screen.CARD) {
             val row = Look.row(this)
@@ -552,25 +550,22 @@ class BenchmarkActivity : ComponentActivity() {
             if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "다시 실행") { preflight() }, Look.buttonParams())
             return
         }
-        val view = BenchmarkResultCards.addResult(this, content, run, comparison, comparedTo, isBaseline, lastFile?.name)
+        // The result card is the comparison: its ticks are the reference run, and it carries what the removed 비교
+        // screen showed (percentages, the reference's facts), so there is no second chart behind a button.
+        val view = BenchmarkResultCards.addResult(this, content, run, comparison, comparedTo, isBaseline, lastFile?.name,
+            reference = baseRun)
 
         // Give the longer baseline action a full row to avoid truncation.
         actions.addView(
             action(view.baselineButton, view.baselineButtonEnabled) { toggleBaseline() },
             Look.buttonParams()
         )
-        val row = Look.row(this)
-        row.addView(action("비교", baseRun != null) { screen = Screen.COMPARE; render() }, Look.buttonParams(0, 1f))
-        row.addView(
+        actions.addView(
             action("내보내기", lastFile != null) { lastFile?.let(::share) },
-            Look.buttonParams(0, 1f).apply { marginStart = dp(8) }
+            Look.buttonParams().apply { topMargin = dp(8) }
         )
-        actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "다시 실행") { preflight() }, Look.buttonParams().apply { topMargin = dp(8) })
     }
-
-    /** 7.3. The card itself is laid out by [BenchmarkResultCards.addCompare]. */
-    private fun renderCompare() = BenchmarkResultCards.addCompare(this, content, lastRun, baseRun, comparison, comparedTo, isBaseline)
 
     // ---- run ----
 
@@ -835,7 +830,6 @@ class BenchmarkActivity : ComponentActivity() {
                 main.post {
                     if (destroyed) return@post
                     baseRun = base; comparedTo = to; comparison = cmp; isBaseline = onBaseline
-                    if (screen == Screen.COMPARE && base == null) screen = Screen.RESULT
                     render()
                 }
             } catch (e: Exception) {
