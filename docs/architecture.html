@@ -113,7 +113,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-26 @ <code>ab240bb</code> · Claude (result history button on main, code-checked)</li>
+<li>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</li>
 </ul>
 </details><!-- omm:end id=overview --><h2 id="전체-구조도">전체 구조도</h2>
 <p>그림을 클릭하면 확대 화면이 열립니다. 키보드에서는 Tab으로 그림을 선택한 뒤 Enter 또는 Space를 누르세요.</p>
@@ -157,7 +157,7 @@
 </tr>
 <tr>
 <td><code>camera/</code></td>
-<td>엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다. <code>close(done)</code> 완료 전에 다음 카메라를 열지 않습니다. 사진·녹화 같은 미디어 동작은 <code>MediaCapture</code> 인터페이스가 계약이며, Live 화면은 구체 엔진 타입 대신 이 인터페이스로 확인합니다. 벤치마크 RECORD 단계의 recorder 상태 기계는 <code>BenchmarkRecorder</code>가 담당하고 <code>Camera2Engine</code>은 그 호출을 위임합니다. 카메라를 화면에 적는 이름(<code>Camera · 0 (Wide · Rear)</code>)도 이 패키지의 <code>CameraLabel</code> 하나가 만들며, Live·Benchmark·Probe·CTS가 모두 그것을 부릅니다. 렌즈 이름을 붙이지 못한 카메라에는 HAL이 보고한 35mm 환산 초점거리를 덧붙여 <code>Camera · 1 (Front · 26 mm)</code>처럼 적으므로, 전면 카메라가 둘인 기기에서도 목록이 두 항목을 구별합니다.</td>
+<td>엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다. <code>close(done)</code> 완료 전에 다음 카메라를 열지 않습니다. 사진·녹화 같은 미디어 동작은 <code>MediaCapture</code> 인터페이스가 계약이며, Live 화면은 구체 엔진 타입 대신 이 인터페이스로 확인합니다. EV·AE/AF 잠금·플래시 같은 Live 제어도 같은 방식으로 <code>LiveTuning</code> 인터페이스가 계약이며, 요청값은 순수 Kotlin 값 <code>LiveControls</code>가 담습니다. 벤치마크 RECORD 단계의 recorder 상태 기계는 <code>BenchmarkRecorder</code>가 담당하고 <code>Camera2Engine</code>은 그 호출을 위임합니다. 카메라를 화면에 적는 이름(<code>Camera · 0 (Wide · Rear)</code>)도 이 패키지의 <code>CameraLabel</code> 하나가 만들며, Live·Benchmark·Probe·CTS가 모두 그것을 부릅니다. 렌즈 이름을 붙이지 못한 카메라에는 HAL이 보고한 35mm 환산 초점거리를 덧붙여 <code>Camera · 1 (Front · 26 mm)</code>처럼 적으므로, 전면 카메라가 둘인 기기에서도 목록이 두 항목을 구별합니다.</td>
 </tr>
 <tr>
 <td><code>metrics/</code></td>
@@ -193,7 +193,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/BenchmarkController.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/ui/MetricRows.kt</code>, <code>app/src/main/java/dev/halcamera/ui/Look.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCatalog.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/Camera2Ops.kt</code>, <code>app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt</code>, <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbe.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-26 @ <code>ab240bb</code> · Claude (result history button on main, code-checked)</li>
+<li>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</li>
 </ul>
 </details><!-- omm:end id=module-roles --><h2 id="주요-실행-흐름">주요 실행 흐름</h2>
 <!-- omm:begin id=runtime-flow --><p><strong>실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.</strong> 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.</p>
@@ -207,7 +207,7 @@
 <li><code>RunAssembler</code>가 러너 결과와 이벤트를 결합해 <code>BenchmarkEvaluator</code>와 <code>RunValidityEvaluator</code>를 호출합니다. <code>ScoreComposer</code>는 calibration의 적용 범위와 적격 조건에 맞는 run에만 내부 점수를 채웁니다.</li>
 <li><code>BenchmarkReport</code>가 실행 JSON을 저장합니다. Activity는 baseline 또는 이전 실행을 찾아 비교 결과를 별도로 계산합니다. 저장 직후 <code>RunRetention</code>이 설정된 <code>보관 개수</code>를 적용해 한도를 넘는 실행 파일을 오래된 것부터 삭제하며, baseline으로 지정된 실행은 삭제하지 않습니다(기본값은 Unlimited).</li>
 </ol>
-<p><code>Telemetry.callback()</code>은 <code>capture_started</code>, <code>request_observed</code>, <code>capture_result</code>, <code>capture_failed</code>, <code>buffer_lost</code>를 기록합니다. 콜백의 <code>alive()</code>가 거짓이면 이미 닫힌 세션의 늦은 이벤트를 버립니다. <code>request_observed</code>는 요청 제출 시각이 아니라 <code>onCaptureStarted</code>에서 관측한 요청 내용입니다.</p>
+<p><code>Telemetry.callback()</code>은 <code>capture_started</code>, <code>request_observed</code>, <code>capture_result</code>, <code>capture_failed</code>, <code>buffer_lost</code>를 기록합니다. 콜백의 <code>alive()</code>가 거짓이면 이미 닫힌 세션의 늦은 이벤트를 버립니다. <code>request_observed</code>는 요청 제출 시각이 아니라 <code>onCaptureStarted</code>에서 관측한 요청 내용입니다. Live 제어를 확인할 수 있도록 <code>request_observed</code>에는 요청한 줌·EV·AE 잠금·플래시 모드·AF/precapture trigger를, <code>capture_result</code>에는 적용된 AE 잠금·EV·플래시 상태와 논리 카메라가 알려 주는 물리 카메라 ID(API 29 이상)를 함께 기록합니다.</p>
 <p>러너는 API 호출과 완료 신호 사이의 시각 차이를 기록합니다. <code>RunAssembler</code>는 관측 세션의 프레임 중 관측 시작 이전에 도착한 프레임 수를 워밍업으로 계산합니다. <code>MetricExtractor</code>가 이벤트를 표본으로 연결하고, <code>BenchmarkEvaluator</code>가 profile에 따라 초기 반복을 제외하고 통계를 계산합니다. 3A 수렴은 관측 세션의 첫 결과부터 계산합니다.</p>
 <p><code>RunAssembler.ObservationInput.observedFrames</code>는 워밍업을 제외한 <code>steadyFrames</code>의 수입니다. 이 값은 <code>RunValidityEvaluator</code>의 표본 수 검사에 전달됩니다. <code>RunAssembler</code>가 구성한 <code>BenchmarkRun</code>은 <code>BenchmarkReportCodec</code>에서 schema 4로 직렬화하며, 파일 쓰기는 조립기 밖에서 처리합니다.</p>
 <h3 id="저장된-실행을-다시-계산하는-경로">저장된 실행을 다시 계산하는 경로</h3>
@@ -227,7 +227,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>tools/halcam/halcam/download.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/GalleryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-26 @ <code>ab240bb</code> · Claude (result history button on main, code-checked)</li>
+<li>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</li>
 </ul>
 </details><!-- omm:end id=runtime-flow --><h3 id="이벤트와-결과가-전달되는-경로">이벤트와 결과가 전달되는 경로</h3>
 <!-- omm:begin id=runtime-diagram --><pre><code class="language-mermaid">graph LR
@@ -400,7 +400,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandStore.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-26 @ <code>ab240bb</code> · Claude (result history button on main, code-checked)</li>
+<li>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</li>
 </ul>
 </details><!-- omm:end id=constraints --><h2 id="변경-후-검증">변경 후 검증</h2>
 <p>Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 확인할 수 있습니다. 저장소 루트에서 실행하세요.</p>
@@ -440,17 +440,17 @@
 <tbody><tr>
 <td>구조 원본 <code>data-flow</code></td>
 <td>최신</td>
-<td>검토 2026-09-26 @ <code>ab240bb</code> · Claude (result history button on main, code-checked)</td>
+<td>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>overall-architecture</code></td>
 <td>최신</td>
-<td>검토 2026-09-26 @ <code>ab240bb</code> · Claude (result history button on main, code-checked)</td>
+<td>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>state-transitions</code></td>
 <td>최신</td>
-<td>검토 2026-09-26 @ <code>ab240bb</code> · Claude (result history button on main, code-checked)</td>
+<td>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>ui-camera-label</code></td>
@@ -460,7 +460,7 @@
 <tr>
 <td>구조 원본 <code>ui-tool-handoff</code></td>
 <td>최신</td>
-<td>검토 2026-09-25 @ <code>fffbc89</code> · Claude (split MainActivity, code-checked)</td>
+<td>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>ui-zoom</code></td>
@@ -470,22 +470,22 @@
 <tr>
 <td>원고 <code>overview</code></td>
 <td>최신</td>
-<td>검토 2026-09-26 @ <code>ab240bb</code> · Claude (result history button on main, code-checked)</td>
+<td>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</td>
 </tr>
 <tr>
 <td>원고 <code>module-roles</code></td>
 <td>최신</td>
-<td>검토 2026-09-26 @ <code>ab240bb</code> · Claude (result history button on main, code-checked)</td>
+<td>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</td>
 </tr>
 <tr>
 <td>원고 <code>runtime-flow</code></td>
 <td>최신</td>
-<td>검토 2026-09-26 @ <code>ab240bb</code> · Claude (result history button on main, code-checked)</td>
+<td>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</td>
 </tr>
 <tr>
 <td>원고 <code>constraints</code></td>
 <td>최신</td>
-<td>검토 2026-09-26 @ <code>ab240bb</code> · Claude (result history button on main, code-checked)</td>
+<td>검토 2026-09-26 @ <code>efc3218</code> · Claude (Live controls #169 #174 #176 after main merge, code-checked)</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p>표의 <code>최신</code>은 기록된 근거와 원고가 검토 이후 바뀌지 않았다는 뜻입니다. 모든 기기에서 동작을 검증했다는 뜻은 아닙니다.</p>
