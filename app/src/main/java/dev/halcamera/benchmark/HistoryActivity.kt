@@ -120,15 +120,23 @@ class HistoryActivity : ComponentActivity() {
             showSelectionPopup(anchor, listOf("Camera · 전체") + values.map(CameraLabel::short), values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
         val runs = visible()
-        text("${runs.size}개 실행")
-        if (selectedId == null && !pickingComparison) button("두 실행 비교", runs.size >= 2) {
-            pickingComparison = true; render()
-        }
+        // The list actions share one row, as 비교 and 내보내기 do on the result screen: two full-width buttons and a
+        // count line pushed the first run to the middle of the screen. The count now sits on the list headings.
+        val listActions = Look.row(this)
+        if (selectedId == null && !pickingComparison) listActions.addView(
+            ghost("두 실행 비교", runs.size >= 2) { pickingComparison = true; render() }, Look.buttonParams(0, 1f)
+        )
+        listActions.addView(
+            ghost("CSV 내보내기", runs.isNotEmpty()) { exportCsv(runs) }.apply {
+                contentDescription = "현재 필터의 실행 ${runs.size}개를 CSV로 내보내기"
+            },
+            Look.buttonParams(0, 1f).apply { if (listActions.childCount > 0) marginStart = dp(8) }
+        )
+        body.addView(listActions, lp())
         if (pickingComparison && selectedId == null) {
             text("기준으로 사용할 실행을 선택하세요.")
             button("비교 선택 취소") { pickingComparison = false; render() }
         }
-        button("CSV 내보내기 · 현재 필터 ${runs.size}개", runs.isNotEmpty()) { exportCsv(runs) }
         indexError?.let { text("Baseline을 읽지 못했습니다: $it") }
         if (index.unreadableIds.isNotEmpty()) text("읽을 수 없는 파일 ${index.unreadableIds.size}개: ${index.unreadableIds.joinToString()}")
         selectedId?.let { id ->
@@ -140,13 +148,13 @@ class HistoryActivity : ComponentActivity() {
         // Baselines lead the list under their own heading. In a newest-first list a baseline, usually the oldest
         // run of its camera, sat at the very bottom with a grey badge, and nobody could tell which run it was.
         val (baselineRuns, otherRuns) = pointers.baselinesFirst(runs)
+        // Each heading counts its own group. One baseline per camera is the usual case, so "1개" would only be
+        // noise; a count appears once several cameras are listed together.
         if (baselineRuns.isNotEmpty()) {
-            // Each heading carries its own count: the total above them counts both groups. One baseline per camera
-            // is the usual case, so "1개" would only be noise; a count appears once cameras are listed together.
             heading(if (baselineRuns.size == 1) "Baseline" else "Baseline · ${baselineRuns.size}개")
             baselineRuns.forEach { runRow(it, byId) }
             if (otherRuns.isNotEmpty()) heading("다른 실행 · ${otherRuns.size}개")
-        }
+        } else if (otherRuns.isNotEmpty()) heading("실행 · ${otherRuns.size}개")
         otherRuns.take(pageSize).forEach { runRow(it, byId) }
         if (otherRuns.size > pageSize) button("더 보기 · ${otherRuns.size - pageSize}개 남음") { pageSize += 50; render() }
         scroll.post { scroll.scrollTo(0, if (wasComparison) listScrollY else scrollY) }
@@ -195,9 +203,12 @@ class HistoryActivity : ComponentActivity() {
             lines.addView(Look.text(this, it, 13, Look.onDarkMuted), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
         }
         val facts = "Capture $capture · ${CameraLabel.full(run.endpoint)}"
+        // With one camera picked in the filter every row would repeat its name, and the name pushed the line onto a
+        // third row behind the ⋮ button. The spoken label keeps it.
+        val shownFacts = if (endpointKey != null) "Capture $capture" else facts
         // Proportional, not monospace: nothing lines up between rows, and the mono advance pushed this
         // line onto a second row behind the ⋮ button.
-        lines.addView(Look.text(this, facts, 13, Look.onDarkMuted), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
+        lines.addView(Look.text(this, shownFacts, 13, Look.onDarkMuted), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
 
         val label = listOfNotNull(
             ResultPresenter.localTime(run.runId) ?: run.runId,
@@ -330,12 +341,14 @@ class HistoryActivity : ComponentActivity() {
     private fun text(value: String, size: Int = 14, bold: Boolean = false) {
         body.addView(Look.text(this, value, size, Look.onDark, bold = bold), lp())
     }
-    private fun button(label: String, enabled: Boolean = true, click: (View) -> Unit) {
-        body.addView(Look.ghostButton(this, label, dark = true) {}.apply {
+    private fun ghost(label: String, enabled: Boolean = true, click: (View) -> Unit) =
+        Look.ghostButton(this, label, dark = true) {}.apply {
             setOnClickListener { if (!busy) click(it) }
             isEnabled = enabled && !busy
             minHeight = dp(48)
-        }, lp())
+        }
+    private fun button(label: String, enabled: Boolean = true, click: (View) -> Unit) {
+        body.addView(ghost(label, enabled, click), lp())
     }
     private fun titleBar(title: String, sizeSp: Int, backLabel: String, click: () -> Unit) {
         body.addView(Look.titleBar(this, title, sizeSp, backLabel) { if (!busy) click() }.apply {
