@@ -45,7 +45,7 @@
 | M2 Measurement correctness | 완료. Galaxy S25+ 실기기 확인 |
 | M3 Product conversion | 완료 |
 | M4 Developer workflow | 완료. baseline 지정과 vs baseline / vs previous 열을 실기기에서 확인 |
-| M5a Internal score | 내부 점수 초안 구현. 밝은 조건의 release 적격 run 10회로 calibration을 만들고 저조도 3회에 별도 적용. 저조도 효과의 일관성, 발열·점유 경쟁 검증은 미완료 |
+| M5a Internal score | 내부 점수 초안 구현. 2026-09-26 v2 민감도 재검증에서 저조도·발열·점유 경쟁 모두 저하 기준 미달([검증 기록](validation/score-sensitivity-20260926.md)). 점수 설계 검토([#162](https://github.com/TTolsun/hal-camera/issues/162))가 남음 |
 | M5b Public endpoint score | 데이터 확보 대기. 여러 제조사·성능군의 5–10개 기기 분포 필요 |
 | M6 History / export | 완료. Results 필터, 두 run 비교·삭제, JSON·CSV 내보내기, PC 집계, subject 재사용 (PR #39, 이슈 #10 종료) |
 
@@ -103,9 +103,9 @@ Galaxy S25+ (`SM-S936N`, Android SDK 36)에서 무선 ADB로 수집했습니다.
 
 ## M5를 이어서 진행하는 순서
 
-1. 밝은 조건과 저조도를 추가 반복해 점수 차이가 정상 실행 간 변동보다 큰지 확인합니다. 이번 저조도 3회만으로 일관된 저하를 주장하지 않습니다.
-2. 발열·카메라 점유 경쟁 조건의 run을 각각 3회 이상 확보해 민감도를 검증합니다. 측정 자체가 실패하면 임의 점수 대신 계산 불가로 기록합니다. 스트레스 데이터는 curve 학습에 넣지 않습니다.
-3. 코드 리뷰는 완료했으며, 추가 실기기 결과로 민감도를 확인한 뒤 M5a 완료 여부를 결정합니다.
+1. 2026-09-26 v2 재검증([검증 기록](validation/score-sensitivity-20260926.md))에서 저조도·발열·점유 경쟁 각 6회가 모두 저하 기준을 만족하지 않았습니다. 원인은 척도 하한(중앙값의 15%)과, 측정 직전 기기 상태에 따라 두 갈래로 나뉘는 launch 지표입니다.
+2. 이 두 원인을 점수 설계에서 어떻게 다룰지 [이슈 #162](https://github.com/TTolsun/hal-camera/issues/162)에서 검토합니다. 결과에 맞춰 계수를 바꾸지 않으며, 설계를 바꾸면 scoring rule 버전을 올리고 다시 측정합니다.
+3. 점수 설계 검토 결과를 보고 M5a 완료 여부를 결정합니다.
 4. 제조사와 성능군이 다른 5–10개 기기의 적격 분포로 공개 curve를 확정한 뒤 `score-v1`로 전환합니다. M5a와 M5b의 완료 근거를 확인한 후 #9와 #4를 종료합니다.
 
 ## M3에서 한 일
