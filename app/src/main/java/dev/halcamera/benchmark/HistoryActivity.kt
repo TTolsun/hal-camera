@@ -253,15 +253,8 @@ class HistoryActivity : ComponentActivity() {
         val comparison = RegressionDetector.compare(base, current)
         titleBar("비교", 20, "실행 이력으로 돌아가기") { compareId = null; render() }
         if (busy) text("실행 기록을 처리하고 있습니다.")
-        // Which run is which, in the time the list shows. Old runs may carry a commit typed on a start card that no
-        // longer asks for one; it is still worth showing when it is there.
-        fun who(role: String, run: BenchmarkRun) = listOfNotNull(
-            "$role: ${ResultPresenter.localTime(run.runId) ?: run.runId}",
-            run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() },
-            run.subject.subjectCommit?.takeIf { it.isNotBlank() }
-        ).joinToString(" · ")
-        // The same names as the card below: Baseline when the picked run is the baseline, 선택한 run otherwise.
-        text("${who(ResultPresenter.referenceName(if (onBaseline) ComparedTo.BASELINE else ComparedTo.PREVIOUS, !onBaseline), base)}\n${who("이번 run", current)}")
+        // No "Baseline: … / 이번 run: …" lines here: the card below names the reference in its headline, and each
+        // run's build and commit are in its 실행 정보.
         if (!comparison.sameContract || !comparison.sameEndpoint) text("Profile·측정 계약 또는 camera endpoint가 달라 판정할 수 없습니다.")
         // The same bars and reference ticks as a run's result screen, with the picked run as the tick. Comparing
         // two runs used to be a column of text rows here and a percentage chart behind the result screen's 비교;
@@ -283,7 +276,8 @@ class HistoryActivity : ComponentActivity() {
 
     private fun menu(run: BenchmarkRun) {
         val isBaseline = pointers.baseline(run.contract.comparisonContractId, run.endpoint.key) == run.runId
-        choose(run.runId, listOf("결과 열기", if (isBaseline) "baseline 해제" else "baseline으로 지정", "비교", "JSON 내보내기", "CSV 내보내기", "삭제")) {
+        // The list shows the time, so the menu does too; the raw id did not look like the row it came from.
+        choose(ResultPresenter.localTime(run.runId) ?: run.runId, listOf("결과 열기", if (isBaseline) "baseline 해제" else "baseline으로 지정", "비교", "JSON 내보내기", "CSV 내보내기", "삭제")) {
             when (it) {
                 0 -> open(run)
                 1 -> {

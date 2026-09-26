@@ -170,7 +170,10 @@ object ResultPresenter {
             "카메라" to "$endpointName · ID ${run.endpoint.logicalCameraId}",
             localTime(run.runId)?.let { "측정 시각" to it },
             run.device.buildDisplay.takeIf { it.isNotBlank() }?.let { "OS 빌드" to it },
-            "측정 대상" to (run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() } ?: "입력하지 않음"),
+            "측정 대상" to (listOfNotNull(
+                run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() },
+                run.subject.subjectCommit?.takeIf { it.isNotBlank() }
+            ).joinToString(" · ").ifEmpty { "입력하지 않음" }),
             "표본" to "열기 ${launch}회 · 촬영 ${still}회",
             thermal.takeIf { it.size == 3 }?.let { "발열 단계" to it.joinToString(" → ") },
             run.validity.flags.takeIf { it.isNotEmpty() }?.let { flags ->
@@ -198,7 +201,8 @@ object ResultPresenter {
         return listOfNotNull(
             role to listOfNotNull(
                 localTime(reference.runId) ?: reference.runId,
-                reference.subject.subjectBuildLabel?.takeIf { it.isNotBlank() }
+                reference.subject.subjectBuildLabel?.takeIf { it.isNotBlank() },
+                reference.subject.subjectCommit?.takeIf { it.isNotBlank() }
             ).joinToString(" · "),
             reference.device.buildDisplay.takeIf { it.isNotBlank() }?.let { "$role OS" to it },
             thermal.takeIf { it.size == 3 }?.let { "$role 발열" to it.joinToString(" → ") },
@@ -571,7 +575,8 @@ object ResultPresenter {
         ConditionMismatch.THERMAL_MAX_DIFFERS -> "thermal 최고값 2단계 이상 차이"
         ConditionMismatch.POWER_SAVE_DIFFERS -> "절전 모드 다름"
         ConditionMismatch.CHARGING_DIFFERS -> "충전 상태 다름"
-        ConditionMismatch.EXPOSURE_DIFFERS -> "노출 부하 4배 이상 차이 (3A 제외)"
+        // "(3A 제외)" read as "3A aside"; what it means is that 3A is not judged under this difference.
+        ConditionMismatch.EXPOSURE_DIFFERS -> "노출 부하 4배 이상 차이 → 3A 판정 안 함"
     }
 
     /** 7.4: four axes summarised in one line; the subject axis is dropped when neither side is labelled. */

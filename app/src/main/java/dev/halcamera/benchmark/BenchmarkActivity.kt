@@ -334,7 +334,7 @@ class BenchmarkActivity : ComponentActivity() {
         card.addView(Look.text(this, "보관 개수", 19, Look.onDark, bold = true))
         val value = Look.text(this, RunRetention.label(options[picked]), 30, Look.primaryOnDark, bold = true, mono = true)
         card.addView(value, lp(top = 10))
-        card.addView(Look.text(this, "보관할 개수입니다. 넘으면 오래된 것부터 지우고 baseline은 남깁니다.", 12, Look.onDarkMuted), lp(top = 4))
+        card.addView(Look.text(this, "넘으면 오래된 것부터 지우고 baseline은 남깁니다.", 12, Look.onDarkMuted), lp(top = 4))
 
         // The horizontal padding is the thumb's own radius: with it removed the thumb is clipped in half at
         // both ends of the track, so it stays and the tick row is inset to match instead.
@@ -449,11 +449,10 @@ class BenchmarkActivity : ComponentActivity() {
             content.addView(card)
             return
         }
-        card.addView(Look.text(this, state.titleLine, 13, Look.onDarkMuted))
-        // What the feature does and what the run needs, before any jargon: the profile id and the preflight
-        // verdict move into the Details fold below.
-        card.addView(Look.text(this, "카메라를 벤치마킹합니다.", 15, Look.onDark, bold = true), lp(top = 12))
-        card.addView(Look.text(this, "${state.durationLine}\n${state.detailLine}", 13, Look.onDarkMuted), lp(top = 4))
+        // The measured condition leads; "카메라를 벤치마킹합니다." only repeated the screen title. What the run does
+        // comes first and how to prepare for it second, one line each.
+        card.addView(Look.text(this, state.titleLine, 15, Look.onDark, bold = true))
+        card.addView(Look.text(this, "${state.detailLine}\n${state.durationLine}", 13, Look.onDarkMuted), lp(top = 4))
         card.addView(statusChips(), lp(top = 14))
         state.notices.forEach { card.addView(Look.text(this, "· $it", 12, Look.statusWarn), lp(top = 8)) }
         state.blockedReason?.let { card.addView(Look.text(this, it, 13, Look.statusFail, bold = true), lp(top = 10)) }
@@ -462,10 +461,13 @@ class BenchmarkActivity : ComponentActivity() {
         // extra fields to skip past, and the run JSON still carries all three for files written earlier.
         if (state.canStart || state.refreshable) {
             val draft = draftSubject ?: subjectPrefs.last()
+            // A label above the field: its hint disappears once a value is typed, and "i123-s7-control-day2" alone
+            // did not say what it was.
+            card.addView(Look.text(this, "측정 대상 빌드", 12, Look.onDarkMuted), lp(top = 14))
             buildInput = input(draft.subjectBuildLabel).also {
                 it.contentDescription = "측정 대상 빌드 이름"
-                it.hint = "빌드 이름 (선택)"
-                card.addView(it, lp(top = 14))
+                it.hint = "선택"
+                card.addView(it, lp(top = 4))
             }
         } else {
             buildInput = null

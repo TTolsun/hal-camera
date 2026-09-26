@@ -85,18 +85,10 @@ object BenchmarkResultCards {
         sections.forEach { section ->
             metricsCard.addView(Look.text(context, section.title, 13, Look.onDarkMuted, bold = true), lp(16))
             section.bars.forEach { k ->
-                // Name and value on the first line, with the Camera2 span beside the name in small type so a HAL
-                // developer can tell what "Partial" measures without leaving the screen.
+                // Name and value on the first line, the Camera2 span on its own line under the name. Beside the name it
+                // wrapped wherever the column ran out ("createCaptureSession →" / "onConfigured").
                 val top = Look.row(context)
-                val name = android.text.SpannableStringBuilder(k.label).apply {
-                    if (k.statLabel.isNotBlank()) append(" · ${k.statLabel}")
-                    if (k.span.isNotBlank()) {
-                        val from = length
-                        append("  ${k.span}")
-                        setSpan(android.text.style.RelativeSizeSpan(0.8f), from, length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        setSpan(android.text.style.ForegroundColorSpan(Look.onDarkMuted), from, length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                    }
-                }
+                val name = if (k.statLabel.isBlank()) k.label else "${k.label} · ${k.statLabel}"
                 top.addView(Look.text(context, name, 13, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
                 val valueColor = if (k.tone == Tone.BAD) Look.statusFail else Look.onDark
                 // A count has no bar, so its change sits beside its value on the one line it has.
@@ -107,6 +99,7 @@ object BenchmarkResultCards {
                 top.addView(Look.text(context, k.valueText, 15, valueColor, bold = true, mono = true),
                     LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
                 metricsCard.addView(top, lp(10))
+                if (k.span.isNotBlank()) metricsCard.addView(Look.text(context, k.span, 11, Look.onDarkMuted), lp(0))
                 if (!k.count) {
                     // The change at the right end of the bar: two lines a row instead of three.
                     val barRow = Look.row(context)

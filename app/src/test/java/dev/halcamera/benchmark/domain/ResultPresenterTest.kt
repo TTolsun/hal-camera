@@ -243,7 +243,7 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.7", 400.0)), thermalMax = 3, exposureLoad = 5.0e6,
             flags = listOf(ValidityFlags.THERMAL_HIGH))
         val v = present(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
-        assertEquals("비교 시점 조건 차이: thermal 최고값 2단계 이상 차이 · 노출 부하 4배 이상 차이 (3A 제외)", v.conditionLine)
+        assertEquals("비교 시점 조건 차이: thermal 최고값 2단계 이상 차이 · 노출 부하 4배 이상 차이 → 3A 판정 안 함", v.conditionLine)
     }
 
     @Test fun withoutAConditionDifferenceThereIsNoBanner() {
@@ -674,7 +674,8 @@ class ResultPresenterTest {
         assertEquals("samsung SM-S936N", facts.first { it.first == "기기" }.second)
         assertEquals("충전 중 · 빌드 이름 없음", facts.first { it.first == "참고 사항" }.second)
         assertEquals("20260923-013403-785.json", facts.first { it.first == "파일" }.second)
-        assertEquals("SW42", facts.first { it.first == "측정 대상" }.second)
+        // An old run's commit stays visible: with the history comparison's header lines gone, this is where it lives.
+        assertEquals("SW42 · a8f29c1", facts.first { it.first == "측정 대상" }.second)
 
         val unlabelled = run(subject = SubjectLabel())
         val without = ResultPresenter.runFacts(unlabelled, "samsung SM-S936N", "Rear main", null)
