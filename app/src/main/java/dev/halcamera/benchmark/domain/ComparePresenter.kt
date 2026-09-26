@@ -73,7 +73,7 @@ object ComparePresenter {
             baseHeader = if (againstBaseline) "Baseline" else if (selectedReference) "Selected" else "Previous",
             referenceNote = when {
                 againstBaseline -> null
-                selectedReference -> "선택한 run 대비 delta만 표시합니다 · baseline은 변경하지 않습니다"
+                selectedReference -> "비교 대상 대비 delta만 표시합니다 · baseline은 변경하지 않습니다"
                 // The baseline has nothing above it to be measured against, so it too falls back to the previous
                 // run. Saying "baseline 없음" on the baseline's own screen contradicts the button beside it.
                 currentIsBaseline -> "이 run이 baseline입니다 · 이전 run 대비 delta만 표시합니다"

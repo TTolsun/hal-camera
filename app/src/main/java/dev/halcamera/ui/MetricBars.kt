@@ -15,14 +15,18 @@ internal class MeterView(
     context: Context,
     private val fraction: Float,
     private val baseFraction: Float?,
-    degraded: Boolean
+    degraded: Boolean,
+    /** The reference is past the end of the track: its tick sits at the end with an arrow pointing on. */
+    private val baseBeyond: Boolean = false
 ) : View(context) {
 
     private val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.expertTile3 }
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = if (degraded) Look.statusFail else Look.primaryOnDark
     }
-    private val tick = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.onDarkMuted }
+    // White and 2dp wide: the grey 3px tick nearly vanished on the dark track, in the legend most of all.
+    private val tick = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.onDark }
+    private val tickHalf = Look.dp(context, 1).toFloat()
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), Look.dp(context, 12))
@@ -36,43 +40,17 @@ internal class MeterView(
         canvas.drawRoundRect(0f, barTop, w, barBottom, r, r, track)
         canvas.drawRoundRect(0f, barTop, w * fraction.coerceIn(0f, 1f), barBottom, r, r, fill)
         baseFraction?.let {
-            val x = (w * it.coerceIn(0f, 1f)).coerceIn(1.5f, w - 1.5f)
-            canvas.drawRect(x - 1.5f, 0f, x + 1.5f, height.toFloat(), tick)
+            if (baseBeyond) {
+                // A small arrow at the end of the track: the reference is further on than the track reaches.
+                val h = height.toFloat()
+                val path = android.graphics.Path().apply {
+                    moveTo(w - h * 0.6f, 0f); lineTo(w, h / 2); lineTo(w - h * 0.6f, h); close()
+                }
+                canvas.drawPath(path, tick)
+                return@let
+            }
+            val x = (w * it.coerceIn(0f, 1f)).coerceIn(tickHalf, w - tickHalf)
+            canvas.drawRect(x - tickHalf, 0f, x + tickHalf, height.toFloat(), tick)
         }
-    }
-}
-
-/**
- * One row of the compare screen's delta chart: a bar growing right (degraded) or left (improved) from a
- * centre zero line. [pct] is the metric's signed delta and [maxPct] the largest magnitude on the screen, so
- * every row shares one scale.
- */
-internal class DeltaBarView(
-    context: Context,
-    private val pct: Float,
-    private val maxPct: Float,
-    degraded: Boolean
-) : View(context) {
-
-    private val zero = Paint().apply { color = Look.expertTile3 }
-    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = if (degraded) Look.statusFail else Look.primaryOnDark
-    }
-
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), Look.dp(context, 14))
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        val w = width.toFloat()
-        val centre = w / 2f
-        canvas.drawRect(centre - 0.5f, 0f, centre + 0.5f, height.toFloat(), zero)
-        if (maxPct <= 0f) return
-        val extent = (kotlin.math.abs(pct) / maxPct).coerceIn(0f, 1f) * (w / 2f - Look.dp(context, 2))
-        val top = height * 0.15f
-        val bottom = height * 0.85f
-        val r = Look.dp(context, 2).toFloat()
-        if (pct >= 0f) canvas.drawRoundRect(centre, top, centre + extent, bottom, r, r, fill)
-        else canvas.drawRoundRect(centre - extent, top, centre, bottom, r, r, fill)
     }
 }

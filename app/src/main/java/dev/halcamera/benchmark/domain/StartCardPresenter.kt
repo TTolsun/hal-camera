@@ -79,13 +79,13 @@ object StartCardPresenter {
         }
         return StartCard(
             // No engine name: the profile is Camera2-only, so this always read "Camera2" and told the reader
-            // nothing. It also collided with the camera label right after it — "Camera2 · Camera · 0 (Wide ·
-            // Rear)" reads as one phrase. Entering from a CameraX preview is announced in notices instead.
-            titleLine = listOf(endpointName, conditionLabel(profile), launchModeLabel(profile))
-                .joinToString(" · "),
+            // nothing. No camera either: the camera button right under the card names it, and the two together
+            // said it twice. Entering from a CameraX preview is announced in notices instead.
+            titleLine = listOf(conditionLabel(profile), launchModeLabel(profile)).joinToString(" · "),
             profileLine = "Profile  ${profile.id}",
             verdictLine = verdictLine(compatibility),
-            durationLine = "약 ${estimatedSeconds(profile)}초 · 화면을 켠 채 유지 · 밝은 피사체를 향해 고정",
+            // How to prepare, short enough for one line; "…향해 / 고정" used to break off its last word.
+            durationLine = "약 ${estimatedSeconds(profile)}초 · 화면 켠 채 · 밝은 피사체에 고정",
             detailLine = listOfNotNull(
                 "${profile.launchIterations}× open",
                 "${profile.observeMs / 1000}초 관측",

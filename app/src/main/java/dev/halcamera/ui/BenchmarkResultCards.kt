@@ -1,10 +1,8 @@
 package dev.halcamera.ui
 
 import android.content.Context
-import android.view.Gravity
 import android.widget.LinearLayout
 import dev.halcamera.benchmark.domain.BenchmarkRun
-import dev.halcamera.benchmark.domain.ComparePresenter
 import dev.halcamera.benchmark.domain.ComparedTo
 import dev.halcamera.benchmark.domain.ResultPresenter
 import dev.halcamera.benchmark.domain.ResultView
@@ -13,17 +11,25 @@ import dev.halcamera.benchmark.domain.Tone
 import dev.halcamera.camera.CameraLabel
 
 /**
- * The cards of BENCHMARK's result (8.4) and compare (7.3) screens.
+ * The cards of BENCHMARK's result screen (8.4), which is also the only way two runs are compared.
  *
- * Every number and sentence comes from [ResultPresenter] and [ComparePresenter]; this file only lays them out. The
- * buttons under the cards and what they do stay in BenchmarkActivity, which owns the run, the baseline and the export.
- * The cards were split out so BenchmarkActivity stays inside the 60,000-character input the docs scan can read.
+ * There used to be a second chart for that, a percentage bar around a zero line behind a 비교 button, and run
+ * history drew its comparison as text rows. Three pictures of one comparison was two too many; the bars with a
+ * reference tick stayed, and this card now carries everything the other two showed (percentages, rows only the
+ * reference measured, why a row was not judged, and the reference run's facts).
+ *
+ * Every number and sentence comes from [ResultPresenter]; this file only lays them out. The buttons under the
+ * cards and what they do stay in BenchmarkActivity and HistoryActivity. The cards were split out so
+ * BenchmarkActivity stays inside the 60,000-character input the docs scan can read.
  */
 object BenchmarkResultCards {
     /**
      * Adds the headline card and the metrics card to [content] and returns the presented view, whose baseline button
      * label and state the activity needs for its actions. The verdict leads, every metric follows as a bar grouped
      * by category, and the run facts fold (mockup v7).
+     *
+     * [reference] is the run the ticks stand for: the baseline, the previous run, or the run picked first in run
+     * history's 두 실행 비교, which is that comparison's baseline.
      */
     fun addResult(
         context: Context,
@@ -33,6 +39,7 @@ object BenchmarkResultCards {
         comparedTo: ComparedTo,
         isBaseline: Boolean,
         fileName: String?,
+        reference: BenchmarkRun? = null,
     ): ResultView {
         val dp = { v: Int -> Look.dp(context, v) }
         val lp = { top: Int -> LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top) } }
@@ -50,7 +57,12 @@ object BenchmarkResultCards {
         }
         card.addView(Look.text(context, head.text, 21, headColor, bold = true))
         card.addView(Look.text(context, head.sub, 13, Look.onDarkMuted), lp(6))
-        view.conditionLine?.let { card.addView(Look.text(context, it, 13, Look.statusWarn), lp(8)) }
+        // One line per condition difference under a short title. Run together after "비교 시점 조건 차이:" the items
+        // wrapped wherever the card ran out ("노출 부하" / "4배 이상 차이").
+        comparison?.conditionMismatches?.takeIf { it.isNotEmpty() }?.let { mismatches ->
+            val lines = listOf("비교 시점 조건 차이") + mismatches.map { "· ${ResultPresenter.conditionText(it)}" }
+            card.addView(Look.text(context, lines.joinToString("\n"), 13, Look.statusWarn), lp(8))
+        }
         ResultPresenter.scoreValue(run)?.let { total ->
             val scoreRow = Look.row(context)
             scoreRow.addView(Look.text(context, total.toString(), 30, Look.onDark, bold = true, mono = true))
@@ -63,43 +75,68 @@ object BenchmarkResultCards {
         // Metrics card: every metric is a bar, grouped by category. The table behind an "All metrics" fold is gone:
         // a number next to its baseline is what this screen is for, and a bar answers that faster than a row of digits.
         val metricsCard = Look.card(context, dark = true)
-        val sections = ResultPresenter.metricBars(run, comparison, comparedTo)
-        var anyBaseline = false
-        sections.forEachIndexed { sectionIndex, section ->
-            metricsCard.addView(Look.text(context, section.title, 13, Look.onDarkMuted, bold = true), lp(if (sectionIndex == 0) 0 else 20))
-            section.bars.forEachIndexed { i, k ->
-                if (k.baseFraction != null) anyBaseline = true
+        val sections = ResultPresenter.metricBars(run, comparison, comparedTo, reference)
+        // One legend line at the top, before the bars it explains. The keys are drawn with the bar itself, a piece of
+        // fill and a tick on a track, not with "━" and "│", which looked like neither and read as punctuation.
+        val legend = Look.row(context)
+        fun key(view: android.view.View, widthDp: Int, label: String) {
+            legend.addView(view, LinearLayout.LayoutParams(dp(widthDp), -2).apply {
+                if (legend.childCount > 0) marginStart = dp(12)
+            })
+            legend.addView(Look.text(context, label, 11, Look.onDarkMuted), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(6) })
+        }
+        if (comparedTo != ComparedTo.NONE) {
+            key(MeterView(context, 1f, null, false), 20, ResultPresenter.COMPARE_LABEL)
+            key(MeterView(context, 0f, 0.5f, false), 12, ResultPresenter.legendReferenceLabel(comparedTo))
+        }
+        metricsCard.addView(legend)
+        // Its own line: beside the two keys it was cut off at the card's edge on a Galaxy S25+.
+        metricsCard.addView(Look.text(context, "대표값: Median", 11, Look.onDarkMuted), lp(4))
+        sections.forEach { section ->
+            metricsCard.addView(Look.text(context, section.title, 13, Look.onDarkMuted, bold = true), lp(16))
+            section.bars.forEach { k ->
+                // Name and value on the first line, the Camera2 span on its own line under the name. Beside the name it
+                // wrapped wherever the column ran out ("createCaptureSession →" / "onConfigured").
                 val top = Look.row(context)
-                val label = if (k.statLabel.isBlank()) k.label else "${k.label} · ${k.statLabel}"
-                top.addView(Look.text(context, label, 13, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
-                top.addView(Look.text(context, k.valueText, 15, if (k.tone == Tone.BAD) Look.statusFail else Look.onDark, bold = true, mono = true))
-                k.deltaText?.let {
-                    val deltaColor = when (k.tone) {
-                        Tone.BAD -> Look.statusFail
-                        Tone.GOOD -> Look.primaryOnDark
-                        Tone.NEUTRAL -> Look.onDarkMuted
-                    }
-                    top.addView(Look.text(context, it, 12, deltaColor, bold = true), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
+                val name = if (k.statLabel.isBlank()) k.label else "${k.label} · ${k.statLabel}"
+                top.addView(Look.text(context, name, 13, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
+                val valueColor = if (k.tone == Tone.BAD) Look.statusFail else Look.onDark
+                // A count has no bar, so its change sits beside its value on the one line it has.
+                if (k.count) k.deltaText?.let {
+                    top.addView(Look.text(context, it, 12, deltaColor(k.tone), bold = true),
+                        LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
                 }
-                metricsCard.addView(top, lp(if (i == 0) 8 else 14))
-                metricsCard.addView(MeterView(context, k.fraction.toFloat(), k.baseFraction?.toFloat(), k.tone == Tone.BAD), lp(6))
+                top.addView(Look.text(context, k.valueText, 15, valueColor, bold = true, mono = true),
+                    LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
+                metricsCard.addView(top, lp(10))
+                if (k.span.isNotBlank()) metricsCard.addView(Look.text(context, k.span, 11, Look.onDarkMuted), lp(0))
+                if (!k.count) {
+                    // The change at the right end of the bar: two lines a row instead of three.
+                    val barRow = Look.row(context)
+                    barRow.addView(MeterView(context, k.fraction.toFloat(), k.baseFraction?.toFloat(), k.tone == Tone.BAD, k.baseBeyond),
+                        LinearLayout.LayoutParams(0, -2, 1f))
+                    k.deltaText?.let {
+                        barRow.addView(Look.text(context, it, 12, deltaColor(k.tone), bold = true),
+                            LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
+                    }
+                    metricsCard.addView(barRow, lp(4))
+                }
+                // Why this row has no verdict or no fill; the removed compare chart said it beside the row.
+                k.note?.let { metricsCard.addView(Look.text(context, it, 11, Look.onDarkMuted), lp(2)) }
             }
-        }
-        if (anyBaseline) {
-            val tickName = if (comparedTo == ComparedTo.BASELINE) "baseline" else "이전 run"
-            metricsCard.addView(Look.text(context, "막대 = 이번 run · 눈금 = $tickName", 11, Look.onDarkMuted), lp(12))
-        }
-        // How far a length may be compared. Without it the reader has to guess the rule from the bars, and the guess
-        // a column of bars invites — every row on one axis — is not the rule a mixed-unit section follows.
-        ResultPresenter.barScaleNote(sections)?.let {
-            metricsCard.addView(Look.text(context, it, 11, Look.onDarkMuted), lp(if (anyBaseline) 4 else 12))
         }
         // Label and value pairs, not seven sentences that repeated each other: the eligibility line named the same
         // flags the summary printed again as codes, and neither said what a code meant.
         val details = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        ResultPresenter.runFacts(run, deviceName, endpointName, fileName).forEachIndexed { i, (label, fact) ->
+        // The reference run's facts follow this run's, so the fold answers "compared with what" as well; the compare
+        // screen that used to hold them is gone.
+        val role = ResultPresenter.referenceName(comparedTo)
+        val referenceFacts = reference?.takeIf { comparedTo != ComparedTo.NONE }
+            ?.let { ResultPresenter.referenceFacts(it, comparison, role) }.orEmpty()
+        (ResultPresenter.runFacts(run, deviceName, endpointName, fileName) + referenceFacts).forEachIndexed { i, (label, fact) ->
             val factRow = Look.row(context)
-            factRow.addView(Look.text(context, label, 12, Look.onDarkMuted), LinearLayout.LayoutParams(dp(76), -2))
+            // 96dp so "Baseline 발열" and "이전 run 발열" stay on one line.
+            factRow.addView(Look.text(context, label, 12, Look.onDarkMuted), LinearLayout.LayoutParams(dp(96), -2))
             factRow.addView(Look.text(context, fact, 12, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
             details.addView(factRow, lp(if (i == 0) 4 else 8))
         }
@@ -111,65 +148,13 @@ object BenchmarkResultCards {
         return view
     }
 
-    /** Adds the compare card: a delta chart around a zero line first, and rows a chart cannot carry as text below it. */
-    fun addCompare(
-        context: Context,
-        content: LinearLayout,
-        run: BenchmarkRun?,
-        base: BenchmarkRun?,
-        comparison: RunComparison?,
-        comparedTo: ComparedTo,
-        isBaseline: Boolean,
-    ) {
-        val dp = { v: Int -> Look.dp(context, v) }
-        val lp = { top: Int -> LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top) } }
-        val card = Look.card(context, dark = true)
-        if (run == null || base == null || comparison == null) {
-            card.addView(Look.text(context, "비교할 run이 없습니다.", 13, Look.onDarkMuted), lp(2))
-            content.addView(card)
-            return
-        }
-        val view = ComparePresenter.present(base, run, comparison, comparedTo, isBaseline)
-        card.addView(Look.text(context, "Delta vs ${view.baseHeader.lowercase()}", 19, Look.onDark, bold = true))
-        view.referenceNote?.let { card.addView(Look.text(context, it, 13, Look.onDarkMuted), lp(6)) }
-        val regressed = view.rows.filter { it.marker.startsWith("▲") }
-        if (regressed.isNotEmpty()) {
-            card.addView(Look.text(context, "▲ ${regressed.size} degraded", 17, Look.statusFail, bold = true), lp(10))
-        }
-        view.conditionLine?.let { card.addView(Look.text(context, it, 13, Look.statusWarn), lp(8)) }
-
-        // The chart: one shared percentage scale, degraded grows right, improved grows left.
-        val charted = view.rows.filter { it.deltaPct != null }
-        if (charted.isNotEmpty()) {
-            card.addView(Look.text(context, "◀ Improved · Degraded ▶", 11, Look.onDarkMuted), lp(12))
-            // An informational outlier (a 3A metric can move by thousands of percent) must not flatten every judged
-            // bar, so the shared scale caps at 100% and larger deltas saturate.
-            val maxPct = charted.maxOf { kotlin.math.abs(it.deltaPct!!) }.coerceIn(1.0, 100.0)
-            charted.forEach { row ->
-                val line = Look.row(context)
-                val degraded = row.marker.startsWith("▲")
-                val valueColor = when {
-                    degraded -> Look.statusFail
-                    row.marker.startsWith("▼") -> Look.primaryOnDark
-                    else -> Look.onDarkMuted
-                }
-                line.addView(Look.text(context, row.label, 12, Look.onDarkMuted), LinearLayout.LayoutParams(dp(96), -2))
-                line.addView(DeltaBarView(context, row.deltaPct!!.toFloat(), maxPct.toFloat(), degraded),
-                    LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(4); marginEnd = dp(8) })
-                line.addView(Look.text(context, row.delta, 12, valueColor, bold = true, mono = true).apply {
-                    gravity = Gravity.END
-                }, LinearLayout.LayoutParams(dp(56), -2))
-                card.addView(line, lp(8))
-            }
-        }
-
-        // Rows without a percentage (counts, unit changes, unknowns) keep their textual form.
-        view.rows.filter { it.deltaPct == null }.forEach { card.addView(MetricRows.comparison(context, it, view.baseHeader)) }
-        val details = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-        listOfNotNull(view.baseLine, view.currentLine, view.identityLine).forEach {
-            details.addView(Look.text(context, it.trim().replace(Regex(" {2,}"), " · "), 12, Look.onDarkMuted), lp(8))
-        }
-        card.addView(Look.disclosure(context, "실행 정보", details), lp(10))
-        content.addView(card)
+    /**
+     * One colour per verdict for every delta on the card: red degraded, green improved, grey not judged. Improved
+     * used to be blue, which on this app's dark screens is the colour of things that can be pressed.
+     */
+    private fun deltaColor(tone: Tone): Int = when (tone) {
+        Tone.BAD -> Look.statusFail
+        Tone.GOOD -> Look.statusPass
+        Tone.NEUTRAL -> Look.onDarkMuted
     }
 }

@@ -232,7 +232,6 @@ sources:
           - app/src/main/java/dev/halcamera/ui/IconButton.kt
           - app/src/main/java/dev/halcamera/ui/LiveReadout.kt
           - app/src/main/java/dev/halcamera/ui/Look.kt
-          - app/src/main/java/dev/halcamera/ui/MetricRows.kt
           - app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt
           - app/src/main/java/dev/halcamera/ui/ScopeView.kt
           - app/src/main/java/dev/halcamera/ui/SelectionPopup.kt
@@ -335,7 +334,6 @@ sources:
       - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
       - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
       - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
-      - app/src/main/java/dev/halcamera/ui/MetricRows.kt
       - tools/halcam/halcam/cli.py
       - tools/halcam/halcam/download.py
     elements:
@@ -369,9 +367,11 @@ sources:
           - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
       rendered-screens:
         evidence:
-          - app/src/main/java/dev/halcamera/ui/MetricRows.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/ComparePresenter.kt
+      # The CLI adapters moved out when ResultPresenter.kt grew past the element's 60,000-character input (#182).
+      rendered-screens/cli-bridge:
+        evidence:
           - app/src/main/java/dev/halcamera/cli/LiveController.kt
           - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
       rendered-screens/history-list:

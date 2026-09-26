@@ -4,6 +4,7 @@ import dev.halcamera.benchmark.domain.BenchmarkRunFixture.metric
 import dev.halcamera.benchmark.domain.BenchmarkRunFixture.run
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -152,7 +153,7 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 170.0)))
         val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
         assertEquals("No baseline · shown vs previous run 20260910-100000-000", v.comparisonLine)
-        assertEquals("[ baseline으로 지정 ]을 누르면 이 run이 기준이 됩니다", v.hint)
+        assertEquals("[ baseline으로 지정 ]을 누르면 이 run이 baseline이 됩니다", v.hint)
     }
 
     @Test fun theFirstRunOfADeviceHasNeitherBaselineNorPrevious() {
@@ -177,7 +178,7 @@ class ResultPresenterTest {
         val previous = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 150.0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 164.0)))
         val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
-        assertEquals("[ baseline으로 지정 ]을 누르면 이 run이 기준이 됩니다", v.hint)
+        assertEquals("[ baseline으로 지정 ]을 누르면 이 run이 baseline이 됩니다", v.hint)
     }
 
     @Test fun theBaselineItselfIsNotDescribedAsHavingNoBaseline() {
@@ -242,7 +243,7 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.7", 400.0)), thermalMax = 3, exposureLoad = 5.0e6,
             flags = listOf(ValidityFlags.THERMAL_HIGH))
         val v = present(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
-        assertEquals("비교 시점 조건 차이: thermal 최고값 2단계 이상 차이 · 노출 부하 4배 이상 차이 (3A 제외)", v.conditionLine)
+        assertEquals("비교 시점 조건 차이: thermal 최고값 2단계 이상 차이 · 노출 부하 4배 이상 차이 → 3A 판정 안 함", v.conditionLine)
     }
 
     @Test fun withoutAConditionDifferenceThereIsNoBanner() {
@@ -350,7 +351,7 @@ class ResultPresenterTest {
 
         val open = bars.first { it.label == "Open" }
         assertEquals("128 ms", open.valueText)
-        assertEquals("+28 ms", open.deltaText)
+        assertEquals("+28 ms · +28%", open.deltaText)
         // The largest millisecond value of the section — First frame, 412 ms — sits at 80% of the bar, and every
         // other Launch row is measured against it, so both the fill and the tick stay on screen.
         val scale = 412.0 / 0.8
@@ -378,7 +379,7 @@ class ResultPresenterTest {
 
     @Test fun aUnitWithOneRowInItsSectionKeepsItsOwnScale() {
         // A frame rate on the millisecond axis would draw a 30 fps recording shorter than its own start latency,
-        // so the two units stay apart and the note under the card says the fps bar compares with nothing.
+        // so the two units stay apart.
         val current = run(metrics = listOf(
             launchMetric("3.1", 186.0, 201.0),
             windowMetric("3.4", 30.0),
@@ -392,29 +393,24 @@ class ResultPresenterTest {
         assertTrue(record.getValue("Record stalls").ownScale)
         assertFalse(record.getValue("Record start").ownScale)
         assertEquals(0.8 * 186.0 / 302.0, record.getValue("Record start").fraction, 1e-9)
-        assertTrue(ResultPresenter.barScaleNote(sections)!!.contains("자체 스케일"))
+        // A count is drawn as a number, not a bar.
+        assertTrue(record.getValue("Record stalls").count)
     }
 
-    @Test fun theScaleNoteSaysHowFarALengthMayBeCompared() {
-        val shared = ResultPresenter.metricBars(
-            run(metrics = listOf(launchMetric("1.1", 11.0, 14.0), launchMetric("1.6", 561.0, 590.0))),
-            null, ComparedTo.NONE
-        )
-        // Nothing stands alone here, so the note only names the rule and does not warn about a lone unit.
-        assertEquals("막대 길이는 같은 묶음 안에서 단위가 같은 지표끼리 비교됩니다", ResultPresenter.barScaleNote(shared))
-        assertNull(ResultPresenter.barScaleNote(emptyList()))
-    }
-
-    @Test fun aBaselineFarAboveThisRunKeepsItsTickOnTheTrack() {
+    @Test fun aBaselineFarAboveThisRunNoLongerFlattensTheBarsBesideIt() {
+        // Seen on a Galaxy S25+: a 13 s AF baseline set the 3A scale and drew AE 404 ms as a dot.
         val base = run(runId = "20260910-100000-000", metrics = listOf(
             launchMetric("1.1", 900.0, 950.0), launchMetric("1.6", 120.0, 140.0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(
             launchMetric("1.1", 120.0, 140.0), launchMetric("1.6", 130.0, 150.0)))
         val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
-            .flatMap { it.bars }
-        // The shared scale counts the ticks too, so a baseline nobody came close to still fits inside the bar.
-        assertEquals(0.8, bars.first { it.label == "Open" }.baseFraction!!, 1e-9)
-        assertTrue(bars.all { (it.baseFraction ?: 0.0) <= 0.8 + 1e-9 && it.fraction <= 0.8 + 1e-9 })
+            .flatMap { it.bars }.associateBy { it.label }
+        // This run's largest value sits at 80%; the far-off tick is pinned to the end and flagged.
+        assertEquals(0.8, bars.getValue("First frame").fraction, 1e-9)
+        assertEquals(0.8 * 120.0 / 130.0, bars.getValue("Open").fraction, 1e-9)
+        assertTrue(bars.getValue("Open").baseBeyond)
+        assertEquals(1.0, bars.getValue("Open").baseFraction!!, 1e-9)
+        assertFalse(bars.getValue("First frame").baseBeyond)
     }
 
     @Test fun frameRateLeadsThePreviewSectionAsHOneUpsideDown() {
@@ -446,9 +442,9 @@ class ResultPresenterTest {
 
     // ---- every metric as a bar ----
 
-    @Test fun theShownNumberIsTheMedianAndSaysSo() {
-        // The value a sampled latency stores is its median (BenchmarkEvaluator sets value = p50), so the row
-        // must not borrow statHeader, which names the second statistic the old table put beside it.
+    @Test fun rowsCarryTheirCamera2SpanInsteadOfARepeatedMedianCaption() {
+        // The value a sampled latency stores is its median (BenchmarkEvaluator sets value = p50); the card's legend
+        // says so once instead of "· median" on every row. What a HAL developer needs beside the name is the span.
         val current = run(metrics = listOf(
             launchMetric("1.1", 142.0, 161.0, n = 9),
             launchMetric("2.2", 164.0, 190.0, n = 25),
@@ -456,12 +452,54 @@ class ResultPresenterTest {
             countMetric("H.5", 0)
         ))
         val bars = ResultPresenter.metricBars(current, null, ComparedTo.NONE).flatMap { it.bars }
-        assertEquals("median", bars.first { it.label == "Open" }.statLabel)
-        assertEquals("median", bars.first { it.label == "Capture" }.statLabel)
-        // These two already name their statistic, and a count has none.
-        assertEquals("", bars.first { it.label == "Interval p50" }.statLabel)
-        assertEquals("", bars.first { it.label == "Stalls" }.statLabel)
+        assertTrue(bars.all { it.statLabel.isEmpty() })
+        assertEquals("openCamera → onOpened", bars.first { it.label == "Open" }.span)
+        assertEquals("capture → onImageAvailable", bars.first { it.label == "Capture" }.span)
         assertEquals("0", bars.first { it.label == "Stalls" }.valueText)
+        assertTrue(BenchmarkMetricCatalog.ids.all { BenchmarkMetricCatalog.info(it)!!.span.isNotBlank() })
+    }
+
+    @Test fun aValueBelowATenthOfAMillisecondIsShownInMicroseconds() {
+        // Seen on a Galaxy S25+: preview jitter printed "0.0 ms", then "0.00 ms", beside a -19% change.
+        fun shown(v: Double) = ResultPresenter.metricBars(run(metrics = listOf(windowMetric("H.10", v))), null, ComparedTo.NONE)
+            .flatMap { it.bars }.single().valueText
+        assertEquals("170 ns", shown(0.00017))
+        assertEquals("3 µs", shown(0.0031))
+        assertEquals("21 µs", shown(0.021))
+        assertEquals("0.4 ms", shown(0.40))
+    }
+
+    @Test fun aReferenceThatTimedOutIsNotComparedAgainst() {
+        // Seen on a Galaxy S25+: the baseline's AF timed out and stored a 13 s window; the card drew it as a tick and
+        // printed "-12448 ms · -96%" against this run's 562 ms convergence.
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("H.7", 13010.0, timeout = true), metric("H.6", 227.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.7", 562.0), metric("H.6", 404.0)))
+        val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE, base)
+            .flatMap { it.bars }.associateBy { it.label }
+        val af = bars.getValue("AF")
+        assertEquals("562 ms", af.valueText)
+        assertNull(af.baseFraction)
+        assertNull(af.deltaText)
+        assertEquals("Baseline은 timeout", af.note)
+        assertNotNull(bars.getValue("AE").baseFraction)
+    }
+
+    @Test fun aJitterIsScaledApartFromTheIntervalsOfItsSection() {
+        // 83 ns beside 33.3 ms intervals drew an empty bar and an invisible tick.
+        val current = run(metrics = listOf(windowMetric("H.1", 33.3), windowMetric("H.10", 0.000083)))
+        val preview = ResultPresenter.metricBars(current, null, ComparedTo.NONE).single { it.title == "Preview" }
+            .bars.associateBy { it.label }
+        assertEquals(0.8, preview.getValue("Jitter").fraction, 1e-9)
+        assertEquals(0.8, preview.getValue("Interval p50").fraction, 1e-9)
+    }
+
+    @Test fun anUnchangedCountShowsNoDelta() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(countMetric("H.5", 0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(countMetric("H.5", 0)))
+        val bar = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+            .flatMap { it.bars }.single()
+        assertNull(bar.deltaText)
+        assertTrue(bar.count)
     }
 
     @Test fun barsCoverEveryMeasuredMetricGroupedByCategory() {
@@ -533,7 +571,86 @@ class ResultPresenterTest {
         val base = run(metrics = listOf(windowMetric("3.7", 0.40)), runId = "20260924-000000-000")
         val current = run(metrics = listOf(windowMetric("3.7", 0.75)))
         val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
-        assertEquals("+0.4 ms", bars.flatMap { it.bars }.single().deltaText)
+        assertEquals("+0.4 ms · +87%", bars.flatMap { it.bars }.single().deltaText)
+    }
+
+    // ---- the bars are the only comparison view: nothing the removed compare chart showed may go missing ----
+
+    @Test fun aChangeSmallerThanTheUsualPrecisionIsNotPrintedAsASignedZero() {
+        fun delta(before: Double, after: Double, id: String = "1.1"): String? {
+            val base = run(runId = "20260910-100000-000", metrics = listOf(metric(id, before)))
+            val current = run(runId = "20260910-110000-000", metrics = listOf(metric(id, after)))
+            return ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+                .flatMap { it.bars }.single().deltaText
+        }
+        assertEquals("-0.3 ms · -3%", delta(10.3, 10.0))
+        assertEquals("+28 ms · +28%", delta(100.0, 128.0))
+        assertEquals("0 ms · 0%", delta(100.0, 100.0))
+        // Seen on a Galaxy S25+: Open 10.00 → 10.04 ms printed "+0.04 ms · 0%", decimals spent on noise.
+        assertEquals("0 ms · 0%", delta(10.0, 10.04))
+        // A value shown in µs or ns keeps its change in that unit (seen: "83 ns" beside "0.0 ms · 0%").
+        assertEquals("-2 µs · -18%", delta(0.011, 0.009, id = "3.7"))
+        assertEquals("0 ns · 0%", delta(0.000083, 0.000083, id = "H.10"))
+        assertEquals("-19 ns · -19%", delta(0.000100, 0.000081, id = "H.10"))
+    }
+
+    @Test fun aCountDeltaStaysAbsoluteBecauseAPercentageOfASmallCountMisleads() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("H.5", 2.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.5", 3.0)))
+        val bar = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+            .flatMap { it.bars }.single()
+        assertEquals("+1", bar.deltaText)
+    }
+
+    @Test fun aMetricOnlyTheReferenceMeasuredKeepsItsRowWithTheTick() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("1.1", 100.0), metric("2.2", 164.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("1.1", 104.0)))
+        val cmp = RegressionDetector.compare(base, current)
+        val capture = ResultPresenter.metricBars(current, cmp, ComparedTo.BASELINE)
+            .flatMap { it.bars }.single { it.label == "Capture" }
+        assertEquals("—", capture.valueText)
+        assertEquals(0.0, capture.fraction, 0.0)
+        assertNotNull(capture.baseFraction)
+        assertEquals("Baseline에만 있음", capture.note)
+        // Without a reference there is nothing to keep: a metric this run did not measure is still left out.
+        assertTrue(ResultPresenter.metricBars(current, null, ComparedTo.NONE).flatMap { it.bars }.none { it.label == "Capture" })
+    }
+
+    @Test fun onlyABaselineColoursABarAPreviousOrPickedRunLeavesItNeutral() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 221.0)))
+        val cmp = RegressionDetector.compare(base, current)
+        fun tone(to: ComparedTo) = ResultPresenter.metricBars(current, cmp, to).flatMap { it.bars }.single().tone
+        assertEquals(Tone.BAD, tone(ComparedTo.BASELINE))
+        assertEquals(Tone.NEUTRAL, tone(ComparedTo.PREVIOUS))
+    }
+
+    @Test fun aUnitThatChangedBetweenTheRunsDrawsNoTickAndSaysWhy() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0).copy(unit = "us")))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 170.0)))
+        val bar = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.PREVIOUS, base)
+            .flatMap { it.bars }.single()
+        assertNull(bar.baseFraction)
+        assertNull(bar.deltaText)
+        assertEquals("단위 다름", bar.note)
+    }
+
+    @Test fun theLegendNamesTheBarsCompareAndTheTicksBaseline() {
+        assertEquals("비교 대상(Compare)", ResultPresenter.COMPARE_LABEL)
+        assertEquals("기준(Baseline)", ResultPresenter.legendReferenceLabel(ComparedTo.BASELINE))
+        assertEquals("이전 run", ResultPresenter.legendReferenceLabel(ComparedTo.PREVIOUS))
+    }
+
+    @Test fun theReferenceRunsFactsFollowThisRunsInTheFold() {
+        val reference = run(runId = "20260910-100000-000", subject = SubjectLabel("SW41", "9c01d2e"))
+        val current = run(runId = "20260910-110000-000")
+        val role = ResultPresenter.referenceName(ComparedTo.BASELINE)
+        val facts = ResultPresenter.referenceFacts(reference, RegressionDetector.compare(reference, current), role)
+        // The labels use the screen's own name for the reference, not a new word ("기준") for it.
+        assertEquals("Baseline", facts.first().first)
+        assertTrue(facts.first().second.contains("SW41"))
+        assertTrue(facts.any { it.first == "Baseline OS" })
+        assertEquals("이전 run", ResultPresenter.referenceName(ComparedTo.PREVIOUS))
     }
 
     @Test fun aRunThatRecordedNothingSaysSoInWords() {
@@ -555,7 +672,8 @@ class ResultPresenterTest {
         assertEquals("samsung SM-S936N", facts.first { it.first == "기기" }.second)
         assertEquals("충전 중 · 빌드 이름 없음", facts.first { it.first == "참고 사항" }.second)
         assertEquals("20260923-013403-785.json", facts.first { it.first == "파일" }.second)
-        assertEquals("SW42", facts.first { it.first == "측정 대상" }.second)
+        // An old run's commit stays visible: with the history comparison's header lines gone, this is where it lives.
+        assertEquals("SW42 · a8f29c1", facts.first { it.first == "측정 대상" }.second)
 
         val unlabelled = run(subject = SubjectLabel())
         val without = ResultPresenter.runFacts(unlabelled, "samsung SM-S936N", "Rear main", null)
