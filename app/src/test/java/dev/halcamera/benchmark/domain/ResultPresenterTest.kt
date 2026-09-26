@@ -463,6 +463,7 @@ class ResultPresenterTest {
         // Seen on a Galaxy S25+: preview jitter printed "0.0 ms", then "0.00 ms", beside a -19% change.
         fun shown(v: Double) = ResultPresenter.metricBars(run(metrics = listOf(windowMetric("H.10", v))), null, ComparedTo.NONE)
             .flatMap { it.bars }.single().valueText
+        assertEquals("170 ns", shown(0.00017))
         assertEquals("3 µs", shown(0.0031))
         assertEquals("21 µs", shown(0.021))
         assertEquals("0.4 ms", shown(0.40))

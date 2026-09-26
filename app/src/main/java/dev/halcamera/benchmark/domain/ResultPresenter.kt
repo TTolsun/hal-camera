@@ -699,6 +699,9 @@ object ResultPresenter {
         // A preview jitter of a few microseconds printed "0.0 ms", then "0.00 ms", beside a -19% change. Below
         // 0.1 ms the value is shown in microseconds, the unit a HAL developer reads sensor jitter in anyway.
         "ms" -> when {
+            // Sensor timestamps are nanoseconds, and a steady HAL keeps their spread under a microsecond: "0 µs"
+            // (seen on versionCode 401) hid a -19% change as well, so below 1 µs the value goes to nanoseconds.
+            fine && kotlin.math.abs(value) < 0.001 -> String.format(Locale.US, "%.0f ns", value * 1_000_000.0)
             fine && kotlin.math.abs(value) < 0.1 -> String.format(Locale.US, "%.0f µs", value * 1000.0)
             fine -> String.format(Locale.US, "%.1f ms", value)
             else -> String.format(Locale.US, "%.0f ms", value)
