@@ -539,6 +539,18 @@ class ResultPresenterTest {
 
     // ---- the bars are the only comparison view: nothing the removed compare chart showed may go missing ----
 
+    @Test fun aChangeSmallerThanTheUsualPrecisionIsNotPrintedAsASignedZero() {
+        fun delta(before: Double, after: Double, id: String = "1.1"): String? {
+            val base = run(runId = "20260910-100000-000", metrics = listOf(metric(id, before)))
+            val current = run(runId = "20260910-110000-000", metrics = listOf(metric(id, after)))
+            return ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+                .flatMap { it.bars }.single().deltaText
+        }
+        assertEquals("-0.3 ms · -3%", delta(10.3, 10.0))
+        assertEquals("+28 ms · +28%", delta(100.0, 128.0))
+        assertEquals("0 ms · 0%", delta(100.0, 100.0))
+    }
+
     @Test fun aCountDeltaStaysAbsoluteBecauseAPercentageOfASmallCountMisleads() {
         val base = run(runId = "20260910-100000-000", metrics = listOf(metric("H.5", 2.0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.5", 3.0)))

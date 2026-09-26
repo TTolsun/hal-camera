@@ -418,12 +418,12 @@ object ResultPresenter {
         val delta = if (!withDelta || base == null) null else {
             val d = value - base
             val absolute = when (input.unit) {
-                "fps" -> String.format(Locale.US, "%+.1f fps", d)
+                "fps" -> "${signedAmount(d, 1)} fps"
                 // A count difference is already the whole story, and "+3 count" reads as a unit nobody uses.
                 "count" -> String.format(Locale.US, "%+.0f", d)
                 // A change of a fraction of a millisecond is the whole point of a jitter row; "+0 ms" is not.
-                "ms" -> String.format(Locale.US, if (input.fine) "%+.1f ms" else "%+.0f ms", d)
-                else -> String.format(Locale.US, "%+.0f %s", d, input.unit)
+                "ms" -> "${signedAmount(d, if (input.fine) 1 else 0)} ms"
+                else -> "${signedAmount(d, 0)} ${input.unit}"
             }
             // The percentage the compare chart drew, so dropping that chart loses nothing. A count has none: a
             // percentage of a small count says more about the count than about the change (7.2).
@@ -448,6 +448,18 @@ object ResultPresenter {
             ownScale = ownScale,
             note = note
         )
+    }
+
+    /**
+     * A signed change with as many decimals as it takes to show it, up to two. "-0 ms" beside "-5%" read as a
+     * contradiction once the percentage sat next to it (10.3 ms to 10.0 ms); it now reads "-0.3 ms". A change too
+     * small even for two decimals is printed as an unsigned zero.
+     */
+    private fun signedAmount(d: Double, decimals: Int): String {
+        var places = decimals
+        while (places < 2 && kotlin.math.abs(d) < 0.5 * Math.pow(10.0, -places.toDouble())) places++
+        return if (kotlin.math.abs(d) < 0.5 * Math.pow(10.0, -places.toDouble())) String.format(Locale.US, "%.${decimals}f", 0.0)
+        else String.format(Locale.US, "%+.${places}f", d)
     }
 
     /** "+4%", "-19%", and "0%" rather than "-0%" for a change that rounds away. */
