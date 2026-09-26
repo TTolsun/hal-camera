@@ -123,15 +123,20 @@ class HistoryActivity : ComponentActivity() {
         // The list actions share one row, as 비교 and 내보내기 do on the result screen: two full-width buttons and a
         // count line pushed the first run to the middle of the screen. The count now sits on the list headings.
         val listActions = Look.row(this)
+        // Half-width buttons: the ghost button's 20dp side padding wrapped "목록 CSV 내보내기" onto two lines on a
+        // Galaxy S25+ at the default font size. Narrower padding keeps it on one line there; at a larger font it can
+        // still wrap, so both buttons fill the row's height and stay the same size.
+        fun rowButton(view: View) = view.apply { setPadding(dp(8), paddingTop, dp(8), paddingBottom) }
+        fun rowParams() = Look.buttonParams(0, 1f).apply { height = LinearLayout.LayoutParams.MATCH_PARENT }
         if (selectedId == null && !pickingComparison) listActions.addView(
-            ghost("두 실행 비교", runs.size >= 2) { pickingComparison = true; render() }, Look.buttonParams(0, 1f)
+            rowButton(ghost("두 실행 비교", runs.size >= 2) { pickingComparison = true; render() }), rowParams()
         )
         listActions.addView(
             // "목록" says what goes into the file: every run listed below, not one run and not the screen.
-            ghost("목록 CSV 내보내기", runs.isNotEmpty()) { exportCsv(runs) }.apply {
+            rowButton(ghost("목록 CSV 내보내기", runs.isNotEmpty()) { exportCsv(runs) }.apply {
                 contentDescription = "현재 필터의 실행 ${runs.size}개를 CSV로 내보내기"
-            },
-            Look.buttonParams(0, 1f).apply { if (listActions.childCount > 0) marginStart = dp(8) }
+            }),
+            rowParams().apply { if (listActions.childCount > 0) marginStart = dp(8) }
         )
         body.addView(listActions, lp())
         if (pickingComparison && selectedId == null) {
