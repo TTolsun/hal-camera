@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e8f3db403251aa95",
-        "modelHash": "b9fbb8378e034faf",
+        "codeHash": "9041ed7813fd4a8f",
+        "modelHash": "8623398c5388ca13",
         "at": "2026-09-26",
-        "commit": "e7732f0",
-        "reviewer": "Claude (sub-ms delta unit, device-checked)",
+        "commit": "74920a4",
+        "reviewer": "Claude (legend median label, code-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -120,7 +120,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "9b7de92580b19335c1ed2d7a1c8ef2409c4f08a3",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "834680c61b7308416d4b6e35bfa4b4fc3f70702f",
-          "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "007c67ce360ae675a4cd0f10b20cbe8ca3684ad4",
+          "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "fc6c251a4d3a97a12da2b73ced88496bf5253cdf",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "06dd274fbf1cfd848fab914975658653edc205e2",
           "app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt": "930ca2c896046a1a86d3997282eb0df2963a9203",
           "app/src/main/java/dev/halcamera/ui/EvRuler.kt": "5cf4de2d6a6999bb91a3b1f94bd5dcf2bd95d47d",
@@ -235,11 +235,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "cc2842e6c8f6fbe1",
-        "modelHash": "481e2374751dc87c",
+        "codeHash": "f06f79ba78260eba",
+        "modelHash": "12a700aa3b952054",
         "at": "2026-09-26",
-        "commit": "e7732f0",
-        "reviewer": "Claude (sub-ms delta unit, device-checked)",
+        "commit": "74920a4",
+        "reviewer": "Claude (legend median label, code-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -349,7 +349,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "9b7de92580b19335c1ed2d7a1c8ef2409c4f08a3",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "834680c61b7308416d4b6e35bfa4b4fc3f70702f",
-          "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "007c67ce360ae675a4cd0f10b20cbe8ca3684ad4",
+          "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "fc6c251a4d3a97a12da2b73ced88496bf5253cdf",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "06dd274fbf1cfd848fab914975658653edc205e2",
           "app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt": "930ca2c896046a1a86d3997282eb0df2963a9203",
           "app/src/main/java/dev/halcamera/ui/EvRuler.kt": "5cf4de2d6a6999bb91a3b1f94bd5dcf2bd95d47d",
@@ -478,11 +478,11 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "e8f3db403251aa95",
-        "modelHash": "26eac1057e6d3b20",
+        "codeHash": "9041ed7813fd4a8f",
+        "modelHash": "e17926c459015def",
         "at": "2026-09-26",
-        "commit": "e7732f0",
-        "reviewer": "Claude (sub-ms delta unit, device-checked)",
+        "commit": "74920a4",
+        "reviewer": "Claude (legend median label, code-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -592,7 +592,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "9b7de92580b19335c1ed2d7a1c8ef2409c4f08a3",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "834680c61b7308416d4b6e35bfa4b4fc3f70702f",
-          "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "007c67ce360ae675a4cd0f10b20cbe8ca3684ad4",
+          "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "fc6c251a4d3a97a12da2b73ced88496bf5253cdf",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "06dd274fbf1cfd848fab914975658653edc205e2",
           "app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt": "930ca2c896046a1a86d3997282eb0df2963a9203",
           "app/src/main/java/dev/halcamera/ui/EvRuler.kt": "5cf4de2d6a6999bb91a3b1f94bd5dcf2bd95d47d",
@@ -623,11 +623,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "e8f3db403251aa95",
-        "modelHash": "bcb7718d2ddb8844",
+        "codeHash": "9041ed7813fd4a8f",
+        "modelHash": "09d749a4de081c8b",
         "at": "2026-09-26",
-        "commit": "e7732f0",
-        "reviewer": "Claude (sub-ms delta unit, device-checked)",
+        "commit": "74920a4",
+        "reviewer": "Claude (legend median label, code-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -737,7 +737,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "9b7de92580b19335c1ed2d7a1c8ef2409c4f08a3",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "834680c61b7308416d4b6e35bfa4b4fc3f70702f",
-          "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "007c67ce360ae675a4cd0f10b20cbe8ca3684ad4",
+          "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "fc6c251a4d3a97a12da2b73ced88496bf5253cdf",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "06dd274fbf1cfd848fab914975658653edc205e2",
           "app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt": "930ca2c896046a1a86d3997282eb0df2963a9203",
           "app/src/main/java/dev/halcamera/ui/EvRuler.kt": "5cf4de2d6a6999bb91a3b1f94bd5dcf2bd95d47d",

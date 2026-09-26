@@ -90,7 +90,7 @@ object BenchmarkResultCards {
             key(MeterView(context, 0f, 0.5f, false), 12, ResultPresenter.legendReferenceLabel(comparedTo))
         }
         legend.addView(android.view.View(context), LinearLayout.LayoutParams(0, 1, 1f))
-        legend.addView(Look.text(context, "값: 중앙값", 11, Look.onDarkMuted))
+        legend.addView(Look.text(context, "대표값: Median", 11, Look.onDarkMuted))
         metricsCard.addView(legend)
         sections.forEach { section ->
             metricsCard.addView(Look.text(context, section.title, 13, Look.onDarkMuted, bold = true), lp(16))
