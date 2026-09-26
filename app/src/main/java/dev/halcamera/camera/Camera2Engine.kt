@@ -33,6 +33,7 @@ class Camera2Engine(
     /** Benchmark profile streams. null keeps the LIVE screen behaviour of picking sizes by pixel budget. */
     private val spec: StreamSpec? = null,
     private val previewReady: () -> Unit = {},
+    private val previewFrame: () -> Unit = {},
     private val recordingState: (Boolean) -> Unit = {},
     private val status: (String, Boolean) -> Unit
 ) : CameraEngine, MediaCapture, LiveTuning {
@@ -109,13 +110,13 @@ class Camera2Engine(
     })
     override fun start() {
         telemetry.registerSession(sessionId, "Camera2", manager, cameraId)
-        if (view.isAvailable) handler.post { open() }
-        else view.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+        view.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) { handler.post { open() } }
             override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) = Unit
             override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean = true
-            override fun onSurfaceTextureUpdated(surface: SurfaceTexture) = Unit
+            override fun onSurfaceTextureUpdated(surface: SurfaceTexture) { if (active) previewFrame() }
         }
+        if (view.isAvailable) handler.post { open() }
     }
     @SuppressLint("MissingPermission")
     private fun open() {

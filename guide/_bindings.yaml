@@ -161,6 +161,7 @@ sources:
       screens/expert-screen/live-controls:
         evidence:
           - app/src/main/java/dev/halcamera/ui/LiveControlBar.kt
+          - app/src/main/java/dev/halcamera/ui/LiveIndicator.kt
           - app/src/main/java/dev/halcamera/ui/EvRuler.kt
           - app/src/main/java/dev/halcamera/camera/LiveControls.kt
           - app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt
