@@ -140,15 +140,15 @@ class HistoryActivity : ComponentActivity() {
         )
         body.addView(listActions, lp())
         if (pickingComparison && selectedId == null) {
-            // The first pick is the 비교 대상 (the ticks), the second the run the reader looks at (the bars, 선택한 run).
-            text("비교 대상 run을 먼저 고르세요.")
+            // The first pick is this comparison's Baseline (the ticks), the second the run compared against it (the bars).
+            text("기준(Baseline)을 선택하세요.")
             button("비교 선택 취소") { pickingComparison = false; render() }
         }
         indexError?.let { text("Baseline을 읽지 못했습니다: $it") }
         if (index.unreadableIds.isNotEmpty()) text("읽을 수 없는 파일 ${index.unreadableIds.size}개: ${index.unreadableIds.joinToString()}")
         selectedId?.let { id ->
             val picked = index.runs.find { it.runId == id }?.let { ResultPresenter.localTime(it.runId) } ?: id
-            text("비교 대상: $picked\n볼 run을 누르세요.")
+            text("Baseline: $picked\n비교 대상(Compare)을 선택하세요.")
             button("선택 취소") { selectedId = null; pickingComparison = false; render() }
         }
         if (runs.isEmpty()) text("이 조건에 맞는 실행이 없습니다. 필터를 바꾸거나 새 벤치마크를 실행하세요.")
@@ -181,7 +181,7 @@ class HistoryActivity : ComponentActivity() {
         val card = Look.card(this, dark = true)
         if (selectedId == run.runId) {
             card.background = Look.cardBackground(this, Look.expertTile2, Look.primaryOnDark)
-            androidx.core.view.ViewCompat.setStateDescription(card, "비교 대상")
+            androidx.core.view.ViewCompat.setStateDescription(card, "기준(Baseline)")
         }
         // Two lines, or three when a build label was typed: when the run happened and how it did, then
         // the numbers. The run id, the profile and the raw validity flags live on the result screen this
@@ -249,21 +249,19 @@ class HistoryActivity : ComponentActivity() {
     private fun renderComparison(): Boolean {
         val base = index.runs.find { it.runId == selectedId } ?: return false
         val current = index.runs.find { it.runId == compareId } ?: return false
-        val onBaseline = pointers.baseline(current.contract.comparisonContractId, current.endpoint.key) == base.runId
         val comparison = RegressionDetector.compare(base, current)
         titleBar("비교", 20, "실행 이력으로 돌아가기") { compareId = null; render() }
         if (busy) text("실행 기록을 처리하고 있습니다.")
         // No "Baseline: … / 이번 run: …" lines here: the card below names the reference in its headline, and each
         // run's build and commit are in its 실행 정보.
         if (!comparison.sameContract || !comparison.sameEndpoint) text("Profile·측정 계약 또는 camera endpoint가 달라 판정할 수 없습니다.")
-        // The same bars and reference ticks as a run's result screen, with the picked run as the tick. Comparing
-        // two runs used to be a column of text rows here and a percentage chart behind the result screen's 비교;
-        // one picture of a comparison is enough, and this one carries everything the other two showed.
+        // The same bars and reference ticks as a run's result screen. The run picked first is this comparison's
+        // Baseline and is judged as one, whether or not it is the designated baseline: the screen calls it
+        // 기준(Baseline), and a Baseline that was not judged against read as a contradiction. The designated
+        // baseline itself is not changed.
         BenchmarkResultCards.addResult(
-            this, body, current, comparison,
-            if (onBaseline) ComparedTo.BASELINE else ComparedTo.PREVIOUS,
-            pointers.isBaseline(current), fileName = null,
-            reference = base, selectedReference = !onBaseline
+            this, body, current, comparison, ComparedTo.BASELINE,
+            pointers.isBaseline(current), fileName = null, reference = base
         )
         button("두 run 바꾸기") { val old = selectedId; selectedId = compareId; compareId = old; render() }
         button("CSV 내보내기 · 두 실행") { exportCsv(listOf(base, current)) }

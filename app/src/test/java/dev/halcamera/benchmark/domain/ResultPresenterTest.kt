@@ -633,26 +633,22 @@ class ResultPresenterTest {
         assertEquals("단위 다름", bar.note)
     }
 
-    @Test fun aRunPickedInHistoryIsNamedAsSuchAndIsNotJudged() {
-        val picked = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0)))
-        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 221.0)))
-        val head = ResultPresenter.headline(current, RegressionDetector.compare(picked, current), ComparedTo.PREVIOUS,
-            isBaseline = false, endpointName = "Camera · 0", selectedReference = true)
-        assertEquals("No verdict", head.text)
-        assertTrue(head.sub.startsWith("비교 대상("))
-        assertEquals(Tone.NEUTRAL, head.tone)
+    @Test fun theLegendNamesTheBarsCompareAndTheTicksBaseline() {
+        assertEquals("비교 대상(Compare)", ResultPresenter.COMPARE_LABEL)
+        assertEquals("기준(Baseline)", ResultPresenter.legendReferenceLabel(ComparedTo.BASELINE))
+        assertEquals("이전 run", ResultPresenter.legendReferenceLabel(ComparedTo.PREVIOUS))
     }
 
     @Test fun theReferenceRunsFactsFollowThisRunsInTheFold() {
         val reference = run(runId = "20260910-100000-000", subject = SubjectLabel("SW41", "9c01d2e"))
         val current = run(runId = "20260910-110000-000")
-        val role = ResultPresenter.referenceName(ComparedTo.BASELINE, selectedReference = false)
+        val role = ResultPresenter.referenceName(ComparedTo.BASELINE)
         val facts = ResultPresenter.referenceFacts(reference, RegressionDetector.compare(reference, current), role)
         // The labels use the screen's own name for the reference, not a new word ("기준") for it.
         assertEquals("Baseline", facts.first().first)
         assertTrue(facts.first().second.contains("SW41"))
         assertTrue(facts.any { it.first == "Baseline OS" })
-        assertEquals("비교 대상", ResultPresenter.referenceName(ComparedTo.PREVIOUS, selectedReference = true))
+        assertEquals("이전 run", ResultPresenter.referenceName(ComparedTo.PREVIOUS))
     }
 
     @Test fun aRunThatRecordedNothingSaysSoInWords() {

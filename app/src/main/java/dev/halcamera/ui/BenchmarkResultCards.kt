@@ -28,8 +28,8 @@ object BenchmarkResultCards {
      * label and state the activity needs for its actions. The verdict leads, every metric follows as a bar grouped
      * by category, and the run facts fold (mockup v7).
      *
-     * [reference] is the run the ticks stand for, and [selectedReference] says it was picked in run history rather
-     * than found as the baseline or the previous run.
+     * [reference] is the run the ticks stand for: the baseline, the previous run, or the run picked first in run
+     * history's 두 실행 비교, which is that comparison's baseline.
      */
     fun addResult(
         context: Context,
@@ -40,7 +40,6 @@ object BenchmarkResultCards {
         isBaseline: Boolean,
         fileName: String?,
         reference: BenchmarkRun? = null,
-        selectedReference: Boolean = false,
     ): ResultView {
         val dp = { v: Int -> Look.dp(context, v) }
         val lp = { top: Int -> LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top) } }
@@ -49,7 +48,7 @@ object BenchmarkResultCards {
         val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, deviceName, endpointName)
 
         // Headline card: the verdict, what it was measured against, and the score.
-        val head = ResultPresenter.headline(run, comparison, comparedTo, isBaseline, endpointName, selectedReference)
+        val head = ResultPresenter.headline(run, comparison, comparedTo, isBaseline, endpointName)
         val card = Look.card(context, dark = true)
         val headColor = when (head.tone) {
             Tone.BAD -> Look.statusFail
@@ -76,7 +75,7 @@ object BenchmarkResultCards {
         // Metrics card: every metric is a bar, grouped by category. The table behind an "All metrics" fold is gone:
         // a number next to its baseline is what this screen is for, and a bar answers that faster than a row of digits.
         val metricsCard = Look.card(context, dark = true)
-        val sections = ResultPresenter.metricBars(run, comparison, comparedTo, reference, selectedReference)
+        val sections = ResultPresenter.metricBars(run, comparison, comparedTo, reference)
         // One legend line at the top, before the bars it explains. The keys are drawn with the bar itself, a piece of
         // fill and a tick on a track, not with "━" and "│", which looked like neither and read as punctuation.
         val legend = Look.row(context)
@@ -87,9 +86,8 @@ object BenchmarkResultCards {
             legend.addView(Look.text(context, label, 11, Look.onDarkMuted), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(6) })
         }
         if (comparedTo != ComparedTo.NONE) {
-            // The run the reader chose to open, in the benchmark or in run history.
-            key(MeterView(context, 1f, null, false), 20, "선택한 run")
-            key(MeterView(context, 0f, 0.5f, false), 12, ResultPresenter.referenceName(comparedTo, selectedReference))
+            key(MeterView(context, 1f, null, false), 20, ResultPresenter.COMPARE_LABEL)
+            key(MeterView(context, 0f, 0.5f, false), 12, ResultPresenter.legendReferenceLabel(comparedTo))
         }
         legend.addView(android.view.View(context), LinearLayout.LayoutParams(0, 1, 1f))
         legend.addView(Look.text(context, "값: 중앙값", 11, Look.onDarkMuted))
@@ -132,12 +130,12 @@ object BenchmarkResultCards {
         val details = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         // The reference run's facts follow this run's, so the fold answers "compared with what" as well; the compare
         // screen that used to hold them is gone.
-        val role = ResultPresenter.referenceName(comparedTo, selectedReference)
+        val role = ResultPresenter.referenceName(comparedTo)
         val referenceFacts = reference?.takeIf { comparedTo != ComparedTo.NONE }
             ?.let { ResultPresenter.referenceFacts(it, comparison, role) }.orEmpty()
         (ResultPresenter.runFacts(run, deviceName, endpointName, fileName) + referenceFacts).forEachIndexed { i, (label, fact) ->
             val factRow = Look.row(context)
-            // 96dp so "Baseline 발열" and "비교 대상 발열" stay on one line.
+            // 96dp so "Baseline 발열" and "이전 run 발열" stay on one line.
             factRow.addView(Look.text(context, label, 12, Look.onDarkMuted), LinearLayout.LayoutParams(dp(96), -2))
             factRow.addView(Look.text(context, fact, 12, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
             details.addView(factRow, lp(if (i == 0) 4 else 8))

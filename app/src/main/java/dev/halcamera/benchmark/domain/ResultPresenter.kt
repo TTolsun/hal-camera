@@ -184,14 +184,15 @@ object ResultPresenter {
     }
 
     /**
-     * What the screen calls the run its ticks stand for: Baseline, 이전 run, or 비교 대상 for the run picked first in
-     * run history. "선택한 run" is the run the reader opened, the bars, so the ticks cannot use it too.
+     * What notes and fact labels call the run the ticks stand for: Baseline, or 이전 run when there is none. The run
+     * picked first in run history's 두 실행 비교 is that comparison's Baseline and is judged as one.
      */
-    fun referenceName(comparedTo: ComparedTo, selectedReference: Boolean): String = when {
-        comparedTo == ComparedTo.BASELINE -> "Baseline"
-        selectedReference -> "비교 대상"
-        else -> "이전 run"
-    }
+    fun referenceName(comparedTo: ComparedTo): String = if (comparedTo == ComparedTo.BASELINE) "Baseline" else "이전 run"
+
+    /** The legend's names: the bars are the run being compared, the ticks its baseline (or the previous run). */
+    const val COMPARE_LABEL = "비교 대상(Compare)"
+    fun legendReferenceLabel(comparedTo: ComparedTo): String =
+        if (comparedTo == ComparedTo.BASELINE) "기준(Baseline)" else "이전 run"
 
     /**
      * The run the ticks stand for, as label and value pairs for the same 실행 정보 fold. The compare screen
@@ -278,9 +279,7 @@ object ResultPresenter {
         comparison: RunComparison?,
         comparedTo: ComparedTo,
         isBaseline: Boolean,
-        endpointName: String,
-        /** Run history's 두 실행 비교: the reference was picked by hand, not found as a baseline or previous run. */
-        selectedReference: Boolean = false
+        endpointName: String
     ): ResultHeadline {
         val vs = comparison?.baseRunId?.let { localTime(it) ?: it }
         return when {
@@ -289,8 +288,6 @@ object ResultPresenter {
             comparison == null || comparedTo == ComparedTo.NONE ->
                 if (isBaseline) ResultHeadline("This run is the baseline", "비교할 이전 run이 없습니다\n$endpointName", Tone.NEUTRAL)
                 else ResultHeadline("First run", "Baseline으로 지정하면 다음 run부터 비교합니다\n$endpointName", Tone.NEUTRAL)
-            selectedReference && comparedTo != ComparedTo.BASELINE ->
-                ResultHeadline("No verdict", "비교 대상($vs) 대비\nbaseline이 아니라서 판정하지 않습니다", Tone.NEUTRAL)
             comparedTo == ComparedTo.PREVIOUS ->
                 ResultHeadline(
                     if (isBaseline) "This run is the baseline" else "No baseline",
@@ -328,17 +325,15 @@ object ResultPresenter {
         comparison: RunComparison?,
         comparedTo: ComparedTo,
         /** The run the ticks stand for; only needed to notice a metric whose unit changed between the two. */
-        reference: BenchmarkRun? = null,
-        /** The reference was picked in run history, so notes call it "비교 대상" rather than the previous run. */
-        selectedReference: Boolean = false
+        reference: BenchmarkRun? = null
     ): List<MetricBarSection> {
         val withDelta = comparedTo != ComparedTo.NONE
-        // Colour is a verdict, and only a baseline is judged against (7.1). Against the previous run or a run
-        // picked in history the bars stay neutral, as the compare chart did; they used to turn red there too.
+        // Colour is a verdict, and only a baseline is judged against (7.1): the designated one, or the run picked
+        // first in run history's 두 실행 비교. Against the previous run the bars stay neutral.
         val judged = comparedTo == ComparedTo.BASELINE
         // The note calls the reference by the name the rest of the screen uses. "기준 run은 timeout" brought in a word
         // the screen used nowhere else, and the reader had to work out that it meant the baseline.
-        val referenceName = referenceName(comparedTo, selectedReference)
+        val referenceName = referenceName(comparedTo)
         return (ORDER + Category.THREE_A).mapNotNull { category ->
             val measured = BenchmarkMetricCatalog.ids.mapNotNull { id ->
                 val info = BenchmarkMetricCatalog.info(id) ?: return@mapNotNull null
