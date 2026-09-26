@@ -125,6 +125,8 @@ sources:
           - app/src/main/java/dev/halcamera/camera/StillPair.kt
           - app/src/main/java/dev/halcamera/camera/YuvPacking.kt
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+          - app/src/main/java/dev/halcamera/camera/LiveControls.kt
+          - app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt
       camera-engines/camerax-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
@@ -157,6 +159,11 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt
           - app/src/main/java/dev/halcamera/ui/CameraWidgets.kt
+      # 상단 카메라 제어(플래시·AF/AE 잠금·EV)의 배치와 다이얼은 MainActivity 입력 한도 때문에 따로 둡니다.
+      screens/expert-screen/live-controls:
+        evidence:
+          - app/src/main/java/dev/halcamera/ui/LiveControlBar.kt
+          - app/src/main/java/dev/halcamera/ui/EvRuler.kt
       screens/benchmark-screen:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
