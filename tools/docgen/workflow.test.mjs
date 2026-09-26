@@ -52,3 +52,31 @@ test('only docs-sync uses the local label and it never accepts review automatica
   assert.equal(workflow.on.workflow_dispatch.inputs.force.type, 'boolean');
   assert.match(sync.run, /\$env:DOCGEN_FORCE -eq 'true'/);
 });
+
+test('every run says whether there is anything to review, and an automatic docs PR waits for review', () => {
+  const steps = workflow.jobs.sync.steps;
+  const sync = steps.find(step => step.env?.DOCGEN_QWEN_MODEL);
+  const pr = steps.find(step => step.uses?.startsWith('peter-evans/create-pull-request'));
+  const summary = steps.at(-1);
+  assert.equal(sync.id, 'sync');
+  assert.equal(pr.id, 'pr');
+  assert.deepEqual(pr.with.labels.trim().split('\n').map(label => label.trim()), ['documentation', 'needs-review']);
+  assert.equal(summary.if, 'always()');
+  assert.equal(summary.env.SYNC_OUTCOME, '${{ steps.sync.outcome }}');
+  assert.equal(summary.env.PR_NUMBER, '${{ steps.pr.outputs.pull-request-number }}');
+  assert.match(summary.run, /GITHUB_STEP_SUMMARY/);
+  assert.match(summary.run, /::notice/);
+  // Windows PowerShell 5.1 reads the BOM-less script in the ANSI code page, so Korean text lives in env, and step
+  // outputs reach the script through env rather than being pasted into it.
+  for (const step of steps.filter(step => step.run)) {
+    assert.ok(!/[\uac00-\ud7a3]/.test(step.run), step.name);
+    assert.ok(!step.run.includes('${{'), step.name);
+  }
+});
+
+test('docs-check runs on every pull request so it can be a required check', () => {
+  const check = parse(fs.readFileSync(path.join(directory, 'docs-check.yml'), 'utf8'));
+  assert.ok('pull_request' in check.on);
+  assert.equal(check.on.pull_request?.paths, undefined);
+  assert.deepEqual(check.jobs.check.strategy.matrix.os, ['ubuntu-latest', 'windows-latest']);
+});
