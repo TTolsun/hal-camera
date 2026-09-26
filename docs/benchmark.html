@@ -100,6 +100,7 @@
 <p>비교 화면은 0 기준선 좌우로 변화율 막대를 그리는 delta 차트를 먼저 표시하고, 백분율을 계산할 수 없는 행(count 지표, 단위가 다른 행)은 글줄로 남깁니다.</p>
 <p>화면의 언어는 역할에 따라 나뉩니다. 버튼·메뉴·화면 제목과 설명·안내·오류 문장은 앱의 다른 화면처럼 한국어로 씁니다. 지표명·판정 단어·상태 칩은 영어로 씁니다(판정은 <code>Regressed</code>가 아니라 <code>degraded</code>입니다). 이 이름들은 run JSON과 CLI 출력에 같은 철자로 남으므로, 화면과 파일을 오가며 같은 값을 찾을 수 있어야 하기 때문입니다. <code>baseline</code>도 같은 이유로 버튼 안에서 원어를 유지합니다(<code>baseline으로 지정</code>).</p>
 <p class="editorial" lang="en">A number is only useful<br>when its context travels with it.</p><h2 lang="en">Work through the run history.</h2><p>실행 기록의 각 행은 실행 하나이며 두 줄로 적습니다. 첫 줄은 실행 시각이고, 오른쪽 끝에 배지가 붙을 수 있습니다. 둘째 줄은 <code>Capture 1.20 s · Camera · 0 (Wide · Rear)</code>처럼 사실만 적습니다. 빌드 이름을 입력한 실행에는 그 줄이 하나 더 붙습니다. run id, profile, 원본 flag는 행이 아니라 행을 눌러 여는 결과 화면에 있습니다.</p>
+<p>baseline인 실행은 시간순 목록에서 빼내 <code>Baseline</code> 제목 아래 맨 위에 두고, 나머지는 <code>다른 실행</code> 아래에 최신순으로 이어집니다. baseline은 대개 그 카메라에서 가장 오래된 실행이라 최신순 목록의 맨 끝에 놓이는데, 회색 배지만으로는 어느 실행이 기준인지 찾기 어려웠기 때문입니다. baseline 행은 진한 파란 테두리와 채운 파란 배지로 표시합니다. 필터와 카메라 선택은 baseline 행에도 똑같이 적용됩니다.</p>
 <table>
 <thead>
 <tr>
@@ -109,7 +110,7 @@
 </thead>
 <tbody><tr>
 <td><code>★ Baseline</code></td>
-<td>이 실행이 현재 baseline입니다.</td>
+<td>이 실행이 현재 baseline입니다. 다른 배지와 달리 파란 바탕에 흰 글자로 채웁니다.</td>
 </tr>
 <tr>
 <td><code>▲ N degraded</code></td>
@@ -126,7 +127,7 @@
 </tbody></table>
 <p>판정이 있으면 적격성 문구보다 판정을 먼저 보여 줍니다. 저하된 실행은 점수에서 빠졌는지와 무관하게 열어 볼 값어치가 있고, 두 사실은 결과 화면이 모두 가지고 있기 때문입니다.</p>
 <ol>
-<li><code>두 실행 비교</code>를 누르고 기준과 현재 실행을 차례로 고릅니다. 선택한 기준은 테두리로 표시하며 취소나 뒤로 가기로 선택을 해제합니다.</li>
+<li><code>두 실행 비교</code>를 누르고 기준과 현재 실행을 차례로 고릅니다. 선택한 기준은 밝은 파란 테두리로 표시하며 취소나 뒤로 가기로 선택을 해제합니다.</li>
 <li>각 행의 <code>⋮</code> 메뉴 또는 길게 누르기로 baseline 지정, 비교, JSON·CSV 내보내기, 삭제를 선택합니다.</li>
 <li>삭제는 확인을 거친 뒤 파일을 지우고 해당 baseline 포인터를 정리합니다.</li>
 </ol>
