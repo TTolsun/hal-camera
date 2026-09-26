@@ -15,15 +15,16 @@ import dev.halcamera.camera.CameraLabel
 /**
  * The cards of BENCHMARK's result (8.4) and compare (7.3) screens.
  *
- * Every number and sentence comes from [ResultPresenter] and [ComparePresenter]; this file only lays them out. The
- * buttons under the cards and what they do stay in BenchmarkActivity, which owns the run, the baseline and the export.
+ * Every number and sentence comes from [ResultPresenter] and [ComparePresenter]; this file only lays them out. What
+ * the buttons do stays in BenchmarkActivity, which owns the run, the baseline and the export; the baseline button is
+ * placed here only because it sits between two cards.
  * The cards were split out so BenchmarkActivity stays inside the 60,000-character input the docs scan can read.
  */
 object BenchmarkResultCards {
     /**
-     * Adds the headline card and the metrics card to [content] and returns the presented view, whose baseline button
-     * label and state the activity needs for its actions. The verdict leads, every metric follows as a bar grouped
-     * by category, and the run facts fold (mockup v7).
+     * Adds the headline card, the baseline button, and the metrics card to [content] and returns the presented view.
+     * The verdict leads, the action that decides what it is measured against follows, every metric follows as a bar
+     * grouped by category, and the run facts fold (mockup v7).
      */
     fun addResult(
         context: Context,
@@ -33,6 +34,7 @@ object BenchmarkResultCards {
         comparedTo: ComparedTo,
         isBaseline: Boolean,
         fileName: String?,
+        onToggleBaseline: () -> Unit,
     ): ResultView {
         val dp = { v: Int -> Look.dp(context, v) }
         val lp = { top: Int -> LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top) } }
@@ -59,6 +61,15 @@ object BenchmarkResultCards {
             card.addView(scoreRow, lp(12))
         }
         content.addView(card)
+
+        // The baseline action sits under the verdict it changes. At the foot of the screen, as a grey outline among
+        // four others, it was the part of the result nobody noticed (2026-09-26).
+        val baselineButton = if (view.baselineButtonPrimary) Look.primaryButton(context, view.baselineButton, onToggleBaseline)
+        else Look.ghostButton(context, view.baselineButton, dark = true, action = onToggleBaseline).apply {
+            isEnabled = view.baselineButtonEnabled
+            alpha = if (view.baselineButtonEnabled) 1f else 0.4f
+        }
+        content.addView(baselineButton, Look.buttonParams().apply { topMargin = dp(10) })
 
         // Metrics card: every metric is a bar, grouped by category. The table behind an "All metrics" fold is gone:
         // a number next to its baseline is what this screen is for, and a bar answers that faster than a row of digits.

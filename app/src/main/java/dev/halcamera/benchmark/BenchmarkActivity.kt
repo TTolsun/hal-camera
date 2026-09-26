@@ -549,20 +549,16 @@ class BenchmarkActivity : ComponentActivity() {
             if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "다시 실행") { preflight() }, Look.buttonParams())
             return
         }
-        val view = BenchmarkResultCards.addResult(this, content, run, comparison, comparedTo, isBaseline, lastFile?.name)
+        // The baseline button is laid out under the verdict card, not here among the actions.
+        BenchmarkResultCards.addResult(this, content, run, comparison, comparedTo, isBaseline, lastFile?.name) { toggleBaseline() }
 
-        // Give the longer baseline action a full row to avoid truncation.
-        actions.addView(
-            action(view.baselineButton, view.baselineButtonEnabled) { toggleBaseline() },
-            Look.buttonParams()
-        )
         val row = Look.row(this)
         row.addView(action("비교", baseRun != null) { screen = Screen.COMPARE; render() }, Look.buttonParams(0, 1f))
         row.addView(
             action("내보내기", lastFile != null) { lastFile?.let(::share) },
             Look.buttonParams(0, 1f).apply { marginStart = dp(8) }
         )
-        actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
+        actions.addView(row)
         if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "다시 실행") { preflight() }, Look.buttonParams().apply { topMargin = dp(8) })
     }
 
@@ -861,7 +857,7 @@ class BenchmarkActivity : ComponentActivity() {
     }
 
     /** The result and compare tables are laid out in fixed monospace columns, so they scroll sideways rather than wrap. */
-    /** A ghost button that shows whether it can be pressed, since three of the result actions depend on state. */
+    /** A ghost button that shows whether it can be pressed, since the result actions depend on state. */
     private fun action(label: String, enabled: Boolean, onClick: () -> Unit) =
         Look.ghostButton(this, label, dark = true) { onClick() }.apply {
             isEnabled = enabled

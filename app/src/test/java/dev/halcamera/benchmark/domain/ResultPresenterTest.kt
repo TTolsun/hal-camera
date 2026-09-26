@@ -137,6 +137,16 @@ class ResultPresenterTest {
         assertTrue(cleared.baselineButtonEnabled)
     }
 
+    @Test fun onlyAnActionThatWouldSetABaselineIsDrawnFilled() {
+        val clean = run()
+        assertTrue(present(clean).baselineButtonPrimary)
+        // Clearing undoes a choice already made, so it does not compete with the verdict for attention.
+        assertFalse(present(clean, isBaseline = true).baselineButtonPrimary)
+        // A filled button that cannot be pressed would read as broken rather than as unavailable.
+        val hot = run(thermalMax = 3, flags = listOf(ValidityFlags.THERMAL_HIGH))
+        assertFalse(present(hot).baselineButtonPrimary)
+    }
+
     // ---- comparison headline (7.1, 8.4) ----
 
     @Test fun theHeadlineNamesTheBaselineAndTheRegressionCount() {

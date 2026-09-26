@@ -78,6 +78,8 @@ data class ResultView(
     val threeALine: String?,
     val baselineButton: String,
     val baselineButtonEnabled: Boolean,
+    /** The baseline action is drawn filled, right under the verdict, only while pressing it would set a baseline. */
+    val baselineButtonPrimary: Boolean,
     val scoreLine: String? = null
 ) {
     fun render(): String = buildString {
@@ -211,7 +213,11 @@ object ResultPresenter {
             threeALine = threeALine(run),
             baselineButton = if (isBaseline) "baseline 해제" else "baseline으로 지정",
             // Clearing must stay possible even if the run later became ineligible under a changed flag table.
-            baselineButtonEnabled = isBaseline || run.validity.comparisonEligible
+            baselineButtonEnabled = isBaseline || run.validity.comparisonEligible,
+            // Setting a baseline is what turns "First run" and "No baseline" into a verdict, and a grey outline at
+            // the foot of the screen was easy to miss (2026-09-26). Clearing stays quiet: it undoes a choice already
+            // made. A filled button that cannot be pressed would only look broken, so an ineligible run gets none.
+            baselineButtonPrimary = !isBaseline && run.validity.comparisonEligible
         )
     }
 
