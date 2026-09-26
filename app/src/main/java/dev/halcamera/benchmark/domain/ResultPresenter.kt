@@ -348,7 +348,7 @@ object ResultPresenter {
                         // Only the reference measured it. Dropping the row would hide that this run lost a metric.
                         val base = cmp?.baselineValue?.takeIf { withDelta } ?: return@mapNotNull null
                         BarInput(info.short, "", null, base, info.unit, cmp, fine(info.id, info.category),
-                            note = "이번 run에서 측정되지 않음", span = info.span, id = info.id)
+                            note = "${referenceName}에만 있음", span = info.span, id = info.id)
                     }
                     // A timed-out 3A metric stores the observation window as its value (plan chapter 13), so a bar
                     // would compare a window against a convergence. It keeps its row and says so instead.

@@ -24,7 +24,9 @@ internal class MeterView(
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = if (degraded) Look.statusFail else Look.primaryOnDark
     }
-    private val tick = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.onDarkMuted }
+    // White and 2dp wide: the grey 3px tick nearly vanished on the dark track, in the legend most of all.
+    private val tick = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.onDark }
+    private val tickHalf = Look.dp(context, 1).toFloat()
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), Look.dp(context, 12))
@@ -47,8 +49,8 @@ internal class MeterView(
                 canvas.drawPath(path, tick)
                 return@let
             }
-            val x = (w * it.coerceIn(0f, 1f)).coerceIn(1.5f, w - 1.5f)
-            canvas.drawRect(x - 1.5f, 0f, x + 1.5f, height.toFloat(), tick)
+            val x = (w * it.coerceIn(0f, 1f)).coerceIn(tickHalf, w - tickHalf)
+            canvas.drawRect(x - tickHalf, 0f, x + tickHalf, height.toFloat(), tick)
         }
     }
 }

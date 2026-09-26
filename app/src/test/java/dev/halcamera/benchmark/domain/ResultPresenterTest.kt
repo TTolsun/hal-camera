@@ -609,7 +609,7 @@ class ResultPresenterTest {
         assertEquals("—", capture.valueText)
         assertEquals(0.0, capture.fraction, 0.0)
         assertNotNull(capture.baseFraction)
-        assertEquals("이번 run에서 측정되지 않음", capture.note)
+        assertEquals("Baseline에만 있음", capture.note)
         // Without a reference there is nothing to keep: a metric this run did not measure is still left out.
         assertTrue(ResultPresenter.metricBars(current, null, ComparedTo.NONE).flatMap { it.bars }.none { it.label == "Capture" })
     }

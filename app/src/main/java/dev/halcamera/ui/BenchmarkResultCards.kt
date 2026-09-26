@@ -87,7 +87,7 @@ object BenchmarkResultCards {
             legend.addView(Look.text(context, label, 11, Look.onDarkMuted), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(6) })
         }
         if (comparedTo != ComparedTo.NONE) {
-            key(MeterView(context, 1f, null, false), 20, "이번 run")
+            key(MeterView(context, 1f, null, false), 20, "Current")
             key(MeterView(context, 0f, 0.5f, false), 12, ResultPresenter.referenceName(comparedTo, selectedReference))
         }
         legend.addView(android.view.View(context), LinearLayout.LayoutParams(0, 1, 1f))
