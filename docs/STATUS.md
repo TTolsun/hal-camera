@@ -1,5 +1,7 @@
 # 작업 상태
 
+2026-09-27 · HAL CAM 0.14.0은 Live의 Flash·AF·AE 잠금·EV 제어와 녹화 중 줌, 작은 Live 표시등과 중앙 촬영 제어 화살표, 선택적인 작업실, 간결한 실행 기록·벤치마크 비교 화면을 포함합니다. 현재 S25+에서 versionCode 513 정식 APK를 기존 앱 위에 설치하고 프리뷰 실행을 확인했습니다. [릴리스 노트](releases/0.14.0.md)를 참고하세요.
+
 2026-09-24에 녹화(3.x) 지표를 구현했습니다([이슈 #122](https://github.com/TTolsun/hal-camera/issues/122)). 벤치마크 시퀀스의 사진 촬영 뒤에 RECORD 단계가 붙어, 9초짜리 녹화를 다섯 번 반복하고 3.1·3.2·3.4·3.6·3.7 다섯 지표를 계산합니다. 3.3은 `MediaRecorder`로 인코더 쪽 프레임 수를 얻을 수 없으므로 `not_measurable`을 유지하고, 3.5는 별도 시나리오로 남겼습니다. 설계와 결정 근거는 [PLAN-Recording-v0.1.md](PLAN-Recording-v0.1.md)에 있습니다.
 
 이 변경으로 profile이 `camera2-standard-v2`가 되었습니다. v1으로 저장된 실행 파일은 계속 읽히고 v1끼리도 계속 비교되지만, v2와는 비교되지 않으므로 기기마다 baseline과 calibration을 다시 만들어야 합니다. run JSON은 schema 5이고 validity flag 표는 `validity-v3`, 회귀 규칙은 `regression-rule-v2`입니다. 점수 체계는 건드리지 않았습니다. RECORD 카테고리의 가중치를 0으로 두었으므로 계산과 `score-v1-draft`라는 이름이 그대로입니다. 녹화 지표를 점수에 넣는 일은 [이슈 #123](https://github.com/TTolsun/hal-camera/issues/123)의 민감도 검증 뒤로 미뤘습니다.

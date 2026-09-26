@@ -6,13 +6,13 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "34b913ffd1c9a845",
+        "codeHash": "9feeace67c1eefaf",
         "modelHash": "c08ebf893e398627",
         "at": "2026-09-26",
-        "commit": "0ddd611",
+        "commit": "314ba06",
         "reviewer": "Codex",
         "files": {
-          "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
+          "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "4637b44f974eb6972a8aa6b5630c93af22d425b0",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "71ad43bb9cb9547c5541fcaa6ff07d529dc440e0",
@@ -238,13 +238,13 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6dc0e7d73d458575",
-        "modelHash": "4223dc11c8c41fd0",
+        "codeHash": "ac1af6b086fd8d03",
+        "modelHash": "816ae293a79ae7fb",
         "at": "2026-09-26",
-        "commit": "0ddd611",
+        "commit": "314ba06",
         "reviewer": "Codex",
         "files": {
-          "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
+          "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "4637b44f974eb6972a8aa6b5630c93af22d425b0",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "71ad43bb9cb9547c5541fcaa6ff07d529dc440e0",
@@ -389,9 +389,9 @@
       },
       "accepted": {
         "codeHash": "fe158ecaf7d2895b",
-        "modelHash": "ffa4c37889bbedc1",
+        "modelHash": "3082566b8cfef53e",
         "at": "2026-09-26",
-        "commit": "0ddd611",
+        "commit": "314ba06",
         "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "71ad43bb9cb9547c5541fcaa6ff07d529dc440e0",
@@ -438,9 +438,9 @@
       },
       "accepted": {
         "codeHash": "8508be45c9f11853",
-        "modelHash": "d810ad2f68ba91b1",
+        "modelHash": "09d823e6464e2157",
         "at": "2026-09-26",
-        "commit": "0ddd611",
+        "commit": "314ba06",
         "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "71ad43bb9cb9547c5541fcaa6ff07d529dc440e0",
@@ -484,13 +484,13 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "34b913ffd1c9a845",
-        "modelHash": "264dbf651918bb50",
+        "codeHash": "9feeace67c1eefaf",
+        "modelHash": "962f17592bbec9ab",
         "at": "2026-09-26",
-        "commit": "0ddd611",
+        "commit": "314ba06",
         "reviewer": "Codex",
         "files": {
-          "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
+          "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "4637b44f974eb6972a8aa6b5630c93af22d425b0",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "71ad43bb9cb9547c5541fcaa6ff07d529dc440e0",
@@ -632,13 +632,13 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "34b913ffd1c9a845",
-        "modelHash": "efa3a91e22649063",
+        "codeHash": "9feeace67c1eefaf",
+        "modelHash": "f8c33562f1a0a603",
         "at": "2026-09-26",
-        "commit": "0ddd611",
+        "commit": "314ba06",
         "reviewer": "Codex",
         "files": {
-          "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
+          "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "4637b44f974eb6972a8aa6b5630c93af22d425b0",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "71ad43bb9cb9547c5541fcaa6ff07d529dc440e0",
