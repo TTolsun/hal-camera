@@ -180,23 +180,28 @@ object ResultPresenter {
         )
     }
 
+    /** What the screen calls the run its ticks stand for: Baseline, 선택한 run or 이전 run. */
+    fun referenceName(comparedTo: ComparedTo, selectedReference: Boolean): String = when {
+        comparedTo == ComparedTo.BASELINE -> "Baseline"
+        selectedReference -> "선택한 run"
+        else -> "이전 run"
+    }
+
     /**
      * The run the ticks stand for, as label and value pairs for the same 실행 정보 fold. The compare screen
      * carried these; with that screen gone, the result card is the only place they can live.
      *
-     * The labels stay short ("기준 run", "기준 OS") and [role] — baseline, 이전 run, 선택한 run — leads the first
-     * value instead: "baseline 발열" wrapped in the 76dp label column on a Galaxy S25+.
+     * The labels use the name the rest of the screen uses ("Baseline", "Baseline OS"), not a new word for it.
      */
     fun referenceFacts(reference: BenchmarkRun, comparison: RunComparison?, role: String): List<Pair<String, String>> {
         val thermal = listOfNotNull(reference.env.thermalStart, reference.env.thermalMax, reference.env.thermalEnd)
         return listOfNotNull(
-            "기준 run" to listOfNotNull(
-                role,
+            role to listOfNotNull(
                 localTime(reference.runId) ?: reference.runId,
                 reference.subject.subjectBuildLabel?.takeIf { it.isNotBlank() }
             ).joinToString(" · "),
-            reference.device.buildDisplay.takeIf { it.isNotBlank() }?.let { "기준 OS" to it },
-            thermal.takeIf { it.size == 3 }?.let { "기준 발열" to it.joinToString(" → ") },
+            reference.device.buildDisplay.takeIf { it.isNotBlank() }?.let { "$role OS" to it },
+            thermal.takeIf { it.size == 3 }?.let { "$role 발열" to it.joinToString(" → ") },
             comparison?.identity?.let { "빌드 비교" to identityLine(it) }
         )
     }
@@ -312,15 +317,17 @@ object ResultPresenter {
         comparison: RunComparison?,
         comparedTo: ComparedTo,
         /** The run the ticks stand for; only needed to notice a metric whose unit changed between the two. */
-        reference: BenchmarkRun? = null
+        reference: BenchmarkRun? = null,
+        /** The reference was picked in run history, so notes call it "선택한 run" rather than the previous run. */
+        selectedReference: Boolean = false
     ): List<MetricBarSection> {
         val withDelta = comparedTo != ComparedTo.NONE
         // Colour is a verdict, and only a baseline is judged against (7.1). Against the previous run or a run
         // picked in history the bars stay neutral, as the compare chart did; they used to turn red there too.
         val judged = comparedTo == ComparedTo.BASELINE
-        // "기준 run은 timeout" was read as "is the baseline timing out?"; the note names the reference and says what
-        // the timeout means for this row.
-        val referenceName = if (comparedTo == ComparedTo.BASELINE) "baseline" else "기준 run"
+        // The note calls the reference by the name the rest of the screen uses. "기준 run은 timeout" brought in a word
+        // the screen used nowhere else, and the reader had to work out that it meant the baseline.
+        val referenceName = referenceName(comparedTo, selectedReference)
         return (ORDER + Category.THREE_A).mapNotNull { category ->
             val measured = BenchmarkMetricCatalog.ids.mapNotNull { id ->
                 val info = BenchmarkMetricCatalog.info(id) ?: return@mapNotNull null
@@ -343,7 +350,7 @@ object ResultPresenter {
                     // "-12448 ms · -96%"; the row keeps this run's bar and says why there is nothing to compare.
                     refMetric?.timeout == true ->
                         BarInput(info.short, "", metric.value, null, info.unit, null,
-                            fine(info.id, info.category), note = "${referenceName}에서 수렴 못 함(timeout) · 비교 안 함", span = info.span, id = info.id)
+                            fine(info.id, info.category), note = "${referenceName}은 timeout", span = info.span, id = info.id)
                     // History can pair runs of different contracts; a tick in another unit would be a lie.
                     refMetric != null && refMetric.unit != metric.unit ->
                         BarInput(info.short, "", metric.value, null, info.unit, null,

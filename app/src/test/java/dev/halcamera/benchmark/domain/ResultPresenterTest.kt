@@ -480,7 +480,7 @@ class ResultPresenterTest {
         assertEquals("562 ms", af.valueText)
         assertNull(af.baseFraction)
         assertNull(af.deltaText)
-        assertEquals("baseline에서 수렴 못 함(timeout) · 비교 안 함", af.note)
+        assertEquals("Baseline은 timeout", af.note)
         assertNotNull(bars.getValue("AE").baseFraction)
     }
 
@@ -646,12 +646,13 @@ class ResultPresenterTest {
     @Test fun theReferenceRunsFactsFollowThisRunsInTheFold() {
         val reference = run(runId = "20260910-100000-000", subject = SubjectLabel("SW41", "9c01d2e"))
         val current = run(runId = "20260910-110000-000")
-        val facts = ResultPresenter.referenceFacts(reference, RegressionDetector.compare(reference, current), "baseline")
-        assertEquals("기준 run", facts.first().first)
-        assertTrue(facts.first().second.startsWith("baseline · "))
+        val role = ResultPresenter.referenceName(ComparedTo.BASELINE, selectedReference = false)
+        val facts = ResultPresenter.referenceFacts(reference, RegressionDetector.compare(reference, current), role)
+        // The labels use the screen's own name for the reference, not a new word ("기준") for it.
+        assertEquals("Baseline", facts.first().first)
         assertTrue(facts.first().second.contains("SW41"))
-        // Every label fits the fold's narrow label column; the kind of reference lives in the value.
-        assertTrue(facts.all { it.first.length <= 6 })
+        assertTrue(facts.any { it.first == "Baseline OS" })
+        assertEquals("선택한 run", ResultPresenter.referenceName(ComparedTo.PREVIOUS, selectedReference = true))
     }
 
     @Test fun aRunThatRecordedNothingSaysSoInWords() {

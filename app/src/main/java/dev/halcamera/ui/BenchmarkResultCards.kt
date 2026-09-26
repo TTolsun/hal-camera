@@ -71,7 +71,7 @@ object BenchmarkResultCards {
         // Metrics card: every metric is a bar, grouped by category. The table behind an "All metrics" fold is gone:
         // a number next to its baseline is what this screen is for, and a bar answers that faster than a row of digits.
         val metricsCard = Look.card(context, dark = true)
-        val sections = ResultPresenter.metricBars(run, comparison, comparedTo, reference)
+        val sections = ResultPresenter.metricBars(run, comparison, comparedTo, reference, selectedReference)
         // One legend line at the top instead of "· median" on every row and a paragraph about scales under the last
         // one: the reader needs the key before the bars, not after them.
         val tickName = when {
@@ -127,16 +127,13 @@ object BenchmarkResultCards {
         val details = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         // The reference run's facts follow this run's, so the fold answers "compared with what" as well; the compare
         // screen that used to hold them is gone.
-        val role = when {
-            comparedTo == ComparedTo.BASELINE -> "baseline"
-            selectedReference -> "선택한 run"
-            else -> "이전 run"
-        }
+        val role = ResultPresenter.referenceName(comparedTo, selectedReference)
         val referenceFacts = reference?.takeIf { comparedTo != ComparedTo.NONE }
             ?.let { ResultPresenter.referenceFacts(it, comparison, role) }.orEmpty()
         (ResultPresenter.runFacts(run, deviceName, endpointName, fileName) + referenceFacts).forEachIndexed { i, (label, fact) ->
             val factRow = Look.row(context)
-            factRow.addView(Look.text(context, label, 12, Look.onDarkMuted), LinearLayout.LayoutParams(dp(76), -2))
+            // 96dp so "Baseline 발열" and "선택한 run OS" stay on one line.
+            factRow.addView(Look.text(context, label, 12, Look.onDarkMuted), LinearLayout.LayoutParams(dp(96), -2))
             factRow.addView(Look.text(context, fact, 12, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
             details.addView(factRow, lp(if (i == 0) 4 else 8))
         }
