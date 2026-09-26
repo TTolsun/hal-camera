@@ -400,6 +400,9 @@ class BenchmarkActivity : ComponentActivity() {
         val frame = FrameLayout(this).apply { setPadding(dp(16), 0, dp(16), 0); addView(card) }
         dialog.setContentView(frame)
         dialog.show()
+        // Full screen width less the frame's 16dp gutters: the platform's default dialog width left the slider
+        // about half the screen, too short to land on one of eleven stops without trying twice.
+        dialog.window?.setLayout(android.view.ViewGroup.LayoutParams.MATCH_PARENT, android.view.ViewGroup.LayoutParams.WRAP_CONTENT)
     }
 
     private fun applyRunLimit(limit: Int) {
