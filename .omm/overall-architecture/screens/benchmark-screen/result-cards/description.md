@@ -1,4 +1,4 @@
-BenchmarkResultCards는 BENCHMARK 결과 화면과 비교 화면의 카드를 만들어 배치합니다. 숫자와 문장은 모두 ResultPresenter와 ComparePresenter가 만들고, 이 파일은 그 값을 카드로 옮기기만 합니다.
+BenchmarkResultCards는 BENCHMARK 결과 화면과 비교 화면의 카드를 만들어 배치합니다. 실행 기록의 두 실행 비교도 addCompare를 selectedReference로 호출해 같은 변화율 막대 카드를 씁니다. 전에는 그 화면만 글자 행으로 그려서, 같은 비교가 들어온 곳에 따라 다르게 보였습니다. 숫자와 문장은 모두 ResultPresenter와 ComparePresenter가 만들고, 이 파일은 그 값을 카드로 옮기기만 합니다.
 
 결과 화면에는 두 카드를 둡니다. 판정 카드는 판정 한 줄, 무엇과 비교했는지, 측정 조건 경고, 내부 초안 점수를 표시합니다. 지표 카드는 모든 지표를 카테고리별 막대로 그리며, 기준이 있으면 막대 옆에 눈금을 두고 막대 길이를 비교할 수 있는 범위를 적습니다. 실행 정보는 라벨과 값 한 쌍씩 접어 둡니다. addResult는 ResultView를 돌려주며, BenchmarkActivity는 그 값으로 baseline 버튼의 이름과 사용 가능 여부를 정합니다.
 

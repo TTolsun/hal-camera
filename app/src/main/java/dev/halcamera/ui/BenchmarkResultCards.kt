@@ -111,7 +111,11 @@ object BenchmarkResultCards {
         return view
     }
 
-    /** Adds the compare card: a delta chart around a zero line first, and rows a chart cannot carry as text below it. */
+    /**
+     * Adds the compare card: a delta chart around a zero line first, and rows a chart cannot carry as text below it.
+     * Run history's 두 실행 비교 uses the same card with [selectedReference], so comparing two runs looks the same
+     * wherever it is opened; it used to be a column of text rows there.
+     */
     fun addCompare(
         context: Context,
         content: LinearLayout,
@@ -120,6 +124,7 @@ object BenchmarkResultCards {
         comparison: RunComparison?,
         comparedTo: ComparedTo,
         isBaseline: Boolean,
+        selectedReference: Boolean = false,
     ) {
         val dp = { v: Int -> Look.dp(context, v) }
         val lp = { top: Int -> LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top) } }
@@ -129,7 +134,7 @@ object BenchmarkResultCards {
             content.addView(card)
             return
         }
-        val view = ComparePresenter.present(base, run, comparison, comparedTo, isBaseline)
+        val view = ComparePresenter.present(base, run, comparison, comparedTo, isBaseline, selectedReference)
         card.addView(Look.text(context, "Delta vs ${view.baseHeader.lowercase()}", 19, Look.onDark, bold = true))
         view.referenceNote?.let { card.addView(Look.text(context, it, 13, Look.onDarkMuted), lp(6)) }
         val regressed = view.rows.filter { it.marker.startsWith("▲") }
