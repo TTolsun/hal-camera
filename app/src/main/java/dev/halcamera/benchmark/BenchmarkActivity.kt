@@ -337,7 +337,8 @@ class BenchmarkActivity : ComponentActivity() {
     private fun showSettings(storedIds: List<String>, protected: Set<String>) {
         val options = RunRetention.OPTIONS
         var picked = options.indexOf(settings.runLimit).coerceAtLeast(0)
-        fun impact(limit: Int) = RunRetention.impactLine(storedIds.size, RunRetention.toDelete(storedIds, protected, limit).size)
+        val baselineCount = storedIds.count { it in protected }
+        fun impact(limit: Int) = RunRetention.impactLine(storedIds.size, baselineCount, RunRetention.toDelete(storedIds, protected, limit).size)
 
         // A plain Dialog with the app's own card, not AlertDialog: the platform dialog arrives in the system
         // theme, so a grey sheet with system buttons would sit on top of this screen's black cards.

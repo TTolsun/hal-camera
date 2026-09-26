@@ -38,8 +38,10 @@ class RunRetentionTest {
         assertEquals("무제한", RunRetention.tickLabel(RunRetention.UNLIMITED))
         assertEquals("10개", RunRetention.valueLabel(10))
         assertEquals("무제한", RunRetention.valueLabel(RunRetention.UNLIMITED))
-        assertEquals("현재 11개 · 1개 삭제", RunRetention.impactLine(11, 1))
-        assertEquals("현재 8개", RunRetention.impactLine(8, 0))
+        assertEquals("현재 11개 · 1개 삭제", RunRetention.impactLine(11, 0, 1))
+        assertEquals("현재 8개", RunRetention.impactLine(8, 0, 0))
+        // Seen on a Galaxy S25+: 12 stored under a limit of 10 and nothing to delete, because two are baselines.
+        assertEquals("현재 12개 (baseline 2개)", RunRetention.impactLine(12, 2, 0))
     }
 
     @Test fun aProtectedRunStillCountsTowardTheLimit() {

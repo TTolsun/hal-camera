@@ -36,11 +36,14 @@ object RunRetention {
     fun tickLabel(limit: Int): String = label(limit)
 
     /**
-     * What a limit would do, beside the value: how many runs are stored now and how many applying it deletes.
-     * The dialog asked for a number without the one fact the choice depends on.
+     * What a limit would do, beside the value: how many runs are stored now, how many of them are baselines, and
+     * how many applying it deletes. The dialog asked for a number without the one fact the choice depends on,
+     * and "현재 12개" under a limit of 10 with nothing to delete did not say that the two over it are baselines.
      */
-    fun impactLine(stored: Int, deleting: Int): String =
-        if (deleting == 0) "현재 ${stored}개" else "현재 ${stored}개 · ${deleting}개 삭제"
+    fun impactLine(stored: Int, baselines: Int, deleting: Int): String {
+        val now = if (baselines == 0) "현재 ${stored}개" else "현재 ${stored}개 (baseline ${baselines}개)"
+        return if (deleting == 0) now else "$now · ${deleting}개 삭제"
+    }
 
     /** Run ids to delete, oldest first. [runIdsNewestFirst] is the store's name order, which is time order. */
     fun toDelete(runIdsNewestFirst: List<String>, protected: Set<String>, limit: Int): List<String> {
