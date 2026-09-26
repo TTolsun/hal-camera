@@ -469,6 +469,30 @@ class ResultPresenterTest {
         assertEquals("0.4 ms", shown(0.40))
     }
 
+    @Test fun aReferenceThatTimedOutIsNotComparedAgainst() {
+        // Seen on a Galaxy S25+: the baseline's AF timed out and stored a 13 s window; the card drew it as a tick and
+        // printed "-12448 ms · -96%" against this run's 562 ms convergence.
+        val base = run(runId = "20260910-100000-000", metrics = listOf(metric("H.7", 13010.0, timeout = true), metric("H.6", 227.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.7", 562.0), metric("H.6", 404.0)))
+        val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE, base)
+            .flatMap { it.bars }.associateBy { it.label }
+        val af = bars.getValue("AF")
+        assertEquals("562 ms", af.valueText)
+        assertNull(af.baseFraction)
+        assertNull(af.deltaText)
+        assertEquals("기준 run은 timeout", af.note)
+        assertNotNull(bars.getValue("AE").baseFraction)
+    }
+
+    @Test fun aJitterIsScaledApartFromTheIntervalsOfItsSection() {
+        // 83 ns beside 33.3 ms intervals drew an empty bar and an invisible tick.
+        val current = run(metrics = listOf(windowMetric("H.1", 33.3), windowMetric("H.10", 0.000083)))
+        val preview = ResultPresenter.metricBars(current, null, ComparedTo.NONE).single { it.title == "Preview" }
+            .bars.associateBy { it.label }
+        assertEquals(0.8, preview.getValue("Jitter").fraction, 1e-9)
+        assertEquals(0.8, preview.getValue("Interval p50").fraction, 1e-9)
+    }
+
     @Test fun anUnchangedCountShowsNoDelta() {
         val base = run(runId = "20260910-100000-000", metrics = listOf(countMetric("H.5", 0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(countMetric("H.5", 0)))

@@ -330,18 +330,24 @@ object ResultPresenter {
                         // Only the reference measured it. Dropping the row would hide that this run lost a metric.
                         val base = cmp?.baselineValue?.takeIf { withDelta } ?: return@mapNotNull null
                         BarInput(info.short, "", null, base, info.unit, cmp, fine(info.id, info.category),
-                            note = "이번 run에서 측정되지 않음", span = info.span)
+                            note = "이번 run에서 측정되지 않음", span = info.span, id = info.id)
                     }
                     // A timed-out 3A metric stores the observation window as its value (plan chapter 13), so a bar
                     // would compare a window against a convergence. It keeps its row and says so instead.
                     metric.timeout -> BarInput(info.short, "timeout", null, null, info.unit, null, false, span = info.span)
+                    // A reference that timed out stored its observation window, not a convergence (plan chapter 13).
+                    // Drawing it as a tick compared 562 ms of AF against a 13 s window on a Galaxy S25+ and printed
+                    // "-12448 ms · -96%"; the row keeps this run's bar and says why there is nothing to compare.
+                    refMetric?.timeout == true ->
+                        BarInput(info.short, "", metric.value, null, info.unit, null,
+                            fine(info.id, info.category), note = "기준 run은 timeout", span = info.span, id = info.id)
                     // History can pair runs of different contracts; a tick in another unit would be a lie.
                     refMetric != null && refMetric.unit != metric.unit ->
                         BarInput(info.short, "", metric.value, null, info.unit, null,
-                            fine(info.id, info.category), note = "단위 다름", span = info.span)
+                            fine(info.id, info.category), note = "단위 다름", span = info.span, id = info.id)
                     // No per-row "median": nearly every value is one, and the card's legend says so once.
                     else -> BarInput(info.short, "", metric.value,
-                        cmp?.baselineValue, info.unit, cmp, fine(info.id, info.category), span = info.span)
+                        cmp?.baselineValue, info.unit, cmp, fine(info.id, info.category), span = info.span, id = info.id)
                 }
             }
             // Frame rate leads the preview section: it is H.1 turned upside down, and "29.8 fps" answers the
@@ -349,9 +355,9 @@ object ResultPresenter {
             val inputs = if (category == Category.PREVIEW) listOfNotNull(frameRate(run, comparison)) + measured else measured
             if (inputs.isEmpty()) return@mapNotNull null
             val scales = scales(inputs)
-            val drawn = inputs.filter { it.value != null || it.base != null }.groupingBy { it.unit }.eachCount()
+            val drawn = inputs.filter { it.value != null || it.base != null }.groupingBy { it.scaleKey }.eachCount()
             MetricBarSection(categoryLabel(category), inputs.map { input ->
-                bar(input, scales[input.unit] ?: 1.0, ownScale = (drawn[input.unit] ?: 0) < 2, withDelta = withDelta,
+                bar(input, scales[input.scaleKey] ?: 1.0, ownScale = (drawn[input.scaleKey] ?: 0) < 2, withDelta = withDelta,
                     judged = judged, comparedTo = comparedTo)
             })
         }
@@ -374,8 +380,15 @@ object ResultPresenter {
         val cmp: MetricComparison?,
         val fine: Boolean,
         val note: String? = null,
-        val span: String = ""
-    )
+        val span: String = "",
+        val id: String = ""
+    ) {
+        /**
+         * Which bars share a scale. A jitter is a spread of nanoseconds, five orders of magnitude below the 33 ms
+         * intervals of its section; on their axis its bar and tick were both invisible, so it gets its own.
+         */
+        val scaleKey: String get() = if (id in SPREAD_METRICS) "$unit-spread" else unit
+    }
 
     /**
      * One scale per unit in a section: the largest value or baseline tick of the group sits at 80% of the bar,
@@ -383,7 +396,7 @@ object ResultPresenter {
      * values are all zero would make the scale 0 and every fraction NaN, so it falls back to empty bars.
      */
     private fun scales(inputs: List<BarInput>): Map<String, Double> =
-        inputs.filter { it.value != null || it.base != null }.groupBy { it.unit }.mapValues { (_, group) ->
+        inputs.filter { it.value != null || it.base != null }.groupBy { it.scaleKey }.mapValues { (_, group) ->
             // This run's values set the scale; a reference only when this run has none in the group. A far-off
             // reference used to set it and flatten every bar beside it (AE 404 ms drawn as a dot next to a 13 s
             // AF baseline).
@@ -714,6 +727,9 @@ object ResultPresenter {
     /** True for the millisecond metrics whose values are small enough that a whole millisecond hides them. */
     internal fun fine(id: String, category: Category): Boolean =
         category == Category.PREVIEW || id in FINE_MS_METRICS
+
+    /** Spreads (standard deviations) of sensor intervals; they scale apart from the intervals themselves. */
+    private val SPREAD_METRICS = setOf("H.10", "3.7")
 
     /** Millisecond metrics outside PREVIEW that are still small enough to need a decimal. */
     private val FINE_MS_METRICS = setOf("3.7")
