@@ -29,6 +29,7 @@ import dev.halcamera.ui.LiveReadout
 import dev.halcamera.ui.DiagnosticsPanel
 import dev.halcamera.ui.ExpandingZoomControl
 import dev.halcamera.ui.LiveControlBar
+import dev.halcamera.ui.LiveIndicator
 import dev.halcamera.ui.RecentMediaButton
 import dev.halcamera.ui.ShutterButton
 import dev.halcamera.ui.IconButton
@@ -154,7 +155,9 @@ class MainActivity : ComponentActivity() {
     private var savedNoticeShown = false
     private val clearNotice = Runnable { savedNoticeShown = false; if (ready) cameraNotice.visibility = View.GONE }
     private lateinit var recentMedia: RecentMediaThumbnail
-    private lateinit var statusText: TextView
+    private lateinit var liveIndicator: LiveIndicator
+    private var lastPreviewFrameNs = 0L
+    private var cameraXStreaming = false
     private lateinit var strip: StripView
     private lateinit var stripText: TextView
     private lateinit var readoutCard: TextView
@@ -224,6 +227,10 @@ class MainActivity : ComponentActivity() {
             }
             val events = recorder.snapshot(10_000_000_000L)
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
+            val previewAt = if (engineName == "Camera2") lastPreviewFrameNs
+                else if (cameraXStreaming) frames.lastOrNull()?.atNs ?: 0L else 0L
+            liveIndicator.bind(resumed && !paused && !closing && engine != null &&
+                previewAt > 0L && time - previewAt < 1_500_000_000L)
             // The only cursor left is the incident trigger. The other one marked the frames that produced a
             // WARNING, and there is no longer anything issuing one.
             val markers = events.filter { it.kind == "incident_trigger" }.map { Triple(it.atNs, "Mark", true) }
@@ -278,6 +285,7 @@ class MainActivity : ComponentActivity() {
         pendingMediaAction = null
         pendingPermissionAction = null
         resumed = false; main.removeCallbacks(tick)
+        liveIndicator.bind(false)
         telemetry.event(sessionId.ifEmpty { "app" }, "activity_stopped")
         recorder.finish("activity_stopped")?.let { export(it) }
         restartCamera()
@@ -292,6 +300,9 @@ class MainActivity : ComponentActivity() {
     }
     private fun hasPermission() = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
     private fun restartCamera() {
+        liveIndicator.bind(false)
+        lastPreviewFrameNs = 0L
+        cameraXStreaming = false
         zoomControl.collapse(animate = false)
         if (closing) return
         ready=false; mediaButton.isEnabled=false; reportButton.isEnabled=false
@@ -315,10 +326,17 @@ class MainActivity : ComponentActivity() {
         zoomApplied = false
         updateCameraChoices()
         setStatus("$engineName · ${CameraLabel.short(cameraId)} 연결 중…", false)
+        (previewHost.getChildAt(0) as? PreviewView)?.previewStreamState?.removeObservers(this)
         previewHost.removeAllViews()
         engine = if (engineName == "CameraX") {
             val view = PreviewView(this).apply { implementationMode = PreviewView.ImplementationMode.COMPATIBLE; scaleType = PreviewView.ScaleType.FILL_CENTER }
             previewHost.addView(view, FrameLayout.LayoutParams(-1,-1))
+            view.previewStreamState.observe(this) { state ->
+                if (thisSession == sessionId && resumed && !closing) {
+                    cameraXStreaming = state == PreviewView.StreamState.STREAMING
+                    if (!cameraXStreaming) liveIndicator.bind(false)
+                }
+            }
             CameraXEngine(this, this, view, cameraId, sessionId, telemetry, cameraWorker) { text, ok ->
                 if (thisSession == sessionId && resumed && !closing) setStatus(text,ok)
             }
@@ -327,6 +345,8 @@ class MainActivity : ComponentActivity() {
             previewHost.addView(view, FrameLayout.LayoutParams(-1,-1))
             Camera2Engine(this, view, cameraId, sessionId, telemetry, previewReady = {
                 if (thisSession == sessionId && resumed && !closing) liveCli.previewReady()
+            }, previewFrame = {
+                if (thisSession == sessionId && resumed && !closing && !paused) lastPreviewFrameNs = nowNs()
             }, recordingState = { recording ->
                 if (thisSession == sessionId) {
                     recordingVideo = recording
@@ -346,9 +366,6 @@ class MainActivity : ComponentActivity() {
         updateCameraChoices()
     }
     private fun setStatus(text: String, ok: Boolean) {
-        // The centre column is one line between two button groups, so it carries the short label only.
-        statusText.text="${CameraLabel.short(cameraId)} · ${if(recordingVideo) "REC" else if(ok) "Live" else "대기"}"
-        statusText.setTextColor(Look.onDarkMuted)
         // A save notice stays for its 2.5 s even when the engine's "· LIVE" report follows it. Stopping a recording
         // rebuilds the preview session, and that report used to arrive right after the video notice and hide it.
         // Only that one routine report waits; a failure or any other notice still replaces the save notice.
@@ -430,22 +447,18 @@ class MainActivity : ComponentActivity() {
         toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: 사양 확인, 동작 검증, 성능 측정, 실행 기록, 작업실" }
         val panelButton=button("진단") { showDiagnostics(true) }.apply { contentDescription="진단 패널 열기" }
         listOf(engineButton,toolsButton,panelButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
-        statusText=label("카메라 준비 중…",12,Look.onDarkMuted).apply {
-            gravity=Gravity.CENTER
-            maxLines=2
+        liveIndicator=LiveIndicator(this)
+        val leadingSlot=LinearLayout(this).apply {
+            orientation=LinearLayout.VERTICAL; gravity=Gravity.START
+            addView(engineButton,LinearLayout.LayoutParams(-2,dp(48)))
+            addView(liveIndicator,LinearLayout.LayoutParams(-2,dp(16)))
         }
-        // Three equal columns keep the status text on the screen's centre line: the engine switch hugs the start
-        // edge and 도구·진단 hug the end edge, so both sides mirror each other around the readout.
-        val leadingSlot=row().apply { gravity=Gravity.START or Gravity.CENTER_VERTICAL; addView(engineButton,LinearLayout.LayoutParams(-2,dp(48))) }
         val trailingSlot=row().apply {
             gravity=Gravity.END or Gravity.CENTER_VERTICAL
             addView(toolsButton,LinearLayout.LayoutParams(-2,dp(48)))
             addView(panelButton,LinearLayout.LayoutParams(-2,dp(48)).apply { marginStart=dp(4) })
         }
-        controls.addView(leadingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
-        controls.addView(statusText,LinearLayout.LayoutParams(0,dp(48),1f))
-        controls.addView(trailingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
-        // Flash, AF/AE lock and EV sit under the status row, where stock camera apps keep their quick settings.
+        // Equal-width slots keep the expander at the screen centre, aligned with the engine button.
         controlBar=LiveControlBar(this,object : LiveControlBar.Host {
             override fun controlsChanged(controls: LiveControls) { (engine as? LiveTuning)?.setControls(controls) }
             override fun needsCamera2():Boolean {
@@ -454,6 +467,12 @@ class MainActivity : ComponentActivity() {
             }
             override fun notice(text: String) = toast(text)
         })
+        controls.gravity=Gravity.TOP
+        controls.addView(leadingSlot,LinearLayout.LayoutParams(0,-2,1f))
+        controls.addView(FrameLayout(this).apply {
+            addView(controlBar.handle,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.TOP or Gravity.CENTER_HORIZONTAL))
+        },LinearLayout.LayoutParams(0,dp(48),1f))
+        controls.addView(trailingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
         topBar.addView(controlBar.view,lp(top=4))
         resetControls()
         cameraNotice=label("카메라 준비 중…",12,Look.onDark).apply {
@@ -647,6 +666,7 @@ class MainActivity : ComponentActivity() {
         zoomControl.setChoices(if(cameraId.isEmpty()) listOf(1f) else zoomPresets(zoomRange(manager,cameraId)),zoomRatio)
     }
     private fun updateMediaControls() {
+        if (!resumed || paused || closing || engine == null) liveIndicator.bind(false)
         cli.setUiBusy(liveCli, recordingVideo || stoppingRecording || pendingMediaAction != null || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true)
         listOf(photoModeButton,videoModeButton).forEachIndexed { index, button ->
             val selected=(index==1)==videoMode

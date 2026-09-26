@@ -8,7 +8,6 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.RippleDrawable
-import android.graphics.drawable.InsetDrawable
 import android.os.Build
 import android.view.accessibility.AccessibilityManager
 import android.view.Gravity
@@ -80,18 +79,11 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     /** The buttons stay folded behind [handle] until asked for, so the preview is not covered by controls not in use. */
     private var expanded = false
     private val rows = FrameLayout(context).apply { visibility = View.GONE }
-    private val handle = TextView(context).apply {
-        textSize = 12f; setTextColor(Look.onDark); gravity = Gravity.CENTER
-        background = InsetDrawable(Look.pill(context, Look.cameraGlass), 0, dp(8), 0, dp(8))
-        minimumHeight = dp(48)
-        isFocusable = true
-        compoundDrawablePadding = dp(4)
-        setOnClickListener { setExpanded(!expanded) }
-    }
+    /** Hosted in the centre of the preview header; the panel below contains only expanded controls. */
+    val handle = IconButton(context, R.drawable.ic_chevron_down, "카메라 제어 펼치기") { setExpanded(!expanded) }
 
     init {
         view.gravity = Gravity.CENTER_HORIZONTAL
-        view.addView(handle, LinearLayout.LayoutParams(-2, -2))
         rows.addView(mainRow, FrameLayout.LayoutParams(-1, -2))
         rows.addView(flashRow, FrameLayout.LayoutParams(-1, -2))
         view.addView(rows, LinearLayout.LayoutParams(-1, -2))
@@ -244,22 +236,16 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         // Dim while the bar is off (camera not ready, recording being saved, a CLI command running), as MainActivity
         // dims every other Live control, so a tap that does nothing never looks like one that should.
         listOf(flash, afLock, aeLock, ev).forEach { it.isEnabled = enabled; if (!enabled) it.alpha = 0.4f }
-        // Folded, the handle names whatever is on: a hidden lock or EV step must never change pictures unseen.
+        // Keep the visible handle to one glyph; requested values remain in its accessible name.
         val on = listOfNotNull(
             controls.flash.takeIf { it != FlashMode.OFF }?.label,
             "AF lock".takeIf { controls.afLock }, "AE lock".takeIf { controls.aeLock },
             support.evLabel(controls.evIndex).takeIf { controls.evIndex != 0 },
         )
-        handle.text = if (expanded) "촬영 설정 접기" else on.joinToString(" · ").ifEmpty { "Flash · AF · AE · EV" }
         ViewCompat.setStateDescription(handle, if (expanded) "펼쳐짐" else "접힘")
-        val chevron = ContextCompat.getDrawable(context, if (expanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down)!!
-            .mutate().apply { setBounds(0, 0, dp(18), dp(18)) }
-        handle.setCompoundDrawablesRelative(null, null, chevron, null)
-        // Chevron alone: equal sides keep it centred in the pill. With a summary: text first, chevron after it.
-        if (handle.text.isEmpty()) { handle.compoundDrawablePadding = 0; handle.setPadding(dp(19), 0, dp(19), 0) }
-        else { handle.compoundDrawablePadding = dp(4); handle.setPadding(dp(14), 0, dp(10), 0) }
-        handle.contentDescription = if (expanded) "카메라 제어 접기" else
-            "카메라 제어 펼치기: 플래시, AF 잠금, AE 잠금, EV" + if (on.isEmpty()) "" else ". 켜짐: ${on.joinToString(", ")}"
+        handle.setIcon(if (expanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down,
+            (if (expanded) "카메라 제어 접기" else "카메라 제어 펼치기: 플래시, AF 잠금, AE 잠금, EV") +
+                if (on.isEmpty()) "" else ". 켜짐: ${on.joinToString(", ")}")
     }
 
     private fun flashIcon(mode: FlashMode) = when (mode) {
