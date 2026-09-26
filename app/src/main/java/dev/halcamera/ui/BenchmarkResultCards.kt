@@ -89,9 +89,9 @@ object BenchmarkResultCards {
             key(MeterView(context, 1f, null, false), 20, ResultPresenter.COMPARE_LABEL)
             key(MeterView(context, 0f, 0.5f, false), 12, ResultPresenter.legendReferenceLabel(comparedTo))
         }
-        legend.addView(android.view.View(context), LinearLayout.LayoutParams(0, 1, 1f))
-        legend.addView(Look.text(context, "대표값: Median", 11, Look.onDarkMuted))
         metricsCard.addView(legend)
+        // Its own line: beside the two keys it was cut off at the card's edge on a Galaxy S25+.
+        metricsCard.addView(Look.text(context, "대표값: Median", 11, Look.onDarkMuted), lp(4))
         sections.forEach { section ->
             metricsCard.addView(Look.text(context, section.title, 13, Look.onDarkMuted, bold = true), lp(16))
             section.bars.forEach { k ->
