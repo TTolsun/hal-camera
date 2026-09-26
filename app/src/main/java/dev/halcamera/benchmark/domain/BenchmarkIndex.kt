@@ -8,6 +8,15 @@ package dev.halcamera.benchmark.domain
 data class BenchmarkIndex(val baselines: Map<String, String> = emptyMap()) {
     fun baseline(contractId: String, endpointKey: String): String? = baselines[key(contractId, endpointKey)]
 
+    fun isBaseline(run: BenchmarkRun): Boolean = baseline(run.contract.comparisonContractId, run.endpoint.key) == run.runId
+
+    /**
+     * Splits a history list into the runs that are a baseline and the rest, each keeping its order. The history
+     * screen lists the baselines first: a baseline is usually the oldest run of its camera, so in a newest-first
+     * list it sat at the very bottom, marked only by a grey badge (2026-09-26).
+     */
+    fun baselinesFirst(runs: List<BenchmarkRun>): Pair<List<BenchmarkRun>, List<BenchmarkRun>> = runs.partition(::isBaseline)
+
     fun withBaseline(contractId: String, endpointKey: String, runId: String?): BenchmarkIndex {
         val k = key(contractId, endpointKey)
         return BenchmarkIndex(if (runId == null) baselines - k else baselines + (k to runId))

@@ -42,6 +42,23 @@ class RunHistoryTest {
         assertEquals(RegressionDetector.exposureLoad(clean), RegressionDetector.exposureLoad(index.runs.first()))
     }
 
+    @Test fun baselinesAreListedApartFromTheOtherRunsInTheirOriginalOrder() {
+        val newest = run(runId = "004")
+        val otherCameraBaseline = run(runId = "003", endpointKey = "1")
+        val middle = run(runId = "002")
+        val oldestBaseline = run(runId = "001")
+        val contract = oldestBaseline.contract.comparisonContractId
+        val index = BenchmarkIndex()
+            .withBaseline(contract, "0", "001")
+            .withBaseline(contract, "1", "003")
+        val (baselines, rest) = index.baselinesFirst(listOf(newest, otherCameraBaseline, middle, oldestBaseline))
+        assertEquals(listOf("003", "001"), baselines.map { it.runId })
+        assertEquals(listOf("004", "002"), rest.map { it.runId })
+        // A run is a baseline only for its own contract and camera; the same id elsewhere is not enough.
+        assertFalse(BenchmarkIndex().withBaseline(contract, "1", "001").isBaseline(oldestBaseline))
+        assertTrue(BenchmarkIndex().baselinesFirst(listOf(newest, middle)).first.isEmpty())
+    }
+
     @Test fun deletionClearsEveryPointerToDeletedRunOnlyAfterRemovalSucceeds() {
         val index = BenchmarkIndex(mapOf("a|0" to "first", "a|1" to "second", "b|0" to "first"))
         var saved: BenchmarkIndex? = null

@@ -96,9 +96,7 @@ Live 진단 패널의 `프레임·3A 수치`를 펼치면 상세 수치를 볼 �
 
 손상된 JSON은 목록과 PC 집계에서 별도로 알립니다. CSV 출력 장치의 오류는 입력 파일 오류와 구분하며 작업을 실패로 종료합니다. baseline 파일을 읽을 수 없으면 baseline 변경과 삭제를 중단합니다. 기기 화면·공유·삭제 동작의 실제 검증 기록은 이 문서에서 주장하지 않습니다.
 
-사진·동영상 저장 실패는 벤치마크 비교와 구분해 확인합니다. 사진은 같은 센서 타임스탬프의 YUV·JPEG 버퍼가 모두 있어야 저장됩니다. 녹화 중에는 엔진·카메라·촬영 모드 변경과 일시정지·갤러리·벤치마크를 비활성화하지만, 줌은 녹화를 멈추지 않고 바꿀 수 있습니다. 셔터는 정지 동작을 제공하고 경과 시간은 셔터 아래의 모드 위치에 표시합니다. 진단 패널은 촬영 조작부를 가리므로, 녹화 중에 패널을 열면 정지 버튼과 경과 시간이 패널 머리글에 함께 나타나 패널을 닫지 않고도 녹화를 끝낼 수 있습니다. 정지를 누르면 녹화 종료 처리 동안 셔터를 비활성화하며, 앨범 저장 완료는 사진 저장과 같은 위치의 안내 문구로 표시합니다. 저장이 끝나기 전에 카메라가 닫혔다면 안내 문구를 표시할 곳이 없으므로 토스트로 알립니다. 녹화 종료 후 사진용 프리뷰로 복귀하며 동영상 모드 선택은 유지합니다. 벤치마크 비교 화면에서 뒤로 가기를 누르면 결과 화면으로 돌아갑니다.
-
-사진이 예상보다 어둡거나 밝거나 초점이 맞지 않으면 상단 가운데의 제어 알약을 먼저 봅니다. 접힌 알약에 `AF lock`, `AE lock`, `EV +0.7`, `Torch`처럼 켜 둔 제어가 표시되면 그 요청이 사진과 녹화에 계속 적용되는 중입니다. 알약을 눌러 버튼 줄을 펼친 뒤 흰 원으로 표시된 버튼을 다시 누르면 해제됩니다. 요청이 실제로 적용되었는지는 프리뷰 아래 둘째 줄의 AE·AF 상태로 확인합니다. AE 잠금이면 `AE Locked`, AF 잠금에서 초점을 맞추지 못했으면 `AF No focus`가 표시됩니다. 플래시 Auto·On 사진이 늦게 찍히면 precapture 측광이 3초 제한에 걸린 것이며, 이때는 안내 문구를 표시하고 그대로 촬영합니다. 카메라나 API를 바꾸면 이 제어는 모두 기본값으로 돌아갑니다.
+사진·동영상 저장 실패는 벤치마크 비교와 구분해 확인합니다. 사진은 같은 센서 타임스탬프의 YUV·JPEG 버퍼가 모두 있어야 저장됩니다. 녹화 중에는 엔진·카메라·줌·촬영 모드 변경과 일시정지·갤러리·벤치마크를 비활성화합니다. 셔터는 정지 동작을 제공하고 경과 시간은 셔터 아래의 모드 위치에 표시합니다. 진단 패널은 촬영 조작부를 가리므로, 녹화 중에 패널을 열면 정지 버튼과 경과 시간이 패널 머리글에 함께 나타나 패널을 닫지 않고도 녹화를 끝낼 수 있습니다. 정지를 누르면 녹화 종료 처리 동안 셔터를 비활성화하며, 앨범 저장 완료는 사진 저장과 같은 위치의 안내 문구로 표시합니다. 저장이 끝나기 전에 카메라가 닫혔다면 안내 문구를 표시할 곳이 없으므로 토스트로 알립니다. 녹화 종료 후 사진용 프리뷰로 복귀하며 동영상 모드 선택은 유지합니다. 벤치마크 비교 화면에서 뒤로 가기를 누르면 결과 화면으로 돌아갑니다.
 
 ### CLI 작업이 끝나지 않거나 파일이 없을 때
 
@@ -111,7 +109,7 @@ Live 진단 패널의 `프레임·3A 수치`를 펼치면 상세 수치를 볼 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-26 @ `69d13d5` · Claude (Live controls #169 #174 #176, code-checked)
+- 검토 2026-09-26 @ `ab240bb` · Claude (result history button on main, code-checked)
 
 </details>
 
@@ -187,9 +185,9 @@ Live 진단 패널의 `프레임·3A 수치`를 펼치면 상세 수치를 볼 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-26 @ `69d13d5` · Claude (Live controls #169 #174 #176, code-checked) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-26 @ `69d13d5` · Claude (Live controls #169 #174 #176, code-checked) |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-26 @ `69d13d5` · Claude (Live controls #169 #174 #176, code-checked) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-26 @ `ab240bb` · Claude (result history button on main, code-checked) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-26 @ `ab240bb` · Claude (result history button on main, code-checked) |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-26 @ `ab240bb` · Claude (result history button on main, code-checked) |
 
 <!-- omm:end id=status -->
 
