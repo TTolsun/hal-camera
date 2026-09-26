@@ -2,6 +2,10 @@ Camera2Engine은 전용 HandlerThread에서 Camera2 요청과 세션을 관리�
 
 Live 사진은 하나의 요청에서 YUV와 JPEG을 대상으로 지정합니다. StillPair가 센서 타임스탬프로 두 버퍼를 연결하고 YuvPacking이 평면 stride와 crop을 고려해 NV21을 만듭니다. 별도 mediaIo 실행기가 YUV 변환과 MediaLibrary 저장을 처리합니다. 벤치마크 still은 기존 JPEG 측정 경로를 유지하며 앨범에 저장하지 않습니다.
 
-녹화는 MediaRecorder의 영상·마이크 입력을 사용합니다. 프리뷰와 인코더 출력으로 세션을 구성하고 종료 시 임시 MP4를 앨범에 저장합니다. 실패하거나 너무 짧아 stop에 실패한 파일은 폐기합니다. 녹화 중에는 촬영·줌 요청을 받지 않습니다.
+녹화는 MediaRecorder의 영상·마이크 입력을 사용합니다. 프리뷰와 인코더 출력으로 세션을 구성하고 종료 시 임시 MP4를 앨범에 저장합니다. 실패하거나 너무 짧아 stop에 실패한 파일은 폐기합니다. 녹화 중에는 사진 촬영 요청을 받지 않지만 줌은 받습니다. 줌을 바꾸면 녹화 request를 같은 preview·인코더 target으로 다시 만들어 repeating request만 교체합니다. 줌 입력은 카메라 스레드에 한 번만 예약하므로, 빠르게 연속으로 조작하면 실행 시점의 마지막 배율 하나로 합쳐집니다. 녹화 세션이 구성 중이거나 종료 중이면 요청을 보내지 않고, 다음 세션이 구성될 때 현재 배율을 읽어 적용합니다. 정지와 겹쳐 닫힌 세션에 보낸 요청은 카메라 오류가 아니라 request_skipped 이벤트로 기록합니다.
+
+AF 잠금은 별도 key가 아니라 연속 AF 모드의 trigger 전이입니다. 잠글 때 AF_TRIGGER_START를 한 번의 capture로 보내고, 풀 때 CANCEL을 보냅니다. repeating request는 같은 AF 모드와 IDLE trigger를 유지하므로 잠금이 이어집니다. 녹화 시작·종료로 세션이 새로 만들어지면 잠금을 다시 겁니다. 제어 변경도 줌처럼 카메라 스레드에 한 번만 예약하므로, EV 다이얼을 빠르게 끌어도 실행 시점의 마지막 값 하나만 보냅니다. AE 잠금은 새 세션의 첫 request부터 켜지므로, 세션을 새로 만드는 HAL에서는 잠근 노출이 아니라 새 세션의 초기 노출로 잠길 수 있습니다. 수동 노출 없이는 이전 노출을 옮길 방법이 없어 알려진 제약으로 둡니다. Camera2는 AE 잠금 중에도 노출 보정을 적용하므로 잠금 중 EV 변경을 허용합니다. Galaxy S25+에서 AE 잠금 중 EV를 −0.7로 바꾸면 ISO가 6939에서 4274로 내려가는 것을 확인했습니다.
+
+플래시 Auto·On 사진은 AE_PRECAPTURE_TRIGGER_START를 preview capture 하나로 보낸 뒤, PrecaptureWatch가 이후 결과의 AE 상태가 PRECAPTURE를 지나 벗어날 때까지 기다리고 나서 still을 촬영합니다. AE 상태가 없으면 바로 촬영합니다. PRECAPTURE 없이 안정 상태가 보고되면 바로 믿지 않고, 안정 상태가 결과 3개 연속으로 이어질 때에만 PRECAPTURE를 건너뛰는 기기로 봅니다. 일부 HAL은 trigger 결과에 이전 상태를 적고 한두 프레임 뒤에 PRECAPTURE로 들어가므로, 첫 결과만 보고 촬영하면 사전 발광 측광을 건너뛰기 때문입니다. 3초 안에 끝나지 않으면 precapture_timeout을 기록하고 그대로 촬영하며, trigger를 보내지 못했으면 기다리지 않고 바로 촬영합니다. AE 잠금 중에는 노출이 이미 고정되어 있으므로 precapture 없이 촬영합니다. 카메라가 precapture 대기 중에 닫히면 대기를 끝내 촬영 요청자에게 실패를 돌려줍니다.
 
 close는 active를 해제하고 세션과 기기를 닫습니다. finishClose에서 녹화 정리, reader와 Surface 해제, closed 이벤트, 완료 콜백, 실행기 종료를 처리합니다. API 30 이상은 CONTROL_ZOOM_RATIO를, 이전 버전은 crop 영역을 사용합니다.

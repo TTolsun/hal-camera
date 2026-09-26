@@ -28,6 +28,7 @@ import dev.halcamera.telemetry.*
 import dev.halcamera.ui.LiveReadout
 import dev.halcamera.ui.DiagnosticsPanel
 import dev.halcamera.ui.ExpandingZoomControl
+import dev.halcamera.ui.LiveControlBar
 import dev.halcamera.ui.RecentMediaButton
 import dev.halcamera.ui.ShutterButton
 import dev.halcamera.ui.IconButton
@@ -58,7 +59,7 @@ class MainActivity : ComponentActivity() {
             override fun prepare(camera: String) {
                 showDiagnostics(false)
                 cameraId = camera; engineName = "Camera2"; paused = false; zoomRatio = 1f
-                updateCameraChoices(); restartCamera()
+                resetControls(); updateCameraChoices(); restartCamera()
             }
             override fun capture(id: String, done: (Result<PhotoResult>) -> Unit) {
                 val camera = engine as? MediaCapture
@@ -148,6 +149,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var bottomBar: LinearLayout
     private lateinit var diagnostics: ScrollView
     private lateinit var zoomControl: ExpandingZoomControl
+    private lateinit var controlBar: LiveControlBar
     private lateinit var cameraNotice: TextView
     private var savedNoticeShown = false
     private val clearNotice = Runnable { savedNoticeShown = false; if (ready) cameraNotice.visibility = View.GONE }
@@ -363,7 +365,11 @@ class MainActivity : ComponentActivity() {
         else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         updateMediaControls()
         // Re-apply the chosen zoom once the new session is live so engine and camera switches keep the same framing.
-        if (ok && !zoomApplied) { zoomApplied = true; if (zoomRatio != 1f) engine?.setZoom(zoomRatio) }
+        if (ok && !zoomApplied) {
+            zoomApplied = true; if (zoomRatio != 1f) engine?.setZoom(zoomRatio)
+            // A pause or a return from another screen reopens the same camera, so its chips still apply.
+            if (controlBar.controls != LiveControls()) (engine as? LiveTuning)?.setControls(controlBar.controls)
+        }
         if (ok && engine is MediaCapture) pendingMediaAction?.also { pendingMediaAction = null; main.post { if (resumed && ready) it() } }
     }
 
@@ -439,6 +445,17 @@ class MainActivity : ComponentActivity() {
         controls.addView(leadingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
         controls.addView(statusText,LinearLayout.LayoutParams(0,dp(48),1f))
         controls.addView(trailingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
+        // Flash, AF/AE lock and EV sit under the status row, where stock camera apps keep their quick settings.
+        controlBar=LiveControlBar(this,object : LiveControlBar.Host {
+            override fun controlsChanged(controls: LiveControls) { (engine as? LiveTuning)?.setControls(controls) }
+            override fun needsCamera2():Boolean {
+                if(recordingVideo) return false
+                toast("플래시·AF/AE 잠금·EV는 Camera2에서 동작하므로 Camera2로 전환한 뒤 적용합니다"); chooseEngine("Camera2"); return true
+            }
+            override fun notice(text: String) = toast(text)
+        })
+        topBar.addView(controlBar.view,lp(top=4))
+        resetControls()
         cameraNotice=label("카메라 준비 중…",12,Look.onDark).apply {
             gravity=Gravity.CENTER
             accessibilityLiveRegion=View.ACCESSIBILITY_LIVE_REGION_POLITE
@@ -454,7 +471,8 @@ class MainActivity : ComponentActivity() {
         }
         root.addView(captureChrome,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
         captureChrome.addView(bottomBar,LinearLayout.LayoutParams(-1,-2))
-        metrics=label("FPS —  ·  ISO —  ·  Exp —\nLens —  ·  Zoom —",12,Look.onDark).apply {
+        metrics=label("FPS — · ISO — · Exp —\nAE — · AF —",12,Look.onDark).apply {
+            maxLines=2
             gravity=Gravity.CENTER
             typeface=Look.mono
             setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
@@ -595,7 +613,7 @@ class MainActivity : ComponentActivity() {
                 pendingMediaAction=null; pendingPermissionAction=null
                 recorder.finish("camera_changed")?.let { export(it) }
                 cameraId=chosen; zoomRatio=1f
-                updateCameraChoices(); restartCamera()
+                resetControls(); updateCameraChoices(); restartCamera()
             }
         }
     }
@@ -654,7 +672,10 @@ class MainActivity : ComponentActivity() {
         engineButton.isEnabled=!recordingVideo
         cameraButton.isEnabled=!recordingVideo && cameraId.isNotEmpty()
         cameraShortcut.isEnabled=cameraButton.isEnabled
-        zoomControl.isEnabled=ready && !recordingVideo
+        // Zoom stays live while recording (#174): the engine changes the recording request in place.
+        // The engine reports "REC" as not-ready, so a running recording counts as ready here, as for the shutter.
+        zoomControl.isEnabled=(ready || recordingVideo) && !stoppingRecording
+        controlBar.bind(engine is LiveTuning || (engine==null && engineName=="Camera2"),videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null)
         pauseButton.isEnabled=!recordingVideo
         galleryButton.isEnabled=!recordingVideo
         toolsButton.isEnabled=!recordingVideo && !stoppingRecording && !closing
@@ -668,14 +689,32 @@ class MainActivity : ComponentActivity() {
     private fun chooseEngine(name:String) {
         if(engineName==name) return
         recorder.finish("engine_changed")?.let { export(it) }
-        engineName=name; updateCameraChoices(); restartCamera()
+        engineName=name; resetControls(); updateCameraChoices(); restartCamera()
     }
+    /** Locks, EV and flash start over for every camera and engine; the new session opens with the defaults. */
+    private fun resetControls()=controlBar.reset(if(cameraId.isEmpty()) LiveControlSupport.NONE else liveControlSupport(manager,cameraId))
     private fun updateReadings(events:List<Event>,frames:List<Event>,time:Long) {
         val frame=frames.lastOrNull()?.takeIf { time-it.atNs < 1_500_000_000L }
         fun num(key:String)= (frame?.values?.get(key) as? Number)?.toDouble()
         fun fmt(value:Double?,pattern:String)=value?.let { pattern.format(Locale.US,it) } ?: "—"
-        val zoom=num("zoomRatio")?.let { "Zoom ${"%.2f".format(Locale.US,it)}x" } ?: "Zoom —"
-        metrics.text="FPS ${fmt(num("resultFps"),"%.1f")} · ISO ${num("iso")?.toInt() ?: "—"} · Exp ${fmt(num("exposureNs")?.div(1e6),"%.2fms")}\nLens ${fmt(num("focusDiopters"),"%.2fD")} · $zoom"
+        // Two lines at most over the preview: the measurement, then the camera's state. Values the screen already shows
+        // are left out (the zoom rail's ratio, the buttons' EV), and the extras join line 2 in priority order only while
+        // they fit its width. With a flash mode on, the flash state leads, since no button can show it. An applied EV or
+        // zoom that differs from the request appears only once the last ten results all differ, not for the few frames
+        // the pipeline lags behind every change. Lens position and everything else stay in the incident ZIP.
+        val recent=frames.takeLast(10)
+        fun differs(key:String,want:Double,tolerance:Double)=recent.size==10 &&
+            recent.all { e -> (e.values[key] as? Number)?.toDouble()?.let { kotlin.math.abs(it-want)>tolerance } == true }
+        val controls=controlBar.controls
+        val extras=listOfNotNull(
+            LiveControlBar.afState(num("af")?.toInt()),
+            LiveControlBar.evApplied(num("evApplied")?.toInt()?.takeIf { differs("evApplied",controls.evIndex.toDouble(),0.5) },controls,controlBar.support),
+            num("zoomRatio")?.takeIf { differs("zoomRatio",zoomRatio.toDouble(),0.01*zoomRatio) }?.let { "Zoom ${"%.2f".format(Locale.US,it)}x applied" },
+            frame?.values?.get("physicalId")?.let { "Phys $it" })
+        val room=(metrics.width-metrics.paddingLeft-metrics.paddingRight).toFloat()
+        var state=listOfNotNull(LiveControlBar.aeState(num("ae")?.toInt()),LiveControlBar.flashState(num("flashState")?.toInt(),controls)).joinToString(" · ")
+        for(extra in extras) { val next="$state · $extra"; if(room>0f && metrics.paint.measureText(next)<=room) state=next else break }
+        metrics.text="FPS ${fmt(num("resultFps"),"%.1f")} · ISO ${num("iso")?.toInt() ?: "—"} · Exp ${fmt(num("exposureNs")?.div(1e6),"%.2fms")}\n$state"
         if(frame==null) { timeline.text="수신 중인 프레임 없음"; stripText.text="Partial —   Buffer — ms"; return }
         val imageEvents=events.filter { it.session==sessionId && it.kind=="image_available" }
         val matched=frames.asReversed().firstOrNull { r -> r.sensorNs!=null && imageEvents.any { it.sensorNs==r.sensorNs } } ?: frame
@@ -782,7 +821,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun showNotes() {
         AlertDialog.Builder(this).setTitle("측정 안내")
-            .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• 앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 사진·동영상 모드를 선택한 뒤 실행 버튼을 누르면 갤러리에 저장합니다. 사진은 YUV·JPEG 두 장이며 동영상에는 소리가 포함됩니다. 녹화 중에는 엔진·카메라·줌·모드 변경을 할 수 없습니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
+            .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• 앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 사진·동영상 모드를 선택한 뒤 실행 버튼을 누르면 갤러리에 저장합니다. 사진은 YUV·JPEG 두 장이며 동영상에는 소리가 포함됩니다. 녹화 중에도 줌은 바꿀 수 있지만 엔진·카메라·모드는 바꿀 수 없습니다.\n\n• 위쪽의 플래시·AF·AE·EV 버튼과 줌 레일은 요청값입니다. 아래 두 줄은 capture result에서 읽으며, 화면에 이미 보이는 값은 생략합니다. 둘째 줄에는 AE·AF 상태 뒤에 플래시 상태(플래시를 켰을 때), 요청과 다른 EV·줌, 물리 렌즈 순서로 폭이 허락하는 만큼만 붙습니다. 렌즈 위치 같은 나머지 값은 ZIP에 있습니다. AE 잠금 중에도 EV는 적용됩니다. 버튼은 Camera2에서만 동작하고 카메라나 엔진을 바꾸면 초기화됩니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
             .setPositiveButton("확인",null).show()
     }
     private fun showToolsMenu(anchor: View) {

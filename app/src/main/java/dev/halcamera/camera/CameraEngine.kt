@@ -29,6 +29,15 @@ interface MediaCapture {
     fun stopRecording()
 }
 
+/**
+ * EV, AE/AF lock and flash on LIVE (issues #169, #176). Like [MediaCapture] it is a capability of the engine
+ * instance: Camera2Engine implements it, CameraXEngine does not, and LIVE offers to switch engines instead.
+ */
+interface LiveTuning {
+    /** Replaces the requested controls. The caller has already coerced them to what the camera supports. */
+    fun setControls(next: LiveControls)
+}
+
 /** Zoom ratio range reported by the camera characteristics. Below API 30 only digital zoom >= 1x is available. */
 fun zoomRange(manager: CameraManager, id: String): Pair<Float, Float> {
     val c = try { manager.getCameraCharacteristics(id) } catch (_: Exception) { return 1f to 1f }

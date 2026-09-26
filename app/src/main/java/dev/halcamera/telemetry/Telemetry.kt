@@ -34,6 +34,12 @@ class Telemetry(val recorder: FlightRecorder) {
                         "focusDiopters" to result[CaptureResult.LENS_FOCUS_DISTANCE],
                         "zoomRatio" to if (android.os.Build.VERSION.SDK_INT >= 30) result[CaptureResult.CONTROL_ZOOM_RATIO] else null,
                         "cropRegion" to result[CaptureResult.SCALER_CROP_REGION]?.toShortString(),
+                        // What LIVE's EV, lock and flash requests became; the request side is in request_observed.
+                        "aeLock" to result[CaptureResult.CONTROL_AE_LOCK],
+                        "evApplied" to result[CaptureResult.CONTROL_AE_EXPOSURE_COMPENSATION],
+                        "flashState" to result[CaptureResult.FLASH_STATE],
+                        // Public only on API 29+ and only for logical cameras; null means the lens is not known.
+                        "physicalId" to if (android.os.Build.VERSION.SDK_INT >= 29) result[CaptureResult.LOGICAL_MULTI_CAMERA_ACTIVE_PHYSICAL_ID] else null,
                         "intervalMs" to stats.intervalMs, "resultFps" to stats.fps,
                         "observedResultGap" to stats.resultGap, "requestTag" to request.tag?.toString()
                     ))
@@ -57,6 +63,10 @@ class Telemetry(val recorder: FlightRecorder) {
         "awbMode" to r[CaptureRequest.CONTROL_AWB_MODE], "exposureNs" to r[CaptureRequest.SENSOR_EXPOSURE_TIME],
         "iso" to r[CaptureRequest.SENSOR_SENSITIVITY], "fpsRange" to r[CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE]?.toString(),
         "cropRegion" to r[CaptureRequest.SCALER_CROP_REGION]?.toShortString(), "requestTag" to r.tag?.toString(),
+        "zoomRatio" to if (android.os.Build.VERSION.SDK_INT >= 30) r[CaptureRequest.CONTROL_ZOOM_RATIO] else null,
+        "aeLock" to r[CaptureRequest.CONTROL_AE_LOCK], "evIndex" to r[CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION],
+        "flashMode" to r[CaptureRequest.FLASH_MODE], "afTrigger" to r[CaptureRequest.CONTROL_AF_TRIGGER],
+        "aePrecaptureTrigger" to r[CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER],
         "observation" to "request contents seen in onCaptureStarted; not request submission time"
     )
 }
