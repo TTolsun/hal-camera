@@ -296,7 +296,7 @@ class BenchmarkActivity : ComponentActivity() {
             row.addView(Look.ghostButton(this, "실행 기록", dark = true) { openHistoryScreen() },
                 Look.buttonParams(0, 1f))
             row.addView(Look.ghostButton(this, "설정", dark = true) { openSettings() }.apply {
-                contentDescription = "벤치마크 설정, 보관 개수 ${RunRetention.label(settings.runLimit)}"
+                contentDescription = "벤치마크 설정, 최대 보관 개수 ${RunRetention.label(settings.runLimit)}"
             }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
             actions.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
@@ -331,10 +331,11 @@ class BenchmarkActivity : ComponentActivity() {
         // A plain Dialog with the app's own card, not AlertDialog: the platform dialog arrives in the system
         // theme, so a grey sheet with system buttons would sit on top of this screen's black cards.
         val card = Look.card(this, dark = true)
-        card.addView(Look.text(this, "보관 개수", 19, Look.onDark, bold = true))
+        card.addView(Look.text(this, "최대 보관 개수", 19, Look.onDark, bold = true))
         val value = Look.text(this, RunRetention.label(options[picked]), 30, Look.primaryOnDark, bold = true, mono = true)
         card.addView(value, lp(top = 10))
-        card.addView(Look.text(this, "넘으면 오래된 것부터 지우고 baseline은 남깁니다.", 12, Look.onDarkMuted), lp(top = 4))
+        // The title says it is a limit; the one thing it does not say is that a baseline is never deleted.
+        card.addView(Look.text(this, "Baseline은 유지됩니다.", 12, Look.onDarkMuted), lp(top = 4))
 
         // The horizontal padding is the thumb's own radius: with it removed the thumb is clipped in half at
         // both ends of the track, so it stays and the tick row is inset to match instead.
@@ -391,7 +392,7 @@ class BenchmarkActivity : ComponentActivity() {
                 if (destroyed) return@post
                 val suffix = if (deleted == 0) "" else " · 오래된 run ${deleted}개 삭제"
                 android.widget.Toast.makeText(
-                    this, "보관 개수 ${RunRetention.label(limit)}$suffix", android.widget.Toast.LENGTH_SHORT
+                    this, "최대 보관 개수 ${RunRetention.label(limit)}$suffix", android.widget.Toast.LENGTH_SHORT
                 ).show()
                 render()
             }
