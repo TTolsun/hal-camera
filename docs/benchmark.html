@@ -61,7 +61,7 @@
 <td><code>camera2-standard-v1</code>과 <code>camera2-standard-v2</code>는 서로 비교되지 않습니다. v2는 녹화 측정을 포함하는 대신 기기마다 baseline을 다시 잡아야 합니다.</td>
 </tr>
 </tbody></table>
-<p>측정 대상 카메라는 앱 전체가 함께 쓰는 표기로 적습니다. 카메라 선택 버튼, 실행 기록의 각 행, 시작·결과 화면의 제목 줄에는 <code>Camera · 0 (Wide · Rear)</code>를 쓰고, 실행 기록 필터 버튼처럼 칸이 좁은 자리에는 <code>Camera · 0</code>으로 줄입니다. 규칙 전문은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md">APP-UI.md</a>의 &quot;카메라를 부르는 이름&quot;에 있습니다.</p>
+<p>측정 대상 카메라는 앱 전체가 함께 쓰는 표기로 적습니다. 카메라 선택 버튼, 시작·결과 화면의 제목 줄, 카메라 필터가 <code>Camera · 전체</code>일 때의 실행 기록 행에는 <code>Camera · 0 (Wide · Rear)</code>를 쓰고, 실행 기록 필터 버튼처럼 칸이 좁은 자리에는 <code>Camera · 0</code>으로 줄입니다. 규칙 전문은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md">APP-UI.md</a>의 &quot;카메라를 부르는 이름&quot;에 있습니다.</p>
 <p>baseline은 사용자가 명시적으로 지정합니다. baseline이 없으면 결과 화면은 이전의 비교 가능한 실행 대비 변화량만 표시하며, 이력에서 임의로 고른 실행도 실제 baseline이 아닌 한 회귀 판정의 기준이 되지 않습니다.</p>
 <h2 lang="en">Recording is measured last.</h2><p>실행은 사진 촬영을 마친 뒤 같은 카메라를 연 채로 짧은 녹화를 반복합니다. <code>camera2-standard-v2</code>는 9초짜리 녹화를 다섯 번 하고 첫 회는 워밍업으로 제외하므로, 녹화 지표의 유효 표본은 네 개입니다. 표본이 네 개일 때 p95는 사실상 최대값이며 화면은 그 사실을 그대로 적습니다.</p>
 <p>녹화를 마지막에 두는 이유는 세 가지입니다. 녹화는 캡처 세션을 다시 구성하므로, 먼저 실행하면 프리뷰 관측 창과 촬영 지연에 그 영향이 섞입니다. 녹화가 실패해도 앞에서 얻은 실행·프리뷰·촬영 표본이 남습니다. 그리고 카메라를 다시 열지 않으므로 warm reopen이라는 조건이 흐려지지 않습니다.</p>
@@ -99,10 +99,11 @@
 <p><code>실행 정보</code>의 validity flag는 저장된 코드가 아니라 뜻으로 적습니다(<code>충전 중</code>, <code>빌드 이름 없음</code>). 코드는 계약이므로 JSON과 CSV에는 그대로 남고, 화면에서만 풀어 씁니다.</p>
 <p>비교 화면은 0 기준선 좌우로 변화율 막대를 그리는 delta 차트를 먼저 표시하고, 백분율을 계산할 수 없는 행(count 지표, 단위가 다른 행)은 글줄로 남깁니다.</p>
 <p>화면의 언어는 역할에 따라 나뉩니다. 버튼·메뉴·화면 제목과 설명·안내·오류 문장은 앱의 다른 화면처럼 한국어로 씁니다. 지표명·판정 단어·상태 칩은 영어로 씁니다(판정은 <code>Regressed</code>가 아니라 <code>degraded</code>입니다). 이 이름들은 run JSON과 CLI 출력에 같은 철자로 남으므로, 화면과 파일을 오가며 같은 값을 찾을 수 있어야 하기 때문입니다. <code>baseline</code>도 같은 이유로 버튼 안에서 원어를 유지합니다(<code>baseline으로 지정</code>).</p>
-<p class="editorial" lang="en">A number is only useful<br>when its context travels with it.</p><h2 lang="en">Work through the run history.</h2><p>실행 기록의 각 행은 실행 하나이며 두 줄로 적습니다. 첫 줄은 실행 시각이고, 오른쪽 끝에 배지가 붙을 수 있습니다. 둘째 줄은 <code>Capture 1.20 s · Camera · 0 (Wide · Rear)</code>처럼 사실만 적습니다. 빌드 이름을 입력한 실행에는 그 줄이 하나 더 붙습니다. run id, profile, 원본 flag는 행이 아니라 행을 눌러 여는 결과 화면에 있습니다.</p>
+<p class="editorial" lang="en">A number is only useful<br>when its context travels with it.</p><h2 lang="en">Work through the run history.</h2><p>실행 기록의 각 행은 실행 하나이며 두 줄로 적습니다. 첫 줄은 실행 시각이고, 오른쪽 끝에 배지가 붙을 수 있습니다. 둘째 줄은 <code>Capture 1.20 s · Camera · 0 (Wide · Rear)</code>처럼 사실만 적습니다. 카메라 필터로 카메라 하나를 고른 상태에서는 모든 행의 카메라가 같으므로 <code>Capture 1.20 s</code>만 적고, 화면 낭독기가 읽는 행 설명에만 카메라를 남깁니다. 카메라 이름 때문에 사실 줄이 <code>⋮</code> 버튼 뒤에서 셋째 줄로 넘어가던 문제도 이렇게 없앴습니다. 빌드 이름을 입력한 실행에는 그 줄이 하나 더 붙습니다. run id, profile, 원본 flag는 행이 아니라 행을 눌러 여는 결과 화면에 있습니다.</p>
 <p>baseline인 실행은 시간순 목록에서 빼내 <code>Baseline</code> 제목 아래 맨 위에 두고, 나머지는 <code>다른 실행 · N개</code> 아래에 최신순으로 이어집니다. baseline은 대개 그 카메라에서 가장 오래된 실행이라 최신순 목록의 맨 끝에 놓이는데, 회색 배지만으로는 어느 실행이 기준인지 찾기 어려웠기 때문입니다. 필터와 카메라 선택은 baseline 행에도 똑같이 적용됩니다.</p>
-<p>위쪽의 <code>N개 실행</code>은 두 묶음을 합친 개수이므로 <code>다른 실행</code> 제목에 그 묶음의 개수를 따로 적습니다. baseline은 카메라마다 하나라서 보통 1개이므로 개수를 적지 않고, <code>Camera · 전체</code>처럼 여러 카메라를 함께 볼 때만 <code>Baseline · 2개</code>처럼 적습니다. 두 제목은 접근성 제목으로 지정되어 있어 TalkBack에서 제목 단위로 이동할 수 있습니다.</p>
+<p>개수는 목록 위의 별도 줄이 아니라 각 묶음의 제목에 적습니다. baseline이 없으면 제목은 <code>실행 · N개</code> 하나입니다. baseline은 카메라마다 하나라서 보통 1개이므로 개수를 적지 않고, <code>Camera · 전체</code>처럼 여러 카메라를 함께 볼 때만 <code>Baseline · 2개</code>처럼 적습니다. 두 제목은 접근성 제목으로 지정되어 있어 TalkBack에서 제목 단위로 이동할 수 있습니다.</p>
 <p>baseline 행에는 배지를 붙이지 않습니다. 이 행은 언제나 <code>Baseline</code> 제목 아래에만 나오므로 배지는 같은 말을 반복할 뿐이고, 테두리 있는 칩은 옆의 <code>⋮</code> 버튼과 같은 모양이라 누르는 요소처럼 보였기 때문입니다. 화면 낭독기가 읽는 행 설명에는 <code>★ Baseline</code>이 그대로 들어갑니다.</p>
+<p><code>두 실행 비교</code>와 <code>목록 CSV 내보내기</code>는 결과 화면의 <code>비교</code>·<code>내보내기</code>처럼 한 줄에 나란히 둡니다. 전체 폭 버튼 두 개와 개수 줄이 화면 위쪽 절반을 차지해 첫 실행이 화면 중간에서야 보였기 때문입니다. <code>목록 CSV 내보내기</code>는 아래 목록에 보이는 실행을 모두 CSV 파일 하나로 내보냅니다. 버튼 이름의 <code>목록</code>은 화면이나 실행 하나가 아니라 목록 전체가 파일에 들어간다는 뜻이며, 몇 개인지는 목록 제목과 화면 낭독기 설명에 있습니다.</p>
 <table>
 <thead>
 <tr>
