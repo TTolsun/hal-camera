@@ -449,7 +449,9 @@ object ResultPresenter {
                 // A count difference is already the whole story, and "+3 count" reads as a unit nobody uses.
                 "count" -> if (d == 0.0) null else String.format(Locale.US, "%+.0f", d)
                 // A change of a fraction of a millisecond is the whole point of a jitter row; "+0 ms" is not.
-                "ms" -> signedAmount(d, if (input.fine) 1 else 0, moved)?.let { "$it ms" }
+                // A value shown in ns or µs keeps its change in the same unit: "83 ns" beside "0.0 ms · 0%" mixed two.
+                "ms" -> if (input.fine && kotlin.math.abs(value) < 0.1) subMillisecondChange(d, value, moved)
+                else signedAmount(d, if (input.fine) 1 else 0, moved)?.let { "$it ms" }
                 else -> signedAmount(d, 0, moved)?.let { "$it ${input.unit}" }
             }
             when {
@@ -498,6 +500,12 @@ object ResultPresenter {
             moved -> null
             else -> String.format(Locale.US, "%.${decimals}f", 0.0)
         }
+    }
+
+    /** A change of a value shown below 0.1 ms, in the unit the value itself is shown in (ns below 1 µs, else µs). */
+    private fun subMillisecondChange(dMs: Double, valueMs: Double, moved: Boolean): String? {
+        val (scale, unit) = if (kotlin.math.abs(valueMs) < 0.001) 1_000_000.0 to "ns" else 1000.0 to "µs"
+        return signedAmount(dMs * scale, 0, moved)?.let { "$it $unit" }
     }
 
     /** "+4%", "-19%", and "0%" rather than "-0%" for a change that rounds away. */
