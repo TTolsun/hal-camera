@@ -29,8 +29,18 @@ object RunRetention {
 
     fun label(limit: Int): String = if (limit == UNLIMITED) "무제한" else limit.toString()
 
-    /** The same value under a slider tick, where the word would be several times the width of every other stop. */
-    fun tickLabel(limit: Int): String = if (limit == UNLIMITED) "∞" else limit.toString()
+    /** The value in the Settings dialog, with its unit: "10" alone did not say ten of what. */
+    fun valueLabel(limit: Int): String = if (limit == UNLIMITED) "무제한" else "${limit}개"
+
+    /** The ends under the slider. Only the two ends are labelled, so the word fits where ∞ used to stand. */
+    fun tickLabel(limit: Int): String = label(limit)
+
+    /**
+     * What a limit would do, beside the value: how many runs are stored now and how many applying it deletes.
+     * The dialog asked for a number without the one fact the choice depends on.
+     */
+    fun impactLine(stored: Int, deleting: Int): String =
+        if (deleting == 0) "현재 ${stored}개" else "현재 ${stored}개 · ${deleting}개 삭제"
 
     /** Run ids to delete, oldest first. [runIdsNewestFirst] is the store's name order, which is time order. */
     fun toDelete(runIdsNewestFirst: List<String>, protected: Set<String>, limit: Int): List<String> {

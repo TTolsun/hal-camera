@@ -35,7 +35,11 @@ class RunRetentionTest {
         assertTrue(numeric.zipWithNext().all { (a, b) -> b - a == RunRetention.STEP })
         // Unlimited is not a number, so it is the one stop past the end rather than a point on the scale.
         assertEquals(RunRetention.UNLIMITED, RunRetention.OPTIONS.last())
-        assertEquals("∞", RunRetention.tickLabel(RunRetention.UNLIMITED))
+        assertEquals("무제한", RunRetention.tickLabel(RunRetention.UNLIMITED))
+        assertEquals("10개", RunRetention.valueLabel(10))
+        assertEquals("무제한", RunRetention.valueLabel(RunRetention.UNLIMITED))
+        assertEquals("현재 11개 · 1개 삭제", RunRetention.impactLine(11, 1))
+        assertEquals("현재 8개", RunRetention.impactLine(8, 0))
     }
 
     @Test fun aProtectedRunStillCountsTowardTheLimit() {

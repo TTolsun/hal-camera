@@ -325,17 +325,33 @@ class BenchmarkActivity : ComponentActivity() {
      * axis and shows where the current value sits on it.
      */
     private fun openSettings() {
+        // The stored runs and the baselines are read off the main thread; the dialog needs them to say what a
+        // limit would delete before it is applied.
+        io.execute {
+            val ids = store.files().map { it.nameWithoutExtension }
+            val protected = store.index().baselines.values.toSet()
+            main.post { if (!destroyed) showSettings(ids, protected) }
+        }
+    }
+
+    private fun showSettings(storedIds: List<String>, protected: Set<String>) {
         val options = RunRetention.OPTIONS
         var picked = options.indexOf(settings.runLimit).coerceAtLeast(0)
+        fun impact(limit: Int) = RunRetention.impactLine(storedIds.size, RunRetention.toDelete(storedIds, protected, limit).size)
 
         // A plain Dialog with the app's own card, not AlertDialog: the platform dialog arrives in the system
         // theme, so a grey sheet with system buttons would sit on top of this screen's black cards.
+        // Title and the one fact it does not say first; then the value with what it would do, directly above the
+        // slider that changes it. The value is white: blue is what can be pressed on these screens.
         val card = Look.card(this, dark = true)
         card.addView(Look.text(this, "최대 보관 개수", 19, Look.onDark, bold = true))
-        val value = Look.text(this, RunRetention.label(options[picked]), 30, Look.primaryOnDark, bold = true, mono = true)
-        card.addView(value, lp(top = 10))
-        // The title says it is a limit; the one thing it does not say is that a baseline is never deleted.
         card.addView(Look.text(this, "Baseline은 유지됩니다.", 12, Look.onDarkMuted), lp(top = 4))
+        val valueRow = Look.row(this)
+        val value = Look.text(this, RunRetention.valueLabel(options[picked]), 30, Look.onDark, bold = true, mono = true)
+        valueRow.addView(value, LinearLayout.LayoutParams(0, -2, 1f))
+        val effect = Look.text(this, impact(options[picked]), 12, Look.onDarkMuted)
+        valueRow.addView(effect)
+        card.addView(valueRow, lp(top = 16))
 
         // The horizontal padding is the thumb's own radius: with it removed the thumb is clipped in half at
         // both ends of the track, so it stays and the tick row is inset to match instead.
@@ -345,13 +361,14 @@ class BenchmarkActivity : ComponentActivity() {
             setOnSeekBarChangeListener(object : android.widget.SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(seek: android.widget.SeekBar, position: Int, fromUser: Boolean) {
                     picked = position
-                    value.text = RunRetention.label(options[position])
+                    value.text = RunRetention.valueLabel(options[position])
+                    effect.text = impact(options[position])
                 }
                 override fun onStartTrackingTouch(seek: android.widget.SeekBar) = Unit
                 override fun onStopTrackingTouch(seek: android.widget.SeekBar) = Unit
             })
         }
-        card.addView(bar, lp(top = 16))
+        card.addView(bar, lp(top = 8))
 
         // Only the ends are labelled. Eleven stops will not fit as text, and a label on every other stop
         // would have to lie about where the thumb lands; the chosen value is already set in large type above.
