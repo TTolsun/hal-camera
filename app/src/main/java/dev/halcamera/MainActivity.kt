@@ -448,7 +448,10 @@ class MainActivity : ComponentActivity() {
         // Flash, AF/AE lock and EV sit under the status row, where stock camera apps keep their quick settings.
         controlBar=LiveControlBar(this,object : LiveControlBar.Host {
             override fun controlsChanged(controls: LiveControls) { (engine as? LiveTuning)?.setControls(controls) }
-            override fun needsCamera2() { if(!recordingVideo) { toast("플래시·AF/AE 잠금·EV는 Camera2에서 사용할 수 있어 Camera2로 전환합니다"); chooseEngine("Camera2") } }
+            override fun needsCamera2():Boolean {
+                if(recordingVideo) return false
+                toast("플래시·AF/AE 잠금·EV는 Camera2에서 동작하므로 Camera2로 전환한 뒤 적용합니다"); chooseEngine("Camera2"); return true
+            }
             override fun notice(text: String) = toast(text)
         })
         topBar.addView(controlBar.view,lp(top=4))

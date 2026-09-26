@@ -28,19 +28,26 @@ import dev.halcamera.camera.LiveControls
  * stock camera app: round glyph buttons under the status line, white when on, the same selection look as the
  * zoom rail. Two of them open in place instead of cycling blind:
  *
- * - Flash turns the row into its choices (off, auto, on, torch) with captions, and folds back after a pick.
- * - EV opens a dial under the row; it folds away four seconds after the last touch.
+ * - Flash turns the row into its choices (off, auto, on, torch) with captions. It stays open until a pick or a
+ *   tap on the pill: folding on a timer put the AE button under a finger that was reaching for a choice.
+ * - EV opens a dial under the row; it folds away four seconds after the last touch. Nothing sits where the dial
+ *   was, so a late tap there reaches the preview, not another control.
  *
- * The buttons show what was requested. What the camera applied is the readout line built by [appliedLine].
+ * The buttons show what was requested. What the camera applied is the readout line built by [stateLine].
  * A control the camera lacks stays visible and dimmed, and a tap says why: a missing flash on the front camera is
- * itself something a developer checks. On CameraX a tap asks [Host.needsCamera2], since only Camera2 carries these.
+ * itself something a developer checks. On CameraX a tap asks [Host.needsCamera2] to switch engines and then
+ * carries out the tap once the Camera2 session is ready, so one tap is enough.
  */
 class LiveControlBar(private val context: Context, private val host: Host) {
     interface Host {
         fun controlsChanged(controls: LiveControls)
-        fun needsCamera2()
+        /** Starts the switch to Camera2; false when it cannot switch now (a recording is running). */
+        fun needsCamera2(): Boolean
         fun notice(text: String)
     }
+
+    /** A tap made on CameraX, run once the Camera2 session it waited for is ready. */
+    private var pending: (() -> Unit)? = null
 
     val view = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
     var support = LiveControlSupport.NONE; private set
@@ -99,6 +106,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     fun reset(support: LiveControlSupport) {
         this.support = support
         controls = LiveControls()
+        pending = null
         setExpanded(false)
     }
 
@@ -115,11 +123,14 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             if (!enabled) closePanels()
             render()
         }
+        // The switch reset the bar; reopen it so the finished tap is visible where it was made.
+        if (camera2 && enabled) pending?.let { pending = null; setExpanded(true); it() }
     }
 
     private fun tap(action: () -> Unit) {
         if (!enabled) return
-        if (!camera2) host.needsCamera2() else action()
+        if (camera2) action()
+        else if (host.needsCamera2()) pending = action
     }
 
     private fun update(next: LiveControls) {
@@ -148,7 +159,6 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         }
         mainRow.visibility = View.INVISIBLE
         flashRow.visibility = View.VISIBLE
-        scheduleFold()
     }
 
     private fun toggleAf() {
