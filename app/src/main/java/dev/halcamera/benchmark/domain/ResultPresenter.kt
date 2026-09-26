@@ -318,6 +318,9 @@ object ResultPresenter {
         // Colour is a verdict, and only a baseline is judged against (7.1). Against the previous run or a run
         // picked in history the bars stay neutral, as the compare chart did; they used to turn red there too.
         val judged = comparedTo == ComparedTo.BASELINE
+        // "기준 run은 timeout" was read as "is the baseline timing out?"; the note names the reference and says what
+        // the timeout means for this row.
+        val referenceName = if (comparedTo == ComparedTo.BASELINE) "baseline" else "기준 run"
         return (ORDER + Category.THREE_A).mapNotNull { category ->
             val measured = BenchmarkMetricCatalog.ids.mapNotNull { id ->
                 val info = BenchmarkMetricCatalog.info(id) ?: return@mapNotNull null
@@ -340,7 +343,7 @@ object ResultPresenter {
                     // "-12448 ms · -96%"; the row keeps this run's bar and says why there is nothing to compare.
                     refMetric?.timeout == true ->
                         BarInput(info.short, "", metric.value, null, info.unit, null,
-                            fine(info.id, info.category), note = "기준 run은 timeout", span = info.span, id = info.id)
+                            fine(info.id, info.category), note = "${referenceName}에서 수렴 못 함(timeout) · 비교 안 함", span = info.span, id = info.id)
                     // History can pair runs of different contracts; a tick in another unit would be a lie.
                     refMetric != null && refMetric.unit != metric.unit ->
                         BarInput(info.short, "", metric.value, null, info.unit, null,

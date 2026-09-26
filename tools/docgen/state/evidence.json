@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1a1b3cfd23d23377",
+        "codeHash": "55084a478fb13828",
         "modelHash": "1bae0a273ca1e1aa",
         "at": "2026-09-26",
-        "commit": "63b373d",
-        "reviewer": "Claude (AF timeout reference and jitter scale, device-checked)",
+        "commit": "46c411b",
+        "reviewer": "Claude (timeout reference wording, device-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -36,7 +36,7 @@
           "app/src/main/java/dev/halcamera/benchmark/domain/ReferenceResolver.kt": "ad040c2c2028aaeb77f0a293fa385b4c81cf599b",
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt": "265f38f162ac480519085a2a7be6acb0dedd3b7e",
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt": "49d8ee83816eed1795e0884a8d632856714efb56",
-          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "5189983d13eed7cf1e600f40546771ede5e7153e",
+          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "77b9f4215a44492bd2128d975e44ccbd2ebf0152",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt": "4273abbd87e60cc98b9b416d0856b5b84a8b7561",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt": "3681943e202a5dde7a27a5dc90082d54f7b5b601",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt": "fcb30e5dbaa0cd0605d8bf84c7f3757f4b070e41",
@@ -147,11 +147,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e54b1d4ad4efefb8",
+        "codeHash": "0b2f99dc4599b16f",
         "modelHash": "70ef83fe07885f99",
         "at": "2026-09-26",
-        "commit": "63b373d",
-        "reviewer": "Claude (AF timeout reference and jitter scale, device-checked)",
+        "commit": "46c411b",
+        "reviewer": "Claude (timeout reference wording, device-checked)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "bc60b7dc21472ccac440450bb53661f8067fa794",
@@ -163,7 +163,7 @@
           "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt": "ab67c3b35e1587d0cc271dae40571654f71e702b",
           "app/src/main/java/dev/halcamera/benchmark/domain/ComparePresenter.kt": "8e0b5d7c56498fc3785a97582756793c14046791",
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt": "265f38f162ac480519085a2a7be6acb0dedd3b7e",
-          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "5189983d13eed7cf1e600f40546771ede5e7153e",
+          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "77b9f4215a44492bd2128d975e44ccbd2ebf0152",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt": "4273abbd87e60cc98b9b416d0856b5b84a8b7561",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt": "3681943e202a5dde7a27a5dc90082d54f7b5b601",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt": "fcb30e5dbaa0cd0605d8bf84c7f3757f4b070e41",
@@ -231,11 +231,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "827c03ae56381ea2",
+        "codeHash": "ea7d5baae95c9906",
         "modelHash": "b15fbf004bd4b3b6",
         "at": "2026-09-26",
-        "commit": "63b373d",
-        "reviewer": "Claude (AF timeout reference and jitter scale, device-checked)",
+        "commit": "46c411b",
+        "reviewer": "Claude (timeout reference wording, device-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -261,7 +261,7 @@
           "app/src/main/java/dev/halcamera/benchmark/domain/ReferenceResolver.kt": "ad040c2c2028aaeb77f0a293fa385b4c81cf599b",
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt": "265f38f162ac480519085a2a7be6acb0dedd3b7e",
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt": "49d8ee83816eed1795e0884a8d632856714efb56",
-          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "5189983d13eed7cf1e600f40546771ede5e7153e",
+          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "77b9f4215a44492bd2128d975e44ccbd2ebf0152",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt": "4273abbd87e60cc98b9b416d0856b5b84a8b7561",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt": "3681943e202a5dde7a27a5dc90082d54f7b5b601",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt": "fcb30e5dbaa0cd0605d8bf84c7f3757f4b070e41",
@@ -374,11 +374,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e54b1d4ad4efefb8",
+        "codeHash": "0b2f99dc4599b16f",
         "modelHash": "e391792a0b649581",
         "at": "2026-09-26",
-        "commit": "63b373d",
-        "reviewer": "Claude (AF timeout reference and jitter scale, device-checked)",
+        "commit": "46c411b",
+        "reviewer": "Claude (timeout reference wording, device-checked)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "bc60b7dc21472ccac440450bb53661f8067fa794",
@@ -390,7 +390,7 @@
           "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt": "ab67c3b35e1587d0cc271dae40571654f71e702b",
           "app/src/main/java/dev/halcamera/benchmark/domain/ComparePresenter.kt": "8e0b5d7c56498fc3785a97582756793c14046791",
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt": "265f38f162ac480519085a2a7be6acb0dedd3b7e",
-          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "5189983d13eed7cf1e600f40546771ede5e7153e",
+          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "77b9f4215a44492bd2128d975e44ccbd2ebf0152",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt": "4273abbd87e60cc98b9b416d0856b5b84a8b7561",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt": "3681943e202a5dde7a27a5dc90082d54f7b5b601",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt": "fcb30e5dbaa0cd0605d8bf84c7f3757f4b070e41",
@@ -423,11 +423,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "cbdb819941daab57",
+        "codeHash": "d495adbbecc16d85",
         "modelHash": "ca585718fcafeef8",
         "at": "2026-09-26",
-        "commit": "63b373d",
-        "reviewer": "Claude (AF timeout reference and jitter scale, device-checked)",
+        "commit": "46c411b",
+        "reviewer": "Claude (timeout reference wording, device-checked)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "9c4f4d06331db21e383b04606635494f64a32c45",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "bc60b7dc21472ccac440450bb53661f8067fa794",
@@ -439,7 +439,7 @@
           "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt": "ab67c3b35e1587d0cc271dae40571654f71e702b",
           "app/src/main/java/dev/halcamera/benchmark/domain/ComparePresenter.kt": "8e0b5d7c56498fc3785a97582756793c14046791",
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt": "265f38f162ac480519085a2a7be6acb0dedd3b7e",
-          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "5189983d13eed7cf1e600f40546771ede5e7153e",
+          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "77b9f4215a44492bd2128d975e44ccbd2ebf0152",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt": "4273abbd87e60cc98b9b416d0856b5b84a8b7561",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt": "3681943e202a5dde7a27a5dc90082d54f7b5b601",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt": "fcb30e5dbaa0cd0605d8bf84c7f3757f4b070e41",
@@ -470,11 +470,11 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "1a1b3cfd23d23377",
+        "codeHash": "55084a478fb13828",
         "modelHash": "d6a7d552d7ef2328",
         "at": "2026-09-26",
-        "commit": "63b373d",
-        "reviewer": "Claude (AF timeout reference and jitter scale, device-checked)",
+        "commit": "46c411b",
+        "reviewer": "Claude (timeout reference wording, device-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -500,7 +500,7 @@
           "app/src/main/java/dev/halcamera/benchmark/domain/ReferenceResolver.kt": "ad040c2c2028aaeb77f0a293fa385b4c81cf599b",
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt": "265f38f162ac480519085a2a7be6acb0dedd3b7e",
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt": "49d8ee83816eed1795e0884a8d632856714efb56",
-          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "5189983d13eed7cf1e600f40546771ede5e7153e",
+          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "77b9f4215a44492bd2128d975e44ccbd2ebf0152",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt": "4273abbd87e60cc98b9b416d0856b5b84a8b7561",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt": "3681943e202a5dde7a27a5dc90082d54f7b5b601",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt": "fcb30e5dbaa0cd0605d8bf84c7f3757f4b070e41",
@@ -611,11 +611,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "1a1b3cfd23d23377",
+        "codeHash": "55084a478fb13828",
         "modelHash": "65a8c8fe859dee52",
         "at": "2026-09-26",
-        "commit": "63b373d",
-        "reviewer": "Claude (AF timeout reference and jitter scale, device-checked)",
+        "commit": "46c411b",
+        "reviewer": "Claude (timeout reference wording, device-checked)",
         "files": {
           "app/build.gradle.kts": "9d8a45b6d56331a13e1ad8f06d3e185bd3d602fc",
           "app/src/main/AndroidManifest.xml": "310fcf6556fcf884afaa8ae9c18091f2f985f655",
@@ -641,7 +641,7 @@
           "app/src/main/java/dev/halcamera/benchmark/domain/ReferenceResolver.kt": "ad040c2c2028aaeb77f0a293fa385b4c81cf599b",
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt": "265f38f162ac480519085a2a7be6acb0dedd3b7e",
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt": "49d8ee83816eed1795e0884a8d632856714efb56",
-          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "5189983d13eed7cf1e600f40546771ede5e7153e",
+          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "77b9f4215a44492bd2128d975e44ccbd2ebf0152",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt": "4273abbd87e60cc98b9b416d0856b5b84a8b7561",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt": "3681943e202a5dde7a27a5dc90082d54f7b5b601",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt": "fcb30e5dbaa0cd0605d8bf84c7f3757f4b070e41",

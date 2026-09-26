@@ -480,7 +480,7 @@ class ResultPresenterTest {
         assertEquals("562 ms", af.valueText)
         assertNull(af.baseFraction)
         assertNull(af.deltaText)
-        assertEquals("기준 run은 timeout", af.note)
+        assertEquals("baseline에서 수렴 못 함(timeout) · 비교 안 함", af.note)
         assertNotNull(bars.getValue("AE").baseFraction)
     }
 
