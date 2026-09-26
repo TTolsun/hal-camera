@@ -29,11 +29,11 @@ object BenchmarkMetricCatalog {
         MetricInfo("2.2", Category.CAPTURE, "Capture", "ms", "capture → onImageAvailable"),
         MetricInfo("2.3", Category.CAPTURE, "Result", "ms", "capture → onCaptureCompleted"),
         MetricInfo("2.5", Category.CAPTURE, "Shot-to-shot", "ms", "capture → 다음 capture"),
-        MetricInfo("H.5", Category.STABILITY, "Stalls", "count", "간격 > 1.5 × 기준"),
+        MetricInfo("H.5", Category.STABILITY, "Stalls", "count", "간격 > 1.5 × 프레임 주기"),
         MetricInfo("H.9", Category.STABILITY, "Callback fail", "count", "onCaptureFailed + onCaptureBufferLost"),
         // Six characters shorter than "Stall during capture", which was the one name that set the label column
         // width for the whole table and pushed the verdict markers off the screen.
-        MetricInfo("2.7", Category.STABILITY, "Capture stalls", "count", "촬영 중 간격 > 1.5 × 기준"),
+        MetricInfo("2.7", Category.STABILITY, "Capture stalls", "count", "촬영 중 간격 > 1.5 × 프레임 주기"),
         MetricInfo("H.6", Category.THREE_A, "AE", "ms", "첫 result → AE CONVERGED"),
         MetricInfo("H.7", Category.THREE_A, "AF", "ms", "첫 result → AF FOCUSED"),
         MetricInfo("H.8", Category.THREE_A, "AWB", "ms", "첫 result → AWB CONVERGED"),
@@ -47,7 +47,7 @@ object BenchmarkMetricCatalog {
         MetricInfo("3.4", Category.RECORD, "Record fps", "fps", "1초 창의 녹화 result 수"),
         MetricInfo("3.6", Category.RECORD, "Record stop", "ms", "MediaRecorder.stop 반환까지"),
         MetricInfo("3.7", Category.RECORD, "Record jitter", "ms", "녹화 센서 간격 표준편차"),
-        MetricInfo("3.2", Category.RECORD, "Record stalls", "count", "녹화 간격 > 1.5 × 기준")
+        MetricInfo("3.2", Category.RECORD, "Record stalls", "count", "녹화 간격 > 1.5 × 프레임 주기")
     ).associateBy { it.id }
 
     fun info(id: String): MetricInfo? = infos[id]

@@ -247,7 +247,7 @@ object ResultPresenter {
             // button reads CLEAR BASELINE by then, so telling the reader to press SET AS BASELINE describes
             // nothing they can do. Being compared against a baseline and being one are separate states.
             hint = if (comparedTo == ComparedTo.BASELINE || isBaseline) null
-            else "[ baseline으로 지정 ]을 누르면 이 run이 기준이 됩니다",
+            else "[ baseline으로 지정 ]을 누르면 이 run이 baseline이 됩니다",
             sections = sections,
             threeALine = threeALine(run),
             baselineButton = if (isBaseline) "baseline 해제" else "baseline으로 지정",
