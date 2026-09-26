@@ -87,7 +87,8 @@ object BenchmarkResultCards {
             legend.addView(Look.text(context, label, 11, Look.onDarkMuted), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(6) })
         }
         if (comparedTo != ComparedTo.NONE) {
-            key(MeterView(context, 1f, null, false), 20, "Current")
+            // The run the reader chose to open, in the benchmark or in run history.
+            key(MeterView(context, 1f, null, false), 20, "선택한 run")
             key(MeterView(context, 0f, 0.5f, false), 12, ResultPresenter.referenceName(comparedTo, selectedReference))
         }
         legend.addView(android.view.View(context), LinearLayout.LayoutParams(0, 1, 1f))
@@ -136,7 +137,7 @@ object BenchmarkResultCards {
             ?.let { ResultPresenter.referenceFacts(it, comparison, role) }.orEmpty()
         (ResultPresenter.runFacts(run, deviceName, endpointName, fileName) + referenceFacts).forEachIndexed { i, (label, fact) ->
             val factRow = Look.row(context)
-            // 96dp so "Baseline 발열" and "선택한 run OS" stay on one line.
+            // 96dp so "Baseline 발열" and "비교 대상 발열" stay on one line.
             factRow.addView(Look.text(context, label, 12, Look.onDarkMuted), LinearLayout.LayoutParams(dp(96), -2))
             factRow.addView(Look.text(context, fact, 12, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
             details.addView(factRow, lp(if (i == 0) 4 else 8))

@@ -183,10 +183,13 @@ object ResultPresenter {
         )
     }
 
-    /** What the screen calls the run its ticks stand for: Baseline, 선택한 run or 이전 run. */
+    /**
+     * What the screen calls the run its ticks stand for: Baseline, 이전 run, or 비교 대상 for the run picked first in
+     * run history. "선택한 run" is the run the reader opened, the bars, so the ticks cannot use it too.
+     */
     fun referenceName(comparedTo: ComparedTo, selectedReference: Boolean): String = when {
         comparedTo == ComparedTo.BASELINE -> "Baseline"
-        selectedReference -> "선택한 run"
+        selectedReference -> "비교 대상"
         else -> "이전 run"
     }
 
@@ -287,7 +290,7 @@ object ResultPresenter {
                 if (isBaseline) ResultHeadline("This run is the baseline", "비교할 이전 run이 없습니다\n$endpointName", Tone.NEUTRAL)
                 else ResultHeadline("First run", "Baseline으로 지정하면 다음 run부터 비교합니다\n$endpointName", Tone.NEUTRAL)
             selectedReference && comparedTo != ComparedTo.BASELINE ->
-                ResultHeadline("Selected run", "선택한 run($vs) 대비 표시 · baseline이 아니면 판정하지 않습니다", Tone.NEUTRAL)
+                ResultHeadline("No verdict", "비교 대상($vs) 대비\nbaseline이 아니라서 판정하지 않습니다", Tone.NEUTRAL)
             comparedTo == ComparedTo.PREVIOUS ->
                 ResultHeadline(
                     if (isBaseline) "This run is the baseline" else "No baseline",
@@ -326,7 +329,7 @@ object ResultPresenter {
         comparedTo: ComparedTo,
         /** The run the ticks stand for; only needed to notice a metric whose unit changed between the two. */
         reference: BenchmarkRun? = null,
-        /** The reference was picked in run history, so notes call it "선택한 run" rather than the previous run. */
+        /** The reference was picked in run history, so notes call it "비교 대상" rather than the previous run. */
         selectedReference: Boolean = false
     ): List<MetricBarSection> {
         val withDelta = comparedTo != ComparedTo.NONE

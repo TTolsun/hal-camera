@@ -140,15 +140,15 @@ class HistoryActivity : ComponentActivity() {
         )
         body.addView(listActions, lp())
         if (pickingComparison && selectedId == null) {
-            // No "기준": the screen calls the run the ticks stand for Baseline or 선택한 run everywhere else.
-            text("눈금으로 둘 run을 먼저 고르세요.")
+            // The first pick is the 비교 대상 (the ticks), the second the run the reader looks at (the bars, 선택한 run).
+            text("비교 대상 run을 먼저 고르세요.")
             button("비교 선택 취소") { pickingComparison = false; render() }
         }
         indexError?.let { text("Baseline을 읽지 못했습니다: $it") }
         if (index.unreadableIds.isNotEmpty()) text("읽을 수 없는 파일 ${index.unreadableIds.size}개: ${index.unreadableIds.joinToString()}")
         selectedId?.let { id ->
             val picked = index.runs.find { it.runId == id }?.let { ResultPresenter.localTime(it.runId) } ?: id
-            text("선택한 run: $picked\n비교할 다른 run을 누르세요.")
+            text("비교 대상: $picked\n볼 run을 누르세요.")
             button("선택 취소") { selectedId = null; pickingComparison = false; render() }
         }
         if (runs.isEmpty()) text("이 조건에 맞는 실행이 없습니다. 필터를 바꾸거나 새 벤치마크를 실행하세요.")
@@ -181,7 +181,7 @@ class HistoryActivity : ComponentActivity() {
         val card = Look.card(this, dark = true)
         if (selectedId == run.runId) {
             card.background = Look.cardBackground(this, Look.expertTile2, Look.primaryOnDark)
-            androidx.core.view.ViewCompat.setStateDescription(card, "선택한 run")
+            androidx.core.view.ViewCompat.setStateDescription(card, "비교 대상")
         }
         // Two lines, or three when a build label was typed: when the run happened and how it did, then
         // the numbers. The run id, the profile and the raw validity flags live on the result screen this

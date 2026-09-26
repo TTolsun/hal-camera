@@ -638,8 +638,8 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 221.0)))
         val head = ResultPresenter.headline(current, RegressionDetector.compare(picked, current), ComparedTo.PREVIOUS,
             isBaseline = false, endpointName = "Camera · 0", selectedReference = true)
-        assertEquals("Selected run", head.text)
-        assertTrue(head.sub.startsWith("선택한 run("))
+        assertEquals("No verdict", head.text)
+        assertTrue(head.sub.startsWith("비교 대상("))
         assertEquals(Tone.NEUTRAL, head.tone)
     }
 
@@ -652,7 +652,7 @@ class ResultPresenterTest {
         assertEquals("Baseline", facts.first().first)
         assertTrue(facts.first().second.contains("SW41"))
         assertTrue(facts.any { it.first == "Baseline OS" })
-        assertEquals("선택한 run", ResultPresenter.referenceName(ComparedTo.PREVIOUS, selectedReference = true))
+        assertEquals("비교 대상", ResultPresenter.referenceName(ComparedTo.PREVIOUS, selectedReference = true))
     }
 
     @Test fun aRunThatRecordedNothingSaysSoInWords() {
