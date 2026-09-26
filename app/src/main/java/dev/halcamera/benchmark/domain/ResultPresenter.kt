@@ -38,7 +38,17 @@ data class KeyMetric(
      * Why the row carries no verdict or no bar, in a word or two: a condition mismatch, a unit that changed, a
      * metric only the reference measured. The compare chart used to say this; the bars have to say it now.
      */
-    val note: String? = null
+    val note: String? = null,
+    /** The Camera2 span the metric measures, printed small beside the name; see [MetricInfo.span]. */
+    val span: String = "",
+    /** A count has no bar: a track and a tick for "0 of 0" said nothing and took a line. */
+    val count: Boolean = false,
+    /**
+     * The reference lies past the end of the track. The scale follows this run's values, so one reference far
+     * off (a 13 s AF baseline) no longer squashes every bar of the section to a dot; its tick sits at the end
+     * with an arrow instead.
+     */
+    val baseBeyond: Boolean = false
 )
 
 /** One category of [KeyMetric] bars on the result screen. */
@@ -320,17 +330,18 @@ object ResultPresenter {
                         // Only the reference measured it. Dropping the row would hide that this run lost a metric.
                         val base = cmp?.baselineValue?.takeIf { withDelta } ?: return@mapNotNull null
                         BarInput(info.short, "", null, base, info.unit, cmp, fine(info.id, info.category),
-                            note = "이번 run에서 측정되지 않음")
+                            note = "이번 run에서 측정되지 않음", span = info.span)
                     }
                     // A timed-out 3A metric stores the observation window as its value (plan chapter 13), so a bar
                     // would compare a window against a convergence. It keeps its row and says so instead.
-                    metric.timeout -> BarInput(info.short, "timeout", null, null, info.unit, null, false)
+                    metric.timeout -> BarInput(info.short, "timeout", null, null, info.unit, null, false, span = info.span)
                     // History can pair runs of different contracts; a tick in another unit would be a lie.
                     refMetric != null && refMetric.unit != metric.unit ->
-                        BarInput(info.short, statLabel(metric, info), metric.value, null, info.unit, null,
-                            fine(info.id, info.category), note = "단위 다름")
-                    else -> BarInput(info.short, statLabel(metric, info), metric.value,
-                        cmp?.baselineValue, info.unit, cmp, fine(info.id, info.category))
+                        BarInput(info.short, "", metric.value, null, info.unit, null,
+                            fine(info.id, info.category), note = "단위 다름", span = info.span)
+                    // No per-row "median": nearly every value is one, and the card's legend says so once.
+                    else -> BarInput(info.short, "", metric.value,
+                        cmp?.baselineValue, info.unit, cmp, fine(info.id, info.category), span = info.span)
                 }
             }
             // Frame rate leads the preview section: it is H.1 turned upside down, and "29.8 fps" answers the
@@ -346,25 +357,11 @@ object ResultPresenter {
         }
     }
 
-    /**
-     * What the lengths on the metrics card mean, for the card to print under them.
-     *
-     * A column of bars invites a comparison between its rows, so the screen has to say how far that comparison
-     * reaches instead of leaving the reader to infer a rule the bars do not follow (#137).
-     */
-    fun barScaleNote(sections: List<MetricBarSection>): String? {
-        val bars = sections.flatMap { it.bars }
-        if (bars.isEmpty()) return null
-        val shared = "막대 길이는 같은 묶음 안에서 단위가 같은 지표끼리 비교됩니다"
-        if (bars.none { it.ownScale }) return shared
-        return "$shared · 단위가 혼자인 지표는 자체 스케일이라 다른 행과 길이를 비교할 수 없습니다"
-    }
-
     private fun frameRate(run: BenchmarkRun, comparison: RunComparison?): BarInput? {
         val fps = run.metric("H.1")?.value?.takeIf { it > 0 }?.let { 1000.0 / it } ?: return null
         val cmp = comparison?.metric("H.1")
         val baseFps = cmp?.baselineValue?.takeIf { it > 0 }?.let { 1000.0 / it }
-        return BarInput("Frame rate", "", fps, baseFps, "fps", cmp, false)
+        return BarInput("Frame rate", "", fps, baseFps, "fps", cmp, false, span = "1000 / Interval p50")
     }
 
     /** A bar before its section's scale is known. [value] is null only for a timed-out row, which draws no fill. */
@@ -376,7 +373,8 @@ object ResultPresenter {
         val unit: String,
         val cmp: MetricComparison?,
         val fine: Boolean,
-        val note: String? = null
+        val note: String? = null,
+        val span: String = ""
     )
 
     /**
@@ -386,24 +384,13 @@ object ResultPresenter {
      */
     private fun scales(inputs: List<BarInput>): Map<String, Double> =
         inputs.filter { it.value != null || it.base != null }.groupBy { it.unit }.mapValues { (_, group) ->
-            val top = group.maxOf { maxOf(it.value ?: 0.0, it.base ?: 0.0) }
+            // This run's values set the scale; a reference only when this run has none in the group. A far-off
+            // reference used to set it and flatten every bar beside it (AE 404 ms drawn as a dot next to a 13 s
+            // AF baseline).
+            val values = group.mapNotNull { it.value }
+            val top = if (values.isNotEmpty()) values.max() else group.maxOf { it.base ?: 0.0 }
             (top / 0.8).takeIf { it > 0 } ?: 1.0
         }
-
-    /**
-     * What the shown number is, when that is not obvious from the metric's name.
-     *
-     * [BenchmarkMetric.value] is the median for every sampled latency ([BenchmarkEvaluator] sets
-     * `value = p50`), so that is what the bar and the number report. This is not [statHeader], which names
-     * the *second* statistic the old table put beside the median — reusing it here labelled a median "max".
-     */
-    private fun statLabel(metric: BenchmarkMetric, info: MetricInfo): String = when {
-        metric.unit == "count" -> ""
-        // "Interval p50" and "Interval p95" already say which statistic they are.
-        info.short.contains("p50") || info.short.contains("p95") -> ""
-        metric.p50 == null -> ""
-        else -> "median"
-    }
 
     private fun bar(
         input: BarInput,
@@ -413,10 +400,12 @@ object ResultPresenter {
         judged: Boolean,
         comparedTo: ComparedTo
     ): KeyMetric {
+        val isCount = input.unit == "count"
         val value = input.value
             ?: return KeyMetric(input.label, input.statLabel, "—", null, Tone.NEUTRAL, 0.0,
                 input.base?.let { (it / scale).coerceIn(0.0, 1.0) }, ownScale = input.base != null && ownScale,
-                note = input.note)
+                note = input.note, span = input.span, count = isCount,
+                baseBeyond = input.base?.let { it / scale > 1.0 } ?: false)
         val base = input.base
         val cmp = input.cmp
         val delta = if (!withDelta || base == null) null else {
@@ -429,7 +418,7 @@ object ResultPresenter {
             val amount = when (input.unit) {
                 "fps" -> signedAmount(d, 1, moved)?.let { "$it fps" }
                 // A count difference is already the whole story, and "+3 count" reads as a unit nobody uses.
-                "count" -> String.format(Locale.US, "%+.0f", d)
+                "count" -> if (d == 0.0) null else String.format(Locale.US, "%+.0f", d)
                 // A change of a fraction of a millisecond is the whole point of a jitter row; "+0 ms" is not.
                 "ms" -> signedAmount(d, if (input.fine) 1 else 0, moved)?.let { "$it ms" }
                 else -> signedAmount(d, 0, moved)?.let { "$it ${input.unit}" }
@@ -456,7 +445,10 @@ object ResultPresenter {
             fraction = (value / scale).coerceIn(0.0, 1.0),
             baseFraction = base?.let { (it / scale).coerceIn(0.0, 1.0) },
             ownScale = ownScale,
-            note = note
+            note = note,
+            span = input.span,
+            count = isCount,
+            baseBeyond = base != null && base / scale > 1.0
         )
     }
 
@@ -704,7 +696,9 @@ object ResultPresenter {
     internal fun formatValue(value: Double, unit: String, fine: Boolean): String = when (unit) {
         "count" -> String.format(Locale.US, "%.0f", value)
         "fps" -> String.format(Locale.US, "%.1f fps", value)
-        "ms" -> String.format(Locale.US, if (fine) "%.1f ms" else "%.0f ms", value)
+        // A jitter of hundredths of a millisecond printed "0.0 ms" beside a -19% change; below 0.1 ms the value
+        // keeps two decimals so it can be read at all.
+        "ms" -> String.format(Locale.US, if (fine && kotlin.math.abs(value) < 0.1) "%.2f ms" else if (fine) "%.1f ms" else "%.0f ms", value)
         // A unit this app does not define comes from a run written by another version; it is printed as stored
         // rather than rounded to a precision this version invented for it.
         else -> "$value $unit"

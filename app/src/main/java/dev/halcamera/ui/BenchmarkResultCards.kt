@@ -72,44 +72,55 @@ object BenchmarkResultCards {
         // a number next to its baseline is what this screen is for, and a bar answers that faster than a row of digits.
         val metricsCard = Look.card(context, dark = true)
         val sections = ResultPresenter.metricBars(run, comparison, comparedTo, reference)
-        var anyBaseline = false
-        sections.forEachIndexed { sectionIndex, section ->
-            metricsCard.addView(Look.text(context, section.title, 13, Look.onDarkMuted, bold = true), lp(if (sectionIndex == 0) 0 else 20))
-            section.bars.forEachIndexed { i, k ->
-                if (k.baseFraction != null) anyBaseline = true
+        // One legend line at the top instead of "· median" on every row and a paragraph about scales under the last
+        // one: the reader needs the key before the bars, not after them.
+        val tickName = when {
+            comparedTo == ComparedTo.NONE -> null
+            comparedTo == ComparedTo.BASELINE -> "baseline"
+            selectedReference -> "선택한 run"
+            else -> "이전 run"
+        }
+        val legend = listOfNotNull("시간 값 = median", "━ 이번 run", tickName?.let { "│ $it" }).joinToString(" · ")
+        metricsCard.addView(Look.text(context, legend, 11, Look.onDarkMuted))
+        sections.forEach { section ->
+            metricsCard.addView(Look.text(context, section.title, 13, Look.onDarkMuted, bold = true), lp(16))
+            section.bars.forEach { k ->
+                // Name and value on the first line, with the Camera2 span beside the name in small type so a HAL
+                // developer can tell what "Partial" measures without leaving the screen.
                 val top = Look.row(context)
-                val label = if (k.statLabel.isBlank()) k.label else "${k.label} · ${k.statLabel}"
-                top.addView(Look.text(context, label, 13, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
-                top.addView(Look.text(context, k.valueText, 15, if (k.tone == Tone.BAD) Look.statusFail else Look.onDark, bold = true, mono = true),
+                val name = android.text.SpannableStringBuilder(k.label).apply {
+                    if (k.statLabel.isNotBlank()) append(" · ${k.statLabel}")
+                    if (k.span.isNotBlank()) {
+                        val from = length
+                        append("  ${k.span}")
+                        setSpan(android.text.style.RelativeSizeSpan(0.8f), from, length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        setSpan(android.text.style.ForegroundColorSpan(Look.onDarkMuted), from, length, android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
+                }
+                top.addView(Look.text(context, name, 13, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
+                val valueColor = if (k.tone == Tone.BAD) Look.statusFail else Look.onDark
+                // A count has no bar, so its change sits beside its value on the one line it has.
+                if (k.count) k.deltaText?.let {
+                    top.addView(Look.text(context, it, 12, deltaColor(k.tone), bold = true),
+                        LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
+                }
+                top.addView(Look.text(context, k.valueText, 15, valueColor, bold = true, mono = true),
                     LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
-                metricsCard.addView(top, lp(if (i == 0) 8 else 14))
-                metricsCard.addView(MeterView(context, k.fraction.toFloat(), k.baseFraction?.toFloat(), k.tone == Tone.BAD), lp(6))
-                // The change and the reason a row was not judged sit under the bar, not beside the value. With the
-                // percentage added, "First frame · median 542 ms +20 ms · +4%" ran the name into the value on a
-                // Galaxy S25+ at the default font size.
-                if (k.deltaText != null || k.note != null) {
-                    val under = Look.row(context)
-                    under.addView(Look.text(context, k.note.orEmpty(), 11, Look.onDarkMuted), LinearLayout.LayoutParams(0, -2, 1f))
+                metricsCard.addView(top, lp(10))
+                if (!k.count) {
+                    // The change at the right end of the bar: two lines a row instead of three.
+                    val barRow = Look.row(context)
+                    barRow.addView(MeterView(context, k.fraction.toFloat(), k.baseFraction?.toFloat(), k.tone == Tone.BAD, k.baseBeyond),
+                        LinearLayout.LayoutParams(0, -2, 1f))
                     k.deltaText?.let {
-                        under.addView(Look.text(context, it, 12, deltaColor(k.tone), bold = true),
+                        barRow.addView(Look.text(context, it, 12, deltaColor(k.tone), bold = true),
                             LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
                     }
-                    metricsCard.addView(under, lp(4))
+                    metricsCard.addView(barRow, lp(4))
                 }
+                // Why this row has no verdict or no fill; the removed compare chart said it beside the row.
+                k.note?.let { metricsCard.addView(Look.text(context, it, 11, Look.onDarkMuted), lp(2)) }
             }
-        }
-        if (anyBaseline) {
-            val tickName = when {
-                comparedTo == ComparedTo.BASELINE -> "baseline"
-                selectedReference -> "선택한 run"
-                else -> "이전 run"
-            }
-            metricsCard.addView(Look.text(context, "막대 = 이번 run · 눈금 = $tickName", 11, Look.onDarkMuted), lp(12))
-        }
-        // How far a length may be compared. Without it the reader has to guess the rule from the bars, and the guess
-        // a column of bars invites — every row on one axis — is not the rule a mixed-unit section follows.
-        ResultPresenter.barScaleNote(sections)?.let {
-            metricsCard.addView(Look.text(context, it, 11, Look.onDarkMuted), lp(if (anyBaseline) 4 else 12))
         }
         // Label and value pairs, not seven sentences that repeated each other: the eligibility line named the same
         // flags the summary printed again as codes, and neither said what a code meant.

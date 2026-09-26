@@ -379,7 +379,7 @@ class ResultPresenterTest {
 
     @Test fun aUnitWithOneRowInItsSectionKeepsItsOwnScale() {
         // A frame rate on the millisecond axis would draw a 30 fps recording shorter than its own start latency,
-        // so the two units stay apart and the note under the card says the fps bar compares with nothing.
+        // so the two units stay apart.
         val current = run(metrics = listOf(
             launchMetric("3.1", 186.0, 201.0),
             windowMetric("3.4", 30.0),
@@ -393,29 +393,24 @@ class ResultPresenterTest {
         assertTrue(record.getValue("Record stalls").ownScale)
         assertFalse(record.getValue("Record start").ownScale)
         assertEquals(0.8 * 186.0 / 302.0, record.getValue("Record start").fraction, 1e-9)
-        assertTrue(ResultPresenter.barScaleNote(sections)!!.contains("자체 스케일"))
+        // A count is drawn as a number, not a bar.
+        assertTrue(record.getValue("Record stalls").count)
     }
 
-    @Test fun theScaleNoteSaysHowFarALengthMayBeCompared() {
-        val shared = ResultPresenter.metricBars(
-            run(metrics = listOf(launchMetric("1.1", 11.0, 14.0), launchMetric("1.6", 561.0, 590.0))),
-            null, ComparedTo.NONE
-        )
-        // Nothing stands alone here, so the note only names the rule and does not warn about a lone unit.
-        assertEquals("막대 길이는 같은 묶음 안에서 단위가 같은 지표끼리 비교됩니다", ResultPresenter.barScaleNote(shared))
-        assertNull(ResultPresenter.barScaleNote(emptyList()))
-    }
-
-    @Test fun aBaselineFarAboveThisRunKeepsItsTickOnTheTrack() {
+    @Test fun aBaselineFarAboveThisRunNoLongerFlattensTheBarsBesideIt() {
+        // Seen on a Galaxy S25+: a 13 s AF baseline set the 3A scale and drew AE 404 ms as a dot.
         val base = run(runId = "20260910-100000-000", metrics = listOf(
             launchMetric("1.1", 900.0, 950.0), launchMetric("1.6", 120.0, 140.0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(
             launchMetric("1.1", 120.0, 140.0), launchMetric("1.6", 130.0, 150.0)))
         val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
-            .flatMap { it.bars }
-        // The shared scale counts the ticks too, so a baseline nobody came close to still fits inside the bar.
-        assertEquals(0.8, bars.first { it.label == "Open" }.baseFraction!!, 1e-9)
-        assertTrue(bars.all { (it.baseFraction ?: 0.0) <= 0.8 + 1e-9 && it.fraction <= 0.8 + 1e-9 })
+            .flatMap { it.bars }.associateBy { it.label }
+        // This run's largest value sits at 80%; the far-off tick is pinned to the end and flagged.
+        assertEquals(0.8, bars.getValue("First frame").fraction, 1e-9)
+        assertEquals(0.8 * 120.0 / 130.0, bars.getValue("Open").fraction, 1e-9)
+        assertTrue(bars.getValue("Open").baseBeyond)
+        assertEquals(1.0, bars.getValue("Open").baseFraction!!, 1e-9)
+        assertFalse(bars.getValue("First frame").baseBeyond)
     }
 
     @Test fun frameRateLeadsThePreviewSectionAsHOneUpsideDown() {
@@ -447,9 +442,9 @@ class ResultPresenterTest {
 
     // ---- every metric as a bar ----
 
-    @Test fun theShownNumberIsTheMedianAndSaysSo() {
-        // The value a sampled latency stores is its median (BenchmarkEvaluator sets value = p50), so the row
-        // must not borrow statHeader, which names the second statistic the old table put beside it.
+    @Test fun rowsCarryTheirCamera2SpanInsteadOfARepeatedMedianCaption() {
+        // The value a sampled latency stores is its median (BenchmarkEvaluator sets value = p50); the card's legend
+        // says so once instead of "· median" on every row. What a HAL developer needs beside the name is the span.
         val current = run(metrics = listOf(
             launchMetric("1.1", 142.0, 161.0, n = 9),
             launchMetric("2.2", 164.0, 190.0, n = 25),
@@ -457,12 +452,27 @@ class ResultPresenterTest {
             countMetric("H.5", 0)
         ))
         val bars = ResultPresenter.metricBars(current, null, ComparedTo.NONE).flatMap { it.bars }
-        assertEquals("median", bars.first { it.label == "Open" }.statLabel)
-        assertEquals("median", bars.first { it.label == "Capture" }.statLabel)
-        // These two already name their statistic, and a count has none.
-        assertEquals("", bars.first { it.label == "Interval p50" }.statLabel)
-        assertEquals("", bars.first { it.label == "Stalls" }.statLabel)
+        assertTrue(bars.all { it.statLabel.isEmpty() })
+        assertEquals("openCamera → onOpened", bars.first { it.label == "Open" }.span)
+        assertEquals("capture → onImageAvailable", bars.first { it.label == "Capture" }.span)
         assertEquals("0", bars.first { it.label == "Stalls" }.valueText)
+        assertTrue(BenchmarkMetricCatalog.ids.all { BenchmarkMetricCatalog.info(it)!!.span.isNotBlank() })
+    }
+
+    @Test fun aValueBelowATenthOfAMillisecondKeepsTwoDecimals() {
+        // Seen on a Galaxy S25+: preview jitter printed "0.0 ms" beside a -19% change.
+        val bars = ResultPresenter.metricBars(run(metrics = listOf(windowMetric("H.10", 0.021))), null, ComparedTo.NONE)
+            .flatMap { it.bars }
+        assertEquals("0.02 ms", bars.single().valueText)
+    }
+
+    @Test fun anUnchangedCountShowsNoDelta() {
+        val base = run(runId = "20260910-100000-000", metrics = listOf(countMetric("H.5", 0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(countMetric("H.5", 0)))
+        val bar = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE)
+            .flatMap { it.bars }.single()
+        assertNull(bar.deltaText)
+        assertTrue(bar.count)
     }
 
     @Test fun barsCoverEveryMeasuredMetricGroupedByCategory() {

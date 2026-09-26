@@ -15,7 +15,9 @@ internal class MeterView(
     context: Context,
     private val fraction: Float,
     private val baseFraction: Float?,
-    degraded: Boolean
+    degraded: Boolean,
+    /** The reference is past the end of the track: its tick sits at the end with an arrow pointing on. */
+    private val baseBeyond: Boolean = false
 ) : View(context) {
 
     private val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.expertTile3 }
@@ -36,6 +38,15 @@ internal class MeterView(
         canvas.drawRoundRect(0f, barTop, w, barBottom, r, r, track)
         canvas.drawRoundRect(0f, barTop, w * fraction.coerceIn(0f, 1f), barBottom, r, r, fill)
         baseFraction?.let {
+            if (baseBeyond) {
+                // A small arrow at the end of the track: the reference is further on than the track reaches.
+                val h = height.toFloat()
+                val path = android.graphics.Path().apply {
+                    moveTo(w - h * 0.6f, 0f); lineTo(w, h / 2); lineTo(w - h * 0.6f, h); close()
+                }
+                canvas.drawPath(path, tick)
+                return@let
+            }
             val x = (w * it.coerceIn(0f, 1f)).coerceIn(1.5f, w - 1.5f)
             canvas.drawRect(x - 1.5f, 0f, x + 1.5f, height.toFloat(), tick)
         }
