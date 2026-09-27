@@ -41,6 +41,6 @@ nav:
   - path: evidence.html
     label: Evidence
   - path: getting-started.html
-    label: 빠른 시작
+    label: Quickstart
   - path: troubleshooting.html
-    label: 디버깅
+    label: Debugging

@@ -35,11 +35,11 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 
 ### CameraX 기기 관찰
 
-2026년 9월 27일의 V-002 기록입니다. 앱은 0.14.0 로컬 release 빌드(versionCode 540~542)이며, 마지막 빌드의 앱 코드는 main의 `06717ba`와 같습니다. Android 16을 사용하는 후면 카메라 0에서 확인했습니다. 전면 카메라·다른 기기와 `yuvOffsetNs` 값은 검증하지 않았습니다.
+2026년 9월 27일의 V-002 기록입니다. 앱은 0.14.0 로컬 release 빌드(versionCode 540~542)이며, 마지막 빌드의 앱 코드는 main의 `06717ba`와 같습니다. Galaxy S25+의 Android 16 환경에서 후면 카메라 0으로 확인했습니다. 전면 카메라·다른 기기와 `yuvOffsetNs` 값은 검증하지 않았습니다.
 
 <!-- omm:begin id=device-notes -->
 
-**CameraX 경로는 Galaxy S25+ 한 대의 후면 카메라에서만 확인했습니다.** 아래는 V-002 기록의 관찰 결과이며, 다른 기기와 전면 카메라에서는 확인하지 않았습니다.
+아래는 위 조건에서 수행한 V-002 기록의 관찰 결과입니다.
 
 | 확인 항목 | 관찰 결과 |
 | --- | --- |
@@ -58,13 +58,20 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`
 - 기기 검증: `V-002`
 - 근거 수준: 기기 검증
-- 검토 2026-09-27 @ `9f821a0` · Codex
+- 검토 상태: 원본이 갱신됨: 검토 대기
 
 </details>
 
 <!-- omm:end id=device-notes -->
 
 ## 문서를 수정하고 검증하세요
+
+```mermaid
+flowchart LR
+    source["원본 수정"] --> review["근거 대조 · 검토"]
+    review --> build["페이지 생성 · 검사"]
+    build --> browser["브라우저 확인 · PR"]
+```
 
 문서 도구에는 **Node.js 24**가 필요합니다. `npm ci --prefix tools/docgen --ignore-scripts`로 공용 엔진을 설치합니다. 문서 원본은 다음과 같이 나뉩니다.
 
@@ -114,8 +121,8 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-27 @ `9f821a0` · Codex |
-| 원고 `device-notes` | 최신 | 검토 2026-09-27 @ `9f821a0` · Codex |
+| 구조 원본 `overall-architecture` | 원본이 갱신됨: 검토 대기 | 검토 2026-09-27 @ `9f821a0` · Codex |
+| 원고 `device-notes` | 원본이 갱신됨: 검토 대기 | 검토 2026-09-27 @ `9f821a0` · Codex |
 
 <!-- omm:end id=status -->
 

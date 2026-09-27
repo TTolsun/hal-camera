@@ -34,7 +34,7 @@ adb shell sh /data/local/tmp/halcam status
 
 `probe`, `cts cases`, `cts run --cases KEY[,KEY...]`도 지원합니다. 벤치마크는 CLI 지원 범위에서 제외하며 앱 화면에서 실행합니다. Python `halcam`은 사진·probe·CTS 파일 수집을 위한 선택 도구입니다. 기본 CLI에 Python이나 pip는 필요하지 않습니다.
 
-<h2 lang="en">Commands.</h2>
+## 명령을 실행하세요
 
 | 명령 | 동작과 결과 |
 | --- | --- |
@@ -55,7 +55,7 @@ CTS 키는 `custom:fast_on_off`나 `vendored:android.hardware.camera2.cts.Record
 
 녹화 준비에는 최대 30초를 기다립니다. 멈출 CLI 녹화가 없을 때 `record stop`을 호출하면 `NOT_RECORDING`으로 거부합니다. 화면을 벗어나 녹화가 종료되면 `RECORDING_INTERRUPTED`로 기록하여 정상적인 `record stop` 완료와 구분합니다. 완료 기록은 최대 24시간·200개를 보관합니다. CLI는 Android 사용자 0을 대상으로 합니다.
 
-<h2 lang="en">Direct calls.</h2>
+## Provider를 직접 호출하세요
 
 스크립트 없이도 `content call`로 직접 호출할 수 있습니다. 응답의 `json` 값은 사람이 읽을 수 있는 JSON이며 Base64 변환은 필요하지 않습니다. 사진·프리뷰·녹화·CTS 실행 전에 Live 화면을 엽니다.
 
@@ -74,7 +74,7 @@ CTS 항목만 `--extra`가 아니라 `--arg`로 전달합니다. `--extra`는 �
 
 기존 Python 도구의 `submit`·`cancel` Base64 전송은 유지합니다. 지원 명령은 `/v1/hello`의 `commands`, 상태 조회·취소 등의 조작은 `controls`에서 확인합니다.
 
-<h2 lang="en">Optional Python client.</h2>
+## Python 클라이언트를 사용하세요
 
 기존 자동화에서 Python 도구가 필요하면 다음과 같이 설치합니다. 녹화와 프리뷰 종료는 위의 ADB 스크립트를 사용합니다.
 
@@ -85,7 +85,7 @@ halcam --serial DEVICE capture --camera 0 --output ./photos --json
 halcam --serial DEVICE probe --output ./probe --json
 ```
 
-Python 도구의 `--json`은 stdout에 JSON 하나를 출력하며, `--wait-timeout`은 PC에서 기다리는 시간만 제한합니다. ADB 스크립트는 진행 메시지와 요청별 결과를 출력하고 성공 시 0, 오류 시 1을 반환합니다. 실패하거나 취소된 요청에도 저장된 파일이 있으면 `fetch UUID`로 회수할 수 있습니다. 기계적으로 JSON만 처리하려면 직접 `content read`를 사용합니다.
+Python 도구의 `--json`은 stdout에 JSON 하나를 출력하며, `--wait-timeout`은 PC에서 기다리는 시간만 제한합니다. ADB 스크립트는 진행 메시지와 요청별 결과를 출력하고 성공 시 0, 오류 시 1을 반환합니다. 기계적으로 JSON만 처리하려면 직접 `content read`를 사용합니다. 파일 회수 실패에 대한 대응은 다음 절을 확인하세요.
 
 ## 요청이 끝나지 않거나 파일이 없을 때
 

@@ -7,7 +7,7 @@ title: Callback
 
 그래프를 켜면 FPS·ISO·노출·AF·AE 정보 두 줄을 숨깁니다. 촬영·녹화 조작부는 그대로 사용할 수 있으며 `Callback`을 다시 누르면 그래프가 닫힙니다.
 
-<h2 lang="en">Read the time origin first.</h2>
+## 시간 기준을 확인하세요
 
 **0ms는 이전 프레임의 `onCaptureStarted` 콜백을 앱에서 받은 시점입니다.** 현재 프레임의 Shutter부터 Metadata와 각 출력까지 모두 이 기준에서 경과한 시간을 표시합니다. 요청을 생성하거나 HAL에 전달한 시점을 기준으로 삼지 않습니다.
 
@@ -21,7 +21,7 @@ title: Callback
 
 시간축은 값에 맞춰 자동으로 늘어납니다. 작은 범위가 3초 동안 유지되면 줄어들며, 자동 고정 중에는 늦게 도착한 결과를 담기 위한 확장만 합니다. 사용자가 범위를 설정할 필요는 없습니다.
 
-<h2 lang="en">Follow the configured streams.</h2>
+## 스트림별 도착 시각을 읽으세요
 
 세션 구성과 그래프는 같은 스트림 목록을 사용합니다. 표시 이름과 별개인 스트림 고유 ID로 결과를 연결하므로, YUV 출력이 여러 개여도 각각 추적합니다. 표시 중인 프레임이 요청하지 않은 출력도 행을 남겨 구분합니다.
 
@@ -40,7 +40,16 @@ CameraX의 YUV 행은 ImageAnalysis 수신 시점, JPEG 행은 ImageCapture 수�
 
 버퍼와 프레임은 센서 타임스탬프가 같은지 확인하여 연결하고, 표시 시간은 앱의 단조 시계로 계산합니다. 이 값은 앱 수신 시각이며 HAL 내부 처리 완료 시각을 직접 측정한 값은 아닙니다.
 
-<h2 lang="en">Hold a capture long enough to read.</h2>
+## 촬영 프레임을 고정하세요
+
+```mermaid
+flowchart TB
+    off["Real-time Frame<br/>실시간 갱신"] -->|"고정"| waiting["Event Frame<br/>촬영 출력 대기"]
+    waiting -->|"출력 수신"| held["Event Frame · 일시정지 표시<br/>촬영 프레임 고정"]
+    held -->|"시간 경과"| waiting
+    waiting -->|"해제"| off
+    held -->|"해제"| off
+```
 
 자동 고정은 처음에 켜져 있으며 기본 시간은 3초입니다. JPEG처럼 반복 요청하지 않는 출력이 도착하면 해당 프레임을 정해진 시간 동안 표시합니다. 카메라와 녹화는 계속 동작합니다.
 
@@ -58,7 +67,7 @@ CameraX의 YUV 행은 ImageAnalysis 수신 시점, JPEG 행은 ImageCapture 수�
 3. 일시정지 표시가 나타난 동안 값을 읽습니다. 늦게 도착한 같은 프레임의 결과도 채워집니다.
 4. 시간이 지나면 갱신이 재개됩니다. 곧바로 돌아가려면 `해제`를 누릅니다.
 
-<h2 lang="en">A missing value has a meaning.</h2>
+## 값이 없는 이유를 확인하세요
 
 | 표시 | 의미 |
 | --- | --- |
@@ -68,9 +77,9 @@ CameraX의 YUV 행은 ImageAnalysis 수신 시점, JPEG 행은 ImageCapture 수�
 | 콜백 없음 | 현재 엔진·경로에서는 그 출력의 수신 시점을 직접 관측하지 못합니다. |
 | 시작 시각 없음 | 출력은 받았지만 공통 기준 시각을 연결하지 못했습니다. |
 
-**다음 단계:** 반복 측정과 저장된 실행의 비교는 [Benchmark](benchmark.md)에서 확인하세요.
-
 <details>
 <summary>코드 근거를 확인하세요</summary>
 <p class="doc-evidence">화면과 버튼은 <code>MainActivity.kt</code>·<code>ui/ResultCallbackGraph.kt</code>, 프레임 선택과 자동 고정은 <code>ui/ResultCallbackTimeline.kt</code>, 시간 기준과 결과 연결은 <code>ui/ResultCallbackSeries.kt</code>·<code>telemetry/Telemetry.kt</code>에서 확인할 수 있습니다. 세션과 그래프의 공통 스트림 목록은 <code>camera/StreamConfiguration.kt</code>, Camera2의 PRIVATE 버퍼 수신은 <code>camera/PreviewBufferRelay.kt</code>·<code>camera/RecordingBufferRelay.kt</code>가 담당합니다. CameraX의 관측 가능 여부와 출력 구성은 <code>camera/CameraXEngine.kt</code>, 사진 쌍의 연결은 <code>camera/CameraXStillCapture.kt</code>에 있습니다.</p>
 </details>
+
+**다음 단계:** 반복 측정과 저장된 실행의 비교는 [Benchmark](benchmark.md)에서 확인하세요.

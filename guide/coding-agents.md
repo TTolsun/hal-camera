@@ -25,3 +25,5 @@ CLI에서 지원하지 않는 Benchmark 실행을 요청받으면 앱 화면에�
 명령 계약을 바꿀 때에는 `CliCommand.COMMANDS`, `AdbArguments`, `app/src/main/assets/halcam.sh`, [CLI](cli.md), `skills/halcam-cli/SKILL.md`를 함께 대조합니다. 가이드에는 명령의 의미와 제한을, 스킬에는 에이전트가 확인하고 실행할 순서를 적습니다.
 
 계약 원문은 [CLI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md), 구현은 `app/src/main/java/dev/halcamera/cli/`에 있습니다.
+
+**다음 단계:** 작업 결과를 기록할 때에는 [Evidence](evidence.md)의 검증 범위를 따르세요.

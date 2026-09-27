@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>카메라 엔진 · HALCamera 개발자 가이드</title>
+  <title>Engine · HALCamera 개발자 가이드</title>
   <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
 </head>
@@ -21,14 +21,13 @@
       <a href="./cli.html">CLI</a>
       <a href="./coding-agents.html">Agents</a>
       <a href="./evidence.html">Evidence</a>
-      <a href="./getting-started.html">빠른 시작</a>
-      <a href="./troubleshooting.html">디버깅</a>
+      <a href="./getting-started.html">Quickstart</a>
+      <a href="./troubleshooting.html">Debugging</a>
     </nav>
   </header>
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
-    <h1 id="카메라-엔진">카메라 엔진</h1>
-<p><strong>측정값을 보기 전에 Live가 Camera2와 CameraX 중 어느 엔진으로 열렸는지 확인하세요.</strong> 두 엔진은 같은 계약을 구현하므로 Live의 조작은 같지만, 카메라에 보내는 요청과 앱이 기록하는 시각은 엔진마다 다릅니다. 이 문서는 엔진 계약, 두 엔진의 구현, 두 엔진이 다르게 동작하는 지점을 설명합니다.</p>
+    <h1 lang="en">Two engines.<br>One camera contract.</h1><p><strong>Live가 Camera2와 CameraX 중 어느 엔진으로 열렸는지 확인하세요.</strong> 같은 조작이라도 요청 구성과 관측 가능한 버퍼가 다릅니다. 이 페이지는 엔진의 구현을 설명하며, 화면 조작은 <a href="getting-started.html#live에서-촬영하세요">Quickstart</a>, 그래프 해석은 <a href="callback.html">Callback</a>에서 확인합니다.</p>
 <table>
 <thead>
 <tr>
@@ -56,15 +55,15 @@
 <p>엔진이 앱 전체 구조에서 차지하는 위치는 <a href="architecture.html#패키지별-역할">아키텍처</a>에 있습니다.</p>
 <h2 id="엔진-계약">엔진 계약</h2>
 <pre><code class="language-mermaid">flowchart TB
-    live[&quot;MainActivity&lt;br/&gt;Live 셔터 · 상단 제어 · 프리뷰 터치&quot;] --&gt; contract[&quot;CameraEngine&lt;br/&gt;MediaCapture · LiveTuning · TouchMetering&quot;]
-    contract --&gt; c2[&quot;Camera2Engine&lt;br/&gt;StillCapture · LiveRecorder · TouchFocus&quot;]
-    contract --&gt; cx[&quot;CameraXEngine&lt;br/&gt;StillCapture · LiveRecorder · Controls&quot;]
-    bench[&quot;BenchmarkActivity&quot;] --&gt; c2
-    cx --&gt; camx[&quot;CameraX 1.6&quot;]
+    live[&quot;Live · MainActivity&quot;] --&gt; contract[&quot;CameraEngine&lt;br/&gt;촬영 · 제어 · 터치 측광&quot;]
+    contract --&gt; c2[&quot;Camera2Engine&quot;]
+    contract --&gt; cx[&quot;CameraXEngine&quot;]
+    bench[&quot;Benchmark&quot;] --&gt; c2
+    cx --&gt; camx[&quot;CameraX&quot;]
     c2 --&gt; fw[&quot;Camera2 API&quot;]
     camx --&gt; fw
 </code></pre>
-<p>이 그림은 화면과 엔진의 호출 방향을 나타냅니다. 엔진 아래의 이름은 <code>Camera2StillCapture</code>, <code>CameraXControls</code>처럼 엔진 이름을 앞에 붙인 도우미 클래스입니다. Benchmark는 Camera2 엔진만 사용하고, CameraX도 결국 Camera2 API로 카메라를 엽니다.</p>
+<p>화면에서 카메라 API까지의 호출 방향입니다. 클래스별 구현은 아래에서 설명합니다.</p>
 <!-- omm:begin id=contract --><p><strong>화면은 엔진 클래스가 아니라 엔진이 구현한 인터페이스로 기능을 확인합니다.</strong> 그래서 Live의 셔터, 상단 제어, 프리뷰 터치는 Camera2와 CameraX에서 같은 코드로 동작하고, 엔진을 바꾸지 않습니다.</p>
 <table>
 <thead>
@@ -104,7 +103,7 @@
 <li>녹화 중에는 API 버튼과 카메라 선택이 비활성화되어 엔진을 바꿀 수 없습니다.</li>
 </ol>
 <h3 id="benchmark와-cli가-쓰는-엔진">Benchmark와 CLI가 쓰는 엔진</h3>
-<p>Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 <code>StartCardPresenter</code>가 Camera2로 전환한다고 알립니다. 벤치마크용 <code>Camera2Engine</code>은 profile의 <code>StreamSpec</code> 크기를 그대로 사용하며, 지원하지 않는 크기를 다른 크기로 바꾸지 않고 구성 단계에서 실패합니다. 벤치마크 사진은 JPEG 도착 시각만 측정하고 앨범에 저장하지 않습니다.</p>
+<p>Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 <code>StartCardPresenter</code>가 Camera2로 전환한다고 알립니다. Live와 다른 스트림 크기 및 저장 방식은 <a href="#camera2-엔진">Camera2 엔진</a>에서 설명합니다.</p>
 <p>CLI의 <code>preview</code> 명령은 <code>LiveController</code>를 통해 Camera2로 카메라를 엽니다. CameraX 제어는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md">CLI 계약</a>의 후속 범위에 있습니다.</p>
 <h3 id="두-엔진이-함께-남기는-기록">두 엔진이 함께 남기는 기록</h3>
 <p>두 엔진은 세션을 열 때 <code>Telemetry.registerSession</code>에 엔진 이름(<code>Camera2</code> 또는 <code>CameraX</code>)을 남기고, 같은 <code>Telemetry.callback</code>으로 capture 콜백을 기록합니다. 그래서 <code>capture_started</code>, <code>capture_result</code> 같은 이벤트 종류가 엔진과 관계없이 같습니다. 엔진별로 요청을 만드는 방법이 다르므로, 같은 이벤트라도 요청에 들어간 키는 엔진마다 다를 수 있습니다.</p>
@@ -138,7 +137,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/ui/LiveControlBar.kt</code>, <code>app/src/main/java/dev/halcamera/ui/FocusRing.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-27 @ <code>9f821a0</code> · Codex</li>
+<li>검토 상태: 원본이 갱신됨: 검토 대기</li>
 </ul>
 </details><!-- omm:end id=contract --><h2 id="camera2-엔진">Camera2 엔진</h2>
 <!-- omm:begin id=camera2 --><p><strong>Camera2Engine은 앱에서 CaptureRequest를 직접 구성합니다.</strong> <code>request_observed</code>에 기록한 키를 HAL 로그와 대조할 수 있습니다. 엔진 자체는 세션, 요청 구성, 줌, Live 제어를 담당하고, 사진은 <code>Camera2StillCapture</code>, Live 녹화는 <code>Camera2LiveRecorder</code>, 터치 측광은 <code>Camera2TouchFocus</code>, 벤치마크 녹화는 <code>BenchmarkRecorder</code>가 맡습니다. 카메라 요청과 capture 콜백은 엔진이 만든 카메라 스레드 하나에서 처리하고, 버퍼 relay와 파일 저장은 각자의 스레드에서 처리합니다.</p>
@@ -233,7 +232,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillPair.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-27 @ <code>9f821a0</code> · Codex</li>
+<li>검토 상태: 원본이 갱신됨: 검토 대기</li>
 </ul>
 </details><!-- omm:end id=camera2 --><h2 id="camerax-엔진">CameraX 엔진</h2>
 <!-- omm:begin id=camerax --><p><strong>CameraXEngine은 CameraX use case로 Camera2 엔진과 같은 Live 기능을 제공하지만, 요청 키 일부는 CameraX가 정합니다.</strong> 앱이 CameraX 1.6.2에 직접 넣는 Camera2 키는 AE 잠금(<code>CONTROL_AE_LOCK</code>)과 AF 잠금 해제용 cancel trigger뿐입니다. 엔진 자체는 use case bind, 줌, 수명 주기를 담당하고, 사진은 <code>CameraXStillCapture</code>, 녹화는 <code>CameraXLiveRecorder</code>, Live 제어와 터치 측광은 <code>CameraXControls</code>가 맡습니다.</p>
@@ -301,7 +300,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/build.gradle.kts</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-27 @ <code>9f821a0</code> · Codex</li>
+<li>검토 상태: 원본이 갱신됨: 검토 대기</li>
 </ul>
 </details><!-- omm:end id=camerax --><h2 id="두-엔진의-차이">두 엔진의 차이</h2>
 <!-- omm:begin id=comparison --><p><strong>두 엔진의 측정값을 비교하기 전에 아래 차이가 결과에 영향을 주는지 확인하세요.</strong> 같은 조작이라도 엔진이 카메라에 보내는 요청과 앱이 기록하는 시각이 다를 수 있습니다.</p>
@@ -358,7 +357,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-27 @ <code>9f821a0</code> · Codex</li>
+<li>검토 상태: 원본이 갱신됨: 검토 대기</li>
 </ul>
 </details><!-- omm:end id=comparison --><h3 id="기기에서-관찰한-차이">기기에서 관찰한 차이</h3>
 <p>Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 <a href="evidence.html#camerax-기기-관찰">Evidence</a>에 있습니다.</p>
@@ -377,27 +376,27 @@
 </thead>
 <tbody><tr>
 <td>구조 원본 <code>overall-architecture</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>9f821a0</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>contract</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>9f821a0</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>camera2</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>9f821a0</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>camerax</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>9f821a0</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>comparison</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>9f821a0</code> · Codex</td>
 </tr>
 </tbody></table>
@@ -468,6 +467,11 @@
       canvas.append(svg);
       dialog.showModal();
       fitDiagram();
+      if (scale < .875) {
+        fitting = false;
+        setScale(.875);
+        viewport.scrollTo(0, 0);
+      }
     }
 
     dialog.querySelector('.diagram-close').addEventListener('click', () => dialog.close());
@@ -500,7 +504,8 @@
           theme: 'base',
           themeVariables: { primaryColor: '#f6f7f8', primaryTextColor: '#18191b', primaryBorderColor: '#c8ccd2', lineColor: '#858b94', secondaryColor: '#ffffff', tertiaryColor: '#ffffff', fontFamily: 'system-ui, sans-serif', fontSize: '16px' },
           // Leave room for multiline nodes and labels on returning edges.
-          flowchart: { nodeSpacing: 100, rankSpacing: 120, wrappingWidth: 300 },
+          flowchart: { nodeSpacing: 24, rankSpacing: 28, padding: 10, wrappingWidth: 220 },
+          sequence: { actorMargin: 32, messageMargin: 24, noteMargin: 6, width: 160, height: 44, wrap: true },
         });
         const nodes = blocks.map(code => {
           const node = document.createElement('div');
@@ -517,16 +522,29 @@
         nodes.forEach(node => {
           const svg = node.querySelector('svg');
           if (!svg) return;
+          const width = svg.viewBox.baseVal.width;
+          // Keep 16px diagram text at least 14px wide, even on narrow screens.
+          // The figure scrolls locally instead of shrinking the whole page.
+          svg.style.width = '100%';
+          svg.style.maxWidth = `${width}px`;
+          svg.style.minWidth = `${width * .875}px`;
+          let heading = node.previousElementSibling;
+          while (heading && !/^H[1-3]$/.test(heading.tagName)) heading = heading.previousElementSibling;
+          const label = heading?.textContent.trim() || document.querySelector('h1')?.textContent.trim() || '다이어그램';
           node.tabIndex = 0;
           node.setAttribute('role', 'button');
-          node.setAttribute('aria-label', '그림 확대');
+          node.setAttribute('aria-label', `그림 확대: ${label}`);
           node.setAttribute('aria-haspopup', 'dialog');
           node.addEventListener('click', event => {
-            if (!event.target.closest('a')) openDiagram(svg, node);
+            if (!event.target.closest('a')) {
+              dialog.querySelector('#diagram-title').textContent = label;
+              openDiagram(svg, node);
+            }
           });
           node.addEventListener('keydown', event => {
             if (event.target === node && (event.key === 'Enter' || event.key === ' ')) {
               event.preventDefault();
+              dialog.querySelector('#diagram-title').textContent = label;
               openDiagram(svg, node);
             }
           });

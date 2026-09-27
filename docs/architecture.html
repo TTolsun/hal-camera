@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>아키텍처 및 코드 구조 · HALCamera 개발자 가이드</title>
+  <title>Architecture · HALCamera 개발자 가이드</title>
   <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
 </head>
@@ -21,14 +21,13 @@
       <a href="./cli.html">CLI</a>
       <a href="./coding-agents.html">Agents</a>
       <a href="./evidence.html">Evidence</a>
-      <a href="./getting-started.html">빠른 시작</a>
-      <a href="./troubleshooting.html">디버깅</a>
+      <a href="./getting-started.html">Quickstart</a>
+      <a href="./troubleshooting.html">Debugging</a>
     </nav>
   </header>
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
-    <h1 id="아키텍처-및-코드-구조">아키텍처 및 코드 구조</h1>
-<p><strong>수정할 기능과 연결된 코드부터 찾으세요.</strong> 이 문서는 카메라 구동부터 이벤트 기록, 지표 계산, 결과 표시까지의 책임과 변경 시 지켜야 할 제약을 설명합니다.</p>
+    <h1 lang="en">One system.<br>Clear responsibilities.</h1><p><strong>수정할 기능과 연결된 코드부터 찾으세요.</strong> 이 문서는 카메라 구동부터 이벤트 기록, 지표 계산, 결과 표시까지의 책임과 변경 시 지켜야 할 제약을 설명합니다.</p>
 <table>
 <thead>
 <tr>
@@ -59,7 +58,7 @@
 </tbody></table>
 <p>아직 빌드하지 않았다면 <a href="getting-started.html">빠른 시작</a>을 먼저 진행하세요. 아래의 <code>코드 확인</code>은 구현을 대조했다는 뜻이며, 기기 실측을 뜻하지 않습니다.</p>
 <h2 id="앱의-역할과-평가-경로">앱의 역할과 평가 경로</h2>
-<!-- omm:begin id=overview --><p><strong>Live, Benchmark, 실행 기록 중 수정할 화면과 연결된 코드를 먼저 확인하세요.</strong> 앱은 카메라 성능을 관측하고 저장된 실행을 비교합니다. Android 앱 모듈과 CTS 원문을 실행하는 <code>:ctsvendor</code> 모듈로 구성됩니다.</p>
+<!-- omm:begin id=overview --><p>앱은 카메라 성능을 관측하고 저장된 실행을 비교합니다. Android 앱 모듈과 CTS 원문을 실행하는 <code>:ctsvendor</code> 모듈로 구성됩니다.</p>
 <table>
 <thead>
 <tr>
@@ -114,29 +113,20 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/WorkbenchActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-27 @ <code>9f821a0</code> · Codex</li>
+<li>검토 상태: 원본이 갱신됨: 검토 대기</li>
 </ul>
 </details><!-- omm:end id=overview --><h2 id="전체-구조도">전체 구조도</h2>
 <p>그림을 클릭하면 확대 화면이 열립니다. 키보드에서는 Tab으로 그림을 선택한 뒤 Enter 또는 Space를 누르세요.</p>
-<!-- omm:begin id=overall-diagram --><pre><code class="language-mermaid">graph LR
-    pc[&quot;PC · adb&quot;] --&gt;|&quot;ADB&quot;| provider[&quot;CliProvider · shell 전용&quot;]
-    provider --&gt; commands[&quot;CommandCoordinator / CommandStore&quot;]
-    commands --&gt;|&quot;LiveController&quot;| live
-    live[&quot;MainActivity · Live&quot;] --&gt;|&quot;엔진 선택&quot;| engines[&quot;Camera2Engine / CameraXEngine&quot;]
-    live --&gt;|&quot;벤치마크 진입&quot;| benchmark[&quot;BenchmarkActivity / BenchmarkRunner&quot;]
-    benchmark --&gt;|&quot;Driver 호출&quot;| engines
-    engines --&gt;|&quot;요청 실행&quot;| platform[&quot;Android Camera API&quot;]
-    engines --&gt;|&quot;이벤트 기록&quot;| telemetry[&quot;Telemetry / FlightRecorder&quot;]
-    telemetry --&gt;|&quot;관측 표본&quot;| assemble[&quot;RunAssembler / BenchmarkEvaluator / RunValidity&quot;]
-    benchmark --&gt;|&quot;실행 시각&quot;| assemble
-    assemble --&gt;|&quot;적격 조건 확인&quot;| score[&quot;ScoreComposer · 내부 초안&quot;]
-    score --&gt;|&quot;실행과 해당 점수 저장&quot;| files[&quot;BenchmarkReport / BenchmarkStore · schema 4&quot;]
-    files --&gt;|&quot;기준 실행 읽기&quot;| comparison[&quot;BaselineManager / RegressionDetector&quot;]
-    comparison --&gt;|&quot;비교 표시&quot;| results[&quot;ResultPresenter / ComparePresenter&quot;]
-    benchmark --&gt;|&quot;이력 진입&quot;| history[&quot;HistoryActivity / RunIndex&quot;]
-    files --&gt;|&quot;목록 읽기&quot;| history
-    history --&gt;|&quot;선택한 두 실행&quot;| comparison
-    history --&gt;|&quot;지표별 내보내기&quot;| csv[&quot;BenchmarkCsv · CSV&quot;]
+<!-- omm:begin id=overall-diagram --><pre><code class="language-mermaid">graph TB
+    live[&quot;Live · MainActivity&quot;] --&gt; engines[&quot;Camera2 / CameraX&lt;br/&gt;CameraEngine&quot;]
+    cli[&quot;ADB · CliProvider&quot;] --&gt;|&quot;LiveController&quot;| live
+    bench[&quot;Benchmark&lt;br/&gt;화면 · Runner&quot;] --&gt;|&quot;Camera2 Driver&quot;| engines
+    engines --&gt; api[&quot;Android Camera API&quot;]
+    engines --&gt; events[&quot;콜백 기록&lt;br/&gt;Telemetry · FlightRecorder&quot;]
+    bench --&gt;|&quot;실행 시각&quot;| evaluate[&quot;측정 · 유효성 · 점수&lt;br/&gt;RunAssembler&quot;]
+    events --&gt;|&quot;관측 표본&quot;| evaluate
+    evaluate --&gt; files[&quot;실행 JSON 저장&lt;br/&gt;BenchmarkStore&quot;]
+    files --&gt; results[&quot;실행 기록 · 비교 · CSV&quot;]
 </code></pre>
 <details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
@@ -194,7 +184,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/BenchmarkController.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/ui/Look.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCatalog.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/Camera2Ops.kt</code>, <code>app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt</code>, <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbe.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-27 @ <code>9f821a0</code> · Codex</li>
+<li>검토 상태: 원본이 갱신됨: 검토 대기</li>
 </ul>
 </details><!-- omm:end id=module-roles --><h2 id="주요-실행-흐름">주요 실행 흐름</h2>
 <!-- omm:begin id=runtime-flow --><p><strong>실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.</strong> 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.</p>
@@ -228,28 +218,17 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>tools/halcam/halcam/download.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/GalleryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-27 @ <code>9f821a0</code> · Codex</li>
+<li>검토 상태: 원본이 갱신됨: 검토 대기</li>
 </ul>
 </details><!-- omm:end id=runtime-flow --><h3 id="이벤트와-결과가-전달되는-경로">이벤트와 결과가 전달되는 경로</h3>
-<!-- omm:begin id=runtime-diagram --><pre><code class="language-mermaid">graph LR
-    cli[&quot;ADB 인자 또는 request JSON&quot;] --&gt; coordinator[&quot;CommandCoordinator&quot;]
-    coordinator --&gt; request[&quot;CommandStore · 요청 기록&quot;]
-    photo[&quot;사진 한 쌍 저장 완료&quot;] --&gt; artifact[&quot;artifact 등록 · 크기와 SHA-256&quot;]
-    video[&quot;MP4 저장 완료&quot;] --&gt; artifact
-    artifact --&gt;|&quot;읽기 전용 파일&quot;| pc[&quot;ADB 스크립트 · 검증 후 adb pull&quot;]
-    callbacks[&quot;Camera 콜백&quot;] --&gt;|&quot;이벤트 기록&quot;| events[&quot;Telemetry / FlightRecorder&quot;]
-    callbacks --&gt;|&quot;단계 완료 신호&quot;| marks[&quot;BenchmarkRunner.Result&quot;]
-    events --&gt;|&quot;프레임 연결&quot;| frames[&quot;metrics/MetricExtractor&quot;]
-    frames --&gt;|&quot;관측 표본&quot;| assemble[&quot;RunAssembler / BenchmarkEvaluator&quot;]
-    marks --&gt;|&quot;실행 시각&quot;| assemble
-    assemble --&gt;|&quot;실패와 환경&quot;| validity[&quot;RunValidityEvaluator&quot;]
-    validity --&gt;|&quot;측정값과 validity&quot;| score[&quot;ScoreComposer · 해당하는 calibration만 적용&quot;]
-    score --&gt;|&quot;적격 내부 점수 또는 null&quot;| json[&quot;BenchmarkReport · schema 4 JSON&quot;]
-    json --&gt;|&quot;저장 실행 읽기&quot;| compare[&quot;BaselineManager / RegressionDetector&quot;]
-    compare --&gt;|&quot;다시 계산한 비교&quot;| screen[&quot;결과 / Compare&quot;]
-    json --&gt;|&quot;목록 읽기&quot;| history[&quot;HistoryActivity / RunIndex&quot;]
-    history --&gt;|&quot;두 실행 선택&quot;| compare
-    history --&gt;|&quot;필터 결과&quot;| csv[&quot;CSV 내보내기&quot;]
+<!-- omm:begin id=runtime-diagram --><pre><code class="language-mermaid">graph TB
+    events[&quot;Telemetry / FlightRecorder&lt;br/&gt;콜백 이벤트&quot;] --&gt; frames[&quot;MetricExtractor&lt;br/&gt;프레임 연결 · 관측 표본&quot;]
+    marks[&quot;BenchmarkRunner&lt;br/&gt;실행 단계 시각&quot;] --&gt; assemble[&quot;RunAssembler&lt;br/&gt;측정값 · validity 조립&quot;]
+    frames --&gt; assemble
+    assemble --&gt; score[&quot;ScoreComposer&lt;br/&gt;적격 실행의 내부 점수&quot;]
+    score --&gt; json[&quot;BenchmarkReport&lt;br/&gt;schema 5 JSON 저장&quot;]
+    json --&gt; compare[&quot;BaselineManager / RegressionDetector&lt;br/&gt;저장된 실행으로 비교 재계산&quot;]
+    compare --&gt; screen[&quot;결과 화면 · 실행 기록&quot;]
 </code></pre>
 <details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
@@ -260,17 +239,10 @@
 <h3 id="카메라-열기와-닫기">카메라 열기와 닫기</h3>
 <p>러너가 <code>Driver</code>를 통해 카메라를 열고 닫습니다. 다음 실행으로 넘어가기 전에 현재 엔진의 <code>close(done)</code> 완료 통지를 확인해야 합니다. incident 이벤트 보존은 러너와 별도로 동작합니다.</p>
 <!-- omm:begin id=lifecycle-diagram --><pre><code class="language-mermaid">graph LR
-    accepted[&quot;CLI accepted&quot;] --&gt; preparing[&quot;preparing&quot;] --&gt; running[&quot;running&quot;] --&gt; saving[&quot;saving&quot;] --&gt; succeeded[&quot;succeeded&quot;]
-    running --&gt; cancelling[&quot;cancelling&quot;] --&gt; saving
-    running --&gt; failed[&quot;failed / cancelled&quot;]
-    accepted --&gt; interrupted[&quot;프로세스 재시작: interrupted&quot;]
-    runner[&quot;BenchmarkRunner&quot;] --&gt;|&quot;Driver open / still / record / close&quot;| engine[&quot;CameraEngine 수명주기&quot;]
-    engine --&gt;|&quot;현재 세션 완료 신호&quot;| runner
-    runner --&gt;|&quot;Result와 환경&quot;| validity[&quot;RunValidity&quot;]
-    validity --&gt;|&quot;비교 가능 여부&quot;| comparison[&quot;RegressionDetector&quot;]
-    history[&quot;실행 기록 목록 / 비교&quot;] --&gt;|&quot;기준과 현재 선택&quot;| comparison
-    history --&gt;|&quot;확인 후 삭제&quot;| delete[&quot;실행 파일 삭제 / baseline 정리&quot;]
-    recorder[&quot;FlightRecorder&quot;] --&gt;|&quot;전후 창 보존&quot;| incident[&quot;incident 전후 이벤트 창&quot;]
+    start[&quot;열기 요청&quot;] --&gt; open[&quot;세션 구성 · 실행&quot;]
+    open --&gt; close[&quot;close(done) 호출&quot;]
+    close --&gt; wait[&quot;종료 완료 대기&quot;]
+    wait --&gt;|&quot;done 수신&quot;| next[&quot;다음 카메라 열기 허용&quot;]
 </code></pre>
 <details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
@@ -305,22 +277,13 @@
 <p>위의 그림들은 코드가 어떤 순서로 호출되는지를 보여 줍니다. 이 절의 세 그림은 화면에서 무엇이 어떤 조건으로 바뀌는지를 보여 줍니다. 근거 코드가 바뀌면 문서 검사가 그림을 재검토 대상으로 표시합니다. 로컬 모델의 재생성은 코드에서 바뀐 값을 놓칠 수 있으므로, 재검토할 때 그림을 코드와 직접 대조하세요. <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md">APP-UI.md</a>에도 같은 그림의 사본이 있으며, 회귀 검사가 두 그림이 같은지 확인합니다.</p>
 <h3 id="카메라-이름을-적는-방법">카메라 이름을 적는 방법</h3>
 <p>같은 카메라를 모든 화면이 같은 이름으로 부르도록 <code>CameraLabel</code>이 괄호 안의 세 칸을 채우는 순서입니다.</p>
-<!-- omm:begin id=camera-label-diagram --><pre><code class="language-mermaid">flowchart TD
-    K[&quot;카메라 키&lt;br/&gt;0, 1, 0.2&quot;] --&gt; L{&quot;렌즈 역할이&lt;br/&gt;MAIN · ULTRA_WIDE · TELE인가?&quot;}
-    L --&gt;|예| L1[&quot;렌즈 칸&lt;br/&gt;Wide · UWide · Tele&quot;]
-    L --&gt;|&quot;아니오: FRONT · EXTERNAL · UNKNOWN&quot;| L0[&quot;렌즈 칸 비움&quot;]
-    L1 --&gt; F{&quot;HAL이 LENS_FACING을&lt;br/&gt;보고했는가?&quot;}
-    L0 --&gt; F
-    F --&gt;|예| F1[&quot;방향 칸&lt;br/&gt;Rear · Front · External&quot;]
-    F --&gt;|아니오| F0[&quot;역할이 FRONT면 Front&lt;br/&gt;아니면 방향 칸 비움&quot;]
-    F1 --&gt; A{&quot;렌즈 칸이 비었고&lt;br/&gt;35mm 환산값이 있는가?&quot;}
-    F0 --&gt; A
-    A --&gt;|예| A1[&quot;화각 칸&lt;br/&gt;26 mm, 1mm 단위 반올림&quot;]
-    A --&gt;|아니오| A0[&quot;화각 칸 비움&quot;]
-    A1 --&gt; J{&quot;채운 칸이&lt;br/&gt;하나라도 있는가?&quot;}
-    A0 --&gt; J
-    J --&gt;|예| FULL[&quot;전체 형태&lt;br/&gt;Camera · 0 (Wide · Rear)&lt;br/&gt;Camera · 1 (Front · 26 mm)&quot;]
-    J --&gt;|아니오| SHORT[&quot;축약 형태&lt;br/&gt;Camera · 0&quot;]
+<!-- omm:begin id=camera-label-diagram --><pre><code class="language-mermaid">flowchart TB
+    key[&quot;카메라 키&lt;br/&gt;0 · 1 · 0.2&quot;] --&gt; lens[&quot;렌즈 역할이 알려지면&lt;br/&gt;Wide · UWide · Tele&quot;]
+    lens --&gt; facing[&quot;HAL의 LENS_FACING 우선&lt;br/&gt;없으면 FRONT 역할만 Front&quot;]
+    facing --&gt; focal[&quot;렌즈 칸이 비고 환산값이 있으면&lt;br/&gt;35mm 환산 초점거리를 1mm로 반올림&quot;]
+    focal --&gt; filled{&quot;채운 칸이 있는가?&quot;}
+    filled --&gt;|&quot;예&quot;| label[&quot;채운 칸을 괄호 안에 연결&lt;br/&gt;Camera · 1 (Front · 26 mm)&quot;]
+    filled --&gt;|&quot;아니오&quot;| empty[&quot;채운 칸이 없으면 키만 표시&lt;br/&gt;Camera · 0&quot;]
 </code></pre>
 <details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
@@ -330,23 +293,20 @@
 </details><!-- omm:end id=camera-label-diagram --><h3 id="도구-화면으로-넘어가는-순서">도구 화면으로 넘어가는 순서</h3>
 <p><code>CTS</code>와 <code>Benchmark</code>는 Live 카메라가 닫힌 뒤에 열리고, <code>Probe</code>는 기다리지 않고 바로 열립니다.</p>
 <!-- omm:begin id=tool-handoff-diagram --><pre><code class="language-mermaid">sequenceDiagram
-    actor U as 개발자
     participant L as Live 화면
-    participant E as Live 카메라 엔진
+    participant E as 카메라 엔진
     participant T as 도구 화면
-    Note over L: 녹화 중, 녹화 저장 중, 세션 종료 중에는 도구 버튼이 비활성화됨
-    U-&gt;&gt;L: 도구 → Probe
-    L-&gt;&gt;T: CameraProbeActivity를 바로 시작
-    Note over L,E: 화면이 가려지면 onStop이 평소처럼 카메라를 닫음
-    U-&gt;&gt;L: 도구 → CTS 또는 Benchmark
-    L-&gt;&gt;L: 진행 중인 incident를 마무리하고 콜백 그래프를 닫음
-    L-&gt;&gt;L: closing을 켜고 &quot;카메라 세션 종료 중…&quot; 표시
-    L-&gt;&gt;E: close(done)
-    E--&gt;&gt;L: done
-    L-&gt;&gt;T: CtsEntryActivity 또는 BenchmarkActivity 시작
-    T-&gt;&gt;T: 자기 카메라를 엶
-    U-&gt;&gt;T: 뒤로 가기
-    T--&gt;&gt;L: Live 복귀, onStart가 카메라를 다시 엶
+    alt Probe 선택
+        L-&gt;&gt;T: 바로 열기
+        Note over L,E: Live의 onStop에서 카메라 닫기
+    else CTS 또는 Benchmark 선택
+        L-&gt;&gt;E: close(done)
+        E--&gt;&gt;L: done
+        L-&gt;&gt;T: 도구 화면 열기
+        T-&gt;&gt;T: 자기 카메라 열기
+    end
+    T--&gt;&gt;L: 뒤로 가기
+    L-&gt;&gt;E: onStart: 프리뷰 다시 열기
 </code></pre>
 <details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
@@ -401,7 +361,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandStore.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-27 @ <code>9f821a0</code> · Codex</li>
+<li>검토 상태: 원본이 갱신됨: 검토 대기</li>
 </ul>
 </details><!-- omm:end id=constraints --><h2 id="변경-후-검증">변경 후 검증</h2>
 <p>Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 확인할 수 있습니다. 저장소 루트에서 실행하세요.</p>
@@ -439,22 +399,22 @@
 </thead>
 <tbody><tr>
 <td>구조 원본 <code>data-flow</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>4de7ca0</code> · Claude</td>
 </tr>
 <tr>
 <td>구조 원본 <code>overall-architecture</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>9f821a0</code> · Codex</td>
 </tr>
 <tr>
 <td>구조 원본 <code>state-transitions</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>4de7ca0</code> · Claude</td>
 </tr>
 <tr>
 <td>구조 원본 <code>ui-camera-label</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-25 @ <code>fffbc89</code> · K.H. Kim</td>
 </tr>
 <tr>
@@ -469,22 +429,22 @@
 </tr>
 <tr>
 <td>원고 <code>overview</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>9f821a0</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>module-roles</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>9f821a0</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>runtime-flow</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>9f821a0</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>constraints</code></td>
-<td>최신</td>
+<td>원본이 갱신됨: 검토 대기</td>
 <td>검토 2026-09-27 @ <code>9f821a0</code> · Codex</td>
 </tr>
 </tbody></table>
@@ -556,6 +516,11 @@
       canvas.append(svg);
       dialog.showModal();
       fitDiagram();
+      if (scale < .875) {
+        fitting = false;
+        setScale(.875);
+        viewport.scrollTo(0, 0);
+      }
     }
 
     dialog.querySelector('.diagram-close').addEventListener('click', () => dialog.close());
@@ -588,7 +553,8 @@
           theme: 'base',
           themeVariables: { primaryColor: '#f6f7f8', primaryTextColor: '#18191b', primaryBorderColor: '#c8ccd2', lineColor: '#858b94', secondaryColor: '#ffffff', tertiaryColor: '#ffffff', fontFamily: 'system-ui, sans-serif', fontSize: '16px' },
           // Leave room for multiline nodes and labels on returning edges.
-          flowchart: { nodeSpacing: 100, rankSpacing: 120, wrappingWidth: 300 },
+          flowchart: { nodeSpacing: 24, rankSpacing: 28, padding: 10, wrappingWidth: 220 },
+          sequence: { actorMargin: 32, messageMargin: 24, noteMargin: 6, width: 160, height: 44, wrap: true },
         });
         const nodes = blocks.map(code => {
           const node = document.createElement('div');
@@ -605,16 +571,29 @@
         nodes.forEach(node => {
           const svg = node.querySelector('svg');
           if (!svg) return;
+          const width = svg.viewBox.baseVal.width;
+          // Keep 16px diagram text at least 14px wide, even on narrow screens.
+          // The figure scrolls locally instead of shrinking the whole page.
+          svg.style.width = '100%';
+          svg.style.maxWidth = `${width}px`;
+          svg.style.minWidth = `${width * .875}px`;
+          let heading = node.previousElementSibling;
+          while (heading && !/^H[1-3]$/.test(heading.tagName)) heading = heading.previousElementSibling;
+          const label = heading?.textContent.trim() || document.querySelector('h1')?.textContent.trim() || '다이어그램';
           node.tabIndex = 0;
           node.setAttribute('role', 'button');
-          node.setAttribute('aria-label', '그림 확대');
+          node.setAttribute('aria-label', `그림 확대: ${label}`);
           node.setAttribute('aria-haspopup', 'dialog');
           node.addEventListener('click', event => {
-            if (!event.target.closest('a')) openDiagram(svg, node);
+            if (!event.target.closest('a')) {
+              dialog.querySelector('#diagram-title').textContent = label;
+              openDiagram(svg, node);
+            }
           });
           node.addEventListener('keydown', event => {
             if (event.target === node && (event.key === 'Enter' || event.key === ' ')) {
               event.preventDefault();
+              dialog.querySelector('#diagram-title').textContent = label;
               openDiagram(svg, node);
             }
           });
