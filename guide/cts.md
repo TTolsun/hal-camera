@@ -3,7 +3,7 @@ title: CTS
 ---
 <h1 lang="en">The same test, inside the app.</h1>
 
-**CTS 화면은 CTS가 아닙니다.** 공식 판정은 cts-tradefed의 `test_result.xml`뿐이며, 이 화면은 그 결과를 기다리기 전에 같은 조건을 기기에서 미리 확인하는 용도입니다. 두 방식이 있고, 첫 화면에서 하나를 고릅니다. **커스텀 케이스**는 CTS 카메라 테스트의 판정 규칙과 상수를 앱의 Kotlin으로 옮긴 케이스 다섯 가지로, 카메라와 단계마다 PASS·FAIL·SKIP과 측정값을 보여 줍니다. **CTS 원문 케이스**는 AOSP CTS의 Java 테스트 코드를 그대로 가져와 앱 안의 JUnit으로 실행하며, 테스트 메서드 하나에 판정 하나를 냅니다. 어느 쪽도 Benchmark의 반복 측정이나 회귀 점수에는 들어가지 않습니다.
+**앱에서 CTS 규칙과 AOSP 테스트를 실행해 카메라 동작을 확인하세요.** 공식 CTS 판정은 cts-tradefed의 `test_result.xml`로 확인하며, 앱의 결과는 사전 점검에 사용합니다. 두 방식이 있고, 첫 화면에서 하나를 고릅니다. **커스텀 케이스**는 CTS 카메라 테스트의 판정 규칙과 상수를 앱의 Kotlin으로 옮긴 케이스 다섯 가지로, 카메라와 단계마다 PASS·FAIL·SKIP과 측정값을 보여 줍니다. **CTS 원문 케이스**는 AOSP CTS의 Java 테스트 코드를 가져와 앱 안의 JUnit으로 실행하며, 테스트 메서드 하나에 판정 하나를 냅니다. 어느 쪽도 Benchmark의 반복 측정이나 회귀 점수에는 들어가지 않습니다.
 
 ```mermaid
 flowchart LR
@@ -22,7 +22,7 @@ flowchart LR
     U --> T["RecordingTest 등<br/>AOSP 원문 · :ctsvendor"]
 ```
 
-이 그림은 두 방식이 각각 진행되는 개념적 순서입니다. 두 목록은 모두 체크리스트이고, 체크한 항목을 `실행`하면 `CtsSuiteRunActivity`가 위에서부터 차례로 돌립니다. 이 화면은 가져온 `Camera2SurfaceViewCtsActivity`를 상속하면서 커스텀 러너의 `PreviewHost`도 구현하므로 SurfaceView 하나로 두 종류를 다 호스트하지만, 목록이 분리되어 있으므로 한 번의 실행에는 한 종류만 들어갑니다. 커스텀 케이스의 규칙은 카메라를 모르는 순수 Kotlin이라 JVM 테스트로 검증하고, 러너가 CTS가 기기에서 읽는 값을 채워 넣습니다. 다섯 케이스는 같은 `CtsRunner` 계약을 구현하므로 화면은 케이스를 구분하지 않습니다. CTS 원문 케이스는 코드를 옮기지 않으므로 검사 내용은 AOSP 소스 그대로이고, 앱은 그 코드가 전제하는 instrumentation 대역만 제공합니다.
+이 그림은 두 방식이 각각 진행되는 개념적 순서입니다. 두 목록은 모두 체크리스트이고, 체크한 항목을 `실행`하면 `CtsSuiteRunActivity`가 위에서부터 차례로 돌립니다. 이 화면은 가져온 `Camera2SurfaceViewCtsActivity`를 상속하면서 커스텀 러너의 `PreviewHost`도 구현하므로 SurfaceView 하나로 두 종류를 다 호스트하지만, 목록이 분리되어 있으므로 한 번의 실행에는 한 종류만 들어갑니다. 커스텀 케이스의 규칙은 카메라를 모르는 순수 Kotlin이라 JVM 테스트로 검증하고, 러너가 CTS가 기기에서 읽는 값을 채워 넣습니다. 다섯 케이스는 같은 `CtsRunner` 계약을 구현하므로 화면은 케이스를 구분하지 않습니다. CTS 원문 케이스는 코드를 옮기지 않으므로 검사 본문은 AOSP 소스를 따르며, 앱 실행에 필요한 instrumentation 대역과 공개 API 호환 패치를 적용합니다.
 
 <h2 lang="en">Pick a custom case.</h2>
 
@@ -40,20 +40,20 @@ flowchart LR
 
 CTS 원문 케이스 목록은 `:ctsvendor` 모듈에 가져온 테스트 클래스의 `@Test` 메서드를 reflection으로 나열합니다. 지금 가져온 클래스는 세 개입니다.
 
-| 클래스 | 검사하는 것 | 실기기 확인 |
-| --- | --- | --- |
-| `RecordingTest` | CamcorderProfile 녹화, 동영상 스냅샷, 고속·슬로모션 녹화, 프리뷰 크기별 녹화 등 16개 메서드(업스트림 본문이 `// TODO. Need implement.`뿐인 `testCameraRecorderOrdering`·`testMediaCodecRecording`·`testTimelapseRecording`은 목록에서 뺐습니다) | 16개 모두 실행, PASS 14 · SKIP 2(Galaxy S25+). `testBasic10BitRecordingAV1`은 `MediaCodecList`에 `video/av01` 10비트 인코더가 없고 업스트림 `getDynamicRangeProfile()`이 AV1을 매핑하지 않아, `testSlowMotionRecording`은 네 카메라 모두 `CONTROL_AVAILABLE_SCENE_MODES`에 `HIGH_SPEED_VIDEO`가 없어 SKIP입니다. `testVideoSnapshot` 9분 52초, `testSupportedVideoSizes` 4분 46초가 가장 깁니다. |
-| `StillCaptureTest` | JPEG·HEIC·RAW·DNG 정지 영상, AE/AF 수렴, 줌, 회전, 초점 거리, 프리뷰와 정지 영상 크기 조합, 타임스탬프 등 21개 메서드 | 21개 모두 실행, PASS 17 · FAIL 1 · SKIP 3(Galaxy S25+). `testAeCompensation`이 카메라 0의 노출 시간 범위 초과와 카메라 2의 AE 보정 미적용으로 FAIL했고, 이는 HAL 판정입니다. HEIC·HEIC UltraHDR·dynamic depth를 어느 카메라도 지원하지 않아 `testHeicExif`·`testHeicUltraHdrCapture`·`testDynamicDepthCapture`는 SKIP입니다. `testStillPreviewCombination`은 18분 29초가 걸립니다. |
-| `BurstCaptureTest` | JPEG·YUV·RAW 연속 촬영의 프레임 순서와 처리량 3개 메서드 | PASS 2 · SKIP 1(Galaxy S25+). 정지 영상 bokeh를 지원하지 않아 `testYuvBurstWithStillBokeh`는 SKIP입니다. |
+| 클래스 | 검사하는 범위 |
+| --- | --- |
+| `RecordingTest` | CamcorderProfile 녹화, 동영상 스냅샷, 고속·슬로모션 녹화, 프리뷰 크기별 녹화 등 16개 메서드입니다. |
+| `StillCaptureTest` | JPEG·HEIC·RAW·DNG 촬영, AE/AF 수렴, 줌, 회전, 초점 거리, 프리뷰와 정지 영상 크기 조합, 타임스탬프 등 21개 메서드입니다. |
+| `BurstCaptureTest` | JPEG·YUV·RAW 연속 촬영의 프레임 순서와 처리량을 검사하는 3개 메서드입니다. |
 
-`UiAutomation`이나 `@TestApi`가 필요한 메서드는 실행하면 초기화 단계에서 FAIL로 끝납니다. 세 클래스의 40개 메서드 중 그런 메서드는 없었습니다. 결과 목록은 `docs/STATUS.md`의 실기기 확인 절에 있습니다. 측정된 적 없는 메서드는 행에 `시간 미상`으로 표시됩니다.
+업스트림 본문이 TODO뿐인 `testCameraRecorderOrdering`·`testMediaCodecRecording`·`testTimelapseRecording`은 목록에서 제외합니다. 측정 이력이 없는 메서드는 `시간 미상`으로 표시합니다. `UiAutomation`이나 `@TestApi`가 필요한 메서드는 초기화 단계에서 실패할 수 있습니다. 기존 기기별 결과와 소요 시간은 [Evidence](evidence.md#cts-원문-케이스)에 있습니다.
 
 가져온 소스는 AOSP `android16-release` 브랜치의 `cts/tests/camera`와 `frameworks/ex/camera2/public`이며, 원본 커밋과 적용한 패치 여덟 건(`@TestApi`·`@FlaggedApi` 호출을 공개 API로 바꾸거나 제거하고, shell 권한 행을 만들지 않게 한 것)은 `ctsvendor/UPSTREAM.md`에 있습니다. Android 14(API 34) 아래 기기에서는 이 경로가 비활성화됩니다. 업스트림이 이 파일 집합을 `min_sdk_version 34`로 빌드하기 때문입니다.
 
 <h2 lang="en">What one run does.</h2>
 
 1. Live 상단 `도구` 메뉴에서 두 번째 항목인 `CTS`를 고릅니다. Live 카메라의 `close(done)` 콜백을 받은 뒤 방식 선택 화면이 열리고, `커스텀 케이스`나 `CTS 원문 케이스`를 누르면 그 체크리스트가 열립니다.
-2. 실행할 항목에 체크합니다. 행마다 제목과 대략의 소요 시간이 적혀 있고(측정된 적 없는 원문 메서드는 `시간 미상`), 커스텀 행에는 원본도 함께 적힙니다, 그룹의 `전체 선택`으로 한 번에 고를 수 있습니다. 하단 바에 `선택 N개 · 약 M분`이 갱신되며, 선택은 다음에 열 때 그대로 남아 있습니다.
+2. 실행할 항목에 체크합니다. 행마다 제목과 대략의 소요 시간이 적혀 있고(측정된 적 없는 원문 메서드는 `시간 미상`), 커스텀 행에는 원본도 함께 적힙니다. 그룹의 `전체 선택`으로 한 번에 고를 수 있습니다. 하단 바에 `선택 N개 · 약 M분`이 갱신되며, 선택은 다음에 열 때 그대로 남아 있습니다.
 3. 하단 바의 `실행`을 누르면 실행 화면이 열리고, 카메라 권한(녹화 항목이 있으면 마이크 권한도)을 확인한 뒤 바로 첫 항목을 시작합니다. 각 항목은 공개 카메라 전부를 순회하며, 컬러 출력이 없거나 외장 카메라이면 CTS와 같은 사유로 건너뜁니다. 한 항목이 카메라를 닫고 결과를 보고한 뒤에야 다음 항목이 시작됩니다.
 4. 항목마다 카드가 하나씩 놓입니다. 실행 중인 카드에는 단계별 판정이 결정되는 즉시 행이 추가되고, 끝난 카드는 `PASS`·`FAIL`·`SKIP`과 소요 시간을 보여 주며 누르면 상세가 펼쳐집니다. `중단`을 누르면 실행 중인 항목만 멈추고(`중단됨`) 나머지는 `실행 안 함`으로 남습니다.
 5. 끝나면 머리글에 `N개 중 PASS a · FAIL b · 소요 시간`이 나옵니다. `복사`는 항목 전체의 보고서를 클립보드에 넣고 `공유`는 같은 텍스트를 다른 앱으로 보냅니다. `다시 실행`은 같은 항목을 처음부터 다시 돌립니다.
@@ -64,7 +64,7 @@ CTS와 달리 한 단계가 실패해도 나머지 단계와 카메라를 계속
 
 CTS 원문 케이스의 한 번 실행은 다릅니다. `실행`을 누르면 카메라와 마이크 권한을 확인한 뒤 JUnit이 테스트 메서드를 작업 스레드에서 돌립니다. 테스트는 카메라 전부를 스스로 순회하므로 진행 중에는 경과 시간만 갱신되고, 실패가 생기면 그 즉시 실패 카드가 추가됩니다. `중단`은 실행 중인 테스트가 쥔 카메라를 닫아 테스트를 실패시키는 방식이라 몇 초 뒤에 `중단됨`으로 끝납니다. JUnit에는 실행 중인 본문을 멈출 수단이 없기 때문입니다. 실행 화면 자체가 CTS의 `Camera2SurfaceViewCtsActivity`를 상속하므로 테스트의 `updatePreviewSurface`가 같은 SurfaceView를 그대로 씁니다.
 
-<p class="editorial" lang="en">A rule you can run on the JVM<br>is a rule you can trust on the device.</p>
+
 
 <h2 lang="en">Read the verdicts.</h2>
 
@@ -90,7 +90,7 @@ CTS 원문 클래스를 추가하려면 테스트마다 코드를 쓰지 않습�
 
 <details>
 <summary>코드 근거를 확인하세요</summary>
-<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cts/</code>에서 <code>CtsEntryActivity.kt</code>(방식 선택), <code>CtsCatalog.kt</code>(케이스 목록), <code>CtsRunner.kt</code>·<code>CameraCaseRunner.kt</code>·<code>Camera2Ops.kt</code>(공통 계약과 Camera2 호출), <code>CtsCaseListActivity.kt</code>·<code>CtsCaseActivity.kt</code>(화면), <code>CaseReportPresenter.kt</code>(보고서), <code>suite/</code>의 <code>CtsChecklistActivity.kt</code>·<code>CtsSuiteRunActivity.kt</code>(체크리스트와 차례 실행)와 <code>SuitePlan.kt</code>·<code>SuiteReport.kt</code>(선택·예상 시간·통합 보고서), 그리고 <code>onoff/</code>·<code>switching/</code>·<code>sizes/</code>·<code>combination/</code>·<code>snapshot/</code>의 <code>…Rules.kt</code>(판정)와 <code>…Runner.kt</code>(실행), 공유 규칙 <code>recording/BasicRecordingRules.kt</code>를 확인하세요. CTS 원문 경로는 <code>cts/vendored/</code>의 두 화면과 <code>ctsvendor/src/main/java/dev/halcamera/ctsvendor/</code>의 <code>VendoredCts.kt</code>·<code>VendoredRun.kt</code>·<code>VendoredCatalog.kt</code>, 패치 목록 <code>ctsvendor/UPSTREAM.md</code>입니다. JVM 테스트는 <code>app/src/test/java/dev/halcamera/cts/</code>에 있습니다. 원고의 검토 상태는 아키텍처 문서 끝에 있습니다.</p>
+<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cts/</code>에서 <code>CtsEntryActivity.kt</code>(방식 선택), <code>CtsCatalog.kt</code>(케이스 목록), <code>CtsRunner.kt</code>·<code>CameraCaseRunner.kt</code>·<code>Camera2Ops.kt</code>(공통 계약과 Camera2 호출), <code>CtsCaseListActivity.kt</code>·<code>CtsCaseActivity.kt</code>(화면), <code>CaseReportPresenter.kt</code>(보고서), <code>suite/</code>의 <code>CtsChecklistActivity.kt</code>·<code>CtsSuiteRunActivity.kt</code>(체크리스트와 차례 실행)와 <code>SuitePlan.kt</code>·<code>SuiteReport.kt</code>(선택·예상 시간·통합 보고서), 그리고 <code>onoff/</code>·<code>switching/</code>·<code>sizes/</code>·<code>combination/</code>·<code>snapshot/</code>의 <code>…Rules.kt</code>(판정)와 <code>…Runner.kt</code>(실행), 공유 규칙 <code>recording/BasicRecordingRules.kt</code>를 확인하세요. CTS 원문 경로는 <code>cts/vendored/</code>의 두 화면과 <code>ctsvendor/src/main/java/dev/halcamera/ctsvendor/</code>의 <code>VendoredCts.kt</code>·<code>VendoredRun.kt</code>·<code>VendoredCatalog.kt</code>, 패치 목록 <code>ctsvendor/UPSTREAM.md</code>입니다. JVM 테스트는 <code>app/src/test/java/dev/halcamera/cts/</code>에 있습니다. 코드 확인과 기기 검증의 범위는 <a href="evidence.html">Evidence</a>에서 구분합니다.</p>
 </details>
 
 **다음 단계:** 판정에 쓰인 시간 규칙이 어디서 오는지 [Benchmark](benchmark.md)의 측정 범위와 비교해 읽으세요. CTS는 통과·실패를, Benchmark는 얼마나 걸리는지를 답합니다.

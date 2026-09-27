@@ -648,11 +648,6 @@ pages:
       - id: status
         kind: status
 
-      - id: build-identity
-        kind: fact
-        source: build-facts
-        confidence: code
-
       - id: log-tags
         kind: fact
         source: telemetry-facts
@@ -671,8 +666,10 @@ pages:
           must_link: [FlightRecorder, capacityEvictions, INSUFFICIENT_SAMPLES]
           forbid:
             - 특정 기기에서 재현되었다는 서술을 하지 않습니다. device-verification.yaml 의 기록만 인용합니다.
-
-      - id: open-questions
-        kind: omm-concerns
-        source: data-flow
-        confidence: intent
+  getting-started.md:
+    title: 개발 환경 및 빠른 시작
+    blocks:
+      - id: build-identity
+        kind: fact
+        source: build-facts
+        confidence: code

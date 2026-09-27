@@ -11,13 +11,13 @@ nav_order: 7
 | 재현에 필요한 정보를 모읍니다. | [문제 발생 시 수집할 정보](#문제-발생-시-수집할-정보) |
 | 로그와 incident 번들을 확보합니다. | [로그와 진단 자료](#로그와-진단-자료) |
 | 증상이 시작된 계층을 좁힙니다. | [앱과 프레임워크·HAL 구분](#앱과-프레임워크hal을-구분하세요) |
-| 앱 버전과 SDK 설정을 확인합니다. | [앱 버전과 빌드 설정](#앱-버전과-빌드-설정) |
+| 앱 버전과 SDK 설정을 확인합니다. | [빠른 시작의 빌드 정보](getting-started.md#앱-버전과-빌드-설정) |
 
 실행 순서가 익숙하지 않다면 [주요 실행 흐름](architecture.md#주요-실행-흐름)을 먼저 읽으세요.
 
 ## 문제 발생 시 수집할 정보
 
-재현 조건과 기록을 함께 남기세요. 앱 버전은 이 페이지 아래의 빌드 정보와 대조합니다.
+재현 조건과 기록을 함께 남기세요. 앱 버전은 [빠른 시작의 빌드 정보](getting-started.md#앱-버전과-빌드-설정)와 대조합니다.
 
 1. 기기 모델과 Android 빌드 번호를 기록합니다.
 2. 사용한 엔진인 Camera2 또는 CameraX와 카메라 엔드포인트를 기록합니다.
@@ -25,6 +25,8 @@ nav_order: 7
 4. `Mark`에서 생성한 ZIP 번들과 관련 로그를 확보합니다.
 
 ## 로그와 진단 자료
+
+Live의 `Mark`는 직전 10초와 이후 5초의 이벤트를 incident ZIP으로 저장합니다. 저장한 파일은 `도구 → ZIP 기록`에서 공유합니다.
 
 아래는 현재 추출기가 `TAG` 상수와 `Log.*` 호출에서 찾은 로그 태그입니다. 목록에 없다는 이유만으로 코드 전체에서 해당 태그를 사용하지 않는다고 단정할 수는 없습니다.
 
@@ -119,64 +121,15 @@ incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽�
 
 <!-- omm:end id=layer-isolation -->
 
-## 증상별 절차와 알려진 제약
+## 알려진 제약
 
-개별 증상에 대한 재현·분석 절차는 아직 정리하지 않았습니다. 먼저 위의 계층 구분 순서를 적용하고, 확인한 조건과 결과를 기록하세요.
-
-<!-- omm:begin id=open-questions -->
-
-다음 항목은 구조 스캔에서 확인한 제약이나 추가 검증이 필요한 사항입니다.
-
-- 콜백과 파일 작업의 실행 스레드, close 완료와 늦은 신호 처리는 변경 시 함께 검증해야 합니다.
-- 실행 기록의 화면 배치·공유·삭제 동작은 기기 검증이 추가로 필요합니다.
-- 촬영 중 프리뷰 stall 지표 2.7은 여전히 NOT_RUN입니다.
-
-**후속 작업**
-
-1. 실행 기록의 필터·임의 비교·baseline·삭제·공유 동작을 기기에서 검증하고 근거를 남깁니다.
-2. 촬영 중 프리뷰 stall 지표 2.7의 관측·계산 규칙을 구현합니다.
-
-<details class="doc-evidence" markdown="1">
-<summary>근거와 검토 정보</summary>
-
-- 근거: `.omm/data-flow/concern.md`, `.omm/data-flow/todo.md`
-- 근거 수준: 설계 의도 / 추정
-
-</details>
-
-<!-- omm:end id=open-questions -->
+미구현 지표와 추가 검증 사항은 [Architecture](architecture.md#미완성-기능과-추가-검증)에서 관리합니다. 기기에서 확인한 결과는 [Evidence](evidence.md)에 있습니다.
 
 ## 앱 규칙을 테스트로 확인하세요
 
 동일한 이벤트 목록을 `MetricExtractor`에 입력하는 JVM 테스트로 계산 규칙을 확인할 수 있습니다. `MetricExtractorTest`는 표본 수가 14개일 때 부족으로 판정하고, 15개일 때 정상으로 판정하는 경계를 검사합니다.
 
-앱의 결과 콜백 간격만으로 HAL 내부 프레임 드롭을 확정할 수 없습니다. 시스템 자료로 확인한 사실과 앱이 계산한 값을 구분해 기록하세요. 현재 기기 관찰 기록은 [기기 검증 기록](_inputs/device-verification.yaml)에서 확인할 수 있습니다.
-
-## 앱 버전과 빌드 설정
-
-<!-- omm:begin id=build-identity -->
-
-| 항목 | 값 |
-| --- | --- |
-| `applicationId` | `dev.halcamera` |
-| `namespace` | `dev.halcamera` |
-| `versionName` | `0.14.0` |
-| `versionCode` | `513` |
-| `minSdk` | `26` |
-| `targetSdk` | `36` |
-| `compileSdk` | `36` |
-| `gradleVersion` | `8.13` |
-| `jvmTarget` | `17` |
-
-<details class="doc-evidence" markdown="1">
-<summary>근거와 검토 정보</summary>
-
-- 근거: `app/build.gradle.kts`, `gradle/wrapper/gradle-wrapper.properties`
-- 근거 수준: 코드 확인
-
-</details>
-
-<!-- omm:end id=build-identity -->
+앱의 결과 콜백 간격만으로 HAL 내부 프레임 드롭을 확정할 수 없습니다. 시스템 자료로 확인한 사실과 앱이 계산한 값을 구분해 기록하세요. 현재 기기 관찰 기록은 [Evidence](evidence.md)에서 확인할 수 있습니다.
 
 ## 문서 검토 상태
 

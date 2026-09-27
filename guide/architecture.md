@@ -276,7 +276,7 @@ graph LR
 
 세션, Surface, 버퍼의 소유권과 해제 시점은 **확인 필요**입니다. 구현을 수정하기 전에 `CameraEngine`의 단일 점유 규칙과 `close(done)` 완료 조건부터 확인하세요.
 
-## 화면 조작 규칙
+## 공통 UI의 상태와 전환
 
 위의 그림들은 코드가 어떤 순서로 호출되는지를 보여 줍니다. 이 절의 세 그림은 화면에서 무엇이 어떤 조건으로 바뀌는지를 보여 줍니다. 근거 코드가 바뀌면 문서 검사가 그림을 재검토 대상으로 표시합니다. 로컬 모델의 재생성은 코드에서 바뀐 값을 놓칠 수 있으므로, 재검토할 때 그림을 코드와 직접 대조하세요. [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)에도 같은 그림의 사본이 있으며, 회귀 검사가 두 그림이 같은지 확인합니다.
 
@@ -430,9 +430,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 확인할 수 있습니다. 저장소 루트에서 실행하세요.
 
-~~~powershell
-.\gradlew.bat :app:testDebugUnitTest
-~~~
+테스트 실행 명령과 개발 환경은 [빠른 시작](getting-started.md#앱을-빌드하고-실행하세요)을 확인하세요.
 
 `BenchmarkRunnerTest`, `RunAssemblerTest`, `RegressionDetectorTest`, `MetricExtractorTest`에서 단계 전이와 계산 규칙을 확인합니다. 테스트가 통과해도 문서의 조건·예외가 코드와 맞는지 대조해야 합니다. 기기에서의 검증은 별도로 기록합니다.
 
