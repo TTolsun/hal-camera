@@ -29,8 +29,8 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
     private val fold = Runnable { collapse() }
 
     init {
-        // Keep the rail visually close to Samsung Camera without shrinking its touch targets.
-        background = InsetDrawable(Look.pill(context, Look.cameraGlass), dp(6), dp(8), dp(6), dp(8))
+        // A 30dp rail leaves a 1dp rim around the 28dp circle, folded or expanded.
+        background = InsetDrawable(Look.pill(context, Look.cameraGlass), dp(9), dp(9), dp(9), dp(9))
         setPadding(0, 0, 0, 0)
         clipChildren = true
         isChildrenDrawingOrderEnabled = true
