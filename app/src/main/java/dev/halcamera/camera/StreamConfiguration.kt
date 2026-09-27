@@ -1,7 +1,7 @@
 package dev.halcamera.camera
 
 enum class OutputKind(val label: String, val eventKind: String = "image_available") {
-    PREVIEW("Preview", "preview_presented"), YUV("YUV"), JPEG("JPEG"), RECORDING("Recording"), RAW("RAW")
+    PREVIEW("Preview", "preview_available"), YUV("YUV"), JPEG("JPEG"), RECORDING("Recording"), RAW("RAW")
 }
 
 /** Identity belongs to the output, never to its translated/numbered display name. */

@@ -5,9 +5,11 @@ import android.content.Context
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
+import android.hardware.camera2.params.OutputConfiguration
 import android.media.ImageReader
 import java.util.concurrent.Executors
 import android.os.Handler
+import android.os.Build
 import android.os.HandlerThread
 import android.os.Looper
 import android.util.Size
@@ -39,6 +41,8 @@ class Camera2Engine(
     private var device: CameraDevice? = null
     private var captureSession: CameraCaptureSession? = null
     private var previewSurface: Surface? = null
+    private var displaySurface: Surface? = null
+    private var previewRelay: PreviewBufferRelay? = null
     private var yuv: ImageReader? = null
     private var jpeg: ImageReader? = null
     private var finished = false
@@ -133,7 +137,8 @@ class Camera2Engine(
         override val active: Boolean get() = this@Camera2Engine.active
         override val benchmark: Boolean get() = spec != null
         override val characteristics: CameraCharacteristics? get() = chars
-        override val previewSurface: Surface? get() = this@Camera2Engine.previewSurface
+        override val previewOutput: ConfiguredOutput<Surface>? get() =
+            configuredOutputs.outputs.find { it.descriptor.kind == OutputKind.PREVIEW }
         override val session: CameraCaptureSession? get() = captureSession
         override val stillInFlight: Boolean get() = stills.inFlight
         override fun onSessionConfigured(session: CameraCaptureSession?) { captureSession = session }
@@ -162,7 +167,7 @@ class Camera2Engine(
                 if (active) {
                     previewFrame()
                     configuredOutputs.outputs.find { it.target === previewSurface }?.descriptor?.let { output ->
-                        telemetry.recorder.record(sessionId, output.kind.eventKind, sensorNs = surface.timestamp,
+                        telemetry.recorder.record(sessionId, "preview_presented", sensorNs = surface.timestamp,
                             values = mapOf("stream" to output.id))
                     }
                 }
@@ -204,7 +209,8 @@ class Camera2Engine(
     @Suppress("DEPRECATION")
     private fun configure(camera: CameraDevice) {
         try {
-            yuv?.close(); jpeg?.close(); previewSurface?.release()
+            yuv?.close(); jpeg?.close()
+            if (previewRelay == null) { previewSurface?.release(); displaySurface?.release() }
             val chars = manager.getCameraCharacteristics(cameraId).also { this.chars = it }
             val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP] ?: error("No stream configuration")
             // With a profile spec the sizes are exact and unavailable ones fail the configure step: measuring a
@@ -217,10 +223,20 @@ class Camera2Engine(
                 ?: choose(map.getOutputSizes(ImageFormat.JPEG), 1920L * 1080)
             val texture = view.surfaceTexture ?: error("Preview surface unavailable")
             texture.setDefaultBufferSize(size.width, size.height)
+            // A recording session and its replacement preview session reuse the same display producer.
+            // Reconnecting a second ImageWriter while the first still owns TextureView would fail.
+            if (Build.VERSION.SDK_INT >= 33 && spec == null) {
+                if (previewRelay == null) {
+                    displaySurface = Surface(texture)
+                    previewRelay = PreviewBufferRelay(displaySurface!!, size, telemetry, sessionId) { error ->
+                        handler.post { if (active) fail(error) }
+                    }
+                } else require(previewSize == size) { "Preview relay size changed within a camera session" }
+                previewSurface = previewRelay!!.output.target
+            } else previewSurface = Surface(texture)
             previewSize = size
-            previewSurface = Surface(texture)
             main.post { if (active) view.fitPreview(size) }
-            val previewOutput = OutputDescriptor("preview", OutputKind.PREVIEW, repeating = true)
+            val previewOutput = OutputDescriptor("preview", OutputKind.PREVIEW, repeating = true, observable = previewRelay != null)
             val yuvOutput = OutputDescriptor("analysis_acquire_latest", OutputKind.YUV, repeating = true, stillCapture = spec == null)
             val jpegOutput = OutputDescriptor("still", OutputKind.JPEG, repeating = false, stillCapture = true)
             yuv = reader(yuvSize, ImageFormat.YUV_420_888, yuvOutput)
@@ -235,7 +251,13 @@ class Camera2Engine(
             )
             telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
             telemetry.event(sessionId, "configure_requested", sizes)
-            camera.createCaptureSession(outputs.targets, object : CameraCaptureSession.StateCallback() {
+            val configurations = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
+                if (Build.VERSION.SDK_INT >= 33 && output.descriptor.kind == OutputKind.PREVIEW && previewRelay != null) {
+                    timestampBase = OutputConfiguration.TIMESTAMP_BASE_SENSOR
+                    if (Build.VERSION.SDK_INT >= 34) setReadoutTimestampEnabled(false)
+                }
+            } }
+            camera.createCaptureSessionByOutputConfigurations(configurations, object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(session: CameraCaptureSession) {
                     telemetry.event(sessionId, "session_configured", sizes)
                     if (!active) { session.close(); return }
@@ -514,7 +536,10 @@ class Camera2Engine(
         captureSession?.close(); captureSession = null
         yuv?.close(); yuv = null
         jpeg?.close(); jpeg = null
+        if (Build.VERSION.SDK_INT >= 33) previewRelay?.close()
+        previewRelay = null
         previewSurface?.release(); previewSurface = null
+        displaySurface?.release(); displaySurface = null
         telemetry.event(sessionId, "closed")
         closeDone?.let { main.post(it) }
         thread.quitSafely()

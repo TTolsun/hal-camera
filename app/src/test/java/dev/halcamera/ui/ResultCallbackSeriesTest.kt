@@ -5,6 +5,20 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ResultCallbackSeriesTest {
+    @Test fun previewUsesBufferReceiptAndIgnoresLaterDisplayUpdates() {
+        val config = metadata(stream("preview", "Preview") + ("eventKind" to "preview_available"))
+        val events = listOf(
+            Event(100_000_000, "s", "capture_started", 8, 900,
+                mapOf("previousStartAtNs" to 67_000_000L)),
+            Event(160_000_000, "s", "preview_available", sensorNs = 900, values = mapOf("stream" to "preview")),
+            Event(210_000_000, "s", "preview_presented", sensorNs = 900, values = mapOf("stream" to "preview")))
+        val series = ResultCallbackSeries.read(events, "s", 250_000_000, config)
+        assertEquals("Shutter", series.tracks[0].label)
+        assertEquals(93.0, series.tracks[2].points.single().latencyMs!!, 0.001)
+        val displayOnly = ResultCallbackSeries.read(events.filter { it.kind != "preview_available" }, "s", 250_000_000, config)
+        assertTrue(displayOnly.tracks[2].points.isEmpty())
+    }
+
     private fun stream(id: String, label: String = id, observable: Boolean = true) =
         mapOf("id" to id, "label" to label, "observable" to observable)
     private fun metadata(vararg outputs: Map<String, Any>) = mapOf("callbackStreams" to outputs.toList(), "partialResultCount" to 2)
@@ -33,7 +47,7 @@ class ResultCallbackSeriesTest {
         val sensorTime = 99_000_000_000L
         val events = listOf(Event(100_000_000, "s", "capture_started", 1, sensorTime, mapOf("firstStart" to true)),
             Event(150_000_000, "s", "image_available", sensorNs = sensorTime, values = mapOf("stream" to "jpeg")),
-            Event(180_000_000, "s", "preview_presented", sensorNs = sensorTime, values = mapOf("stream" to "preview")))
+            Event(180_000_000, "s", "preview_available", sensorNs = sensorTime, values = mapOf("stream" to "preview")))
         val tracks = ResultCallbackSeries.read(events, "s", 200_000_000, metadata(stream("jpeg"), stream("preview"))).tracks
         assertEquals(50.0, tracks[2].points.single().latencyMs!!, 0.001)
         assertEquals(80.0, tracks[3].points.single().latencyMs!!, 0.001)

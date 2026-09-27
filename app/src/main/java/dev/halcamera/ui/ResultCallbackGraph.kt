@@ -91,7 +91,7 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
         hold.contentDescription = if (timeline.autoHold) "자동 고정 해제" else "자동 고정 켜기"
         if (renderedFrame != timeline.displayed) {
             renderedFrame = timeline.displayed
-            plot.contentDescription = "프레임 ${timeline.displayed?.number ?: "없음"}. 이전 프레임의 Start 콜백 기준. " + timeline.displayed?.rows.orEmpty().joinToString(". ") {
+            plot.contentDescription = "프레임 ${timeline.displayed?.number ?: "없음"}. 이전 프레임의 Shutter 콜백 기준. " + timeline.displayed?.rows.orEmpty().joinToString(". ") {
                 "${it.label} ${it.state ?: it.latenciesMs.joinToString { value -> format(value) }}"
             }
         }

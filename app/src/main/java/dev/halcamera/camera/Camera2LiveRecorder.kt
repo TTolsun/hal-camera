@@ -42,7 +42,7 @@ internal class Camera2LiveRecorder(
         /** A benchmark engine never records LIVE video. */
         val benchmark: Boolean
         val characteristics: CameraCharacteristics?
-        val previewSurface: Surface?
+        val previewOutput: ConfiguredOutput<Surface>?
         val session: CameraCaptureSession?
         val stillInFlight: Boolean
         fun onSessionConfigured(session: CameraCaptureSession?)
@@ -136,10 +136,10 @@ internal class Camera2LiveRecorder(
                     }.also { relay = it }.surface
                 } else recorder.surface
                 val outputs = StreamConfiguration(listOf(
-                    ConfiguredOutput(OutputDescriptor("preview", OutputKind.PREVIEW, true), host.previewSurface!!),
+                    host.previewOutput!!,
                     ConfiguredOutput(recordingOutput, recordingSurface)))
                 val configurations = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
-                    if (Build.VERSION.SDK_INT >= 33 && output.descriptor.id == recordingOutput.id) {
+                    if (Build.VERSION.SDK_INT >= 33 && output.descriptor.observable) {
                         timestampBase = OutputConfiguration.TIMESTAMP_BASE_SENSOR
                         if (Build.VERSION.SDK_INT >= 34) setReadoutTimestampEnabled(false)
                     }

@@ -35,7 +35,7 @@ data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frame
                 ResultCallbackPoint(event.atNs, latency, start?.atNs)
             }
             val tracks = mutableListOf(
-                ResultCallbackTrack("start", "Start", null, points("capture_started")),
+                ResultCallbackTrack("start", "Shutter", null, points("capture_started")),
                 ResultCallbackTrack("all", "Metadata", null, points("capture_result"))
             )
             val streams = (metadata["callbackStreams"] as? List<*>)?.filterIsInstance<Map<*, *>>().orEmpty()
@@ -43,7 +43,7 @@ data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frame
                 val id = stream["id"] as? String ?: continue
                 val label = stream["label"] as? String ?: id
                 val unavailable = if (stream["observable"] == false) "콜백 없음" else null
-                val kind = stream["eventKind"] as? String ?: if (id == "preview") "preview_presented" else "image_available"
+                val kind = stream["eventKind"] as? String ?: if (id == "preview") "preview_available" else "image_available"
                 tracks += ResultCallbackTrack(id, label, unavailable, if (unavailable == null) points(kind, id) else emptyList(), stream["repeating"] != false)
             }
             return ResultCallbackSeries(tracks, starts.values.map { start ->
