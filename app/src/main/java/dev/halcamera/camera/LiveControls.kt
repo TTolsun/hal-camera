@@ -95,8 +95,10 @@ object LiveControlText {
  * therefore froze that session's initial, unconverged exposure: on the S25+ a dark scene went from ISO 4274 to
  * ISO 2990 when a recording started.
  *
- * So a rebuilt session starts unlocked ([waiting]), AE meters the same scene again, and the lock goes back on at
- * the first settled result, or when the caller's timeout gives up on AE settling. The exposure the lock held
+ * So a rebuilt session starts unlocked ([waiting]), AE meters the same scene again, and the lock goes back on after
+ * [SETTLED_RESULTS] settled results in a row, or when the caller's timeout gives up on AE settling. One settled
+ * result is not trusted: a HAL may carry the old session's CONVERGED into the new one's first frames before it
+ * meters the new streams, as PrecaptureWatch notes for the precapture trigger. The exposure the lock held
  * (exposure time × ISO) is remembered from LOCKED results, and the first LOCKED result after the relock is compared
  * with it. The two may still differ: the recording frame rate caps the exposure time at the frame duration, and
  * AE may meter a new stream set differently. [LiveControlText.relockNotice] tells the user when it does.
@@ -118,15 +120,29 @@ class AeRelock {
 
     private var held: Exposure? = null
     private var comparing = false
+    private var settledInRow = 0
+
+    /** Bumped per rebuilt session; the caller's timeout carries it so an older session's timeout does nothing. */
+    var generation = 0
+        private set
 
     /** True while a rebuilt session must run with AE unlocked; the requests then leave CONTROL_AE_LOCK off. */
     var waiting = false
         private set
 
     /** A new capture session was configured. With the lock on it runs unlocked until [onResult] relocks it. */
-    fun sessionRebuilt(locked: Boolean) {
+    fun sessionRebuilt(locked: Boolean): Int {
         waiting = locked
         comparing = false
+        settledInRow = 0
+        return ++generation
+    }
+
+    /** The relock request could not be sent; wait for settled results again rather than stay silently unlocked. */
+    fun relockNotSent() {
+        waiting = true
+        comparing = false
+        settledInRow = 0
     }
 
     /** The user turned the lock on or off. On locks at once, at the exposure the user sees, so nothing waits. */
@@ -139,8 +155,10 @@ class AeRelock {
     /** Feed every LIVE repeating result in frame order. */
     fun onResult(aeState: Int?, exposure: Exposure?): Step {
         if (waiting) {
-            val settled = aeState == null || aeState == AE_STATE_CONVERGED || aeState == AE_STATE_FLASH_REQUIRED || aeState == AE_STATE_LOCKED
-            return if (settled) { relock(); Step.Relock } else Step.None
+            if (aeState == null) { relock(); return Step.Relock } // no AE state reported: nothing to wait for
+            val settled = aeState == AE_STATE_CONVERGED || aeState == AE_STATE_FLASH_REQUIRED || aeState == AE_STATE_LOCKED
+            settledInRow = if (settled) settledInRow + 1 else 0
+            return if (settledInRow >= SETTLED_RESULTS) { relock(); Step.Relock } else Step.None
         }
         // A device without AE state or without exposure values cannot be compared; the lock itself still applies.
         if (aeState != AE_STATE_LOCKED || exposure == null) return Step.None
@@ -152,8 +170,8 @@ class AeRelock {
     }
 
     /** The timeout ran out while AE had not settled. Returns whether the caller should send the lock anyway. */
-    fun timedOut(): Boolean {
-        if (!waiting) return false
+    fun timedOut(gen: Int): Boolean {
+        if (gen != generation || !waiting) return false
         relock()
         return true
     }
@@ -168,6 +186,8 @@ class AeRelock {
         const val TOLERANCE_EV = 1.0 / 3
         /** Dark scenes take AE a second or more; past this the lock goes on at whatever AE has. */
         const val TIMEOUT_MS = 2000L
+        /** Two frames, about 67 ms at 30 fps: past a stale first result, short against the timeout. */
+        const val SETTLED_RESULTS = 2
         // CaptureResult.CONTROL_AE_STATE_* values, as in PrecaptureWatch.
         const val AE_STATE_CONVERGED = 2
         const val AE_STATE_LOCKED = 3

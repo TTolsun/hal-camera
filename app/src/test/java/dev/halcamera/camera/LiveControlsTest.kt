@@ -98,6 +98,7 @@ class LiveControlsTest {
         relock.sessionRebuilt(locked = true)
         assertTrue(relock.waiting)
         assertEquals(AeRelock.Step.None, relock.onResult(searching, recording))
+        assertEquals(AeRelock.Step.None, relock.onResult(converged, recording)) // one settled result is not trusted
         assertEquals(AeRelock.Step.Relock, relock.onResult(converged, recording))
         assertFalse(relock.waiting)
         assertEquals(AeRelock.Step.None, relock.onResult(converged, recording)) // results still in flight
@@ -116,13 +117,16 @@ class LiveControlsTest {
     }
 
     @Test
-    fun `the timeout relocks an AE that never settles, and only while waiting`() {
+    fun `the timeout relocks an AE that never settles, and only its own session while waiting`() {
         val relock = AeRelock()
-        assertFalse(relock.timedOut())
-        relock.sessionRebuilt(locked = true)
-        assertTrue(relock.timedOut())
+        assertFalse(relock.timedOut(relock.generation))
+        val old = relock.sessionRebuilt(locked = true)
+        val gen = relock.sessionRebuilt(locked = true)
+        assertFalse(relock.timedOut(old))
+        assertTrue(relock.waiting)
+        assertTrue(relock.timedOut(gen))
         assertFalse(relock.waiting)
-        assertFalse(relock.timedOut())
+        assertFalse(relock.timedOut(gen))
         // No exposure held before: the relock is reported without a difference.
         assertEquals(AeRelock.Step.Relocked(null, recording, null), relock.onResult(locked, recording))
     }
@@ -144,7 +148,7 @@ class LiveControlsTest {
         assertFalse(relock.waiting)
         relock.lockChanged(true)
         relock.sessionRebuilt(locked = true)
-        relock.onResult(converged, recording)
+        relock.onResult(converged, recording); relock.onResult(converged, recording)
         assertEquals(null, (relock.onResult(locked, recording) as AeRelock.Step.Relocked).before)
     }
 
@@ -156,8 +160,30 @@ class LiveControlsTest {
         val brighter = preview.copy(iso = preview.iso * 2)
         relock.onResult(locked, brighter)
         relock.sessionRebuilt(locked = true)
-        relock.onResult(converged, brighter)
+        relock.onResult(converged, brighter); relock.onResult(converged, brighter)
         assertEquals(0.0, (relock.onResult(locked, brighter) as AeRelock.Step.Relocked).deltaEv!!, 1e-9)
+    }
+
+    @Test
+    fun `a settled run broken by searching starts over`() {
+        val relock = AeRelock()
+        relock.sessionRebuilt(locked = true)
+        relock.onResult(converged, recording)
+        assertEquals(AeRelock.Step.None, relock.onResult(searching, recording))
+        assertEquals(AeRelock.Step.None, relock.onResult(converged, recording))
+        assertEquals(AeRelock.Step.Relock, relock.onResult(converged, recording))
+    }
+
+    @Test
+    fun `a relock that could not be sent waits for AE to settle again`() {
+        val relock = AeRelock()
+        relock.sessionRebuilt(locked = true)
+        relock.onResult(converged, recording)
+        assertEquals(AeRelock.Step.Relock, relock.onResult(converged, recording))
+        relock.relockNotSent()
+        assertTrue(relock.waiting)
+        assertEquals(AeRelock.Step.None, relock.onResult(converged, recording))
+        assertEquals(AeRelock.Step.Relock, relock.onResult(converged, recording))
     }
 
     @Test

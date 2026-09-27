@@ -78,8 +78,8 @@ class Camera2Engine(
     private val controlsQueued = java.util.concurrent.atomic.AtomicBoolean(false)
     /** Takes the AE lock again on a rebuilt session once AE has settled (#184). Camera thread only. */
     private val aeRelock = AeRelock()
-    /** Bumped per rebuilt session, so a relock timeout from an older session does nothing. */
-    private var relockGeneration = 0
+    /** A pending [setControls] restores the chips of a reopened camera, so an AE lock in it waits like a rebuild. */
+    private val restoreQueued = java.util.concurrent.atomic.AtomicBoolean(false)
     /** The LIVE recorder's surface while a recording session is up; repeating requests then use the record template. */
     private var recorderSurface: Surface? = null
     /** Called with every LIVE repeating result; the flash precapture waits on it. Camera thread only. */
@@ -276,20 +276,20 @@ class Camera2Engine(
      */
     private fun startRelock() {
         if (spec != null) return
-        aeRelock.sessionRebuilt(controls.aeLock)
-        val generation = ++relockGeneration
+        val generation = aeRelock.sessionRebuilt(controls.aeLock)
         if (!aeRelock.waiting) return
         telemetry.event(sessionId, "ae_relock_wait", mapOf("recording" to (recorderSurface != null)))
-        handler.postDelayed({
-            if (generation == relockGeneration && aeRelock.timedOut()) submitRepeating("ae_relock", mapOf("reason" to "timeout"))
-        }, AeRelock.TIMEOUT_MS)
+        handler.postDelayed({ if (aeRelock.timedOut(generation)) sendRelock("timeout", null) }, AeRelock.TIMEOUT_MS)
+    }
+    private fun sendRelock(reason: String, state: Int?) {
+        if (!submitRepeating("ae_relock", mapOf("reason" to reason, "aeState" to state))) aeRelock.relockNotSent()
     }
     private fun relockStep(result: TotalCaptureResult) {
         val state = result[CaptureResult.CONTROL_AE_STATE]
         val time = result[CaptureResult.SENSOR_EXPOSURE_TIME]; val iso = result[CaptureResult.SENSOR_SENSITIVITY]
         when (val step = aeRelock.onResult(state, if (time != null && iso != null) AeRelock.Exposure(time, iso) else null)) {
             AeRelock.Step.None -> Unit
-            AeRelock.Step.Relock -> submitRepeating("ae_relock", mapOf("reason" to "settled", "aeState" to state))
+            AeRelock.Step.Relock -> sendRelock("settled", state)
             is AeRelock.Step.Relocked -> {
                 telemetry.event(sessionId, "ae_relocked", mapOf(
                     "beforeExposureNs" to step.before?.timeNs, "beforeIso" to step.before?.iso,
@@ -303,15 +303,18 @@ class Camera2Engine(
      * that lands before the queued one runs only replaces [requestedControls]. An AF lock toggled on and off within
      * one turn therefore sends no trigger, which matches the final state.
      */
-    override fun setControls(next: LiveControls) {
+    override fun setControls(next: LiveControls, restore: Boolean) {
         requestedControls = next
+        if (restore) restoreQueued.set(true)
         if (!controlsQueued.compareAndSet(false, true)) return
         handler.post {
             controlsQueued.set(false)
             val old = controls
             val now = requestedControls
             controls = now
-            if (old.aeLock != now.aeLock) aeRelock.lockChanged(now.aeLock)
+            // A restored lock meets a session that has just started metering: relock it like a rebuilt one.
+            if (old.aeLock != now.aeLock) { if (restoreQueued.getAndSet(false) && now.aeLock) startRelock() else aeRelock.lockChanged(now.aeLock) }
+            restoreQueued.set(false)
             submitRepeating("controls_set", mapOf("evIndex" to now.evIndex, "aeLock" to now.aeLock, "afLock" to now.afLock, "flash" to now.flash.name))
             if (old.afLock != now.afLock) sendAfTrigger(now.afLock)
         }
@@ -394,7 +397,7 @@ class Camera2Engine(
                 main.post { done?.invoke(Result.failure(IllegalStateException("Camera not ready or busy"))) }
                 return@post
             }
-            if (spec == null && controls.needsPrecapture) { photoInFlight = true; precapture { shoot(requestId, done) } }
+            if (spec == null && requestControls().needsPrecapture) { photoInFlight = true; precapture { shoot(requestId, done) } }
             else shoot(requestId, done)
         }
     }
