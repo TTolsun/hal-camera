@@ -17,6 +17,8 @@ flowchart TB
 
 이 그림은 두 방식이 각각 진행되는 개념적 순서입니다. 두 목록은 모두 체크리스트이고, 체크한 항목을 `실행`하면 `CtsSuiteRunActivity`가 위에서부터 차례로 돌립니다. 이 화면은 가져온 `Camera2SurfaceViewCtsActivity`를 상속하면서 커스텀 러너의 `PreviewHost`도 구현하므로 SurfaceView 하나로 두 종류를 다 호스트하지만, 목록이 분리되어 있으므로 한 번의 실행에는 한 종류만 들어갑니다. 커스텀 케이스의 규칙은 카메라를 모르는 순수 Kotlin이라 JVM 테스트로 검증하고, 러너가 CTS가 기기에서 읽는 값을 채워 넣습니다. 다섯 케이스는 같은 `CtsRunner` 계약을 구현하므로 화면은 케이스를 구분하지 않습니다. CTS 원문 케이스는 코드를 옮기지 않으므로 검사 본문은 AOSP 소스를 따르며, 앱 실행에 필요한 instrumentation 대역과 공개 API 호환 패치를 적용합니다.
 
+<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
+
 ## 커스텀 케이스를 선택하세요
 
 | 케이스 | 원본 | 한 번 실행하면 |
@@ -26,6 +28,11 @@ flowchart TB
 | 모든 크기 켜기·끄기 | `custom#AllSizeOnOff` | SurfaceHolder로 보고하는 프리뷰 크기 전부를 큰 것부터 하나씩 열어 첫 프레임을 확인합니다. 1080p 상한을 두지 않습니다. |
 | 정지 영상 × 프리뷰 조합 | `custom#StillPreviewCombination` | JPEG 크기 전부와 프리뷰 크기(1080p 이하) 전부의 조합마다 세션을 구성해 프리뷰 첫 프레임 뒤 정지 영상을 한 장 찍고, 요청한 크기의 디코딩 가능한 JPEG인지 검사합니다. `StillCaptureTest#testStillPreviewCombination`의 순서와 QCIF 예외를 따르되 AE·AF 수렴은 기다리지 않습니다. |
 | 동영상 스냅샷 | `custom#VideoSnapshot` | 가장 큰 CamcorderProfile로 25초를 녹화하면서 5~20초 사이 무작위 시점에 같은 세션으로 JPEG 스냅샷을 한 장 찍습니다. 동영상은 `RecordingTest#testVideoSnapshot`의 프레임 드롭률 8 %(15 MP 초과 스냅샷은 12 %), 스냅샷은 크기와 디코딩을 검사합니다. |
+
+<figure class="app-screenshot" id="screen-cts-custom">
+<a href="assets/screenshots/cts-custom.png" aria-label="CTS 커스텀 케이스 목록에서 빠른 켜기 끄기 선택 원본 보기"><img src="assets/screenshots/cts-custom.png" alt="CTS 커스텀 케이스 목록에서 빠른 켜기 끄기 선택" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>커스텀 케이스에서 빠른 켜기·끄기 한 개를 선택했습니다. 하단 실행 버튼은 선택한 항목 수를 표시합니다. <a href="assets/screenshots/cts-custom.png">원본 보기</a></figcaption>
+</figure>
 
 `custom#` 원본은 CTS 클래스에 그대로 대응하는 메서드가 없는 케이스입니다. 검사 문구는 CTS `CameraTestUtils`에 같은 검사가 있으면 그 문구를 따릅니다. `RecordingTest#testBasicRecording`은 커스텀 케이스에 없습니다. 원문 그대로 실행하는 쪽이 옮겨 적는 쪽보다 정확하므로 CTS 원문 케이스로만 제공하며, 녹화 판정 규칙(`BasicRecordingRules`)은 카메라 전환과 동영상 스냅샷이 계속 공유합니다.
 
@@ -40,6 +47,11 @@ CTS 원문 케이스 목록은 `:ctsvendor` 모듈에 가져온 테스트 클래
 | `BurstCaptureTest` | JPEG·YUV·RAW 연속 촬영의 프레임 순서와 처리량을 검사하는 3개 메서드입니다. |
 
 업스트림 본문이 TODO뿐인 `testCameraRecorderOrdering`·`testMediaCodecRecording`·`testTimelapseRecording`은 목록에서 제외합니다. 측정 이력이 없는 메서드는 `시간 미상`으로 표시합니다. `UiAutomation`이나 `@TestApi`가 필요한 메서드는 초기화 단계에서 실패할 수 있습니다. 기존 기기별 결과와 소요 시간은 [Evidence](evidence.md#cts-원문-케이스)에 있습니다.
+
+<figure class="app-screenshot" id="screen-cts-vendored">
+<a href="assets/screenshots/cts-vendored.png" aria-label="CTS 원문 메서드 선택 목록 원본 보기"><img src="assets/screenshots/cts-vendored.png" alt="CTS 원문 메서드 선택 목록" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>AOSP 원문 메서드 목록을 연 화면입니다. 이 장면에서는 항목을 선택하거나 원문 테스트를 실행하지 않았습니다. <a href="assets/screenshots/cts-vendored.png">원본 보기</a></figcaption>
+</figure>
 
 가져온 소스는 AOSP `android16-release` 브랜치의 `cts/tests/camera`와 `frameworks/ex/camera2/public`이며, 원본 커밋과 적용한 패치 여덟 건(`@TestApi`·`@FlaggedApi` 호출을 공개 API로 바꾸거나 제거하고, shell 권한 행을 만들지 않게 한 것)은 `ctsvendor/UPSTREAM.md`에 있습니다. Android 14(API 34) 아래 기기에서는 이 경로가 비활성화됩니다. 업스트림이 이 파일 집합을 `min_sdk_version 34`로 빌드하기 때문입니다.
 
@@ -59,6 +71,11 @@ CTS 원문 케이스의 한 번 실행은 다릅니다. `실행`을 누르면 �
 
 
 
+<figure class="app-screenshot" id="screen-cts-running">
+<a href="assets/screenshots/cts-running.png" aria-label="빠른 켜기 끄기 CTS 검사 실행 중 원본 보기"><img src="assets/screenshots/cts-running.png" alt="빠른 켜기 끄기 CTS 검사 실행 중" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>빠른 켜기·끄기를 실행 중인 화면입니다. 카메라 프리뷰와 현재 회차, 단계별 판정을 함께 표시합니다. <a href="assets/screenshots/cts-running.png">원본 보기</a></figcaption>
+</figure>
+
 ## 판정을 읽으세요
 
 커스텀 케이스의 `PASS`·`FAIL`·`SKIP`은 카메라와 단계 단위로 붙습니다. 카메라는 진행 줄과 보고서 모두 `Camera · 0`처럼 축약 표기로 적습니다. 한 줄에 단계와 수치가 함께 들어가기 때문입니다. 단계는 케이스마다 다릅니다. 동영상 스냅샷은 프로파일 이름, 빠른 켜기·끄기는 `standard_1`·`fast_1`과 `compare`, 카메라 전환은 `round_1`과 `record`, 크기 케이스는 `1920x1080`, 조합 케이스는 `4000x3000/1920x1080`처럼 정지 영상과 프리뷰 크기입니다. PASS 행에도 열기·세션 구성·첫 프레임·닫기의 소요 시간이나 녹화 길이·프레임 수 같은 수치를 남겨 경계에 가까운 통과를 다시 실행하지 않고 볼 수 있습니다. FAIL의 상세 문구는 CTS의 assertion 메시지와 같으므로 원본 테스트 결과와 나란히 읽을 수 있습니다.
@@ -66,6 +83,11 @@ CTS 원문 케이스의 한 번 실행은 다릅니다. `실행`을 누르면 �
 CTS 원문 케이스의 판정은 메서드 하나에 하나입니다. `PASS`는 JUnit이 실패 없이 끝나고 카메라를 하나 이상 연 것, `FAIL`은 실패가 한 건 이상 있는 것, `SKIP`은 테스트가 assumption으로 스스로 건너뛰었거나 모든 카메라를 `continue`로 건너뛰어 카메라를 하나도 열지 않은 것입니다. 원문은 후자를 통과로 세지만, 이 앱은 가져온 `openDevice`에 심은 기록이 비어 있으면 SKIP으로 바꾸고 `건너뛴 이유` 카드에 세 겹의 이유를 보여 줍니다. assumption의 메시지, 테스트가 `Log`로 남긴 "… skipping" 문구(프로세스 자신의 logcat에서 읽음, 예: `Camera 0 does not support HEIC_ULTRAHDR, skipping`), 그리고 `SkipDiagnosis`가 원문의 `continue` 조건을 그대로 다시 읽어 적는 키와 값입니다(예: `모든 카메라: SCALER_STREAM_CONFIGURATION_MAP 출력 형식에 ImageFormat.HEIC_ULTRAHDR(0x48455548) 없음(있는 형식: RAW_SENSOR, JPEG, PRIVATE, YUV_420_888, RAW_PRIVATE, RAW12, YCBCR_P010, JPEG_R)`). 모든 카메라가 같은 이유로 빠지면 한 줄로, 카메라마다 다르면 카메라별로 적습니다. 10비트 AV1 녹화처럼 업스트림 코드 자체가 어떤 기기에서도 카메라를 열지 않는 메서드는 그 사실을 이유로 적습니다(`getDynamicRangeProfile()`의 switch에 AV1 case가 없음). 앱은 자기 프로세스의 로그만 읽을 수 있으므로 카메라별·프로파일별 세부는 이 문구 이상으로 남지 않고, 실패 카드에는 예외 메시지와 CTS 코드 안의 호출 위치 세 줄만 남습니다. 어느 카메라에서 무엇이 실패했는지는 그 메시지에 적힌 카메라 ID로 읽습니다.
 
 녹화한 동영상은 앱 전용 폴더에 `test_video.mp4`로 쓰고 판정 뒤 삭제하며, 정지 영상과 스냅샷은 크기와 디코딩만 확인하고 버립니다. CTS 원문 케이스도 같은 앱 전용 폴더(`getExternalFilesDir`)에 씁니다. 앨범에는 아무것도 남지 않습니다.
+
+<figure class="app-screenshot" id="screen-cts-result">
+<a href="assets/screenshots/cts-result.png" aria-label="빠른 켜기 끄기 CTS 검사 PASS 완료 원본 보기"><img src="assets/screenshots/cts-result.png" alt="빠른 켜기 끄기 CTS 검사 PASS 완료" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>이번 실행은 34초에 PASS로 끝났습니다. 이 결과는 해당 기기의 앱 내 검사 한 건이며 공식 CTS 인증 결과가 아닙니다. <a href="assets/screenshots/cts-result.png">원본 보기</a></figcaption>
+</figure>
 
 ## 케이스를 추가하세요
 

@@ -14,6 +14,13 @@ flowchart LR
 
 이 그림은 사양 표가 만들어지는 개념적 순서입니다. `CameraProbeReader`만 `CameraManager`를 알고, 모델과 렌더러는 JVM 테스트로 검증합니다.
 
+<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
+
+<figure class="app-screenshot" id="screen-probe">
+<a href="assets/screenshots/probe.png" aria-label="Probe에서 조회한 카메라 0의 Identity 사양 원본 보기"><img src="assets/screenshots/probe.png" alt="Probe에서 조회한 카메라 0의 Identity 사양" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>기기 정보 영역을 접고 카메라 0의 Identity를 펼쳤습니다. LEVEL_3 선언과 논리 멀티카메라 정보를 읽을 수 있습니다. <a href="assets/screenshots/probe.png">원본 보기</a></figcaption>
+</figure>
+
 ## 사양 표를 읽으세요
 
 | 확인할 항목 | 확인하는 이유 |

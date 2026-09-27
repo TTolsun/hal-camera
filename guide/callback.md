@@ -7,6 +7,8 @@ title: Callback
 
 그래프를 켜면 FPS·ISO·노출·AF·AE 정보 두 줄을 숨깁니다. 촬영·녹화 조작부는 그대로 사용할 수 있으며 `Callback`을 다시 누르면 그래프가 닫힙니다.
 
+<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
+
 ## 시간 기준을 확인하세요
 
 **0ms는 이전 프레임의 `onCaptureStarted` 콜백을 앱에서 받은 시점입니다.** 현재 프레임의 Shutter부터 Metadata와 각 출력까지 모두 이 기준에서 경과한 시간을 표시합니다. 요청을 생성하거나 HAL에 전달한 시점을 기준으로 삼지 않습니다.
@@ -33,6 +35,11 @@ title: Callback
 | YUV 1, YUV 2, … | 해당 YUV 스트림의 이미지 수신 시점입니다. |
 | JPEG | JPEG 이미지 수신 시점입니다. 파일 저장 완료 시점은 아닙니다. |
 | Recording | Camera2의 Android 13 이상에서 PRIVATE 버퍼를 받아 인코더로 전달하기 전의 시점입니다. |
+
+<figure class="app-screenshot" id="screen-callback-recording">
+<a href="assets/screenshots/callback-recording.png" aria-label="녹화 중 Shutter Metadata Preview Recording 콜백 그래프 원본 보기"><img src="assets/screenshots/callback-recording.png" alt="녹화 중 Shutter Metadata Preview Recording 콜백 그래프" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>Camera2로 녹화하면서 Preview·Recording 값을 확인한 장면입니다. Real-time Frame에서는 시간 버튼이 숨겨지고 프레임이 계속 갱신됩니다. <a href="assets/screenshots/callback-recording.png">원본 보기</a></figcaption>
+</figure>
 
 Camera2의 Android 12 이하와 CameraX에서는 Preview·Recording 버퍼 도착을 직접 관측하지 못하므로 `콜백 없음`을 표시합니다. CameraX도 선택한 엔진에서 녹화하며, 녹화 세션에는 Preview·Recording 행이 표시됩니다.
 
@@ -66,6 +73,11 @@ flowchart TB
 2. 사진을 촬영합니다. Camera2에서 YUV와 JPEG를 함께 요청했다면 같은 프레임의 두 행을 비교합니다.
 3. 일시정지 표시가 나타난 동안 값을 읽습니다. 늦게 도착한 같은 프레임의 결과도 채워집니다.
 4. 시간이 지나면 갱신이 재개됩니다. 곧바로 돌아가려면 `해제`를 누릅니다.
+
+<figure class="app-screenshot" id="screen-callback-event">
+<a href="assets/screenshots/callback-event.png" aria-label="사진 촬영 후 YUV와 JPEG 도착 시각을 자동 고정한 Callback 원본 보기"><img src="assets/screenshots/callback-event.png" alt="사진 촬영 후 YUV와 JPEG 도착 시각을 자동 고정한 Callback" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>고정 시간이 10초인 상태에서 사진을 촬영했습니다. 일시정지 표시와 같은 프레임의 YUV 1·JPEG 값을 확인할 수 있습니다. <a href="assets/screenshots/callback-event.png">원본 보기</a></figcaption>
+</figure>
 
 ## 값이 없는 이유를 확인하세요
 

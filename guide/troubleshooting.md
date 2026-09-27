@@ -26,7 +26,14 @@ nav_order: 7
 
 ## 로그와 진단 자료
 
-Live의 `Mark`는 직전 10초와 이후 5초의 이벤트를 incident ZIP으로 저장합니다. 저장한 파일은 `도구 → ZIP 기록`에서 공유합니다.
+Live의 `이벤트 저장 · ZIP`은 직전 10초와 이후 5초의 이벤트를 incident ZIP으로 저장합니다. 저장한 파일은 `도구 → ZIP 기록`에서 공유합니다.
+
+<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
+
+<figure class="app-screenshot" id="screen-incident-history">
+<a href="assets/screenshots/incident-history.png" aria-label="앱의 Incident ZIP 기록 목록 원본 보기"><img src="assets/screenshots/incident-history.png" alt="앱의 Incident ZIP 기록 목록" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>도구 → ZIP 기록에서 기기에 저장된 incident 목록을 열었습니다. 기존 기록을 조회한 화면이며 이 촬영에서 ZIP 생성이나 공유를 실행하지 않았습니다. <a href="assets/screenshots/incident-history.png">원본 보기</a></figcaption>
+</figure>
 
 아래는 현재 추출기가 `TAG` 상수와 `Log.*` 호출에서 찾은 로그 태그입니다. 목록에 없다는 이유만으로 코드 전체에서 해당 태그를 사용하지 않는다고 단정할 수는 없습니다.
 
