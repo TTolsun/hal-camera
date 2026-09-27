@@ -38,7 +38,7 @@ class Camera2Engine(
     /** A short notice that leaves the camera state alone, such as an AE relock that changed the exposure. */
     private val notice: (String) -> Unit = {},
     private val status: (String, Boolean) -> Unit
-) : CameraEngine, MediaCapture, LiveTuning {
+) : CameraEngine, MediaCapture, LiveTuning, TouchMetering {
     private val thread = HandlerThread("CD.Camera2").apply { start() }
     private val handler = Handler(thread.looper)
     private val main = Handler(Looper.getMainLooper())
@@ -80,6 +80,7 @@ class Camera2Engine(
     private val aeRelock = AeRelock()
     /** Bumped per rebuilt session, so a relock timeout from an older session does nothing. */
     private var relockGeneration = 0
+    private var previewSize: Size? = null
     /** The LIVE recorder's surface while a recording session is up; repeating requests then use the record template. */
     private var recorderSurface: Surface? = null
     /** Called with every LIVE repeating result; the flash precapture waits on it. Camera thread only. */
@@ -94,7 +95,7 @@ class Camera2Engine(
         override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
             callback.onCaptureCompleted(session, request, result)
             resultHook?.invoke(result)
-            if (spec == null) relockStep(result)
+            if (spec == null) { relockStep(result); touchFocus.onResult(result) }
         }
         override fun onCaptureFailed(session: CameraCaptureSession, request: CaptureRequest, failure: CaptureFailure) =
             callback.onCaptureFailed(session, request, failure)
@@ -114,6 +115,17 @@ class Camera2Engine(
         override fun orientationHint(chars: CameraCharacteristics): Int = outputRotation(chars)
         override fun recordRequest(camera: CameraDevice, chars: CameraCharacteristics, recorderSurface: Surface, recording: Boolean, iteration: Int): CaptureRequest =
             this@Camera2Engine.recordRequest(camera, chars, recorderSurface, recording, iteration)
+    })
+    /** Tap-to-focus (#168); the sequence lives in [Camera2TouchFocus]. */
+    private val touchFocus = Camera2TouchFocus(handler, main, object : Camera2TouchFocus.Host {
+        override val live get() = active
+        override val afLocked get() = controls.afLock
+        override val captureCallback: CameraCaptureSession.CaptureCallback get() = callback
+        override fun event(kind: String, values: Map<String, Any?>) { telemetry.event(sessionId, kind, values) }
+        override fun submitRepeating(kind: String, values: Map<String, Any?>) { this@Camera2Engine.submitRepeating(kind, values) }
+        override fun trigger(kind: String, afTrigger: Int, callback: CameraCaptureSession.CaptureCallback) = withLiveSession(kind) { camera, session, c ->
+            session.capture(repeatingRequest(camera, c, afTrigger = afTrigger), callback, handler)
+        }
     })
     override fun start() {
         telemetry.registerSession(sessionId, "Camera2", manager, cameraId)
@@ -172,6 +184,7 @@ class Camera2Engine(
                 ?: choose(map.getOutputSizes(ImageFormat.JPEG), 1920L * 1080)
             val texture = view.surfaceTexture ?: error("Preview surface unavailable")
             texture.setDefaultBufferSize(size.width, size.height)
+            previewSize = size
             previewSurface = Surface(texture)
             main.post { transform(size, chars) }
             yuv = reader(yuvSize, ImageFormat.YUV_420_888, "analysis_acquire_latest")
@@ -214,7 +227,7 @@ class Camera2Engine(
             set(CaptureRequest.CONTROL_AF_MODE, afMode(chars))
             spec?.fpsRange?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, it) }
             applyZoom(this, chars)
-            if (spec == null) applyLiveControls(requestControls())
+            if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus.target) }
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
             aeTrigger?.let { set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, it) }
             setTag("preview")
@@ -228,7 +241,7 @@ class Camera2Engine(
             set(CaptureRequest.CONTROL_AF_MODE, if (CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO in modes)
                 CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO else CaptureRequest.CONTROL_AF_MODE_OFF)
             applyZoom(this, c)
-            applyLiveControls(requestControls())
+            applyLiveControls(requestControls()); applyTouch(touchFocus.target)
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
             setTag("recording")
         }.build()
@@ -251,7 +264,7 @@ class Camera2Engine(
         catch (e: CameraAccessException) { telemetry.event(sessionId, "request_skipped", mapOf("for" to kind, "reason" to e.toString())); false }
         catch (e: Exception) { fail(e); false }
     }
-    private fun submitRepeating(kind: String, values: Map<String, Any?>) = withLiveSession(kind) { camera, session, c ->
+    private fun submitRepeating(kind: String, values: Map<String, Any?>): Boolean = withLiveSession(kind) { camera, session, c ->
         telemetry.event(sessionId, kind, values + mapOf("api" to "setRepeatingRequest", "recording" to (recorderSurface != null)))
         session.setRepeatingRequest(repeatingRequest(camera, c), liveCallback, handler)
     }
@@ -276,6 +289,7 @@ class Camera2Engine(
      */
     private fun startRelock() {
         if (spec != null) return
+        touchFocus.drop() // a tapped point is one-shot and does not outlive its session
         aeRelock.sessionRebuilt(controls.aeLock)
         val generation = ++relockGeneration
         if (!aeRelock.waiting) return
@@ -283,6 +297,15 @@ class Camera2Engine(
         handler.postDelayed({
             if (generation == relockGeneration && aeRelock.timedOut()) submitRepeating("ae_relock", mapOf("reason" to "timeout"))
         }, AeRelock.TIMEOUT_MS)
+    }
+    /** Called on the main thread, where the TextureView transform is read. */
+    override fun meterAt(x: Float, y: Float, feedback: (TouchPhase) -> Unit): Boolean {
+        val c = chars ?: return false
+        val (af, ae) = touchSupport(c)
+        if (spec != null || !active || (!af && !ae)) return false
+        val (u, v) = view.naturalPoint(x, y) ?: return false
+        handler.post { touchFocus.tap(c, u, v, af, ae, zoomRatio, previewSize ?: return@post, feedback) }
+        return true
     }
     private fun relockStep(result: TotalCaptureResult) {
         val state = result[CaptureResult.CONTROL_AE_STATE]
@@ -312,6 +335,7 @@ class Camera2Engine(
             val now = requestedControls
             controls = now
             if (old.aeLock != now.aeLock) aeRelock.lockChanged(now.aeLock)
+            if (old.afLock && !now.afLock) touchFocus.drop()
             submitRepeating("controls_set", mapOf("evIndex" to now.evIndex, "aeLock" to now.aeLock, "afLock" to now.afLock, "flash" to now.flash.name))
             if (old.afLock != now.afLock) sendAfTrigger(now.afLock)
         }
@@ -461,7 +485,7 @@ class Camera2Engine(
                 set(CaptureRequest.CONTROL_AF_MODE, afMode(c))
                 applyZoom(this, c)
                 // Same AE mode, EV, lock and torch as the preview, so the still is exposed as the preview showed it.
-                if (spec == null) applyLiveControls(requestControls())
+                if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus.target) }
                 setTag(tag)
             }.build()
             photoInFlight = true

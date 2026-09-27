@@ -25,20 +25,7 @@ import androidx.core.view.ViewCompat
 import dev.halcamera.camera.*
 import dev.halcamera.cli.LiveController
 import dev.halcamera.telemetry.*
-import dev.halcamera.ui.LiveReadout
-import dev.halcamera.ui.DiagnosticsPanel
-import dev.halcamera.ui.ExpandingZoomControl
-import dev.halcamera.ui.LiveControlBar
-import dev.halcamera.ui.LiveIndicator
-import dev.halcamera.ui.RecentMediaButton
-import dev.halcamera.ui.ShutterButton
-import dev.halcamera.ui.IconButton
-import dev.halcamera.ui.Look
-import dev.halcamera.ui.showActionPopup
-import dev.halcamera.ui.showSelectionPopup
-import dev.halcamera.ui.LiveReading
-import dev.halcamera.ui.ScopeView
-import dev.halcamera.ui.StripView
+import dev.halcamera.ui.*
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
@@ -364,6 +351,7 @@ class MainActivity : ComponentActivity() {
                 if (thisSession == sessionId && resumed && !closing) setStatus(text,ok)
             }
         }
+        previewHost.addView(FocusRing(this) { engine as? TouchMetering }, FrameLayout.LayoutParams(-1,-1))
         try { engine?.start() } catch (e: Exception) { setStatus("시작 실패: ${e.message}",false) }
         updateCameraChoices()
     }

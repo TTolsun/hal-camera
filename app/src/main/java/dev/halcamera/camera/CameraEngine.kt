@@ -38,6 +38,18 @@ interface LiveTuning {
     fun setControls(next: LiveControls)
 }
 
+/**
+ * Tap-to-focus and metering on the LIVE preview (#168). Both engines implement it: Camera2Engine sets the regions
+ * and AF trigger itself, CameraXEngine uses FocusMeteringAction.
+ */
+interface TouchMetering {
+    /**
+     * Meters and focuses at ([x], [y]) in the preview view's pixels. [feedback] runs on the main thread for this tap
+     * until DONE. Returns false when the camera is not ready or offers neither AF nor AE regions.
+     */
+    fun meterAt(x: Float, y: Float, feedback: (TouchPhase) -> Unit): Boolean
+}
+
 /** Zoom ratio range reported by the camera characteristics. Below API 30 only digital zoom >= 1x is available. */
 fun zoomRange(manager: CameraManager, id: String): Pair<Float, Float> {
     val c = try { manager.getCameraCharacteristics(id) } catch (_: Exception) { return 1f to 1f }
