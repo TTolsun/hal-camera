@@ -38,12 +38,19 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `도구 → 설
 빌드와 테스트가 통과하면 APK 생성과 JVM 테스트 결과를 확인한 것입니다. 측정 정확성과 기기 동작은 별도로 검증해야 합니다. 검증 자료의 구분과 기록 위치는 [Evidence](evidence.md)를 확인하세요.
 
 
+<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
+
 ## Live에서 촬영하세요
 
 1. 상단에서 엔진과 카메라를 선택합니다. Camera2와 CameraX 모두 선택한 엔진에서 사진·동영상을 저장합니다.
 2. 사진 모드에서 셔터를 누릅니다. YUV를 변환한 JPEG와 카메라가 만든 JPEG 두 장을 `DCIM/HALCamera`에 저장합니다. 두 엔진이 사진 쌍을 구성하는 차이는 [Engine](engine.md#두-엔진의-차이)에서 확인합니다.
 3. 동영상 모드에서 셔터를 눌러 녹화를 시작하고 다시 눌러 종료합니다. 종료 처리 중에는 셔터를 사용할 수 없으며, 저장이 끝나면 안내 문구가 나타납니다.
 4. 최근 썸네일을 눌러 앨범을 확인합니다.
+
+<figure class="app-screenshot" id="screen-live">
+<a href="assets/screenshots/live.png" aria-label="Camera2 Live 사진 모드와 실시간 정보 원본 보기"><img src="assets/screenshots/live.png" alt="Camera2 Live 사진 모드와 실시간 정보" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>Camera2의 사진 모드입니다. 하단에서 실시간 정보, 줌, 셔터와 최근 썸네일을 확인할 수 있습니다. <a href="assets/screenshots/live.png">원본 보기</a></figcaption>
+</figure>
 
 녹화 중에는 셔터 아래에 경과 시간이 표시됩니다. 줌은 계속 바꿀 수 있지만 엔진·카메라·모드 변경, 일시정지, 갤러리와 다른 도구 진입은 제한됩니다. 녹화를 마치면 사진용 프리뷰로 돌아오며 동영상 모드 선택은 유지됩니다.
 
@@ -56,6 +63,11 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `도구 → 설
 | 프리뷰를 짧게 터치합니다. | 해당 지점에 초점을 맞춥니다. 모서리 사각형이 초록색이면 성공, 빨간색이면 실패입니다. 5초 뒤 전체 화면 기준으로 돌아가며, AF 잠금이 켜져 있으면 잠금을 풀 때까지 유지합니다. |
 | 프리뷰를 길게 누릅니다. | 해당 지점을 기준으로 AE를 잠급니다. 원 위의 자물쇠와 AE 버튼으로 잠금 상태를 확인합니다. |
 | 다른 지점을 짧게 터치하거나 AE 버튼을 누릅니다. | 터치로 설정한 AE 잠금을 해제합니다. |
+
+<figure class="app-screenshot" id="screen-live-controls">
+<a href="assets/screenshots/live-controls.png" aria-label="Live의 Flash AF AE EV 제어 줄 원본 보기"><img src="assets/screenshots/live-controls.png" alt="Live의 Flash AF AE EV 제어 줄" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>상단 화살표로 제어 줄을 펼쳤습니다. Flash·AF·AE·EV를 조작할 수 있습니다. <a href="assets/screenshots/live-controls.png">원본 보기</a></figcaption>
+</figure>
 
 프리뷰 정보의 `AE Locked`는 노출 잠금, `AF No focus`는 AF 잠금 상태에서 초점을 맞추지 못했음을 뜻합니다. [Callback](callback.md) 그래프를 켜면 이 정보 줄을 숨기고 프레임별 콜백을 표시합니다. 촬영 지연이나 노출 변화가 예상과 다르면 [디버깅](troubleshooting.md#앱과-프레임워크hal을-구분하세요)을 확인하세요.
 

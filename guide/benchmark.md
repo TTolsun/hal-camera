@@ -5,6 +5,8 @@ title: Benchmark
 
 **같은 조건에서 측정한 실행을 비교하세요.** Benchmark는 카메라 열기, 프리뷰, 촬영, 녹화에 걸린 시간과 콜백을 기록합니다. 결과 화면에서 baseline 대비 변화를 읽고, 실행 기록에서 비교 대상을 선택하거나 파일을 내보낼 수 있습니다.
 
+<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
+
 ## 실행 조건을 확인하세요
 
 1. Live의 `도구 → Benchmark`에서 카메라와 profile을 확인하고 실행합니다.
@@ -16,6 +18,16 @@ title: Benchmark
 | 카메라와 profile | `camera2-standard-v1`과 녹화를 포함하는 `camera2-standard-v2`는 서로 비교하지 않습니다. v2의 baseline은 기기별로 새로 지정합니다. |
 | 관측 창과 워밍업 | 카메라를 다시 여는 반복 측정과 프리뷰 관측 세션은 구분됩니다. 관측 시작 전에 도착한 프레임은 워밍업으로 제외합니다. |
 | 유효성과 환경 | 표본 수, 발열, 충전 상태, 빌드 정보를 `실행 정보`에서 확인합니다. 비교 조건이 맞지 않으면 이유를 표시합니다. |
+
+<figure class="app-screenshot" id="screen-benchmark-setup">
+<a href="assets/screenshots/benchmark-setup.png" aria-label="Benchmark의 실행 조건과 문서 촬영용 빌드 이름 원본 보기"><img src="assets/screenshots/benchmark-setup.png" alt="Benchmark의 실행 조건과 문서 촬영용 빌드 이름" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>카메라 0에서 실행하기 전의 조건입니다. 이번 실행에는 docs-screenshots-v0.15.0이라는 이름을 붙였습니다. <a href="assets/screenshots/benchmark-setup.png">원본 보기</a></figcaption>
+</figure>
+
+<figure class="app-screenshot" id="screen-benchmark-running">
+<a href="assets/screenshots/benchmark-running.png" aria-label="Benchmark 카메라 열기 반복 측정 진행 중 원본 보기"><img src="assets/screenshots/benchmark-running.png" alt="Benchmark 카메라 열기 반복 측정 진행 중" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>카메라 열기 반복 측정이 진행 중입니다. 현재 단계와 회차, 진행률을 확인할 수 있습니다. <a href="assets/screenshots/benchmark-running.png">원본 보기</a></figcaption>
+</figure>
 
 `camera2-standard-v2`는 사진 촬영을 마친 뒤 카메라를 닫지 않고 9초 녹화를 다섯 번 반복합니다. 첫 회를 워밍업으로 제외하므로 녹화 지표의 유효 표본은 네 개이며, 이때 p95는 사실상 최대값입니다. 녹화를 마지막에 실행하므로 녹화 세션 구성의 영향이 앞선 프리뷰 관측과 촬영 지연에 섞이지 않습니다.
 
@@ -32,6 +44,11 @@ title: Benchmark
 | `No verdict` | baseline은 있지만 비교 조건을 충족한 지표가 없습니다. |
 | `N metrics degraded` | baseline보다 저하된 지표가 N개입니다. |
 | `No degradation` | 판정한 지표 중 저하된 지표가 없습니다. |
+
+<figure class="app-screenshot" id="screen-benchmark-result">
+<a href="assets/screenshots/benchmark-result.png" aria-label="Benchmark 결과와 baseline 대비 조건 차이 경고 원본 보기"><img src="assets/screenshots/benchmark-result.png" alt="Benchmark 결과와 baseline 대비 조건 차이 경고" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>실행 완료 후 기존 baseline과 비교한 화면입니다. 충전 상태와 노출 조건 차이가 표시되므로, 이 장면을 앱 버전 간 성능 저하의 증거로 해석하지 않습니다. <a href="assets/screenshots/benchmark-result.png">원본 보기</a></figcaption>
+</figure>
 
 지표는 `Launch`·`Preview`·`Capture`·`Stability`·`Record`·`3A`로 묶습니다. 막대는 비교 대상의 값, 눈금은 baseline 또는 이전 실행의 값입니다. 시간 값의 대표값은 중앙값이며, 각 지표 아래에는 측정한 Camera2 구간을 표시합니다. 지표 정의는 [METRICS.md](https://github.com/TTolsun/hal-camera/blob/main/docs/METRICS.md)를 확인하세요. Benchmark의 `Partial`은 `onCaptureStarted → onCaptureCompleted` 구간을 뜻하며, Camera2의 중간 메타데이터 콜백인 `onCaptureProgressed`를 뜻하지 않습니다.
 
@@ -65,6 +82,11 @@ title: Benchmark
 1. `두 실행 비교`를 누르고 baseline으로 사용할 실행과 비교할 실행을 차례로 고릅니다. 먼저 고른 실행은 이번 비교에만 baseline으로 쓰이며, 저하·개선도 그 실행을 기준으로 판정합니다. 목록에 지정해 둔 baseline은 바뀌지 않습니다. 취소나 뒤로 가기로 선택을 해제합니다.
 2. 각 행의 `⋮` 메뉴 또는 길게 누르기로 baseline 지정, 비교, JSON·CSV 내보내기, 삭제를 선택합니다. 삭제는 확인 후 실행하며 해당 baseline 포인터도 정리합니다.
 3. `목록 CSV 내보내기`로 현재 필터에 맞는 실행 전체를 CSV 하나로 내보냅니다.
+
+<figure class="app-screenshot" id="screen-benchmark-history">
+<a href="assets/screenshots/benchmark-history.png" aria-label="저장된 Benchmark 실행 기록과 baseline 원본 보기"><img src="assets/screenshots/benchmark-history.png" alt="저장된 Benchmark 실행 기록과 baseline" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>방금 실행한 docs-screenshots-v0.15.0이 목록에 저장됐습니다. 기존 baseline은 별도 묶음에 남아 있습니다. <a href="assets/screenshots/benchmark-history.png">원본 보기</a></figcaption>
+</figure>
 
 기본 상태 필터는 `전체`이므로 중단·무효 실행도 보입니다. 찾는 실행이 없으면 profile·camera 조건을 확인하거나 `필터 초기화`를 누르세요. PC의 `tools/aggregate.py`는 기본적으로 점수 산정 가능한 실행만 내보내므로 전체 실행이 필요하면 `--eligibility all`을 사용합니다.
 

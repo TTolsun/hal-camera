@@ -15,6 +15,13 @@ nav_order: 5
 
 엔진이 앱 전체 구조에서 차지하는 위치는 [아키텍처](architecture.md#패키지별-역할)에 있습니다.
 
+<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
+
+<figure class="app-screenshot" id="screen-engine-camerax">
+<a href="assets/screenshots/engine-camerax.png" aria-label="CameraX로 전환한 Live 프리뷰 원본 보기"><img src="assets/screenshots/engine-camerax.png" alt="CameraX로 전환한 Live 프리뷰" width="1440" height="3120" loading="lazy" decoding="async"></a>
+<figcaption>CameraX로 전환한 뒤 프리뷰와 실시간 정보가 갱신되는 화면입니다. 상단의 엔진 이름으로 현재 경로를 확인합니다. <a href="assets/screenshots/engine-camerax.png">원본 보기</a></figcaption>
+</figure>
+
 ## 엔진 계약
 
 ```mermaid
