@@ -14,15 +14,15 @@ import android.util.Size
 import android.view.TextureView
 
 /**
- * The Camera2 side of [TouchMeter] (#168). [Camera2TouchFocus] keeps one [TouchTarget] for the latest tap and
- * Camera2Engine calls [applyTouch] on every LIVE request after the AF mode is set, so preview, still and
- * recording requests all meter the tapped point until the hold ends.
+ * The Camera2 side of [TouchMeter] (#168). A short tap focuses and a long press meters exposure, as in the Samsung
+ * camera's photo mode. [Camera2TouchFocus] keeps one [TouchTarget] for each, and Camera2Engine calls [applyTouch]
+ * on every LIVE request after the AF mode is set, so preview, still and recording requests all carry them.
  */
-class TouchTarget(val generation: Int, val af: MeteringRectangle?, val ae: MeteringRectangle?, val feedback: (TouchPhase) -> Unit)
+class TouchTarget(val generation: Int, val rect: MeteringRectangle, val feedback: (TouchPhase) -> Unit)
 
 /**
  * Tap-to-focus needs AF regions, the AUTO AF mode, whose trigger always starts a new scan (a continuous mode
- * may lock at once on the old point), and a lens that moves. A fixed-focus camera still gets AE metering.
+ * may lock at once on the old point), and a lens that moves. A fixed-focus camera still meters exposure on a long press.
  */
 fun touchSupport(c: CameraCharacteristics): Pair<Boolean, Boolean> {
     val afModes = c[CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES] ?: intArrayOf()
@@ -64,11 +64,17 @@ fun touchRegion(c: CameraCharacteristics, u: Double, v: Double, zoom: Float, pre
 }
 
 /**
- * Camera2Engine's tap sequence, kept out of the engine. One tap: the repeating request takes the regions (the AUTO
- * AF mode when focusing), then one capture carries AF trigger START. The outcome comes from the trigger's result
- * and the results after it ([TouchFocusWatch]); the point is held for [TouchMeter.HOLD_MS], or while AF lock is on,
- * before AF and AE go back to the whole frame with a CANCEL, as the AOSP camera does. Camera thread only; the
- * feedback goes to the main thread.
+ * Camera2Engine's touch sequences, kept out of the engine. Camera thread only; the feedback goes to the main thread.
+ *
+ * A tap ([focusAt]): the repeating request takes the AF region and the AUTO AF mode, then one capture carries AF
+ * trigger START. The outcome comes from the trigger's result and the results after it ([TouchFocusWatch]); the point
+ * is held for [TouchMeter.HOLD_MS], or while AF lock is on, before AF goes back to the whole frame with a CANCEL, as
+ * the AOSP camera does. A tap also ends a long-pressed exposure point, as in the Samsung camera.
+ *
+ * A long press ([exposeAt]): the repeating request takes the AE region and reports METERED once AE has settled on it
+ * ([TouchExposureWatch]), or after [AeRelock.TIMEOUT_MS]. The caller then takes the AE lock through the Live
+ * controls, so the AE button shows it. The point stays until a tap, another long press or the AE lock is released;
+ * a session rebuild keeps it, and [AeRelock] locks the new session on it again.
  */
 class Camera2TouchFocus(private val handler: Handler, private val main: Handler, private val host: Host) {
     interface Host {
@@ -82,17 +88,21 @@ class Camera2TouchFocus(private val handler: Handler, private val main: Handler,
         fun trigger(kind: String, afTrigger: Int, callback: CameraCaptureSession.CaptureCallback): Boolean
     }
 
-    /** The latest tap while its point is held; [applyTouch] puts it on every request. */
-    var target: TouchTarget? = null
+    /** The tapped AF point while it is held. */
+    var af: TouchTarget? = null
         private set
-    private val watch = TouchFocusWatch()
+    /** The long-pressed AE point. */
+    var ae: TouchTarget? = null
+        private set
+    private val focusWatch = TouchFocusWatch()
+    private val exposureWatch = TouchExposureWatch()
 
-    fun tap(c: CameraCharacteristics, u: Double, v: Double, af: Boolean, ae: Boolean, zoom: Float, preview: Size, feedback: (TouchPhase) -> Unit) {
+    fun focusAt(c: CameraCharacteristics, u: Double, v: Double, zoom: Float, preview: Size, feedback: (TouchPhase) -> Unit) {
         val rect = touchRegion(c, u, v, zoom, preview) ?: return
-        val gen = watch.tap()
-        target = TouchTarget(gen, rect.takeIf { af }, rect.takeIf { ae }, feedback)
-        host.submitRepeating("touch_meter", mapOf("generation" to gen, "u" to u, "v" to v, "region" to rect.rect.toShortString(), "af" to af, "ae" to ae))
-        if (!af) { done(gen, TouchPhase.METERED); return }
+        dropExposure()
+        val gen = focusWatch.tap()
+        af = TouchTarget(gen, rect, feedback)
+        host.submitRepeating("touch_meter", mapOf("kind" to "AF", "generation" to gen, "u" to u, "v" to v, "region" to rect.rect.toShortString()))
         post(feedback, TouchPhase.SCANNING)
         val cb = host.captureCallback
         host.trigger("touch_af_trigger", CaptureRequest.CONTROL_AF_TRIGGER_START, object : CameraCaptureSession.CaptureCallback() {
@@ -100,46 +110,70 @@ class Camera2TouchFocus(private val handler: Handler, private val main: Handler,
                 cb.onCaptureStarted(s, r, timestamp, frameNumber)
             override fun onCaptureCompleted(s: CameraCaptureSession, r: CaptureRequest, result: TotalCaptureResult) {
                 cb.onCaptureCompleted(s, r, result)
-                watch.triggerCompleted(gen, result[CaptureResult.CONTROL_AF_STATE])?.let { done(gen, it) }
+                focusWatch.triggerCompleted(gen, result[CaptureResult.CONTROL_AF_STATE])?.let { focused(gen, it) }
             }
             override fun onCaptureFailed(s: CameraCaptureSession, r: CaptureRequest, failure: CaptureFailure) {
-                cb.onCaptureFailed(s, r, failure); if (watch.timedOut(gen)) done(gen, TouchPhase.FAILED)
+                cb.onCaptureFailed(s, r, failure); if (focusWatch.timedOut(gen)) focused(gen, TouchPhase.FAILED)
             }
         })
-        handler.postDelayed({ if (watch.timedOut(gen)) done(gen, TouchPhase.FAILED) }, TouchMeter.SCAN_TIMEOUT_MS)
+        handler.postDelayed({ if (focusWatch.timedOut(gen)) focused(gen, TouchPhase.FAILED) }, TouchMeter.SCAN_TIMEOUT_MS)
+    }
+
+    fun exposeAt(c: CameraCharacteristics, u: Double, v: Double, zoom: Float, preview: Size, feedback: (TouchPhase) -> Unit) {
+        val rect = touchRegion(c, u, v, zoom, preview) ?: return
+        dropExposure()
+        val gen = exposureWatch.press()
+        ae = TouchTarget(gen, rect, feedback)
+        host.submitRepeating("touch_meter", mapOf("kind" to "AE", "generation" to gen, "u" to u, "v" to v, "region" to rect.rect.toShortString()))
+        post(feedback, TouchPhase.SCANNING)
+        handler.postDelayed({ if (exposureWatch.timedOut(gen)) exposed(gen) }, AeRelock.TIMEOUT_MS)
     }
 
     /** Every LIVE repeating result. */
-    fun onResult(result: TotalCaptureResult) { watch.onResult(result[CaptureResult.CONTROL_AF_STATE])?.let { done(watch.generation, it) } }
+    fun onResult(result: TotalCaptureResult) {
+        focusWatch.onResult(result[CaptureResult.CONTROL_AF_STATE])?.let { focused(focusWatch.generation, it) }
+        if (exposureWatch.onResult(result[CaptureResult.CONTROL_AE_STATE])) exposed(exposureWatch.generation)
+    }
 
-    /** Forgets the tap without a request: a new session, or AF lock released, builds the next request anyway. */
-    fun drop() {
-        val t = target ?: return
+    /** Forgets the AF point without a request: a new session, or AF lock released, builds the next request anyway. */
+    fun dropFocus() {
+        val t = af ?: return
         post(t.feedback, TouchPhase.DONE)
-        target = null; watch.cancel()
+        af = null; focusWatch.cancel()
     }
 
-    private fun done(gen: Int, phase: TouchPhase) {
-        val t = target?.takeIf { it.generation == gen } ?: return
-        host.event("touch_meter_result", mapOf("generation" to gen, "phase" to phase.name))
+    /** Forgets the AE point, for a tap, a new long press or the AE lock released. */
+    fun dropExposure() {
+        val t = ae ?: return
+        post(t.feedback, TouchPhase.DONE)
+        ae = null; exposureWatch.cancel()
+    }
+
+    private fun focused(gen: Int, phase: TouchPhase) {
+        val t = af?.takeIf { it.generation == gen } ?: return
+        host.event("touch_meter_result", mapOf("kind" to "AF", "generation" to gen, "phase" to phase.name))
         post(t.feedback, phase)
-        // With AF lock on the point stays until the lock is released; only the ring goes.
-        handler.postDelayed({ if (target === t) { if (host.afLocked) post(t.feedback, TouchPhase.DONE) else end() } }, TouchMeter.HOLD_MS)
+        // With AF lock on the point stays until the lock is released; only the square goes.
+        handler.postDelayed({ if (af === t) { if (host.afLocked) post(t.feedback, TouchPhase.DONE) else endFocus() } }, TouchMeter.HOLD_MS)
     }
 
-    private fun end() {
-        val focused = target?.af != null
-        drop()
-        host.submitRepeating("touch_meter_end", emptyMap())
-        // Only a tap that ran the AUTO scan has a lock to cancel; an AE-only tap left continuous AF alone.
-        if (focused) host.trigger("af_trigger", CaptureRequest.CONTROL_AF_TRIGGER_CANCEL, host.captureCallback)
+    private fun exposed(gen: Int) {
+        val t = ae?.takeIf { it.generation == gen } ?: return
+        host.event("touch_meter_result", mapOf("kind" to "AE", "generation" to gen, "phase" to TouchPhase.METERED.name))
+        post(t.feedback, TouchPhase.METERED)
+    }
+
+    private fun endFocus() {
+        dropFocus()
+        host.submitRepeating("touch_meter_end", mapOf("kind" to "AF"))
+        host.trigger("af_trigger", CaptureRequest.CONTROL_AF_TRIGGER_CANCEL, host.captureCallback)
     }
 
     private fun post(feedback: (TouchPhase) -> Unit, phase: TouchPhase) { main.post { if (host.live) feedback(phase) } }
 }
 
-/** Sets the tapped regions, and the AUTO AF mode when the tap focuses. Without a target the HAL meters the frame. */
-fun CaptureRequest.Builder.applyTouch(t: TouchTarget?) {
-    t?.af?.let { set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO); set(CaptureRequest.CONTROL_AF_REGIONS, arrayOf(it)) }
-    t?.ae?.let { set(CaptureRequest.CONTROL_AE_REGIONS, arrayOf(it)) }
+/** Sets the touched regions, and the AUTO AF mode for a tapped AF point. Without them the HAL meters the frame. */
+fun CaptureRequest.Builder.applyTouch(touch: Camera2TouchFocus) {
+    touch.af?.let { set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_AUTO); set(CaptureRequest.CONTROL_AF_REGIONS, arrayOf(it.rect)) }
+    touch.ae?.let { set(CaptureRequest.CONTROL_AE_REGIONS, arrayOf(it.rect)) }
 }

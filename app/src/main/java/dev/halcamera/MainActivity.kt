@@ -351,7 +351,7 @@ class MainActivity : ComponentActivity() {
                 if (thisSession == sessionId && resumed && !closing) setStatus(text,ok)
             }
         }
-        previewHost.addView(FocusRing(this) { engine as? TouchMetering }, FrameLayout.LayoutParams(-1,-1))
+        previewHost.addView(FocusRing(this, { engine as? TouchMetering }) { controlBar.setAeLock(it) }, FrameLayout.LayoutParams(-1,-1))
         try { engine?.start() } catch (e: Exception) { setStatus("시작 실패: ${e.message}",false) }
         updateCameraChoices()
     }

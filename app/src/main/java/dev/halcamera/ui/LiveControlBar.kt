@@ -190,6 +190,17 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         update(controls.copy(afLock = !controls.afLock))
     }
 
+    /**
+     * The AE lock a long press on the preview takes once AE has metered the pressed point, and a tap releases. It
+     * goes through the same controls as the AE button, which therefore shows it. False when this camera or engine
+     * has no AE lock; the press then only meters.
+     */
+    fun setAeLock(on: Boolean): Boolean {
+        if (!camera2 || !enabled || !support.aeLock) return false
+        if (controls.aeLock != on) update(controls.copy(aeLock = on))
+        return true
+    }
+
     private fun toggleAe() {
         if (!support.aeLock) { host.notice("이 카메라는 AE 잠금을 지원하지 않습니다"); return }
         update(controls.copy(aeLock = !controls.aeLock))

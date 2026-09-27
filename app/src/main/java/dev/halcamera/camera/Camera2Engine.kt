@@ -227,7 +227,7 @@ class Camera2Engine(
             set(CaptureRequest.CONTROL_AF_MODE, afMode(chars))
             spec?.fpsRange?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, it) }
             applyZoom(this, chars)
-            if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus.target) }
+            if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus) }
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
             aeTrigger?.let { set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, it) }
             setTag("preview")
@@ -241,7 +241,7 @@ class Camera2Engine(
             set(CaptureRequest.CONTROL_AF_MODE, if (CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO in modes)
                 CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO else CaptureRequest.CONTROL_AF_MODE_OFF)
             applyZoom(this, c)
-            applyLiveControls(requestControls()); applyTouch(touchFocus.target)
+            applyLiveControls(requestControls()); applyTouch(touchFocus)
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
             setTag("recording")
         }.build()
@@ -289,7 +289,7 @@ class Camera2Engine(
      */
     private fun startRelock() {
         if (spec != null) return
-        touchFocus.drop() // a tapped point is one-shot and does not outlive its session
+        touchFocus.dropFocus() // a tapped AF point is one-shot; a pressed AE point stays and is relocked on
         val generation = aeRelock.sessionRebuilt(controls.aeLock)
         if (!aeRelock.waiting) return
         telemetry.event(sessionId, "ae_relock_wait", mapOf("recording" to (recorderSurface != null)))
@@ -299,12 +299,15 @@ class Camera2Engine(
         if (!submitRepeating("ae_relock", mapOf("reason" to reason, "aeState" to state))) aeRelock.relockNotSent()
     }
     /** Called on the main thread, where the TextureView transform is read. */
-    override fun meterAt(x: Float, y: Float, feedback: (TouchPhase) -> Unit): Boolean {
+    override fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean {
         val c = chars ?: return false
         val (af, ae) = touchSupport(c)
-        if (spec != null || !active || (!af && !ae)) return false
+        if (spec != null || !active || !(if (exposure) ae else af)) return false
         val (u, v) = view.naturalPoint(x, y) ?: return false
-        handler.post { touchFocus.tap(c, u, v, af, ae, zoomRatio, previewSize ?: return@post, feedback) }
+        handler.post {
+            val size = previewSize ?: return@post
+            if (exposure) touchFocus.exposeAt(c, u, v, zoomRatio, size, feedback) else touchFocus.focusAt(c, u, v, zoomRatio, size, feedback)
+        }
         return true
     }
     private fun relockStep(result: TotalCaptureResult) {
@@ -338,7 +341,8 @@ class Camera2Engine(
             // A restored lock meets a session that has just started metering: relock it like a rebuilt one.
             if (old.aeLock != now.aeLock) { if (restoreQueued.getAndSet(false) && now.aeLock) startRelock() else aeRelock.lockChanged(now.aeLock) }
             restoreQueued.set(false)
-            if (old.afLock && !now.afLock) touchFocus.drop()
+            if (old.afLock && !now.afLock) touchFocus.dropFocus()
+            if (old.aeLock && !now.aeLock) touchFocus.dropExposure()
             submitRepeating("controls_set", mapOf("evIndex" to now.evIndex, "aeLock" to now.aeLock, "afLock" to now.afLock, "flash" to now.flash.name))
             if (old.afLock != now.afLock) sendAfTrigger(now.afLock)
         }
@@ -488,7 +492,7 @@ class Camera2Engine(
                 set(CaptureRequest.CONTROL_AF_MODE, afMode(c))
                 applyZoom(this, c)
                 // Same AE mode, EV, lock and torch as the preview, so the still is exposed as the preview showed it.
-                if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus.target) }
+                if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus) }
                 setTag(tag)
             }.build()
             photoInFlight = true

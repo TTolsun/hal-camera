@@ -56,6 +56,39 @@ object TouchMeter {
     }
 }
 
+/**
+ * When AE has metered a long-pressed point (#168 follow-up): the same rule as [AeRelock], two settled AE states in
+ * a row, because the first result after the new region can still carry the old one's CONVERGED. A newer press gets
+ * a new generation, so an older press never reports.
+ */
+class TouchExposureWatch {
+    var generation = 0
+        private set
+    private var pending = false
+    private var settledInRow = 0
+
+    fun press(): Int { generation++; pending = true; settledInRow = 0; return generation }
+
+    fun cancel() { generation++; pending = false }
+
+    /** Every result after the press; true once, when AE has settled on the new region. */
+    fun onResult(aeState: Int?): Boolean {
+        if (!pending) return false
+        val settled = aeState == null || aeState == AeRelock.AE_STATE_CONVERGED || aeState == AeRelock.AE_STATE_FLASH_REQUIRED
+        settledInRow = if (settled) settledInRow + 1 else 0
+        if (aeState != null && settledInRow < AeRelock.SETTLED_RESULTS) return false
+        pending = false
+        return true
+    }
+
+    /** AE did not settle in time; returns whether press [gen] still waited and should be taken as metered. */
+    fun timedOut(gen: Int): Boolean {
+        if (gen != generation || !pending) return false
+        pending = false
+        return true
+    }
+}
+
 /** What the focus ring shows for one tap. */
 enum class TouchPhase { SCANNING, FOCUSED, FAILED, METERED, DONE }
 

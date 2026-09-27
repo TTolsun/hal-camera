@@ -95,23 +95,26 @@ class CameraXEngine(
         cam.cameraControl.setZoomRatio(clamped)
     }
     /**
-     * CameraX maps the tap through PreviewView itself (rotation, mirroring, fill-crop, zoom) and cancels the
-     * regions after the same hold as Camera2. A newer tap cancels the older future, which then reports nothing.
+     * CameraX maps the touch through PreviewView itself (rotation, mirroring, fill-crop, zoom). A tap focuses and is
+     * cancelled after the same hold as Camera2; a long press meters exposure and stays. CameraX has no AE lock, so
+     * the exposure point is not locked. A newer touch cancels the older future, which then reports nothing.
      */
-    override fun meterAt(x: Float, y: Float, feedback: (TouchPhase) -> Unit): Boolean {
+    override fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean {
         val cam = camera ?: return false
-        val action = FocusMeteringAction.Builder(view.meteringPointFactory.createPoint(x, y), FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE)
-            .setAutoCancelDuration(TouchMeter.HOLD_MS, java.util.concurrent.TimeUnit.MILLISECONDS).build()
+        val builder = FocusMeteringAction.Builder(view.meteringPointFactory.createPoint(x, y),
+            if (exposure) FocusMeteringAction.FLAG_AE else FocusMeteringAction.FLAG_AF)
+        val action = (if (exposure) builder.disableAutoCancel() else builder.setAutoCancelDuration(TouchMeter.HOLD_MS, java.util.concurrent.TimeUnit.MILLISECONDS)).build()
         if (!active || !cam.cameraInfo.isFocusMeteringSupported(action)) return false
-        telemetry.event(session, "touch_meter", mapOf("x" to x, "y" to y, "api" to "CameraControl.startFocusAndMetering"))
+        telemetry.event(session, "touch_meter", mapOf("kind" to if (exposure) "AE" else "AF", "x" to x, "y" to y, "api" to "CameraControl.startFocusAndMetering"))
         feedback(TouchPhase.SCANNING)
         val future = cam.cameraControl.startFocusAndMetering(action)
         future.addListener({
             val focused = runCatching { future.get().isFocusSuccessful }.getOrNull() ?: return@addListener
-            telemetry.event(session, "touch_meter_result", mapOf("phase" to if (focused) "FOCUSED" else "FAILED"))
+            val phase = if (exposure) TouchPhase.METERED else if (focused) TouchPhase.FOCUSED else TouchPhase.FAILED
+            telemetry.event(session, "touch_meter_result", mapOf("phase" to phase.name))
             if (!active) return@addListener
-            feedback(if (focused) TouchPhase.FOCUSED else TouchPhase.FAILED)
-            view.postDelayed({ if (active) feedback(TouchPhase.DONE) }, TouchMeter.HOLD_MS)
+            feedback(phase)
+            if (!exposure) view.postDelayed({ if (active) feedback(TouchPhase.DONE) }, TouchMeter.HOLD_MS)
         }, main)
         return true
     }
