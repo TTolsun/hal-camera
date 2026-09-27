@@ -88,7 +88,9 @@ incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽�
 
 ### 화면에서 지표가 보이지 않을 때
 
-상단의 `수치`는 프리뷰 위의 콜백 오실로스코프를 켜고 끕니다. 배경 박스나 카메라 선택 버튼은 없으며 기존 FPS·ISO·노출·AF·AE 표시와 촬영 조작부를 유지합니다. Partial Result와 All Result를 기본 행으로 두고 현재 구성된 출력 스트림을 순서대로 추가합니다. 모든 행은 최근 10초와 공통 ms 축을 사용하며 6행 구성도 지원합니다. 중간 Partial을 지원하지 않는 기기는 `미지원`, 앱에 프레임별 콜백을 주지 않는 출력은 `콜백 없음`으로 표시합니다. 저장한 ZIP은 `도구 → ZIP 기록`에서 공유합니다. 하단 Mark는 직전 10초와 이후 5초를 incident ZIP으로 저장합니다. Benchmark 결과 화면은 판정을 먼저 표시하고 모든 측정 항목을 카테고리별 막대로 보여 줍니다. 막대 옆 숫자는 표본의 중앙값이며, 표본 수와 validity flag는 `실행 정보` 접힘에 있습니다. 막대 길이는 같은 카테고리에서 단위가 같은 지표끼리 공유하는 축을 기준으로 그리므로 이웃 행과 길이를 견줄 수 있으며, 그 카테고리에서 단위가 혼자인 지표는 자체 축을 쓰기 때문에 다른 행과 길이를 견줄 수 없습니다. 이 배치는 저장된 지표나 CSV의 범위를 바꾸지 않습니다.
+상단의 `Callback`은 프리뷰 위에 한 프레임의 콜백 도착 시각을 표시합니다. Shutter와 Metadata를 기본 행으로 두고 세션에 구성된 출력 스트림을 추가하며 Partial은 표시하지 않습니다. 모든 행은 이전 프레임의 `onCaptureStarted` 수신 시각을 공통 기준으로 사용합니다. 시간축은 표시된 값에 맞춰 자동 조정됩니다. 그래프를 켜면 FPS·ISO·노출·AF·AE의 실시간 정보 두 줄을 숨기며 촬영 조작부는 유지합니다. 콜백 없음·요청 대상 아님·시작 시각 없음은 구분합니다. Camera2의 Android 13 이상에서 Preview와 Recording은 PRIVATE 버퍼의 앱 수신 시각이며, 화면 갱신이나 HAL 내부 완료 시각이 아닙니다. 상단 버튼은 12sp를 유지하고 한 줄로 표시하며, 중앙 화살표는 48dp만 사용하여 양쪽 버튼의 공간을 확보합니다.
+
+저장한 ZIP은 `도구 → ZIP 기록`에서 공유합니다. 하단 Mark는 직전 10초와 이후 5초를 incident ZIP으로 저장합니다. Benchmark 결과 화면은 판정을 먼저 표시하고 모든 측정 항목을 카테고리별 막대로 보여 줍니다. 막대 옆 숫자는 표본의 중앙값이며, 표본 수와 validity flag는 `실행 정보` 접힘에 있습니다. 막대 길이는 같은 카테고리에서 단위가 같은 지표끼리 공유하는 축을 기준으로 그리므로 이웃 행과 길이를 견줄 수 있으며, 그 카테고리에서 단위가 혼자인 지표는 자체 축을 쓰기 때문에 다른 행과 길이를 견줄 수 없습니다. 이 배치는 저장된 지표나 CSV의 범위를 바꾸지 않습니다.
 
 ### 이력과 CSV가 예상과 다를 때
 
@@ -111,7 +113,7 @@ incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-27 @ `0fbaa29` · Codex
+- 검토 2026-09-27 @ `ffacbcf` · Codex
 
 </details>
 
@@ -187,9 +189,9 @@ incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽�
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-27 @ `0fbaa29` · Codex |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-27 @ `0fbaa29` · Codex |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-27 @ `0fbaa29` · Codex |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-27 @ `ffacbcf` · Codex |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-27 @ `ffacbcf` · Codex |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-27 @ `ffacbcf` · Codex |
 
 <!-- omm:end id=status -->
 
