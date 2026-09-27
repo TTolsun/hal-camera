@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "91accba2e4b6cea5",
+        "codeHash": "9464a1a3f8ea1f9f",
         "modelHash": "da5e8353e095fdf7",
         "at": "2026-09-27",
-        "commit": "4163ccc",
-        "reviewer": "claude",
+        "commit": "09843ed",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
@@ -128,7 +128,7 @@
           "app/src/main/java/dev/halcamera/ui/DeviceIdentity.kt": "8c47816b55dfcc25b126b2eccbdc88d6daf68d03",
           "app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt": "e826b3098eb1fea13fe82174eff49e33b0b28f71",
           "app/src/main/java/dev/halcamera/ui/EvRuler.kt": "174c4938d6d4207956c3d3920a66c92ac3f610b2",
-          "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "3c7887c571a36b9c480243dec5d78153b4e11281",
+          "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "2be9890cf1d47dc449b777e8eebe578a9ef08b30",
           "app/src/main/java/dev/halcamera/ui/FocusRing.kt": "a12586e98c1f540f968d5f748761a9d262527116",
           "app/src/main/java/dev/halcamera/ui/GalleryCount.kt": "65bfeba9b7405a3e95d0a46a8cffe7f187125231",
           "app/src/main/java/dev/halcamera/ui/GalleryImageView.kt": "faafafabf3f34a4928da4fba3e2f31ec9972bfd4",
@@ -241,11 +241,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "af2dfefb6322434f",
+        "codeHash": "782662ccf6c7868b",
         "modelHash": "f60a72f4bdcb2f2c",
         "at": "2026-09-27",
-        "commit": "4163ccc",
-        "reviewer": "claude",
+        "commit": "09843ed",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
@@ -363,7 +363,7 @@
           "app/src/main/java/dev/halcamera/ui/DeviceIdentity.kt": "8c47816b55dfcc25b126b2eccbdc88d6daf68d03",
           "app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt": "e826b3098eb1fea13fe82174eff49e33b0b28f71",
           "app/src/main/java/dev/halcamera/ui/EvRuler.kt": "174c4938d6d4207956c3d3920a66c92ac3f610b2",
-          "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "3c7887c571a36b9c480243dec5d78153b4e11281",
+          "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "2be9890cf1d47dc449b777e8eebe578a9ef08b30",
           "app/src/main/java/dev/halcamera/ui/FocusRing.kt": "a12586e98c1f540f968d5f748761a9d262527116",
           "app/src/main/java/dev/halcamera/ui/GalleryCount.kt": "65bfeba9b7405a3e95d0a46a8cffe7f187125231",
           "app/src/main/java/dev/halcamera/ui/GalleryImageView.kt": "faafafabf3f34a4928da4fba3e2f31ec9972bfd4",
@@ -490,11 +490,11 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "91accba2e4b6cea5",
+        "codeHash": "9464a1a3f8ea1f9f",
         "modelHash": "3431db3a2eee8c91",
         "at": "2026-09-27",
-        "commit": "4163ccc",
-        "reviewer": "claude",
+        "commit": "09843ed",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
@@ -612,7 +612,7 @@
           "app/src/main/java/dev/halcamera/ui/DeviceIdentity.kt": "8c47816b55dfcc25b126b2eccbdc88d6daf68d03",
           "app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt": "e826b3098eb1fea13fe82174eff49e33b0b28f71",
           "app/src/main/java/dev/halcamera/ui/EvRuler.kt": "174c4938d6d4207956c3d3920a66c92ac3f610b2",
-          "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "3c7887c571a36b9c480243dec5d78153b4e11281",
+          "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "2be9890cf1d47dc449b777e8eebe578a9ef08b30",
           "app/src/main/java/dev/halcamera/ui/FocusRing.kt": "a12586e98c1f540f968d5f748761a9d262527116",
           "app/src/main/java/dev/halcamera/ui/GalleryCount.kt": "65bfeba9b7405a3e95d0a46a8cffe7f187125231",
           "app/src/main/java/dev/halcamera/ui/GalleryImageView.kt": "faafafabf3f34a4928da4fba3e2f31ec9972bfd4",
@@ -641,11 +641,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "91accba2e4b6cea5",
+        "codeHash": "9464a1a3f8ea1f9f",
         "modelHash": "a6282f1af3445d14",
         "at": "2026-09-27",
-        "commit": "4163ccc",
-        "reviewer": "claude",
+        "commit": "09843ed",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
@@ -763,7 +763,7 @@
           "app/src/main/java/dev/halcamera/ui/DeviceIdentity.kt": "8c47816b55dfcc25b126b2eccbdc88d6daf68d03",
           "app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt": "e826b3098eb1fea13fe82174eff49e33b0b28f71",
           "app/src/main/java/dev/halcamera/ui/EvRuler.kt": "174c4938d6d4207956c3d3920a66c92ac3f610b2",
-          "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "3c7887c571a36b9c480243dec5d78153b4e11281",
+          "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "2be9890cf1d47dc449b777e8eebe578a9ef08b30",
           "app/src/main/java/dev/halcamera/ui/FocusRing.kt": "a12586e98c1f540f968d5f748761a9d262527116",
           "app/src/main/java/dev/halcamera/ui/GalleryCount.kt": "65bfeba9b7405a3e95d0a46a8cffe7f187125231",
           "app/src/main/java/dev/halcamera/ui/GalleryImageView.kt": "faafafabf3f34a4928da4fba3e2f31ec9972bfd4",
@@ -826,13 +826,13 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "391d4ad258878ab2",
+        "codeHash": "4c7cba834c3df17c",
         "modelHash": "1be8e0e862e701f9",
         "at": "2026-09-27",
-        "commit": "2ede835",
+        "commit": "09843ed",
         "reviewer": "Codex",
         "files": {
-          "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "3c7887c571a36b9c480243dec5d78153b4e11281"
+          "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "2be9890cf1d47dc449b777e8eebe578a9ef08b30"
         }
       }
     }
