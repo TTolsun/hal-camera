@@ -1,12 +1,7 @@
 package dev.halcamera.camera
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.ImageFormat
-import android.graphics.Matrix
-import android.graphics.Rect
-import android.graphics.YuvImage
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
@@ -19,7 +14,6 @@ import android.os.Handler
 import android.view.Surface
 import android.widget.Toast
 import dev.halcamera.telemetry.Telemetry
-import java.io.ByteArrayOutputStream
 import java.util.concurrent.Executor
 
 /**
@@ -62,7 +56,6 @@ internal class Camera2StillCapture(
         fun fail(e: Exception)
     }
 
-    private class YuvFrame(val bytes: ByteArray, val width: Int, val height: Int)
     private class Photo(val name: String, val rotation: Int, val requestId: String?, val done: ((Result<PhotoResult>) -> Unit)?) {
         val pair = StillPair<YuvFrame, ByteArray>()
         val delivered = java.util.concurrent.atomic.AtomicBoolean(false)
@@ -225,22 +218,7 @@ internal class Camera2StillCapture(
         val (yuvFrame, jpegBytes) = pending.pair.complete() ?: return
         photo = null // Keep inFlight until the pair has been written.
         mediaIo.execute {
-            val result = runCatching {
-                val stream = ByteArrayOutputStream()
-                check(YuvImage(yuvFrame.bytes, ImageFormat.NV21, yuvFrame.width, yuvFrame.height, null)
-                    .compressToJpeg(Rect(0, 0, yuvFrame.width, yuvFrame.height), 95, stream))
-                var converted = stream.toByteArray()
-                if (pending.rotation != 0) {
-                    val bitmap = BitmapFactory.decodeByteArray(converted, 0, converted.size) ?: error("Cannot decode YUV JPEG")
-                    val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height,
-                        Matrix().apply { postRotate(pending.rotation.toFloat()) }, true)
-                    try {
-                        stream.reset(); check(rotated.compress(Bitmap.CompressFormat.JPEG, 95, stream))
-                        converted = stream.toByteArray()
-                    } finally { if (rotated !== bitmap) rotated.recycle(); bitmap.recycle() }
-                }
-                library.savePair(pending.name, converted, jpegBytes)
-            }
+            val result = runCatching { library.savePair(pending.name, encodeYuvStill(yuvFrame, pending.rotation), jpegBytes) }
             result.onSuccess { uris ->
                 telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "uris" to uris.map { it.toString() }))
             }

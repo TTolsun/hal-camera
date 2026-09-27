@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
     private val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
     private val liveCli by lazy {
         LiveController(cli, object : LiveController.Driver {
-            override fun busy() = recordingVideo || stoppingRecording || pendingMediaAction != null || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true
+            override fun busy() = recordingVideo || stoppingRecording || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true
             override fun prepare(camera: String) {
                 showCallbacks(false)
                 cameraId = camera; engineName = "Camera2"; paused = false; zoomRatio = 1f
@@ -49,13 +49,13 @@ class MainActivity : ComponentActivity() {
             }
             override fun capture(id: String, done: (Result<PhotoResult>) -> Unit) {
                 val camera = engine as? MediaCapture
-                if (camera == null) done(Result.failure(IllegalStateException("Media capture unavailable; switch to Camera2"))) else camera.capturePhoto(id, done)
+                if (camera == null) done(Result.failure(IllegalStateException("Media capture unavailable; camera not ready"))) else camera.capturePhoto(id, done)
                 updateMediaControls()
             }
             override fun record(audio: Boolean, started: () -> Unit, done: (Result<android.net.Uri>) -> Unit) {
                 videoMode = true
                 val camera = engine as? MediaCapture
-                if (camera == null) done(Result.failure(IllegalStateException("Media capture unavailable; switch to Camera2")))
+                if (camera == null) done(Result.failure(IllegalStateException("Media capture unavailable; camera not ready")))
                 else camera.startRecording(audio, started, done)
                 updateMediaControls()
             }
@@ -165,7 +165,6 @@ class MainActivity : ComponentActivity() {
     private var recordingVideo = false
     private var stoppingRecording = false
     private var recordingStartedAt = 0L
-    private var pendingMediaAction: (() -> Unit)? = null
     private var pendingPermissionAction: (() -> Unit)? = null
     private val mediaPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
         val action = pendingPermissionAction.also { pendingPermissionAction = null }
@@ -245,7 +244,6 @@ class MainActivity : ComponentActivity() {
         zoomControl.collapse(animate = false)
         recentMedia.stop()
         main.removeCallbacks(clearNotice); savedNoticeShown = false
-        pendingMediaAction = null
         pendingPermissionAction = null
         resumed = false; main.removeCallbacks(tick)
         liveIndicator.bind(false)
@@ -291,6 +289,21 @@ class MainActivity : ComponentActivity() {
         setStatus("$engineName · ${CameraLabel.short(cameraId)} 연결 중…", false)
         (previewHost.getChildAt(0) as? PreviewView)?.previewStreamState?.removeObservers(this)
         previewHost.removeAllViews()
+        val previewReady = { if (thisSession == sessionId && resumed && !closing) liveCli.previewReady() }
+        val recordingState = { recording: Boolean ->
+            if (thisSession == sessionId) {
+                recordingVideo = recording
+                if (!recording) stoppingRecording = false
+                if (recording) {
+                    recordingStartedAt = SystemClock.elapsedRealtime()
+                    recordingTime.text = "● REC  00:00"
+                }
+                updateMediaControls()
+                window.apply { if (recording || ready) addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+            }
+        }
+        val notice = { text: String -> if (thisSession == sessionId && resumed && !closing) showNotice(text) }
+        val status = { text: String, ok: Boolean -> if (thisSession == sessionId && resumed && !closing) setStatus(text,ok) }
         engine = if (engineName == "CameraX") {
             val view = PreviewView(this).apply { implementationMode = PreviewView.ImplementationMode.COMPATIBLE; scaleType = PreviewView.ScaleType.FILL_CENTER }
             previewHost.addView(view, FrameLayout.LayoutParams(-1,-1))
@@ -300,32 +313,13 @@ class MainActivity : ComponentActivity() {
                     if (!cameraXStreaming) liveIndicator.bind(false)
                 }
             }
-            CameraXEngine(this, this, view, cameraId, sessionId, telemetry, cameraWorker) { text, ok ->
-                if (thisSession == sessionId && resumed && !closing) setStatus(text,ok)
-            }
+            CameraXEngine(this, this, view, cameraId, sessionId, telemetry, cameraWorker, previewReady, recordingState, notice, status)
         } else {
             val view = TextureView(this)
             previewHost.addView(view, FrameLayout.LayoutParams(-1,-1))
-            Camera2Engine(this, view, cameraId, sessionId, telemetry, previewReady = {
-                if (thisSession == sessionId && resumed && !closing) liveCli.previewReady()
-            }, previewFrame = {
+            Camera2Engine(this, view, cameraId, sessionId, telemetry, previewReady = previewReady, previewFrame = {
                 if (thisSession == sessionId && resumed && !closing && !paused) lastPreviewFrameNs = nowNs()
-            }, recordingState = { recording ->
-                if (thisSession == sessionId) {
-                    recordingVideo = recording
-                    if (!recording) stoppingRecording = false
-                    if (recording) {
-                        recordingStartedAt = SystemClock.elapsedRealtime()
-                        recordingTime.text = "● REC  00:00"
-                    }
-                    updateMediaControls()
-                    window.apply { if (recording || ready) addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
-                }
-            }, notice = { text ->
-                if (thisSession == sessionId && resumed && !closing) showNotice(text)
-            }) { text, ok ->
-                if (thisSession == sessionId && resumed && !closing) setStatus(text,ok)
-            }
+            }, recordingState = recordingState, notice = notice, status = status)
         }
         previewHost.addView(FocusRing(this, { engine as? TouchMetering }) { controlBar.setAeLock(it) }, FrameLayout.LayoutParams(-1,-1))
         try { engine?.start() } catch (e: Exception) { setStatus("시작 실패: ${e.message}",false) }
@@ -358,7 +352,6 @@ class MainActivity : ComponentActivity() {
             // A pause or a return from another screen reopens the same camera, so its chips still apply.
             if (controlBar.controls != LiveControls()) (engine as? LiveTuning)?.setControls(controlBar.controls, restore = true)
         }
-        if (ok && engine is MediaCapture) pendingMediaAction?.also { pendingMediaAction = null; main.post { if (resumed && ready) it() } }
     }
 
     @Suppress("DEPRECATION")
@@ -368,14 +361,6 @@ class MainActivity : ComponentActivity() {
         if (video) required += Manifest.permission.RECORD_AUDIO
         val missing = required.filter { ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED }
         if (missing.isEmpty()) action() else { pendingPermissionAction = action; mediaPermissions.launch(missing.toTypedArray()) }
-    }
-
-    private fun runMediaCaptureAction(action: () -> Unit) {
-        if (engine is MediaCapture) action() else {
-            pendingMediaAction = action
-            toast("촬영과 녹화를 위해 Camera2로 전환합니다")
-            chooseEngine("Camera2")
-        }
     }
     private fun buildUi() {
         val root=FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
@@ -403,7 +388,7 @@ class MainActivity : ComponentActivity() {
         cameraEndpoints=try { CameraEndpointResolver(manager).resolve().filter { it.physicalCameraId==null }.associateBy { it.logicalCameraId } } catch (_:Exception) { emptyMap() }
         if (cameraId !in cameraIds) cameraId=cameraIds.firstOrNull().orEmpty()
         engineButton=button("") {
-            pendingMediaAction=null; pendingPermissionAction=null
+            pendingPermissionAction=null
             chooseEngine(if(engineName=="Camera2") "CameraX" else "Camera2")
         }
         // Standalone tools stay in the menu; Mark remains on the live preview.
@@ -432,10 +417,6 @@ class MainActivity : ComponentActivity() {
         // Giving it a third of the row squeezed the two trailing labels and wrapped "Callback".
         controlBar=LiveControlBar(this,object : LiveControlBar.Host {
             override fun controlsChanged(controls: LiveControls) { (engine as? LiveTuning)?.setControls(controls) }
-            override fun needsCamera2():Boolean {
-                if(recordingVideo) { toast("촬영 설정을 바꾸려면 녹화를 마쳐 주세요"); return false }
-                toast("촬영 설정을 위해 Camera2로 전환합니다"); chooseEngine("Camera2"); return true
-            }
             override fun notice(text: String) = toast(text)
         })
         controls.gravity=Gravity.TOP
@@ -491,8 +472,8 @@ class MainActivity : ComponentActivity() {
                 if (cli.active != null) return@setOnClickListener
                 if(recordingVideo) stopRecording()
                 else if(videoMode) {
-                    withMediaPermissions(true) { runMediaCaptureAction { (engine as? MediaCapture)?.startRecording() } }
-                } else withMediaPermissions(false) { runMediaCaptureAction { engine?.capture() } }
+                    withMediaPermissions(true) { (engine as? MediaCapture)?.startRecording() }
+                } else withMediaPermissions(false) { engine?.capture() }
             }
         }
         captureRow.addView(mediaButton,LinearLayout.LayoutParams(dp(72),dp(72)).apply { marginStart=dp(12); marginEnd=dp(12) })
@@ -564,7 +545,7 @@ class MainActivity : ComponentActivity() {
                     4 -> {
                         if (cli.active != null || recordingVideo) return@setItems
                         paused=!paused
-                        if(paused) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("user_paused")?.let(incidents::export) }
+                        if(paused) { pendingPermissionAction=null; recorder.finish("user_paused")?.let(incidents::export) }
                         restartCamera()
                     }
                 }
@@ -581,7 +562,7 @@ class MainActivity : ComponentActivity() {
         selectChoice(anchor,cameraIds.map(::cameraLabel),cameraIds.indexOf(cameraId)) { index ->
             val chosen=cameraIds[index]
             if (cameraId!=chosen) {
-                pendingMediaAction=null; pendingPermissionAction=null
+                pendingPermissionAction=null
                 recorder.finish("camera_changed")?.let(incidents::export)
                 cameraId=chosen; zoomRatio=1f
                 resetControls(); updateCameraChoices(); restartCamera()
@@ -591,7 +572,7 @@ class MainActivity : ComponentActivity() {
     private fun selectMode(video: Boolean) {
         if (cli.active != null) return
         if (recordingVideo || !ready || videoMode==video) return
-        pendingMediaAction=null; pendingPermissionAction=null
+        pendingPermissionAction=null
         videoMode=video
         updateMediaControls()
     }
@@ -616,7 +597,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun updateMediaControls() {
         if (!resumed || paused || closing || engine == null) liveIndicator.bind(false)
-        cli.setUiBusy(liveCli, recordingVideo || stoppingRecording || pendingMediaAction != null || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true)
+        cli.setUiBusy(liveCli, recordingVideo || stoppingRecording || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true)
         listOf(photoModeButton,videoModeButton).forEachIndexed { index, button ->
             val selected=(index==1)==videoMode
             button.isSelected=selected
@@ -640,7 +621,7 @@ class MainActivity : ComponentActivity() {
         // Zoom stays live while recording (#174): the engine changes the recording request in place.
         // The engine reports "REC" as not-ready, so a running recording counts as ready here, as for the shutter.
         zoomControl.isEnabled=(ready || recordingVideo) && !stoppingRecording
-        controlBar.bind(engine is LiveTuning || (engine==null && engineName=="Camera2"),videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null)
+        controlBar.bind(videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null)
         galleryButton.isEnabled=!recordingVideo
         toolsButton.isEnabled=!recordingVideo && !stoppingRecording && !closing
         if (cli.active != null) {
@@ -659,7 +640,7 @@ class MainActivity : ComponentActivity() {
     private fun resetControls()=controlBar.reset(if(cameraId.isEmpty()) LiveControlSupport.NONE else liveControlSupport(manager,cameraId))
     private fun showNotes() {
         AlertDialog.Builder(this).setTitle("측정 안내")
-            .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• 앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 사진·동영상 모드를 선택한 뒤 실행 버튼을 누르면 갤러리에 저장합니다. 사진은 YUV·JPEG 두 장이며 동영상에는 소리가 포함됩니다. 녹화 중에도 줌은 바꿀 수 있지만 엔진·카메라·모드는 바꿀 수 없습니다.\n\n• 위쪽의 플래시·AF·AE·EV 버튼과 줌 레일은 요청값입니다. 아래 두 줄은 capture result에서 읽으며, 화면에 이미 보이는 값은 생략합니다. 둘째 줄에는 AE·AF 상태 뒤에 플래시 상태(플래시를 켰을 때), 요청과 다른 EV·줌, 물리 렌즈 순서로 폭이 허락하는 만큼만 붙습니다. 렌즈 위치 같은 나머지 값은 ZIP에 있습니다. AE 잠금 중에도 EV는 적용됩니다. 버튼은 Camera2에서만 동작하고 카메라나 엔진을 바꾸면 초기화됩니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
+            .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• 앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 사진·동영상 모드를 선택한 뒤 실행 버튼을 누르면 갤러리에 저장합니다. 사진은 YUV·JPEG 두 장이며 동영상에는 소리가 포함됩니다. 녹화 중에도 줌은 바꿀 수 있지만 엔진·카메라·모드는 바꿀 수 없습니다.\n\n• 위쪽의 플래시·AF·AE·EV 버튼과 줌 레일은 요청값입니다. 아래 두 줄은 capture result에서 읽으며, 화면에 이미 보이는 값은 생략합니다. 둘째 줄에는 AE·AF 상태 뒤에 플래시 상태(플래시를 켰을 때), 요청과 다른 EV·줌, 물리 렌즈 순서로 폭이 허락하는 만큼만 붙습니다. 렌즈 위치 같은 나머지 값은 ZIP에 있습니다. AE 잠금 중에도 EV는 적용됩니다. 버튼은 Camera2와 CameraX에서 모두 동작하고 카메라나 엔진을 바꾸면 초기화됩니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
             .setPositiveButton("확인",null).show()
     }
     private fun showToolsMenu(anchor: View) {
