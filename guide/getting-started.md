@@ -67,8 +67,8 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `도구 → 설
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.14.0` |
-| `versionCode` | `513` |
+| `versionName` | `0.15.0` |
+| `versionCode` | `543` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |
