@@ -84,6 +84,97 @@ class LiveControlsTest {
         assertFalse(PrecaptureWatch().onResult(1)) // SEARCHING before any PRECAPTURE: keep waiting
     }
 
+    private val searching = 1
+    private val converged = AeRelock.AE_STATE_CONVERGED
+    private val locked = AeRelock.AE_STATE_LOCKED
+    private val preview = AeRelock.Exposure(timeNs = 41_620_000, iso = 4274) // S25+ dark scene, #184
+    private val recording = AeRelock.Exposure(timeNs = 33_330_000, iso = 2990)
+
+    @Test
+    fun `a rebuilt session runs unlocked until AE settles, then relocks and compares`() {
+        val relock = AeRelock()
+        relock.lockChanged(true)
+        assertEquals(AeRelock.Step.None, relock.onResult(locked, preview)) // held exposure from the old session
+        relock.sessionRebuilt(locked = true)
+        assertTrue(relock.waiting)
+        assertEquals(AeRelock.Step.None, relock.onResult(searching, recording))
+        assertEquals(AeRelock.Step.Relock, relock.onResult(converged, recording))
+        assertFalse(relock.waiting)
+        assertEquals(AeRelock.Step.None, relock.onResult(converged, recording)) // results still in flight
+        val step = relock.onResult(locked, recording) as AeRelock.Step.Relocked
+        assertEquals(preview, step.before)
+        assertEquals(-0.83, step.deltaEv!!, 0.01)
+        assertEquals(AeRelock.Step.None, relock.onResult(locked, recording)) // compared once per rebuild
+    }
+
+    @Test
+    fun `a session rebuilt without the lock never waits`() {
+        val relock = AeRelock()
+        relock.sessionRebuilt(locked = false)
+        assertFalse(relock.waiting)
+        assertEquals(AeRelock.Step.None, relock.onResult(converged, preview))
+    }
+
+    @Test
+    fun `the timeout relocks an AE that never settles, and only while waiting`() {
+        val relock = AeRelock()
+        assertFalse(relock.timedOut())
+        relock.sessionRebuilt(locked = true)
+        assertTrue(relock.timedOut())
+        assertFalse(relock.waiting)
+        assertFalse(relock.timedOut())
+        // No exposure held before: the relock is reported without a difference.
+        assertEquals(AeRelock.Step.Relocked(null, recording, null), relock.onResult(locked, recording))
+    }
+
+    @Test
+    fun `a device without AE state relocks at once`() {
+        val relock = AeRelock()
+        relock.sessionRebuilt(locked = true)
+        assertEquals(AeRelock.Step.Relock, relock.onResult(null, null))
+    }
+
+    @Test
+    fun `the user toggling the lock cancels a pending relock and forgets the held exposure when off`() {
+        val relock = AeRelock()
+        relock.lockChanged(true)
+        relock.onResult(locked, preview)
+        relock.sessionRebuilt(locked = true)
+        relock.lockChanged(false)
+        assertFalse(relock.waiting)
+        relock.lockChanged(true)
+        relock.sessionRebuilt(locked = true)
+        relock.onResult(converged, recording)
+        assertEquals(null, (relock.onResult(locked, recording) as AeRelock.Step.Relocked).before)
+    }
+
+    @Test
+    fun `EV steps while locked move the held exposure the next relock compares with`() {
+        val relock = AeRelock()
+        relock.lockChanged(true)
+        relock.onResult(locked, preview)
+        val brighter = preview.copy(iso = preview.iso * 2)
+        relock.onResult(locked, brighter)
+        relock.sessionRebuilt(locked = true)
+        relock.onResult(converged, brighter)
+        assertEquals(0.0, (relock.onResult(locked, brighter) as AeRelock.Step.Relocked).deltaEv!!, 1e-9)
+    }
+
+    @Test
+    fun `the relock notice names the difference only beyond a third of a stop`() {
+        assertEquals(null, LiveControlText.relockNotice(null))
+        assertEquals(null, LiveControlText.relockNotice(0.3))
+        assertEquals("노출을 다시 잠갔습니다 · 이전보다 0.8 EV 어둡습니다", LiveControlText.relockNotice(-0.83))
+        assertEquals("노출을 다시 잠갔습니다 · 이전보다 0.5 EV 밝습니다", LiveControlText.relockNotice(0.5))
+    }
+
+    @Test
+    fun `the relock AE state values are the Camera2 ones`() {
+        assertEquals(android.hardware.camera2.CaptureResult.CONTROL_AE_STATE_CONVERGED, AeRelock.AE_STATE_CONVERGED)
+        assertEquals(android.hardware.camera2.CaptureResult.CONTROL_AE_STATE_LOCKED, AeRelock.AE_STATE_LOCKED)
+        assertEquals(android.hardware.camera2.CaptureResult.CONTROL_AE_STATE_FLASH_REQUIRED, AeRelock.AE_STATE_FLASH_REQUIRED)
+    }
+
     @Test
     fun `a PRECAPTURE that arrives a frame late is still waited for`() {
         val late = PrecaptureWatch()

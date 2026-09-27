@@ -35,6 +35,8 @@ class Camera2Engine(
     private val previewReady: () -> Unit = {},
     private val previewFrame: () -> Unit = {},
     private val recordingState: (Boolean) -> Unit = {},
+    /** A short notice that leaves the camera state alone, such as an AE relock that changed the exposure. */
+    private val notice: (String) -> Unit = {},
     private val status: (String, Boolean) -> Unit
 ) : CameraEngine, MediaCapture, LiveTuning {
     private val thread = HandlerThread("CD.Camera2").apply { start() }
@@ -74,6 +76,10 @@ class Camera2Engine(
     @Volatile private var controls = LiveControls()
     @Volatile private var requestedControls = LiveControls()
     private val controlsQueued = java.util.concurrent.atomic.AtomicBoolean(false)
+    /** Takes the AE lock again on a rebuilt session once AE has settled (#184). Camera thread only. */
+    private val aeRelock = AeRelock()
+    /** Bumped per rebuilt session, so a relock timeout from an older session does nothing. */
+    private var relockGeneration = 0
     /** The LIVE recorder's surface while a recording session is up; repeating requests then use the record template. */
     private var recorderSurface: Surface? = null
     /** Called with every LIVE repeating result; the flash precapture waits on it. Camera thread only. */
@@ -88,6 +94,7 @@ class Camera2Engine(
         override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
             callback.onCaptureCompleted(session, request, result)
             resultHook?.invoke(result)
+            if (spec == null) relockStep(result)
         }
         override fun onCaptureFailed(session: CameraCaptureSession, request: CaptureRequest, failure: CaptureFailure) =
             callback.onCaptureFailed(session, request, failure)
@@ -183,6 +190,7 @@ class Camera2Engine(
                     if (!active) { session.close(); return }
                     captureSession = session
                     try {
+                        startRelock()
                         telemetry.event(sessionId, "repeating_submit", mapOf("zoomRequested" to zoomRatio))
                         session.setRepeatingRequest(previewRequest(camera, chars), liveCallback, handler)
                         relockFocus()
@@ -206,7 +214,7 @@ class Camera2Engine(
             set(CaptureRequest.CONTROL_AF_MODE, afMode(chars))
             spec?.fpsRange?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, it) }
             applyZoom(this, chars)
-            if (spec == null) applyLiveControls(controls)
+            if (spec == null) applyLiveControls(requestControls())
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
             aeTrigger?.let { set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, it) }
             setTag("preview")
@@ -220,7 +228,7 @@ class Camera2Engine(
             set(CaptureRequest.CONTROL_AF_MODE, if (CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO in modes)
                 CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO else CaptureRequest.CONTROL_AF_MODE_OFF)
             applyZoom(this, c)
-            applyLiveControls(controls)
+            applyLiveControls(requestControls())
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
             setTag("recording")
         }.build()
@@ -259,6 +267,37 @@ class Camera2Engine(
     }
     /** A new session (recording start or stop) may not keep the old AF state, so a held lock is taken again. */
     private fun relockFocus() { if (spec == null && controls.afLock) sendAfTrigger(true) }
+    /** [controls] as the requests carry them: AE stays unlocked while [aeRelock] waits for a rebuilt session. */
+    private fun requestControls(): LiveControls = if (aeRelock.waiting) controls.copy(aeLock = false) else controls
+    /**
+     * Called on every new LIVE session before its first request. With the lock on, the session starts unlocked and
+     * [relockStep] locks it once AE has settled; a timeout locks it anyway so a scene AE never settles on still
+     * ends up locked.
+     */
+    private fun startRelock() {
+        if (spec != null) return
+        aeRelock.sessionRebuilt(controls.aeLock)
+        val generation = ++relockGeneration
+        if (!aeRelock.waiting) return
+        telemetry.event(sessionId, "ae_relock_wait", mapOf("recording" to (recorderSurface != null)))
+        handler.postDelayed({
+            if (generation == relockGeneration && aeRelock.timedOut()) submitRepeating("ae_relock", mapOf("reason" to "timeout"))
+        }, AeRelock.TIMEOUT_MS)
+    }
+    private fun relockStep(result: TotalCaptureResult) {
+        val state = result[CaptureResult.CONTROL_AE_STATE]
+        val time = result[CaptureResult.SENSOR_EXPOSURE_TIME]; val iso = result[CaptureResult.SENSOR_SENSITIVITY]
+        when (val step = aeRelock.onResult(state, if (time != null && iso != null) AeRelock.Exposure(time, iso) else null)) {
+            AeRelock.Step.None -> Unit
+            AeRelock.Step.Relock -> submitRepeating("ae_relock", mapOf("reason" to "settled", "aeState" to state))
+            is AeRelock.Step.Relocked -> {
+                telemetry.event(sessionId, "ae_relocked", mapOf(
+                    "beforeExposureNs" to step.before?.timeNs, "beforeIso" to step.before?.iso,
+                    "exposureNs" to step.after.timeNs, "iso" to step.after.iso, "deltaEv" to step.deltaEv))
+                LiveControlText.relockNotice(step.deltaEv)?.let { text -> main.post { if (active) notice(text) } }
+            }
+        }
+    }
     /**
      * Coalesced like [setZoom]: dragging the EV dial across 0.1 EV steps calls this once per step, and every call
      * that lands before the queued one runs only replaces [requestedControls]. An AF lock toggled on and off within
@@ -272,6 +311,7 @@ class Camera2Engine(
             val old = controls
             val now = requestedControls
             controls = now
+            if (old.aeLock != now.aeLock) aeRelock.lockChanged(now.aeLock)
             submitRepeating("controls_set", mapOf("evIndex" to now.evIndex, "aeLock" to now.aeLock, "afLock" to now.afLock, "flash" to now.flash.name))
             if (old.afLock != now.afLock) sendAfTrigger(now.afLock)
         }
@@ -421,7 +461,7 @@ class Camera2Engine(
                 set(CaptureRequest.CONTROL_AF_MODE, afMode(c))
                 applyZoom(this, c)
                 // Same AE mode, EV, lock and torch as the preview, so the still is exposed as the preview showed it.
-                if (spec == null) applyLiveControls(controls)
+                if (spec == null) applyLiveControls(requestControls())
                 setTag(tag)
             }.build()
             photoInFlight = true
@@ -553,6 +593,7 @@ class Camera2Engine(
                         captureSession = session
                         try {
                             recorderSurface = recorder.surface
+                            startRelock()
                             session.setRepeatingRequest(liveRecordRequest(camera, c, recorder.surface), liveCallback, handler)
                             relockFocus()
                             recorder.start(); videoStarted = true

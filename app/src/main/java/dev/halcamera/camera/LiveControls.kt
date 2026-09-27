@@ -80,6 +80,105 @@ object LiveControlText {
         val sign = if (tenths > 0) "+" else "−"
         return "EV $sign${String.format(Locale.US, "%.1f", kotlin.math.abs(tenths) / 10.0)}"
     }
+
+    /** The notice after [AeRelock] locked a rebuilt session again; null while the difference is within tolerance. */
+    fun relockNotice(deltaEv: Double?): String? {
+        if (deltaEv == null || kotlin.math.abs(deltaEv) <= AeRelock.TOLERANCE_EV) return null
+        val amount = String.format(Locale.US, "%.1f", kotlin.math.abs(deltaEv))
+        return "노출을 다시 잠갔습니다 · 이전보다 $amount EV ${if (deltaEv > 0) "밝습니다" else "어둡습니다"}"
+    }
+}
+
+/**
+ * AE lock across a rebuilt capture session (#184). CONTROL_AE_LOCK holds whatever exposure AE has now, and
+ * Camera2 has no key that carries a locked exposure into a new session. A lock on a new session's first request
+ * therefore froze that session's initial, unconverged exposure: on the S25+ a dark scene went from ISO 4274 to
+ * ISO 2990 when a recording started.
+ *
+ * So a rebuilt session starts unlocked ([waiting]), AE meters the same scene again, and the lock goes back on at
+ * the first settled result, or when the caller's timeout gives up on AE settling. The exposure the lock held
+ * (exposure time × ISO) is remembered from LOCKED results, and the first LOCKED result after the relock is compared
+ * with it. The two may still differ: the recording frame rate caps the exposure time at the frame duration, and
+ * AE may meter a new stream set differently. [LiveControlText.relockNotice] tells the user when it does.
+ *
+ * Carrying the old values over with AE off (SENSOR_EXPOSURE_TIME and SENSOR_SENSITIVITY) would keep the exposure
+ * exactly, but needs the manual exposure path of #172 and would stop EV steps from working while locked.
+ */
+class AeRelock {
+    data class Exposure(val timeNs: Long, val iso: Int)
+
+    sealed interface Step {
+        /** Nothing to send. */
+        data object None : Step
+        /** AE settled on the rebuilt session: send the repeating request again with the lock on. */
+        data object Relock : Step
+        /** The relock took effect. [deltaEv] is log2(after / before), null without an exposure from before. */
+        data class Relocked(val before: Exposure?, val after: Exposure, val deltaEv: Double?) : Step
+    }
+
+    private var held: Exposure? = null
+    private var comparing = false
+
+    /** True while a rebuilt session must run with AE unlocked; the requests then leave CONTROL_AE_LOCK off. */
+    var waiting = false
+        private set
+
+    /** A new capture session was configured. With the lock on it runs unlocked until [onResult] relocks it. */
+    fun sessionRebuilt(locked: Boolean) {
+        waiting = locked
+        comparing = false
+    }
+
+    /** The user turned the lock on or off. On locks at once, at the exposure the user sees, so nothing waits. */
+    fun lockChanged(locked: Boolean) {
+        waiting = false
+        comparing = false
+        if (!locked) held = null
+    }
+
+    /** Feed every LIVE repeating result in frame order. */
+    fun onResult(aeState: Int?, exposure: Exposure?): Step {
+        if (waiting) {
+            val settled = aeState == null || aeState == AE_STATE_CONVERGED || aeState == AE_STATE_FLASH_REQUIRED || aeState == AE_STATE_LOCKED
+            return if (settled) { relock(); Step.Relock } else Step.None
+        }
+        // A device without AE state or without exposure values cannot be compared; the lock itself still applies.
+        if (aeState != AE_STATE_LOCKED || exposure == null) return Step.None
+        val before = held
+        held = exposure
+        if (!comparing) return Step.None
+        comparing = false
+        return Step.Relocked(before, exposure, before?.let { deltaEv(it, exposure) })
+    }
+
+    /** The timeout ran out while AE had not settled. Returns whether the caller should send the lock anyway. */
+    fun timedOut(): Boolean {
+        if (!waiting) return false
+        relock()
+        return true
+    }
+
+    private fun relock() {
+        waiting = false
+        comparing = true
+    }
+
+    companion object {
+        /** One third of a stop: the usual EV step, below which two exposures look the same. */
+        const val TOLERANCE_EV = 1.0 / 3
+        /** Dark scenes take AE a second or more; past this the lock goes on at whatever AE has. */
+        const val TIMEOUT_MS = 2000L
+        // CaptureResult.CONTROL_AE_STATE_* values, as in PrecaptureWatch.
+        const val AE_STATE_CONVERGED = 2
+        const val AE_STATE_LOCKED = 3
+        const val AE_STATE_FLASH_REQUIRED = 4
+
+        fun deltaEv(before: Exposure, after: Exposure): Double? {
+            val a = before.timeNs.toDouble() * before.iso
+            val b = after.timeNs.toDouble() * after.iso
+            return if (a > 0 && b > 0) kotlin.math.ln(b / a) / kotlin.math.ln(2.0) else null
+        }
+    }
 }
 
 /**

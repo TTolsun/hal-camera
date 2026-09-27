@@ -153,7 +153,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var controlBar: LiveControlBar
     private lateinit var cameraNotice: TextView
     private var savedNoticeShown = false
-    private val clearNotice = Runnable { savedNoticeShown = false; if (ready) cameraNotice.visibility = View.GONE }
+    // A recording keeps its "REC" report hidden (setStatus), so a notice shown over it is cleared as well.
+    private val clearNotice = Runnable { savedNoticeShown = false; if (ready || recordingVideo) cameraNotice.visibility = View.GONE }
     private lateinit var recentMedia: RecentMediaThumbnail
     private lateinit var liveIndicator: LiveIndicator
     private var lastPreviewFrameNs = 0L
@@ -358,12 +359,25 @@ class MainActivity : ComponentActivity() {
                     updateMediaControls()
                     window.apply { if (recording || ready) addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
                 }
+            }, notice = { text ->
+                if (thisSession == sessionId && resumed && !closing) showNotice(text)
             }) { text, ok ->
                 if (thisSession == sessionId && resumed && !closing) setStatus(text,ok)
             }
         }
         try { engine?.start() } catch (e: Exception) { setStatus("시작 실패: ${e.message}",false) }
         updateCameraChoices()
+    }
+    /**
+     * An engine notice that leaves [ready] alone and shows even while recording, for 2.5 s like a save notice, which
+     * also keeps the routine "· LIVE" report from hiding it. The AE relock after a recording starts or stops uses it.
+     */
+    private fun showNotice(text: String) {
+        main.removeCallbacks(clearNotice)
+        savedNoticeShown = true
+        cameraNotice.text = text
+        cameraNotice.visibility = View.VISIBLE
+        main.postDelayed(clearNotice, 2500)
     }
     private fun setStatus(text: String, ok: Boolean) {
         // A save notice stays for its 2.5 s even when the engine's "· LIVE" report follows it. Stopping a recording
