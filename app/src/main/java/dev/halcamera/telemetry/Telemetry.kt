@@ -39,6 +39,7 @@ class Telemetry(val recorder: FlightRecorder) {
                         "evApplied" to result[CaptureResult.CONTROL_AE_EXPOSURE_COMPENSATION],
                         "flashState" to result[CaptureResult.FLASH_STATE],
                         "afRegions" to result[CaptureResult.CONTROL_AF_REGIONS]?.joinToString { it.rect.toShortString() },
+                        "aeRegions" to result[CaptureResult.CONTROL_AE_REGIONS]?.joinToString { it.rect.toShortString() },
                         // Public only on API 29+ and only for logical cameras; null means the lens is not known.
                         "physicalId" to if (android.os.Build.VERSION.SDK_INT >= 29) result[CaptureResult.LOGICAL_MULTI_CAMERA_ACTIVE_PHYSICAL_ID] else null,
                         "intervalMs" to stats.intervalMs, "resultFps" to stats.fps,

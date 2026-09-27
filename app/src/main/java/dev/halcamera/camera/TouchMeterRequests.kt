@@ -128,9 +128,11 @@ class Camera2TouchFocus(private val handler: Handler, private val main: Handler,
     }
 
     private fun end() {
+        val focused = target?.af != null
         drop()
         host.submitRepeating("touch_meter_end", emptyMap())
-        host.trigger("af_trigger", CaptureRequest.CONTROL_AF_TRIGGER_CANCEL, host.captureCallback)
+        // Only a tap that ran the AUTO scan has a lock to cancel; an AE-only tap left continuous AF alone.
+        if (focused) host.trigger("af_trigger", CaptureRequest.CONTROL_AF_TRIGGER_CANCEL, host.captureCallback)
     }
 
     private fun post(feedback: (TouchPhase) -> Unit, phase: TouchPhase) { main.post { if (host.live) feedback(phase) } }

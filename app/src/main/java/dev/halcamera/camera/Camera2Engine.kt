@@ -87,7 +87,7 @@ class Camera2Engine(
     private var resultHook: ((TotalCaptureResult) -> Unit)? = null
     /** Ends a precapture still waiting for AE, so closing the camera still answers the capture caller. */
     private var precaptureFinish: ((String) -> Unit)? = null
-    private var chars: CameraCharacteristics? = null
+    @Volatile private var chars: CameraCharacteristics? = null
     private val callback = telemetry.callback(sessionId) { active }
     private val liveCallback = object : CameraCaptureSession.CaptureCallback() {
         override fun onCaptureStarted(session: CameraCaptureSession, request: CaptureRequest, timestamp: Long, frameNumber: Long) =
