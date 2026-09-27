@@ -1,4 +1,4 @@
-MainActivity는 Live 런처입니다. CameraEngine을 선택하고 카메라 수명주기·권한·incident 내보내기·CPU 샘플링과 관측 수치를 관리합니다. BenchmarkActivity로 벤치마크를 시작합니다. v0.2 HealthMonitor와 소비자용 Home 진입 경로는 제거되었습니다.
+MainActivity는 Live 런처입니다. CameraEngine을 선택하고 카메라 수명주기·권한·모드와 버튼 상태를 관리합니다. 매 틱의 관측 수치와 CPU 샘플링은 LiveReadings(diagnostics-panel 요소)가, incident ZIP의 저장·목록·공유는 IncidentActions(incident-exporter 요소)가 맡습니다. BenchmarkActivity로 벤치마크를 시작합니다. v0.2 HealthMonitor와 소비자용 Home 진입 경로는 제거되었습니다.
 
 검은 프리뷰 배경과 하단 촬영 조작부는 삼성 카메라를 참고합니다. 상단에는 API 토글, 중앙의 촬영 제어 화살표, 도구·진단 버튼을 표시합니다. API 아래의 작은 원과 Live 글씨는 프리뷰가 동작할 때 함께 빨간색으로 깜빡이며 정지하면 회색으로 고정됩니다. Camera2는 TextureView 갱신, CameraX는 STREAMING 상태와 capture result 수신을 확인하며 1.5초 동안 새 프레임이 없으면 회색으로 바뀝니다. 시스템 애니메이션이 꺼져 있으면 동작 중에도 빨간색을 고정합니다. 하단에는 핵심 측정값, 줌, 갤러리·셔터·카메라 선택 행, 사진·동영상 모드를 배치하고 Mark 작업 행을 고정합니다. Mark 버튼과 작업 행 자체의 배경은 투명합니다. 상단과 하단에 은은한 그라데이션을 두며 촬영 조작부부터 Mark까지 하나의 그라데이션으로 이어집니다. Mark 글씨에는 그림자를 적용합니다. 아이콘은 24dp, 터치 영역은 48dp 이상이며 한국어 접근성 이름과 설명을 제공합니다. 디자인 규칙은 docs/design/APP-UI.md에서 관리합니다.
 

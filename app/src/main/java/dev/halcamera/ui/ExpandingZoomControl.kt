@@ -9,10 +9,14 @@ import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.InsetDrawable
 import android.graphics.drawable.RippleDrawable
 import android.os.Build
+import android.view.MotionEvent
+import android.view.View
 import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import android.view.animation.PathInterpolator
 import android.widget.Button
+import android.widget.FrameLayout
+import android.widget.HorizontalScrollView
 import androidx.core.view.ViewCompat
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -101,6 +105,26 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
     fun setTouchInProgress(inProgress: Boolean) {
         touching = inProgress
         if (touching) removeCallbacks(fold) else scheduleFold()
+    }
+
+    /**
+     * The horizontal scroller the rail sits in on the Live screen. It reports every finger down and up to
+     * [setTouchInProgress], also when the scroller takes the drag over, so the rail never folds under a finger.
+     */
+    fun viewport(): HorizontalScrollView = object : HorizontalScrollView(context) {
+        override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) setTouchInProgress(true)
+            val handled = super.dispatchTouchEvent(event)
+            if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL ||
+                (event.actionMasked == MotionEvent.ACTION_DOWN && !handled)) {
+                setTouchInProgress(false)
+            }
+            return handled
+        }
+    }.apply {
+        isHorizontalScrollBarEnabled = false
+        overScrollMode = View.OVER_SCROLL_NEVER
+        addView(this@ExpandingZoomControl, FrameLayout.LayoutParams(-2, dp(48)))
     }
 
     private fun animateTo(target: Float, animate: Boolean = true) {

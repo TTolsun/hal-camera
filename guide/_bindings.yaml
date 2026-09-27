@@ -122,9 +122,17 @@ sources:
       camera-engines/camera2-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+          - app/src/main/java/dev/halcamera/camera/PreviewTransform.kt
+          - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+      # Stills and LIVE recording moved out of Camera2Engine.kt (refactor after #192); each has its own element.
+      camera-engines/camera2-engine/still-capture:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt
           - app/src/main/java/dev/halcamera/camera/StillPair.kt
           - app/src/main/java/dev/halcamera/camera/YuvPacking.kt
-          - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+      camera-engines/camera2-engine/live-recorder:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt
       camera-engines/camerax-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
@@ -157,6 +165,7 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt
           - app/src/main/java/dev/halcamera/ui/CameraWidgets.kt
+          - app/src/main/java/dev/halcamera/ui/LiveReadings.kt
       # 상단 카메라 제어(플래시·AF/AE 잠금·EV)의 배치·다이얼과 요청값 모델. MainActivity·camera2-engine 입력 한도 때문에 따로 둡니다.
       screens/expert-screen/live-controls:
         evidence:
@@ -286,6 +295,7 @@ sources:
       telemetry/incident-exporter:
         evidence:
           - app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt
+          - app/src/main/java/dev/halcamera/ui/IncidentActions.kt
       persistence:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt
