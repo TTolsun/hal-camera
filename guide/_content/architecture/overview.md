@@ -24,7 +24,7 @@ verifications: []
 | 단계 | 담당 코드 | 책임 |
 | --- | --- | --- |
 | CLI 제어 | `CliProvider`, `CommandCoordinator`, `assets/halcam.sh` | ADB 명령을 프리뷰·사진·녹화·CTS 경로에 연결하고 요청 상태와 검증 가능한 결과 파일을 반환합니다. Python 도구는 선택 사항이며 벤치마크 실행은 CLI에서 제외합니다. |
-| 카메라 구동 | `CameraEngine`, `Camera2Engine`, `CameraXEngine` | 엔진 수명주기와 카메라 요청을 처리합니다. |
+| 카메라 구동 | `CameraEngine`, `Camera2Engine`, `CameraXEngine` | 엔진 수명주기와 카메라 요청을 처리합니다. 계약과 두 엔진의 차이는 [Engine](engine.md)에 있습니다. |
 | 콜백 기록 | `Telemetry`, `FlightRecorder` | 세션·프레임·시각·메타데이터를 이벤트로 기록합니다. |
 | 지표 계산 | `BenchmarkRunner`, `RunAssembler`, `BenchmarkEvaluator`, `metrics/MetricExtractor` | 러너의 실행 시각과 콜백을 합쳐 측정값을 만듭니다. |
 | 내부 점수 | `ScoreComposer` | 검토한 calibration의 범위에 맞는 적격 release run에 점수와 카테고리 평균을 계산합니다. |
