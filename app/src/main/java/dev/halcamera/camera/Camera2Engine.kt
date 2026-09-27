@@ -3,18 +3,9 @@ package dev.halcamera.camera
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.ImageFormat
-import android.graphics.Matrix
-import android.graphics.RectF
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
 import android.media.ImageReader
-import android.media.MediaRecorder
-import android.graphics.YuvImage
-import android.graphics.Rect
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import java.io.ByteArrayOutputStream
-import java.io.File
 import java.util.concurrent.Executors
 import android.os.Handler
 import android.os.HandlerThread
@@ -52,24 +43,10 @@ class Camera2Engine(
     private var jpeg: ImageReader? = null
     private var finished = false
     private var closeDone: (() -> Unit)? = null
-    @Volatile private var photoInFlight = false
-    override val mediaBusy: Boolean get() = photoInFlight || videoBusy || bench.recording
+    override val mediaBusy: Boolean get() = stills.inFlight || video.busy || bench.recording
     private var previewSeen = false
     private val mediaIo = Executors.newSingleThreadExecutor()
     private val library = MediaLibrary(context)
-    private data class YuvFrame(val bytes: ByteArray, val width: Int, val height: Int)
-    private class Photo(val name: String, val rotation: Int, val requestId: String?, val done: ((Result<PhotoResult>) -> Unit)?) {
-        val pair = StillPair<YuvFrame, ByteArray>()
-        val delivered = java.util.concurrent.atomic.AtomicBoolean(false)
-    }
-    private var photo: Photo? = null
-    private var videoRecorder: MediaRecorder? = null
-    private var videoFile: File? = null
-    private var videoStarted = false
-    @Volatile private var videoBusy = false
-    private var videoDone: ((Result<android.net.Uri>) -> Unit)? = null
-    private var videoStopRequested = false
-    private var videoFailure: Exception? = null
     @Volatile private var zoomRatio = 1f
     /** One queued zoom submission at a time: a fast drag merges into the ratio that is current when it runs. */
     private val zoomQueued = java.util.concurrent.atomic.AtomicBoolean(false)
@@ -81,12 +58,6 @@ class Camera2Engine(
     /** A pending [setControls] restores the chips of a reopened camera, so an AE lock in it waits like a rebuild. */
     private val restoreQueued = java.util.concurrent.atomic.AtomicBoolean(false)
     private var previewSize: Size? = null
-    /** The LIVE recorder's surface while a recording session is up; repeating requests then use the record template. */
-    private var recorderSurface: Surface? = null
-    /** Called with every LIVE repeating result; the flash precapture waits on it. Camera thread only. */
-    private var resultHook: ((TotalCaptureResult) -> Unit)? = null
-    /** Ends a precapture still waiting for AE, so closing the camera still answers the capture caller. */
-    private var precaptureFinish: ((String) -> Unit)? = null
     @Volatile private var chars: CameraCharacteristics? = null
     private val callback = telemetry.callback(sessionId) { active }
     private val liveCallback = object : CameraCaptureSession.CaptureCallback() {
@@ -94,7 +65,7 @@ class Camera2Engine(
             callback.onCaptureStarted(session, request, timestamp, frameNumber)
         override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
             callback.onCaptureCompleted(session, request, result)
-            resultHook?.invoke(result)
+            stills.onLiveResult(result)
             if (spec == null) { relockStep(result); touchFocus.onResult(result) }
         }
         override fun onCaptureFailed(session: CameraCaptureSession, request: CaptureRequest, failure: CaptureFailure) =
@@ -126,6 +97,48 @@ class Camera2Engine(
         override fun trigger(kind: String, afTrigger: Int, callback: CameraCaptureSession.CaptureCallback) = withLiveSession(kind) { camera, session, c ->
             session.capture(repeatingRequest(camera, c, afTrigger = afTrigger), callback, handler)
         }
+    })
+    /** Stills and the flash precapture (#176); a benchmark engine measures its stills and saves none. */
+    private val stills: Camera2StillCapture = Camera2StillCapture(context, handler, main, telemetry, sessionId, library, mediaIo, spec != null, object : Camera2StillCapture.Host {
+        override val camera: CameraDevice? get() = device
+        override val session: CameraCaptureSession? get() = captureSession
+        override val characteristics: CameraCharacteristics get() = chars ?: manager.getCameraCharacteristics(cameraId)
+        override val active: Boolean get() = this@Camera2Engine.active
+        override val recordingBusy: Boolean get() = video.busy
+        override val needsPrecapture: Boolean get() = requestControls().needsPrecapture
+        override val flashName: String get() = controls.flash.name
+        override val zoomRequested: Float get() = zoomRatio
+        override val captureCallback: CameraCaptureSession.CaptureCallback get() = callback
+        override fun orientation(c: CameraCharacteristics): Int = outputRotation(c)
+        override fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?) = this@Camera2Engine.stillRequest(camera, c, tag, rotation)
+        override fun precaptureTrigger(callback: CameraCaptureSession.CaptureCallback) = withLiveSession("precapture_trigger") { camera, session, c ->
+            session.capture(previewRequest(camera, c, aeTrigger = CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START), callback, handler)
+        }
+        override fun report(message: String, ok: Boolean) = this@Camera2Engine.report(message, ok)
+        override fun fail(e: Exception) = this@Camera2Engine.fail(e)
+    })
+    /** The LIVE video recording; the benchmark RECORD stage uses [bench] instead. */
+    private val video: Camera2LiveRecorder = Camera2LiveRecorder(context, handler, main, telemetry, sessionId, library, mediaIo, object : Camera2LiveRecorder.Host {
+        override val camera: CameraDevice? get() = device
+        override val active: Boolean get() = this@Camera2Engine.active
+        override val benchmark: Boolean get() = spec != null
+        override val characteristics: CameraCharacteristics? get() = chars
+        override val previewSurface: Surface? get() = this@Camera2Engine.previewSurface
+        override val session: CameraCaptureSession? get() = captureSession
+        override val stillInFlight: Boolean get() = stills.inFlight
+        override fun onSessionConfigured(session: CameraCaptureSession?) { captureSession = session }
+        override fun startRepeating(camera: CameraDevice, session: CameraCaptureSession, c: CameraCharacteristics, surface: Surface) {
+            startRelock()
+            session.setRepeatingRequest(liveRecordRequest(camera, c, surface), liveCallback, handler)
+            relockFocus()
+        }
+        override fun rebuildPreview() { if (this@Camera2Engine.active) { device?.let { configure(it) } } }
+        override fun orientationHint(c: CameraCharacteristics): Int = outputRotation(c)
+        override fun chooseSize(sizes: Array<Size>, maxPixels: Long): Size = choose(sizes, maxPixels)
+        override fun recordingState(recording: Boolean) = this@Camera2Engine.recordingState(recording)
+        override fun status(message: String, ok: Boolean) = this@Camera2Engine.status(message, ok)
+        override fun report(message: String, ok: Boolean) = this@Camera2Engine.report(message, ok)
+        override fun fail(e: Exception) = this@Camera2Engine.fail(e)
     })
     override fun start() {
         telemetry.registerSession(sessionId, "Camera2", manager, cameraId)
@@ -186,7 +199,7 @@ class Camera2Engine(
             texture.setDefaultBufferSize(size.width, size.height)
             previewSize = size
             previewSurface = Surface(texture)
-            main.post { transform(size, chars) }
+            main.post { if (active) view.fitPreview(size) }
             yuv = reader(yuvSize, ImageFormat.YUV_420_888, "analysis_acquire_latest")
             jpeg = reader(jpegSize, ImageFormat.JPEG, "still")
             // The effective values go into the event so conditions.effective in the run JSON reports what the
@@ -247,7 +260,7 @@ class Camera2Engine(
         }.build()
     /** Whichever LIVE request is repeating now: the recording one while the recorder runs, the preview one otherwise. */
     private fun repeatingRequest(camera: CameraDevice, c: CameraCharacteristics, afTrigger: Int? = null, aeTrigger: Int? = null): CaptureRequest =
-        recorderSurface?.let { liveRecordRequest(camera, c, it, afTrigger) } ?: previewRequest(camera, c, afTrigger, aeTrigger)
+        video.surface?.let { liveRecordRequest(camera, c, it, afTrigger) } ?: previewRequest(camera, c, afTrigger, aeTrigger)
     /**
      * Runs [submit] against the current session, or skips it when there is no session to change. A recording that
      * is still being configured or already stopping has none that may be touched; the next session reads the
@@ -258,14 +271,14 @@ class Camera2Engine(
     private fun withLiveSession(kind: String, submit: (CameraDevice, CameraCaptureSession, CameraCharacteristics) -> Unit): Boolean {
         val camera = device; val session = captureSession; val c = chars
         if (camera == null || session == null || c == null || !active || spec != null) return false
-        if (videoBusy && (recorderSurface == null || videoStopRequested)) { telemetry.event(sessionId, "request_deferred", mapOf("for" to kind)); return false }
+        if (video.blocksRequests) { telemetry.event(sessionId, "request_deferred", mapOf("for" to kind)); return false }
         return try { submit(camera, session, c); true }
         catch (e: IllegalStateException) { telemetry.event(sessionId, "request_skipped", mapOf("for" to kind, "reason" to e.toString())); false }
         catch (e: CameraAccessException) { telemetry.event(sessionId, "request_skipped", mapOf("for" to kind, "reason" to e.toString())); false }
         catch (e: Exception) { fail(e); false }
     }
     private fun submitRepeating(kind: String, values: Map<String, Any?>): Boolean = withLiveSession(kind) { camera, session, c ->
-        telemetry.event(sessionId, kind, values + mapOf("api" to "setRepeatingRequest", "recording" to (recorderSurface != null)))
+        telemetry.event(sessionId, kind, values + mapOf("api" to "setRepeatingRequest", "recording" to (video.surface != null)))
         session.setRepeatingRequest(repeatingRequest(camera, c), liveCallback, handler)
     }
     /**
@@ -292,7 +305,7 @@ class Camera2Engine(
         touchFocus.dropFocus() // a tapped AF point is one-shot; a pressed AE point stays and is relocked on
         val generation = aeRelock.sessionRebuilt(controls.aeLock)
         if (!aeRelock.waiting) return
-        telemetry.event(sessionId, "ae_relock_wait", mapOf("recording" to (recorderSurface != null)))
+        telemetry.event(sessionId, "ae_relock_wait", mapOf("recording" to (video.surface != null)))
         handler.postDelayed({ if (aeRelock.timedOut(generation)) sendRelock("timeout", null) }, AeRelock.TIMEOUT_MS)
     }
     private fun sendRelock(reason: String, state: Int?) {
@@ -385,193 +398,37 @@ class Camera2Engine(
                 if (source !== yuv && source !== jpeg) return@setOnImageAvailableListener
                 try {
                     // Drain in order while a still is pending: acquireLatestImage can discard its YUV frame.
-                    val next = if (photo != null) source.acquireNextImage() else source.acquireLatestImage()
+                    val next = if (stills.pairing) source.acquireNextImage() else source.acquireLatestImage()
                     next?.use { image ->
                         if (active) telemetry.image(sessionId, image.timestamp, image.width, image.height, image.format, stream)
                         if (active && !previewSeen && format == ImageFormat.YUV_420_888) {
                             previewSeen = true
                             main.post { if (active) previewReady() }
                         }
-                        val pending = photo
-                        if (active && pending != null) {
-                            if (format == ImageFormat.JPEG) {
-                                pending.pair.jpeg(image.timestamp, ByteArray(image.planes[0].buffer.remaining()).also { image.planes[0].buffer.get(it) })
-                            } else if (pending.pair.accepts(image.timestamp)) {
-                                val crop = image.cropRect
-                                pending.pair.yuv(image.timestamp, YuvFrame(YuvPacking.nv21(image.planes.map {
-                                    YuvPacking.Plane(it.buffer, it.rowStride, it.pixelStride)
-                                }, crop.left, crop.top, crop.width(), crop.height()), crop.width(), crop.height()))
-                            }
-                            savePhotoIfComplete(pending)
-                        } else if (stream == "still" && spec != null) {
-                            photoInFlight = false; report("Camera2 · capture received", true)
-                        }
+                        stills.onImage(image, format, stream)
                     }
-                } catch (e: Exception) { photo?.let { deliverPhoto(it, Result.failure(e)) }; photo = null; photoInFlight = false; if (active) { fail(e); report("Capture failed: ${e.message} · retry", true) } }
+                } catch (e: Exception) { stills.onImageFailed(e) }
             }, handler)
         }
-    override fun capture() {
-        requestCapture(null, null)
-    }
-    override fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit) = requestCapture(requestId, done)
+    override fun capture() = stills.capture(null, null)
+    override fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit) = stills.capture(requestId, done)
 
-    private fun deliverPhoto(pending: Photo, result: Result<PhotoResult>) {
-        if (pending.delivered.compareAndSet(false, true)) main.post { pending.done?.invoke(result) }
-    }
-
-    private fun requestCapture(requestId: String?, done: ((Result<PhotoResult>) -> Unit)?) {
-        handler.post {
-            if (device == null || captureSession == null || !active || photoInFlight || videoBusy || (done != null && spec != null)) {
-                main.post { done?.invoke(Result.failure(IllegalStateException("Camera not ready or busy"))) }
-                return@post
+    /** The still request: JPEG only for a benchmark still, YUV + JPEG with the output [rotation] for a LIVE pair. */
+    private fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?): CaptureRequest =
+        camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
+            addTarget(jpeg!!.surface)
+            if (rotation != null) {
+                addTarget(yuv!!.surface)
+                set(CaptureRequest.JPEG_ORIENTATION, rotation)
+                set(CaptureRequest.JPEG_QUALITY, 95.toByte())
             }
-            if (spec == null && requestControls().needsPrecapture) { photoInFlight = true; precapture { shoot(requestId, done) } }
-            else shoot(requestId, done)
-        }
-    }
-
-    /**
-     * Flash auto/on metering before the still (#176). The trigger rides on one preview capture; the repeating
-     * results after it are watched until AE leaves PRECAPTURE. A sequence that has not settled after 3 s is logged
-     * as `precapture_timeout` and the still fires anyway, because a stuck AE must not leave the shutter dead.
-     */
-    private fun precapture(then: () -> Unit) {
-        val watch = PrecaptureWatch()
-        var finished = false
-        val finish = { reason: String ->
-            if (!finished) {
-                finished = true; resultHook = null; precaptureFinish = null
-                telemetry.event(sessionId, "precapture_done", mapOf("reason" to reason))
-                if (reason == "timeout") report("플래시 측광이 3초 안에 끝나지 않아 그대로 촬영합니다", false)
-                then()
-            }
-        }
-        precaptureFinish = finish
-        report("플래시 측광 중…", false)
-        telemetry.event(sessionId, "precapture_trigger", mapOf("flash" to controls.flash.name))
-        // A trigger that could not be sent has no result to wait for: shoot now rather than after the 3 s timeout.
-        val sent = withLiveSession("precapture_trigger") { camera, session, c ->
-            session.capture(previewRequest(camera, c, aeTrigger = CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER_START), object : CameraCaptureSession.CaptureCallback() {
-                override fun onCaptureStarted(s: CameraCaptureSession, r: CaptureRequest, timestamp: Long, frameNumber: Long) =
-                    callback.onCaptureStarted(s, r, timestamp, frameNumber)
-                override fun onCaptureCompleted(s: CameraCaptureSession, r: CaptureRequest, result: TotalCaptureResult) {
-                    callback.onCaptureCompleted(s, r, result)
-                    if (finished) return
-                    if (watch.onResult(result[CaptureResult.CONTROL_AE_STATE])) finish("settled")
-                    else resultHook = { next -> if (watch.onResult(next[CaptureResult.CONTROL_AE_STATE])) finish("settled") }
-                }
-                override fun onCaptureFailed(s: CameraCaptureSession, r: CaptureRequest, failure: CaptureFailure) {
-                    callback.onCaptureFailed(s, r, failure); finish("trigger_failed")
-                }
-            }, handler)
-        }
-        if (!sent) { finish("trigger_not_sent"); return }
-        handler.postDelayed({ if (!finished) { telemetry.event(sessionId, "precapture_timeout"); finish("timeout") } }, 3000)
-    }
-
-    private fun shoot(requestId: String?, done: ((Result<PhotoResult>) -> Unit)?) {
-        val camera = device
-        val session = captureSession
-        if (camera == null || session == null || !active) {
-            photoInFlight = false
-            main.post { done?.invoke(Result.failure(IllegalStateException("Camera closed before capture"))) }
-            return
-        }
-        try {
-            val tag = "still-${android.os.SystemClock.elapsedRealtimeNanos()}"
-            val c = chars ?: manager.getCameraCharacteristics(cameraId)
-            val pending = if (spec == null) Photo(library.name(), outputRotation(c), requestId, done) else null
-            val request = camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
-                addTarget(jpeg!!.surface)
-                if (pending != null) {
-                    addTarget(yuv!!.surface)
-                    set(CaptureRequest.JPEG_ORIENTATION, pending.rotation)
-                    set(CaptureRequest.JPEG_QUALITY, 95.toByte())
-                }
-                set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
-                set(CaptureRequest.CONTROL_AF_MODE, afMode(c))
-                applyZoom(this, c)
-                // Same AE mode, EV, lock and torch as the preview, so the still is exposed as the preview showed it.
-                if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus) }
-                setTag(tag)
-            }.build()
-            photoInFlight = true
-            photo = pending
-            if (pending != null) report("YUV + JPEG 촬영 중…", false)
-            telemetry.event(sessionId, "capture_submit", mapOf("requestTag" to tag, "api" to "CameraCaptureSession.capture", "zoomRequested" to zoomRatio))
-            session.capture(request, if (pending == null) callback else photoCallback(pending), handler)
-            handler.postDelayed({
-                if (photoInFlight && active && (pending == null || photo === pending)) {
-                    pending?.let { deliverPhoto(it, Result.failure(IllegalStateException("Capture timed out"))) }
-                    photo = null; photoInFlight = false; telemetry.event(sessionId, "capture_timeout")
-                    report("Capture timed out (5s) · retry", spec == null)
-                }
-            }, 5000)
-        } catch (e: Exception) {
-            val pending = photo
-            if (pending != null) deliverPhoto(pending, Result.failure(e)) else main.post { done?.invoke(Result.failure(e)) }
-            photo = null; photoInFlight = false; fail(e); if (spec == null) report("Capture failed: ${e.message} · retry", true)
-        }
-    }
-
-    private fun photoCallback(pending: Photo) = object : CameraCaptureSession.CaptureCallback() {
-        override fun onCaptureStarted(session: CameraCaptureSession, request: CaptureRequest, timestamp: Long, frameNumber: Long) {
-            callback.onCaptureStarted(session, request, timestamp, frameNumber)
-            if (photo === pending) { pending.pair.timestamp = timestamp; savePhotoIfComplete(pending) }
-        }
-        override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
-            callback.onCaptureCompleted(session, request, result)
-            if (photo === pending) { result[CaptureResult.SENSOR_TIMESTAMP]?.let { pending.pair.timestamp = it }; savePhotoIfComplete(pending) }
-        }
-        override fun onCaptureFailed(session: CameraCaptureSession, request: CaptureRequest, failure: CaptureFailure) {
-            callback.onCaptureFailed(session, request, failure)
-            if (photo === pending) { deliverPhoto(pending, Result.failure(IllegalStateException("Capture failed"))); photo = null; photoInFlight = false; report("Capture failed · retry", true) }
-        }
-        override fun onCaptureBufferLost(session: CameraCaptureSession, request: CaptureRequest, target: Surface, frameNumber: Long) {
-            callback.onCaptureBufferLost(session, request, target, frameNumber)
-            if (photo === pending) { deliverPhoto(pending, Result.failure(IllegalStateException("Capture buffer lost"))); photo = null; photoInFlight = false; report("Capture buffer lost · retry", true) }
-        }
-    }
-
-    private fun savePhotoIfComplete(pending: Photo) {
-        val timestamp = pending.pair.timestamp ?: return
-        val (yuvFrame, jpegBytes) = pending.pair.complete() ?: return
-        photo = null // Keep photoInFlight until the pair has been written.
-        mediaIo.execute {
-            val result = runCatching {
-                val stream = ByteArrayOutputStream()
-                check(YuvImage(yuvFrame.bytes, ImageFormat.NV21, yuvFrame.width, yuvFrame.height, null)
-                    .compressToJpeg(Rect(0, 0, yuvFrame.width, yuvFrame.height), 95, stream))
-                var converted = stream.toByteArray()
-                if (pending.rotation != 0) {
-                    val bitmap = BitmapFactory.decodeByteArray(converted, 0, converted.size) ?: error("Cannot decode YUV JPEG")
-                    val rotated = Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height,
-                        Matrix().apply { postRotate(pending.rotation.toFloat()) }, true)
-                    try {
-                        stream.reset(); check(rotated.compress(Bitmap.CompressFormat.JPEG, 95, stream))
-                        converted = stream.toByteArray()
-                    } finally { if (rotated !== bitmap) rotated.recycle(); bitmap.recycle() }
-                }
-                library.savePair(pending.name, converted, jpegBytes)
-            }
-            result.onSuccess { uris ->
-                telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "uris" to uris.map { it.toString() }))
-            }
-            deliverPhoto(pending, result.map { PhotoResult(pending.requestId, pending.name, timestamp, it) })
-            main.post {
-                if (!active || result.isFailure) {
-                    val message = result.fold({ "갤러리에 YUV · JPEG 사진 2장을 저장했습니다" }, { "사진 저장 실패: ${it.message}" })
-                    android.widget.Toast.makeText(context.applicationContext, message, android.widget.Toast.LENGTH_LONG).show()
-                }
-            }
-            handler.post {
-                photoInFlight = false
-                result.fold({
-                    report("갤러리에 YUV · JPEG 사진 2장을 저장했습니다", true)
-                }, { report("사진 저장 실패: ${it.message} · 다시 촬영할 수 있습니다", true) })
-            }
-        }
-    }
+            set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
+            set(CaptureRequest.CONTROL_AF_MODE, afMode(c))
+            applyZoom(this, c)
+            // Same AE mode, EV, lock and torch as the preview, so the still is exposed as the preview showed it.
+            if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus) }
+            setTag(tag)
+        }.build()
 
     private fun outputRotation(c: CameraCharacteristics): Int {
         val degrees = when (view.display?.rotation) { Surface.ROTATION_90 -> 90; Surface.ROTATION_180 -> 180; Surface.ROTATION_270 -> 270; else -> 0 }
@@ -579,79 +436,7 @@ class Camera2Engine(
         return (sensor + if (c[CameraCharacteristics.LENS_FACING] == CameraCharacteristics.LENS_FACING_FRONT) degrees else -degrees + 360) % 360
     }
 
-    @Suppress("DEPRECATION")
-    override fun startRecording(audio: Boolean, started: () -> Unit, done: ((Result<android.net.Uri>) -> Unit)?) {
-        handler.post {
-            val camera = device
-            if (camera == null || !active || spec != null || photoInFlight || videoBusy || captureSession == null) {
-                main.post { done?.invoke(Result.failure(IllegalStateException("Camera is not ready to record"))) }
-                return@post
-            }
-            videoBusy = true
-            videoDone = done; videoStopRequested = false; videoFailure = null
-            report("녹화를 준비하고 있습니다…", false)
-            try {
-                val c = chars ?: error("Camera characteristics unavailable")
-                val sizes = c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]!!.getOutputSizes(MediaRecorder::class.java)
-                val size = choose(sizes.filter { it.width >= it.height }.toTypedArray(), 1920L * 1080)
-                val file = File.createTempFile("hal_recording_", ".mp4", context.cacheDir).also { videoFile = it }
-                val recorder = (if (android.os.Build.VERSION.SDK_INT >= 31) MediaRecorder(context) else MediaRecorder()).also { videoRecorder = it }
-                recorder.apply {
-                    if (audio) setAudioSource(MediaRecorder.AudioSource.MIC)
-                    setVideoSource(MediaRecorder.VideoSource.SURFACE)
-                    setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-                    setOutputFile(file.absolutePath)
-                    setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-                    if (audio) setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-                    setVideoSize(size.width, size.height)
-                    setVideoFrameRate(30)
-                    setVideoEncodingBitRate(10_000_000)
-                    if (audio) {
-                        setAudioEncodingBitRate(128_000)
-                        setAudioSamplingRate(44_100)
-                    }
-                    setOrientationHint(outputRotation(c))
-                    setOnErrorListener { _, what, extra -> handler.post {
-                        telemetry.event(sessionId, "recording_error", mapOf("what" to what, "extra" to extra))
-                        videoFailure = IllegalStateException("Recorder error $what/$extra")
-                        stopRecording()
-                    } }
-                    prepare()
-                }
-                camera.createCaptureSession(listOf(previewSurface!!, recorder.surface), object : CameraCaptureSession.StateCallback() {
-                    override fun onConfigured(session: CameraCaptureSession) {
-                        if (!active || videoStopRequested) { session.close(); return }
-                        captureSession = session
-                        try {
-                            recorderSurface = recorder.surface
-                            startRelock()
-                            session.setRepeatingRequest(liveRecordRequest(camera, c, recorder.surface), liveCallback, handler)
-                            relockFocus()
-                            recorder.start(); videoStarted = true
-                            telemetry.event(sessionId, "recording_started", mapOf("size" to size.toString(), "audio" to audio))
-                            main.post { if (active) { recordingState(true); started() } }
-                            report(if (audio) "REC · 영상과 소리를 녹화하고 있습니다" else "REC · 영상을 녹화하고 있습니다", false)
-                        } catch (e: Exception) { videoFailure = e; fail(e); session.close() }
-                    }
-                    override fun onConfigureFailed(session: CameraCaptureSession) {
-                        videoFailure = IllegalStateException("Recording stream configuration rejected")
-                        report("녹화 스트림 구성을 지원하지 않습니다", false)
-                        session.close()
-                    }
-                    override fun onClosed(session: CameraCaptureSession) {
-                        if (captureSession === session) captureSession = null
-                        recorderSurface = null
-                        finishVideo()
-                        if (active) { device?.let { configure(it) } }
-                    }
-                }, handler)
-            } catch (e: Exception) {
-                videoFailure = e
-                finishVideo()
-                report("녹화 준비 실패: ${e.message} · 다시 시도할 수 있습니다", captureSession != null)
-            }
-        }
-    }
+    override fun startRecording(audio: Boolean, started: () -> Unit, done: ((Result<android.net.Uri>) -> Unit)?) = video.start(audio, started, done)
 
     // ---- Benchmark RECORD stage (docs/PLAN-Recording-v0.1.md 6) ----
     //
@@ -682,53 +467,8 @@ class Camera2Engine(
             setTag(if (recording) RecordSpec.tag(iteration) else RecordSpec.prepareTag(iteration))
         }.build()
 
-    override fun stopRecording() {
-        handler.post {
-            if (!videoBusy) return@post
-            videoStopRequested = true
-            report("녹화를 저장하고 있습니다…", false)
-            captureSession?.close()
-        }
-    }
+    override fun stopRecording() = video.stop()
 
-    private fun finishVideo() {
-        if (videoRecorder == null && videoFile == null && !videoBusy) return
-        val recorder = videoRecorder
-        videoRecorder = null
-        val file = videoFile; videoFile = null
-        val done = videoDone; videoDone = null
-        val failure = videoFailure; videoFailure = null
-        val wasStarted = videoStarted
-        val stopped = wasStarted && recorder != null && runCatching { recorder.stop() }.isSuccess
-        runCatching { recorder?.reset() }; runCatching { recorder?.release() }
-        recorderSurface = null
-        videoStarted = false; videoBusy = false; videoStopRequested = false
-        main.post { recordingState(false) }
-        if (stopped && file != null) {
-            mediaIo.execute {
-                try {
-                    val uri = library.saveVideo(file)
-                    telemetry.event(sessionId, "video_saved", mapOf("uri" to uri.toString()))
-                    main.post {
-                        done?.invoke(if (failure == null) Result.success(uri) else Result.failure(failure))
-                        // Same place as the photo notice: a toast at the bottom covered the photo/video mode buttons.
-                        // Only a camera already closed has no notice line left, so that case keeps the toast.
-                        if (active) status("갤러리에 동영상을 저장했습니다", true)
-                        else android.widget.Toast.makeText(context.applicationContext, "갤러리에 동영상을 저장했습니다", android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: Exception) {
-                    main.post {
-                        done?.invoke(Result.failure(e))
-                        android.widget.Toast.makeText(context.applicationContext, "동영상 저장 실패: ${e.message}", android.widget.Toast.LENGTH_LONG).show()
-                    }
-                } finally { file.delete() }
-            }
-        } else {
-            file?.delete()
-            main.post { done?.invoke(Result.failure(failure ?: IllegalStateException("Recording did not produce a playable video; record for longer before stopping"))) }
-            if (wasStarted) main.post { android.widget.Toast.makeText(context.applicationContext, "녹화가 너무 짧거나 실패하여 동영상을 저장하지 못했습니다", android.widget.Toast.LENGTH_LONG).show() }
-        }
-    }
     override fun close(done: () -> Unit) {
         active = false
         view.surfaceTextureListener = null
@@ -744,10 +484,8 @@ class Camera2Engine(
     private fun finishClose() {
         if (finished) return
         finished = true
-        precaptureFinish?.invoke("closed")
-        photo?.let { deliverPhoto(it, Result.failure(IllegalStateException("Camera closed before capture completed"))) }
-        photo = null
-        finishVideo()
+        stills.close()
+        video.finish()
         bench.release()
         captureSession?.close(); captureSession = null
         yuv?.close(); yuv = null
@@ -760,30 +498,4 @@ class Camera2Engine(
     }
     private fun fail(e: Exception) { telemetry.event(sessionId, "camera_error", mapOf("message" to e.toString())); report("Camera2: ${e.message}", false) }
     private fun report(message: String, ok: Boolean) { main.post { if (active) status(message, ok) } }
-    @Suppress("DEPRECATION", "UNUSED_PARAMETER")
-    private fun transform(size: Size, chars: CameraCharacteristics) {
-        if (!active || view.width == 0) return
-        val rotation = view.display?.rotation ?: Surface.ROTATION_0
-        val w = view.width.toFloat(); val h = view.height.toFloat()
-        val cx = w / 2; val cy = h / 2
-        val matrix = Matrix()
-        // The camera pipeline already rotates buffers (and mirrors front cameras) for the device's natural orientation,
-        // so in portrait a 1280x720 buffer is shown as 720x1280 stretched to the view. Only undo the stretch and fill-crop.
-        // In landscape the display itself is rotated, so follow the Camera2Basic sample: map, scale, then rotate.
-        if (rotation == Surface.ROTATION_90 || rotation == Surface.ROTATION_270) {
-            val viewRect = RectF(0f, 0f, w, h)
-            val bufferRect = RectF(0f, 0f, size.height.toFloat(), size.width.toFloat())
-            bufferRect.offset(cx - bufferRect.centerX(), cy - bufferRect.centerY())
-            matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL)
-            val scale = maxOf(h / size.height, w / size.width)
-            matrix.postScale(scale, scale, cx, cy)
-            matrix.postRotate(90f * (rotation - 2), cx, cy)
-        } else {
-            val contentW = size.height.toFloat(); val contentH = size.width.toFloat()
-            val scale = maxOf(w / contentW, h / contentH)
-            matrix.setScale(contentW * scale / w, contentH * scale / h, cx, cy)
-            if (rotation == Surface.ROTATION_180) matrix.postRotate(180f, cx, cy)
-        }
-        view.setTransform(matrix)
-    }
 }
