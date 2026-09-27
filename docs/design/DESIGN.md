@@ -27,7 +27,7 @@ Android 앱과 문서 사이트는 이 문서를 단일 디자인 기준으로 �
 
 1. HAL CAMERA 브랜드와 문서 탐색을 표시합니다.
 2. `Engineering the invisible.`을 큰 제목으로 표시하고 목적과 빠른 시작 링크를 제공합니다.
-3. Architecture, Probe, CTS, Benchmark, CLI, Decisions, Evidence를 01–07 번호가 있는 행으로 배치합니다. 도구 세 가지는 앱의 `도구` 메뉴와 같은 Probe, CTS, Benchmark 순서를 사용합니다.
+3. Architecture, Engine, Probe, CTS, Benchmark, CLI, Decisions, Evidence를 01–08 번호가 있는 행으로 배치합니다. Engine은 구조 설명이므로 Architecture 바로 다음에 둡니다. 도구 세 가지는 앱의 `도구` 메뉴와 같은 Probe, CTS, Benchmark 순서를 사용합니다.
 4. 앱의 책임을 설명하는 대표 그림과 상세 문서 링크를 제공합니다.
 5. 짧은 편집 문장과 근거 확인 링크로 마무리합니다.
 
@@ -72,6 +72,7 @@ Android 앱과 문서 사이트는 이 문서를 단일 디자인 기준으로 �
 각 문서는 제목, 먼저 알아야 할 결론, 대표 그림, 세부 설명, 코드 근거, 다음 읽을 문서 순서로 구성합니다. 대표 그림 한 개를 중심으로 두되, 긴 아키텍처 문서에는 필요한 보조 그림을 유지합니다. 절차 문서에는 불필요한 그림을 추가하지 않습니다.
 
 - Architecture는 책임, 실행 흐름, 변경 제약을 설명합니다.
+- Engine은 Camera2·CameraX 엔진의 계약과 구현, 두 엔진의 차이를 설명합니다.
 - Benchmark는 입력, 관측 범위, 저장과 비교의 의미를 설명합니다.
 - Probe는 HAL이 공개한 사양 표의 읽는 법과 측정과의 차이를 설명합니다.
 - CTS는 앱 안에서 실행하는 CTS 케이스의 범위와 공식 판정과의 차이를 설명합니다.

@@ -23,3 +23,12 @@ records:
     scenario: Auto Check 60초 검사 실행
     result: 검사가 60초를 완료하지 못했습니다. 센서 타임스탬프 소스는 REALTIME으로 보고됐습니다.
     note: 검사를 완료하지 못한 원인은 기록되지 않았습니다. 재현 절차와 로그를 확보한 뒤 갱신해야 합니다.
+
+  - id: V-002
+    date: 2026-09-27
+    device: Galaxy S25+ (SM-S936N)
+    os: Android 16
+    build: 0.14.0 로컬 release 빌드 (versionCode 540~542). PR 196 병합 전 브랜치의 단계별 빌드이며, 마지막 빌드의 앱 코드는 06717ba와 같습니다
+    scenario: Live에서 CameraX 엔진으로 후면 카메라 0을 열고 사진 촬영, 녹화, AE·AF 잠금, EV, 길게 누르기, 토치, AE 잠금 중 플래시 On 사진을 차례로 실행했습니다. 사진 EXIF, MP4 헤더, dumpsys media.camera의 최신 프레임 메타데이터를 함께 확인했습니다.
+    result: 사진은 엔진 전환 없이 YUV·JPEG 두 장으로 저장됐습니다. JPEG는 4080×3060에 EXIF 방향 6, YUV는 480×640이었습니다. 녹화 파일은 H.264 1920×1080(90도 회전 정보), 약 10Mbps, AAC 48kHz였습니다. AE 잠금 중 EV +0.5를 적용하자 노출 시간×ISO가 1.42배가 됐고, 그 상태의 사진 EXIF는 1/59초, ISO 287, 노출 보정 +0.5였습니다. AE 잠금 중 플래시 On 사진은 플래시가 발광했고 1/1169초, ISO 25로 저장됐습니다. 잠금 직전 프리뷰는 ISO 161, 8.33ms였습니다. 녹화 중 AF 잠금은 첫 Status 이벤트에서 초점 요청을 다시 보내기 전에는 AF Idle로, 다시 보낸 뒤에는 No focus(잠김)로 표시됐습니다. cancelFocusAndMetering을 호출하던 빌드에서는 탭 초점이 끝난 뒤 AE 잠금을 켜도 결과가 AE OK였고, 최신 프레임 메타데이터의 android.control.aeLock이 OFF였습니다. 호출을 없앤 빌드에서는 탭 초점 종료, 녹화 시작·종료, 플래시 사진 뒤에도 AE Locked가 유지됐습니다.
+    note: 후면 카메라 0 하나만 확인했습니다. 전면 카메라, 다른 기기, media_saved의 yuvOffsetNs 값은 확인하지 않았습니다. 플래시 사진의 재측광은 CameraX ImageCapture의 precapture 순서에서 온 것으로 보지만 CameraX 내부 로그로 확인하지는 않았습니다.
