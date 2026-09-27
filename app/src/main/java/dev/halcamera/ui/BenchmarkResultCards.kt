@@ -28,8 +28,8 @@ object BenchmarkResultCards {
      * label and state the activity needs for its actions. The verdict leads, every metric follows as a bar grouped
      * by category, and the run facts fold (mockup v7).
      *
-     * [reference] is the run the ticks stand for: the baseline, the previous run, or the run picked first in run
-     * history's 두 실행 비교, which is that comparison's baseline.
+     * [references] are the runs the ticks stand for: the baseline set, the previous run, or the run picked first in
+     * run history's 두 실행 비교, which is that comparison's baseline.
      */
     fun addResult(
         context: Context,
@@ -39,7 +39,7 @@ object BenchmarkResultCards {
         comparedTo: ComparedTo,
         isBaseline: Boolean,
         fileName: String?,
-        reference: BenchmarkRun? = null,
+        references: List<BenchmarkRun> = emptyList(),
     ): ResultView {
         val dp = { v: Int -> Look.dp(context, v) }
         val lp = { top: Int -> LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top) } }
@@ -75,7 +75,7 @@ object BenchmarkResultCards {
         // Metrics card: every metric is a bar, grouped by category. The table behind an "All metrics" fold is gone:
         // a number next to its baseline is what this screen is for, and a bar answers that faster than a row of digits.
         val metricsCard = Look.card(context, dark = true)
-        val sections = ResultPresenter.metricBars(run, comparison, comparedTo, reference)
+        val sections = ResultPresenter.metricBars(run, comparison, comparedTo, references)
         // One legend line at the top, before the bars it explains. The keys are drawn with the bar itself, a piece of
         // fill and a tick on a track, not with "━" and "│", which looked like neither and read as punctuation.
         val legend = Look.row(context)
@@ -87,7 +87,7 @@ object BenchmarkResultCards {
         }
         if (comparedTo != ComparedTo.NONE) {
             key(MeterView(context, 1f, null, false), 20, ResultPresenter.COMPARE_LABEL)
-            key(MeterView(context, 0f, 0.5f, false), 12, ResultPresenter.legendReferenceLabel(comparedTo))
+            key(MeterView(context, 0f, 0.5f, false), 12, ResultPresenter.legendReferenceLabel(comparedTo, references.size))
         }
         metricsCard.addView(legend)
         // Its own line: beside the two keys it was cut off at the card's edge on a Galaxy S25+.
@@ -131,8 +131,8 @@ object BenchmarkResultCards {
         // The reference run's facts follow this run's, so the fold answers "compared with what" as well; the compare
         // screen that used to hold them is gone.
         val role = ResultPresenter.referenceName(comparedTo)
-        val referenceFacts = reference?.takeIf { comparedTo != ComparedTo.NONE }
-            ?.let { ResultPresenter.referenceFacts(it, comparison, role) }.orEmpty()
+        val referenceFacts = if (comparedTo == ComparedTo.NONE) emptyList()
+            else ResultPresenter.referenceFacts(references, comparison, role)
         (ResultPresenter.runFacts(run, deviceName, endpointName, fileName) + referenceFacts).forEachIndexed { i, (label, fact) ->
             val factRow = Look.row(context)
             // 96dp so "Baseline 발열" and "이전 run 발열" stay on one line.

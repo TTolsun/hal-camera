@@ -16,6 +16,9 @@ data class MetricInfo(val id: String, val category: Category, val short: String,
 object BenchmarkMetricCatalog {
     private val infos = listOf(
         MetricInfo("1.1", Category.LAUNCH, "Open", "ms", "openCamera → onOpened"),
+        // The two ends of 1.1 (#165): the warm-up cycle the median drops, and the slowest measured cycle.
+        MetricInfo("1.9", Category.LAUNCH, "First open", "ms", "첫 사이클 openCamera → onOpened"),
+        MetricInfo("1.10", Category.LAUNCH, "Open max", "ms", "openCamera → onOpened 최댓값"),
         MetricInfo("1.2", Category.LAUNCH, "Configure", "ms", "createCaptureSession → onConfigured"),
         MetricInfo("1.3", Category.LAUNCH, "First started", "ms", "setRepeatingRequest → onCaptureStarted"),
         MetricInfo("1.8", Category.LAUNCH, "First YUV", "ms", "setRepeatingRequest → 첫 YUV"),

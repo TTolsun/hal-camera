@@ -124,7 +124,7 @@ class RegressionDetectorTest {
     @Test fun noBaselineListsCurrentValuesWithoutAState() {
         val current = run(metrics = listOf(metric("1.1", 120.0)))
         val c = RegressionDetector.compare(null, current)
-        assertNull(c.baseRunId)
+        assertEquals(emptyList<String>(), c.baseRunIds)
         assertEquals(UnknownReason.NO_BASELINE, c.metric("1.1")!!.unknownReason)
         assertEquals(120.0, c.metric("1.1")!!.currentValue!!, 0.0)
         assertNull(c.metric("1.1")!!.baselineValue)

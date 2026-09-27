@@ -552,21 +552,43 @@ data class BuildIdentityComparison(
 
 | | BASELINE | REFERENCE |
 |---|---|---|
-| 뜻 | 개발자가 의도적으로 고른 기준 형상 | 직전에 잰 값 |
-| 정하는 방법 | 결과 화면이나 이력에서 `Set as baseline`. **자동 생성 없음** | 같은 `(comparisonContractId, endpoint.key)`의 가장 최근 comparison-eligible run을 자동 선택. 자기 자신 제외 |
-| 해제하는 방법 | 이미 baseline인 run에서는 같은 버튼이 `Clear baseline`이다. 포인터만 지우고 run 파일은 남긴다 | 해당 없음 |
-| 저장 | `files/benchmarks/index.json`에 `(comparisonContractId, endpoint.key)` → run_id 포인터 | 저장하지 않고 조회 시 계산 |
-| regression 상태 | 이것 대비로만 IMPROVED / STABLE / REGRESSED | 상태 없음. delta %만 참고 표시 |
+| 뜻 | 개발자가 의도적으로 고른 기준 형상의 정상 run 집합 | 직전에 잰 값 |
+| 정하는 방법 | 결과 화면이나 이력에서 `baseline에 추가`. **자동 생성 없음** | 같은 `(comparisonContractId, endpoint.key)`의 가장 최근 comparison-eligible run을 자동 선택. 자기 자신 제외 |
+| 해제하는 방법 | 이미 집합에 든 run에서는 같은 버튼이 `baseline에서 빼기`이다. 집합에서만 빼고 run 파일은 남긴다 | 해당 없음 |
+| 저장 | `files/benchmarks/index.json`(schema 2)에 `(comparisonContractId, endpoint.key)` → run_id 목록. schema 1의 단일 포인터는 run 하나짜리 집합으로 읽는다 | 저장하지 않고 조회 시 계산 |
+| regression 상태 | 이것 대비로만 IMPROVED / STABLE / REGRESSED. 판정 방법은 7.1.1 | 상태 없음. delta %만 참고 표시 |
 | 없을 때 | `UNKNOWN(no_baseline)`. 화면에는 reference delta만 | 첫 run이면 표시 없음 |
 
 - 자동 baseline을 없앤 이유: v0.2 checkpoint-007에서 첫 검사가 스트림 시작 artefact(stall 1회)를 안은 채 baseline이 되었다. 첫 run은 설치 직후, 발열 상태, 잘못된 label 등 우연에 가장 많이 노출된다.
 - **fingerprint가 달라도 baseline은 무효화하지 않는다.** 빌드 간 regression 추적이 이 제품의 목적이다. 대신 7.4의 identity 비교를 함께 저장하고 화면에 보여 준다.
 - profile.id가 다르면 비교하지 않는다. 모든 지표가 `UNKNOWN(condition_mismatch)`이다.
-- comparison 부적격 run(5.3)은 baseline으로 지정할 수 없고 reference로도 선택되지 않는다.
-- baseline run 파일이 삭제되면 포인터를 지우고 `NO_BASELINE`으로 돌아간다.
-- **baseline 해제는 run 삭제와 별개다.** 기준으로 삼았던 형상이 더 이상 기준이 아니게 되는 일과, 그 측정 결과가 필요 없어지는 일은 다르다. 지정을 무르려고 run 파일을 지워야 한다면 측정 데이터를 잃게 되므로, 이미 baseline인 run의 결과 화면에서는 `Set as baseline`이 `Clear baseline`으로 바뀌어 포인터만 지운다. 다른 run에 `Set as baseline`을 누르면 포인터는 그대로 덮어써지므로 갱신에는 별도 동작이 필요 없다.
+- comparison 부적격 run(5.3)은 baseline에 추가할 수 없고 reference로도 선택되지 않는다.
+- baseline run 파일이 삭제되면 그 run만 집합에서 빠진다. 집합이 비면 `NO_BASELINE`으로 돌아간다.
+- **baseline 해제는 run 삭제와 별개다.** 기준으로 삼았던 형상이 더 이상 기준이 아니게 되는 일과, 그 측정 결과가 필요 없어지는 일은 다르다. 집합에서 빼려고 run 파일을 지워야 한다면 측정 데이터를 잃게 되므로, 이미 집합에 든 run의 결과 화면에서는 버튼이 `baseline에서 빼기`로 바뀌어 집합에서만 뺀다.
+
+#### 7.1.1 Baseline 집합과 범위 판정 (#165)
+
+baseline은 run 하나가 아니라 같은 형상에서 잰 정상 run 여러 개의 집합이다. 지표마다 집합의 값 범위를 만들고, 그 범위를 벗어난 만큼만 판정한다.
+
+```text
+worst = 집합에서 가장 나쁜 값 (LOWER_IS_BETTER면 최댓값, HIGHER_IS_BETTER면 최솟값)
+best  = 집합에서 가장 좋은 값
+REGRESSED : worst 대비 7.2 규칙으로 REGRESSED
+IMPROVED  : best 대비 7.2 규칙으로 IMPROVED
+STABLE    : 그 외 (범위 안)
+baseline_value, delta_pct, 결과 화면의 기준 눈금 = worst
+```
+
+- 이유: S25+ 정상 run의 launch는 느린 모드(1.3 약 260 ms)와 빠른 모드(약 170 ms)로 나뉘고, 3.6 record stop은 정상 run끼리도 99–136 ms로 퍼진다. run 하나를 baseline으로 쓰면 그 run이 어느 쪽에 걸렸는지가 이후 모든 판정을 정했다. 빠른 모드 run이 baseline이면 정상 run이 100% 저하로, 느린 모드 run이면 정상 run의 17%가 녹화 지표로 저하로 표시되었다(#165).
+- 권장 크기는 3개 이상이다. 집합이 클수록 정상 변동을 더 덮지만 범위가 넓어져 작은 저하는 놓친다. 크기를 강제하지는 않으며 run 하나짜리 집합은 v2의 쌍 비교와 같다.
+- 집합의 run 하나라도 조건이 다르면(7.5) 집합 전체와 다른 것으로 본다. 맞는 run만 골라 범위를 좁히면 판정이 어떤 범위를 썼는지 화면이 말할 수 없다. comparison 부적격 run이 하나라도 있으면 모든 지표가 `UNKNOWN(condition_mismatch)`이다.
+- 집합의 run 하나라도 timeout이면 그 지표는 `UNKNOWN(not_measurable)`이다. 값이 없는 run은 범위에서 빠진다.
+- 집합에 든 run의 결과 화면은 나머지 run과 비교한다. 그 run이 집합에 어울리는지를 보여 주기 위해서다. 집합에 run이 하나뿐이면 그 run은 이전 run과 비교하고 판정하지 않는다.
+- 실행 기록 목록은 집합에 든 run에 저하 배지를 붙이지 않는다.
 
 ### 7.2 Regression rule `regression-rule-v1`
+
+현재 버전은 `regression-rule-v3`다. v2는 RECORD 지표(3.x)를 추가했고, v3(#165)는 1.9 first open과 1.10 open max를 1.1과 같은 규칙으로 추가했다. 기존 지표의 값은 v1부터 바뀌지 않았다. 집합 baseline에 적용하는 방법은 7.1.1이다.
 
 전역 noise floor는 쓰지 않는다. 10 ms 하나로는 Jitter(수 ms)와 Interval p95(약 33 ms)의 변화를 놓치기 때문이다. 지표별 표이며, 값 하나라도 바꾸면 `regression-rule-v2`다. 아래 값은 초기 제안이고 M5에서 S25+ 반복 분포를 보고 조정한다.
 
@@ -588,7 +610,7 @@ UNKNOWN   : baseline 없음 / 둘 중 하나가 값 없음 / profile 불일치 /
 
 | 지표 | kind | deltaPct | noiseFloor |
 |---|---|---:|---:|
-| 1.1 open, 1.3 first started, 1.8 yuv proxy, 1.6 preview_total | LATENCY | 15 % | 10 ms |
+| 1.1 open, 1.9 first open, 1.10 open max, 1.3 first started, 1.8 yuv proxy, 1.6 preview_total | LATENCY | 15 % | 10 ms |
 | 1.2 configure, 1.7 close | LATENCY | 15 % | 5 ms |
 | 2.2 capture, 2.3 result, 2.5 shot_to_shot | LATENCY | 15 % | 10 ms |
 | H.1 interval p50, H.2 interval p95 | LATENCY | 10 % | 2 ms |

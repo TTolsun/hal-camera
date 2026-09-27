@@ -8,7 +8,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Baseline pointer rules and reference selection of 7.1, over an in-memory catalog. */
+/** Baseline set rules and reference selection of 7.1, over an in-memory catalog. */
 class BaselineManagerTest {
 
     /** Stands in for files/benchmarks/: runs by id plus the index. Unreadable files are modelled as a null run. */
@@ -30,22 +30,23 @@ class BaselineManagerTest {
     @Test fun thereIsNoBaselineUntilOneIsSet() {
         val current = runAt("20260910-110000-000")
         val m = BaselineManager(FakeCatalog(listOf(current)))
-        assertNull(m.pointer(current))
-        assertNull(m.baselineRun(current))
+        assertEquals(emptyList<String>(), m.members(current))
+        assertEquals(emptyList<BenchmarkRun>(), m.baselineRuns(current))
         assertFalse(m.isBaseline(current))
+        assertEquals(ComparedTo.NONE, m.resolve(current).comparedTo)
     }
 
-    @Test fun setPointsAtTheRunAndClearRemovesThePointerOnly() {
+    @Test fun setAddsTheRunAndClearRemovesItFromTheSetOnly() {
         val base = runAt("20260910-100000-000")
         val catalog = FakeCatalog(listOf(base))
         val m = BaselineManager(catalog)
 
         assertEquals(BaselineManager.SetOutcome.SET, m.set(base))
-        assertEquals(base.runId, m.pointer(base))
+        assertEquals(listOf(base.runId), m.members(base))
         assertTrue(m.isBaseline(base))
 
         assertEquals(BaselineManager.SetOutcome.CLEARED, m.clear(base))
-        assertNull(m.pointer(base))
+        assertEquals(emptyList<String>(), m.members(base))
         // The run file itself is untouched by clearing.
         assertTrue(base.runId in catalog.runIds())
     }
@@ -55,7 +56,7 @@ class BaselineManagerTest {
         val m = BaselineManager(FakeCatalog(listOf(base)))
         assertEquals(BaselineManager.SetOutcome.SET, m.toggle(base))
         assertEquals(BaselineManager.SetOutcome.CLEARED, m.toggle(base))
-        assertNull(m.pointer(base))
+        assertEquals(emptyList<String>(), m.members(base))
     }
 
     @Test fun anIneligibleRunCannotBecomeTheBaseline() {
@@ -63,7 +64,7 @@ class BaselineManagerTest {
         val catalog = FakeCatalog(listOf(bad))
         val m = BaselineManager(catalog)
         assertEquals(BaselineManager.SetOutcome.NOT_ELIGIBLE, m.set(bad))
-        assertNull(m.pointer(bad))
+        assertEquals(emptyList<String>(), m.members(bad))
         assertEquals(0, catalog.writes)
     }
 
@@ -74,14 +75,47 @@ class BaselineManagerTest {
         assertEquals(BaselineManager.SetOutcome.SET, m.set(charging))
     }
 
-    @Test fun settingAnotherRunOverwritesThePointer() {
+    @Test fun settingAnotherRunAddsItToTheSet() {
         val first = runAt("20260910-100000-000")
         val second = runAt("20260910-110000-000")
-        val m = BaselineManager(FakeCatalog(listOf(first, second)))
+        val catalog = FakeCatalog(listOf(first, second))
+        val m = BaselineManager(catalog)
         m.set(first)
         m.set(second)
-        assertEquals(second.runId, m.pointer(second))
-        assertFalse(m.isBaseline(first))
+        // #165: one run could not stand for a camera whose launch alternates between two modes.
+        assertEquals(listOf(first.runId, second.runId), m.members(second))
+        assertTrue(m.isBaseline(first))
+        // Adding a member twice changes nothing and writes nothing.
+        val writes = catalog.writes
+        m.set(first)
+        assertEquals(listOf(first.runId, second.runId), m.members(first))
+        assertEquals(writes, catalog.writes)
+    }
+
+    @Test fun aRunIsJudgedAgainstEveryMemberButItself() {
+        val a = runAt("20260910-100000-000")
+        val b = runAt("20260910-101000-000")
+        val current = runAt("20260910-110000-000")
+        val m = BaselineManager(FakeCatalog(listOf(a, b, current)))
+        m.set(a)
+        m.set(b)
+
+        val resolved = m.resolve(current)
+        assertEquals(ComparedTo.BASELINE, resolved.comparedTo)
+        assertEquals(listOf(a.runId, b.runId), resolved.runs.map { it.runId })
+        assertEquals(listOf(a.runId, b.runId), resolved.comparison(current).baseRunIds)
+        // A member is measured against the others, which is what tells whether it belongs in the set.
+        assertEquals(listOf(b.runId), m.resolve(a).runs.map { it.runId })
+    }
+
+    @Test fun theOnlyMemberFallsBackToThePreviousRun() {
+        val older = runAt("20260910-090000-000")
+        val base = runAt("20260910-100000-000")
+        val m = BaselineManager(FakeCatalog(listOf(older, base)))
+        m.set(base)
+        val resolved = m.resolve(base)
+        assertEquals(ComparedTo.PREVIOUS, resolved.comparedTo)
+        assertEquals(listOf(older.runId), resolved.runs.map { it.runId })
     }
 
     @Test fun aDeletedBaselineFileReturnsToNoBaseline() {
@@ -93,13 +127,28 @@ class BaselineManagerTest {
 
         catalog.runs.remove(base.runId)
 
-        assertNull(m.pointer(current))
-        assertNull(m.baselineRun(current))
-        // The stale pointer is dropped from the stored index, not just ignored on read.
+        assertEquals(emptyList<String>(), m.members(current))
+        assertEquals(emptyList<BenchmarkRun>(), m.baselineRuns(current))
+        // The stale id is dropped from the stored index, not just ignored on read.
         assertTrue(catalog.index.baselines.isEmpty())
     }
 
-    @Test fun anUnreadableBaselineFileYieldsNoBaselineRunButKeepsThePointer() {
+    @Test fun aDeletedMemberLeavesTheRestOfTheSet() {
+        val a = runAt("20260910-100000-000")
+        val b = runAt("20260910-101000-000")
+        val current = runAt("20260910-110000-000")
+        val catalog = FakeCatalog(listOf(a, b, current))
+        val m = BaselineManager(catalog)
+        m.set(a)
+        m.set(b)
+
+        catalog.runs.remove(a.runId)
+
+        assertEquals(listOf(b.runId), m.members(current))
+        assertEquals(listOf(b.runId), catalog.index.baselines(current.contract.comparisonContractId, "0"))
+    }
+
+    @Test fun anUnreadableBaselineFileYieldsNoBaselineRunButKeepsItsId() {
         val base = runAt("20260910-100000-000")
         val current = runAt("20260910-110000-000")
         val catalog = FakeCatalog(listOf(base, current))
@@ -108,8 +157,8 @@ class BaselineManagerTest {
 
         catalog.runs[base.runId] = null   // the file exists but does not parse
 
-        assertEquals(base.runId, m.pointer(current))
-        assertNull(m.baselineRun(current))
+        assertEquals(listOf(base.runId), m.members(current))
+        assertEquals(emptyList<BenchmarkRun>(), m.baselineRuns(current))
     }
 
     @Test fun baselinesOfOtherEndpointsAreIndependent() {
@@ -117,8 +166,8 @@ class BaselineManagerTest {
         val ultrawide = runAt("20260910-101000-000", endpointKey = "2")
         val m = BaselineManager(FakeCatalog(listOf(main, ultrawide)))
         m.set(main)
-        assertEquals(main.runId, m.pointer(main))
-        assertNull(m.pointer(ultrawide))
+        assertEquals(listOf(main.runId), m.members(main))
+        assertEquals(emptyList<String>(), m.members(ultrawide))
     }
 
     @Test fun theBaselineSurvivesAFingerprintChange() {
@@ -129,9 +178,9 @@ class BaselineManagerTest {
         )
         val m = BaselineManager(FakeCatalog(listOf(base, newBuild)))
         m.set(base)
-        // Comparing across builds is the point of the product, so a new fingerprint must not drop the pointer.
-        assertEquals(base.runId, m.pointer(newBuild))
-        assertEquals(base.runId, m.baselineRun(newBuild)?.runId)
+        // Comparing across builds is the point of the product, so a new fingerprint must not drop the set.
+        assertEquals(listOf(base.runId), m.members(newBuild))
+        assertEquals(listOf(base.runId), m.baselineRuns(newBuild).map { it.runId })
     }
 
     @Test fun referenceIsTheMostRecentEligibleEarlierRun() {

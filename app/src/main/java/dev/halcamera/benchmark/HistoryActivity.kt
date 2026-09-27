@@ -168,8 +168,8 @@ class HistoryActivity : ComponentActivity() {
         // Baselines lead the list under their own heading. In a newest-first list a baseline, usually the oldest
         // run of its camera, sat at the very bottom with a grey badge, and nobody could tell which run it was.
         val (baselineRuns, otherRuns) = pointers.baselinesFirst(runs)
-        // Each heading counts its own group. One baseline per camera is the usual case, so "1개" would only be
-        // noise; a count appears once several cameras are listed together.
+        // Each heading counts its own group. A baseline set usually holds several runs, and several cameras can
+        // have one; "1개" alone would only be noise.
         if (baselineRuns.isNotEmpty()) {
             heading(if (baselineRuns.size == 1) "Baseline" else "Baseline · ${baselineRuns.size}개")
             baselineRuns.forEach { runRow(it, byId) }
@@ -181,12 +181,15 @@ class HistoryActivity : ComponentActivity() {
     }
 
     private fun runRow(run: BenchmarkRun, byId: Map<String, BenchmarkRun>) {
-        val baselineId = pointers.baseline(run.contract.comparisonContractId, run.endpoint.key)
-        val baseline = byId[baselineId]?.takeIf { it.runId != run.runId }
-        val regression = baseline?.let { RegressionDetector.compare(it, run).regressedCount } ?: 0
+        val members = pointers.baselines(run.contract.comparisonContractId, run.endpoint.key)
+        val isMember = run.runId in members
+        // A member is not judged in the list: its row sits under the Baseline heading, and "degraded" there would
+        // read as a verdict on the set itself. Its result screen measures it against the other members.
+        val bases = if (isMember) emptyList() else members.mapNotNull { byId[it] }
+        val regression = if (bases.isEmpty()) 0 else RegressionDetector.compare(bases, run).regressedCount
         val capture = run.metric("2.2")?.let { ResultPresenter.format(it, it.value) } ?: "—"
         val status = when {
-            baselineId == run.runId -> "★ Baseline"
+            isMember -> "★ Baseline"
             regression > 0 -> "▲ $regression degraded"
             else -> ""
         }
@@ -214,7 +217,7 @@ class HistoryActivity : ComponentActivity() {
         val badge = status.ifEmpty { ResultPresenter.shortStatus(run).orEmpty() }
         // A baseline row shows no badge: it only ever appears under the Baseline heading, which already says so,
         // and a bordered chip beside the ⋮ button read as another button. The spoken label below keeps the word.
-        if (badge.isNotEmpty() && baselineId != run.runId) {
+        if (badge.isNotEmpty() && !isMember) {
             val badgeColor = if (status.isEmpty()) Look.statusWarn else Look.statusFail
             head.addView(Look.text(this, badge, 13, badgeColor, bold = true))
         }
@@ -273,7 +276,7 @@ class HistoryActivity : ComponentActivity() {
         // baseline itself is not changed.
         BenchmarkResultCards.addResult(
             this, body, current, comparison, ComparedTo.BASELINE,
-            pointers.isBaseline(current), fileName = null, reference = base
+            pointers.isBaseline(current), fileName = null, references = listOf(base)
         )
         button("두 run 바꾸기") { val old = selectedId; selectedId = compareId; compareId = old; render() }
         button("CSV 내보내기 · 두 실행") { exportCsv(listOf(base, current)) }
@@ -285,21 +288,21 @@ class HistoryActivity : ComponentActivity() {
     }
 
     private fun menu(run: BenchmarkRun) {
-        val isBaseline = pointers.baseline(run.contract.comparisonContractId, run.endpoint.key) == run.runId
+        val isBaseline = pointers.isBaseline(run)
         // The list shows the time, so the menu does too; the raw id did not look like the row it came from.
-        choose(ResultPresenter.localTime(run.runId) ?: run.runId, listOf("결과 열기", if (isBaseline) "baseline 해제" else "baseline으로 지정", "비교", "JSON 내보내기", "CSV 내보내기", "삭제")) {
+        choose(ResultPresenter.localTime(run.runId) ?: run.runId, listOf("결과 열기", if (isBaseline) ResultPresenter.REMOVE_BASELINE else ResultPresenter.ADD_BASELINE, "비교", "JSON 내보내기", "CSV 내보내기", "삭제")) {
             when (it) {
                 0 -> open(run)
                 1 -> {
                     if (indexError != null) message("Baseline 파일을 읽을 수 없어 변경할 수 없습니다.")
-                    else if (!isBaseline && !run.validity.comparisonEligible) message("비교 가능한 실행만 baseline으로 지정할 수 있습니다.")
+                    else if (!isBaseline && !run.validity.comparisonEligible) message("비교 가능한 실행만 baseline에 추가할 수 있습니다.")
                     else work({ baselines.toggle(run) }) { reload() }
                 }
                 2 -> { selectedId = run.runId; compareId = null; render() }
                 3 -> share(store.file(run.runId), "application/json")
                 4 -> exportCsv(listOf(run))
                 5 -> AlertDialog.Builder(this).setTitle("실행을 삭제할까요?")
-                    .setMessage("${run.runId}\n실행 JSON을 삭제합니다.${if (isBaseline) " 이 실행의 baseline 지정도 해제됩니다." else ""}")
+                    .setMessage("${run.runId}\n실행 JSON을 삭제합니다.${if (isBaseline) " 이 실행은 baseline에서도 빠집니다." else ""}")
                     .setNegativeButton("취소", null)
                     .setPositiveButton("삭제") { _, _ -> work({ check(store.deleteRun(run.runId)) { "실행을 삭제하지 못했습니다." } }) { reload() } }
                     .show()

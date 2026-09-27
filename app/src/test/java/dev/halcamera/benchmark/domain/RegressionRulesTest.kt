@@ -31,7 +31,10 @@ class RegressionRulesTest {
         assertEquals(30.0, r("H.6").deltaPct!!, 0.0); assertEquals(200.0, r("H.6").noiseFloor, 0.0)
         assertEquals(2.0, r("H.5").noiseFloor, 0.0)
         assertEquals(1.0, r("H.9").noiseFloor, 0.0)
-        assertEquals("regression-rule-v2", RegressionRules.VERSION)
+        // v3 (#165): the first open and the slowest open, judged like 1.1.
+        assertEquals(15.0, r("1.9").deltaPct!!, 0.0); assertEquals(10.0, r("1.9").noiseFloor, 0.0)
+        assertEquals(15.0, r("1.10").deltaPct!!, 0.0); assertEquals(10.0, r("1.10").noiseFloor, 0.0)
+        assertEquals("regression-rule-v3", RegressionRules.VERSION)
     }
 
     @Test fun theRecordingRulesAddTheOnlyHigherIsBetterMetric() {

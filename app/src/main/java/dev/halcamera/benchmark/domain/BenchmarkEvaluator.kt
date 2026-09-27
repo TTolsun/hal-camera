@@ -102,7 +102,7 @@ data class Stats(val p50: Double?, val p95: Double?, val min: Double?, val max: 
 
 /** The metric ids a camera2-standard run reports, in display order (docs/PLAN-BenchMarker-v0.3.md chapter 4). */
 object BenchmarkMetrics {
-    val LAUNCH = listOf("1.1", "1.2", "1.3", "1.8", "1.6", "1.7")
+    val LAUNCH = listOf("1.1", "1.9", "1.10", "1.2", "1.3", "1.8", "1.6", "1.7")
     val PREVIEW = listOf("H.1", "H.2", "H.3", "H.4", "H.10")
     val CAPTURE = listOf("2.2", "2.3", "2.5")
     val STABILITY = listOf("H.5", "H.9", "2.7")
@@ -152,7 +152,9 @@ class BenchmarkEvaluator(private val profile: BenchmarkProfile) {
         val warm = input.cycles.filter { it.warmup }
         fun cycle(id: String, pick: (LaunchCycle) -> Double?) =
             bounded(id, valid.mapNotNull(pick), warm.mapNotNull(pick))
-        out += cycle("1.1") { it.openMs }
+        val open = cycle("1.1") { it.openMs }
+        out += open
+        out += LaunchTail.metrics(open)
         out += cycle("1.2") { it.configureMs }
         out += cycle("1.3") { it.firstStartedMs }
         out += cycle("1.8") { it.yuvProxyMs }

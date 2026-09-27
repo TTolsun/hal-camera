@@ -53,6 +53,13 @@ class BenchmarkEvaluatorTest {
         assertEquals(UnknownReason.NO_BASELINE, open.unknownReason)
     }
 
+    @Test fun theWarmUpOpenAndTheSlowestOpenAreWrittenBesideOpen() {
+        val m = evaluate(observation())
+        // #165: the two ends of 1.1 that its median leaves out.
+        assertEquals(200.0, m.getValue("1.9").value!!, 1e-9)
+        assertEquals(149.0, m.getValue("1.10").value!!, 1e-9)
+    }
+
     @Test fun stillStatisticsAndShotToShotIntervals() {
         val m = evaluate(observation())
         val capture = m["2.2"]!!

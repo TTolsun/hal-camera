@@ -87,9 +87,12 @@ run 하나당 JSON 파일 하나. 그래프와 비교는 PC에서 한다. 각 �
 | 1.5 | `activity_create_to_open` | Activity `onCreate()` 진입 | `openCamera()` 호출 직전 | 프로세스 전체 기동 시간이 아님. 권한 대기·surface 대기도 포함될 수 있으므로 조건 기록 |
 | 1.6 | `preview_total` | `openCamera()` 호출 직전 | 1.4의 끝점 | 직접 차감. 단계 합과의 차이는 open 완료→configure 호출, configure 완료→repeating 호출 사이의 앱 구간 |
 | 1.7 | `close_latency` | `CameraDevice.close()` 호출 직전 | `StateCallback.onClosed()` 진입 | 카메라 전환 시나리오에서 필요 |
+| 1.9 | `open_latency_first_cycle` | 1.1과 같음 | 1.1과 같음 | warmup으로 1.1에서 빠지는 첫 launch 사이클 하나의 값. 다른 앱이 카메라를 쥐고 있으면 이 사이클만 수백 ms가 된다(#165) |
+| 1.10 | `open_latency_max` | 1.1과 같음 | 1.1과 같음 | 1.1 측정 사이클의 최댓값. 중앙값이 가리는 한두 번의 튐을 본다(#165) |
 
 주의
 
+- 1.9와 1.10은 새로 재는 값이 아니라 1.1이 저장한 warmup 표본과 max에서 읽는다. 그래서 두 지표가 생기기 전에 저장된 run도 읽을 때 같은 값을 얻고, `metric_definition_version`은 바꾸지 않는다. 기존 지표의 정의가 그대로이므로 예전 run과 계속 비교된다.
 - "화면에 실제로 표시된 시각"은 앱에서 알 수 없다. 1.4는 Surface 도착 기준이며, 표시 기준은 나중에 Perfetto(SurfaceFlinger)로 붙인다.
 - 1.4−1.3은 콜백 관측 차이다. 센서 readout, 처리·buffer 전달, listener 스케줄링 등이 함께 포함될 수 있으며 HAL buffer queue 깊이를 단독으로 추정하지 않는다. 이는 관측 경계에 따른 해석 제한이다.
 - 현재 프리뷰 APK는 TextureView를 사용하며 이 listener 계측이 없다. `onSurfaceTextureUpdated()`나 YUV 이미지 콜백을 1.4로 대신 기록하지 않는다.
