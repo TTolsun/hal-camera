@@ -92,7 +92,8 @@ fun describeCamera(manager: CameraManager, id: String): Map<String, Any?> {
 }
 
 fun Telemetry.registerSession(session: String, engine: String, manager: CameraManager, cameraId: String) {
-    sessions[session] = describeCamera(manager, cameraId) + mapOf("engine" to engine, "sessionId" to session)
+    sessions[session] = describeCamera(manager, cameraId) + mapOf("engine" to engine, "sessionId" to session,
+        "partialResultCount" to manager.getCameraCharacteristics(cameraId)[CameraCharacteristics.REQUEST_PARTIAL_RESULT_COUNT])
     event(session, "open_requested", mapOf("engine" to engine, "cameraId" to cameraId))
 }
 

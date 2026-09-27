@@ -2,7 +2,6 @@ package dev.halcamera.ui
 
 import dev.halcamera.metrics.MetricExtractor
 import dev.halcamera.telemetry.Event
-import java.util.Locale
 
 /**
  * The live numbers of the LIVE screen (docs/PLAN-BenchMarker-v0.3.md 8.1). Every field is an observation; none of
@@ -13,7 +12,7 @@ import java.util.Locale
  * opinion formed from a two-second window is not a measurement anyone can act on, and the BenchMarker answers the
  * same question properly by comparing a whole run against a baseline the developer chose.
  *
- * [intervalRefMs] survives because [StripView] needs a reference line to draw against, and the reference is the
+ * [intervalRefMs] is kept for the reading captured at Mark time. The reference is the
  * session's own median interval rather than a target frame rate: a 30 to 15 fps change by AE is a different cadence,
  * not a slower one.
  */
@@ -80,39 +79,4 @@ class LiveReadout(
         )
     }
 
-    companion object {
-        /**
-         * The panel's raw table. One row per number, aligned, and a dash wherever a value cannot be read yet.
-         *
-         * The labels are English because the block is drawn in a monospace face, where a Hangul glyph occupies
-         * two cells while [String.padEnd] counts it as one: Korean labels put every value in a different column.
-         * The 3A states get their own indented rows rather than one long line, so no row has to wrap.
-         */
-        fun panelText(r: LiveReading): String {
-            fun ms(v: Double?) = v?.let { String.format(Locale.US, "%.1f ms", it) } ?: "—"
-            fun row(label: String, value: String) = label.padEnd(LABEL_WIDTH) + value
-            return listOf(
-                row("interval", ms(r.intervalMs)),
-                row("interval ref p50", ms(r.intervalRefMs)),
-                row("interval max", ms(r.maxIntervalMs)),
-                row("frame duration", ms(r.frameDurationMs)),
-                row("partial", ms(r.partialMs)),
-                row("partial ref p50", ms(r.baselinePartialMs)),
-                row("buffer", ms(r.bufferMs)),
-                row("stalls (10s)", r.stalls.toString()),
-                row("ref frames", r.baselineFrames.toString()),
-                row("  AE", dev.halcamera.telemetry.stateName("AE", r.ae)),
-                row("  AF", dev.halcamera.telemetry.stateName("AF", r.af)),
-                row("  AWB", dev.halcamera.telemetry.stateName("AWB", r.awb))
-            ).joinToString("\n")
-        }
-
-        /** The one-line strip caption under the sparkline. */
-        fun stripText(frame: Long?, partialMs: Double?, bufferMs: Double?): String {
-            fun short(v: Double?) = v?.let { String.format(Locale.US, "%+.1f", it) } ?: "—"
-            return "#${frame ?: "—"}  Start +0  Partial ${short(partialMs)}  Buffer ${short(bufferMs)} ms"
-        }
-
-        internal const val LABEL_WIDTH = 18
-    }
 }

@@ -4,9 +4,12 @@ import android.content.Context
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
+import android.hardware.camera2.params.OutputConfiguration
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Handler
+import android.os.Build
+import android.os.SystemClock
 import android.util.Size
 import android.view.Surface
 import android.widget.Toast
@@ -43,8 +46,8 @@ internal class Camera2LiveRecorder(
         val session: CameraCaptureSession?
         val stillInFlight: Boolean
         fun onSessionConfigured(session: CameraCaptureSession?)
-        /** Starts the repeating recording request on the new session; [surface] is already [Camera2LiveRecorder.surface]. */
-        fun startRepeating(camera: CameraDevice, session: CameraCaptureSession, c: CameraCharacteristics, surface: Surface)
+        /** Starts repeating with the same output configuration used to create this session. */
+        fun startRepeating(camera: CameraDevice, session: CameraCaptureSession, c: CameraCharacteristics, outputs: StreamConfiguration<Surface>)
         /** The recording session closed: rebuild the preview session if the camera is still in use. */
         fun rebuildPreview()
         fun orientationHint(c: CameraCharacteristics): Int
@@ -56,6 +59,7 @@ internal class Camera2LiveRecorder(
     }
 
     private var recorder: MediaRecorder? = null
+    private var relay: RecordingBufferRelay? = null
     private var file: File? = null
     private var started = false
     private var done: ((Result<Uri>) -> Unit)? = null
@@ -110,13 +114,43 @@ internal class Camera2LiveRecorder(
                     } }
                     prepare()
                 }
-                camera.createCaptureSession(listOf(host.previewSurface!!, recorder.surface), object : CameraCaptureSession.StateCallback() {
+                // API 33 lets the PRIVATE stream retain sensor timestamps for exact frame correlation.
+                // Older versions keep the direct recorder path rather than guessing a clock offset for matching.
+                val recordingOutput = OutputDescriptor("recording", OutputKind.RECORDING, true,
+                    observable = Build.VERSION.SDK_INT >= 33)
+                val recordingSurface = if (Build.VERSION.SDK_INT >= 33) {
+                    val monotonicBefore = System.nanoTime()
+                    val realtime = SystemClock.elapsedRealtimeNanos()
+                    val monotonicAfter = System.nanoTime()
+                    val timebase = RecordingTimebase(
+                        c[CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE] == CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME,
+                        realtime - (monotonicBefore + (monotonicAfter - monotonicBefore) / 2))
+                    RecordingBufferRelay(recorder.surface, size, recordingOutput, telemetry, sessionId, timebase) { error ->
+                        handler.post {
+                            if (this.recorder === recorder && busy && !stopRequested) {
+                                failure = error
+                                telemetry.event(sessionId, "recording_error", mapOf("message" to error.toString(), "source" to "buffer_relay"))
+                                stop()
+                            }
+                        }
+                    }.also { relay = it }.surface
+                } else recorder.surface
+                val outputs = StreamConfiguration(listOf(
+                    ConfiguredOutput(OutputDescriptor("preview", OutputKind.PREVIEW, true), host.previewSurface!!),
+                    ConfiguredOutput(recordingOutput, recordingSurface)))
+                val configurations = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
+                    if (Build.VERSION.SDK_INT >= 33 && output.descriptor.id == recordingOutput.id) {
+                        timestampBase = OutputConfiguration.TIMESTAMP_BASE_SENSOR
+                        if (Build.VERSION.SDK_INT >= 34) setReadoutTimestampEnabled(false)
+                    }
+                } }
+                camera.createCaptureSessionByOutputConfigurations(configurations, object : CameraCaptureSession.StateCallback() {
                     override fun onConfigured(session: CameraCaptureSession) {
                         if (!host.active || stopRequested) { session.close(); return }
                         host.onSessionConfigured(session)
                         try {
-                            surface = recorder.surface
-                            host.startRepeating(camera, session, c, recorder.surface)
+                            surface = recordingSurface
+                            host.startRepeating(camera, session, c, outputs)
                             recorder.start(); this@Camera2LiveRecorder.started = true
                             telemetry.event(sessionId, "recording_started", mapOf("size" to size.toString(), "audio" to audio))
                             main.post { if (host.active) { host.recordingState(true); started() } }
@@ -157,12 +191,15 @@ internal class Camera2LiveRecorder(
         if (recorder == null && file == null && !busy) return
         val recorder = recorder
         this.recorder = null
+        val relay = relay; this.relay = null
+        if (Build.VERSION.SDK_INT >= 33) relay?.stopAccepting()
         val file = file; this.file = null
         val done = done; this.done = null
         val failure = failure; this.failure = null
         val wasStarted = started
         val stopped = wasStarted && recorder != null && runCatching { recorder.stop() }.isSuccess
         runCatching { recorder?.reset() }; runCatching { recorder?.release() }
+        if (Build.VERSION.SDK_INT >= 33) relay?.closeAfterEncoder()
         surface = null
         started = false; busy = false; stopRequested = false
         main.post { host.recordingState(false) }

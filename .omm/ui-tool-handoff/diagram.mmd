@@ -8,7 +8,7 @@ sequenceDiagram
     L->>T: CameraProbeActivity를 바로 시작
     Note over L,E: 화면이 가려지면 onStop이 평소처럼 카메라를 닫음
     U->>L: 도구 → CTS 또는 Benchmark
-    L->>L: 진행 중인 incident를 마무리하고 진단 패널을 닫음
+    L->>L: 진행 중인 incident를 마무리하고 콜백 그래프를 닫음
     L->>L: closing을 켜고 "카메라 세션 종료 중…" 표시
     L->>E: close(done)
     E-->>L: done

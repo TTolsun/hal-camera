@@ -6,23 +6,22 @@ import android.os.Debug
 import android.os.PowerManager
 import android.os.Process
 import android.os.SystemClock
+import android.view.View
 import android.widget.TextView
 import dev.halcamera.camera.LiveControlSupport
 import dev.halcamera.camera.LiveControls
 import dev.halcamera.telemetry.Event
 import dev.halcamera.telemetry.FlightRecorder
 import java.util.Locale
+import java.util.concurrent.Executor
+import java.util.concurrent.atomic.AtomicBoolean
 
-/**
- * The numbers the Live screen reads from the flight recorder on every tick: the two lines over the preview
- * ([metrics]), and in the diagnostics [panel] the readout card, the strip, the callback timeline and the app's
- * CPU, memory and thermal sample. Main thread only.
- */
+/** UI updates run on the main thread; system telemetry sampling runs on the supplied worker. */
 class LiveReadings(
     private val context: Context,
     private val metrics: TextView,
-    private val panel: DiagnosticsPanel,
     private val recorder: FlightRecorder,
+    private val systemWorker: Executor,
 ) {
     private val readout = LiveReadout()
     /** The latest readout; a Mark keeps the one current when it was pressed. */
@@ -31,14 +30,19 @@ class LiveReadings(
     private var previousCpu = Process.getElapsedCpuTime()
     private var previousSample = SystemClock.elapsedRealtime()
     private var lastSystemNs = 0L
+    private val samplingSystem = AtomicBoolean(false)
 
     fun update(events: List<Event>, frames: List<Event>, time: Long, sessionId: String, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float) {
-        updateReadout(events, frames, time, sessionId)
-        updateReadings(events, frames, time, sessionId, controls, support, zoomRatio)
-        if (time - lastSystemNs >= 1_000_000_000L) { sampleSystem(); lastSystemNs = time }
+        last = readout.read(events, sessionId, time)
+        if (metrics.visibility == View.VISIBLE) updateReadings(frames, time, controls, support, zoomRatio)
+        if (time - lastSystemNs >= 1_000_000_000L && samplingSystem.compareAndSet(false, true)) {
+            lastSystemNs = time
+            // PSS collection can block for tens of milliseconds. Never run it on the preview's UI thread.
+            systemWorker.execute { try { sampleSystem() } finally { samplingSystem.set(false) } }
+        }
     }
 
-    private fun updateReadings(events: List<Event>, frames: List<Event>, time: Long, sessionId: String, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float) {
+    private fun updateReadings(frames: List<Event>, time: Long, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float) {
         val frame = frames.lastOrNull()?.takeIf { time - it.atNs < 1_500_000_000L }
         fun num(key: String) = (frame?.values?.get(key) as? Number)?.toDouble()
         fun fmt(value: Double?, pattern: String) = value?.let { pattern.format(Locale.US, it) } ?: "—"
@@ -58,35 +62,8 @@ class LiveReadings(
         val room = (metrics.width - metrics.paddingLeft - metrics.paddingRight).toFloat()
         var state = listOfNotNull(LiveControlBar.aeState(num("ae")?.toInt()), LiveControlBar.flashState(num("flashState")?.toInt(), controls)).joinToString(" · ")
         for (extra in extras) { val next = "$state · $extra"; if (room > 0f && metrics.paint.measureText(next) <= room) state = next else break }
-        metrics.text = "FPS ${fmt(num("resultFps"), "%.1f")} · ISO ${num("iso")?.toInt() ?: "—"} · Exp ${fmt(num("exposureNs")?.div(1e6), "%.2fms")}\n$state"
-        if (frame == null) { panel.timeline.text = "수신 중인 프레임 없음"; panel.stripText.text = "Partial —   Buffer — ms"; return }
-        val imageEvents = events.filter { it.session == sessionId && it.kind == "image_available" }
-        val matched = frames.asReversed().firstOrNull { r -> r.sensorNs != null && imageEvents.any { it.sensorNs == r.sensorNs } } ?: frame
-        val start = events.lastOrNull { it.session == sessionId && it.kind == "capture_started" && it.frame == matched.frame }
-        val image = imageEvents.lastOrNull { it.sensorNs == matched.sensorNs }
-        fun offset(e: Event?) = if (e != null && start != null) "%+.2f ms".format(Locale.US, (e.atNs - start.atNs) / 1e6) else "—"
-        panel.timeline.text = "Frame #${matched.frame} · observed callbacks\nStart    ${if (start != null) "+0.00 ms" else "—"}\nPartial  ${offset(matched)}\nBuffer   ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
-        fun ms(e: Event?) = if (e != null && start != null) (e.atNs - start.atNs) / 1e6 else null
-        panel.timelineView.update(matched.frame, ms(matched), ms(image), last?.baselinePartialMs, last?.baselineBufferMs)
-        fun offset(value: Double?) = value?.let { "%+.1f".format(Locale.US, it) } ?: "—"
-        panel.stripText.text = "Partial ${offset(ms(matched))}   Buffer ${offset(ms(image))} ms"
-    }
-
-    /**
-     * The live numbers, read once per tick and nothing more. The old version of this also recorded a
-     * `health_assessment` event on every change of verdict; the flight recorder now carries only what was
-     * observed, which is the only thing a ZIP opened months later can still be checked against.
-     */
-    private fun updateReadout(events: List<Event>, frames: List<Event>, time: Long, sessionId: String) {
-        val r = readout.read(events, sessionId, time)
-        panel.strip.update(frames, r.intervalRefMs, time)
-        val note = when {
-            !r.hasCurrentFrame -> "수신 중인 프레임 없음"
-            !r.hasReference -> "기준 수집 중 (${r.baselineFrames}프레임)"
-            else -> null
-        }
-        panel.readoutCard.text = listOfNotNull(note, LiveReadout.panelText(r)).joinToString("\n")
-        last = r
+        val text = "FPS ${fmt(num("resultFps"), "%.1f")} · ISO ${num("iso")?.toInt() ?: "—"} · Exp ${fmt(num("exposureNs")?.div(1e6), "%.2fms")}\n$state"
+        if (metrics.text.toString() != text) metrics.text = text
     }
 
     private fun sampleSystem() {
@@ -96,7 +73,6 @@ class LiveReadings(
         val memory = Debug.MemoryInfo().also { Debug.getMemoryInfo(it) }.totalPss / 1024.0
         val thermal = if (Build.VERSION.SDK_INT >= 29) context.getSystemService(PowerManager::class.java).currentThermalStatus else null
         val thermalName = thermal?.let { listOf("NONE", "LIGHT", "MODERATE", "SEVERE", "CRITICAL", "EMERGENCY", "SHUTDOWN").getOrNull(it) ?: "$it" } ?: "N/A"
-        panel.system.text = "App CPU ${"%.1f".format(Locale.US, percent)}% (1코어=100%)\nPSS ${"%.0f".format(Locale.US, memory)} MB · Thermal $thermalName"
         recorder.record("app", "system_sample", values = mapOf("appCpuPercentOneCore" to percent, "pssMb" to memory, "thermalStatus" to thermal, "thermalName" to thermalName))
     }
 }

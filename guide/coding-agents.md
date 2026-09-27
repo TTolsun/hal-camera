@@ -8,7 +8,7 @@ title: Agents
 <h2 lang="en">Use it.</h2>
 
 1. 저장소를 clone하고 APK를 기기에 설치합니다.
-2. Live 화면의 **진단** 버튼으로 진단 패널을 열고 **ADB CLI 허용**을 켭니다. 초기값이 꺼짐이며 adb로는 켤 수 없습니다.
+2. Live 화면의 **도구 → 설정 · 앱 정보 → ADB CLI 설정**에서 **ADB CLI 허용**을 켭니다. 초기값이 꺼짐이며 adb로는 켤 수 없습니다.
 3. 에이전트를 저장소 루트에서 실행합니다. Claude Code는 `.claude/skills/halcam-cli/`를 통해 스킬을 인식하며, 그 파일은 본문인 `skills/halcam-cli/SKILL.md`를 가리킵니다.
 4. 다른 에이전트를 쓴다면 `skills/halcam-cli/SKILL.md`를 직접 읽히십시오. 저장소의 `AGENTS.md`에도 같은 경로를 적어 두었습니다.
 

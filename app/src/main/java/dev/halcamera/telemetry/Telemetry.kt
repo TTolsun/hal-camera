@@ -8,14 +8,28 @@ import java.util.concurrent.ConcurrentHashMap
 class Telemetry(val recorder: FlightRecorder) {
     val sessions = ConcurrentHashMap<String, Map<String, Any?>>()
     fun event(session: String, kind: String, values: Map<String, Any?> = emptyMap()) = recorder.record(session, kind, values = values)
-    fun callback(sessionId: String, alive: () -> Boolean): CameraCaptureSession.CaptureCallback {
+    /** Snapshot the configured outputs, including outputs with no app-visible buffer callback. */
+    fun configureCallbackStreams(session: String, outputs: List<Map<String, Any?>>) {
+        val event = recorder.record(session, "callback_streams", values = mapOf("outputs" to outputs))
+        sessions.computeIfPresent(session) { _, old -> old + mapOf("callbackStreams" to outputs, "callbackStreamsAtNs" to event.atNs) }
+    }
+    fun callback(sessionId: String, streams: (CaptureRequest) -> List<String>? = { null }, alive: () -> Boolean): CameraCaptureSession.CaptureCallback {
         val tracker = FrameTracker()
         return object : CameraCaptureSession.CaptureCallback() {
+            private var previousStart: Event? = null
+            @Synchronized
             override fun onCaptureStarted(session: CameraCaptureSession, request: CaptureRequest, timestamp: Long, frameNumber: Long) {
                 if (!alive()) return
-                recorder.record(sessionId, "capture_started", frameNumber, timestamp,
-                    mapOf("requestTag" to request.tag?.toString(), "templateObservable" to false))
+                val configuredAt = (sessions[sessionId]?.get("callbackStreamsAtNs") as? Number)?.toLong() ?: Long.MIN_VALUE
+                val previous = previousStart?.takeIf { it.atNs >= configuredAt }
+                previousStart = recorder.record(sessionId, "capture_started", frameNumber, timestamp,
+                    mapOf("requestTag" to request.tag?.toString(), "templateObservable" to false, "streams" to streams(request),
+                        "previousStartAtNs" to previous?.atNs, "firstStart" to (previous == null)))
                 recorder.record(sessionId, "request_observed", frameNumber, values = requestValues(request))
+            }
+            override fun onCaptureProgressed(session: CameraCaptureSession, request: CaptureRequest, partialResult: CaptureResult) {
+                if (alive()) recorder.record(sessionId, "capture_partial", partialResult.frameNumber,
+                    partialResult[CaptureResult.SENSOR_TIMESTAMP], mapOf("requestTag" to request.tag?.toString()))
             }
             override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
                 if (!alive()) return
@@ -24,6 +38,7 @@ class Telemetry(val recorder: FlightRecorder) {
                     val sensor = result[CaptureResult.SENSOR_TIMESTAMP]
                     val stats = tracker.add(result.frameNumber, sensor)
                     recorder.record(sessionId, "capture_result", result.frameNumber, sensor, mapOf(
+                        "partialResultsCount" to result.partialResults.size,
                         "ae" to result[CaptureResult.CONTROL_AE_STATE],
                         "af" to result[CaptureResult.CONTROL_AF_STATE],
                         "afMode" to (result[CaptureResult.CONTROL_AF_MODE] ?: request[CaptureRequest.CONTROL_AF_MODE]),

@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
         LiveController(cli, object : LiveController.Driver {
             override fun busy() = recordingVideo || stoppingRecording || pendingMediaAction != null || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true
             override fun prepare(camera: String) {
-                showDiagnostics(false)
+                showCallbacks(false)
                 cameraId = camera; engineName = "Camera2"; paused = false; zoomRatio = 1f
                 resetControls(); updateCameraChoices(); restartCamera()
             }
@@ -127,7 +127,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var pausedOverlay: TextView
     private lateinit var topBar: LinearLayout
     private lateinit var bottomBar: LinearLayout
-    private lateinit var diagnostics: ScrollView
+    private lateinit var graphButton: Button
+    private lateinit var callbackGraph: ResultCallbackGraph
     private lateinit var zoomControl: ExpandingZoomControl
     private lateinit var controlBar: LiveControlBar
     private lateinit var cameraNotice: TextView
@@ -143,20 +144,17 @@ class MainActivity : ComponentActivity() {
         IncidentActions(this, io, main, object : IncidentActions.Host {
             override val sessions get() = telemetry.sessions.toMap()
             override val destroyed get() = this@MainActivity.destroyed
-            override fun latestChanged(file: File?) { shareButton.isEnabled = file != null }
+            override fun latestChanged(file: File?) = Unit
             override fun saveAs(file: File) { saveFile = file; saveDocument.launch(file.name) }
         })
     }
-    private lateinit var scope: ScopeView
+
     private lateinit var reportButton: Button
     private lateinit var mediaButton: ShutterButton
     private lateinit var photoModeButton: Button
     private lateinit var videoModeButton: Button
     private lateinit var modeControls: LinearLayout
     private lateinit var recordingTime: TextView
-    /** The same two controls as the capture row, kept in the panel header while the panel covers it. */
-    private lateinit var panelRecordingTime: TextView
-    private lateinit var panelStopButton: IconButton
     private lateinit var galleryButton: RecentMediaButton
     private lateinit var cameraShortcut: IconButton
     private var cameraIds = emptyList<String>()
@@ -174,15 +172,11 @@ class MainActivity : ComponentActivity() {
         if (grants.values.all { it }) action?.invoke() else toast("저장하려면 요청한 권한을 허용해 주세요")
     }
     private lateinit var engineButton: Button
-    private lateinit var cameraButton: Button
-    private lateinit var pauseButton: IconButton
-    private lateinit var recorderText: TextView
-    private lateinit var shareButton: Button
-    private val panelBack = object : OnBackPressedCallback(false) {
-        override fun handleOnBackPressed() = showDiagnostics(false)
+    private val graphBack = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() = showCallbacks(false)
     }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) restartCamera() else setStatus("카메라 권한이 필요합니다 · 측정 패널의 권한 버튼으로 재시도", false)
+        if (granted) restartCamera() else setStatus("카메라 권한이 필요합니다 · 도구의 설정에서 카메라를 다시 연결하세요", false)
     }
     private val saveDocument = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         val file = saveFile
@@ -202,7 +196,6 @@ class MainActivity : ComponentActivity() {
                 val seconds = (SystemClock.elapsedRealtime() - recordingStartedAt) / 1000
                 val elapsed = "● REC  %02d:%02d".format(Locale.US, seconds / 60, seconds % 60)
                 recordingTime.text = elapsed
-                panelRecordingTime.text = elapsed
             }
             val events = recorder.snapshot(10_000_000_000L)
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
@@ -210,18 +203,13 @@ class MainActivity : ComponentActivity() {
                 else if (cameraXStreaming) frames.lastOrNull()?.atNs ?: 0L else 0L
             liveIndicator.bind(resumed && !paused && !closing && engine != null &&
                 previewAt > 0L && time - previewAt < 1_500_000_000L)
-            // The only cursor left is the incident trigger. The other one marked the frames that produced a
-            // WARNING, and there is no longer anything issuing one.
-            val markers = events.filter { it.kind == "incident_trigger" }.map { Triple(it.atNs, "Mark", true) }
-            scope.update(frames, time, markers)
             readings.update(events, frames, time, sessionId, controlBar.controls, controlBar.support, zoomRatio)
+            if (callbackGraph.visibility == View.VISIBLE) callbackGraph.update(events, sessionId, time, telemetry.sessions[sessionId].orEmpty())
             recorder.finish()?.let(incidents::export)
             val remaining = recorder.remainingNs()
             reportButton.isEnabled = remaining == null && ready && !paused && cli.active == null
             updateMediaControls()
             reportButton.text = if (remaining != null) "저장까지 ${"%.1f".format(Locale.US, remaining/1e9)}s" else "이벤트 저장 · ZIP"
-            val span = events.firstOrNull()?.let { (time-it.atNs)/1e9 } ?: 0.0
-            recorderText.text = if (incidents.exporting > 0) "ZIP 저장 중…" else if (remaining != null) "기록 중 · 이후 ${"%.1f".format(Locale.US, remaining/1e9)}초 남음" else "30s 순환 버퍼  ·  ${"%.1f".format(Locale.US, span.coerceAtMost(10.0))}s / 10s 사전 기록 준비"
             main.postDelayed(this, 100)
         }
     }
@@ -236,8 +224,7 @@ class MainActivity : ComponentActivity() {
         manager = getSystemService(CameraManager::class.java)
         buildUi()
         recentMedia = RecentMediaThumbnail(this) { bitmap, video -> galleryButton.setThumbnail(bitmap, video) }
-        onBackPressedDispatcher.addCallback(this, panelBack)
-        shareButton.isEnabled = incidents.latest != null
+        onBackPressedDispatcher.addCallback(this, graphBack)
         recorder.record("app", "clock_anchor", values = mapOf("wallTimeMs" to System.currentTimeMillis(), "uptimeMs" to SystemClock.uptimeMillis()))
     }
     override fun onSaveInstanceState(outState: Bundle) {
@@ -419,18 +406,11 @@ class MainActivity : ComponentActivity() {
             pendingMediaAction=null; pendingPermissionAction=null
             chooseEngine(if(engineName=="Camera2") "CameraX" else "Camera2")
         }
-        cameraButton=button("") { selectCamera(cameraButton) }
-        pauseButton=IconButton(this,if(paused) R.drawable.ic_action_play else R.drawable.ic_action_pause,if(paused) "프리뷰 재개" else "프리뷰 일시정지") {
-            if (cli.active != null) return@IconButton
-            paused=!paused
-            pauseButton.setIcon(if(paused) R.drawable.ic_action_play else R.drawable.ic_action_pause,if(paused) "프리뷰 재개" else "프리뷰 일시정지")
-            if(paused) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("user_paused")?.let(incidents::export) }
-            restartCamera()
-        }
         // Standalone tools stay in the menu; Mark remains on the live preview.
-        toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: 사양 확인, 동작 검증, 성능 측정, 실행 기록, 작업실" }
-        val panelButton=button("진단") { showDiagnostics(true) }.apply { contentDescription="진단 패널 열기" }
-        listOf(engineButton,toolsButton,panelButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
+        toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: 측정 도구, ZIP 기록, 설정" }
+        // Read-only overlay controls remain usable while the CLI owns a recording.
+        graphButton=CameraWidgets(this).button("수치") { showCallbacks(callbackGraph.visibility != View.VISIBLE) }.apply { contentDescription="Result callback 그래프 표시" }
+        listOf(engineButton,toolsButton,graphButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
         liveIndicator=LiveIndicator(this)
         val leadingSlot=LinearLayout(this).apply {
             orientation=LinearLayout.VERTICAL; gravity=Gravity.START
@@ -440,7 +420,7 @@ class MainActivity : ComponentActivity() {
         val trailingSlot=row().apply {
             gravity=Gravity.END or Gravity.CENTER_VERTICAL
             addView(toolsButton,LinearLayout.LayoutParams(-2,dp(48)))
-            addView(panelButton,LinearLayout.LayoutParams(-2,dp(48)).apply { marginStart=dp(4) })
+            addView(graphButton,LinearLayout.LayoutParams(-2,dp(48)).apply { marginStart=dp(4) })
         }
         // Equal-width slots keep the expander at the screen centre, aligned with the engine button.
         controlBar=LiveControlBar(this,object : LiveControlBar.Host {
@@ -481,6 +461,9 @@ class MainActivity : ComponentActivity() {
             typeface=Look.mono
             setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
         }
+        callbackGraph=ResultCallbackGraph(this).apply { visibility=View.GONE }
+        bottomBar.addView(callbackGraph,lp())
+        readings=LiveReadings(this,metrics,recorder,io)
         bottomBar.addView(metrics,lp())
         zoomControl=ExpandingZoomControl(this) { ratio ->
             if (cli.active != null) return@ExpandingZoomControl
@@ -542,38 +525,6 @@ class MainActivity : ComponentActivity() {
         reportButton.setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
         captureChrome.addView(mainRow,LinearLayout.LayoutParams(-1,-2))
 
-        val panelView=DiagnosticsPanel(this,widgets,cameraButton,pauseButton,MARK_LABEL,object : DiagnosticsPanel.Actions {
-            override fun close() = showDiagnostics(false)
-            override fun stopRecording() = this@MainActivity.stopRecording()
-            override fun about() = dev.halcamera.ui.AboutSheet.show(this@MainActivity)
-            override fun shareLatest() { incidents.latest?.let(incidents::share) }
-            override fun incidents() = incidents.showList()
-            override fun retryPermission() {
-                if(hasPermission()) restartCamera()
-                else if(shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) permission.launch(Manifest.permission.CAMERA)
-                else startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,android.net.Uri.parse("package:$packageName")))
-            }
-            override fun notes() = showNotes()
-            override var cliEnabled: Boolean
-                get() = cli.enabled
-                set(value) = cli.setEnabled(value)
-        })
-        diagnostics=panelView.view; panelRecordingTime=panelView.recordingTime; panelStopButton=panelView.stopButton
-        scope=panelView.scope; readings=LiveReadings(this,metrics,panelView,recorder)
-        recorderText=panelView.recorderText; shareButton=panelView.shareButton
-        val body=panelView.body
-        root.addView(diagnostics,FrameLayout.LayoutParams(-1,0,Gravity.BOTTOM))
-        // Keep the preview and incident action visible while inspecting live graphs.
-        root.addOnLayoutChangeListener { _,_,_,_,_,_,_,_,_ ->
-            val footerHeight=mainRow.height
-            val panelParams=diagnostics.layoutParams as FrameLayout.LayoutParams
-            val panelHeight=((root.height-footerHeight)*0.6f).toInt()
-            if(panelParams.height!=panelHeight || panelParams.bottomMargin!=footerHeight) {
-                panelParams.height=panelHeight; panelParams.bottomMargin=footerHeight
-                diagnostics.layoutParams=panelParams
-            }
-        }
-
         root.setOnApplyWindowInsetsListener { _,insets ->
             val (l,t,r,b)=if (Build.VERSION.SDK_INT >= 30) {
                 val bars=insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
@@ -582,12 +533,35 @@ class MainActivity : ComponentActivity() {
             topBar.setPadding(dp(12)+l,dp(8)+t,dp(12)+r,dp(10))
             bottomBar.setPadding(dp(16)+l,dp(4),dp(16)+r,0)
             mainRow.setPadding(dp(16)+l,0,dp(16)+r,b)
-            body.setPadding(dp(18)+l,dp(12),dp(18)+r,dp(24))
             insets
         }
         root.requestApplyInsets()
         updateCameraChoices()
         updateMediaControls()
+    }
+    private fun showLiveSettings() {
+        AlertDialog.Builder(this).setTitle("설정 · 앱 정보")
+            .setItems(arrayOf("ADB CLI 설정", "카메라 다시 연결", "측정 안내", "앱 정보", if (paused) "프리뷰 재개" else "프리뷰 일시정지")) { _, index ->
+                when (index) {
+                    0 -> AlertDialog.Builder(this).setTitle("ADB CLI 설정")
+                        .setMultiChoiceItems(arrayOf("ADB CLI 허용"), booleanArrayOf(cli.enabled)) { _, _, checked ->
+                            cli.setEnabled(checked)
+                        }.setPositiveButton("닫기", null).show()
+                    1 -> {
+                        if (hasPermission()) restartCamera()
+                        else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) permission.launch(Manifest.permission.CAMERA)
+                        else startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName")))
+                    }
+                    2 -> showNotes()
+                    3 -> dev.halcamera.ui.AboutSheet.show(this)
+                    4 -> {
+                        if (cli.active != null || recordingVideo) return@setItems
+                        paused=!paused
+                        if(paused) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("user_paused")?.let(incidents::export) }
+                        restartCamera()
+                    }
+                }
+            }.setNegativeButton("닫기", null).show()
     }
     private fun selectChoice(anchor:View,items:List<String>,selected:Int,onSelect:(Int)->Unit) {
         showSelectionPopup(anchor,items,selected) { index ->
@@ -629,8 +603,6 @@ class MainActivity : ComponentActivity() {
         }
         engineButton.text=engineName
         engineButton.contentDescription="현재 $engineName, 누르면 ${if(engineName=="Camera2") "CameraX" else "Camera2"}로 전환"
-        cameraButton.text="${cameraLabel(cameraId)} ▾"
-        cameraButton.contentDescription="카메라 선택, 현재 ${cameraLabel(cameraId)}"
         cameraShortcut.contentDescription="카메라 선택 목록 열기, 현재 ${cameraLabel(cameraId)}"
         cameraShortcut.tooltipText=cameraShortcut.contentDescription
         zoomControl.setChoices(if(cameraId.isEmpty()) listOf(1f) else zoomPresets(zoomRange(manager,cameraId)),zoomRatio)
@@ -650,10 +622,6 @@ class MainActivity : ComponentActivity() {
         pausedOverlay.visibility=if(paused) View.VISIBLE else View.GONE
         modeControls.visibility=if(recordingVideo) View.INVISIBLE else View.VISIBLE
         recordingTime.visibility=if(recordingVideo) View.VISIBLE else View.GONE
-        panelRecordingTime.visibility=recordingTime.visibility
-        panelStopButton.visibility=recordingTime.visibility
-        panelStopButton.isEnabled=recordingVideo && !stoppingRecording
-        panelStopButton.alpha=if(panelStopButton.isEnabled) 1f else 0.4f
         mediaButton.setCaptureState(videoMode,recordingVideo)
         if(stoppingRecording) {
             mediaButton.contentDescription="동영상 저장 중"
@@ -661,19 +629,17 @@ class MainActivity : ComponentActivity() {
         }
         mediaButton.isEnabled=(ready || recordingVideo) && !stoppingRecording
         engineButton.isEnabled=!recordingVideo
-        cameraButton.isEnabled=!recordingVideo && cameraId.isNotEmpty()
-        cameraShortcut.isEnabled=cameraButton.isEnabled
+        cameraShortcut.isEnabled=!recordingVideo && cameraId.isNotEmpty()
         // Zoom stays live while recording (#174): the engine changes the recording request in place.
         // The engine reports "REC" as not-ready, so a running recording counts as ready here, as for the shutter.
         zoomControl.isEnabled=(ready || recordingVideo) && !stoppingRecording
         controlBar.bind(engine is LiveTuning || (engine==null && engineName=="Camera2"),videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null)
-        pauseButton.isEnabled=!recordingVideo
         galleryButton.isEnabled=!recordingVideo
         toolsButton.isEnabled=!recordingVideo && !stoppingRecording && !closing
         if (cli.active != null) {
-            listOf(mediaButton, engineButton, cameraButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, pauseButton, galleryButton, toolsButton, reportButton).forEach { it.isEnabled = false }
+            listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, toolsButton, reportButton).forEach { it.isEnabled = false }
         }
-        listOf(engineButton,cameraButton,cameraShortcut,photoModeButton,videoModeButton,mediaButton,pauseButton,galleryButton,toolsButton).forEach {
+        listOf(engineButton,cameraShortcut,photoModeButton,videoModeButton,mediaButton,galleryButton,toolsButton).forEach {
             it.alpha=if(it.isEnabled) 1f else 0.4f
         }
     }
@@ -693,7 +659,7 @@ class MainActivity : ComponentActivity() {
         if (closing) return
         // PROBE, CTS, BENCHMARK is the order a developer meets the tools in: read what the HAL claims, check whether
         // it passes, then measure how long it takes. The guide's tabs carry the same order.
-        showActionPopup(anchor, listOf("Probe · 사양 확인", "CTS · 동작 검증", "Benchmark · 성능 측정", "실행 기록 · 비교", "작업실로 이동")) { index ->
+        showActionPopup(anchor, listOf("Probe · 사양 확인", "CTS · 동작 검증", "Benchmark · 성능 측정", "실행 기록 · 비교", "작업실로 이동", "ZIP 기록", "설정 · 앱 정보")) { index ->
             when (index) {
                 // PROBE reads CameraCharacteristics only and never opens a camera, so it starts without waiting for
                 // close(done); onStop closes the LIVE camera as it does for any screen change.
@@ -708,6 +674,8 @@ class MainActivity : ComponentActivity() {
                 4 -> openAfterClose("workbench_opened") {
                     Intent(this, WorkbenchActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                 }
+                5 -> incidents.showList()
+                6 -> showLiveSettings()
             }
         }
     }
@@ -719,7 +687,7 @@ class MainActivity : ComponentActivity() {
     private fun openAfterClose(reason: String, intent: () -> Intent) {
         if (closing) return
         recorder.finish(reason)?.let(incidents::export)
-        showDiagnostics(false)
+        showCallbacks(false)
         val old = engine; engine = null; closing = true; ready = false
         setStatus("카메라 세션 종료 중…", false)
         updateMediaControls()
@@ -734,15 +702,18 @@ class MainActivity : ComponentActivity() {
         if (!recordingVideo || stoppingRecording) return
         stoppingRecording = true
         recordingTime.text = "저장 중…"
-        panelRecordingTime.text = "저장 중…"
         updateMediaControls()
         (engine as? MediaCapture)?.stopRecording()
     }
-    private fun showDiagnostics(show: Boolean) {
-        if (show) zoomControl.collapse(animate = false)
-        diagnostics.visibility = if (show) View.VISIBLE else View.GONE
-        panelBack.isEnabled = show
-        bottomBar.visibility = if (show) View.GONE else View.VISIBLE
+    private fun showCallbacks(show: Boolean) {
+        callbackGraph.reset()
+        callbackGraph.visibility = if (show) View.VISIBLE else View.GONE
+        metrics.visibility = if (show) View.GONE else View.VISIBLE
+        graphBack.isEnabled = show
+        graphButton.contentDescription = if (show) "Result callback 그래프 숨기기" else "Result callback 그래프 표시"
+        graphButton.isSelected = show
+        ViewCompat.setStateDescription(graphButton, if (show) "표시됨" else "숨겨짐")
+        if (show) callbackGraph.update(recorder.snapshot(10_000_000_000L),sessionId,nowNs(),telemetry.sessions[sessionId].orEmpty())
     }
     private fun label(text:String,size:Int,color:Int,bold:Boolean=false)=widgets.label(text,size,color,bold)
     private fun button(text:String,action:()->Unit)=widgets.button(text,action)
