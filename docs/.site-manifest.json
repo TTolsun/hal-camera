@@ -2,19 +2,20 @@
   "version": 1,
   "files": {
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "_inputs/decisions.html": "90136664cd7c35f7c92e63e554f5b90452cbc502d928833749430116803128d1",
-    "_inputs/device-verification.yaml": "d66c4205e3c9b54c4453055774654d353e46495c11048432532ce51e2f00f95b",
-    "architecture.html": "b30ccbf611d683a8b462db6a5d2e32d6a52c60d3ad45687433d498d08a68aa9c",
+    "_inputs/decisions.html": "bfcdaaa1a634c75c6ea2a3030b4884653dcffaeb40842a62939704e726250944",
+    "_inputs/device-verification.yaml": "1852f48d52f75733b4db973418fc7fad1f0f9d340a8b4b555cf9d49aa7016215",
+    "architecture.html": "de1cd364fca59ade70ab05c2dc132b2a7a66c118825673a7b47b2659a4c90783",
     "assets/docflow-design.css": "ea3d16525a779961c22aed37625c5db0479555496a38126db1890c3d471b88df",
-    "benchmark.html": "118daac2060c6eb850eba2baa853beb325759fc6c32c6aa36bac74d4d6283feb",
-    "cli.html": "f6980244f1cfa0ce7e5fe6b2b23dae85536b0caa4a2fcf0495571297154fea34",
-    "coding-agents.html": "7c333587b8026a21ebbbe4b9d5f96adac1881aae1617d075259662ca248a9d06",
-    "cts.html": "3fdab23ebc08aa3b3c461dfe85769fac3109f5ba779d82835675d8b1569c047f",
-    "decisions.html": "fd18568f51b5428c3db9db0f5f4cce40bb6fe328c81011072f244bd72d4331e7",
-    "evidence.html": "894b38ef68d03d3c33de2dddffd91e7864bb4ee9350a292abf8dd93174b511ce",
-    "getting-started.html": "9e5d8cded28673e3fa91044ae674375b8a84fdb2d8bcb2d83ed81b99c2267ef0",
-    "index.html": "3b176c177ae51bdc7e931979bc4d45c8e03b7c4b91a32de712e879894b7465f5",
-    "probe.html": "b4ef89140787360f3f605027549f9898193fd06bf5239b6a3c52ba8288921b90",
-    "troubleshooting.html": "1f7c0b1eb007e71f51a6b36f63d05e4d0d6c520a50d9dd3ad03812721bbda931"
+    "benchmark.html": "1b50fbb566012e2ab97682225df2ec3430246f0d8087e4fb7db2bf9e1c55d136",
+    "cli.html": "d794e70b9fedf9b94fc62825b981cf4203654864ea0e8818dedfc868cdf725ff",
+    "coding-agents.html": "e7bbd211a8f0cba750b3978b9ec4ea8a3dfcdff5947d91e3ce0a649353b86786",
+    "cts.html": "03cd388926cf554fb26129234748dd25fe53c9ef07872d89c4dd9cb7d8e2d5ae",
+    "decisions.html": "17314b870659cf457c3c9ef6643340c8b1d7a8aadef3c8f5cc879d615ad39a1f",
+    "engine.html": "9a034a67226f13b5a89797a550b2daac32f0d64d7d406984e5b2beb6f503fdb6",
+    "evidence.html": "d7a1f3263dec51a47f60853678e7cea80eeaca610453d1c49c81d4e1b7171d86",
+    "getting-started.html": "d505956c10bc73478e3bf8bcb89e97d597142fcbc293fc12c088c6f3c5199162",
+    "index.html": "8a2202d59fa2fe051faf2aee30e8f17f52188396aeb1fd9858f40bc2524f5a26",
+    "probe.html": "db949361e43fdb8d45021e46fcb835a60f85d2cc597b0c35835fa55f5dda37ac",
+    "troubleshooting.html": "7be4c503ba3eb1baa067872cd00935c602f45ae92f6620dd143eddd6ae53bea0"
   }
 }

@@ -20,9 +20,12 @@ exclude:
 
 # 상단 메뉴. 경로는 사이트 루트 기준이며 빌더가 페이지 깊이에 맞춰 상대 경로로 바꿉니다.
 # 도구 세 가지는 앱의 `도구` 메뉴와 같은 Probe, CTS, Benchmark 순서로 배치합니다.
+# Engine은 구조 설명이므로 Architecture 바로 다음에 둡니다.
 nav:
   - path: architecture.html
     label: Architecture
+  - path: engine.html
+    label: Engine
   - path: probe.html
     label: Probe
   - path: cts.html

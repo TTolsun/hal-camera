@@ -654,6 +654,77 @@ pages:
         source: overall-architecture
         confidence: intent
 
+  # Camera2·CameraX 엔진의 계약과 구현. Architecture에 흩어져 있던 엔진 설명을 모은 페이지입니다.
+  engine.md:
+    title: 카메라 엔진
+    blocks:
+      - id: status
+        kind: status
+
+      - id: contract
+        kind: content
+        based_on: [overall-architecture]
+        confidence: code
+        brief:
+          reader: Live·Benchmark·CLI가 어떤 엔진을 어떤 계약으로 쓰는지 알아야 하는 개발자
+          answers:
+            - 엔진이 구현해야 하는 인터페이스는 무엇이며, 화면은 엔진 기능을 어떻게 확인하는가
+            - 엔진은 어디서 고르고, 바꿀 때 무엇이 초기화되는가
+            - Benchmark와 CLI는 어느 엔진을 쓰는가
+          must_link: [CameraEngine, MediaCapture, LiveTuning, TouchMetering]
+          forbid:
+            - 기기에서 동작했다는 서술을 하지 않습니다. 기기 관찰은 device-notes 블록에만 적습니다.
+
+      - id: camera2
+        kind: content
+        based_on: [overall-architecture]
+        confidence: code
+        brief:
+          reader: Camera2 요청과 결과를 HAL 로그와 대조해야 하는 HAL 개발자
+          answers:
+            - Live와 벤치마크 세션은 어떤 스트림으로 구성되는가
+            - 사진 쌍, 녹화, Live 제어, 터치 측광은 어떤 요청 키와 순서로 처리되는가
+          must_link: [Camera2Engine, Camera2StillCapture, Camera2LiveRecorder, Camera2TouchFocus]
+          forbid:
+            - 기기에서 동작했다는 서술을 하지 않습니다.
+
+      - id: camerax
+        kind: content
+        based_on: [overall-architecture]
+        confidence: code
+        brief:
+          reader: CameraX 경로의 결과를 Camera2 경로와 비교해야 하는 개발자
+          answers:
+            - CameraX 엔진은 어떤 use case로 Camera2와 같은 기능을 제공하는가
+            - 앱이 CameraX에 맡기는 요청과 직접 정하는 요청은 무엇인가
+          must_link: [CameraXEngine, CameraXStillCapture, CameraXLiveRecorder, CameraXControls]
+          forbid:
+            - 기기에서 동작했다는 서술을 하지 않습니다. 기기 관찰은 device-notes 블록에만 적습니다.
+
+      - id: comparison
+        kind: content
+        based_on: [overall-architecture]
+        confidence: code
+        brief:
+          reader: 같은 조작의 결과가 엔진마다 다른 이유를 찾아야 하는 개발자
+          answers:
+            - 두 엔진의 결과가 달라질 수 있는 지점은 어디이며, 코드상 원인은 무엇인가
+          must_link: [CameraXControls, Camera2StillCapture]
+          forbid:
+            - 코드에서 확인한 차이만 적습니다. 기기에서 관찰한 값은 device-notes 블록에 적습니다.
+
+      - id: device-notes
+        kind: content
+        based_on: [overall-architecture]
+        confidence: device
+        brief:
+          reader: CameraX 경로의 기기 동작을 확인해야 하는 개발자
+          answers:
+            - 실제 기기에서 CameraX 경로를 확인한 결과는 무엇인가
+          must_link: [CameraXControls]
+          forbid:
+            - device-verification.yaml 의 기록만 인용합니다.
+
   troubleshooting.md:
     title: 디버깅 및 문제 해결
     blocks:
