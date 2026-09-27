@@ -72,7 +72,7 @@ fun touchRegion(c: CameraCharacteristics, u: Double, v: Double, zoom: Float, pre
  * the AOSP camera does. A tap also ends a long-pressed exposure point, as in the Samsung camera.
  *
  * A long press ([exposeAt]): the repeating request takes the AE region and reports METERED once AE has settled on it
- * ([TouchExposureWatch]), or after [AeRelock.TIMEOUT_MS]. The caller then takes the AE lock through the Live
+ * ([TouchExposureWatch]), or after [AeRelock.TIMEOUT_MS]; a held AF point ends. The caller then takes the AE lock through the Live
  * controls, so the AE button shows it. The point stays until a tap, another long press or the AE lock is released;
  * a session rebuild keeps it, and [AeRelock] locks the new session on it again.
  */
@@ -122,6 +122,8 @@ class Camera2TouchFocus(private val handler: Handler, private val main: Handler,
     fun exposeAt(c: CameraCharacteristics, u: Double, v: Double, zoom: Float, preview: Size, feedback: (TouchPhase) -> Unit) {
         val rect = touchRegion(c, u, v, zoom, preview) ?: return
         dropExposure()
+        // The press hides the AF square, so a held AF point ends too instead of lingering unseen in AUTO mode.
+        if (af != null) endFocus()
         val gen = exposureWatch.press()
         ae = TouchTarget(gen, rect, feedback)
         host.submitRepeating("touch_meter", mapOf("kind" to "AE", "generation" to gen, "u" to u, "v" to v, "region" to rect.rect.toShortString()))
