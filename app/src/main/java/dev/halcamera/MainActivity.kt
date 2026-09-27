@@ -2,7 +2,6 @@ package dev.halcamera
 
 import android.Manifest
 import android.app.AlertDialog
-import android.content.ClipData
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -19,7 +18,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import androidx.core.view.ViewCompat
 import dev.halcamera.camera.*
@@ -98,7 +96,6 @@ class MainActivity : ComponentActivity() {
         /** 8.1: one word, because the button records a moment and no longer claims anything about it. */
         const val MARK_LABEL = "Mark"
     }
-    private lateinit var timelineView: dev.halcamera.ui.TimelineView
     // Camera UI follows docs/design/APP-UI.md; shared dark surfaces and active states use ui/Look.
     private val bg = Look.cameraSurface
     private val panel = Look.cameraCard
@@ -120,15 +117,10 @@ class MainActivity : ComponentActivity() {
     private var engineName = "CameraX"
     private var cameraId = ""
     private var sessionId = ""
-    private var exporting = 0
     private var ready = false
     private var zoomRatio = 1f
     private var zoomApplied = false
-    private var latestFile: File? = null
     private var saveFile: File? = null
-    private var previousCpu = Process.getElapsedCpuTime()
-    private var previousSample = SystemClock.elapsedRealtime()
-    private var lastSystemNs = 0L
     private lateinit var manager: CameraManager
     private lateinit var previewHost: FrameLayout
     /** Sits over the frozen frame while the preview is paused. */
@@ -145,16 +137,16 @@ class MainActivity : ComponentActivity() {
     private lateinit var liveIndicator: LiveIndicator
     private var lastPreviewFrameNs = 0L
     private var cameraXStreaming = false
-    private lateinit var strip: StripView
-    private lateinit var stripText: TextView
-    private lateinit var readoutCard: TextView
-    private val readout = LiveReadout()
-    private var lastReading: LiveReading? = null
-    /** The reading at each MARK, held by incident id until that incident's ZIP is written. Main thread only. */
-    private val markedReadings = mutableMapOf<String, LiveReading?>()
     private lateinit var metrics: TextView
-    private lateinit var timeline: TextView
-    private lateinit var system: TextView
+    private lateinit var readings: LiveReadings
+    private val incidents by lazy {
+        IncidentActions(this, io, main, object : IncidentActions.Host {
+            override val sessions get() = telemetry.sessions.toMap()
+            override val destroyed get() = this@MainActivity.destroyed
+            override fun latestChanged(file: File?) { shareButton.isEnabled = file != null }
+            override fun saveAs(file: File) { saveFile = file; saveDocument.launch(file.name) }
+        })
+    }
     private lateinit var scope: ScopeView
     private lateinit var reportButton: Button
     private lateinit var mediaButton: ShutterButton
@@ -222,16 +214,14 @@ class MainActivity : ComponentActivity() {
             // WARNING, and there is no longer anything issuing one.
             val markers = events.filter { it.kind == "incident_trigger" }.map { Triple(it.atNs, "Mark", true) }
             scope.update(frames, time, markers)
-            updateReadout(events, frames, time)
-            updateReadings(events, frames, time)
-            if (time-lastSystemNs >= 1_000_000_000L) { sampleSystem(); lastSystemNs=time }
-            recorder.finish()?.let { export(it) }
+            readings.update(events, frames, time, sessionId, controlBar.controls, controlBar.support, zoomRatio)
+            recorder.finish()?.let(incidents::export)
             val remaining = recorder.remainingNs()
             reportButton.isEnabled = remaining == null && ready && !paused && cli.active == null
             updateMediaControls()
             reportButton.text = if (remaining != null) "저장까지 ${"%.1f".format(Locale.US, remaining/1e9)}s" else "이벤트 저장 · ZIP"
             val span = events.firstOrNull()?.let { (time-it.atNs)/1e9 } ?: 0.0
-            recorderText.text = if (exporting > 0) "ZIP 저장 중…" else if (remaining != null) "기록 중 · 이후 ${"%.1f".format(Locale.US, remaining/1e9)}초 남음" else "30s 순환 버퍼  ·  ${"%.1f".format(Locale.US, span.coerceAtMost(10.0))}s / 10s 사전 기록 준비"
+            recorderText.text = if (incidents.exporting > 0) "ZIP 저장 중…" else if (remaining != null) "기록 중 · 이후 ${"%.1f".format(Locale.US, remaining/1e9)}초 남음" else "30s 순환 버퍼  ·  ${"%.1f".format(Locale.US, span.coerceAtMost(10.0))}s / 10s 사전 기록 준비"
             main.postDelayed(this, 100)
         }
     }
@@ -247,8 +237,7 @@ class MainActivity : ComponentActivity() {
         buildUi()
         recentMedia = RecentMediaThumbnail(this) { bitmap, video -> galleryButton.setThumbnail(bitmap, video) }
         onBackPressedDispatcher.addCallback(this, panelBack)
-        latestFile = incidentFiles().firstOrNull()
-        shareButton.isEnabled = latestFile != null
+        shareButton.isEnabled = incidents.latest != null
         recorder.record("app", "clock_anchor", values = mapOf("wallTimeMs" to System.currentTimeMillis(), "uptimeMs" to SystemClock.uptimeMillis()))
     }
     override fun onSaveInstanceState(outState: Bundle) {
@@ -274,7 +263,7 @@ class MainActivity : ComponentActivity() {
         resumed = false; main.removeCallbacks(tick)
         liveIndicator.bind(false)
         telemetry.event(sessionId.ifEmpty { "app" }, "activity_stopped")
-        recorder.finish("activity_stopped")?.let { export(it) }
+        recorder.finish("activity_stopped")?.let(incidents::export)
         restartCamera()
         super.onStop()
     }
@@ -435,7 +424,7 @@ class MainActivity : ComponentActivity() {
             if (cli.active != null) return@IconButton
             paused=!paused
             pauseButton.setIcon(if(paused) R.drawable.ic_action_play else R.drawable.ic_action_pause,if(paused) "프리뷰 재개" else "프리뷰 일시정지")
-            if(paused) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("user_paused")?.let { export(it) } }
+            if(paused) { pendingMediaAction=null; pendingPermissionAction=null; recorder.finish("user_paused")?.let(incidents::export) }
             restartCamera()
         }
         // Standalone tools stay in the menu; Mark remains on the live preview.
@@ -497,21 +486,7 @@ class MainActivity : ComponentActivity() {
             if (cli.active != null) return@ExpandingZoomControl
             zoomRatio=ratio; engine?.setZoom(ratio)
         }
-        val zoomViewport=object : HorizontalScrollView(this) {
-            override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-                if (event.actionMasked == MotionEvent.ACTION_DOWN) zoomControl.setTouchInProgress(true)
-                val handled = super.dispatchTouchEvent(event)
-                if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL ||
-                    (event.actionMasked == MotionEvent.ACTION_DOWN && !handled)) {
-                    zoomControl.setTouchInProgress(false)
-                }
-                return handled
-            }
-        }.apply {
-            isHorizontalScrollBarEnabled=false
-            overScrollMode=View.OVER_SCROLL_NEVER
-            addView(zoomControl,FrameLayout.LayoutParams(-2,dp(48)))
-        }
+        val zoomViewport=zoomControl.viewport()
         bottomBar.addView(zoomViewport,LinearLayout.LayoutParams(-2,dp(48)))
         val captureRow=row().apply { gravity=Gravity.CENTER_VERTICAL }
         bottomBar.addView(captureRow,lp(top=4))
@@ -559,7 +534,7 @@ class MainActivity : ComponentActivity() {
             // The reading is captured here, not when the dialog opens. The dialog is at least five seconds later
             // and after an asynchronous write, by which point lastReading has been replaced many times over and
             // may even belong to a different camera. What the dialog shows has to be the evidence for that ZIP.
-            if(recorder.trigger(id)) { markedReadings[id]=lastReading; toast("5초 후 incident ZIP을 저장합니다") }
+            if(recorder.trigger(id)) { incidents.marked(id,readings.last); toast("5초 후 incident ZIP을 저장합니다") }
         }.apply { setTextColor(Color.WHITE); background=cameraChrome(Color.TRANSPARENT); contentDescription="Mark: 직전 10초와 이후 5초를 ZIP으로 저장" }
         reportButton.minHeight=dp(48); reportButton.minimumHeight=dp(48)
         reportButton.contentDescription="문제 시점 기록: 직전 10초와 이후 5초의 이벤트를 ZIP으로 저장"
@@ -571,8 +546,8 @@ class MainActivity : ComponentActivity() {
             override fun close() = showDiagnostics(false)
             override fun stopRecording() = this@MainActivity.stopRecording()
             override fun about() = dev.halcamera.ui.AboutSheet.show(this@MainActivity)
-            override fun shareLatest() { latestFile?.let { share(it) } }
-            override fun incidents() = showIncidents()
+            override fun shareLatest() { incidents.latest?.let(incidents::share) }
+            override fun incidents() = incidents.showList()
             override fun retryPermission() {
                 if(hasPermission()) restartCamera()
                 else if(shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) permission.launch(Manifest.permission.CAMERA)
@@ -584,8 +559,7 @@ class MainActivity : ComponentActivity() {
                 set(value) = cli.setEnabled(value)
         })
         diagnostics=panelView.view; panelRecordingTime=panelView.recordingTime; panelStopButton=panelView.stopButton
-        readoutCard=panelView.readoutCard; strip=panelView.strip; stripText=panelView.stripText; scope=panelView.scope
-        timelineView=panelView.timelineView; timeline=panelView.timeline; system=panelView.system
+        scope=panelView.scope; readings=LiveReadings(this,metrics,panelView,recorder)
         recorderText=panelView.recorderText; shareButton=panelView.shareButton
         val body=panelView.body
         root.addView(diagnostics,FrameLayout.LayoutParams(-1,0,Gravity.BOTTOM))
@@ -627,7 +601,7 @@ class MainActivity : ComponentActivity() {
             val chosen=cameraIds[index]
             if (cameraId!=chosen) {
                 pendingMediaAction=null; pendingPermissionAction=null
-                recorder.finish("camera_changed")?.let { export(it) }
+                recorder.finish("camera_changed")?.let(incidents::export)
                 cameraId=chosen; zoomRatio=1f
                 resetControls(); updateCameraChoices(); restartCamera()
             }
@@ -705,137 +679,11 @@ class MainActivity : ComponentActivity() {
     }
     private fun chooseEngine(name:String) {
         if(engineName==name) return
-        recorder.finish("engine_changed")?.let { export(it) }
+        recorder.finish("engine_changed")?.let(incidents::export)
         engineName=name; resetControls(); updateCameraChoices(); restartCamera()
     }
     /** Locks, EV and flash start over for every camera and engine; the new session opens with the defaults. */
     private fun resetControls()=controlBar.reset(if(cameraId.isEmpty()) LiveControlSupport.NONE else liveControlSupport(manager,cameraId))
-    private fun updateReadings(events:List<Event>,frames:List<Event>,time:Long) {
-        val frame=frames.lastOrNull()?.takeIf { time-it.atNs < 1_500_000_000L }
-        fun num(key:String)= (frame?.values?.get(key) as? Number)?.toDouble()
-        fun fmt(value:Double?,pattern:String)=value?.let { pattern.format(Locale.US,it) } ?: "—"
-        // Two lines at most over the preview: the measurement, then the camera's state. Values the screen already shows
-        // are left out (the zoom rail's ratio, the buttons' EV), and the extras join line 2 in priority order only while
-        // they fit its width. With a flash mode on, the flash state leads, since no button can show it. An applied EV or
-        // zoom that differs from the request appears only once the last ten results all differ, not for the few frames
-        // the pipeline lags behind every change. Lens position and everything else stay in the incident ZIP.
-        val recent=frames.takeLast(10)
-        fun differs(key:String,want:Double,tolerance:Double)=recent.size==10 &&
-            recent.all { e -> (e.values[key] as? Number)?.toDouble()?.let { kotlin.math.abs(it-want)>tolerance } == true }
-        val controls=controlBar.controls
-        val extras=listOfNotNull(
-            LiveControlBar.afState(num("af")?.toInt()),
-            LiveControlBar.evApplied(num("evApplied")?.toInt()?.takeIf { differs("evApplied",controls.evIndex.toDouble(),0.5) },controls,controlBar.support),
-            num("zoomRatio")?.takeIf { differs("zoomRatio",zoomRatio.toDouble(),0.01*zoomRatio) }?.let { "Zoom ${"%.2f".format(Locale.US,it)}x applied" },
-            frame?.values?.get("physicalId")?.let { "Phys $it" })
-        val room=(metrics.width-metrics.paddingLeft-metrics.paddingRight).toFloat()
-        var state=listOfNotNull(LiveControlBar.aeState(num("ae")?.toInt()),LiveControlBar.flashState(num("flashState")?.toInt(),controls)).joinToString(" · ")
-        for(extra in extras) { val next="$state · $extra"; if(room>0f && metrics.paint.measureText(next)<=room) state=next else break }
-        metrics.text="FPS ${fmt(num("resultFps"),"%.1f")} · ISO ${num("iso")?.toInt() ?: "—"} · Exp ${fmt(num("exposureNs")?.div(1e6),"%.2fms")}\n$state"
-        if(frame==null) { timeline.text="수신 중인 프레임 없음"; stripText.text="Partial —   Buffer — ms"; return }
-        val imageEvents=events.filter { it.session==sessionId && it.kind=="image_available" }
-        val matched=frames.asReversed().firstOrNull { r -> r.sensorNs!=null && imageEvents.any { it.sensorNs==r.sensorNs } } ?: frame
-        val start=events.lastOrNull { it.session==sessionId && it.kind=="capture_started" && it.frame==matched.frame }
-        val image=imageEvents.lastOrNull { it.sensorNs==matched.sensorNs }
-        fun offset(e:Event?)=if(e!=null && start!=null) "%+.2f ms".format(Locale.US,(e.atNs-start.atNs)/1e6) else "—"
-        fun short(e:Event?)=if(e!=null && start!=null) "%+.1f".format(Locale.US,(e.atNs-start.atNs)/1e6) else "—"
-        timeline.text="Frame #${matched.frame} · observed callbacks\nStart    ${if(start!=null) "+0.00 ms" else "—"}\nPartial  ${offset(matched)}\nBuffer   ${offset(image)}\n센서 시각으로 연결 · HAL 처리 시간과 다름"
-        fun ms(e:Event?)=if(e!=null && start!=null) (e.atNs-start.atNs)/1e6 else null
-        timelineView.update(matched.frame,ms(matched),ms(image),lastReading?.baselinePartialMs,lastReading?.baselineBufferMs)
-        fun offset(value: Double?) = value?.let { "%+.1f".format(Locale.US,it) } ?: "—"
-        stripText.text="Partial ${offset(ms(matched))}   Buffer ${offset(ms(image))} ms"
-    }
-    /**
-     * The live numbers, read once per tick and nothing more. The old version of this also recorded a
-     * `health_assessment` event on every change of verdict; the flight recorder now carries only what was
-     * observed, which is the only thing a ZIP opened months later can still be checked against.
-     */
-    private fun updateReadout(events:List<Event>,frames:List<Event>,time:Long) {
-        val r=readout.read(events,sessionId,time)
-        strip.update(frames,r.intervalRefMs,time)
-        val note=when {
-            !r.hasCurrentFrame -> "수신 중인 프레임 없음"
-            !r.hasReference -> "기준 수집 중 (${r.baselineFrames}프레임)"
-            else -> null
-        }
-        readoutCard.text=listOfNotNull(note,LiveReadout.panelText(r)).joinToString("\n")
-        lastReading=r
-    }
-    private fun sampleSystem() {
-        val elapsed=SystemClock.elapsedRealtime(); val cpu=Process.getElapsedCpuTime()
-        val percent=if(elapsed>previousSample) 100.0*(cpu-previousCpu)/(elapsed-previousSample) else 0.0
-        previousSample=elapsed; previousCpu=cpu
-        val memory=Debug.MemoryInfo().also { Debug.getMemoryInfo(it) }.totalPss/1024.0
-        val thermal=if(Build.VERSION.SDK_INT>=29) getSystemService(PowerManager::class.java).currentThermalStatus else null
-        val thermalName=thermal?.let { listOf("NONE","LIGHT","MODERATE","SEVERE","CRITICAL","EMERGENCY","SHUTDOWN").getOrNull(it) ?: "$it" } ?: "N/A"
-        system.text="App CPU ${"%.1f".format(Locale.US,percent)}% (1코어=100%)\nPSS ${"%.0f".format(Locale.US,memory)} MB · Thermal $thermalName"
-        recorder.record("app","system_sample",values=mapOf("appCpuPercentOneCore" to percent,"pssMb" to memory,"thermalStatus" to thermal,"thermalName" to thermalName))
-    }
-    private fun export(incident:Incident) {
-        exporting++
-        val app=applicationContext; val sessions=telemetry.sessions.toMap()
-        io.execute {
-            try {
-                val file=IncidentExporter(app).export(incident,sessions)
-                main.post {
-                    exporting--
-                    val marked=markedReadings.remove(incident.id)
-                    if(!destroyed) { latestFile=file; shareButton.isEnabled=true; toast("저장 완료 · ${file.name}"); if(incident.finishReason=="completed") showSaved(file,marked) }
-                }
-            } catch(e:Exception) { main.post { exporting--; markedReadings.remove(incident.id); if(!destroyed) toast("ZIP 저장 실패: ${e.message}") } }
-        }
-    }
-    private fun incidentFiles()=File(filesDir,"incidents").listFiles()?.filter { it.extension=="zip" }?.sortedByDescending { it.lastModified() }.orEmpty()
-    private fun showIncidents() {
-        val files=incidentFiles()
-        if(files.isEmpty()) { toast("저장된 incident가 없습니다"); return }
-        AlertDialog.Builder(this).setTitle("Incident ZIP · ${files.size}개")
-            .setItems(files.map { "${it.name}\n${it.length()/1024} KB" }.toTypedArray()) { _,index ->
-                val file=files[index]
-                AlertDialog.Builder(this).setTitle(file.name).setItems(arrayOf("공유","다른 위치에 저장","삭제")) { _,action ->
-                    when(action) {
-                        0 -> share(file)
-                        1 -> { saveFile=file; saveDocument.launch(file.name) }
-                        2 -> AlertDialog.Builder(this).setMessage("${file.name}을 기기에서 삭제할까요?").setNegativeButton("취소",null).setPositiveButton("삭제") { _,_ ->
-                            if(file.delete()) { latestFile=incidentFiles().firstOrNull(); shareButton.isEnabled=latestFile!=null; toast("삭제했습니다") }
-                        }.show()
-                    }
-                }.setNegativeButton("취소",null).show()
-            }.setNegativeButton("닫기",null).show()
-    }
-    private fun share(file:File) {
-        val uri=FileProvider.getUriForFile(this,"$packageName.files",file)
-        val intent=Intent(Intent.ACTION_SEND).apply {
-            type="application/zip"; putExtra(Intent.EXTRA_STREAM,uri)
-            clipData=ClipData.newRawUri("incident",uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        startActivity(Intent.createChooser(intent,"Incident 공유"))
-    }
-    /**
-     * 8.1: the dialog after a MARK keeps raw values only. It used to open with a verdict sentence and evidence
-     * lines in consumer words, which claimed more about the recording than the app had measured.
-     */
-    private fun showSaved(file:File,marked:LiveReading?) {
-        if(destroyed || isFinishing) return
-        fun ms(v:Double?)=v?.let { String.format(Locale.US,"%.1f ms",it) } ?: "—"
-        val body=if(marked==null) "직전 10초와 이후 5초를 저장했습니다." else listOf(
-            "직전 10초와 이후 5초를 저장했습니다.",
-            "Mark를 누른 시점의 값입니다.",
-            "",
-            // The dialog body is proportional, so padding with spaces never lined the columns up; one value per line
-            // reads the same on every font.
-            "interval: ${ms(marked.intervalMs)}",
-            "  기준 p50: ${ms(marked.intervalRefMs)}",
-            "partial: ${ms(marked.partialMs)}",
-            "  기준 p50: ${ms(marked.baselinePartialMs)}",
-            "stall (10s): ${marked.stalls}회"
-        ).joinToString("\n")
-        AlertDialog.Builder(this).setTitle(file.name)
-            .setMessage(body)
-            .setPositiveButton("공유") { _,_ -> share(file) }
-            .setNegativeButton("닫기",null).show()
-    }
     private fun showNotes() {
         AlertDialog.Builder(this).setTitle("측정 안내")
             .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• 앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 사진·동영상 모드를 선택한 뒤 실행 버튼을 누르면 갤러리에 저장합니다. 사진은 YUV·JPEG 두 장이며 동영상에는 소리가 포함됩니다. 녹화 중에도 줌은 바꿀 수 있지만 엔진·카메라·모드는 바꿀 수 없습니다.\n\n• 위쪽의 플래시·AF·AE·EV 버튼과 줌 레일은 요청값입니다. 아래 두 줄은 capture result에서 읽으며, 화면에 이미 보이는 값은 생략합니다. 둘째 줄에는 AE·AF 상태 뒤에 플래시 상태(플래시를 켰을 때), 요청과 다른 EV·줌, 물리 렌즈 순서로 폭이 허락하는 만큼만 붙습니다. 렌즈 위치 같은 나머지 값은 ZIP에 있습니다. AE 잠금 중에도 EV는 적용됩니다. 버튼은 Camera2에서만 동작하고 카메라나 엔진을 바꾸면 초기화됩니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
@@ -870,7 +718,7 @@ class MainActivity : ComponentActivity() {
      */
     private fun openAfterClose(reason: String, intent: () -> Intent) {
         if (closing) return
-        recorder.finish(reason)?.let { export(it) }
+        recorder.finish(reason)?.let(incidents::export)
         showDiagnostics(false)
         val old = engine; engine = null; closing = true; ready = false
         setStatus("카메라 세션 종료 중…", false)
