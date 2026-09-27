@@ -42,15 +42,15 @@ interface LiveTuning {
 }
 
 /**
- * Tap-to-focus and metering on the LIVE preview (#168). Both engines implement it: Camera2Engine sets the regions
- * and AF trigger itself, CameraXEngine uses FocusMeteringAction.
+ * Touch focus and exposure on the LIVE preview (#168): a tap focuses, a long press meters exposure. Both engines
+ * implement it: Camera2Engine sets the regions and AF trigger itself, CameraXEngine uses FocusMeteringAction.
  */
 interface TouchMetering {
     /**
-     * Meters and focuses at ([x], [y]) in the preview view's pixels. [feedback] runs on the main thread for this tap
-     * until DONE. Returns false when the camera is not ready or offers neither AF nor AE regions.
+     * Focuses at ([x], [y]) in the preview view's pixels, or meters exposure there when [exposure]. [feedback] runs on
+     * the main thread for this touch until DONE. Returns false when the camera is not ready or has no such region.
      */
-    fun meterAt(x: Float, y: Float, feedback: (TouchPhase) -> Unit): Boolean
+    fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean
 }
 
 /** Zoom ratio range reported by the camera characteristics. Below API 30 only digital zoom >= 1x is available. */

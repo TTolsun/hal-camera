@@ -100,6 +100,35 @@ class TouchMeterTest {
     }
 
     @Test
+    fun `a long press is metered after two settled AE results, once`() {
+        val watch = TouchExposureWatch()
+        watch.press()
+        assertFalse(watch.onResult(1)) // SEARCHING
+        assertFalse(watch.onResult(AeRelock.AE_STATE_CONVERGED)) // one settled result may be the old region's
+        assertTrue(watch.onResult(AeRelock.AE_STATE_FLASH_REQUIRED))
+        assertFalse(watch.onResult(AeRelock.AE_STATE_CONVERGED))
+    }
+
+    @Test
+    fun `a newer press or a cancel silences the older one`() {
+        val watch = TouchExposureWatch()
+        val first = watch.press()
+        val second = watch.press()
+        assertFalse(watch.timedOut(first))
+        assertTrue(watch.timedOut(second))
+        assertFalse(watch.onResult(AeRelock.AE_STATE_CONVERGED))
+        watch.press(); watch.cancel()
+        assertFalse(watch.onResult(null))
+    }
+
+    @Test
+    fun `a device without AE state is metered at once`() {
+        val watch = TouchExposureWatch()
+        watch.press()
+        assertTrue(watch.onResult(null))
+    }
+
+    @Test
     fun `the copied AF state values are the Camera2 ones`() {
         assertEquals(android.hardware.camera2.CaptureResult.CONTROL_AF_STATE_FOCUSED_LOCKED, TouchFocusWatch.AF_STATE_FOCUSED_LOCKED)
         assertEquals(android.hardware.camera2.CaptureResult.CONTROL_AF_STATE_NOT_FOCUSED_LOCKED, TouchFocusWatch.AF_STATE_NOT_FOCUSED_LOCKED)

@@ -449,6 +449,9 @@ sources:
       engine-lifecycle:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+      # CameraXEngine.kt moved out when the long-press exposure pushed the pair past 60,000 characters (#168).
+      engine-lifecycle/camerax-lifecycle:
+        evidence:
           - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
       runner-sequence:
         evidence:
