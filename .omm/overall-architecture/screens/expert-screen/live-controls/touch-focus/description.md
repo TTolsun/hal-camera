@@ -12,6 +12,6 @@ Camera2에서는 Camera2TouchFocus가 AF 지점과 AE 지점을 따로 가집니
 
 AE 지점은 repeating request의 AE 영역이 됩니다. TouchExposureWatch가 AE 상태가 CONVERGED·FLASH_REQUIRED로 결과 2개 연속 이어지면 측광이 끝난 것으로 봅니다. AeRelock과 같은 규칙이며, 새 영역의 첫 결과가 이전 영역의 CONVERGED를 그대로 담고 있을 수 있기 때문입니다. AE 상태가 없는 기기는 바로, 2초 안에 수렴하지 않으면 그 시점에 측광이 끝난 것으로 봅니다. 녹화 시작·정지로 세션이 바뀌면 AF 지점은 버리지만 AE 지점은 남기므로, AeRelock이 같은 지점을 다시 측광한 뒤 잠급니다.
 
-CameraX에서는 PreviewView.meteringPointFactory가 좌표를 변환합니다. 짧은 터치는 FocusMeteringAction(AF, 5초 뒤 자동 취소), 길게 누르기는 FocusMeteringAction(AE, 자동 취소 없음)으로 처리합니다. CameraX 경로에는 AE 잠금이 없으므로 길게 누르기는 측광만 하고 자물쇠를 그리지 않습니다. 새 터치가 이전 요청을 취소하면 이전 요청은 결과를 보고하지 않습니다.
+CameraX에서는 PreviewView.meteringPointFactory가 좌표를 변환하고, CameraXControls가 FocusMeteringAction으로 같은 규칙을 따릅니다. 짧은 터치는 AF 지점, 길게 누르기는 AE 지점이 되며, AE가 수렴하면 Camera2와 같이 AE 잠금을 겁니다. CameraX는 action을 하나만 유지하므로 AF 잠금과 두 지점을 하나의 action으로 합쳐 다시 보냅니다. 새 터치가 이전 action을 취소하면 이전 action은 결과를 보고하지 않습니다. 자세한 동작은 camerax-engine/controls 요소에 있습니다.
 
 Telemetry의 request_observed에는 요청한 afRegions·aeRegions가, capture_result에는 HAL이 적용한 afRegions·aeRegions가 기록됩니다. 엔진은 touch_meter(kind AF·AE, 세대, 정규화 좌표, 영역), touch_af_trigger, touch_meter_result(FOCUSED·FAILED·METERED), touch_meter_end 이벤트를 남깁니다. 삼성 카메라의 길게 누르기 원 아래에 있는 밝기 슬라이더는 아직 없으며, 노출 보정은 EV 버튼으로 합니다.

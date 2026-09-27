@@ -17,13 +17,16 @@ interface CameraEngine {
 /**
  * The LIVE media surface an engine may offer beyond [CameraEngine]'s preview contract: gallery stills and
  * video recording. LIVE and the CLI check for this interface instead of a concrete engine class, so which
- * engine records is a capability of the instance, not a hard-coded type. Camera2Engine implements it;
- * CameraXEngine does not yet, and LIVE switches to Camera2 when a media action needs it.
+ * engine records is a capability of the instance, not a hard-coded type. Both LIVE engines implement it; a
+ * benchmark Camera2Engine refuses the calls, since a measurement saves nothing.
  */
 interface MediaCapture {
     /** True while a still pair or a recording is in flight; LIVE and the CLI report BUSY from it. */
     val mediaBusy: Boolean
-    /** One YUV + JPEG still pair saved through MediaLibrary. [done] is called on the main thread. */
+    /**
+     * One YUV + JPEG still pair saved through MediaLibrary. [done] is called on the main thread. Camera2 takes both
+     * from one capture; CameraX pairs its JPEG with the analysis frame nearest in sensor time.
+     */
     fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit)
     fun startRecording(audio: Boolean = true, started: () -> Unit = {}, done: ((Result<android.net.Uri>) -> Unit)? = null)
     fun stopRecording()
@@ -31,7 +34,8 @@ interface MediaCapture {
 
 /**
  * EV, AE/AF lock and flash on LIVE (issues #169, #176). Like [MediaCapture] it is a capability of the engine
- * instance: Camera2Engine implements it, CameraXEngine does not, and LIVE offers to switch engines instead.
+ * instance, and both LIVE engines implement it: Camera2Engine with request keys, CameraXEngine with CameraControl
+ * plus CONTROL_AE_LOCK through Camera2 interop.
  */
 interface LiveTuning {
     /**
