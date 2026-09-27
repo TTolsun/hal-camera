@@ -109,6 +109,7 @@ class CameraXEngine(
             report("CameraX · LIVE", true)
         }
         override fun recordingState(recording: Boolean) = this@CameraXEngine.recordingState(recording)
+        override fun streamingStarted() = controls.resendMetering()
         override fun status(message: String, ok: Boolean) { if (active) this@CameraXEngine.status(message, ok) }
         override fun report(message: String, ok: Boolean) = this@CameraXEngine.report(message, ok)
     })

@@ -84,6 +84,9 @@ internal class CameraXControls(
         submitMetering()
     }
 
+    /** Sends AF lock and a pressed AE point again, for a stream that went live after [sessionRebuilt]. */
+    fun resendMetering() { submitMetering() }
+
     /** Focuses at ([x], [y]) in the view's pixels, or meters exposure there; PreviewView maps the point itself. */
     fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean {
         val camera = host.camera ?: return false

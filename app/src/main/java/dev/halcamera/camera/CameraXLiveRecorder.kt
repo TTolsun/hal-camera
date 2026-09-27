@@ -51,6 +51,12 @@ internal class CameraXLiveRecorder(
         /** The recording has ended: put the analysis and still use cases back. */
         fun unbindRecording(video: VideoCapture<Recorder>)
         fun recordingState(recording: Boolean)
+        /**
+         * The first frame reached the file. CameraX reconfigures the repeating request when the video surface goes
+         * live, after [bindRecording] returned and after Start, and a FocusMeteringAction sent before then is lost
+         * (AF lock read AF Idle for a whole recording on the S25+), so the held metering goes out again here.
+         */
+        fun streamingStarted()
         fun status(message: String, ok: Boolean)
         fun report(message: String, ok: Boolean)
     }
@@ -58,6 +64,7 @@ internal class CameraXLiveRecorder(
     private var video: VideoCapture<Recorder>? = null
     private var recording: Recording? = null
     private var done: ((Result<Uri>) -> Unit)? = null
+    private var streaming = false
     private var afterClose: (() -> Unit)? = null
     var busy = false
         private set
@@ -119,6 +126,7 @@ internal class CameraXLiveRecorder(
                 if (host.active) { host.recordingState(true); started() }
                 host.report(if (audio) "REC · 영상과 소리를 녹화하고 있습니다" else "REC · 영상을 녹화하고 있습니다", false)
             }
+            is VideoRecordEvent.Status -> if (!streaming) { streaming = true; if (host.active) host.streamingStarted() }
             is VideoRecordEvent.Finalize -> {
                 // SOURCE_INACTIVE is a stop caused by the camera closing; Recorder still writes a playable file then.
                 val playable = event.error == VideoRecordEvent.Finalize.ERROR_NONE || event.error == VideoRecordEvent.Finalize.ERROR_SOURCE_INACTIVE
@@ -141,7 +149,7 @@ internal class CameraXLiveRecorder(
     /** Back to the preview session. Runs on every way out of a recording, so [busy] never outlives it. */
     private fun end() {
         val useCase = video
-        video = null; recording = null; busy = false
+        video = null; recording = null; busy = false; streaming = false
         host.recordingState(false)
         if (useCase != null && host.active) {
             try { host.unbindRecording(useCase) } catch (e: Exception) { telemetry.event(sessionId, "camera_error", mapOf("message" to e.toString())) }
