@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e098af74741c85d6",
-        "modelHash": "dc3952a6fe897f9a",
+        "codeHash": "91accba2e4b6cea5",
+        "modelHash": "da5e8353e095fdf7",
         "at": "2026-09-27",
-        "commit": "a91f0ad",
+        "commit": "4163ccc",
         "reviewer": "claude",
         "files": {
           "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
@@ -70,7 +70,7 @@
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "071caa9ff35cd036a420e4da1d440d363a6fd3d5",
           "app/src/main/java/dev/halcamera/camera/TouchMeter.kt": "0644615406b43948ca34eca60fd708fbbaf6acc1",
-          "app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt": "6648b188a720a7b3a011e069981610f91220721d",
+          "app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt": "a6bba906059f1fd91e97221d7615a41b6bc83b8b",
           "app/src/main/java/dev/halcamera/camera/YuvPacking.kt": "67eb508ec4479b7685a6918073f23f55da140664",
           "app/src/main/java/dev/halcamera/cli/AdbArguments.kt": "f3185427960cd58ff7190d131231ccabd347916c",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "c4ef5a864976fa43c2a808015b2d5edc2a45ed6c",
@@ -241,10 +241,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "065c9e5dd4f61ce7",
-        "modelHash": "b32f596df4040444",
+        "codeHash": "af2dfefb6322434f",
+        "modelHash": "f60a72f4bdcb2f2c",
         "at": "2026-09-27",
-        "commit": "a91f0ad",
+        "commit": "4163ccc",
         "reviewer": "claude",
         "files": {
           "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
@@ -305,7 +305,7 @@
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "071caa9ff35cd036a420e4da1d440d363a6fd3d5",
           "app/src/main/java/dev/halcamera/camera/TouchMeter.kt": "0644615406b43948ca34eca60fd708fbbaf6acc1",
-          "app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt": "6648b188a720a7b3a011e069981610f91220721d",
+          "app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt": "a6bba906059f1fd91e97221d7615a41b6bc83b8b",
           "app/src/main/java/dev/halcamera/camera/YuvPacking.kt": "67eb508ec4479b7685a6918073f23f55da140664",
           "app/src/main/java/dev/halcamera/cli/AdbArguments.kt": "f3185427960cd58ff7190d131231ccabd347916c",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "c4ef5a864976fa43c2a808015b2d5edc2a45ed6c",
@@ -490,10 +490,10 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "e098af74741c85d6",
-        "modelHash": "6f8c9f457c47d2a3",
+        "codeHash": "91accba2e4b6cea5",
+        "modelHash": "3431db3a2eee8c91",
         "at": "2026-09-27",
-        "commit": "a91f0ad",
+        "commit": "4163ccc",
         "reviewer": "claude",
         "files": {
           "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
@@ -554,7 +554,7 @@
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "071caa9ff35cd036a420e4da1d440d363a6fd3d5",
           "app/src/main/java/dev/halcamera/camera/TouchMeter.kt": "0644615406b43948ca34eca60fd708fbbaf6acc1",
-          "app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt": "6648b188a720a7b3a011e069981610f91220721d",
+          "app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt": "a6bba906059f1fd91e97221d7615a41b6bc83b8b",
           "app/src/main/java/dev/halcamera/camera/YuvPacking.kt": "67eb508ec4479b7685a6918073f23f55da140664",
           "app/src/main/java/dev/halcamera/cli/AdbArguments.kt": "f3185427960cd58ff7190d131231ccabd347916c",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "c4ef5a864976fa43c2a808015b2d5edc2a45ed6c",
@@ -641,10 +641,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "e098af74741c85d6",
-        "modelHash": "bddabdea6039298b",
+        "codeHash": "91accba2e4b6cea5",
+        "modelHash": "a6282f1af3445d14",
         "at": "2026-09-27",
-        "commit": "a91f0ad",
+        "commit": "4163ccc",
         "reviewer": "claude",
         "files": {
           "app/build.gradle.kts": "eb0131da4399f5326714fca1acf32ce18c18af16",
@@ -705,7 +705,7 @@
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "071caa9ff35cd036a420e4da1d440d363a6fd3d5",
           "app/src/main/java/dev/halcamera/camera/TouchMeter.kt": "0644615406b43948ca34eca60fd708fbbaf6acc1",
-          "app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt": "6648b188a720a7b3a011e069981610f91220721d",
+          "app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt": "a6bba906059f1fd91e97221d7615a41b6bc83b8b",
           "app/src/main/java/dev/halcamera/camera/YuvPacking.kt": "67eb508ec4479b7685a6918073f23f55da140664",
           "app/src/main/java/dev/halcamera/cli/AdbArguments.kt": "f3185427960cd58ff7190d131231ccabd347916c",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "c4ef5a864976fa43c2a808015b2d5edc2a45ed6c",
