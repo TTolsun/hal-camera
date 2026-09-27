@@ -111,7 +111,7 @@ incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 상태: 관련 소스 변경됨: 재검토 필요
+- 검토 2026-09-27 @ `2f95952` · Codex
 
 </details>
 
@@ -187,9 +187,9 @@ incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽�
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-27 @ `46d779c` · claude |
-| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-27 @ `46d779c` · claude |
-| 원고 `layer-isolation` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-27 @ `46d779c` · claude |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-27 @ `2f95952` · Codex |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-27 @ `2f95952` · Codex |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-27 @ `2f95952` · Codex |
 
 <!-- omm:end id=status -->
 
