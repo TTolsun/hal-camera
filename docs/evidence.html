@@ -53,7 +53,7 @@
 <td><a href="_inputs/decisions.html">설계 결정 원문</a>의 D-번호를 확인합니다.</td>
 </tr>
 </tbody></table>
-<p><a href="architecture.html">Architecture</a>와 <a href="troubleshooting.html">디버깅</a> 끝의 <strong>문서 검토 상태</strong>에는 해당 페이지에 연결된 구조 근거와 생성 원고의 기준 버전·검토 커밋이 있습니다. 관련 소스나 원고가 바뀌면 다시 검토해야 합니다. 이 상태는 수동으로 작성한 Probe·CTS·Benchmark·Callback 등 다른 페이지의 검토까지 보장하지 않습니다.</p>
+<p><a href="architecture.html">Architecture</a>·<a href="engine.html">Engine</a>·<a href="troubleshooting.html">디버깅</a>과 이 페이지 끝의 <strong>문서 검토 상태</strong>에는 해당 페이지에 연결된 구조 근거와 생성 원고의 기준 버전·검토 커밋이 있습니다. 관련 소스나 원고가 바뀌면 다시 검토해야 합니다. 이 상태는 수동으로 작성한 Probe·CTS·Benchmark·Callback 등 다른 페이지의 검토까지 보장하지 않습니다.</p>
 <h2 id="기기-검증-기록">기기 검증 기록</h2>
 <p>검증 날짜, 앱 빌드, 기기와 실행 조건을 함께 확인하세요. 아래는 기존 기록을 옮긴 요약이며, 이번 문서 정리에서 새로 실행한 결과가 아닙니다.</p>
 <h3 id="cts-원문-케이스">CTS 원문 케이스</h3>
@@ -84,7 +84,50 @@
 </tbody></table>
 <p>이 기록에서 초기화 단계의 <code>UiAutomation</code>·<code>@TestApi</code> 실패는 없었습니다. 공식 CTS 인증 결과는 아니며 다른 기기나 현재 빌드의 결과를 보장하지 않습니다. 실행 방법과 PASS·FAIL·SKIP의 정의는 <a href="cts.html">CTS</a>에 있습니다.</p>
 <p>추가 관찰은 <a href="_inputs/device-verification.yaml">기기 검증 입력</a>, <a href="https://github.com/TTolsun/hal-camera/tree/main/docs/validation">검증 문서</a>, <a href="https://github.com/TTolsun/hal-camera/tree/main/docs/releases">릴리스 기록</a>에서 확인하세요.</p>
-<h2 id="문서를-수정하고-검증하세요">문서를 수정하고 검증하세요</h2>
+<h3 id="camerax-기기-관찰">CameraX 기기 관찰</h3>
+<p>2026년 9월 27일의 V-002 기록입니다. 앱은 0.14.0 로컬 release 빌드(versionCode 540~542)이며, 마지막 빌드의 앱 코드는 main의 <code>06717ba</code>와 같습니다. Android 16을 사용하는 후면 카메라 0에서 확인했습니다. 전면 카메라·다른 기기와 <code>yuvOffsetNs</code> 값은 검증하지 않았습니다.</p>
+<!-- omm:begin id=device-notes --><p><strong>CameraX 경로는 Galaxy S25+ 한 대의 후면 카메라에서만 확인했습니다.</strong> 아래는 V-002 기록의 관찰 결과이며, 다른 기기와 전면 카메라에서는 확인하지 않았습니다.</p>
+<table>
+<thead>
+<tr>
+<th>확인 항목</th>
+<th>관찰 결과</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>사진</td>
+<td>엔진 전환 없이 두 장이 저장됐습니다. JPEG는 4080×3060에 EXIF 방향 6, YUV는 480×640이었습니다.</td>
+</tr>
+<tr>
+<td>녹화</td>
+<td>H.264 1920×1080(90도 회전 정보), 약 10Mbps, AAC 48kHz 파일이 저장됐습니다.</td>
+</tr>
+<tr>
+<td>AE 잠금 중 EV</td>
+<td>EV +0.5를 적용하자 노출 시간×ISO가 1.42배가 됐고, 사진 EXIF는 1/59초, ISO 287, 노출 보정 +0.5였습니다.</td>
+</tr>
+<tr>
+<td>AE 잠금 중 플래시 On 사진</td>
+<td>플래시가 발광했고 1/1169초, ISO 25로 저장됐습니다. 잠금 직전 프리뷰는 ISO 161, 8.33ms였습니다.</td>
+</tr>
+<tr>
+<td>녹화 중 AF 잠금</td>
+<td>첫 Status 이벤트에서 초점 요청을 다시 보내기 전에는 AF Idle, 다시 보낸 뒤에는 No focus(잠김)로 표시됐습니다.</td>
+</tr>
+<tr>
+<td><code>cancelFocusAndMetering</code> 뒤의 AE 잠금</td>
+<td>이 호출을 쓰던 빌드에서는 탭 초점이 끝난 뒤 AE 잠금을 켜도 결과가 AE OK였고, 최신 프레임 메타데이터의 <code>android.control.aeLock</code>이 OFF였습니다. 호출을 없앤 빌드에서는 탭 초점 종료, 녹화 시작·종료, 플래시 사진 뒤에도 AE Locked가 유지됐습니다.</td>
+</tr>
+</tbody></table>
+<p><code>CameraXControls</code>의 <code>cancelFocusAndMetering</code> 우회와 녹화 중 초점 요청 재전송은 이 관찰에서 나온 수정입니다. 플래시 사진의 재측광은 CameraX ImageCapture의 precapture 순서에서 온 것으로 보지만, CameraX 내부 로그로 확인하지는 않았습니다.</p>
+<details class="doc-evidence">
+<summary>근거와 검토 정보</summary><ul>
+<li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code></li>
+<li>기기 검증: <code>V-002</code></li>
+<li>근거 수준: 기기 검증</li>
+<li>검토 2026-09-27 @ <code>20e9ea5</code> · Codex</li>
+</ul>
+</details><!-- omm:end id=device-notes --><h2 id="문서를-수정하고-검증하세요">문서를 수정하고 검증하세요</h2>
 <p>문서 도구에는 <strong>Node.js 24</strong>가 필요합니다. <code>npm ci --prefix tools/docgen --ignore-scripts</code>로 공용 엔진을 설치합니다. 문서 원본은 다음과 같이 나뉩니다.</p>
 <table>
 <thead>
@@ -136,7 +179,31 @@ node tools/docgen/docflow.mjs check --ci
 </ol>
 <p><code>docs-sync</code>는 main의 관련 변경에서 근거의 최신성을 확인합니다. PR에서 검토와 재생성을 마쳐 근거 해시가 같으면 추가 동기화 PR 없이 끝납니다. 운영과 실패 복구는 <a href="https://github.com/TTolsun/hal-camera/blob/main/tools/docgen/README.md">문서 도구 안내</a>에 있습니다.</p>
 <p>한국어 문장은 <a href="https://github.com/snflkd/fluent-korean">fluent-korean</a>과 <a href="https://github.com/TTolsun/omm-doc-workflow/blob/main/style/README.md">공통 집필 규칙</a>에 따라 다듬습니다. 사용법은 해당 기능 페이지에 한 번만 설명하고, 다른 페이지에서는 필요한 부분으로 연결합니다.</p>
-<p><strong>다음 단계:</strong> 구현 구조는 <a href="architecture.html">Architecture</a>, 과거의 선택은 <a href="_inputs/decisions.html">설계 결정 원문</a>에서 확인하세요.</p>
+<h2 id="문서-검토-상태">문서 검토 상태</h2>
+<p>아래 표는 이 페이지에 연결된 CameraX 기기 관찰 원고의 검토 상태입니다. 위 CTS 요약을 포함한 수동 본문의 검토 범위는 PR 기록에서 확인합니다.</p>
+<!-- omm:begin id=status --><ul>
+<li>검증 기준 앱 버전: 0.14.0 (versionCode 513)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>최신성</th>
+<th>검토</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>구조 원본 <code>overall-architecture</code></td>
+<td>최신</td>
+<td>검토 2026-09-27 @ <code>4de7ca0</code> · Claude</td>
+</tr>
+<tr>
+<td>원고 <code>device-notes</code></td>
+<td>최신</td>
+<td>검토 2026-09-27 @ <code>20e9ea5</code> · Codex</td>
+</tr>
+</tbody></table>
+<!-- omm:end id=status --><p><strong>다음 단계:</strong> 구현 구조는 <a href="architecture.html">Architecture</a>, 과거의 선택은 <a href="_inputs/decisions.html">설계 결정 원문</a>에서 확인하세요.</p>
 
   </main>
   <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>

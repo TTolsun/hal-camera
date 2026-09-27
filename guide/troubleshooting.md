@@ -111,7 +111,7 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-27 @ `7dc378b` · Codex
+- 검토 2026-09-27 @ `20e9ea5` · Codex
 
 </details>
 
@@ -140,7 +140,7 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 | --- | --- | --- |
 | 구조 원본 `data-flow` | 최신 | 검토 2026-09-27 @ `4de7ca0` · Claude |
 | 구조 원본 `state-transitions` | 최신 | 검토 2026-09-27 @ `4de7ca0` · Claude |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-27 @ `7dc378b` · Codex |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-27 @ `20e9ea5` · Codex |
 
 <!-- omm:end id=status -->
 

@@ -58,7 +58,7 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`
 - 기기 검증: `V-002`
 - 근거 수준: 기기 검증
-- 검토 2026-09-27 @ `08e4b1f` · Claude
+- 검토 2026-09-27 @ `20e9ea5` · Codex
 
 </details>
 
@@ -109,6 +109,14 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 아래 표는 이 페이지에 연결된 CameraX 기기 관찰 원고의 검토 상태입니다. 위 CTS 요약을 포함한 수동 본문의 검토 범위는 PR 기록에서 확인합니다.
 
 <!-- omm:begin id=status -->
+
+- 검증 기준 앱 버전: 0.14.0 (versionCode 513)
+
+| 항목 | 최신성 | 검토 |
+| --- | --- | --- |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-27 @ `4de7ca0` · Claude |
+| 원고 `device-notes` | 최신 | 검토 2026-09-27 @ `20e9ea5` · Codex |
+
 <!-- omm:end id=status -->
 
 **다음 단계:** 구현 구조는 [Architecture](architecture.md), 과거의 선택은 [설계 결정 원문](_inputs/decisions.md)에서 확인하세요.
