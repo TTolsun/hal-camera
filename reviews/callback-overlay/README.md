@@ -13,7 +13,7 @@ Reviewed on 2026-09-27 against main 077e3f8. This is the author's code and UI re
 
 ## Automated validation
 
-- JDK 17: testDebugUnitTest (546 tests), lintDebug and assembleRelease passed for the build 532 source (the additional Preview regression ran after the release build). Release version override is an external local install script; the repository's version code is unchanged.
+- JDK 17: testDebugUnitTest (546 tests), lintDebug and assembleRelease passed for the final source including the Callback button label. Release version override is an external local install script; the repository's version code is unchanged.
 - Regression coverage includes configured stream identities, exact sensor-key correlation, previous-Start origin after ring eviction, recording arrival distinct from Metadata, per-update frame advancement, missing output fallback, hold duration/expiry/reconfiguration and stable axis shrink timing.
 - Documentation regression tests: 21 passed. Coverage and generated page/site checks are part of the PR validation.
 
@@ -46,3 +46,7 @@ Limits: On Android 13+ Camera2 LIVE, Preview measures app receipt of the PRIVATE
 ![Preview buffer receipt with Shutter label](preview-buffer-532.png)
 
 ![Preview and Recording buffer receipts](preview-recording-532.png)
+
+## Final label and installation boundary
+
+The user selected Callback for the overlay button. The final source passed 546 JVM tests, lintDebug and assembleRelease. Build 533 was not installed: Android rejected it because another build (540) was already on the device. At the user’s request no further device installation was attempted. Hardware observations above apply to the stated earlier builds; the final label is source-validated only.

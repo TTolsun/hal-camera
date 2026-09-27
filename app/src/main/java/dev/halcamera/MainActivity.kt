@@ -409,7 +409,7 @@ class MainActivity : ComponentActivity() {
         // Standalone tools stay in the menu; Mark remains on the live preview.
         toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: 측정 도구, ZIP 기록, 설정" }
         // Read-only overlay controls remain usable while the CLI owns a recording.
-        graphButton=CameraWidgets(this).button("수치") { showCallbacks(callbackGraph.visibility != View.VISIBLE) }.apply { contentDescription="Result callback 그래프 표시" }
+        graphButton=CameraWidgets(this).button("Callback") { showCallbacks(callbackGraph.visibility != View.VISIBLE) }.apply { contentDescription="Callback 타이밍 표시" }
         listOf(engineButton,toolsButton,graphButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
         liveIndicator=LiveIndicator(this)
         val leadingSlot=LinearLayout(this).apply {
@@ -710,7 +710,7 @@ class MainActivity : ComponentActivity() {
         callbackGraph.visibility = if (show) View.VISIBLE else View.GONE
         metrics.visibility = if (show) View.GONE else View.VISIBLE
         graphBack.isEnabled = show
-        graphButton.contentDescription = if (show) "Result callback 그래프 숨기기" else "Result callback 그래프 표시"
+        graphButton.contentDescription = if (show) "Callback 타이밍 숨기기" else "Callback 타이밍 표시"
         graphButton.isSelected = show
         ViewCompat.setStateDescription(graphButton, if (show) "표시됨" else "숨겨짐")
         if (show) callbackGraph.update(recorder.snapshot(10_000_000_000L),sessionId,nowNs(),telemetry.sessions[sessionId].orEmpty())
