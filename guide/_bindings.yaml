@@ -673,7 +673,7 @@ pages:
             - Benchmark와 CLI는 어느 엔진을 쓰는가
           must_link: [CameraEngine, MediaCapture, LiveTuning, TouchMetering]
           forbid:
-            - 기기에서 동작했다는 서술을 하지 않습니다. 기기 관찰은 device-notes 블록에만 적습니다.
+            - 기기에서 동작했다는 서술을 하지 않습니다. 기기 관찰은 Evidence의 device-notes 블록에만 적습니다.
 
       - id: camera2
         kind: content
@@ -699,7 +699,7 @@ pages:
             - 앱이 CameraX에 맡기는 요청과 직접 정하는 요청은 무엇인가
           must_link: [CameraXEngine, CameraXStillCapture, CameraXLiveRecorder, CameraXControls]
           forbid:
-            - 기기에서 동작했다는 서술을 하지 않습니다. 기기 관찰은 device-notes 블록에만 적습니다.
+            - 기기에서 동작했다는 서술을 하지 않습니다. 기기 관찰은 Evidence의 device-notes 블록에만 적습니다.
 
       - id: comparison
         kind: content
@@ -711,30 +711,14 @@ pages:
             - 두 엔진의 결과가 달라질 수 있는 지점은 어디이며, 코드상 원인은 무엇인가
           must_link: [CameraXControls, Camera2StillCapture]
           forbid:
-            - 코드에서 확인한 차이만 적습니다. 기기에서 관찰한 값은 device-notes 블록에 적습니다.
+            - 코드에서 확인한 차이만 적습니다. 기기에서 관찰한 값은 Evidence의 device-notes 블록에 적습니다.
 
-      - id: device-notes
-        kind: content
-        based_on: [overall-architecture]
-        confidence: device
-        brief:
-          reader: CameraX 경로의 기기 동작을 확인해야 하는 개발자
-          answers:
-            - 실제 기기에서 CameraX 경로를 확인한 결과는 무엇인가
-          must_link: [CameraXControls]
-          forbid:
-            - device-verification.yaml 의 기록만 인용합니다.
 
   troubleshooting.md:
     title: 디버깅 및 문제 해결
     blocks:
       - id: status
         kind: status
-
-      - id: build-identity
-        kind: fact
-        source: build-facts
-        confidence: code
 
       - id: log-tags
         kind: fact
@@ -754,8 +738,28 @@ pages:
           must_link: [FlightRecorder, capacityEvictions, INSUFFICIENT_SAMPLES]
           forbid:
             - 특정 기기에서 재현되었다는 서술을 하지 않습니다. device-verification.yaml 의 기록만 인용합니다.
+  getting-started.md:
+    title: 개발 환경 및 빠른 시작
+    blocks:
+      - id: build-identity
+        kind: fact
+        source: build-facts
+        confidence: code
 
-      - id: open-questions
-        kind: omm-concerns
-        source: data-flow
-        confidence: intent
+  evidence.md:
+    title: Evidence
+    blocks:
+      - id: status
+        kind: status
+
+      - id: device-notes
+        kind: content
+        based_on: [overall-architecture]
+        confidence: device
+        brief:
+          reader: CameraX 경로의 기기 동작을 확인해야 하는 개발자
+          answers:
+            - 실제 기기에서 CameraX 경로를 확인한 결과는 무엇인가
+          must_link: [CameraXControls]
+          forbid:
+            - device-verification.yaml 의 기록만 인용합니다.

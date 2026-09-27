@@ -254,10 +254,10 @@
       },
       "accepted": {
         "codeHash": "841dd8ac6de5e653",
-        "modelHash": "d2f0d69c8cb984ad",
+        "modelHash": "97dd2001b908b268",
         "at": "2026-09-27",
-        "commit": "08e4b1f",
-        "reviewer": "Claude",
+        "commit": "20e9ea5",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "5a0b0d26887226eb58f1e172a480e0b9e0c7866c",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
@@ -419,10 +419,10 @@
       },
       "accepted": {
         "codeHash": "5de973f7655c6ec7",
-        "modelHash": "3f3fe8889fb09042",
+        "modelHash": "bb3a1a6da0c2fe20",
         "at": "2026-09-27",
-        "commit": "08e4b1f",
-        "reviewer": "Claude",
+        "commit": "20e9ea5",
+        "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "71ad43bb9cb9547c5541fcaa6ff07d529dc440e0",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "88c66fe0b644cbcef7ffe3c68c5e46cda986bf89",
@@ -467,11 +467,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "75dec1178c499124",
-        "modelHash": "129cb182f2b5e097",
+        "codeHash": "9473e55a742d0053",
+        "modelHash": "cbfb6f241659069c",
         "at": "2026-09-27",
-        "commit": "08e4b1f",
-        "reviewer": "Claude",
+        "commit": "20e9ea5",
+        "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "71ad43bb9cb9547c5541fcaa6ff07d529dc440e0",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "88c66fe0b644cbcef7ffe3c68c5e46cda986bf89",
@@ -494,6 +494,7 @@
           "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "d69c61be8718996b3695428b600f88dc3330a3b1",
           "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "dad6db8f1bbe2e11d66b33d3a2ff4c2ab2eb8531",
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "10b4960560475a8f5d0d88301b450ffd9e736523",
+          "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "f9212ee977e554307e74d19b406f7681960015d6",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f678129326b2ce5851670e2a50f8aaddab4e53c4",
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "c4ef5a864976fa43c2a808015b2d5edc2a45ed6c",
@@ -890,10 +891,10 @@
       },
       "accepted": {
         "codeHash": "90c45f759df2de98",
-        "modelHash": "3a379136a164e512",
+        "modelHash": "b21a322a3c91fdf9",
         "at": "2026-09-27",
-        "commit": "08e4b1f",
-        "reviewer": "Claude",
+        "commit": "20e9ea5",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "5a0b0d26887226eb58f1e172a480e0b9e0c7866c",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
@@ -1053,10 +1054,10 @@
       },
       "accepted": {
         "codeHash": "90c45f759df2de98",
-        "modelHash": "b980bdfe59a0aed4",
+        "modelHash": "4edb0be638779bbb",
         "at": "2026-09-27",
-        "commit": "08e4b1f",
-        "reviewer": "Claude",
+        "commit": "20e9ea5",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "5a0b0d26887226eb58f1e172a480e0b9e0c7866c",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
@@ -1216,10 +1217,10 @@
       },
       "accepted": {
         "codeHash": "90c45f759df2de98",
-        "modelHash": "4856ffe3d9a0c6b9",
+        "modelHash": "d04947f066f8ff96",
         "at": "2026-09-27",
-        "commit": "08e4b1f",
-        "reviewer": "Claude",
+        "commit": "20e9ea5",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "5a0b0d26887226eb58f1e172a480e0b9e0c7866c",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
@@ -1379,10 +1380,10 @@
       },
       "accepted": {
         "codeHash": "90c45f759df2de98",
-        "modelHash": "4ecb56648d1ee67f",
+        "modelHash": "1cbccc7131ea1674",
         "at": "2026-09-27",
-        "commit": "08e4b1f",
-        "reviewer": "Claude",
+        "commit": "20e9ea5",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "5a0b0d26887226eb58f1e172a480e0b9e0c7866c",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
@@ -1536,7 +1537,7 @@
         }
       }
     },
-    "content:engine.md/device-notes": {
+    "content:evidence.md/device-notes": {
       "observed": {
         "state": "fresh"
       },
@@ -1544,8 +1545,8 @@
         "codeHash": "90c45f759df2de98",
         "modelHash": "1bd216857c095830",
         "at": "2026-09-27",
-        "commit": "08e4b1f",
-        "reviewer": "Claude",
+        "commit": "20e9ea5",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "5a0b0d26887226eb58f1e172a480e0b9e0c7866c",
           "app/src/main/AndroidManifest.xml": "67cc1cfa59f58bad3d57ede35eeb15c43e7226d9",
