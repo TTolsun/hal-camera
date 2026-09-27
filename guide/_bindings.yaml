@@ -165,6 +165,12 @@ sources:
           - app/src/main/java/dev/halcamera/ui/EvRuler.kt
           - app/src/main/java/dev/halcamera/camera/LiveControls.kt
           - app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt
+      # Tap-to-focus has its own element: the three files would push live-controls past 60,000 characters (#168).
+      screens/expert-screen/live-controls/touch-focus:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/TouchMeter.kt
+          - app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt
+          - app/src/main/java/dev/halcamera/ui/FocusRing.kt
       screens/benchmark-screen:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
