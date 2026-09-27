@@ -37,24 +37,17 @@ import dev.halcamera.camera.LiveControls
  *
  * The buttons show what was requested. What the camera applied is the readout line built by [stateLine].
  * A control the camera lacks stays visible and dimmed, and a tap says why: a missing flash on the front camera is
- * itself something a developer checks. On CameraX a tap asks [Host.needsCamera2] to switch engines and then
- * carries out the tap once the Camera2 session is ready, so one tap is enough.
+ * itself something a developer checks. Both engines carry every control, so a tap never switches engines.
  */
 class LiveControlBar(private val context: Context, private val host: Host) {
     interface Host {
         fun controlsChanged(controls: LiveControls)
-        /** Starts the switch to Camera2; false when it cannot switch now (a recording is running). */
-        fun needsCamera2(): Boolean
         fun notice(text: String)
     }
-
-    /** A tap made on CameraX, run once the Camera2 session it waited for is ready. */
-    private var pending: (() -> Unit)? = null
 
     val view = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
     var support = LiveControlSupport.NONE; private set
     var controls = LiveControls(); private set
-    private var camera2 = true
     private var video = false
     private var enabled = true
 
@@ -128,7 +121,6 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     fun reset(support: LiveControlSupport) {
         this.support = support
         controls = LiveControls()
-        pending = null
         setExpanded(false)
     }
 
@@ -136,23 +128,19 @@ class LiveControlBar(private val context: Context, private val host: Host) {
      * Called on every LIVE refresh. Switching to video mode drops flash auto and on, which only a still can fire;
      * the engine is told so the repeating request matches the buttons.
      */
-    fun bind(camera2: Boolean, video: Boolean, enabled: Boolean) {
-        val changed = camera2 != this.camera2 || video != this.video || enabled != this.enabled
-        this.camera2 = camera2; this.video = video; this.enabled = enabled
+    fun bind(video: Boolean, enabled: Boolean) {
+        val changed = video != this.video || enabled != this.enabled
+        this.video = video; this.enabled = enabled
         val coerced = controls.coerce(support, video)
         if (coerced != controls) { controls = coerced; host.controlsChanged(coerced); render() }
         if (changed) {
             if (!enabled) closePanels()
             render()
         }
-        // The switch reset the bar; reopen it so the finished tap is visible where it was made.
-        if (camera2 && enabled) pending?.let { pending = null; setExpanded(true); it() }
     }
 
     private fun tap(action: () -> Unit) {
-        if (!enabled) return
-        if (camera2) action()
-        else if (host.needsCamera2()) pending = action
+        if (enabled) action()
     }
 
     private fun update(next: LiveControls) {
@@ -196,7 +184,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
      * has no AE lock; the press then only meters.
      */
     fun setAeLock(on: Boolean): Boolean {
-        if (!camera2 || !enabled || !support.aeLock) return false
+        if (!enabled || !support.aeLock) return false
         if (controls.aeLock != on) update(controls.copy(aeLock = on))
         return true
     }
@@ -233,17 +221,16 @@ class LiveControlBar(private val context: Context, private val host: Host) {
 
     private fun render() {
         evPanel.visibility = ruler.visibility
-        val suffix = if (!camera2) ". Camera2에서만 사용할 수 있습니다" else ""
-        flash.show(flashIcon(controls.flash), null, controls.flash != FlashMode.OFF, false, camera2 && support.flash,
-            "플래시, 현재 ${controls.flash.label}$suffix")
-        afLock.show(null, "AF", controls.afLock, controls.afLock, camera2 && support.afLock,
-            (if (controls.afLock) "AF 잠금 켜짐, 누르면 해제" else "AF 잠금, 누르면 초점을 맞추고 잠금") + suffix)
-        aeLock.show(null, "AE", controls.aeLock, controls.aeLock, camera2 && support.aeLock,
-            (if (controls.aeLock) "AE 잠금 켜짐, 누르면 해제" else "AE 잠금, 누르면 현재 노출을 잠금") + suffix)
+        flash.show(flashIcon(controls.flash), null, controls.flash != FlashMode.OFF, false, support.flash,
+            "플래시, 현재 ${controls.flash.label}")
+        afLock.show(null, "AF", controls.afLock, controls.afLock, support.afLock,
+            if (controls.afLock) "AF 잠금 켜짐, 누르면 해제" else "AF 잠금, 누르면 초점을 맞추고 잠금")
+        aeLock.show(null, "AE", controls.aeLock, controls.aeLock, support.aeLock,
+            if (controls.aeLock) "AE 잠금 켜짐, 누르면 해제" else "AE 잠금, 누르면 현재 노출을 잠금")
         val evText = if (controls.evIndex == 0) null else support.evLabel(controls.evIndex).removePrefix("EV ")
         ev.show(if (evText == null) R.drawable.ic_exposure else null, evText,
-            controls.evIndex != 0 || ruler.visibility == View.VISIBLE, false, camera2 && support.evRange != null,
-            "노출 보정, 현재 ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "조절기 접기" else "조절기 펼치기"}$suffix")
+            controls.evIndex != 0 || ruler.visibility == View.VISIBLE, false, support.evRange != null,
+            "노출 보정, 현재 ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "조절기 접기" else "조절기 펼치기"}")
         // Dim while the bar is off (camera not ready, recording being saved, a CLI command running), as MainActivity
         // dims every other Live control, so a tap that does nothing never looks like one that should.
         listOf(flash, afLock, aeLock, ev).forEach { it.isEnabled = enabled; if (!enabled) it.alpha = 0.4f }

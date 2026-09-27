@@ -29,6 +29,7 @@ Reviewed all 12 published pages, including the home page and the preserved Decis
 - Corrected the two-run comparison description against HistoryActivity and ResultPresenter: the first selected run is the temporary comparison baseline. Previous-run references remain unjudged.
 - Corrected First run versus No baseline and removed the unsupported claim that 29.8 fps establishes a lost frame.
 - Clarified that generated freshness records do not cover every handwritten page and that CLI does not run benchmarks.
+- Integrated main's CameraX parity change (#196) before final review. Updated Callback, Live usage and troubleshooting: CameraX keeps its engine for capture/recording, pairs the nearest analysis YUV with the JPEG, and cannot observe Preview/Recording buffer arrival directly. Reviewed CameraXEngine, CameraXStillCapture and CameraXLiveRecorder for these distinctions.
 - Kept historical decision inputs and validation/release documents intact. Removed only the Decisions navigation entry.
 - Checked every published page at a 390 × 844 viewport: document width and content width both measured 375 CSS px after the scrollbar. Restored the viewport afterward.
 - Verified Benchmark → Callback navigation with the keyboard and checked all 37 local HTML fragment links; no missing targets were found.

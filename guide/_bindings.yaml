@@ -134,6 +134,7 @@ sources:
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
           - app/src/main/java/dev/halcamera/camera/StillPair.kt
           - app/src/main/java/dev/halcamera/camera/YuvPacking.kt
+          - app/src/main/java/dev/halcamera/camera/StillEncoding.kt
       camera-engines/camera2-engine/live-recorder:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt
@@ -142,6 +143,17 @@ sources:
       camera-engines/camerax-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+      # CameraX parity with Camera2 on Live: the same three helpers as camera2-engine, each its own element.
+      camera-engines/camerax-engine/still-capture:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt
+          - app/src/main/java/dev/halcamera/camera/StillEncoding.kt
+      camera-engines/camerax-engine/live-recorder:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt
+      camera-engines/camerax-engine/controls:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraXControls.kt
       camera-engines/endpoint-model:
         evidence:
           - app/src/main/java/dev/halcamera/camera/CameraEndpoint.kt

@@ -1,19 +1,38 @@
 package dev.halcamera.camera
 
 import android.content.Context
+import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraManager
+import android.hardware.camera2.CaptureFailure
+import android.hardware.camera2.CaptureRequest
+import android.hardware.camera2.CaptureResult
+import android.hardware.camera2.TotalCaptureResult
+import android.os.Handler
+import android.os.Looper
+import android.view.Surface
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.Recorder
+import androidx.camera.video.VideoCapture
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import dev.halcamera.telemetry.Telemetry
 import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
+/**
+ * The CameraX engine of Live. It offers what Camera2Engine offers there: gallery stills and video
+ * ([CameraXStillCapture], [CameraXLiveRecorder]), EV, AE/AF lock and flash, and touch metering ([CameraXControls]).
+ * Benchmark profiles stay Camera2-only (PLAN-BenchMarker-v0.3 8.2), so nothing here takes a StreamSpec.
+ *
+ * The session is Preview + ImageAnalysis + ImageCapture, which is Camera2Engine's preview + YUV + JPEG. While a
+ * recording runs it is Preview + VideoCapture, as Camera2's recording session is preview + encoder.
+ */
 @androidx.annotation.OptIn(markerClass = [ExperimentalCamera2Interop::class])
 class CameraXEngine(
     private val context: Context,
@@ -23,19 +42,78 @@ class CameraXEngine(
     private val session: String,
     private val telemetry: Telemetry,
     private val executor: ExecutorService,
+    private val previewReady: () -> Unit = {},
+    private val recordingState: (Boolean) -> Unit = {},
+    /** A short notice that leaves the camera state alone, such as an AE relock that changed the exposure. */
+    private val notice: (String) -> Unit = {},
     private val status: (String, Boolean) -> Unit
-) : CameraEngine, TouchMetering {
+) : CameraEngine, MediaCapture, LiveTuning, TouchMetering {
     @Volatile private var active = true
     private var provider: ProcessCameraProvider? = null
-    private var camera: Camera? = null
+    private var selector: CameraSelector? = null
+    @Volatile private var camera: Camera? = null
     private var capture: ImageCapture? = null
     private var preview: Preview? = null
     private var analysis: ImageAnalysis? = null
-    private var takingPhoto = false
+    /** The VideoCapture bound while a recording runs, so closing the camera unbinds it too. */
+    private var recording: VideoCapture<Recorder>? = null
+    @Volatile private var previewSeen = false
     private val previewOutput = OutputDescriptor("preview", OutputKind.PREVIEW, repeating = true, observable = false)
     private val analysisOutput = OutputDescriptor("analysis_keep_latest", OutputKind.YUV, repeating = true)
     private val captureOutput = OutputDescriptor("still", OutputKind.JPEG, repeating = false, stillCapture = true)
+    /** CameraX gives the app no buffer callback for the encoder, so the recording output is not observable. */
+    private val recordingOutput = OutputDescriptor("recording", OutputKind.RECORDING, repeating = true, observable = false)
+    @Volatile private var zoomRatio = 1f
     private val main = ContextCompat.getMainExecutor(context)
+    private val handler = Handler(Looper.getMainLooper())
+    private val mediaIo = Executors.newSingleThreadExecutor()
+    private val library = MediaLibrary(context)
+    override val mediaBusy: Boolean get() = stills.inFlight || video.busy
+
+    private val controls: CameraXControls = CameraXControls(view, handler, telemetry, session, object : CameraXControls.Host {
+        override val camera: Camera? get() = this@CameraXEngine.camera
+        override val imageCapture: ImageCapture? get() = capture
+        override val active: Boolean get() = this@CameraXEngine.active
+        override fun notice(text: String) = this@CameraXEngine.notice(text)
+    })
+    private val stills: CameraXStillCapture = CameraXStillCapture(context, handler, main, telemetry, session, library, mediaIo, object : CameraXStillCapture.Host {
+        override val imageCapture: ImageCapture? get() = capture
+        override val active: Boolean get() = this@CameraXEngine.active
+        override val recordingBusy: Boolean get() = video.busy
+        override val flashName: String get() = controls.controls.flash.name
+        override val zoomRequested: Float get() = zoomRatio
+        override val stillStream: String get() = captureOutput.id
+        override fun updateRotation() { val r = displayRotation(); capture?.targetRotation = r; analysis?.targetRotation = r }
+        override fun report(message: String, ok: Boolean) = this@CameraXEngine.report(message, ok)
+    })
+    private val video: CameraXLiveRecorder = CameraXLiveRecorder(context, main, telemetry, session, library, mediaIo, object : CameraXLiveRecorder.Host {
+        override val active: Boolean get() = this@CameraXEngine.active
+        override val stillInFlight: Boolean get() = stills.inFlight
+        override val displayRotation: Int get() = displayRotation()
+        override fun bindRecording(video: VideoCapture<Recorder>) {
+            val provider = provider ?: error("Camera not bound")
+            val stills = listOfNotNull(analysis, capture).toTypedArray()
+            provider.unbind(*stills)
+            val outputs = StreamConfiguration<UseCase>(listOf(ConfiguredOutput(previewOutput, preview!!), ConfiguredOutput(recordingOutput, video)))
+            try { camera = provider.bindToLifecycle(owner, selector!!, video) }
+            catch (e: Exception) { camera = provider.bindToLifecycle(owner, selector!!, *stills); throw e }
+            recording = video
+            rebuilt(outputs, mapOf("recording" to video.resolutionInfo?.resolution?.toString()))
+        }
+        override fun unbindRecording(video: VideoCapture<Recorder>) {
+            val provider = provider ?: return
+            provider.unbind(video)
+            recording = null
+            camera = provider.bindToLifecycle(owner, selector!!, *listOfNotNull(analysis, capture).toTypedArray())
+            rebuilt(liveOutputs(), streamSizes())
+            report("CameraX · LIVE", true)
+        }
+        override fun recordingState(recording: Boolean) = this@CameraXEngine.recordingState(recording)
+        override fun streamingStarted() = controls.resendMetering()
+        override fun status(message: String, ok: Boolean) { if (active) this@CameraXEngine.status(message, ok) }
+        override fun report(message: String, ok: Boolean) = this@CameraXEngine.report(message, ok)
+    })
+
     override fun start() {
         telemetry.registerSession(session, "CameraX", context.getSystemService(CameraManager::class.java), cameraId)
         val future = ProcessCameraProvider.getInstance(context)
@@ -44,55 +122,80 @@ class CameraXEngine(
             try {
                 provider = future.get()
                 val builder = Preview.Builder()
-                Camera2Interop.Extender(builder).setSessionCaptureCallback(telemetry.callback(session) { active })
+                Camera2Interop.Extender(builder).setSessionCaptureCallback(resultCallback(telemetry.callback(session) { active }))
                 preview = builder.build().also { it.setSurfaceProvider(view.surfaceProvider) }
                 analysis = ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build().also { useCase ->
                     useCase.setAnalyzer(executor) { image ->
-                        try { if (active) telemetry.image(session, image.imageInfo.timestamp, image.width, image.height, image.format, analysisOutput.id) }
-                        finally { image.close() }
+                        try {
+                            if (active) {
+                                telemetry.image(session, image.imageInfo.timestamp, image.width, image.height, image.format, analysisOutput.id)
+                                if (!previewSeen) { previewSeen = true; handler.post { if (active) previewReady() } }
+                                stills.onFrame(image)
+                            }
+                        } finally { image.close() }
                     }
                 }
                 capture = ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
-                val selector = CameraSelector.Builder().addCameraFilter { infos ->
+                selector = CameraSelector.Builder().addCameraFilter { infos ->
                     infos.filter { Camera2CameraInfo.from(it).cameraId == cameraId }
                 }.build()
-                val outputs = StreamConfiguration<UseCase>(listOf(ConfiguredOutput(previewOutput, preview!!),
-                    ConfiguredOutput(analysisOutput, analysis!!), ConfiguredOutput(captureOutput, capture!!)))
-                camera = provider!!.bindToLifecycle(owner, selector, *outputs.targets.toTypedArray())
+                val outputs = liveOutputs()
+                camera = provider!!.bindToLifecycle(owner, selector!!, *outputs.targets.toTypedArray())
                 camera!!.cameraInfo.cameraState.observe(owner) { state ->
                     if (!active) return@observe
                     state.error?.let { status("CameraX error ${it.code}", false); telemetry.event(session, "camera_error", mapOf("code" to it.code)) }
-                    if (state.type == CameraState.Type.OPEN) status("CameraX · LIVE", true)
+                    if (state.type == CameraState.Type.OPEN && !video.busy) status("CameraX · LIVE", true)
                 }
-                val sizes = mapOf("preview" to preview?.resolutionInfo?.resolution?.toString(),
-                    "analysis" to analysis?.resolutionInfo?.resolution?.toString(), "jpeg" to capture?.resolutionInfo?.resolution?.toString())
+                val sizes = streamSizes()
                 telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
                 telemetry.configureCallbackStreams(session, outputs.metadata())
                 telemetry.event(session, "bound", sizes)
             } catch (e: Exception) { status("CameraX: ${e.message}", false); telemetry.event(session, "camera_error", mapOf("message" to e.toString())) }
         }, main)
     }
-    override fun capture() {
-        val useCase = capture ?: return
-        if (!active || takingPhoto) return
-        takingPhoto = true
-        telemetry.event(session, "capture_submit", mapOf("api" to "ImageCapture.takePicture", "correlation" to "one app capture in flight; CameraX owns internal tags"))
-        useCase.takePicture(main, object : ImageCapture.OnImageCapturedCallback() {
-            override fun onCaptureSuccess(image: ImageProxy) {
-                try {
-                    if (active) {
-                        telemetry.image(session, image.imageInfo.timestamp, image.width, image.height, image.format, captureOutput.id)
-                        status("CameraX · capture received", true)
-                    }
-                } finally { image.close(); takingPhoto = false }
-            }
-            override fun onError(exception: ImageCaptureException) {
-                takingPhoto = false
-                if (active) { telemetry.event(session, "capture_error", mapOf("message" to exception.message)); status("Capture: ${exception.message}", false) }
-            }
-        })
+
+    /** The same outputs bind the use cases and describe the Callback graph, as on Camera2. */
+    private fun liveOutputs() = StreamConfiguration<UseCase>(listOf(ConfiguredOutput(previewOutput, preview!!),
+        ConfiguredOutput(analysisOutput, analysis!!), ConfiguredOutput(captureOutput, capture!!)))
+
+    private fun streamSizes() = mapOf("preview" to preview?.resolutionInfo?.resolution?.toString(),
+        "analysis" to analysis?.resolutionInfo?.resolution?.toString(), "jpeg" to capture?.resolutionInfo?.resolution?.toString())
+
+    /** A recording start or stop rebound the use cases: the zoom and the controls go on the new session again. */
+    private fun rebuilt(outputs: StreamConfiguration<UseCase>, sizes: Map<String, Any?>) {
+        telemetry.configureCallbackStreams(session, outputs.metadata())
+        telemetry.event(session, "bound", sizes)
+        camera?.cameraControl?.setZoomRatio(zoomRatio)
+        controls.sessionRebuilt()
     }
+
+    /** The telemetry callback, plus every repeating result for the AE relock and the long-press exposure watch. */
+    private fun resultCallback(telemetry: CameraCaptureSession.CaptureCallback) = object : CameraCaptureSession.CaptureCallback() {
+        override fun onCaptureStarted(session: CameraCaptureSession, request: CaptureRequest, timestamp: Long, frameNumber: Long) =
+            telemetry.onCaptureStarted(session, request, timestamp, frameNumber)
+        override fun onCaptureProgressed(session: CameraCaptureSession, request: CaptureRequest, partialResult: CaptureResult) =
+            telemetry.onCaptureProgressed(session, request, partialResult)
+        override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
+            telemetry.onCaptureCompleted(session, request, result)
+            if (active) controls.onResult(request, result)
+        }
+        override fun onCaptureFailed(session: CameraCaptureSession, request: CaptureRequest, failure: CaptureFailure) =
+            telemetry.onCaptureFailed(session, request, failure)
+        override fun onCaptureBufferLost(session: CameraCaptureSession, request: CaptureRequest, target: Surface, frameNumber: Long) =
+            telemetry.onCaptureBufferLost(session, request, target, frameNumber)
+    }
+
+    private fun displayRotation(): Int = view.display?.rotation ?: Surface.ROTATION_0
+
+    override fun capture() = stills.capture(null, null)
+    override fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit) = stills.capture(requestId, done)
+    override fun startRecording(audio: Boolean, started: () -> Unit, done: ((Result<android.net.Uri>) -> Unit)?) = video.start(audio, started, done)
+    override fun stopRecording() = video.stop()
+    override fun setControls(next: LiveControls, restore: Boolean) = controls.setControls(next, restore)
+
+    /** Also works while recording: CameraControl changes the zoom of whatever session is bound. */
     override fun setZoom(ratio: Float) {
+        zoomRatio = ratio
         val cam = camera ?: return
         if (!active) return
         val state = cam.cameraInfo.zoomState.value
@@ -100,35 +203,22 @@ class CameraXEngine(
         telemetry.event(session, "zoom_set", mapOf("zoomRequested" to clamped, "api" to "CameraControl.setZoomRatio"))
         cam.cameraControl.setZoomRatio(clamped)
     }
+
     /**
-     * CameraX maps the touch through PreviewView itself (rotation, mirroring, fill-crop, zoom). A tap focuses and is
-     * cancelled after the same hold as Camera2; a long press meters exposure and stays. CameraX has no AE lock, so
-     * the exposure point is not locked. A newer touch cancels the older future, which then reports nothing.
+     * CameraX maps the touch through PreviewView itself (rotation, mirroring, fill-crop, zoom). The rules are
+     * Camera2's: a tap focuses and ends after [TouchMeter.HOLD_MS], a long press meters exposure and stays until
+     * released; see [CameraXControls].
      */
-    override fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean {
-        val cam = camera ?: return false
-        val builder = FocusMeteringAction.Builder(view.meteringPointFactory.createPoint(x, y),
-            if (exposure) FocusMeteringAction.FLAG_AE else FocusMeteringAction.FLAG_AF)
-        val action = (if (exposure) builder.disableAutoCancel() else builder.setAutoCancelDuration(TouchMeter.HOLD_MS, java.util.concurrent.TimeUnit.MILLISECONDS)).build()
-        if (!active || !cam.cameraInfo.isFocusMeteringSupported(action)) return false
-        telemetry.event(session, "touch_meter", mapOf("kind" to if (exposure) "AE" else "AF", "x" to x, "y" to y, "api" to "CameraControl.startFocusAndMetering"))
-        feedback(TouchPhase.SCANNING)
-        val future = cam.cameraControl.startFocusAndMetering(action)
-        future.addListener({
-            val focused = runCatching { future.get().isFocusSuccessful }.getOrNull() ?: return@addListener
-            val phase = if (exposure) TouchPhase.METERED else if (focused) TouchPhase.FOCUSED else TouchPhase.FAILED
-            telemetry.event(session, "touch_meter_result", mapOf("phase" to phase.name))
-            if (!active) return@addListener
-            feedback(phase)
-            if (!exposure) view.postDelayed({ if (active) feedback(TouchPhase.DONE) }, TouchMeter.HOLD_MS)
-        }, main)
-        return true
-    }
+    override fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean =
+        controls.meterAt(x, y, exposure, feedback)
+
     override fun close(done: () -> Unit) {
         active = false
         analysis?.clearAnalyzer()
+        stills.close()
+        video.close { mediaIo.shutdown() }
         val info = camera?.cameraInfo
-        val bound = listOfNotNull(preview, analysis, capture).toTypedArray()
+        val bound = listOfNotNull(preview, analysis, capture, recording).toTypedArray()
         if (info == null || provider == null) { done(); return }
         var finished = false
         lateinit var observer: Observer<CameraState>
@@ -145,4 +235,6 @@ class CameraXEngine(
         provider!!.unbind(*bound)
         if (info.cameraState.value?.type == CameraState.Type.CLOSED) finish()
     }
+
+    private fun report(message: String, ok: Boolean) { handler.post { if (active) status(message, ok) } }
 }

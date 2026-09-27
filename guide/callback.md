@@ -34,7 +34,9 @@ title: Callback
 | JPEG | JPEG 이미지 수신 시점입니다. 파일 저장 완료 시점은 아닙니다. |
 | Recording | Camera2의 Android 13 이상에서 PRIVATE 버퍼를 받아 인코더로 전달하기 전의 시점입니다. |
 
-Camera2의 Android 12 이하와 CameraX에서는 Preview 버퍼 도착을 직접 관측하지 못하므로 `콜백 없음`을 표시합니다. Recording도 Android 12 이하에서는 직접 관측하지 못합니다. 앱에서 CameraX 상태로 녹화를 요청하면 Camera2로 전환합니다.
+Camera2의 Android 12 이하와 CameraX에서는 Preview·Recording 버퍼 도착을 직접 관측하지 못하므로 `콜백 없음`을 표시합니다. CameraX도 선택한 엔진에서 녹화하며, 녹화 세션에는 Preview·Recording 행이 표시됩니다.
+
+CameraX의 YUV 행은 ImageAnalysis 수신 시점, JPEG 행은 ImageCapture 수신 시점입니다. 사진으로 저장하는 YUV는 JPEG와 시각이 가장 가까운 analysis 프레임이므로 두 행을 같은 촬영 요청의 결과로 해석하지 않습니다. 저장한 두 이미지의 시각 차이는 `media_saved`의 `yuvOffsetNs`에서 확인합니다.
 
 버퍼와 프레임은 센서 타임스탬프가 같은지 확인하여 연결하고, 표시 시간은 앱의 단조 시계로 계산합니다. 이 값은 앱 수신 시각이며 HAL 내부 처리 완료 시각을 직접 측정한 값은 아닙니다.
 
@@ -52,7 +54,7 @@ Camera2의 Android 12 이하와 CameraX에서는 Preview 버퍼 도착을 직접
 | `3s` | 누를 때마다 `3s → 5s → 10s → 15s → 30s → 1s` 순서로 바뀝니다. |
 
 1. `Event Frame` 상태에서 원하는 고정 시간을 선택합니다.
-2. 사진을 촬영합니다. YUV와 JPEG를 함께 요청했다면 같은 프레임의 두 행을 비교합니다.
+2. 사진을 촬영합니다. Camera2에서 YUV와 JPEG를 함께 요청했다면 같은 프레임의 두 행을 비교합니다.
 3. 일시정지 표시가 나타난 동안 값을 읽습니다. 늦게 도착한 같은 프레임의 결과도 채워집니다.
 4. 시간이 지나면 갱신이 재개됩니다. 곧바로 돌아가려면 `해제`를 누릅니다.
 
@@ -70,5 +72,5 @@ Camera2의 Android 12 이하와 CameraX에서는 Preview 버퍼 도착을 직접
 
 <details>
 <summary>코드 근거를 확인하세요</summary>
-<p class="doc-evidence">화면과 버튼은 <code>MainActivity.kt</code>·<code>ui/ResultCallbackGraph.kt</code>, 프레임 선택과 자동 고정은 <code>ui/ResultCallbackTimeline.kt</code>, 시간 기준과 결과 연결은 <code>ui/ResultCallbackSeries.kt</code>·<code>telemetry/Telemetry.kt</code>에서 확인할 수 있습니다. 세션과 그래프의 공통 스트림 목록은 <code>camera/StreamConfiguration.kt</code>, 실제 버퍼 수신은 <code>camera/PreviewBufferRelay.kt</code>·<code>camera/RecordingBufferRelay.kt</code>가 담당합니다.</p>
+<p class="doc-evidence">화면과 버튼은 <code>MainActivity.kt</code>·<code>ui/ResultCallbackGraph.kt</code>, 프레임 선택과 자동 고정은 <code>ui/ResultCallbackTimeline.kt</code>, 시간 기준과 결과 연결은 <code>ui/ResultCallbackSeries.kt</code>·<code>telemetry/Telemetry.kt</code>에서 확인할 수 있습니다. 세션과 그래프의 공통 스트림 목록은 <code>camera/StreamConfiguration.kt</code>, Camera2의 PRIVATE 버퍼 수신은 <code>camera/PreviewBufferRelay.kt</code>·<code>camera/RecordingBufferRelay.kt</code>가 담당합니다. CameraX의 관측 가능 여부와 출력 구성은 <code>camera/CameraXEngine.kt</code>, 사진 쌍의 연결은 <code>camera/CameraXStillCapture.kt</code>에 있습니다.</p>
 </details>
