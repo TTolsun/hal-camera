@@ -45,7 +45,7 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
             ratios.forEach { ratio ->
                 addView(Button(context).apply {
                     isAllCaps = false
-                    textSize = 12f
+                    textSize = 11f
                     minWidth = 0; minimumWidth = 0; minHeight = 0; minimumHeight = 0
                     setPadding(0, 0, 0, 0)
                     stateListAnimator = null
@@ -139,9 +139,8 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
                 setColor(if (active) Look.cameraSelection else Color.TRANSPARENT)
             }
             val mask = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(Color.WHITE) }
-            // Samsung Camera's selected circle measures 30dp on the reference S25+.
-            // Use a slightly larger 32dp circle inside the unchanged 48dp touch target.
-            button.background = InsetDrawable(RippleDrawable(ColorStateList.valueOf(0x40FFFFFF), circle, mask), dp(8))
+            // Match the compact label with a 28dp circle inside the 48dp touch target.
+            button.background = InsetDrawable(RippleDrawable(ColorStateList.valueOf(0x40FFFFFF), circle, mask), dp(10))
             button.setPadding(0, 0, 0, 0)
             button.contentDescription = "${ratio}배 줌" + if (!expanded && active && ratios.size > 1) ", 배율 펼치기" else ""
             ViewCompat.setStateDescription(button, if (active) "선택됨" else null)
@@ -179,7 +178,7 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val wanted = dp(48) + dp(48) * (ratios.size - 1).coerceAtLeast(0) * progress
-        setMeasuredDimension(resolveSize(wanted.roundToInt(), widthMeasureSpec), resolveSize(dp(52), heightMeasureSpec))
+        setMeasuredDimension(resolveSize(wanted.roundToInt(), widthMeasureSpec), resolveSize(dp(48), heightMeasureSpec))
         val size = MeasureSpec.makeMeasureSpec(dp(48), MeasureSpec.EXACTLY)
         for (index in 0 until childCount) getChildAt(index).measure(size, size)
     }

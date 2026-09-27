@@ -477,7 +477,7 @@ class MainActivity : ComponentActivity() {
         topBar.addView(cameraNotice,lp(top=4))
 
         // The zoom rail expands horizontally without moving the shutter or the readout.
-        bottomBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER_HORIZONTAL; setPadding(dp(16),dp(14),dp(16),dp(14)) }
+        bottomBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER_HORIZONTAL; setPadding(dp(16),dp(4),dp(16),0) }
         // A single soft scrim spans capture controls and Mark without a separate footer band.
         val captureChrome=LinearLayout(this).apply {
             orientation=LinearLayout.VERTICAL
@@ -486,6 +486,7 @@ class MainActivity : ComponentActivity() {
         root.addView(captureChrome,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
         captureChrome.addView(bottomBar,LinearLayout.LayoutParams(-1,-2))
         metrics=label("FPS — · ISO — · Exp —\nAE — · AF —",12,Look.onDark).apply {
+            textSize=11f
             maxLines=2
             gravity=Gravity.CENTER
             typeface=Look.mono
@@ -509,11 +510,11 @@ class MainActivity : ComponentActivity() {
         }.apply {
             isHorizontalScrollBarEnabled=false
             overScrollMode=View.OVER_SCROLL_NEVER
-            addView(zoomControl,FrameLayout.LayoutParams(-2,dp(52)))
+            addView(zoomControl,FrameLayout.LayoutParams(-2,dp(48)))
         }
-        bottomBar.addView(zoomViewport,LinearLayout.LayoutParams(-2,dp(52)).apply { topMargin=dp(10) })
+        bottomBar.addView(zoomViewport,LinearLayout.LayoutParams(-2,dp(48)))
         val captureRow=row().apply { gravity=Gravity.CENTER_VERTICAL }
-        bottomBar.addView(captureRow,lp(top=16))
+        bottomBar.addView(captureRow,lp(top=4))
         galleryButton=RecentMediaButton(this) {
             if (cli.active != null) return@RecentMediaButton
             withMediaPermissions(false) { startActivity(Intent(this, GalleryActivity::class.java)) }
@@ -535,14 +536,14 @@ class MainActivity : ComponentActivity() {
         captureRow.addView(cameraSlot,LinearLayout.LayoutParams(0,dp(72),1f))
 
         val modeRow=FrameLayout(this)
-        bottomBar.addView(modeRow,lp(height=48,top=16))
+        bottomBar.addView(modeRow,lp(height=48))
         modeControls=row().apply { gravity=Gravity.CENTER }
         photoModeButton=button("사진") { selectMode(false) }
         videoModeButton=button("동영상") { selectMode(true) }
         listOf(photoModeButton,videoModeButton).forEach {
             it.background=cameraChrome(Color.TRANSPARENT)
-            it.textSize=14f
-            modeControls.addView(it,LinearLayout.LayoutParams(dp(96),dp(48)))
+            it.textSize=12f
+            modeControls.addView(it,LinearLayout.LayoutParams(dp(80),dp(48)))
         }
         modeRow.addView(modeControls,FrameLayout.LayoutParams(-2,-1,Gravity.CENTER))
         recordingTime=label("● REC  00:00",14,coral,true).apply { gravity=Gravity.CENTER; typeface=Look.mono; visibility=View.GONE }
@@ -550,7 +551,7 @@ class MainActivity : ComponentActivity() {
 
         val mainRow=row().apply {
             gravity=Gravity.CENTER_VERTICAL
-            setPadding(dp(16),dp(8),dp(16),dp(8))
+            setPadding(dp(16),0,dp(16),0)
             setBackgroundColor(Color.TRANSPARENT)
         }
         reportButton=button(MARK_LABEL) {
@@ -605,8 +606,8 @@ class MainActivity : ComponentActivity() {
                 listOf(bars.left,bars.top,bars.right,bars.bottom)
             } else { @Suppress("DEPRECATION") listOf(insets.systemWindowInsetLeft,insets.systemWindowInsetTop,insets.systemWindowInsetRight,insets.systemWindowInsetBottom) }
             topBar.setPadding(dp(12)+l,dp(8)+t,dp(12)+r,dp(10))
-            bottomBar.setPadding(dp(16)+l,dp(14),dp(16)+r,dp(14))
-            mainRow.setPadding(dp(16)+l,dp(8),dp(16)+r,dp(8)+b)
+            bottomBar.setPadding(dp(16)+l,dp(4),dp(16)+r,0)
+            mainRow.setPadding(dp(16)+l,0,dp(16)+r,b)
             body.setPadding(dp(18)+l,dp(12),dp(18)+r,dp(24))
             insets
         }
