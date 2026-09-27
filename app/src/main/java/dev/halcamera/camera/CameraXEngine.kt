@@ -32,6 +32,9 @@ class CameraXEngine(
     private var preview: Preview? = null
     private var analysis: ImageAnalysis? = null
     private var takingPhoto = false
+    private val previewOutput = OutputDescriptor("preview", OutputKind.PREVIEW, repeating = true, observable = false)
+    private val analysisOutput = OutputDescriptor("analysis_keep_latest", OutputKind.YUV, repeating = true)
+    private val captureOutput = OutputDescriptor("still", OutputKind.JPEG, repeating = false, stillCapture = true)
     private val main = ContextCompat.getMainExecutor(context)
     override fun start() {
         telemetry.registerSession(session, "CameraX", context.getSystemService(CameraManager::class.java), cameraId)
@@ -45,7 +48,7 @@ class CameraXEngine(
                 preview = builder.build().also { it.setSurfaceProvider(view.surfaceProvider) }
                 analysis = ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build().also { useCase ->
                     useCase.setAnalyzer(executor) { image ->
-                        try { if (active) telemetry.image(session, image.imageInfo.timestamp, image.width, image.height, image.format, "analysis_keep_latest") }
+                        try { if (active) telemetry.image(session, image.imageInfo.timestamp, image.width, image.height, image.format, analysisOutput.id) }
                         finally { image.close() }
                     }
                 }
@@ -53,7 +56,9 @@ class CameraXEngine(
                 val selector = CameraSelector.Builder().addCameraFilter { infos ->
                     infos.filter { Camera2CameraInfo.from(it).cameraId == cameraId }
                 }.build()
-                camera = provider!!.bindToLifecycle(owner, selector, preview, analysis, capture)
+                val outputs = StreamConfiguration<UseCase>(listOf(ConfiguredOutput(previewOutput, preview!!),
+                    ConfiguredOutput(analysisOutput, analysis!!), ConfiguredOutput(captureOutput, capture!!)))
+                camera = provider!!.bindToLifecycle(owner, selector, *outputs.targets.toTypedArray())
                 camera!!.cameraInfo.cameraState.observe(owner) { state ->
                     if (!active) return@observe
                     state.error?.let { status("CameraX error ${it.code}", false); telemetry.event(session, "camera_error", mapOf("code" to it.code)) }
@@ -62,6 +67,7 @@ class CameraXEngine(
                 val sizes = mapOf("preview" to preview?.resolutionInfo?.resolution?.toString(),
                     "analysis" to analysis?.resolutionInfo?.resolution?.toString(), "jpeg" to capture?.resolutionInfo?.resolution?.toString())
                 telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
+                telemetry.configureCallbackStreams(session, outputs.metadata())
                 telemetry.event(session, "bound", sizes)
             } catch (e: Exception) { status("CameraX: ${e.message}", false); telemetry.event(session, "camera_error", mapOf("message" to e.toString())) }
         }, main)
@@ -75,7 +81,7 @@ class CameraXEngine(
             override fun onCaptureSuccess(image: ImageProxy) {
                 try {
                     if (active) {
-                        telemetry.image(session, image.imageInfo.timestamp, image.width, image.height, image.format, "still")
+                        telemetry.image(session, image.imageInfo.timestamp, image.width, image.height, image.format, captureOutput.id)
                         status("CameraX · capture received", true)
                     }
                 } finally { image.close(); takingPhoto = false }

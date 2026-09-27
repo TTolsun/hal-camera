@@ -119,20 +119,26 @@ sources:
       camera-engines/engine-interface:
         evidence:
           - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
+          - app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt
       camera-engines/camera2-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
           - app/src/main/java/dev/halcamera/camera/PreviewTransform.kt
-          - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+          - app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt
       # Stills and LIVE recording moved out of Camera2Engine.kt (refactor after #192); each has its own element.
       camera-engines/camera2-engine/still-capture:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt
+      camera-engines/camera2-engine/still-output:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
           - app/src/main/java/dev/halcamera/camera/StillPair.kt
           - app/src/main/java/dev/halcamera/camera/YuvPacking.kt
       camera-engines/camera2-engine/live-recorder:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt
+          - app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt
+          - app/src/main/java/dev/halcamera/camera/RecordingTimebase.kt
       camera-engines/camerax-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
@@ -160,10 +166,12 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
           - app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt
-      # 진단 패널의 배치는 MainActivity 에서 옮겼습니다(입력 한도). 동작은 MainActivity 에 남아 있습니다.
+      # 프리뷰 위 콜백 그래프와 순수 표본 조립기.
       screens/expert-screen/diagnostics-panel:
         evidence:
-          - app/src/main/java/dev/halcamera/ui/DiagnosticsPanel.kt
+          - app/src/main/java/dev/halcamera/ui/ResultCallbackGraph.kt
+          - app/src/main/java/dev/halcamera/ui/ResultCallbackSeries.kt
+          - app/src/main/java/dev/halcamera/ui/ResultCallbackTimeline.kt
           - app/src/main/java/dev/halcamera/ui/CameraWidgets.kt
           - app/src/main/java/dev/halcamera/ui/LiveReadings.kt
       # 상단 카메라 제어(플래시·AF/AE 잠금·EV)의 배치·다이얼과 요청값 모델. MainActivity·camera2-engine 입력 한도 때문에 따로 둡니다.
@@ -255,17 +263,12 @@ sources:
           - app/src/main/java/dev/halcamera/ui/LiveReadout.kt
           - app/src/main/java/dev/halcamera/ui/Look.kt
           - app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt
-          - app/src/main/java/dev/halcamera/ui/ScopeView.kt
           - app/src/main/java/dev/halcamera/ui/SelectionPopup.kt
-          - app/src/main/java/dev/halcamera/ui/StripView.kt
       # 촬영 조작 두 파일은 ui-widgets 입력이 6만 자 한도에 가까워 하위 요소로 내렸습니다.
       ui-widgets/capture-controls:
         evidence:
           - app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt
           - app/src/main/java/dev/halcamera/ui/ShutterButton.kt
-      ui-widgets/frame-timeline:
-        evidence:
-          - app/src/main/java/dev/halcamera/ui/TimelineView.kt
       ui-widgets/metric-bars:
         evidence:
           - app/src/main/java/dev/halcamera/ui/MetricBars.kt
@@ -363,7 +366,6 @@ sources:
       .:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt
-          - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
           - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt
           - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
@@ -386,6 +388,8 @@ sources:
       framework-callbacks:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+      framework-callbacks/metadata-callbacks:
+        evidence:
           - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
       # CameraXEngine.kt moved out when Camera2Engine.kt grew past the element's 60,000-character input (#184).
       framework-callbacks/camerax-callbacks:

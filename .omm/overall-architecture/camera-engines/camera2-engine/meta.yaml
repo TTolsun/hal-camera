@@ -7,5 +7,6 @@ title: camera2-engine
 children:
   - still-capture
   - live-recorder
+  - still-output
 parentPath:
   - camera-engines

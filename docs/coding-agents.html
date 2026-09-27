@@ -29,7 +29,7 @@
     <h1 lang="en">Hand the camera to a coding agent.</h1><p>저장소의 <code>skills/halcam-cli/SKILL.md</code> 한 파일이 에이전트용 운전 지침입니다. 준비 절차, 명령 목록, 결과 파일 회수, 오류 코드 대응을 담고 있으므로, AI 코딩 에이전트에게 이 파일을 읽히면 사람이 매번 <code>adb</code> 사용법을 설명하지 않아도 됩니다. 사람이 읽는 CLI 설명은 <a href="cli.html">CLI 가이드</a>이고, 계약의 원본은 <code>app/src/main/java/dev/halcamera/cli/</code>의 코드입니다. 스킬은 그 둘을 에이전트가 실행할 수 있는 순서로 옮겨 적은 문서입니다.</p>
 <h2 lang="en">Use it.</h2><ol>
 <li>저장소를 clone하고 APK를 기기에 설치합니다.</li>
-<li>Live 화면의 <strong>진단</strong> 버튼으로 진단 패널을 열고 <strong>ADB CLI 허용</strong>을 켭니다. 초기값이 꺼짐이며 adb로는 켤 수 없습니다.</li>
+<li>Live 화면의 <strong>도구 → 설정 · 앱 정보 → ADB CLI 설정</strong>에서 <strong>ADB CLI 허용</strong>을 켭니다. 초기값이 꺼짐이며 adb로는 켤 수 없습니다.</li>
 <li>에이전트를 저장소 루트에서 실행합니다. Claude Code는 <code>.claude/skills/halcam-cli/</code>를 통해 스킬을 인식하며, 그 파일은 본문인 <code>skills/halcam-cli/SKILL.md</code>를 가리킵니다.</li>
 <li>다른 에이전트를 쓴다면 <code>skills/halcam-cli/SKILL.md</code>를 직접 읽히십시오. 저장소의 <code>AGENTS.md</code>에도 같은 경로를 적어 두었습니다.</li>
 </ol>

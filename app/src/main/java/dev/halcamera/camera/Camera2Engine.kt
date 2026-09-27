@@ -5,9 +5,11 @@ import android.content.Context
 import android.graphics.ImageFormat
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
+import android.hardware.camera2.params.OutputConfiguration
 import android.media.ImageReader
 import java.util.concurrent.Executors
 import android.os.Handler
+import android.os.Build
 import android.os.HandlerThread
 import android.os.Looper
 import android.util.Size
@@ -39,6 +41,8 @@ class Camera2Engine(
     private var device: CameraDevice? = null
     private var captureSession: CameraCaptureSession? = null
     private var previewSurface: Surface? = null
+    private var displaySurface: Surface? = null
+    private var previewRelay: PreviewBufferRelay? = null
     private var yuv: ImageReader? = null
     private var jpeg: ImageReader? = null
     private var finished = false
@@ -59,10 +63,20 @@ class Camera2Engine(
     private val restoreQueued = java.util.concurrent.atomic.AtomicBoolean(false)
     private var previewSize: Size? = null
     @Volatile private var chars: CameraCharacteristics? = null
-    private val callback = telemetry.callback(sessionId) { active }
+    @Volatile private var configuredOutputs = StreamConfiguration<Surface>(emptyList())
+    // Camera thread only. Requests still retained by Camera2 remain keys; retired requests do not leak.
+    private val requestOutputs = java.util.WeakHashMap<CaptureRequest, List<String>>()
+    private val callback = telemetry.callback(sessionId, streams = { requestOutputs[it] }) { active }
+
+    private fun buildRequest(builder: CaptureRequest.Builder, outputs: List<ConfiguredOutput<Surface>>): CaptureRequest {
+        outputs.forEach { builder.addTarget(it.target) }
+        return builder.build().also { requestOutputs[it] = outputs.map { output -> output.descriptor.id } }
+    }
     private val liveCallback = object : CameraCaptureSession.CaptureCallback() {
         override fun onCaptureStarted(session: CameraCaptureSession, request: CaptureRequest, timestamp: Long, frameNumber: Long) =
             callback.onCaptureStarted(session, request, timestamp, frameNumber)
+        override fun onCaptureProgressed(session: CameraCaptureSession, request: CaptureRequest, partialResult: CaptureResult) =
+            callback.onCaptureProgressed(session, request, partialResult)
         override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
             callback.onCaptureCompleted(session, request, result)
             stills.onLiveResult(result)
@@ -123,13 +137,16 @@ class Camera2Engine(
         override val active: Boolean get() = this@Camera2Engine.active
         override val benchmark: Boolean get() = spec != null
         override val characteristics: CameraCharacteristics? get() = chars
-        override val previewSurface: Surface? get() = this@Camera2Engine.previewSurface
+        override val previewOutput: ConfiguredOutput<Surface>? get() =
+            configuredOutputs.outputs.find { it.descriptor.kind == OutputKind.PREVIEW }
         override val session: CameraCaptureSession? get() = captureSession
         override val stillInFlight: Boolean get() = stills.inFlight
         override fun onSessionConfigured(session: CameraCaptureSession?) { captureSession = session }
-        override fun startRepeating(camera: CameraDevice, session: CameraCaptureSession, c: CameraCharacteristics, surface: Surface) {
+        override fun startRepeating(camera: CameraDevice, session: CameraCaptureSession, c: CameraCharacteristics, outputs: StreamConfiguration<Surface>) {
+            configuredOutputs = outputs
+            telemetry.configureCallbackStreams(sessionId, outputs.metadata())
             startRelock()
-            session.setRepeatingRequest(liveRecordRequest(camera, c, surface), liveCallback, handler)
+            session.setRepeatingRequest(liveRecordRequest(camera, c), liveCallback, handler)
             relockFocus()
         }
         override fun rebuildPreview() { if (this@Camera2Engine.active) { device?.let { configure(it) } } }
@@ -146,7 +163,15 @@ class Camera2Engine(
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) { handler.post { open() } }
             override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) = Unit
             override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean = true
-            override fun onSurfaceTextureUpdated(surface: SurfaceTexture) { if (active) previewFrame() }
+            override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {
+                if (active) {
+                    previewFrame()
+                    configuredOutputs.outputs.find { it.target === previewSurface }?.descriptor?.let { output ->
+                        telemetry.recorder.record(sessionId, "preview_presented", sensorNs = surface.timestamp,
+                            values = mapOf("stream" to output.id))
+                    }
+                }
+            }
         }
         if (view.isAvailable) handler.post { open() }
     }
@@ -184,7 +209,8 @@ class Camera2Engine(
     @Suppress("DEPRECATION")
     private fun configure(camera: CameraDevice) {
         try {
-            yuv?.close(); jpeg?.close(); previewSurface?.release()
+            yuv?.close(); jpeg?.close()
+            if (previewRelay == null) { previewSurface?.release(); displaySurface?.release() }
             val chars = manager.getCameraCharacteristics(cameraId).also { this.chars = it }
             val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP] ?: error("No stream configuration")
             // With a profile spec the sizes are exact and unavailable ones fail the configure step: measuring a
@@ -197,11 +223,26 @@ class Camera2Engine(
                 ?: choose(map.getOutputSizes(ImageFormat.JPEG), 1920L * 1080)
             val texture = view.surfaceTexture ?: error("Preview surface unavailable")
             texture.setDefaultBufferSize(size.width, size.height)
+            // A recording session and its replacement preview session reuse the same display producer.
+            // Reconnecting a second ImageWriter while the first still owns TextureView would fail.
+            if (Build.VERSION.SDK_INT >= 33 && spec == null) {
+                if (previewRelay == null) {
+                    displaySurface = Surface(texture)
+                    previewRelay = PreviewBufferRelay(displaySurface!!, size, telemetry, sessionId) { error ->
+                        handler.post { if (active) fail(error) }
+                    }
+                } else require(previewSize == size) { "Preview relay size changed within a camera session" }
+                previewSurface = previewRelay!!.output.target
+            } else previewSurface = Surface(texture)
             previewSize = size
-            previewSurface = Surface(texture)
             main.post { if (active) view.fitPreview(size) }
-            yuv = reader(yuvSize, ImageFormat.YUV_420_888, "analysis_acquire_latest")
-            jpeg = reader(jpegSize, ImageFormat.JPEG, "still")
+            val previewOutput = OutputDescriptor("preview", OutputKind.PREVIEW, repeating = true, observable = previewRelay != null)
+            val yuvOutput = OutputDescriptor("analysis_acquire_latest", OutputKind.YUV, repeating = true, stillCapture = spec == null)
+            val jpegOutput = OutputDescriptor("still", OutputKind.JPEG, repeating = false, stillCapture = true)
+            yuv = reader(yuvSize, ImageFormat.YUV_420_888, yuvOutput)
+            jpeg = reader(jpegSize, ImageFormat.JPEG, jpegOutput)
+            val outputs = StreamConfiguration(listOf(ConfiguredOutput(previewOutput, previewSurface!!),
+                ConfiguredOutput(yuvOutput, yuv!!.surface), ConfiguredOutput(jpegOutput, jpeg!!.surface)))
             // The effective values go into the event so conditions.effective in the run JSON reports what the
             // camera actually ran with, not what the profile asked for (3.1, fixed-focus cameras run AF OFF).
             val sizes = mapOf(
@@ -210,11 +251,19 @@ class Camera2Engine(
             )
             telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
             telemetry.event(sessionId, "configure_requested", sizes)
-            camera.createCaptureSession(listOf(previewSurface!!, yuv!!.surface, jpeg!!.surface), object : CameraCaptureSession.StateCallback() {
+            val configurations = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
+                if (Build.VERSION.SDK_INT >= 33 && output.descriptor.kind == OutputKind.PREVIEW && previewRelay != null) {
+                    timestampBase = OutputConfiguration.TIMESTAMP_BASE_SENSOR
+                    if (Build.VERSION.SDK_INT >= 34) setReadoutTimestampEnabled(false)
+                }
+            } }
+            camera.createCaptureSessionByOutputConfigurations(configurations, object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(session: CameraCaptureSession) {
                     telemetry.event(sessionId, "session_configured", sizes)
                     if (!active) { session.close(); return }
                     captureSession = session
+                    configuredOutputs = outputs
+                    telemetry.configureCallbackStreams(sessionId, outputs.metadata())
                     try {
                         startRelock()
                         telemetry.event(sessionId, "repeating_submit", mapOf("zoomRequested" to zoomRatio))
@@ -235,7 +284,6 @@ class Camera2Engine(
     /** [afTrigger] and [aeTrigger] go on a one-shot capture only; the repeating request always leaves them IDLE. */
     private fun previewRequest(camera: CameraDevice, chars: CameraCharacteristics, afTrigger: Int? = null, aeTrigger: Int? = null): CaptureRequest =
         camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
-            addTarget(previewSurface!!); addTarget(yuv!!.surface)
             set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
             set(CaptureRequest.CONTROL_AF_MODE, afMode(chars))
             spec?.fpsRange?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, it) }
@@ -244,11 +292,10 @@ class Camera2Engine(
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
             aeTrigger?.let { set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, it) }
             setTag("preview")
-        }.build()
+        }.let { buildRequest(it, configuredOutputs.repeating) }
     /** The LIVE recording request. Zoom and the controls change it in place: the targets stay preview + encoder. */
-    private fun liveRecordRequest(camera: CameraDevice, c: CameraCharacteristics, recorder: Surface, afTrigger: Int? = null): CaptureRequest =
+    private fun liveRecordRequest(camera: CameraDevice, c: CameraCharacteristics, afTrigger: Int? = null): CaptureRequest =
         camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-            addTarget(previewSurface!!); addTarget(recorder)
             set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
             val modes = c[CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES] ?: intArrayOf()
             set(CaptureRequest.CONTROL_AF_MODE, if (CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO in modes)
@@ -257,10 +304,10 @@ class Camera2Engine(
             applyLiveControls(requestControls()); applyTouch(touchFocus)
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
             setTag("recording")
-        }.build()
+        }.let { buildRequest(it, configuredOutputs.repeating) }
     /** Whichever LIVE request is repeating now: the recording one while the recorder runs, the preview one otherwise. */
     private fun repeatingRequest(camera: CameraDevice, c: CameraCharacteristics, afTrigger: Int? = null, aeTrigger: Int? = null): CaptureRequest =
-        video.surface?.let { liveRecordRequest(camera, c, it, afTrigger) } ?: previewRequest(camera, c, afTrigger, aeTrigger)
+        video.surface?.let { liveRecordRequest(camera, c, afTrigger) } ?: previewRequest(camera, c, afTrigger, aeTrigger)
     /**
      * Runs [submit] against the current session, or skips it when there is no session to change. A recording that
      * is still being configured or already stopping has none that may be touched; the next session reads the
@@ -392,20 +439,21 @@ class Camera2Engine(
         val modes = chars[CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES] ?: intArrayOf()
         return if (modes.contains(CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)) CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE else CaptureRequest.CONTROL_AF_MODE_OFF
     }
-    private fun reader(size: Size, format: Int, stream: String): ImageReader =
+    private fun reader(size: Size, format: Int, output: OutputDescriptor): ImageReader =
         ImageReader.newInstance(size.width, size.height, format, 3).also { reader ->
+            val target = reader.surface
             reader.setOnImageAvailableListener({ source ->
-                if (source !== yuv && source !== jpeg) return@setOnImageAvailableListener
+                if (configuredOutputs.outputs.none { it.descriptor.id == output.id && it.target === target }) return@setOnImageAvailableListener
                 try {
                     // Drain in order while a still is pending: acquireLatestImage can discard its YUV frame.
                     val next = if (stills.pairing) source.acquireNextImage() else source.acquireLatestImage()
                     next?.use { image ->
-                        if (active) telemetry.image(sessionId, image.timestamp, image.width, image.height, image.format, stream)
+                        if (active) telemetry.image(sessionId, image.timestamp, image.width, image.height, image.format, output.id)
                         if (active && !previewSeen && format == ImageFormat.YUV_420_888) {
                             previewSeen = true
                             main.post { if (active) previewReady() }
                         }
-                        stills.onImage(image, format, stream)
+                        stills.onImage(image, format, output.id)
                     }
                 } catch (e: Exception) { stills.onImageFailed(e) }
             }, handler)
@@ -416,9 +464,7 @@ class Camera2Engine(
     /** The still request: JPEG only for a benchmark still, YUV + JPEG with the output [rotation] for a LIVE pair. */
     private fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?): CaptureRequest =
         camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
-            addTarget(jpeg!!.surface)
             if (rotation != null) {
-                addTarget(yuv!!.surface)
                 set(CaptureRequest.JPEG_ORIENTATION, rotation)
                 set(CaptureRequest.JPEG_QUALITY, 95.toByte())
             }
@@ -428,7 +474,7 @@ class Camera2Engine(
             // Same AE mode, EV, lock and torch as the preview, so the still is exposed as the preview showed it.
             if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus) }
             setTag(tag)
-        }.build()
+        }.let { buildRequest(it, configuredOutputs.still) }
 
     private fun outputRotation(c: CameraCharacteristics): Int {
         val degrees = when (view.display?.rotation) { Surface.ROTATION_90 -> 90; Surface.ROTATION_180 -> 180; Surface.ROTATION_270 -> 270; else -> 0 }
@@ -490,7 +536,10 @@ class Camera2Engine(
         captureSession?.close(); captureSession = null
         yuv?.close(); yuv = null
         jpeg?.close(); jpeg = null
+        if (Build.VERSION.SDK_INT >= 33) previewRelay?.close()
+        previewRelay = null
         previewSurface?.release(); previewSurface = null
+        displaySurface?.release(); displaySurface = null
         telemetry.event(sessionId, "closed")
         closeDone?.let { main.post(it) }
         thread.quitSafely()

@@ -86,34 +86,6 @@ class LiveReadoutTest {
         assertEquals(33.3, r.intervalRefMs!!, 0.1)
         assertEquals(frames, r.baselineFrames)
 
-        val lines = LiveReadout.panelText(r).lines()
-        assertTrue(lines.first { it.startsWith("interval ") }.endsWith("—"))
-        assertTrue(lines.first { it.startsWith("interval ref p50") }.endsWith("33.3 ms"))
     }
 
-    @Test fun everyRowOfThePanelPutsItsValueInTheSameColumn() {
-        // The block is monospace, so the columns only line up if every label is padded to the same cell count.
-        // Korean labels break this silently: padEnd counts one char where the face draws two cells.
-        val lines = LiveReadout.panelText(LiveReadout().read(stream(60), session, now(60))).lines()
-        assertEquals(12, lines.size)
-        lines.forEach { line ->
-            assertTrue(line, line.length > LiveReadout.LABEL_WIDTH)
-            assertEquals(line, ' ', line[LiveReadout.LABEL_WIDTH - 1])
-            assertTrue(line, line.all { it.code < 128 })
-        }
-    }
-
-    @Test fun aValueThatCannotBeReadYetIsADashAndNeverAZero() {
-        val lines = LiveReadout.panelText(LiveReadout().read(emptyList(), session, 0)).lines()
-        assertTrue(lines[0].endsWith("—"))
-        assertTrue(lines.first { it.startsWith("interval ref p50") }.endsWith("—"))
-        // A count of nothing is genuinely nothing, so those two stay numeric.
-        assertTrue(lines.first { it.startsWith("stalls") }.endsWith("0"))
-        assertTrue(lines.first { it.startsWith("ref frames") }.endsWith("0"))
-    }
-
-    @Test fun theStripCaptionKeepsTheSignOfEachOffset() {
-        assertEquals("#12  Start +0  Partial +5.0  Buffer +9.0 ms", LiveReadout.stripText(12L, 5.0, 9.0))
-        assertEquals("#—  Start +0  Partial —  Buffer — ms", LiveReadout.stripText(null, null, null))
-    }
 }

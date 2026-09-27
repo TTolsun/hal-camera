@@ -150,6 +150,8 @@ internal class Camera2StillCapture(
         val sent = host.precaptureTrigger(object : CameraCaptureSession.CaptureCallback() {
             override fun onCaptureStarted(s: CameraCaptureSession, r: CaptureRequest, timestamp: Long, frameNumber: Long) =
                 cb.onCaptureStarted(s, r, timestamp, frameNumber)
+            override fun onCaptureProgressed(s: CameraCaptureSession, r: CaptureRequest, result: CaptureResult) =
+                cb.onCaptureProgressed(s, r, result)
             override fun onCaptureCompleted(s: CameraCaptureSession, r: CaptureRequest, result: TotalCaptureResult) {
                 cb.onCaptureCompleted(s, r, result)
                 if (finished) return
@@ -198,6 +200,8 @@ internal class Camera2StillCapture(
 
     private fun photoCallback(pending: Photo) = object : CameraCaptureSession.CaptureCallback() {
         val cb = host.captureCallback
+        override fun onCaptureProgressed(session: CameraCaptureSession, request: CaptureRequest, result: CaptureResult) =
+            cb.onCaptureProgressed(session, request, result)
         override fun onCaptureStarted(session: CameraCaptureSession, request: CaptureRequest, timestamp: Long, frameNumber: Long) {
             cb.onCaptureStarted(session, request, timestamp, frameNumber)
             if (photo === pending) { pending.pair.timestamp = timestamp; savePhotoIfComplete(pending) }
