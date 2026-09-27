@@ -7,4 +7,4 @@ CameraXControls는 CameraXEngine의 Live 제어(EV, AE/AF 잠금, 플래시)와 
 - 길게 누르기는 action의 future가 끝난 뒤부터 TouchExposureWatch로 AE 상태를 셉니다. 그 전의 결과는 이전 영역을 담고 있기 때문입니다. 수렴하면 METERED를 알리고, FocusRing이 AE 잠금을 겁니다. 2초 안에 수렴하지 않으면 그 시점에 측광이 끝난 것으로 봅니다.
 - 녹화 시작·정지로 세션이 바뀌면 탭한 AF 지점은 버리고, AE 잠금은 AeRelock으로 다시 수렴시킨 뒤 잠급니다. AF 잠금, 길게 누른 AE 지점, EV, 토치도 새 세션에 다시 보냅니다.
 
-Camera2와 다른 점이 하나 있습니다. Camera2는 AE 잠금 중인 플래시 사진에서 precapture를 건너뛰지만, CameraX는 ImageCapture가 자기 순서대로 precapture를 수행합니다. 공개 호출은 main thread에서 오고 onResult는 카메라 콜백 스레드에서 오므로 상태는 lock으로 보호합니다. CameraX의 제어 호출은 스레드에 안전합니다.
+Camera2와 다른 점이 하나 있습니다. Camera2는 AE 잠금 중인 플래시 사진에서 precapture를 건너뛰고 잠긴 노출로 촬영하지만, CameraX는 ImageCapture가 자기 순서대로 precapture를 수행하고 플래시에 맞춰 노출을 다시 정합니다. Galaxy S25+에서 AE 잠금(ISO 161, 8.33ms)과 플래시 On으로 찍은 사진은 플래시가 터졌고 1/1169초, ISO 25로 저장되었습니다. 플래시가 없는 사진에는 잠긴 노출과 EV가 그대로 적용됩니다. 공개 호출은 main thread에서 오고 onResult는 카메라 콜백 스레드에서 오므로 상태는 lock으로 보호합니다. CameraX의 제어 호출은 스레드에 안전합니다.
