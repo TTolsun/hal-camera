@@ -45,7 +45,7 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
             ratios.forEach { ratio ->
                 addView(Button(context).apply {
                     isAllCaps = false
-                    textSize = 12f
+                    textSize = 11f
                     minWidth = 0; minimumWidth = 0; minHeight = 0; minimumHeight = 0
                     setPadding(0, 0, 0, 0)
                     stateListAnimator = null
