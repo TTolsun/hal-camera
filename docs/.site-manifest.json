@@ -4,18 +4,18 @@
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "_inputs/decisions.html": "266f309156d5d29c7a84e67b0d3f8e9ecc92ff57d57ce16d54140e458173360d",
     "_inputs/device-verification.yaml": "d66c4205e3c9b54c4453055774654d353e46495c11048432532ce51e2f00f95b",
-    "architecture.html": "bc641aa295bcffdef5399218bea62a863621d0fc428a124f8d26384c9e140978",
+    "architecture.html": "a5e492f090a7876b3da67b6df0293a3394f86498bafa6f2888c08dc7efc26e14",
     "assets/docflow-design.css": "ea3d16525a779961c22aed37625c5db0479555496a38126db1890c3d471b88df",
     "benchmark.html": "fb121bf0c9f32a42e9eb3464b8eae47aa26dab5b28efa49e7b16c20202c40b7b",
-    "callback.html": "589f17a8cb034036c8cc0229af037686a22c5666f7d6728b1c148a731e8e1451",
+    "callback.html": "a1e2e225e6db032b7b149cb35710b300619e7922cd9fd964bc5454b1413ee2f2",
     "cli.html": "f72a650f290d356a875d142db7e3609e0949a3a7818db20711c51043b602ce53",
     "coding-agents.html": "e66175cadbc30985c487b7bc3129038b6843d55e84fca054181c43ccb4fca92f",
     "cts.html": "375c0199c506da32de253d91a2e5c08faef9834de1ce5400909acbdf3800c301",
     "decisions.html": "ddf223c5c5485292ebae229ab444abf48cefe3a0fdf3f7ec794b35e576d23917",
     "evidence.html": "6993d455945a11ffa2eddb0c26506fc019e49339c4be40f301aa91a49f4a6d29",
-    "getting-started.html": "f2b3e5fcbb0f30b62706d2964e08224b79da03eded1153813c9b97b33e885408",
+    "getting-started.html": "06d32f1464b3abb8fdd6f6b3e8659326a169eec34f0525c7c266473d9ed85cde",
     "index.html": "fdbfce30d74017776f4ed48d8df5718cc1f47f8a139e4c79aaa30395c8f53038",
     "probe.html": "d871cc44b472b58aef7b397e483838aed576939eaa9a45e46cfb720a218bc811",
-    "troubleshooting.html": "d14eee248d23b4c1a0ce55363e5c21f6a88b30c64fea443fc6bf46311d0b8805"
+    "troubleshooting.html": "7ad3cbb230608d5c7c0a10bdb04158c4a47a4627a83ddb735d61cb157dee8f4e"
   }
 }
