@@ -370,8 +370,11 @@ sources:
       framework-callbacks:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
-          - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
           - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+      # CameraXEngine.kt moved out when Camera2Engine.kt grew past the element's 60,000-character input (#184).
+      framework-callbacks/camerax-callbacks:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
       rendered-screens:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt
