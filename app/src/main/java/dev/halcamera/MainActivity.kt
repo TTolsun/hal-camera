@@ -380,7 +380,7 @@ class MainActivity : ComponentActivity() {
         if (ok && !zoomApplied) {
             zoomApplied = true; if (zoomRatio != 1f) engine?.setZoom(zoomRatio)
             // A pause or a return from another screen reopens the same camera, so its chips still apply.
-            if (controlBar.controls != LiveControls()) (engine as? LiveTuning)?.setControls(controlBar.controls)
+            if (controlBar.controls != LiveControls()) (engine as? LiveTuning)?.setControls(controlBar.controls, restore = true)
         }
         if (ok && engine is MediaCapture) pendingMediaAction?.also { pendingMediaAction = null; main.post { if (resumed && ready) it() } }
     }

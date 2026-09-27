@@ -34,8 +34,11 @@ interface MediaCapture {
  * instance: Camera2Engine implements it, CameraXEngine does not, and LIVE offers to switch engines instead.
  */
 interface LiveTuning {
-    /** Replaces the requested controls. The caller has already coerced them to what the camera supports. */
-    fun setControls(next: LiveControls)
+    /**
+     * Replaces the requested controls. The caller has already coerced them to what the camera supports. [restore]
+     * marks the chips a reopened camera gets back, whose AE lock must wait for AE to settle (#184).
+     */
+    fun setControls(next: LiveControls, restore: Boolean = false)
 }
 
 /**
