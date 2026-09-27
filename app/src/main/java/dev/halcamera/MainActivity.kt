@@ -489,7 +489,6 @@ class MainActivity : ComponentActivity() {
         topBar.addView(cameraNotice,lp(top=4))
 
         // The zoom rail expands horizontally without moving the shutter or the readout.
-        // Compact the gaps, not the touch targets, to leave more of the preview unobstructed.
         bottomBar=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL; gravity=Gravity.CENTER_HORIZONTAL; setPadding(dp(16),dp(4),dp(16),0) }
         // A single soft scrim spans capture controls and Mark without a separate footer band.
         val captureChrome=LinearLayout(this).apply {
@@ -499,7 +498,6 @@ class MainActivity : ComponentActivity() {
         root.addView(captureChrome,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
         captureChrome.addView(bottomBar,LinearLayout.LayoutParams(-1,-2))
         metrics=label("FPS — · ISO — · Exp —\nAE — · AF —",12,Look.onDark).apply {
-            // The live overlay is intentionally smaller than labels in the diagnostics panel.
             textSize=11f
             maxLines=2
             gravity=Gravity.CENTER
