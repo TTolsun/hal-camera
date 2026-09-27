@@ -11,7 +11,7 @@ flowchart LR
     B --> C["구현 대조<br/>현재 동작과 구분"]
 ```
 
-<h2 lang="en">The decision register.</h2>
+## 과거 결정 기록을 확인하세요
 
 | 기록 | 선택한 방식 | 이유의 기록 상태 |
 | --- | --- | --- |

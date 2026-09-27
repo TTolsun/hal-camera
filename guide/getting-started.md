@@ -1,7 +1,7 @@
 ---
-title: 개발 환경 및 빠른 시작
+title: Quickstart
 ---
-# 개발 환경 및 빠른 시작
+<h1 lang="en">Build. Run. Observe.</h1>
 
 **저장소 루트에서 Gradle Wrapper로 앱을 빌드하세요.** 아래 명령은 Windows PowerShell을 기준으로 작성했습니다.
 
@@ -41,7 +41,7 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `도구 → 설
 ## Live에서 촬영하세요
 
 1. 상단에서 엔진과 카메라를 선택합니다. Camera2와 CameraX 모두 선택한 엔진에서 사진·동영상을 저장합니다.
-2. 사진 모드에서 셔터를 누릅니다. YUV를 변환한 JPEG와 카메라가 만든 JPEG 두 장을 `DCIM/HALCamera`에 저장합니다. Camera2는 같은 프레임의 YUV·JPEG를, CameraX는 JPEG와 센서 시각이 가장 가까운 analysis 프레임을 사용합니다.
+2. 사진 모드에서 셔터를 누릅니다. YUV를 변환한 JPEG와 카메라가 만든 JPEG 두 장을 `DCIM/HALCamera`에 저장합니다. 두 엔진이 사진 쌍을 구성하는 차이는 [Engine](engine.md#두-엔진의-차이)에서 확인합니다.
 3. 동영상 모드에서 셔터를 눌러 녹화를 시작하고 다시 눌러 종료합니다. 종료 처리 중에는 셔터를 사용할 수 없으며, 저장이 끝나면 안내 문구가 나타납니다.
 4. 최근 썸네일을 눌러 앨범을 확인합니다.
 

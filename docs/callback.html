@@ -21,15 +21,16 @@
       <a href="./cli.html">CLI</a>
       <a href="./coding-agents.html">Agents</a>
       <a href="./evidence.html">Evidence</a>
-      <a href="./getting-started.html">빠른 시작</a>
-      <a href="./troubleshooting.html">디버깅</a>
+      <a href="./getting-started.html">Quickstart</a>
+      <a href="./troubleshooting.html">Debugging</a>
     </nav>
   </header>
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
     <h1 lang="en">One frame.<br>Every callback.</h1><p><strong>Live 화면의 <code>Callback</code>을 누르면 한 프레임의 콜백이 앱에 도착한 시각을 비교할 수 있습니다.</strong> Shutter·Metadata와 현재 세션의 출력 스트림을 같은 시간축에 표시합니다. 점의 위치는 도착 시각이고, 오른쪽 고정 열은 그 값을 ms로 보여 줍니다.</p>
 <p>그래프를 켜면 FPS·ISO·노출·AF·AE 정보 두 줄을 숨깁니다. 촬영·녹화 조작부는 그대로 사용할 수 있으며 <code>Callback</code>을 다시 누르면 그래프가 닫힙니다.</p>
-<h2 lang="en">Read the time origin first.</h2><p><strong>0ms는 이전 프레임의 <code>onCaptureStarted</code> 콜백을 앱에서 받은 시점입니다.</strong> 현재 프레임의 Shutter부터 Metadata와 각 출력까지 모두 이 기준에서 경과한 시간을 표시합니다. 요청을 생성하거나 HAL에 전달한 시점을 기준으로 삼지 않습니다.</p>
+<h2 id="시간-기준을-확인하세요">시간 기준을 확인하세요</h2>
+<p><strong>0ms는 이전 프레임의 <code>onCaptureStarted</code> 콜백을 앱에서 받은 시점입니다.</strong> 현재 프레임의 Shutter부터 Metadata와 각 출력까지 모두 이 기준에서 경과한 시간을 표시합니다. 요청을 생성하거나 HAL에 전달한 시점을 기준으로 삼지 않습니다.</p>
 <table>
 <thead>
 <tr>
@@ -56,7 +57,8 @@
 </tbody></table>
 <p>이 표는 읽는 법을 설명하기 위한 예시이며 실측 결과가 아닙니다. 구성 후 첫 프레임의 Shutter는 0ms이고, 이후 Shutter 값은 직전 프레임과의 콜백 간격을 나타냅니다. 기준 시각을 연결할 수 없으면 임의의 0을 넣지 않고 <code>시작 시각 없음</code>으로 표시합니다.</p>
 <p>시간축은 값에 맞춰 자동으로 늘어납니다. 작은 범위가 3초 동안 유지되면 줄어들며, 자동 고정 중에는 늦게 도착한 결과를 담기 위한 확장만 합니다. 사용자가 범위를 설정할 필요는 없습니다.</p>
-<h2 lang="en">Follow the configured streams.</h2><p>세션 구성과 그래프는 같은 스트림 목록을 사용합니다. 표시 이름과 별개인 스트림 고유 ID로 결과를 연결하므로, YUV 출력이 여러 개여도 각각 추적합니다. 표시 중인 프레임이 요청하지 않은 출력도 행을 남겨 구분합니다.</p>
+<h2 id="스트림별-도착-시각을-읽으세요">스트림별 도착 시각을 읽으세요</h2>
+<p>세션 구성과 그래프는 같은 스트림 목록을 사용합니다. 표시 이름과 별개인 스트림 고유 ID로 결과를 연결하므로, YUV 출력이 여러 개여도 각각 추적합니다. 표시 중인 프레임이 요청하지 않은 출력도 행을 남겨 구분합니다.</p>
 <table>
 <thead>
 <tr>
@@ -92,7 +94,15 @@
 <p>Camera2의 Android 12 이하와 CameraX에서는 Preview·Recording 버퍼 도착을 직접 관측하지 못하므로 <code>콜백 없음</code>을 표시합니다. CameraX도 선택한 엔진에서 녹화하며, 녹화 세션에는 Preview·Recording 행이 표시됩니다.</p>
 <p>CameraX의 YUV 행은 ImageAnalysis 수신 시점, JPEG 행은 ImageCapture 수신 시점입니다. 사진으로 저장하는 YUV는 JPEG와 시각이 가장 가까운 analysis 프레임이므로 두 행을 같은 촬영 요청의 결과로 해석하지 않습니다. 저장한 두 이미지의 시각 차이는 <code>media_saved</code>의 <code>yuvOffsetNs</code>에서 확인합니다.</p>
 <p>버퍼와 프레임은 센서 타임스탬프가 같은지 확인하여 연결하고, 표시 시간은 앱의 단조 시계로 계산합니다. 이 값은 앱 수신 시각이며 HAL 내부 처리 완료 시각을 직접 측정한 값은 아닙니다.</p>
-<h2 lang="en">Hold a capture long enough to read.</h2><p>자동 고정은 처음에 켜져 있으며 기본 시간은 3초입니다. JPEG처럼 반복 요청하지 않는 출력이 도착하면 해당 프레임을 정해진 시간 동안 표시합니다. 카메라와 녹화는 계속 동작합니다.</p>
+<h2 id="촬영-프레임을-고정하세요">촬영 프레임을 고정하세요</h2>
+<pre><code class="language-mermaid">flowchart TB
+    off[&quot;Real-time Frame&lt;br/&gt;실시간 갱신&quot;] --&gt;|&quot;고정&quot;| waiting[&quot;Event Frame&lt;br/&gt;촬영 출력 대기&quot;]
+    waiting --&gt;|&quot;출력 수신&quot;| held[&quot;Event Frame · 일시정지 표시&lt;br/&gt;촬영 프레임 고정&quot;]
+    held --&gt;|&quot;시간 경과&quot;| waiting
+    waiting --&gt;|&quot;해제&quot;| off
+    held --&gt;|&quot;해제&quot;| off
+</code></pre>
+<p>자동 고정은 처음에 켜져 있으며 기본 시간은 3초입니다. JPEG처럼 반복 요청하지 않는 출력이 도착하면 해당 프레임을 정해진 시간 동안 표시합니다. 카메라와 녹화는 계속 동작합니다.</p>
 <table>
 <thead>
 <tr>
@@ -131,7 +141,8 @@
 <li>일시정지 표시가 나타난 동안 값을 읽습니다. 늦게 도착한 같은 프레임의 결과도 채워집니다.</li>
 <li>시간이 지나면 갱신이 재개됩니다. 곧바로 돌아가려면 <code>해제</code>를 누릅니다.</li>
 </ol>
-<h2 lang="en">A missing value has a meaning.</h2><table>
+<h2 id="값이-없는-이유를-확인하세요">값이 없는 이유를 확인하세요</h2>
+<table>
 <thead>
 <tr>
 <th>표시</th>
@@ -159,11 +170,10 @@
 <td>출력은 받았지만 공통 기준 시각을 연결하지 못했습니다.</td>
 </tr>
 </tbody></table>
-<p><strong>다음 단계:</strong> 반복 측정과 저장된 실행의 비교는 <a href="benchmark.html">Benchmark</a>에서 확인하세요.</p>
 <details>
 <summary>코드 근거를 확인하세요</summary>
 <p class="doc-evidence">화면과 버튼은 <code>MainActivity.kt</code>·<code>ui/ResultCallbackGraph.kt</code>, 프레임 선택과 자동 고정은 <code>ui/ResultCallbackTimeline.kt</code>, 시간 기준과 결과 연결은 <code>ui/ResultCallbackSeries.kt</code>·<code>telemetry/Telemetry.kt</code>에서 확인할 수 있습니다. 세션과 그래프의 공통 스트림 목록은 <code>camera/StreamConfiguration.kt</code>, Camera2의 PRIVATE 버퍼 수신은 <code>camera/PreviewBufferRelay.kt</code>·<code>camera/RecordingBufferRelay.kt</code>가 담당합니다. CameraX의 관측 가능 여부와 출력 구성은 <code>camera/CameraXEngine.kt</code>, 사진 쌍의 연결은 <code>camera/CameraXStillCapture.kt</code>에 있습니다.</p>
-</details>
+</details><p><strong>다음 단계:</strong> 반복 측정과 저장된 실행의 비교는 <a href="benchmark.html">Benchmark</a>에서 확인하세요.</p>
 
   </main>
   <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
@@ -223,6 +233,11 @@
       canvas.append(svg);
       dialog.showModal();
       fitDiagram();
+      if (scale < .875) {
+        fitting = false;
+        setScale(.875);
+        viewport.scrollTo(0, 0);
+      }
     }
 
     dialog.querySelector('.diagram-close').addEventListener('click', () => dialog.close());
@@ -253,9 +268,10 @@
           startOnLoad: false,
           securityLevel: 'strict',
           theme: 'base',
-          themeVariables: { primaryColor: '#f6f7f8', primaryTextColor: '#18191b', primaryBorderColor: '#c8ccd2', lineColor: '#858b94', secondaryColor: '#ffffff', tertiaryColor: '#ffffff', fontFamily: 'system-ui, sans-serif', fontSize: '16px' },
+          themeVariables: { primaryColor: '#f6f7f8', primaryTextColor: '#18191b', primaryBorderColor: '#c8ccd2', lineColor: '#858b94', secondaryColor: '#ffffff', tertiaryColor: '#ffffff', noteBkgColor: '#f6f7f8', noteTextColor: '#18191b', noteBorderColor: '#c8ccd2', fontFamily: 'system-ui, sans-serif', fontSize: '16px' },
           // Leave room for multiline nodes and labels on returning edges.
-          flowchart: { nodeSpacing: 100, rankSpacing: 120, wrappingWidth: 300 },
+          flowchart: { nodeSpacing: 24, rankSpacing: 28, padding: 10, wrappingWidth: 220 },
+          sequence: { actorMargin: 32, messageMargin: 24, noteMargin: 6, width: 160, height: 44, wrap: true },
         });
         const nodes = blocks.map(code => {
           const node = document.createElement('div');
@@ -272,16 +288,29 @@
         nodes.forEach(node => {
           const svg = node.querySelector('svg');
           if (!svg) return;
+          const width = svg.viewBox.baseVal.width;
+          // Keep 16px diagram text at least 14px wide, even on narrow screens.
+          // The figure scrolls locally instead of shrinking the whole page.
+          svg.style.width = '100%';
+          svg.style.maxWidth = `${width}px`;
+          svg.style.minWidth = `${width * .875}px`;
+          let heading = node.previousElementSibling;
+          while (heading && !/^H[1-3]$/.test(heading.tagName)) heading = heading.previousElementSibling;
+          const label = heading?.textContent.trim() || document.querySelector('h1')?.textContent.trim() || '다이어그램';
           node.tabIndex = 0;
           node.setAttribute('role', 'button');
-          node.setAttribute('aria-label', '그림 확대');
+          node.setAttribute('aria-label', `그림 확대: ${label}`);
           node.setAttribute('aria-haspopup', 'dialog');
           node.addEventListener('click', event => {
-            if (!event.target.closest('a')) openDiagram(svg, node);
+            if (!event.target.closest('a')) {
+              dialog.querySelector('#diagram-title').textContent = label;
+              openDiagram(svg, node);
+            }
           });
           node.addEventListener('keydown', event => {
             if (event.target === node && (event.key === 'Enter' || event.key === ' ')) {
               event.preventDefault();
+              dialog.querySelector('#diagram-title').textContent = label;
               openDiagram(svg, node);
             }
           });

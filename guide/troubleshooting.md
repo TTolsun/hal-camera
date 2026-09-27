@@ -1,8 +1,8 @@
 ---
-title: 디버깅 및 문제 해결
+title: Debugging
 nav_order: 7
 ---
-# 디버깅 및 문제 해결
+<h1 lang="en">Trace the cause.</h1>
 
 **측정 결과가 예상과 다르면 세션 ID, 관측 창, `unknownReason`부터 확인하세요.** 그다음 원시 이벤트와 계산된 지표를 대조합니다. 지표에는 앱의 필터와 표본 수 규칙이 적용되어 있습니다.
 
@@ -22,7 +22,7 @@ nav_order: 7
 1. 기기 모델과 Android 빌드 번호를 기록합니다.
 2. 사용한 엔진인 Camera2 또는 CameraX와 카메라 엔드포인트를 기록합니다.
 3. 재현 절차와 반복 횟수 중 문제가 발생한 횟수를 기록합니다.
-4. `Mark`에서 생성한 ZIP 번들과 관련 로그를 확보합니다.
+4. `이벤트 저장 · ZIP`으로 생성한 번들과 관련 로그를 확보합니다.
 
 ## 로그와 진단 자료
 
@@ -111,7 +111,7 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-27 @ `9f821a0` · Codex
+- 검토 2026-09-27 @ `40a116a` · Codex
 
 </details>
 
@@ -138,9 +138,9 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-27 @ `4de7ca0` · Claude |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-27 @ `4de7ca0` · Claude |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-27 @ `9f821a0` · Codex |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-27 @ `40a116a` · Codex |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-27 @ `40a116a` · Codex |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-27 @ `40a116a` · Codex |
 
 <!-- omm:end id=status -->
 

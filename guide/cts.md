@@ -6,25 +6,18 @@ title: CTS
 **앱에서 CTS 규칙과 AOSP 테스트를 실행해 카메라 동작을 확인하세요.** 공식 CTS 판정은 cts-tradefed의 `test_result.xml`로 확인하며, 앱의 결과는 사전 점검에 사용합니다. 두 방식이 있고, 첫 화면에서 하나를 고릅니다. **커스텀 케이스**는 CTS 카메라 테스트의 판정 규칙과 상수를 앱의 Kotlin으로 옮긴 케이스 다섯 가지로, 카메라와 단계마다 PASS·FAIL·SKIP과 측정값을 보여 줍니다. **CTS 원문 케이스**는 AOSP CTS의 Java 테스트 코드를 가져와 앱 안의 JUnit으로 실행하며, 테스트 메서드 하나에 판정 하나를 냅니다. 어느 쪽도 Benchmark의 반복 측정이나 회귀 점수에는 들어가지 않습니다.
 
 ```mermaid
-flowchart LR
-    E["CtsEntryActivity<br/>방식 선택"] --> L["CtsCaseListActivity<br/>커스텀 케이스 체크리스트"]
-    E --> V["VendoredCtsListActivity<br/>CTS 원문 메서드 체크리스트"]
-    L -->|실행| S["CtsSuiteRunActivity<br/>체크한 항목을 차례로 실행"]
-    V -->|실행| S
-    L -->|›| A["CtsCaseActivity<br/>케이스 하나 · SurfaceView · 중단"]
-    S --> R["…Runner<br/>Camera2Ops · MediaRecorder · ImageReader"]
-    A --> R
-    R --> J["…Rules<br/>판정 · 순수 Kotlin"]
-    J --> P["CaseReportPresenter<br/>카메라 × 단계 PASS · FAIL · SKIP"]
-    V -->|›| H["VendoredCaseActivity<br/>메서드 하나 · Camera2SurfaceViewCtsActivity 상속"]
-    S --> U["VendoredRun<br/>JUnit runner · RunListener"]
-    H --> U
-    U --> T["RecordingTest 등<br/>AOSP 원문 · :ctsvendor"]
+flowchart TB
+    entry["CTS · 방식 선택"] --> custom["커스텀 케이스 목록"]
+    entry --> vendored["CTS 원문 메서드 목록"]
+    custom --> suite["선택한 항목을 순서대로 실행<br/>CtsSuiteRunActivity"]
+    vendored --> suite
+    suite --> rules["커스텀 Runner · Rules<br/>카메라와 단계별 판정"]
+    suite --> junit["VendoredRun · JUnit<br/>메서드별 판정"]
 ```
 
 이 그림은 두 방식이 각각 진행되는 개념적 순서입니다. 두 목록은 모두 체크리스트이고, 체크한 항목을 `실행`하면 `CtsSuiteRunActivity`가 위에서부터 차례로 돌립니다. 이 화면은 가져온 `Camera2SurfaceViewCtsActivity`를 상속하면서 커스텀 러너의 `PreviewHost`도 구현하므로 SurfaceView 하나로 두 종류를 다 호스트하지만, 목록이 분리되어 있으므로 한 번의 실행에는 한 종류만 들어갑니다. 커스텀 케이스의 규칙은 카메라를 모르는 순수 Kotlin이라 JVM 테스트로 검증하고, 러너가 CTS가 기기에서 읽는 값을 채워 넣습니다. 다섯 케이스는 같은 `CtsRunner` 계약을 구현하므로 화면은 케이스를 구분하지 않습니다. CTS 원문 케이스는 코드를 옮기지 않으므로 검사 본문은 AOSP 소스를 따르며, 앱 실행에 필요한 instrumentation 대역과 공개 API 호환 패치를 적용합니다.
 
-<h2 lang="en">Pick a custom case.</h2>
+## 커스텀 케이스를 선택하세요
 
 | 케이스 | 원본 | 한 번 실행하면 |
 | --- | --- | --- |
@@ -36,7 +29,7 @@ flowchart LR
 
 `custom#` 원본은 CTS 클래스에 그대로 대응하는 메서드가 없는 케이스입니다. 검사 문구는 CTS `CameraTestUtils`에 같은 검사가 있으면 그 문구를 따릅니다. `RecordingTest#testBasicRecording`은 커스텀 케이스에 없습니다. 원문 그대로 실행하는 쪽이 옮겨 적는 쪽보다 정확하므로 CTS 원문 케이스로만 제공하며, 녹화 판정 규칙(`BasicRecordingRules`)은 카메라 전환과 동영상 스냅샷이 계속 공유합니다.
 
-<h2 lang="en">Pick a CTS method.</h2>
+## CTS 원문 메서드를 선택하세요
 
 CTS 원문 케이스 목록은 `:ctsvendor` 모듈에 가져온 테스트 클래스의 `@Test` 메서드를 reflection으로 나열합니다. 지금 가져온 클래스는 세 개입니다.
 
@@ -50,7 +43,7 @@ CTS 원문 케이스 목록은 `:ctsvendor` 모듈에 가져온 테스트 클래
 
 가져온 소스는 AOSP `android16-release` 브랜치의 `cts/tests/camera`와 `frameworks/ex/camera2/public`이며, 원본 커밋과 적용한 패치 여덟 건(`@TestApi`·`@FlaggedApi` 호출을 공개 API로 바꾸거나 제거하고, shell 권한 행을 만들지 않게 한 것)은 `ctsvendor/UPSTREAM.md`에 있습니다. Android 14(API 34) 아래 기기에서는 이 경로가 비활성화됩니다. 업스트림이 이 파일 집합을 `min_sdk_version 34`로 빌드하기 때문입니다.
 
-<h2 lang="en">What one run does.</h2>
+## 선택한 항목을 실행하세요
 
 1. Live 상단 `도구` 메뉴에서 두 번째 항목인 `CTS`를 고릅니다. Live 카메라의 `close(done)` 콜백을 받은 뒤 방식 선택 화면이 열리고, `커스텀 케이스`나 `CTS 원문 케이스`를 누르면 그 체크리스트가 열립니다.
 2. 실행할 항목에 체크합니다. 행마다 제목과 대략의 소요 시간이 적혀 있고(측정된 적 없는 원문 메서드는 `시간 미상`), 커스텀 행에는 원본도 함께 적힙니다. 그룹의 `전체 선택`으로 한 번에 고를 수 있습니다. 하단 바에 `선택 N개 · 약 M분`이 갱신되며, 선택은 다음에 열 때 그대로 남아 있습니다.
@@ -60,13 +53,13 @@ CTS 원문 케이스 목록은 `:ctsvendor` 모듈에 가져온 테스트 클래
 
 항목 하나만 따로 보려면 행의 `›`를 누릅니다. 커스텀 케이스는 `CtsCaseActivity`, CTS 원문은 `VendoredCaseActivity`가 열리며, `실행`·`중단`·`복사`·`공유`의 동작은 아래와 같고 결과 표시만 그 항목 하나에 맞춰져 있습니다.
 
-CTS와 달리 한 단계가 실패해도 나머지 단계와 카메라를 계속 실행합니다. 화면의 SurfaceView가 CTS의 `Camera2SurfaceViewCtsActivity` 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 `surfaceChanged`를 기다린 뒤 세션을 엽니다. 카메라 열기·세션 구성·첫 결과·닫기의 대기 시간은 CTS `CameraTestUtils`와 같은 3초입니다.
+커스텀 케이스는 한 단계가 실패해도 나머지 단계와 카메라를 계속 실행합니다. 화면의 SurfaceView가 CTS의 `Camera2SurfaceViewCtsActivity` 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 `surfaceChanged`를 기다린 뒤 세션을 엽니다. 카메라 열기·세션 구성·첫 결과·닫기의 대기 시간은 CTS `CameraTestUtils`와 같은 3초입니다.
 
 CTS 원문 케이스의 한 번 실행은 다릅니다. `실행`을 누르면 카메라와 마이크 권한을 확인한 뒤 JUnit이 테스트 메서드를 작업 스레드에서 돌립니다. 테스트는 카메라 전부를 스스로 순회하므로 진행 중에는 경과 시간만 갱신되고, 실패가 생기면 그 즉시 실패 카드가 추가됩니다. `중단`은 실행 중인 테스트가 쥔 카메라를 닫아 테스트를 실패시키는 방식이라 몇 초 뒤에 `중단됨`으로 끝납니다. JUnit에는 실행 중인 본문을 멈출 수단이 없기 때문입니다. 실행 화면 자체가 CTS의 `Camera2SurfaceViewCtsActivity`를 상속하므로 테스트의 `updatePreviewSurface`가 같은 SurfaceView를 그대로 씁니다.
 
 
 
-<h2 lang="en">Read the verdicts.</h2>
+## 판정을 읽으세요
 
 커스텀 케이스의 `PASS`·`FAIL`·`SKIP`은 카메라와 단계 단위로 붙습니다. 카메라는 진행 줄과 보고서 모두 `Camera · 0`처럼 축약 표기로 적습니다. 한 줄에 단계와 수치가 함께 들어가기 때문입니다. 단계는 케이스마다 다릅니다. 동영상 스냅샷은 프로파일 이름, 빠른 켜기·끄기는 `standard_1`·`fast_1`과 `compare`, 카메라 전환은 `round_1`과 `record`, 크기 케이스는 `1920x1080`, 조합 케이스는 `4000x3000/1920x1080`처럼 정지 영상과 프리뷰 크기입니다. PASS 행에도 열기·세션 구성·첫 프레임·닫기의 소요 시간이나 녹화 길이·프레임 수 같은 수치를 남겨 경계에 가까운 통과를 다시 실행하지 않고 볼 수 있습니다. FAIL의 상세 문구는 CTS의 assertion 메시지와 같으므로 원본 테스트 결과와 나란히 읽을 수 있습니다.
 
@@ -74,7 +67,7 @@ CTS 원문 케이스의 판정은 메서드 하나에 하나입니다. `PASS`는
 
 녹화한 동영상은 앱 전용 폴더에 `test_video.mp4`로 쓰고 판정 뒤 삭제하며, 정지 영상과 스냅샷은 크기와 디코딩만 확인하고 버립니다. CTS 원문 케이스도 같은 앱 전용 폴더(`getExternalFilesDir`)에 씁니다. 앨범에는 아무것도 남지 않습니다.
 
-<h2 lang="en">Add a case.</h2>
+## 케이스를 추가하세요
 
 커스텀 케이스를 추가하려면 다음 순서를 따릅니다.
 

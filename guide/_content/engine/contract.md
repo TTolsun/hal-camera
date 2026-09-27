@@ -37,7 +37,7 @@ verifications: []
 
 ### Benchmark와 CLI가 쓰는 엔진
 
-Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 `StartCardPresenter`가 Camera2로 전환한다고 알립니다. 벤치마크용 `Camera2Engine`은 profile의 `StreamSpec` 크기를 그대로 사용하며, 지원하지 않는 크기를 다른 크기로 바꾸지 않고 구성 단계에서 실패합니다. 벤치마크 사진은 JPEG 도착 시각만 측정하고 앨범에 저장하지 않습니다.
+Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 `StartCardPresenter`가 Camera2로 전환한다고 알립니다. Live와 다른 스트림 크기 및 저장 방식은 [Camera2 엔진](#camera2-엔진)에서 설명합니다.
 
 CLI의 `preview` 명령은 `LiveController`를 통해 Camera2로 카메라를 엽니다. CameraX 제어는 [CLI 계약](https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md)의 후속 범위에 있습니다.
 

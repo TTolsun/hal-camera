@@ -1,10 +1,10 @@
 ---
-title: 카메라 엔진
+title: Engine
 nav_order: 5
 ---
-# 카메라 엔진
+<h1 lang="en">Two engines.<br>One camera contract.</h1>
 
-**측정값을 보기 전에 Live가 Camera2와 CameraX 중 어느 엔진으로 열렸는지 확인하세요.** 두 엔진은 같은 계약을 구현하므로 Live의 조작은 같지만, 카메라에 보내는 요청과 앱이 기록하는 시각은 엔진마다 다릅니다. 이 문서는 엔진 계약, 두 엔진의 구현, 두 엔진이 다르게 동작하는 지점을 설명합니다.
+**Live가 Camera2와 CameraX 중 어느 엔진으로 열렸는지 확인하세요.** 같은 조작이라도 요청 구성과 관측 가능한 버퍼가 다릅니다. 이 페이지는 엔진의 구현을 설명하며, 화면 조작은 [Quickstart](getting-started.md#live에서-촬영하세요), 그래프 해석은 [Callback](callback.md)에서 확인합니다.
 
 | 지금 확인할 내용 | 이동할 절 |
 | --- | --- |
@@ -19,16 +19,16 @@ nav_order: 5
 
 ```mermaid
 flowchart TB
-    live["MainActivity<br/>Live 셔터 · 상단 제어 · 프리뷰 터치"] --> contract["CameraEngine<br/>MediaCapture · LiveTuning · TouchMetering"]
-    contract --> c2["Camera2Engine<br/>StillCapture · LiveRecorder · TouchFocus"]
-    contract --> cx["CameraXEngine<br/>StillCapture · LiveRecorder · Controls"]
-    bench["BenchmarkActivity"] --> c2
-    cx --> camx["CameraX 1.6"]
+    live["Live · MainActivity"] --> contract["CameraEngine<br/>촬영 · 제어 · 터치 측광"]
+    contract --> c2["Camera2Engine"]
+    contract --> cx["CameraXEngine"]
+    bench["Benchmark"] --> c2
+    cx --> camx["CameraX"]
     c2 --> fw["Camera2 API"]
     camx --> fw
 ```
 
-이 그림은 화면과 엔진의 호출 방향을 나타냅니다. 엔진 아래의 이름은 `Camera2StillCapture`, `CameraXControls`처럼 엔진 이름을 앞에 붙인 도우미 클래스입니다. Benchmark는 Camera2 엔진만 사용하고, CameraX도 결국 Camera2 API로 카메라를 엽니다.
+화면에서 카메라 API까지의 호출 방향입니다. 클래스별 구현은 아래에서 설명합니다.
 
 <!-- omm:begin id=contract -->
 
@@ -52,7 +52,7 @@ flowchart TB
 
 ### Benchmark와 CLI가 쓰는 엔진
 
-Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 `StartCardPresenter`가 Camera2로 전환한다고 알립니다. 벤치마크용 `Camera2Engine`은 profile의 `StreamSpec` 크기를 그대로 사용하며, 지원하지 않는 크기를 다른 크기로 바꾸지 않고 구성 단계에서 실패합니다. 벤치마크 사진은 JPEG 도착 시각만 측정하고 앨범에 저장하지 않습니다.
+Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 `StartCardPresenter`가 Camera2로 전환한다고 알립니다. Live와 다른 스트림 크기 및 저장 방식은 [Camera2 엔진](#camera2-엔진)에서 설명합니다.
 
 CLI의 `preview` 명령은 `LiveController`를 통해 Camera2로 카메라를 엽니다. CameraX 제어는 [CLI 계약](https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md)의 후속 범위에 있습니다.
 
@@ -76,7 +76,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-27 @ `9f821a0` · Codex
+- 검토 2026-09-27 @ `40a116a` · Codex
 
 </details>
 
@@ -154,7 +154,7 @@ Live 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성합니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-27 @ `9f821a0` · Codex
+- 검토 2026-09-27 @ `40a116a` · Codex
 
 </details>
 
@@ -221,7 +221,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-09-27 @ `9f821a0` · Codex
+- 검토 2026-09-27 @ `40a116a` · Codex
 
 </details>
 
@@ -249,7 +249,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-27 @ `9f821a0` · Codex
+- 검토 2026-09-27 @ `40a116a` · Codex
 
 </details>
 
@@ -270,11 +270,11 @@ Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 [Evidence]
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-27 @ `9f821a0` · Codex |
-| 원고 `contract` | 최신 | 검토 2026-09-27 @ `9f821a0` · Codex |
-| 원고 `camera2` | 최신 | 검토 2026-09-27 @ `9f821a0` · Codex |
-| 원고 `camerax` | 최신 | 검토 2026-09-27 @ `9f821a0` · Codex |
-| 원고 `comparison` | 최신 | 검토 2026-09-27 @ `9f821a0` · Codex |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-27 @ `40a116a` · Codex |
+| 원고 `contract` | 최신 | 검토 2026-09-27 @ `40a116a` · Codex |
+| 원고 `camera2` | 최신 | 검토 2026-09-27 @ `40a116a` · Codex |
+| 원고 `camerax` | 최신 | 검토 2026-09-27 @ `40a116a` · Codex |
+| 원고 `comparison` | 최신 | 검토 2026-09-27 @ `40a116a` · Codex |
 
 <!-- omm:end id=status -->
 

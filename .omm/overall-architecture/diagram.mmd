@@ -1,19 +1,10 @@
-graph LR
-    pc["PC · adb"] -->|"ADB"| provider["CliProvider · shell 전용"]
-    provider --> commands["CommandCoordinator / CommandStore"]
-    commands -->|"LiveController"| live
-    live["MainActivity · Live"] -->|"엔진 선택"| engines["Camera2Engine / CameraXEngine"]
-    live -->|"벤치마크 진입"| benchmark["BenchmarkActivity / BenchmarkRunner"]
-    benchmark -->|"Driver 호출"| engines
-    engines -->|"요청 실행"| platform["Android Camera API"]
-    engines -->|"이벤트 기록"| telemetry["Telemetry / FlightRecorder"]
-    telemetry -->|"관측 표본"| assemble["RunAssembler / BenchmarkEvaluator / RunValidity"]
-    benchmark -->|"실행 시각"| assemble
-    assemble -->|"적격 조건 확인"| score["ScoreComposer · 내부 초안"]
-    score -->|"실행과 해당 점수 저장"| files["BenchmarkReport / BenchmarkStore · schema 4"]
-    files -->|"기준 실행 읽기"| comparison["BaselineManager / RegressionDetector"]
-    comparison -->|"비교 표시"| results["ResultPresenter / ComparePresenter"]
-    benchmark -->|"이력 진입"| history["HistoryActivity / RunIndex"]
-    files -->|"목록 읽기"| history
-    history -->|"선택한 두 실행"| comparison
-    history -->|"지표별 내보내기"| csv["BenchmarkCsv · CSV"]
+graph TB
+    live["Live · MainActivity"] --> engines["Camera2 / CameraX<br/>CameraEngine"]
+    cli["ADB · CliProvider"] -->|"LiveController"| live
+    bench["Benchmark<br/>화면 · Runner"] -->|"Camera2 Driver"| engines
+    engines --> api["Android Camera API"]
+    engines --> events["콜백 기록<br/>Telemetry · FlightRecorder"]
+    bench -->|"실행 시각"| evaluate["측정 · 유효성 · 점수<br/>RunAssembler"]
+    events -->|"관측 표본"| evaluate
+    evaluate --> files["실행 JSON 저장<br/>BenchmarkStore"]
+    files --> results["실행 기록 · 비교 · CSV"]

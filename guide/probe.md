@@ -14,7 +14,7 @@ flowchart LR
 
 이 그림은 사양 표가 만들어지는 개념적 순서입니다. `CameraProbeReader`만 `CameraManager`를 알고, 모델과 렌더러는 JVM 테스트로 검증합니다.
 
-<h2 lang="en">Read the table for what it is.</h2>
+## 사양 표를 읽으세요
 
 | 확인할 항목 | 확인하는 이유 |
 | --- | --- |
@@ -27,11 +27,11 @@ flowchart LR
 
 <p class="editorial" lang="en">A capability table is a promise.<br>Measure before you trust it.</p>
 
-<h2 lang="en">Take it with you.</h2>
+## 사양을 내보내세요
 
 `TXT`와 `JSON`은 모든 카메라의 사양을 파일로 공유하고, `복사`는 현재 카메라만 클립보드에 넣습니다. 이미지 픽셀은 포함되지 않습니다. 같은 기기의 빌드 전후를 비교하거나, 다른 기기의 HAL이 무엇을 공개하는지 나란히 볼 때 JSON을 씁니다. Benchmark 결과 JSON과는 별개 파일이며 자동으로 연결되지 않습니다.
 
-<h2 lang="en">Where it sits in the app.</h2>
+## 앱에서 Probe를 여세요
 
 Live 상단 `도구` 메뉴의 첫 항목이며, 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 열립니다. Live에서 고른 카메라 ID를 초기값으로 받고 화면 안에서 다시 고를 수 있습니다. 다른 도구로 옮길 때에는 Live로 돌아가 `도구` 메뉴를 다시 사용합니다. 배치 기준은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)의 "도구 메뉴와 독립 화면"에 있습니다.
 

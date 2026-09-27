@@ -7,9 +7,9 @@
       },
       "accepted": {
         "codeHash": "7024f02c39e55c94",
-        "modelHash": "dcc96269c2147a83",
+        "modelHash": "5f27b2f248ba55f5",
         "at": "2026-09-27",
-        "commit": "9f821a0",
+        "commit": "40a116a",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "a40d669a30a772645d88100e78f658b2db424ef7",
@@ -170,10 +170,10 @@
       },
       "accepted": {
         "codeHash": "5de973f7655c6ec7",
-        "modelHash": "38e91b6efabf8535",
+        "modelHash": "1b17d45ec0c97a3a",
         "at": "2026-09-27",
-        "commit": "4de7ca0",
-        "reviewer": "Claude",
+        "commit": "40a116a",
+        "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "71ad43bb9cb9547c5541fcaa6ff07d529dc440e0",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "88c66fe0b644cbcef7ffe3c68c5e46cda986bf89",
@@ -219,10 +219,10 @@
       },
       "accepted": {
         "codeHash": "7c48ecffa1559322",
-        "modelHash": "3c55c5dcfa3cb0b8",
+        "modelHash": "d1803cc40984d289",
         "at": "2026-09-27",
-        "commit": "4de7ca0",
-        "reviewer": "Claude",
+        "commit": "40a116a",
+        "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/MainActivity.kt": "88c66fe0b644cbcef7ffe3c68c5e46cda986bf89",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "f050e9e699e263bdc59199a417e399a5453d53e0",
@@ -254,9 +254,9 @@
       },
       "accepted": {
         "codeHash": "aa107a015dd14327",
-        "modelHash": "9718817fcdb21f8b",
+        "modelHash": "6c89d83be8e0c9e6",
         "at": "2026-09-27",
-        "commit": "9f821a0",
+        "commit": "40a116a",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "a40d669a30a772645d88100e78f658b2db424ef7",
@@ -419,9 +419,9 @@
       },
       "accepted": {
         "codeHash": "5de973f7655c6ec7",
-        "modelHash": "2adc9bbb604ae12f",
+        "modelHash": "566a64165447f8fb",
         "at": "2026-09-27",
-        "commit": "9f821a0",
+        "commit": "40a116a",
         "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "71ad43bb9cb9547c5541fcaa6ff07d529dc440e0",
@@ -468,9 +468,9 @@
       },
       "accepted": {
         "codeHash": "9473e55a742d0053",
-        "modelHash": "8788492cb37545f4",
+        "modelHash": "da1286553f154e25",
         "at": "2026-09-27",
-        "commit": "9f821a0",
+        "commit": "40a116a",
         "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "71ad43bb9cb9547c5541fcaa6ff07d529dc440e0",
@@ -516,9 +516,9 @@
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "7024f02c39e55c94",
-        "modelHash": "3fda5d67d6a6eb2c",
+        "modelHash": "24e8928b95f28682",
         "at": "2026-09-27",
-        "commit": "9f821a0",
+        "commit": "40a116a",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "a40d669a30a772645d88100e78f658b2db424ef7",
@@ -679,9 +679,9 @@
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "7024f02c39e55c94",
-        "modelHash": "d002f3a580120e2f",
+        "modelHash": "76ed74bc90b9708b",
         "at": "2026-09-27",
-        "commit": "9f821a0",
+        "commit": "40a116a",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "a40d669a30a772645d88100e78f658b2db424ef7",
@@ -845,10 +845,10 @@
       },
       "accepted": {
         "codeHash": "50f8d9ff0212902a",
-        "modelHash": "2d342dce363f7e74",
-        "at": "2026-09-25",
-        "commit": "fffbc89",
-        "reviewer": "K.H. Kim",
+        "modelHash": "3a5055221b4a743a",
+        "at": "2026-09-27",
+        "commit": "40a116a",
+        "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/camera/CameraEndpoint.kt": "e6b4cba31e14ee2af51744094c6f986141190528",
           "app/src/test/java/dev/halcamera/camera/CameraLabelTest.kt": "0a2f97f5f40567ea0dd764a052152af72d89b1d1"
@@ -861,10 +861,10 @@
       },
       "accepted": {
         "codeHash": "a1562736110fd8cf",
-        "modelHash": "004f8d3897f67df6",
+        "modelHash": "f8845397c6e81a32",
         "at": "2026-09-27",
-        "commit": "4de7ca0",
-        "reviewer": "Claude",
+        "commit": "40a116a",
+        "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/MainActivity.kt": "88c66fe0b644cbcef7ffe3c68c5e46cda986bf89"
         }
@@ -891,9 +891,9 @@
       },
       "accepted": {
         "codeHash": "7024f02c39e55c94",
-        "modelHash": "4eeb7e9efc1fe762",
+        "modelHash": "7e1152b7642b5884",
         "at": "2026-09-27",
-        "commit": "9f821a0",
+        "commit": "40a116a",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "a40d669a30a772645d88100e78f658b2db424ef7",
@@ -1054,9 +1054,9 @@
       },
       "accepted": {
         "codeHash": "7024f02c39e55c94",
-        "modelHash": "288c6a1298889dad",
+        "modelHash": "bb6e3feb31e4a0d5",
         "at": "2026-09-27",
-        "commit": "9f821a0",
+        "commit": "40a116a",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "a40d669a30a772645d88100e78f658b2db424ef7",
@@ -1217,9 +1217,9 @@
       },
       "accepted": {
         "codeHash": "7024f02c39e55c94",
-        "modelHash": "e70cea7fe591d1eb",
+        "modelHash": "127ac350631adf7f",
         "at": "2026-09-27",
-        "commit": "9f821a0",
+        "commit": "40a116a",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "a40d669a30a772645d88100e78f658b2db424ef7",
@@ -1380,9 +1380,9 @@
       },
       "accepted": {
         "codeHash": "7024f02c39e55c94",
-        "modelHash": "a8f7736862d6a8e8",
+        "modelHash": "4229adf644578a2d",
         "at": "2026-09-27",
-        "commit": "9f821a0",
+        "commit": "40a116a",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "a40d669a30a772645d88100e78f658b2db424ef7",
@@ -1543,9 +1543,9 @@
       },
       "accepted": {
         "codeHash": "7024f02c39e55c94",
-        "modelHash": "9fe6d77cd61d4f26",
+        "modelHash": "893e26632608c8a0",
         "at": "2026-09-27",
-        "commit": "9f821a0",
+        "commit": "40a116a",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "a40d669a30a772645d88100e78f658b2db424ef7",
