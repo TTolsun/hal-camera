@@ -153,7 +153,8 @@
 <p>지표의 표본 부족과 실행 전체의 validity는 별도로 계산됩니다. <code>MetricExtractor</code>는 워밍업을 제외한 프레임 수와 지표별 가용 데이터로 표본의 <code>unknownReason</code>을 정합니다. <code>RunAssembler</code>는 <code>observation.steadyFrames.size</code>를 <code>ValidityInputs.observedFrames</code>로 전달하고, <code>RunValidityEvaluator</code>는 이 값이 기본 15개에 미달하거나 시작·촬영 표본이 profile의 기대 개수보다 적으면 실행에 <code>INSUFFICIENT_SAMPLES</code> flag를 붙입니다. 이 평가는 개별 지표의 <code>unknownReason</code>을 읽지 않습니다.</p>
 <p><code>intervalMs</code>, <code>resultFps</code>, <code>observedResultGap</code>은 관측값으로 계산한 수치입니다. HAL 내부의 처리 시간이나 화면에 표시된 프레임 수를 직접 측정한 값이 아닙니다.</p>
 <h3 id="화면에서-지표가-보이지-않을-때">화면에서 지표가 보이지 않을 때</h3>
-<p>상단의 <code>수치</code>는 프리뷰 위의 콜백 오실로스코프를 켜고 끕니다. 배경 박스나 카메라 선택 버튼은 없으며 기존 FPS·ISO·노출·AF·AE 표시와 촬영 조작부를 유지합니다. Partial Result와 All Result를 기본 행으로 두고 현재 구성된 출력 스트림을 순서대로 추가합니다. 모든 행은 최근 10초와 공통 ms 축을 사용하며 6행 구성도 지원합니다. 중간 Partial을 지원하지 않는 기기는 <code>미지원</code>, 앱에 프레임별 콜백을 주지 않는 출력은 <code>콜백 없음</code>으로 표시합니다. 저장한 ZIP은 <code>도구 → ZIP 기록</code>에서 공유합니다. 하단 Mark는 직전 10초와 이후 5초를 incident ZIP으로 저장합니다. Benchmark 결과 화면은 판정을 먼저 표시하고 모든 측정 항목을 카테고리별 막대로 보여 줍니다. 막대 옆 숫자는 표본의 중앙값이며, 표본 수와 validity flag는 <code>실행 정보</code> 접힘에 있습니다. 막대 길이는 같은 카테고리에서 단위가 같은 지표끼리 공유하는 축을 기준으로 그리므로 이웃 행과 길이를 견줄 수 있으며, 그 카테고리에서 단위가 혼자인 지표는 자체 축을 쓰기 때문에 다른 행과 길이를 견줄 수 없습니다. 이 배치는 저장된 지표나 CSV의 범위를 바꾸지 않습니다.</p>
+<p>상단의 <code>Callback</code>은 프리뷰 위에 한 프레임의 콜백 도착 시각을 표시합니다. Shutter와 Metadata를 기본 행으로 두고 세션에 구성된 출력 스트림을 추가하며 Partial은 표시하지 않습니다. 모든 행은 이전 프레임의 <code>onCaptureStarted</code> 수신 시각을 공통 기준으로 사용합니다. 시간축은 표시된 값에 맞춰 자동 조정됩니다. 그래프를 켜면 FPS·ISO·노출·AF·AE의 실시간 정보 두 줄을 숨기며 촬영 조작부는 유지합니다. 콜백 없음·요청 대상 아님·시작 시각 없음은 구분합니다. Camera2의 Android 13 이상에서 Preview와 Recording은 PRIVATE 버퍼의 앱 수신 시각이며, 화면 갱신이나 HAL 내부 완료 시각이 아닙니다. 상단 버튼은 12sp를 유지하고 한 줄로 표시하며, 중앙 화살표는 48dp만 사용하여 양쪽 버튼의 공간을 확보합니다.</p>
+<p>저장한 ZIP은 <code>도구 → ZIP 기록</code>에서 공유합니다. 하단 Mark는 직전 10초와 이후 5초를 incident ZIP으로 저장합니다. Benchmark 결과 화면은 판정을 먼저 표시하고 모든 측정 항목을 카테고리별 막대로 보여 줍니다. 막대 옆 숫자는 표본의 중앙값이며, 표본 수와 validity flag는 <code>실행 정보</code> 접힘에 있습니다. 막대 길이는 같은 카테고리에서 단위가 같은 지표끼리 공유하는 축을 기준으로 그리므로 이웃 행과 길이를 견줄 수 있으며, 그 카테고리에서 단위가 혼자인 지표는 자체 축을 쓰기 때문에 다른 행과 길이를 견줄 수 없습니다. 이 배치는 저장된 지표나 CSV의 범위를 바꾸지 않습니다.</p>
 <h3 id="이력과-csv가-예상과-다를-때">이력과 CSV가 예상과 다를 때</h3>
 <p>실행 기록의 기본 상태 필터는 <code>전체</code>이며 중단·무효 실행도 표시합니다. 찾는 실행이 없으면 접힌 필터를 열어 profile·camera 조건을 확인하거나 <code>필터 초기화</code>를 누릅니다. PC의 <code>tools/aggregate.py</code>는 기본적으로 점수 산정 가능한 실행만 내보내므로, 전체 실행을 보려면 <code>--eligibility all</code>을 사용합니다.</p>
 <p>손상된 JSON은 목록과 PC 집계에서 별도로 알립니다. CSV 출력 장치의 오류는 입력 파일 오류와 구분하며 작업을 실패로 종료합니다. baseline 파일을 읽을 수 없으면 baseline 변경과 삭제를 중단합니다. 기기 화면·공유·삭제 동작의 실제 검증 기록은 이 문서에서 주장하지 않습니다.</p>
@@ -166,7 +167,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandStore.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-27 @ <code>0fbaa29</code> · Codex</li>
+<li>검토 2026-09-27 @ <code>ffacbcf</code> · Codex</li>
 </ul>
 </details><!-- omm:end id=layer-isolation --><h2 id="증상별-절차와-알려진-제약">증상별 절차와 알려진 제약</h2>
 <p>개별 증상에 대한 재현·분석 절차는 아직 정리하지 않았습니다. 먼저 위의 계층 구분 순서를 적용하고, 확인한 조건과 결과를 기록하세요.</p>
@@ -255,17 +256,17 @@
 <tbody><tr>
 <td>구조 원본 <code>data-flow</code></td>
 <td>최신</td>
-<td>검토 2026-09-27 @ <code>0fbaa29</code> · Codex</td>
+<td>검토 2026-09-27 @ <code>ffacbcf</code> · Codex</td>
 </tr>
 <tr>
 <td>구조 원본 <code>state-transitions</code></td>
 <td>최신</td>
-<td>검토 2026-09-27 @ <code>0fbaa29</code> · Codex</td>
+<td>검토 2026-09-27 @ <code>ffacbcf</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>layer-isolation</code></td>
 <td>최신</td>
-<td>검토 2026-09-27 @ <code>0fbaa29</code> · Codex</td>
+<td>검토 2026-09-27 @ <code>ffacbcf</code> · Codex</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p><code>코드 확인</code>과 실제 기기 검증은 서로 다른 근거입니다. 표의 검토 기록만으로 특정 기기에서 재현됐다고 판단하지 않습니다.</p>
