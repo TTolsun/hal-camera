@@ -24,7 +24,7 @@ class CameraXEngine(
     private val telemetry: Telemetry,
     private val executor: ExecutorService,
     private val status: (String, Boolean) -> Unit
-) : CameraEngine {
+) : CameraEngine, TouchMetering {
     @Volatile private var active = true
     private var provider: ProcessCameraProvider? = null
     private var camera: Camera? = null
@@ -93,6 +93,27 @@ class CameraXEngine(
         val clamped = if (state != null) ratio.coerceIn(state.minZoomRatio, state.maxZoomRatio) else ratio
         telemetry.event(session, "zoom_set", mapOf("zoomRequested" to clamped, "api" to "CameraControl.setZoomRatio"))
         cam.cameraControl.setZoomRatio(clamped)
+    }
+    /**
+     * CameraX maps the tap through PreviewView itself (rotation, mirroring, fill-crop, zoom) and cancels the
+     * regions after the same hold as Camera2. A newer tap cancels the older future, which then reports nothing.
+     */
+    override fun meterAt(x: Float, y: Float, feedback: (TouchPhase) -> Unit): Boolean {
+        val cam = camera ?: return false
+        val action = FocusMeteringAction.Builder(view.meteringPointFactory.createPoint(x, y), FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE)
+            .setAutoCancelDuration(TouchMeter.HOLD_MS, java.util.concurrent.TimeUnit.MILLISECONDS).build()
+        if (!active || !cam.cameraInfo.isFocusMeteringSupported(action)) return false
+        telemetry.event(session, "touch_meter", mapOf("x" to x, "y" to y, "api" to "CameraControl.startFocusAndMetering"))
+        feedback(TouchPhase.SCANNING)
+        val future = cam.cameraControl.startFocusAndMetering(action)
+        future.addListener({
+            val focused = runCatching { future.get().isFocusSuccessful }.getOrNull() ?: return@addListener
+            telemetry.event(session, "touch_meter_result", mapOf("phase" to if (focused) "FOCUSED" else "FAILED"))
+            if (!active) return@addListener
+            feedback(if (focused) TouchPhase.FOCUSED else TouchPhase.FAILED)
+            view.postDelayed({ if (active) feedback(TouchPhase.DONE) }, TouchMeter.HOLD_MS)
+        }, main)
+        return true
     }
     override fun close(done: () -> Unit) {
         active = false
