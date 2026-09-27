@@ -1,6 +1,6 @@
 # 작업 상태
 
-2026-09-27 · HAL CAM 0.14.0은 Live의 Flash·AF·AE 잠금·EV 제어와 녹화 중 줌, 작은 Live 표시등과 중앙 촬영 제어 화살표, 선택적인 작업실, 간결한 실행 기록·벤치마크 비교 화면을 포함합니다. 현재 S25+에서 versionCode 513 정식 APK를 기존 앱 위에 설치하고 프리뷰 실행을 확인했습니다. [릴리스 노트](releases/0.14.0.md)를 참고하세요.
+2026-09-27 · HAL CAM 0.15.0은 Callback 그래프, CameraX 사진·동영상 저장, 터치 초점·노출 제어와 정리된 개발자 문서를 포함합니다. Galaxy S25+에서 versionCode 543 서명 APK를 기존 앱 위에 설치하고 Camera2·CameraX 프리뷰와 Callback 표시를 확인했습니다. [릴리스 노트](releases/0.15.0.md)를 참고하세요.
 
 2026-09-24에 녹화(3.x) 지표를 구현했습니다([이슈 #122](https://github.com/TTolsun/hal-camera/issues/122)). 벤치마크 시퀀스의 사진 촬영 뒤에 RECORD 단계가 붙어, 9초짜리 녹화를 다섯 번 반복하고 3.1·3.2·3.4·3.6·3.7 다섯 지표를 계산합니다. 3.3은 `MediaRecorder`로 인코더 쪽 프레임 수를 얻을 수 없으므로 `not_measurable`을 유지하고, 3.5는 별도 시나리오로 남겼습니다. 설계와 결정 근거는 [PLAN-Recording-v0.1.md](PLAN-Recording-v0.1.md)에 있습니다.
 
