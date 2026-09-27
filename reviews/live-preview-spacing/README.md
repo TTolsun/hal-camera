@@ -4,10 +4,13 @@ Reviewed the requested layout and typography changes against main (772bdf5).
 No blocking findings in the changed code.
 
 - Live readout and zoom labels: 12sp to 11sp. Photo/video labels: 14sp to 12sp.
-- Vertical padding and margins shrink by 70dp in total, excluding the additional
+- Vertical padding and margins shrink by 78dp in total, excluding the additional
   reduction from the smaller readout text. The preview surface itself is unchanged.
 - Photo/video targets narrow from 96dp to 80dp and remain 48dp tall.
-- Zoom targets remain 48dp, the zoom viewport 52dp, and the shutter 72dp.
+- Zoom circles shrink from 32dp to 28dp while targets remain 48dp. The viewport
+  shrinks from 52dp to 48dp, and the shutter remains 72dp. Removing the footer's
+  remaining 8dp padding lowers the capture/mode rows by 8dp, zoom by 10dp and the
+  readout by 12dp relative to the first compact layout with 11sp zoom labels.
 - Initial padding and window-inset padding agree; navigation-bar and cutout
   insets remain applied. The diagnostics panel still derives its offset from
   the actual event-save footer height.

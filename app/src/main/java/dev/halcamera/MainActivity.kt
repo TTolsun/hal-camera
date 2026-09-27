@@ -522,9 +522,9 @@ class MainActivity : ComponentActivity() {
         }.apply {
             isHorizontalScrollBarEnabled=false
             overScrollMode=View.OVER_SCROLL_NEVER
-            addView(zoomControl,FrameLayout.LayoutParams(-2,dp(52)))
+            addView(zoomControl,FrameLayout.LayoutParams(-2,dp(48)))
         }
-        bottomBar.addView(zoomViewport,LinearLayout.LayoutParams(-2,dp(52)))
+        bottomBar.addView(zoomViewport,LinearLayout.LayoutParams(-2,dp(48)))
         val captureRow=row().apply { gravity=Gravity.CENTER_VERTICAL }
         bottomBar.addView(captureRow,lp(top=4))
         galleryButton=RecentMediaButton(this) {
@@ -563,7 +563,7 @@ class MainActivity : ComponentActivity() {
 
         val mainRow=row().apply {
             gravity=Gravity.CENTER_VERTICAL
-            setPadding(dp(16),dp(4),dp(16),dp(4))
+            setPadding(dp(16),0,dp(16),0)
             setBackgroundColor(Color.TRANSPARENT)
         }
         reportButton=button(MARK_LABEL) {
@@ -619,7 +619,7 @@ class MainActivity : ComponentActivity() {
             } else { @Suppress("DEPRECATION") listOf(insets.systemWindowInsetLeft,insets.systemWindowInsetTop,insets.systemWindowInsetRight,insets.systemWindowInsetBottom) }
             topBar.setPadding(dp(12)+l,dp(8)+t,dp(12)+r,dp(10))
             bottomBar.setPadding(dp(16)+l,dp(4),dp(16)+r,0)
-            mainRow.setPadding(dp(16)+l,dp(4),dp(16)+r,dp(4)+b)
+            mainRow.setPadding(dp(16)+l,0,dp(16)+r,b)
             body.setPadding(dp(18)+l,dp(12),dp(18)+r,dp(24))
             insets
         }
