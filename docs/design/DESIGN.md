@@ -27,7 +27,7 @@ Android 앱과 문서 사이트는 이 문서를 단일 디자인 기준으로 �
 
 1. HAL CAMERA 브랜드와 문서 탐색을 표시합니다.
 2. `Engineering the invisible.`을 큰 제목으로 표시하고 목적과 빠른 시작 링크를 제공합니다.
-3. Architecture, Probe, CTS, Benchmark, CLI, Decisions, Evidence를 01–07 번호가 있는 행으로 배치합니다. 도구 세 가지는 앱의 `도구` 메뉴와 같은 Probe, CTS, Benchmark 순서를 사용합니다.
+3. Architecture, Probe, CTS, Benchmark, Callback, CLI, Evidence를 01–07 번호가 있는 행으로 배치합니다. 도구 세 가지는 앱의 `도구` 메뉴와 같은 Probe, CTS, Benchmark 순서를 사용하며 Callback은 Benchmark 바로 다음에 둡니다. Decisions는 탐색 메뉴에서 제외하고 기존 문서 주소는 유지합니다.
 4. 앱의 책임을 설명하는 대표 그림과 상세 문서 링크를 제공합니다.
 5. 짧은 편집 문장과 근거 확인 링크로 마무리합니다.
 
@@ -75,7 +75,7 @@ Android 앱과 문서 사이트는 이 문서를 단일 디자인 기준으로 �
 - Benchmark는 입력, 관측 범위, 저장과 비교의 의미를 설명합니다.
 - Probe는 HAL이 공개한 사양 표의 읽는 법과 측정과의 차이를 설명합니다.
 - CTS는 앱 안에서 실행하는 CTS 케이스의 범위와 공식 판정과의 차이를 설명합니다.
-- Decisions는 결정 번호와 선택을 보여주고, 빠진 이유를 명시합니다.
+- Callback은 프레임별 콜백 시각의 기준과 스트림 행, 자동 고정 조작을 설명합니다.
 - Evidence는 구현 대조, 기기 검증, 설계 의도를 구분하고 검토 상태로 연결합니다.
 
 편집 문장은 한 페이지에 최대 한 개를 사용합니다. `Good measurements should explain the system, not just produce numbers.`처럼 해당 내용과 연결되는 문장을 선택합니다.
