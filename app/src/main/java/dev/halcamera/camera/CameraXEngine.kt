@@ -177,7 +177,7 @@ class CameraXEngine(
             telemetry.onCaptureProgressed(session, request, partialResult)
         override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
             telemetry.onCaptureCompleted(session, request, result)
-            if (active) controls.onResult(result)
+            if (active) controls.onResult(request, result)
         }
         override fun onCaptureFailed(session: CameraCaptureSession, request: CaptureRequest, failure: CaptureFailure) =
             telemetry.onCaptureFailed(session, request, failure)

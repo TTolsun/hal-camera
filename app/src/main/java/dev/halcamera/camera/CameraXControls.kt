@@ -25,6 +25,10 @@ import dev.halcamera.telemetry.Telemetry
  * - AF lock, a tapped AF point and a pressed AE point are one FocusMeteringAction, because CameraX holds a single
  *   action and a new one cancels the old. [submitMetering] rebuilds it from what is held. Every action disables
  *   CameraX's auto-cancel; a tapped point ends after [TouchMeter.HOLD_MS] here, as on Camera2.
+ * - cancelFocusAndMetering is never called. On camera-pipe it is unlock3A(ae = true), which leaves aeLock = false in
+ *   the graph's 3A state, and that state overrides request options: CONTROL_AE_LOCK stayed OFF for the rest of the
+ *   session on the S25+. Nothing held is an AE-only action on the whole frame instead (regions only), and an AF
+ *   point or lock is released with a one-shot CONTROL_AF_TRIGGER_CANCEL on the interop options.
  * - A rebuilt session (recording start and stop) relocks AE with [AeRelock] and puts AF lock and a pressed point back.
  *
  * Public calls come from the main thread; [onResult] comes from the camera's callback thread. State is guarded by
@@ -45,7 +49,10 @@ internal class CameraXControls(
         fun notice(text: String)
     }
 
-    private class Target(val point: MeteringPoint, val feedback: (TouchPhase) -> Unit)
+    private class Target(val point: MeteringPoint, val feedback: (TouchPhase) -> Unit) {
+        /** A tap reports one outcome, from whichever action carrying it completes first or from the scan timeout. Main thread. */
+        var answered = false
+    }
 
     private val lock = Any()
     @Volatile var controls = LiveControls()
@@ -55,6 +62,10 @@ internal class CameraXControls(
     /** The tapped AF point while it is held, and the pressed AE point until a tap or the AE lock releases it. */
     private var af: Target? = null
     private var ae: Target? = null
+    /** The last action scanned and locked AF, so dropping it needs an AF cancel trigger. */
+    private var afInAction = false
+    /** CONTROL_AF_TRIGGER_CANCEL rides on the interop options until a result shows it was sent. */
+    private var afCancelPending = false
 
     fun setControls(next: LiveControls, restore: Boolean) {
         val old = synchronized(lock) {
@@ -78,7 +89,8 @@ internal class CameraXControls(
      * point and every other control are sent again, since CameraX may reset them with the session.
      */
     fun sessionRebuilt() {
-        synchronized(lock) { dropFocus(); startRelock() }
+        // A new session starts with AF unlocked, so there is nothing to cancel.
+        synchronized(lock) { dropFocus(); startRelock(); afInAction = false; afCancelPending = false }
         val camera = host.camera ?: return
         apply(camera, null)
         submitMetering()
@@ -101,31 +113,40 @@ internal class CameraXControls(
         }
         telemetry.event(sessionId, "touch_meter", mapOf("kind" to if (exposure) "AE" else "AF", "x" to x, "y" to y, "api" to "CameraControl.startFocusAndMetering"))
         feedback(TouchPhase.SCANNING)
-        // A press that AE never settles on is taken as metered after the timeout, as on Camera2.
+        // A press that AE never settles on is taken as metered after the timeout, and a tap that no action answers
+        // as failed, as on Camera2.
         if (exposure) main.postDelayed({ if (synchronized(lock) { ae === target && exposureWatch.timedOut(exposureWatch.generation) }) exposed(target) }, AeRelock.TIMEOUT_MS)
+        else main.postDelayed({ focused(target, TouchPhase.FAILED) }, TouchMeter.SCAN_TIMEOUT_MS)
         val future = submitMetering() ?: return true
-        future.addListener({
-            val result = runCatching { future.get() }.getOrNull() ?: return@addListener // replaced by a newer action
-            // Results from before the action still carried the old region, so the settle count starts again here.
-            if (exposure) synchronized(lock) { if (ae === target) exposureWatch.press() }
-            else focused(target, if (result.isFocusSuccessful) TouchPhase.FOCUSED else TouchPhase.FAILED)
+        // Results from before the action still carried the old region, so the settle count starts again here.
+        if (exposure) future.addListener({
+            if (runCatching { future.get() }.isSuccess) synchronized(lock) { if (ae === target) exposureWatch.press() }
         }, { main.post(it) })
         return true
     }
 
-    /** Every result of the repeating request, on the camera's callback thread. */
-    fun onResult(result: TotalCaptureResult) {
+    /**
+     * Every result of the repeating request, on the camera's callback thread. CameraX rebuilds a session on its own
+     * executor after bindToLifecycle returns, so results of the old, locked session still arrive after
+     * [sessionRebuilt]; their LOCKED state must not count as the new session settling. While the relock waits only
+     * results of unlocked requests are fed to [AeRelock].
+     */
+    fun onResult(request: CaptureRequest, result: TotalCaptureResult) {
         val state = result[CaptureResult.CONTROL_AE_STATE]
         val time = result[CaptureResult.SENSOR_EXPOSURE_TIME]; val iso = result[CaptureResult.SENSOR_SENSITIVITY]
         var metered: Target? = null
         val step = synchronized(lock) {
             if (exposureWatch.onResult(state)) metered = ae
-            aeRelock.onResult(state, if (time != null && iso != null) AeRelock.Exposure(time, iso) else null)
+            if (aeRelock.waiting && request[CaptureRequest.CONTROL_AE_LOCK] == true) AeRelock.Step.None
+            else aeRelock.onResult(state, if (time != null && iso != null) AeRelock.Exposure(time, iso) else null)
         }
         metered?.let { target -> main.post { exposed(target) } }
+        val cancelSent = request[CaptureRequest.CONTROL_AF_TRIGGER] == CaptureRequest.CONTROL_AF_TRIGGER_CANCEL &&
+            synchronized(lock) { afCancelPending.also { afCancelPending = false } }
+        if (cancelSent) host.camera?.let(::applyOptions)
         when (step) {
             AeRelock.Step.None -> Unit
-            AeRelock.Step.Relock -> { telemetry.event(sessionId, "ae_relock", mapOf("reason" to "settled", "aeState" to state)); host.camera?.let(::applyAeLock) }
+            AeRelock.Step.Relock -> { telemetry.event(sessionId, "ae_relock", mapOf("reason" to "settled", "aeState" to state)); host.camera?.let(::applyOptions) }
             is AeRelock.Step.Relocked -> {
                 telemetry.event(sessionId, "ae_relocked", mapOf(
                     "beforeExposureNs" to step.before?.timeNs, "beforeIso" to step.before?.iso,
@@ -146,14 +167,18 @@ internal class CameraXControls(
             FlashMode.OFF, FlashMode.TORCH -> ImageCapture.FLASH_MODE_OFF
         }
         if ((old == null || (old.flash == FlashMode.TORCH) != (now.flash == FlashMode.TORCH)) && camera.cameraInfo.hasFlashUnit()) control.enableTorch(now.flash == FlashMode.TORCH)
-        if (old?.aeLock != now.aeLock) applyAeLock(camera)
+        if (old?.aeLock != now.aeLock) applyOptions(camera)
     }
 
-    /** CONTROL_AE_LOCK as the requests carry it: off while [aeRelock] waits for a rebuilt session to settle. */
-    private fun applyAeLock(camera: Camera) {
-        val locked = synchronized(lock) { controls.aeLock && !aeRelock.waiting }
-        Camera2CameraControl.from(camera.cameraControl).setCaptureRequestOptions(
-            CaptureRequestOptions.Builder().setCaptureRequestOption(CaptureRequest.CONTROL_AE_LOCK, locked).build())
+    /**
+     * The interop options: CONTROL_AE_LOCK as the requests carry it (off while [aeRelock] waits for a rebuilt session
+     * to settle), plus the AF cancel trigger while one is pending.
+     */
+    private fun applyOptions(camera: Camera) {
+        val (locked, cancel) = synchronized(lock) { (controls.aeLock && !aeRelock.waiting) to afCancelPending }
+        val options = CaptureRequestOptions.Builder().setCaptureRequestOption(CaptureRequest.CONTROL_AE_LOCK, locked)
+        if (cancel) options.setCaptureRequestOption(CaptureRequest.CONTROL_AF_TRIGGER, CaptureRequest.CONTROL_AF_TRIGGER_CANCEL)
+        Camera2CameraControl.from(camera.cameraControl).setCaptureRequestOptions(options.build())
     }
 
     /** Caller holds [lock]. With the lock on, the session runs unlocked until [onResult] or the timeout relocks it. */
@@ -162,40 +187,57 @@ internal class CameraXControls(
         if (!aeRelock.waiting) return
         telemetry.event(sessionId, "ae_relock_wait", emptyMap())
         main.postDelayed({
-            if (synchronized(lock) { aeRelock.timedOut(generation) }) {
+            // A closed engine's timer must not reach the CameraControl a reopened engine shares.
+            if (host.active && synchronized(lock) { aeRelock.timedOut(generation) }) {
                 telemetry.event(sessionId, "ae_relock", mapOf("reason" to "timeout"))
-                host.camera?.let(::applyAeLock)
+                host.camera?.let(::applyOptions)
             }
         }, AeRelock.TIMEOUT_MS)
     }
 
     /**
      * The one action for everything held now: the tapped point or, under AF lock, the whole frame for AF, and the
-     * pressed point for AE. Without either it cancels, which returns AF and AE to the whole frame. Null when there
-     * was nothing to start.
+     * pressed point for AE. Without either it meters AE on the whole frame, which only resets the regions, and an AF
+     * the previous action locked is released with the cancel trigger. Null without a camera.
      */
     private fun submitMetering(): com.google.common.util.concurrent.ListenableFuture<androidx.camera.core.FocusMeteringResult>? {
         val camera = host.camera ?: return null
-        val (focus, exposure) = synchronized(lock) { (af?.point ?: if (controls.afLock) wholeFrame else null) to ae?.point }
+        var releaseAf = false
+        val (tapped, focus, exposure) = synchronized(lock) {
+            val focus = af?.point ?: if (controls.afLock) wholeFrame else null
+            releaseAf = focus == null && afInAction
+            afInAction = focus != null
+            // A new AF scan must not meet a cancel still riding on the options.
+            if (focus != null) afCancelPending = false else if (releaseAf) afCancelPending = true
+            Triple(af, focus, ae?.point)
+        }
+        if (releaseAf || focus != null) applyOptions(camera)
         val builder = when {
             focus != null -> FocusMeteringAction.Builder(focus, FocusMeteringAction.FLAG_AF).also { b -> exposure?.let { b.addPoint(it, FocusMeteringAction.FLAG_AE) } }
-            exposure != null -> FocusMeteringAction.Builder(exposure, FocusMeteringAction.FLAG_AE)
-            else -> { camera.cameraControl.cancelFocusAndMetering(); return null }
+            else -> FocusMeteringAction.Builder(exposure ?: wholeFrame, FocusMeteringAction.FLAG_AE)
         }
-        return camera.cameraControl.startFocusAndMetering(builder.disableAutoCancel().build())
+        val future = camera.cameraControl.startFocusAndMetering(builder.disableAutoCancel().build())
+        // Any action carrying an unanswered tap answers it: a resend cancels the earlier action, whose future then fails.
+        if (tapped != null) future.addListener({
+            val result = runCatching { future.get() }.getOrNull() ?: return@addListener
+            focused(tapped, if (result.isFocusSuccessful) TouchPhase.FOCUSED else TouchPhase.FAILED)
+        }, { main.post(it) })
+        return future
     }
 
     /** Main thread. The square stays [TouchMeter.HOLD_MS]; without AF lock the point then ends as well. */
     private fun focused(target: Target, phase: TouchPhase) {
-        if (synchronized(lock) { af !== target } || !host.active) return
+        if (target.answered || synchronized(lock) { af !== target } || !host.active) return
+        target.answered = true
         telemetry.event(sessionId, "touch_meter_result", mapOf("kind" to "AF", "phase" to phase.name))
         target.feedback(phase)
         main.postDelayed({
+            if (!host.active) return@postDelayed
             val ended = synchronized(lock) {
                 if (af !== target) return@postDelayed
                 if (controls.afLock) false else { af = null; true }
             }
-            if (host.active) target.feedback(TouchPhase.DONE)
+            target.feedback(TouchPhase.DONE)
             if (ended) submitMetering()
         }, TouchMeter.HOLD_MS)
     }
