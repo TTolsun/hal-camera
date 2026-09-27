@@ -395,7 +395,13 @@ class MainActivity : ComponentActivity() {
         toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: 측정 도구, ZIP 기록, 설정" }
         // Read-only overlay controls remain usable while the CLI owns a recording.
         graphButton=CameraWidgets(this).button("Callback") { showCallbacks(callbackGraph.visibility != View.VISIBLE) }.apply { contentDescription="Callback 타이밍 표시" }
-        listOf(engineButton,toolsButton,graphButton).forEach { it.background=cameraChrome(Color.TRANSPARENT); it.setTextColor(Color.WHITE); it.setPadding(dp(12),0,dp(12),0) }
+        listOf(engineButton,toolsButton,graphButton).forEach {
+            it.background=cameraChrome(Color.TRANSPARENT)
+            it.setTextColor(Color.WHITE)
+            it.setPadding(dp(12),0,dp(12),0)
+            it.setSingleLine(true)
+            it.minWidth=dp(48); it.minimumWidth=dp(48)
+        }
         liveIndicator=LiveIndicator(this)
         val leadingSlot=LinearLayout(this).apply {
             orientation=LinearLayout.VERTICAL; gravity=Gravity.START
@@ -407,7 +413,8 @@ class MainActivity : ComponentActivity() {
             addView(toolsButton,LinearLayout.LayoutParams(-2,dp(48)))
             addView(graphButton,LinearLayout.LayoutParams(-2,dp(48)).apply { marginStart=dp(4) })
         }
-        // Equal-width slots keep the expander at the screen centre, aligned with the engine button.
+        // Only the side slots share spare width; the centred expander needs a 48dp touch target.
+        // Giving it a third of the row squeezed the two trailing labels and wrapped "Callback".
         controlBar=LiveControlBar(this,object : LiveControlBar.Host {
             override fun controlsChanged(controls: LiveControls) { (engine as? LiveTuning)?.setControls(controls) }
             override fun notice(text: String) = toast(text)
@@ -416,7 +423,7 @@ class MainActivity : ComponentActivity() {
         controls.addView(leadingSlot,LinearLayout.LayoutParams(0,-2,1f))
         controls.addView(FrameLayout(this).apply {
             addView(controlBar.handle,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.TOP or Gravity.CENTER_HORIZONTAL))
-        },LinearLayout.LayoutParams(0,dp(48),1f))
+        },LinearLayout.LayoutParams(dp(48),dp(48)))
         controls.addView(trailingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
         topBar.addView(controlBar.view,lp(top=4))
         resetControls()
