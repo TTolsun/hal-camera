@@ -621,8 +621,8 @@ class MainActivity : ComponentActivity() {
         }
         if (streamDialogLoading || closing || cli.active != null || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true) return
         if (engineName != "Camera2") {
-            AlertDialog.Builder(this).setTitle("Live 스트림 설정")
-                .setMessage("출력 조합과 정확한 해상도 지정은 Camera2에서 지원합니다. CameraX는 자동 구성을 사용합니다.")
+            AlertDialog.Builder(this, R.style.LabDialogTheme).setTitle("Live Streams")
+                .setMessage("해상도와 출력 설정을 변경하려면 Camera2로 전환하세요.")
                 .setPositiveButton("Camera2로 전환") { _, _ -> chooseEngine("Camera2") }.setNegativeButton("취소", null)
                 .setOnDismissListener { dismissed() }.show()
             return

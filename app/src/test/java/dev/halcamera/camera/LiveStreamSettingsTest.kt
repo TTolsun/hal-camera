@@ -4,6 +4,40 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class LiveStreamSettingsTest {
+    @Test fun `recording choices follow codec size and supported frame rate without changing an untouched default`() {
+        val hd = LiveSize(1280, 720)
+        val full = LiveSize(1920, 1080)
+        val ultra = LiveSize(3840, 2160)
+        val options = listOf(LiveVideo(hd, 30, "H264"), LiveVideo(full, 30, "H264"),
+            LiveVideo(full, 60, "H264"), LiveVideo(ultra, 24, "HEVC"), LiveVideo(hd, 60, "HEVC"))
+        val support = LiveStreamSupport(listOf(hd), emptyList(), emptyList(), emptyList(), options, options[1])
+        val draft = LiveVideoDraft(support, null)
+        assertNull(draft.requested)
+        assertEquals(full, draft.value?.size)
+        assertEquals(listOf(full, hd), draft.sizes())
+        draft.selectFormat("HEVC")
+        assertEquals(LiveVideo(ultra, 24, "HEVC"), draft.requested)
+        assertEquals(listOf(ultra, hd), draft.sizes())
+        assertEquals(listOf(24), draft.rates())
+        draft.selectSize(hd)
+        assertEquals(LiveVideo(hd, 60, "HEVC"), draft.requested)
+        draft.selectFormat("H264")
+        assertEquals(LiveVideo(hd, 30, "H264"), draft.requested)
+        draft.selectSize(full)
+        draft.selectRate(60)
+        assertEquals(LiveVideo(full, 60, "H264"), draft.requested)
+        assertNull(support.rejection(support.defaults().copy(video = draft.requested)))
+    }
+    @Test fun `recording default reports the actual size even without full HD`() {
+        val hd = LiveSize(1280, 720)
+        val full = LiveSize(1920, 1080)
+        val ultra = LiveSize(3840, 2160)
+        assertEquals(LiveVideo(full, 30, "H264"), defaultLiveVideo(listOf(ultra, hd, full)))
+        assertEquals(LiveVideo(hd, 30, "H264"), defaultLiveVideo(listOf(hd, ultra)))
+        assertEquals(LiveVideo(ultra, 30, "H264"), defaultLiveVideo(listOf(ultra)))
+        assertNull(defaultLiveVideo(listOf(LiveSize(720, 1280))))
+        assertNull(defaultLiveVideo(emptyList()))
+    }
     @Test fun `saved camera settings retain disabled outputs video and default rollback across recreation`() {
         val first = LiveStreamSettings(LiveSize(1280, 720), null, LiveSize(1920, 1080), LiveFps(15, 30),
             LiveVideo(LiveSize(1920, 1080), 30, "HEVC"))

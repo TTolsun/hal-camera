@@ -91,7 +91,9 @@ internal class Camera2LiveRecorder(
                 val c = host.characteristics ?: error("Camera characteristics unavailable")
                 val sizes = c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]!!.getOutputSizes(MediaRecorder::class.java)
                 val settings = host.settings
-                val size = settings?.size?.androidSize() ?: host.chooseSize(sizes.filter { it.width >= it.height }.toTypedArray(), 1920L * 1080)
+                val size = settings?.size?.androidSize() ?: requireNotNull(defaultLiveVideo(sizes.map { LiveSize(it.width, it.height) })) {
+                    "No landscape recording size available"
+                }.size.androidSize()
                 if (settings != null) require(settings in liveStreamSupport(c).videos) { "Unsupported recording size, FPS or codec" }
                 telemetry.event(sessionId, "live_recording_requested", mapOf("size" to size.toString(), "fps" to (settings?.fps ?: 30), "codec" to (settings?.codec ?: "H264")))
                 val file = File.createTempFile("hal_recording_", ".mp4", context.cacheDir).also { this.file = it }

@@ -34,5 +34,5 @@ fun liveStreamSupport(c: CameraCharacteristics): LiveStreamSupport {
         }
     }
     return LiveStreamSupport(sizes(map.getOutputSizes(SurfaceTexture::class.java)), sizes(map.getOutputSizes(ImageFormat.YUV_420_888)),
-        sizes(map.getOutputSizes(ImageFormat.JPEG)), fps, videos)
+        sizes(map.getOutputSizes(ImageFormat.JPEG)), fps, videos, defaultLiveVideo(videoSizes))
 }

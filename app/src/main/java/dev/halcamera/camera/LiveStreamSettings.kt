@@ -15,6 +15,15 @@ data class LiveVideo(val size: LiveSize, val fps: Int, val codec: String, val bi
     override fun toString() = "$size · $fps fps · $codec"
 }
 
+/** Shared by the recorder and its default-option label, including cameras without 1080p. */
+fun defaultLiveVideo(sizes: List<LiveSize>): LiveVideo? {
+    val landscape = sizes.filter { it.width >= it.height }
+    val size = landscape.filter { it.width.toLong() * it.height <= 1920L * 1080 }
+        .maxByOrNull { it.width.toLong() * it.height }
+        ?: landscape.minByOrNull { it.width.toLong() * it.height }
+    return size?.let { LiveVideo(it, 30, "H264") }
+}
+
 data class LiveStreamSettings(
     val preview: LiveSize,
     val yuv: LiveSize?,
@@ -30,7 +39,7 @@ data class LiveStreamSettings(
 
 data class LiveStreamSupport(
     val preview: List<LiveSize>, val yuv: List<LiveSize>, val jpeg: List<LiveSize>,
-    val fps: List<LiveFps>, val videos: List<LiveVideo>,
+    val fps: List<LiveFps>, val videos: List<LiveVideo>, val defaultVideo: LiveVideo? = null,
 ) {
     fun rejection(value: LiveStreamSettings): String? = when {
         value.preview !in preview -> "지원하지 않는 Preview 크기입니다."
@@ -45,5 +54,29 @@ data class LiveStreamSupport(
             .maxByOrNull { it.width.toLong() * it.height } ?: sizes.minBy { it.width.toLong() * it.height }
         return LiveStreamSettings(choose(preview, 1280L * 720), yuv.takeIf { it.isNotEmpty() }?.let { choose(it, 640L * 480) },
             jpeg.takeIf { it.isNotEmpty() }?.let { choose(it, 1920L * 1080) }, null)
+    }
+}
+
+/** Dependent recording choices only commit supported triples; opening the panel preserves defaults. */
+class LiveVideoDraft(private val support: LiveStreamSupport, initial: LiveVideo?) {
+    var requested: LiveVideo? = initial
+        private set
+    val value get() = requested ?: support.defaultVideo
+    val formats get() = support.videos.map { it.codec }.distinct()
+    fun sizes(codec: String? = value?.codec) = support.videos.filter { it.codec == codec }
+        .map { it.size }.distinct().sortedByDescending { it.width.toLong() * it.height }
+    fun rates() = support.videos.filter { it.codec == value?.codec && it.size == value?.size }
+        .map { it.fps }.distinct().sortedDescending()
+    fun selectFormat(codec: String) {
+        val sizes = sizes(codec)
+        val size = value?.size?.takeIf { it in sizes } ?: sizes.firstOrNull() ?: return
+        select(codec, size, value?.fps)
+    }
+    fun selectSize(size: LiveSize) { value?.codec?.let { select(it, size, value?.fps) } }
+    fun selectRate(rate: Int) { value?.let { select(it.codec, it.size, rate) } }
+    private fun select(codec: String, size: LiveSize, rate: Int?) {
+        val options = support.videos.filter { it.codec == codec && it.size == size }
+        requested = options.firstOrNull { it.fps == rate } ?: options.firstOrNull { it.fps == 30 }
+            ?: options.maxByOrNull { it.fps } ?: return
     }
 }
