@@ -4,6 +4,20 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class LiveStreamSettingsTest {
+    @Test fun `saved camera settings retain disabled outputs video and default rollback across recreation`() {
+        val first = LiveStreamSettings(LiveSize(1280, 720), null, LiveSize(1920, 1080), LiveFps(15, 30),
+            LiveVideo(LiveSize(1920, 1080), 30, "HEVC"))
+        val settings = hashMapOf("0" to first, "1" to first.copy(yuv = LiveSize(640, 480), jpeg = null))
+        val lastGood = hashMapOf<String, LiveStreamSettings?>("0" to null, "1" to settings["1"])
+        val buffer = java.io.ByteArrayOutputStream()
+        java.io.ObjectOutputStream(buffer).use { it.writeObject(settings); it.writeObject(lastGood) }
+        java.io.ObjectInputStream(java.io.ByteArrayInputStream(buffer.toByteArray())).use {
+            assertEquals(settings, it.readObject())
+            assertEquals(lastGood, it.readObject())
+        }
+        assertEquals(null, settings["0"]?.yuv)
+        assertEquals(null, settings["1"]?.jpeg)
+    }
     private val small = LiveSize(640, 480)
     private val hd = LiveSize(1280, 720)
     private val full = LiveSize(1920, 1080)

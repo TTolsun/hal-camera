@@ -20,7 +20,7 @@ import dev.halcamera.R
 object AboutSheet {
     const val AUTHOR = "KH"
     const val EMAIL = "kh_87.kim@samsung.com"
-    private const val TAGLINE = "HAL instrumentation & benchmark"
+    private const val TAGLINE = "Camera inspection, CTS checks, and benchmarks."
     private const val STACKS = "Camera2 · CameraX"
     private const val EASTER_EGG_TAPS = 5
 
@@ -81,7 +81,7 @@ object AboutSheet {
 
         root.addView(Look.row(context).apply {
             gravity = Gravity.END
-            addView(Look.ghostButton(context, "닫기") { dialog.dismiss() })
+            addView(Look.ghostButton(context, "Close") { dialog.dismiss() })
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = d })
 
         dialog.show()

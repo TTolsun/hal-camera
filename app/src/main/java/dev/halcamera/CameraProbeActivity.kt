@@ -91,16 +91,18 @@ class CameraProbeActivity : ComponentActivity() {
     private class Placed(val card: View, val text: TextView?, val lines: List<List<Int>>)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(dev.halcamera.R.style.LabTheme)
         super.onCreate(savedInstanceState)
+        Look.configureLabWindow(this)
         cameraKey = savedInstanceState?.getString("camera") ?: intent.getStringExtra(EXTRA_CAMERA_ID)
         savedInstanceState?.getStringArrayList("collapsed")?.let { collapsed.clear(); collapsed += it }
         query = savedInstanceState?.getString("query").orEmpty()
 
-        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.expertTile) }
+        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.canvas) }
         scroll = ScrollView(this)
         val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(16), dp(16), dp(16)) }
-        column.addView(Look.titleBar(this, "Probe · 사양 확인", 24, "이전 화면으로 돌아가기") { finish() }, lp())
-        column.addView(Look.text(this, "CameraCharacteristics · 정적 사양 조회", 14, Look.onDarkMuted), lp())
+        column.addView(Look.titleBar(this, "Probe", 24, "이전 화면으로 돌아가기") { finish() }, lp())
+        column.addView(Look.text(this, "CameraCharacteristics · 정적 사양 조회", 14, Look.inkMuted), lp())
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         column.addView(body)
         scroll.addView(column)
@@ -145,14 +147,14 @@ class CameraProbeActivity : ComponentActivity() {
     private fun filterPanel(): View {
         panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(Look.expertTile)
+            setBackgroundColor(Look.canvas)
             setPadding(dp(16), dp(8), dp(16), dp(12))
         }
-        hitHeader = Look.text(this, "", 12, Look.onDarkMuted, bold = true)
+        hitHeader = Look.text(this, "", 12, Look.inkMuted, bold = true)
         hitList = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         hitScroll = CappedScrollView(this, maxFraction = 0.34f).apply {
             addView(hitList)
-            background = Look.cardBackground(this@CameraProbeActivity, Look.expertTile2, Look.expertTile3)
+            background = Look.cardBackground(this@CameraProbeActivity, Look.labSurface, Look.hairline)
         }
         val hits = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE; tag = "hits" }
         hits.addView(hitHeader, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(6) })
@@ -165,14 +167,14 @@ class CameraProbeActivity : ComponentActivity() {
             // Examples every Camera2 device answers: a format section, a size fragment (matches 1920x1080 as well as
             // 1440x1080, so a camera without exact 1080p still hits), and the mark for an absent value.
             hint = "예: JPEG, 1080, ✗"
-            setHintTextColor(Look.onDarkMuted)
-            setTextColor(Look.onDark)
+            setHintTextColor(Look.inkMuted)
+            setTextColor(Look.ink)
             typeface = Look.mono
             textSize = 14f
             isSingleLine = true
             inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
             imeOptions = EditorInfo.IME_ACTION_SEARCH
-            background = Look.cardBackground(this@CameraProbeActivity, Look.expertTile2, Look.expertTile3)
+            background = Look.cardBackground(this@CameraProbeActivity, Look.labSurface, Look.hairline)
             setPadding(dp(14), dp(12), dp(14), dp(12))
             contentDescription = "필터 단어. 그 단어가 들어간 줄만 위 목록에 나오고, 누르면 그 줄로 이동합니다"
             // Search on the keyboard just closes it: the list is already live.
@@ -222,7 +224,7 @@ class CameraProbeActivity : ComponentActivity() {
         val camera = snapshot?.camera(cameraKey.orEmpty())?.key.orEmpty()
         hitHeader.text = "${all.size}개 일치 · ${CameraLabel.short(camera)}" + if (all.size > MAX_HITS) " · 앞 ${MAX_HITS}개 표시" else ""
         if (all.isEmpty()) {
-            hitList.addView(Look.text(this, "일치하는 줄이 없습니다. 다른 카메라를 고르거나 단어를 줄여 보세요.", 12, Look.onDarkMuted).apply { setPadding(dp(12), dp(10), dp(12), dp(10)) })
+            hitList.addView(Look.text(this, "일치하는 줄이 없습니다. 다른 카메라를 고르거나 단어를 줄여 보세요.", 12, Look.inkMuted).apply { setPadding(dp(12), dp(10), dp(12), dp(10)) })
             return
         }
         val rowsByTitle = shown.associate { it.title to it.rows }
@@ -237,7 +239,7 @@ class CameraProbeActivity : ComponentActivity() {
             // A hundred hits under one key would repeat the same header a hundred times.
             if (where != group) {
                 group = where
-                hitList.addView(Look.text(this, where, 11, Look.onDarkMuted, bold = true).apply { setPadding(dp(12), dp(10), dp(12), dp(2)) })
+                hitList.addView(Look.text(this, where, 11, Look.inkMuted, bold = true).apply { setPadding(dp(12), dp(10), dp(12), dp(2)) })
             }
             val label = SpannableStringBuilder().append(hit.text)
             highlight(label, 0)
@@ -247,15 +249,15 @@ class CameraProbeActivity : ComponentActivity() {
             if (hit.line < 0 && hit.row >= 0 && value != null) {
                 val lines = value.split('\n')
                 val more = if (lines.size > 1) " · 외 ${lines.size - 1}줄" else ""
-                label.append("  ${lines.first()}$more", ForegroundColorSpan(Look.onDarkMuted), 0)
+                label.append("  ${lines.first()}$more", ForegroundColorSpan(Look.inkMuted), 0)
             }
             val active = hit == activeHit
-            val item = Look.text(this, label, 12, Look.onDark, mono = true).apply {
+            val item = Look.text(this, label, 12, Look.ink, mono = true).apply {
                 minHeight = dp(40)
                 isClickable = true; isFocusable = true
                 contentDescription = "${hit.section}의 ${hit.text} 줄로 이동${if (active) ", 현재 위치" else ""}"
                 setPadding(dp(12), dp(6), dp(12), dp(6))
-                if (active) setBackgroundColor(Look.expertTile3)
+                if (active) setBackgroundColor(Look.hairline)
                 setOnClickListener { jump(hit) }
             }
             hitList.addView(item)
@@ -345,9 +347,9 @@ class CameraProbeActivity : ComponentActivity() {
         }
         // Short labels: three 15sp buttons share one row, and "JSON 공유" was cut to "JSON" on a 360dp phone.
         val exports = Look.row(this)
-        exports.addView(Look.ghostButton(this, "TXT", dark = true) { export(snap, "txt") }.apply { contentDescription = "모든 카메라를 TXT 파일로 공유" }, Look.buttonParams(0, 1f))
-        exports.addView(Look.ghostButton(this, "JSON", dark = true) { export(snap, "json") }.apply { contentDescription = "모든 카메라를 JSON 파일로 공유" }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
-        exports.addView(Look.ghostButton(this, "복사", dark = true) { copy(snap, current) }.apply { contentDescription = "현재 카메라를 클립보드에 복사" }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
+        exports.addView(Look.ghostButton(this, "TXT", dark = false) { export(snap, "txt") }.apply { contentDescription = "모든 카메라를 TXT 파일로 공유" }, Look.buttonParams(0, 1f))
+        exports.addView(Look.ghostButton(this, "JSON", dark = false) { export(snap, "json") }.apply { contentDescription = "모든 카메라를 JSON 파일로 공유" }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
+        exports.addView(Look.ghostButton(this, "Copy", dark = false) { copy(snap, current) }.apply { contentDescription = "현재 카메라를 클립보드에 복사" }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
         body.addView(exports, lp())
         text("TXT·JSON: 전체 ${cameras.size}개 · 복사: 현재 카메라", 12)
         val sections = ArrayList<ProbeSection>()
@@ -370,8 +372,8 @@ class CameraProbeActivity : ComponentActivity() {
      */
     private fun section(title: String, rows: List<ProbeRow>) {
         val open = title !in collapsed
-        val card = Look.card(this, dark = true)
-        val header = Look.text(this, "${if (open) "▾" else "▸"} $title (${rows.size})", 14, Look.onDarkMuted, bold = true).apply {
+        val card = Look.card(this, dark = false)
+        val header = Look.text(this, "${if (open) "▾" else "▸"} $title (${rows.size})", 14, Look.inkMuted, bold = true).apply {
             minHeight = dp(48)
             gravity = android.view.Gravity.CENTER_VERTICAL
             isClickable = true; isFocusable = true
@@ -390,7 +392,7 @@ class CameraProbeActivity : ComponentActivity() {
             // the edge and "-0.086577885" broke mid-number into "-0.0865" and "77885", which reads as two values
             // that were never measured. The simple strategy breaks line by line against the width each line
             // actually has, and hyphenation has nothing to offer a table of identifiers and figures.
-            view = Look.text(this, content, 12, Look.onDark, mono = true).apply {
+            view = Look.text(this, content, 12, Look.ink, mono = true).apply {
                 setTextIsSelectable(true)
                 breakStrategy = LineBreaker.BREAK_STRATEGY_SIMPLE
                 hyphenationFrequency = Layout.HYPHENATION_FREQUENCY_NONE
@@ -423,7 +425,7 @@ class CameraProbeActivity : ComponentActivity() {
             val ownLine = row.key.length > width || lines.size > 1
             val keyStart = out.length
             val rowOffsets = ArrayList<Int>().apply { add(keyStart) }
-            out.append(if (ownLine) row.key else row.key.padEnd(width + 2), ForegroundColorSpan(Look.onDarkMuted), 0)
+            out.append(if (ownLine) row.key else row.key.padEnd(width + 2), ForegroundColorSpan(Look.inkMuted), 0)
             if (isActive(i, -1)) out.setSpan(BackgroundColorSpan(ACTIVE_LINE), keyStart, out.length, 0)
             if (ownLine) out.append('\n')
             lines.forEachIndexed { j, line ->
@@ -538,10 +540,10 @@ class CameraProbeActivity : ComponentActivity() {
     }
 
     private fun text(value: String, size: Int = 14, bold: Boolean = false) {
-        body.addView(Look.text(this, value, size, if (size < 14) Look.onDarkMuted else Look.onDark, bold = bold), lp())
+        body.addView(Look.text(this, value, size, if (size < 14) Look.inkMuted else Look.ink, bold = bold), lp())
     }
     private fun button(label: String, click: (View) -> Unit) {
-        body.addView(Look.ghostButton(this, label, dark = true) {}.apply {
+        body.addView(Look.ghostButton(this, label, dark = false) {}.apply {
             setOnClickListener { if (!busy) click(it) }
             isEnabled = !busy
             minHeight = dp(48)

@@ -13,7 +13,7 @@ import dev.halcamera.ctsvendor.VendoredCts
  * [VendoredCaseActivity] for that method alone. Nothing here opens a camera.
  */
 class VendoredCtsListActivity : CtsChecklistActivity() {
-    override val screenTitle = "CTS 원문 케이스"
+    override val screenTitle = "AOSP CTS"
     override val intro = "목록 순서로 실행 · 전체 카메라 대상\n중단 시 현재 테스트 FAIL · › 개별 검사"
     override val disclaimer = VendoredReportPresenter.DISCLAIMER
     override val prefsName = "cts_vendored"

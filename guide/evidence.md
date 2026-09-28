@@ -25,6 +25,8 @@ title: Evidence
 
 Live·CameraX 전환·사진 자동 고정·Recording 콜백·Probe 조회·CTS 실행·Benchmark 완료와 기록 저장을 확인했습니다. CTS 원문 목록, CLI 허용 설정, ZIP 기록은 화면 조회만 확인했습니다. 자세한 절차와 한계는 [촬영 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/2026-09-27-app-screenshots.md)에 있습니다. 화면에 보이는 수치는 해당 순간의 관찰이며 기기의 대표 성능값이 아닙니다.
 
+2026년 9월 29일 같은 기기의 Lab 디자인 적용 빌드로 Probe, CTS 4개, Benchmark 4개, CLI 설정, ZIP 목록의 기존 이미지 11개를 교체했습니다. 설치 빌드는 기존 데이터 보존을 위해 versionCode 590을 유지했습니다. Rapid Open / Close는 35초 PASS로 완료했고, Benchmark 완료·결과·기록을 확인했습니다. Live 관련 이미지는 이전 촬영본입니다. [Lab 검증 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/lab-ui-20260929.md)에서 확인 범위를 구분합니다.
+
 ### CTS 원문 케이스
 
 Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수행한 기록입니다. versionCode 108의 SKIP 판정을 적용한 결과는 40개 메서드 중 **PASS 33 · FAIL 1 · SKIP 6**입니다. 여러 실행과 재실행을 합친 기록입니다. 원본 요청 ID와 로그 해석은 [STATUS.md](https://github.com/TTolsun/hal-camera/blob/main/docs/STATUS.md)에 있습니다.
@@ -64,7 +66,7 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`
 - 기기 검증: `V-002`
 - 근거 수준: 기기 검증
-- 검토 2026-09-28 @ `b071c9e` · Codex-code-review
+- 검토 2026-09-28 @ `73786cd` · Codex-code-review
 
 </details>
 
@@ -127,8 +129,8 @@ flowchart LR
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-28 @ `b071c9e` · Codex-code-review |
-| 원고 `device-notes` | 최신 | 검토 2026-09-28 @ `b071c9e` · Codex-code-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-28 @ `73786cd` · Codex-code-review |
+| 원고 `device-notes` | 최신 | 검토 2026-09-28 @ `73786cd` · Codex-code-review |
 
 <!-- omm:end id=status -->
 

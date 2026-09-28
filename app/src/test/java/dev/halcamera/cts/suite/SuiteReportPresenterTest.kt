@@ -98,13 +98,13 @@ class SuiteReportPresenterTest {
         assertEquals("3개 중 PASS 1 · FAIL 1 · 실행 안 함 1 · 1분 47초", lines[2])
         assertEquals(CaseReportPresenter.DISCLAIMER + " " + VendoredReportPresenter.DISCLAIMER, lines[3])
         assertEquals("", lines[4])
-        assertEquals("[PASS] 빠른 켜기·끄기 · custom#FastOnOff · 1분 2초", lines[5])
+        assertEquals("[PASS] Rapid Open / Close · custom#FastOnOff · 1분 2초", lines[5])
         assertEquals("Camera · 0 · PASS 1 FAIL 0 SKIP 0", lines[6])
         assertEquals("PASS  open", lines[7])
         assertEquals("", lines[8])
         assertEquals("[FAIL] testBasicRecording · RecordingTest#testBasicRecording · 45초", lines[9])
         assertEquals("실패 1", lines[10])
-        assertEquals("[실행 안 함] 동영상 스냅샷 · custom#VideoSnapshot", lines.last())
+        assertEquals("[실행 안 함] Video Snapshot · custom#VideoSnapshot", lines.last())
     }
 }
 

@@ -21,13 +21,13 @@ Linear 45%, Apple Editorial 30%, Vercel 20%, 개인 시그니처 5%를 방향성
 
 ## 적용 범위
 
-Android 앱과 문서 사이트는 이 문서를 단일 디자인 기준으로 사용합니다. 색상·글꼴·선·모서리는 함께 관리하며, 플랫폼별 크기와 조작은 아래 매핑을 따릅니다. 앱의 화면별 배치·동작은 [APP-UI.md](APP-UI.md)에 기록합니다. 별도 테마를 도입하지 않습니다.
+Android 앱과 문서 사이트는 이 문서를 단일 디자인 기준으로 사용합니다. 색상·글꼴·선·모서리는 함께 관리하며, 플랫폼별 크기와 조작은 아래 매핑을 따릅니다. 앱의 화면별 배치·동작은 [APP-UI.md](APP-UI.md)에 기록합니다. Lab과 연결 검사 화면은 사용자가 지정한 Apple 참고안을 적용하며, 아래 Lab 매핑을 따릅니다.
 
 ## 문서 사이트 첫 화면의 순서
 
 1. HAL CAMERA 브랜드와 문서 탐색을 표시합니다.
 2. `Engineering the invisible.`을 큰 제목으로 표시하고 목적과 빠른 시작 링크를 제공합니다.
-3. Architecture, Engine, Probe, CTS, Benchmark, Callback, CLI, Evidence를 01–08 번호가 있는 행으로 배치합니다. Engine은 Architecture 바로 다음에 둡니다. 도구 세 가지는 앱의 `도구` 메뉴와 같은 Probe, CTS, Benchmark 순서를 사용하며 Callback은 Benchmark 바로 다음에 둡니다. Decisions는 탐색 메뉴에서 제외하고 기존 문서 주소는 유지합니다.
+3. Architecture, Engine, Probe, CTS, Benchmark, Callback, CLI, Evidence를 01–08 번호가 있는 행으로 배치합니다. Engine은 Architecture 바로 다음에 둡니다. 도구 세 가지는 앱의 Lab과 같은 Probe, CTS, Benchmark 순서를 사용하며 Callback은 Benchmark 바로 다음에 둡니다. Decisions는 탐색 메뉴에서 제외하고 기존 문서 주소는 유지합니다.
 4. 앱의 책임을 설명하는 대표 그림과 상세 문서 링크를 제공합니다.
 5. 짧은 편집 문장과 근거 확인 링크로 마무리합니다.
 
@@ -66,6 +66,20 @@ Android 앱과 문서 사이트는 이 문서를 단일 디자인 기준으로 �
 ![HAL CAMERA Editorial 색상 토큰 견본](figures/color-tokens.svg)
 
 프리뷰 위의 그라데이션과 글자 그림자는 영상에 따른 대비를 확보하는 용도로만 사용합니다. 장식용 카드 그림자는 사용하지 않습니다.
+
+## Lab의 Apple 매핑
+
+Lab 화면은 사용자가 지정한 `npx getdesign@latest add apple`의 [Apple 참고안](../../apple/DESIGN.md)을 적용합니다. Probe, CTS 선택·상세·실행, Benchmark 설정·실행·결과, Run History·Comparison과 Lab의 대화상자에도 같은 매핑을 적용합니다. Live와 Gallery는 기존 디자인을 유지합니다.
+
+- 흰 배경과 `#f5f5f7` 그룹 표면, 기존 Action Blue를 사용합니다. 그룹 표면은 `Look.labSurface`가 관리합니다.
+- 제목은 시스템 산세리프 34sp, 그룹 제목은 20sp, 기능 이름은 17sp, 보조문은 13sp입니다. SF Pro를 앱에 포함하지 않습니다.
+- 그룹은 18dp 모서리로 묶고 그림자와 외곽 테두리를 생략합니다. 행 사이에는 얇은 선을 둡니다. 터치 영역은 최소 48dp이며 기능 행은 최소 56dp입니다.
+- 상단에는 작은 Live 복귀 링크와 Lab 제목을 두고 큰 복귀 버튼을 중복 배치하지 않습니다. 하위 화면은 Back 링크와 페이지 제목을 사용합니다. 기기 행은 모델·Android 정보를 표시하며 상세 빌드는 대화상자에 둡니다.
+- Inspection, Results, Settings를 세로 그룹으로 구분합니다. 폭은 최대 680dp로 제한하고 긴 문구와 큰 글자는 높이를 늘려 표시합니다.
+
+- 페이지·섹션·검사 제목은 영어, 보조 설명은 한글로 표시합니다. 사용자가 영어로 지정한 About 소개는 유지합니다. 긴 CTS 메서드 제목은 26sp로 줄이고 줄바꿈을 허용합니다.
+- 밝은 표면의 판정 글씨는 성공 `#18794e`, 경고 `#9a5700`, 실패 `#c62828`로 대비를 확보합니다. 영상 위의 라벨은 밝은 글씨를 유지합니다.
+- Benchmark는 설정과 결과를 흰 화면에 표시하고 실행 중에만 별도 160dp 영상 영역을 표시합니다. 측정 로직과 카메라 스트림 계약은 변경하지 않습니다.
 
 ## 상세 문서 포맷
 

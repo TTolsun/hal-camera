@@ -57,7 +57,7 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 Live 셔터는 현재 엔진의 `MediaCapture`로 사진이나 동영상을 저장하며, 촬영을 위해 엔진을 바꾸지 않습니다. 기본 사진은 YUV·JPEG 쌍이며 Camera2는 Live 스트림에서 켠 출력만 저장할 수도 있습니다. 저장은 별도 작업 스레드에서 처리하고, 완료된 파일만 앨범에 공개합니다. 엔진별 요청 구성과 저장 순서는 [Engine](engine.md)에 있습니다.
 
-도구 화면 전환은 카메라 점유 여부에 따라 나뉩니다. 실행 기록은 카메라를 열지 않으므로 바로 이동하며, 선택적인 작업실은 Live 세션 종료 후 이동합니다. `CTS`와 `Benchmark`는 자기 카메라를 열기 때문에 Live 카메라의 `close(done)` 콜백을 받은 뒤에 화면을 열며, 그동안 메뉴를 비활성화합니다. `Probe`는 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 엽니다. Live 카메라는 화면이 가려질 때 평소처럼 닫히고 돌아오면 다시 열립니다. 녹화·저장·세션 종료·CLI 작업 중에는 도구 메뉴를 비활성화합니다.
+Live 상단에는 Callback, Lab 순서로 버튼을 배치합니다. Lab 버튼은 메뉴 없이 `WorkbenchActivity`를 엽니다. Lab의 Inspection에는 Probe·CTS·Benchmark를, Results에는 Run History·Gallery·ZIP Archives를 모읍니다. Settings에서 설정과 앱 정보를 제공합니다. 항목 이름은 영어로, 짧은 보조 설명은 한글로 표시합니다. ZIP 기록은 공유·다른 위치에 저장·삭제를 지원하며, 설정에는 Live Streams, ADB CLI 허용, Reconnect Camera, About가 있습니다. Live 카메라의 `close(done)` 콜백을 받은 뒤 Lab을 열며, Lab 자체는 카메라를 열지 않습니다. 선택한 카메라 ID는 Probe와 Benchmark에, 엔진은 Benchmark에 전달합니다. 프리뷰 제어는 결과를 Live에 돌려주어 실행합니다. 녹화·저장·세션 종료·CLI 작업 중에는 Lab 버튼을 비활성화합니다.
 
 ### 갤러리 항목의 조회 경로
 
@@ -72,3 +72,5 @@ CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩�
 PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 확인합니다. 같은 요청 ID와 같은 내용은 기존 결과를 반환하며 새로운 촬영을 시작하지 않습니다. 명령 사용법과 전송 실패 대응은 [CLI](cli.md)에 있습니다.
 
 앱을 열 때는 투명한 `CliLaunchActivity`가 main thread에서 작업 상태를 다시 확인합니다. 실행 중인 작업이 있으면 Live로 전환하지 않습니다. 상태 조회는 `CommandStore`의 메모리 snapshot을 읽으며 파일 기록은 상태 전환 때만 수행합니다.
+
+Lab과 연결 검사 화면은 흰 배경, 밝은 회색 그룹과 파란색 조작부를 공유합니다. 제목은 영어, 보조 설명은 한글입니다. Gallery는 기존 디자인을 유지합니다.

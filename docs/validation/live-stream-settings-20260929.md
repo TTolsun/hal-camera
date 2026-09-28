@@ -16,6 +16,12 @@ Windows, JDK 17, Android SDK 36에서 `assembleDebug`, `testDebugUnitTest`, `lin
 
 `LiveStreamSettingsTest`는 기존 기본 크기 예산, 네 가지 출력 조합, 미지원 크기·FPS·코덱·비트레이트 거부와 비활성 출력 메타데이터를 확인합니다. `StillPairTest`는 단일 JPEG·YUV에서도 capture 타임스탬프 확정과 일치가 필요하고, 꺼진 출력은 기다리지 않는지 확인합니다. 기존 JVM 테스트는 Benchmark의 계층 경계와 측정·판정 회귀를 함께 검사합니다.
 
+## 최신 main 통합 검증
+
+`origin/main`의 `8f2538c`(Lab 화면 개편, PR #206)를 병합했습니다. 이전 도구 메뉴 대신 `Lab → Settings → Live Streams`로 진입합니다. Lab에서 설정을 요청한 복귀에서는 카메라를 먼저 열지 않고 설정창을 표시하며, 적용·취소 후에만 선택한 값 또는 기존 값으로 재개합니다. Lab에 머무는 동안 프레임 기록 보존 시간이 지나도 카메라별 마지막 결과 FPS 범위를 표시할 수 있도록 값을 보관합니다.
+
+앱 및 기기 테스트 APK 빌드, 전체 JVM 테스트 597개, lint, 문서 검사 6단계가 통과했습니다. 추가 테스트는 카메라별 비활성 출력·HEVC 설정·기본값 복구 표식이 직렬화 후에도 보존되는지 확인합니다. Activity Result 동선은 코드 대조와 컴파일로 확인했으며, 실제 화면 조작을 통한 검증으로 간주하지 않습니다.
+
 ## 기기 검증 상태
 
 연결 기기는 Galaxy S25+ (`SM-S936N`), Android 16입니다. 기존 설치 앱을 교체하지 않도록 별도 applicationId `dev.halcamera.streamtest`의 디버그 APK를 설치했습니다. 기기가 다른 작업에 사용 중이므로 사용자 요청에 따라 조작을 중단했습니다. 이번 변경의 UI 캡처·사진 저장·녹화·세션 실패 복구는 **미검증**이며 PASS나 미지원 SKIP으로 기록하지 않습니다.

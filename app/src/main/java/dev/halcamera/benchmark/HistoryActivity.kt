@@ -47,20 +47,22 @@ class HistoryActivity : ComponentActivity() {
     private var showingComparison = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(dev.halcamera.R.style.LabTheme)
         super.onCreate(savedInstanceState)
+        Look.configureLabWindow(this)
         filter = RunFilter.values().firstOrNull { it.name == savedInstanceState?.getString("filter") } ?: RunFilter.ALL
         profileId = if (savedInstanceState != null) savedInstanceState.getString("profile") else intent.getStringExtra("profile")
         endpointKey = if (savedInstanceState != null) savedInstanceState.getString("endpoint") else intent.getStringExtra("endpoint")
         selectedId = savedInstanceState?.getString("selected")
         pickingComparison = savedInstanceState?.getBoolean("pickingComparison") ?: false
         compareId = savedInstanceState?.getString("compare")
-        scroll = ScrollView(this).apply { setBackgroundColor(Look.expertTile) }
+        scroll = ScrollView(this).apply { setBackgroundColor(Look.canvas) }
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         scroll.addView(body)
         setContentView(scroll)
         ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            view.setPadding(bars.left + dp(16), bars.top + dp(16), bars.right + dp(16), bars.bottom + dp(16))
+            view.setPadding(bars.left + Look.pageMargin(view, bars.left + bars.right), bars.top + dp(16), bars.right + Look.pageMargin(view, bars.left + bars.right), bars.bottom + dp(16))
             insets
         }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -110,7 +112,7 @@ class HistoryActivity : ComponentActivity() {
             scroll.post { scroll.scrollTo(0, if (wasComparison) scrollY else 0) }
             return
         }
-        titleBar("실행 기록", 24, "이전 화면으로 돌아가기") { finish() }
+        titleBar("Run History", 24, "이전 화면으로 돌아가기") { finish() }
         if (busy) text("실행 기록을 처리하고 있습니다.")
         val filters = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         button("측정 상태 · ${filter.label} ▾", parent = filters) { anchor ->
@@ -120,16 +122,16 @@ class HistoryActivity : ComponentActivity() {
             val values = (index.runs.map { it.endpoint.key } + listOfNotNull(endpointKey)).distinct().sorted()
             showSelectionPopup(anchor, listOf("Camera · 전체") + values.map(CameraLabel::short), values.indexOf(endpointKey) + 1) { endpointKey = if (it == 0) null else values[it - 1]; pageSize = 50; render() }
         }
-        profileId?.let { filters.addView(Look.text(this, "Profile · $it", 12, Look.onDarkMuted), lp()) }
-        button("필터 초기화", parent = filters) {
+        profileId?.let { filters.addView(Look.text(this, "Profile · $it", 12, Look.inkMuted), lp()) }
+        button("Reset Filters", parent = filters) {
             filter = RunFilter.ALL; profileId = null; endpointKey = null; pageSize = 50; render()
         }
-        body.addView(Look.disclosure(this, "필터 · ${filter.label} · ${endpointKey?.let(CameraLabel::short) ?: "모든 카메라"}", filters), lp())
+        body.addView(Look.disclosure(this, "Filters · ${filter.label} · ${endpointKey?.let(CameraLabel::short) ?: "모든 카메라"}", filters), lp())
         val runs = visible()
         // The list actions share one row: two full-width buttons and a
         // count line pushed the first run to the middle of the screen. The count now sits on the list headings.
         val listActions = Look.row(this)
-        // Half-width buttons: the ghost button's 20dp side padding wrapped "목록 CSV 내보내기" onto two lines on a
+        // Half-width buttons: the ghost button's 20dp side padding wrapped "Export CSV" onto two lines on a
         // Galaxy S25+ at the default font size. Narrower padding keeps it on one line there; at a larger font it can
         // still wrap, so both buttons fill the row's height and stay the same size.
         fun rowButton(view: View) = view.apply { setPadding(dp(8), paddingTop, dp(8), paddingBottom) }
@@ -139,7 +141,7 @@ class HistoryActivity : ComponentActivity() {
         )
         listActions.addView(
             // "목록" says what goes into the file: every run listed below, not one run and not the screen.
-            rowButton(ghost("목록 CSV 내보내기", runs.isNotEmpty()) { exportCsv(runs) }.apply {
+            rowButton(ghost("Export CSV", runs.isNotEmpty()) { exportCsv(runs) }.apply {
                 contentDescription = "현재 필터의 실행 ${runs.size}개를 CSV로 내보내기"
             }),
             rowParams().apply { if (listActions.childCount > 0) marginStart = dp(8) }
@@ -159,7 +161,7 @@ class HistoryActivity : ComponentActivity() {
         }
         if (runs.isEmpty()) {
             text(if (index.runs.isEmpty()) "아직 저장된 실행이 없습니다. 첫 측정을 시작해 보세요." else "이 조건에 맞는 실행이 없습니다. 필터를 초기화하면 다른 실행을 볼 수 있습니다.")
-            if (index.runs.isNotEmpty()) button("필터 초기화") {
+            if (index.runs.isNotEmpty()) button("Reset Filters") {
                 filter = RunFilter.ALL; profileId = null; endpointKey = null; pageSize = 50; render()
             }
             button("새 벤치마크") { startActivity(Intent(this, BenchmarkActivity::class.java)) }
@@ -171,10 +173,10 @@ class HistoryActivity : ComponentActivity() {
         // Each heading counts its own group. A baseline set usually holds several runs, and several cameras can
         // have one; "1개" alone would only be noise.
         if (baselineRuns.isNotEmpty()) {
-            heading(if (baselineRuns.size == 1) "Baseline" else "Baseline · ${baselineRuns.size}개")
+            heading(if (baselineRuns.size == 1) "Baseline" else "Baselines · ${baselineRuns.size}")
             baselineRuns.forEach { runRow(it, byId) }
-            if (otherRuns.isNotEmpty()) heading("다른 실행 · ${otherRuns.size}개")
-        } else if (otherRuns.isNotEmpty()) heading("실행 · ${otherRuns.size}개")
+            if (otherRuns.isNotEmpty()) heading("Other Runs · ${otherRuns.size}")
+        } else if (otherRuns.isNotEmpty()) heading("Runs · ${otherRuns.size}")
         otherRuns.take(pageSize).forEach { runRow(it, byId) }
         if (otherRuns.size > pageSize) button("더 보기 · ${otherRuns.size - pageSize}개 남음") { pageSize += 50; render() }
         scroll.post { scroll.scrollTo(0, if (wasComparison) listScrollY else scrollY) }
@@ -193,9 +195,9 @@ class HistoryActivity : ComponentActivity() {
             regression > 0 -> "▲ $regression degraded"
             else -> ""
         }
-        val card = Look.card(this, dark = true)
+        val card = Look.card(this, dark = false)
         if (selectedId == run.runId) {
-            card.background = Look.cardBackground(this, Look.expertTile2, Look.primaryOnDark)
+            card.background = Look.cardBackground(this, Look.labSurface, Look.primary)
             androidx.core.view.ViewCompat.setStateDescription(card, "기준(Baseline)")
         }
         // Two lines, or three when a build label was typed: when the run happened and how it did, then
@@ -206,7 +208,7 @@ class HistoryActivity : ComponentActivity() {
         head.addView(
             // A long badge must not wrap the time onto a second line at a large font scale; the time is a
             // fixed 16 characters, so letting it ellipsize is the right way to lose the argument.
-            Look.text(this, ResultPresenter.localTime(run.runId) ?: run.runId, 15, Look.onDark, bold = true).apply {
+            Look.text(this, ResultPresenter.localTime(run.runId) ?: run.runId, 15, Look.ink, bold = true).apply {
                 maxLines = 1
                 ellipsize = android.text.TextUtils.TruncateAt.END
             },
@@ -218,12 +220,12 @@ class HistoryActivity : ComponentActivity() {
         // A baseline row shows no badge: it only ever appears under the Baseline heading, which already says so,
         // and a bordered chip beside the ⋮ button read as another button. The spoken label below keeps the word.
         if (badge.isNotEmpty() && !isMember) {
-            val badgeColor = if (status.isEmpty()) Look.statusWarn else Look.statusFail
+            val badgeColor = if (status.isEmpty()) Look.warningInk else Look.failureInk
             head.addView(Look.text(this, badge, 13, badgeColor, bold = true))
         }
         lines.addView(head)
         run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() }?.let {
-            lines.addView(Look.text(this, it, 13, Look.onDarkMuted), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
+            lines.addView(Look.text(this, it, 13, Look.inkMuted), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
         }
         val facts = "Capture $capture · ${CameraLabel.full(run.endpoint)}"
         // With one camera picked in the filter every row would repeat its name, and the name pushed the line onto a
@@ -231,7 +233,7 @@ class HistoryActivity : ComponentActivity() {
         val shownFacts = if (endpointKey != null) "Capture $capture" else facts
         // Proportional, not monospace: nothing lines up between rows, and the mono advance pushed this
         // line onto a second row behind the ⋮ button.
-        lines.addView(Look.text(this, shownFacts, 13, Look.onDarkMuted), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
+        lines.addView(Look.text(this, shownFacts, 13, Look.inkMuted), LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
 
         val label = listOfNotNull(
             ResultPresenter.localTime(run.runId) ?: run.runId,
@@ -241,7 +243,7 @@ class HistoryActivity : ComponentActivity() {
         ).joinToString(" · ")
         val row = Look.row(this)
         row.addView(lines, LinearLayout.LayoutParams(0, -2, 1f))
-        row.addView(Look.ghostButton(this, "⋮", dark = true) { if (!busy) menu(run) }.apply {
+        row.addView(Look.ghostButton(this, "⋮", dark = false) { if (!busy) menu(run) }.apply {
             contentDescription = "${run.runId} 작업 메뉴"
             setPadding(0, 0, 0, 0)
             isEnabled = !busy
@@ -265,7 +267,7 @@ class HistoryActivity : ComponentActivity() {
         val base = index.runs.find { it.runId == selectedId } ?: return false
         val current = index.runs.find { it.runId == compareId } ?: return false
         val comparison = RegressionDetector.compare(base, current)
-        titleBar("비교", 20, "실행 이력으로 돌아가기") { compareId = null; render() }
+        titleBar("Comparison", 20, "실행 이력으로 돌아가기") { compareId = null; render() }
         if (busy) text("실행 기록을 처리하고 있습니다.")
         // No "Baseline: … / 이번 run: …" lines here: the card below names the reference in its headline, and each
         // run's build and commit are in its 실행 정보.
@@ -290,7 +292,7 @@ class HistoryActivity : ComponentActivity() {
     private fun menu(run: BenchmarkRun) {
         val isBaseline = pointers.isBaseline(run)
         // The list shows the time, so the menu does too; the raw id did not look like the row it came from.
-        choose(ResultPresenter.localTime(run.runId) ?: run.runId, listOf("결과 열기", if (isBaseline) ResultPresenter.REMOVE_BASELINE else ResultPresenter.ADD_BASELINE, "비교", "JSON 내보내기", "CSV 내보내기", "삭제")) {
+        choose(ResultPresenter.localTime(run.runId) ?: run.runId, listOf("Open Result", if (isBaseline) ResultPresenter.REMOVE_BASELINE else ResultPresenter.ADD_BASELINE, "Compare", "Export JSON", "Export CSV", "Delete")) {
             when (it) {
                 0 -> open(run)
                 1 -> {
@@ -301,10 +303,10 @@ class HistoryActivity : ComponentActivity() {
                 2 -> { selectedId = run.runId; compareId = null; render() }
                 3 -> share(store.file(run.runId), "application/json")
                 4 -> exportCsv(listOf(run))
-                5 -> AlertDialog.Builder(this).setTitle("실행을 삭제할까요?")
+                5 -> AlertDialog.Builder(this).setTitle("Delete Run?")
                     .setMessage("${run.runId}\n실행 JSON을 삭제합니다.${if (isBaseline) " 이 실행은 baseline에서도 빠집니다." else ""}")
-                    .setNegativeButton("취소", null)
-                    .setPositiveButton("삭제") { _, _ -> work({ check(store.deleteRun(run.runId)) { "실행을 삭제하지 못했습니다." } }) { reload() } }
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Delete") { _, _ -> work({ check(store.deleteRun(run.runId)) { "실행을 삭제하지 못했습니다." } }) { reload() } }
                     .show()
             }
         }
@@ -348,22 +350,22 @@ class HistoryActivity : ComponentActivity() {
     }
 
     private fun choose(title: String, items: List<String>, onSelect: (Int) -> Unit) {
-        AlertDialog.Builder(this).setTitle(title).setNegativeButton("취소", null)
+        AlertDialog.Builder(this).setTitle(title).setNegativeButton("Cancel", null)
             .setItems(items.toTypedArray()) { _, i -> onSelect(i) }
             .show()
     }
     /** A list section title, marked as a heading so TalkBack can jump between sections. */
     private fun heading(value: String) {
-        val view = Look.text(this, value, 17, Look.onDark, bold = true)
+        val view = Look.text(this, value, 17, Look.ink, bold = true)
         ViewCompat.setAccessibilityHeading(view, true)
         body.addView(view, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(20) })
     }
 
     private fun text(value: String, size: Int = 14, bold: Boolean = false) {
-        body.addView(Look.text(this, value, size, Look.onDark, bold = bold), lp())
+        body.addView(Look.text(this, value, size, Look.ink, bold = bold), lp())
     }
     private fun ghost(label: String, enabled: Boolean = true, click: (View) -> Unit) =
-        Look.ghostButton(this, label, dark = true) {}.apply {
+        Look.ghostButton(this, label, dark = false) {}.apply {
             setOnClickListener { if (!busy) click(it) }
             isEnabled = enabled && !busy
             minHeight = dp(48)

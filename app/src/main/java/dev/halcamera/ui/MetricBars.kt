@@ -20,12 +20,12 @@ internal class MeterView(
     private val baseBeyond: Boolean = false
 ) : View(context) {
 
-    private val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.expertTile3 }
+    private val track = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.hairline }
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = if (degraded) Look.statusFail else Look.primaryOnDark
+        color = if (degraded) Look.statusFail else Look.primary
     }
-    // White and 2dp wide: the grey 3px tick nearly vanished on the dark track, in the legend most of all.
-    private val tick = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.onDark }
+    // A dark 2dp reference tick stays distinct against the light track and blue fill.
+    private val tick = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.ink }
     private val tickHalf = Look.dp(context, 1).toFloat()
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

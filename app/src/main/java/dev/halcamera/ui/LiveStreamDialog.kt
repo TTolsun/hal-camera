@@ -9,7 +9,7 @@ import dev.halcamera.camera.*
 /** A draft is committed only by Apply; dismissing a selector or this panel never changes the camera. */
 object LiveStreamDialog {
     fun show(context: Context, support: LiveStreamSupport, current: LiveStreamSettings,
-             actual: String, restore: (() -> Unit)?, apply: (LiveStreamSettings) -> Unit) {
+             actual: String, restore: (() -> Unit)?, dismissed: () -> Unit = {}, apply: (LiveStreamSettings) -> Unit) {
         val content = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(Look.dp(context, 20), Look.dp(context, 8), Look.dp(context, 20), Look.dp(context, 8))
@@ -44,6 +44,7 @@ object LiveStreamDialog {
         val video = choice("녹화 설정", listOf(null) + support.videos, current.video) { it?.toString() ?: "기본 설정 · H264 / 30 fps" }
         val scroll = ScrollView(context).apply { addView(content) }
         val builder = AlertDialog.Builder(context).setTitle("Live 스트림 · Camera2").setView(scroll)
+            .setOnDismissListener { dismissed() }
             .setNegativeButton("취소", null)
             .setPositiveButton("적용") { _, _ -> apply(LiveStreamSettings(preview(), yuv(), jpeg(), fps(), video())) }
         if (restore != null) builder.setNeutralButton("직전 정상 구성") { _, _ -> restore() }
