@@ -31,7 +31,7 @@ nav_order: 4
 | 내부 점수 | `ScoreComposer` | 검토한 calibration의 범위에 맞는 적격 release run에 점수와 카테고리 평균을 계산합니다. |
 | 저장·비교·표시 | `BenchmarkReport`, `BaselineManager`, `RegressionDetector`, 각 Activity | JSON 저장과 화면을 구성하고, 현재 기준에 따른 비교 결과를 계산합니다. |
 
-`MainActivity`가 런처이며 앱을 열면 바로 Live 프리뷰를 표시합니다. Live에서는 프리뷰와 촬영 조작부, 선택한 관측 정보를 표시합니다. 도구 메뉴에서 여는 선택적인 `WorkbenchActivity`는 기기 식별 정보와 검사 목적별 진입점을 모읍니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.
+`MainActivity`가 런처이며 앱을 열면 바로 Live 프리뷰를 표시합니다. Live에서는 프리뷰와 촬영 조작부, 선택한 관측 정보를 표시합니다. Lab 버튼으로 바로 여는 `WorkbenchActivity`는 기기 식별 정보, 검사 도구, 저장된 결과와 설정·도움말을 모읍니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.
 
 `BaselineManager`는 사용자가 baseline에 추가한 정상 실행의 집합을 관리합니다. `HistoryActivity`의 두 실행 비교에서는 먼저 선택한 실행을 그 비교에만 쓰는 baseline으로 전달합니다. 이전 실행을 자동 선택한 reference 비교와 달리, 이 경로에서는 저하·개선을 판정합니다. 선택 절차와 표시 의미는 [Benchmark](benchmark.md)에 있습니다.
 
@@ -50,7 +50,7 @@ Live의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/WorkbenchActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-28 @ `584fa9a` · Claude
+- 검토 2026-09-28 @ `689d4b1` · Codex
 
 </details>
 
@@ -117,7 +117,7 @@ graph TB
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/ui/Look.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-28 @ `584fa9a` · Claude
+- 검토 2026-09-28 @ `689d4b1` · Codex
 
 </details>
 
@@ -157,7 +157,7 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 Live 셔터는 현재 엔진의 `MediaCapture`로 YUV·JPEG 사진 쌍이나 동영상을 저장하며, 촬영을 위해 엔진을 바꾸지 않습니다. 저장은 별도 작업 스레드에서 처리하고, 완료된 파일만 앨범에 공개합니다. 엔진별 요청 구성과 저장 순서는 [Engine](engine.md)에 있습니다.
 
-도구 화면 전환은 카메라 점유 여부에 따라 나뉩니다. 실행 기록은 카메라를 열지 않으므로 바로 이동하며, 선택적인 작업실은 Live 세션 종료 후 이동합니다. `CTS`와 `Benchmark`는 자기 카메라를 열기 때문에 Live 카메라의 `close(done)` 콜백을 받은 뒤에 화면을 열며, 그동안 메뉴를 비활성화합니다. `Probe`는 카메라를 열지 않으므로 닫기 완료를 기다리지 않고 바로 엽니다. Live 카메라는 화면이 가려질 때 평소처럼 닫히고 돌아오면 다시 열립니다. 녹화·저장·세션 종료·CLI 작업 중에는 도구 메뉴를 비활성화합니다.
+Live 상단에는 Callback, Lab 순서로 버튼을 배치합니다. Lab 버튼은 메뉴 없이 `WorkbenchActivity`를 엽니다. Lab에는 Probe·CTS·Benchmark, 실행 기록, 갤러리, ZIP 기록과 설정·도움말을 모읍니다. ZIP 기록은 공유·다른 위치에 저장·삭제를 지원하며, 설정에는 ADB CLI 허용, 카메라 다시 연결, 프리뷰 일시정지·재개, 앱 정보가 있습니다. Live 카메라의 `close(done)` 콜백을 받은 뒤 Lab을 열며, Lab 자체는 카메라를 열지 않습니다. 선택한 카메라 ID는 Probe와 Benchmark에, 엔진은 Benchmark에 전달합니다. 프리뷰 제어는 결과를 Live에 돌려주어 실행합니다. 녹화·저장·세션 종료·CLI 작업 중에는 Lab 버튼을 비활성화합니다.
 
 ### 갤러리 항목의 조회 경로
 
@@ -178,7 +178,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-28 @ `584fa9a` · Claude
+- 검토 2026-09-28 @ `689d4b1` · Codex
 
 </details>
 
@@ -289,18 +289,15 @@ flowchart TB
 sequenceDiagram
     participant L as Live 화면
     participant E as 카메라 엔진
-    participant T as 도구 화면
-    alt Probe 선택
-        L->>T: 바로 열기
-        Note over L,E: Live의 onStop에서 카메라 닫기
-    else CTS 또는 Benchmark 선택
-        L->>E: close(done)
-        E-->>L: done
-        L->>T: 도구 화면 열기
-        T->>T: 자기 카메라 열기
-    end
-    T-->>L: 뒤로 가기
-    L->>E: onStart: 프리뷰 다시 열기
+    participant W as Lab
+    participant T as 검사 화면
+    L->>E: Lab 선택: close(done)
+    E-->>L: done
+    L->>W: Lab 열기 (카메라 ID, 엔진, 일시정지 상태)
+    W->>T: Probe / CTS / Benchmark 선택
+    T-->>W: 뒤로 가기
+    W-->>L: 복귀 또는 프리뷰 제어 결과
+    L->>E: onStart: 일시정지 상태에 따라 열기
 ```
 
 <details class="doc-evidence" markdown="1">
@@ -381,7 +378,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-28 @ `584fa9a` · Claude
+- 검토 2026-09-28 @ `689d4b1` · Codex
 
 </details>
 
@@ -431,16 +428,16 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-28 @ `584fa9a` · Claude |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-28 @ `584fa9a` · Claude |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-28 @ `584fa9a` · Claude |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-28 @ `689d4b1` · Codex |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-28 @ `689d4b1` · Codex |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-28 @ `689d4b1` · Codex |
 | 구조 원본 `ui-camera-label` | 최신 | 검토 2026-09-27 @ `40a116a` · Codex |
-| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-09-27 @ `40a116a` · Codex |
+| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-09-28 @ `689d4b1` · Codex |
 | 구조 원본 `ui-zoom` | 최신 | 검토 2026-09-27 @ `2f95952` · Codex |
-| 원고 `overview` | 최신 | 검토 2026-09-28 @ `584fa9a` · Claude |
-| 원고 `module-roles` | 최신 | 검토 2026-09-28 @ `584fa9a` · Claude |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-28 @ `584fa9a` · Claude |
-| 원고 `constraints` | 최신 | 검토 2026-09-28 @ `584fa9a` · Claude |
+| 원고 `overview` | 최신 | 검토 2026-09-28 @ `689d4b1` · Codex |
+| 원고 `module-roles` | 최신 | 검토 2026-09-28 @ `689d4b1` · Codex |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-28 @ `689d4b1` · Codex |
+| 원고 `constraints` | 최신 | 검토 2026-09-28 @ `689d4b1` · Codex |
 
 <!-- omm:end id=status -->
 

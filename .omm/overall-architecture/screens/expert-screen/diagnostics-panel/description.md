@@ -4,7 +4,7 @@ ResultCallbackSeries는 같은 세션과 프레임 번호의 capture_started를 
 
 Camera2의 Android 13 이상에서 PreviewBufferRelay는 PRIVATE 프리뷰 버퍼가 앱에 도착한 시각을 기록한 뒤 ImageWriter로 TextureView에 넘깁니다. 화면 갱신 시각과 구분하며 HAL 내부 완료 시각을 직접 측정하는 것은 아닙니다. Android 12 이하에서는 Preview 버퍼를 직접 관측하지 못합니다. YUV·JPEG는 ImageReader 수신을 관측합니다. Camera2의 Android 13 이상에서는 RecordingBufferRelay가 PRIVATE 녹화 버퍼를 수신한 시각을 Recording 행에 표시하고 ImageWriter로 MediaRecorder에 전달합니다. 버퍼 수신 시각이며 인코딩 완료나 파일 저장 시각은 아닙니다. Android 12 이하와 CameraX에서는 녹화 버퍼를 직접 관측하지 않으므로 콜백 없음으로 표시합니다. CameraX에서는 Preview 버퍼가 노출되지 않으며 YUV 분석과 still 이미지는 관측합니다. JPEG 행은 result 메타데이터가 아니라 JPEG 이미지 수신 시각입니다. Start는 onCaptureStarted, Metadata는 onCaptureCompleted의 실제 수신 시각입니다.
 
-MainActivity는 그래프를 표시한 동안만 그래프 표본을 갱신합니다. 녹화 정지와 경과 시간은 원래 촬영 조작부에 남습니다. 카메라 선택은 하단 카메라 아이콘에서, 일시정지·재개와 ADB CLI·앱 정보는 도구의 설정에서 실행합니다. ZIP 기록은 도구 메뉴에 있으며 Mark와 incident 수집은 유지합니다.
+MainActivity는 그래프를 표시한 동안만 그래프 표본을 갱신합니다. 녹화 정지와 경과 시간은 원래 촬영 조작부에 남습니다. 카메라 선택은 하단 카메라 아이콘에서, 일시정지·재개와 ADB CLI·앱 정보는 Lab에서 실행합니다. ZIP 기록은 Lab에 있으며 Mark와 incident 수집은 유지합니다.
 
 
 `고정`은 자동 고정을 켜고 `해제`는 자동 고정을 끄면서 갱신을 재개합니다. 자동 고정의 기본값은 켜짐이므로 초기 버튼은 `해제`입니다. 자동 고정은 JPEG처럼 반복 요청하지 않는 출력이 도착한 프레임을 고정합니다. 자동 고정이 켜져 있으면 `Event Frame #번호`, 꺼져 있으면 `Real-time Frame #번호`로 표시하며 콜백의 frameNumber를 사용합니다. 수치 영역의 버튼은 `고정`/`해제`와 시간 버튼 두 개입니다. 시간 버튼은 `3s → 5s → 10s → 15s → 30s → 1s` 순환이며 다음 자동 고정부터 적용하고 재실행 후에도 유지합니다. 자동 고정을 끄면 시간 버튼을 숨기고 다시 켜면 이전 시간을 표시합니다. 별도 설정창은 없습니다. 카메라와 프리뷰는 계속 동작합니다. 고정 중 같은 프레임의 늦은 콜백은 채우지만 다른 프레임의 값은 섞지 않습니다. 새 단발 출력이 오면 해당 프레임으로 교체하고 고정 시간을 다시 셉니다. 그래프를 다시 열거나 카메라·출력 구성을 바꾸면 고정을 해제하며 과거 촬영을 재생하지 않습니다. 평상시 수치는 100ms 주기로 최신 결과가 모인 프레임을 표시합니다. 특정 출력이 250ms 이상 도착하지 않으면 새 프레임으로 진행하며 해당 행은 수신 대기로 표시합니다.

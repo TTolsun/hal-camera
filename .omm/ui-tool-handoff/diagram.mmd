@@ -1,15 +1,12 @@
 sequenceDiagram
     participant L as Live 화면
     participant E as 카메라 엔진
-    participant T as 도구 화면
-    alt Probe 선택
-        L->>T: 바로 열기
-        Note over L,E: Live의 onStop에서 카메라 닫기
-    else CTS 또는 Benchmark 선택
-        L->>E: close(done)
-        E-->>L: done
-        L->>T: 도구 화면 열기
-        T->>T: 자기 카메라 열기
-    end
-    T-->>L: 뒤로 가기
-    L->>E: onStart: 프리뷰 다시 열기
+    participant W as Lab
+    participant T as 검사 화면
+    L->>E: Lab 선택: close(done)
+    E-->>L: done
+    L->>W: Lab 열기 (카메라 ID, 엔진, 일시정지 상태)
+    W->>T: Probe / CTS / Benchmark 선택
+    T-->>W: 뒤로 가기
+    W-->>L: 복귀 또는 프리뷰 제어 결과
+    L->>E: onStart: 일시정지 상태에 따라 열기
