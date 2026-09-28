@@ -122,5 +122,3 @@ Mermaid는 한 그림에 한 흐름만 담고 긴 클래스 목록은 표로 옮
 CSS 원본은 공용 실행기의 custom 프리셋으로 연결합니다. `node tools/docgen/docflow.mjs design`을 실행하면 사이트의 `guide/assets/docflow-design.css`가 갱신됩니다.
 
 custom CSS는 공용 엔진이 원본 스타일시트를 그대로 복사하여 생성합니다. `node tools/docgen/docflow.mjs design --check`로 생성 결과를 확인합니다.
-
-현재 기기 화면은 [앱 UI 설계의 Lab 화면 검증 자료](APP-UI.md#lab-화면-검증-자료)를 참고합니다.

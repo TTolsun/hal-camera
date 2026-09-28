@@ -35,7 +35,7 @@ Live의 `Lab`에서 기기 모델과 Android 정보를 확인하고, 기기 행�
 
 현재 값을 읽어야 하는 API·카메라 ID·촬영 모드·줌·필터와, 작업의 의미를 알려야 하는 `선택`·`이벤트 저장 · ZIP`·`Lab`·`Probe`·`CTS`·`Benchmark`·`Callback`은 글씨를 유지합니다. 새 동작도 아이콘만으로 의미가 모호하면 글씨를 사용합니다. 표시 개수를 줄이더라도 현재 값, 동작, 선택 상태는 확인할 수 있어야 합니다.
 
-Live 아래의 모든 화면은 화면 제목 왼쪽에 48dp 뒤로 가기 아이콘을 둡니다. 갤러리·Probe·CTS·벤치마크·실행 이력이 같은 자리와 같은 기호를 쓰므로 빠져나가는 버튼을 화면마다 다시 찾지 않아도 됩니다. 공통 제목 줄은 `Look.titleBar`가 만듭니다. 벤치마크 실행 중에는 이 아이콘을 표시하지 않고 `중단`으로만 멈춥니다. 실행·비교·내보내기와 필터의 구체적인 작업 이름은 글씨를 유지합니다.
+Lab 연결 화면은 제목 위에 Back 링크를 두고 공통 제목 줄은 `Look.titleBar`로 만듭니다. 갤러리는 기존 뒤로 가기 아이콘을 유지합니다. 벤치마크 실행 중에는 Back을 표시하지 않고 `Stop`으로 멈춥니다. 실행·비교·내보내기와 필터의 구체적인 작업 이름은 글씨를 유지합니다.
 
 ## 카메라를 부르는 이름
 
@@ -194,51 +194,3 @@ Live 배치는 `MainActivity.kt`, 셔터·줌·선택 목록은 `ui/ShutterButto
 
 
 `고정`은 자동 고정을 켜고 `해제`는 자동 고정을 끄면서 갱신을 재개합니다. 자동 고정의 기본값은 켜짐이므로 초기 버튼은 `해제`입니다. 자동 고정은 JPEG처럼 반복 요청하지 않는 출력이 도착한 프레임을 고정합니다. 자동 고정이 켜져 있으면 `Event Frame #번호`, 꺼져 있으면 `Real-time Frame #번호`로 표시하며 콜백의 frameNumber를 사용합니다. 수치 영역의 버튼은 `고정`/`해제`와 시간 버튼 두 개입니다. 시간 버튼은 `3s → 5s → 10s → 15s → 30s → 1s` 순환이며 다음 자동 고정부터 적용하고 재실행 후에도 유지합니다. 자동 고정을 끄면 시간 버튼을 숨기고 다시 켜면 이전 시간을 표시합니다. 별도 설정창은 없습니다. 카메라와 프리뷰는 계속 동작합니다. 고정 중 같은 프레임의 늦은 콜백은 채우지만 다른 프레임의 값은 섞지 않습니다. 새 단발 출력이 오면 해당 프레임으로 교체하고 고정 시간을 다시 셉니다. 그래프를 다시 열거나 카메라·출력 구성을 바꾸면 고정을 해제하며 과거 촬영을 재생하지 않습니다. 평상시 수치는 100ms 주기로 최신 결과가 모인 프레임을 표시합니다. 특정 출력이 250ms 이상 도착하지 않으면 새 프레임으로 진행하며 해당 행은 수신 대기로 표시합니다.
-
-## Lab 화면 검증 자료
-
-2026-09-29, Galaxy S25+(SM-S936N), Android 16/API 36, 앱 0.15.0 (기기 설치 코드 590)에서 캡처했습니다. 제목은 영어, 보조 설명은 한글입니다. Gallery는 이번 디자인 변경에서 제외했습니다. [검증 범위](../validation/lab-ui-20260929.md)를 함께 참고합니다.
-
-### Lab
-
-![Galaxy S25+의 Lab](../validation/assets/lab-20260929/lab.png)
-
-### Lab Settings
-
-![Galaxy S25+의 Lab Settings](../validation/assets/lab-20260929/settings.png)
-
-### Probe
-
-![Galaxy S25+의 Probe](../validation/assets/lab-20260929/probe.png)
-
-### CTS
-
-![Galaxy S25+의 CTS](../validation/assets/lab-20260929/cts.png)
-
-### Custom Checks
-
-![Galaxy S25+의 Custom Checks](../validation/assets/lab-20260929/cts-checks.png)
-
-### Test Details
-
-![Galaxy S25+의 Test Details](../validation/assets/lab-20260929/cts-detail.png)
-
-### AOSP CTS
-
-![Galaxy S25+의 AOSP CTS](../validation/assets/lab-20260929/cts-aosp.png)
-
-### Benchmark
-
-![Galaxy S25+의 Benchmark](../validation/assets/lab-20260929/benchmark.png)
-
-### Benchmark Result
-
-![Galaxy S25+의 Benchmark Result](../validation/assets/lab-20260929/benchmark-result.png)
-
-### Run History
-
-![Galaxy S25+의 Run History](../validation/assets/lab-20260929/history.png)
-
-### About
-
-![Galaxy S25+의 About](../validation/assets/lab-20260929/about.png)
