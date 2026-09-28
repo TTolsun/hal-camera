@@ -178,19 +178,18 @@ class MainActivity : ComponentActivity() {
         if (granted) restartCamera() else setStatus("카메라 권한이 필요합니다 · Lab에서 카메라를 다시 연결하세요", false)
     }
     private var reconnectFromLab = false
+    private var returningFromLab = false
+    private var returningFromSettings = false
     private val labLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         when (result.data?.getStringExtra(WorkbenchActivity.EXTRA_LIVE_ACTION)) {
             WorkbenchActivity.ACTION_TOGGLE_PREVIEW -> {
                 if (cli.active == null && !recordingVideo) {
                     paused = result.data?.getBooleanExtra(WorkbenchActivity.EXTRA_PAUSED, paused) ?: paused
                     pendingPermissionAction = null
-                    // Pending results are delivered during super.onStart(), before its normal reopen.
-                    if (resumed && !destroyed) restartCamera()
                 }
             }
             WorkbenchActivity.ACTION_RECONNECT -> {
                 reconnectFromLab = true
-                if (resumed && !destroyed) reconnectCameraFromLab()
             }
         }
     }
@@ -235,6 +234,9 @@ class MainActivity : ComponentActivity() {
         engineName = savedInstanceState?.getString("engine") ?: "Camera2"
         cameraId = savedInstanceState?.getString("camera") ?: ""
         paused = savedInstanceState?.getBoolean("paused") ?: false
+        returningFromLab = savedInstanceState?.getBoolean("returningFromLab") ?: false
+        returningFromSettings = savedInstanceState?.getBoolean("returningFromSettings") ?: false
+        reconnectFromLab = savedInstanceState?.getBoolean("reconnectFromLab") ?: false
         zoomRatio = savedInstanceState?.getFloat("zoom") ?: 1f
         videoMode = savedInstanceState?.getBoolean("videoMode") ?: false
         manager = getSystemService(CameraManager::class.java)
@@ -246,6 +248,9 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("engine", engineName); outState.putString("camera", cameraId); outState.putBoolean("paused", paused); outState.putFloat("zoom", zoomRatio)
         outState.putBoolean("videoMode", videoMode)
+        outState.putBoolean("returningFromLab", returningFromLab)
+        outState.putBoolean("returningFromSettings", returningFromSettings)
+        outState.putBoolean("reconnectFromLab", reconnectFromLab)
         super.onSaveInstanceState(outState)
     }
     override fun onStart() {
@@ -253,9 +258,28 @@ class MainActivity : ComponentActivity() {
         cli.attach(liveCli)
         recentMedia.start()
         main.post(tick)
-        if (reconnectFromLab) reconnectCameraFromLab()
-        else if (hasPermission()) restartCamera()
+        // Activity results are delivered by STARTED; consume Lab state once at RESUMED.
+        if (returningFromLab || returningFromSettings) return
+        if (hasPermission()) restartCamera()
         else { setStatus("카메라 접근을 허용하면 측정이 시작됩니다", false); permission.launch(Manifest.permission.CAMERA) }
+    }
+    override fun onResume() {
+        super.onResume()
+        when {
+            returningFromLab -> {
+                returningFromLab = false
+                if (reconnectFromLab) reconnectCameraFromLab()
+                else if (cli.active == null && !recordingVideo) {
+                    if (hasPermission()) restartCamera()
+                    else setStatus("카메라 권한이 필요합니다 · Lab에서 카메라를 다시 연결하세요", false)
+                }
+            }
+            returningFromSettings -> {
+                returningFromSettings = false
+                if (cli.active == null && !recordingVideo && hasPermission()) restartCamera()
+                else if (!hasPermission()) setStatus("카메라 권한이 필요합니다 · Lab에서 카메라를 다시 연결하세요", false)
+            }
+        }
     }
     override fun onStop() {
         cli.detach(liveCli)
@@ -283,7 +307,10 @@ class MainActivity : ComponentActivity() {
         if (cli.active != null || recordingVideo) return
         if (hasPermission()) restartCamera()
         else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) permission.launch(Manifest.permission.CAMERA)
-        else startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName")))
+        else {
+            returningFromSettings = true
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName")))
+        }
     }
     private fun restartCamera() {
         liveIndicator.bind(false)
@@ -650,7 +677,7 @@ class MainActivity : ComponentActivity() {
     /**
      * Lab can launch CTS and Benchmark, so the live session must be closed and its close(done) received
      * before the next screen starts. Same sequence as the CLI CTS path; onStop's restartCamera() sees
-     * `closing` and stays out of the way, and onStart reopens the camera when the user comes back.
+     * `closing` and stays out of the way, and onResume applies the Lab result before reopening the camera.
      */
     private fun openAfterClose(reason: String, intent: () -> Intent) {
         if (closing) return
@@ -661,7 +688,10 @@ class MainActivity : ComponentActivity() {
         updateMediaControls()
         val open = {
             closing = false
-            if (resumed && !destroyed) labLauncher.launch(intent()) else updateMediaControls()
+            if (resumed && !destroyed) {
+                returningFromLab = true
+                labLauncher.launch(intent())
+            } else updateMediaControls()
         }
         if (old == null) open() else old.close { open() }
     }

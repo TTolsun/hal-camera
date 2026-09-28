@@ -15,6 +15,7 @@ import android.widget.TextView
 object Look {
     val canvas = Color.WHITE
     val card = Color.WHITE
+    val labSurface = Color.parseColor("#f5f5f7")
     val hairline = Color.parseColor("#e2e4e8")
     val ink = Color.parseColor("#18191b")
     val inkMuted = Color.parseColor("#62666d")

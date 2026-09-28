@@ -57,7 +57,7 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 Live 셔터는 현재 엔진의 `MediaCapture`로 YUV·JPEG 사진 쌍이나 동영상을 저장하며, 촬영을 위해 엔진을 바꾸지 않습니다. 저장은 별도 작업 스레드에서 처리하고, 완료된 파일만 앨범에 공개합니다. 엔진별 요청 구성과 저장 순서는 [Engine](engine.md)에 있습니다.
 
-Live 상단에는 Callback, Lab 순서로 버튼을 배치합니다. Lab 버튼은 메뉴 없이 `WorkbenchActivity`를 엽니다. Lab에는 Probe·CTS·Benchmark, 실행 기록, 갤러리, ZIP 기록과 설정·도움말을 모읍니다. ZIP 기록은 공유·다른 위치에 저장·삭제를 지원하며, 설정에는 ADB CLI 허용, 카메라 다시 연결, 프리뷰 일시정지·재개, 앱 정보가 있습니다. Live 카메라의 `close(done)` 콜백을 받은 뒤 Lab을 열며, Lab 자체는 카메라를 열지 않습니다. 선택한 카메라 ID는 Probe와 Benchmark에, 엔진은 Benchmark에 전달합니다. 프리뷰 제어는 결과를 Live에 돌려주어 실행합니다. 녹화·저장·세션 종료·CLI 작업 중에는 Lab 버튼을 비활성화합니다.
+Live 상단에는 Callback, Lab 순서로 버튼을 배치합니다. Lab 버튼은 메뉴 없이 `WorkbenchActivity`를 엽니다. Lab에는 Probe·CTS·Benchmark, 실행 기록, 갤러리, ZIP 기록과 설정을 모읍니다. ZIP 기록은 공유·다른 위치에 저장·삭제를 지원하며, 설정에는 ADB CLI 허용, 카메라 다시 연결, 프리뷰 일시정지·재개, 앱 정보가 있습니다. Live 카메라의 `close(done)` 콜백을 받은 뒤 Lab을 열며, Lab 자체는 카메라를 열지 않습니다. 선택한 카메라 ID는 Probe와 Benchmark에, 엔진은 Benchmark에 전달합니다. 프리뷰 제어는 결과를 Live에 돌려주어 실행합니다. 녹화·저장·세션 종료·CLI 작업 중에는 Lab 버튼을 비활성화합니다.
 
 ### 갤러리 항목의 조회 경로
 
