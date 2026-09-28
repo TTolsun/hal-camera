@@ -160,7 +160,7 @@ class MainActivity : ComponentActivity() {
     private var cameraIds = emptyList<String>()
     /** Logical id to endpoint, so [cameraLabel] can name the lens without re-reading CameraCharacteristics. */
     private var cameraEndpoints = emptyMap<String, CameraEndpoint>()
-    private lateinit var toolsButton: Button
+    private lateinit var labButton: Button
     private var videoMode = false
     private var recordingVideo = false
     private var stoppingRecording = false
@@ -175,7 +175,25 @@ class MainActivity : ComponentActivity() {
         override fun handleOnBackPressed() = showCallbacks(false)
     }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) restartCamera() else setStatus("카메라 권한이 필요합니다 · 도구의 설정에서 카메라를 다시 연결하세요", false)
+        if (granted) restartCamera() else setStatus("카메라 권한이 필요합니다 · Lab에서 카메라를 다시 연결하세요", false)
+    }
+    private val labLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        when (result.data?.getStringExtra(WorkbenchActivity.EXTRA_LIVE_ACTION)) {
+            WorkbenchActivity.ACTION_TOGGLE_PREVIEW -> {
+                if (cli.active == null && !recordingVideo) {
+                    paused = result.data?.getBooleanExtra(WorkbenchActivity.EXTRA_PAUSED, paused) ?: paused
+                    pendingPermissionAction = null
+                    main.post { if (resumed && !destroyed) restartCamera() }
+                }
+            }
+            WorkbenchActivity.ACTION_RECONNECT -> main.post {
+                if (resumed && !destroyed && cli.active == null && !recordingVideo) {
+                    if (hasPermission()) restartCamera()
+                    else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) permission.launch(Manifest.permission.CAMERA)
+                    else startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName")))
+                }
+            }
+        }
     }
     private val saveDocument = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         val file = saveFile
@@ -391,11 +409,11 @@ class MainActivity : ComponentActivity() {
             pendingPermissionAction=null
             chooseEngine(if(engineName=="Camera2") "CameraX" else "Camera2")
         }
-        // Standalone tools stay in the menu; Mark remains on the live preview.
-        toolsButton=button("도구") { showToolsMenu(toolsButton) }.apply { contentDescription="도구 메뉴: 측정 도구, ZIP 기록, 설정" }
+        // Lab groups inspection, saved results and settings; Mark stays on the preview.
+        labButton=button("Lab") { openLab() }.apply { contentDescription="Lab 열기: 검사 도구, 저장된 결과, 설정" }
         // Read-only overlay controls remain usable while the CLI owns a recording.
         graphButton=CameraWidgets(this).button("Callback") { showCallbacks(callbackGraph.visibility != View.VISIBLE) }.apply { contentDescription="Callback 타이밍 표시" }
-        listOf(engineButton,toolsButton,graphButton).forEach {
+        listOf(engineButton,labButton,graphButton).forEach {
             it.background=cameraChrome(Color.TRANSPARENT)
             it.setTextColor(Color.WHITE)
             it.setPadding(dp(12),0,dp(12),0)
@@ -410,8 +428,8 @@ class MainActivity : ComponentActivity() {
         }
         val trailingSlot=row().apply {
             gravity=Gravity.END or Gravity.CENTER_VERTICAL
-            addView(toolsButton,LinearLayout.LayoutParams(-2,dp(48)))
-            addView(graphButton,LinearLayout.LayoutParams(-2,dp(48)).apply { marginStart=dp(4) })
+            addView(graphButton,LinearLayout.LayoutParams(-2,dp(48)))
+            addView(labButton,LinearLayout.LayoutParams(-2,dp(48)).apply { marginStart=dp(4) })
         }
         // Only the side slots share spare width; the centred expander needs a 48dp touch target.
         // Giving it a third of the row squeezed the two trailing labels and wrapped "Callback".
@@ -527,30 +545,6 @@ class MainActivity : ComponentActivity() {
         updateCameraChoices()
         updateMediaControls()
     }
-    private fun showLiveSettings() {
-        AlertDialog.Builder(this).setTitle("설정 · 앱 정보")
-            .setItems(arrayOf("ADB CLI 설정", "카메라 다시 연결", "측정 안내", "앱 정보", if (paused) "프리뷰 재개" else "프리뷰 일시정지")) { _, index ->
-                when (index) {
-                    0 -> AlertDialog.Builder(this).setTitle("ADB CLI 설정")
-                        .setMultiChoiceItems(arrayOf("ADB CLI 허용"), booleanArrayOf(cli.enabled)) { _, _, checked ->
-                            cli.setEnabled(checked)
-                        }.setPositiveButton("닫기", null).show()
-                    1 -> {
-                        if (hasPermission()) restartCamera()
-                        else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) permission.launch(Manifest.permission.CAMERA)
-                        else startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName")))
-                    }
-                    2 -> showNotes()
-                    3 -> dev.halcamera.ui.AboutSheet.show(this)
-                    4 -> {
-                        if (cli.active != null || recordingVideo) return@setItems
-                        paused=!paused
-                        if(paused) { pendingPermissionAction=null; recorder.finish("user_paused")?.let(incidents::export) }
-                        restartCamera()
-                    }
-                }
-            }.setNegativeButton("닫기", null).show()
-    }
     private fun selectChoice(anchor:View,items:List<String>,selected:Int,onSelect:(Int)->Unit) {
         showSelectionPopup(anchor,items,selected) { index ->
             if(!recordingVideo && resumed && cli.active == null) onSelect(index)
@@ -623,11 +617,11 @@ class MainActivity : ComponentActivity() {
         zoomControl.isEnabled=(ready || recordingVideo) && !stoppingRecording
         controlBar.bind(videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null)
         galleryButton.isEnabled=!recordingVideo
-        toolsButton.isEnabled=!recordingVideo && !stoppingRecording && !closing
+        labButton.isEnabled=!recordingVideo && !stoppingRecording && !closing
         if (cli.active != null) {
-            listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, toolsButton, reportButton).forEach { it.isEnabled = false }
+            listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, labButton, reportButton).forEach { it.isEnabled = false }
         }
-        listOf(engineButton,cameraShortcut,photoModeButton,videoModeButton,mediaButton,galleryButton,toolsButton).forEach {
+        listOf(engineButton,cameraShortcut,photoModeButton,videoModeButton,mediaButton,galleryButton,labButton).forEach {
             it.alpha=if(it.isEnabled) 1f else 0.4f
         }
     }
@@ -638,37 +632,16 @@ class MainActivity : ComponentActivity() {
     }
     /** Locks, EV and flash start over for every camera and engine; the new session opens with the defaults. */
     private fun resetControls()=controlBar.reset(if(cameraId.isEmpty()) LiveControlSupport.NONE else liveControlSupport(manager,cameraId))
-    private fun showNotes() {
-        AlertDialog.Builder(this).setTitle("측정 안내")
-            .setMessage("• Result FPS는 센서 타임스탬프 간격으로 계산합니다. 화면 표시 FPS가 아닙니다.\n\n• 앱 CPU 100%는 CPU 코어 하나의 사용량에 해당하며 100%를 넘을 수 있습니다. HAL 프로세스 CPU는 측정하지 않습니다.\n\n• 줌 버튼은 요청 배율입니다. 실제 적용 배율은 capture result의 CONTROL_ZOOM_RATIO로 ZIP에 기록되며, 논리 카메라의 물리 렌즈 전환은 HAL이 결정합니다.\n\n• CameraX와 Camera2의 실제 스트림 크기는 ZIP에 기록됩니다. 동일 조건 A/B 벤치마크는 후속 기능입니다.\n\n• 앱을 나가거나 카메라를 변경하면 진행 중인 incident를 partial 사유와 함께 저장합니다.\n\n• 사진·동영상 모드를 선택한 뒤 실행 버튼을 누르면 갤러리에 저장합니다. 사진은 YUV·JPEG 두 장이며 동영상에는 소리가 포함됩니다. 녹화 중에도 줌은 바꿀 수 있지만 엔진·카메라·모드는 바꿀 수 없습니다.\n\n• 위쪽의 플래시·AF·AE·EV 버튼과 줌 레일은 요청값입니다. 아래 두 줄은 capture result에서 읽으며, 화면에 이미 보이는 값은 생략합니다. 둘째 줄에는 AE·AF 상태 뒤에 플래시 상태(플래시를 켰을 때), 요청과 다른 EV·줌, 물리 렌즈 순서로 폭이 허락하는 만큼만 붙습니다. 렌즈 위치 같은 나머지 값은 ZIP에 있습니다. AE 잠금 중에도 EV는 적용됩니다. 버튼은 Camera2와 CameraX에서 모두 동작하고 카메라나 엔진을 바꾸면 초기화됩니다. Incident ZIP과 벤치마크에는 이미지 픽셀을 저장하지 않습니다.")
-            .setPositiveButton("확인",null).show()
-    }
-    private fun showToolsMenu(anchor: View) {
-        if (closing) return
-        // PROBE, CTS, BENCHMARK is the order a developer meets the tools in: read what the HAL claims, check whether
-        // it passes, then measure how long it takes. The guide's tabs carry the same order.
-        showActionPopup(anchor, listOf("Probe · 사양 확인", "CTS · 동작 검증", "Benchmark · 성능 측정", "실행 기록 · 비교", "작업실로 이동", "ZIP 기록", "설정 · 앱 정보")) { index ->
-            when (index) {
-                // PROBE reads CameraCharacteristics only and never opens a camera, so it starts without waiting for
-                // close(done); onStop closes the LIVE camera as it does for any screen change.
-                0 -> startActivity(Intent(this, CameraProbeActivity::class.java).putExtra(CameraProbeActivity.EXTRA_CAMERA_ID, cameraId))
-                1 -> openAfterClose("cts_started") { Intent(this, dev.halcamera.cts.CtsEntryActivity::class.java) }
-                2 -> openAfterClose("benchmark_started") {
-                    Intent(this, dev.halcamera.benchmark.BenchmarkActivity::class.java)
-                        .putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_ENGINE, engineName)
-                        .putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_CAMERA_ID, cameraId)
-                }
-                3 -> startActivity(Intent(this, dev.halcamera.benchmark.HistoryActivity::class.java))
-                4 -> openAfterClose("workbench_opened") {
-                    Intent(this, WorkbenchActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                }
-                5 -> incidents.showList()
-                6 -> showLiveSettings()
-            }
+    private fun openLab() {
+        openAfterClose("workbench_opened") {
+            Intent(this, WorkbenchActivity::class.java)
+                .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, cameraId)
+                .putExtra(WorkbenchActivity.EXTRA_ENGINE, engineName)
+                .putExtra(WorkbenchActivity.EXTRA_PAUSED, paused)
         }
     }
     /**
-     * CTS and Benchmark open their own camera, so the live session must be closed and its close(done) received
+     * Lab can launch CTS and Benchmark, so the live session must be closed and its close(done) received
      * before the next screen starts. Same sequence as the CLI CTS path; onStop's restartCamera() sees
      * `closing` and stays out of the way, and onStart reopens the camera when the user comes back.
      */
@@ -681,7 +654,7 @@ class MainActivity : ComponentActivity() {
         updateMediaControls()
         val open = {
             closing = false
-            if (resumed && !destroyed) startActivity(intent()) else updateMediaControls()
+            if (resumed && !destroyed) labLauncher.launch(intent()) else updateMediaControls()
         }
         if (old == null) open() else old.close { open() }
     }

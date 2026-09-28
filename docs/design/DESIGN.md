@@ -27,7 +27,7 @@ Android 앱과 문서 사이트는 이 문서를 단일 디자인 기준으로 �
 
 1. HAL CAMERA 브랜드와 문서 탐색을 표시합니다.
 2. `Engineering the invisible.`을 큰 제목으로 표시하고 목적과 빠른 시작 링크를 제공합니다.
-3. Architecture, Engine, Probe, CTS, Benchmark, Callback, CLI, Evidence를 01–08 번호가 있는 행으로 배치합니다. Engine은 Architecture 바로 다음에 둡니다. 도구 세 가지는 앱의 `도구` 메뉴와 같은 Probe, CTS, Benchmark 순서를 사용하며 Callback은 Benchmark 바로 다음에 둡니다. Decisions는 탐색 메뉴에서 제외하고 기존 문서 주소는 유지합니다.
+3. Architecture, Engine, Probe, CTS, Benchmark, Callback, CLI, Evidence를 01–08 번호가 있는 행으로 배치합니다. Engine은 Architecture 바로 다음에 둡니다. 도구 세 가지는 앱의 Lab과 같은 Probe, CTS, Benchmark 순서를 사용하며 Callback은 Benchmark 바로 다음에 둡니다. Decisions는 탐색 메뉴에서 제외하고 기존 문서 주소는 유지합니다.
 4. 앱의 책임을 설명하는 대표 그림과 상세 문서 링크를 제공합니다.
 5. 짧은 편집 문장과 근거 확인 링크로 마무리합니다.
 
