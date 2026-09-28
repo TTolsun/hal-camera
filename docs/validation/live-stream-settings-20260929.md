@@ -1,0 +1,31 @@
+# Live 스트림 설정 검증 — 2026-09-29
+
+이 기록은 이슈 #173의 자동 검증 범위와 남은 기기 검증을 구분합니다.
+
+## 구현 범위
+
+- Camera2 Live에서 Preview 크기, YUV·JPEG 활성화와 크기, 프리뷰 FPS 범위를 지정합니다. Preview는 항상 켭니다.
+- 카메라와 surface 인코더의 지원 정보를 대조한 녹화 크기·고정 FPS·H264/HEVC 조합을 선택합니다. 후보 FPS는 24·25·30·60이며 고속 세션은 구현하지 않았습니다.
+- 명시한 크기는 자동으로 대체하지 않습니다. 출력 조합 조회가 불가능하면 미확인으로 기록하고 실제 세션 구성 결과를 사용합니다.
+- 설정 적용은 기존 카메라의 close(done) 뒤 수행합니다. 구성 실패 시 이유를 표시하고 해당 카메라의 직전 정상 프리뷰 구성으로 복구할 수 있습니다. 프리뷰 구성 성공이 녹화 구성의 성공을 뜻하지는 않습니다.
+- 사진은 켜진 출력만 요청·저장합니다. YUV는 JPEG 변환이며 원본 plane 내보내기는 #177의 범위입니다. 두 출력을 끄면 사진 촬영을 거절합니다.
+
+## 자동 검증
+
+Windows, JDK 17, Android SDK 36에서 `assembleDebug`, `testDebugUnitTest`, `lintDebug`가 통과했습니다. app·ctsvendor JVM 테스트는 총 596개이며 실패·오류·SKIP은 0개입니다. `node tools/docgen/docflow.mjs check --build`의 문서 검사 6단계도 통과했습니다. 문서 최신성의 Codex-code-review 기록은 코드 대조 기록이며 사람의 승인이나 기기 검증을 뜻하지 않습니다.
+
+`LiveStreamSettingsTest`는 기존 기본 크기 예산, 네 가지 출력 조합, 미지원 크기·FPS·코덱·비트레이트 거부와 비활성 출력 메타데이터를 확인합니다. `StillPairTest`는 단일 JPEG·YUV에서도 capture 타임스탬프 확정과 일치가 필요하고, 꺼진 출력은 기다리지 않는지 확인합니다. 기존 JVM 테스트는 Benchmark의 계층 경계와 측정·판정 회귀를 함께 검사합니다.
+
+## 기기 검증 상태
+
+연결 기기는 Galaxy S25+ (`SM-S936N`), Android 16입니다. 기존 설치 앱을 교체하지 않도록 별도 applicationId `dev.halcamera.streamtest`의 디버그 APK를 설치했습니다. 기기가 다른 작업에 사용 중이므로 사용자 요청에 따라 조작을 중단했습니다. 이번 변경의 UI 캡처·사진 저장·녹화·세션 실패 복구는 **미검증**이며 PASS나 미지원 SKIP으로 기록하지 않습니다.
+
+기기 사용이 가능해지면 다음을 확인해야 합니다.
+
+1. Preview only, Preview+YUV, Preview+JPEG, Preview+YUV+JPEG의 실제 스트림과 한 장·두 장 저장 결과를 확인합니다.
+2. 큰 출력 조합 거부 시 이유가 표시되고 직전 정상 구성으로 복구되는지 확인합니다. 단일 크기 지원과 조합 지원을 구분합니다.
+3. 고정·가변 FPS 요청과 capture result 범위·프레임 주기를 대조합니다. 지원하는 H264/HEVC 녹화의 해상도·재생·프레임률과 종료 후 프리뷰 복구를 확인합니다.
+4. 설정 취소, 촬영·저장 중 적용 차단, 카메라 전환, CameraX 안내, 화면 이탈·Activity 재생성을 확인합니다.
+5. CLI가 기본 YUV·JPEG 사진 쌍을 유지하고 Benchmark가 기존 profile 크기·FPS로 실행되는지 확인합니다.
+
+사용 절차는 [빠른 시작](../../guide/getting-started.md#live-스트림을-설정하세요)에 있습니다.

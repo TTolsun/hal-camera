@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
             override fun prepare(camera: String) {
                 showCallbacks(false)
                 cameraId = camera; engineName = "Camera2"; paused = false; zoomRatio = 1f
+                streamSettings.remove(camera) // Existing CLI capture contract remains the default YUV + JPEG pair.
                 resetControls(); updateCameraChoices(); restartCamera()
             }
             override fun capture(id: String, done: (Result<PhotoResult>) -> Unit) {
@@ -117,6 +118,10 @@ class MainActivity : ComponentActivity() {
     private var engineName = "CameraX"
     private var cameraId = ""
     private var sessionId = ""
+    private val streamSettings = mutableMapOf<String, LiveStreamSettings>()
+    private val goodStreams = mutableMapOf<String, LiveStreamSettings?>()
+    private val streamState = mutableMapOf<String, String>()
+    private var streamDialogLoading = false
     private var ready = false
     private var zoomRatio = 1f
     private var zoomApplied = false
@@ -220,6 +225,10 @@ class MainActivity : ComponentActivity() {
         paused = savedInstanceState?.getBoolean("paused") ?: false
         zoomRatio = savedInstanceState?.getFloat("zoom") ?: 1f
         videoMode = savedInstanceState?.getBoolean("videoMode") ?: false
+        @Suppress("DEPRECATION", "UNCHECKED_CAST")
+        (savedInstanceState?.getSerializable("liveStreams") as? HashMap<String, LiveStreamSettings>)?.let(streamSettings::putAll)
+        @Suppress("DEPRECATION", "UNCHECKED_CAST")
+        (savedInstanceState?.getSerializable("goodStreams") as? HashMap<String, LiveStreamSettings?>)?.let(goodStreams::putAll)
         manager = getSystemService(CameraManager::class.java)
         buildUi()
         recentMedia = RecentMediaThumbnail(this) { bitmap, video -> galleryButton.setThumbnail(bitmap, video) }
@@ -229,6 +238,8 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("engine", engineName); outState.putString("camera", cameraId); outState.putBoolean("paused", paused); outState.putFloat("zoom", zoomRatio)
         outState.putBoolean("videoMode", videoMode)
+        outState.putSerializable("liveStreams", HashMap(streamSettings))
+        outState.putSerializable("goodStreams", HashMap(goodStreams))
         super.onSaveInstanceState(outState)
     }
     override fun onStart() {
@@ -284,6 +295,9 @@ class MainActivity : ComponentActivity() {
         if (cameraId.isEmpty()) { setStatus("사용 가능한 카메라가 없습니다", false); return }
         sessionId = UUID.randomUUID().toString()
         val thisSession = sessionId
+        val thisCamera = cameraId
+        val requestedStreams = streamSettings[thisCamera]
+        if (engineName == "Camera2") streamState[thisCamera] = "구성 중입니다."
         zoomApplied = false
         updateCameraChoices()
         setStatus("$engineName · ${CameraLabel.short(cameraId)} 연결 중…", false)
@@ -317,7 +331,24 @@ class MainActivity : ComponentActivity() {
         } else {
             val view = TextureView(this)
             previewHost.addView(view, FrameLayout.LayoutParams(-1,-1))
-            Camera2Engine(this, view, cameraId, sessionId, telemetry, previewReady = previewReady, previewFrame = {
+            Camera2Engine(this, view, cameraId, sessionId, telemetry, liveStreams = requestedStreams,
+                streamsConfigured = { values ->
+                    if (thisSession == sessionId && resumed && !closing) {
+                        goodStreams[thisCamera] = requestedStreams
+                        streamState[thisCamera] = "구성 성공 · Preview ${values["preview"]} · YUV ${values["analysis"] ?: "Off"} · JPEG ${values["jpeg"] ?: "Off"}"
+                    }
+                }, streamsFailed = { reason ->
+                    if (thisSession == sessionId && resumed && !closing) {
+                        streamState[thisCamera] = "실패: $reason"
+                        val failed = engine; engine = null; closing = failed != null
+                        setStatus("$reason · 도구 → Live 스트림에서 구성을 변경하거나 복구하세요.", false)
+                        failed?.close {
+                            closing = false
+                            if (destroyed) cameraWorker.shutdown()
+                            else if (resumed && thisSession == sessionId) updateMediaControls()
+                        }
+                    }
+                }, previewReady = previewReady, previewFrame = {
                 if (thisSession == sessionId && resumed && !closing && !paused) lastPreviewFrameNs = nowNs()
             }, recordingState = recordingState, notice = notice, status = status)
         }
@@ -551,6 +582,42 @@ class MainActivity : ComponentActivity() {
                 }
             }.setNegativeButton("닫기", null).show()
     }
+    private fun showStreamSettings() {
+        if (streamDialogLoading || closing || cli.active != null || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true) return
+        if (engineName != "Camera2") {
+            AlertDialog.Builder(this).setTitle("Live 스트림 설정")
+                .setMessage("출력 조합과 정확한 해상도 지정은 Camera2에서 지원합니다. CameraX는 자동 구성을 사용합니다.")
+                .setPositiveButton("Camera2로 전환") { _, _ -> chooseEngine("Camera2") }.setNegativeButton("취소", null).show()
+            return
+        }
+        val id = cameraId
+        if (id.isEmpty()) return
+        streamDialogLoading = true
+        cameraWorker.execute {
+            val result = runCatching { liveStreamSupport(manager.getCameraCharacteristics(id)) }
+            main.post {
+                streamDialogLoading = false
+                if (!resumed || destroyed || id != cameraId || engineName != "Camera2" || closing || cli.active != null ||
+                    pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true) return@post
+                result.fold({ support ->
+                    val restore: (() -> Unit)? = if (goodStreams.containsKey(id)) ({ applyStreams(id, goodStreams[id]) }) else null
+                    val latest = recorder.snapshot(2_000_000_000L).lastOrNull { it.session == sessionId && it.kind == "capture_result" }
+                    val observed = latest?.values?.get("fpsRange")?.let { "\n최근 결과 FPS 범위: $it" }.orEmpty()
+                    LiveStreamDialog.show(this, support, streamSettings[id] ?: support.defaults(), (streamState[id] ?: "아직 구성하지 않았습니다.") + observed, restore) { next ->
+                        support.rejection(next)?.let { toast(it) } ?: applyStreams(id, next)
+                    }
+                }, { toast("스트림 지원 정보 조회 실패: ${it.message}") })
+            }
+        }
+    }
+    private fun applyStreams(id: String, next: LiveStreamSettings?) {
+        if (!resumed || destroyed || cameraId != id || engineName != "Camera2" || closing || cli.active != null ||
+            pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true) return
+        telemetry.event(sessionId, "live_streams_changed", next?.metadata() ?: mapOf("mode" to "default"))
+        if (next == null) streamSettings.remove(id) else streamSettings[id] = next
+        paused = false
+        restartCamera()
+    }
     private fun selectChoice(anchor:View,items:List<String>,selected:Int,onSelect:(Int)->Unit) {
         showSelectionPopup(anchor,items,selected) { index ->
             if(!recordingVideo && resumed && cli.active == null) onSelect(index)
@@ -604,7 +671,7 @@ class MainActivity : ComponentActivity() {
             button.isEnabled=ready && !recordingVideo
             button.setTextColor(if(selected) Look.onDark else Look.onDarkMuted)
             button.setTypeface(null,if(selected) Typeface.BOLD else Typeface.NORMAL)
-            button.contentDescription=if(index==0) "사진 모드, YUV와 JPEG 두 장 저장" else "동영상 모드, 소리 포함"
+            button.contentDescription=if(index==0) "사진 모드, 선택한 YUV 및 JPEG 출력 저장" else "동영상 모드, 소리 포함"
             ViewCompat.setStateDescription(button,if(selected) "선택됨" else null)
         }
         pausedOverlay.visibility=if(paused) View.VISIBLE else View.GONE
@@ -616,6 +683,10 @@ class MainActivity : ComponentActivity() {
             ViewCompat.setStateDescription(mediaButton,"저장 중")
         }
         mediaButton.isEnabled=(ready || recordingVideo) && !stoppingRecording
+        if (!videoMode && engineName == "Camera2" && streamSettings[cameraId]?.canCapture == false) {
+            mediaButton.isEnabled = false
+            mediaButton.contentDescription = "사진 출력 꺼짐: Live 스트림에서 YUV 또는 JPEG을 켜세요"
+        }
         engineButton.isEnabled=!recordingVideo
         cameraShortcut.isEnabled=!recordingVideo && cameraId.isNotEmpty()
         // Zoom stays live while recording (#174): the engine changes the recording request in place.
@@ -623,7 +694,7 @@ class MainActivity : ComponentActivity() {
         zoomControl.isEnabled=(ready || recordingVideo) && !stoppingRecording
         controlBar.bind(videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null)
         galleryButton.isEnabled=!recordingVideo
-        toolsButton.isEnabled=!recordingVideo && !stoppingRecording && !closing
+        toolsButton.isEnabled=!recordingVideo && !stoppingRecording && !closing && (engine as? MediaCapture)?.mediaBusy != true
         if (cli.active != null) {
             listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, toolsButton, reportButton).forEach { it.isEnabled = false }
         }
@@ -647,7 +718,7 @@ class MainActivity : ComponentActivity() {
         if (closing) return
         // PROBE, CTS, BENCHMARK is the order a developer meets the tools in: read what the HAL claims, check whether
         // it passes, then measure how long it takes. The guide's tabs carry the same order.
-        showActionPopup(anchor, listOf("Probe · 사양 확인", "CTS · 동작 검증", "Benchmark · 성능 측정", "실행 기록 · 비교", "작업실로 이동", "ZIP 기록", "설정 · 앱 정보")) { index ->
+        showActionPopup(anchor, listOf("Probe · 사양 확인", "CTS · 동작 검증", "Benchmark · 성능 측정", "실행 기록 · 비교", "작업실로 이동", "ZIP 기록", "설정 · 앱 정보", "Live 스트림 · 해상도와 FPS")) { index ->
             when (index) {
                 // PROBE reads CameraCharacteristics only and never opens a camera, so it starts without waiting for
                 // close(done); onStop closes the LIVE camera as it does for any screen change.
@@ -664,6 +735,7 @@ class MainActivity : ComponentActivity() {
                 }
                 5 -> incidents.showList()
                 6 -> showLiveSettings()
+                7 -> showStreamSettings()
             }
         }
     }

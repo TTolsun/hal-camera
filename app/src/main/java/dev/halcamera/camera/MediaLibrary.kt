@@ -47,12 +47,21 @@ class MediaLibrary(context: Context) {
     }
 
     fun savePair(name: String, yuvJpeg: ByteArray, cameraJpeg: ByteArray): List<Uri> {
+        return savePhotos(name, yuvJpeg, cameraJpeg)
+    }
+
+    fun savePhotos(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?): List<Uri> {
+        require(yuvJpeg != null || cameraJpeg != null)
         val entries = mutableListOf<Uri>()
         try {
-            val yuv = create("${name}_YUV.jpg", false).also { entries += it }
-            val jpeg = create("${name}_JPEG.jpg", false).also { entries += it }
-            write(yuv) { it.write(yuvJpeg) }
-            write(jpeg) { it.write(cameraJpeg) }
+            if (yuvJpeg != null) {
+                val yuv = create("${name}_YUV.jpg", false).also { entries += it }
+                write(yuv) { it.write(yuvJpeg) }
+            }
+            if (cameraJpeg != null) {
+                val jpeg = create("${name}_JPEG.jpg", false).also { entries += it }
+                write(jpeg) { it.write(cameraJpeg) }
+            }
             entries.forEach(::publish)
             return entries
         } catch (e: Exception) {

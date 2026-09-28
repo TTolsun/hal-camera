@@ -24,8 +24,8 @@ interface MediaCapture {
     /** True while a still pair or a recording is in flight; LIVE and the CLI report BUSY from it. */
     val mediaBusy: Boolean
     /**
-     * One YUV + JPEG still pair saved through MediaLibrary. [done] is called on the main thread. Camera2 takes both
-     * from one capture; CameraX pairs its JPEG with the analysis frame nearest in sensor time.
+     * Selected LIVE outputs saved through MediaLibrary. [done] is called on the main thread. Camera2 takes
+     * enabled YUV/JPEG outputs from one capture (both by default); CameraX always saves a pair using the nearest analysis frame.
      */
     fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit)
     fun startRecording(audio: Boolean = true, started: () -> Unit = {}, done: ((Result<android.net.Uri>) -> Unit)? = null)

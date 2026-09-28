@@ -22,7 +22,7 @@ verifications: []
 | 인터페이스 | 담당하는 동작 | 구현 |
 | --- | --- | --- |
 | `CameraEngine` | 카메라 열기(`start`), 촬영(`capture`), 줌(`setZoom`), 닫기(`close(done)`) | 두 엔진 |
-| `MediaCapture` | YUV·JPEG 사진 쌍 저장(`capturePhoto`), 녹화 시작·정지, 촬영이나 녹화가 진행 중인지(`mediaBusy`) | 두 엔진. 벤치마크용 Camera2Engine은 사진 쌍을 만들지 않고 녹화 요청을 거절합니다 |
+| `MediaCapture` | 선택한 사진 출력 저장(`capturePhoto`, 기본은 YUV·JPEG 쌍), 녹화 시작·정지, 촬영이나 녹화가 진행 중인지(`mediaBusy`) | 두 엔진. 벤치마크용 Camera2Engine은 사진 쌍을 만들지 않고 녹화 요청을 거절합니다 |
 | `LiveTuning` | EV, AE·AF 잠금, 플래시(`setControls`) | 두 엔진 |
 | `TouchMetering` | 짧게 터치한 지점의 초점, 길게 누른 지점의 노출(`meterAt`) | 두 엔진 |
 
@@ -39,7 +39,7 @@ verifications: []
 
 Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 `StartCardPresenter`가 Camera2로 전환한다고 알립니다. Live와 다른 스트림 크기 및 저장 방식은 [Camera2 엔진](#camera2-엔진)에서 설명합니다.
 
-CLI의 `preview` 명령은 `LiveController`를 통해 Camera2로 카메라를 엽니다. CameraX 제어는 [CLI 계약](https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md)의 후속 범위에 있습니다.
+CLI의 `preview` 명령은 `LiveController`를 통해 Camera2로 카메라를 엽니다. CLI 준비 시 해당 카메라의 사용자 스트림 설정을 해제하여 기존 YUV·JPEG 사진 쌍 계약을 유지합니다. CameraX 제어는 [CLI 계약](https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md)의 후속 범위에 있습니다.
 
 ### 두 엔진이 함께 남기는 기록
 
