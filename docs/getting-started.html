@@ -63,10 +63,10 @@
 </figure><p>녹화 중에는 셔터 아래에 경과 시간이 표시됩니다. 줌은 계속 바꿀 수 있지만 엔진·카메라·모드 변경, 일시정지, 갤러리와 다른 도구 진입은 제한됩니다. 녹화를 마치면 사진용 프리뷰로 돌아오며 동영상 모드 선택은 유지됩니다.</p>
 <h3 id="live-스트림을-설정하세요">Live 스트림을 설정하세요</h3>
 <ol>
-<li><code>Lab → Settings → Live Streams</code>를 엽니다. CameraX를 사용 중이면 Camera2 전환 안내가 나타납니다.</li>
+<li><code>Lab → Settings → Live Streams</code>를 엽니다. Lab과 같은 독립 설정 페이지가 열립니다.</li>
 <li>Preview 크기와 YUV·JPEG의 크기 또는 <code>Off</code>를 선택합니다. 둘 다 끄면 프리뷰만 실행하며 사진 셔터는 비활성화됩니다.</li>
-<li>프리뷰 FPS 범위와 녹화 크기·FPS·코덱 조합을 고릅니다. 녹화는 Preview + Encoder로 전환하며, 고속 세션은 제공하지 않습니다.</li>
-<li><code>적용</code>을 누릅니다. 카메라 종료가 완료된 후 정확한 요청 크기로 새 세션을 구성합니다. 사진·녹화·저장 중에는 설정을 적용할 수 없습니다.</li>
+<li>프리뷰 FPS를 고르고 녹화는 Format → Resolution → Frame Rate 순서로 선택합니다. 해상도는 큰 순서로 표시합니다. 녹화는 Preview + Encoder로 전환하며, 고속 세션은 제공하지 않습니다.</li>
+<li><code>저장</code>을 눌러 Lab으로 돌아갑니다. Live로 복귀하면 Camera2로 설정을 적용합니다. 상단·시스템 뒤로가기는 저장하지 않고 Lab으로 돌아갑니다.</li>
 <li>설정을 다시 열어 구성 상태와 최근 결과 FPS 범위를 확인합니다. 실패하면 이유를 확인하고 <code>직전 정상 구성</code>으로 복구합니다. 개별 크기를 지원해도 출력 조합은 거부될 수 있습니다.</li>
 </ol>
 <p>설정은 카메라마다 구분합니다. Live 설정은 Benchmark의 profile을 바꾸지 않습니다. API별 구성 검사와 저장 방식은 <a href="engine.html#camera2-엔진">Camera2 엔진</a>에서 확인합니다.</p>
@@ -118,7 +118,7 @@
 </tr>
 <tr>
 <td><code>versionCode</code></td>
-<td><code>592</code></td>
+<td><code>593</code></td>
 </tr>
 <tr>
 <td><code>minSdk</code></td>

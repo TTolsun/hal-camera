@@ -122,7 +122,6 @@ class MainActivity : ComponentActivity() {
     private val goodStreams = mutableMapOf<String, LiveStreamSettings?>()
     private val streamState = mutableMapOf<String, String>()
     private val lastStreamFps = mutableMapOf<String, String>()
-    private var streamDialogLoading = false
     private var ready = false
     private var zoomRatio = 1f
     private var zoomApplied = false
@@ -184,15 +183,23 @@ class MainActivity : ComponentActivity() {
         if (granted) restartCamera() else setStatus("카메라 권한이 필요합니다 · Lab에서 카메라를 다시 연결하세요", false)
     }
     private var reconnectFromLab = false
-    private var streamsFromLab = false
     private var returningFromLab = false
     private var returningFromSettings = false
     private val labLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-        when (result.data?.getStringExtra(WorkbenchActivity.EXTRA_LIVE_ACTION)) {
-            WorkbenchActivity.ACTION_STREAMS -> streamsFromLab = true
-            WorkbenchActivity.ACTION_RECONNECT -> {
-                reconnectFromLab = true
-            }
+        val data = result.data
+        if (result.resultCode == RESULT_OK && data?.hasExtra(LiveStreamsActivity.EXTRA_SETTINGS) == true &&
+            data.getStringExtra(WorkbenchActivity.EXTRA_CAMERA_ID) == cameraId) {
+            @Suppress("DEPRECATION")
+            val settings = data.getSerializableExtra(LiveStreamsActivity.EXTRA_SETTINGS) as? LiveStreamSettings
+            if (settings == null) streamSettings.remove(cameraId) else streamSettings[cameraId] = settings
+            telemetry.event(sessionId, "live_streams_changed", settings?.metadata() ?: mapOf("mode" to "default"))
+            val switched = engineName != "Camera2"
+            engineName = "Camera2"
+            paused = false
+            if (switched) resetControls()
+        }
+        if (data?.getStringExtra(WorkbenchActivity.EXTRA_LIVE_ACTION) == WorkbenchActivity.ACTION_RECONNECT) {
+            reconnectFromLab = true
         }
     }
     private val saveDocument = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
@@ -240,7 +247,6 @@ class MainActivity : ComponentActivity() {
         returningFromLab = savedInstanceState?.getBoolean("returningFromLab") ?: false
         returningFromSettings = savedInstanceState?.getBoolean("returningFromSettings") ?: false
         reconnectFromLab = savedInstanceState?.getBoolean("reconnectFromLab") ?: false
-        streamsFromLab = savedInstanceState?.getBoolean("streamsFromLab") ?: false
         zoomRatio = savedInstanceState?.getFloat("zoom") ?: 1f
         videoMode = savedInstanceState?.getBoolean("videoMode") ?: false
         @Suppress("DEPRECATION", "UNCHECKED_CAST")
@@ -261,7 +267,6 @@ class MainActivity : ComponentActivity() {
         outState.putBoolean("returningFromLab", returningFromLab)
         outState.putBoolean("returningFromSettings", returningFromSettings)
         outState.putBoolean("reconnectFromLab", reconnectFromLab)
-        outState.putBoolean("streamsFromLab", streamsFromLab)
         super.onSaveInstanceState(outState)
     }
     override fun onStart() {
@@ -280,7 +285,7 @@ class MainActivity : ComponentActivity() {
             returningFromLab -> {
                 returningFromLab = false
                 if (reconnectFromLab) reconnectCameraFromLab()
-                else if (!streamsFromLab && cli.active == null && !recordingVideo) {
+                else if (cli.active == null && !recordingVideo) {
                     if (hasPermission()) restartCamera()
                     else setStatus("카메라 권한이 필요합니다 · Lab에서 카메라를 다시 연결하세요", false)
                 }
@@ -290,10 +295,6 @@ class MainActivity : ComponentActivity() {
                 if (cli.active == null && !recordingVideo && hasPermission()) restartCamera()
                 else if (!hasPermission()) setStatus("카메라 권한이 필요합니다 · Lab에서 카메라를 다시 연결하세요", false)
             }
-        }
-        if (streamsFromLab) {
-            streamsFromLab = false
-            showStreamSettings(resumePreview = true)
         }
     }
     override fun onStop() {
@@ -615,45 +616,6 @@ class MainActivity : ComponentActivity() {
         updateCameraChoices()
         updateMediaControls()
     }
-    private fun showStreamSettings(resumePreview: Boolean = false) {
-        val dismissed = {
-            if (resumePreview && resumed && !destroyed && engine == null && !closing && cli.active == null) restartCamera()
-        }
-        if (streamDialogLoading || closing || cli.active != null || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true) return
-        if (engineName != "Camera2") {
-            AlertDialog.Builder(this, R.style.LabDialogTheme).setTitle("Live Streams")
-                .setMessage("해상도와 출력 설정을 변경하려면 Camera2로 전환하세요.")
-                .setPositiveButton("Camera2로 전환") { _, _ -> chooseEngine("Camera2") }.setNegativeButton("취소", null)
-                .setOnDismissListener { dismissed() }.show()
-            return
-        }
-        val id = cameraId
-        if (id.isEmpty()) return
-        streamDialogLoading = true
-        cameraWorker.execute {
-            val result = runCatching { liveStreamSupport(manager.getCameraCharacteristics(id)) }
-            main.post {
-                streamDialogLoading = false
-                if (!resumed || destroyed || id != cameraId || engineName != "Camera2" || closing || cli.active != null ||
-                    pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true) return@post
-                result.fold({ support ->
-                    val restore: (() -> Unit)? = if (goodStreams.containsKey(id)) ({ applyStreams(id, goodStreams[id]) }) else null
-                    val observed = lastStreamFps[id]?.let { "\n마지막 결과 FPS 범위: $it" }.orEmpty()
-                    LiveStreamDialog.show(this, support, streamSettings[id] ?: support.defaults(), (streamState[id] ?: "아직 구성하지 않았습니다.") + observed, restore, dismissed) { next ->
-                        support.rejection(next)?.let { toast(it) } ?: applyStreams(id, next)
-                    }
-                }, { toast("스트림 지원 정보 조회 실패: ${it.message}"); dismissed() })
-            }
-        }
-    }
-    private fun applyStreams(id: String, next: LiveStreamSettings?) {
-        if (!resumed || destroyed || cameraId != id || engineName != "Camera2" || closing || cli.active != null ||
-            pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true) return
-        telemetry.event(sessionId, "live_streams_changed", next?.metadata() ?: mapOf("mode" to "default"))
-        if (next == null) streamSettings.remove(id) else streamSettings[id] = next
-        paused = false
-        restartCamera()
-    }
     private fun selectChoice(anchor:View,items:List<String>,selected:Int,onSelect:(Int)->Unit) {
         showSelectionPopup(anchor,items,selected) { index ->
             if(!recordingVideo && resumed && cli.active == null) onSelect(index)
@@ -750,6 +712,11 @@ class MainActivity : ComponentActivity() {
             Intent(this, WorkbenchActivity::class.java)
                 .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, cameraId)
                 .putExtra(WorkbenchActivity.EXTRA_ENGINE, engineName)
+                .putExtra(LiveStreamsActivity.EXTRA_SETTINGS, streamSettings[cameraId])
+                .putExtra(LiveStreamsActivity.EXTRA_GOOD_SETTINGS, goodStreams[cameraId])
+                .putExtra(LiveStreamsActivity.EXTRA_HAS_GOOD, goodStreams.containsKey(cameraId))
+                .putExtra(LiveStreamsActivity.EXTRA_STATUS, (streamState[cameraId] ?: "아직 구성하지 않았습니다.") +
+                    lastStreamFps[cameraId]?.let { "\n결과 FPS: $it" }.orEmpty())
         }
     }
     /**

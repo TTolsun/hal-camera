@@ -5,7 +5,7 @@
       "applicationId": "dev.halcamera",
       "namespace": "dev.halcamera",
       "versionName": "0.16.0",
-      "versionCode": "592",
+      "versionCode": "593",
       "minSdk": "26",
       "targetSdk": "36",
       "compileSdk": "36",

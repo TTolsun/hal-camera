@@ -56,10 +56,10 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `도구 → 설
 
 ### Live 스트림을 설정하세요
 
-1. `Lab → Settings → Live Streams`를 엽니다. CameraX를 사용 중이면 Camera2 전환 안내가 나타납니다.
+1. `Lab → Settings → Live Streams`를 엽니다. Lab과 같은 독립 설정 페이지가 열립니다.
 2. Preview 크기와 YUV·JPEG의 크기 또는 `Off`를 선택합니다. 둘 다 끄면 프리뷰만 실행하며 사진 셔터는 비활성화됩니다.
-3. 프리뷰 FPS 범위와 녹화 크기·FPS·코덱 조합을 고릅니다. 녹화는 Preview + Encoder로 전환하며, 고속 세션은 제공하지 않습니다.
-4. `적용`을 누릅니다. 카메라 종료가 완료된 후 정확한 요청 크기로 새 세션을 구성합니다. 사진·녹화·저장 중에는 설정을 적용할 수 없습니다.
+3. 프리뷰 FPS를 고르고 녹화는 Format → Resolution → Frame Rate 순서로 선택합니다. 해상도는 큰 순서로 표시합니다. 녹화는 Preview + Encoder로 전환하며, 고속 세션은 제공하지 않습니다.
+4. `저장`을 눌러 Lab으로 돌아갑니다. Live로 복귀하면 Camera2로 설정을 적용합니다. 상단·시스템 뒤로가기는 저장하지 않고 Lab으로 돌아갑니다.
 5. 설정을 다시 열어 구성 상태와 최근 결과 FPS 범위를 확인합니다. 실패하면 이유를 확인하고 `직전 정상 구성`으로 복구합니다. 개별 크기를 지원해도 출력 조합은 거부될 수 있습니다.
 
 설정은 카메라마다 구분합니다. Live 설정은 Benchmark의 profile을 바꾸지 않습니다. API별 구성 검사와 저장 방식은 [Camera2 엔진](engine.md#camera2-엔진)에서 확인합니다.
@@ -90,7 +90,7 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `도구 → 설
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
 | `versionName` | `0.16.0` |
-| `versionCode` | `592` |
+| `versionCode` | `593` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |

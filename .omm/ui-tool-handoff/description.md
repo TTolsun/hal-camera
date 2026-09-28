@@ -4,4 +4,4 @@ Lab 진입은 openAfterClose를 거칩니다. 진행 중인 incident를 마무�
 
 Lab의 시스템 뒤로 가기와 상단 Live 링크은 기존 Live로 복귀합니다. 프리뷰 일시정지·재개와 카메라 다시 연결은 Activity Result로 Live에 전달합니다. 일시정지는 목표 상태를 적용하므로 화면 재생성 뒤에도 토글의 의미가 뒤집히지 않습니다. Lab 복귀는 Activity Result를 받은 뒤 onResume에서 일시정지 여부에 따라 프리뷰를 한 번만 다시 엽니다. Android 권한 설정에서 돌아오는 경우에도 onResume에서 권한을 다시 확인합니다.
 
-Settings의 Live Streams는 Activity Result로 Live에 설정 열기를 요청합니다. 이 복귀에서는 프리뷰를 먼저 열지 않고 스트림 설정을 표시합니다. 적용은 선택한 구성으로 카메라를 열며, 취소하면 기존 설정으로 프리뷰를 재개합니다. 따라서 실패한 구성을 설정창보다 먼저 다시 시도하지 않습니다.
+Live Streams는 Lab 위에 LiveStreamsActivity를 열며 카메라를 열지 않습니다. 상단·시스템 뒤로가기는 변경을 버리고 Lab으로 돌아갑니다. 저장과 직전 정상 구성 복원도 Lab으로 돌아가며, Lab은 설정 결과를 보관했다가 Live로 복귀할 때 전달합니다. MainActivity는 이 결과를 반영한 뒤 프리뷰를 재개합니다. 화면 재생성 때에도 편집 중 초안과 저장한 결과를 각각 보존합니다.

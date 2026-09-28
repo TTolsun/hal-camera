@@ -51,6 +51,17 @@ class WorkbenchActivity : ComponentActivity() {
             override fun saveAs(file: File) { saveFile = file; saveDocument.launch(file.name) }
         })
     }
+    private var pendingStreams: Intent? = null
+    private val streamSettings = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            pendingStreams = Intent(result.data).putExtra(EXTRA_LIVE_ACTION, ACTION_STREAMS)
+                .putExtra(EXTRA_CAMERA_ID, intent.getStringExtra(EXTRA_CAMERA_ID))
+            intent.putExtras(result.data!!)
+            intent.putExtra(EXTRA_ENGINE, "Camera2")
+            setResult(RESULT_OK, pendingStreams)
+        }
+    }
+
     private val saveDocument = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         val file = saveFile
         if (uri != null && file != null) io.execute {
@@ -64,6 +75,7 @@ class WorkbenchActivity : ComponentActivity() {
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
+        outState.putParcelable("pending_streams", pendingStreams)
         outState.putString("save_zip", saveFile?.name)
         outState.putInt("lab_scroll", scroll.scrollY)
         super.onSaveInstanceState(outState)
@@ -77,6 +89,14 @@ class WorkbenchActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.LabTheme)
         super.onCreate(savedInstanceState)
+        @Suppress("DEPRECATION")
+        val savedStreams = savedInstanceState?.getParcelable<Intent>("pending_streams")
+        if (savedStreams != null) {
+            pendingStreams = savedStreams
+            intent.putExtras(savedStreams)
+            intent.putExtra(EXTRA_ENGINE, "Camera2")
+            setResult(RESULT_OK, savedStreams)
+        }
         WindowCompat.setDecorFitsSystemWindows(window, false)
         WindowCompat.getInsetsController(window, window.decorView).apply {
             isAppearanceLightStatusBars = true
@@ -148,7 +168,7 @@ class WorkbenchActivity : ComponentActivity() {
             entry(results, "ZIP Archives", "공유 · 저장 · 삭제") { incidents.showList() }
         }
         section("Settings") { settings ->
-            entry(settings, "Live Streams", "해상도·출력·FPS와 녹화 설정") { returnToLive(ACTION_STREAMS) }
+            entry(settings, "Live Streams", "해상도·출력·FPS와 녹화 설정") { streamSettings.launch(Intent(this, LiveStreamsActivity::class.java).putExtras(intent)) }
             entry(settings, "ADB CLI", if (cli.enabled) "허용됨" else "꺼짐") {
                 AlertDialog.Builder(this).setTitle("ADB CLI")
                     .setMultiChoiceItems(arrayOf("ADB CLI 허용"), booleanArrayOf(cli.enabled)) { _, _, checked ->
@@ -222,7 +242,7 @@ class WorkbenchActivity : ComponentActivity() {
         group.addView(row, LinearLayout.LayoutParams(-1, -2))
     }
     private fun returnToLive(action: String) {
-        setResult(RESULT_OK, Intent().putExtra(EXTRA_LIVE_ACTION, action))
+        setResult(RESULT_OK, Intent(pendingStreams ?: Intent()).putExtra(EXTRA_LIVE_ACTION, action))
         finish()
     }
 

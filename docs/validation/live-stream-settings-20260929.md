@@ -50,3 +50,8 @@ Debug 빌드, JVM 테스트 599개, lint가 통과했습니다. 기기 화면 �
 0.16.0 / 592의 assembleRelease·testReleaseUnitTest·lintRelease, JVM 테스트 599개, 문서 검사 6단계가 통과했습니다. 기존 정식 서명과 인증서 SHA-256이 일치합니다. Galaxy S25+ (SM-S936N, Android 16)에 dev.halcamera를 업데이트 설치했으며 최초 설치 시각 2026-09-16 02:33:27이 유지됐습니다. APK SHA-256은 d28d2c1335c19bb70a92a2a5909a61b56aa2ec61d61c49f8464c4dc2d63879c8입니다. 화면 조작과 촬영·녹화는 수행하지 않았습니다.
 
 머지 전 코드 리뷰에서는 설정 초안의 취소, 포맷별 크기·FPS 연동, 단일 출력 타임스탬프 매칭, close(done) 이후 재구성, CLI·Benchmark 경계를 대조했으며 차단할 결함을 발견하지 않았습니다. 실기기 조합 호환성과 화면 시각 검증은 이 리뷰의 범위에 포함되지 않습니다.
+## Lab 페이지 이동 수정
+
+최종 릴리스 후보는 0.16.0 / 593입니다. LiveStreamsActivity를 Lab의 독립 페이지로 등록하고 Look.titleBar·LabTheme·동일한 페이지 여백을 적용했습니다. 상단 뒤로가기와 시스템 뒤로가기는 저장하지 않고 Lab으로 돌아갑니다. 저장·정상 구성 복원도 Lab으로 돌아가며, Live로 복귀할 때에만 저장한 설정을 적용합니다. Lab과 설정 페이지가 재생성돼도 저장 결과와 편집 초안을 보존합니다. 저장 후 Reconnect Camera를 선택해도 설정 결과를 함께 전달합니다.
+
+Debug·Release 빌드, 각 JVM 테스트 599개, lint, 기기 테스트 APK 빌드와 문서 검사 6단계가 통과했습니다. 최종 APK를 Galaxy S25+에 업데이트 설치하여 versionCode 593과 최초 설치 시각 유지 여부를 확인했습니다. APK SHA-256은 f3f352d4c7102fc64c82c9900548aa4cfb0ef5a2f7990e52df2f9dbce42a66b0입니다. 페이지 이동은 코드 대조와 컴파일로 검토했으며, 기기가 사용 중이므로 화면 조작과 촬영·녹화는 수행하지 않았습니다.

@@ -8,4 +8,4 @@ Lab은 Apple 참고안에 따라 흰 배경과 밝은 회색의 18dp 그룹 표�
 
 Probe·CTS·Benchmark·Run History와 상세 화면은 LabTheme, Look.titleBar, 밝은 그룹 표면을 공유합니다. Gallery는 기존 디자인을 유지합니다. 제목은 영어, 보조 설명은 한글이며 About 소개는 사용자 지정 영어 문구를 유지합니다.
 
-Settings의 Live Streams는 Activity Result로 Live에 설정 열기를 요청합니다. 이 복귀에서는 프리뷰를 먼저 열지 않고 스트림 설정을 표시합니다. 적용은 선택한 구성으로 카메라를 열며, 취소하면 기존 설정으로 프리뷰를 재개합니다. 따라서 실패한 구성을 설정창보다 먼저 다시 시도하지 않습니다.
+Live Streams는 Lab 위에 LiveStreamsActivity를 열며 카메라를 열지 않습니다. 상단·시스템 뒤로가기는 변경을 버리고 Lab으로 돌아갑니다. 저장과 직전 정상 구성 복원도 Lab으로 돌아가며, Lab은 설정 결과를 보관했다가 Live로 복귀할 때 전달합니다. MainActivity는 이 결과를 반영한 뒤 프리뷰를 재개합니다. 화면 재생성 때에도 편집 중 초안과 저장한 결과를 각각 보존합니다.

@@ -2,7 +2,6 @@ package dev.halcamera.ui
 
 import android.app.AlertDialog
 import android.content.Context
-import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.*
@@ -10,21 +9,21 @@ import dev.halcamera.R
 import dev.halcamera.camera.*
 
 /** A draft is committed only by Apply; dismissing a selector or this panel never changes the camera. */
-object LiveStreamDialog {
-    fun show(context: Context, support: LiveStreamSupport, current: LiveStreamSettings,
-             actual: String, restore: (() -> Unit)?, dismissed: () -> Unit = {}, apply: (LiveStreamSettings) -> Unit) {
-        val themed = ContextThemeWrapper(context, R.style.LabDialogTheme)
+object LiveStreamSettingsView {
+    fun create(context: Context, support: LiveStreamSupport, current: LiveStreamSettings,
+             actual: String, restore: (() -> Unit)?, back: () -> Unit, changed: (LiveStreamSettings) -> Unit, apply: (LiveStreamSettings) -> Unit): ScrollView {
+        val themed = context
         fun dp(value: Int) = Look.dp(themed, value)
         val content = LinearLayout(themed).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dp(20), dp(24), dp(20), dp(20))
+
         }
         fun caption(value: String) {
             content.addView(Look.text(themed, value, 13, Look.inkMuted),
                 LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8); bottomMargin = dp(8) })
         }
-        content.addView(Look.text(themed, "Live Streams", 24, Look.ink, bold = true))
-        caption("해상도와 출력 방식을 선택하세요.")
+        content.addView(Look.titleBar(themed, "Live Streams", 34, "Lab으로 돌아가기", back))
+        caption("Live로 돌아가면 Camera2에 적용됩니다.")
         fun section(title: String): LinearLayout {
             content.addView(Look.text(themed, title, 13, Look.inkMuted, bold = true),
                 LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(20); bottomMargin = dp(8) })
@@ -106,23 +105,18 @@ object LiveStreamDialog {
         choice(recording, "Frame Rate", { video.rates() }, { video.value?.fps }, { it?.let(video::selectRate) }) {
             it?.let { rate -> "$rate fps" } ?: "지원 정보 없음"
         }
+        refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested)) }
         refreshers.forEach { it() }
         caption("출력 조합은 적용 시, 녹화 설정은 녹화 시작 시 확인합니다.")
         section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
             setPadding(dp(18), dp(14), dp(18), dp(14))
         })
         val scroll = ScrollView(themed).apply { isFillViewport = true; addView(content) }
-        val dialog = AlertDialog.Builder(themed, R.style.LabDialogTheme).setView(scroll)
-            .setOnDismissListener { dismissed() }.create()
-        content.addView(Look.primaryButton(themed, "적용") {
+        content.addView(Look.primaryButton(themed, "저장") {
             apply(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested))
-            dialog.dismiss()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(24) })
-        if (restore != null) content.addView(Look.ghostButton(themed, "직전 정상 구성 복원") {
-            restore(); dialog.dismiss()
-        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
-        content.addView(Look.ghostButton(themed, "취소") { dialog.dismiss() },
+        if (restore != null) content.addView(Look.ghostButton(themed, "직전 정상 구성 복원", action = restore),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
-        dialog.show()
+        return scroll
     }
 }
