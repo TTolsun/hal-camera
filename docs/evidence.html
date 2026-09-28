@@ -59,6 +59,7 @@
 <h3 id="앱-화면-촬영">앱 화면 촬영</h3>
 <p>2026년 9월 27일 Galaxy S25+(SM-S936N)·Android 16(API 36)에서 배포된 0.15.0(versionCode 543)을 실행해 16개 화면을 촬영했습니다. 원본은 1440×3120 PNG이며, 각 기능의 담당 문서에 한 번씩 배치했습니다.</p>
 <p>Live·CameraX 전환·사진 자동 고정·Recording 콜백·Probe 조회·CTS 실행·Benchmark 완료와 기록 저장을 확인했습니다. CTS 원문 목록, CLI 허용 설정, ZIP 기록은 화면 조회만 확인했습니다. 자세한 절차와 한계는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/2026-09-27-app-screenshots.md">촬영 기록</a>에 있습니다. 화면에 보이는 수치는 해당 순간의 관찰이며 기기의 대표 성능값이 아닙니다.</p>
+<p>2026년 9월 29일 같은 기기의 Lab 디자인 적용 빌드로 Probe, CTS 4개, Benchmark 4개, CLI 설정, ZIP 목록의 기존 이미지 11개를 교체했습니다. 설치 빌드는 기존 데이터 보존을 위해 versionCode 590을 유지했습니다. Rapid Open / Close는 35초 PASS로 완료했고, Benchmark 완료·결과·기록을 확인했습니다. Live 관련 이미지는 이전 촬영본입니다. <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/lab-ui-20260929.md">Lab 검증 기록</a>에서 확인 범위를 구분합니다.</p>
 <h3 id="cts-원문-케이스">CTS 원문 케이스</h3>
 <p>Galaxy S25+·Android 16에서 2026년 9월 17<del>19일, versionCode 106</del>108로 수행한 기록입니다. versionCode 108의 SKIP 판정을 적용한 결과는 40개 메서드 중 <strong>PASS 33 · FAIL 1 · SKIP 6</strong>입니다. 여러 실행과 재실행을 합친 기록입니다. 원본 요청 ID와 로그 해석은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/STATUS.md">STATUS.md</a>에 있습니다.</p>
 <table>
@@ -128,7 +129,7 @@
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code></li>
 <li>기기 검증: <code>V-002</code></li>
 <li>근거 수준: 기기 검증</li>
-<li>검토 2026-09-28 @ <code>584fa9a</code> · Claude</li>
+<li>검토 2026-09-28 @ <code>b74b78c</code> · Codex</li>
 </ul>
 </details><!-- omm:end id=device-notes --><h2 id="문서를-수정하고-검증하세요">문서를 수정하고 검증하세요</h2>
 <pre><code class="language-mermaid">flowchart LR
@@ -203,12 +204,12 @@ node tools/docgen/docflow.mjs check --ci
 <tbody><tr>
 <td>구조 원본 <code>overall-architecture</code></td>
 <td>최신</td>
-<td>검토 2026-09-28 @ <code>584fa9a</code> · Claude</td>
+<td>검토 2026-09-28 @ <code>b74b78c</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>device-notes</code></td>
 <td>최신</td>
-<td>검토 2026-09-28 @ <code>584fa9a</code> · Claude</td>
+<td>검토 2026-09-28 @ <code>b74b78c</code> · Codex</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p><strong>다음 단계:</strong> 구현 구조는 <a href="architecture.html">Architecture</a>, 과거의 선택은 <a href="_inputs/decisions.html">설계 결정 원문</a>에서 확인하세요.</p>

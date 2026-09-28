@@ -45,14 +45,16 @@ abstract class CtsChecklistActivity : ComponentActivity() {
     private var cameras = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(dev.halcamera.R.style.LabTheme)
         super.onCreate(savedInstanceState)
+        Look.configureLabWindow(this)
         val groups = groups()
         items = groups.flatMap { it.items }
         cameras = runCatching { getSystemService(CameraManager::class.java).cameraIdList.size }.getOrDefault(0)
         val keys = items.map { it.key }.toSet()
         selected += (getSharedPreferences(prefsName, MODE_PRIVATE).getStringSet(KEY_SELECTED, emptySet()) ?: emptySet()).filter { it in keys }
 
-        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.expertTile) }
+        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.canvas) }
         val scroll = ScrollView(this)
         val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         scroll.addView(body)
@@ -62,16 +64,16 @@ abstract class CtsChecklistActivity : ComponentActivity() {
         setContentView(root)
         ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            scroll.setPadding(bars.left + dp(16), bars.top + dp(16), bars.right + dp(16), dp(16))
-            bar.setPadding(bars.left + dp(16), dp(12), bars.right + dp(16), bars.bottom + dp(12))
+            scroll.setPadding(bars.left + Look.pageMargin(root, bars.left + bars.right), bars.top + dp(16), bars.right + Look.pageMargin(root, bars.left + bars.right), dp(16))
+            bar.setPadding(bars.left + Look.pageMargin(root, bars.left + bars.right), dp(12), bars.right + Look.pageMargin(root, bars.left + bars.right), bars.bottom + dp(12))
             insets
         }
 
         body.addView(Look.titleBar(this, screenTitle, 22, "이전 화면으로 돌아가기") { finish() })
-        body.addView(Look.text(this, intro, 12, Look.onDarkMuted), lp(top = 4))
-        body.addView(Look.text(this, "앱 내 검사 · 공식 CTS 인증 결과 아님", 12, Look.onDarkMuted), lp(top = 4))
+        body.addView(Look.text(this, intro, 12, Look.inkMuted), lp(top = 4))
+        body.addView(Look.text(this, "앱 내 검사 · 공식 CTS 인증 결과 아님", 12, Look.inkMuted), lp(top = 4))
         groups.forEach { body.addView(section(it), lp(top = 20)) }
-        body.addView(Look.disclosure(this, "실행 범위 안내", Look.text(this, disclaimer, 13, Look.onDarkMuted)), lp(top = 16))
+        body.addView(Look.disclosure(this, "Test Scope", Look.text(this, disclaimer, 13, Look.inkMuted)), lp(top = 16))
         onSelectionChanged()
     }
 
@@ -86,20 +88,20 @@ abstract class CtsChecklistActivity : ComponentActivity() {
     private fun section(group: Group): View {
         val block = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val head = Look.row(this)
-        head.addView(Look.text(this, group.title, 15, Look.onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
-        val all = Look.ghostButton(this, "전체 선택", dark = true) {}
+        head.addView(Look.text(this, group.title, 15, Look.ink, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
+        val all = Look.ghostButton(this, "Select All", dark = false) {}
         all.setOnClickListener {
             val everySelected = group.items.all { it.key in selected }
             group.items.forEach { boxes[it.key]?.isChecked = !everySelected }
         }
         head.addView(all, LinearLayout.LayoutParams(-2, -2))
         block.addView(head)
-        if (group.detail.isNotEmpty()) block.addView(Look.text(this, group.detail, 12, Look.onDarkMuted), lp(top = 2))
+        if (group.detail.isNotEmpty()) block.addView(Look.text(this, group.detail, 12, Look.inkMuted), lp(top = 2))
         groupButtons += group.items to all
 
-        val card = Look.card(this, dark = true).apply { setPadding(0, 0, 0, 0) }
+        val card = Look.card(this, dark = false).apply { setPadding(0, 0, 0, 0) }
         group.items.forEachIndexed { index, item ->
-            if (index > 0) card.addView(View(this).apply { setBackgroundColor(Look.expertTile3) }, LinearLayout.LayoutParams(-1, dp(1)))
+            if (index > 0) card.addView(View(this).apply { setBackgroundColor(Look.hairline) }, LinearLayout.LayoutParams(-1, dp(1)))
             card.addView(row(item))
         }
         block.addView(card, lp(top = 10))
@@ -111,7 +113,7 @@ abstract class CtsChecklistActivity : ComponentActivity() {
         val estimate = SuitePlan.estimateLabel(item, cameras)
         val box = CheckBox(this).apply {
             isChecked = item.key in selected
-            buttonTintList = ColorStateList.valueOf(Look.onDark)
+            buttonTintList = ColorStateList.valueOf(Look.primary)
             contentDescription = "${item.title}, $estimate"
             minimumWidth = dp(48); minimumHeight = dp(48)
             setOnCheckedChangeListener { _, checked ->
@@ -128,10 +130,10 @@ abstract class CtsChecklistActivity : ComponentActivity() {
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
             setOnClickListener { box.toggle() }
         }
-        column.addView(Look.text(this, item.title, 15, Look.onDark, bold = true))
+        column.addView(Look.text(this, item.title, 15, Look.ink, bold = true))
         // A vendored row is titled by its method and grouped under its class, so its source would only repeat both.
         val line = if (item is SuiteItem.Vendored) estimate else "$estimate · ${item.source}"
-        column.addView(Look.text(this, line, 12, Look.onDarkMuted), lp(top = 2))
+        column.addView(Look.text(this, line, 12, Look.inkMuted), lp(top = 2))
         row.addView(column, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(4) })
         row.addView(IconButton(this, R.drawable.ic_action_next, "${item.title} 하나만 여는 화면") { startActivity(singleIntent(item)) }, LinearLayout.LayoutParams(dp(48), dp(48)))
         return row
@@ -142,11 +144,11 @@ abstract class CtsChecklistActivity : ComponentActivity() {
     private fun buildBar(): View {
         val bar = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = Look.cardBackground(this@CtsChecklistActivity, Look.expertTile2, Look.expertTile3)
+            background = Look.cardBackground(this@CtsChecklistActivity, Look.labSurface, Look.hairline)
         }
-        summaryView = Look.text(this, "", 13, Look.onDark)
+        summaryView = Look.text(this, "", 13, Look.ink)
         bar.addView(summaryView, LinearLayout.LayoutParams(-1, -2))
-        runButton = Look.primaryButton(this, "선택한 검사 실행") { run() }
+        runButton = Look.primaryButton(this, "Run Selected") { run() }
         // Wrap height with a 48dp floor: a fixed 48dp clipped the label at large font scales.
         runButton.minHeight = dp(48)
         bar.addView(runButton, Look.buttonParams().apply { topMargin = dp(8) })
@@ -157,11 +159,11 @@ abstract class CtsChecklistActivity : ComponentActivity() {
         val chosen = SuitePlan.select(items, selected)
         summaryView.text = SuitePlan.summaryLine(chosen, cameras)
         runButton.isEnabled = chosen.isNotEmpty()
-        runButton.text = if (chosen.isEmpty()) "검사 항목을 선택하세요" else "선택한 ${chosen.size}개 검사 실행"
+        runButton.text = if (chosen.isEmpty()) "Select Tests" else "Run Selected (${chosen.size})"
         runButton.alpha = if (chosen.isEmpty()) 0.5f else 1f
         runButton.contentDescription = if (chosen.isEmpty()) "실행, 항목을 먼저 고르세요" else "선택한 ${chosen.size}개 실행"
         groupButtons.forEach { (groupItems, button) ->
-            button.text = if (groupItems.isNotEmpty() && groupItems.all { it.key in selected }) "전체 해제" else "전체 선택"
+            button.text = if (groupItems.isNotEmpty() && groupItems.all { it.key in selected }) "Deselect All" else "Select All"
         }
     }
 

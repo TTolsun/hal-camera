@@ -49,24 +49,24 @@ object BenchmarkResultCards {
 
         // Headline card: the verdict, what it was measured against, and the score.
         val head = ResultPresenter.headline(run, comparison, comparedTo, isBaseline, endpointName)
-        val card = Look.card(context, dark = true)
+        val card = Look.card(context, dark = false)
         val headColor = when (head.tone) {
-            Tone.BAD -> Look.statusFail
-            Tone.GOOD -> Look.statusPass
-            Tone.NEUTRAL -> Look.onDark
+            Tone.BAD -> Look.failureInk
+            Tone.GOOD -> Look.successInk
+            Tone.NEUTRAL -> Look.ink
         }
         card.addView(Look.text(context, head.text, 21, headColor, bold = true))
-        card.addView(Look.text(context, head.sub, 13, Look.onDarkMuted), lp(6))
+        card.addView(Look.text(context, head.sub, 13, Look.inkMuted), lp(6))
         // One line per condition difference under a short title. Run together after "비교 시점 조건 차이:" the items
         // wrapped wherever the card ran out ("노출 부하" / "4배 이상 차이").
         comparison?.conditionMismatches?.takeIf { it.isNotEmpty() }?.let { mismatches ->
             val lines = listOf("비교 시점 조건 차이") + mismatches.map { "· ${ResultPresenter.conditionText(it)}" }
-            card.addView(Look.text(context, lines.joinToString("\n"), 13, Look.statusWarn), lp(8))
+            card.addView(Look.text(context, lines.joinToString("\n"), 13, Look.warningInk), lp(8))
         }
         ResultPresenter.scoreValue(run)?.let { total ->
             val scoreRow = Look.row(context)
-            scoreRow.addView(Look.text(context, total.toString(), 30, Look.onDark, bold = true, mono = true))
-            scoreRow.addView(Look.text(context, "/ 1000 · Camera Endpoint Score · internal draft", 12, Look.onDarkMuted),
+            scoreRow.addView(Look.text(context, total.toString(), 30, Look.ink, bold = true, mono = true))
+            scoreRow.addView(Look.text(context, "/ 1000 · Camera Endpoint Score · internal draft", 12, Look.inkMuted),
                 LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
             card.addView(scoreRow, lp(12))
         }
@@ -74,7 +74,7 @@ object BenchmarkResultCards {
 
         // Metrics card: every metric is a bar, grouped by category. The table behind an "All metrics" fold is gone:
         // a number next to its baseline is what this screen is for, and a bar answers that faster than a row of digits.
-        val metricsCard = Look.card(context, dark = true)
+        val metricsCard = Look.card(context, dark = false)
         val sections = ResultPresenter.metricBars(run, comparison, comparedTo, references)
         // One legend line at the top, before the bars it explains. The keys are drawn with the bar itself, a piece of
         // fill and a tick on a track, not with "━" and "│", which looked like neither and read as punctuation.
@@ -83,7 +83,7 @@ object BenchmarkResultCards {
             legend.addView(view, LinearLayout.LayoutParams(dp(widthDp), -2).apply {
                 if (legend.childCount > 0) marginStart = dp(12)
             })
-            legend.addView(Look.text(context, label, 11, Look.onDarkMuted), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(6) })
+            legend.addView(Look.text(context, label, 11, Look.inkMuted), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(6) })
         }
         if (comparedTo != ComparedTo.NONE) {
             key(MeterView(context, 1f, null, false), 20, ResultPresenter.COMPARE_LABEL)
@@ -91,16 +91,16 @@ object BenchmarkResultCards {
         }
         metricsCard.addView(legend)
         // Its own line: beside the two keys it was cut off at the card's edge on a Galaxy S25+.
-        metricsCard.addView(Look.text(context, "대표값: Median", 11, Look.onDarkMuted), lp(4))
+        metricsCard.addView(Look.text(context, "대표값: Median", 11, Look.inkMuted), lp(4))
         sections.forEach { section ->
-            metricsCard.addView(Look.text(context, section.title, 13, Look.onDarkMuted, bold = true), lp(16))
+            metricsCard.addView(Look.text(context, section.title, 13, Look.inkMuted, bold = true), lp(16))
             section.bars.forEach { k ->
                 // Name and value on the first line, the Camera2 span on its own line under the name. Beside the name it
                 // wrapped wherever the column ran out ("createCaptureSession →" / "onConfigured").
                 val top = Look.row(context)
                 val name = if (k.statLabel.isBlank()) k.label else "${k.label} · ${k.statLabel}"
-                top.addView(Look.text(context, name, 13, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
-                val valueColor = if (k.tone == Tone.BAD) Look.statusFail else Look.onDark
+                top.addView(Look.text(context, name, 13, Look.ink), LinearLayout.LayoutParams(0, -2, 1f))
+                val valueColor = if (k.tone == Tone.BAD) Look.failureInk else Look.ink
                 // A count has no bar, so its change sits beside its value on the one line it has.
                 if (k.count) k.deltaText?.let {
                     top.addView(Look.text(context, it, 12, deltaColor(k.tone), bold = true),
@@ -109,7 +109,7 @@ object BenchmarkResultCards {
                 top.addView(Look.text(context, k.valueText, 15, valueColor, bold = true, mono = true),
                     LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(8) })
                 metricsCard.addView(top, lp(10))
-                if (k.span.isNotBlank()) metricsCard.addView(Look.text(context, k.span, 11, Look.onDarkMuted), lp(0))
+                if (k.span.isNotBlank()) metricsCard.addView(Look.text(context, k.span, 11, Look.inkMuted), lp(0))
                 if (!k.count) {
                     // The change at the right end of the bar: two lines a row instead of three.
                     val barRow = Look.row(context)
@@ -122,7 +122,7 @@ object BenchmarkResultCards {
                     metricsCard.addView(barRow, lp(4))
                 }
                 // Why this row has no verdict or no fill; the removed compare chart said it beside the row.
-                k.note?.let { metricsCard.addView(Look.text(context, it, 11, Look.onDarkMuted), lp(2)) }
+                k.note?.let { metricsCard.addView(Look.text(context, it, 11, Look.inkMuted), lp(2)) }
             }
         }
         // Label and value pairs, not seven sentences that repeated each other: the eligibility line named the same
@@ -136,14 +136,14 @@ object BenchmarkResultCards {
         (ResultPresenter.runFacts(run, deviceName, endpointName, fileName) + referenceFacts).forEachIndexed { i, (label, fact) ->
             val factRow = Look.row(context)
             // 96dp so "Baseline 발열" and "이전 run 발열" stay on one line.
-            factRow.addView(Look.text(context, label, 12, Look.onDarkMuted), LinearLayout.LayoutParams(dp(96), -2))
-            factRow.addView(Look.text(context, fact, 12, Look.onDark), LinearLayout.LayoutParams(0, -2, 1f))
+            factRow.addView(Look.text(context, label, 12, Look.inkMuted), LinearLayout.LayoutParams(dp(96), -2))
+            factRow.addView(Look.text(context, fact, 12, Look.ink), LinearLayout.LayoutParams(0, -2, 1f))
             details.addView(factRow, lp(if (i == 0) 4 else 8))
         }
         ResultPresenter.scoreValue(run)?.let {
-            details.addView(Look.text(context, "점수는 같은 기기·카메라의 변화를 보기 위한 내부 초안입니다. 기기 간 순위가 아닙니다.", 11, Look.onDarkMuted), lp(12))
+            details.addView(Look.text(context, "점수는 같은 기기·카메라의 변화를 보기 위한 내부 초안입니다. 기기 간 순위가 아닙니다.", 11, Look.inkMuted), lp(12))
         }
-        metricsCard.addView(Look.disclosure(context, "실행 정보", details), lp(4))
+        metricsCard.addView(Look.disclosure(context, "Run Details", details), lp(4))
         content.addView(metricsCard, lp(10))
         return view
     }
@@ -153,8 +153,8 @@ object BenchmarkResultCards {
      * used to be blue, which on this app's dark screens is the colour of things that can be pressed.
      */
     private fun deltaColor(tone: Tone): Int = when (tone) {
-        Tone.BAD -> Look.statusFail
-        Tone.GOOD -> Look.statusPass
-        Tone.NEUTRAL -> Look.onDarkMuted
+        Tone.BAD -> Look.failureInk
+        Tone.GOOD -> Look.successInk
+        Tone.NEUTRAL -> Look.inkMuted
     }
 }

@@ -111,7 +111,9 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         VendoredCts.install(this)
+        setTheme(dev.halcamera.R.style.LabTheme)
         super.onCreate(savedInstanceState)
+        Look.configureLabWindow(this)
         val keys = intent.getStringArrayExtra(EXTRA_KEYS)?.toList() ?: emptyList()
         val vendored: List<VendoredTest> =
             if (Build.VERSION.SDK_INT >= VendoredCts.MIN_SDK && keys.any { it.startsWith(SuiteItem.VENDORED_PREFIX) }) VendoredCatalog.tests() else emptyList()
@@ -143,19 +145,19 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
             }
         })
 
-        val scroll = ScrollView(this).apply { setBackgroundColor(Look.expertTile) }
+        val scroll = ScrollView(this).apply { setBackgroundColor(Look.canvas) }
         val body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         scroll.addView(body)
         setContentView(scroll)
         ViewCompat.setOnApplyWindowInsetsListener(scroll) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
-            view.setPadding(bars.left + dp(16), bars.top + dp(16), bars.right + dp(16), bars.bottom + dp(16))
+            view.setPadding(bars.left + Look.pageMargin(view, bars.left + bars.right), bars.top + dp(16), bars.right + Look.pageMargin(view, bars.left + bars.right), bars.bottom + dp(16))
             insets
         }
 
-        body.addView(Look.titleBar(this, "CTS 실행", 22, "이전 화면으로 돌아가기") { finish() })
-        body.addView(Look.text(this, "${queue.size}개 검사 · 화면을 나가면 중단", 12, Look.onDarkMuted), lp(top = 4))
-        body.addView(Look.text(this, "앱 내 검사 · 공식 CTS 인증 결과 아님", 11, Look.onDarkMuted), lp(top = 4))
+        body.addView(Look.titleBar(this, "CTS Run", 22, "이전 화면으로 돌아가기") { finish() })
+        body.addView(Look.text(this, "${queue.size}개 검사 · 화면을 나가면 중단", 12, Look.inkMuted), lp(top = 4))
+        body.addView(Look.text(this, "앱 내 검사 · 공식 CTS 인증 결과 아님", 11, Look.inkMuted), lp(top = 4))
 
         // The preview keeps its frame; each item resizes only the buffer, as in the CTS activity.
         val frame = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
@@ -171,17 +173,17 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         frame.addView(previewCover, FrameLayout.LayoutParams(-1, -1))
         body.addView(frame, lp(top = 12).apply { height = dp(180) })
 
-        statusView = Look.text(this, status, 13, Look.onDarkMuted)
+        statusView = Look.text(this, status, 13, Look.inkMuted)
         body.addView(statusView, lp(top = 8))
         val actions = Look.row(this)
-        runButton = Look.ghostButton(this, "실행", dark = true) { if (running) stop() else requestAndStart() }
+        runButton = Look.ghostButton(this, "Run", dark = false) { if (running) stop() else requestAndStart() }
         actions.addView(runButton, LinearLayout.LayoutParams(0, -2, 1f))
-        copyButton = Look.ghostButton(this, "복사", dark = true) { copy() }
-        shareButton = Look.ghostButton(this, "공유", dark = true) { share() }
+        copyButton = Look.ghostButton(this, "Copy", dark = false) { copy() }
+        shareButton = Look.ghostButton(this, "Share", dark = false) { share() }
         actions.addView(copyButton, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
         actions.addView(shareButton, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
         body.addView(actions, lp(top = 8))
-        headlineView = Look.text(this, "", 19, Look.onDark, bold = true)
+        headlineView = Look.text(this, "", 19, Look.ink, bold = true)
         body.addView(headlineView, lp(top = 18))
         list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         body.addView(list, lp(top = 4))
@@ -406,7 +408,7 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         renderStatus()
         previewCover.visibility = if (running) View.GONE else View.VISIBLE
         previewCover.text = if (report == null) "실행을 시작하면 프리뷰가 여기에 나옵니다" else "실행이 끝나 카메라를 닫았습니다"
-        runButton.text = when { running -> "중단"; report != null -> "다시 실행"; else -> "실행" }
+        runButton.text = when { running -> "Stop"; report != null -> "Run Again"; else -> "Run" }
         listOf(copyButton, shareButton).forEach {
             it.isEnabled = !running && report != null
             it.alpha = if (it.isEnabled) 1f else 0.4f
@@ -415,7 +417,7 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         headlineView.visibility = if (done == null) View.GONE else View.VISIBLE
         if (done != null) {
             headlineView.text = SuiteReportPresenter.headline(done)
-            headlineView.setTextColor(when { done.cancelled -> Look.statusWarn; done.failed > 0 -> Look.statusFail; else -> Look.statusPass })
+            headlineView.setTextColor(when { done.cancelled -> Look.warningInk; done.failed > 0 -> Look.failureInk; else -> Look.successInk })
         }
         list.removeAllViews()
         queue.forEachIndexed { index, item ->
@@ -431,11 +433,11 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
 
     private fun entryCard(index: Int, entry: SuiteEntry): View {
         val color = when (entry.outcome) {
-            SuiteOutcome.PASS -> Look.statusPass
-            SuiteOutcome.FAIL -> Look.statusFail
+            SuiteOutcome.PASS -> Look.successInk
+            SuiteOutcome.FAIL -> Look.failureInk
             SuiteOutcome.SKIP -> Look.statusUnknown
-            SuiteOutcome.CANCELLED -> Look.statusWarn
-            SuiteOutcome.NOT_RUN -> Look.onDarkMuted
+            SuiteOutcome.CANCELLED -> Look.warningInk
+            SuiteOutcome.NOT_RUN -> Look.inkMuted
         }
         val open = index in expanded
         val card = itemCard(SuiteReportPresenter.outcomeLabel(entry.outcome), color, entry.item.title, SuiteReportPresenter.entryLine(entry))
@@ -443,31 +445,31 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
             card.isClickable = true; card.isFocusable = true
             card.contentDescription = "${entry.item.title} ${SuiteReportPresenter.outcomeLabel(entry.outcome)}, 상세 ${if (open) "접기" else "펼치기"}"
             card.setOnClickListener { if (open) expanded -= index else expanded += index; render() }
-            if (open) card.addView(wide(Look.text(this, entry.detail, 11, Look.onDark, mono = true)), lp(top = 10))
+            if (open) card.addView(wide(Look.text(this, entry.detail, 11, Look.ink, mono = true)), lp(top = 10))
         }
         return card
     }
 
     private fun liveCard(item: SuiteItem): View {
-        val card = itemCard("실행 중", Look.primaryOnDark, item.title, item.source)
+        val card = itemCard("실행 중", Look.primary, item.title, item.source)
         val detail = when (item) {
             is SuiteItem.Custom -> SuiteReportPresenter.customDetail(liveSteps.map { CameraCaseResult(it.key, it.value) })
             is SuiteItem.Vendored -> SuiteReportPresenter.vendoredDetail(liveFailures)
         }
-        if (detail.isNotEmpty()) card.addView(wide(Look.text(this, detail, 11, Look.onDark, mono = true)), lp(top = 10))
+        if (detail.isNotEmpty()) card.addView(wide(Look.text(this, detail, 11, Look.ink, mono = true)), lp(top = 10))
         return card
     }
 
-    private fun pendingCard(item: SuiteItem): View = itemCard("대기", Look.onDarkMuted, item.title, item.source).apply { alpha = 0.7f }
+    private fun pendingCard(item: SuiteItem): View = itemCard("대기", Look.inkMuted, item.title, item.source).apply { alpha = 0.7f }
 
     /** A dark card with the outcome tag on the left and the title and its second line on the right. */
     private fun itemCard(tag: String, tagColor: Int, title: String, line: String): LinearLayout {
-        val card = Look.card(this, dark = true)
+        val card = Look.card(this, dark = false)
         val row = Look.row(this)
         row.addView(Look.text(this, tag, 12, tagColor, bold = true).apply { minWidth = dp(64) }, LinearLayout.LayoutParams(-2, -2))
         val column = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        column.addView(Look.text(this, title, 15, Look.onDark, bold = true))
-        column.addView(Look.text(this, line, 12, Look.onDarkMuted), lp(top = 2))
+        column.addView(Look.text(this, title, 15, Look.ink, bold = true))
+        column.addView(Look.text(this, line, 12, Look.inkMuted), lp(top = 2))
         row.addView(column, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
         card.addView(row)
         return card

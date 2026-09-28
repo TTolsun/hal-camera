@@ -67,7 +67,7 @@ class IncidentActions(
     fun showList() {
         val files = files()
         if (files.isEmpty()) { toast("저장된 incident가 없습니다"); return }
-        AlertDialog.Builder(activity).setTitle("Incident ZIP · ${files.size}개")
+        AlertDialog.Builder(activity).setTitle("ZIP Archives · ${files.size}")
             .setItems(files.map { "${it.name}\n${it.length() / 1024} KB" }.toTypedArray()) { _, index ->
                 val file = files[index]
                 AlertDialog.Builder(activity).setTitle(file.name).setItems(arrayOf("공유", "다른 위치에 저장", "삭제")) { _, action ->

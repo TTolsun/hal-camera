@@ -24,7 +24,7 @@ class SuitePlanTest {
     fun `select keeps the list order whatever order the keys come in and drops unknown keys`() {
         val keys = listOf(SuiteItem.VENDORED_PREFIX + basic.id, "custom:nope", SuiteItem.CUSTOM_PREFIX + CtsCatalog.VIDEO_SNAPSHOT, SuiteItem.CUSTOM_PREFIX + CtsCatalog.FAST_ON_OFF)
         val chosen = SuitePlan.select(all, keys)
-        assertEquals(listOf("빠른 켜기·끄기", "동영상 스냅샷", "testBasicRecording"), chosen.map { it.title })
+        assertEquals(listOf("Rapid Open / Close", "Video Snapshot", "testBasicRecording"), chosen.map { it.title })
     }
 
     @Test

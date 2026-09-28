@@ -4,15 +4,23 @@ import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
-import android.os.Build
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
+import android.view.View
+import android.widget.ImageView
+import android.view.accessibility.AccessibilityNodeInfo
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.text.InputFilter
-import android.view.Gravity
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.benchmark.BenchmarkActivity
@@ -20,16 +28,62 @@ import dev.halcamera.benchmark.HistoryActivity
 import dev.halcamera.cts.CtsEntryActivity
 import dev.halcamera.ui.AboutSheet
 import dev.halcamera.ui.DeviceIdentity
-import dev.halcamera.ui.IconButton
+import androidx.core.view.WindowCompat
 import dev.halcamera.ui.Look
+import dev.halcamera.ui.IncidentActions
+import dev.halcamera.cli.CommandCoordinator
+import java.io.File
+import java.util.concurrent.Executors
 
-/** An optional camera-free workspace, reached from LIVE's tools menu. */
+/** Camera-free home for inspection tools and saved results, reached from LIVE. */
 class WorkbenchActivity : ComponentActivity() {
     private lateinit var body: LinearLayout
+    private lateinit var scroll: ScrollView
+    private val io = Executors.newSingleThreadExecutor()
+    private val main = Handler(Looper.getMainLooper())
+    private var saveFile: File? = null
+    private val cli by lazy { CommandCoordinator.get(this) }
+    private val incidents by lazy {
+        IncidentActions(this, io, main, object : IncidentActions.Host {
+            override val sessions = emptyMap<String, Map<String, Any?>>()
+            override val destroyed get() = isDestroyed
+            override fun latestChanged(file: File?) = Unit
+            override fun saveAs(file: File) { saveFile = file; saveDocument.launch(file.name) }
+        })
+    }
+    private val saveDocument = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        val file = saveFile
+        if (uri != null && file != null) io.execute {
+            val message = runCatching {
+                contentResolver.openOutputStream(uri)?.use { target -> file.inputStream().use { it.copyTo(target) } }
+                    ?: error("저장 위치를 열 수 없습니다")
+                "선택한 위치에 저장했습니다"
+            }.getOrElse { "저장 실패: ${it.message}" }
+            main.post { if (!isDestroyed) Toast.makeText(this, message, Toast.LENGTH_LONG).show() }
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString("save_zip", saveFile?.name)
+        outState.putInt("lab_scroll", scroll.scrollY)
+        super.onSaveInstanceState(outState)
+    }
+
+    override fun onDestroy() {
+        io.shutdown()
+        super.onDestroy()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.LabTheme)
         super.onCreate(savedInstanceState)
-        val scroll = ScrollView(this).apply { setBackgroundColor(Look.cameraSurface); isFillViewport = true }
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
+        }
+        savedInstanceState?.getString("save_zip")?.let { saveFile = File(File(filesDir, "incidents"), it) }
+        scroll = ScrollView(this).apply { setBackgroundColor(Look.canvas); isFillViewport = true }
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         scroll.addView(body)
         setContentView(scroll)
@@ -37,7 +91,7 @@ class WorkbenchActivity : ComponentActivity() {
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             // Readable on tablets and in landscape; recompute from the actual window, not physical display size.
             val available = view.width - bars.left - bars.right
-            val margin = maxOf(dp(20), (available - dp(840)) / 2)
+            val margin = maxOf(dp(20), (available - dp(680)) / 2)
             view.setPadding(bars.left + margin, bars.top + dp(16), bars.right + margin, bars.bottom + dp(24))
             insets
         }
@@ -45,62 +99,130 @@ class WorkbenchActivity : ComponentActivity() {
             if (r - l != oldR - oldL) ViewCompat.requestApplyInsets(view)
         }
         render()
+        savedInstanceState?.getInt("lab_scroll")?.let { y -> scroll.post { scroll.scrollTo(0, y) } }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        render()
     }
 
     private fun render() {
+        val scrollY = scroll.scrollY
         body.removeAllViews()
-        val header = Look.row(this)
-        header.addView(IconButton(this, R.drawable.ic_action_back, "프리뷰로 돌아가기") { finish() }, LinearLayout.LayoutParams(dp(48), dp(48)))
-        header.addView(Look.text(this, "HAL CAMERA", 14, Look.onDark, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
-        header.addView(IconButton(this, R.drawable.ic_action_info, "앱 정보") { AboutSheet.show(this) }, LinearLayout.LayoutParams(dp(48), dp(48)))
-        body.addView(header)
-        body.addView(Look.text(this, "카메라 작업실", 24, Look.onDark, bold = true), lp(8))
-
-        val device = Look.card(this, dark = true).apply {
-            background = Look.touchBackground(this@WorkbenchActivity, Look.cameraCard, Look.cameraOutline)
+        val back = Look.row(this).apply {
+            minimumHeight = dp(48)
+            setPadding(dp(4), 0, dp(16), 0)
+            background = touchSurface(Color.TRANSPARENT)
+            contentDescription = "Live 프리뷰로 돌아가기"
             isFocusable = true
-            contentDescription = "기기 이름·빌드 정보, ${DeviceIdentity.label(this@WorkbenchActivity)}"
-            setOnClickListener { showDevice() }
+            setOnClickListener { finish() }
+            asButton()
         }
-        device.addView(Look.text(this, "DEVICE · 기기 정보  ›", 12, Look.primaryOnDark, bold = true))
-        device.addView(Look.text(this, DeviceIdentity.label(this), 20, Look.onDark, bold = true), lp(4))
-        device.addView(Look.text(this, "${DeviceIdentity.chipset()} · ${DeviceIdentity.platform()}", 12, Look.onDarkMuted), lp(4))
-        device.addView(Look.text(this, "Build · ${Build.DISPLAY}", 12, Look.onDarkMuted, mono = true).apply {
-            maxLines = 1
-            ellipsize = android.text.TextUtils.TruncateAt.END
-        }, lp(4))
-        body.addView(device, lp(16))
+        back.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_action_back)
+            imageTintList = ColorStateList.valueOf(Look.primary)
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }, LinearLayout.LayoutParams(dp(24), dp(24)))
+        back.addView(Look.text(this, "Live", 17, Look.primary).apply {
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(4) })
+        body.addView(back, LinearLayout.LayoutParams(-2, -2))
+        body.addView(Look.text(this, "Lab", 34, Look.ink, bold = true).apply {
+            ViewCompat.setAccessibilityHeading(this, true)
+        }, lp(8))
 
-        body.addView(Look.primaryButton(this, "Live · 카메라 열기") { open(MainActivity::class.java) }, lp(16))
-        body.addView(Look.text(this, "프리뷰 · 사진·동영상 · 실시간 진단 · Incident ZIP", 12, Look.onDarkMuted), lp(8))
-        body.addView(Look.text(this, "검사 도구", 14, Look.onDark, bold = true), lp(20))
-        destination("01", "Probe · 사양 확인", "지원 기능 · 해상도 · 스트림 사양") { open(CameraProbeActivity::class.java) }
-        destination("02", "CTS · 동작 검증", "검사 선택·단계별 판정·실패 원인") { open(CtsEntryActivity::class.java) }
-        destination("03", "Benchmark · 성능 측정", "반복 측정·지연·안정성 비교") { open(BenchmarkActivity::class.java) }
-        body.addView(Look.text(this, "저장된 결과", 14, Look.onDark, bold = true), lp(24))
-        body.addView(Look.ghostButton(this, "실행 기록 · 비교·내보내기", dark = true) { open(HistoryActivity::class.java) }, lp(12))
-        body.addView(Look.ghostButton(this, "갤러리 · 사진·동영상", dark = true) { open(GalleryActivity::class.java) }, lp(8))
+        val device = group()
+        entry(device, DeviceIdentity.label(this), DeviceIdentity.platform()) { showDevice() }
+        body.addView(device, lp(24))
+
+        section("Inspection") { tools ->
+            entry(tools, "Probe", "사양 확인") { open(CameraProbeActivity::class.java) }
+            entry(tools, "CTS", "동작 검증") { open(CtsEntryActivity::class.java) }
+            entry(tools, "Benchmark", "성능 측정") { open(BenchmarkActivity::class.java) }
+        }
+        section("Results") { results ->
+            entry(results, "Run History", "비교 · 내보내기") { open(HistoryActivity::class.java) }
+            entry(results, "Gallery", "사진 · 동영상") { open(GalleryActivity::class.java) }
+            entry(results, "ZIP Archives", "공유 · 저장 · 삭제") { incidents.showList() }
+        }
+        section("Settings") { settings ->
+            entry(settings, "ADB CLI", if (cli.enabled) "허용됨" else "꺼짐") {
+                AlertDialog.Builder(this).setTitle("ADB CLI")
+                    .setMultiChoiceItems(arrayOf("ADB CLI 허용"), booleanArrayOf(cli.enabled)) { _, _, checked ->
+                        cli.setEnabled(checked)
+                    }
+                    .setPositiveButton("Close", null)
+                    .setOnDismissListener { render() }.show()
+            }
+            entry(settings, "Reconnect Camera", "카메라 연결 다시 시작") { returnToLive(ACTION_RECONNECT) }
+            entry(settings, "About", "앱 버전 · 프로젝트 정보") { AboutSheet.show(this) }
+        }
+        scroll.post { scroll.scrollTo(0, scrollY) }
     }
 
-    private fun destination(number: String, title: String, detail: String, action: () -> Unit) {
-        val row = Look.row(this).apply {
-            gravity = Gravity.TOP
-            background = Look.touchBackground(this@WorkbenchActivity, Look.cameraSurface, Look.cameraOutline)
-            setPadding(dp(16), dp(16), dp(16), dp(16))
-            isFocusable = true
-            contentDescription = "$title. $detail"
-            setOnClickListener { action() }
+    private fun group() = LinearLayout(this).apply {
+        orientation = LinearLayout.VERTICAL
+        background = GradientDrawable().apply { setColor(Look.labSurface); cornerRadius = dp(18).toFloat() }
+        clipToOutline = true
+    }
+
+    private fun section(title: String, build: (LinearLayout) -> Unit) {
+        body.addView(Look.text(this, title, 20, Look.ink, bold = true).apply {
+            ViewCompat.setAccessibilityHeading(this, true)
+        }, lp(32))
+        body.addView(group().also(build), lp(12))
+    }
+
+    private fun touchSurface(fill: Int) = RippleDrawable(
+        ColorStateList.valueOf(0x180066CC),
+        GradientDrawable().apply { setColor(fill) },
+        GradientDrawable().apply { setColor(Color.WHITE) }
+    )
+
+    private fun View.asButton() {
+        accessibilityDelegate = object : View.AccessibilityDelegate() {
+            override fun onInitializeAccessibilityNodeInfo(host: View, info: AccessibilityNodeInfo) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.className = android.widget.Button::class.java.name
+            }
         }
-        row.addView(Look.text(this, number, 12, Look.primaryOnDark, mono = true), LinearLayout.LayoutParams(dp(36), -2).apply { topMargin = dp(4) })
+    }
+
+    private fun entry(group: LinearLayout, title: String, detail: String? = null, action: () -> Unit) {
+        if (group.childCount > 0) {
+            group.addView(View(this).apply {
+                setBackgroundColor(Look.hairline)
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }, LinearLayout.LayoutParams(-1, dp(1)).apply { marginStart = dp(20); marginEnd = dp(20) })
+        }
+        val row = Look.row(this).apply {
+            minimumHeight = dp(56)
+            setPadding(dp(20), dp(16), dp(20), dp(16))
+            background = touchSurface(Color.TRANSPARENT)
+            contentDescription = listOfNotNull(title, detail).joinToString(". ")
+            isFocusable = true
+            setOnClickListener { action() }
+            asButton()
+        }
         val words = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            addView(Look.text(this@WorkbenchActivity, title, 17, Look.ink))
+            if (detail != null) addView(Look.text(this@WorkbenchActivity, detail, 13, Look.inkMuted), lp(4))
         }
-        words.addView(Look.text(this, title, 17, Look.onDark, bold = true))
-        words.addView(Look.text(this, detail, 13, Look.onDarkMuted), lp(4))
         row.addView(words, LinearLayout.LayoutParams(0, -2, 1f))
-        row.addView(Look.text(this, "›", 20, Look.onDarkMuted).apply { importantForAccessibility = android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO }, LinearLayout.LayoutParams(dp(20), -2))
-        body.addView(row, lp(8))
+        row.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_action_next)
+            imageTintList = ColorStateList.valueOf(Look.primary)
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }, LinearLayout.LayoutParams(dp(20), dp(20)).apply { marginStart = dp(12) })
+        group.addView(row, LinearLayout.LayoutParams(-1, -2))
+    }
+    private fun returnToLive(action: String) {
+        setResult(RESULT_OK, Intent().putExtra(EXTRA_LIVE_ACTION, action))
+        finish()
     }
 
     private fun showDevice() {
@@ -108,26 +230,42 @@ class WorkbenchActivity : ComponentActivity() {
         val name = EditText(this).apply {
             setText(DeviceIdentity.alias(this@WorkbenchActivity))
             hint = "예: EVT2 · Lab 03"
-            contentDescription = "이 기기의 작업실 이름"
+            contentDescription = "이 기기의 식별 이름"
             isSingleLine = true
             filters = arrayOf(InputFilter.LengthFilter(40))
         }
-        content.addView(Look.text(this, "같은 모델을 구별할 이름입니다. 이 앱에만 저장됩니다.", 14, Look.onDarkMuted))
+        content.addView(Look.text(this, "같은 모델을 구별할 이름입니다. 이 앱에만 저장됩니다.", 14, Look.inkMuted))
         content.addView(name, lp(8))
-        content.addView(Look.text(this, DeviceIdentity.report(this), 12, Look.onDarkMuted, mono = true).apply { setTextIsSelectable(true) }, lp(16))
-        AlertDialog.Builder(this).setTitle("기기 이름·빌드 정보")
+        content.addView(Look.text(this, DeviceIdentity.report(this), 12, Look.inkMuted, mono = true).apply { setTextIsSelectable(true) }, lp(16))
+        AlertDialog.Builder(this).setTitle("Device Info")
             .setView(ScrollView(this).apply { addView(content) })
             .setPositiveButton("이름 저장") { _, _ -> DeviceIdentity.setAlias(this, name.text.toString()); render() }
             .setNeutralButton("기기 정보 복사") { _, _ ->
                 getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("HAL CAMERA device", DeviceIdentity.report(this)))
                 Toast.makeText(this, "기기·빌드 정보를 복사했습니다.", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton("닫기", null).show()
+            .setNegativeButton("Close", null).show()
     }
 
     private fun open(screen: Class<out android.app.Activity>) = startActivity(Intent(this, screen).apply {
-        if (screen == MainActivity::class.java) addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        if (screen == CameraProbeActivity::class.java || screen == BenchmarkActivity::class.java) {
+            this@WorkbenchActivity.intent.getStringExtra(EXTRA_CAMERA_ID)?.let {
+                putExtra(CameraProbeActivity.EXTRA_CAMERA_ID, it)
+            }
+        }
+        if (screen == BenchmarkActivity::class.java) {
+            this@WorkbenchActivity.intent.getStringExtra(EXTRA_ENGINE)?.let {
+                putExtra(BenchmarkActivity.EXTRA_ENGINE, it)
+            }
+        }
     })
+    companion object {
+        const val EXTRA_LIVE_ACTION = "live_action"
+        const val ACTION_RECONNECT = "reconnect"
+        const val EXTRA_CAMERA_ID = "camera_id"
+        const val EXTRA_ENGINE = "engine"
+    }
+
     private fun dp(value: Int) = Look.dp(this, value)
     private fun lp(top: Int = 0) = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top) }
 }

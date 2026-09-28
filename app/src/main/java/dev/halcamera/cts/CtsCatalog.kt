@@ -38,7 +38,7 @@ object CtsCatalog {
         CtsCaseSpec(
             id = FAST_ON_OFF,
             source = FastOnOffRules.SOURCE,
-            title = "빠른 켜기·끄기",
+            title = "Rapid Open / Close",
             needsAudio = false,
             summary = { cameras ->
                 "카메라 ${cameras}대마다 표준 열기(열기 → 프리뷰 세션 → 첫 프레임 → 닫기)와 빠른 열기(열기 직후 닫기 → 다시 열기 → 첫 프레임 → 닫기)를 " +
@@ -50,7 +50,7 @@ object CtsCatalog {
         CtsCaseSpec(
             id = SWITCHING,
             source = SwitchingRules.SOURCE,
-            title = "카메라 전환",
+            title = "Camera Switching",
             needsAudio = true,
             summary = { cameras ->
                 "카메라 ${cameras}대를 차례로 열고 첫 프레임을 받은 뒤 닫는 전환을 ${SwitchingRules.DEFAULT_ROUNDS}회 반복하고, " +
@@ -62,7 +62,7 @@ object CtsCatalog {
         CtsCaseSpec(
             id = ALL_SIZE_ON_OFF,
             source = AllSizeOnOffRules.SOURCE,
-            title = "모든 크기 켜기·끄기",
+            title = "Stream Sizes",
             needsAudio = false,
             summary = { cameras ->
                 "카메라 ${cameras}대마다 SurfaceHolder로 보고하는 모든 프리뷰 크기를 큰 것부터 하나씩 열어(열기 → 그 크기의 프리뷰 세션 → 첫 프레임 → 닫기) 확인합니다" +
@@ -74,7 +74,7 @@ object CtsCatalog {
         CtsCaseSpec(
             id = STILL_PREVIEW_COMBINATION,
             source = StillPreviewCombinationRules.SOURCE,
-            title = "정지 영상 × 프리뷰 조합",
+            title = "Still / Preview Combinations",
             needsAudio = false,
             summary = { cameras ->
                 "카메라 ${cameras}대마다 JPEG 크기 전부와 프리뷰 크기(1080p 이하) 전부의 조합을 하나씩 구성해 프리뷰 첫 프레임 뒤 정지 영상을 한 장 찍고, " +
@@ -87,7 +87,7 @@ object CtsCatalog {
         CtsCaseSpec(
             id = VIDEO_SNAPSHOT,
             source = VideoSnapshotRules.SOURCE,
-            title = "동영상 스냅샷",
+            title = "Video Snapshot",
             needsAudio = true,
             summary = { cameras ->
                 "카메라 ${cameras}대마다 가장 큰 CamcorderProfile로 ${VideoSnapshotRules.RECORDING_DURATION_MS / 1000}초를 녹화하면서 " +
