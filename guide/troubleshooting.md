@@ -99,7 +99,7 @@ incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽�
 
 ### 사진 저장이나 노출이 예상과 다를 때
 
-Camera2의 사진 저장에는 센서 타임스탬프가 일치하는 YUV·JPEG 버퍼가 모두 필요합니다. CameraX는 JPEG와 시각이 가장 가까운 analysis 프레임을 연결하므로, `media_saved.yuvOffsetNs`로 차이를 확인합니다. 엔진별 연결 기준을 먼저 구분한 뒤 Callback과 저장 오류를 대조하세요. 저장 완료 안내와 녹화 조작법은 [빠른 시작](getting-started.md#live에서-촬영하세요)에 있습니다.
+Camera2의 기본 사진 저장에는 센서 타임스탬프가 일치하는 YUV·JPEG 버퍼가 모두 필요합니다. Live 스트림에서 출력을 하나만 켰다면 해당 출력만 기다리며, 그 이미지도 요청의 센서 시각과 일치해야 합니다. CameraX는 JPEG와 시각이 가장 가까운 analysis 프레임을 연결하므로, `media_saved.yuvOffsetNs`로 차이를 확인합니다. 엔진별 연결 기준을 먼저 구분한 뒤 Callback과 저장 오류를 대조하세요. 저장 완료 안내와 녹화 조작법은 [빠른 시작](getting-started.md#live에서-촬영하세요)에 있습니다.
 
 Camera2의 Flash Auto·On에서 precapture 측광이 3초 안에 끝나지 않으면 안내 문구를 표시하고 촬영을 진행합니다. 촬영 지연을 확인할 때 이 대기 시간도 구분하세요. CameraX의 플래시 측광은 ImageCapture가 처리합니다.
 
@@ -118,7 +118,7 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-28 @ `b74b78c` · Codex
+- 검토 2026-09-28 @ `ee4d548` · Codex-code-review
 
 </details>
 
@@ -141,13 +141,13 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.15.0 (versionCode 543)
+- 검증 기준 앱 버전: 0.16.0 (versionCode 593)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-28 @ `b74b78c` · Codex |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-28 @ `b74b78c` · Codex |
-| 원고 `layer-isolation` | 최신 | 검토 2026-09-28 @ `b74b78c` · Codex |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-28 @ `ee4d548` · Codex-code-review |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-28 @ `ee4d548` · Codex-code-review |
+| 원고 `layer-isolation` | 최신 | 검토 2026-09-28 @ `ee4d548` · Codex-code-review |
 
 <!-- omm:end id=status -->
 

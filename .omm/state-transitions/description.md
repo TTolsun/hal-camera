@@ -9,3 +9,5 @@ API 버튼을 누르면 Camera2와 CameraX 사이를 전환하며 기존 close �
 CLI는 accepted → preparing → running → saving → succeeded로 진행하며 실패·취소·프로세스 중단을 별도 terminal state로 기록합니다. 같은 요청 ID와 내용은 기존 상태를 반환하며 내용이 다르면 충돌로 거부합니다. 프로세스가 다시 시작되면 미완료 기록을 interrupted로 바꾸고 촬영이나 측정을 재실행하지 않습니다. 제출된 사진 저장의 취소는 실제 저장 결과와 경합할 수 있습니다.
 
 여러 실행을 묶어 비교하던 ProfileComparisonActivity는 제거되었습니다. 현재 두 실행 비교는 HistoryActivity가 담당합니다.
+
+Live 스트림 적용은 사진·녹화·저장·권한 요청·CLI 작업 중에 거절합니다. 기존 close(done)가 끝난 뒤 새 엔진에 설정을 전달하고 구성 성공값을 카메라별로 보관합니다. 실패하면 크기를 자동 대체하지 않으며 사용자가 직전 정상 구성으로 복구할 수 있습니다. Activity 재생성에서도 요청값과 정상 구성을 복원합니다.

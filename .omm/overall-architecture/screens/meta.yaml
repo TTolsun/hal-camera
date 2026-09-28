@@ -6,6 +6,7 @@ kind: nested-class
 title: screens
 children:
   - workbench-screen
+  - live-streams-screen
   - benchmark-screen
   - benchmark-start
   - cts-screen

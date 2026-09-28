@@ -41,6 +41,7 @@ internal class Camera2LiveRecorder(
         val active: Boolean
         /** A benchmark engine never records LIVE video. */
         val benchmark: Boolean
+        val settings: LiveVideo?
         val characteristics: CameraCharacteristics?
         val previewOutput: ConfiguredOutput<Surface>?
         val session: CameraCaptureSession?
@@ -89,7 +90,12 @@ internal class Camera2LiveRecorder(
             try {
                 val c = host.characteristics ?: error("Camera characteristics unavailable")
                 val sizes = c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]!!.getOutputSizes(MediaRecorder::class.java)
-                val size = host.chooseSize(sizes.filter { it.width >= it.height }.toTypedArray(), 1920L * 1080)
+                val settings = host.settings
+                val size = settings?.size?.androidSize() ?: requireNotNull(defaultLiveVideo(sizes.map { LiveSize(it.width, it.height) })) {
+                    "No landscape recording size available"
+                }.size.androidSize()
+                if (settings != null) require(settings in liveStreamSupport(c).videos) { "Unsupported recording size, FPS or codec" }
+                telemetry.event(sessionId, "live_recording_requested", mapOf("size" to size.toString(), "fps" to (settings?.fps ?: 30), "codec" to (settings?.codec ?: "H264")))
                 val file = File.createTempFile("hal_recording_", ".mp4", context.cacheDir).also { this.file = it }
                 val recorder = (if (android.os.Build.VERSION.SDK_INT >= 31) MediaRecorder(context) else MediaRecorder()).also { this.recorder = it }
                 recorder.apply {
@@ -97,11 +103,11 @@ internal class Camera2LiveRecorder(
                     setVideoSource(MediaRecorder.VideoSource.SURFACE)
                     setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                     setOutputFile(file.absolutePath)
-                    setVideoEncoder(MediaRecorder.VideoEncoder.H264)
+                    setVideoEncoder(if (settings?.codec == "HEVC") MediaRecorder.VideoEncoder.HEVC else MediaRecorder.VideoEncoder.H264)
                     if (audio) setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
                     setVideoSize(size.width, size.height)
-                    setVideoFrameRate(30)
-                    setVideoEncodingBitRate(10_000_000)
+                    setVideoFrameRate(settings?.fps ?: 30)
+                    setVideoEncodingBitRate(settings?.bitrate ?: 10_000_000)
                     if (audio) {
                         setAudioEncodingBitRate(128_000)
                         setAudioSamplingRate(44_100)
@@ -144,7 +150,7 @@ internal class Camera2LiveRecorder(
                         if (Build.VERSION.SDK_INT >= 34) setReadoutTimestampEnabled(false)
                     }
                 } }
-                camera.createCaptureSessionByOutputConfigurations(configurations, object : CameraCaptureSession.StateCallback() {
+                val sessionCallback = object : CameraCaptureSession.StateCallback() {
                     override fun onConfigured(session: CameraCaptureSession) {
                         if (!host.active || stopRequested) { session.close(); return }
                         host.onSessionConfigured(session)
@@ -152,7 +158,8 @@ internal class Camera2LiveRecorder(
                             surface = recordingSurface
                             host.startRepeating(camera, session, c, outputs)
                             recorder.start(); this@Camera2LiveRecorder.started = true
-                            telemetry.event(sessionId, "recording_started", mapOf("size" to size.toString(), "audio" to audio))
+                            telemetry.event(sessionId, "recording_started", mapOf("size" to size.toString(), "audio" to audio,
+                                "fps" to (settings?.fps ?: 30), "codec" to (settings?.codec ?: "H264")))
                             main.post { if (host.active) { host.recordingState(true); started() } }
                             host.report(if (audio) "REC · 영상과 소리를 녹화하고 있습니다" else "REC · 영상을 녹화하고 있습니다", false)
                         } catch (e: Exception) { failure = e; host.fail(e); session.close() }
@@ -168,7 +175,11 @@ internal class Camera2LiveRecorder(
                         finish()
                         host.rebuildPreview()
                     }
-                }, handler)
+                }
+                checkLiveSession(camera, configurations, handler, sessionCallback) { result ->
+                    telemetry.event(sessionId, "live_recording_preflight", mapOf("result" to result))
+                }
+                camera.createCaptureSessionByOutputConfigurations(configurations, sessionCallback, handler)
             } catch (e: Exception) {
                 failure = e
                 finish()

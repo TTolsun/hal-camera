@@ -20,4 +20,13 @@ internal class StillPair<Y, J> {
         val second = jpeg[key] ?: return null
         return first to second
     }
+    /** A disabled output is not awaited. Enabled outputs must match the capture's sensor timestamp. */
+    fun selected(requireYuv: Boolean, requireJpeg: Boolean): Pair<Y?, J?>? {
+        if (!requireYuv && !requireJpeg) return null
+        val key = timestamp ?: return null
+        val first = yuv[key]
+        val second = jpeg[key]
+        if ((requireYuv && first == null) || (requireJpeg && second == null)) return null
+        return (if (requireYuv) first else null) to (if (requireJpeg) second else null)
+    }
 }

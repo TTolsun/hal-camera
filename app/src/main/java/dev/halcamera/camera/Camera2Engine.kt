@@ -23,8 +23,11 @@ class Camera2Engine(
     private val cameraId: String,
     private val sessionId: String,
     private val telemetry: Telemetry,
-    /** Benchmark profile streams. null keeps the LIVE screen behaviour of picking sizes by pixel budget. */
+    /** Benchmark profile streams. LIVE uses liveStreams or the default pixel budgets. */
     private val spec: StreamSpec? = null,
+    private val liveStreams: LiveStreamSettings? = null,
+    private val streamsConfigured: (Map<String, Any?>) -> Unit = {},
+    private val streamsFailed: (String) -> Unit = {},
     private val previewReady: () -> Unit = {},
     private val previewFrame: () -> Unit = {},
     private val recordingState: (Boolean) -> Unit = {},
@@ -32,6 +35,7 @@ class Camera2Engine(
     private val notice: (String) -> Unit = {},
     private val status: (String, Boolean) -> Unit
 ) : CameraEngine, MediaCapture, LiveTuning, TouchMetering {
+    init { require(spec == null || liveStreams == null) { "LIVE settings cannot override a benchmark profile" } }
     private val thread = HandlerThread("CD.Camera2").apply { start() }
     private val handler = Handler(thread.looper)
     private val main = Handler(Looper.getMainLooper())
@@ -81,6 +85,10 @@ class Camera2Engine(
             callback.onCaptureCompleted(session, request, result)
             stills.onLiveResult(result)
             if (spec == null) { relockStep(result); touchFocus.onResult(result) }
+            if (spec == null && !previewSeen && request.tag == "preview") {
+                previewSeen = true
+                main.post { if (active) previewReady() }
+            }
         }
         override fun onCaptureFailed(session: CameraCaptureSession, request: CaptureRequest, failure: CaptureFailure) =
             callback.onCaptureFailed(session, request, failure)
@@ -119,6 +127,8 @@ class Camera2Engine(
         override val characteristics: CameraCharacteristics get() = chars ?: manager.getCameraCharacteristics(cameraId)
         override val active: Boolean get() = this@Camera2Engine.active
         override val recordingBusy: Boolean get() = video.busy
+        override val captureYuv: Boolean get() = liveStreams == null || liveStreams.yuv != null
+        override val captureJpeg: Boolean get() = liveStreams == null || liveStreams.jpeg != null
         override val needsPrecapture: Boolean get() = requestControls().needsPrecapture
         override val flashName: String get() = controls.flash.name
         override val zoomRequested: Float get() = zoomRatio
@@ -136,6 +146,7 @@ class Camera2Engine(
         override val camera: CameraDevice? get() = device
         override val active: Boolean get() = this@Camera2Engine.active
         override val benchmark: Boolean get() = spec != null
+        override val settings: LiveVideo? get() = liveStreams?.video
         override val characteristics: CameraCharacteristics? get() = chars
         override val previewOutput: ConfiguredOutput<Surface>? get() =
             configuredOutputs.outputs.find { it.descriptor.kind == OutputKind.PREVIEW }
@@ -213,14 +224,24 @@ class Camera2Engine(
             if (previewRelay == null) { previewSurface?.release(); displaySurface?.release() }
             val chars = manager.getCameraCharacteristics(cameraId).also { this.chars = it }
             val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP] ?: error("No stream configuration")
+            liveStreams?.let { settings ->
+                liveStreamSupport(chars).rejection(settings)?.let { error(it) }
+                telemetry.event(sessionId, "live_streams_requested", settings.metadata())
+                settings.fps?.let { fps ->
+                    val durations = listOfNotNull(map.getOutputMinFrameDuration(SurfaceTexture::class.java, settings.preview.androidSize()),
+                        settings.yuv?.let { map.getOutputMinFrameDuration(ImageFormat.YUV_420_888, it.androidSize()) },
+                        settings.jpeg?.let { map.getOutputMinFrameDuration(ImageFormat.JPEG, it.androidSize()) })
+                    require(durations.all { it == 0L || it <= 1_000_000_000L / fps.min + 1 }) { "선택한 크기의 최소 프레임 시간이 FPS 하한을 초과합니다." }
+                }
+            }
             // With a profile spec the sizes are exact and unavailable ones fail the configure step: measuring a
             // smaller stream under the same profile id would corrupt every comparison made with that id.
             val size = spec?.preview?.also { require(it in map.getOutputSizes(SurfaceTexture::class.java)) { "preview $it unsupported" } }
-                ?: choose(map.getOutputSizes(SurfaceTexture::class.java), 1280L * 720)
+                ?: liveStreams?.preview?.androidSize() ?: choose(map.getOutputSizes(SurfaceTexture::class.java), 1280L * 720)
             val yuvSize = spec?.yuv?.also { require(it in map.getOutputSizes(ImageFormat.YUV_420_888)) { "yuv $it unsupported" } }
-                ?: choose(map.getOutputSizes(ImageFormat.YUV_420_888), 640L * 480)
+                ?: if (liveStreams != null) liveStreams.yuv?.androidSize() else choose(map.getOutputSizes(ImageFormat.YUV_420_888), 640L * 480)
             val jpegSize = spec?.jpeg?.also { require(it in map.getOutputSizes(ImageFormat.JPEG)) { "jpeg $it unsupported" } }
-                ?: choose(map.getOutputSizes(ImageFormat.JPEG), 1920L * 1080)
+                ?: if (liveStreams != null) liveStreams.jpeg?.androidSize() else choose(map.getOutputSizes(ImageFormat.JPEG), 1920L * 1080)
             val texture = view.surfaceTexture ?: error("Preview surface unavailable")
             texture.setDefaultBufferSize(size.width, size.height)
             // A recording session and its replacement preview session reuse the same display producer.
@@ -239,17 +260,17 @@ class Camera2Engine(
             val previewOutput = OutputDescriptor("preview", OutputKind.PREVIEW, repeating = true, observable = previewRelay != null)
             val yuvOutput = OutputDescriptor("analysis_acquire_latest", OutputKind.YUV, repeating = true, stillCapture = spec == null)
             val jpegOutput = OutputDescriptor("still", OutputKind.JPEG, repeating = false, stillCapture = true)
-            yuv = reader(yuvSize, ImageFormat.YUV_420_888, yuvOutput)
-            jpeg = reader(jpegSize, ImageFormat.JPEG, jpegOutput)
-            val outputs = StreamConfiguration(listOf(ConfiguredOutput(previewOutput, previewSurface!!),
-                ConfiguredOutput(yuvOutput, yuv!!.surface), ConfiguredOutput(jpegOutput, jpeg!!.surface)))
+            yuv = yuvSize?.let { reader(it, ImageFormat.YUV_420_888, yuvOutput) }
+            jpeg = jpegSize?.let { reader(it, ImageFormat.JPEG, jpegOutput) }
+            val outputs = StreamConfiguration(listOfNotNull(ConfiguredOutput(previewOutput, previewSurface!!),
+                yuv?.let { ConfiguredOutput(yuvOutput, it.surface) }, jpeg?.let { ConfiguredOutput(jpegOutput, it.surface) }))
             // The effective values go into the event so conditions.effective in the run JSON reports what the
             // camera actually ran with, not what the profile asked for (3.1, fixed-focus cameras run AF OFF).
             val sizes = mapOf(
-                "preview" to size.toString(), "analysis" to yuvSize.toString(), "jpeg" to jpegSize.toString(),
-                "afMode" to afMode(chars), "fpsRange" to spec?.fpsRange?.toString()
+                "preview" to size.toString(), "analysis" to yuvSize?.toString(), "jpeg" to jpegSize?.toString(),
+                "afMode" to afMode(chars), "fpsRange" to (spec?.fpsRange?.toString() ?: liveStreams?.fps?.toString())
             )
-            telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
+            if (spec != null) telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
             telemetry.event(sessionId, "configure_requested", sizes)
             val configurations = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
                 if (Build.VERSION.SDK_INT >= 33 && output.descriptor.kind == OutputKind.PREVIEW && previewRelay != null) {
@@ -257,7 +278,7 @@ class Camera2Engine(
                     if (Build.VERSION.SDK_INT >= 34) setReadoutTimestampEnabled(false)
                 }
             } }
-            camera.createCaptureSessionByOutputConfigurations(configurations, object : CameraCaptureSession.StateCallback() {
+            val sessionCallback = object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(session: CameraCaptureSession) {
                     telemetry.event(sessionId, "session_configured", sizes)
                     if (!active) { session.close(); return }
@@ -270,23 +291,30 @@ class Camera2Engine(
                         session.setRepeatingRequest(previewRequest(camera, chars), liveCallback, handler)
                         relockFocus()
                         telemetry.event(sessionId, "configured", sizes)
+                        if (spec == null) telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
+                        if (spec == null) main.post { if (active) streamsConfigured(sizes) }
                         report("Camera2 · LIVE", true)
-                    } catch (e: Exception) { fail(e) }
+                    } catch (e: Exception) { fail(e, configuration = true) }
                 }
                 override fun onConfigureFailed(session: CameraCaptureSession) {
                     session.close()
                     telemetry.event(sessionId, "configure_failed", sizes)
                     report("Camera2 stream combination rejected; select another camera", false)
+                    if (spec == null) main.post { if (active) streamsFailed("카메라가 요청한 출력 조합을 거부했습니다.") }
                 }
-            }, handler)
-        } catch (e: Exception) { fail(e) }
+            }
+            if (spec == null) checkLiveSession(camera, configurations, handler, sessionCallback) { result ->
+                telemetry.event(sessionId, "live_stream_preflight", mapOf("result" to result))
+            }
+            camera.createCaptureSessionByOutputConfigurations(configurations, sessionCallback, handler)
+        } catch (e: Exception) { fail(e, configuration = true) }
     }
     /** [afTrigger] and [aeTrigger] go on a one-shot capture only; the repeating request always leaves them IDLE. */
     private fun previewRequest(camera: CameraDevice, chars: CameraCharacteristics, afTrigger: Int? = null, aeTrigger: Int? = null): CaptureRequest =
         camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
             set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
             set(CaptureRequest.CONTROL_AF_MODE, afMode(chars))
-            spec?.fpsRange?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, it) }
+            (spec?.fpsRange ?: liveStreams?.fps?.let { android.util.Range(it.min, it.max) })?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, it) }
             applyZoom(this, chars)
             if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus) }
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
@@ -296,6 +324,7 @@ class Camera2Engine(
     /** The LIVE recording request. Zoom and the controls change it in place: the targets stay preview + encoder. */
     private fun liveRecordRequest(camera: CameraDevice, c: CameraCharacteristics, afTrigger: Int? = null): CaptureRequest =
         camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+            liveStreams?.video?.fps?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, android.util.Range(it, it)) }
             set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
             val modes = c[CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES] ?: intArrayOf()
             set(CaptureRequest.CONTROL_AF_MODE, if (CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO in modes)
@@ -464,6 +493,7 @@ class Camera2Engine(
     /** The still request: JPEG only for a benchmark still, YUV + JPEG with the output [rotation] for a LIVE pair. */
     private fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?): CaptureRequest =
         camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
+            liveStreams?.fps?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, android.util.Range(it.min, it.max)) }
             if (rotation != null) {
                 set(CaptureRequest.JPEG_ORIENTATION, rotation)
                 set(CaptureRequest.JPEG_QUALITY, 95.toByte())
@@ -545,6 +575,9 @@ class Camera2Engine(
         thread.quitSafely()
         mediaIo.shutdown()
     }
-    private fun fail(e: Exception) { telemetry.event(sessionId, "camera_error", mapOf("message" to e.toString())); report("Camera2: ${e.message}", false) }
+    private fun fail(e: Exception, configuration: Boolean = false) {
+        telemetry.event(sessionId, "camera_error", mapOf("message" to e.toString())); report("Camera2: ${e.message}", false)
+        if (spec == null && (configuration || captureSession == null)) main.post { if (active) streamsFailed(e.message ?: e.toString()) }
+    }
     private fun report(message: String, ok: Boolean) { main.post { if (active) status(message, ok) } }
 }

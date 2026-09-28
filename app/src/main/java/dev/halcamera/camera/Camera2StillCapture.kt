@@ -41,6 +41,8 @@ internal class Camera2StillCapture(
         val characteristics: CameraCharacteristics
         val active: Boolean
         val recordingBusy: Boolean
+        val captureYuv: Boolean
+        val captureJpeg: Boolean
         /** Flash auto or on with AE not locked on the request the still will carry. */
         val needsPrecapture: Boolean
         val flashName: String
@@ -74,6 +76,11 @@ internal class Camera2StillCapture(
 
     fun capture(requestId: String?, done: ((Result<PhotoResult>) -> Unit)?) {
         handler.post {
+            if (!benchmark && !host.captureYuv && !host.captureJpeg) {
+                main.post { done?.invoke(Result.failure(IllegalStateException("사진 출력이 꺼져 있습니다. Live 스트림 설정에서 YUV 또는 JPEG을 켜세요."))) }
+                host.report("사진 출력이 꺼져 있습니다. Live 스트림 설정에서 YUV 또는 JPEG을 켜세요.", true)
+                return@post
+            }
             if (host.camera == null || host.session == null || !host.active || inFlight || host.recordingBusy || (done != null && benchmark)) {
                 main.post { done?.invoke(Result.failure(IllegalStateException("Camera not ready or busy"))) }
                 return@post
@@ -174,7 +181,7 @@ internal class Camera2StillCapture(
             val request = host.stillRequest(camera, c, tag, pending?.rotation)
             inFlight = true
             photo = pending
-            if (pending != null) host.report("YUV + JPEG 촬영 중…", false)
+            if (pending != null) host.report("${photoLabel()} 촬영 중…", false)
             telemetry.event(sessionId, "capture_submit", mapOf("requestTag" to tag, "api" to "CameraCaptureSession.capture", "zoomRequested" to host.zoomRequested))
             session.capture(request, if (pending == null) host.captureCallback else photoCallback(pending), handler)
             handler.postDelayed({
@@ -215,26 +222,27 @@ internal class Camera2StillCapture(
 
     private fun savePhotoIfComplete(pending: Photo) {
         val timestamp = pending.pair.timestamp ?: return
-        val (yuvFrame, jpegBytes) = pending.pair.complete() ?: return
+        val (yuvFrame, jpegBytes) = pending.pair.selected(host.captureYuv, host.captureJpeg) ?: return
         photo = null // Keep inFlight until the pair has been written.
         mediaIo.execute {
-            val result = runCatching { library.savePair(pending.name, encodeYuvStill(yuvFrame, pending.rotation), jpegBytes) }
+            val result = runCatching { library.savePhotos(pending.name, yuvFrame?.let { encodeYuvStill(it, pending.rotation) }, jpegBytes) }
             result.onSuccess { uris ->
                 telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "uris" to uris.map { it.toString() }))
             }
             deliverPhoto(pending, result.map { PhotoResult(pending.requestId, pending.name, timestamp, it) })
             main.post {
                 if (!host.active || result.isFailure) {
-                    val message = result.fold({ "갤러리에 YUV · JPEG 사진 2장을 저장했습니다" }, { "사진 저장 실패: ${it.message}" })
+                    val message = result.fold({ "갤러리에 ${photoLabel()} 사진 ${it.size}장을 저장했습니다" }, { "사진 저장 실패: ${it.message}" })
                     Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
                 }
             }
             handler.post {
                 inFlight = false
                 result.fold({
-                    host.report("갤러리에 YUV · JPEG 사진 2장을 저장했습니다", true)
+                    host.report("갤러리에 ${photoLabel()} 사진 ${it.size}장을 저장했습니다", true)
                 }, { host.report("사진 저장 실패: ${it.message} · 다시 촬영할 수 있습니다", true) })
             }
         }
     }
+    private fun photoLabel() = listOfNotNull(if (host.captureYuv) "YUV" else null, if (host.captureJpeg) "JPEG" else null).joinToString(" · ")
 }

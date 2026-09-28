@@ -45,7 +45,7 @@ verifications: []
 
 ### 사진 저장이나 노출이 예상과 다를 때
 
-Camera2의 사진 저장에는 센서 타임스탬프가 일치하는 YUV·JPEG 버퍼가 모두 필요합니다. CameraX는 JPEG와 시각이 가장 가까운 analysis 프레임을 연결하므로, `media_saved.yuvOffsetNs`로 차이를 확인합니다. 엔진별 연결 기준을 먼저 구분한 뒤 Callback과 저장 오류를 대조하세요. 저장 완료 안내와 녹화 조작법은 [빠른 시작](getting-started.md#live에서-촬영하세요)에 있습니다.
+Camera2의 기본 사진 저장에는 센서 타임스탬프가 일치하는 YUV·JPEG 버퍼가 모두 필요합니다. Live 스트림에서 출력을 하나만 켰다면 해당 출력만 기다리며, 그 이미지도 요청의 센서 시각과 일치해야 합니다. CameraX는 JPEG와 시각이 가장 가까운 analysis 프레임을 연결하므로, `media_saved.yuvOffsetNs`로 차이를 확인합니다. 엔진별 연결 기준을 먼저 구분한 뒤 Callback과 저장 오류를 대조하세요. 저장 완료 안내와 녹화 조작법은 [빠른 시작](getting-started.md#live에서-촬영하세요)에 있습니다.
 
 Camera2의 Flash Auto·On에서 precapture 측광이 3초 안에 끝나지 않으면 안내 문구를 표시하고 촬영을 진행합니다. 촬영 지연을 확인할 때 이 대기 시간도 구분하세요. CameraX의 플래시 측광은 ImageCapture가 처리합니다.
 
