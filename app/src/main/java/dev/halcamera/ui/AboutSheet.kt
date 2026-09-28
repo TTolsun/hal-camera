@@ -20,7 +20,7 @@ import dev.halcamera.R
 object AboutSheet {
     const val AUTHOR = "KH"
     const val EMAIL = "kh_87.kim@samsung.com"
-    private const val TAGLINE = "HAL instrumentation & benchmark"
+    private const val TAGLINE = "Inspect camera behavior, run CTS checks, and benchmark performance."
     private const val STACKS = "Camera2 · CameraX"
     private const val EASTER_EGG_TAPS = 5
 

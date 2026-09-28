@@ -137,17 +137,17 @@ class WorkbenchActivity : ComponentActivity() {
         entry(device, DeviceIdentity.label(this), DeviceIdentity.platform()) { showDevice() }
         body.addView(device, lp(24))
 
-        section("검사 도구") { tools ->
+        section("Inspection") { tools ->
             entry(tools, "Probe", "사양 확인") { open(CameraProbeActivity::class.java) }
             entry(tools, "CTS", "동작 검증") { open(CtsEntryActivity::class.java) }
             entry(tools, "Benchmark", "성능 측정") { open(BenchmarkActivity::class.java) }
         }
-        section("저장된 결과") { results ->
-            entry(results, "실행 기록", "비교 · 내보내기") { open(HistoryActivity::class.java) }
-            entry(results, "갤러리", "사진 · 동영상") { open(GalleryActivity::class.java) }
-            entry(results, "ZIP 기록", "공유 · 저장 · 삭제") { incidents.showList() }
+        section("Results") { results ->
+            entry(results, "Run History", "비교 · 내보내기") { open(HistoryActivity::class.java) }
+            entry(results, "Gallery", "사진 · 동영상") { open(GalleryActivity::class.java) }
+            entry(results, "ZIP Archives", "공유 · 저장 · 삭제") { incidents.showList() }
         }
-        section("설정") { settings ->
+        section("Settings") { settings ->
             entry(settings, "ADB CLI", if (cli.enabled) "허용됨" else "꺼짐") {
                 AlertDialog.Builder(this).setTitle("ADB CLI 설정")
                     .setMultiChoiceItems(arrayOf("ADB CLI 허용"), booleanArrayOf(cli.enabled)) { _, _, checked ->
@@ -156,11 +156,8 @@ class WorkbenchActivity : ComponentActivity() {
                     .setPositiveButton("닫기", null)
                     .setOnDismissListener { render() }.show()
             }
-            entry(settings, "카메라 다시 연결") { returnToLive(ACTION_RECONNECT) }
-            entry(settings, if (intent.getBooleanExtra(EXTRA_PAUSED, false)) "프리뷰 재개" else "프리뷰 일시정지") {
-                returnToLive(ACTION_TOGGLE_PREVIEW)
-            }
-            entry(settings, "앱 정보") { AboutSheet.show(this) }
+            entry(settings, "Reconnect Camera", "카메라 연결 다시 시작") { returnToLive(ACTION_RECONNECT) }
+            entry(settings, "About", "앱 버전 · 프로젝트 정보") { AboutSheet.show(this) }
         }
         scroll.post { scroll.scrollTo(0, scrollY) }
     }
@@ -224,7 +221,7 @@ class WorkbenchActivity : ComponentActivity() {
         group.addView(row, LinearLayout.LayoutParams(-1, -2))
     }
     private fun returnToLive(action: String) {
-        setResult(RESULT_OK, Intent().putExtra(EXTRA_LIVE_ACTION, action).putExtra(EXTRA_PAUSED, !intent.getBooleanExtra(EXTRA_PAUSED, false)))
+        setResult(RESULT_OK, Intent().putExtra(EXTRA_LIVE_ACTION, action))
         finish()
     }
 
@@ -263,10 +260,8 @@ class WorkbenchActivity : ComponentActivity() {
         }
     })
     companion object {
-        const val EXTRA_PAUSED = "preview_paused"
         const val EXTRA_LIVE_ACTION = "live_action"
         const val ACTION_RECONNECT = "reconnect"
-        const val ACTION_TOGGLE_PREVIEW = "toggle_preview"
         const val EXTRA_CAMERA_ID = "camera_id"
         const val EXTRA_ENGINE = "engine"
     }

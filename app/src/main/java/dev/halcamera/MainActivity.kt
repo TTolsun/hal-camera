@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
                 closing = old != null
                 val closed = {
                     closing = false
-                    setStatus("일시정지 · Lab에서 프리뷰를 재개하세요", false)
+                    setStatus("프리뷰 중지 · Lab에서 카메라를 다시 연결하세요", false)
                     done()
                 }
                 if (old == null) closed() else old.close(closed)
@@ -182,12 +182,6 @@ class MainActivity : ComponentActivity() {
     private var returningFromSettings = false
     private val labLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         when (result.data?.getStringExtra(WorkbenchActivity.EXTRA_LIVE_ACTION)) {
-            WorkbenchActivity.ACTION_TOGGLE_PREVIEW -> {
-                if (cli.active == null && !recordingVideo) {
-                    paused = result.data?.getBooleanExtra(WorkbenchActivity.EXTRA_PAUSED, paused) ?: paused
-                    pendingPermissionAction = null
-                }
-            }
             WorkbenchActivity.ACTION_RECONNECT -> {
                 reconnectFromLab = true
             }
@@ -305,6 +299,7 @@ class MainActivity : ComponentActivity() {
     private fun reconnectCameraFromLab() {
         reconnectFromLab = false
         if (cli.active != null || recordingVideo) return
+        paused = false
         if (hasPermission()) restartCamera()
         else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) permission.launch(Manifest.permission.CAMERA)
         else {
@@ -330,7 +325,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun openCamera() {
         if (!resumed || destroyed || paused || !hasPermission()) {
-            if (paused) setStatus("일시정지 · Lab에서 프리뷰를 재개하세요", false)
+            if (paused) setStatus("프리뷰 중지 · Lab에서 카메라를 다시 연결하세요", false)
             return
         }
         if (cameraId.isEmpty()) { setStatus("사용 가능한 카메라가 없습니다", false); return }
@@ -422,7 +417,7 @@ class MainActivity : ComponentActivity() {
         // A paused preview keeps its last frame, which looks exactly like a preview that has stopped updating
         // on its own. The scrim says which of the two it is, over the frame rather than above it in the top
         // bar, because that frame is what raises the question.
-        pausedOverlay=label("일시정지됨\nLab → 프리뷰 재개로 측정을 다시 시작합니다",14,Look.onDark).apply {
+        pausedOverlay=label("프리뷰 중지됨\nLab → Reconnect Camera로 다시 시작합니다",14,Look.onDark).apply {
             gravity=Gravity.CENTER
             setBackgroundColor(Color.argb(150,0,0,0))
             visibility=View.GONE
@@ -671,7 +666,6 @@ class MainActivity : ComponentActivity() {
             Intent(this, WorkbenchActivity::class.java)
                 .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, cameraId)
                 .putExtra(WorkbenchActivity.EXTRA_ENGINE, engineName)
-                .putExtra(WorkbenchActivity.EXTRA_PAUSED, paused)
         }
     }
     /**
