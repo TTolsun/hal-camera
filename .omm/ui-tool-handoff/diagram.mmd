@@ -5,7 +5,7 @@ sequenceDiagram
     participant T as 검사 화면
     L->>E: Lab 선택: close(done)
     E-->>L: done
-    L->>W: Lab 열기 (카메라 ID, 엔진, 일시정지 상태)
+    L->>W: Lab 열기 (카메라 ID, 엔진)
     W->>T: Probe / CTS / Benchmark 선택
     T-->>W: 뒤로 가기
     W-->>L: 복귀 또는 프리뷰 제어 결과

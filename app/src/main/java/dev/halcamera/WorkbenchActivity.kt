@@ -129,9 +129,9 @@ class WorkbenchActivity : ComponentActivity() {
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(4) })
         body.addView(back, LinearLayout.LayoutParams(-2, -2))
-        body.addView(Look.text(this, "Lab", 40, Look.ink, bold = true).apply {
+        body.addView(Look.text(this, "Lab", 34, Look.ink, bold = true).apply {
             ViewCompat.setAccessibilityHeading(this, true)
-        }, lp(16))
+        }, lp(8))
 
         val device = group()
         entry(device, DeviceIdentity.label(this), DeviceIdentity.platform()) { showDevice() }
@@ -149,11 +149,11 @@ class WorkbenchActivity : ComponentActivity() {
         }
         section("Settings") { settings ->
             entry(settings, "ADB CLI", if (cli.enabled) "허용됨" else "꺼짐") {
-                AlertDialog.Builder(this).setTitle("ADB CLI 설정")
+                AlertDialog.Builder(this).setTitle("ADB CLI")
                     .setMultiChoiceItems(arrayOf("ADB CLI 허용"), booleanArrayOf(cli.enabled)) { _, _, checked ->
                         cli.setEnabled(checked)
                     }
-                    .setPositiveButton("닫기", null)
+                    .setPositiveButton("Close", null)
                     .setOnDismissListener { render() }.show()
             }
             entry(settings, "Reconnect Camera", "카메라 연결 다시 시작") { returnToLive(ACTION_RECONNECT) }
@@ -237,14 +237,14 @@ class WorkbenchActivity : ComponentActivity() {
         content.addView(Look.text(this, "같은 모델을 구별할 이름입니다. 이 앱에만 저장됩니다.", 14, Look.inkMuted))
         content.addView(name, lp(8))
         content.addView(Look.text(this, DeviceIdentity.report(this), 12, Look.inkMuted, mono = true).apply { setTextIsSelectable(true) }, lp(16))
-        AlertDialog.Builder(this).setTitle("기기 이름·빌드 정보")
+        AlertDialog.Builder(this).setTitle("Device Info")
             .setView(ScrollView(this).apply { addView(content) })
             .setPositiveButton("이름 저장") { _, _ -> DeviceIdentity.setAlias(this, name.text.toString()); render() }
             .setNeutralButton("기기 정보 복사") { _, _ ->
                 getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("HAL CAMERA device", DeviceIdentity.report(this)))
                 Toast.makeText(this, "기기·빌드 정보를 복사했습니다.", Toast.LENGTH_SHORT).show()
             }
-            .setNegativeButton("닫기", null).show()
+            .setNegativeButton("Close", null).show()
     }
 
     private fun open(screen: Class<out android.app.Activity>) = startActivity(Intent(this, screen).apply {

@@ -17,7 +17,7 @@ object Look {
     val card = Color.WHITE
     val labSurface = Color.parseColor("#f5f5f7")
     val hairline = Color.parseColor("#e2e4e8")
-    val ink = Color.parseColor("#18191b")
+    val ink = Color.parseColor("#1d1d1f")
     val inkMuted = Color.parseColor("#62666d")
     val primary = Color.parseColor("#0066cc")
     val onPrimary = Color.WHITE
@@ -38,6 +38,9 @@ object Look {
     val statusWarn = Color.parseColor("#ff9500")
     val statusFail = Color.parseColor("#ff3b30")
     val statusUnknown = inkMuted
+    val successInk = Color.parseColor("#18794e")
+    val warningInk = Color.parseColor("#9a5700")
+    val failureInk = Color.parseColor("#c62828")
 
     fun statusColor(level: String): Int = when (level.lowercase()) {
         "normal", "pass", "ok" -> statusPass
@@ -49,7 +52,10 @@ object Look {
     fun dp(context: Context, v: Int) = (v * context.resources.displayMetrics.density).toInt()
 
     fun cardBackground(context: Context, fill: Int = card, stroke: Int = hairline) = GradientDrawable().apply {
-        setColor(fill); cornerRadius = dp(context, 4).toFloat(); setStroke(dp(context, 1), stroke)
+        setColor(fill)
+        val light = fill == card || fill == labSurface || fill == canvas
+        cornerRadius = dp(context, if (light) 18 else 4).toFloat()
+        if (!light || stroke != hairline) setStroke(dp(context, 1), stroke)
     }
 
     fun pill(context: Context, fill: Int) = GradientDrawable().apply { setColor(fill); cornerRadius = dp(context, 999).toFloat() }
@@ -100,7 +106,7 @@ object Look {
     }
 
     fun primaryButton(context: Context, label: String, action: () -> Unit) = Button(context).apply {
-        text = label; isAllCaps = false; textSize = 17f; setTextColor(onPrimary); background = touchBackground(context, primary, primary)
+        text = label; isAllCaps = false; textSize = 17f; setTextColor(onPrimary); background = RippleDrawable(ColorStateList.valueOf(0x30FFFFFF), pill(context, primary), pill(context, Color.WHITE))
         backgroundTintList = null
         setPadding(dp(context, 24), dp(context, 14), dp(context, 24), dp(context, 14)); stateListAnimator = null
         minHeight = dp(context, 56); minimumHeight = dp(context, 56)
@@ -110,7 +116,7 @@ object Look {
     fun ghostButton(context: Context, label: String, dark: Boolean = false, action: () -> Unit) = Button(context).apply {
         text = label; isAllCaps = false; textSize = 15f
         setTextColor(if (dark) primaryOnDark else primary)
-        background = touchBackground(context, if (dark) expertTile2 else Color.parseColor("#f6f7f8"), if (dark) expertTile3 else hairline)
+        background = if (dark) touchBackground(context, expertTile2, expertTile3) else RippleDrawable(ColorStateList.valueOf(0x180066CC), pill(context, labSurface), pill(context, Color.WHITE))
         backgroundTintList = null
         setPadding(dp(context, 20), dp(context, 12), dp(context, 20), dp(context, 12)); stateListAnimator = null
         minHeight = dp(context, 48); minimumHeight = dp(context, 48)
@@ -129,7 +135,7 @@ object Look {
 
     fun card(context: Context, dark: Boolean = false) = LinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL
-        background = if (dark) cardBackground(context, expertTile2, expertTile3) else cardBackground(context)
+        background = if (dark) cardBackground(context, expertTile2, expertTile3) else cardBackground(context, labSurface)
         setPadding(dp(context, 18), dp(context, 16), dp(context, 18), dp(context, 16))
     }
 
@@ -140,21 +146,43 @@ object Look {
      * One place and one symbol, so the way out is never looked for twice. The row is returned so a screen can add
      * trailing controls after the title.
      */
-    fun titleBar(context: Context, title: CharSequence, sizeSp: Int, backLabel: String, onBack: () -> Unit) = row(context).apply {
-        addView(IconButton(context, dev.halcamera.R.drawable.ic_action_back, backLabel) { onBack() }, LinearLayout.LayoutParams(dp(context, 48), dp(context, 48)))
-        val heading = LinearLayout(context).apply {
-            orientation = LinearLayout.VERTICAL
-            addView(text(context, title, sizeSp, onDark, bold = true))
-            addView(text(context, DeviceIdentity.label(context), 12, onDarkMuted))
+    fun isLight(context: Context): Boolean {
+        val value = android.util.TypedValue()
+        context.theme.resolveAttribute(android.R.attr.windowLightStatusBar, value, true)
+        return value.data != 0
+    }
+
+    fun pageMargin(view: android.view.View, horizontalInsets: Int): Int {
+        val width = view.width.takeIf { it > 0 } ?: view.resources.displayMetrics.widthPixels
+        return maxOf(dp(view.context, 20), (width - horizontalInsets - dp(view.context, 680)) / 2)
+    }
+
+    fun configureLabWindow(activity: android.app.Activity) {
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+        androidx.core.view.WindowCompat.getInsetsController(activity.window, activity.window.decorView).apply {
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
         }
-        addView(heading, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(context, 12) })
+    }
+
+    /** A quiet back link above the page heading, shared by every Lab destination. */
+    fun titleBar(context: Context, title: CharSequence, sizeSp: Int, backLabel: String, onBack: () -> Unit) = LinearLayout(context).apply {
+        orientation = LinearLayout.VERTICAL
+        addView(ghostButton(context, "‹ Back") { onBack() }.apply {
+            contentDescription = backLabel
+            background = RippleDrawable(ColorStateList.valueOf(0x180066CC), null, pill(context, Color.WHITE))
+            setPadding(dp(context, 4), 0, dp(context, 16), 0)
+        }, LinearLayout.LayoutParams(-2, -2))
+        addView(text(context, title, if (title.length > 28) 26 else 34, ink, bold = true).apply {
+            androidx.core.view.ViewCompat.setAccessibilityHeading(this, true)
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(context, 8); bottomMargin = dp(context, 16) })
     }
 
     /** Secondary information stays available without displacing the primary task. */
     fun disclosure(context: Context, title: String, content: android.view.View, initiallyExpanded: Boolean = false) = LinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL
         content.visibility = if (initiallyExpanded) android.view.View.VISIBLE else android.view.View.GONE
-        val toggle = ghostButton(context, "$title ${if (initiallyExpanded) "▴" else "▾"}", dark = true) {}
+        val toggle = ghostButton(context, "$title ${if (initiallyExpanded) "▴" else "▾"}", dark = false) {}
         toggle.minHeight = dp(context, 48)
         toggle.setOnClickListener {
             val expanded = content.visibility != android.view.View.VISIBLE

@@ -16,7 +16,7 @@ class IconButton(
     context: Context,
     @DrawableRes iconRes: Int,
     label: String,
-    private val dark: Boolean = true,
+    private val dark: Boolean = !Look.isLight(context),
     filled: Boolean = false,
     action: () -> Unit
 ) : Button(context) {
@@ -55,7 +55,7 @@ class IconButton(
             val left = (width - edge) / 2
             val top = (height - edge) / 2
             it.setBounds(left, top, left + edge, top + edge)
-            it.setTint(if (isSelected) { if (dark) Look.primaryOnDark else Look.primary } else if (dark) Look.onDark else Look.ink)
+            it.setTint(if (isSelected) { if (dark) Look.primaryOnDark else Look.primary } else if (dark) Look.onDark else Look.primary)
             it.alpha = if (isEnabled) 255 else 90
             it.draw(canvas)
         }

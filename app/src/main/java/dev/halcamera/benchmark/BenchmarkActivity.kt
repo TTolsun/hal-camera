@@ -144,37 +144,36 @@ class BenchmarkActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(dev.halcamera.R.style.LabTheme)
         super.onCreate(savedInstanceState)
+        Look.configureLabWindow(this)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         engineName = intent.getStringExtra(EXTRA_ENGINE) ?: StartCardPresenter.ENGINE_CAMERA2
 
-        val root = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
+        val root = FrameLayout(this).apply { setBackgroundColor(Look.canvas) }
         setContentView(root)
         preview = TextureView(this)
-        root.addView(preview, FrameLayout.LayoutParams(-1, -1))
 
         val panel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(20), dp(48), dp(20), dp(28))
-            background = android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.BOTTOM_TOP,
-                intArrayOf(Color.argb(235, 0, 0, 0), Color.argb(60, 0, 0, 0))
-            )
+            setBackgroundColor(Look.canvas)
         }
         root.addView(panel, FrameLayout.LayoutParams(-1, -1))
         ViewCompat.setOnApplyWindowInsetsListener(panel) { view, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
             val keyboard = insets.getInsets(WindowInsetsCompat.Type.ime())
-            view.setPadding(bars.left + dp(20), bars.top + dp(16), bars.right + dp(20), maxOf(bars.bottom, keyboard.bottom) + dp(16))
+            view.setPadding(bars.left + Look.pageMargin(view, bars.left + bars.right), bars.top + dp(16), bars.right + Look.pageMargin(view, bars.left + bars.right), maxOf(bars.bottom, keyboard.bottom) + dp(16))
             insets
         }
 
-        // The title and the way out sit at the top left as on every other screen; the cards stay at the bottom.
+        // Shared Lab navigation leads the page; measurement preview sits above scrollable content.
         header = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         panel.addView(header, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
-        // Short content sits at the bottom like the M2 card; a long result table scrolls instead of being cut off.
+        panel.addView(preview, LinearLayout.LayoutParams(-1, dp(160)).apply { bottomMargin = dp(16) })
+        // Long configuration and result content scrolls while the primary action remains reachable.
         val scroll = ScrollView(this).apply { isFillViewport = true }
-        content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.BOTTOM }
+        content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.TOP }
         scroll.addView(content, FrameLayout.LayoutParams(-1, -2))
         panel.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         actions = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
@@ -285,6 +284,7 @@ class BenchmarkActivity : ComponentActivity() {
 
     private fun render() {
         cli.setUiBusy(benchmarkCli, screen == Screen.RUNNING || historyLoading)
+        preview.visibility = if (screen == Screen.RUNNING) View.VISIBLE else View.GONE
         header.removeAllViews()
         content.removeAllViews()
         actions.removeAllViews()
@@ -301,9 +301,9 @@ class BenchmarkActivity : ComponentActivity() {
         }
         if (screen == Screen.CARD) {
             val row = Look.row(this)
-            row.addView(Look.ghostButton(this, "실행 기록", dark = true) { openHistoryScreen() },
+            row.addView(Look.ghostButton(this, "Run History", dark = false) { openHistoryScreen() },
                 Look.buttonParams(0, 1f))
-            row.addView(Look.ghostButton(this, "보관 개수", dark = true) { openSettings() }.apply {
+            row.addView(Look.ghostButton(this, "Storage", dark = false) { openSettings() }.apply {
                 contentDescription = "벤치마크 설정, 최대 보관 개수 ${RunRetention.label(settings.runLimit)}"
             }, Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
             header.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
@@ -312,7 +312,7 @@ class BenchmarkActivity : ComponentActivity() {
         // exactly the same (openHistoryScreen finishes in that case). It stays after a fresh run, where the back
         // arrow leads to the camera and this is the short way to the history.
         if (screen == Screen.RESULT && !intent.hasExtra(EXTRA_RUN_ID)) {
-            actions.addView(Look.ghostButton(this, "실행 기록", dark = true) { openHistoryScreen() },
+            actions.addView(Look.ghostButton(this, "Run History", dark = false) { openHistoryScreen() },
                 Look.buttonParams().apply { topMargin = dp(8) })
         }
     }
@@ -352,13 +352,13 @@ class BenchmarkActivity : ComponentActivity() {
         // theme, so a grey sheet with system buttons would sit on top of this screen's black cards.
         // Title and the one fact it does not say first; then the value with what it would do, directly above the
         // slider that changes it. The value is white: blue is what can be pressed on these screens.
-        val card = Look.card(this, dark = true)
-        card.addView(Look.text(this, "최대 보관 개수", 19, Look.onDark, bold = true))
-        card.addView(Look.text(this, "Baseline은 유지됩니다.", 12, Look.onDarkMuted), lp(top = 4))
+        val card = Look.card(this, dark = false)
+        card.addView(Look.text(this, "Storage Limit", 20, Look.ink, bold = true))
+        card.addView(Look.text(this, "Baseline은 유지됩니다.", 12, Look.inkMuted), lp(top = 4))
         val valueRow = Look.row(this)
-        val value = Look.text(this, RunRetention.valueLabel(options[picked]), 30, Look.onDark, bold = true, mono = true)
+        val value = Look.text(this, RunRetention.valueLabel(options[picked]), 30, Look.ink, bold = true, mono = true)
         valueRow.addView(value, LinearLayout.LayoutParams(0, -2, 1f))
-        val effect = Look.text(this, impact(options[picked]), 12, Look.onDarkMuted)
+        val effect = Look.text(this, impact(options[picked]), 12, Look.inkMuted)
         valueRow.addView(effect)
         card.addView(valueRow, lp(top = 16))
 
@@ -383,10 +383,10 @@ class BenchmarkActivity : ComponentActivity() {
         // would have to lie about where the thumb lands; the chosen value is already set in large type above.
         val ticks = Look.row(this).apply { setPadding(bar.paddingLeft, 0, bar.paddingRight, 0) }
         ticks.addView(
-            Look.text(this, RunRetention.tickLabel(options.first()), 12, Look.onDarkMuted),
+            Look.text(this, RunRetention.tickLabel(options.first()), 12, Look.inkMuted),
             LinearLayout.LayoutParams(0, -2, 1f)
         )
-        ticks.addView(Look.text(this, RunRetention.tickLabel(options.last()), 12, Look.onDarkMuted))
+        ticks.addView(Look.text(this, RunRetention.tickLabel(options.last()), 12, Look.inkMuted))
         card.addView(ticks, lp(top = 2))
 
         // Held in a field so onDestroy can close it: a dialog still showing when the activity goes away
@@ -399,9 +399,9 @@ class BenchmarkActivity : ComponentActivity() {
         }
         settingsDialog = dialog
         val actionRow = Look.row(this)
-        actionRow.addView(Look.ghostButton(this, "취소", dark = true) { dialog.dismiss() },
+        actionRow.addView(Look.ghostButton(this, "Cancel", dark = false) { dialog.dismiss() },
             Look.buttonParams(0, 1f))
-        actionRow.addView(Look.primaryButton(this, "적용") { applyRunLimit(options[picked]); dialog.dismiss() },
+        actionRow.addView(Look.primaryButton(this, "Apply") { applyRunLimit(options[picked]); dialog.dismiss() },
             Look.buttonParams(0, 1f).apply { marginStart = dp(8) })
         card.addView(actionRow, lp(top = 18))
 
@@ -470,20 +470,20 @@ class BenchmarkActivity : ComponentActivity() {
     private fun renderCard() {
         progressHeadline = null; progressBar = null; progressStats = null
         cardRecheck?.let { main.removeCallbacks(it) }; cardRecheck = null
-        val card = Look.card(this, dark = true)
+        val card = Look.card(this, dark = false)
         val state = startCard
         if (state == null) {
-            card.addView(Look.text(this, cardError ?: "카메라를 확인하는 중입니다.", 13, Look.onDarkMuted))
+            card.addView(Look.text(this, cardError ?: "카메라를 확인하는 중입니다.", 13, Look.inkMuted))
             content.addView(card)
             return
         }
         // The measured condition leads; "카메라를 벤치마킹합니다." only repeated the screen title. What the run does
         // comes first and how to prepare for it second, one line each.
-        card.addView(Look.text(this, state.titleLine, 15, Look.onDark, bold = true))
-        card.addView(Look.text(this, "${state.detailLine}\n${state.durationLine}", 13, Look.onDarkMuted), lp(top = 4))
+        card.addView(Look.text(this, state.titleLine, 15, Look.ink, bold = true))
+        card.addView(Look.text(this, "${state.detailLine}\n${state.durationLine}", 13, Look.inkMuted), lp(top = 4))
         card.addView(statusChips(), lp(top = 14))
-        state.notices.forEach { card.addView(Look.text(this, "· $it", 12, Look.statusWarn), lp(top = 8)) }
-        state.blockedReason?.let { card.addView(Look.text(this, it, 13, Look.statusFail, bold = true), lp(top = 10)) }
+        state.notices.forEach { card.addView(Look.text(this, "· $it", 12, Look.warningInk), lp(top = 8)) }
+        state.blockedReason?.let { card.addView(Look.text(this, it, 13, Look.failureInk, bold = true), lp(top = 10)) }
 
         // One label, not three. The build under test is the only one anybody typed; a commit and a note were
         // extra fields to skip past, and the run JSON still carries all three for files written earlier.
@@ -491,7 +491,7 @@ class BenchmarkActivity : ComponentActivity() {
             val draft = draftSubject ?: subjectPrefs.last()
             // A label above the field: its hint disappears once a value is typed, and "i123-s7-control-day2" alone
             // did not say what it was.
-            card.addView(Look.text(this, "측정 대상 빌드", 12, Look.onDarkMuted), lp(top = 14))
+            card.addView(Look.text(this, "측정 대상 빌드", 12, Look.inkMuted), lp(top = 14))
             buildInput = input(draft.subjectBuildLabel).also {
                 it.contentDescription = "측정 대상 빌드 이름"
                 it.hint = "선택"
@@ -504,14 +504,14 @@ class BenchmarkActivity : ComponentActivity() {
 
         val row = Look.row(this)
         val cameraLabel = endpoints.getOrNull(selected)?.let { "${CameraLabel.full(it)} ▾" } ?: "카메라 없음"
-        row.addView(Look.ghostButton(this, cameraLabel, dark = true) {}.apply {
+        row.addView(Look.ghostButton(this, cameraLabel, dark = false) {}.apply {
             setOnClickListener { selectCamera(it) }
             isEnabled = endpoints.isNotEmpty()
             contentDescription = "벤치마크 카메라 선택, 현재 $cameraLabel"
         }, Look.buttonParams(0, 1f))
         actions.addView(row)
         if (state.canStart) {
-            actions.addView(Look.primaryButton(this, "벤치마크 시작") { begin() }, Look.buttonParams().apply { topMargin = dp(8) })
+            actions.addView(Look.primaryButton(this, "Start Benchmark") { begin() }, Look.buttonParams().apply { topMargin = dp(8) })
         } else if (state.refreshable) {
             // A card opened at SEVERE re-checks itself, so START returns without anyone tapping a button while
             // the device rests. The recheck stops the moment the card is replaced or the screen changes.
@@ -527,21 +527,21 @@ class BenchmarkActivity : ComponentActivity() {
     private fun statusChips(): LinearLayout {
         val row = Look.row(this)
         fun chip(label: String, color: Int) = Look.text(this, label, 12, color, bold = true).apply {
-            background = Look.cardBackground(this@BenchmarkActivity, Look.expertTile2, Look.expertTile3)
+            background = Look.cardBackground(this@BenchmarkActivity, Look.labSurface, Look.hairline)
             setPadding(dp(12), dp(6), dp(12), dp(6))
         }
         val thermal = probe.thermalStatus()
         if (thermal != null) {
             val (label, color) = when {
-                thermal >= StartCardPresenter.THERMAL_SEVERE -> "Thermal severe" to Look.statusFail
-                thermal >= ValidityFlags.THERMAL_MODERATE -> "Thermal moderate" to Look.statusWarn
-                thermal >= 1 -> "Thermal light" to Look.statusWarn
-                else -> "Thermal OK" to Look.statusPass
+                thermal >= StartCardPresenter.THERMAL_SEVERE -> "Thermal severe" to Look.failureInk
+                thermal >= ValidityFlags.THERMAL_MODERATE -> "Thermal moderate" to Look.warningInk
+                thermal >= 1 -> "Thermal light" to Look.warningInk
+                else -> "Thermal OK" to Look.successInk
             }
             row.addView(chip(label, color))
         }
         probe.batteryPercent()?.let {
-            row.addView(chip("Battery $it%", Look.onDarkMuted),
+            row.addView(chip("Battery $it%", Look.inkMuted),
                 LinearLayout.LayoutParams(-2, -2).apply { marginStart = if (row.childCount > 0) dp(8) else 0 })
         }
         return row
@@ -555,16 +555,16 @@ class BenchmarkActivity : ComponentActivity() {
 
     /** 8.3. */
     private fun renderRunning() {
-        val card = Look.card(this, dark = true)
-        card.addView(Look.text(this, "벤치마크 실행 중", 19, Look.onDark, bold = true))
+        val card = Look.card(this, dark = false)
+        card.addView(Look.text(this, "Benchmark Running", 20, Look.ink, bold = true))
         // The first phase is shown before the runner starts, so the card never appears blank for a frame.
         val first = ProgressPresenter.headline(BenchmarkRunner.Phase.CAMERA_OPEN, 0, profile.launchIterations, profile.records)
-        progressHeadline = Look.text(this, first, 14, Look.onDark, mono = true).also { card.addView(it, lp(top = 10)) }
-        progressBar = Look.text(this, ProgressPresenter.barLine(0), 13, Look.primaryOnDark, mono = true)
+        progressHeadline = Look.text(this, first, 14, Look.ink, mono = true).also { card.addView(it, lp(top = 10)) }
+        progressBar = Look.text(this, ProgressPresenter.barLine(0), 13, Look.primary, mono = true)
             .also { it.maxLines = 1; card.addView(it, lp(top = 4)) }
-        progressStats = Look.text(this, "", 12, Look.onDarkMuted, mono = true).also { card.addView(it, lp(top = 10)) }
+        progressStats = Look.text(this, "", 12, Look.inkMuted, mono = true).also { card.addView(it, lp(top = 10)) }
         content.addView(card)
-        actions.addView(Look.ghostButton(this, "중단", dark = true) { runner?.abort("user") }, Look.buttonParams())
+        actions.addView(Look.ghostButton(this, "Stop", dark = false) { runner?.abort("user") }, Look.buttonParams())
         updateStats()
     }
 
@@ -573,11 +573,11 @@ class BenchmarkActivity : ComponentActivity() {
         progressHeadline = null; progressBar = null; progressStats = null
         val run = lastRun
         if (run == null) {
-            val card = Look.card(this, dark = true)
-            card.addView(Look.text(this, "벤치마크 결과", 19, Look.onDark, bold = true))
-            card.addView(Look.text(this, lastSummary.ifBlank { "결과를 만들지 못했습니다." }, 12, Look.onDarkMuted, mono = true), lp(top = 10))
+            val card = Look.card(this, dark = false)
+            card.addView(Look.text(this, "Benchmark Result", 20, Look.ink, bold = true))
+            card.addView(Look.text(this, lastSummary.ifBlank { "결과를 만들지 못했습니다." }, 12, Look.inkMuted, mono = true), lp(top = 10))
             content.addView(card)
-            if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "다시 실행") { preflight() }, Look.buttonParams())
+            if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "Run Again") { preflight() }, Look.buttonParams())
             return
         }
         // The result card is the comparison: its ticks are the reference run, and it carries what the removed 비교
@@ -591,10 +591,10 @@ class BenchmarkActivity : ComponentActivity() {
             Look.buttonParams()
         )
         actions.addView(
-            action("내보내기", lastFile != null) { lastFile?.let(::share) },
+            action("Export", lastFile != null) { lastFile?.let(::share) },
             Look.buttonParams().apply { topMargin = dp(8) }
         )
-        if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "다시 실행") { preflight() }, Look.buttonParams().apply { topMargin = dp(8) })
+        if (!intent.hasExtra(EXTRA_RUN_ID) && !historyLoading) actions.addView(Look.primaryButton(this, "Run Again") { preflight() }, Look.buttonParams().apply { topMargin = dp(8) })
     }
 
     // ---- run ----
@@ -864,21 +864,21 @@ class BenchmarkActivity : ComponentActivity() {
 
     private fun input(initial: String?): EditText = EditText(this).apply {
         setText(initial.orEmpty())
-        setTextColor(Look.onDark)
-        setHintTextColor(Look.onDarkMuted)
+        setTextColor(Look.ink)
+        setHintTextColor(Look.inkMuted)
         textSize = 14f
         minimumHeight = dp(48)
         typeface = Look.mono
         isSingleLine = true
         inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-        background = Look.cardBackground(this@BenchmarkActivity, Look.expertTile, Look.expertTile3)
+        background = Look.cardBackground(this@BenchmarkActivity, Look.canvas, Look.hairline)
         setPadding(dp(12), dp(10), dp(12), dp(10))
     }
 
     /** The result and compare tables are laid out in fixed monospace columns, so they scroll sideways rather than wrap. */
     /** A ghost button that shows whether it can be pressed, since three of the result actions depend on state. */
     private fun action(label: String, enabled: Boolean, onClick: () -> Unit) =
-        Look.ghostButton(this, label, dark = true) { onClick() }.apply {
+        Look.ghostButton(this, label, dark = false) { onClick() }.apply {
             isEnabled = enabled
             alpha = if (enabled) 1f else 0.4f
         }
