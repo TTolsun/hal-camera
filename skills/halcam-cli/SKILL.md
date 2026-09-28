@@ -9,8 +9,14 @@ PC에 필요한 것은 `adb` 하나입니다. 명령을 해석하고 완료를 �
 
 ## 1. 준비 (기기마다 한 번, APK를 갱신한 뒤에도 같은 명령)
 
-1. Live 화면의 **도구 → 설정 · 앱 정보 → ADB CLI 설정**에서 **ADB CLI 허용**을 켭니다. 초기값이 꺼짐이므로 사람이 직접 켜야 하며, 꺼져 있으면 provider에 닿는 모든 명령이 `CLI_DISABLED`로 끝납니다. 스크립트가 자체적으로 처리하는 `help`만 예외입니다.
-2. 카메라 권한을 허용하고 화면 잠금을 해제합니다. 소리를 포함한 녹화에는 마이크 권한도 필요합니다.
+가장 먼저 기기 상태를 읽습니다. 응답의 `enabled`, `camera_permission`, `locked`가 아래 1·2번 중 무엇을 사람에게 요청해야 하는지 알려 주므로, 명령을 시도하다가 오류로 알아내는 것보다 빠릅니다.
+
+```sh
+adb exec-out content read --uri content://dev.halcamera.cli/v1/hello
+```
+
+1. `enabled`가 `false`이면 사용자에게 요청합니다. Live 화면의 **도구 → 설정 · 앱 정보 → ADB CLI 설정**에서 **ADB CLI 허용**을 켜야 합니다. 초기값이 꺼짐이므로 사람이 직접 켜야 하며, 꺼져 있으면 provider에 닿는 모든 명령이 `CLI_DISABLED`로 끝납니다. 스크립트가 자체적으로 처리하는 `help`만 예외입니다.
+2. `camera_permission`이 `false`이거나 `locked`가 `true`이면 카메라 권한 허용과 화면 잠금 해제를 요청합니다. 소리를 포함한 녹화에는 마이크 권한도 필요합니다.
 3. 기기에 스크립트를 내려놓습니다.
 
 ```sh
@@ -18,7 +24,7 @@ adb shell "content read --uri content://dev.halcamera.cli/v1/shell > /data/local
 adb shell sh /data/local/tmp/halcam help
 ```
 
-연결 상태는 `adb exec-out content read --uri content://dev.halcamera.cli/v1/hello`로 확인합니다. 응답의 `enabled`, `camera_permission`, `locked`가 준비 상태를 그대로 알려 줍니다. `commands` 배열은 이 빌드가 접수하는 작업 명령이고, 상태 조회와 취소처럼 작업을 만들지 않는 조작은 `controls` 배열(`record.stop`, `status`, `request`, `request.cancel`)에 따로 있습니다. 기기가 여러 대이면 모든 명령에 `adb -s SERIAL`을 붙입니다.
+`hello` 응답의 `commands` 배열은 이 빌드가 접수하는 작업 명령이고, 상태 조회와 취소처럼 작업을 만들지 않는 조작은 `controls` 배열(`record.stop`, `status`, `request`, `request.cancel`)에 따로 있습니다. 기기가 여러 대이면 모든 명령에 `adb -s SERIAL`을 붙입니다.
 
 ## 2. 자주 쓰는 명령
 
@@ -34,7 +40,7 @@ adb shell sh /data/local/tmp/halcam cts cases
 adb shell sh /data/local/tmp/halcam cts run --cases custom:fast_on_off
 adb shell sh /data/local/tmp/halcam status                     # 마지막 제출 요청, ID를 주면 그 요청
 adb shell sh /data/local/tmp/halcam cancel
-adb shell sh /data/local/tmp/halcam fetch REQUEST_ID           # 촬영을 반복하지 않고 파일만 다시 준비
+adb shell sh /data/local/tmp/halcam fetch [REQUEST_ID]         # 촬영을 반복하지 않고 파일만 다시 준비. ID를 생략하면 마지막 요청
 ```
 
 스크립트가 앱 실행, 요청 ID 생성, 완료 대기를 모두 처리합니다. 첫 줄에 `request_id=UUID`를 출력하고 마지막에 완료된 요청 JSON을 출력하며, 성공이면 0, 오류면 1을 반환합니다. S25+에서 `capture`는 앱 실행을 포함해 약 10초가 걸립니다.
@@ -99,10 +105,10 @@ CTS 항목만 `--arg`로 전달하고 `--extra cases:s:...`를 쓰지 않습니�
 
 완료 기록은 24시간, 최대 200개까지만 남습니다. 그 뒤에는 `status`와 `fetch`가 실패하므로 필요한 파일은 실행 직후에 내려받습니다.
 
-## 6. 이 PC에서의 함정
+## 6. 실행 환경별 주의
 
-- `adb`가 PATH에 없습니다. `C:\Users\baboe\AppData\Local\Android\Sdk\platform-tools\adb.exe`를 전체 경로로 호출합니다.
-- Git Bash는 `/data/local/tmp/halcam` 같은 인자를 Windows 경로로 바꿔 버려서 `sh: C:/Program: No such file or directory`가 납니다. adb를 호출하기 전에 `export MSYS2_ARG_CONV_EXCL='*' MSYS_NO_PATHCONV=1`을 설정하거나 명령 전체를 따옴표로 감쌉니다.
+- `adb`가 PATH에 없으면 Android SDK의 `platform-tools/adb`를 전체 경로로 호출합니다. 위치는 PC마다 다르므로 `adb version`이 실패하면 사용자에게 SDK 경로를 확인합니다.
+- Windows의 Git Bash(MSYS)는 `/data/local/tmp/halcam` 같은 기기 경로 인자를 Windows 경로로 바꿔 버려서 `sh: C:/Program: No such file or directory`가 납니다. adb를 호출하기 전에 `export MSYS2_ARG_CONV_EXCL='*' MSYS_NO_PATHCONV=1`을 설정하거나 명령 전체를 따옴표로 감쌉니다. PowerShell과 CMD, macOS·Linux 셸에는 이 문제가 없습니다.
 - 사진·프리뷰·녹화·CTS는 Live 화면이 필요합니다. 스크립트는 직접 열지만, `content call`을 직접 쓸 때에는 `CliLaunchActivity`를 먼저 실행합니다. `probe`와 `cts cases`는 화면이 필요 없습니다.
 - 기기 화면을 사람이 만지면 진행 중인 CLI 작업이 취소될 수 있습니다. 측정 중에는 화면을 건드리지 않습니다.
-- 이 스킬의 서술과 `guide/cli.md`가 다르면 `guide/cli.md`와 `app/src/main/java/dev/halcamera/cli/`의 코드가 원본입니다. 명령 집합을 바꾸면 `CliCommand.COMMANDS`, `AdbArguments`, `app/src/main/assets/halcam.sh`, `guide/cli.md`를 함께 갱신합니다.
+- 이 스킬의 서술과 `guide/cli.md`가 다르면 `guide/cli.md`와 `app/src/main/java/dev/halcamera/cli/`의 코드가 원본입니다. 명령 집합을 바꾸면 `CliCommand.COMMANDS`, `AdbArguments`, `app/src/main/assets/halcam.sh`, `guide/cli.md`, 그리고 이 파일과 같은 `description`을 가진 `.claude/skills/halcam-cli/SKILL.md`를 함께 갱신합니다.
