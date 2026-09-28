@@ -279,7 +279,9 @@ object ResultPresenter {
             // button reads CLEAR BASELINE by then, so telling the reader to press SET AS BASELINE describes
             // nothing they can do. Being compared against a baseline and being one are separate states.
             hint = if (comparedTo == ComparedTo.BASELINE || isBaseline) null
-            else "[ $ADD_BASELINE ]를 누르면 이 run이 baseline에 들어갑니다",
+            // Five normal runs, because two metrics of the S25+ alternate between two values; three runs often
+            // caught only one of them and flagged the other as degraded (#165, 2026-09-28 measurement).
+            else "[ $ADD_BASELINE ]로 정상 run을 5개 이상 넣으면 판정이 안정됩니다",
             sections = sections,
             threeALine = threeALine(run),
             baselineButton = if (isBaseline) REMOVE_BASELINE else ADD_BASELINE,
@@ -688,6 +690,8 @@ object ResultPresenter {
     fun noteFor(comparison: MetricComparison?, comparedTo: ComparedTo): String {
         if (comparison == null || comparedTo == ComparedTo.NONE) return ""
         if (comparison.state != RegressionState.UNKNOWN) return ""
+        // 3A is compared but never judged (RegressionRules.INFORMATIONAL); "판정 불가" would read as a failure.
+        if (comparison.metricId in RegressionRules.INFORMATIONAL && comparison.unknownReason == UnknownReason.NOT_MEASURABLE) return "참고용"
         return when (comparison.unknownReason) {
             UnknownReason.CONDITION_MISMATCH -> "조건 불일치"
             UnknownReason.NOT_MEASURABLE -> "판정 불가"

@@ -55,9 +55,19 @@ class RegressionDetectorTest {
     }
 
     @Test fun threeAUsesThirtyPercentAndTwoHundredMillisecondFloor() {
-        assertEquals(RegressionState.REGRESSED, state(500.0, 700.0, "H.7")) // +40 %, +200 ms
-        assertEquals(RegressionState.STABLE, state(500.0, 690.0, "H.7"))    // +38 % but +190 ms
-        assertEquals(RegressionState.STABLE, state(400.0, 520.0, "H.6"))    // +30 % but +120 ms
+        fun rule(id: String, b: Double, c: Double) = RegressionDetector.state(RegressionRules.rule(id)!!, b, c)
+        assertEquals(RegressionState.REGRESSED, rule("H.7", 500.0, 700.0)) // +40 %, +200 ms
+        assertEquals(RegressionState.STABLE, rule("H.7", 500.0, 690.0))    // +38 % but +190 ms
+        assertEquals(RegressionState.STABLE, rule("H.6", 400.0, 520.0))    // +30 % but +120 ms
+    }
+
+    @Test fun threeAIsComparedButNeverJudged() {
+        // #165: AE took 353–1413 ms across ten normal S25+ runs of one scene; 3A is informational on screen and in the verdict.
+        val m = compare(500.0, 900.0, "H.6")
+        assertEquals(RegressionState.UNKNOWN, m.state)
+        assertEquals(UnknownReason.NOT_MEASURABLE, m.unknownReason)
+        assertEquals(80.0, m.deltaPct!!, 1e-9)
+        assertEquals("참고용", ResultPresenter.noteFor(m, ComparedTo.BASELINE))
     }
 
     @Test fun captureMetricsFollowTheFifteenPercentRow() {
@@ -219,7 +229,8 @@ class RegressionDetectorTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.7", 700.0)), exposureLoad = 3.9e6)
         val c = RegressionDetector.compare(base, current)
         assertTrue(c.conditionMismatches.isEmpty())
-        assertEquals(RegressionState.REGRESSED, c.metric("H.7")!!.state)
+        // Not blocked by the mismatch rule; the metric is informational, so no verdict either way.
+        assertEquals(UnknownReason.NOT_MEASURABLE, c.metric("H.7")!!.unknownReason)
     }
 
     @Test fun aMissingExposureLoadIsNotAMismatch() {

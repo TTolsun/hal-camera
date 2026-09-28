@@ -196,6 +196,7 @@ object RegressionDetector {
             !comparable -> UnknownReason.CONDITION_MISMATCH
             mismatches.any { it.blocks(id) } -> UnknownReason.CONDITION_MISMATCH
             rule == null -> UnknownReason.NOT_MEASURABLE
+            id in RegressionRules.INFORMATIONAL -> UnknownReason.NOT_MEASURABLE
             else -> null
         }
         if (reason != null) return MetricComparison(id, worst, c, delta, RegressionState.UNKNOWN, reason, best)

@@ -153,7 +153,7 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 170.0)))
         val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
         assertEquals("No baseline · shown vs previous run 20260910-100000-000", v.comparisonLine)
-        assertEquals("[ baseline에 추가 ]를 누르면 이 run이 baseline에 들어갑니다", v.hint)
+        assertEquals("[ baseline에 추가 ]로 정상 run을 5개 이상 넣으면 판정이 안정됩니다", v.hint)
     }
 
     @Test fun theFirstRunOfADeviceHasNeitherBaselineNorPrevious() {
@@ -178,7 +178,7 @@ class ResultPresenterTest {
         val previous = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 150.0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 164.0)))
         val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
-        assertEquals("[ baseline에 추가 ]를 누르면 이 run이 baseline에 들어갑니다", v.hint)
+        assertEquals("[ baseline에 추가 ]로 정상 run을 5개 이상 넣으면 판정이 안정됩니다", v.hint)
     }
 
     @Test fun theBaselineItselfIsNotDescribedAsHavingNoBaseline() {
