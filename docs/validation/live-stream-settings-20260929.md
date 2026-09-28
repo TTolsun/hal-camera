@@ -50,4 +50,3 @@ Debug 빌드, JVM 테스트 599개, lint가 통과했습니다. 기기 화면 �
 0.16.0 / 592의 assembleRelease·testReleaseUnitTest·lintRelease, JVM 테스트 599개, 문서 검사 6단계가 통과했습니다. 기존 정식 서명과 인증서 SHA-256이 일치합니다. Galaxy S25+ (SM-S936N, Android 16)에 dev.halcamera를 업데이트 설치했으며 최초 설치 시각 2026-09-16 02:33:27이 유지됐습니다. APK SHA-256은 d28d2c1335c19bb70a92a2a5909a61b56aa2ec61d61c49f8464c4dc2d63879c8입니다. 화면 조작과 촬영·녹화는 수행하지 않았습니다.
 
 머지 전 코드 리뷰에서는 설정 초안의 취소, 포맷별 크기·FPS 연동, 단일 출력 타임스탬프 매칭, close(done) 이후 재구성, CLI·Benchmark 경계를 대조했으며 차단할 결함을 발견하지 않았습니다. 실기기 조합 호환성과 화면 시각 검증은 이 리뷰의 범위에 포함되지 않습니다.
-
