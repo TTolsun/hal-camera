@@ -286,7 +286,7 @@ data class BenchmarkProfile(
 | Stability | H.5 | `stall_count` | 창 합 | 약 297 (판정한 간격 수) | null | OBSERVE |
 | Stability | H.9 | `callback_failure_count` | 합 | 관측 프레임 수 + still 10 | null | OBSERVE + STILL 전체 |
 | Stability | 2.7 | `preview_stall_during_capture` | 10개 창 합 | 10개 창의 간격 수 | null | STILL. M2에서 여유가 있으면 포함 |
-| 3A | H.6 / H.7 / H.8 | AE / AF / AWB convergence | 단일 | 1 | 저장 (값 1개) | 11번째 open의 첫 result부터. 장면 의존이 커서 score-v1에서는 weight 0(informational). 같은 기기 · 같은 장소의 regression 비교에는 쓴다 |
+| 3A | H.6 / H.7 / H.8 | AE / AF / AWB convergence | 단일 | 1 | 저장 (값 1개) | 11번째 open의 첫 result부터. 장면 의존이 커서 score-v1에서는 weight 0(informational). regression 비교에서도 delta만 표시하고 판정하지 않는다(v3, 7.1.1) |
 | Resource | (없음) | thermal start / max / end, 배터리 start / end, 절전 모드 | 기록만 | | | run 전후와 도중 |
 
 **sampleCount와 samples의 뜻.** `sampleCount`는 언제나 그 metric을 계산하는 데 쓴 raw 표본 수다. Launch의 9와 Preview의 297이 같은 뜻이어야 CSV 집계가 사람을 괴롭히지 않는다. `samples`는 표본 수가 profile로 유한하게 정해진 metric(launch, still, 3A)에만 저장하고, 관측 창 metric은 `null`로 두고 `events`에서 재계산한다. H.1과 H.2가 같은 300개 간격을 두 번 저장하지 않기 위해서다.
@@ -552,21 +552,44 @@ data class BuildIdentityComparison(
 
 | | BASELINE | REFERENCE |
 |---|---|---|
-| 뜻 | 개발자가 의도적으로 고른 기준 형상 | 직전에 잰 값 |
-| 정하는 방법 | 결과 화면이나 이력에서 `Set as baseline`. **자동 생성 없음** | 같은 `(comparisonContractId, endpoint.key)`의 가장 최근 comparison-eligible run을 자동 선택. 자기 자신 제외 |
-| 해제하는 방법 | 이미 baseline인 run에서는 같은 버튼이 `Clear baseline`이다. 포인터만 지우고 run 파일은 남긴다 | 해당 없음 |
-| 저장 | `files/benchmarks/index.json`에 `(comparisonContractId, endpoint.key)` → run_id 포인터 | 저장하지 않고 조회 시 계산 |
-| regression 상태 | 이것 대비로만 IMPROVED / STABLE / REGRESSED | 상태 없음. delta %만 참고 표시 |
+| 뜻 | 개발자가 의도적으로 고른 기준 형상의 정상 run 집합 | 직전에 잰 값 |
+| 정하는 방법 | 결과 화면이나 이력에서 `baseline에 추가`. **자동 생성 없음** | 같은 `(comparisonContractId, endpoint.key)`의 가장 최근 comparison-eligible run을 자동 선택. 자기 자신 제외 |
+| 해제하는 방법 | 이미 집합에 든 run에서는 같은 버튼이 `baseline에서 빼기`이다. 집합에서만 빼고 run 파일은 남긴다 | 해당 없음 |
+| 저장 | `files/benchmarks/index.json`(schema 2)에 `(comparisonContractId, endpoint.key)` → run_id 목록. schema 1의 단일 포인터는 run 하나짜리 집합으로 읽는다 | 저장하지 않고 조회 시 계산 |
+| regression 상태 | 이것 대비로만 IMPROVED / STABLE / REGRESSED. 판정 방법은 7.1.1 | 상태 없음. delta %만 참고 표시 |
 | 없을 때 | `UNKNOWN(no_baseline)`. 화면에는 reference delta만 | 첫 run이면 표시 없음 |
 
 - 자동 baseline을 없앤 이유: v0.2 checkpoint-007에서 첫 검사가 스트림 시작 artefact(stall 1회)를 안은 채 baseline이 되었다. 첫 run은 설치 직후, 발열 상태, 잘못된 label 등 우연에 가장 많이 노출된다.
 - **fingerprint가 달라도 baseline은 무효화하지 않는다.** 빌드 간 regression 추적이 이 제품의 목적이다. 대신 7.4의 identity 비교를 함께 저장하고 화면에 보여 준다.
 - profile.id가 다르면 비교하지 않는다. 모든 지표가 `UNKNOWN(condition_mismatch)`이다.
-- comparison 부적격 run(5.3)은 baseline으로 지정할 수 없고 reference로도 선택되지 않는다.
-- baseline run 파일이 삭제되면 포인터를 지우고 `NO_BASELINE`으로 돌아간다.
-- **baseline 해제는 run 삭제와 별개다.** 기준으로 삼았던 형상이 더 이상 기준이 아니게 되는 일과, 그 측정 결과가 필요 없어지는 일은 다르다. 지정을 무르려고 run 파일을 지워야 한다면 측정 데이터를 잃게 되므로, 이미 baseline인 run의 결과 화면에서는 `Set as baseline`이 `Clear baseline`으로 바뀌어 포인터만 지운다. 다른 run에 `Set as baseline`을 누르면 포인터는 그대로 덮어써지므로 갱신에는 별도 동작이 필요 없다.
+- comparison 부적격 run(5.3)은 baseline에 추가할 수 없고 reference로도 선택되지 않는다.
+- baseline run 파일이 삭제되면 그 run만 집합에서 빠진다. 집합이 비면 `NO_BASELINE`으로 돌아간다.
+- **baseline 해제는 run 삭제와 별개다.** 기준으로 삼았던 형상이 더 이상 기준이 아니게 되는 일과, 그 측정 결과가 필요 없어지는 일은 다르다. 집합에서 빼려고 run 파일을 지워야 한다면 측정 데이터를 잃게 되므로, 이미 집합에 든 run의 결과 화면에서는 버튼이 `baseline에서 빼기`로 바뀌어 집합에서만 뺀다.
+
+#### 7.1.1 Baseline 집합과 범위 판정 (#165)
+
+baseline은 run 하나가 아니라 같은 형상에서 잰 정상 run 여러 개의 집합이다. 지표마다 집합의 값 범위를 만들고, 그 범위를 벗어난 만큼만 판정한다.
+
+```text
+worst = 집합에서 가장 나쁜 값 (LOWER_IS_BETTER면 최댓값, HIGHER_IS_BETTER면 최솟값)
+best  = 집합에서 가장 좋은 값
+REGRESSED : worst 대비 7.2 규칙으로 REGRESSED
+IMPROVED  : best 대비 7.2 규칙으로 IMPROVED
+STABLE    : 그 외 (범위 안)
+baseline_value, delta_pct, 결과 화면의 기준 눈금 = worst
+```
+
+- 이유: S25+ 정상 run의 launch는 느린 모드(1.3 약 260 ms)와 빠른 모드(약 170 ms)로 나뉘고, 3.6 record stop은 정상 run끼리도 99–136 ms로 퍼진다. run 하나를 baseline으로 쓰면 그 run이 어느 쪽에 걸렸는지가 이후 모든 판정을 정했다. 빠른 모드 run이 baseline이면 정상 run이 100% 저하로, 느린 모드 run이면 정상 run의 17%가 녹화 지표로 저하로 표시되었다(#165).
+- 권장 크기는 5개 이상이다. S25+에서는 launch뿐 아니라 3.1 record start도 두 값(약 186 ms, 약 217 ms) 사이를 오간다. 3개 집합은 느린 값을 자주 놓쳐 정상 run의 8–14%를 저하로 표시했고, 5개 집합은 3%였다(2026-09-28 측정). 집합이 클수록 범위가 넓어져 작은 저하는 놓친다. 크기를 강제하지는 않으며 run 하나짜리 집합은 v2의 쌍 비교와 같다.
+- 3A(H.6 / H.7 / H.8)는 비교해서 delta를 보여 주지만 판정하지 않는다(`UNKNOWN(not_measurable)`, 화면에는 "참고용"). 한 장면에서 잰 정상 run 10회의 AE 수렴이 353–1413 ms로 퍼져, 정상 run끼리의 저하 판정 가운데 다른 모든 지표를 합친 것보다 많은 몫을 차지했다.
+- 집합의 run 하나라도 조건이 다르면(7.5) 집합 전체와 다른 것으로 본다. 맞는 run만 골라 범위를 좁히면 판정이 어떤 범위를 썼는지 화면이 말할 수 없다. comparison 부적격 run이 하나라도 있으면 모든 지표가 `UNKNOWN(condition_mismatch)`이다.
+- 집합의 run 하나라도 timeout이면 그 지표는 `UNKNOWN(not_measurable)`이다. 값이 없는 run은 범위에서 빠진다.
+- 집합에 든 run의 결과 화면은 나머지 run과 비교한다. 그 run이 집합에 어울리는지를 보여 주기 위해서다. 집합에 run이 하나뿐이면 그 run은 이전 run과 비교하고 판정하지 않는다.
+- 실행 기록 목록은 집합에 든 run에 저하 배지를 붙이지 않는다.
 
 ### 7.2 Regression rule `regression-rule-v1`
+
+현재 버전은 `regression-rule-v3`다. v2는 RECORD 지표(3.x)를 추가했고, v3(#165)는 1.9 first open과 1.10 open max를 1.1과 같은 규칙으로 추가하고, 3A를 판정 대상에서 뺐다. 기존 지표의 기준값은 v1부터 바뀌지 않았다. 집합 baseline에 적용하는 방법은 7.1.1이다.
 
 전역 noise floor는 쓰지 않는다. 10 ms 하나로는 Jitter(수 ms)와 Interval p95(약 33 ms)의 변화를 놓치기 때문이다. 지표별 표이며, 값 하나라도 바꾸면 `regression-rule-v2`다. 아래 값은 초기 제안이고 M5에서 S25+ 반복 분포를 보고 조정한다.
 
@@ -588,13 +611,13 @@ UNKNOWN   : baseline 없음 / 둘 중 하나가 값 없음 / profile 불일치 /
 
 | 지표 | kind | deltaPct | noiseFloor |
 |---|---|---:|---:|
-| 1.1 open, 1.3 first started, 1.8 yuv proxy, 1.6 preview_total | LATENCY | 15 % | 10 ms |
+| 1.1 open, 1.9 first open, 1.10 open max, 1.3 first started, 1.8 yuv proxy, 1.6 preview_total | LATENCY | 15 % | 10 ms |
 | 1.2 configure, 1.7 close | LATENCY | 15 % | 5 ms |
 | 2.2 capture, 2.3 result, 2.5 shot_to_shot | LATENCY | 15 % | 10 ms |
 | H.1 interval p50, H.2 interval p95 | LATENCY | 10 % | 2 ms |
 | H.3 partial, H.4 buffer | LATENCY | 15 % | 5 ms |
 | H.10 jitter | LATENCY | 20 % | 1 ms |
-| H.6 / H.7 / H.8 3A | LATENCY | 30 % | 200 ms |
+| H.6 / H.7 / H.8 3A (v3부터 판정하지 않음, 7.1.1) | LATENCY | 30 % | 200 ms |
 | H.5 stall, 2.7 preview stall during capture | COUNT | — | 2 |
 | H.9 callback failure | COUNT | — | 1 |
 
@@ -827,7 +850,7 @@ M2가 끝나면 사용자는 결과 UI 없이도 S25+에서 run을 반복해 raw
 | 8 | 버전 | M1부터 versionName 0.3.0, 마일스톤마다 patch 증가 | v0.2 = Doctor, v0.3 = HAL Camera 첫 라인 |
 | 9 | 지표 표시 이름 | 결과 · 비교 화면은 영문 짧은 이름, 안내 문구는 한국어 | 8.4 |
 | 10 | 첫 score의 이름 | Camera Endpoint Score. Device Score는 표준 endpoint 집합 이후 | 실제로 잰 것은 "S25+ 후면 메인 camera2-standard-v1"이다 |
-| 11 | 3A와 score | score-v1에서 weight 0(informational). regression 비교에는 포함 | 장면 · 거리 · 조도 의존이 커서 기기 간 비교에 쓰면 환경 차이가 성능처럼 보인다 |
+| 11 | 3A와 score | score-v1에서 weight 0(informational). regression 비교에서는 v3부터 판정하지 않고 delta만 표시(#165) | 장면 · 거리 · 조도 의존이 커서 기기 간 비교에 쓰면 환경 차이가 성능처럼 보인다 |
 | 12 | compatibility 판정의 AF 예외 | 스트림 · fps는 엄격, AF 모드만 예외(고정 초점은 OFF로 실행하고 기록) | 엄격히 요구하면 S25+ 초광각 같은 고정 초점 카메라를 영원히 잴 수 없다. endpoint별 baseline이라 섞이지 않는다 |
 | 13 | validity 모델 | boolean 하나 대신 measurement / comparison / scoring 세 단계. flag 표(5.3)에서 유도. thermal은 시작값이 아니라 run 최고값 | "측정이 유효함"과 "점수에 적합함"은 다른 질문이다. LIGHT로 시작해 SEVERE로 끝난 run이 유효로 남는 구멍을 막는다 |
 | 14 | 통계 열 표시 | n < 20이면 `max`, n ≥ 20이면 `p95`. JSON은 둘 다 저장 | n = 9의 nearest-rank p95는 max다 |
@@ -863,7 +886,7 @@ M2가 끝나면 사용자는 결과 UI 없이도 S25+에서 run을 반복해 raw
 | 1 | 7.2 전역 10 ms noise floor와 7.3 Jitter 예시(3.2 → 7.1 ms, REGRESSED)가 모순 | 지표별 `RegressionRule` 표로 교체(5.2, 7.2). 예시를 표로 검산 |
 | 2 | Profile 미지원 기기에서 조건을 낮춰 같은 id로 저장할 위험 | `ProfileCompatibility` preflight 신설(3.6). SUPPORTED / UNSUPPORTED만, fallback은 별도 profile id. v1 확정 후 불변 규칙(3.5) |
 | 3 | launch 10회 반복은 warm reopen인데 이름에 드러나지 않음 | Profile에 `launchMode = WARM_REOPEN` 필드. cold는 별도 profile로 예약 |
-| 4 | 3A는 장면 의존이 커서 기기 간 score에 부적합 | score-v1에서 3A weight 0. regression 비교에는 유지 |
+| 4 | 3A는 장면 의존이 커서 기기 간 score에 부적합 | score-v1에서 3A weight 0. regression 비교는 v3부터 delta만 표시(#165) |
 | 5 | 1 run = 1 camera인데 "기기 Score"라 부르면 논리가 뛴다 | 첫 점수를 Camera Endpoint Score로 명명. `summary.endpoint_score` |
 | 6 | 첫 run 자동 baseline은 우연에 취약 | 자동 baseline 삭제. BASELINE(명시적)과 REFERENCE(직전 적격 run) 분리(7.1) |
 | 7 | `same_build` boolean은 HAL 개발 형상 차이를 못 잡는다 | `BuildIdentityComparison` 6축(5.4, 7.4) |

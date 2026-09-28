@@ -4,6 +4,7 @@ import android.content.Context
 import dev.halcamera.benchmark.domain.AtomicFiles
 import dev.halcamera.benchmark.domain.BenchmarkReportCodec
 import dev.halcamera.benchmark.domain.BenchmarkRun
+import dev.halcamera.benchmark.domain.LaunchTail
 import dev.halcamera.telemetry.Event
 import org.json.JSONArray
 import org.json.JSONObject
@@ -28,7 +29,8 @@ class BenchmarkReport(private val store: BenchmarkStore) {
     /** null means unreadable; the reason is kept in [lastReadError] so the UI can say so instead of hiding it. */
     fun read(file: File): BenchmarkRun? = try {
         lastReadError = null
-        BenchmarkReportCodec.fromJsonMap(toMap(JSONObject(file.readText())), file)
+        // 1.9 and 1.10 are read off 1.1, so a run written before they existed is compared on them as well (#165).
+        LaunchTail.backfill(BenchmarkReportCodec.fromJsonMap(toMap(JSONObject(file.readText())), file))
     } catch (e: Exception) {
         lastReadError = "${file.name}: ${e.message}"
         android.util.Log.w(TAG, "unreadable run file ${file.name}: ${e.message}")

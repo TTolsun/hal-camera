@@ -131,10 +131,10 @@ class ResultPresenterTest {
     @Test fun anIneligibleRunCannotBeSetAsBaselineButABaselineCanAlwaysBeCleared() {
         val hot = run(thermalMax = 3, flags = listOf(ValidityFlags.THERMAL_HIGH))
         assertFalse(present(hot).baselineButtonEnabled)
-        assertEquals("baseline으로 지정", present(hot).baselineButton)
+        assertEquals("baseline에 추가", present(hot).baselineButton)
 
         val cleared = present(hot, isBaseline = true)
-        assertEquals("baseline 해제", cleared.baselineButton)
+        assertEquals("baseline에서 빼기", cleared.baselineButton)
         assertTrue(cleared.baselineButtonEnabled)
     }
 
@@ -153,7 +153,7 @@ class ResultPresenterTest {
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 170.0)))
         val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
         assertEquals("No baseline · shown vs previous run 20260910-100000-000", v.comparisonLine)
-        assertEquals("[ baseline으로 지정 ]을 누르면 이 run이 baseline이 됩니다", v.hint)
+        assertEquals("[ baseline에 추가 ]로 정상 run을 5개 이상 넣으면 판정이 안정됩니다", v.hint)
     }
 
     @Test fun theFirstRunOfADeviceHasNeitherBaselineNorPrevious() {
@@ -172,13 +172,13 @@ class ResultPresenterTest {
         // The button reads CLEAR BASELINE at this point, so a hint naming SET AS BASELINE points at nothing.
         // Being measured against a baseline and being one are separate states, and only the first was checked.
         val alone = present(run(metrics = listOf(metric("2.2", 164.0))), isBaseline = true)
-        assertEquals("baseline 해제", alone.baselineButton)
+        assertEquals("baseline에서 빼기", alone.baselineButton)
         assertNull(alone.hint)
 
         val previous = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 150.0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 164.0)))
         val v = present(current, RegressionDetector.compare(previous, current), ComparedTo.PREVIOUS)
-        assertEquals("[ baseline으로 지정 ]을 누르면 이 run이 baseline이 됩니다", v.hint)
+        assertEquals("[ baseline에 추가 ]로 정상 run을 5개 이상 넣으면 판정이 안정됩니다", v.hint)
     }
 
     @Test fun theBaselineItselfIsNotDescribedAsHavingNoBaseline() {
@@ -330,7 +330,7 @@ class ResultPresenterTest {
 
         val first = ResultPresenter.headline(current, null, ComparedTo.NONE, isBaseline = false, endpointName = "Camera · 0 (Wide · Rear)")
         assertEquals("First run", first.text)
-        assertTrue(first.sub, first.sub.startsWith("Baseline으로 지정하면"))
+        assertTrue(first.sub, first.sub.startsWith("Baseline에 추가하면"))
 
         val asBaseline = ResultPresenter.headline(current, null, ComparedTo.NONE, isBaseline = true, endpointName = "Camera · 0 (Wide · Rear)")
         assertEquals("This run is the baseline", asBaseline.text)
@@ -474,7 +474,7 @@ class ResultPresenterTest {
         // printed "-12448 ms · -96%" against this run's 562 ms convergence.
         val base = run(runId = "20260910-100000-000", metrics = listOf(metric("H.7", 13010.0, timeout = true), metric("H.6", 227.0)))
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("H.7", 562.0), metric("H.6", 404.0)))
-        val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE, base)
+        val bars = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.BASELINE, listOf(base))
             .flatMap { it.bars }.associateBy { it.label }
         val af = bars.getValue("AF")
         assertEquals("562 ms", af.valueText)
@@ -628,7 +628,7 @@ class ResultPresenterTest {
     @Test fun aUnitThatChangedBetweenTheRunsDrawsNoTickAndSaysWhy() {
         val base = run(runId = "20260910-100000-000", metrics = listOf(metric("2.2", 164.0).copy(unit = "us")))
         val current = run(runId = "20260910-110000-000", metrics = listOf(metric("2.2", 170.0)))
-        val bar = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.PREVIOUS, base)
+        val bar = ResultPresenter.metricBars(current, RegressionDetector.compare(base, current), ComparedTo.PREVIOUS, listOf(base))
             .flatMap { it.bars }.single()
         assertNull(bar.baseFraction)
         assertNull(bar.deltaText)
@@ -639,13 +639,29 @@ class ResultPresenterTest {
         assertEquals("비교 대상(Compare)", ResultPresenter.COMPARE_LABEL)
         assertEquals("기준(Baseline)", ResultPresenter.legendReferenceLabel(ComparedTo.BASELINE))
         assertEquals("이전 run", ResultPresenter.legendReferenceLabel(ComparedTo.PREVIOUS))
+        // Against a set the tick is the worst member, not one run, and the legend has to say so.
+        assertEquals("기준(Baseline 3개 중 최악값)", ResultPresenter.legendReferenceLabel(ComparedTo.BASELINE, 3))
+    }
+
+    @Test fun aBaselineSetIsNamedByItsSizeInTheHeadlineAndItsRunsInTheFold() {
+        val a = run(runId = "20260910-100000-000", metrics = listOf(metric("1.1", 100.0)))
+        val b = run(runId = "20260910-101000-000", metrics = listOf(metric("1.1", 104.0)))
+        val current = run(runId = "20260910-110000-000", metrics = listOf(metric("1.1", 102.0)))
+        val cmp = RegressionDetector.compare(listOf(a, b), current)
+        val head = ResultPresenter.headline(current, cmp, ComparedTo.BASELINE, false, "Camera 0")
+        assertEquals("No degradation", head.text)
+        assertTrue(head.sub.startsWith("baseline 2개 대비"))
+        val facts = ResultPresenter.referenceFacts(listOf(a, b), cmp, "Baseline")
+        assertEquals("Baseline" to "2개 · 2026-09-10 10:00, 2026-09-10 10:10", facts.first())
+        assertEquals("No degradation   baseline ${a.runId}, ${b.runId}",
+            ResultPresenter.comparisonLine(current, cmp, ComparedTo.BASELINE))
     }
 
     @Test fun theReferenceRunsFactsFollowThisRunsInTheFold() {
         val reference = run(runId = "20260910-100000-000", subject = SubjectLabel("SW41", "9c01d2e"))
         val current = run(runId = "20260910-110000-000")
         val role = ResultPresenter.referenceName(ComparedTo.BASELINE)
-        val facts = ResultPresenter.referenceFacts(reference, RegressionDetector.compare(reference, current), role)
+        val facts = ResultPresenter.referenceFacts(listOf(reference), RegressionDetector.compare(reference, current), role)
         // The labels use the screen's own name for the reference, not a new word ("기준") for it.
         assertEquals("Baseline", facts.first().first)
         assertTrue(facts.first().second.contains("SW41"))

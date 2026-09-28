@@ -189,18 +189,42 @@ object ResultPresenter {
      */
     fun referenceName(comparedTo: ComparedTo): String = if (comparedTo == ComparedTo.BASELINE) "Baseline" else "이전 run"
 
-    /** The legend's names: the bars are the run being compared, the ticks its baseline (or the previous run). */
+    /**
+     * The legend's names: the bars are the run being compared, the ticks its baseline (or the previous run).
+     * Against a set of [baselineCount] runs a tick is the worst value among them, and the legend says so: a tick
+     * that is sometimes one run and sometimes another would otherwise read as one run's numbers.
+     */
     const val COMPARE_LABEL = "비교 대상(Compare)"
-    fun legendReferenceLabel(comparedTo: ComparedTo): String =
-        if (comparedTo == ComparedTo.BASELINE) "기준(Baseline)" else "이전 run"
+    fun legendReferenceLabel(comparedTo: ComparedTo, baselineCount: Int = 1): String = when {
+        comparedTo != ComparedTo.BASELINE -> "이전 run"
+        baselineCount > 1 -> "기준(Baseline ${baselineCount}개 중 최악값)"
+        else -> "기준(Baseline)"
+    }
 
     /**
-     * The run the ticks stand for, as label and value pairs for the same 실행 정보 fold. The compare screen
+     * What the verdict was measured against, in the words the headline uses: the baseline's time for one run,
+     * the number of runs for a set.
+     */
+    fun baselineText(comparison: RunComparison): String = when (comparison.baseRunIds.size) {
+        0 -> "baseline 없음"
+        1 -> comparison.baseRunIds[0].let { "baseline(${localTime(it) ?: it})" }
+        else -> "baseline ${comparison.baseRunIds.size}개"
+    }
+
+    /**
+     * The runs the ticks stand for, as label and value pairs for the same 실행 정보 fold. The compare screen
      * carried these; with that screen gone, the result card is the only place they can live.
      *
-     * The labels use the name the rest of the screen uses ("Baseline", "Baseline OS"), not a new word for it.
+     * The labels use the name the rest of the screen uses ("Baseline", "Baseline OS"), not a new word for it. A
+     * baseline set gets one line listing its runs: an OS and thermal line per member would push this run's own
+     * facts out of the fold.
      */
-    fun referenceFacts(reference: BenchmarkRun, comparison: RunComparison?, role: String): List<Pair<String, String>> {
+    fun referenceFacts(references: List<BenchmarkRun>, comparison: RunComparison?, role: String): List<Pair<String, String>> {
+        if (references.size > 1) return listOfNotNull(
+            role to "${references.size}개 · " + references.joinToString(", ") { localTime(it.runId) ?: it.runId },
+            comparison?.identity?.let { "빌드 비교" to identityLine(it) }
+        )
+        val reference = references.firstOrNull() ?: return emptyList()
         val thermal = listOfNotNull(reference.env.thermalStart, reference.env.thermalMax, reference.env.thermalEnd)
         return listOfNotNull(
             role to listOfNotNull(
@@ -255,14 +279,23 @@ object ResultPresenter {
             // button reads CLEAR BASELINE by then, so telling the reader to press SET AS BASELINE describes
             // nothing they can do. Being compared against a baseline and being one are separate states.
             hint = if (comparedTo == ComparedTo.BASELINE || isBaseline) null
-            else "[ baseline으로 지정 ]을 누르면 이 run이 baseline이 됩니다",
+            // Five normal runs, because two metrics of the S25+ alternate between two values; three runs often
+            // caught only one of them and flagged the other as degraded (#165, 2026-09-28 measurement).
+            else "[ $ADD_BASELINE ]로 정상 run을 5개 이상 넣으면 판정이 안정됩니다",
             sections = sections,
             threeALine = threeALine(run),
-            baselineButton = if (isBaseline) "baseline 해제" else "baseline으로 지정",
+            baselineButton = if (isBaseline) REMOVE_BASELINE else ADD_BASELINE,
             // Clearing must stay possible even if the run later became ineligible under a changed flag table.
             baselineButtonEnabled = isBaseline || run.validity.comparisonEligible
         )
     }
+
+    /**
+     * The baseline action, on the result screen and in the run history menu alike. A run joins or leaves the
+     * baseline set (#165); "지정" and "해제" described a single pointer that one press replaced.
+     */
+    const val ADD_BASELINE = "baseline에 추가"
+    const val REMOVE_BASELINE = "baseline에서 빼기"
 
     // ---- headline and key metrics ----
 
@@ -281,13 +314,13 @@ object ResultPresenter {
         isBaseline: Boolean,
         endpointName: String
     ): ResultHeadline {
-        val vs = comparison?.baseRunId?.let { localTime(it) ?: it }
+        val vs = comparison?.baseRunIds?.firstOrNull()?.let { localTime(it) ?: it }
         return when {
             !run.validity.measurementValid ->
                 ResultHeadline("Measurement invalid", eligibilityLine(run), Tone.BAD)
             comparison == null || comparedTo == ComparedTo.NONE ->
                 if (isBaseline) ResultHeadline("This run is the baseline", "비교할 이전 run이 없습니다\n$endpointName", Tone.NEUTRAL)
-                else ResultHeadline("First run", "Baseline으로 지정하면 다음 run부터 비교합니다\n$endpointName", Tone.NEUTRAL)
+                else ResultHeadline("First run", "Baseline에 추가하면 다음 run부터 비교합니다\n$endpointName", Tone.NEUTRAL)
             comparedTo == ComparedTo.PREVIOUS ->
                 ResultHeadline(
                     if (isBaseline) "This run is the baseline" else "No baseline",
@@ -295,14 +328,14 @@ object ResultPresenter {
                     Tone.NEUTRAL
                 )
             comparison.judgedCount == 0 ->
-                ResultHeadline("No verdict", "비교 조건을 만족하는 지표가 없습니다 · baseline $vs", Tone.NEUTRAL)
+                ResultHeadline("No verdict", "비교 조건을 만족하는 지표가 없습니다 · ${baselineText(comparison)}", Tone.NEUTRAL)
             comparison.hasRegression ->
                 ResultHeadline(
                     "${comparison.regressedCount} ${if (comparison.regressedCount == 1) "metric" else "metrics"} degraded",
-                    "baseline($vs) 대비\n$endpointName",
+                    "${baselineText(comparison)} 대비\n$endpointName",
                     Tone.BAD
                 )
-            else -> ResultHeadline("No degradation", "baseline($vs) 대비\n$endpointName", Tone.GOOD)
+            else -> ResultHeadline("No degradation", "${baselineText(comparison)} 대비\n$endpointName", Tone.GOOD)
         }
     }
 
@@ -324,8 +357,11 @@ object ResultPresenter {
         run: BenchmarkRun,
         comparison: RunComparison?,
         comparedTo: ComparedTo,
-        /** The run the ticks stand for; only needed to notice a metric whose unit changed between the two. */
-        reference: BenchmarkRun? = null
+        /**
+         * The runs the ticks stand for; only needed to notice a metric whose unit changed between them and this
+         * run, or one they timed out on.
+         */
+        references: List<BenchmarkRun> = emptyList()
     ): List<MetricBarSection> {
         val withDelta = comparedTo != ComparedTo.NONE
         // Colour is a verdict, and only a baseline is judged against (7.1): the designated one, or the run picked
@@ -340,7 +376,7 @@ object ResultPresenter {
                 if (info.category != category) return@mapNotNull null
                 val metric = run.metric(id)
                 val cmp = comparison?.metric(id)
-                val refMetric = reference?.metric(id)
+                val refMetrics = references.mapNotNull { it.metric(id) }
                 when {
                     metric?.value == null -> {
                         // Only the reference measured it. Dropping the row would hide that this run lost a metric.
@@ -354,11 +390,11 @@ object ResultPresenter {
                     // A reference that timed out stored its observation window, not a convergence (plan chapter 13).
                     // Drawing it as a tick compared 562 ms of AF against a 13 s window on a Galaxy S25+ and printed
                     // "-12448 ms · -96%"; the row keeps this run's bar and says why there is nothing to compare.
-                    refMetric?.timeout == true ->
+                    refMetrics.any { it.timeout } ->
                         BarInput(info.short, "", metric.value, null, info.unit, null,
                             fine(info.id, info.category), note = "${referenceName}은 timeout", span = info.span, id = info.id)
                     // History can pair runs of different contracts; a tick in another unit would be a lie.
-                    refMetric != null && refMetric.unit != metric.unit ->
+                    refMetrics.any { it.unit != metric.unit } ->
                         BarInput(info.short, "", metric.value, null, info.unit, null,
                             fine(info.id, info.category), note = "단위 다름", span = info.span, id = info.id)
                     // No per-row "median": nearly every value is one, and the card's legend says so once.
@@ -556,19 +592,23 @@ object ResultPresenter {
         comparison: RunComparison?,
         comparedTo: ComparedTo,
         isBaseline: Boolean = false
-    ): String = when {
-        comparison == null || comparedTo == ComparedTo.NONE ->
-            if (isBaseline) "This run is the baseline · no earlier run to compare"
-            else "No baseline · no earlier run to compare"
-        // No metric could be judged: saying "no degradation" here would read as a clean result rather than as a
-        // comparison that never happened (PR #21 review).
-        comparison.judgedCount == 0 && comparedTo == ComparedTo.BASELINE ->
-            "No verdict   baseline ${comparison.baseRunId} · no metric met the comparison conditions"
-        comparedTo == ComparedTo.PREVIOUS ->
-            if (isBaseline) "This run is the baseline · shown vs previous run ${comparison.baseRunId}"
-            else "No baseline · shown vs previous run ${comparison.baseRunId}"
-        comparison.hasRegression -> "▲ ${comparison.regressedCount} degraded   baseline ${comparison.baseRunId}"
-        else -> "No degradation   baseline ${comparison.baseRunId}"
+    ): String {
+        // The copied text keeps the run ids, so a PC reader can open the very files the verdict came from.
+        val ids = comparison?.baseRunIds?.joinToString(", ")
+        return when {
+            comparison == null || comparedTo == ComparedTo.NONE ->
+                if (isBaseline) "This run is the baseline · no earlier run to compare"
+                else "No baseline · no earlier run to compare"
+            // No metric could be judged: saying "no degradation" here would read as a clean result rather than as a
+            // comparison that never happened (PR #21 review).
+            comparison.judgedCount == 0 && comparedTo == ComparedTo.BASELINE ->
+                "No verdict   baseline $ids · no metric met the comparison conditions"
+            comparedTo == ComparedTo.PREVIOUS ->
+                if (isBaseline) "This run is the baseline · shown vs previous run $ids"
+                else "No baseline · shown vs previous run $ids"
+            comparison.hasRegression -> "▲ ${comparison.regressedCount} degraded   baseline $ids"
+            else -> "No degradation   baseline $ids"
+        }
     }
 
     /**
@@ -650,6 +690,8 @@ object ResultPresenter {
     fun noteFor(comparison: MetricComparison?, comparedTo: ComparedTo): String {
         if (comparison == null || comparedTo == ComparedTo.NONE) return ""
         if (comparison.state != RegressionState.UNKNOWN) return ""
+        // 3A is compared but never judged (RegressionRules.INFORMATIONAL); "판정 불가" would read as a failure.
+        if (comparison.metricId in RegressionRules.INFORMATIONAL && comparison.unknownReason == UnknownReason.NOT_MEASURABLE) return "참고용"
         return when (comparison.unknownReason) {
             UnknownReason.CONDITION_MISMATCH -> "조건 불일치"
             UnknownReason.NOT_MEASURABLE -> "판정 불가"

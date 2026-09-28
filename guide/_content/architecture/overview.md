@@ -32,7 +32,7 @@ verifications: []
 
 `MainActivity`가 런처이며 앱을 열면 바로 Live 프리뷰를 표시합니다. Live에서는 프리뷰와 촬영 조작부, 선택한 관측 정보를 표시합니다. 도구 메뉴에서 여는 선택적인 `WorkbenchActivity`는 기기 식별 정보와 검사 목적별 진입점을 모읍니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.
 
-`BaselineManager`는 사용자가 지정한 기준 실행을 관리합니다. `HistoryActivity`의 두 실행 비교에서는 먼저 선택한 실행을 그 비교에만 쓰는 baseline으로 전달합니다. 이전 실행을 자동 선택한 reference 비교와 달리, 이 경로에서는 저하·개선을 판정합니다. 선택 절차와 표시 의미는 [Benchmark](benchmark.md)에 있습니다.
+`BaselineManager`는 사용자가 baseline에 추가한 정상 실행의 집합을 관리합니다. `HistoryActivity`의 두 실행 비교에서는 먼저 선택한 실행을 그 비교에만 쓰는 baseline으로 전달합니다. 이전 실행을 자동 선택한 reference 비교와 달리, 이 경로에서는 저하·개선을 판정합니다. 선택 절차와 표시 의미는 [Benchmark](benchmark.md)에 있습니다.
 
 ### 코드를 처음 읽는 순서
 

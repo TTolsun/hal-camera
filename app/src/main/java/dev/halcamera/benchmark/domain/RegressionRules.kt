@@ -27,7 +27,7 @@ data class RegressionRule(
  * [VERSION] (7.2). The detector that applies these rules arrives in M4; M1 only fixes the table.
  */
 object RegressionRules {
-    const val VERSION = "regression-rule-v2"
+    const val VERSION = "regression-rule-v3"
 
     private fun latency(id: String, pct: Double, floorMs: Double) =
         RegressionRule(id, RuleKind.LATENCY, Direction.LOWER_IS_BETTER, pct, floorMs)
@@ -41,6 +41,9 @@ object RegressionRules {
 
     val rules: Map<String, RegressionRule> = listOf(
         latency("1.1", 15.0, 10.0),
+        // v3 (#165): the first open and the slowest open, judged like 1.1 itself.
+        latency("1.9", 15.0, 10.0),
+        latency("1.10", 15.0, 10.0),
         latency("1.3", 15.0, 10.0),
         latency("1.8", 15.0, 10.0),
         latency("1.6", 15.0, 10.0),
@@ -70,4 +73,13 @@ object RegressionRules {
     ).associateBy { it.metricId }
 
     fun rule(metricId: String): RegressionRule? = rules[metricId]
+
+    /**
+     * Metrics compared and shown but never given a verdict (v3, #165). 3A convergence depends on the scene more
+     * than on the camera: in the 2026-09-28 S25+ runs, AE took 353–1413 ms across ten normal runs of one dim scene,
+     * and it caused more "degraded" verdicts between normal runs than every other metric together. The result
+     * screen already labelled 3A informational; the verdict now agrees with it. Their rows above stay, so the delta
+     * a developer reads is still measured against the same thresholds' scale.
+     */
+    val INFORMATIONAL: Set<String> = setOf("H.6", "H.7", "H.8")
 }

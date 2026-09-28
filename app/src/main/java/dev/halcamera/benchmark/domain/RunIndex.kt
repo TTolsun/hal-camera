@@ -41,7 +41,7 @@ data class RunIndex(val runs: List<BenchmarkRun>, val unreadableIds: List<String
 object RunDeletion {
     fun delete(runId: String, index: BenchmarkIndex, remove: () -> Boolean, save: (BenchmarkIndex) -> Unit): Boolean {
         if (!remove()) return false
-        val next = BenchmarkIndex(index.baselines.filterValues { it != runId })
+        val next = index.retaining(index.allRunIds - runId)
         if (next != index) save(next)
         return true
     }

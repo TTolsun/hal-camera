@@ -2,6 +2,8 @@
 
 2026-09-27 · HAL CAM 0.15.0은 Callback 그래프, CameraX 사진·동영상 저장, 터치 초점·노출 제어와 정리된 개발자 문서를 포함합니다. Galaxy S25+에서 versionCode 543 서명 APK를 기존 앱 위에 설치하고 Camera2·CameraX 프리뷰와 Callback 표시를 확인했습니다. [릴리스 노트](releases/0.15.0.md)를 참고하세요.
 
+2026-09-28 · baseline이 실행 하나가 아니라 정상 실행의 집합이 되었습니다([이슈 #165](https://github.com/TTolsun/hal-camera/issues/165)). 지표마다 집합의 가장 나쁜 값보다 규칙만큼 나빠야 저하로 판정하므로, launch가 빠른 모드와 느린 모드로 나뉘는 S25+에서 baseline 선택에 따라 판정이 뒤집히던 문제가 사라집니다. 첫 사이클의 open(1.9)과 가장 느린 open(1.10)을 비교 지표로 더해 카메라 점유 경쟁과 발열의 튐을 잡습니다. 회귀 규칙은 `regression-rule-v3`, baseline 인덱스는 schema 2입니다. #123의 40회로 후보를 고른 뒤 같은 기기에서 새로 잰 29회로 확인했습니다. 정상 run 5개 집합에서 정상 오탐은 3 %, 점유 경쟁 탐지는 100 %입니다. 이 확인 측정에서 3A가 오탐의 가장 큰 원인으로 드러나 3A는 판정에서 빼고 delta만 표시합니다. 저조도는 여전히 잡지 못하고, 발열은 쓸 수 있는 run이 부족해 답하지 못했습니다([검증 기록](validation/baseline-set-20260928.md)).
+
 2026-09-24에 녹화(3.x) 지표를 구현했습니다([이슈 #122](https://github.com/TTolsun/hal-camera/issues/122)). 벤치마크 시퀀스의 사진 촬영 뒤에 RECORD 단계가 붙어, 9초짜리 녹화를 다섯 번 반복하고 3.1·3.2·3.4·3.6·3.7 다섯 지표를 계산합니다. 3.3은 `MediaRecorder`로 인코더 쪽 프레임 수를 얻을 수 없으므로 `not_measurable`을 유지하고, 3.5는 별도 시나리오로 남겼습니다. 설계와 결정 근거는 [PLAN-Recording-v0.1.md](PLAN-Recording-v0.1.md)에 있습니다.
 
 이 변경으로 profile이 `camera2-standard-v2`가 되었습니다. v1으로 저장된 실행 파일은 계속 읽히고 v1끼리도 계속 비교되지만, v2와는 비교되지 않으므로 기기마다 baseline과 calibration을 다시 만들어야 합니다. run JSON은 schema 5이고 validity flag 표는 `validity-v3`, 회귀 규칙은 `regression-rule-v2`입니다. 점수 체계는 건드리지 않았습니다. RECORD 카테고리의 가중치를 0으로 두었으므로 계산과 `score-v1-draft`라는 이름이 그대로입니다. 녹화 지표를 점수에 넣는 일은 [이슈 #123](https://github.com/TTolsun/hal-camera/issues/123)의 민감도 검증 뒤로 미뤘습니다.
@@ -46,7 +48,7 @@
 | M1 Data contract | 완료 |
 | M2 Measurement correctness | 완료. Galaxy S25+ 실기기 확인 |
 | M3 Product conversion | 완료 |
-| M4 Developer workflow | 완료. baseline 지정과 vs baseline / vs previous 열을 실기기에서 확인 |
+| M4 Developer workflow | 완료. baseline 지정과 vs baseline / vs previous 열을 실기기에서 확인. 2026-09-28 baseline 집합과 범위 판정으로 변경, 확인 측정 완료(#165) |
 | M5a Internal score | 내부 점수 초안 구현. 2026-09-26 v2 민감도 재검증에서 저조도·발열·점유 경쟁 모두 저하 기준 미달([검증 기록](validation/score-sensitivity-20260926.md)). 점수 설계 검토([#162](https://github.com/TTolsun/hal-camera/issues/162))가 남음 |
 | M5b Public endpoint score | 데이터 확보 대기. 여러 제조사·성능군의 5–10개 기기 분포 필요 |
 | M6 History / export | 완료. Results 필터, 두 run 비교·삭제, JSON·CSV 내보내기, PC 집계, subject 재사용 (PR #39, 이슈 #10 종료) |

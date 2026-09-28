@@ -49,23 +49,23 @@ class RunHistoryTest {
         val oldestBaseline = run(runId = "001")
         val contract = oldestBaseline.contract.comparisonContractId
         val index = BenchmarkIndex()
-            .withBaseline(contract, "0", "001")
-            .withBaseline(contract, "1", "003")
+            .withAdded(contract, "0", "001")
+            .withAdded(contract, "1", "003")
         val (baselines, rest) = index.baselinesFirst(listOf(newest, otherCameraBaseline, middle, oldestBaseline))
         assertEquals(listOf("003", "001"), baselines.map { it.runId })
         assertEquals(listOf("004", "002"), rest.map { it.runId })
         // A run is a baseline only for its own contract and camera; the same id elsewhere is not enough.
-        assertFalse(BenchmarkIndex().withBaseline(contract, "1", "001").isBaseline(oldestBaseline))
+        assertFalse(BenchmarkIndex().withAdded(contract, "1", "001").isBaseline(oldestBaseline))
         assertTrue(BenchmarkIndex().baselinesFirst(listOf(newest, middle)).first.isEmpty())
     }
 
-    @Test fun deletionClearsEveryPointerToDeletedRunOnlyAfterRemovalSucceeds() {
-        val index = BenchmarkIndex(mapOf("a|0" to "first", "a|1" to "second", "b|0" to "first"))
+    @Test fun deletionRemovesTheDeletedRunFromEverySetOnlyAfterRemovalSucceeds() {
+        val index = BenchmarkIndex(mapOf("a|0" to listOf("first"), "a|1" to listOf("second", "first"), "b|0" to listOf("first")))
         var saved: BenchmarkIndex? = null
         assertFalse(RunDeletion.delete("first", index, { false }, { saved = it }))
         assertNull(saved)
         assertTrue(RunDeletion.delete("first", index, { true }, { saved = it }))
-        assertEquals(mapOf("a|1" to "second"), saved!!.baselines)
+        assertEquals(mapOf("a|1" to listOf("second")), saved!!.baselines)
         saved = null
         assertTrue(RunDeletion.delete("third", index, { true }, { saved = it }))
         assertNull(saved)

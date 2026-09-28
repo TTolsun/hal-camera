@@ -129,7 +129,7 @@ class BenchmarkActivity : ComponentActivity() {
     private var lastRun: BenchmarkRun? = null
     private var lastFile: File? = null
     private var lastSummary: String = ""
-    private var baseRun: BenchmarkRun? = null
+    private var baseRuns: List<BenchmarkRun> = emptyList()
     private var comparison: RunComparison? = null
     private var comparedTo: ComparedTo = ComparedTo.NONE
     private var isBaseline = false
@@ -337,7 +337,7 @@ class BenchmarkActivity : ComponentActivity() {
         // limit would delete before it is applied.
         io.execute {
             val ids = store.files().map { it.nameWithoutExtension }
-            val protected = store.index().baselines.values.toSet()
+            val protected = store.index().allRunIds
             main.post { if (!destroyed) showSettings(ids, protected) }
         }
     }
@@ -432,7 +432,7 @@ class BenchmarkActivity : ComponentActivity() {
     private fun prune(): Int {
         val limit = settings.runLimit
         if (limit == RunRetention.UNLIMITED) return 0
-        val protected = store.index().baselines.values.toSet()
+        val protected = store.index().allRunIds
         val doomed = RunRetention.toDelete(store.files().map { it.nameWithoutExtension }, protected, limit)
         return doomed.count { store.deleteRun(it) }
     }
@@ -448,16 +448,14 @@ class BenchmarkActivity : ComponentActivity() {
             val result = runCatching {
                 val run = report.read(store.file(id)) ?: error(report.lastReadError ?: "실행을 읽을 수 없습니다.")
                 require(run.runId == id) { "실행 ID와 파일명이 다릅니다." }
-                val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
-                val base = baseline ?: baselines.reference(run)
-                val to = if (baseline != null) ComparedTo.BASELINE else if (base != null) ComparedTo.PREVIOUS else ComparedTo.NONE
-                val cmp = RegressionDetector.compare(base, run)
+                val resolved = baselines.resolve(run)
+                val cmp = resolved.comparison(run)
                 val onBaseline = baselines.isBaseline(run)
                 main.post {
                     if (destroyed) return@post
                     historyLoading = false
-                    lastRun = run; lastFile = store.file(id); baseRun = base
-                    comparedTo = to; comparison = cmp; isBaseline = onBaseline
+                    lastRun = run; lastFile = store.file(id); baseRuns = resolved.runs
+                    comparedTo = resolved.comparedTo; comparison = cmp; isBaseline = onBaseline
                     lastSummary = previousSummary ?: "${run.runId}\n${run.validity.flags.joinToString(" · ")}"
                     render()
                 }
@@ -585,7 +583,7 @@ class BenchmarkActivity : ComponentActivity() {
         // The result card is the comparison: its ticks are the reference run, and it carries what the removed 비교
         // screen showed (percentages, the reference's facts), so there is no second chart behind a button.
         val view = BenchmarkResultCards.addResult(this, content, run, comparison, comparedTo, isBaseline, lastFile?.name,
-            reference = baseRun)
+            references = baseRuns)
 
         // Give the longer baseline action a full row to avoid truncation.
         actions.addView(
@@ -797,18 +795,12 @@ class BenchmarkActivity : ComponentActivity() {
                     runId = run.runId, aborted = result.aborted, hardFailure = result.hardFailure,
                     schemaVersion = BenchmarkReportCodec.SCHEMA_VERSION, file = file
                 )
-                val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
-                val base = baseline ?: baselines.reference(run)
-                val to = when {
-                    baseline != null -> ComparedTo.BASELINE
-                    base != null -> ComparedTo.PREVIOUS
-                    else -> ComparedTo.NONE
-                }
-                val cmp = RegressionDetector.compare(base, run)
+                val resolved = baselines.resolve(run)
+                val cmp = resolved.comparison(run)
                 val onBaseline = baselines.isBaseline(run)
                 main.post {
                     if (destroyed) return@post
-                    lastRun = run; lastFile = file; baseRun = base; comparedTo = to; comparison = cmp; isBaseline = onBaseline
+                    lastRun = run; lastFile = file; baseRuns = resolved.runs; comparedTo = resolved.comparedTo; comparison = cmp; isBaseline = onBaseline
                     lastSummary = summary(run, result, file)
                     screen = Screen.RESULT
                     render()
@@ -839,9 +831,9 @@ class BenchmarkActivity : ComponentActivity() {
     }
 
     /**
-     * `SET AS BASELINE` / `CLEAR BASELINE` (7.1). The pointer is written and the comparison recomputed on the
-     * io thread, because clearing a baseline changes which run the result is measured against and that means
-     * reading the reference run from disk.
+     * `baseline에 추가` / `baseline에서 빼기` (7.1). The set is written and the comparison recomputed on the io
+     * thread, because changing the set changes which runs the result is measured against and that means reading
+     * them from disk.
      */
     private fun toggleBaseline() {
         val run = lastRun ?: return
@@ -850,18 +842,12 @@ class BenchmarkActivity : ComponentActivity() {
                 store.index()
                 check(store.lastIndexError == null) { "Baseline 파일을 읽을 수 없어 변경할 수 없습니다." }
                 baselines.toggle(run)
-                val baseline = baselines.baselineRun(run)?.takeIf { it.runId != run.runId }
-                val base = baseline ?: baselines.reference(run)
-                val to = when {
-                    baseline != null -> ComparedTo.BASELINE
-                    base != null -> ComparedTo.PREVIOUS
-                    else -> ComparedTo.NONE
-                }
-                val cmp = RegressionDetector.compare(base, run)
+                val resolved = baselines.resolve(run)
+                val cmp = resolved.comparison(run)
                 val onBaseline = baselines.isBaseline(run)
                 main.post {
                     if (destroyed) return@post
-                    baseRun = base; comparedTo = to; comparison = cmp; isBaseline = onBaseline
+                    baseRuns = resolved.runs; comparedTo = resolved.comparedTo; comparison = cmp; isBaseline = onBaseline
                     render()
                 }
             } catch (e: Exception) {

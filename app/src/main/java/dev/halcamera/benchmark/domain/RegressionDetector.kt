@@ -18,22 +18,30 @@ enum class ConditionMismatch(val blocksAll: Boolean, val metricIds: Set<String> 
     fun blocks(metricId: String): Boolean = blocksAll || metricId in metricIds
 }
 
-/** One metric of the comparison table (7.3). [deltaPct] is filled whenever both values exist, even when the state is UNKNOWN. */
+/**
+ * One metric of the comparison table (7.3). [deltaPct] is filled whenever both values exist, even when the state is
+ * UNKNOWN.
+ *
+ * Against a baseline set, [baselineValue] is the worst value of the set: the edge a regression has to cross, and
+ * the value the delta and the result screen's tick stand for. [baselineBest] is the other edge, the one an
+ * improvement has to cross. Against a single run the two are the same number.
+ */
 data class MetricComparison(
     val metricId: String,
     val baselineValue: Double?,
     val currentValue: Double?,
     val deltaPct: Double?,
     val state: RegressionState,
-    val unknownReason: UnknownReason?
+    val unknownReason: UnknownReason?,
+    val baselineBest: Double? = baselineValue
 )
 
 /**
- * Result of comparing one run against a reference point. Pure data, recomputed at display time with the current
- * rule version (7.2) rather than read back from the stored run.
+ * Result of comparing one run against a baseline set or a single reference run. Pure data, recomputed at display
+ * time with the current rule version (7.2) rather than read back from the stored run.
  */
 data class RunComparison(
-    val baseRunId: String?,
+    val baseRunIds: List<String>,
     val currentRunId: String,
     val sameContract: Boolean,
     val sameEndpoint: Boolean,
@@ -59,9 +67,9 @@ data class RunComparison(
     fun metric(id: String): MetricComparison? = metrics.firstOrNull { it.metricId == id }
 
     companion object {
-        /** No baseline pointer: the table still lists the current values, with no state. */
+        /** No baseline: the table still lists the current values, with no state. */
         fun noBaseline(current: BenchmarkRun): RunComparison = RunComparison(
-            baseRunId = null, currentRunId = current.runId, sameContract = false, sameEndpoint = false,
+            baseRunIds = emptyList(), currentRunId = current.runId, sameContract = false, sameEndpoint = false,
             identity = null, conditionMismatches = emptyList(),
             metrics = current.metrics.map {
                 MetricComparison(it.id, null, it.value, null, RegressionState.UNKNOWN, UnknownReason.NO_BASELINE)
@@ -71,11 +79,17 @@ data class RunComparison(
 }
 
 /**
- * Applies the regression rule table (7.2) and the pairwise condition rules (7.5) to two runs.
+ * Applies the regression rule table (7.2) and the pairwise condition rules (7.5) to a run and its baseline set.
  *
  * The whole comparison is one pure function so that every boundary value of the table is testable on the JVM and
  * so that the stored run never has to be trusted: the run JSON keeps measured values, and baseline / reference
  * columns are derived here each time they are shown.
+ *
+ * Against a set, each metric is judged against the range of the set's values: REGRESSED only when the run is worse
+ * than the worst member by the rule's margin, IMPROVED only when it is better than the best member by it (#165).
+ * Normal runs of one camera spread wider than a rule's margin (launch alternates between two modes, record stop
+ * varies by a third), and a single run as the baseline turned that spread into verdicts. A set of one reduces to
+ * the plain pairwise comparison.
  */
 object RegressionDetector {
 
@@ -89,25 +103,47 @@ object RegressionDetector {
         base: BenchmarkRun?,
         current: BenchmarkRun,
         rules: Map<String, RegressionRule> = RegressionRules.rules
-    ): RunComparison {
-        if (base == null) return RunComparison.noBaseline(current)
+    ): RunComparison = compare(listOfNotNull(base), current, rules)
 
-        val sameContract = base.contract.comparisonContractId == current.contract.comparisonContractId
-        val sameEndpoint = base.endpoint.key == current.endpoint.key
-        val mismatches = conditionMismatches(base, current)
+    fun compare(
+        bases: List<BenchmarkRun>,
+        current: BenchmarkRun,
+        rules: Map<String, RegressionRule> = RegressionRules.rules
+    ): RunComparison {
+        if (bases.isEmpty()) return RunComparison.noBaseline(current)
+
+        val sameContract = bases.all { it.contract.comparisonContractId == current.contract.comparisonContractId }
+        val sameEndpoint = bases.all { it.endpoint.key == current.endpoint.key }
+        // A condition that differs from any member differs from the set: judging against the members that happen
+        // to match would quietly narrow the range the verdict claims to use.
+        val mismatches = bases.flatMap { conditionMismatches(it, current) }.distinct().sorted()
         // A run that may not be compared at all (5.3) cannot produce a trustworthy state, in either position.
-        val eligible = base.validity.comparisonEligible && current.validity.comparisonEligible
+        val eligible = current.validity.comparisonEligible && bases.all { it.validity.comparisonEligible }
         val comparable = sameContract && sameEndpoint && eligible
 
-        val ids = (current.metrics.map { it.id } + base.metrics.map { it.id }).distinct()
+        val ids = (current.metrics.map { it.id } + bases.flatMap { b -> b.metrics.map { it.id } }).distinct()
         val metrics = ids.map { id ->
-            compareMetric(id, base.metric(id), current.metric(id), rules[id], comparable, mismatches)
+            compareMetric(id, bases.map { it.metric(id) }, current.metric(id), rules[id], comparable, mismatches)
         }
         return RunComparison(
-            baseRunId = base.runId, currentRunId = current.runId,
+            baseRunIds = bases.map { it.runId }, currentRunId = current.runId,
             sameContract = sameContract, sameEndpoint = sameEndpoint,
-            identity = BuildIdentity.compare(BuildIdentity.of(base), BuildIdentity.of(current)),
+            identity = bases.map { BuildIdentity.compare(BuildIdentity.of(it), BuildIdentity.of(current)) }.reduce(::both),
             conditionMismatches = mismatches, metrics = metrics
+        )
+    }
+
+    /** "same" against a set means the same as every member; an axis unknown for any member is unknown. */
+    private fun both(a: BuildIdentityComparison, b: BuildIdentityComparison): BuildIdentityComparison {
+        fun and(x: Boolean?, y: Boolean?): Boolean? = if (x == null || y == null) null else x && y
+        return BuildIdentityComparison(
+            sameSystemFingerprint = a.sameSystemFingerprint && b.sameSystemFingerprint,
+            sameVendorFingerprint = and(a.sameVendorFingerprint, b.sameVendorFingerprint),
+            sameCameraInfoVersion = and(a.sameCameraInfoVersion, b.sameCameraInfoVersion),
+            sameAppVersion = a.sameAppVersion && b.sameAppVersion,
+            sameAppBuild = and(a.sameAppBuild, b.sameAppBuild),
+            sameSubjectLabel = and(a.sameSubjectLabel, b.sameSubjectLabel),
+            sameSubjectCommit = and(a.sameSubjectCommit, b.sameSubjectCommit)
         )
     }
 
@@ -136,30 +172,42 @@ object RegressionDetector {
 
     private fun compareMetric(
         id: String,
-        base: BenchmarkMetric?,
+        bases: List<BenchmarkMetric?>,
         current: BenchmarkMetric?,
         rule: RegressionRule?,
         comparable: Boolean,
         mismatches: List<ConditionMismatch>
     ): MetricComparison {
-        val b = base?.value
+        // Members without a value are left out of the range. A metric one member did not measure (a profile
+        // change, an unsupported stage) cannot widen it, and leaving it out only makes the range narrower.
+        val values = bases.mapNotNull { it?.value }
+        val higherIsBetter = rule?.direction == Direction.HIGHER_IS_BETTER
+        val worst = if (higherIsBetter) values.minOrNull() else values.maxOrNull()
+        val best = if (higherIsBetter) values.maxOrNull() else values.minOrNull()
         val c = current?.value
-        val delta = deltaPct(b, c)
+        val delta = deltaPct(worst, c)
 
         // A 3A metric that timed out stores the observation window length as its value (plan chapter 13,
         // 2026-09-10). Comparing that number would report a regression against a window, not a convergence.
-        val timedOut = base?.timeout == true || current?.timeout == true
+        val timedOut = bases.any { it?.timeout == true } || current?.timeout == true
         val reason = when {
-            b == null || c == null -> missingReason(base, current)
+            worst == null || c == null -> missingReason(bases.firstOrNull { it?.value == null }, current)
             timedOut -> UnknownReason.NOT_MEASURABLE
             !comparable -> UnknownReason.CONDITION_MISMATCH
             mismatches.any { it.blocks(id) } -> UnknownReason.CONDITION_MISMATCH
             rule == null -> UnknownReason.NOT_MEASURABLE
+            id in RegressionRules.INFORMATIONAL -> UnknownReason.NOT_MEASURABLE
             else -> null
         }
-        if (reason != null) return MetricComparison(id, b, c, delta, RegressionState.UNKNOWN, reason)
+        if (reason != null) return MetricComparison(id, worst, c, delta, RegressionState.UNKNOWN, reason, best)
 
-        return MetricComparison(id, b, c, delta, state(rule!!, b!!, c!!), null)
+        val againstWorst = state(rule!!, worst!!, c!!)
+        val stateInRange = when {
+            againstWorst == RegressionState.REGRESSED -> RegressionState.REGRESSED
+            state(rule, best!!, c) == RegressionState.IMPROVED -> RegressionState.IMPROVED
+            else -> RegressionState.STABLE
+        }
+        return MetricComparison(id, worst, c, delta, stateInRange, null, best)
     }
 
     /**
