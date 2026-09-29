@@ -10,13 +10,25 @@ import java.util.UUID
 /** Device tests use real JSONObject and AtomicFile, with a deterministic clock and isolated files. */
 class CliStoreInstrumentation : Instrumentation() {
     private var exportReports = false
+    private var probeLaunchDiagnostics = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
         exportReports = arguments?.getString("export_reports") == "true"
+        probeLaunchDiagnostics = arguments?.getString("probe_launch_diagnostics") == "true"
         start()
     }
 
     override fun onStart() {
+        if (probeLaunchDiagnostics) {
+            val power = targetContext.getSystemService(android.os.PowerManager::class.java)
+            val probe = dev.halcamera.benchmark.platform.LaunchDiagnostics(
+                android.os.SystemClock::elapsedRealtimeNanos,
+                { if (android.os.Build.VERSION.SDK_INT >= 29) power?.currentThermalStatus else null }
+            )
+            val snapshot = dev.halcamera.benchmark.platform.BenchmarkReport.json(probe.snapshot())
+            finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "HALCAM_LAUNCH_DIAGNOSTICS=$snapshot\n") })
+            return
+        }
         if (exportReports) {
             val store = dev.halcamera.benchmark.platform.BenchmarkStore(targetContext)
             val codec = dev.halcamera.benchmark.platform.BenchmarkReport(store)
@@ -25,8 +37,12 @@ class CliStoreInstrumentation : Instrumentation() {
                 check(codec.read(file) != null) { "Unreadable report ${file.name}" }
                 val json = JSONObject(file.readText())
                 val selected = JSONObject()
-                listOf("run_id", "profile", "comparison_contract_id", "metric_definition_version", "stats_method", "clock",
-                    "app", "device", "env", "validity", "metrics", "raw", "aborted").forEach { key -> selected.put(key, json.opt(key)) }
+                listOf("schema_version", "kind", "run_id", "exported_at_utc", "profile", "compatibility", "conditions",
+                    "comparison_contract_id", "metric_definition_version", "stats_method", "clock", "regression_rule_version",
+                    "app", "device", "endpoint", "subject", "env", "validity", "metrics", "raw", "aborted")
+                    .forEach { key -> selected.put(key, json.opt(key)) }
+                selected.put("source_sha256", java.security.MessageDigest.getInstance("SHA-256")
+                    .digest(file.readBytes()).joinToString("") { "%02x".format(it.toInt() and 0xff) })
                 reports.put(selected)
             }
             finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "HALCAM_REPORTS=$reports\n") })
