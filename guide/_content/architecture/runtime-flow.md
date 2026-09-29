@@ -55,9 +55,11 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 ### Live에서 촬영과 저장
 
-Live 셔터는 현재 엔진의 `MediaCapture`로 사진이나 동영상을 저장하며, 촬영을 위해 엔진을 바꾸지 않습니다. 기본 사진은 YUV·JPEG 쌍이며 Camera2는 Live 스트림에서 켠 출력만 저장할 수도 있습니다. 저장은 별도 작업 스레드에서 처리하고, 완료된 파일만 앨범에 공개합니다. 엔진별 요청 구성과 저장 순서는 [Engine](engine.md)에 있습니다.
+Live 셔터는 현재 엔진의 `MediaCapture`로 사진이나 동영상을 저장하며, 촬영을 위해 엔진을 바꾸지 않습니다. 기본 사진은 YUV·JPEG 쌍이며 두 엔진 모두 Live 스트림에서 켠 출력만 저장할 수도 있습니다. 저장은 별도 작업 스레드에서 처리하고, 완료된 파일만 앨범에 공개합니다. 엔진별 요청 구성과 저장 순서는 [Engine](engine.md)에 있습니다.
 
 Live 상단에는 Callback, Lab 순서로 버튼을 배치합니다. Lab 버튼은 메뉴 없이 `WorkbenchActivity`를 엽니다. Lab의 Inspection에는 Probe·CTS·Benchmark를, Results에는 Run History·Gallery·ZIP Archives를 모읍니다. Settings에서 설정과 앱 정보를 제공합니다. 항목 이름은 영어로, 짧은 보조 설명은 한글로 표시합니다. ZIP 기록은 공유·다른 위치에 저장·삭제를 지원하며, 설정에는 Live Streams, ADB CLI 허용, Reconnect Camera, About가 있습니다. Live 카메라의 `close(done)` 콜백을 받은 뒤 Lab을 열며, Lab 자체는 카메라를 열지 않습니다. 선택한 카메라 ID는 Probe와 Benchmark에, 엔진은 Benchmark에 전달합니다. 프리뷰 제어는 결과를 Live에 돌려주어 실행합니다. 녹화·저장·세션 종료·CLI 작업 중에는 Lab 버튼을 비활성화합니다.
+
+Live 표시 옆에는 구성된 P·Y·J 크기를 한 줄로 표시합니다. 녹화 중에는 P와 R 크기 및 H264·HEVC·Auto를 표시하며 크기 글씨는 깜빡이지 않습니다. 크기 영역을 누르면 엔진의 `close(done)` 뒤 Live Streams를 직접 열고, 뒤로 가기나 저장으로 Live에 복귀합니다. Lab에서 진입한 경우에는 Lab으로 복귀합니다.
 
 ### 갤러리 항목의 조회 경로
 
@@ -67,7 +69,7 @@ Live 상단에는 Callback, Lab 순서로 버튼을 배치합니다. Lab 버튼�
 
 ### CLI 요청과 결과 수집
 
-CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩니다. 요청 ID와 내용을 먼저 저장하고 `LiveController`, `CtsController`가 화면의 카메라·CTS suite 동작을 실행합니다. 사진은 두 이미지의 저장 완료, CTS suite는 보고서 JSON·텍스트 쓰기 완료 후 artifact를 등록합니다. 벤치마크 실행은 CLI 명령에서 제외합니다. `cameras`·`probe`·`cts.cases`는 화면을 거치지 않고 coordinator가 IO 스레드에서 바로 완료하며, probe 파일은 요청별 `files/cli/artifacts/<request_id>/`에 두었다가 기록 정리와 함께 지웁니다. 명령 접수와 실제 완료는 서로 다른 상태입니다.
+CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩니다. 요청 ID와 내용을 먼저 저장하고 `LiveController`, `CtsController`가 화면의 카메라·CTS suite 동작을 실행합니다. 사진은 켜진 출력 이미지의 저장 완료, CTS suite는 보고서 JSON·텍스트 쓰기 완료 후 artifact를 등록합니다. 벤치마크 실행은 CLI 명령에서 제외합니다. `cameras`·`streams`·`probe`·`cts.cases`는 화면을 거치지 않고 coordinator가 처리합니다. 스트림 지원 조회와 probe 파일 작업은 IO 스레드에서 실행하며, probe 파일은 요청별 `files/cli/artifacts/<request_id>/`에 두었다가 기록 정리와 함께 지웁니다. 명령 접수와 실제 완료는 서로 다른 상태입니다.
 
 PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 확인합니다. 같은 요청 ID와 같은 내용은 기존 결과를 반환하며 새로운 촬영을 시작하지 않습니다. 명령 사용법과 전송 실패 대응은 [CLI](cli.md)에 있습니다.
 

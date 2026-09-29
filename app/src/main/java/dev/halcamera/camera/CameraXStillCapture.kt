@@ -35,6 +35,7 @@ internal class CameraXStillCapture(
 ) {
     interface Host {
         val imageCapture: ImageCapture?
+        val analysisEnabled: Boolean
         val active: Boolean
         val recordingBusy: Boolean
         val flashName: String
@@ -61,7 +62,7 @@ internal class CameraXStillCapture(
 
     fun capture(requestId: String?, done: ((Result<PhotoResult>) -> Unit)?) {
         val useCase = host.imageCapture
-        if (useCase == null || !host.active || inFlight || host.recordingBusy) {
+        if ((useCase == null && !host.analysisEnabled) || !host.active || inFlight || host.recordingBusy) {
             main.post { done?.invoke(Result.failure(IllegalStateException("Camera not ready or busy"))) }
             return
         }
@@ -69,10 +70,10 @@ internal class CameraXStillCapture(
         synchronized(lock) { photo = pending }
         inFlight = true
         host.updateRotation()
-        host.report("YUV + JPEG 촬영 중…", false)
-        telemetry.event(sessionId, "capture_submit", mapOf("api" to "ImageCapture.takePicture", "flash" to host.flashName,
+        host.report("사진 촬영 중…", false)
+        telemetry.event(sessionId, "capture_submit", mapOf("api" to if (useCase == null) "ImageAnalysis" else "ImageCapture.takePicture", "flash" to host.flashName,
             "zoomRequested" to host.zoomRequested, "correlation" to "one app capture in flight; CameraX owns internal tags"))
-        useCase.takePicture(mainExecutor, object : ImageCapture.OnImageCapturedCallback() {
+        useCase?.takePicture(mainExecutor, object : ImageCapture.OnImageCapturedCallback() {
             override fun onCaptureSuccess(image: ImageProxy) {
                 try {
                     val timestamp = image.imageInfo.timestamp
@@ -110,6 +111,7 @@ internal class CameraXStillCapture(
         val ready = synchronized(lock) {
             if (photo !== pending) return
             pending.frames[timestamp] = frame
+            if (host.imageCapture == null) pending.timestamp = timestamp
             while (pending.frames.size > 8) pending.frames.remove(pending.frames.keys.first())
             pending.timestamp?.let { timestamp >= it } == true
         }
@@ -127,7 +129,7 @@ internal class CameraXStillCapture(
         val ready = synchronized(lock) {
             if (photo !== pending) return
             pending.jpeg = jpeg; pending.timestamp = timestamp
-            pending.frames.keys.any { it >= timestamp }
+            !host.analysisEnabled || pending.frames.keys.any { it >= timestamp }
         }
         if (ready) save(pending) else main.postDelayed({ save(pending) }, FRAME_WAIT_MS)
     }
@@ -152,21 +154,23 @@ internal class CameraXStillCapture(
         val (timestamp, jpeg, picked) = synchronized(lock) {
             if (photo !== pending) return
             val t = pending.timestamp ?: return
-            val j = pending.jpeg ?: return
-            val p = pending.frames.entries.minByOrNull { abs(it.key - t) } ?: return
+            val j = pending.jpeg
+            val p = pending.frames.entries.minByOrNull { abs(it.key - t) }
+            if ((host.imageCapture != null && j == null) || (host.analysisEnabled && p == null)) return
             photo = null // Keep inFlight until the pair has been written.
             Triple(t, j, p)
         }
         mediaIo.execute {
-            val result = runCatching { library.savePair(pending.name, encodeYuvStill(picked.value.yuv, picked.value.rotation), jpeg) }
+            val result = runCatching { library.savePhotos(pending.name,
+                picked?.value?.let { encodeYuvStill(it.yuv, it.rotation) }, jpeg) }
             result.onSuccess { uris ->
-                telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "yuvOffsetNs" to picked.key - timestamp,
+                telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "yuvOffsetNs" to picked?.key?.minus(timestamp),
                     "uris" to uris.map { it.toString() }))
             }
             deliver(pending, result.map { PhotoResult(pending.requestId, pending.name, timestamp, it) })
             main.post {
                 inFlight = false
-                val message = result.fold({ "갤러리에 YUV · JPEG 사진 2장을 저장했습니다" }, { "사진 저장 실패: ${it.message}" })
+                val message = result.fold({ "갤러리에 사진 ${it.size}장을 저장했습니다" }, { "사진 저장 실패: ${it.message}" })
                 if (!host.active || result.isFailure) Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
                 if (host.active) host.report(result.fold({ message }, { "$message · 다시 촬영할 수 있습니다" }), true)
             }

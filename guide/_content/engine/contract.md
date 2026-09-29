@@ -39,7 +39,7 @@ verifications: []
 
 Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 `StartCardPresenter`가 Camera2로 전환한다고 알립니다. Live와 다른 스트림 크기 및 저장 방식은 [Camera2 엔진](#camera2-엔진)에서 설명합니다.
 
-CLI의 `preview` 명령은 `LiveController`를 통해 Camera2로 카메라를 엽니다. CLI 준비 시 해당 카메라의 사용자 스트림 설정을 해제하여 기존 YUV·JPEG 사진 쌍 계약을 유지합니다. CameraX 제어는 [CLI 계약](https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md)의 후속 범위에 있습니다.
+CLI의 `preview`·`capture`·`record.start`는 `LiveController`를 통해 Camera2 또는 CameraX를 엽니다. 기본 엔진은 Camera2이며 `--engine CameraX`로 바꿉니다. 크기 옵션을 생략하면 기본 사진 쌍 구성을 유지하고, 명시한 옵션은 지원 검사 후 적용합니다. 이전 UI 설정은 이어받지 않습니다. `streams`는 화면 없이 지원 크기와 녹화 후보를 조회합니다. 인자와 예제는 [CLI](cli.md)에 있습니다.
 
 ### 두 엔진이 함께 남기는 기록
 

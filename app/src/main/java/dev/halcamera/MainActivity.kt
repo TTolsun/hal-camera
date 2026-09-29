@@ -42,11 +42,40 @@ class MainActivity : ComponentActivity() {
     private val liveCli by lazy {
         LiveController(cli, object : LiveController.Driver {
             override fun busy() = recordingVideo || stoppingRecording || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true
-            override fun prepare(camera: String) {
-                showCallbacks(false)
-                cameraId = camera; engineName = "Camera2"; paused = false; zoomRatio = 1f
-                streamSettings.remove(camera) // Existing CLI capture contract remains the default YUV + JPEG pair.
-                resetControls(); updateCameraChoices(); restartCamera()
+            override fun prepare(command: dev.halcamera.cli.CliCommand, ready: () -> Unit) {
+                // Capability work can initialize CameraX; keep it off the main thread.
+                io.execute {
+                    val selected = runCatching {
+                        val id = requireNotNull(command.camera)
+                        if (command.streams == null) null else {
+                            var support = liveStreamSupport(getSystemService(CameraManager::class.java).getCameraCharacteristics(id))
+                            if (command.engine == "CameraX") support = cameraXStreamSupport(this@MainActivity, id, support)
+                            command.streams.resolve(support)
+                        }
+                    }
+                    main.post {
+                        if (cli.active?.id != command.id || !resumed) return@post
+                        selected.fold({ settings ->
+                            if (command.command == "capture" && settings?.canCapture == false) {
+                                cli.fail(command.id, "PREFLIGHT_FAILED", "Capture requires YUV or JPEG output")
+                                return@fold
+                            }
+                            showCallbacks(false)
+                            cameraId = requireNotNull(command.camera); engineName = command.engine ?: "Camera2"
+                            paused = false; zoomRatio = 1f
+                            if (settings == null) streamSettings.remove(streamKey()) else streamSettings[streamKey()] = settings
+                            resetControls(); updateCameraChoices(); restartCamera(); ready()
+                        }, { cli.fail(command.id, (it as? dev.halcamera.cli.CliFailure)?.code ?: "PREFLIGHT_FAILED", it.message ?: "Invalid stream settings") })
+                    }
+                }
+            }
+            override fun streamInfo(): Map<String, Any?> =
+                (telemetry.sessions[sessionId]?.get("negotiatedStreams") as? Map<*, *>)?.entries
+                    ?.associate { it.key.toString() to it.value }.orEmpty()
+            override fun photoLabels(): List<String> {
+                val settings = streamSettings[streamKey()]
+                return listOfNotNull("YUV".takeIf { settings == null || settings.yuv != null },
+                    "JPEG".takeIf { settings == null || settings.jpeg != null })
             }
             override fun capture(id: String, done: (Result<PhotoResult>) -> Unit) {
                 val camera = engine as? MediaCapture
@@ -191,12 +220,9 @@ class MainActivity : ComponentActivity() {
             data.getStringExtra(WorkbenchActivity.EXTRA_CAMERA_ID) == cameraId) {
             @Suppress("DEPRECATION")
             val settings = data.getSerializableExtra(LiveStreamsActivity.EXTRA_SETTINGS) as? LiveStreamSettings
-            if (settings == null) streamSettings.remove(cameraId) else streamSettings[cameraId] = settings
+            if (settings == null) streamSettings.remove(streamKey()) else streamSettings[streamKey()] = settings
             telemetry.event(sessionId, "live_streams_changed", settings?.metadata() ?: mapOf("mode" to "default"))
-            val switched = engineName != "Camera2"
-            engineName = "Camera2"
             paused = false
-            if (switched) resetControls()
         }
         if (data?.getStringExtra(WorkbenchActivity.EXTRA_LIVE_ACTION) == WorkbenchActivity.ACTION_RECONNECT) {
             reconnectFromLab = true
@@ -223,11 +249,14 @@ class MainActivity : ComponentActivity() {
             }
             val events = recorder.snapshot(10_000_000_000L)
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
-            if (engineName == "Camera2") frames.lastOrNull()?.values?.get("fpsRange")?.let { lastStreamFps[cameraId] = it.toString() }
+            if (engineName == "Camera2") frames.lastOrNull()?.values?.get("fpsRange")?.let { lastStreamFps[streamKey()] = it.toString() }
             val previewAt = if (engineName == "Camera2") lastPreviewFrameNs
                 else if (cameraXStreaming) frames.lastOrNull()?.atNs ?: 0L else 0L
             liveIndicator.bind(resumed && !paused && !closing && engine != null &&
                 previewAt > 0L && time - previewAt < 1_500_000_000L)
+            if (!closing && engine != null) {
+                liveIndicator.bindSizes(telemetry.sessions[sessionId]?.get("negotiatedStreams") as? Map<*, *>)
+            }
             readings.update(events, frames, time, sessionId, controlBar.controls, controlBar.support, zoomRatio)
             if (callbackGraph.visibility == View.VISIBLE) callbackGraph.update(events, sessionId, time, telemetry.sessions[sessionId].orEmpty())
             recorder.finish()?.let(incidents::export)
@@ -331,6 +360,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun restartCamera() {
         liveIndicator.bind(false)
+        liveIndicator.bindSizes(null)
         lastPreviewFrameNs = 0L
         cameraXStreaming = false
         zoomControl.collapse(animate = false)
@@ -354,8 +384,9 @@ class MainActivity : ComponentActivity() {
         sessionId = UUID.randomUUID().toString()
         val thisSession = sessionId
         val thisCamera = cameraId
-        val requestedStreams = streamSettings[thisCamera]
-        if (engineName == "Camera2") streamState[thisCamera] = "구성 중입니다."
+        val thisKey = streamKey()
+        val requestedStreams = streamSettings[thisKey]
+        if (engineName == "Camera2") streamState[thisKey] = "구성 중입니다."
         zoomApplied = false
         updateCameraChoices()
         setStatus("$engineName · ${CameraLabel.short(cameraId)} 연결 중…", false)
@@ -383,21 +414,34 @@ class MainActivity : ComponentActivity() {
                 if (thisSession == sessionId && resumed && !closing) {
                     cameraXStreaming = state == PreviewView.StreamState.STREAMING
                     if (!cameraXStreaming) liveIndicator.bind(false)
+                    else previewReady()
                 }
             }
-            CameraXEngine(this, this, view, cameraId, sessionId, telemetry, cameraWorker, previewReady, recordingState, notice, status)
+            CameraXEngine(this, this, view, cameraId, sessionId, telemetry, cameraWorker, previewReady, recordingState, notice, status,
+                liveStreams = requestedStreams, streamsConfigured = { values ->
+                    if (thisSession == sessionId && resumed && !closing) {
+                        goodStreams[thisKey] = requestedStreams
+                        streamState[thisKey] = "구성 성공"
+                        liveIndicator.bindSizes(values)
+                    }
+                }, streamsFailed = { reason ->
+                    if (thisSession == sessionId) cli.active?.takeIf { it.command in setOf("preview", "capture", "record.start") }?.let { cli.fail(it.id, "PREFLIGHT_FAILED", reason) }
+                    if (thisSession == sessionId && resumed && !closing) streamState[thisKey] = "실패: $reason"
+                })
         } else {
             val view = TextureView(this)
             previewHost.addView(view, FrameLayout.LayoutParams(-1,-1))
             Camera2Engine(this, view, cameraId, sessionId, telemetry, liveStreams = requestedStreams,
                 streamsConfigured = { values ->
                     if (thisSession == sessionId && resumed && !closing) {
-                        goodStreams[thisCamera] = requestedStreams
-                        streamState[thisCamera] = "구성 성공 · Preview ${values["preview"]} · YUV ${values["analysis"] ?: "Off"} · JPEG ${values["jpeg"] ?: "Off"}"
+                        goodStreams[thisKey] = requestedStreams
+                        liveIndicator.bindSizes(values)
+                        streamState[thisKey] = "구성 성공 · Preview ${values["preview"]} · YUV ${values["analysis"] ?: "Off"} · JPEG ${values["jpeg"] ?: "Off"}"
                     }
                 }, streamsFailed = { reason ->
+                    if (thisSession == sessionId) cli.active?.takeIf { it.command in setOf("preview", "capture", "record.start") }?.let { cli.fail(it.id, "PREFLIGHT_FAILED", reason) }
                     if (thisSession == sessionId && resumed && !closing) {
-                        streamState[thisCamera] = "실패: $reason"
+                        streamState[thisKey] = "실패: $reason"
                         val failed = engine; engine = null; closing = failed != null
                         setStatus("$reason · Lab → Live Streams에서 구성을 변경하거나 복구하세요.", false)
                         failed?.close {
@@ -491,11 +535,10 @@ class MainActivity : ComponentActivity() {
             it.setSingleLine(true)
             it.minWidth=dp(48); it.minimumWidth=dp(48)
         }
-        liveIndicator=LiveIndicator(this)
+        liveIndicator=LiveIndicator(this).apply { onSizesClick = ::openLiveStreams }
         val leadingSlot=LinearLayout(this).apply {
             orientation=LinearLayout.VERTICAL; gravity=Gravity.START
             addView(engineButton,LinearLayout.LayoutParams(-2,dp(48)))
-            addView(liveIndicator,LinearLayout.LayoutParams(-2,dp(16)))
         }
         val trailingSlot=row().apply {
             gravity=Gravity.END or Gravity.CENTER_VERTICAL
@@ -514,6 +557,7 @@ class MainActivity : ComponentActivity() {
             addView(controlBar.handle,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.TOP or Gravity.CENTER_HORIZONTAL))
         },LinearLayout.LayoutParams(dp(48),dp(48)))
         controls.addView(trailingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
+        topBar.addView(liveIndicator,LinearLayout.LayoutParams(-1,-2))
         topBar.addView(controlBar.view,lp(top=4))
         resetControls()
         cameraNotice=label("카메라 준비 중…",12,Look.onDark).apply {
@@ -681,7 +725,7 @@ class MainActivity : ComponentActivity() {
             ViewCompat.setStateDescription(mediaButton,"저장 중")
         }
         mediaButton.isEnabled=(ready || recordingVideo) && !stoppingRecording
-        if (!videoMode && engineName == "Camera2" && streamSettings[cameraId]?.canCapture == false) {
+        if (!videoMode && streamSettings[streamKey()]?.canCapture == false) {
             mediaButton.isEnabled = false
             mediaButton.contentDescription = "사진 출력 꺼짐: Live 스트림에서 YUV 또는 JPEG을 켜세요"
         }
@@ -693,6 +737,7 @@ class MainActivity : ComponentActivity() {
         controlBar.bind(videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null)
         galleryButton.isEnabled=!recordingVideo
         labButton.isEnabled=!recordingVideo && !stoppingRecording && !closing && (engine as? MediaCapture)?.mediaBusy != true
+        liveIndicator.setSizesEnabled(labButton.isEnabled && cli.active == null && pendingPermissionAction == null && cameraId.isNotEmpty())
         if (cli.active != null) {
             listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, labButton, reportButton).forEach { it.isEnabled = false }
         }
@@ -707,18 +752,29 @@ class MainActivity : ComponentActivity() {
     }
     /** Locks, EV and flash start over for every camera and engine; the new session opens with the defaults. */
     private fun resetControls()=controlBar.reset(if(cameraId.isEmpty()) LiveControlSupport.NONE else liveControlSupport(manager,cameraId))
+    private fun streamKey() = liveStreamSettingsKey(cameraId, engineName)
     private fun openLab() {
         openAfterClose("workbench_opened") {
-            Intent(this, WorkbenchActivity::class.java)
-                .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, cameraId)
-                .putExtra(WorkbenchActivity.EXTRA_ENGINE, engineName)
-                .putExtra(LiveStreamsActivity.EXTRA_SETTINGS, streamSettings[cameraId])
-                .putExtra(LiveStreamsActivity.EXTRA_GOOD_SETTINGS, goodStreams[cameraId])
-                .putExtra(LiveStreamsActivity.EXTRA_HAS_GOOD, goodStreams.containsKey(cameraId))
-                .putExtra(LiveStreamsActivity.EXTRA_STATUS, (streamState[cameraId] ?: "아직 구성하지 않았습니다.") +
-                    lastStreamFps[cameraId]?.let { "\n결과 FPS: $it" }.orEmpty())
+            streamSettingsIntent(WorkbenchActivity::class.java)
         }
     }
+    private fun openLiveStreams() {
+        if (cli.active != null || recordingVideo || stoppingRecording || closing ||
+            pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true || cameraId.isEmpty()) return
+        openAfterClose("live_stream_settings_opened") {
+            streamSettingsIntent(LiveStreamsActivity::class.java)
+                .putExtra(LiveStreamsActivity.EXTRA_FROM_LIVE, true)
+        }
+    }
+    private fun streamSettingsIntent(destination: Class<*>) =
+            Intent(this, destination)
+                .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, cameraId)
+                .putExtra(WorkbenchActivity.EXTRA_ENGINE, engineName)
+                .putExtra(LiveStreamsActivity.EXTRA_SETTINGS, streamSettings[streamKey()])
+                .putExtra(LiveStreamsActivity.EXTRA_GOOD_SETTINGS, goodStreams[streamKey()])
+                .putExtra(LiveStreamsActivity.EXTRA_HAS_GOOD, goodStreams.containsKey(streamKey()))
+                .putExtra(LiveStreamsActivity.EXTRA_STATUS, (streamState[streamKey()] ?: "아직 구성하지 않았습니다.") +
+                    lastStreamFps[streamKey()]?.let { "\n결과 FPS: $it" }.orEmpty())
     /**
      * Lab can launch CTS and Benchmark, so the live session must be closed and its close(done) received
      * before the next screen starts. Same sequence as the CLI CTS path; onStop's restartCamera() sees

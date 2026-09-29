@@ -158,6 +158,11 @@ internal class Camera2LiveRecorder(
                             surface = recordingSurface
                             host.startRepeating(camera, session, c, outputs)
                             recorder.start(); this@Camera2LiveRecorder.started = true
+                            telemetry.sessions.computeIfPresent(sessionId) { _, old ->
+                                val preview = (old["negotiatedStreams"] as? Map<*, *>)?.get("preview")
+                                old + mapOf("negotiatedStreams" to mapOf("preview" to preview,
+                                    "recording" to size.toString(), "recordingFormat" to (settings?.codec ?: "H264")))
+                            }
                             telemetry.event(sessionId, "recording_started", mapOf("size" to size.toString(), "audio" to audio,
                                 "fps" to (settings?.fps ?: 30), "codec" to (settings?.codec ?: "H264")))
                             main.post { if (host.active) { host.recordingState(true); started() } }

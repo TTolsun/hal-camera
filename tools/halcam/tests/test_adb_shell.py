@@ -61,6 +61,24 @@ sha256sum() {
             self.downloads = {p.name: p.read_bytes() for p in (root / "downloads").rglob("*") if p.is_file()}
             return proc, calls
 
+    def test_stream_options_reach_provider_as_strings(self):
+        proc, calls = self.run_client(["preview", "--engine", "CameraX", "--preview-size", "1280x720", "--yuv-size", "off"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("engine:s:CameraX", calls)
+        self.assertIn("preview_size:s:1280x720", calls)
+        self.assertIn("yuv_size:s:off", calls)
+
+    def test_stream_listing_does_not_launch_live(self):
+        proc, calls = self.run_client(["streams", "--camera", "0", "--engine", "CameraX"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("--method streams", calls)
+        self.assertNotIn("v1/status", calls)
+
+    def test_stream_option_cannot_inject_shell_or_extra_delimiter(self):
+        proc, calls = self.run_client(["preview", "--preview-size", "1280:720"])
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertEqual(calls, "")
+
     def test_capture_waits_and_needs_no_user_generated_id(self):
         proc, calls = self.run_client(["capture", "--camera", "1"])
         self.assertEqual(proc.returncode, 0, proc.stderr)

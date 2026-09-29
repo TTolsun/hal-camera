@@ -57,7 +57,6 @@ class WorkbenchActivity : ComponentActivity() {
             pendingStreams = Intent(result.data).putExtra(EXTRA_LIVE_ACTION, ACTION_STREAMS)
                 .putExtra(EXTRA_CAMERA_ID, intent.getStringExtra(EXTRA_CAMERA_ID))
             intent.putExtras(result.data!!)
-            intent.putExtra(EXTRA_ENGINE, "Camera2")
             setResult(RESULT_OK, pendingStreams)
         }
     }
@@ -94,7 +93,6 @@ class WorkbenchActivity : ComponentActivity() {
         if (savedStreams != null) {
             pendingStreams = savedStreams
             intent.putExtras(savedStreams)
-            intent.putExtra(EXTRA_ENGINE, "Camera2")
             setResult(RESULT_OK, savedStreams)
         }
         WindowCompat.setDecorFitsSystemWindows(window, false)
