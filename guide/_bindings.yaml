@@ -279,6 +279,7 @@ sources:
       ui-widgets:
         evidence:
           - app/src/main/java/dev/halcamera/ui/AboutSheet.kt
+          - app/src/main/java/dev/halcamera/ui/LabDialog.kt
           - app/src/main/java/dev/halcamera/ui/GalleryImageView.kt
           - app/src/main/java/dev/halcamera/ui/IconButton.kt
           - app/src/main/java/dev/halcamera/ui/LiveReadout.kt

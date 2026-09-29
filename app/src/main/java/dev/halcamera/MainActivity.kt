@@ -123,8 +123,8 @@ class MainActivity : ComponentActivity() {
         })
     }
     companion object {
-        /** 8.1: one word, because the button records a moment and no longer claims anything about it. */
-        const val MARK_LABEL = "Mark"
+        /** Shared initial and idle label for the event ZIP action. */
+        const val MARK_LABEL = "Save Events · ZIP"
     }
     // Camera UI follows docs/design/APP-UI.md; shared dark surfaces and active states use ui/Look.
     private val bg = Look.cameraSurface
@@ -263,7 +263,7 @@ class MainActivity : ComponentActivity() {
             val remaining = recorder.remainingNs()
             reportButton.isEnabled = remaining == null && ready && !paused && cli.active == null
             updateMediaControls()
-            reportButton.text = if (remaining != null) "저장까지 ${"%.1f".format(Locale.US, remaining/1e9)}s" else "이벤트 저장 · ZIP"
+            reportButton.text = if (remaining != null) "Saving in ${"%.1f".format(Locale.US, remaining/1e9)}s" else MARK_LABEL
             main.postDelayed(this, 100)
         }
     }

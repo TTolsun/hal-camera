@@ -1,6 +1,5 @@
 package dev.halcamera
 
-import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
@@ -30,6 +29,7 @@ import dev.halcamera.ui.AboutSheet
 import dev.halcamera.ui.DeviceIdentity
 import androidx.core.view.WindowCompat
 import dev.halcamera.ui.Look
+import dev.halcamera.ui.LabDialog
 import dev.halcamera.ui.IncidentActions
 import dev.halcamera.cli.CommandCoordinator
 import java.io.File
@@ -168,12 +168,20 @@ class WorkbenchActivity : ComponentActivity() {
         section("Settings") { settings ->
             entry(settings, "Live Streams", "해상도·출력·FPS와 녹화 설정") { streamSettings.launch(Intent(this, LiveStreamsActivity::class.java).putExtras(intent)) }
             entry(settings, "ADB CLI", if (cli.enabled) "허용됨" else "꺼짐") {
-                AlertDialog.Builder(this).setTitle("ADB CLI")
-                    .setMultiChoiceItems(arrayOf("ADB CLI 허용"), booleanArrayOf(cli.enabled)) { _, _, checked ->
-                        cli.setEnabled(checked)
+                LabDialog(this, "ADB CLI").apply {
+                    group {
+                        addView(android.widget.Switch(context).apply {
+                            text = "ADB CLI 허용"; textSize = 17f; setTextColor(Look.ink)
+                            minimumHeight = dp(48)
+                            isChecked = cli.enabled
+                            setOnCheckedChangeListener { _, checked -> cli.setEnabled(checked) }
+                        }, LinearLayout.LayoutParams(-1, -2))
+                        addView(Look.text(context, "PC에서 ADB로 검사 명령을 실행할 수 있습니다.", 13, Look.inkMuted))
                     }
-                    .setPositiveButton("Close", null)
-                    .setOnDismissListener { render() }.show()
+                    action("Close", primary = true)
+                    onDismiss { render() }
+                    show()
+                }
             }
             entry(settings, "Reconnect Camera", "카메라 연결 다시 시작") { returnToLive(ACTION_RECONNECT) }
             entry(settings, "About", "앱 버전 · 프로젝트 정보") { AboutSheet.show(this) }
@@ -245,7 +253,7 @@ class WorkbenchActivity : ComponentActivity() {
     }
 
     private fun showDevice() {
-        val content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(8), dp(24), dp(8)) }
+        val sheet = LabDialog(this, "Device Info")
         val name = EditText(this).apply {
             setText(DeviceIdentity.alias(this@WorkbenchActivity))
             hint = "예: EVT2 · Lab 03"
@@ -253,17 +261,20 @@ class WorkbenchActivity : ComponentActivity() {
             isSingleLine = true
             filters = arrayOf(InputFilter.LengthFilter(40))
         }
-        content.addView(Look.text(this, "같은 모델을 구별할 이름입니다. 이 앱에만 저장됩니다.", 14, Look.inkMuted))
-        content.addView(name, lp(8))
-        content.addView(Look.text(this, DeviceIdentity.report(this), 12, Look.inkMuted, mono = true).apply { setTextIsSelectable(true) }, lp(16))
-        AlertDialog.Builder(this).setTitle("Device Info")
-            .setView(ScrollView(this).apply { addView(content) })
-            .setPositiveButton("이름 저장") { _, _ -> DeviceIdentity.setAlias(this, name.text.toString()); render() }
-            .setNeutralButton("기기 정보 복사") { _, _ ->
+        sheet.group {
+            addView(Look.text(context, "같은 모델을 구별할 이름입니다. 이 앱에만 저장됩니다.", 14, Look.inkMuted))
+            addView(name, lp(8))
+        }
+        sheet.group {
+            addView(Look.text(context, DeviceIdentity.report(this@WorkbenchActivity), 12, Look.inkMuted, mono = true).apply { setTextIsSelectable(true) })
+        }
+        sheet.action("이름 저장", primary = true) { DeviceIdentity.setAlias(this, name.text.toString()); render() }
+        sheet.action("기기 정보 복사") {
                 getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("HAL CAMERA device", DeviceIdentity.report(this)))
                 Toast.makeText(this, "기기·빌드 정보를 복사했습니다.", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Close", null).show()
+        }
+        sheet.action("Close")
+        sheet.show()
     }
 
     private fun open(screen: Class<out android.app.Activity>) = startActivity(Intent(this, screen).apply {
