@@ -59,7 +59,7 @@
 
 `[추정]` **초기 session parameters에 같은 FPS를 넣는 A/B 실험**은 관측한 재설정을 줄일 수 있는 구체적인 후보이다. `[미확인]` 이번 자료로 변경된 session key가 FPS인지, 빠른 모드에서도 재설정이 발생하는지, 이 변경이 총 시작 시간을 줄이는지는 검증하지 않았다. 재설정 시간이 초기 configure로 이동할 수도 있다.
 
-이 실험에서는 first_started뿐 아니라 configure와 전체 preview 시작 시간, profile 충족 여부를 함께 비교해야 한다. 벤치마크 호출 순서가 달라지면 비교 계약과 기존 baseline의 호환성도 검토해야 한다. 따라서 이번 진단 PR에 성능 수정으로 섞지 않았고 이슈를 원인 해결로 닫지 않는다.
+이 실험에서는 first_started뿐 아니라 configure와 전체 preview 시작 시간, profile 충족 여부를 함께 비교해야 한다. 벤치마크 호출 순서가 달라지면 비교 계약과 기존 baseline의 호환성도 검토해야 한다. 따라서 이번 진단 PR에 성능 수정으로 섞지 않는다. #204는 배제한 설명과 관측 한계를 기록하는 조사 범위로 완료하며, 원인 규명이나 성능 개선 완료와 구분한다.
 
 ## 자료와 재현
 
@@ -72,4 +72,4 @@ node tools/perfetto/launch-windows.mjs docs/validation/launch-trace-20260930.jso
 
 추적을 로드한 같은 Trace Processor 세션에서 `windows.sql`, [공통 분석 SQL](../../tools/perfetto/launch-analysis.sql)을 순서대로 실행한다. 대표 사이클의 상세 경계는 [고정 자료용 SQL](launch-trace-20260930.sql)로 재조회한다. 상세 수집·분석 순서는 [도구 안내](../../tools/perfetto/README.md)를 따른다.
 
-이번 변경은 PC 수집·분석 도구와 실측 기록에 한정한다. 앱 APK는 바꾸지 않았다. 분석기 테스트와 실제 trace SQL 실행을 확인했으며, 기존 PR의 문서 최신성 승인 대기는 별도로 남아 있다.
+이번 추적 단계의 변경은 PC 수집·분석 도구와 실측 기록에 한정하며 수집 APK는 이전 실측과 같다. 분석기 테스트 4개와 실제 trace SQL 실행을 확인했다. 최종 문서 검토와 조사 완료 범위는 [launch 진단 기록](launch-diagnostics.md#코드-검증과-조사-완료-범위)에 정리했다.
