@@ -16,7 +16,7 @@ object CliJson {
         exactKeys(json, setOf("protocol_version", "request_id", "command", "params", "execution_timeout_ms"))
         if (json.opt("protocol_version") != 1) throw CliFailure("PROTOCOL_MISMATCH", "Expected protocol version 1")
         val params = json.optJSONObject("params") ?: throw CliFailure("INVALID_ARGUMENT", "params object required")
-        exactKeys(params, setOf("camera_id", "profile_id", "cases", "audio"))
+        exactKeys(params, setOf("camera_id", "profile_id", "cases", "audio", "engine", "streams"))
         fun string(obj: JSONObject, key: String, optional: Boolean = false): String? {
             if (optional && !obj.has(key)) return null
             return obj.opt(key) as? String ?: throw CliFailure("INVALID_ARGUMENT", "$key must be a string")
@@ -25,12 +25,17 @@ object CliJson {
             val array = params.opt("cases") as? JSONArray ?: throw CliFailure("INVALID_ARGUMENT", "cases must be an array of strings")
             List(array.length()) { array.opt(it) as? String ?: throw CliFailure("INVALID_ARGUMENT", "cases must be an array of strings") }
         }
+        val streams = if (!params.has("streams")) null else {
+            val obj = params.optJSONObject("streams") ?: throw CliFailure("INVALID_ARGUMENT", "streams must be an object")
+            exactKeys(obj, CliStreams.KEYS)
+            CliStreams(obj.keys().asSequence().associateWith { string(obj, it)!! })
+        }
         val timeout = json.opt("execution_timeout_ms")
         if (timeout !is Int && timeout !is Long) throw CliFailure("INVALID_ARGUMENT", "execution_timeout_ms must be an integer")
         val audio = if (!params.has("audio")) null else params.opt("audio") as? Boolean
             ?: throw CliFailure("INVALID_ARGUMENT", "audio must be a boolean")
         return CliCommand(string(json, "request_id")!!, string(json, "command")!!,
-            string(params, "camera_id", true), string(params, "profile_id", true), (timeout as Number).toLong(), cases, audio)
+            string(params, "camera_id", true), string(params, "profile_id", true), (timeout as Number).toLong(), cases, audio, string(params, "engine", true), streams)
     }
 
     fun encode(command: CliCommand) = envelope().put("request_id", command.id).put("command", command.command)
@@ -38,6 +43,8 @@ object CliJson {
             command.camera?.let { put("camera_id", it) }; command.profile?.let { put("profile_id", it) }
             command.cases?.let { put("cases", JSONArray(it)) }
             command.audio?.let { put("audio", it) }
+            command.engine?.let { put("engine", it) }
+            command.streams?.let { put("streams", JSONObject(it.values)) }
         })
 
     /** A pure-Kotlin map (the app's internal data contract) as org.json, for the file boundary. */

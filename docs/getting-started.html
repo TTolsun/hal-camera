@@ -63,13 +63,13 @@
 </figure><p>녹화 중에는 셔터 아래에 경과 시간이 표시됩니다. 줌은 계속 바꿀 수 있지만 엔진·카메라·모드 변경, 일시정지, 갤러리와 다른 도구 진입은 제한됩니다. 녹화를 마치면 사진용 프리뷰로 돌아오며 동영상 모드 선택은 유지됩니다.</p>
 <h3 id="live-스트림을-설정하세요">Live 스트림을 설정하세요</h3>
 <ol>
-<li><code>Lab → Settings → Live Streams</code>를 엽니다. Lab과 같은 독립 설정 페이지가 열립니다.</li>
+<li>Live 옆의 크기 표시를 누릅니다. <code>Lab → Settings → Live Streams</code>에서도 같은 설정을 열 수 있습니다.</li>
 <li>Preview 크기와 YUV·JPEG의 크기 또는 <code>Off</code>를 선택합니다. 둘 다 끄면 프리뷰만 실행하며 사진 셔터는 비활성화됩니다.</li>
 <li>프리뷰 FPS를 고르고 녹화는 Format → Resolution → Frame Rate 순서로 선택합니다. 해상도는 큰 순서로 표시합니다. 녹화는 Preview + Encoder로 전환하며, 고속 세션은 제공하지 않습니다.</li>
-<li><code>저장</code>을 눌러 Lab으로 돌아갑니다. Live로 복귀하면 Camera2로 설정을 적용합니다. 상단·시스템 뒤로가기는 저장하지 않고 Lab으로 돌아갑니다.</li>
-<li>설정을 다시 열어 구성 상태와 최근 결과 FPS 범위를 확인합니다. 실패하면 이유를 확인하고 <code>직전 정상 구성</code>으로 복구합니다. 개별 크기를 지원해도 출력 조합은 거부될 수 있습니다.</li>
+<li><code>저장</code>을 누르면 진입한 화면으로 돌아가며 현재 Camera2·CameraX 엔진에 적용합니다. Live에서 직접 열었다면 바로 프리뷰로 복귀합니다. 상단·시스템 뒤로 가기는 저장하지 않고 돌아갑니다.</li>
+<li>Live의 P·Y·J 표시에서 적용 크기를 확인합니다. 녹화 중에는 P·R과 H264·HEVC·Auto가 표시됩니다. 실패하면 설정 화면에서 이유를 확인하고 <code>직전 정상 구성</code>으로 복구합니다. 개별 크기를 지원해도 출력 조합은 거부될 수 있습니다.</li>
 </ol>
-<p>설정은 카메라마다 구분합니다. Live 설정은 Benchmark의 profile을 바꾸지 않습니다. API별 구성 검사와 저장 방식은 <a href="engine.html#camera2-엔진">Camera2 엔진</a>에서 확인합니다.</p>
+<p>설정은 카메라와 엔진마다 구분합니다. CameraX 녹화 포맷은 Auto이며 코덱은 라이브러리가 선택합니다. Live 설정은 Benchmark의 profile을 바꾸지 않습니다. API별 구성 검사와 저장 방식은 <a href="engine.html#camera2-엔진">Camera2 엔진</a>에서 확인합니다.</p>
 <h3 id="초점과-노출을-조절하세요">초점과 노출을 조절하세요</h3>
 <p>상단 가운데 화살표로 제어 줄을 펼칩니다. 선택한 Flash·AF·AE와 EV는 제어 줄을 접어도 유지됩니다. AF·AE 잠금은 같은 버튼으로 해제하고, 플래시는 <code>Off</code>로, EV는 눈금 옆 <code>0</code>으로 초기화합니다. 카메라나 엔진을 바꾸면 제어가 기본값으로 돌아갑니다.</p>
 <table>

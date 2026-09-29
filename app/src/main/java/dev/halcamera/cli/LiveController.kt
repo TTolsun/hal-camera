@@ -7,7 +7,9 @@ import org.json.JSONObject
 /** Owns the asynchronous CLI LIVE flow; the Activity supplies its actual preview and engine. */
 class LiveController(private val commands: CommandCoordinator, private val driver: Driver) : CliHost {
     interface Driver {
-        fun prepare(camera: String)
+        fun prepare(command: CliCommand, ready: () -> Unit)
+        fun streamInfo(): Map<String, Any?>
+        fun photoLabels(): List<String>
         fun capture(id: String, done: (Result<PhotoResult>) -> Unit)
         fun record(audio: Boolean, started: () -> Unit, done: (Result<Uri>) -> Unit)
         fun stopRecording()
@@ -20,12 +22,13 @@ class LiveController(private val commands: CommandCoordinator, private val drive
     override val screen = "live"
     override fun isBusy() = driver.busy()
     private var pending: CliCommand? = null
+    private var prepared = false
     private var submitted = false
     private var cancelled = false
     private var recordingStopped = false
 
     override fun execute(command: CliCommand) {
-        pending = command; submitted = false; cancelled = false; recordingStopped = false
+        pending = command; prepared = false; submitted = false; cancelled = false; recordingStopped = false
         if (command.command == "preview.stop") {
             submitted = true
             commands.state(command.id, "running")
@@ -37,27 +40,31 @@ class LiveController(private val commands: CommandCoordinator, private val drive
             commands.beginHandover()
             driver.cts(command)
             pending = null
-        } else driver.prepare(requireNotNull(command.camera))
+        } else driver.prepare(command) { prepared = true }
     }
 
     fun previewReady() {
         val command = pending ?: return
-        if (submitted || commands.active?.id != command.id) return
+        if (!prepared || submitted || commands.active?.id != command.id) return
         submitted = true
         if (!commands.state(command.id, "running")) { pending = null; driver.stopPreparing(); return }
         if (command.command == "preview") {
             pending = null
-            commands.complete(command.id, JSONObject().put("camera_id", command.camera).put("camera_ready", true))
+            commands.complete(command.id, JSONObject().put("camera_id", command.camera).put("camera_ready", true)
+                .put("engine", command.engine ?: "Camera2").put("streams", CliJson.of(driver.streamInfo())))
         } else if (command.command == "record.start") {
+            var recordingStreams = emptyMap<String, Any?>()
             driver.record(command.audio != false, started = {
+                recordingStreams = driver.streamInfo()
                 if (commands.active?.id == command.id && !recordingStopped && !cancelled) {
-                    if (!commands.recordingStarted(command)) driver.stopRecording()
+                    if (!commands.recordingStarted(command, recordingStreams)) driver.stopRecording()
                 }
             }) { result ->
                 pending = null
                 result.fold({ uri ->
                     commands.complete(command.id, JSONObject().put("camera_id", command.camera)
                         .put("recording", false).put("audio", command.audio != false).put("cancelled", cancelled)
+                        .put("engine", command.engine ?: "Camera2").put("streams", CliJson.of(recordingStreams))
                         .put("artifact_count", 1), listOf(CliArtifact("recording_${command.id}.mp4", "video/mp4", uri)),
                         if (!recordingStopped && !cancelled) CliFailure("RECORDING_INTERRUPTED", "Recording stopped without a CLI stop request") else null)
                 }, { commands.fail(command.id, if (cancelled) "CANCELLED" else "RECORDING_FAILED", it.message ?: "Recording failed") })
@@ -66,8 +73,8 @@ class LiveController(private val commands: CommandCoordinator, private val drive
             pending = null
             result.fold({ photo ->
                 commands.complete(command.id, JSONObject().put("camera_id", command.camera)
-                    .put("capture_id", photo.name).put("sensor_timestamp_ns", photo.sensorTimestamp).put("artifact_count", 2),
-                    photo.uris.mapIndexed { index, uri -> CliArtifact("${photo.name}_${if (index == 0) "YUV" else "JPEG"}.jpg", "image/jpeg", uri) })
+                    .put("capture_id", photo.name).put("sensor_timestamp_ns", photo.sensorTimestamp).put("artifact_count", photo.uris.size),
+                    photo.uris.mapIndexed { index, uri -> CliArtifact("${photo.name}_${driver.photoLabels()[index]}.jpg", "image/jpeg", uri) })
             }, { commands.fail(command.id, "CAPTURE_FAILED", it.message ?: "Capture failed") })
         }
     }

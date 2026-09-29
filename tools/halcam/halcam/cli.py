@@ -29,12 +29,16 @@ def parser():
     common(root, True)
     root.add_argument("--version", action="version", version=__version__)
     commands = root.add_subparsers(dest="command", required=True)
-    for name in ("devices", "doctor", "launch", "cameras", "preview", "capture", "probe", "status", "fetch", "cancel"):
+    for name in ("devices", "doctor", "launch", "cameras", "streams", "preview", "capture", "probe", "status", "fetch", "cancel"):
         p = commands.add_parser(name)
         common(p)
-        if name in ("preview", "capture"):
+        if name in ("preview", "capture", "streams"):
             p.add_argument("--camera", required=True)
-        if name in ("cameras", "preview", "capture", "probe"):
+            p.add_argument("--engine", choices=("Camera2", "CameraX"))
+        if name in ("preview", "capture"):
+            for option in ("preview-size", "yuv-size", "jpeg-size", "video-size", "video-fps", "codec"):
+                p.add_argument("--" + option)
+        if name in ("streams", "cameras", "preview", "capture", "probe"):
             execution_options(p)
         if name == "status":
             p.add_argument("--request")
@@ -74,7 +78,7 @@ def execution_options(p, timeout=30):
 
 
 # Commands the app answers without a screen: nothing to bring to the foreground first.
-SCREENLESS = ("cameras", "probe", "cts.cases")
+SCREENLESS = ("streams", "cameras", "probe", "cts.cases")
 
 
 def app_command(args):
@@ -141,6 +145,12 @@ def execute(args, context):
                "params": {}, "execution_timeout_ms": int(args.timeout * 1000)}
     if hasattr(args, "camera"):
         payload["params"]["camera_id"] = args.camera
+    if getattr(args, "engine", None):
+        payload["params"]["engine"] = args.engine
+    streams = {key: getattr(args, key) for key in ("preview_size", "yuv_size", "jpeg_size", "video_size", "video_fps", "codec")
+               if getattr(args, key, None) is not None}
+    if streams:
+        payload["params"]["streams"] = streams
     if hasattr(args, "profile"):
         payload["params"]["profile_id"] = args.profile
     if hasattr(args, "cases"):

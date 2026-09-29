@@ -10,6 +10,20 @@ import android.util.Size
 
 internal fun LiveSize.androidSize() = Size(width, height)
 
+/** CameraX Recorder exposes quality resolutions and chooses the SDR codec itself. */
+@androidx.annotation.OptIn(markerClass = [androidx.camera.camera2.interop.ExperimentalCamera2Interop::class])
+fun cameraXStreamSupport(context: android.content.Context, id: String, hardware: LiveStreamSupport): LiveStreamSupport {
+    val provider = androidx.camera.lifecycle.ProcessCameraProvider.getInstance(context).get()
+    val info = provider.availableCameraInfos.first { androidx.camera.camera2.interop.Camera2CameraInfo.from(it).cameraId == id }
+    val resolutions = androidx.camera.video.QualitySelector.getSupportedQualities(info).mapNotNull {
+        androidx.camera.video.QualitySelector.getResolution(info, it)?.let { size -> LiveSize(size.width, size.height) }
+    }
+    val videos = hardware.videos.filter { it.size in resolutions }.map { it.copy(codec = "Auto") }.distinct()
+    val default = videos.filter { it.fps == 30 && it.size.width.toLong() * it.size.height <= 1920L * 1080 }
+        .maxByOrNull { it.size.width.toLong() * it.size.height } ?: videos.firstOrNull()
+    return hardware.copy(videos = videos, defaultVideo = default)
+}
+
 /** Individual sizes and encoder limits are checked here; combinations still need a real session check. */
 fun liveStreamSupport(c: CameraCharacteristics): LiveStreamSupport {
     val map = requireNotNull(c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP])

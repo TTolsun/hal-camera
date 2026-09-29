@@ -43,6 +43,8 @@ internal class CameraXLiveRecorder(
 ) {
     interface Host {
         val active: Boolean
+        val settings: LiveVideo?
+        val cameraInfo: androidx.camera.core.CameraInfo?
         val stillInFlight: Boolean
         /** Surface.ROTATION_* of the display now; the recording keeps it as its orientation hint. */
         val displayRotation: Int
@@ -78,13 +80,25 @@ internal class CameraXLiveRecorder(
         host.report("녹화를 준비하고 있습니다…", false)
         var file: File? = null
         try {
+            val settings = host.settings
+            val quality = settings?.let { requested ->
+                require(requested.codec == "Auto") { "CameraX chooses the recording codec automatically" }
+                val info = requireNotNull(host.cameraInfo)
+                QualitySelector.getSupportedQualities(info).firstOrNull {
+                    QualitySelector.getResolution(info, it) == requested.size.androidSize()
+                } ?: error("CameraX does not support recording size ${requested.size}")
+            }
             val recorder = Recorder.Builder()
-                .setQualitySelector(QualitySelector.from(Quality.FHD, FallbackStrategy.lowerQualityOrHigherThan(Quality.FHD)))
-                .setTargetVideoEncodingBitRate(10_000_000)
+                .setQualitySelector(if (quality == null) QualitySelector.from(Quality.FHD, FallbackStrategy.lowerQualityOrHigherThan(Quality.FHD)) else QualitySelector.from(quality))
+                .setTargetVideoEncodingBitRate(settings?.bitrate ?: 10_000_000)
                 .build()
-            val useCase = VideoCapture.Builder(recorder).setTargetFrameRate(Range(30, 30)).setTargetRotation(host.displayRotation).build()
-            host.bindRecording(useCase)
+            val fps = settings?.fps ?: 30
+            val useCase = VideoCapture.Builder(recorder).setTargetFrameRate(Range(fps, fps)).setTargetRotation(host.displayRotation).build()
             video = useCase
+            host.bindRecording(useCase)
+            if (settings != null) require(useCase.resolutionInfo?.resolution == settings.size.androidSize()) {
+                "CameraX could not configure recording size ${settings.size}"
+            }
             val output = File.createTempFile("hal_recording_", ".mp4", context.cacheDir).also { file = it }
             val pending = recorder.prepareRecording(context, FileOutputOptions.Builder(output).build())
             val withAudio = if (!audio) pending else {

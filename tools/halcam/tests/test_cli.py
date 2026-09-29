@@ -45,6 +45,13 @@ class ProtocolTests(unittest.TestCase):
             self.assertEqual(args.serial, "phone")
             self.assertTrue(args.json)
 
+    def test_stream_options_and_capabilities(self):
+        args = parser().parse_args(["preview", "--camera", "0", "--engine", "CameraX", "--preview-size", "1280x720", "--yuv-size", "off"])
+        self.assertEqual(args.engine, "CameraX")
+        self.assertEqual(args.preview_size, "1280x720")
+        self.assertEqual(args.yuv_size, "off")
+        self.assertEqual(parser().parse_args(["streams", "--camera", "0"]).command, "streams")
+
     def test_benchmark_is_not_exposed(self):
         with self.assertRaises(CliError):
             parser().parse_args(["benchmark", "run", "--camera", "0", "--output", "out"])

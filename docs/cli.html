@@ -59,7 +59,7 @@ adb shell sh /data/local/tmp/halcam status
 </thead>
 <tbody><tr>
 <td><code>preview</code> 또는 <code>preview start</code></td>
-<td>Camera2의 첫 프리뷰 프레임까지 기다립니다. 이후에도 프리뷰를 유지합니다.</td>
+<td>선택한 엔진의 첫 프리뷰 프레임까지 기다립니다. 이후에도 프리뷰를 유지합니다.</td>
 </tr>
 <tr>
 <td><code>preview stop</code></td>
@@ -67,7 +67,7 @@ adb shell sh /data/local/tmp/halcam status
 </tr>
 <tr>
 <td><code>capture</code></td>
-<td>선택한 카메라로 프리뷰를 준비하고 사진 두 장을 저장합니다.</td>
+<td>선택한 카메라로 프리뷰를 준비하고 켜진 출력의 사진을 저장합니다. 기본값은 두 장입니다.</td>
 </tr>
 <tr>
 <td><code>record start</code></td>
@@ -76,6 +76,10 @@ adb shell sh /data/local/tmp/halcam status
 <tr>
 <td><code>record stop</code></td>
 <td>현재 CLI 녹화를 끝내고 저장 완료까지 기다립니다. 화면에서 시작한 녹화는 멈추지 않습니다.</td>
+</tr>
+<tr>
+<td><code>streams</code></td>
+<td>선택한 카메라와 엔진의 스트림 크기·녹화 옵션을 조회합니다.</td>
 </tr>
 <tr>
 <td><code>cameras</code></td>
@@ -108,6 +112,18 @@ adb shell sh /data/local/tmp/halcam status
 </tbody></table>
 <p>CTS 키는 <code>custom:fast_on_off</code>나 <code>vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording</code>과 같이 목록에 나온 값을 그대로 사용합니다. CTS 실행 제한은 기본 1,800초이며 최대 3,600초입니다. 사진·프리뷰·probe는 기본 30초입니다. Android 8–9에서 사진이나 영상을 저장할 때에는 저장소 권한도 필요합니다.</p>
 <p>녹화 준비에는 최대 30초를 기다립니다. 멈출 CLI 녹화가 없을 때 <code>record stop</code>을 호출하면 <code>NOT_RECORDING</code>으로 거부합니다. 화면을 벗어나 녹화가 종료되면 <code>RECORDING_INTERRUPTED</code>로 기록하여 정상적인 <code>record stop</code> 완료와 구분합니다. 완료 기록은 최대 24시간·200개를 보관합니다. CLI는 Android 사용자 0을 대상으로 합니다.</p>
+<h2 id="스트림-크기를-지정하세요">스트림 크기를 지정하세요</h2>
+<p>지원 목록을 먼저 조회한 뒤 프리뷰·촬영·녹화 명령에 크기 옵션을 붙입니다. 엔진의 기본값은 Camera2이며, CameraX를 사용할 때에는 조회와 실행 모두에 <code>--engine CameraX</code>를 지정합니다.</p>
+<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam streams --camera 0
+adb shell sh /data/local/tmp/halcam streams --camera 0 --engine CameraX
+adb shell sh /data/local/tmp/halcam preview --camera 0 --preview-size 1280x720 --yuv-size 640x480 --jpeg-size 1920x1080
+adb shell sh /data/local/tmp/halcam capture --camera 0 --engine CameraX --yuv-size off --jpeg-size 1920x1080
+adb shell sh /data/local/tmp/halcam record start --camera 0 --video-size 1280x720 --video-fps 30 --codec HEVC --no-audio
+adb shell sh /data/local/tmp/halcam record stop
+</code></pre>
+<p><code>--preview-size</code>, <code>--yuv-size</code>, <code>--jpeg-size</code>, <code>--video-size</code>는 <code>너비x높이</code> 형식을 사용합니다. YUV와 JPEG는 <code>off</code>로 끌 수 있지만, <code>capture</code>에는 적어도 하나가 필요합니다. <code>--video-fps</code>는 녹화 프레임 레이트이고 <code>--codec</code>은 Camera2에서 H264·HEVC, CameraX에서 Auto를 사용합니다. CameraX의 실제 녹화 코덱은 라이브러리가 선택합니다.</p>
+<p>생략한 값은 기본 설정을 사용하며 이전 UI·CLI 설정을 이어받지 않습니다. 적용한 설정은 명령 완료 후 Live에 남지만 다음 CLI 카메라 명령은 다시 기본값과 명시한 옵션으로 구성합니다. 지원하지 않는 값은 <code>PREFLIGHT_FAILED</code>로 거부하며 다른 크기로 자동 변경하지 않습니다. 지원 목록은 개별 크기와 인코더 조건을 나타내며 출력 조합의 성공까지 보장하지 않습니다. 실제 세션 구성에서 실패할 수도 있습니다.</p>
+<p><code>preview</code> 완료 결과와 녹화 시작 상태의 <code>result.streams</code>에서 적용된 크기를 확인할 수 있습니다. Provider 직접 호출에서는 <code>--extra preview_size:s:1280x720</code>, <code>--extra engine:s:CameraX</code>처럼 문자열로 전달합니다. JSON 제출은 <code>params.engine</code>과 <code>params.streams</code> 객체를 사용하며, 크기·FPS·코덱 값은 모두 문자열입니다. 예를 들어 <code>&quot;streams&quot;:{&quot;preview_size&quot;:&quot;1280x720&quot;,&quot;yuv_size&quot;:&quot;off&quot;}</code>로 전달합니다.</p>
 <h2 id="provider를-직접-호출하세요">Provider를 직접 호출하세요</h2>
 <p>스크립트 없이도 <code>content call</code>로 직접 호출할 수 있습니다. 응답의 <code>json</code> 값은 사람이 읽을 수 있는 JSON이며 Base64 변환은 필요하지 않습니다. 사진·프리뷰·녹화·CTS 실행 전에 Live 화면을 엽니다.</p>
 <pre><code class="language-sh">adb shell am start -W -n dev.halcamera/.cli.CliLaunchActivity
@@ -124,6 +140,8 @@ adb exec-out content read --uri content://dev.halcamera.cli/v1/status
 <p>기존 자동화에서 Python 도구가 필요하면 다음과 같이 설치합니다. 녹화와 프리뷰 종료는 위의 ADB 스크립트를 사용합니다.</p>
 <pre><code class="language-sh">python -m pip install ./tools/halcam
 halcam --serial DEVICE doctor --json
+halcam --serial DEVICE streams --camera 0 --engine CameraX --json
+halcam --serial DEVICE preview --camera 0 --engine CameraX --preview-size 1280x720 --yuv-size off --json
 halcam --serial DEVICE capture --camera 0 --output ./photos --json
 halcam --serial DEVICE probe --output ./probe --json
 </code></pre>
@@ -156,6 +174,10 @@ halcam --serial DEVICE probe --output ./probe --json
 <tr>
 <td><code>interrupted</code></td>
 <td>앱 프로세스가 종료된 미완료 기록입니다. 남은 파일을 확인한 뒤 재실행 여부를 정합니다. 자동으로 재실행하지 않습니다.</td>
+</tr>
+<tr>
+<td><code>PREFLIGHT_FAILED</code></td>
+<td><code>streams</code>로 지원 크기와 코덱을 확인하고 출력 조합을 줄입니다.</td>
 </tr>
 <tr>
 <td><code>UNKNOWN_CASE</code></td>

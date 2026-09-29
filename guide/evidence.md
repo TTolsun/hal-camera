@@ -129,8 +129,8 @@ flowchart LR
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-28 @ `ee4d548` · Codex-code-review |
-| 원고 `device-notes` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-28 @ `ee4d548` · Codex-code-review |
+| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-29 @ `4fe0abf` · Codex-code-review |
+| 원고 `device-notes` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-29 @ `4fe0abf` · Codex-code-review |
 
 <!-- omm:end id=status -->
 

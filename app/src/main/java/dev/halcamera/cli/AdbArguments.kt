@@ -12,7 +12,8 @@ object AdbArguments {
     fun command(method: String, values: Map<String, Any?>, arg: String? = null): CliCommand {
         val command = if (method == "preview.start") "preview" else method
         val allowed = mutableSetOf("request_id", "timeout_ms")
-        if (command in CliCommand.CAMERA_COMMANDS) allowed += "camera"
+        if (command in CliCommand.CAMERA_COMMANDS) allowed += setOf("camera", "engine")
+        if (command in setOf("preview", "capture", "record.start")) allowed += CliStreams.KEYS
         if (command == "record.start") allowed += "audio"
         if (command == "cts.run") allowed += "cases"
         if (values.keys.any { it !in allowed }) throw CliFailure("INVALID_ARGUMENT", "Unexpected argument for $method")
@@ -33,6 +34,9 @@ object AdbArguments {
                 "record.start" -> 3_600_000L
                 "cts.run" -> 1_800_000L
                 else -> 30_000L
-            }, (arg ?: string("cases"))?.split(","), audio as? Boolean)
+            }, (arg ?: string("cases"))?.split(","), audio as? Boolean, string("engine"),
+            values.keys.intersect(CliStreams.KEYS).takeIf { it.isNotEmpty() }?.let { keys ->
+                CliStreams(keys.associateWith { string(it)!! })
+            })
     }
 }
