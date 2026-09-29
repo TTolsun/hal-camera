@@ -10,6 +10,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.camera.LiveStreamSettings
 import dev.halcamera.camera.liveStreamSupport
+import dev.halcamera.camera.cameraXStreamSupport
 import dev.halcamera.ui.LiveStreamSettingsView
 import dev.halcamera.ui.Look
 import java.util.concurrent.Executors
@@ -19,6 +20,7 @@ class LiveStreamsActivity : ComponentActivity() {
     private val io = Executors.newSingleThreadExecutor()
     private var draft: LiveStreamSettings? = null
     private var scroll: ScrollView? = null
+    private val backDescription get() = if (intent.getBooleanExtra(EXTRA_FROM_LIVE, false)) "Live 프리뷰로 돌아가기" else "Lab으로 돌아가기"
 
     @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,7 +32,10 @@ class LiveStreamsActivity : ComponentActivity() {
         showMessage("설정을 불러오는 중입니다.")
         val id = intent.getStringExtra(WorkbenchActivity.EXTRA_CAMERA_ID).orEmpty()
         io.execute {
-            val result = runCatching { liveStreamSupport(getSystemService(CameraManager::class.java).getCameraCharacteristics(id)) }
+            val result = runCatching {
+                val support = liveStreamSupport(getSystemService(CameraManager::class.java).getCameraCharacteristics(id))
+                if (intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE) == "CameraX") cameraXStreamSupport(this, id, support) else support
+            }
             runOnUiThread {
                 if (isDestroyed || isFinishing) return@runOnUiThread
                 result.fold({ support ->
@@ -38,7 +43,8 @@ class LiveStreamsActivity : ComponentActivity() {
                         save(intent.getSerializableExtra(EXTRA_GOOD_SETTINGS) as? LiveStreamSettings)
                     }) else null
                     val page = LiveStreamSettingsView.create(this, support, draft ?: support.defaults(),
-                        intent.getStringExtra(EXTRA_STATUS).orEmpty(), restore, ::finish, { draft = it }, ::save)
+                        intent.getStringExtra(EXTRA_STATUS).orEmpty(), restore, ::finish, { draft = it }, ::save,
+                        backDescription)
                     showPage(page)
                     savedInstanceState?.getInt("scroll_y")?.let { y -> page.post { page.scrollTo(0, y) } }
                 }, { showMessage("지원 정보를 불러오지 못했습니다. ${it.message.orEmpty()}") })
@@ -47,14 +53,16 @@ class LiveStreamsActivity : ComponentActivity() {
     }
 
     private fun save(settings: LiveStreamSettings?) {
-        setResult(RESULT_OK, Intent().putExtra(EXTRA_SETTINGS, settings))
+        setResult(RESULT_OK, Intent().putExtra(EXTRA_SETTINGS, settings)
+            .putExtra(WorkbenchActivity.EXTRA_ENGINE, intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE))
+            .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, intent.getStringExtra(WorkbenchActivity.EXTRA_CAMERA_ID)))
         finish()
     }
 
     private fun showMessage(message: String) {
         val body = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            addView(Look.titleBar(this@LiveStreamsActivity, "Live Streams", 34, "Lab으로 돌아가기", ::finish))
+            addView(Look.titleBar(this@LiveStreamsActivity, "Live Streams", 34, backDescription, ::finish))
             addView(Look.text(this@LiveStreamsActivity, message, 15, Look.inkMuted))
         }
         showPage(ScrollView(this).apply { addView(body) })
@@ -92,5 +100,6 @@ class LiveStreamsActivity : ComponentActivity() {
         const val EXTRA_GOOD_SETTINGS = "live_stream_good_settings"
         const val EXTRA_HAS_GOOD = "live_stream_has_good"
         const val EXTRA_STATUS = "live_stream_status"
+        const val EXTRA_FROM_LIVE = "live_stream_from_live"
     }
 }

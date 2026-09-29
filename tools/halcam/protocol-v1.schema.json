@@ -21,6 +21,7 @@
     },
     "command": {
       "enum": [
+        "streams",
         "cameras",
         "preview",
         "preview.stop",
@@ -59,6 +60,46 @@
         },
         "audio": {
           "type": "boolean"
+        },
+        "engine": {
+          "enum": [
+            "Camera2",
+            "CameraX"
+          ]
+        },
+        "streams": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "preview_size": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
+            },
+            "yuv_size": {
+              "type": "string",
+              "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
+            },
+            "jpeg_size": {
+              "type": "string",
+              "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
+            },
+            "video_size": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
+            },
+            "video_fps": {
+              "type": "string",
+              "pattern": "^(0*[1-9]|0*[1-9][0-9]|0*1[0-9]{2}|0*2[0-3][0-9]|0*240)$"
+            },
+            "codec": {
+              "enum": [
+                "H264",
+                "HEVC",
+                "Auto"
+              ]
+            }
+          }
         }
       }
     }
@@ -194,6 +235,78 @@
                 {
                   "required": [
                     "audio"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "streams"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "required": [
+              "camera_id"
+            ],
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "streams"
+                  ]
+                },
+                {
+                  "required": [
+                    "cases"
+                  ]
+                },
+                {
+                  "required": [
+                    "audio"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "enum": [
+              "cameras",
+              "preview.stop",
+              "probe",
+              "cts.cases",
+              "cts.run"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "engine"
+                  ]
+                },
+                {
+                  "required": [
+                    "streams"
                   ]
                 }
               ]

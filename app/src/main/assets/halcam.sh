@@ -12,10 +12,16 @@ HAL CAM — adb only
   capture [--camera ID]                  Save YUV + JPEG photos
   record start [--camera ID] [--no-audio] Start recording and return when ready
   record stop                           Stop, wait for MP4, show download command
+  streams [--camera ID] [--engine Camera2|CameraX]  List supported sizes
   cameras | probe | cts cases
   cts run --cases KEY[,KEY...]
   status [REQUEST_ID] | cancel [REQUEST_ID]
   fetch [REQUEST_ID]                     Prepare files and show one adb pull command
+Stream options for preview/capture/record start:
+  --engine Camera2|CameraX (default Camera2)
+  --preview-size WxH --yuv-size WxH|off --jpeg-size WxH|off
+  --video-size WxH --video-fps FPS --codec H264|HEVC|Auto
+Omitted stream fields use defaults. CameraX recording codec is Auto.
 Options: --timeout SECONDS (operation deadline), --no-wait (return request ID)
 Default camera: 0. Microphone is enabled unless --no-audio is given.
 Only one operation runs at a time. Unlock the device and allow ADB CLI in the app.
@@ -74,7 +80,7 @@ wait_for() {
                 case "$method" in
                     preview) echo 'Preview is ready.' ;;
                     preview.stop) echo 'Preview stopped.' ;;
-                    capture) echo 'Saved two photos (YUV and JPEG).' ;;
+                    capture) echo 'Photos saved.' ;;
                     record.stop) echo 'Recording saved.' ;;
                     probe) echo 'Camera specifications saved (JSON and TXT).' ;;
                     *) echo "$result" ;;
@@ -101,7 +107,7 @@ case "$method" in
         method=$method.$1; shift ;;
 esac
 case "$method" in
-    cameras|preview|preview.stop|capture|record.start|record.stop|probe|cts.cases|cts.run|status|cancel|fetch) ;;
+    streams|cameras|preview|preview.stop|capture|record.start|record.stop|probe|cts.cases|cts.run|status|cancel|fetch) ;;
     *) die "Unknown command: $method. Use help. Benchmark is available in the app only." ;;
 esac
 
@@ -144,8 +150,15 @@ timeout=
 camera=
 audio=
 cases=
+stream_options=
 while [ $# -gt 0 ]; do
     case "$1" in
+        --engine|--preview-size|--yuv-size|--jpeg-size|--video-size|--video-fps|--codec)
+            [ $# -ge 2 ] || die "$1 needs a value"
+            case "$2" in ''|*[!a-zA-Z0-9x]*) die 'Invalid stream option value' ;; esac
+            key=$(echo "${1#--}" | tr '-' '_')
+            stream_options="$stream_options $key:s:$2"
+            shift 2 ;;
         --camera|--timeout|--cases)
             [ $# -ge 2 ] || die "$1 needs a value"
             [ -n "$2" ] || die "$1 needs a nonempty value"
@@ -161,6 +174,7 @@ if [ -n "$camera" ]; then
     case "$camera" in *[!a-zA-Z0-9_.-]*) die 'Invalid camera ID' ;; esac
     set -- "$@" --extra "camera:s:$camera"
 fi
+for option in $stream_options; do set -- "$@" --extra "$option"; done
 [ -z "$audio" ] || set -- "$@" --extra "audio:b:false"
 # Suite keys hold colons, which --extra key:type:value cannot carry, so they travel as --arg.
 [ -z "$cases" ] || set -- "$@" --arg "$cases"

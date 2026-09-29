@@ -11,19 +11,15 @@ import dev.halcamera.camera.*
 /** A draft is committed only by Apply; dismissing a selector or this panel never changes the camera. */
 object LiveStreamSettingsView {
     fun create(context: Context, support: LiveStreamSupport, current: LiveStreamSettings,
-             actual: String, restore: (() -> Unit)?, back: () -> Unit, changed: (LiveStreamSettings) -> Unit, apply: (LiveStreamSettings) -> Unit): ScrollView {
+             actual: String, restore: (() -> Unit)?, back: () -> Unit, changed: (LiveStreamSettings) -> Unit, apply: (LiveStreamSettings) -> Unit,
+             backDescription: String = "Lab으로 돌아가기"): ScrollView {
         val themed = context
         fun dp(value: Int) = Look.dp(themed, value)
         val content = LinearLayout(themed).apply {
             orientation = LinearLayout.VERTICAL
 
         }
-        fun caption(value: String) {
-            content.addView(Look.text(themed, value, 13, Look.inkMuted),
-                LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8); bottomMargin = dp(8) })
-        }
-        content.addView(Look.titleBar(themed, "Live Streams", 34, "Lab으로 돌아가기", back))
-        caption("Live로 돌아가면 Camera2에 적용됩니다.")
+        content.addView(Look.titleBar(themed, "Live Streams", 34, backDescription, back))
         fun section(title: String): LinearLayout {
             content.addView(Look.text(themed, title, 13, Look.inkMuted, bold = true),
                 LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(20); bottomMargin = dp(8) })
@@ -91,7 +87,6 @@ object LiveStreamSettingsView {
         choice(outputs, "Preview", { sizes(support.preview) }, { preview }, { preview = it }) { it.toString() }
         choice(outputs, "YUV", { sizes(support.yuv) + listOf(null) }, { yuv }, { yuv = it }) { it?.toString() ?: "Off" }
         choice(outputs, "JPEG", { sizes(support.jpeg) + listOf(null) }, { jpeg }, { jpeg = it }) { it?.toString() ?: "Off" }
-        caption("YUV 사진은 JPEG으로 저장됩니다.")
         val timing = section("Frame Rate")
         choice(timing, "Preview FPS", { listOf(null) + support.fps }, { fps }, { fps = it }) { it?.toString() ?: "Auto" }
         val recording = section("Recording")
@@ -107,8 +102,7 @@ object LiveStreamSettingsView {
         }
         refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested)) }
         refreshers.forEach { it() }
-        caption("출력 조합은 적용 시, 녹화 설정은 녹화 시작 시 확인합니다.")
-        section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
+        if (actual.startsWith("실패:")) section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
             setPadding(dp(18), dp(14), dp(18), dp(14))
         })
         val scroll = ScrollView(themed).apply { isFillViewport = true; addView(content) }

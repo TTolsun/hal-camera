@@ -16,7 +16,9 @@ data class CliCommand(
     val profile: String?,
     val timeoutMs: Long,
     val cases: List<String>? = null,
-    val audio: Boolean? = null
+    val audio: Boolean? = null,
+    val engine: String? = null,
+    val streams: CliStreams? = null
 ) {
     init {
         validateId(id)
@@ -24,6 +26,12 @@ data class CliCommand(
         if (timeoutMs !in 1..3_600_000) throw CliFailure("INVALID_ARGUMENT", "Invalid execution timeout")
         if (command in CAMERA_COMMANDS && (camera.isNullOrBlank() || camera.length > 128)) throw CliFailure("INVALID_ARGUMENT", "camera_id is required")
         if (command !in CAMERA_COMMANDS && camera != null) throw CliFailure("INVALID_ARGUMENT", "$command takes no camera_id")
+        if (engine != null && (engine !in setOf("Camera2", "CameraX") || command !in CAMERA_COMMANDS))
+            throw CliFailure("INVALID_ARGUMENT", "engine requires a camera command and must be Camera2 or CameraX")
+        if (streams != null && command !in setOf("preview", "capture", "record.start"))
+            throw CliFailure("INVALID_ARGUMENT", "Stream overrides require preview, capture or record.start")
+        if (command == "capture" && streams?.values?.get("yuv_size") == "off" && streams.values["jpeg_size"] == "off")
+            throw CliFailure("INVALID_ARGUMENT", "Capture requires YUV or JPEG output")
         if (profile != null) throw CliFailure("INVALID_ARGUMENT", "Unexpected profile_id")
         if (command != "record.start" && audio != null) throw CliFailure("INVALID_ARGUMENT", "Unexpected audio")
         if (command == "cts.run") {
@@ -36,8 +44,8 @@ data class CliCommand(
     }
 
     companion object {
-        val COMMANDS = listOf("cameras", "preview", "preview.stop", "capture", "record.start", "probe", "cts.cases", "cts.run")
-        val CAMERA_COMMANDS = setOf("preview", "capture", "record.start")
+        val COMMANDS = listOf("streams", "cameras", "preview", "preview.stop", "capture", "record.start", "probe", "cts.cases", "cts.run")
+        val CAMERA_COMMANDS = setOf("preview", "capture", "record.start", "streams")
         const val MAX_CASES = 64
         /** The suite key prefixes of [dev.halcamera.cts.suite.SuiteItem], repeated so this file stays free of cts types. */
         const val CUSTOM_PREFIX = "custom:"
