@@ -50,7 +50,7 @@ Live의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/WorkbenchActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-29 @ `4fe0abf` · Codex-code-review
+- 검토 2026-09-29 @ `c1676e9` · TTolsun (chat authorization; code review by Codex)
 
 </details>
 
@@ -117,7 +117,7 @@ graph TB
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/ui/Look.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-29 @ `4fe0abf` · Codex-code-review
+- 검토 2026-09-29 @ `c1676e9` · TTolsun (chat authorization; code review by Codex)
 
 </details>
 
@@ -146,6 +146,8 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 러너는 API 호출과 완료 신호 사이의 시각 차이를 기록합니다. `RunAssembler`는 관측 세션의 프레임 중 관측 시작 이전에 도착한 프레임 수를 워밍업으로 계산합니다. `MetricExtractor`가 이벤트를 표본으로 연결하고, `BenchmarkEvaluator`가 profile에 따라 초기 반복을 제외하고 통계를 계산합니다. 3A 수렴은 관측 세션의 첫 결과부터 계산합니다.
 
 `RunAssembler.ObservationInput.observedFrames`는 워밍업을 제외한 `steadyFrames`의 수입니다. 이 값은 `RunValidityEvaluator`의 표본 수 검사에 전달됩니다. `RunAssembler`가 구성한 `BenchmarkRun`은 `BenchmarkReportCodec`에서 schema 5로 직렬화하며, 파일 쓰기는 조립기 밖에서 처리합니다.
+
+`BenchmarkActivity`는 `LaunchDiagnostics`의 조회 함수를 러너에 주입합니다. 러너는 launch 사이클의 열기 전과 닫기 처리 후에 CPU 주파수 정책·thermal 상태·조회 시작과 종료 시각을 수집하여 `raw.launch_cycles[].diagnostics`에 보존합니다. 닫기 타임아웃은 `close_completed=false`로 구분합니다. 읽지 못한 값은 미확인 상태로 남으며, 이 선택적 진단 정보는 지표·validity·baseline 판정의 입력이 아닙니다. 조회 시간은 측정 구간 밖에 있지만 사이클 간 간격과 기기 상태에는 영향을 줄 수 있습니다. 수집·분석 절차와 기기별 검증 결과는 [launch 진단 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/launch-diagnostics.md)에 있습니다.
 
 ### 저장된 실행을 다시 계산하는 경로
 
@@ -180,9 +182,9 @@ Lab과 연결 검사 화면은 흰 배경, 밝은 회색 그룹과 파란색 조
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-29 @ `4fe0abf` · Codex-code-review
+- 검토 2026-09-29 @ `c1676e9` · TTolsun (chat authorization; code review by Codex)
 
 </details>
 
@@ -388,7 +390,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-09-29 @ `4fe0abf` · Codex-code-review
+- 검토 2026-09-29 @ `c1676e9` · TTolsun (chat authorization; code review by Codex)
 
 </details>
 
@@ -438,16 +440,16 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-09-29 @ `4fe0abf` · Codex-code-review |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-29 @ `4fe0abf` · Codex-code-review |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-29 @ `4fe0abf` · Codex-code-review |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-09-29 @ `c1676e9` · TTolsun (chat authorization; code review by Codex) |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-29 @ `c1676e9` · TTolsun (chat authorization; code review by Codex) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-09-29 @ `c1676e9` · TTolsun (chat authorization; code review by Codex) |
 | 구조 원본 `ui-camera-label` | 최신 | 검토 2026-09-28 @ `f30cd87` · Codex |
 | 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-09-29 @ `4fe0abf` · Codex-code-review |
 | 구조 원본 `ui-zoom` | 최신 | 검토 2026-09-28 @ `f30cd87` · Codex |
-| 원고 `overview` | 최신 | 검토 2026-09-29 @ `4fe0abf` · Codex-code-review |
-| 원고 `module-roles` | 최신 | 검토 2026-09-29 @ `4fe0abf` · Codex-code-review |
-| 원고 `runtime-flow` | 최신 | 검토 2026-09-29 @ `4fe0abf` · Codex-code-review |
-| 원고 `constraints` | 최신 | 검토 2026-09-29 @ `4fe0abf` · Codex-code-review |
+| 원고 `overview` | 최신 | 검토 2026-09-29 @ `c1676e9` · TTolsun (chat authorization; code review by Codex) |
+| 원고 `module-roles` | 최신 | 검토 2026-09-29 @ `c1676e9` · TTolsun (chat authorization; code review by Codex) |
+| 원고 `runtime-flow` | 최신 | 검토 2026-09-29 @ `c1676e9` · TTolsun (chat authorization; code review by Codex) |
+| 원고 `constraints` | 최신 | 검토 2026-09-29 @ `c1676e9` · TTolsun (chat authorization; code review by Codex) |
 
 <!-- omm:end id=status -->
 
