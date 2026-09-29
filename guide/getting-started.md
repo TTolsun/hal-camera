@@ -33,12 +33,12 @@ Android SDK 경로는 저장소 루트의 `local.properties`에 설정합니다.
 
 4. 앱을 열고 카메라 권한을 허용합니다. Live에서 프리뷰가 나오는지 확인합니다.
 
-PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `도구 → 설정 · 앱 정보 → ADB CLI 설정`에서 `ADB CLI 허용`을 켜고 [CLI](cli.md)를 따르세요. PC에는 `adb`만 있으면 되며, 프리뷰·사진·녹화 명령과 무선 연결 절차도 그 페이지에 있습니다.
+PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `Lab → Settings → ADB CLI`에서 `ADB CLI 허용`을 켜고 [CLI](cli.md)를 따르세요. PC에는 `adb`만 있으면 되며, 프리뷰·사진·녹화 명령과 무선 연결 절차도 그 페이지에 있습니다.
 
 빌드와 테스트가 통과하면 APK 생성과 JVM 테스트 결과를 확인한 것입니다. 측정 정확성과 기기 동작은 별도로 검증해야 합니다. 검증 자료의 구분과 기록 위치는 [Evidence](evidence.md)를 확인하세요.
 
 
-<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
+<p class="doc-evidence">아래 화면은 2026년 9월 30일 Galaxy S25+·Android 16에서 0.16.0(versionCode 593) 디자인 변경 빌드를 실행해 촬영했습니다. 0.17.0에도 같은 Live 디자인을 사용합니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
 
 ## Live에서 촬영하세요
 
@@ -89,8 +89,8 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `도구 → 설
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.16.0` |
-| `versionCode` | `593` |
+| `versionName` | `0.17.0` |
+| `versionCode` | `594` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |
