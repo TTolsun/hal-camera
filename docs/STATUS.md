@@ -1,5 +1,7 @@
 # 작업 상태
 
+2026-09-30 · HAL CAM 0.17.0(versionCode 594)은 Live 스트림 표시와 CameraX CLI 크기 설정, Gallery·About의 Runway 디자인, 설정·ZIP 대화상자의 Apple 디자인과 launch 진단 도구를 포함합니다. 기존 캐릭터와 저장 데이터를 유지합니다. [릴리스 노트](releases/0.17.0.md)에서 변경 사항과 검증 범위를 확인하세요.
+
 2026-09-27 · HAL CAM 0.15.0은 Callback 그래프, CameraX 사진·동영상 저장, 터치 초점·노출 제어와 정리된 개발자 문서를 포함합니다. Galaxy S25+에서 versionCode 543 서명 APK를 기존 앱 위에 설치하고 Camera2·CameraX 프리뷰와 Callback 표시를 확인했습니다. [릴리스 노트](releases/0.15.0.md)를 참고하세요.
 
 2026-09-28 · baseline이 실행 하나가 아니라 정상 실행의 집합이 되었습니다([이슈 #165](https://github.com/TTolsun/hal-camera/issues/165)). 지표마다 집합의 가장 나쁜 값보다 규칙만큼 나빠야 저하로 판정하므로, launch가 빠른 모드와 느린 모드로 나뉘는 S25+에서 baseline 선택에 따라 판정이 뒤집히던 문제가 사라집니다. 첫 사이클의 open(1.9)과 가장 느린 open(1.10)을 비교 지표로 더해 카메라 점유 경쟁과 발열의 튐을 잡습니다. 회귀 규칙은 `regression-rule-v3`, baseline 인덱스는 schema 2입니다. #123의 40회로 후보를 고른 뒤 같은 기기에서 새로 잰 29회로 확인했습니다. 정상 run 5개 집합에서 정상 오탐은 3 %, 점유 경쟁 탐지는 100 %입니다. 이 확인 측정에서 3A가 오탐의 가장 큰 원인으로 드러나 3A는 판정에서 빼고 delta만 표시합니다. 저조도는 여전히 잡지 못하고, 발열은 쓸 수 있는 run이 부족해 답하지 못했습니다([검증 기록](validation/baseline-set-20260928.md)).
