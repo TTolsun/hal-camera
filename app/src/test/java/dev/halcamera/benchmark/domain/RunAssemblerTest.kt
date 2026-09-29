@@ -103,6 +103,21 @@ class RunAssemblerTest {
     }
 
     @Test
+    fun `launch diagnostics round trip without changing metrics validity or comparison contract`() {
+        val events = listOf(configuredEvent()) + previewEvents()
+        val plain = RunAssembler.assemble(result(), events, profile, context())
+        val diagnostics = mapOf("before_open" to mapOf("thermal_status" to 2, "cpu_status" to "unavailable"))
+        val sampled = RunAssembler.assemble(result(cycles = goodCycles().map { it.copy(diagnostics = diagnostics) }),
+            events, profile, context())
+        val decoded = BenchmarkReportCodec.fromJsonMap(BenchmarkReportCodec.toJsonMap(sampled))
+        assertEquals(sampled.raw, decoded.raw)
+        assertEquals(diagnostics, ((decoded.raw["launch_cycles"] as List<*>).first() as Map<*, *>)["diagnostics"])
+        assertEquals(plain.metrics, sampled.metrics)
+        assertEquals(plain.validity, sampled.validity)
+        assertEquals(plain.contract, sampled.contract)
+    }
+
+    @Test
     fun `optional installation identity survives report round trip without changing measurement contract`() {
         val run = RunAssembler.assemble(result(), listOf(configuredEvent()) + previewEvents(), profile,
             context().copy(deviceInstanceId = "synthetic-installation"))

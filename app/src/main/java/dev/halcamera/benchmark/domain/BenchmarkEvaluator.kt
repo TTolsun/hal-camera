@@ -15,12 +15,15 @@ data class LaunchCycle(
     val previewTotalMs: Double?,
     val closeMs: Double?,
     val failed: Boolean = false,
-    val timestampsNs: Map<String, Long> = emptyMap()
+    val timestampsNs: Map<String, Long> = emptyMap(),
+    /** Optional platform observations, never inputs to metrics, validity or comparison. */
+    val diagnostics: Map<String, Any?> = emptyMap()
 ) {
     fun toJsonMap(): Map<String, Any?> = mapOf(
         "iteration" to iteration, "warmup" to warmup, "open_ms" to openMs, "configure_ms" to configureMs,
         "first_started_ms" to firstStartedMs, "yuv_proxy_ms" to yuvProxyMs, "preview_total_ms" to previewTotalMs,
-        "close_ms" to closeMs, "failed" to failed, "timestamps_ns" to timestampsNs.mapValues { it.value.toString() }
+        "close_ms" to closeMs, "failed" to failed, "timestamps_ns" to timestampsNs.mapValues { it.value.toString() },
+        "diagnostics" to diagnostics
     )
 }
 

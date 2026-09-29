@@ -26,7 +26,7 @@ class CliStoreInstrumentation : Instrumentation() {
                 val json = JSONObject(file.readText())
                 val selected = JSONObject()
                 listOf("run_id", "profile", "comparison_contract_id", "metric_definition_version", "stats_method", "clock",
-                    "app", "env", "validity", "metrics", "aborted").forEach { key -> selected.put(key, json.opt(key)) }
+                    "app", "device", "env", "validity", "metrics", "raw", "aborted").forEach { key -> selected.put(key, json.opt(key)) }
                 reports.put(selected)
             }
             finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "HALCAM_REPORTS=$reports\n") })
