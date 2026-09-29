@@ -81,7 +81,11 @@ flowchart TB
 
 
 
-앱 0.15.0의 상단은 Callback → Lab 순서이며 아래에는 측정값, 줌, 셔터, 모드와 이벤트 저장 조작부를 표시합니다.
+앱 0.16.0의 상단은 Callback → Lab 순서이며 아래에는 측정값, 줌, 셔터, 모드와 `Save Events · ZIP` 조작부를 표시합니다. 저장 대기 중에는 `Saving in 5.0s`처럼 남은 시간을 표시합니다.
+
+<a href="figures/live-screen.png"><img src="figures/live-screen.png" alt="영어 ZIP 작업 버튼을 표시하는 Live 화면" width="320"></a>
+
+2026-09-30 Galaxy S25+에서 촬영한 실제 화면입니다. [촬영 및 리뷰 기록](../validation/gallery-lab-ui-20260930.md)에 빌드와 확인 범위를 기록했습니다.
 
 콜백 그래프는 숨긴 상태입니다. 셔터의 세 가지 상태는 녹화 파일을 남기지 않도록 캡처하지 않고 그렸습니다.
 
@@ -180,6 +184,11 @@ HALCamera 앨범만 Runway 스타일의 어두운 배경과 정사각형 격자�
 
 선택 모드에서는 상단 제목에 선택 개수를 크게 표시하고, 전체 선택 체크박스로 현재 필터의 모든 항목을 고르거나 해제합니다. 화면 밖의 항목도 포함합니다. 개별 항목을 해제하면 전체 선택 상태와 개수가 즉시 바뀝니다. 필터를 바꾸거나 선택을 취소하면 기존 선택을 해제합니다. 항목이 없거나 삭제 확인이 진행 중일 때에는 전체 선택을 비활성화합니다. 삭제는 기존 시스템 확인을 거칩니다. 2,000개를 넘는 선택은 2,000개 이하로 나누어 순서대로 시스템 확인을 요청하며, 중간에 취소하면 남은 요청을 중단합니다.
 
+<a href="../../guide/assets/screenshots/gallery.png"><img src="../../guide/assets/screenshots/gallery.png" alt="Runway 스타일의 HALCamera 앨범 격자" width="320"></a>
+<a href="../../guide/assets/screenshots/gallery-selection.png"><img src="../../guide/assets/screenshots/gallery-selection.png" alt="흰색 체크와 공유 버튼을 표시하는 Gallery 선택 모드" width="320"></a>
+
+기기에 저장된 사진 9장과 동영상 9개를 조회한 화면입니다. 선택 수를 확인한 뒤 취소했으며 공유나 삭제는 실행하지 않았습니다. [상세 사진 화면](../../guide/assets/screenshots/gallery-detail.png)도 같은 빌드에서 촬영했습니다.
+
 ## 개발 도구로서의 정보
 
 Camera HAL 개발자의 반복 관측·재현·비교 작업을 우선합니다. Probe와 CTS의 첫 화면은 검사 출처와 결과 단위, 정적 사양 여부만 짧게 표시합니다. 공식 CTS 실행과의 구분, 중단 시 FAIL 처리, 측정 범위와 비교 조건은 해당 동작 가까이 유지합니다.
@@ -210,3 +219,9 @@ Live 표시등 옆에 P·Y·J 크기를 한 줄로 표시하며 꺼진 사진 �
 Device Info는 회색 그룹 안에서 별칭을 편집하고 기기·빌드 정보를 표시하며, 이름 저장과 정보 복사를 제공합니다. ADB CLI 스위치는 기존처럼 변경 즉시 반영합니다. ZIP 목록은 파일명·크기를 표시하고 파일 작업 대화상자에서 공유·다른 위치에 저장·삭제를 제공합니다. 삭제 확인은 별도 대화상자로 열립니다. 이 화면들은 Apple 기반 `LabDialog`를 사용합니다.
 
 About은 Runway 스타일의 흰 배경, 보통 굵기 제목과 검은 Close 버튼을 사용합니다. 기존 로봇 캐릭터, 영어 소개, Camera2·CameraX 표기, 실제 버전과 연락처를 유지합니다. 버전을 다섯 번 누르면 작성자 메시지를 표시하며 연락처를 누르면 메일 앱을 엽니다.
+
+
+<a href="../../guide/assets/screenshots/about.png"><img src="../../guide/assets/screenshots/about.png" alt="기존 로봇 캐릭터를 유지한 Runway 스타일 About" width="320"></a>
+<a href="../../guide/assets/screenshots/device-info.png"><img src="../../guide/assets/screenshots/device-info.png" alt="Apple 스타일의 기기 정보와 별칭 설정 대화상자" width="320"></a>
+
+About과 Device Info의 실제 화면입니다. [ADB CLI](../../guide/assets/screenshots/cli-settings.png), [ZIP 목록](../../guide/assets/screenshots/incident-history.png), [파일 작업](../../guide/assets/screenshots/incident-actions.png), [삭제 확인](../../guide/assets/screenshots/incident-delete.png)의 실제 화면도 확인할 수 있습니다. 설정값과 저장된 파일은 변경하지 않았습니다.

@@ -38,7 +38,7 @@ title: Callback
 
 <figure class="app-screenshot" id="screen-callback-recording">
 <a href="assets/screenshots/callback-recording.png" aria-label="녹화 중 Shutter Metadata Preview Recording 콜백 그래프 원본 보기"><img src="assets/screenshots/callback-recording.png" alt="녹화 중 Shutter Metadata Preview Recording 콜백 그래프" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>Camera2로 녹화하면서 Preview·Recording 값을 확인한 장면입니다. Real-time Frame에서는 시간 버튼이 숨겨지고 프레임이 계속 갱신됩니다. <a href="assets/screenshots/callback-recording.png">원본 보기</a></figcaption>
+<figcaption>2026-09-27의 0.15.0 촬영본입니다. 현재 ZIP 버튼 문구는 Save Events · ZIP입니다. Camera2로 녹화하면서 Preview·Recording 값을 확인한 장면입니다. Real-time Frame에서는 시간 버튼이 숨겨지고 프레임이 계속 갱신됩니다. <a href="assets/screenshots/callback-recording.png">원본 보기</a></figcaption>
 </figure>
 
 Camera2의 Android 12 이하와 CameraX에서는 Preview·Recording 버퍼 도착을 직접 관측하지 못하므로 `콜백 없음`을 표시합니다. CameraX도 선택한 엔진에서 녹화하며, 녹화 세션에는 Preview·Recording 행이 표시됩니다.
@@ -76,7 +76,7 @@ flowchart TB
 
 <figure class="app-screenshot" id="screen-callback-event">
 <a href="assets/screenshots/callback-event.png" aria-label="사진 촬영 후 YUV와 JPEG 도착 시각을 자동 고정한 Callback 원본 보기"><img src="assets/screenshots/callback-event.png" alt="사진 촬영 후 YUV와 JPEG 도착 시각을 자동 고정한 Callback" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>고정 시간이 10초인 상태에서 사진을 촬영했습니다. 일시정지 표시와 같은 프레임의 YUV 1·JPEG 값을 확인할 수 있습니다. <a href="assets/screenshots/callback-event.png">원본 보기</a></figcaption>
+<figcaption>2026-09-27의 0.15.0 촬영본입니다. 현재 ZIP 버튼 문구는 Save Events · ZIP입니다. 고정 시간이 10초인 상태에서 사진을 촬영했습니다. 일시정지 표시와 같은 프레임의 YUV 1·JPEG 값을 확인할 수 있습니다. <a href="assets/screenshots/callback-event.png">원본 보기</a></figcaption>
 </figure>
 
 ## 값이 없는 이유를 확인하세요

@@ -123,7 +123,7 @@ class MainActivity : ComponentActivity() {
         })
     }
     companion object {
-        /** 8.1: one word, because the button records a moment and no longer claims anything about it. */
+        /** Shared initial and idle label for the event ZIP action. */
         const val MARK_LABEL = "Save Events · ZIP"
     }
     // Camera UI follows docs/design/APP-UI.md; shared dark surfaces and active states use ui/Look.

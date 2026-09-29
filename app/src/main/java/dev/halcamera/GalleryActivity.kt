@@ -307,6 +307,7 @@ class GalleryActivity : ComponentActivity() {
     }
 
     private inner class Tile : FrameLayout(this@GalleryActivity) {
+        private val thumbnailClip = android.graphics.Path()
         val image = ImageView(context).apply { scaleType = ImageView.ScaleType.CENTER_CROP; setBackgroundColor(Look.gallerySurface) }
         val badge = Look.text(context, "", 11, Look.onDark, bold = true).apply {
             setBackgroundColor(Color.argb(180, 0, 0, 0)); setPadding(4.dp, 2.dp, 4.dp, 2.dp)
@@ -316,12 +317,25 @@ class GalleryActivity : ComponentActivity() {
             background = android.graphics.drawable.GradientDrawable().apply {
                 setColor(Look.galleryControl); cornerRadius = 8.dp.toFloat()
             }
-            clipToOutline = true
             addView(image, LayoutParams(-1, -1))
             addView(badge, LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.END).apply { setMargins(4.dp, 4.dp, 4.dp, 4.dp) })
             addView(check, LayoutParams(24.dp, 24.dp, Gravity.TOP or Gravity.END).apply { setMargins(8.dp, 8.dp, 8.dp, 8.dp) })
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
             listOf(image, badge, check).forEach { it.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO }
+        }
+
+        override fun dispatchDraw(canvas: android.graphics.Canvas) {
+            // GridView measures and recycles its first child before layout; clip at draw time too.
+            val save = canvas.save()
+            canvas.clipPath(thumbnailClip)
+            super.dispatchDraw(canvas)
+            canvas.restoreToCount(save)
+        }
+
+        override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+            super.onSizeChanged(w, h, oldw, oldh)
+            thumbnailClip.reset()
+            thumbnailClip.addRoundRect(0f, 0f, w.toFloat(), h.toFloat(), 8.dp.toFloat(), 8.dp.toFloat(), android.graphics.Path.Direction.CW)
         }
     }
 
