@@ -156,7 +156,7 @@ class GalleryActivity : ComponentActivity() {
             failedDeletes = it.getInt("failedDeletes")
             deleteBusy = pendingDelete.isNotEmpty()
         }
-        root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Color.BLACK) }
+        root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.gallerySurface) }
         buildAlbum()
         buildDetail()
         root.addView(album, LinearLayout.LayoutParams(-1, -1))
@@ -188,21 +188,23 @@ class GalleryActivity : ComponentActivity() {
         header.addView(IconButton(this, R.drawable.ic_action_back, "이전 화면으로 돌아가기") { onBackPressedDispatcher.onBackPressed() }, LinearLayout.LayoutParams(48.dp, 48.dp))
         val titles = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            albumTitle = Look.text(context, "HALCamera", 24, Look.onDark, bold = true).apply {
+            setPadding(20.dp, 8.dp, 20.dp, 8.dp)
+            albumTitle = Look.text(context, "HALCamera", 32, Look.onDark).apply {
                 accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
             }
             addView(albumTitle)
         }
         count = Look.text(this, "불러오는 중…", 13, Look.onDarkMuted)
         titles.addView(count)
-        header.addView(titles, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = 12.dp; marginEnd = 12.dp })
-        selectButton = button("선택") {
+        header.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
+        selectButton = Look.galleryButton(this, "선택", primary = true) {
             selectionMode = !selectionMode
             if (!selectionMode) selected.clear()
             updateSelection()
         }
         header.addView(selectButton, Look.buttonParams(-2))
         album.addView(header, LinearLayout.LayoutParams(-1, -2))
+        album.addView(titles, LinearLayout.LayoutParams(-1, -2))
         filterButton = button("전체 ▾") {
             showSelectionPopup(filterButton, GalleryCount.filterNames, filter) {
                 rememberGrid()
@@ -220,7 +222,7 @@ class GalleryActivity : ComponentActivity() {
             setTextColor(Look.onDark)
             buttonTintList = ColorStateList(
                 arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf()),
-                intArrayOf(Look.primaryOnDark, Look.onDarkMuted),
+                intArrayOf(Look.onDark, Look.onDarkMuted),
             )
             minHeight = 48.dp
             minimumHeight = 48.dp
@@ -236,10 +238,10 @@ class GalleryActivity : ComponentActivity() {
         val content = FrameLayout(this)
         grid = GridView(this).apply {
             numColumns = 3
-            horizontalSpacing = 2.dp
-            verticalSpacing = 2.dp
+            horizontalSpacing = 6.dp
+            verticalSpacing = 6.dp
             stretchMode = GridView.STRETCH_COLUMN_WIDTH
-            setPadding(2.dp, 0, 2.dp, 0)
+            setPadding(12.dp, 0, 12.dp, 12.dp)
             clipToPadding = false
             selector = android.graphics.drawable.ColorDrawable(Color.TRANSPARENT)
             setOnItemClickListener { _, _, position, _ ->
@@ -265,7 +267,7 @@ class GalleryActivity : ComponentActivity() {
             override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
                 val item = visibleItems[position]
                 val tile = (convertView as? Tile) ?: Tile()
-                val edge = ((grid.width - grid.paddingLeft - grid.paddingRight - (grid.numColumns - 1) * 2.dp) / grid.numColumns).coerceAtLeast(48.dp)
+                val edge = ((grid.width - grid.paddingLeft - grid.paddingRight - (grid.numColumns - 1) * 6.dp) / grid.numColumns).coerceAtLeast(48.dp)
                 tile.layoutParams = AbsListView.LayoutParams(-1, edge)
                 tile.image.tag = item.key
                 tile.image.setImageBitmap(thumbnails.get(item.key))
@@ -278,7 +280,8 @@ class GalleryActivity : ComponentActivity() {
                 tile.badge.visibility = if (tile.badge.text.isEmpty()) View.GONE else View.VISIBLE
                 tile.check.visibility = if (selectionMode) View.VISIBLE else View.GONE
                 tile.check.text = if (item.key in selected) "✓" else "○"
-                tile.check.setBackgroundColor(if (item.key in selected) Look.primary else Color.argb(180, 0, 0, 0))
+                tile.check.background = Look.pill(this@GalleryActivity, if (item.key in selected) Color.WHITE else Color.argb(180, 0, 0, 0))
+                tile.check.setTextColor(if (item.key in selected) Color.BLACK else Color.WHITE)
                 tile.image.alpha = if (item.key in selected) 0.6f else 1f
                 tile.isSelected = item.key in selected
                 tile.contentDescription = "${if (item.video) "동영상" else "사진"}, ${date(item.added)}, ${item.name}"
@@ -294,22 +297,26 @@ class GalleryActivity : ComponentActivity() {
         }
         content.addView(empty, FrameLayout.LayoutParams(-1, -1))
         album.addView(content, LinearLayout.LayoutParams(-1, 0, 1f))
-        selectionBar = Look.row(this).apply { setPadding(24.dp, 12.dp, 24.dp, 16.dp); setBackgroundColor(Look.expertTile) }
-        shareSelection = IconButton(this, R.drawable.ic_action_share, "선택한 항목 공유") { share(items.filter { it.key in selected }) }
-        deleteSelection = IconButton(this, R.drawable.ic_action_delete, "선택한 항목 삭제") { confirmDelete(items.filter { it.key in selected }) }
-        selectionBar.addView(shareSelection, LinearLayout.LayoutParams(0, 56.dp, 1f))
-        selectionBar.addView(deleteSelection, LinearLayout.LayoutParams(0, 56.dp, 1f).apply { marginStart = 24.dp })
+        selectionBar = Look.row(this).apply { setPadding(24.dp, 12.dp, 24.dp, 16.dp); setBackgroundColor(Look.gallerySurface) }
+        shareSelection = Look.galleryButton(this, "공유", primary = true) { share(items.filter { it.key in selected }) }
+        deleteSelection = Look.galleryButton(this, "삭제") { confirmDelete(items.filter { it.key in selected }) }
+        selectionBar.addView(shareSelection, Look.buttonParams(0, 1f))
+        selectionBar.addView(deleteSelection, Look.buttonParams(0, 1f).apply { marginStart = 24.dp })
         album.addView(selectionBar, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 8.dp })
         updateSelection()
     }
 
     private inner class Tile : FrameLayout(this@GalleryActivity) {
-        val image = ImageView(context).apply { scaleType = ImageView.ScaleType.CENTER_CROP; setBackgroundColor(Look.expertTile) }
+        val image = ImageView(context).apply { scaleType = ImageView.ScaleType.CENTER_CROP; setBackgroundColor(Look.gallerySurface) }
         val badge = Look.text(context, "", 11, Look.onDark, bold = true).apply {
             setBackgroundColor(Color.argb(180, 0, 0, 0)); setPadding(4.dp, 2.dp, 4.dp, 2.dp)
         }
         val check = Look.text(context, "", 17, Look.onDark, bold = true).apply { gravity = Gravity.CENTER }
         init {
+            background = android.graphics.drawable.GradientDrawable().apply {
+                setColor(Look.galleryControl); cornerRadius = 8.dp.toFloat()
+            }
+            clipToOutline = true
             addView(image, LayoutParams(-1, -1))
             addView(badge, LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.END).apply { setMargins(4.dp, 4.dp, 4.dp, 4.dp) })
             addView(check, LayoutParams(24.dp, 24.dp, Gravity.TOP or Gravity.END).apply { setMargins(8.dp, 8.dp, 8.dp, 8.dp) })
@@ -336,7 +343,7 @@ class GalleryActivity : ComponentActivity() {
         updateInfoButton()
         header.addView(infoButton, LinearLayout.LayoutParams(48.dp, 48.dp))
         detail.addView(header)
-        val frame = FrameLayout(this)
+        val frame = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
         photo = GalleryImageView(this, ::page)
         frame.addView(photo, FrameLayout.LayoutParams(-1, -1))
         video = VideoView(this).apply { visibility = View.GONE }
@@ -367,11 +374,11 @@ class GalleryActivity : ComponentActivity() {
         navigation.addView(zoom, LinearLayout.LayoutParams(0, 48.dp, 1f).apply { marginStart = 16.dp })
         navigation.addView(next, LinearLayout.LayoutParams(0, 48.dp, 1f).apply { marginStart = 16.dp })
         detail.addView(navigation)
-        val actions = Look.row(this).apply { setPadding(24.dp, 12.dp, 24.dp, 16.dp); setBackgroundColor(Look.expertTile) }
-        detailShare = IconButton(this, R.drawable.ic_action_share, "사진 또는 동영상 공유") { currentItem()?.let { share(listOf(it)) } }
-        detailDelete = IconButton(this, R.drawable.ic_action_delete, "사진 또는 동영상 삭제") { currentItem()?.let { confirmDelete(listOf(it)) } }
-        actions.addView(detailShare, LinearLayout.LayoutParams(0, 56.dp, 1f))
-        actions.addView(detailDelete, LinearLayout.LayoutParams(0, 56.dp, 1f).apply { marginStart = 24.dp })
+        val actions = Look.row(this).apply { setPadding(24.dp, 12.dp, 24.dp, 16.dp); setBackgroundColor(Look.gallerySurface) }
+        detailShare = Look.galleryButton(this, "공유", primary = true) { currentItem()?.let { share(listOf(it)) } }
+        detailDelete = Look.galleryButton(this, "삭제") { currentItem()?.let { confirmDelete(listOf(it)) } }
+        actions.addView(detailShare, Look.buttonParams(0, 1f))
+        actions.addView(detailDelete, Look.buttonParams(0, 1f).apply { marginStart = 24.dp })
         detail.addView(actions, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 8.dp })
     }
 
@@ -782,22 +789,8 @@ class GalleryActivity : ComponentActivity() {
         super.onDestroy()
     }
 
-    private fun button(label: String, description: String = label, action: () -> Unit) = Button(this).apply {
-        text = label
-        contentDescription = description
-        isAllCaps = false
-        textSize = 15f
-        setTextColor(Look.onDark)
-        val attrs = obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackgroundBorderless))
-        background = attrs.getDrawable(0)
-        attrs.recycle()
-        minWidth = 48.dp
-        minimumWidth = 48.dp
-        minHeight = 48.dp
-        minimumHeight = 48.dp
-        setPadding(12.dp, 0, 12.dp, 0)
-        setOnClickListener { action() }
-    }
+    private fun button(label: String, description: String = label, action: () -> Unit) =
+        Look.galleryButton(this, label, action = action).apply { contentDescription = description }
 
     private fun date(timestamp: Long) = DateFormat.getMediumDateFormat(this).format(Date(timestamp))
     private fun duration(milliseconds: Long): String {
