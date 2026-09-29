@@ -70,6 +70,7 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/platform/ProfileCompatibilityChecker.kt
           - app/src/main/java/dev/halcamera/benchmark/platform/StreamSpecs.kt
           - app/src/main/java/dev/halcamera/benchmark/platform/ThermalTracker.kt
+          - app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt
       benchmark/benchmark-model:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkModel.kt

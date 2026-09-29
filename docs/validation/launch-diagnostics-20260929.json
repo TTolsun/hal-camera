@@ -1,0 +1,4544 @@
+[
+  {
+    "schema_version": 5,
+    "kind": "launch_diagnostics_excerpt",
+    "run_id": "20260929-234553-098",
+    "source_sha256": "e3d742643ffe866e074817ed06c831b40ef4836ec7bc2a0c546e068ff5bdeeac",
+    "exported_at_utc": "2026-09-29T14:47:03.634Z",
+    "profile": {
+      "id": "camera2-standard-v2",
+      "engine": "camera2",
+      "preview_size": "1920x1080",
+      "yuv_size": "1920x1080",
+      "still_format": "jpeg",
+      "still_size": "1920x1080",
+      "fps_range": "[30,30]",
+      "zsl": false,
+      "trigger": false,
+      "af_mode": "CONTINUOUS_PICTURE",
+      "launch_mode": "warm_reopen",
+      "launch_iterations": 10,
+      "warmup_ms": 3000,
+      "observe_ms": 10000,
+      "still_count": 10,
+      "exclude_first": true,
+      "record_size": "1920x1080",
+      "record_codec": "h264",
+      "record_bitrate": 10000000,
+      "record_fps": 30,
+      "record_duration_ms": 9000,
+      "record_iterations": 5,
+      "record_audio": false
+    },
+    "comparison_contract_id": "camera2-standard-v2|metrics-0.3|nearest_rank|elapsedRealtimeNanos",
+    "device": {
+      "manufacturer": "samsung",
+      "model": "SM-S936N",
+      "build_display": "BP4A.251205.006.S936NKSSCCZH2",
+      "build_incremental": "S936NKSSCCZH2",
+      "fingerprint": "samsung/pa2qksx/pa2q:16/BP4A.251205.006/S936NKSSCCZH2_OKRCCZH2:user/release-keys",
+      "vendor_fingerprint": "samsung/pa2qksx/pa2q:15/AP3A.240905.015.A2/S936NKSSCCZH2:user/release-keys",
+      "sdk": 36,
+      "security_patch": "2026-08-05",
+      "camera_info_version": null
+    },
+    "app": {
+      "version_name": "0.16.0",
+      "version_code": 593,
+      "debuggable": false
+    },
+    "endpoint": {
+      "logicalCameraId": "0",
+      "physicalCameraId": null,
+      "role": "MAIN",
+      "facing": 1,
+      "independentlyOpenable": true,
+      "selectableByZoom": true,
+      "exposedToCameraX": null,
+      "equivalentFocalMm": 22.90764820252069,
+      "timestampSource": 1,
+      "hardwareLevel": 3,
+      "zoomRatioMin": 0.6000000238418579,
+      "zoomRatioMax": 10
+    },
+    "env": {
+      "thermal_start": 0,
+      "thermal_max": 0,
+      "thermal_end": 0,
+      "battery_start": 39,
+      "battery_end": 39,
+      "charging": true,
+      "power_save_mode": false,
+      "rotation": 0
+    },
+    "validity": {
+      "validity_rule_version": "validity-v3",
+      "measurement_valid": true,
+      "comparison_eligible": true,
+      "scoring_eligible": false,
+      "flags": [
+        "CHARGING"
+      ]
+    },
+    "aborted": null,
+    "raw": {
+      "launch_cycles": [
+        {
+          "iteration": 0,
+          "warmup": true,
+          "open_ms": 7.54323,
+          "configure_ms": 188.313072,
+          "first_started_ms": 171.235989,
+          "yuv_proxy_ms": 219.801927,
+          "preview_total_ms": 417.447136,
+          "close_ms": 185.448698,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53068305779668",
+            "opened": "53068313322898",
+            "configure_call": "53068315019148",
+            "configured": "53068503332220",
+            "repeating_call": "53068503424877",
+            "first_started": "53068674660866",
+            "first_yuv": "53068723226804",
+            "close_call": "53068728642845",
+            "closed": "53068914091543"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53068297453835",
+              "end_ns": "53068298217168",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2227200,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 1017600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53068914174616",
+              "end_ns": "53068914883991",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 1,
+          "warmup": false,
+          "open_ms": 5.582709,
+          "configure_ms": 174.845885,
+          "first_started_ms": 164.513749,
+          "yuv_proxy_ms": 218.464166,
+          "preview_total_ms": 400.211094,
+          "close_ms": 180.88125,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53068917799876",
+            "opened": "53068923382585",
+            "configure_call": "53068924463054",
+            "configured": "53069099308939",
+            "repeating_call": "53069099546804",
+            "first_started": "53069264060553",
+            "first_yuv": "53069318010970",
+            "close_call": "53069321107845",
+            "closed": "53069501989095"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53068915238783",
+              "end_ns": "53068915485189",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53069502119043",
+              "end_ns": "53069502704616",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 2,
+          "warmup": false,
+          "open_ms": 5.087969,
+          "configure_ms": 178.938282,
+          "first_started_ms": 167.113281,
+          "yuv_proxy_ms": 210.901093,
+          "preview_total_ms": 396.798906,
+          "close_ms": 178.369427,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53069505394303",
+            "opened": "53069510482272",
+            "configure_call": "53069512109928",
+            "configured": "53069691048210",
+            "repeating_call": "53069691292116",
+            "first_started": "53069858405397",
+            "first_yuv": "53069902193209",
+            "close_call": "53069913052897",
+            "closed": "53070091422324"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53069503004616",
+              "end_ns": "53069503289095",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53070091582532",
+              "end_ns": "53070091975709",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 3,
+          "warmup": false,
+          "open_ms": 4.727291,
+          "configure_ms": 178.510781,
+          "first_started_ms": 185.993177,
+          "yuv_proxy_ms": 232.089896,
+          "preview_total_ms": 416.773281,
+          "close_ms": 177.53802,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53070094825866",
+            "opened": "53070099553157",
+            "configure_call": "53070100788053",
+            "configured": "53070279298834",
+            "repeating_call": "53070279509251",
+            "first_started": "53070465502428",
+            "first_yuv": "53070511599147",
+            "close_call": "53070513618522",
+            "closed": "53070691156542"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53070092277272",
+              "end_ns": "53070092474876",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53070691286282",
+              "end_ns": "53070691997220",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 4,
+          "warmup": false,
+          "open_ms": 5.297969,
+          "configure_ms": 175.621875,
+          "first_started_ms": 168.332344,
+          "yuv_proxy_ms": 218.956042,
+          "preview_total_ms": 400.994636,
+          "close_ms": 191.720521,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53070695484615",
+            "opened": "53070700782584",
+            "configure_call": "53070701825084",
+            "configured": "53070877446959",
+            "repeating_call": "53070877523209",
+            "first_started": "53071045855553",
+            "first_yuv": "53071096479251",
+            "close_call": "53071106119563",
+            "closed": "53071297840084"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53070692449720",
+              "end_ns": "53070692709095",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53071297896751",
+              "end_ns": "53071298231594",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 5,
+          "warmup": false,
+          "open_ms": 5.654219,
+          "configure_ms": 177.730677,
+          "first_started_ms": 183.474375,
+          "yuv_proxy_ms": 226.82875,
+          "preview_total_ms": 411.647656,
+          "close_ms": 183.363802,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53071301001959",
+            "opened": "53071306656178",
+            "configure_call": "53071308002063",
+            "configured": "53071485732740",
+            "repeating_call": "53071485820865",
+            "first_started": "53071669295240",
+            "first_yuv": "53071712649615",
+            "close_call": "53071723296907",
+            "closed": "53071906660709"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53071298555709",
+              "end_ns": "53071298838209",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53071906719250",
+              "end_ns": "53071907086907",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 6,
+          "warmup": false,
+          "open_ms": 4.742448,
+          "configure_ms": 173.522032,
+          "first_started_ms": 168.329999,
+          "yuv_proxy_ms": 214.711927,
+          "preview_total_ms": 394.418594,
+          "close_ms": 177.526875,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53071909943990",
+            "opened": "53071914686438",
+            "configure_call": "53071916026802",
+            "configured": "53072089548834",
+            "repeating_call": "53072089650657",
+            "first_started": "53072257980656",
+            "first_yuv": "53072304362584",
+            "close_call": "53072306799927",
+            "closed": "53072484326802"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53071907321177",
+              "end_ns": "53071907515396",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53072484388833",
+              "end_ns": "53072484829146",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 7,
+          "warmup": false,
+          "open_ms": 5.117396,
+          "configure_ms": 174.299219,
+          "first_started_ms": 165.33125,
+          "yuv_proxy_ms": 215.889531,
+          "preview_total_ms": 396.697031,
+          "close_ms": 185.408177,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53072487441177",
+            "opened": "53072492558573",
+            "configure_call": "53072493892271",
+            "configured": "53072668191490",
+            "repeating_call": "53072668248677",
+            "first_started": "53072833579927",
+            "first_yuv": "53072884138208",
+            "close_call": "53072899114458",
+            "closed": "53073084522635"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53072485139927",
+              "end_ns": "53072485323000",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53073084611958",
+              "end_ns": "53073085119771",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 8,
+          "warmup": false,
+          "open_ms": 5.306614,
+          "configure_ms": 173.363125,
+          "first_started_ms": 173.180157,
+          "yuv_proxy_ms": 220.226875,
+          "preview_total_ms": 400.29802,
+          "close_ms": 178.98526,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53073088000969",
+            "opened": "53073093307583",
+            "configure_call": "53073094533937",
+            "configured": "53073267897062",
+            "repeating_call": "53073268072114",
+            "first_started": "53073441252271",
+            "first_yuv": "53073488298989",
+            "close_call": "53073491263625",
+            "closed": "53073670248885"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53073085420239",
+              "end_ns": "53073085917271",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53073670320604",
+              "end_ns": "53073670747114",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 9,
+          "warmup": false,
+          "open_ms": 5.117969,
+          "configure_ms": 175.248125,
+          "first_started_ms": 172.79052,
+          "yuv_proxy_ms": 218.575833,
+          "preview_total_ms": 400.11375,
+          "close_ms": 190.226406,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53073673601958",
+            "opened": "53073678719927",
+            "configure_call": "53073679819093",
+            "configured": "53073855067218",
+            "repeating_call": "53073855139875",
+            "first_started": "53074027930395",
+            "first_yuv": "53074073715708",
+            "close_call": "53074083574875",
+            "closed": "53074273801281"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53073671071958",
+              "end_ns": "53073671358000",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53074273898260",
+              "end_ns": "53074274437895",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 5,
+    "kind": "launch_diagnostics_excerpt",
+    "run_id": "20260929-234745-906",
+    "source_sha256": "c09ce91bc1f22a0bfcf19f946b84cc796a909cdb6bcfcb0574ad99b2be477981",
+    "exported_at_utc": "2026-09-29T14:48:58.681Z",
+    "profile": {
+      "id": "camera2-standard-v2",
+      "engine": "camera2",
+      "preview_size": "1920x1080",
+      "yuv_size": "1920x1080",
+      "still_format": "jpeg",
+      "still_size": "1920x1080",
+      "fps_range": "[30,30]",
+      "zsl": false,
+      "trigger": false,
+      "af_mode": "CONTINUOUS_PICTURE",
+      "launch_mode": "warm_reopen",
+      "launch_iterations": 10,
+      "warmup_ms": 3000,
+      "observe_ms": 10000,
+      "still_count": 10,
+      "exclude_first": true,
+      "record_size": "1920x1080",
+      "record_codec": "h264",
+      "record_bitrate": 10000000,
+      "record_fps": 30,
+      "record_duration_ms": 9000,
+      "record_iterations": 5,
+      "record_audio": false
+    },
+    "comparison_contract_id": "camera2-standard-v2|metrics-0.3|nearest_rank|elapsedRealtimeNanos",
+    "device": {
+      "manufacturer": "samsung",
+      "model": "SM-S936N",
+      "build_display": "BP4A.251205.006.S936NKSSCCZH2",
+      "build_incremental": "S936NKSSCCZH2",
+      "fingerprint": "samsung/pa2qksx/pa2q:16/BP4A.251205.006/S936NKSSCCZH2_OKRCCZH2:user/release-keys",
+      "vendor_fingerprint": "samsung/pa2qksx/pa2q:15/AP3A.240905.015.A2/S936NKSSCCZH2:user/release-keys",
+      "sdk": 36,
+      "security_patch": "2026-08-05",
+      "camera_info_version": null
+    },
+    "app": {
+      "version_name": "0.16.0",
+      "version_code": 593,
+      "debuggable": false
+    },
+    "endpoint": {
+      "logicalCameraId": "0",
+      "physicalCameraId": null,
+      "role": "MAIN",
+      "facing": 1,
+      "independentlyOpenable": true,
+      "selectableByZoom": true,
+      "exposedToCameraX": null,
+      "equivalentFocalMm": 22.90764820252069,
+      "timestampSource": 1,
+      "hardwareLevel": 3,
+      "zoomRatioMin": 0.6000000238418579,
+      "zoomRatioMax": 10
+    },
+    "env": {
+      "thermal_start": 0,
+      "thermal_max": 0,
+      "thermal_end": 0,
+      "battery_start": 39,
+      "battery_end": 40,
+      "charging": true,
+      "power_save_mode": false,
+      "rotation": 0
+    },
+    "validity": {
+      "validity_rule_version": "validity-v3",
+      "measurement_valid": true,
+      "comparison_eligible": true,
+      "scoring_eligible": false,
+      "flags": [
+        "CHARGING"
+      ]
+    },
+    "aborted": null,
+    "raw": {
+      "launch_cycles": [
+        {
+          "iteration": 0,
+          "warmup": true,
+          "open_ms": 10.440938,
+          "configure_ms": 208.884063,
+          "first_started_ms": 255.030468,
+          "yuv_proxy_ms": 317.918072,
+          "preview_total_ms": 539.967135,
+          "close_ms": 268.288906,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53181113265094",
+            "opened": "53181123706032",
+            "configure_call": "53181125863375",
+            "configured": "53181334747438",
+            "repeating_call": "53181335314157",
+            "first_started": "53181590344625",
+            "first_yuv": "53181653232229",
+            "close_call": "53181665584938",
+            "closed": "53181933873844"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53181104913219",
+              "end_ns": "53181105803167",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 1785600,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 1017600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53181934007698",
+              "end_ns": "53181934546188",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 1,
+          "warmup": false,
+          "open_ms": 11.033489,
+          "configure_ms": 218.69375,
+          "first_started_ms": 269.624792,
+          "yuv_proxy_ms": 320.622657,
+          "preview_total_ms": 553.789427,
+          "close_ms": 251.876874,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53181940951917",
+            "opened": "53181951985406",
+            "configure_call": "53181955322281",
+            "configured": "53182174016031",
+            "repeating_call": "53182174118687",
+            "first_started": "53182443743479",
+            "first_yuv": "53182494741344",
+            "close_call": "53182499655667",
+            "closed": "53182751532541"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53181934815719",
+              "end_ns": "53181935169729",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53182751711343",
+              "end_ns": "53182752437281",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 2,
+          "warmup": false,
+          "open_ms": 11.384844,
+          "configure_ms": 211.396563,
+          "first_started_ms": 269.359844,
+          "yuv_proxy_ms": 321.909635,
+          "preview_total_ms": 547.765312,
+          "close_ms": 241.873281,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53182759613479",
+            "opened": "53182770998323",
+            "configure_call": "53182773933843",
+            "configured": "53182985330406",
+            "repeating_call": "53182985469156",
+            "first_started": "53183254829000",
+            "first_yuv": "53183307378791",
+            "close_call": "53183317030666",
+            "closed": "53183558903947"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53182752919104",
+              "end_ns": "53182753403479",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53183559889624",
+              "end_ns": "53183560604468",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 3,
+          "warmup": false,
+          "open_ms": 11.264114,
+          "configure_ms": 202.54901,
+          "first_started_ms": 284.050208,
+          "yuv_proxy_ms": 338.243177,
+          "preview_total_ms": 555.998489,
+          "close_ms": 263.754427,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53183568364104",
+            "opened": "53183579628218",
+            "configure_call": "53183583458531",
+            "configured": "53183786007541",
+            "repeating_call": "53183786119416",
+            "first_started": "53184070169624",
+            "first_yuv": "53184124362593",
+            "close_call": "53184134577072",
+            "closed": "53184398331499"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53183561232229",
+              "end_ns": "53183561771291",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53184398648843",
+              "end_ns": "53184399218010",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 4,
+          "warmup": false,
+          "open_ms": 12.180313,
+          "configure_ms": 227.115,
+          "first_started_ms": 264.538906,
+          "yuv_proxy_ms": 317.698906,
+          "preview_total_ms": 568.890156,
+          "close_ms": 248.012188,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53184407950874",
+            "opened": "53184420131187",
+            "configure_call": "53184431929155",
+            "configured": "53184659044155",
+            "repeating_call": "53184659142124",
+            "first_started": "53184923681030",
+            "first_yuv": "53184976841030",
+            "close_call": "53184993604936",
+            "closed": "53185241617124"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53184399581968",
+              "end_ns": "53184400862124",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53185241817593",
+              "end_ns": "53185242569780",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 5,
+          "warmup": false,
+          "open_ms": 10.935782,
+          "configure_ms": 209.853072,
+          "first_started_ms": 288.050781,
+          "yuv_proxy_ms": 340.476615,
+          "preview_total_ms": 565.261459,
+          "close_ms": 258.166354,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53185250021290",
+            "opened": "53185260957072",
+            "configure_call": "53185264635718",
+            "configured": "53185474488790",
+            "repeating_call": "53185474806134",
+            "first_started": "53185762856915",
+            "first_yuv": "53185815282749",
+            "close_call": "53185819363061",
+            "closed": "53186077529415"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53185243191030",
+              "end_ns": "53185244114103",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53186077708009",
+              "end_ns": "53186078306759",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 6,
+          "warmup": false,
+          "open_ms": 11.217969,
+          "configure_ms": 199.667969,
+          "first_started_ms": 265.485781,
+          "yuv_proxy_ms": 319.353541,
+          "preview_total_ms": 533.776354,
+          "close_ms": 268.363281,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53186085406342",
+            "opened": "53186096624311",
+            "configure_call": "53186100057748",
+            "configured": "53186299725717",
+            "repeating_call": "53186299829155",
+            "first_started": "53186565314936",
+            "first_yuv": "53186619182696",
+            "close_call": "53186628601967",
+            "closed": "53186896965248"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53186078877123",
+              "end_ns": "53186079576498",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53186897070352",
+              "end_ns": "53186897726186",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 7,
+          "warmup": false,
+          "open_ms": 11.779896,
+          "configure_ms": 209.341198,
+          "first_started_ms": 266.71302,
+          "yuv_proxy_ms": 326.575052,
+          "preview_total_ms": 550.63099,
+          "close_ms": 231.38625,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53186905067852",
+            "opened": "53186916847748",
+            "configure_call": "53186919667279",
+            "configured": "53187129008477",
+            "repeating_call": "53187129123790",
+            "first_started": "53187395836810",
+            "first_yuv": "53187455698842",
+            "close_call": "53187463019154",
+            "closed": "53187694405404"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53186898411811",
+              "end_ns": "53186899020873",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53187694541185",
+              "end_ns": "53187695240873",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 8,
+          "warmup": false,
+          "open_ms": 10.232812,
+          "configure_ms": 206.07651,
+          "first_started_ms": 263.041146,
+          "yuv_proxy_ms": 316.280938,
+          "preview_total_ms": 536.813229,
+          "close_ms": 248.366145,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53187701488373",
+            "opened": "53187711721185",
+            "configure_call": "53187715796967",
+            "configured": "53187921873477",
+            "repeating_call": "53187922020664",
+            "first_started": "53188185061810",
+            "first_yuv": "53188238301602",
+            "close_call": "53188255180821",
+            "closed": "53188503546966"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53187695609727",
+              "end_ns": "53187696029883",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53188503626758",
+              "end_ns": "53188504250716",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 9,
+          "warmup": false,
+          "open_ms": 9.747656,
+          "configure_ms": 207.194843,
+          "first_started_ms": 262.477969,
+          "yuv_proxy_ms": 321.022657,
+          "preview_total_ms": 541.641406,
+          "close_ms": 252.2625,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53188511246498",
+            "opened": "53188520994154",
+            "configure_call": "53188524516498",
+            "configured": "53188731711341",
+            "repeating_call": "53188731865247",
+            "first_started": "53188994343216",
+            "first_yuv": "53189052887904",
+            "close_call": "53189056056341",
+            "closed": "53189308318841"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53188504837279",
+              "end_ns": "53188505526185",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53189308421028",
+              "end_ns": "53189309026497",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 5,
+    "kind": "launch_diagnostics_excerpt",
+    "run_id": "20260929-234911-080",
+    "source_sha256": "34dd0b512de0d21926a778a4179975c6b7732da274a16b8f351678c1ea741b85",
+    "exported_at_utc": "2026-09-29T14:50:23.877Z",
+    "profile": {
+      "id": "camera2-standard-v2",
+      "engine": "camera2",
+      "preview_size": "1920x1080",
+      "yuv_size": "1920x1080",
+      "still_format": "jpeg",
+      "still_size": "1920x1080",
+      "fps_range": "[30,30]",
+      "zsl": false,
+      "trigger": false,
+      "af_mode": "CONTINUOUS_PICTURE",
+      "launch_mode": "warm_reopen",
+      "launch_iterations": 10,
+      "warmup_ms": 3000,
+      "observe_ms": 10000,
+      "still_count": 10,
+      "exclude_first": true,
+      "record_size": "1920x1080",
+      "record_codec": "h264",
+      "record_bitrate": 10000000,
+      "record_fps": 30,
+      "record_duration_ms": 9000,
+      "record_iterations": 5,
+      "record_audio": false
+    },
+    "comparison_contract_id": "camera2-standard-v2|metrics-0.3|nearest_rank|elapsedRealtimeNanos",
+    "device": {
+      "manufacturer": "samsung",
+      "model": "SM-S936N",
+      "build_display": "BP4A.251205.006.S936NKSSCCZH2",
+      "build_incremental": "S936NKSSCCZH2",
+      "fingerprint": "samsung/pa2qksx/pa2q:16/BP4A.251205.006/S936NKSSCCZH2_OKRCCZH2:user/release-keys",
+      "vendor_fingerprint": "samsung/pa2qksx/pa2q:15/AP3A.240905.015.A2/S936NKSSCCZH2:user/release-keys",
+      "sdk": 36,
+      "security_patch": "2026-08-05",
+      "camera_info_version": null
+    },
+    "app": {
+      "version_name": "0.16.0",
+      "version_code": 593,
+      "debuggable": false
+    },
+    "endpoint": {
+      "logicalCameraId": "0",
+      "physicalCameraId": null,
+      "role": "MAIN",
+      "facing": 1,
+      "independentlyOpenable": true,
+      "selectableByZoom": true,
+      "exposedToCameraX": null,
+      "equivalentFocalMm": 22.90764820252069,
+      "timestampSource": 1,
+      "hardwareLevel": 3,
+      "zoomRatioMin": 0.6000000238418579,
+      "zoomRatioMax": 10
+    },
+    "env": {
+      "thermal_start": 0,
+      "thermal_max": 0,
+      "thermal_end": 0,
+      "battery_start": 40,
+      "battery_end": 40,
+      "charging": true,
+      "power_save_mode": false,
+      "rotation": 0
+    },
+    "validity": {
+      "validity_rule_version": "validity-v3",
+      "measurement_valid": true,
+      "comparison_eligible": true,
+      "scoring_eligible": false,
+      "flags": [
+        "CHARGING"
+      ]
+    },
+    "aborted": null,
+    "raw": {
+      "launch_cycles": [
+        {
+          "iteration": 0,
+          "warmup": true,
+          "open_ms": 8.803281,
+          "configure_ms": 201.545521,
+          "first_started_ms": 263.113073,
+          "yuv_proxy_ms": 320.241094,
+          "preview_total_ms": 533.743073,
+          "close_ms": 236.257031,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53266283130999",
+            "opened": "53266291934280",
+            "configure_call": "53266294949905",
+            "configured": "53266496495426",
+            "repeating_call": "53266496632978",
+            "first_started": "53266759746051",
+            "first_yuv": "53266816874072",
+            "close_call": "53266826747041",
+            "closed": "53267063004072"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53266278583760",
+              "end_ns": "53266279126155",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 1996800,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 1017600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53267063151884",
+              "end_ns": "53267064022040",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 1,
+          "warmup": false,
+          "open_ms": 12.151615,
+          "configure_ms": 205.853959,
+          "first_started_ms": 284.93875,
+          "yuv_proxy_ms": 343.06375,
+          "preview_total_ms": 565.579063,
+          "close_ms": 276.882344,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53267071379540",
+            "opened": "53267083531155",
+            "configure_call": "53267087888238",
+            "configured": "53267293742197",
+            "repeating_call": "53267293894853",
+            "first_started": "53267578833603",
+            "first_yuv": "53267636958603",
+            "close_call": "53267652307144",
+            "closed": "53267929189488"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53267064389488",
+              "end_ns": "53267064841728",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53267929320582",
+              "end_ns": "53267930391571",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 2,
+          "warmup": false,
+          "open_ms": 12.569532,
+          "configure_ms": 200.848959,
+          "first_started_ms": 256.253854,
+          "yuv_proxy_ms": 310.504531,
+          "preview_total_ms": 527.799531,
+          "close_ms": 252.575468,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53267939087196",
+            "opened": "53267951656728",
+            "configure_call": "53267955402769",
+            "configured": "53268156251728",
+            "repeating_call": "53268156382196",
+            "first_started": "53268412636050",
+            "first_yuv": "53268466886727",
+            "close_call": "53268469661259",
+            "closed": "53268722236727"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53267931006363",
+              "end_ns": "53267931502509",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53268722339384",
+              "end_ns": "53268722867925",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 3,
+          "warmup": false,
+          "open_ms": 16.152032,
+          "configure_ms": 209.780104,
+          "first_started_ms": 264.939947,
+          "yuv_proxy_ms": 321.403124,
+          "preview_total_ms": 551.337604,
+          "close_ms": 253.950468,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53268729481154",
+            "opened": "53268745633186",
+            "configure_call": "53268749495634",
+            "configured": "53268959275738",
+            "repeating_call": "53268959415634",
+            "first_started": "53269224355581",
+            "first_yuv": "53269280818758",
+            "close_call": "53269287617665",
+            "closed": "53269541568133"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53268723393915",
+              "end_ns": "53268724068394",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53269545164487",
+              "end_ns": "53269546186519",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 4,
+          "warmup": false,
+          "open_ms": 11.924062,
+          "configure_ms": 212.076719,
+          "first_started_ms": 270.627031,
+          "yuv_proxy_ms": 322.998125,
+          "preview_total_ms": 550.294114,
+          "close_ms": 235.916406,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53269551919644",
+            "opened": "53269563843706",
+            "configure_call": "53269567039852",
+            "configured": "53269779116571",
+            "repeating_call": "53269779215633",
+            "first_started": "53270049842664",
+            "first_yuv": "53270102213758",
+            "close_call": "53270104400164",
+            "closed": "53270340316570"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53269546584540",
+              "end_ns": "53269547052925",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53270340420008",
+              "end_ns": "53270341119956",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 5,
+          "warmup": false,
+          "open_ms": 11.058802,
+          "configure_ms": 217.536823,
+          "first_started_ms": 251.834532,
+          "yuv_proxy_ms": 310.6475,
+          "preview_total_ms": 542.598958,
+          "close_ms": 276.296458,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53270346777612",
+            "opened": "53270357836414",
+            "configure_call": "53270361071570",
+            "configured": "53270578608393",
+            "repeating_call": "53270578729070",
+            "first_started": "53270830563602",
+            "first_yuv": "53270889376570",
+            "close_call": "53270905069643",
+            "closed": "53271181366101"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53270341481675",
+              "end_ns": "53270342040581",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53271181458966",
+              "end_ns": "53271182041258",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 6,
+          "warmup": false,
+          "open_ms": 10.917292,
+          "configure_ms": 203.10875,
+          "first_started_ms": 253.830937,
+          "yuv_proxy_ms": 310.103906,
+          "preview_total_ms": 527.263281,
+          "close_ms": 259.076979,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53271188023445",
+            "opened": "53271198940737",
+            "configure_call": "53271201970476",
+            "configured": "53271405079226",
+            "repeating_call": "53271405182820",
+            "first_started": "53271659013757",
+            "first_yuv": "53271715286726",
+            "close_call": "53271730858862",
+            "closed": "53271989935841"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53271182707924",
+              "end_ns": "53271183399487",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53271990028184",
+              "end_ns": "53271990519174",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 7,
+          "warmup": false,
+          "open_ms": 11.406042,
+          "configure_ms": 205.515365,
+          "first_started_ms": 273.240729,
+          "yuv_proxy_ms": 331.390625,
+          "preview_total_ms": 551.554219,
+          "close_ms": 266.028437,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53271996529851",
+            "opened": "53272007935893",
+            "configure_call": "53272010879174",
+            "configured": "53272216394539",
+            "repeating_call": "53272216693445",
+            "first_started": "53272489934174",
+            "first_yuv": "53272548084070",
+            "close_call": "53272565149226",
+            "closed": "53272831177663"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53271991075789",
+              "end_ns": "53271991771518",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53272831306257",
+              "end_ns": "53272832882611",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 8,
+          "warmup": false,
+          "open_ms": 12.919114,
+          "configure_ms": 206.033437,
+          "first_started_ms": 262.2025,
+          "yuv_proxy_ms": 315.609688,
+          "preview_total_ms": 537.75125,
+          "close_ms": 261.576094,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53272838954851",
+            "opened": "53272851873965",
+            "configure_call": "53272854968601",
+            "configured": "53273061002038",
+            "repeating_call": "53273061096413",
+            "first_started": "53273323298913",
+            "first_yuv": "53273376706101",
+            "close_call": "53273390806569",
+            "closed": "53273652382663"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53272833344017",
+              "end_ns": "53272834160267",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53273652716413",
+              "end_ns": "53273653407038",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 9,
+          "warmup": false,
+          "open_ms": 11.888646,
+          "configure_ms": 212.962552,
+          "first_started_ms": 280.942813,
+          "yuv_proxy_ms": 333.704688,
+          "preview_total_ms": 561.326407,
+          "close_ms": 280.561093,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53273658758600",
+            "opened": "53273670647246",
+            "configure_call": "53273673289173",
+            "configured": "53273886251725",
+            "repeating_call": "53273886380319",
+            "first_started": "53274167323132",
+            "first_yuv": "53274220085007",
+            "close_call": "53274233368132",
+            "closed": "53274513929225"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53273653899382",
+              "end_ns": "53273654320163",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53274514034954",
+              "end_ns": "53274515550788",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 5,
+    "kind": "launch_diagnostics_excerpt",
+    "run_id": "20260929-235038-859",
+    "source_sha256": "443588664c866d3913f8c6cb3b65d2703d39ce1bbdbbc5976e8f01778129870c",
+    "exported_at_utc": "2026-09-29T14:51:51.523Z",
+    "profile": {
+      "id": "camera2-standard-v2",
+      "engine": "camera2",
+      "preview_size": "1920x1080",
+      "yuv_size": "1920x1080",
+      "still_format": "jpeg",
+      "still_size": "1920x1080",
+      "fps_range": "[30,30]",
+      "zsl": false,
+      "trigger": false,
+      "af_mode": "CONTINUOUS_PICTURE",
+      "launch_mode": "warm_reopen",
+      "launch_iterations": 10,
+      "warmup_ms": 3000,
+      "observe_ms": 10000,
+      "still_count": 10,
+      "exclude_first": true,
+      "record_size": "1920x1080",
+      "record_codec": "h264",
+      "record_bitrate": 10000000,
+      "record_fps": 30,
+      "record_duration_ms": 9000,
+      "record_iterations": 5,
+      "record_audio": false
+    },
+    "comparison_contract_id": "camera2-standard-v2|metrics-0.3|nearest_rank|elapsedRealtimeNanos",
+    "device": {
+      "manufacturer": "samsung",
+      "model": "SM-S936N",
+      "build_display": "BP4A.251205.006.S936NKSSCCZH2",
+      "build_incremental": "S936NKSSCCZH2",
+      "fingerprint": "samsung/pa2qksx/pa2q:16/BP4A.251205.006/S936NKSSCCZH2_OKRCCZH2:user/release-keys",
+      "vendor_fingerprint": "samsung/pa2qksx/pa2q:15/AP3A.240905.015.A2/S936NKSSCCZH2:user/release-keys",
+      "sdk": 36,
+      "security_patch": "2026-08-05",
+      "camera_info_version": null
+    },
+    "app": {
+      "version_name": "0.16.0",
+      "version_code": 593,
+      "debuggable": false
+    },
+    "endpoint": {
+      "logicalCameraId": "0",
+      "physicalCameraId": null,
+      "role": "MAIN",
+      "facing": 1,
+      "independentlyOpenable": true,
+      "selectableByZoom": true,
+      "exposedToCameraX": null,
+      "equivalentFocalMm": 22.90764820252069,
+      "timestampSource": 1,
+      "hardwareLevel": 3,
+      "zoomRatioMin": 0.6000000238418579,
+      "zoomRatioMax": 10
+    },
+    "env": {
+      "thermal_start": 0,
+      "thermal_max": 0,
+      "thermal_end": 0,
+      "battery_start": 40,
+      "battery_end": 40,
+      "charging": true,
+      "power_save_mode": false,
+      "rotation": 0
+    },
+    "validity": {
+      "validity_rule_version": "validity-v3",
+      "measurement_valid": true,
+      "comparison_eligible": true,
+      "scoring_eligible": false,
+      "flags": [
+        "CHARGING"
+      ]
+    },
+    "aborted": null,
+    "raw": {
+      "launch_cycles": [
+        {
+          "iteration": 0,
+          "warmup": true,
+          "open_ms": 7.922344,
+          "configure_ms": 204.502604,
+          "first_started_ms": 280.026875,
+          "yuv_proxy_ms": 330.034115,
+          "preview_total_ms": 544.115156,
+          "close_ms": 246.501563,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53354062102372",
+            "opened": "53354070024716",
+            "configure_call": "53354071532372",
+            "configured": "53354276034976",
+            "repeating_call": "53354276183413",
+            "first_started": "53354556210288",
+            "first_yuv": "53354606217528",
+            "close_call": "53354607406434",
+            "closed": "53354853907997"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53354058131539",
+              "end_ns": "53354058655341",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 1996800,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 1017600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53354853993101",
+              "end_ns": "53354854624820",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 1,
+          "warmup": false,
+          "open_ms": 10.93052,
+          "configure_ms": 199.349532,
+          "first_started_ms": 273.919063,
+          "yuv_proxy_ms": 330.508438,
+          "preview_total_ms": 543.722708,
+          "close_ms": 241.18974,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53354861286695",
+            "opened": "53354872217215",
+            "configure_call": "53354875028465",
+            "configured": "53355074377997",
+            "repeating_call": "53355074500965",
+            "first_started": "53355348420028",
+            "first_yuv": "53355405009403",
+            "close_call": "53355416271694",
+            "closed": "53355657461434"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53354855074090",
+              "end_ns": "53354855866434",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53355657802788",
+              "end_ns": "53355659281903",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 2,
+          "warmup": false,
+          "open_ms": 11.598125,
+          "configure_ms": 206.450312,
+          "first_started_ms": 273.384843,
+          "yuv_proxy_ms": 329.101927,
+          "preview_total_ms": 550.365834,
+          "close_ms": 245.526094,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53355665034350",
+            "opened": "53355676632475",
+            "configure_call": "53355679727788",
+            "configured": "53355886178100",
+            "repeating_call": "53355886298257",
+            "first_started": "53356159683100",
+            "first_yuv": "53356215400184",
+            "close_call": "53356216881902",
+            "closed": "53356462407996"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53355659711382",
+              "end_ns": "53355660206590",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53356462550288",
+              "end_ns": "53356463334715",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 3,
+          "warmup": false,
+          "open_ms": 12.731406,
+          "configure_ms": 209.250885,
+          "first_started_ms": 256.313021,
+          "yuv_proxy_ms": 316.075781,
+          "preview_total_ms": 542.670573,
+          "close_ms": 256.643594,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53356469536277",
+            "opened": "53356482267683",
+            "configure_call": "53356486614246",
+            "configured": "53356695865131",
+            "repeating_call": "53356696131069",
+            "first_started": "53356952444090",
+            "first_yuv": "53357012206850",
+            "close_call": "53357026422058",
+            "closed": "53357283065652"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53356463890183",
+              "end_ns": "53356464371902",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53357283212527",
+              "end_ns": "53357284918308",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 4,
+          "warmup": false,
+          "open_ms": 12.494948,
+          "configure_ms": 196.873802,
+          "first_started_ms": 271.853281,
+          "yuv_proxy_ms": 324.109375,
+          "preview_total_ms": 536.673281,
+          "close_ms": 252.391511,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53357290616277",
+            "opened": "53357303111225",
+            "configure_call": "53357306164819",
+            "configured": "53357503038621",
+            "repeating_call": "53357503180183",
+            "first_started": "53357775033464",
+            "first_yuv": "53357827289558",
+            "close_call": "53357835049714",
+            "closed": "53358087441225"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53357285527162",
+              "end_ns": "53357286215912",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53358087565027",
+              "end_ns": "53358088348777",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 5,
+          "warmup": false,
+          "open_ms": 10.924532,
+          "configure_ms": 207.023124,
+          "first_started_ms": 268.624218,
+          "yuv_proxy_ms": 327.180624,
+          "preview_total_ms": 548.150208,
+          "close_ms": 247.898437,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53358094007318",
+            "opened": "53358104931850",
+            "configure_call": "53358107771850",
+            "configured": "53358314794974",
+            "repeating_call": "53358314976902",
+            "first_started": "53358583601120",
+            "first_yuv": "53358642157526",
+            "close_call": "53358644188933",
+            "closed": "53358892087370"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53358088714350",
+              "end_ns": "53358089169193",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53358892223464",
+              "end_ns": "53358893002526",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 6,
+          "warmup": false,
+          "open_ms": 11.589062,
+          "configure_ms": 207.349583,
+          "first_started_ms": 246.500625,
+          "yuv_proxy_ms": 303.711458,
+          "preview_total_ms": 525.159374,
+          "close_ms": 250.627969,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53358899358933",
+            "opened": "53358910947995",
+            "configure_call": "53358913332787",
+            "configured": "53359120682370",
+            "repeating_call": "53359120806849",
+            "first_started": "53359367307474",
+            "first_yuv": "53359424518307",
+            "close_call": "53359428309974",
+            "closed": "53359678937943"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53358893386276",
+              "end_ns": "53358894090964",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53359679093932",
+              "end_ns": "53359679784245",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 7,
+          "warmup": false,
+          "open_ms": 10.734479,
+          "configure_ms": 210.07677,
+          "first_started_ms": 258.901615,
+          "yuv_proxy_ms": 317.317865,
+          "preview_total_ms": 540.956094,
+          "close_ms": 239.068437,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53359684900182",
+            "opened": "53359695634661",
+            "configure_call": "53359698354818",
+            "configured": "53359908431588",
+            "repeating_call": "53359908538411",
+            "first_started": "53360167440026",
+            "first_yuv": "53360225856276",
+            "close_call": "53360237364245",
+            "closed": "53360476432682"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53359680281745",
+              "end_ns": "53359680708932",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53360476520963",
+              "end_ns": "53360477232474",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 8,
+          "warmup": false,
+          "open_ms": 11.18375,
+          "configure_ms": 210.014115,
+          "first_started_ms": 274.643907,
+          "yuv_proxy_ms": 332.178125,
+          "preview_total_ms": 556.572187,
+          "close_ms": 282.336718,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53360482847682",
+            "opened": "53360494031432",
+            "configure_call": "53360497099661",
+            "configured": "53360707113776",
+            "repeating_call": "53360707241744",
+            "first_started": "53360981885651",
+            "first_yuv": "53361039419869",
+            "close_call": "53361054813255",
+            "closed": "53361337149973"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53360477747317",
+              "end_ns": "53360478188567",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53361338139192",
+              "end_ns": "53361338975286",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 9,
+          "warmup": false,
+          "open_ms": 10.764895,
+          "configure_ms": 200.472656,
+          "first_started_ms": 256.570625,
+          "yuv_proxy_ms": 310.782187,
+          "preview_total_ms": 524.71427,
+          "close_ms": 245.52625,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53361343987005",
+            "opened": "53361354751900",
+            "configure_call": "53361357101119",
+            "configured": "53361557573775",
+            "repeating_call": "53361557919088",
+            "first_started": "53361814489713",
+            "first_yuv": "53361868701275",
+            "close_call": "53361869231119",
+            "closed": "53362114757369"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53361339369713",
+              "end_ns": "53361339839036",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53362114995129",
+              "end_ns": "53362116377160",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 5,
+    "kind": "launch_diagnostics_excerpt",
+    "run_id": "20260929-235206-481",
+    "source_sha256": "0dc159819cf21e6f42162e2a30a7207c4b048d08cb4229b2e4a670b0c8524f50",
+    "exported_at_utc": "2026-09-29T14:53:18.907Z",
+    "profile": {
+      "id": "camera2-standard-v2",
+      "engine": "camera2",
+      "preview_size": "1920x1080",
+      "yuv_size": "1920x1080",
+      "still_format": "jpeg",
+      "still_size": "1920x1080",
+      "fps_range": "[30,30]",
+      "zsl": false,
+      "trigger": false,
+      "af_mode": "CONTINUOUS_PICTURE",
+      "launch_mode": "warm_reopen",
+      "launch_iterations": 10,
+      "warmup_ms": 3000,
+      "observe_ms": 10000,
+      "still_count": 10,
+      "exclude_first": true,
+      "record_size": "1920x1080",
+      "record_codec": "h264",
+      "record_bitrate": 10000000,
+      "record_fps": 30,
+      "record_duration_ms": 9000,
+      "record_iterations": 5,
+      "record_audio": false
+    },
+    "comparison_contract_id": "camera2-standard-v2|metrics-0.3|nearest_rank|elapsedRealtimeNanos",
+    "device": {
+      "manufacturer": "samsung",
+      "model": "SM-S936N",
+      "build_display": "BP4A.251205.006.S936NKSSCCZH2",
+      "build_incremental": "S936NKSSCCZH2",
+      "fingerprint": "samsung/pa2qksx/pa2q:16/BP4A.251205.006/S936NKSSCCZH2_OKRCCZH2:user/release-keys",
+      "vendor_fingerprint": "samsung/pa2qksx/pa2q:15/AP3A.240905.015.A2/S936NKSSCCZH2:user/release-keys",
+      "sdk": 36,
+      "security_patch": "2026-08-05",
+      "camera_info_version": null
+    },
+    "app": {
+      "version_name": "0.16.0",
+      "version_code": 593,
+      "debuggable": false
+    },
+    "endpoint": {
+      "logicalCameraId": "0",
+      "physicalCameraId": null,
+      "role": "MAIN",
+      "facing": 1,
+      "independentlyOpenable": true,
+      "selectableByZoom": true,
+      "exposedToCameraX": null,
+      "equivalentFocalMm": 22.90764820252069,
+      "timestampSource": 1,
+      "hardwareLevel": 3,
+      "zoomRatioMin": 0.6000000238418579,
+      "zoomRatioMax": 10
+    },
+    "env": {
+      "thermal_start": 0,
+      "thermal_max": 0,
+      "thermal_end": 0,
+      "battery_start": 41,
+      "battery_end": 41,
+      "charging": true,
+      "power_save_mode": false,
+      "rotation": 0
+    },
+    "validity": {
+      "validity_rule_version": "validity-v3",
+      "measurement_valid": true,
+      "comparison_eligible": true,
+      "scoring_eligible": false,
+      "flags": [
+        "CHARGING"
+      ]
+    },
+    "aborted": null,
+    "raw": {
+      "launch_cycles": [
+        {
+          "iteration": 0,
+          "warmup": true,
+          "open_ms": 11.248906,
+          "configure_ms": 209.927813,
+          "first_started_ms": 263.83125,
+          "yuv_proxy_ms": 321.685937,
+          "preview_total_ms": 545.024635,
+          "close_ms": 259.791979,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53441687024057",
+            "opened": "53441698272963",
+            "configure_call": "53441700316661",
+            "configured": "53441910244474",
+            "repeating_call": "53441910362755",
+            "first_started": "53442174194005",
+            "first_yuv": "53442232048692",
+            "close_call": "53442244796974",
+            "closed": "53442504588953"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53441680853745",
+              "end_ns": "53441681802026",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 1152000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 1017600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53442504697338",
+              "end_ns": "53442505299005",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 1,
+          "warmup": false,
+          "open_ms": 10.391406,
+          "configure_ms": 207.838281,
+          "first_started_ms": 275.930312,
+          "yuv_proxy_ms": 329.869218,
+          "preview_total_ms": 550.672812,
+          "close_ms": 255.983542,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53442510494161",
+            "opened": "53442520885567",
+            "configure_call": "53442523339161",
+            "configured": "53442731177442",
+            "repeating_call": "53442731297755",
+            "first_started": "53443007228067",
+            "first_yuv": "53443061166973",
+            "close_call": "53443070619317",
+            "closed": "53443326602859"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53442505869005",
+              "end_ns": "53442506589578",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53443326913015",
+              "end_ns": "53443327626036",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 2,
+          "warmup": false,
+          "open_ms": 11.338698,
+          "configure_ms": 201.670209,
+          "first_started_ms": 260.549063,
+          "yuv_proxy_ms": 317.492657,
+          "preview_total_ms": 533.155,
+          "close_ms": 268.148281,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53443333396036",
+            "opened": "53443344734734",
+            "configure_call": "53443347240202",
+            "configured": "53443548910411",
+            "repeating_call": "53443549058379",
+            "first_started": "53443809607442",
+            "first_yuv": "53443866551036",
+            "close_call": "53443879618067",
+            "closed": "53444147766348"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53443328278171",
+              "end_ns": "53443328740098",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53444148135827",
+              "end_ns": "53444148872285",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 3,
+          "warmup": false,
+          "open_ms": 10.569479,
+          "configure_ms": 206.929948,
+          "first_started_ms": 258.99625,
+          "yuv_proxy_ms": 316.768802,
+          "preview_total_ms": 536.299843,
+          "close_ms": 282.323125,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53444154643692",
+            "opened": "53444165213171",
+            "configure_call": "53444167138848",
+            "configured": "53444374068796",
+            "repeating_call": "53444374174733",
+            "first_started": "53444633170983",
+            "first_yuv": "53444690943535",
+            "close_call": "53444705839004",
+            "closed": "53444988162129"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53444149345515",
+              "end_ns": "53444149806973",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53444988318900",
+              "end_ns": "53444988949316",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 4,
+          "warmup": false,
+          "open_ms": 9.445156,
+          "configure_ms": 201.295157,
+          "first_started_ms": 264.670886,
+          "yuv_proxy_ms": 317.57375,
+          "preview_total_ms": 530.582968,
+          "close_ms": 243.783229,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53444995567598",
+            "opened": "53445005012754",
+            "configure_call": "53445007186816",
+            "configured": "53445208481973",
+            "repeating_call": "53445208576816",
+            "first_started": "53445473247702",
+            "first_yuv": "53445526150566",
+            "close_call": "53445531292285",
+            "closed": "53445775075514"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53444989420514",
+              "end_ns": "53444990163691",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53445775163743",
+              "end_ns": "53445775694733",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 5,
+          "warmup": false,
+          "open_ms": 10.401615,
+          "configure_ms": 210.935625,
+          "first_started_ms": 254.155938,
+          "yuv_proxy_ms": 305.428907,
+          "preview_total_ms": 529.424844,
+          "close_ms": 250.671511,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53445780832441",
+            "opened": "53445791234056",
+            "configure_call": "53445793773639",
+            "configured": "53446004709264",
+            "repeating_call": "53446004828378",
+            "first_started": "53446258984316",
+            "first_yuv": "53446310257285",
+            "close_call": "53446323685878",
+            "closed": "53446574357389"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53445776089004",
+              "end_ns": "53445776722754",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53446574484889",
+              "end_ns": "53446575868014",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 6,
+          "warmup": false,
+          "open_ms": 14.224687,
+          "configure_ms": 203.361666,
+          "first_started_ms": 248.644844,
+          "yuv_proxy_ms": 306.556666,
+          "preview_total_ms": 528.213853,
+          "close_ms": 233.753437,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53446581012285",
+            "opened": "53446595236972",
+            "configure_call": "53446599206660",
+            "configured": "53446802568326",
+            "repeating_call": "53446802669472",
+            "first_started": "53447051314316",
+            "first_yuv": "53447109226138",
+            "close_call": "53447116141972",
+            "closed": "53447349895409"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53446576400097",
+              "end_ns": "53446576877753",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53447349986711",
+              "end_ns": "53447350494315",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 7,
+          "warmup": false,
+          "open_ms": 11.571562,
+          "configure_ms": 208.885781,
+          "first_started_ms": 247.320625,
+          "yuv_proxy_ms": 313.2,
+          "preview_total_ms": 537.045989,
+          "close_ms": 274.036094,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53447355868795",
+            "opened": "53447367440357",
+            "configure_call": "53447370354576",
+            "configured": "53447579240357",
+            "repeating_call": "53447579714784",
+            "first_started": "53447827035409",
+            "first_yuv": "53447892914784",
+            "close_call": "53447908984315",
+            "closed": "53448183020409"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53447351079315",
+              "end_ns": "53447351714315",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53448183126711",
+              "end_ns": "53448183720253",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 8,
+          "warmup": false,
+          "open_ms": 11.33375,
+          "configure_ms": 209.466406,
+          "first_started_ms": 262.921094,
+          "yuv_proxy_ms": 320.529583,
+          "preview_total_ms": 544.578229,
+          "close_ms": 202.565781,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53448189272544",
+            "opened": "53448200606294",
+            "configure_call": "53448203712440",
+            "configured": "53448413178846",
+            "repeating_call": "53448413321190",
+            "first_started": "53448676242284",
+            "first_yuv": "53448733850773",
+            "close_call": "53448742943690",
+            "closed": "53448945509471"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53448184353065",
+              "end_ns": "53448184977284",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2918400,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3283200,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53448945566763",
+              "end_ns": "53448946291138",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 9,
+          "warmup": false,
+          "open_ms": 4.873125,
+          "configure_ms": 171.732239,
+          "first_started_ms": 192.396094,
+          "yuv_proxy_ms": 237.217813,
+          "preview_total_ms": 415.247448,
+          "close_ms": 191.850469,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53448948198742",
+            "opened": "53448953071867",
+            "configure_call": "53448954133013",
+            "configured": "53449125865252",
+            "repeating_call": "53449126228377",
+            "first_started": "53449318624471",
+            "first_yuv": "53449363446190",
+            "close_call": "53449368136033",
+            "closed": "53449559986502"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53448946532284",
+              "end_ns": "53448946669159",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53449560027440",
+              "end_ns": "53449560419471",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "schema_version": 5,
+    "kind": "launch_diagnostics_excerpt",
+    "run_id": "20260929-235334-587",
+    "source_sha256": "1cc1ef17c7359a7a7ef63a64d2540a9e8f231ac73eb4103206f96ab0ead6f78b",
+    "exported_at_utc": "2026-09-29T14:54:47.317Z",
+    "profile": {
+      "id": "camera2-standard-v2",
+      "engine": "camera2",
+      "preview_size": "1920x1080",
+      "yuv_size": "1920x1080",
+      "still_format": "jpeg",
+      "still_size": "1920x1080",
+      "fps_range": "[30,30]",
+      "zsl": false,
+      "trigger": false,
+      "af_mode": "CONTINUOUS_PICTURE",
+      "launch_mode": "warm_reopen",
+      "launch_iterations": 10,
+      "warmup_ms": 3000,
+      "observe_ms": 10000,
+      "still_count": 10,
+      "exclude_first": true,
+      "record_size": "1920x1080",
+      "record_codec": "h264",
+      "record_bitrate": 10000000,
+      "record_fps": 30,
+      "record_duration_ms": 9000,
+      "record_iterations": 5,
+      "record_audio": false
+    },
+    "comparison_contract_id": "camera2-standard-v2|metrics-0.3|nearest_rank|elapsedRealtimeNanos",
+    "device": {
+      "manufacturer": "samsung",
+      "model": "SM-S936N",
+      "build_display": "BP4A.251205.006.S936NKSSCCZH2",
+      "build_incremental": "S936NKSSCCZH2",
+      "fingerprint": "samsung/pa2qksx/pa2q:16/BP4A.251205.006/S936NKSSCCZH2_OKRCCZH2:user/release-keys",
+      "vendor_fingerprint": "samsung/pa2qksx/pa2q:15/AP3A.240905.015.A2/S936NKSSCCZH2:user/release-keys",
+      "sdk": 36,
+      "security_patch": "2026-08-05",
+      "camera_info_version": null
+    },
+    "app": {
+      "version_name": "0.16.0",
+      "version_code": 593,
+      "debuggable": false
+    },
+    "endpoint": {
+      "logicalCameraId": "0",
+      "physicalCameraId": null,
+      "role": "MAIN",
+      "facing": 1,
+      "independentlyOpenable": true,
+      "selectableByZoom": true,
+      "exposedToCameraX": null,
+      "equivalentFocalMm": 22.90764820252069,
+      "timestampSource": 1,
+      "hardwareLevel": 3,
+      "zoomRatioMin": 0.6000000238418579,
+      "zoomRatioMax": 10
+    },
+    "env": {
+      "thermal_start": 0,
+      "thermal_max": 0,
+      "thermal_end": 0,
+      "battery_start": 41,
+      "battery_end": 41,
+      "charging": true,
+      "power_save_mode": false,
+      "rotation": 0
+    },
+    "validity": {
+      "validity_rule_version": "validity-v3",
+      "measurement_valid": true,
+      "comparison_eligible": true,
+      "scoring_eligible": false,
+      "flags": [
+        "CHARGING"
+      ]
+    },
+    "aborted": null,
+    "raw": {
+      "launch_cycles": [
+        {
+          "iteration": 0,
+          "warmup": true,
+          "open_ms": 28.195781,
+          "configure_ms": 212.766406,
+          "first_started_ms": 256.402604,
+          "yuv_proxy_ms": 310.899999,
+          "preview_total_ms": 553.561562,
+          "close_ms": 271.394219,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53529789176836",
+            "opened": "53529817372617",
+            "configure_call": "53529818944649",
+            "configured": "53530031711055",
+            "repeating_call": "53530031838399",
+            "first_started": "53530288241003",
+            "first_yuv": "53530342738398",
+            "close_call": "53530359069961",
+            "closed": "53530630464180"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53529785708867",
+              "end_ns": "53529786150117",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 2400000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 1017600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53530630561002",
+              "end_ns": "53530631282096",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 1,
+          "warmup": false,
+          "open_ms": 11.384375,
+          "configure_ms": 209.870312,
+          "first_started_ms": 266.806875,
+          "yuv_proxy_ms": 320.489791,
+          "preview_total_ms": 544.587968,
+          "close_ms": 248.554583,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53530636421784",
+            "opened": "53530647806159",
+            "configure_call": "53530650498242",
+            "configured": "53530860368554",
+            "repeating_call": "53530860519961",
+            "first_started": "53531127326836",
+            "first_yuv": "53531181009752",
+            "close_call": "53531192940221",
+            "closed": "53531441494804"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53530631624805",
+              "end_ns": "53530632204648",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53531441652148",
+              "end_ns": "53531442414648",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 2,
+          "warmup": false,
+          "open_ms": 11.389896,
+          "configure_ms": 208.894323,
+          "first_started_ms": 249.243698,
+          "yuv_proxy_ms": 303.72875,
+          "preview_total_ms": 527.154271,
+          "close_ms": 239.407917,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53531447534283",
+            "opened": "53531458924179",
+            "configure_call": "53531461939179",
+            "configured": "53531670833502",
+            "repeating_call": "53531670959804",
+            "first_started": "53531920203502",
+            "first_yuv": "53531974688554",
+            "close_call": "53531985401835",
+            "closed": "53532224809752"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53531442981158",
+              "end_ns": "53531443482565",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53532224981991",
+              "end_ns": "53532225770116",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 3,
+          "warmup": false,
+          "open_ms": 11.331562,
+          "configure_ms": 213.123802,
+          "first_started_ms": 251.573854,
+          "yuv_proxy_ms": 305.652344,
+          "preview_total_ms": 533.7275,
+          "close_ms": 245.838385,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53532231019179",
+            "opened": "53532242350741",
+            "configure_call": "53532245849283",
+            "configured": "53532458973085",
+            "repeating_call": "53532459094335",
+            "first_started": "53532710668189",
+            "first_yuv": "53532764746679",
+            "close_call": "53532769765585",
+            "closed": "53533015603970"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53532226279648",
+              "end_ns": "53532226942564",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53533015705220",
+              "end_ns": "53533016425897",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 4,
+          "warmup": false,
+          "open_ms": 12.303386,
+          "configure_ms": 204.969167,
+          "first_started_ms": 260.604375,
+          "yuv_proxy_ms": 313.323385,
+          "preview_total_ms": 533.154479,
+          "close_ms": 255.909531,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53533021412147",
+            "opened": "53533033715533",
+            "configure_call": "53533036134022",
+            "configured": "53533241103189",
+            "repeating_call": "53533241243241",
+            "first_started": "53533501847616",
+            "first_yuv": "53533554566626",
+            "close_call": "53533570034335",
+            "closed": "53533825943866"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53533016890429",
+              "end_ns": "53533017386991",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53533826026991",
+              "end_ns": "53533826789491",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 5,
+          "warmup": false,
+          "open_ms": 12.514688,
+          "configure_ms": 205.895156,
+          "first_started_ms": 275.778594,
+          "yuv_proxy_ms": 329.2625,
+          "preview_total_ms": 550.349844,
+          "close_ms": 258.121562,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53533831651678",
+            "opened": "53533844166366",
+            "configure_call": "53533846762303",
+            "configured": "53534052657459",
+            "repeating_call": "53534052739022",
+            "first_started": "53534328517616",
+            "first_yuv": "53534382001522",
+            "close_call": "53534395938241",
+            "closed": "53534654059803"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53533827171053",
+              "end_ns": "53533827772772",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53534654121782",
+              "end_ns": "53534654661522",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 6,
+          "warmup": false,
+          "open_ms": 13.017031,
+          "configure_ms": 200.510417,
+          "first_started_ms": 278.219532,
+          "yuv_proxy_ms": 330.215782,
+          "preview_total_ms": 545.521563,
+          "close_ms": 267.502031,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53534660741209",
+            "opened": "53534673758240",
+            "configure_call": "53534675410428",
+            "configured": "53534875920845",
+            "repeating_call": "53534876046990",
+            "first_started": "53535154266522",
+            "first_yuv": "53535206262772",
+            "close_call": "53535221710428",
+            "closed": "53535489212459"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53534655222720",
+              "end_ns": "53534655882303",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53535489324438",
+              "end_ns": "53535490080584",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 7,
+          "warmup": false,
+          "open_ms": 10.565313,
+          "configure_ms": 199.192135,
+          "first_started_ms": 267.114531,
+          "yuv_proxy_ms": 323.707656,
+          "preview_total_ms": 535.840625,
+          "close_ms": 243.816354,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53535494872146",
+            "opened": "53535505437459",
+            "configure_call": "53535507694803",
+            "configured": "53535706886938",
+            "repeating_call": "53535707005115",
+            "first_started": "53535974119646",
+            "first_yuv": "53536030712771",
+            "close_call": "53536039104959",
+            "closed": "53536282921313"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53535490557615",
+              "end_ns": "53535491019438",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53536283037563",
+              "end_ns": "53536283948865",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 8,
+          "warmup": false,
+          "open_ms": 12.636719,
+          "configure_ms": 210.904114,
+          "first_started_ms": 268.771719,
+          "yuv_proxy_ms": 324.406354,
+          "preview_total_ms": 550.024166,
+          "close_ms": 255.420781,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53536289347615",
+            "opened": "53536301984334",
+            "configure_call": "53536303962563",
+            "configured": "53536514866677",
+            "repeating_call": "53536514965427",
+            "first_started": "53536783737146",
+            "first_yuv": "53536839371781",
+            "close_call": "53536839994646",
+            "closed": "53537095415427"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53536284505271",
+              "end_ns": "53536284978552",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53537095519906",
+              "end_ns": "53537096044958",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        },
+        {
+          "iteration": 9,
+          "warmup": false,
+          "open_ms": 11.582292,
+          "configure_ms": 209.750781,
+          "first_started_ms": 267.151094,
+          "yuv_proxy_ms": 320.744792,
+          "preview_total_ms": 544.689011,
+          "close_ms": 252.458906,
+          "failed": false,
+          "timestamps_ns": {
+            "open_call": "53537101069333",
+            "opened": "53537112651625",
+            "configure_call": "53537115169490",
+            "configured": "53537324920271",
+            "repeating_call": "53537325013552",
+            "first_started": "53537592164646",
+            "first_yuv": "53537645758344",
+            "close_call": "53537649226052",
+            "closed": "53537901684958"
+          },
+          "diagnostics": {
+            "before_open": {
+              "start_ns": "53537096491469",
+              "end_ns": "53537097140427",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "after_close": {
+              "start_ns": "53537901842302",
+              "end_ns": "53537902756937",
+              "clock": "elapsedRealtimeNanos",
+              "thermal_status": 0,
+              "cpu_status": "available",
+              "cpu_policies": [
+                {
+                  "policy": "policy0",
+                  "related_cpus": "0 1 2 3 4 5",
+                  "scaling_cur_freq_khz": 3072000,
+                  "status": "available"
+                },
+                {
+                  "policy": "policy6",
+                  "related_cpus": "6 7",
+                  "scaling_cur_freq_khz": 3513600,
+                  "status": "available"
+                }
+              ]
+            },
+            "close_completed": true
+          }
+        }
+      ]
+    }
+  }
+]

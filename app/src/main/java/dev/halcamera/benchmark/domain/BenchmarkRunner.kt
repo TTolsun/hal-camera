@@ -34,7 +34,8 @@ class BenchmarkRunner(
     private val endpoint: CameraEndpoint,
     private val runId: String,
     private val config: Config = Config(),
-    private val listener: Listener
+    private val listener: Listener,
+    private val launchDiagnostics: () -> Map<String, Any?> = { emptyMap() }
 ) {
     data class Config(
         val openTimeoutMs: Long = 5000,
@@ -145,6 +146,7 @@ class BenchmarkRunner(
     private var timer: Any? = null
     private val marks = LinkedHashMap<String, Long>()
     private val cycles = mutableListOf<LaunchCycle>()
+    private var beforeOpenDiagnostics: Map<String, Any?> = emptyMap()
     private val stills = mutableListOf<PendingStill>()
     /** JPEGs whose request is not known yet, by sensor timestamp; claimed when the matching result arrives. */
     private val unmatchedImages = LinkedHashMap<Long, Long>()
@@ -343,6 +345,8 @@ class BenchmarkRunner(
                 sessions += session
                 if (onObservationSession) observeSession = session
                 progress()
+                // Read outside all measured intervals, after the previous camera has closed.
+                beforeOpenDiagnostics = if (onObservationSession) emptyMap() else sampleDiagnostics()
                 marks["open_call"] = clock()
                 driver.open(endpoint, session)
                 arm(config.openTimeoutMs)
@@ -500,8 +504,16 @@ class BenchmarkRunner(
             // closed itself already and the observed value is meaningless.
             closeMs = if (cycleFailed) null else ms("close_call", "closed")?.takeIf { it >= 0.0 },
             failed = cycleFailed,
-            timestampsNs = marks.toMap()
+            timestampsNs = marks.toMap(),
+            diagnostics = mapOf("before_open" to beforeOpenDiagnostics, "after_close" to sampleDiagnostics(),
+                "close_completed" to marks.containsKey("closed"))
         )
+    }
+
+    private fun sampleDiagnostics(): Map<String, Any?> = try {
+        launchDiagnostics().toMap()
+    } catch (e: Exception) {
+        mapOf("status" to "unavailable", "error" to e.javaClass.simpleName)
     }
 
     private fun submitStill() {

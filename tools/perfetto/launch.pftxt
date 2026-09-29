@@ -1,0 +1,36 @@
+# Capture one benchmark including its launch cycles. Keep trace files outside Git.
+# Start recording before pressing Start Benchmark; durations are milliseconds.
+duration_ms: 110000
+buffers { size_kb: 65536 fill_policy: RING_BUFFER }
+write_into_file: true
+file_write_period_ms: 5000
+max_file_size_bytes: 268435456
+data_sources {
+  config {
+    name: "linux.ftrace"
+    ftrace_config {
+      ftrace_events: "sched/sched_switch"
+      ftrace_events: "sched/sched_waking"
+      ftrace_events: "power/cpu_frequency"
+      ftrace_events: "power/cpu_idle"
+      ftrace_events: "binder/binder_transaction"
+      ftrace_events: "binder/binder_transaction_received"
+      atrace_categories: "camera"
+      atrace_categories: "hal"
+      atrace_categories: "aidl"
+      atrace_apps: "dev.halcamera"
+    }
+  }
+}
+data_sources {
+  config {
+    name: "linux.process_stats"
+    process_stats_config { scan_all_processes_on_start: true }
+  }
+}
+data_sources {
+  config {
+    name: "linux.sys_stats"
+    sys_stats_config { cpufreq_period_ms: 1000 }
+  }
+}
