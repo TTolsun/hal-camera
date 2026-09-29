@@ -49,3 +49,4 @@ MainActivity의 비동기 CLI 준비가 끝나기 전 기존 프리뷰 콜백으
 ![Live 녹화 크기와 포맷 표시](assets/live-streams/recording-format.png)
 
 사용법은 [CLI 가이드](../../guide/cli.md)를 확인하세요.
+`docflow check --build`의 6단계와 문서 회귀 테스트 23개가 통과했습니다. 최신성 항목 14개를 갱신했으며 기존 최신 항목 2개의 검토 기록은 유지했습니다.

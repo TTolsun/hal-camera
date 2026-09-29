@@ -119,6 +119,12 @@ sequenceDiagram
     T-->>W: 뒤로 가기
     W-->>L: 복귀 또는 프리뷰 제어 결과
     L->>E: onResume: 복귀 상태를 한 번 적용
+    participant S as Live Streams
+    L->>E: 크기 표시 선택: close(done)
+    E-->>L: done
+    L->>S: 직접 열기 (카메라 ID, 엔진)
+    S-->>L: 뒤로 가기 또는 설정 저장
+    L->>E: onResume: 설정 반영 후 프리뷰 재개
 ```
 
 검사 화면에서 뒤로 가면 Lab으로 돌아옵니다. 다른 검사 도구는 Lab에서 선택합니다. Lab의 시스템 뒤로 가기와 상단 Live 링크은 기존 프리뷰 화면으로 돌아갑니다.
