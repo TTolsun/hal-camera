@@ -59,6 +59,10 @@ internal class CameraXLiveRecorder(
          * (AF lock read AF Idle for a whole recording on the S25+), so the held metering goes out again here.
          */
         fun streamingStarted()
+        /** Why this recording carries no photo use case (#175), or null when it does. */
+        val snapshotUnavailable: String?
+        /** A short message that leaves the recording state alone. */
+        fun notice(text: String)
         fun status(message: String, ok: Boolean)
         fun report(message: String, ok: Boolean)
     }
@@ -69,6 +73,11 @@ internal class CameraXLiveRecorder(
     private var streaming = false
     private var afterClose: (() -> Unit)? = null
     var busy = false
+        private set
+    /** The Start event has arrived and no stop was asked for yet: the recording a photo may be taken from. */
+    var live = false
+        private set
+    var stopping = false
         private set
 
     fun start(audio: Boolean, started: () -> Unit, done: ((Result<Uri>) -> Unit)?) {
@@ -118,6 +127,7 @@ internal class CameraXLiveRecorder(
 
     fun stop() {
         if (!busy) return
+        stopping = true
         host.report("녹화를 저장하고 있습니다…", false)
         recording?.stop()
     }
@@ -137,8 +147,10 @@ internal class CameraXLiveRecorder(
             is VideoRecordEvent.Start -> {
                 telemetry.event(sessionId, "recording_started", mapOf("size" to video?.resolutionInfo?.resolution?.toString(), "audio" to audio,
                     "api" to "Recorder.prepareRecording"))
+                live = true
                 if (host.active) { host.recordingState(true); started() }
                 host.report(if (audio) "REC · 영상과 소리를 녹화하고 있습니다" else "REC · 영상을 녹화하고 있습니다", false)
+                host.snapshotUnavailable?.let { host.notice(it) }
             }
             is VideoRecordEvent.Status -> if (!streaming) { streaming = true; if (host.active) host.streamingStarted() }
             is VideoRecordEvent.Finalize -> {
@@ -163,7 +175,7 @@ internal class CameraXLiveRecorder(
     /** Back to the preview session. Runs on every way out of a recording, so [busy] never outlives it. */
     private fun end() {
         val useCase = video
-        video = null; recording = null; busy = false; streaming = false
+        video = null; recording = null; busy = false; streaming = false; live = false; stopping = false
         host.recordingState(false)
         if (useCase != null && host.active) {
             try { host.unbindRecording(useCase) } catch (e: Exception) { telemetry.event(sessionId, "camera_error", mapOf("message" to e.toString())) }

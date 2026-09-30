@@ -62,10 +62,13 @@ class CameraXEngine(
     private var analysis: ImageAnalysis? = null
     /** The VideoCapture bound while a recording runs, so closing the camera unbinds it too. */
     private var recording: VideoCapture<Recorder>? = null
+    /** ImageCapture is bound next to the VideoCapture of this recording (#175); false when the camera refused that. */
+    @Volatile private var photoBound = false
     @Volatile private var previewSeen = false
     private val previewOutput = OutputDescriptor("preview", OutputKind.PREVIEW, repeating = true, observable = false)
     private val analysisOutput = OutputDescriptor("analysis_keep_latest", OutputKind.YUV, repeating = true)
     private val captureOutput = OutputDescriptor("still", OutputKind.JPEG, repeating = false, stillCapture = true)
+    private val snapshotOutput = OutputDescriptor("video_snapshot", OutputKind.JPEG, repeating = false, stillCapture = true)
     /** CameraX gives the app no buffer callback for the encoder, so the recording output is not observable. */
     private val recordingOutput = OutputDescriptor("recording", OutputKind.RECORDING, repeating = true, observable = false)
     @Volatile private var zoomRatio = 1f
@@ -92,6 +95,16 @@ class CameraXEngine(
         override fun updateRotation() { val r = displayRotation(); capture?.targetRotation = r; analysis?.targetRotation = r }
         override fun report(message: String, ok: Boolean) = this@CameraXEngine.report(message, ok)
     })
+    /** The photo during a recording (#175); the ImageCapture it uses is bound only while recording. */
+    private val snapshots: CameraXVideoSnapshot = CameraXVideoSnapshot(handler, main, telemetry, session, library, mediaIo, object : CameraXVideoSnapshot.Host {
+        override val imageCapture: ImageCapture? get() = if (photoBound) capture else null
+        override val active: Boolean get() = this@CameraXEngine.active
+        override val flashName: String get() = controls.controls.flash.name
+        override val zoomRequested: Float get() = zoomRatio
+        override val snapshotStream: String get() = snapshotOutput.id
+        override fun updateRotation() { capture?.targetRotation = displayRotation() }
+        override fun notice(text: String) = this@CameraXEngine.notice(text)
+    })
     private val video: CameraXLiveRecorder = CameraXLiveRecorder(context, main, telemetry, session, library, mediaIo, object : CameraXLiveRecorder.Host {
         override val active: Boolean get() = this@CameraXEngine.active
         override val settings: LiveVideo? get() = liveStreams?.video
@@ -102,23 +115,35 @@ class CameraXEngine(
             val provider = provider ?: error("Camera not bound")
             val stills = listOfNotNull(analysis, capture).toTypedArray()
             provider.unbind(*stills)
-            val outputs = StreamConfiguration<UseCase>(listOf(ConfiguredOutput(previewOutput, preview!!), ConfiguredOutput(recordingOutput, video)))
-            try { camera = provider.bindToLifecycle(owner, selector!!, video) }
-            catch (e: Exception) { camera = provider.bindToLifecycle(owner, selector!!, *stills); throw e }
+            // Preview + VideoCapture + ImageCapture is a combination every LIMITED camera guarantees, but CameraX decides
+            // at bind time; a refusal falls back to the recording alone and the photo button says why.
+            val photo = capture!!
+            photoBound = try { camera = provider.bindToLifecycle(owner, selector!!, video, photo); true }
+            catch (e: Exception) {
+                telemetry.event(session, "video_snapshot_unavailable", mapOf("reason" to "bind_refused", "message" to e.toString()))
+                try { camera = provider.bindToLifecycle(owner, selector!!, video) }
+                catch (e2: Exception) { camera = provider.bindToLifecycle(owner, selector!!, *stills); throw e2 }
+                false
+            }
+            val outputs = StreamConfiguration<UseCase>(listOfNotNull(ConfiguredOutput(previewOutput, preview!!), ConfiguredOutput(recordingOutput, video),
+                if (photoBound) ConfiguredOutput(snapshotOutput, photo) else null))
             recording = video
             rebuilt(outputs, mapOf("preview" to preview?.resolutionInfo?.resolution?.toString(),
-                "recording" to video.resolutionInfo?.resolution?.toString(), "recordingFormat" to "Auto"))
+                "recording" to video.resolutionInfo?.resolution?.toString(), "recordingFormat" to "Auto",
+                "snapshot" to if (photoBound) photo.resolutionInfo?.resolution?.toString() else null))
         }
         override fun unbindRecording(video: VideoCapture<Recorder>) {
             val provider = provider ?: return
-            provider.unbind(video)
-            recording = null
+            provider.unbind(*listOfNotNull<UseCase>(video, if (photoBound) capture else null).toTypedArray())
+            recording = null; photoBound = false
             camera = provider.bindToLifecycle(owner, selector!!, *listOfNotNull(analysis, capture).toTypedArray())
             rebuilt(liveOutputs(), streamSizes())
             report("CameraX · LIVE", true)
         }
         override fun recordingState(recording: Boolean) = this@CameraXEngine.recordingState(recording)
         override fun streamingStarted() = controls.resendMetering()
+        override val snapshotUnavailable: String? get() = if (photoBound) null else VideoSnapshotPlan.CAMERAX_REASON
+        override fun notice(text: String) { handler.post { if (active) this@CameraXEngine.notice(text) } }
         override fun status(message: String, ok: Boolean) { if (active) this@CameraXEngine.status(message, ok) }
         override fun report(message: String, ok: Boolean) = this@CameraXEngine.report(message, ok)
     })
@@ -223,6 +248,9 @@ class CameraXEngine(
     override fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit) = stills.capture(requestId, done)
     override fun startRecording(audio: Boolean, started: () -> Unit, done: ((Result<android.net.Uri>) -> Unit)?) = video.start(audio, started, done)
     override fun stopRecording() = video.stop()
+    override val snapshot: SnapshotStatus get() =
+        SnapshotStatus.of(video.live, video.stopping, if (photoBound) null else VideoSnapshotPlan.CAMERAX_REASON, snapshots.inFlight)
+    override fun captureSnapshot(done: (Result<PhotoResult>) -> Unit) = snapshots.capture(null, done)
     override fun setControls(next: LiveControls, restore: Boolean) = controls.setControls(next, restore)
 
     /** Also works while recording: CameraControl changes the zoom of whatever session is bound. */

@@ -8,6 +8,8 @@ sources:
   - app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt
   - app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt
   - app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt
+  - app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt
+  - app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt
   - app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt
   - app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt
   - app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt
@@ -59,10 +61,12 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 
 `Camera2LiveRecorder`의 기본값은 MediaRecorder가 지원하는 가로 크기 중 1920×1080 픽셀 예산으로 고른 크기, H.264, 30fps, 10Mbps입니다. Live 스트림 설정에서는 카메라 크기·고정 AE FPS 범위·인코더의 surface 입력, 크기·프레임률·비트레이트 지원을 만족하는 H.264/HEVC 조합을 선택합니다. 후보 FPS는 24·25·30·60이며 고속 세션은 제공하지 않습니다. 명시한 크기·FPS·코덱으로 준비하고 실패하면 이유를 표시합니다. 소리를 포함하면 AAC 128kbps, 44.1kHz를 사용합니다.
 
-1. 녹화를 시작하면 프리뷰와 인코더 두 스트림으로 새 세션을 만듭니다. YUV와 JPEG는 이 세션에 없으므로 녹화 중에는 사진을 찍지 않습니다.
+1. 녹화를 시작하면 프리뷰와 인코더, 그리고 녹화 중 사진용 JPEG 스트림으로 새 세션을 만듭니다. YUV 스트림은 이 세션에 없으므로 녹화 중 사진은 JPEG만 저장합니다. 카메라가 이 조합을 거절하면 JPEG 없이 프리뷰와 인코더만으로 다시 구성하고, 이 경우 녹화 중 사진을 지원하지 않는다는 이유를 화면에 알립니다.
 2. Android 13 이상에서는 `RecordingBufferRelay`가 인코더로 가는 PRIVATE 버퍼를 먼저 받아 도착 시각을 기록합니다. 그보다 낮은 버전에서는 인코더에 직접 연결하고, 녹화 출력을 관측할 수 없다고 표시합니다.
 3. 녹화 요청은 `TEMPLATE_RECORD`이며, 연속 동영상 AF(`CONTINUOUS_VIDEO`)를 지원하면 사용합니다. 줌과 Live 제어는 녹화 중에도 같은 요청을 다시 만들어 적용합니다.
 4. 정지하면 세션을 닫고, 파일을 `MediaLibrary.saveVideo`로 앨범에 공개한 뒤 프리뷰 세션을 다시 만듭니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
+
+**녹화 중 사진(`Camera2VideoSnapshot`)은 녹화를 멈추지 않고 JPEG 한 장을 저장합니다.** 녹화 세션의 JPEG 크기는 요청한 크기(없으면 1080p 이하 중 가장 큰 크기)를 먼저 시도하고, 세션 조합 조회(`isSessionConfigurationSupported`)가 거절하면 녹화 크기 안에 들어가는 가장 큰 크기로 내려갑니다. 실제 크기는 `recording_started`의 `snapshotSize`에 남아 요청값과 구분됩니다. 사진 요청은 `TEMPLATE_VIDEO_SNAPSHOT`이며 프리뷰·인코더·JPEG 세 출력을 모두 대상으로 합니다. 사진은 한 번에 한 장만 처리하고, 앞의 사진이 저장되는 중이거나 녹화가 멈추는 중이면 새 요청을 거절합니다. 5초 안에 JPEG이 오지 않거나 저장에 실패하면 `video_snapshot_failed`를 기록하고 알림만 표시하며, 녹화 파일과 세션은 그대로 유지합니다. 정지와 겹친 사진은 세션이 닫히기 전에 도착하면 저장하고, 그렇지 않으면 실패로 답합니다. Live 스트림 설정에서 JPEG을 끄면 녹화 중 사진도 지원하지 않습니다.
 
 `live_streams_changed`·`live_streams_requested`는 변경·요청값을, `live_stream_preflight`는 출력 조합 조회 결과를 기록합니다. 성공한 출력 크기는 `configured`와 `negotiatedStreams`에 남습니다. 녹화는 `live_recording_requested`·`live_recording_preflight`·`recording_started`로 구분하며, 요청한 인코더 설정과 결과 FPS를 혼동하지 않습니다.
 

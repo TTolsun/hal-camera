@@ -152,6 +152,13 @@ class Camera2Engine(
             configuredOutputs.outputs.find { it.descriptor.kind == OutputKind.PREVIEW }
         override val session: CameraCaptureSession? get() = captureSession
         override val stillInFlight: Boolean get() = stills.inFlight
+        override val snapshotDisabled: Boolean get() = liveStreams != null && liveStreams.jpeg == null
+        override val requestedJpeg: LiveSize? get() = liveStreams?.jpeg
+        override val captureCallback: CameraCaptureSession.CaptureCallback get() = callback
+        override fun orientation(c: CameraCharacteristics): Int = outputRotation(c)
+        override fun snapshotRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int) =
+            this@Camera2Engine.snapshotRequest(camera, c, tag, rotation)
+        override fun notice(text: String) { main.post { if (active) this@Camera2Engine.notice(text) } }
         override fun onSessionConfigured(session: CameraCaptureSession?) { captureSession = session }
         override fun startRepeating(camera: CameraDevice, session: CameraCaptureSession, c: CameraCharacteristics, outputs: StreamConfiguration<Surface>) {
             configuredOutputs = outputs
@@ -334,6 +341,23 @@ class Camera2Engine(
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
             setTag("recording")
         }.let { buildRequest(it, configuredOutputs.repeating) }
+    /**
+     * The photo during a recording (#175): TEMPLATE_VIDEO_SNAPSHOT with the recording request's AF and FPS, aimed at
+     * every output of the recording session (preview, encoder and the JPEG stream), as the CTS video snapshot does.
+     */
+    private fun snapshotRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int): CaptureRequest =
+        camera.createCaptureRequest(CameraDevice.TEMPLATE_VIDEO_SNAPSHOT).apply {
+            liveStreams?.video?.fps?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, android.util.Range(it, it)) }
+            set(CaptureRequest.JPEG_ORIENTATION, rotation)
+            set(CaptureRequest.JPEG_QUALITY, 95.toByte())
+            set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
+            val modes = c[CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES] ?: intArrayOf()
+            set(CaptureRequest.CONTROL_AF_MODE, if (CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO in modes)
+                CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO else CaptureRequest.CONTROL_AF_MODE_OFF)
+            applyZoom(this, c)
+            applyLiveControls(requestControls()); applyTouch(touchFocus)
+            setTag(tag)
+        }.let { buildRequest(it, configuredOutputs.outputs) }
     /** Whichever LIVE request is repeating now: the recording one while the recorder runs, the preview one otherwise. */
     private fun repeatingRequest(camera: CameraDevice, c: CameraCharacteristics, afTrigger: Int? = null, aeTrigger: Int? = null): CaptureRequest =
         video.surface?.let { liveRecordRequest(camera, c, afTrigger) } ?: previewRequest(camera, c, afTrigger, aeTrigger)
@@ -544,6 +568,9 @@ class Camera2Engine(
         }.build()
 
     override fun stopRecording() = video.stop()
+
+    override val snapshot: SnapshotStatus get() = video.snapshotStatus
+    override fun captureSnapshot(done: (Result<PhotoResult>) -> Unit) = video.captureSnapshot(done)
 
     override fun close(done: () -> Unit) {
         active = false
