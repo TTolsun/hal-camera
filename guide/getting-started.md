@@ -90,7 +90,7 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `Lab → Settin
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
 | `versionName` | `0.17.0` |
-| `versionCode` | `594` |
+| `versionCode` | `625` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |
