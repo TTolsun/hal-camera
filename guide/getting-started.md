@@ -33,12 +33,12 @@ Android SDK 경로는 저장소 루트의 `local.properties`에 설정합니다.
 
 4. 앱을 열고 카메라 권한을 허용합니다. Live에서 프리뷰가 나오는지 확인합니다.
 
-PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `도구 → 설정 · 앱 정보 → ADB CLI 설정`에서 `ADB CLI 허용`을 켜고 [CLI](cli.md)를 따르세요. PC에는 `adb`만 있으면 되며, 프리뷰·사진·녹화 명령과 무선 연결 절차도 그 페이지에 있습니다.
+PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `Lab → Settings → ADB CLI`에서 `ADB CLI 허용`을 켜고 [CLI](cli.md)를 따르세요. PC에는 `adb`만 있으면 되며, 프리뷰·사진·녹화 명령과 무선 연결 절차도 그 페이지에 있습니다.
 
 빌드와 테스트가 통과하면 APK 생성과 JVM 테스트 결과를 확인한 것입니다. 측정 정확성과 기기 동작은 별도로 검증해야 합니다. 검증 자료의 구분과 기록 위치는 [Evidence](evidence.md)를 확인하세요.
 
 
-<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
+<p class="doc-evidence">아래 화면은 2026년 9월 30일 Galaxy S25+·Android 16에서 0.16.0(versionCode 593) 디자인 변경 빌드를 실행해 촬영했습니다. 0.17.0에도 같은 Live 디자인을 사용합니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
 
 ## Live에서 촬영하세요
 
@@ -56,13 +56,13 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `도구 → 설
 
 ### Live 스트림을 설정하세요
 
-1. `Lab → Settings → Live Streams`를 엽니다. Lab과 같은 독립 설정 페이지가 열립니다.
+1. Live 옆의 크기 표시를 누릅니다. `Lab → Settings → Live Streams`에서도 같은 설정을 열 수 있습니다.
 2. Preview 크기와 YUV·JPEG의 크기 또는 `Off`를 선택합니다. 둘 다 끄면 프리뷰만 실행하며 사진 셔터는 비활성화됩니다.
 3. 프리뷰 FPS를 고르고 녹화는 Format → Resolution → Frame Rate 순서로 선택합니다. 해상도는 큰 순서로 표시합니다. 녹화는 Preview + Encoder로 전환하며, 고속 세션은 제공하지 않습니다.
-4. `저장`을 눌러 Lab으로 돌아갑니다. Live로 복귀하면 Camera2로 설정을 적용합니다. 상단·시스템 뒤로가기는 저장하지 않고 Lab으로 돌아갑니다.
-5. 설정을 다시 열어 구성 상태와 최근 결과 FPS 범위를 확인합니다. 실패하면 이유를 확인하고 `직전 정상 구성`으로 복구합니다. 개별 크기를 지원해도 출력 조합은 거부될 수 있습니다.
+4. `저장`을 누르면 진입한 화면으로 돌아가며 현재 Camera2·CameraX 엔진에 적용합니다. Live에서 직접 열었다면 바로 프리뷰로 복귀합니다. 상단·시스템 뒤로 가기는 저장하지 않고 돌아갑니다.
+5. Live의 P·Y·J 표시에서 적용 크기를 확인합니다. 녹화 중에는 P·R과 H264·HEVC·Auto가 표시됩니다. 실패하면 설정 화면에서 이유를 확인하고 `직전 정상 구성`으로 복구합니다. 개별 크기를 지원해도 출력 조합은 거부될 수 있습니다.
 
-설정은 카메라마다 구분합니다. Live 설정은 Benchmark의 profile을 바꾸지 않습니다. API별 구성 검사와 저장 방식은 [Camera2 엔진](engine.md#camera2-엔진)에서 확인합니다.
+설정은 카메라와 엔진마다 구분합니다. CameraX 녹화 포맷은 Auto이며 코덱은 라이브러리가 선택합니다. Live 설정은 Benchmark의 profile을 바꾸지 않습니다. API별 구성 검사와 저장 방식은 [Camera2 엔진](engine.md#camera2-엔진)에서 확인합니다.
 
 ### 초점과 노출을 조절하세요
 
@@ -89,8 +89,8 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `도구 → 설
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.16.0` |
-| `versionCode` | `593` |
+| `versionName` | `0.17.0` |
+| `versionCode` | `594` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |

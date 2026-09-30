@@ -34,6 +34,12 @@ object Look {
     val cameraSelection = Color.WHITE
     val cameraOnSelection = ink
     val primaryOnDark = Color.parseColor("#2997ff")
+    // Runway-inspired surfaces are scoped to Gallery and About.
+    val gallerySurface = Color.parseColor("#111111")
+    val galleryControl = Color.parseColor("#252525")
+    val galleryOutline = Color.parseColor("#454545")
+    val runwayInk = Color.parseColor("#030303")
+    val runwayMuted = Color.parseColor("#676f7b")
     val statusPass = Color.parseColor("#34c759")
     val statusWarn = Color.parseColor("#ff9500")
     val statusFail = Color.parseColor("#ff3b30")
@@ -59,6 +65,21 @@ object Look {
     }
 
     fun pill(context: Context, fill: Int) = GradientDrawable().apply { setColor(fill); cornerRadius = dp(context, 999).toFloat() }
+
+    fun galleryButton(context: Context, label: String, primary: Boolean = false, action: () -> Unit) = Button(context).apply {
+        text = label; isAllCaps = false; textSize = 15f
+        val foreground = if (primary) Color.BLACK else Color.WHITE
+        setTextColor(ColorStateList(arrayOf(intArrayOf(-android.R.attr.state_enabled), intArrayOf()),
+            intArrayOf(Color.GRAY, foreground)))
+        val shape = pill(context, if (primary) Color.WHITE else galleryControl).apply {
+            if (!primary) setStroke(dp(context, 1), galleryOutline)
+        }
+        background = RippleDrawable(ColorStateList.valueOf(0x40888888), shape, pill(context, Color.WHITE))
+        backgroundTintList = null; stateListAnimator = null
+        setPadding(dp(context, 20), dp(context, 12), dp(context, 20), dp(context, 12))
+        minHeight = dp(context, 48); minimumHeight = dp(context, 48)
+        setOnClickListener { action() }
+    }
 
     fun touchBackground(context: Context, fill: Int, stroke: Int) = RippleDrawable(
         ColorStateList.valueOf(Color.argb(48, 128, 170, 220)),

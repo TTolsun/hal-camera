@@ -1,6 +1,6 @@
 ---
 name: halcam-cli
-description: HAL CAM 앱을 adb로 조작하는 절차. 기기에서 프리뷰·사진·녹화·probe·CTS를 실행하거나, 결과 파일을 PC로 가져오거나, CLI 요청 상태·취소·BUSY·CLI_DISABLED 같은 오류를 다룰 때 사용한다. 계약 원본은 guide/cli.md와 app/src/main/java/dev/halcamera/cli/이다.
+description: HAL CAM 앱을 adb로 조작하는 절차. 기기에서 스트림 크기·프리뷰·사진·녹화·probe·CTS를 실행하거나, 결과 파일을 PC로 가져오거나, CLI 요청 상태·취소·BUSY·CLI_DISABLED 같은 오류를 다룰 때 사용한다. 계약 원본은 guide/cli.md와 app/src/main/java/dev/halcamera/cli/이다.
 ---
 
 # HAL CAM CLI를 adb로 운전하기
@@ -25,6 +25,25 @@ adb shell sh /data/local/tmp/halcam help
 ```
 
 `hello` 응답의 `commands` 배열은 이 빌드가 접수하는 작업 명령이고, 상태 조회와 취소처럼 작업을 만들지 않는 조작은 `controls` 배열(`record.stop`, `status`, `request`, `request.cancel`)에 따로 있습니다. 기기가 여러 대이면 모든 명령에 `adb -s SERIAL`을 붙입니다.
+
+## 스트림 크기를 지정하세요
+
+지원 목록을 먼저 조회한 뒤 프리뷰·촬영·녹화 명령에 크기 옵션을 붙입니다. 엔진의 기본값은 Camera2이며, CameraX를 사용할 때에는 조회와 실행 모두에 `--engine CameraX`를 지정합니다.
+
+```sh
+adb shell sh /data/local/tmp/halcam streams --camera 0
+adb shell sh /data/local/tmp/halcam streams --camera 0 --engine CameraX
+adb shell sh /data/local/tmp/halcam preview --camera 0 --preview-size 1280x720 --yuv-size 640x480 --jpeg-size 1920x1080
+adb shell sh /data/local/tmp/halcam capture --camera 0 --engine CameraX --yuv-size off --jpeg-size 1920x1080
+adb shell sh /data/local/tmp/halcam record start --camera 0 --video-size 1280x720 --video-fps 30 --codec HEVC --no-audio
+adb shell sh /data/local/tmp/halcam record stop
+```
+
+`--preview-size`, `--yuv-size`, `--jpeg-size`, `--video-size`는 `너비x높이` 형식을 사용합니다. YUV와 JPEG는 `off`로 끌 수 있지만, `capture`에는 적어도 하나가 필요합니다. `--video-fps`는 녹화 프레임 레이트이고 `--codec`은 Camera2에서 H264·HEVC, CameraX에서 Auto를 사용합니다. CameraX의 실제 녹화 코덱은 라이브러리가 선택합니다.
+
+생략한 값은 기본 설정을 사용하며 이전 UI·CLI 설정을 이어받지 않습니다. 적용한 설정은 명령 완료 후 Live에 남지만 다음 CLI 카메라 명령은 다시 기본값과 명시한 옵션으로 구성합니다. 지원하지 않는 값은 `PREFLIGHT_FAILED`로 거부하며 다른 크기로 자동 변경하지 않습니다. 지원 목록은 개별 크기와 인코더 조건을 나타내며 출력 조합의 성공까지 보장하지 않습니다. 실제 세션 구성에서 실패할 수도 있습니다.
+
+`preview` 완료 결과와 녹화 시작 상태의 `result.streams`에서 적용된 크기를 확인할 수 있습니다. Provider 직접 호출에서는 `--extra preview_size:s:1280x720`, `--extra engine:s:CameraX`처럼 문자열로 전달합니다. JSON 제출은 `params.engine`과 `params.streams` 객체를 사용하며, 크기·FPS·코덱 값은 모두 문자열입니다. 예를 들어 `"streams":{"preview_size":"1280x720","yuv_size":"off"}`로 전달합니다.
 
 ## 2. 자주 쓰는 명령
 

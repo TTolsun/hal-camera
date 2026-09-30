@@ -677,7 +677,9 @@ class BenchmarkActivity : ComponentActivity() {
         screen = Screen.RUNNING
         render()
         startTicker()
-        runner = BenchmarkRunner(driver, scheduler, ::nowNs, profile, endpoint, runId, BenchmarkRunner.Config(), listener)
+        val diagnostics = dev.halcamera.benchmark.platform.LaunchDiagnostics(::nowNs, probe::thermalStatus)
+        runner = BenchmarkRunner(driver, scheduler, ::nowNs, profile, endpoint, runId, BenchmarkRunner.Config(), listener,
+            diagnostics::snapshot)
             .also { it.start() }
     }
 

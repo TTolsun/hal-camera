@@ -130,6 +130,7 @@ class CommandCoordinator private constructor(private val context: Context) {
                         val cameras = JSONArray(endpoints.map { JSONObject(it.toJsonMap()).put("selectable", it.independentlyOpenable && it.physicalCameraId == null) })
                         complete(command.id, JSONObject().put("cameras", cameras))
                     }
+                    "streams" -> streamSupport(command)
                     "probe" -> probe(command)
                     "cts.cases" -> complete(command.id, JSONObject().put("cases", CliJson.of(suiteItems())))
                     else -> {
@@ -154,6 +155,21 @@ class CommandCoordinator private constructor(private val context: Context) {
             } catch (e: Exception) { fail(command.id, (e as? CliFailure)?.code ?: "EXECUTION_FAILED", e.message ?: "Execution failed") }
         }
         return CliJson.publicRecord(record)
+    }
+
+    private fun streamSupport(command: CliCommand) {
+        io.execute {
+            try {
+                val manager = context.getSystemService(CameraManager::class.java)
+                if (command.camera !in manager.cameraIdList) throw CliFailure("UNSUPPORTED_CAMERA", "Camera is not independently openable")
+                var support = dev.halcamera.camera.liveStreamSupport(manager.getCameraCharacteristics(command.camera!!))
+                if (command.engine == "CameraX") support = dev.halcamera.camera.cameraXStreamSupport(context, command.camera, support)
+                complete(command.id, JSONObject().put("camera_id", command.camera).put("engine", command.engine ?: "Camera2")
+                    .put("streams", CliJson.of(mapOf("preview" to support.preview.map { it.toString() },
+                        "yuv" to support.yuv.map { it.toString() }, "jpeg" to support.jpeg.map { it.toString() },
+                        "video" to support.videos.map { mapOf("size" to it.size.toString(), "fps" to it.fps, "codec" to it.codec) }))))
+            } catch (e: Exception) { fail(command.id, (e as? CliFailure)?.code ?: "PREFLIGHT_FAILED", e.message ?: "Cannot read stream capabilities") }
+        }
     }
 
     /** Where a command that produces its own files (probe, CTS) writes them; the directory goes with the record. */
@@ -193,9 +209,9 @@ class CommandCoordinator private constructor(private val context: Context) {
     fun state(id: String, value: String): Boolean = try { store.transition(id, value); true }
         catch (error: Exception) { fail(id, "STORE_FAILED", error.message ?: "Cannot persist state"); false }
 
-    fun recordingStarted(command: CliCommand): Boolean = try {
+    fun recordingStarted(command: CliCommand, streams: Map<String, Any?>): Boolean = try {
         store.transition(command.id, "running") {
-            it.put("result", JSONObject().put("camera_id", command.camera).put("recording", true))
+            it.put("result", JSONObject().put("camera_id", command.camera).put("recording", true).put("engine", command.engine ?: "Camera2").put("streams", CliJson.of(streams)))
         }
         true
     } catch (error: Exception) { fail(command.id, "STORE_FAILED", error.message ?: "Cannot persist recording state"); false }
@@ -278,7 +294,7 @@ class CommandCoordinator private constructor(private val context: Context) {
         if (current == "saving") return // Submitted saves complete with their actual result.
         if (current == "accepted" || current == "preparing") {
             // A screenless command never reached the host; telling Live to stop preparing would pause its preview.
-            if (command.command in CliCommand.CAMERA_COMMANDS || command.command in setOf("preview.stop", "cts.run")) host?.cancel(command)
+            if ((command.command in CliCommand.CAMERA_COMMANDS && command.command != "streams") || command.command in setOf("preview.stop", "cts.run")) host?.cancel(command)
             fail(id, code, "Operation cancelled before capture")
         } else {
             state(id, "cancelling")

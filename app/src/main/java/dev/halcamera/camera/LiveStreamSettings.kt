@@ -1,5 +1,8 @@
 package dev.halcamera.camera
 
+/** Preserve the existing Camera2 keys while keeping CameraX choices and rollback independent. */
+fun liveStreamSettingsKey(cameraId: String, engine: String) = if (engine == "Camera2") cameraId else "$engine:$cameraId"
+
 /** LIVE-only values. Benchmark StreamSpec and canonical profiles never read these preferences. */
 data class LiveSize(val width: Int, val height: Int) : java.io.Serializable {
     init { require(width > 0 && height > 0) }

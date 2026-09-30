@@ -107,7 +107,7 @@
 </ol>
 <h3 id="benchmark와-cli가-쓰는-엔진">Benchmark와 CLI가 쓰는 엔진</h3>
 <p>Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 <code>StartCardPresenter</code>가 Camera2로 전환한다고 알립니다. Live와 다른 스트림 크기 및 저장 방식은 <a href="#camera2-엔진">Camera2 엔진</a>에서 설명합니다.</p>
-<p>CLI의 <code>preview</code> 명령은 <code>LiveController</code>를 통해 Camera2로 카메라를 엽니다. CLI 준비 시 해당 카메라의 사용자 스트림 설정을 해제하여 기존 YUV·JPEG 사진 쌍 계약을 유지합니다. CameraX 제어는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/CLI.md">CLI 계약</a>의 후속 범위에 있습니다.</p>
+<p>CLI의 <code>preview</code>·<code>capture</code>·<code>record.start</code>는 <code>LiveController</code>를 통해 Camera2 또는 CameraX를 엽니다. 기본 엔진은 Camera2이며 <code>--engine CameraX</code>로 바꿉니다. 크기 옵션을 생략하면 기본 사진 쌍 구성을 유지하고, 명시한 옵션은 지원 검사 후 적용합니다. 이전 UI 설정은 이어받지 않습니다. <code>streams</code>는 화면 없이 지원 크기와 녹화 후보를 조회합니다. 인자와 예제는 <a href="cli.html">CLI</a>에 있습니다.</p>
 <h3 id="두-엔진이-함께-남기는-기록">두 엔진이 함께 남기는 기록</h3>
 <p>두 엔진은 세션을 열 때 <code>Telemetry.registerSession</code>에 엔진 이름(<code>Camera2</code> 또는 <code>CameraX</code>)을 남기고, 같은 <code>Telemetry.callback</code>으로 capture 콜백을 기록합니다. 그래서 <code>capture_started</code>, <code>capture_result</code> 같은 이벤트 종류가 엔진과 관계없이 같습니다. 엔진별로 요청을 만드는 방법이 다르므로, 같은 이벤트라도 요청에 들어간 키는 엔진마다 다를 수 있습니다.</p>
 <p>Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.</p>
@@ -140,7 +140,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/ui/LiveControlBar.kt</code>, <code>app/src/main/java/dev/halcamera/ui/FocusRing.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-28 @ <code>ee4d548</code> · Codex-code-review</li>
+<li>검토 2026-09-29 @ <code>a933705</code> · Codex-release-review</li>
 </ul>
 </details><!-- omm:end id=contract --><h2 id="camera2-엔진">Camera2 엔진</h2>
 <!-- omm:begin id=camera2 --><p><strong>Camera2Engine은 앱에서 CaptureRequest를 직접 구성합니다.</strong> <code>request_observed</code>에 기록한 키를 HAL 로그와 대조할 수 있습니다. 엔진 자체는 세션, 요청 구성, 줌, Live 제어를 담당하고, 사진은 <code>Camera2StillCapture</code>, Live 녹화는 <code>Camera2LiveRecorder</code>, 터치 측광은 <code>Camera2TouchFocus</code>, 벤치마크 녹화는 <code>BenchmarkRecorder</code>가 맡습니다. 카메라 요청과 capture 콜백은 엔진이 만든 카메라 스레드 하나에서 처리하고, 버퍼 relay와 파일 저장은 각자의 스레드에서 처리합니다.</p>
@@ -172,7 +172,7 @@
 </tbody></table>
 <p>벤치마크 세션은 profile의 <code>StreamSpec</code> 크기를 그대로 사용합니다. 지원하지 않는 크기이면 작은 크기로 대체하지 않고 구성 단계에서 실패합니다. 같은 profile ID로 다른 크기를 측정하면 비교가 무의미해지기 때문입니다.</p>
 <p>명시한 Live 설정도 작은 크기로 대체하지 않습니다. <code>LiveStreamSupport</code>는 개별 크기·일반 FPS 범위·녹화 인코더 지원을 검사하고, 엔진은 출력의 최소 프레임 시간과 FPS 하한을 대조합니다. Android 10 이상에서는 <code>isSessionConfigurationSupported</code>로 출력 조합을 조회합니다. 조회를 지원하지 않거나 Android 9 이하이면 지원 여부를 미확인으로 기록하고 실제 세션 구성으로 확인합니다. 조합 조회만으로 FPS 지원을 확정하지 않으며 <code>capture_result.fpsRange</code>와 <code>frameDurationNs</code>로 실제 결과를 확인합니다.</p>
-<p>설정 적용은 기존 엔진의 <code>close(done)</code> 뒤 새 엔진을 여는 순서입니다. 실패 이유는 화면에 남고, 설정의 <code>직전 정상 구성</code> 버튼으로 해당 카메라에서 마지막으로 구성이 성공했던 값으로 돌아갑니다. 사진·녹화·저장 중에는 적용하지 않습니다. 카메라마다 설정을 분리하고 Activity 재생성 시 복원합니다. CameraX에서는 자동 구성을 사용하며, 이 설정을 사용하려면 Camera2로 전환하도록 안내합니다. Benchmark는 Live 설정을 읽지 않고 CLI 준비는 기본 사진 쌍 구성으로 초기화합니다.</p>
+<p>설정 적용은 기존 엔진의 <code>close(done)</code> 뒤 새 엔진을 여는 순서입니다. 실패 이유는 화면에 남고, 설정의 <code>직전 정상 구성</code> 버튼으로 해당 카메라에서 마지막으로 구성이 성공했던 값으로 돌아갑니다. 사진·녹화·저장 중에는 적용하지 않습니다. 카메라와 엔진마다 설정을 분리하고 Activity 재생성 시 복원합니다. CameraX도 같은 설정 화면에서 출력과 크기를 선택합니다. Live 옆의 크기 표시를 누르면 설정을 바로 열며 이 경로의 뒤로 가기와 저장은 Live로 돌아갑니다. Benchmark는 Live 설정을 읽지 않습니다. CLI는 기본값에 명시한 크기 옵션을 적용하며 이전 화면 설정을 이어받지 않습니다.</p>
 <p><code>StreamConfiguration</code>은 세션을 만드는 출력, 요청의 대상, Callback 그래프가 표시하는 스트림을 같은 목록에서 만듭니다. Android 13 이상의 Live에서는 <code>PreviewBufferRelay</code>가 PRIVATE 프리뷰 버퍼를 먼저 받아 도착 시각을 기록한 뒤 TextureView로 넘깁니다. 픽셀은 복사하지 않습니다. 그보다 낮은 버전에서는 TextureView에 직접 연결하고, 프리뷰 출력을 관측할 수 없다고 표시합니다.</p>
 <h3 id="사진">사진</h3>
 <ol>
@@ -238,12 +238,12 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillPair.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-28 @ <code>ee4d548</code> · Codex-code-review</li>
+<li>검토 2026-09-29 @ <code>a933705</code> · Codex-release-review</li>
 </ul>
 </details><!-- omm:end id=camera2 --><h2 id="camerax-엔진">CameraX 엔진</h2>
-<!-- omm:begin id=camerax --><p><strong>CameraXEngine은 CameraX use case로 Live 촬영과 제어를 제공하지만, 요청 키 일부는 CameraX가 정합니다.</strong> 정확한 스트림 크기·출력 조합 선택은 Camera2 전용입니다. 앱이 CameraX 1.6.2에 직접 넣는 Camera2 키는 AE 잠금(<code>CONTROL_AE_LOCK</code>)과 AF 잠금 해제용 cancel trigger뿐입니다. 엔진 자체는 use case bind, 줌, 수명 주기를 담당하고, 사진은 <code>CameraXStillCapture</code>, 녹화는 <code>CameraXLiveRecorder</code>, Live 제어와 터치 측광은 <code>CameraXControls</code>가 맡습니다.</p>
+<!-- omm:begin id=camerax --><p><strong>CameraXEngine은 CameraX use case로 Live 촬영과 제어를 제공하지만, 요청 키 일부는 CameraX가 정합니다.</strong> Live 스트림 설정에서 Preview·YUV·JPEG 크기와 출력 활성화를 선택할 수 있습니다. 앱이 CameraX 1.6.2에 직접 넣는 Camera2 키는 AE 잠금(<code>CONTROL_AE_LOCK</code>)과 AF 잠금 해제용 cancel trigger뿐입니다. 엔진 자체는 use case bind, 줌, 수명 주기를 담당하고, 사진은 <code>CameraXStillCapture</code>, 녹화는 <code>CameraXLiveRecorder</code>, Live 제어와 터치 측광은 <code>CameraXControls</code>가 맡습니다.</p>
 <h3 id="세션-구성-1">세션 구성</h3>
-<p><code>ProcessCameraProvider</code>로 Preview, ImageAnalysis(<code>STRATEGY_KEEP_ONLY_LATEST</code>), ImageCapture(<code>CAPTURE_MODE_MINIMIZE_LATENCY</code>)를 Activity 수명 주기에 bind합니다. Camera2 엔진의 프리뷰·YUV·JPEG 세 스트림에 대응하는 구성입니다. 카메라는 <code>Camera2CameraInfo</code>의 카메라 ID로 거르므로 전면·후면이 아닌 특정 카메라를 열 수 있습니다.</p>
+<p><code>ProcessCameraProvider</code>로 Preview, ImageAnalysis(<code>STRATEGY_KEEP_ONLY_LATEST</code>), ImageCapture(<code>CAPTURE_MODE_MINIMIZE_LATENCY</code>)를 Activity 수명 주기에 bind합니다. 기본값은 Camera2 엔진의 프리뷰·YUV·JPEG 세 스트림에 대응하는 구성입니다. 명시한 크기는 ResolutionSelector의 필터로 해당 해상도만 남기고, 꺼진 출력의 use case는 만들지 않습니다. Preview는 항상 유지하며 ImageAnalysis가 없는 구성에서도 PreviewView의 STREAMING으로 프리뷰 준비를 알립니다. 크기 후보가 없거나 bind가 실패하면 다른 크기로 바꾸지 않고 오류를 표시합니다. 카메라는 <code>Camera2CameraInfo</code>의 카메라 ID로 거르므로 전면·후면이 아닌 특정 카메라를 열 수 있습니다.</p>
 <p>Preview에 <code>Camera2Interop.Extender.setSessionCaptureCallback</code>으로 Camera2 엔진과 같은 <code>Telemetry</code> 콜백을 붙입니다. 엔진은 이 콜백을 한 번 감싸서, 모든 repeating 결과를 <code>CameraXControls</code>에도 넘깁니다. AE 재잠금과 길게 누르기 측광이 결과의 AE 상태를 읽기 때문입니다. Callback 그래프에는 프리뷰(관측 불가), analysis, still 출력을 등록합니다. CameraX는 프리뷰와 인코더 버퍼를 앱에 넘겨주지 않으므로 두 출력의 도착 시각은 기록하지 않습니다.</p>
 <h3 id="사진-1">사진</h3>
 <p>CameraX에는 analysis 스트림을 still 요청의 대상에 넣는 공개 API가 없습니다. 그래서 두 버퍼가 한 capture에서 나오는 Camera2와 달리, YUV는 JPEG와 센서 시각이 가장 가까운 analysis 프레임을 씁니다.</p>
@@ -251,19 +251,21 @@
 <li>촬영 직전에 ImageCapture와 ImageAnalysis의 <code>targetRotation</code>을 현재 화면 회전으로 맞춥니다.</li>
 <li>촬영 요청부터 짝이 정해질 때까지 analysis 프레임을 NV21로 복사해 최근 8개를 보관합니다. 평소에는 복사하지 않습니다.</li>
 <li>JPEG가 도착하면 그 센서 시각 이후의 프레임이 하나 올 때까지 최대 100ms 기다립니다. 이후 프레임이 가장 가까운 후보의 위쪽 경계가 되기 때문입니다. 아직 프레임이 하나도 없으면(still을 찍는 동안 repeating 스트림을 멈추는 HAL) 다음 프레임을 기다립니다.</li>
-<li>가장 가까운 프레임을 <code>encodeYuvStill</code>로 JPEG로 만들고 프레임의 <code>rotationDegrees</code>만큼 회전한 뒤, <code>MediaLibrary.savePair</code>로 저장합니다. 내부의 <code>savePhotos</code>는 Camera2와 공유합니다.</li>
+<li>가장 가까운 프레임을 <code>encodeYuvStill</code>로 JPEG로 만들고 프레임의 <code>rotationDegrees</code>만큼 회전한 뒤, Camera2와 공유하는 <code>MediaLibrary.savePhotos</code>로 켜진 출력을 저장합니다.</li>
 <li>두 시각의 차이를 <code>media_saved</code>의 <code>yuvOffsetNs</code>에 기록합니다. 5초 안에 끝나지 않으면 <code>capture_timeout</code>으로 실패를 돌려줍니다.</li>
 </ol>
+<p>JPEG만 켜면 analysis 프레임을 기다리지 않습니다. YUV만 켜면 촬영 요청 뒤 도착한 analysis 프레임을 저장하며 ImageCapture 요청은 보내지 않습니다. 두 출력이 모두 꺼져 있으면 사진 촬영을 거절합니다.</p>
 <p>카메라 JPEG는 CameraX가 넣은 방향 정보(EXIF)를 그대로 저장합니다. 플래시 Auto·On의 precapture는 ImageCapture가 자기 순서대로 실행하므로 이 클래스에는 측광 단계가 없습니다.</p>
 <h3 id="녹화-1">녹화</h3>
 <p><code>CameraXLiveRecorder</code>는 CameraX <code>Recorder</code>로 캐시 폴더의 임시 MP4에 기록하고, 끝나면 <code>MediaLibrary.saveVideo</code>로 앨범에 공개합니다.</p>
 <ol>
 <li>녹화를 시작하면 ImageAnalysis와 ImageCapture를 unbind하고 VideoCapture를 bind합니다. 녹화가 끝나면 반대로 되돌립니다. Camera2처럼 프리뷰와 인코더 두 스트림만 쓰기 위해서이며, 네 use case를 한꺼번에 bind하면 스트림 조합을 CameraX의 stream sharing이 정하게 됩니다.</li>
-<li>품질은 FHD를 우선 선택합니다. FHD가 없으면 더 낮은 품질을 먼저 찾고, 낮은 품질도 없으면 더 높은 품질을 선택할 수 있습니다. 30fps, 10Mbps를 요청합니다. 코덱과 오디오 형식은 기기의 encoder profile을 따르므로, 기본 H.264와 44.1kHz AAC를 사용하는 Camera2와 다를 수 있습니다.</li>
+<li>설정을 지정하지 않으면 품질은 FHD를 우선 선택합니다. FHD가 없으면 더 낮은 품질을 먼저 찾고, 낮은 품질도 없으면 더 높은 품질을 선택할 수 있습니다. 30fps, 10Mbps를 요청합니다. 코덱과 오디오 형식은 기기의 encoder profile을 따르므로, 기본 H.264와 44.1kHz AAC를 사용하는 Camera2와 다를 수 있습니다.</li>
 <li>소리를 요청했는데 <code>RECORD_AUDIO</code> 권한이 없으면 소리 없이 녹화하지 않고 실패로 처리합니다.</li>
 <li>첫 <code>VideoRecordEvent.Status</code>가 오면 AF 잠금과 길게 누른 AE 지점을 한 번 더 보냅니다. CameraX는 동영상 surface가 실제로 켜질 때 repeating 요청을 다시 구성하는데, 그 전에 보낸 FocusMeteringAction은 사라지기 때문입니다.</li>
 <li><code>Finalize</code>의 오류가 <code>ERROR_NONE</code>이거나, 카메라가 닫혀서 멈춘 <code>ERROR_SOURCE_INACTIVE</code>이면 파일을 저장합니다. 그 밖의 오류나 빈 파일은 저장하지 않고 알립니다.</li>
 </ol>
+<p>명시한 녹화 크기는 지원 Quality의 해상도와 정확히 일치해야 하며, bind 후 실제 해상도도 검사합니다. 설정 화면의 후보는 CameraX Quality 해상도와 하드웨어의 크기·FPS 조건을 교차해 만듭니다. FPS와 비트레이트는 요청값이고 실제 결과와 구분합니다. CameraX 1.6.2의 공개 Recorder API는 녹화 코덱을 직접 선택하지 않으므로 Format과 Live 표시는 Auto입니다.</p>
 <p>녹화 시작과 정지는 use case를 다시 bind하므로, 엔진은 그때마다 줌과 Live 제어를 새 세션에 다시 보내고 Callback 그래프의 출력 목록도 바꿉니다.</p>
 <h3 id="live-제어와-터치-측광">Live 제어와 터치 측광</h3>
 <table>
@@ -306,7 +308,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/build.gradle.kts</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-28 @ <code>ee4d548</code> · Codex-code-review</li>
+<li>검토 2026-09-29 @ <code>a933705</code> · Codex-release-review</li>
 </ul>
 </details><!-- omm:end id=camerax --><h2 id="두-엔진의-차이">두 엔진의 차이</h2>
 <!-- omm:begin id=comparison --><p><strong>두 엔진의 측정값을 비교하기 전에 아래 차이가 결과에 영향을 주는지 확인하세요.</strong> 같은 조작이라도 엔진이 카메라에 보내는 요청과 앱이 기록하는 시각이 다를 수 있습니다.</p>
@@ -331,7 +333,7 @@
 <tr>
 <td>스트림 선택</td>
 <td>Preview 크기와 YUV·JPEG 활성화·크기, FPS 범위를 선택합니다.</td>
-<td>자동 구성이며 정확한 출력 선택은 Camera2로 전환해야 합니다.</td>
+<td>Preview·YUV·JPEG 크기와 출력 활성화를 선택합니다. 요청한 해상도만 필터에 남기며 조합은 bind 성공 여부로 확인합니다.</td>
 </tr>
 <tr>
 <td>녹화 코덱</td>
@@ -359,23 +361,28 @@
 <td>PreviewView가 STREAMING 상태이고 최근 capture 결과가 있는지로 판정합니다.</td>
 </tr>
 <tr>
-<td>Benchmark·CLI</td>
+<td>Benchmark</td>
 <td>지원합니다.</td>
-<td>지원하지 않습니다. 두 경로 모두 Camera2로 엽니다.</td>
+<td>지원하지 않으며 Camera2로 엽니다.</td>
+</tr>
+<tr>
+<td>CLI</td>
+<td>기본 엔진입니다. 크기와 녹화 H264·HEVC를 지정합니다.</td>
+<td><code>--engine CameraX</code>로 선택합니다. 크기를 지정하며 녹화 코덱은 Auto입니다.</td>
 </tr>
 </tbody></table>
 <details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-09-28 @ <code>ee4d548</code> · Codex-code-review</li>
+<li>검토 2026-09-29 @ <code>a933705</code> · Codex-release-review</li>
 </ul>
 </details><!-- omm:end id=comparison --><h3 id="기기에서-관찰한-차이">기기에서 관찰한 차이</h3>
 <p>Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 <a href="evidence.html#camerax-기기-관찰">Evidence</a>에 있습니다.</p>
 <h2 id="문서-검토-상태">문서 검토 상태</h2>
 <details>
 <summary>기준 앱 버전과 검토 커밋 확인</summary><!-- omm:begin id=status --><ul>
-<li>검증 기준 앱 버전: 0.16.0 (versionCode 593)</li>
+<li>검증 기준 앱 버전: 0.17.0 (versionCode 594)</li>
 </ul>
 <table>
 <thead>
@@ -388,27 +395,27 @@
 <tbody><tr>
 <td>구조 원본 <code>overall-architecture</code></td>
 <td>최신</td>
-<td>검토 2026-09-28 @ <code>ee4d548</code> · Codex-code-review</td>
+<td>검토 2026-09-29 @ <code>a933705</code> · Codex-release-review</td>
 </tr>
 <tr>
 <td>원고 <code>contract</code></td>
 <td>최신</td>
-<td>검토 2026-09-28 @ <code>ee4d548</code> · Codex-code-review</td>
+<td>검토 2026-09-29 @ <code>a933705</code> · Codex-release-review</td>
 </tr>
 <tr>
 <td>원고 <code>camera2</code></td>
 <td>최신</td>
-<td>검토 2026-09-28 @ <code>ee4d548</code> · Codex-code-review</td>
+<td>검토 2026-09-29 @ <code>a933705</code> · Codex-release-review</td>
 </tr>
 <tr>
 <td>원고 <code>camerax</code></td>
 <td>최신</td>
-<td>검토 2026-09-28 @ <code>ee4d548</code> · Codex-code-review</td>
+<td>검토 2026-09-29 @ <code>a933705</code> · Codex-release-review</td>
 </tr>
 <tr>
 <td>원고 <code>comparison</code></td>
 <td>최신</td>
-<td>검토 2026-09-28 @ <code>ee4d548</code> · Codex-code-review</td>
+<td>검토 2026-09-29 @ <code>a933705</code> · Codex-release-review</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p>표의 <code>최신</code>은 기록된 근거와 원고가 검토 이후 바뀌지 않았다는 뜻입니다. 모든 기기에서 동작을 검증했다는 뜻은 아닙니다.</p>

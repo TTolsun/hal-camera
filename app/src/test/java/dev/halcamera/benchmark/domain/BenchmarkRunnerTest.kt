@@ -86,8 +86,48 @@ class BenchmarkRunnerTest {
     private val driver = FakeDriver()
     private val listener = RecordingListener()
 
-    private fun runner(config: BenchmarkRunner.Config = BenchmarkRunner.Config()) =
-        BenchmarkRunner(driver, scheduler, { clock.ns }, profile, endpoint, "20260910-120000-000", config, listener)
+    private fun runner(config: BenchmarkRunner.Config = BenchmarkRunner.Config(), diagnostics: () -> Map<String, Any?> = { emptyMap() }) =
+        BenchmarkRunner(driver, scheduler, { clock.ns }, profile, endpoint, "20260910-120000-000", config, listener, diagnostics)
+
+    @Test
+    fun `diagnostics surround each launch without inflating measured latencies`() {
+        var samples = 0
+        runToEnd(runner(diagnostics = {
+            clock.advanceMs(7)
+            mapOf("sample" to samples++)
+        }))
+        val cycles = listener.result!!.cycles
+        assertEquals(profile.launchIterations * 2, samples)
+        cycles.forEachIndexed { index, cycle ->
+            assertEquals(100.0, cycle.openMs!!, 0.0)
+            assertEquals(30.0, cycle.closeMs!!, 0.0)
+            assertEquals(mapOf("sample" to index * 2), cycle.diagnostics["before_open"])
+            assertEquals(mapOf("sample" to index * 2 + 1), cycle.diagnostics["after_close"])
+            assertEquals(cycle.diagnostics, cycle.toJsonMap()["diagnostics"])
+        }
+    }
+
+    @Test
+    fun `unavailable diagnostics do not fail successful launches`() {
+        runToEnd(runner(diagnostics = { throw SecurityException("denied") }))
+        val result = listener.result!!
+        assertNull(result.hardFailure)
+        assertEquals(profile.expectedLaunchSamples, result.validLaunchSamples)
+        assertEquals("unavailable", (result.cycles.first().diagnostics["before_open"] as Map<*, *>)["status"])
+    }
+
+    @Test
+    fun `failed cycle preserves its diagnostics`() {
+        val r = runner(diagnostics = { mapOf("thermal_status" to 2) })
+        r.start()
+        r.signal(r.currentSession, BenchmarkRunner.Signal.ERROR)
+        completeClose(r)
+        r.abort("test")
+        completeClose(r)
+        val cycle = listener.result!!.cycles.single()
+        assertTrue(cycle.failed)
+        assertEquals(mapOf("thermal_status" to 2), cycle.diagnostics["before_open"])
+    }
 
     /** Drives one open through OPENED, CONFIGURED and FIRST_FRAME the way Camera2Engine's events would. */
     private fun completeOpen(r: BenchmarkRunner, openMs: Long = 100, configureMs: Long = 40, firstFrameMs: Long = 60) {

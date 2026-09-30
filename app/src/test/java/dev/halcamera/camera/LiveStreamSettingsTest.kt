@@ -4,6 +4,26 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class LiveStreamSettingsTest {
+    @Test fun `CameraX automatic codec choices do not overwrite Camera2 settings`() {
+        val camera2 = LiveStreamSettings(LiveSize(1280, 720), LiveSize(640, 480), LiveSize(1920, 1080), null,
+            LiveVideo(LiveSize(1920, 1080), 30, "HEVC"))
+        val cameraX = camera2.copy(jpeg = null, video = camera2.video!!.copy(codec = "Auto"))
+        val settings = hashMapOf(liveStreamSettingsKey("0", "Camera2") to camera2,
+            liveStreamSettingsKey("0", "CameraX") to cameraX)
+        assertEquals(camera2, settings["0"])
+        val bytes = java.io.ByteArrayOutputStream()
+        java.io.ObjectOutputStream(bytes).use { it.writeObject(settings) }
+        java.io.ObjectInputStream(java.io.ByteArrayInputStream(bytes.toByteArray())).use { assertEquals(settings, it.readObject()) }
+        settings.remove("0") // CLI resets only its Camera2 defaults.
+        assertEquals(cameraX, settings[liveStreamSettingsKey("0", "CameraX")])
+        val options = listOf(cameraX.video!!, LiveVideo(LiveSize(1280, 720), 30, "Auto"))
+        val support = LiveStreamSupport(listOf(cameraX.preview), listOf(cameraX.yuv!!), emptyList(), emptyList(), options, options[0])
+        val draft = LiveVideoDraft(support, null)
+        assertEquals(listOf("Auto"), draft.formats)
+        draft.selectSize(LiveSize(1280, 720))
+        assertEquals(options[1], draft.requested)
+        assertNull(support.rejection(cameraX.copy(video = draft.requested)))
+    }
     @Test fun `recording choices follow codec size and supported frame rate without changing an untouched default`() {
         val hd = LiveSize(1280, 720)
         val full = LiveSize(1920, 1080)

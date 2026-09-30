@@ -67,6 +67,16 @@ class IncidentActions(
     fun showList() {
         val files = files()
         if (files.isEmpty()) { toast("저장된 incident가 없습니다"); return }
+        if (Look.isLight(activity)) {
+            LabDialog(activity, "ZIP Archives · ${files.size}").apply {
+                files.forEach { file ->
+                    entry("${file.name}\n${file.length() / 1024} KB") { showLabFile(file) }
+                }
+                action("Close", primary = true)
+                show()
+            }
+            return
+        }
         AlertDialog.Builder(activity).setTitle("ZIP Archives · ${files.size}")
             .setItems(files.map { "${it.name}\n${it.length() / 1024} KB" }.toTypedArray()) { _, index ->
                 val file = files[index]
@@ -80,6 +90,33 @@ class IncidentActions(
                     }
                 }.setNegativeButton("취소", null).show()
             }.setNegativeButton("닫기", null).show()
+    }
+
+    private fun showLabFile(file: File) {
+        LabDialog(activity, "ZIP Archive").apply {
+            group {
+                addView(Look.text(context, file.name, 15, Look.ink).apply { setTextIsSelectable(true) })
+                addView(Look.text(context, "${file.length() / 1024} KB", 13, Look.inkMuted))
+            }
+            action("공유", primary = true) { share(file) }
+            action("다른 위치에 저장") { host.saveAs(file) }
+            action("삭제", destructive = true) {
+                LabDialog(activity, "Delete Archive").apply {
+                    group { addView(Look.text(context, "${file.name}을 기기에서 삭제할까요?", 15, Look.ink)) }
+                    action("삭제", destructive = true) {
+                        if (file.delete()) {
+                            latest = files().firstOrNull()
+                            host.latestChanged(latest)
+                            toast("삭제했습니다")
+                        } else toast("ZIP을 삭제하지 못했습니다")
+                    }
+                    action("취소")
+                    show()
+                }
+            }
+            action("Close")
+            show()
+        }
     }
 
     fun share(file: File) {
