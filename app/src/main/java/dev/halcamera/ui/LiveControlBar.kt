@@ -73,7 +73,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     private var expanded = false
     private val rows = FrameLayout(context).apply { visibility = View.GONE }
     /** Hosted in the centre of the preview header; the panel below contains only expanded controls. */
-    val handle = IconButton(context, R.drawable.ic_chevron_down, "카메라 제어 펼치기") { setExpanded(!expanded) }
+    val handle = IconButton(context, R.drawable.ic_chevron_down, "Expand camera controls") { setExpanded(!expanded) }
 
     init {
         view.gravity = Gravity.CENTER_HORIZONTAL
@@ -94,7 +94,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
                 setOnClickListener {
                     if (enabled) { if (delta == 0) ruler.resetValue() else ruler.adjustBy(delta); scheduleFold() }
                 }
-                contentDescription = when (delta) { -1 -> "노출 보정 한 단계 낮추기"; 1 -> "노출 보정 한 단계 높이기"; else -> "노출 보정 EV 0으로 초기화" }
+                contentDescription = when (delta) { -1 -> "Decrease exposure compensation by one step"; 1 -> "Increase exposure compensation by one step"; else -> "Reset exposure compensation to EV 0" }
                 tooltipText = contentDescription
             }, LinearLayout.LayoutParams(dp(48), dp(48)))
         }
@@ -150,14 +150,14 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
 
     private fun openFlash() {
-        if (!support.flash) { host.notice("이 카메라에는 플래시가 없습니다"); return }
+        if (!support.flash) { host.notice("This camera has no flash."); return }
         closePanels()
         flashRow.removeAllViews()
         support.flashModes(video).forEach { mode ->
             val option = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
             val button = QuickButton(context) { flashRow.visibility = View.GONE; mainRow.visibility = View.VISIBLE; update(controls.copy(flash = mode)) }
             button.show(icon = flashIcon(mode), text = null, active = mode == controls.flash, locked = false, available = true,
-                description = "${mode.label}${if (mode == controls.flash) ", 선택됨" else ""}")
+                description = "${mode.label}${if (mode == controls.flash) ", Selected" else ""}")
             option.addView(button, LinearLayout.LayoutParams(dp(48), dp(48)))
             option.addView(TextView(context).apply {
                 text = mode.label.removePrefix("Flash ").replaceFirstChar { it.uppercase() }
@@ -174,7 +174,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
 
     private fun toggleAf() {
-        if (!support.afLock) { host.notice("초점이 고정된 카메라라서 AF 잠금이 없습니다"); return }
+        if (!support.afLock) { host.notice("AF lock is unavailable on this fixed-focus camera."); return }
         update(controls.copy(afLock = !controls.afLock))
     }
 
@@ -190,12 +190,12 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
 
     private fun toggleAe() {
-        if (!support.aeLock) { host.notice("이 카메라는 AE 잠금을 지원하지 않습니다"); return }
+        if (!support.aeLock) { host.notice("This camera does not support AE lock."); return }
         update(controls.copy(aeLock = !controls.aeLock))
     }
 
     private fun toggleRuler() {
-        val range = support.evRange ?: run { host.notice("이 카메라는 노출 보정(EV)을 지원하지 않습니다"); return }
+        val range = support.evRange ?: run { host.notice("This camera does not support exposure compensation (EV)."); return }
         if (ruler.visibility == View.VISIBLE) { closePanels(); return }
         closePanels()
         ruler.set(range, support.evStep, controls.evIndex)
@@ -222,15 +222,15 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     private fun render() {
         evPanel.visibility = ruler.visibility
         flash.show(flashIcon(controls.flash), null, controls.flash != FlashMode.OFF, false, support.flash,
-            "플래시, 현재 ${controls.flash.label}")
+            "Flash, Current: ${controls.flash.label}")
         afLock.show(null, "AF", controls.afLock, controls.afLock, support.afLock,
-            if (controls.afLock) "AF 잠금 켜짐, 누르면 해제" else "AF 잠금, 누르면 초점을 맞추고 잠금")
+            if (controls.afLock) "AF lock on; tap to unlock" else "AF lock; tap to focus and lock")
         aeLock.show(null, "AE", controls.aeLock, controls.aeLock, support.aeLock,
-            if (controls.aeLock) "AE 잠금 켜짐, 누르면 해제" else "AE 잠금, 누르면 현재 노출을 잠금")
+            if (controls.aeLock) "AE lock on; tap to unlock" else "AE lock; tap to lock current exposure")
         val evText = if (controls.evIndex == 0) null else support.evLabel(controls.evIndex).removePrefix("EV ")
         ev.show(if (evText == null) R.drawable.ic_exposure else null, evText,
             controls.evIndex != 0 || ruler.visibility == View.VISIBLE, false, support.evRange != null,
-            "노출 보정, 현재 ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "조절기 접기" else "조절기 펼치기"}")
+            "Exposure compensation, Current: ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "collapse adjustment" else "expand adjustment"}")
         // Dim while the bar is off (camera not ready, recording being saved, a CLI command running), as MainActivity
         // dims every other Live control, so a tap that does nothing never looks like one that should.
         listOf(flash, afLock, aeLock, ev).forEach { it.isEnabled = enabled; if (!enabled) it.alpha = 0.4f }
@@ -240,10 +240,10 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             "AF lock".takeIf { controls.afLock }, "AE lock".takeIf { controls.aeLock },
             support.evLabel(controls.evIndex).takeIf { controls.evIndex != 0 },
         )
-        ViewCompat.setStateDescription(handle, if (expanded) "펼쳐짐" else "접힘")
+        ViewCompat.setStateDescription(handle, if (expanded) "Expanded" else "Collapsed")
         handle.setIcon(if (expanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down,
-            (if (expanded) "카메라 제어 접기" else "카메라 제어 펼치기: 플래시, AF 잠금, AE 잠금, EV") +
-                if (on.isEmpty()) "" else ". 켜짐: ${on.joinToString(", ")}")
+            (if (expanded) "Collapse camera controls" else "Expand camera controls: flash, AF lock, AE lock, EV") +
+                if (on.isEmpty()) "" else ". On: ${on.joinToString(", ")}")
     }
 
     private fun flashIcon(mode: FlashMode) = when (mode) {
@@ -313,7 +313,7 @@ private class QuickButton(context: Context, action: () -> Unit) : Button(context
         alpha = if (available) 1f else 0.4f
         contentDescription = description
         tooltipText = description
-        ViewCompat.setStateDescription(this, if (active) "켜짐" else null)
+        ViewCompat.setStateDescription(this, if (active) "On" else null)
         invalidate()
     }
 

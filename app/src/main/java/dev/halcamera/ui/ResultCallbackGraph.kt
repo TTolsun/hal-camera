@@ -19,14 +19,14 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
         holdSeconds = prefs.getInt("hold_seconds", 3).takeIf { it in ResultCallbackTimeline.HOLD_SECONDS } ?: 3
     }
     private val widgets = CameraWidgets(context)
-    private val status = widgets.label("수신 대기", 11, Look.onDark).apply {
+    private val status = widgets.label("Waiting for frames… Any moment now.", 11, Look.onDark).apply {
         setShadowLayer(widgets.dp(2).toFloat(), 0f, widgets.dp(1).toFloat(), Color.BLACK)
         setSingleLine()
         setAutoSizeTextTypeUniformWithConfiguration(10, 12, 1, android.util.TypedValue.COMPLEX_UNIT_SP)
     }
     private var nowNs = 0L
     private var renderedFrame: CallbackTimelineFrame? = null
-    private val hold = widgets.button("고정") {
+    private val hold = widgets.button("Hold") {
         timeline.toggleAutoHold(nowNs)
         prefs.edit().putBoolean("auto_hold", timeline.autoHold).apply()
         render()
@@ -82,16 +82,16 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
         status.textIfChanged("$mode #${timeline.displayed?.number ?: "—"}")
         val held = timeline.autoHoldUntilNs != null
         heldIndicator.bind(held)
-        status.contentDescription = if (held) "고정 중, ${status.text}" else status.text
-        hold.textIfChanged(if (timeline.autoHold) "해제" else "고정")
+        status.contentDescription = if (held) "Held, ${status.text}" else status.text
+        hold.textIfChanged(if (timeline.autoHold) "Live" else "Hold")
         duration.textIfChanged("${timeline.holdSeconds}s")
         val durationVisibility = if (timeline.autoHold) View.VISIBLE else View.INVISIBLE
         if (duration.visibility != durationVisibility) duration.visibility = durationVisibility
-        duration.contentDescription = "자동 고정 시간 ${timeline.holdSeconds}초, 누르면 다음 시간"
-        hold.contentDescription = if (timeline.autoHold) "자동 고정 해제" else "자동 고정 켜기"
+        duration.contentDescription = "Auto-hold duration: ${timeline.holdSeconds} seconds; tap for the next duration"
+        hold.contentDescription = if (timeline.autoHold) "Turn off auto-hold" else "Turn on auto-hold"
         if (renderedFrame != timeline.displayed) {
             renderedFrame = timeline.displayed
-            plot.contentDescription = "프레임 ${timeline.displayed?.number ?: "없음"}. 이전 프레임의 Shutter 콜백 기준. " + timeline.displayed?.rows.orEmpty().joinToString(". ") {
+            plot.contentDescription = "Frame ${timeline.displayed?.number ?: "none"}. Relative to the previous frame shutter callback. " + timeline.displayed?.rows.orEmpty().joinToString(". ") {
                 "${it.label} ${it.state ?: it.latenciesMs.joinToString { value -> format(value) }}"
             }
         }

@@ -61,7 +61,7 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
         sizes.contentDescription = active.joinToString(", ") { (key, _, name) ->
             val prefix = if (key == "recording") "$name $recordingFormat" else name
             "$prefix ${streams?.get(key) ?: "Off"}"
-        } + ", 스트림 크기 설정 열기"
+        } + ", open stream size settings"
         sizes.visibility = if (value.isEmpty()) View.GONE else View.VISIBLE
     }
 
@@ -80,7 +80,7 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
         val color = if (running) Look.statusFail else Look.onDarkMuted
         heartbeat.setTextColor(color)
         dot.setColor(color)
-        heartbeat.contentDescription = if (running) "Live, 프리뷰 동작 중" else "Live, 프리뷰 정지"
+        heartbeat.contentDescription = if (running) "Live, preview running" else "Live, preview stopped"
         if (running && isAttachedToWindow && windowVisibility == View.VISIBLE && ValueAnimator.areAnimatorsEnabled()) {
             pulse = ObjectAnimator.ofFloat(heartbeat, View.ALPHA, 1f, 0.3f).apply {
                 duration = 600

@@ -70,7 +70,7 @@ internal class CameraXStillCapture(
         synchronized(lock) { photo = pending }
         inFlight = true
         host.updateRotation()
-        host.report("사진 촬영 중…", false)
+        host.report("Capturing… Say cheese.", false)
         telemetry.event(sessionId, "capture_submit", mapOf("api" to if (useCase == null) "ImageAnalysis" else "ImageCapture.takePicture", "flash" to host.flashName,
             "zoomRequested" to host.zoomRequested, "correlation" to "one app capture in flight; CameraX owns internal tags"))
         useCase?.takePicture(mainExecutor, object : ImageCapture.OnImageCapturedCallback() {
@@ -170,9 +170,9 @@ internal class CameraXStillCapture(
             deliver(pending, result.map { PhotoResult(pending.requestId, pending.name, timestamp, it) })
             main.post {
                 inFlight = false
-                val message = result.fold({ "갤러리에 사진 ${it.size}장을 저장했습니다" }, { "사진 저장 실패: ${it.message}" })
+                val message = result.fold({ "Saved ${it.size} shots. Pixels secured." }, { "Photo save failed: ${it.message}" })
                 if (!host.active || result.isFailure) Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
-                if (host.active) host.report(result.fold({ message }, { "$message · 다시 촬영할 수 있습니다" }), true)
+                if (host.active) host.report(result.fold({ message }, { "$message · Ready for another shot." }), true)
             }
         }
     }

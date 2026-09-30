@@ -100,7 +100,7 @@ class MainActivity : ComponentActivity() {
                 closing = old != null
                 val closed = {
                     closing = false
-                    setStatus("프리뷰 중지 · Lab에서 카메라를 다시 연결하세요", false)
+                    setStatus("Preview paused · Reconnect Camera in Lab.", false)
                     done()
                 }
                 if (old == null) closed() else old.close(closed)
@@ -204,14 +204,14 @@ class MainActivity : ComponentActivity() {
     private var pendingPermissionAction: (() -> Unit)? = null
     private val mediaPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
         val action = pendingPermissionAction.also { pendingPermissionAction = null }
-        if (grants.values.all { it }) action?.invoke() else toast("저장하려면 요청한 권한을 허용해 주세요")
+        if (grants.values.all { it }) action?.invoke() else toast("Allow the requested permissions to save media.")
     }
     private lateinit var engineButton: Button
     private val graphBack = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() = showCallbacks(false)
     }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) restartCamera() else setStatus("카메라 권한이 필요합니다 · Lab에서 카메라를 다시 연결하세요", false)
+        if (granted) restartCamera() else setStatus("Camera permission required · Reconnect Camera in Lab.", false)
     }
     private var reconnectFromLab = false
     private var returningFromLab = false
@@ -235,9 +235,9 @@ class MainActivity : ComponentActivity() {
         if (uri != null && file != null) io.execute {
             try {
                 contentResolver.openOutputStream(uri)?.use { target -> file.inputStream().use { it.copyTo(target) } }
-                    ?: error("저장 위치를 열 수 없습니다")
-                main.post { if (!destroyed) toast("선택한 위치에 저장했습니다") }
-            } catch (e: Exception) { main.post { if (!destroyed) toast("저장 실패: ${e.message}") } }
+                    ?: error("Cannot open the save location.")
+                main.post { if (!destroyed) toast("Saved to your chosen location. Safely stashed.") }
+            } catch (e: Exception) { main.post { if (!destroyed) toast("Save failed: ${e.message}") } }
         }
     }
     private val tick = object : Runnable {
@@ -308,7 +308,7 @@ class MainActivity : ComponentActivity() {
         // Activity results are delivered by STARTED; consume Lab state once at RESUMED.
         if (returningFromLab || returningFromSettings) return
         if (hasPermission()) restartCamera()
-        else { setStatus("카메라 접근을 허용하면 측정이 시작됩니다", false); permission.launch(Manifest.permission.CAMERA) }
+        else { setStatus("Allow camera access to start the preview.", false); permission.launch(Manifest.permission.CAMERA) }
     }
     override fun onResume() {
         super.onResume()
@@ -318,13 +318,13 @@ class MainActivity : ComponentActivity() {
                 if (reconnectFromLab) reconnectCameraFromLab()
                 else if (cli.active == null && !recordingVideo) {
                     if (hasPermission()) restartCamera()
-                    else setStatus("카메라 권한이 필요합니다 · Lab에서 카메라를 다시 연결하세요", false)
+                    else setStatus("Camera permission required · Reconnect Camera in Lab.", false)
                 }
             }
             returningFromSettings -> {
                 returningFromSettings = false
                 if (cli.active == null && !recordingVideo && hasPermission()) restartCamera()
-                else if (!hasPermission()) setStatus("카메라 권한이 필요합니다 · Lab에서 카메라를 다시 연결하세요", false)
+                else if (!hasPermission()) setStatus("Camera permission required · Reconnect Camera in Lab.", false)
             }
         }
     }
@@ -370,7 +370,7 @@ class MainActivity : ComponentActivity() {
         ready=false; mediaButton.isEnabled=false; reportButton.isEnabled=false
         val old = engine; engine = null
         if (old != null) {
-            closing = true; setStatus("카메라 세션 종료 중…", false)
+            closing = true; setStatus("Closing camera… Letting the lens clock out.", false)
             old.close {
                 closing = false
                 if (destroyed) cameraWorker.shutdown() else openCamera()
@@ -379,19 +379,19 @@ class MainActivity : ComponentActivity() {
     }
     private fun openCamera() {
         if (!resumed || destroyed || paused || !hasPermission()) {
-            if (paused) setStatus("프리뷰 중지 · Lab에서 카메라를 다시 연결하세요", false)
+            if (paused) setStatus("Preview paused · Reconnect Camera in Lab.", false)
             return
         }
-        if (cameraId.isEmpty()) { setStatus("사용 가능한 카메라가 없습니다", false); return }
+        if (cameraId.isEmpty()) { setStatus("No cameras available.", false); return }
         sessionId = UUID.randomUUID().toString()
         val thisSession = sessionId
         val thisCamera = cameraId
         val thisKey = streamKey()
         val requestedStreams = streamSettings[thisKey]
-        if (engineName == "Camera2") streamState[thisKey] = "구성 중입니다."
+        if (engineName == "Camera2") streamState[thisKey] = "Configuring… Getting the pixels in line."
         zoomApplied = false
         updateCameraChoices()
-        setStatus("$engineName · ${CameraLabel.short(cameraId)} 연결 중…", false)
+        setStatus("$engineName · ${CameraLabel.short(cameraId)} · Connecting… Waking the pixels.", false)
         (previewHost.getChildAt(0) as? PreviewView)?.previewStreamState?.removeObservers(this)
         previewHost.removeAllViews()
         val previewReady = { if (thisSession == sessionId && resumed && !closing) liveCli.previewReady() }
@@ -423,12 +423,12 @@ class MainActivity : ComponentActivity() {
                 liveStreams = requestedStreams, streamsConfigured = { values ->
                     if (thisSession == sessionId && resumed && !closing) {
                         goodStreams[thisKey] = requestedStreams
-                        streamState[thisKey] = "구성 성공"
+                        streamState[thisKey] = "Configured"
                         liveIndicator.bindSizes(values)
                     }
                 }, streamsFailed = { reason ->
                     if (thisSession == sessionId) cli.active?.takeIf { it.command in setOf("preview", "capture", "record.start") }?.let { cli.fail(it.id, "PREFLIGHT_FAILED", reason) }
-                    if (thisSession == sessionId && resumed && !closing) streamState[thisKey] = "실패: $reason"
+                    if (thisSession == sessionId && resumed && !closing) streamState[thisKey] = "Failed: $reason"
                 })
         } else {
             val view = TextureView(this)
@@ -438,14 +438,14 @@ class MainActivity : ComponentActivity() {
                     if (thisSession == sessionId && resumed && !closing) {
                         goodStreams[thisKey] = requestedStreams
                         liveIndicator.bindSizes(values)
-                        streamState[thisKey] = "구성 성공 · Preview ${values["preview"]} · YUV ${values["analysis"] ?: "Off"} · JPEG ${values["jpeg"] ?: "Off"}"
+                        streamState[thisKey] = "Configured · Preview ${values["preview"]} · YUV ${values["analysis"] ?: "Off"} · JPEG ${values["jpeg"] ?: "Off"}"
                     }
                 }, streamsFailed = { reason ->
                     if (thisSession == sessionId) cli.active?.takeIf { it.command in setOf("preview", "capture", "record.start") }?.let { cli.fail(it.id, "PREFLIGHT_FAILED", reason) }
                     if (thisSession == sessionId && resumed && !closing) {
-                        streamState[thisKey] = "실패: $reason"
+                        streamState[thisKey] = "Failed: $reason"
                         val failed = engine; engine = null; closing = failed != null
-                        setStatus("$reason · Lab → Live Streams에서 구성을 변경하거나 복구하세요.", false)
+                        setStatus("$reason · Change or restore the configuration in Lab → Live Streams.", false)
                         failed?.close {
                             closing = false
                             if (destroyed) cameraWorker.shutdown()
@@ -457,7 +457,7 @@ class MainActivity : ComponentActivity() {
             }, recordingState = recordingState, notice = notice, status = status)
         }
         previewHost.addView(FocusRing(this, { engine as? TouchMetering }) { controlBar.setAeLock(it) }, FrameLayout.LayoutParams(-1,-1))
-        try { engine?.start() } catch (e: Exception) { setStatus("시작 실패: ${e.message}",false) }
+        try { engine?.start() } catch (e: Exception) { setStatus("Camera start failed: ${e.message}",false) }
         updateCameraChoices()
     }
     /** Shown 2.5 s like a save notice, also while recording; [ready] stays as it is. */
@@ -469,12 +469,12 @@ class MainActivity : ComponentActivity() {
         // A save notice stays for its 2.5 s even when the engine's "· LIVE" report follows it. Stopping a recording
         // rebuilds the preview session, and that report used to arrive right after the video notice and hide it.
         // Only that one routine report waits; a failure or any other notice still replaces the save notice.
-        val saved = ok && text.contains("저장했습니다")
+        val saved = ok && text.contains("saved", ignoreCase = true)
         if (!(savedNoticeShown && ok && text.endsWith("· LIVE"))) {
             main.removeCallbacks(clearNotice)
             savedNoticeShown = saved
             cameraNotice.text = text
-            cameraNotice.visibility = if ((!ok && !recordingVideo) || text.contains("실패") || saved) View.VISIBLE else View.GONE
+            cameraNotice.visibility = if ((!ok && !recordingVideo) || (text.contains("실패") || text.contains("failed", ignoreCase = true)) || saved) View.VISIBLE else View.GONE
             if (saved) main.postDelayed(clearNotice, 2500)
         }
         ready=ok; reportButton.isEnabled=ok && recorder.remainingNs()==null
@@ -500,12 +500,12 @@ class MainActivity : ComponentActivity() {
     private fun buildUi() {
         val root=FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
         setContentView(root)
-        previewHost=FrameLayout(this).apply { setBackgroundColor(Color.BLACK); contentDescription="실시간 카메라 프리뷰" }
+        previewHost=FrameLayout(this).apply { setBackgroundColor(Color.BLACK); contentDescription="Live camera preview" }
         root.addView(previewHost,FrameLayout.LayoutParams(-1,-1))
         // A paused preview keeps its last frame, which looks exactly like a preview that has stopped updating
         // on its own. The scrim says which of the two it is, over the frame rather than above it in the top
         // bar, because that frame is what raises the question.
-        pausedOverlay=label("프리뷰 중지됨\nLab → Reconnect Camera로 다시 시작합니다",14,Look.onDark).apply {
+        pausedOverlay=label("Preview paused\nChoose Lab → Reconnect Camera to resume.",14,Look.onDark).apply {
             gravity=Gravity.CENTER
             setBackgroundColor(Color.argb(150,0,0,0))
             visibility=View.GONE
@@ -527,9 +527,9 @@ class MainActivity : ComponentActivity() {
             chooseEngine(if(engineName=="Camera2") "CameraX" else "Camera2")
         }
         // Lab groups inspection, saved results and settings; Mark stays on the preview.
-        labButton=button("Lab") { openLab() }.apply { contentDescription="Lab 열기: 검사 도구, 저장된 결과, 설정" }
+        labButton=button("Lab") { openLab() }.apply { contentDescription="Open Lab: inspection tools, saved results, and settings" }
         // Read-only overlay controls remain usable while the CLI owns a recording.
-        graphButton=CameraWidgets(this).button("Callback") { showCallbacks(callbackGraph.visibility != View.VISIBLE) }.apply { contentDescription="Callback 타이밍 표시" }
+        graphButton=CameraWidgets(this).button("Callback") { showCallbacks(callbackGraph.visibility != View.VISIBLE) }.apply { contentDescription="Show callback timing" }
         listOf(engineButton,labButton,graphButton).forEach {
             it.background=cameraChrome(Color.TRANSPARENT)
             it.setTextColor(Color.WHITE)
@@ -562,7 +562,7 @@ class MainActivity : ComponentActivity() {
         topBar.addView(liveIndicator,LinearLayout.LayoutParams(-1,-2))
         topBar.addView(controlBar.view,lp(top=4))
         resetControls()
-        cameraNotice=label("카메라 준비 중…",12,Look.onDark).apply {
+        cameraNotice=label("Preparing camera… Gathering photons.",12,Look.onDark).apply {
             gravity=Gravity.CENTER
             accessibilityLiveRegion=View.ACCESSIBILITY_LIVE_REGION_POLITE
         }
@@ -613,8 +613,8 @@ class MainActivity : ComponentActivity() {
             }
         }
         captureRow.addView(mediaButton,LinearLayout.LayoutParams(captureSize,captureSize).apply { marginStart=dp(12); marginEnd=dp(12) })
-        cameraShortcut=IconButton(this,R.drawable.ic_camera_select,"카메라 선택",filled=true) { selectCamera(cameraShortcut) }
-        snapshotButton=IconButton(this,R.drawable.ic_snapshot,"녹화 중 사진 촬영",filled=true) { takeSnapshot() }.apply { visibility=View.GONE }
+        cameraShortcut=IconButton(this,R.drawable.ic_camera_select,"Choose camera",filled=true) { selectCamera(cameraShortcut) }
+        snapshotButton=IconButton(this,R.drawable.ic_snapshot,"Take a photo while recording",filled=true) { takeSnapshot() }.apply { visibility=View.GONE }
         val cameraSlot=FrameLayout(this).apply {
             addView(cameraShortcut,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER))
             addView(snapshotButton,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER))
@@ -645,10 +645,10 @@ class MainActivity : ComponentActivity() {
             // The reading is captured here, not when the dialog opens. The dialog is at least five seconds later
             // and after an asynchronous write, by which point lastReading has been replaced many times over and
             // may even belong to a different camera. What the dialog shows has to be the evidence for that ZIP.
-            if(recorder.trigger(id)) { incidents.marked(id,readings.last); toast("5초 후 incident ZIP을 저장합니다") }
-        }.apply { setTextColor(Color.WHITE); background=cameraChrome(Color.TRANSPARENT); contentDescription="Mark: 직전 10초와 이후 5초를 ZIP으로 저장" }
+            if(recorder.trigger(id)) { incidents.marked(id,readings.last); toast("Saving events in 5 seconds. Bagging the evidence.") }
+        }.apply { setTextColor(Color.WHITE); background=cameraChrome(Color.TRANSPARENT); contentDescription="Mark: save the previous 10 and next 5 seconds to a ZIP" }
         reportButton.minHeight=dp(48); reportButton.minimumHeight=dp(48)
-        reportButton.contentDescription="문제 시점 기록: 직전 10초와 이후 5초의 이벤트를 ZIP으로 저장"
+        reportButton.contentDescription="Save events: previous 10 and next 5 seconds to a ZIP"
         mainRow.addView(reportButton,LinearLayout.LayoutParams(0,-2,1f))
         reportButton.setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
         captureChrome.addView(mainRow,LinearLayout.LayoutParams(-1,-2))
@@ -697,7 +697,7 @@ class MainActivity : ComponentActivity() {
      * BENCHMARK, PROBE and the run history do; an id the resolver did not reach still gets the short label.
      */
     private fun cameraLabel(id:String):String {
-        if(id.isEmpty()) return "카메라 없음"
+        if(id.isEmpty()) return "No camera"
         return cameraEndpoints[id]?.let(CameraLabel::full) ?: CameraLabel.short(id)
     }
     private fun updateCameraChoices() {
@@ -706,8 +706,8 @@ class MainActivity : ComponentActivity() {
             if(zoomRatio !in presets) zoomRatio=presets.minByOrNull { kotlin.math.abs(it-zoomRatio) } ?: 1f
         }
         engineButton.text=engineName
-        engineButton.contentDescription="현재 $engineName, 누르면 ${if(engineName=="Camera2") "CameraX" else "Camera2"}로 전환"
-        cameraShortcut.contentDescription="카메라 선택 목록 열기, 현재 ${cameraLabel(cameraId)}"
+        engineButton.contentDescription="Current: $engineName; tap to switch to ${if(engineName=="Camera2") "CameraX" else "Camera2"}"
+        cameraShortcut.contentDescription="Choose camera, current: ${cameraLabel(cameraId)}"
         cameraShortcut.tooltipText=cameraShortcut.contentDescription
         zoomControl.setChoices(if(cameraId.isEmpty()) listOf(1f) else zoomPresets(zoomRange(manager,cameraId)),zoomRatio)
     }
@@ -720,21 +720,21 @@ class MainActivity : ComponentActivity() {
             button.isEnabled=ready && !recordingVideo
             button.setTextColor(if(selected) Look.onDark else Look.onDarkMuted)
             button.setTypeface(null,if(selected) Typeface.BOLD else Typeface.NORMAL)
-            button.contentDescription=if(index==0) "사진 모드, 선택한 YUV 및 JPEG 출력 저장" else "동영상 모드, 소리 포함"
-            ViewCompat.setStateDescription(button,if(selected) "선택됨" else null)
+            button.contentDescription=if(index==0) "Photo mode: save selected YUV and JPEG outputs" else "Video mode with audio"
+            ViewCompat.setStateDescription(button,if(selected) "Selected" else null)
         }
         pausedOverlay.visibility=if(paused) View.VISIBLE else View.GONE
         modeControls.visibility=if(recordingVideo) View.INVISIBLE else View.VISIBLE
         recordingTime.visibility=if(recordingVideo) View.VISIBLE else View.GONE
         mediaButton.setCaptureState(videoMode,recordingVideo)
         if(stoppingRecording) {
-            mediaButton.contentDescription="동영상 저장 중"
-            ViewCompat.setStateDescription(mediaButton,"저장 중")
+            mediaButton.contentDescription="Saving video"
+            ViewCompat.setStateDescription(mediaButton,"Saving")
         }
         mediaButton.isEnabled=(ready || recordingVideo) && !stoppingRecording
         if (!videoMode && streamSettings[streamKey()]?.canCapture == false) {
             mediaButton.isEnabled = false
-            mediaButton.contentDescription = "사진 출력 꺼짐: Live 스트림에서 YUV 또는 JPEG을 켜세요"
+            mediaButton.contentDescription = "Photo output is off: enable YUV or JPEG in Live streams"
         }
         engineButton.isEnabled=!recordingVideo
         cameraShortcut.isEnabled=!recordingVideo && cameraId.isNotEmpty()
@@ -744,8 +744,8 @@ class MainActivity : ComponentActivity() {
         snapshotButton.isEnabled=cli.active == null
         snapshotButton.alpha=if(snapshot.canCapture && cli.active == null) 1f else 0.4f
         snapshotButton.contentDescription=snapshot.reason ?: when(snapshot.phase) {
-            SnapshotStatus.Phase.BUSY -> "사진을 저장하는 중입니다"
-            else -> "녹화 중 사진 촬영"
+            SnapshotStatus.Phase.BUSY -> "Saving snapshot"
+            else -> "Take a photo while recording"
         }
         // Zoom stays live while recording (#174): the engine changes the recording request in place.
         // The engine reports "REC" as not-ready, so a running recording counts as ready here, as for the shutter.
@@ -789,8 +789,8 @@ class MainActivity : ComponentActivity() {
                 .putExtra(LiveStreamsActivity.EXTRA_SETTINGS, streamSettings[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_GOOD_SETTINGS, goodStreams[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_HAS_GOOD, goodStreams.containsKey(streamKey()))
-                .putExtra(LiveStreamsActivity.EXTRA_STATUS, (streamState[streamKey()] ?: "아직 구성하지 않았습니다.") +
-                    lastStreamFps[streamKey()]?.let { "\n결과 FPS: $it" }.orEmpty())
+                .putExtra(LiveStreamsActivity.EXTRA_STATUS, (streamState[streamKey()] ?: "Not configured yet.") +
+                    lastStreamFps[streamKey()]?.let { "\nMeasured FPS: $it" }.orEmpty())
     /**
      * Lab can launch CTS and Benchmark, so the live session must be closed and its close(done) received
      * before the next screen starts. Same sequence as the CLI CTS path; onStop's restartCamera() sees
@@ -801,7 +801,7 @@ class MainActivity : ComponentActivity() {
         recorder.finish(reason)?.let(incidents::export)
         showCallbacks(false)
         val old = engine; engine = null; closing = true; ready = false
-        setStatus("카메라 세션 종료 중…", false)
+        setStatus("Closing camera… Letting the lens clock out.", false)
         updateMediaControls()
         val open = {
             closing = false
@@ -823,14 +823,14 @@ class MainActivity : ComponentActivity() {
         val state=camera.snapshot
         when {
             state.phase==SnapshotStatus.Phase.UNSUPPORTED -> toast(state.reason.orEmpty())
-            state.canCapture -> { camera.captureSnapshot(); updateMediaControls() }
+            state.canCapture -> { showNotice("Capturing snapshot… Stealing a frame."); camera.captureSnapshot(); updateMediaControls() }
         }
     }
     /** Ends the recording and says so on both stop buttons, whichever one the user reached. */
     private fun stopRecording() {
         if (!recordingVideo || stoppingRecording) return
         stoppingRecording = true
-        recordingTime.text = "저장 중…"
+        recordingTime.text = "Saving… Wrapping the reel."
         updateMediaControls()
         (engine as? MediaCapture)?.stopRecording()
     }
@@ -839,9 +839,9 @@ class MainActivity : ComponentActivity() {
         callbackGraph.visibility = if (show) View.VISIBLE else View.GONE
         metrics.visibility = if (show) View.GONE else View.VISIBLE
         graphBack.isEnabled = show
-        graphButton.contentDescription = if (show) "Callback 타이밍 숨기기" else "Callback 타이밍 표시"
+        graphButton.contentDescription = if (show) "Hide callback timing" else "Show callback timing"
         graphButton.isSelected = show
-        ViewCompat.setStateDescription(graphButton, if (show) "표시됨" else "숨겨짐")
+        ViewCompat.setStateDescription(graphButton, if (show) "Shown" else "Hidden")
         if (show) callbackGraph.update(recorder.snapshot(10_000_000_000L),sessionId,nowNs(),telemetry.sessions[sessionId].orEmpty())
     }
     private fun label(text:String,size:Int,color:Int,bold:Boolean=false)=widgets.label(text,size,color,bold)

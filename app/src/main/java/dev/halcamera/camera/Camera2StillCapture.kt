@@ -77,8 +77,8 @@ internal class Camera2StillCapture(
     fun capture(requestId: String?, done: ((Result<PhotoResult>) -> Unit)?) {
         handler.post {
             if (!benchmark && !host.captureYuv && !host.captureJpeg) {
-                main.post { done?.invoke(Result.failure(IllegalStateException("사진 출력이 꺼져 있습니다. Live 스트림 설정에서 YUV 또는 JPEG을 켜세요."))) }
-                host.report("사진 출력이 꺼져 있습니다. Live 스트림 설정에서 YUV 또는 JPEG을 켜세요.", true)
+                main.post { done?.invoke(Result.failure(IllegalStateException("Photo output is off. Enable YUV or JPEG in Live stream settings."))) }
+                host.report("Photo output is off. Enable YUV or JPEG in Live stream settings.", true)
                 return@post
             }
             if (host.camera == null || host.session == null || !host.active || inFlight || host.recordingBusy || (done != null && benchmark)) {
@@ -138,12 +138,12 @@ internal class Camera2StillCapture(
             if (!finished) {
                 finished = true; resultHook = null; precaptureFinish = null
                 telemetry.event(sessionId, "precapture_done", mapOf("reason" to reason))
-                if (reason == "timeout") host.report("플래시 측광이 3초 안에 끝나지 않아 그대로 촬영합니다", false)
+                if (reason == "timeout") host.report("Flash metering timed out after 3 seconds. Capturing anyway.", false)
                 then()
             }
         }
         precaptureFinish = finish
-        host.report("플래시 측광 중…", false)
+        host.report("Metering flash… Consulting the photons.", false)
         telemetry.event(sessionId, "precapture_trigger", mapOf("flash" to host.flashName))
         val cb = host.captureCallback
         // A trigger that could not be sent has no result to wait for: shoot now rather than after the 3 s timeout.
@@ -181,7 +181,7 @@ internal class Camera2StillCapture(
             val request = host.stillRequest(camera, c, tag, pending?.rotation)
             inFlight = true
             photo = pending
-            if (pending != null) host.report("${photoLabel()} 촬영 중…", false)
+            if (pending != null) host.report("Capturing ${photoLabel()}… Say cheese.", false)
             telemetry.event(sessionId, "capture_submit", mapOf("requestTag" to tag, "api" to "CameraCaptureSession.capture", "zoomRequested" to host.zoomRequested))
             session.capture(request, if (pending == null) host.captureCallback else photoCallback(pending), handler)
             handler.postDelayed({
@@ -232,15 +232,15 @@ internal class Camera2StillCapture(
             deliverPhoto(pending, result.map { PhotoResult(pending.requestId, pending.name, timestamp, it) })
             main.post {
                 if (!host.active || result.isFailure) {
-                    val message = result.fold({ "갤러리에 ${photoLabel()} 사진 ${it.size}장을 저장했습니다" }, { "사진 저장 실패: ${it.message}" })
+                    val message = result.fold({ "Saved ${it.size} ${photoLabel()} shots. Pixels secured." }, { "Photo save failed: ${it.message}" })
                     Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
                 }
             }
             handler.post {
                 inFlight = false
                 result.fold({
-                    host.report("갤러리에 ${photoLabel()} 사진 ${it.size}장을 저장했습니다", true)
-                }, { host.report("사진 저장 실패: ${it.message} · 다시 촬영할 수 있습니다", true) })
+                    host.report("Saved ${it.size} ${photoLabel()} shots. Pixels secured.", true)
+                }, { host.report("Photo save failed: ${it.message} · Ready for another shot.", true) })
             }
         }
     }

@@ -43,8 +43,8 @@ internal class CameraXVideoSnapshot(
 
     fun capture(requestId: String?, done: (Result<PhotoResult>) -> Unit) {
         val useCase = host.imageCapture
-        if (useCase == null || !host.active) { done(Result.failure(IllegalStateException("녹화 중 사진을 찍을 수 있는 상태가 아닙니다"))); return }
-        if (!claimed.compareAndSet(false, true)) { done(Result.failure(IllegalStateException("앞의 사진을 저장하는 중입니다"))); return }
+        if (useCase == null || !host.active) { done(Result.failure(IllegalStateException("Snapshot unavailable: recording is not ready."))); return }
+        if (!claimed.compareAndSet(false, true)) { done(Result.failure(IllegalStateException("Saving the last shot… One masterpiece at a time."))); return }
         val name = library.name()
         val answered = AtomicBoolean(false)
         fun finish(result: Result<PhotoResult>, notice: String) {
@@ -64,22 +64,22 @@ internal class CameraXVideoSnapshot(
                         if (host.active) telemetry.image(sessionId, timestamp, image.width, image.height, image.format, host.snapshotStream)
                         val buffer = image.planes[0].buffer
                         ByteArray(buffer.remaining()).also { buffer.get(it) }
-                    } catch (e: Exception) { finish(Result.failure(e), "녹화 중 사진 실패: ${e.message}"); return } finally { image.close() }
+                    } catch (e: Exception) { finish(Result.failure(e), "Snapshot failed: ${e.message}"); return } finally { image.close() }
                     try {
                         mediaIo.execute {
                             val saved = runCatching { library.savePhotos(name, null, bytes) }
                             saved.onSuccess { telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp,
                                 "source" to "video_snapshot", "uris" to it.map { uri -> uri.toString() })) }
                             finish(saved.map { PhotoResult(requestId, name, timestamp, it) },
-                                saved.fold({ "녹화 중 JPEG 사진을 저장했습니다" }, { "녹화 중 사진 저장 실패: ${it.message}" }))
+                                saved.fold({ "Snapshot saved. The show goes on." }, { "Snapshot save failed: ${it.message}" }))
                         }
-                    } catch (e: RejectedExecutionException) { finish(Result.failure(e), "녹화 중 사진 실패: 카메라가 닫혀 저장하지 못했습니다") }
+                    } catch (e: RejectedExecutionException) { finish(Result.failure(e), "Snapshot failed: The camera closed before the photo could be saved.") }
                 }
                 override fun onError(exception: ImageCaptureException) =
-                    finish(Result.failure(exception), "녹화 중 사진 실패: ${exception.message}")
+                    finish(Result.failure(exception), "Snapshot failed: ${exception.message}")
             })
-        } catch (e: Exception) { finish(Result.failure(e), "녹화 중 사진 실패: ${e.message}"); return }
-        main.postDelayed({ finish(Result.failure(IllegalStateException("5초 안에 사진이 오지 않았습니다")), "녹화 중 사진 실패: 5초 안에 오지 않았습니다") }, TIMEOUT_MS)
+        } catch (e: Exception) { finish(Result.failure(e), "Snapshot failed: ${e.message}"); return }
+        main.postDelayed({ finish(Result.failure(IllegalStateException("No photo arrived within 5 seconds.")), "Snapshot failed: No photo arrived within 5 seconds.") }, TIMEOUT_MS)
     }
 
     private companion object { const val TIMEOUT_MS = 5000L }

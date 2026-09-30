@@ -139,7 +139,7 @@ sequenceDiagram
 
 목록은 아래 공간이 부족하면 버튼 위에 열립니다. 바깥을 누르거나 뒤로 가면 값을 유지하고 닫으며, 화면을 나가면 목록도 닫습니다. 값 하나를 고르기 위해 중앙 대화상자나 별도 화면으로 이동하지 않습니다.
 
-모드나 카메라를 선택하는 동작은 설정만 바꿉니다. 촬영과 녹화는 중앙 셔터를 눌러 실행합니다. 녹화 중에는 모드 위치에 경과 시간을 표시합니다. 엔진·카메라·모드 변경과 갤러리·`Lab` 버튼는 비활성화합니다. 줌과 카메라 제어(토치·잠금·EV)는 녹화를 멈추지 않고 바꿀 수 있습니다. 정지 셔터를 누르면 `저장 중…`을 표시하고, 녹화 종료 처리 동안 셔터를 비활성화해 중복 정지를 막습니다. 앨범 저장 완료는 별도 알림으로 표시합니다.
+모드나 카메라를 선택하는 동작은 설정만 바꿉니다. 촬영과 녹화는 중앙 셔터를 눌러 실행합니다. 녹화 중에는 모드 위치에 경과 시간을 표시합니다. 엔진·카메라·모드 변경과 갤러리·`Lab` 버튼는 비활성화합니다. 줌과 카메라 제어(토치·잠금·EV)는 녹화를 멈추지 않고 바꿀 수 있습니다. 정지 셔터를 누르면 `Saving… Wrapping the reel.`을 표시하고, 녹화 종료 처리 동안 셔터를 비활성화해 중복 정지를 막습니다. 앨범 저장 완료는 별도 알림으로 표시합니다.
 
 ## 줌과 접근성
 
@@ -225,3 +225,6 @@ About은 Runway 스타일의 흰 배경, 보통 굵기 제목과 검은 Close �
 <a href="../../guide/assets/screenshots/device-info.png"><img src="../../guide/assets/screenshots/device-info.png" alt="Apple 스타일의 기기 정보와 별칭 설정 대화상자" width="320"></a>
 
 About과 Device Info의 실제 화면입니다. [ADB CLI](../../guide/assets/screenshots/cli-settings.png), [ZIP 목록](../../guide/assets/screenshots/incident-history.png), [파일 작업](../../guide/assets/screenshots/incident-actions.png), [삭제 확인](../../guide/assets/screenshots/incident-delete.png)의 실제 화면도 확인할 수 있습니다. 설정값과 저장된 파일은 변경하지 않았습니다.
+
+프리뷰의 연결·준비·중지·권한·오류 안내와 촬영·녹화·저장 상태는 짧은 영어 문구로 표시합니다. 연결 중에는 엔진·카메라 이름과 함께 `Connecting… Waking the pixels.`를 표시합니다. 촬영 중에는 `Capturing… Say cheese.`, 저장 완료에는 `Pixels secured.`처럼 가벼운 유머를 쓰고, 실패·지원 불가 문구에는 원인과 다음 동작을 명확하게 적습니다. 녹화 중 사진 촬영은 오른쪽 카메라 선택 자리에 나타나는 48dp 버튼을 사용하며, 완료 알림은 `Snapshot saved. The show goes on.`입니다.
+프리뷰의 터치 초점·노출 안내, 줌·셔터·갤러리·제어 버튼의 접근성 설명과 길게 누르기 설명도 영어로 표시합니다. Callback 그래프는 Live·Hold 버튼과 짧은 영어 상태명을 사용하며, 이벤트 ZIP 저장 알림과 완료 대화상자도 영어로 제공합니다. 조작 설명과 오류는 의미를 분명하게 유지합니다.

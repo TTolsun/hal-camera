@@ -190,8 +190,8 @@ class LiveControlsTest {
     fun `the relock notice names the difference only beyond a third of a stop`() {
         assertEquals(null, LiveControlText.relockNotice(null))
         assertEquals(null, LiveControlText.relockNotice(0.3))
-        assertEquals("노출을 다시 잠갔습니다 · 이전보다 0.8 EV 어둡습니다", LiveControlText.relockNotice(-0.83))
-        assertEquals("노출을 다시 잠갔습니다 · 이전보다 0.5 EV 밝습니다", LiveControlText.relockNotice(0.5))
+        assertEquals("Exposure locked again · 0.8 EV darker", LiveControlText.relockNotice(-0.83))
+        assertEquals("Exposure locked again · 0.5 EV brighter", LiveControlText.relockNotice(0.5))
     }
 
     @Test

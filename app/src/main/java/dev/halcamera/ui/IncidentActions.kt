@@ -54,11 +54,11 @@ class IncidentActions(
                     exporting--
                     val marked = markedReadings.remove(incident.id)
                     if (!host.destroyed) {
-                        latest = file; host.latestChanged(file); toast("저장 완료 · ${file.name}")
+                        latest = file; host.latestChanged(file); toast("Events saved. Evidence bagged. · ${file.name}")
                         if (incident.finishReason == "completed") showSaved(file, marked)
                     }
                 }
-            } catch (e: Exception) { main.post { exporting--; markedReadings.remove(incident.id); if (!host.destroyed) toast("ZIP 저장 실패: ${e.message}") } }
+            } catch (e: Exception) { main.post { exporting--; markedReadings.remove(incident.id); if (!host.destroyed) toast("ZIP save failed: ${e.message}") } }
         }
     }
 
@@ -66,7 +66,7 @@ class IncidentActions(
 
     fun showList() {
         val files = files()
-        if (files.isEmpty()) { toast("저장된 incident가 없습니다"); return }
+        if (files.isEmpty()) { toast("No saved events yet. Nothing to investigate."); return }
         if (Look.isLight(activity)) {
             LabDialog(activity, "ZIP Archives · ${files.size}").apply {
                 files.forEach { file ->
@@ -80,16 +80,16 @@ class IncidentActions(
         AlertDialog.Builder(activity).setTitle("ZIP Archives · ${files.size}")
             .setItems(files.map { "${it.name}\n${it.length() / 1024} KB" }.toTypedArray()) { _, index ->
                 val file = files[index]
-                AlertDialog.Builder(activity).setTitle(file.name).setItems(arrayOf("공유", "다른 위치에 저장", "삭제")) { _, action ->
+                AlertDialog.Builder(activity).setTitle(file.name).setItems(arrayOf("Share", "Save as", "Delete")) { _, action ->
                     when (action) {
                         0 -> share(file)
                         1 -> host.saveAs(file)
-                        2 -> AlertDialog.Builder(activity).setMessage("${file.name}을 기기에서 삭제할까요?").setNegativeButton("취소", null).setPositiveButton("삭제") { _, _ ->
-                            if (file.delete()) { latest = files().firstOrNull(); host.latestChanged(latest); toast("삭제했습니다") }
+                        2 -> AlertDialog.Builder(activity).setMessage("${file.name}: delete this file from the device?").setNegativeButton("Cancel", null).setPositiveButton("Delete") { _, _ ->
+                            if (file.delete()) { latest = files().firstOrNull(); host.latestChanged(latest); toast("Deleted.") }
                         }.show()
                     }
-                }.setNegativeButton("취소", null).show()
-            }.setNegativeButton("닫기", null).show()
+                }.setNegativeButton("Cancel", null).show()
+            }.setNegativeButton("Close", null).show()
     }
 
     private fun showLabFile(file: File) {
@@ -98,19 +98,19 @@ class IncidentActions(
                 addView(Look.text(context, file.name, 15, Look.ink).apply { setTextIsSelectable(true) })
                 addView(Look.text(context, "${file.length() / 1024} KB", 13, Look.inkMuted))
             }
-            action("공유", primary = true) { share(file) }
-            action("다른 위치에 저장") { host.saveAs(file) }
-            action("삭제", destructive = true) {
+            action("Share", primary = true) { share(file) }
+            action("Save as") { host.saveAs(file) }
+            action("Delete", destructive = true) {
                 LabDialog(activity, "Delete Archive").apply {
-                    group { addView(Look.text(context, "${file.name}을 기기에서 삭제할까요?", 15, Look.ink)) }
-                    action("삭제", destructive = true) {
+                    group { addView(Look.text(context, "${file.name}: delete this file from the device?", 15, Look.ink)) }
+                    action("Delete", destructive = true) {
                         if (file.delete()) {
                             latest = files().firstOrNull()
                             host.latestChanged(latest)
-                            toast("삭제했습니다")
-                        } else toast("ZIP을 삭제하지 못했습니다")
+                            toast("Deleted.")
+                        } else toast("Could not delete the ZIP.")
                     }
-                    action("취소")
+                    action("Cancel")
                     show()
                 }
             }
@@ -126,7 +126,7 @@ class IncidentActions(
             clipData = ClipData.newRawUri("incident", uri)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         }
-        activity.startActivity(Intent.createChooser(intent, "Incident 공유"))
+        activity.startActivity(Intent.createChooser(intent, "Share incident"))
     }
 
     /**
@@ -136,22 +136,22 @@ class IncidentActions(
     private fun showSaved(file: File, marked: LiveReading?) {
         if (host.destroyed || activity.isFinishing) return
         fun ms(v: Double?) = v?.let { String.format(Locale.US, "%.1f ms", it) } ?: "—"
-        val body = if (marked == null) "직전 10초와 이후 5초를 저장했습니다." else listOf(
-            "직전 10초와 이후 5초를 저장했습니다.",
-            "Mark를 누른 시점의 값입니다.",
+        val body = if (marked == null) "Saved the previous 10 and next 5 seconds. Evidence bagged." else listOf(
+            "Saved the previous 10 and next 5 seconds. Evidence bagged.",
+            "Values recorded when you tapped Save Events.",
             "",
             // The dialog body is proportional, so padding with spaces never lined the columns up; one value per line
             // reads the same on every font.
             "interval: ${ms(marked.intervalMs)}",
-            "  기준 p50: ${ms(marked.intervalRefMs)}",
+            "  Reference p50: ${ms(marked.intervalRefMs)}",
             "partial: ${ms(marked.partialMs)}",
-            "  기준 p50: ${ms(marked.baselinePartialMs)}",
-            "stall (10s): ${marked.stalls}회"
+            "  Reference p50: ${ms(marked.baselinePartialMs)}",
+            "stall (10s): ${marked.stalls} events"
         ).joinToString("\n")
         AlertDialog.Builder(activity).setTitle(file.name)
             .setMessage(body)
-            .setPositiveButton("공유") { _, _ -> share(file) }
-            .setNegativeButton("닫기", null).show()
+            .setPositiveButton("Share") { _, _ -> share(file) }
+            .setNegativeButton("Close", null).show()
     }
 
     private fun toast(text: String) = Toast.makeText(activity, text, Toast.LENGTH_LONG).show()

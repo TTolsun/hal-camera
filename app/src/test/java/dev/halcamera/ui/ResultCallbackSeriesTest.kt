@@ -57,7 +57,7 @@ class ResultCallbackSeriesTest {
         val events = listOf(Event(0, "s", "capture_started", 1, values = mapOf("firstStart" to true)), Event(20_000_000, "s", "capture_result", 1))
         val config = metadata(stream("recording", observable = false)) + ("partialResultCount" to 1)
         val tracks = ResultCallbackSeries.read(events, "s", 40_000_000, config).tracks
-        assertEquals("콜백 없음", tracks[2].unavailable)
+        assertEquals("No callback", tracks[2].unavailable)
         assertTrue(tracks[2].points.isEmpty())
         assertEquals(20.0, tracks[1].points.single().latencyMs!!, 0.001)
     }

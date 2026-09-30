@@ -48,8 +48,8 @@ class RecentMediaButton(context: Context, action: () -> Unit) : Button(context) 
     fun setThumbnail(bitmap: Bitmap?, video: Boolean) {
         thumbnail = bitmap?.let { RoundedBitmapDrawableFactory.create(resources, it).apply { isCircular = true } }
         this.video = video
-        contentDescription = if (bitmap == null) "HALCamera 갤러리 열기"
-            else "최근 ${if (video) "동영상" else "사진"} 미리보기, HALCamera 갤러리 열기"
+        contentDescription = if (bitmap == null) "open HALCamera Gallery"
+            else "Latest ${if (video) "video" else "photo"} preview, open HALCamera Gallery"
         tooltipText = contentDescription
         invalidate()
     }

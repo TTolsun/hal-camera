@@ -238,7 +238,7 @@ class Camera2Engine(
                     val durations = listOfNotNull(map.getOutputMinFrameDuration(SurfaceTexture::class.java, settings.preview.androidSize()),
                         settings.yuv?.let { map.getOutputMinFrameDuration(ImageFormat.YUV_420_888, it.androidSize()) },
                         settings.jpeg?.let { map.getOutputMinFrameDuration(ImageFormat.JPEG, it.androidSize()) })
-                    require(durations.all { it == 0L || it <= 1_000_000_000L / fps.min + 1 }) { "선택한 크기의 최소 프레임 시간이 FPS 하한을 초과합니다." }
+                    require(durations.all { it == 0L || it <= 1_000_000_000L / fps.min + 1 }) { "The selected size cannot meet the minimum requested FPS." }
                 }
             }
             // With a profile spec the sizes are exact and unavailable ones fail the configure step: measuring a
@@ -307,7 +307,7 @@ class Camera2Engine(
                     session.close()
                     telemetry.event(sessionId, "configure_failed", sizes)
                     report("Camera2 stream combination rejected; select another camera", false)
-                    if (spec == null) main.post { if (active) streamsFailed("카메라가 요청한 출력 조합을 거부했습니다.") }
+                    if (spec == null) main.post { if (active) streamsFailed("The camera rejected the requested stream combination.") }
                 }
             }
             if (spec == null) checkLiveSession(camera, configurations, handler, sessionCallback) { result ->
