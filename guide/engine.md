@@ -71,7 +71,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 | 이벤트 | 기록하는 내용 |
 | --- | --- |
-| `controls_set` | 요청한 EV, AE·AF 잠금, 플래시 모드 |
+| `controls_set` | 요청한 EV, AE·AF 잠금, 플래시 모드와 Camera2 수동 ISO·노출 시간·초점·WB |
 | `ae_relock_wait`, `ae_relock`, `ae_relocked` | AE 잠금을 켠 채 세션을 새로 만들었을 때 잠금을 풀고 기다린 시점, 다시 잠근 이유(수렴 또는 2초 timeout), 잠금 전후의 노출 시간·ISO와 EV 차이 |
 | `touch_meter`, `touch_meter_result` | 터치 종류(AF·AE), 정규화 좌표, 결과(FOCUSED·FAILED·METERED) |
 | `media_saved`, `video_saved` | 저장한 사진 쌍의 센서 시각과 URI, 저장한 동영상의 URI |
@@ -83,7 +83,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 상태: 관련 소스 변경됨: 재검토 필요
+- 검토 2026-09-30 @ `5400e46` · Codex-user-requested-review
 
 </details>
 
@@ -177,7 +177,7 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 상태: 관련 소스 변경됨: 재검토 필요
+- 검토 2026-09-30 @ `5400e46` · Codex-user-requested-review
 
 </details>
 
@@ -252,7 +252,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 상태: 관련 소스 변경됨: 재검토 필요
+- 검토 2026-09-30 @ `5400e46` · Codex-user-requested-review
 
 </details>
 
@@ -266,7 +266,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 | 항목 | Camera2 | CameraX |
 | --- | --- | --- |
-| 수동 촬영 | ISO·노출 시간·초점과 WB를 프리뷰·사진·녹화에 적용합니다. 지원 여부와 실제 적용값을 표시합니다. | Manual 패널에서 미지원 안내와 Camera2 전환 버튼을 표시합니다. |
+| 수동 촬영 | ISO·노출 시간·초점과 WB를 프리뷰·사진·녹화에 적용합니다. 지원 여부와 실제 적용값을 표시합니다. | Manual 패널에서 미지원 사유와 기존 상단 엔진 버튼의 위치를 안내합니다. |
 | 요청 키 | 앱이 CaptureRequest를 직접 구성하며 `request_observed`에 기록합니다. | 3A 모드와 영역 일부를 CameraX가 정합니다. 앱이 직접 넣는 키는 `CONTROL_AE_LOCK`과 AF cancel trigger뿐입니다. |
 | 사진 쌍의 YUV | 같은 capture의 버퍼입니다. 센서 시각이 JPEG와 같습니다. | JPEG와 센서 시각이 가장 가까운 analysis 프레임입니다. 차이는 `yuvOffsetNs`에 기록됩니다. |
 | 스트림 선택 | Preview 크기와 YUV·JPEG 활성화·크기, FPS 범위를 선택합니다. | Preview·YUV·JPEG 크기와 출력 활성화를 선택합니다. 요청한 해상도만 필터에 남기며 조합은 bind 성공 여부로 확인합니다. |
@@ -284,7 +284,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 상태: 관련 소스 변경됨: 재검토 필요
+- 검토 2026-09-30 @ `5400e46` · Codex-user-requested-review
 
 </details>
 
@@ -301,15 +301,15 @@ Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 [Evidence]
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.17.0 (versionCode 625)
+- 검증 기준 앱 버전: 0.18.0 (versionCode 627)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 원고 `contract` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 원고 `camera2` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 원고 `camerax` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 원고 `comparison` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-09-30 @ `5400e46` · Codex-user-requested-review |
+| 원고 `contract` | 최신 | 검토 2026-09-30 @ `5400e46` · Codex-user-requested-review |
+| 원고 `camera2` | 최신 | 검토 2026-09-30 @ `5400e46` · Codex-user-requested-review |
+| 원고 `camerax` | 최신 | 검토 2026-09-30 @ `5400e46` · Codex-user-requested-review |
+| 원고 `comparison` | 최신 | 검토 2026-09-30 @ `5400e46` · Codex-user-requested-review |
 
 <!-- omm:end id=status -->
 

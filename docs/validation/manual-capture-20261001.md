@@ -32,7 +32,8 @@
 - `assembleRelease testDebugUnitTest lintDebug --offline -I build/manual-device.gradle`: 성공했습니다. 앱 JVM 테스트 612개가 모두 통과했습니다.
 - 수동 설정 테스트 7개가 지원 범위, FPS 제한, 독립 모드, 충돌하는 잠금·플래시, WB 입력, 셔터 분수 입력을 검증합니다.
 - 문서 회귀 테스트 23개와 coverage, generate 일치, site 검사가 통과했습니다.
-- `docflow check --build`는 최신성 검사에서 재검토 대상 14개로 실패했습니다. 원고와 생성물은 갱신했으며, `tools/docgen/README.md`의 사람 전용 `verify --accept --reviewer=이름` 기록은 수행하지 않았습니다.
+- 최초 `docflow check --build`는 재검토 대상 14개로 실패했습니다. 이후 사용자의 리뷰·머지·배포 요청에 따라 Codex가 코드와 원고를 대조하고 `Codex-user-requested-review`로 기록했습니다. 최신 main 통합 후 문서 검사 6단계가 통과했습니다. 사람의 독립 승인으로 표기하지 않았습니다.
+- 정식 릴리스 후보 0.18.0(627)은 임시 versionCode init script 없이 빌드했습니다. main의 Live UI 변경 #214를 통합하고 리뷰에서 발견한 종료 시점·수동 WB 정규화·AF 실패 복구를 수정한 뒤 release 빌드·JVM 테스트·lint를 다시 통과했습니다.
 
 ## 화면
 
