@@ -18,23 +18,24 @@ data class LiveControls(
     /** Held by an AF trigger in the continuous AF mode; there is no AF lock key in Camera2. */
     val afLock: Boolean = false,
     val flash: FlashMode = FlashMode.OFF,
+    val manual: ManualControls = ManualControls(),
 ) {
     /**
      * Drops what the camera or the capture mode cannot do. Auto and always flash exist for stills only: a
      * recording has no precapture to fire them, so video mode keeps just off and torch.
      */
     fun coerce(support: LiveControlSupport, video: Boolean): LiveControls = copy(
-        evIndex = support.evRange?.let { evIndex.coerceIn(it) } ?: 0,
-        aeLock = aeLock && support.aeLock,
-        afLock = afLock && support.afLock,
-        flash = if (flash in support.flashModes(video)) flash else FlashMode.OFF,
+        evIndex = if (manual.exposure != null) 0 else support.evRange?.let { evIndex.coerceIn(it) } ?: 0,
+        aeLock = aeLock && support.aeLock && manual.exposure == null,
+        afLock = afLock && support.afLock && manual.focusDiopters == null,
+        flash = if (flash in support.flashModes(video || manual.exposure != null)) flash else FlashMode.OFF,
     )
 
     /**
      * A flash still needs the AE precapture sequence first so the metering sees the pre-flash. With AE locked the
      * exposure is already fixed and a precapture trigger would re-meter it, so the still fires without one.
      */
-    val needsPrecapture: Boolean get() = (flash == FlashMode.AUTO || flash == FlashMode.ON) && !aeLock
+    val needsPrecapture: Boolean get() = (flash == FlashMode.AUTO || flash == FlashMode.ON) && !aeLock && manual.exposure == null
 }
 
 enum class FlashMode(val label: String) {
@@ -104,7 +105,7 @@ object LiveControlText {
  * AE may meter a new stream set differently. [LiveControlText.relockNotice] tells the user when it does.
  *
  * Carrying the old values over with AE off (SENSOR_EXPOSURE_TIME and SENSOR_SENSITIVITY) would keep the exposure
- * exactly, but needs the manual exposure path of #172 and would stop EV steps from working while locked.
+ * exactly, but would stop EV steps from working while locked. The explicit Manual mode is a separate choice.
  */
 class AeRelock {
     data class Exposure(val timeNs: Long, val iso: Int)
