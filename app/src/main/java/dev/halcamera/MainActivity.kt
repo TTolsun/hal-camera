@@ -599,7 +599,8 @@ class MainActivity : ComponentActivity() {
             withMediaPermissions(false) { startActivity(Intent(this, GalleryActivity::class.java)) }
         }
         val gallerySlot=FrameLayout(this).apply { addView(galleryButton,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER)) }
-        captureRow.addView(gallerySlot,LinearLayout.LayoutParams(0,dp(72),1f))
+        val captureSize=dp(64)
+        captureRow.addView(gallerySlot,LinearLayout.LayoutParams(0,captureSize,1f))
         mediaButton=ShutterButton(this).apply {
             setOnClickListener {
                 if (cli.active != null) return@setOnClickListener
@@ -609,16 +610,16 @@ class MainActivity : ComponentActivity() {
                 } else withMediaPermissions(false) { engine?.capture() }
             }
         }
-        captureRow.addView(mediaButton,LinearLayout.LayoutParams(dp(72),dp(72)).apply { marginStart=dp(12); marginEnd=dp(12) })
+        captureRow.addView(mediaButton,LinearLayout.LayoutParams(captureSize,captureSize).apply { marginStart=dp(12); marginEnd=dp(12) })
         cameraShortcut=IconButton(this,R.drawable.ic_camera_select,"카메라 선택",filled=true) { selectCamera(cameraShortcut) }
         val cameraSlot=FrameLayout(this).apply { addView(cameraShortcut,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER)) }
-        captureRow.addView(cameraSlot,LinearLayout.LayoutParams(0,dp(72),1f))
+        captureRow.addView(cameraSlot,LinearLayout.LayoutParams(0,captureSize,1f))
 
         val modeRow=FrameLayout(this)
         bottomBar.addView(modeRow,lp(height=48))
         modeControls=row().apply { gravity=Gravity.CENTER }
-        photoModeButton=button("사진") { selectMode(false) }
-        videoModeButton=button("동영상") { selectMode(true) }
+        photoModeButton=button("Photo") { selectMode(false) }
+        videoModeButton=button("Video") { selectMode(true) }
         listOf(photoModeButton,videoModeButton).forEach {
             it.background=cameraChrome(Color.TRANSPARENT)
             it.textSize=12f
