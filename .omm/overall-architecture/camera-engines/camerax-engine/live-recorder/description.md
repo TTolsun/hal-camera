@@ -1,6 +1,6 @@
 CameraXLiveRecorder는 CameraXEngine의 Live 동영상 녹화를 맡으며, Camera2LiveRecorder에 대응합니다. CameraX Recorder가 캐시 폴더의 임시 MP4에 기록하고, 녹화가 끝나면 MediaLibrary.saveVideo로 DCIM/HALCamera에 공개한 뒤 임시 파일을 지웁니다.
 
-Camera2처럼 프리뷰와 인코더 두 스트림만으로 녹화합니다. 녹화를 시작하면 ImageAnalysis와 ImageCapture를 unbind하고 VideoCapture를 bind하므로 세션이 새로 만들어집니다. 녹화가 끝나면 반대로 되돌립니다. 네 use case를 한꺼번에 bind하면 스트림 조합을 CameraX의 stream sharing에 맡기게 되는데, Camera2 경로에는 그런 단계가 없어서 두 엔진의 조건이 달라지기 때문입니다. 녹화 중에는 사진 촬영을 거절합니다.
+Camera2처럼 프리뷰·인코더·JPEG 세 스트림만으로 녹화합니다. 녹화를 시작하면 ImageAnalysis와 ImageCapture를 unbind한 뒤 VideoCapture와 ImageCapture를 함께 bind하므로 세션이 새로 만들어집니다. 녹화가 끝나면 반대로 되돌립니다. 네 use case를 한꺼번에 bind하면 스트림 조합을 CameraX의 stream sharing에 맡기게 되는데, Camera2 경로에는 그런 단계가 없어서 두 엔진의 조건이 달라지기 때문입니다. 카메라가 VideoCapture와 ImageCapture의 조합을 거절하면 VideoCapture만 bind하고 녹화 중 사진을 지원하지 않는 이유를 알립니다. 녹화 중 YUV·JPEG 사진 쌍 촬영은 거절하고, CameraXVideoSnapshot이 ImageCapture로 JPEG 한 장만 저장합니다.
 
 요청 조건은 Recorder가 허용하는 범위에서 Camera2와 맞춥니다. 기본 해상도는 FHD이며 없으면 낮은 품질을 우선하되 높은 품질로 대체할 수도 있습니다. 30fps, 10Mbps를 요청하고, 방향 정보는 녹화 시작 시점의 화면 회전을 씁니다. 코덱과 오디오 형식은 기기의 encoder profile을 따르므로, 기본 H.264와 44.1kHz AAC를 사용하는 Camera2와 다를 수 있습니다. 오디오를 요청했는데 RECORD_AUDIO 권한이 없으면 소리 없이 녹화하지 않고 실패로 처리합니다.
 
