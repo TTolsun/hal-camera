@@ -67,7 +67,7 @@ class EvRuler(context: Context, private val onChange: (Int) -> Unit) : View(cont
         }
         this.range = range; this.step = step
         if (!dragging) { index = current.coerceIn(range); position = index.toFloat() }
-        contentDescription = "노출 보정 ${label(index)}. 좌우로 끌어 조절, 두 번 탭하면 0"
+        contentDescription = "Exposure compensation ${label(index)}. Drag left or right to adjust; double-tap to reset"
         invalidate()
     }
 
@@ -80,7 +80,7 @@ class EvRuler(context: Context, private val onChange: (Int) -> Unit) : View(cont
         val next = i.coerceIn(range)
         position = next.toFloat()
         if (next != index) { index = next; onChange(next); performHapticFeedback(android.view.HapticFeedbackConstants.CLOCK_TICK) }
-        contentDescription = "노출 보정 ${label(index)}"
+        contentDescription = "Exposure compensation ${label(index)}"
         invalidate()
     }
 

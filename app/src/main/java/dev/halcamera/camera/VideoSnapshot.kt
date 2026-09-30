@@ -44,8 +44,8 @@ object VideoSnapshotPlan {
         return listOf(preferred, guaranteed).distinct()
     }
 
-    const val OFF_REASON = "Live 스트림 설정에서 JPEG이 꺼져 있어 녹화 중 사진을 찍을 수 없습니다."
-    const val NO_SIZE_REASON = "이 카메라는 JPEG 출력 크기를 제공하지 않아 녹화 중 사진을 찍을 수 없습니다."
-    const val REFUSED_REASON = "이 카메라는 녹화 중 JPEG 출력을 함께 구성하지 못해 사진 없이 녹화합니다."
-    const val CAMERAX_REASON = "CameraX가 녹화와 사진 출력을 함께 구성하지 못해 사진 없이 녹화합니다."
+    const val OFF_REASON = "Snapshots unavailable: JPEG is off in Live stream settings."
+    const val NO_SIZE_REASON = "Snapshots unavailable: this camera has no JPEG output sizes."
+    const val REFUSED_REASON = "Recording without snapshots: this camera cannot combine video and JPEG."
+    const val CAMERAX_REASON = "Recording without snapshots: CameraX cannot combine video and photos."
 }

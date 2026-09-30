@@ -28,7 +28,7 @@ class ResultCallbackTimelineTest {
         assertEquals(1L, t.displayed!!.number)
         update(t, events, 350)
         assertEquals(2L, t.displayed!!.number)
-        assertEquals("수신 대기", t.displayed!!.rows[2].state)
+        assertEquals("Awaiting data", t.displayed!!.rows[2].state)
         assertTrue(t.displayed!!.rows[2].latenciesMs.isEmpty())
         update(t, events + e(360, "preview_available", sensor = 2, values = mapOf("stream" to "preview")), 360)
         assertEquals(listOf(293.0), t.displayed!!.rows[2].latenciesMs)
@@ -125,7 +125,7 @@ class ResultCallbackTimelineTest {
         assertEquals(1L, t.displayed!!.number)
         assertEquals(listOf(0.0), t.displayed!!.rows[0].latenciesMs)
         assertEquals(listOf(60.0), t.displayed!!.rows[1].latenciesMs)
-        assertEquals("요청 대상 아님", t.displayed!!.rows.last().state)
+        assertEquals("Not requested", t.displayed!!.rows.last().state)
         assertEquals(200, t.axisMs)
     }
 
@@ -135,7 +135,7 @@ class ResultCallbackTimelineTest {
         val events = frame(1, 0) + frame(2, 1000, true) + frame(3, 1050)
         update(t, events, 1200)
         assertEquals(2L, t.displayed!!.number)
-        assertEquals("요청 대상 아님", t.displayed!!.rows[2].state)
+        assertEquals("Not requested", t.displayed!!.rows[2].state)
         assertEquals(listOf(33.0), t.displayed!!.rows[0].latenciesMs)
         assertEquals(listOf(133.0), t.displayed!!.rows[3].latenciesMs)
         assertEquals(3, t.remainingSeconds(1_200_000_000))
@@ -231,7 +231,7 @@ class ResultCallbackTimelineTest {
         update(t, frame(1, 0), 100)
         update(t, frame(1, 0) + e(200, "image_available", sensor = 999, values = mapOf("stream" to "still")), 200)
         assertNull(t.displayed!!.number)
-        assertEquals("시작 시각 없음", t.displayed!!.rows.last().state)
+        assertEquals("No start time", t.displayed!!.rows.last().state)
         assertTrue(t.displayed!!.rows.all { it.latenciesMs.isEmpty() })
     }
 }

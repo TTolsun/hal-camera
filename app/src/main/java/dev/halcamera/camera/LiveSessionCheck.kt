@@ -16,5 +16,5 @@ internal fun checkLiveSession(camera: CameraDevice, outputs: List<OutputConfigur
             outputs, { handler.post(it) }, callback))
     } catch (_: UnsupportedOperationException) { report("unknown: query unavailable"); return }
     report(if (supported) "supported outputs; FPS verified by capture results" else "unsupported outputs")
-    require(supported) { "카메라가 요청한 출력 조합을 지원하지 않습니다." }
+    require(supported) { "The camera does not support the requested stream combination." }
 }

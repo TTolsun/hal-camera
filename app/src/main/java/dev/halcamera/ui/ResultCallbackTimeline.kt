@@ -115,12 +115,12 @@ class ResultCallbackTimeline {
             val state = when {
                 values.isNotEmpty() -> null
                 track.unavailable != null -> track.unavailable
-                points.isNotEmpty() -> "시작 시각 없음"
-                frame == null -> "수신 대기"
-                track.id == "all" || track.id == "start" -> "수신 대기"
-                frame.targets != null && track.id !in frame.targets -> "요청 대상 아님"
-                !track.repeating && frame.targets == null -> "촬영 대기"
-                else -> "수신 대기"
+                points.isNotEmpty() -> "No start time"
+                frame == null -> "Awaiting data"
+                track.id == "all" || track.id == "start" -> "Awaiting data"
+                frame.targets != null && track.id !in frame.targets -> "Not requested"
+                !track.repeating && frame.targets == null -> "Awaiting capture"
+                else -> "Awaiting data"
             }
             CallbackTimelineRow(track.id, track.label, values, state)
         })

@@ -65,7 +65,7 @@ internal class Camera2VideoSnapshot(
 
     /** Creates the JPEG stream for the next recording session. Camera thread. */
     fun open(size: Size): ConfiguredOutput<Surface> {
-        release("새 녹화")
+        release("New recording")
         this.size = size
         val output = OutputDescriptor("video_snapshot", OutputKind.JPEG, repeating = false, stillCapture = true)
         val reader = ImageReader.newInstance(size.width, size.height, ImageFormat.JPEG, 2).also { this.reader = it }
@@ -76,7 +76,7 @@ internal class Camera2VideoSnapshot(
     /** Main thread. The result is delivered on the main thread too. */
     fun capture(requestId: String?, done: (Result<PhotoResult>) -> Unit) {
         if (!claimed.compareAndSet(false, true)) {
-            done(Result.failure(IllegalStateException("앞의 사진을 저장하는 중입니다")))
+            done(Result.failure(IllegalStateException("Saving the last shot… One masterpiece at a time.")))
             return
         }
         val request = Pending(library.name(), requestId, done)
@@ -88,7 +88,7 @@ internal class Camera2VideoSnapshot(
         val session = host.session
         val c = host.characteristics
         if (reader == null || camera == null || session == null || c == null || !host.active) {
-            deliver(request, Result.failure(IllegalStateException("녹화 중 사진을 찍을 수 있는 상태가 아닙니다")))
+            deliver(request, Result.failure(IllegalStateException("Snapshot unavailable: recording is not ready.")))
             claimed.set(false)
             return
         }
@@ -98,7 +98,7 @@ internal class Camera2VideoSnapshot(
             telemetry.event(sessionId, "video_snapshot_submit", mapOf("requestTag" to tag, "size" to size?.toString(),
                 "api" to "CameraCaptureSession.capture", "template" to "TEMPLATE_VIDEO_SNAPSHOT"))
             session.capture(host.snapshotRequest(camera, c, tag, host.orientation(c)), callback(request), handler)
-            handler.postDelayed({ if (pending === request) fail(request, "5초 안에 사진이 오지 않았습니다") }, TIMEOUT_MS)
+            handler.postDelayed({ if (pending === request) fail(request, "No photo arrived within 5 seconds.") }, TIMEOUT_MS)
         } catch (e: Exception) { fail(request, e.message ?: e.toString()) }
     }
 
@@ -112,11 +112,11 @@ internal class Camera2VideoSnapshot(
             cb.onCaptureCompleted(session, r, result)
         override fun onCaptureFailed(session: CameraCaptureSession, r: CaptureRequest, failure: CaptureFailure) {
             cb.onCaptureFailed(session, r, failure)
-            fail(request, "카메라가 사진 요청을 완료하지 못했습니다")
+            fail(request, "The camera could not complete the photo request.")
         }
         override fun onCaptureBufferLost(session: CameraCaptureSession, r: CaptureRequest, target: Surface, frameNumber: Long) {
             cb.onCaptureBufferLost(session, r, target, frameNumber)
-            fail(request, "카메라가 사진 버퍼를 잃었습니다")
+            fail(request, "The camera lost the photo buffer.")
         }
     }
 
@@ -132,7 +132,7 @@ internal class Camera2VideoSnapshot(
         pending = null // The slot stays claimed until the file is written.
         try {
             mediaIo.execute { save(request, bytes, timestamp) }
-        } catch (e: RejectedExecutionException) { failNow(request, "카메라가 닫혀 저장하지 못했습니다") }
+        } catch (e: RejectedExecutionException) { failNow(request, "The camera closed before the photo could be saved.") }
     }
 
     private fun save(request: Pending, jpeg: ByteArray, timestamp: Long) {
@@ -141,7 +141,7 @@ internal class Camera2VideoSnapshot(
             "uris" to it.map { uri -> uri.toString() })) }
         deliver(request, result.map { PhotoResult(request.requestId, request.name, timestamp, it) })
         claimed.set(false)
-        host.notice(result.fold({ "녹화 중 JPEG 사진을 저장했습니다" }, { "녹화 중 사진 저장 실패: ${it.message}" }))
+        host.notice(result.fold({ "Snapshot saved. The show goes on." }, { "Snapshot save failed: ${it.message}" }))
     }
 
     private fun fail(request: Pending, message: String) {
@@ -154,7 +154,7 @@ internal class Camera2VideoSnapshot(
         telemetry.event(sessionId, "video_snapshot_failed", mapOf("message" to message))
         deliver(request, Result.failure(IllegalStateException(message)))
         claimed.set(false)
-        host.notice("녹화 중 사진 실패: $message")
+        host.notice("Snapshot failed: $message")
     }
 
     private fun deliver(request: Pending, result: Result<PhotoResult>) {
@@ -164,7 +164,7 @@ internal class Camera2VideoSnapshot(
     /** The recording session is over: close the stream and answer a snapshot that never arrived. Camera thread. */
     fun release(reason: String) {
         reader?.close(); reader = null
-        pending?.let { fail(it, "$reason 때문에 사진을 받지 못했습니다") }
+        pending?.let { fail(it, "$reason: photo capture was interrupted.") }
     }
 
     private companion object { const val TIMEOUT_MS = 5000L }

@@ -102,7 +102,7 @@ object LiveStreamSettingsView {
         }
         refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested)) }
         refreshers.forEach { it() }
-        if (actual.startsWith("실패:")) section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
+        if (actual.startsWith("Failed:") || actual.startsWith("실패:")) section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
             setPadding(dp(18), dp(14), dp(18), dp(14))
         })
         val scroll = ScrollView(themed).apply { isFillViewport = true; addView(content) }

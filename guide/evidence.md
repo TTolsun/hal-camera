@@ -127,12 +127,12 @@ flowchart LR
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.17.0 (versionCode 594)
+- 검증 기준 앱 버전: 0.17.0 (versionCode 625)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `4ff0b78` · Claude-issue175 |
-| 원고 `device-notes` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `4ff0b78` · Claude-issue175 |
+| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
+| 원고 `device-notes` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
 
 <!-- omm:end id=status -->
 

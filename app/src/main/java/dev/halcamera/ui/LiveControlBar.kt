@@ -75,7 +75,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     private var expanded = false
     private val rows = FrameLayout(context).apply { visibility = View.GONE }
     /** Hosted in the centre of the preview header; the panel below contains only expanded controls. */
-    val handle = IconButton(context, R.drawable.ic_chevron_down, "카메라 제어 펼치기") { setExpanded(!expanded) }
+    val handle = IconButton(context, R.drawable.ic_chevron_down, "Expand camera controls") { setExpanded(!expanded) }
 
     init {
         view.gravity = Gravity.CENTER_HORIZONTAL
@@ -96,7 +96,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
                 setOnClickListener {
                     if (enabled) { if (delta == 0) ruler.resetValue() else ruler.adjustBy(delta); scheduleFold() }
                 }
-                contentDescription = when (delta) { -1 -> "노출 보정 한 단계 낮추기"; 1 -> "노출 보정 한 단계 높이기"; else -> "노출 보정 EV 0으로 초기화" }
+                contentDescription = when (delta) { -1 -> "Decrease exposure compensation by one step"; 1 -> "Increase exposure compensation by one step"; else -> "Reset exposure compensation to EV 0" }
                 tooltipText = contentDescription
             }, LinearLayout.LayoutParams(dp(48), dp(48)))
         }
@@ -152,14 +152,14 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
 
     private fun openFlash() {
-        if (!support.flash) { host.notice("이 카메라에는 플래시가 없습니다"); return }
+        if (!support.flash) { host.notice("This camera has no flash."); return }
         closePanels()
         flashRow.removeAllViews()
         support.flashModes(video || controls.manual.exposure != null).forEach { mode ->
             val option = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
             val button = QuickButton(context) { flashRow.visibility = View.GONE; mainRow.visibility = View.VISIBLE; update(controls.copy(flash = mode)) }
             button.show(icon = flashIcon(mode), text = null, active = mode == controls.flash, locked = false, available = true,
-                description = "${mode.label}${if (mode == controls.flash) ", 선택됨" else ""}")
+                description = "${mode.label}${if (mode == controls.flash) ", Selected" else ""}")
             option.addView(button, LinearLayout.LayoutParams(dp(48), dp(48)))
             option.addView(TextView(context).apply {
                 text = mode.label.removePrefix("Flash ").replaceFirstChar { it.uppercase() }
@@ -246,10 +246,10 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             "AF lock".takeIf { controls.afLock }, "AE lock".takeIf { controls.aeLock },
             support.evLabel(controls.evIndex).takeIf { controls.evIndex != 0 },
         )
-        ViewCompat.setStateDescription(handle, if (expanded) "펼쳐짐" else "접힘")
+        ViewCompat.setStateDescription(handle, if (expanded) "Expanded" else "Collapsed")
         handle.setIcon(if (expanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down,
-            (if (expanded) "카메라 제어 접기" else "카메라 제어 펼치기: 플래시, AF 잠금, AE 잠금, EV") +
-                if (on.isEmpty()) "" else ". 켜짐: ${on.joinToString(", ")}")
+            (if (expanded) "Collapse camera controls" else "Expand camera controls: flash, AF lock, AE lock, EV") +
+                if (on.isEmpty()) "" else ". On: ${on.joinToString(", ")}")
     }
 
     fun setManual(value: dev.halcamera.camera.ManualControls) {
@@ -324,7 +324,7 @@ private class QuickButton(context: Context, action: () -> Unit) : Button(context
         alpha = if (available) 1f else 0.4f
         contentDescription = description
         tooltipText = description
-        ViewCompat.setStateDescription(this, if (active) "켜짐" else null)
+        ViewCompat.setStateDescription(this, if (active) "On" else null)
         invalidate()
     }
 

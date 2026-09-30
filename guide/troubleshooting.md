@@ -95,7 +95,7 @@ incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽�
 
 ### Callback에 값이 없을 때
 
-현재 엔진과 Android 버전, 표시 중인 프레임의 요청 대상을 확인합니다. `콜백 없음`은 관측할 수 없는 경로이며 `수신 대기`와 다릅니다. 행별 수신 지점과 시간 기준, 상태별 의미는 [Callback](callback.md)에서 확인하세요.
+현재 엔진과 Android 버전, 표시 중인 프레임의 요청 대상을 확인합니다. `No callback`은 관측할 수 없는 경로이며 `Awaiting data`와 다릅니다. 행별 수신 지점과 시간 기준, 상태별 의미는 [Callback](callback.md)에서 확인하세요.
 
 ### 사진 저장이나 노출이 예상과 다를 때
 
@@ -141,13 +141,13 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.17.0 (versionCode 594)
+- 검증 기준 앱 버전: 0.17.0 (versionCode 625)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `3c6cc49` · Claude-issue175 |
-| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `3c6cc49` · Claude-issue175 |
-| 원고 `layer-isolation` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `3c6cc49` · Claude-issue175 |
+| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
+| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
+| 원고 `layer-isolation` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
 
 <!-- omm:end id=status -->
 
