@@ -30,6 +30,15 @@ interface MediaCapture {
     fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit)
     fun startRecording(audio: Boolean = true, started: () -> Unit = {}, done: ((Result<android.net.Uri>) -> Unit)? = null)
     fun stopRecording()
+    /** Whether a photo may be taken from the recording that is running (#175); [SnapshotStatus.NONE] outside one. */
+    val snapshot: SnapshotStatus get() = SnapshotStatus.NONE
+    /**
+     * A JPEG from the running recording, saved through MediaLibrary while the recording goes on. [done] is called on
+     * the main thread. A snapshot that fails never ends the recording.
+     */
+    fun captureSnapshot(done: (Result<PhotoResult>) -> Unit = {}) {
+        done(Result.failure(IllegalStateException("녹화 중 사진을 지원하지 않는 엔진입니다")))
+    }
 }
 
 /**

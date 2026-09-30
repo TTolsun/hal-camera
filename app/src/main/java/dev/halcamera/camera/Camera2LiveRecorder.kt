@@ -1,6 +1,7 @@
 package dev.halcamera.camera
 
 import android.content.Context
+import android.graphics.ImageFormat
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraDevice
@@ -36,16 +37,16 @@ internal class Camera2LiveRecorder(
     private val mediaIo: Executor,
     private val host: Host,
 ) {
-    interface Host {
-        val camera: CameraDevice?
-        val active: Boolean
+    interface Host : Camera2VideoSnapshot.Host {
         /** A benchmark engine never records LIVE video. */
         val benchmark: Boolean
         val settings: LiveVideo?
-        val characteristics: CameraCharacteristics?
         val previewOutput: ConfiguredOutput<Surface>?
-        val session: CameraCaptureSession?
         val stillInFlight: Boolean
+        /** The Live stream settings turned the JPEG output off, so the recording session carries no photo stream. */
+        val snapshotDisabled: Boolean
+        /** The JPEG size the Live stream settings ask for, or null for the default. */
+        val requestedJpeg: LiveSize?
         fun onSessionConfigured(session: CameraCaptureSession?)
         /** Starts repeating with the same output configuration used to create this session. */
         fun startRepeating(camera: CameraDevice, session: CameraCaptureSession, c: CameraCharacteristics, outputs: StreamConfiguration<Surface>)
@@ -62,13 +63,18 @@ internal class Camera2LiveRecorder(
     private var recorder: MediaRecorder? = null
     private var relay: RecordingBufferRelay? = null
     private var file: File? = null
-    private var started = false
+    @Volatile private var started = false
     private var done: ((Result<Uri>) -> Unit)? = null
     private var failure: Exception? = null
     @Volatile var busy = false
         private set
-    var stopRequested = false
+    @Volatile var stopRequested = false
         private set
+    /** The photo taken during the recording (#175); its JPEG stream lives and dies with each recording session. */
+    private val snapshots = Camera2VideoSnapshot(handler, main, telemetry, sessionId, library, mediaIo, host)
+    @Volatile private var snapshotUnsupported: String? = null
+    val snapshotStatus: SnapshotStatus get() = SnapshotStatus.of(started && surface != null, stopRequested, snapshotUnsupported, snapshots.inFlight)
+    fun captureSnapshot(done: (Result<PhotoResult>) -> Unit) = snapshots.capture(null, done)
     /** The encoder surface while a recording session is up; repeating requests then use the record template. */
     var surface: Surface? = null
         private set
@@ -141,45 +147,87 @@ internal class Camera2LiveRecorder(
                         }
                     }.also { relay = it }.surface
                 } else recorder.surface
-                val outputs = StreamConfiguration(listOf(
-                    host.previewOutput!!,
-                    ConfiguredOutput(recordingOutput, recordingSurface)))
-                val configurations = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
-                    if (Build.VERSION.SDK_INT >= 33 && output.descriptor.observable) {
-                        timestampBase = OutputConfiguration.TIMESTAMP_BASE_SENSOR
-                        if (Build.VERSION.SDK_INT >= 34) setReadoutTimestampEnabled(false)
+                val recordingConfigured = ConfiguredOutput(recordingOutput, recordingSurface)
+                // The recording session with a JPEG output for the photo button (#175), or without one. A camera that
+                // refuses the extra output at configure time gets the plain session instead of losing the recording.
+                fun build(snapshot: ConfiguredOutput<Surface>?): Pair<List<OutputConfiguration>, CameraCaptureSession.StateCallback> {
+                    val outputs = StreamConfiguration(listOfNotNull(host.previewOutput!!, recordingConfigured, snapshot))
+                    val configurations = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
+                        if (Build.VERSION.SDK_INT >= 33 && output.descriptor.observable && output.descriptor.kind != OutputKind.JPEG) {
+                            timestampBase = OutputConfiguration.TIMESTAMP_BASE_SENSOR
+                            if (Build.VERSION.SDK_INT >= 34) setReadoutTimestampEnabled(false)
+                        }
+                    } }
+                    var replaced = false
+                    val sessionCallback = object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(session: CameraCaptureSession) {
+                            if (!host.active || stopRequested) { session.close(); return }
+                            host.onSessionConfigured(session)
+                            try {
+                                surface = recordingSurface
+                                host.startRepeating(camera, session, c, outputs)
+                                recorder.start(); this@Camera2LiveRecorder.started = true
+                                telemetry.event(sessionId, "recording_started", mapOf("size" to size.toString(), "audio" to audio,
+                                    "fps" to (settings?.fps ?: 30), "codec" to (settings?.codec ?: "H264"),
+                                    "snapshotSize" to if (snapshot != null) snapshots.size?.toString() else null, "snapshotUnavailable" to snapshotUnsupported))
+                                main.post { if (host.active) { host.recordingState(true); started() } }
+                                host.report(if (audio) "REC · 영상과 소리를 녹화하고 있습니다" else "REC · 영상을 녹화하고 있습니다", false)
+                                snapshotUnsupported?.let { host.notice(it) }
+                            } catch (e: Exception) { failure = e; host.fail(e); session.close() }
+                        }
+                        override fun onConfigureFailed(session: CameraCaptureSession) {
+                            if (snapshot != null && host.active && !stopRequested) {
+                                replaced = true
+                                snapshotUnsupported = VideoSnapshotPlan.REFUSED_REASON
+                                telemetry.event(sessionId, "video_snapshot_unavailable", mapOf("reason" to "configure_failed", "size" to snapshots.size?.toString()))
+                                snapshots.release("세션 구성 실패")
+                                try {
+                                    val (plain, plainCallback) = build(null)
+                                    camera.createCaptureSessionByOutputConfigurations(plain, plainCallback, handler)
+                                } catch (e: Exception) { failure = e; finish(); host.report("녹화 준비 실패: ${e.message} · 다시 시도할 수 있습니다", host.session != null) }
+                                return
+                            }
+                            failure = IllegalStateException("Recording stream configuration rejected")
+                            host.report("녹화 스트림 구성을 지원하지 않습니다", false)
+                            session.close()
+                        }
+                        override fun onClosed(session: CameraCaptureSession) {
+                            if (replaced) return
+                            if (host.session === session) host.onSessionConfigured(null)
+                            surface = null
+                            finish()
+                            host.rebuildPreview()
+                        }
                     }
-                } }
-                val sessionCallback = object : CameraCaptureSession.StateCallback() {
-                    override fun onConfigured(session: CameraCaptureSession) {
-                        if (!host.active || stopRequested) { session.close(); return }
-                        host.onSessionConfigured(session)
-                        try {
-                            surface = recordingSurface
-                            host.startRepeating(camera, session, c, outputs)
-                            recorder.start(); this@Camera2LiveRecorder.started = true
-                            telemetry.event(sessionId, "recording_started", mapOf("size" to size.toString(), "audio" to audio,
-                                "fps" to (settings?.fps ?: 30), "codec" to (settings?.codec ?: "H264")))
-                            main.post { if (host.active) { host.recordingState(true); started() } }
-                            host.report(if (audio) "REC · 영상과 소리를 녹화하고 있습니다" else "REC · 영상을 녹화하고 있습니다", false)
-                        } catch (e: Exception) { failure = e; host.fail(e); session.close() }
-                    }
-                    override fun onConfigureFailed(session: CameraCaptureSession) {
-                        failure = IllegalStateException("Recording stream configuration rejected")
-                        host.report("녹화 스트림 구성을 지원하지 않습니다", false)
-                        session.close()
-                    }
-                    override fun onClosed(session: CameraCaptureSession) {
-                        if (host.session === session) host.onSessionConfigured(null)
-                        surface = null
-                        finish()
-                        host.rebuildPreview()
+                    return configurations to sessionCallback
+                }
+                var plan: Pair<List<OutputConfiguration>, CameraCaptureSession.StateCallback>? = null
+                var chosen: ConfiguredOutput<Surface>? = null
+                snapshotUnsupported = null
+                val jpegSizes = c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]!!.getOutputSizes(ImageFormat.JPEG)
+                    .orEmpty().map { LiveSize(it.width, it.height) }.distinct()
+                when {
+                    host.snapshotDisabled -> snapshotUnsupported = VideoSnapshotPlan.OFF_REASON
+                    jpegSizes.isEmpty() -> snapshotUnsupported = VideoSnapshotPlan.NO_SIZE_REASON
+                    else -> {
+                        for (candidate in VideoSnapshotPlan.candidates(host.requestedJpeg, jpegSizes, LiveSize(size.width, size.height))) {
+                            val output = snapshots.open(candidate.androidSize())
+                            val attempt = build(output)
+                            val supported = runCatching { checkLiveSession(camera, attempt.first, handler, attempt.second) { result ->
+                                telemetry.event(sessionId, "live_recording_preflight", mapOf("result" to result, "snapshotSize" to candidate.toString()))
+                            } }.isSuccess
+                            if (supported) { chosen = output; plan = attempt; break }
+                        }
+                        if (chosen == null) { snapshots.release("출력 조합 조회"); snapshotUnsupported = VideoSnapshotPlan.REFUSED_REASON }
                     }
                 }
-                checkLiveSession(camera, configurations, handler, sessionCallback) { result ->
-                    telemetry.event(sessionId, "live_recording_preflight", mapOf("result" to result))
+                if (plan == null) {
+                    plan = build(null)
+                    checkLiveSession(camera, plan.first, handler, plan.second) { result ->
+                        telemetry.event(sessionId, "live_recording_preflight", mapOf("result" to result))
+                    }
                 }
-                camera.createCaptureSessionByOutputConfigurations(configurations, sessionCallback, handler)
+                camera.createCaptureSessionByOutputConfigurations(plan.first, plan.second, handler)
             } catch (e: Exception) {
                 failure = e
                 finish()
@@ -208,6 +256,7 @@ internal class Camera2LiveRecorder(
         val done = done; this.done = null
         val failure = failure; this.failure = null
         val wasStarted = started
+        snapshots.release("녹화 종료"); snapshotUnsupported = null
         val stopped = wasStarted && recorder != null && runCatching { recorder.stop() }.isSuccess
         runCatching { recorder?.reset() }; runCatching { recorder?.release() }
         if (Build.VERSION.SDK_INT >= 33) relay?.closeAfterEncoder()

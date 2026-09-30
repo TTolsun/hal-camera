@@ -162,6 +162,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var recordingTime: TextView
     private lateinit var galleryButton: RecentMediaButton
     private lateinit var cameraShortcut: IconButton
+    /** Takes a photo from the running recording (#175); it sits where the camera picker is while recording. */
+    private lateinit var snapshotButton: IconButton
     private var cameraIds = emptyList<String>()
     /** Logical id to endpoint, so [cameraLabel] can name the lens without re-reading CameraCharacteristics. */
     private var cameraEndpoints = emptyMap<String, CameraEndpoint>()
@@ -567,7 +569,11 @@ class MainActivity : ComponentActivity() {
         }
         captureRow.addView(mediaButton,LinearLayout.LayoutParams(dp(72),dp(72)).apply { marginStart=dp(12); marginEnd=dp(12) })
         cameraShortcut=IconButton(this,R.drawable.ic_camera_select,"카메라 선택",filled=true) { selectCamera(cameraShortcut) }
-        val cameraSlot=FrameLayout(this).apply { addView(cameraShortcut,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER)) }
+        snapshotButton=IconButton(this,R.drawable.ic_snapshot,"녹화 중 사진 촬영",filled=true) { takeSnapshot() }.apply { visibility=View.GONE }
+        val cameraSlot=FrameLayout(this).apply {
+            addView(cameraShortcut,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER))
+            addView(snapshotButton,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER))
+        }
         captureRow.addView(cameraSlot,LinearLayout.LayoutParams(0,dp(72),1f))
 
         val modeRow=FrameLayout(this)
@@ -687,6 +693,15 @@ class MainActivity : ComponentActivity() {
         }
         engineButton.isEnabled=!recordingVideo
         cameraShortcut.isEnabled=!recordingVideo && cameraId.isNotEmpty()
+        val snapshot=(engine as? MediaCapture)?.snapshot ?: SnapshotStatus.NONE
+        cameraShortcut.visibility=if(recordingVideo) View.GONE else View.VISIBLE
+        snapshotButton.visibility=if(recordingVideo) View.VISIBLE else View.GONE
+        snapshotButton.isEnabled=cli.active == null
+        snapshotButton.alpha=if(snapshot.canCapture && cli.active == null) 1f else 0.4f
+        snapshotButton.contentDescription=snapshot.reason ?: when(snapshot.phase) {
+            SnapshotStatus.Phase.BUSY -> "사진을 저장하는 중입니다"
+            else -> "녹화 중 사진 촬영"
+        }
         // Zoom stays live while recording (#174): the engine changes the recording request in place.
         // The engine reports "REC" as not-ready, so a running recording counts as ready here, as for the shutter.
         zoomControl.isEnabled=(ready || recordingVideo) && !stoppingRecording
@@ -739,6 +754,20 @@ class MainActivity : ComponentActivity() {
             } else updateMediaControls()
         }
         if (old == null) open() else old.close { open() }
+    }
+    /**
+     * A JPEG from the running recording (#175). One at a time: a tap while another is in flight, or while the
+     * recording stops, does nothing. A camera that cannot do it says why instead. The engine reports the result as
+     * a notice, and a failed photo never ends the recording.
+     */
+    private fun takeSnapshot() {
+        if (cli.active != null) return
+        val camera=engine as? MediaCapture ?: return
+        val state=camera.snapshot
+        when {
+            state.phase==SnapshotStatus.Phase.UNSUPPORTED -> toast(state.reason.orEmpty())
+            state.canCapture -> { camera.captureSnapshot(); updateMediaControls() }
+        }
     }
     /** Ends the recording and says so on both stop buttons, whichever one the user reached. */
     private fun stopRecording() {
