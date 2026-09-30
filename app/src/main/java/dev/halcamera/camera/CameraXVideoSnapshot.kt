@@ -59,6 +59,9 @@ internal class CameraXVideoSnapshot(
         try {
             useCase.takePicture(mainExecutor, object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
+                    // A photo that arrives after the timeout was already answered as failed; saving it now would
+                    // contradict that answer, as Camera2 drops the same late image.
+                    if (answered.get()) { image.close(); return }
                     val timestamp = image.imageInfo.timestamp
                     val bytes = try {
                         if (host.active) telemetry.image(sessionId, timestamp, image.width, image.height, image.format, host.snapshotStream)
