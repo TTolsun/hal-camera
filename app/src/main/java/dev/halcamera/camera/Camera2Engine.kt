@@ -463,8 +463,13 @@ class Camera2Engine(
         if (!controlsQueued.compareAndSet(false, true)) return
         handler.post {
             controlsQueued.set(false)
+            if (!active) return@post
             val old = controls
-            val c = chars ?: manager.getCameraCharacteristics(cameraId)
+            val c = chars ?: try { manager.getCameraCharacteristics(cameraId) } catch (e: Exception) {
+                telemetry.event(sessionId, "request_rejected", mapOf("for" to "controls_set", "reason" to e.toString()))
+                main.post { if (active) notice("카메라 정보를 읽을 수 없어 설정을 적용하지 못했습니다.") }
+                return@post
+            }
             val fps = if (video.surface != null) liveStreams?.video?.fps ?: 30 else liveStreams?.fps?.max ?: 30
             val requested = requestedControls
             val manual = requested.manual.normalized(manualSupport(c, fps))
@@ -483,7 +488,7 @@ class Camera2Engine(
                 submitRepeating("controls_restored", emptyMap())
                 main.post { if (active) notice("설정 요청이 거부되어 이전 설정으로 복구했습니다. 실제 적용값을 확인하세요.") }
             }
-            if (old.afLock != now.afLock && manual.focusDiopters == null) sendAfTrigger(now.afLock)
+            if (sent && old.afLock != now.afLock && manual.focusDiopters == null) sendAfTrigger(now.afLock)
         }
     }
     /** API 30+ uses CONTROL_ZOOM_RATIO (ultra-wide below 1x possible). Older devices crop the active array, so only >= 1x. */

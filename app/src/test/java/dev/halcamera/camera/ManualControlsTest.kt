@@ -47,6 +47,10 @@ class ManualControlsTest {
         assertNotNull(support.rejection(valid.copy(color = ManualColor(gains = listOf(1f)))))
         assertNotNull(support.rejection(valid.copy(color = ManualColor(transform = List(9) { Float.POSITIVE_INFINITY }))))
         assertEquals(WhiteBalance.AUTO, valid.normalized(ManualSupport()).wb)
+        val impossibleFrame = support.copy(frameNs = support.exposureNs!!.first - 1)
+        val normalized = valid.normalized(impossibleFrame)
+        assertNull(normalized.exposure)
+        assertEquals(WhiteBalance.AUTO, normalized.wb)
     }
 
     @Test fun `faster FPS limits exposure and a new camera drops unsupported controls`() {

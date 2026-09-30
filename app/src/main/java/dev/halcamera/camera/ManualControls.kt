@@ -31,7 +31,7 @@ data class ManualControls(
         exposure = exposure?.let { support.exposure(it.iso, it.timeNs) },
         focusDiopters = focusDiopters?.takeIf { it.isFinite() && support.maxFocus > 0f }?.coerceIn(0f, support.maxFocus),
         wb = wb.takeIf { it in support.whiteBalances &&
-            (it != WhiteBalance.CUSTOM || (exposure != null && support.iso != null && support.exposureNs != null && color.valid())) }
+            (it != WhiteBalance.CUSTOM || (exposure != null && support.canExpose && color.valid())) }
             ?: WhiteBalance.AUTO,
     )
 
