@@ -16,7 +16,6 @@ import androidx.camera.camera2.interop.Camera2Interop
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop
 import androidx.camera.core.*
 import androidx.camera.core.resolutionselector.ResolutionSelector
-import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.Recorder
 import androidx.camera.video.VideoCapture
@@ -63,10 +62,8 @@ class CameraXEngine(
     private var analysis: ImageAnalysis? = null
     /** The VideoCapture bound while a recording runs, so closing the camera unbinds it too. */
     private var recording: VideoCapture<Recorder>? = null
-    /** The ImageCapture bound next to the VideoCapture of this recording (#175), or null when there is none. */
-    @Volatile private var recordingPhoto: ImageCapture? = null
-    /** Why a recording carries no photo use case, when that is known before binding (the JPEG output is off). */
-    @Volatile private var snapshotRefusal: String? = null
+    /** ImageCapture is bound next to the VideoCapture of this recording (#175); false when the camera refused that. */
+    @Volatile private var photoBound = false
     @Volatile private var previewSeen = false
     private val previewOutput = OutputDescriptor("preview", OutputKind.PREVIEW, repeating = true, observable = false)
     private val analysisOutput = OutputDescriptor("analysis_keep_latest", OutputKind.YUV, repeating = true)
@@ -100,14 +97,12 @@ class CameraXEngine(
     })
     /** The photo during a recording (#175); the ImageCapture it uses is bound only while recording. */
     private val snapshots: CameraXVideoSnapshot = CameraXVideoSnapshot(handler, main, telemetry, session, library, mediaIo, object : CameraXVideoSnapshot.Host {
-        override val imageCapture: ImageCapture? get() = recordingPhoto
+        override val imageCapture: ImageCapture? get() = if (photoBound) capture else null
         override val active: Boolean get() = this@CameraXEngine.active
         override val flashName: String get() = controls.controls.flash.name
         override val zoomRequested: Float get() = zoomRatio
         override val snapshotStream: String get() = snapshotOutput.id
-        override fun updateRotation() {
-            recordingPhoto?.let { it.targetRotation = displayRotation(); capture?.let { still -> it.flashMode = still.flashMode } }
-        }
+        override fun updateRotation() { capture?.targetRotation = displayRotation() }
         override fun notice(text: String) = this@CameraXEngine.notice(text)
     })
     private val video: CameraXLiveRecorder = CameraXLiveRecorder(context, main, telemetry, session, library, mediaIo, object : CameraXLiveRecorder.Host {
@@ -121,33 +116,29 @@ class CameraXEngine(
             val stills = listOfNotNull(analysis, capture).toTypedArray()
             provider.unbind(*stills)
             // Preview + VideoCapture + ImageCapture is a combination every LIMITED camera guarantees, but CameraX decides
-            // at bind time; a refusal falls back to the recording alone and the photo button says why. The photo use
-            // case is its own: a full-size JPEG (4080x3060 here) cost the recording a frame, so it follows Camera2's rule.
-            snapshotRefusal = if (liveStreams != null && liveStreams.jpeg == null) VideoSnapshotPlan.OFF_REASON else null
-            var photo: ImageCapture? = if (snapshotRefusal == null) snapshotCapture() else null
-            if (photo != null) {
-                try { camera = provider.bindToLifecycle(owner, selector!!, video, photo) }
-                catch (e: Exception) {
-                    telemetry.event(session, "video_snapshot_unavailable", mapOf("reason" to "bind_refused", "message" to e.toString()))
-                    photo = null
-                }
+            // at bind time; a refusal falls back to the recording alone and the photo button says why.
+            // The Live stream settings can turn the JPEG output off, and then there is no ImageCapture to bind.
+            val photo = capture
+            photoBound = photo != null && try { camera = provider.bindToLifecycle(owner, selector!!, video, photo); true }
+            catch (e: Exception) {
+                telemetry.event(session, "video_snapshot_unavailable", mapOf("reason" to "bind_refused", "message" to e.toString()))
+                false
             }
-            if (photo == null) {
+            if (!photoBound) {
                 try { camera = provider.bindToLifecycle(owner, selector!!, video) }
                 catch (e: Exception) { camera = provider.bindToLifecycle(owner, selector!!, *stills); throw e }
             }
-            recordingPhoto = photo
             val outputs = StreamConfiguration<UseCase>(listOfNotNull(ConfiguredOutput(previewOutput, preview!!), ConfiguredOutput(recordingOutput, video),
-                photo?.let { ConfiguredOutput(snapshotOutput, it) }))
+                if (photoBound) ConfiguredOutput(snapshotOutput, photo!!) else null))
             recording = video
             rebuilt(outputs, mapOf("preview" to preview?.resolutionInfo?.resolution?.toString(),
                 "recording" to video.resolutionInfo?.resolution?.toString(), "recordingFormat" to "Auto",
-                "snapshot" to photo?.resolutionInfo?.resolution?.toString()))
+                "snapshot" to if (photoBound) photo!!.resolutionInfo?.resolution?.toString() else null))
         }
         override fun unbindRecording(video: VideoCapture<Recorder>) {
             val provider = provider ?: return
-            provider.unbind(*listOfNotNull<UseCase>(video, recordingPhoto).toTypedArray())
-            recording = null; recordingPhoto = null
+            provider.unbind(*listOfNotNull<UseCase>(video, if (photoBound) capture else null).toTypedArray())
+            recording = null; photoBound = false
             camera = provider.bindToLifecycle(owner, selector!!, *listOfNotNull(analysis, capture).toTypedArray())
             rebuilt(liveOutputs(), streamSizes())
             report("CameraX · LIVE", true)
@@ -215,18 +206,12 @@ class CameraXEngine(
         }, main)
     }
 
-    /** The photo use case of a recording: the requested JPEG size, else the largest up to 1080p, as Camera2 does. */
-    private fun snapshotCapture(): ImageCapture {
-        val builder = ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-            .setResolutionSelector(liveStreams?.jpeg?.let(::exactResolution) ?: ResolutionSelector.Builder()
-                .setResolutionStrategy(ResolutionStrategy(android.util.Size(1920, 1080), ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER)).build())
-        // CameraX's still request carries the STILL_CAPTURE intent, which costs the recording a frame on the S25+.
-        Camera2Interop.Extender(builder).setCaptureRequestOption(CaptureRequest.CONTROL_CAPTURE_INTENT, CaptureRequest.CONTROL_CAPTURE_INTENT_VIDEO_SNAPSHOT)
-        return builder.build()
+    /** Null while the running recording has a photo use case; otherwise why it has none. */
+    private fun snapshotUnavailableReason(): String? = when {
+        photoBound -> null
+        capture == null -> VideoSnapshotPlan.OFF_REASON
+        else -> VideoSnapshotPlan.CAMERAX_REASON
     }
-
-    /** Null while the running recording has a photo use case; otherwise the reason it has none. */
-    private fun snapshotUnavailableReason(): String? = if (recordingPhoto != null) null else snapshotRefusal ?: VideoSnapshotPlan.CAMERAX_REASON
 
     /** The same outputs bind the use cases and describe the Callback graph, as on Camera2. */
     private fun liveOutputs() = StreamConfiguration<UseCase>(buildList {
@@ -303,7 +288,7 @@ class CameraXEngine(
         stills.close()
         video.close { mediaIo.shutdown() }
         val info = camera?.cameraInfo
-        val bound = listOfNotNull(preview, analysis, capture, recording, recordingPhoto).toTypedArray()
+        val bound = listOfNotNull(preview, analysis, capture, recording).toTypedArray()
         if (info == null || provider == null) { done(); return }
         var finished = false
         lateinit var observer: Observer<CameraState>
