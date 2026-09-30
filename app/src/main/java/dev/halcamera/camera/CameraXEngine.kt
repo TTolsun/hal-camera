@@ -117,20 +117,23 @@ class CameraXEngine(
             provider.unbind(*stills)
             // Preview + VideoCapture + ImageCapture is a combination every LIMITED camera guarantees, but CameraX decides
             // at bind time; a refusal falls back to the recording alone and the photo button says why.
-            val photo = capture!!
-            photoBound = try { camera = provider.bindToLifecycle(owner, selector!!, video, photo); true }
+            // The Live stream settings can turn the JPEG output off, and then there is no ImageCapture to bind.
+            val photo = capture
+            photoBound = photo != null && try { camera = provider.bindToLifecycle(owner, selector!!, video, photo); true }
             catch (e: Exception) {
                 telemetry.event(session, "video_snapshot_unavailable", mapOf("reason" to "bind_refused", "message" to e.toString()))
-                try { camera = provider.bindToLifecycle(owner, selector!!, video) }
-                catch (e2: Exception) { camera = provider.bindToLifecycle(owner, selector!!, *stills); throw e2 }
                 false
             }
+            if (!photoBound) {
+                try { camera = provider.bindToLifecycle(owner, selector!!, video) }
+                catch (e: Exception) { camera = provider.bindToLifecycle(owner, selector!!, *stills); throw e }
+            }
             val outputs = StreamConfiguration<UseCase>(listOfNotNull(ConfiguredOutput(previewOutput, preview!!), ConfiguredOutput(recordingOutput, video),
-                if (photoBound) ConfiguredOutput(snapshotOutput, photo) else null))
+                if (photoBound) ConfiguredOutput(snapshotOutput, photo!!) else null))
             recording = video
             rebuilt(outputs, mapOf("preview" to preview?.resolutionInfo?.resolution?.toString(),
                 "recording" to video.resolutionInfo?.resolution?.toString(), "recordingFormat" to "Auto",
-                "snapshot" to if (photoBound) photo.resolutionInfo?.resolution?.toString() else null))
+                "snapshot" to if (photoBound) photo!!.resolutionInfo?.resolution?.toString() else null))
         }
         override fun unbindRecording(video: VideoCapture<Recorder>) {
             val provider = provider ?: return
@@ -142,7 +145,7 @@ class CameraXEngine(
         }
         override fun recordingState(recording: Boolean) = this@CameraXEngine.recordingState(recording)
         override fun streamingStarted() = controls.resendMetering()
-        override val snapshotUnavailable: String? get() = if (photoBound) null else VideoSnapshotPlan.CAMERAX_REASON
+        override val snapshotUnavailable: String? get() = snapshotUnavailableReason()
         override fun notice(text: String) { handler.post { if (active) this@CameraXEngine.notice(text) } }
         override fun status(message: String, ok: Boolean) { if (active) this@CameraXEngine.status(message, ok) }
         override fun report(message: String, ok: Boolean) = this@CameraXEngine.report(message, ok)
@@ -203,6 +206,13 @@ class CameraXEngine(
         }, main)
     }
 
+    /** Null while the running recording has a photo use case; otherwise why it has none. */
+    private fun snapshotUnavailableReason(): String? = when {
+        photoBound -> null
+        capture == null -> VideoSnapshotPlan.OFF_REASON
+        else -> VideoSnapshotPlan.CAMERAX_REASON
+    }
+
     /** The same outputs bind the use cases and describe the Callback graph, as on Camera2. */
     private fun liveOutputs() = StreamConfiguration<UseCase>(buildList {
         add(ConfiguredOutput(previewOutput, preview!!))
@@ -249,7 +259,7 @@ class CameraXEngine(
     override fun startRecording(audio: Boolean, started: () -> Unit, done: ((Result<android.net.Uri>) -> Unit)?) = video.start(audio, started, done)
     override fun stopRecording() = video.stop()
     override val snapshot: SnapshotStatus get() =
-        SnapshotStatus.of(video.live, video.stopping, if (photoBound) null else VideoSnapshotPlan.CAMERAX_REASON, snapshots.inFlight)
+        SnapshotStatus.of(video.live, video.stopping, snapshotUnavailableReason(), snapshots.inFlight)
     override fun captureSnapshot(done: (Result<PhotoResult>) -> Unit) = snapshots.capture(null, done)
     override fun setControls(next: LiveControls, restore: Boolean) = controls.setControls(next, restore)
 

@@ -53,7 +53,9 @@ JPEG만 켜면 analysis 프레임을 기다리지 않습니다. YUV만 켜면 �
 
 명시한 녹화 크기는 지원 Quality의 해상도와 정확히 일치해야 하며, bind 후 실제 해상도도 검사합니다. 설정 화면의 후보는 CameraX Quality 해상도와 하드웨어의 크기·FPS 조건을 교차해 만듭니다. FPS와 비트레이트는 요청값이고 실제 결과와 구분합니다. CameraX 1.6.2의 공개 Recorder API는 녹화 코덱을 직접 선택하지 않으므로 Format과 Live 표시는 Auto입니다.
 
-녹화 중 사진(`CameraXVideoSnapshot`)은 녹화와 함께 bind한 ImageCapture의 `takePicture`로 JPEG 한 장을 저장합니다. analysis 스트림이 없으므로 YUV 짝은 저장하지 않으며, Camera2와 같이 한 번에 한 장만 처리합니다. 실패하거나 5초 안에 오지 않아도 녹화는 끝나지 않고 알림만 표시합니다. 이 경로의 기기 동작은 아직 확인하지 못했습니다.
+녹화 중 사진(`CameraXVideoSnapshot`)은 녹화와 함께 bind한 ImageCapture의 `takePicture`로 JPEG 한 장을 저장합니다. analysis 스트림이 없으므로 YUV 짝은 저장하지 않으며, Camera2와 같이 한 번에 한 장만 처리합니다. 실패하거나 5초 안에 오지 않아도 녹화는 끝나지 않고 알림만 표시합니다. Live 스트림 설정에서 JPEG을 끄면 bind할 ImageCapture가 없으므로 녹화 중 사진을 지원하지 않는다고 알립니다. 사진 크기는 사진 모드와 같은 ImageCapture를 쓰므로 설정한 JPEG 크기를 따르고, 설정이 없으면 CameraX가 고른 크기(Galaxy S25+에서 4080×3060)로 저장합니다.
+
+Galaxy S25+에서는 사진을 찍는 시점마다 영상 프레임이 1개씩 빠졌습니다(간격 67ms, 기준은 33.5ms). 사진 크기를 1080p로 줄여도, `CONTROL_CAPTURE_INTENT`를 `VIDEO_SNAPSHOT`으로 지정해도 같았습니다. 앱이 CameraX의 사진 요청을 바꿀 수 없으므로 CameraX 내부 경로의 동작으로 보고 그대로 두었습니다. 같은 기기의 Camera2는 전 구간에서 50ms를 넘는 간격이 없었으므로, 녹화 연속성이 중요하면 Camera2를 사용합니다.
 
 녹화 시작과 정지는 use case를 다시 bind하므로, 엔진은 그때마다 줌과 Live 제어를 새 세션에 다시 보내고 Callback 그래프의 출력 목록도 바꿉니다.
 
