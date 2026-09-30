@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1140be0a6c785271",
+        "codeHash": "2250fcd1561125ea",
         "modelHash": "9778bb7771fa2fc2",
         "at": "2026-09-30",
-        "commit": "3c6cc49",
+        "commit": "4ff0b78",
         "reviewer": "Claude-issue175",
         "files": {
           "app/build.gradle.kts": "3e6a1a634756271dd0eb8ae9ff0090b250998554",
@@ -72,7 +72,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "40843880f763da9066b0bc5538445c98dad586c6",
           "app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt": "a1c66e6118a9ddc43c18b99fe7547b6961f4fa55",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "26b0c89bb485f62532a36374dfd7b13ec2b0bdce",
-          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "d1492958ca53cdb0ba9a9bacc577ba78423b7323",
+          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "7e1808a54e7d57189c3d7230889f6bccb91dd568",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "bf18a035e41f9848cedd0e67453af05fddbb59b6",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "2b0f65d89bdf7139b36d0427d0a5422d8012f6a3",
@@ -265,10 +265,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "fbb2adc04293c24b",
+        "codeHash": "44e6a43e30c0ea2d",
         "modelHash": "59c868270ec45640",
         "at": "2026-09-30",
-        "commit": "3c6cc49",
+        "commit": "4ff0b78",
         "reviewer": "Claude-issue175",
         "files": {
           "app/build.gradle.kts": "3e6a1a634756271dd0eb8ae9ff0090b250998554",
@@ -331,7 +331,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "40843880f763da9066b0bc5538445c98dad586c6",
           "app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt": "a1c66e6118a9ddc43c18b99fe7547b6961f4fa55",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "26b0c89bb485f62532a36374dfd7b13ec2b0bdce",
-          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "d1492958ca53cdb0ba9a9bacc577ba78423b7323",
+          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "7e1808a54e7d57189c3d7230889f6bccb91dd568",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "bf18a035e41f9848cedd0e67453af05fddbb59b6",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "2b0f65d89bdf7139b36d0427d0a5422d8012f6a3",
@@ -540,10 +540,10 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "1140be0a6c785271",
+        "codeHash": "2250fcd1561125ea",
         "modelHash": "c4be3a629f53933d",
         "at": "2026-09-30",
-        "commit": "3c6cc49",
+        "commit": "4ff0b78",
         "reviewer": "Claude-issue175",
         "files": {
           "app/build.gradle.kts": "3e6a1a634756271dd0eb8ae9ff0090b250998554",
@@ -606,7 +606,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "40843880f763da9066b0bc5538445c98dad586c6",
           "app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt": "a1c66e6118a9ddc43c18b99fe7547b6961f4fa55",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "26b0c89bb485f62532a36374dfd7b13ec2b0bdce",
-          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "d1492958ca53cdb0ba9a9bacc577ba78423b7323",
+          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "7e1808a54e7d57189c3d7230889f6bccb91dd568",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "bf18a035e41f9848cedd0e67453af05fddbb59b6",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "2b0f65d89bdf7139b36d0427d0a5422d8012f6a3",
@@ -715,10 +715,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "1140be0a6c785271",
+        "codeHash": "2250fcd1561125ea",
         "modelHash": "f4c2054f5bfe6ac0",
         "at": "2026-09-30",
-        "commit": "3c6cc49",
+        "commit": "4ff0b78",
         "reviewer": "Claude-issue175",
         "files": {
           "app/build.gradle.kts": "3e6a1a634756271dd0eb8ae9ff0090b250998554",
@@ -781,7 +781,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "40843880f763da9066b0bc5538445c98dad586c6",
           "app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt": "a1c66e6118a9ddc43c18b99fe7547b6961f4fa55",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "26b0c89bb485f62532a36374dfd7b13ec2b0bdce",
-          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "d1492958ca53cdb0ba9a9bacc577ba78423b7323",
+          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "7e1808a54e7d57189c3d7230889f6bccb91dd568",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "bf18a035e41f9848cedd0e67453af05fddbb59b6",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "2b0f65d89bdf7139b36d0427d0a5422d8012f6a3",
@@ -939,10 +939,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1140be0a6c785271",
+        "codeHash": "2250fcd1561125ea",
         "modelHash": "f37698f986beb285",
         "at": "2026-09-30",
-        "commit": "3c6cc49",
+        "commit": "4ff0b78",
         "reviewer": "Claude-issue175",
         "files": {
           "app/build.gradle.kts": "3e6a1a634756271dd0eb8ae9ff0090b250998554",
@@ -1005,7 +1005,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "40843880f763da9066b0bc5538445c98dad586c6",
           "app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt": "a1c66e6118a9ddc43c18b99fe7547b6961f4fa55",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "26b0c89bb485f62532a36374dfd7b13ec2b0bdce",
-          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "d1492958ca53cdb0ba9a9bacc577ba78423b7323",
+          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "7e1808a54e7d57189c3d7230889f6bccb91dd568",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "bf18a035e41f9848cedd0e67453af05fddbb59b6",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "2b0f65d89bdf7139b36d0427d0a5422d8012f6a3",
@@ -1114,10 +1114,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1140be0a6c785271",
+        "codeHash": "2250fcd1561125ea",
         "modelHash": "a90a069af6bf094a",
         "at": "2026-09-30",
-        "commit": "3c6cc49",
+        "commit": "4ff0b78",
         "reviewer": "Claude-issue175",
         "files": {
           "app/build.gradle.kts": "3e6a1a634756271dd0eb8ae9ff0090b250998554",
@@ -1180,7 +1180,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "40843880f763da9066b0bc5538445c98dad586c6",
           "app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt": "a1c66e6118a9ddc43c18b99fe7547b6961f4fa55",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "26b0c89bb485f62532a36374dfd7b13ec2b0bdce",
-          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "d1492958ca53cdb0ba9a9bacc577ba78423b7323",
+          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "7e1808a54e7d57189c3d7230889f6bccb91dd568",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "bf18a035e41f9848cedd0e67453af05fddbb59b6",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "2b0f65d89bdf7139b36d0427d0a5422d8012f6a3",
@@ -1289,10 +1289,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1140be0a6c785271",
+        "codeHash": "2250fcd1561125ea",
         "modelHash": "76f8f9c47d67ea39",
         "at": "2026-09-30",
-        "commit": "3c6cc49",
+        "commit": "4ff0b78",
         "reviewer": "Claude-issue175",
         "files": {
           "app/build.gradle.kts": "3e6a1a634756271dd0eb8ae9ff0090b250998554",
@@ -1355,7 +1355,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "40843880f763da9066b0bc5538445c98dad586c6",
           "app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt": "a1c66e6118a9ddc43c18b99fe7547b6961f4fa55",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "26b0c89bb485f62532a36374dfd7b13ec2b0bdce",
-          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "d1492958ca53cdb0ba9a9bacc577ba78423b7323",
+          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "7e1808a54e7d57189c3d7230889f6bccb91dd568",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "bf18a035e41f9848cedd0e67453af05fddbb59b6",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "2b0f65d89bdf7139b36d0427d0a5422d8012f6a3",
@@ -1464,10 +1464,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1140be0a6c785271",
+        "codeHash": "2250fcd1561125ea",
         "modelHash": "f6c59a1648ecf95b",
         "at": "2026-09-30",
-        "commit": "3c6cc49",
+        "commit": "4ff0b78",
         "reviewer": "Claude-issue175",
         "files": {
           "app/build.gradle.kts": "3e6a1a634756271dd0eb8ae9ff0090b250998554",
@@ -1530,7 +1530,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "40843880f763da9066b0bc5538445c98dad586c6",
           "app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt": "a1c66e6118a9ddc43c18b99fe7547b6961f4fa55",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "26b0c89bb485f62532a36374dfd7b13ec2b0bdce",
-          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "d1492958ca53cdb0ba9a9bacc577ba78423b7323",
+          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "7e1808a54e7d57189c3d7230889f6bccb91dd568",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "bf18a035e41f9848cedd0e67453af05fddbb59b6",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "2b0f65d89bdf7139b36d0427d0a5422d8012f6a3",
@@ -1639,10 +1639,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1140be0a6c785271",
+        "codeHash": "2250fcd1561125ea",
         "modelHash": "ea778ef373ed342c",
         "at": "2026-09-30",
-        "commit": "3c6cc49",
+        "commit": "4ff0b78",
         "reviewer": "Claude-issue175",
         "files": {
           "app/build.gradle.kts": "3e6a1a634756271dd0eb8ae9ff0090b250998554",
@@ -1705,7 +1705,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "40843880f763da9066b0bc5538445c98dad586c6",
           "app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt": "a1c66e6118a9ddc43c18b99fe7547b6961f4fa55",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "26b0c89bb485f62532a36374dfd7b13ec2b0bdce",
-          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "d1492958ca53cdb0ba9a9bacc577ba78423b7323",
+          "app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt": "7e1808a54e7d57189c3d7230889f6bccb91dd568",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "bf18a035e41f9848cedd0e67453af05fddbb59b6",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "2b0f65d89bdf7139b36d0427d0a5422d8012f6a3",
