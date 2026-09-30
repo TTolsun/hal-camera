@@ -166,8 +166,8 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
             // Match the compact label with a 28dp circle inside the 48dp touch target.
             button.background = InsetDrawable(RippleDrawable(ColorStateList.valueOf(0x40FFFFFF), circle, mask), dp(10))
             button.setPadding(0, 0, 0, 0)
-            button.contentDescription = "${ratio}배 줌" + if (!expanded && active && ratios.size > 1) ", 배율 펼치기" else ""
-            ViewCompat.setStateDescription(button, if (active) "선택됨" else null)
+            button.contentDescription = "${ratio}x zoom" + if (!expanded && active && ratios.size > 1) ", expand zoom choices" else ""
+            ViewCompat.setStateDescription(button, if (active) "Selected" else null)
         }
         renderVisibility()
     }

@@ -22,7 +22,7 @@ android {
         applicationId = "dev.halcamera"
         minSdk = 26
         targetSdk = 36
-        versionCode = 594
+        versionCode = 625
         versionName = "0.17.0"
         testInstrumentationRunner = "dev.halcamera.cli.CliStoreInstrumentation"
     }

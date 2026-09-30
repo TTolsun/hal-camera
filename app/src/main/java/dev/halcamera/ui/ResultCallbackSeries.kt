@@ -42,7 +42,7 @@ data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frame
             for (stream in streams) {
                 val id = stream["id"] as? String ?: continue
                 val label = stream["label"] as? String ?: id
-                val unavailable = if (stream["observable"] == false) "콜백 없음" else null
+                val unavailable = if (stream["observable"] == false) "No callback" else null
                 val kind = stream["eventKind"] as? String ?: if (id == "preview") "preview_available" else "image_available"
                 tracks += ResultCallbackTrack(id, label, unavailable, if (unavailable == null) points(kind, id) else emptyList(), stream["repeating"] != false)
             }

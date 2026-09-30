@@ -86,7 +86,7 @@ internal class CameraXLiveRecorder(
         }
         busy = true
         this.done = done
-        host.report("녹화를 준비하고 있습니다…", false)
+        host.report("Starting video… Rolling out the red carpet.", false)
         var file: File? = null
         try {
             val settings = host.settings
@@ -121,14 +121,14 @@ internal class CameraXLiveRecorder(
             telemetry.event(sessionId, "camera_error", mapOf("message" to e.toString()))
             end()
             this.done?.invoke(Result.failure(e)); this.done = null
-            host.report("녹화 준비 실패: ${e.message} · 다시 시도할 수 있습니다", true)
+            host.report("Video start failed: ${e.message} · Please try again.", true)
         }
     }
 
     fun stop() {
         if (!busy) return
         stopping = true
-        host.report("녹화를 저장하고 있습니다…", false)
+        host.report("Saving video… Wrapping the reel.", false)
         recording?.stop()
     }
 
@@ -149,7 +149,7 @@ internal class CameraXLiveRecorder(
                     "api" to "Recorder.prepareRecording"))
                 live = true
                 if (host.active) { host.recordingState(true); started() }
-                host.report(if (audio) "REC · 영상과 소리를 녹화하고 있습니다" else "REC · 영상을 녹화하고 있습니다", false)
+                host.report(if (audio) "REC · Rolling. Sound and all." else "REC · Rolling. Silent cinema.", false)
                 host.snapshotUnavailable?.let { host.notice(it) }
             }
             is VideoRecordEvent.Status -> if (!streaming) { streaming = true; if (host.active) host.streamingStarted() }
@@ -164,7 +164,7 @@ internal class CameraXLiveRecorder(
                     file.delete()
                     callback?.invoke(Result.failure(event.cause as? Exception
                         ?: IllegalStateException("Recording did not produce a playable video; record for longer before stopping")))
-                    Toast.makeText(context.applicationContext, "녹화가 너무 짧거나 실패하여 동영상을 저장하지 못했습니다", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context.applicationContext, "Video not saved: recording was too short or failed.", Toast.LENGTH_LONG).show()
                 }
                 afterClose?.let { afterClose = null; it() }
             }
@@ -189,13 +189,13 @@ internal class CameraXLiveRecorder(
                 telemetry.event(sessionId, "video_saved", mapOf("uri" to uri.toString()))
                 mainExecutor.execute {
                     done?.invoke(Result.success(uri))
-                    if (host.active) host.status("갤러리에 동영상을 저장했습니다", true)
-                    else Toast.makeText(context.applicationContext, "갤러리에 동영상을 저장했습니다", Toast.LENGTH_SHORT).show()
+                    if (host.active) host.status("Video saved. That's a wrap.", true)
+                    else Toast.makeText(context.applicationContext, "Video saved. That's a wrap.", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 mainExecutor.execute {
                     done?.invoke(Result.failure(e))
-                    Toast.makeText(context.applicationContext, "동영상 저장 실패: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(context.applicationContext, "Video save failed: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             } finally { file.delete() }
         }

@@ -85,7 +85,7 @@ object LiveControlText {
     fun relockNotice(deltaEv: Double?): String? {
         if (deltaEv == null || kotlin.math.abs(deltaEv) <= AeRelock.TOLERANCE_EV) return null
         val amount = String.format(Locale.US, "%.1f", kotlin.math.abs(deltaEv))
-        return "노출을 다시 잠갔습니다 · 이전보다 $amount EV ${if (deltaEv > 0) "밝습니다" else "어둡습니다"}"
+        return "Exposure locked again · $amount EV ${if (deltaEv > 0) "brighter" else "darker"}"
     }
 }
 

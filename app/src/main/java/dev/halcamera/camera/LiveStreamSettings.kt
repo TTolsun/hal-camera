@@ -45,11 +45,11 @@ data class LiveStreamSupport(
     val fps: List<LiveFps>, val videos: List<LiveVideo>, val defaultVideo: LiveVideo? = null,
 ) {
     fun rejection(value: LiveStreamSettings): String? = when {
-        value.preview !in preview -> "지원하지 않는 Preview 크기입니다."
-        value.yuv != null && value.yuv !in yuv -> "지원하지 않는 YUV 크기입니다."
-        value.jpeg != null && value.jpeg !in jpeg -> "지원하지 않는 JPEG 크기입니다."
-        value.fps != null && value.fps !in fps -> "지원하지 않는 일반 세션 FPS 범위입니다."
-        value.video != null && value.video !in videos -> "카메라와 인코더가 지원하지 않는 녹화 설정입니다."
+        value.preview !in preview -> "Unsupported preview size."
+        value.yuv != null && value.yuv !in yuv -> "Unsupported YUV size."
+        value.jpeg != null && value.jpeg !in jpeg -> "Unsupported JPEG size."
+        value.fps != null && value.fps !in fps -> "Unsupported FPS range for a regular session."
+        value.video != null && value.video !in videos -> "The camera and encoder do not support these recording settings."
         else -> null
     }
     fun defaults(): LiveStreamSettings {

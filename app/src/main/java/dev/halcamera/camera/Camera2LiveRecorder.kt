@@ -92,7 +92,7 @@ internal class Camera2LiveRecorder(
             }
             busy = true
             this.done = done; stopRequested = false; failure = null
-            host.report("녹화를 준비하고 있습니다…", false)
+            host.report("Starting video… Rolling out the red carpet.", false)
             try {
                 val c = host.characteristics ?: error("Camera characteristics unavailable")
                 val sizes = c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]!!.getOutputSizes(MediaRecorder::class.java)
@@ -177,7 +177,7 @@ internal class Camera2LiveRecorder(
                                     "fps" to (settings?.fps ?: 30), "codec" to (settings?.codec ?: "H264"),
                                     "snapshotSize" to if (snapshot != null) snapshots.size?.toString() else null, "snapshotUnavailable" to snapshotUnsupported))
                                 main.post { if (host.active) { host.recordingState(true); started() } }
-                                host.report(if (audio) "REC · 영상과 소리를 녹화하고 있습니다" else "REC · 영상을 녹화하고 있습니다", false)
+                                host.report(if (audio) "REC · Rolling. Sound and all." else "REC · Rolling. Silent cinema.", false)
                                 snapshotUnsupported?.let { host.notice(it) }
                             } catch (e: Exception) { failure = e; host.fail(e); session.close() }
                         }
@@ -186,15 +186,15 @@ internal class Camera2LiveRecorder(
                                 replaced = true
                                 snapshotUnsupported = VideoSnapshotPlan.REFUSED_REASON
                                 telemetry.event(sessionId, "video_snapshot_unavailable", mapOf("reason" to "configure_failed", "size" to snapshots.size?.toString()))
-                                snapshots.release("세션 구성 실패")
+                                snapshots.release("Session configuration failed")
                                 try {
                                     val (plain, plainCallback) = build(null)
                                     camera.createCaptureSessionByOutputConfigurations(plain, plainCallback, handler)
-                                } catch (e: Exception) { failure = e; finish(); host.report("녹화 준비 실패: ${e.message} · 다시 시도할 수 있습니다", host.session != null) }
+                                } catch (e: Exception) { failure = e; finish(); host.report("Video start failed: ${e.message} · Please try again.", host.session != null) }
                                 return
                             }
                             failure = IllegalStateException("Recording stream configuration rejected")
-                            host.report("녹화 스트림 구성을 지원하지 않습니다", false)
+                            host.report("This recording stream configuration is not supported.", false)
                             session.close()
                         }
                         override fun onClosed(session: CameraCaptureSession) {
@@ -224,7 +224,7 @@ internal class Camera2LiveRecorder(
                             } }.isSuccess
                             if (supported) { chosen = output; plan = attempt; break }
                         }
-                        if (chosen == null) { snapshots.release("출력 조합 조회"); snapshotUnsupported = VideoSnapshotPlan.REFUSED_REASON }
+                        if (chosen == null) { snapshots.release("Checking stream combinations"); snapshotUnsupported = VideoSnapshotPlan.REFUSED_REASON }
                     }
                 }
                 if (plan == null) {
@@ -237,7 +237,7 @@ internal class Camera2LiveRecorder(
             } catch (e: Exception) {
                 failure = e
                 finish()
-                host.report("녹화 준비 실패: ${e.message} · 다시 시도할 수 있습니다", host.session != null)
+                host.report("Video start failed: ${e.message} · Please try again.", host.session != null)
             }
         }
     }
@@ -246,7 +246,7 @@ internal class Camera2LiveRecorder(
         handler.post {
             if (!busy) return@post
             stopRequested = true
-            host.report("녹화를 저장하고 있습니다…", false)
+            host.report("Saving video… Wrapping the reel.", false)
             host.session?.close()
         }
     }
@@ -262,7 +262,7 @@ internal class Camera2LiveRecorder(
         val done = done; this.done = null
         val failure = failure; this.failure = null
         val wasStarted = started
-        snapshots.release("녹화 종료"); snapshotUnsupported = null
+        snapshots.release("Recording ended"); snapshotUnsupported = null
         val stopped = wasStarted && recorder != null && runCatching { recorder.stop() }.isSuccess
         runCatching { recorder?.reset() }; runCatching { recorder?.release() }
         if (Build.VERSION.SDK_INT >= 33) relay?.closeAfterEncoder()
@@ -278,20 +278,20 @@ internal class Camera2LiveRecorder(
                         done?.invoke(if (failure == null) Result.success(uri) else Result.failure(failure))
                         // Same place as the photo notice: a toast at the bottom covered the photo/video mode buttons.
                         // Only a camera already closed has no notice line left, so that case keeps the toast.
-                        if (host.active) host.status("갤러리에 동영상을 저장했습니다", true)
-                        else Toast.makeText(context.applicationContext, "갤러리에 동영상을 저장했습니다", Toast.LENGTH_SHORT).show()
+                        if (host.active) host.status("Video saved. That's a wrap.", true)
+                        else Toast.makeText(context.applicationContext, "Video saved. That's a wrap.", Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
                     main.post {
                         done?.invoke(Result.failure(e))
-                        Toast.makeText(context.applicationContext, "동영상 저장 실패: ${e.message}", Toast.LENGTH_LONG).show()
+                        Toast.makeText(context.applicationContext, "Video save failed: ${e.message}", Toast.LENGTH_LONG).show()
                     }
                 } finally { file.delete() }
             }
         } else {
             file?.delete()
             main.post { done?.invoke(Result.failure(failure ?: IllegalStateException("Recording did not produce a playable video; record for longer before stopping"))) }
-            if (wasStarted) main.post { Toast.makeText(context.applicationContext, "녹화가 너무 짧거나 실패하여 동영상을 저장하지 못했습니다", Toast.LENGTH_LONG).show() }
+            if (wasStarted) main.post { Toast.makeText(context.applicationContext, "Video not saved: recording was too short or failed.", Toast.LENGTH_LONG).show() }
         }
     }
 }

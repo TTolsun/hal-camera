@@ -37,7 +37,7 @@ interface MediaCapture {
      * the main thread. A snapshot that fails never ends the recording.
      */
     fun captureSnapshot(done: (Result<PhotoResult>) -> Unit = {}) {
-        done(Result.failure(IllegalStateException("녹화 중 사진을 지원하지 않는 엔진입니다")))
+        done(Result.failure(IllegalStateException("This engine does not support snapshots during recording.")))
     }
 }
 

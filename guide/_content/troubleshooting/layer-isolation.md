@@ -41,7 +41,7 @@ verifications: []
 
 ### Callback에 값이 없을 때
 
-현재 엔진과 Android 버전, 표시 중인 프레임의 요청 대상을 확인합니다. `콜백 없음`은 관측할 수 없는 경로이며 `수신 대기`와 다릅니다. 행별 수신 지점과 시간 기준, 상태별 의미는 [Callback](callback.md)에서 확인하세요.
+현재 엔진과 Android 버전, 표시 중인 프레임의 요청 대상을 확인합니다. `No callback`은 관측할 수 없는 경로이며 `Awaiting data`와 다릅니다. 행별 수신 지점과 시간 기준, 상태별 의미는 [Callback](callback.md)에서 확인하세요.
 
 ### 사진 저장이나 노출이 예상과 다를 때
 

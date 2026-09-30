@@ -41,11 +41,11 @@ class ShutterButton(context: Context) : Button(context) {
         shutter.recording = recording
         shutter.invalidateSelf()
         contentDescription = when {
-            recording -> "동영상 녹화 중지"
-            videoMode -> "소리와 함께 동영상 녹화 시작"
-            else -> "YUV와 JPEG 사진 두 장 촬영"
+            recording -> "Stop recording"
+            videoMode -> "Start recording with audio"
+            else -> "Take a photo"
         }
-        ViewCompat.setStateDescription(this, if (recording) "녹화 중" else null)
+        ViewCompat.setStateDescription(this, if (recording) "Recording" else null)
     }
 
     private class ShutterDrawable : Drawable() {
