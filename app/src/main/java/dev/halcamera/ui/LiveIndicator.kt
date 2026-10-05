@@ -63,6 +63,9 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
 
     fun bindStabilization(status: LiveEisStatus, recording: Boolean) {
         this.recording = recording
+        val hidden = status.video == 0 && status.warning == null
+        eis.visibility = if (hidden) View.GONE else View.VISIBLE
+        if (hidden) return
         val value = "${if (recording) "Recording" else "Preview"} · ${status.label}" +
             status.warning?.let { "\n$it" }.orEmpty()
         if (eis.text.toString() != value) eis.text = value

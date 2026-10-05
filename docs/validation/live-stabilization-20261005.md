@@ -72,3 +72,9 @@ JVM 테스트 633개가 실패·오류·SKIP 없이 통과했습니다. 추가 �
 Live에 추가한 문구를 `Preview`·`Recording`, `EIS active`·`EIS inactive`·`EIS status unknown`으로 변경했습니다. 불일치는 `Mode mismatch` 아래 `Requested`와 `Reported`를 각각 한 줄에 표시합니다. 색상만으로 상태를 구분하지 않으며, 기존 12sp 글자 크기·어두운 배경·접근성 알림 정책을 유지합니다. Galaxy S25+에서 최종 APK의 `Preview · EIS inactive`가 한 줄에 잘림 없이 표시되는 것을 확인했습니다. 기존 LiveStabilizationTest 9개, assembleRelease, lintDebug가 통과했습니다. 문구 변경은 상태 판정이나 기존 수명주기 계약을 바꾸지 않습니다.
 
 ![영어 Live 상태](assets/live-stabilization/live-english.png)
+
+### 정상적인 EIS inactive 숨김
+
+EIS inactive이며 불일치 경고가 없으면 Live 상태 뷰를 GONE으로 처리합니다. 배경과 레이아웃 공간도 함께 사라집니다. EIS 적용 요청과 실제 결과가 다른 경우에는 기존 inactive 상태와 경고를 계속 표시합니다. Active·unknown 표시는 유지합니다. Galaxy S25+ (Android 16/API 36)의 Auto 프리뷰에서 영역 숨김을 확인했고 assembleRelease·lintDebug가 통과했습니다.
+
+![미적용 영역 숨김](assets/live-stabilization/live-inactive-hidden.png)
