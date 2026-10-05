@@ -76,6 +76,13 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `Lab → Settin
 
 설정은 카메라와 엔진마다 구분합니다. CameraX 녹화 포맷은 Auto이며 코덱은 라이브러리가 선택합니다. Live 설정은 Benchmark의 profile을 바꾸지 않습니다. API별 구성 검사와 저장 방식은 [Camera2 엔진](engine.md#camera2-엔진)에서 확인합니다.
 
+### 손떨림 보정을 선택하세요
+
+1. 촬영·녹화를 끝내고 Live Streams를 엽니다.
+2. Stabilization의 Requested mode에서 모드를 선택합니다. Camera2는 Auto·Off와 기기가 지원하는 모드를 표시합니다. CameraX에서 수동 보정을 사용하려면 Live에서 Camera2로 전환합니다.
+3. 저장하여 프리뷰를 재개합니다. Auto는 카메라 요청 템플릿의 기본값으로 복귀합니다.
+4. 다시 설정을 열어 Last session result의 Requested와 Reported를 대조합니다. 결과 키가 없으면 Unavailable이며, crop metadata는 보정 변환 전체를 보여주지 않습니다. Video EIS는 일부 크기·FPS에서 Off로 보고될 수 있습니다.
+
 ### 초점과 노출을 조절하세요
 
 상단 가운데 화살표로 제어 줄을 펼칩니다. 선택한 Flash·AF·AE와 EV는 제어 줄을 접어도 유지됩니다. AF·AE 잠금은 같은 버튼으로 해제하고, 플래시는 `Off`로, EV는 눈금 옆 `0`으로 초기화합니다. 카메라나 엔진을 바꾸면 제어가 기본값으로 돌아갑니다.

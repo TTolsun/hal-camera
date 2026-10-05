@@ -73,6 +73,17 @@ class Camera2Engine(
     private val callback = telemetry.callback(sessionId, streams = { requestOutputs[it] }) { active }
 
     private fun buildRequest(builder: CaptureRequest.Builder, outputs: List<ConfiguredOutput<Surface>>): CaptureRequest {
+        // Apply on every LIVE template (including video snapshots and focus triggers), never benchmark requests.
+        if (spec == null) {
+            val mode = liveStreams?.stabilization ?: LiveStabilization.AUTO
+            val keys = chars?.availableCaptureRequestKeys.orEmpty()
+            mode.optical?.takeIf { CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE in keys }?.let {
+                builder.set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, it)
+            }
+            mode.video?.takeIf { CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE in keys }?.let {
+                builder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, it)
+            }
+        }
         outputs.forEach { builder.addTarget(it.target) }
         return builder.build().also { requestOutputs[it] = outputs.map { output -> output.descriptor.id } }
     }

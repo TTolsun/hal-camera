@@ -33,18 +33,23 @@ data class LiveStreamSettings(
     val jpeg: LiveSize?,
     val fps: LiveFps?,
     val video: LiveVideo? = null,
+    val stabilization: LiveStabilization = LiveStabilization.AUTO,
 ) : java.io.Serializable {
     val canCapture get() = yuv != null || jpeg != null
     fun metadata(): Map<String, Any?> = mapOf("preview" to preview.toString(), "analysis" to yuv?.toString(),
-        "jpeg" to jpeg?.toString(), "fpsRange" to fps?.toString(), "video" to video?.toString())
+        "jpeg" to jpeg?.toString(), "fpsRange" to fps?.toString(), "video" to video?.toString(),
+        "stabilization" to stabilization.name)
     fun summary() = "Preview $preview · YUV ${yuv ?: "Off"} · JPEG ${jpeg ?: "Off"} · ${fps ?: "Auto FPS"}"
 }
 
 data class LiveStreamSupport(
     val preview: List<LiveSize>, val yuv: List<LiveSize>, val jpeg: List<LiveSize>,
     val fps: List<LiveFps>, val videos: List<LiveVideo>, val defaultVideo: LiveVideo? = null,
+    val stabilization: List<LiveStabilization> = listOf(LiveStabilization.AUTO),
+    val stabilizationNotice: String = "Manual stabilization requires Camera2. Switch to Camera2 to select a mode.",
 ) {
     fun rejection(value: LiveStreamSettings): String? = when {
+        value.stabilization !in stabilization -> "Unsupported stabilization mode. Select Auto or a supported Camera2 mode."
         value.preview !in preview -> "Unsupported preview size."
         value.yuv != null && value.yuv !in yuv -> "Unsupported YUV size."
         value.jpeg != null && value.jpeg !in jpeg -> "Unsupported JPEG size."

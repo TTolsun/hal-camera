@@ -21,7 +21,9 @@ fun cameraXStreamSupport(context: android.content.Context, id: String, hardware:
     val videos = hardware.videos.filter { it.size in resolutions }.map { it.copy(codec = "Auto") }.distinct()
     val default = videos.filter { it.fps == 30 && it.size.width.toLong() * it.size.height <= 1920L * 1080 }
         .maxByOrNull { it.size.width.toLong() * it.size.height } ?: videos.firstOrNull()
-    return hardware.copy(videos = videos, defaultVideo = default)
+    return hardware.copy(videos = videos, defaultVideo = default,
+        stabilization = listOf(LiveStabilization.AUTO),
+        stabilizationNotice = "Manual stabilization requires Camera2. Switch to Camera2 to select a mode.")
 }
 
 /** Individual sizes and encoder limits are checked here; combinations still need a real session check. */
@@ -48,5 +50,13 @@ fun liveStreamSupport(c: CameraCharacteristics): LiveStreamSupport {
         }
     }
     return LiveStreamSupport(sizes(map.getOutputSizes(SurfaceTexture::class.java)), sizes(map.getOutputSizes(ImageFormat.YUV_420_888)),
-        sizes(map.getOutputSizes(ImageFormat.JPEG)), fps, videos, defaultLiveVideo(videoSizes))
+        sizes(map.getOutputSizes(ImageFormat.JPEG)), fps, videos, defaultLiveVideo(videoSizes),
+        LiveStabilization.supported(
+            c[CameraCharacteristics.LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION]?.toList().orEmpty()
+                .takeIf { android.hardware.camera2.CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE in c.availableCaptureRequestKeys }.orEmpty(),
+            c[CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES]?.toList().orEmpty()
+                .takeIf { android.hardware.camera2.CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE in c.availableCaptureRequestKeys }.orEmpty(),
+            android.os.Build.VERSION.SDK_INT),
+        "OIS and Video EIS are exclusive. Availability depends on size and FPS; check the reported result. " +
+            "Auto restores camera defaults.")
 }

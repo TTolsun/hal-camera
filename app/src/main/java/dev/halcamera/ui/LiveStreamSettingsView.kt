@@ -83,6 +83,7 @@ object LiveStreamSettingsView {
         var yuv = current.yuv
         var jpeg = current.jpeg
         var fps = current.fps
+        var stabilization = current.stabilization
         val outputs = section("Outputs")
         choice(outputs, "Preview", { sizes(support.preview) }, { preview }, { preview = it }) { it.toString() }
         choice(outputs, "YUV", { sizes(support.yuv) + listOf(null) }, { yuv }, { yuv = it }) { it?.toString() ?: "Off" }
@@ -100,14 +101,22 @@ object LiveStreamSettingsView {
         choice(recording, "Frame Rate", { video.rates() }, { video.value?.fps }, { it?.let(video::selectRate) }) {
             it?.let { rate -> "$rate fps" } ?: "지원 정보 없음"
         }
-        refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested)) }
+        val stabilizationGroup = section("Stabilization")
+        choice(stabilizationGroup, "Requested mode", { support.stabilization }, { stabilization }, { stabilization = it }) { it.label }
+        stabilizationGroup.addView(Look.text(themed, support.stabilizationNotice, 13, Look.inkMuted).apply {
+            setPadding(dp(18), dp(14), dp(18), dp(14))
+        })
+        refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization)) }
         refreshers.forEach { it() }
-        if (actual.startsWith("Failed:") || actual.startsWith("실패:")) section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
+        if (actual.isNotBlank()) section("Last session result").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
             setPadding(dp(18), dp(14), dp(18), dp(14))
         })
         val scroll = ScrollView(themed).apply { isFillViewport = true; addView(content) }
         content.addView(Look.primaryButton(themed, "저장") {
-            apply(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested))
+            val settings = LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization)
+            val rejection = support.rejection(settings)
+            if (rejection == null) apply(settings)
+            else AlertDialog.Builder(themed, R.style.LabDialogTheme).setMessage(rejection).setPositiveButton("OK", null).show()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(24) })
         if (restore != null) content.addView(Look.ghostButton(themed, "직전 정상 구성 복원", action = restore),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })

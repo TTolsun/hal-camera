@@ -50,8 +50,11 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 | 이벤트 | 기록하는 내용 |
 | --- | --- |
 | `controls_set` | 요청한 EV, AE·AF 잠금, 플래시 모드와 Camera2 수동 ISO·노출 시간·초점·WB |
+| `live_streams_requested` | Camera2 Live의 출력·FPS·녹화 설정과 요청한 `stabilization` 모드 |
 | `ae_relock_wait`, `ae_relock`, `ae_relocked` | AE 잠금을 켠 채 세션을 새로 만들었을 때 잠금을 풀고 기다린 시점, 다시 잠근 이유(수렴 또는 2초 timeout), 잠금 전후의 노출 시간·ISO와 EV 차이 |
 | `touch_meter`, `touch_meter_result` | 터치 종류(AF·AE), 정규화 좌표, 결과(FOCUSED·FAILED·METERED) |
 | `media_saved`, `video_saved` | 저장한 사진 쌍의 센서 시각과 URI, 저장한 동영상의 URI |
 
 `request_observed`의 `afRegions`·`aeRegions`와 `capture_result`의 `afRegions`·`aeRegions`를 비교하면, 요청한 영역과 HAL이 적용한 영역을 대조할 수 있습니다.
+
+손떨림 보정도 두 이벤트의 `opticalStabilization`·`videoStabilization`·`cropRegion`으로 요청과 결과를 구분합니다. 결과 키가 없으면 적용 여부를 알 수 없습니다. Live Streams는 마지막 프리뷰와 녹화 결과를 분리해 표시하며, 새 엔진 세션을 시작하면 이전 결과를 지웁니다.
