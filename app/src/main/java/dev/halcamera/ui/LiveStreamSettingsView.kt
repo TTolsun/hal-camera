@@ -108,9 +108,13 @@ object LiveStreamSettingsView {
         })
         refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization)) }
         refreshers.forEach { it() }
-        if (actual.startsWith("Failed:") || actual.startsWith("실패:")) section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
-            setPadding(dp(18), dp(14), dp(18), dp(14))
-        })
+        if (actual.startsWith("Failed:") || actual.startsWith("실패:")) {
+            section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
+                setPadding(dp(18), dp(14), dp(18), dp(14))
+            })
+            if (restore != null) content.addView(Look.ghostButton(themed, "이전 설정으로 복원", action = restore),
+                LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
+        }
         val scroll = ScrollView(themed).apply { isFillViewport = true; addView(content) }
         content.addView(Look.primaryButton(themed, "저장") {
             val settings = LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization)
@@ -118,8 +122,6 @@ object LiveStreamSettingsView {
             if (rejection == null) apply(settings)
             else AlertDialog.Builder(themed, R.style.LabDialogTheme).setMessage(rejection).setPositiveButton("OK", null).show()
         }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(24) })
-        if (restore != null) content.addView(Look.ghostButton(themed, "직전 정상 구성 복원", action = restore),
-            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         return scroll
     }
 }
