@@ -9,6 +9,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
+import android.hardware.camera2.CaptureRequest
 import android.os.*
 import android.provider.Settings
 import android.view.*
@@ -262,10 +263,14 @@ class MainActivity : ComponentActivity() {
                 previewAt > 0L && time - previewAt < 1_500_000_000L
             liveIndicator.bind(live)
             val eisFrame = frames.lastOrNull {
-                engineName != "Camera2" || it.values["requestTag"] == if (recordingVideo) "recording" else "preview"
+                if (engineName == "Camera2") it.values["requestTag"] == if (recordingVideo) "recording" else "preview"
+                else when ((it.values["captureIntent"] as? Number)?.toInt()) {
+                    CaptureRequest.CONTROL_CAPTURE_INTENT_PREVIEW, CaptureRequest.CONTROL_CAPTURE_INTENT_VIDEO_RECORD -> true
+                    else -> false
+                }
             }
             liveIndicator.bindStabilization(eisTracker.update(sessionId, recordingVideo,
-                streamSettings[streamKey()]?.stabilization ?: LiveStabilization.AUTO,
+                (streamSettings[streamKey()]?.stabilization ?: LiveStabilization.AUTO).eisComparisonMode(engineName, recordingVideo),
                 eisFrame?.atNs, (eisFrame?.values?.get("videoStabilization") as? Number)?.toInt(), time,
                 live && !stoppingRecording), recordingVideo)
             if (!closing && engine != null) {

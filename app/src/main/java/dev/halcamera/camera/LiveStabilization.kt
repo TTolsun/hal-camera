@@ -9,6 +9,9 @@ enum class LiveStabilization(val label: String, val optical: Int?, val video: In
     PREVIEW("EIS (Preview + Video)", 0, 2);
 
     companion object {
+        fun supportedCameraX(hardware: List<LiveStabilization>, video: Boolean, preview: Boolean): List<LiveStabilization> =
+            hardware.filter { it != VIDEO || video }.filter { it != PREVIEW || preview }
+
         fun supported(optical: List<Int>, video: List<Int>, api: Int): List<LiveStabilization> =
             entries.filter { mode -> mode == AUTO ||
                 ((mode.optical == 0 || mode.optical in optical) &&
@@ -20,6 +23,23 @@ enum class LiveStabilization(val label: String, val optical: Int?, val video: In
         }
     }
 }
+
+/** Null leaves a CameraX builder option unspecified; explicit false can veto the other use case. */
+data class CameraXStabilizationPlan(val preview: Boolean?, val video: Boolean?, val optical: Int?) {
+    companion object {
+        fun forMode(mode: LiveStabilization): CameraXStabilizationPlan = when (mode) {
+            LiveStabilization.AUTO -> CameraXStabilizationPlan(null, null, null)
+            LiveStabilization.OFF -> CameraXStabilizationPlan(false, false, 0)
+            LiveStabilization.OIS -> CameraXStabilizationPlan(false, false, 1)
+            LiveStabilization.VIDEO -> CameraXStabilizationPlan(null, true, 0)
+            LiveStabilization.PREVIEW -> CameraXStabilizationPlan(true, null, 0)
+        }
+    }
+}
+
+/** VideoCapture is unbound outside recording in CameraX; there is no video request to compare yet. */
+fun LiveStabilization.eisComparisonMode(engine: String, recording: Boolean): LiveStabilization =
+    if (engine == "CameraX" && this == LiveStabilization.VIDEO && !recording) LiveStabilization.AUTO else this
 
 /** Capture-result status, not a measurement of stabilization effectiveness. */
 data class LiveEisStatus(val video: Int? = null, val warning: String? = null) {
