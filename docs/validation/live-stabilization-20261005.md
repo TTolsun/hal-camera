@@ -66,3 +66,9 @@ JVM 테스트 633개가 실패·오류·SKIP 없이 통과했습니다. 추가 �
 | EIS 미적용 | 녹화 중 EIS 적용 | 설정 결과 영역 삭제 |
 | --- | --- | --- |
 | ![EIS 미적용](assets/live-stabilization/live-off.png) | ![녹화 중 EIS 적용](assets/live-stabilization/live-recording.png) | ![설정 결과 영역 삭제](assets/live-stabilization/settings-no-result.png) |
+
+### Live 상태 문구 영어 적용
+
+Live에 추가한 문구를 `Preview`·`Recording`, `EIS active`·`EIS inactive`·`EIS status unknown`으로 변경했습니다. 불일치는 `Mode mismatch` 아래 `Requested`와 `Reported`를 각각 한 줄에 표시합니다. 색상만으로 상태를 구분하지 않으며, 기존 12sp 글자 크기·어두운 배경·접근성 알림 정책을 유지합니다. Galaxy S25+에서 최종 APK의 `Preview · EIS inactive`가 한 줄에 잘림 없이 표시되는 것을 확인했습니다. 기존 LiveStabilizationTest 9개, assembleRelease, lintDebug가 통과했습니다. 문구 변경은 상태 판정이나 기존 수명주기 계약을 바꾸지 않습니다.
+
+![영어 Live 상태](assets/live-stabilization/live-english.png)

@@ -24,9 +24,9 @@ enum class LiveStabilization(val label: String, val optical: Int?, val video: In
 /** Capture-result status, not a measurement of stabilization effectiveness. */
 data class LiveEisStatus(val video: Int? = null, val warning: String? = null) {
     val label: String get() = when (video) {
-        0 -> "EIS 미적용"
-        1, 2 -> "EIS 적용됨"
-        else -> "EIS 확인 불가"
+        0 -> "EIS inactive"
+        1, 2 -> "EIS active"
+        else -> "EIS status unknown"
     }
 }
 
@@ -70,7 +70,7 @@ class LiveEisTracker {
             else -> "EIS Off"
         }
         val warning = if (resultAtNs - mismatchSinceNs >= 1_000_000_000L)
-            "요청과 다름 · 요청: ${requested.label} / 결과: $actual" else null
+            "Mode mismatch\nRequested: ${requested.label}\nReported: $actual" else null
         return LiveEisStatus(video, warning)
     }
 }

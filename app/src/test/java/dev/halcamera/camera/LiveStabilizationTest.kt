@@ -41,14 +41,14 @@ class LiveStabilizationTest {
     @Test fun `live status uses fresh results and Auto never assumes EIS is enabled`() {
         val tracker = LiveEisTracker()
         fun result(at: Long?, value: Int?, now: Long) = tracker.update("a", false, LiveStabilization.AUTO, at, value, now, true)
-        assertEquals("EIS 미적용", result(0, 0, 0).label)
-        assertEquals("EIS 적용됨", result(1, 1, 1).label)
-        assertEquals("EIS 적용됨", result(2, 2, 2).label)
+        assertEquals("EIS inactive", result(0, 0, 0).label)
+        assertEquals("EIS active", result(1, 1, 1).label)
+        assertEquals("EIS active", result(2, 2, 2).label)
         assertNull(result(3, 1, 3).warning)
-        assertEquals("EIS 확인 불가", result(3, 1, 1_500_000_003L).label)
-        assertEquals("EIS 확인 불가", result(4, null, 4).label)
-        assertEquals("EIS 확인 불가", result(5, 99, 5).label)
-        assertEquals("EIS 확인 불가", result(7, 1, 6).label)
+        assertEquals("EIS status unknown", result(3, 1, 1_500_000_003L).label)
+        assertEquals("EIS status unknown", result(4, null, 4).label)
+        assertEquals("EIS status unknown", result(5, 99, 5).label)
+        assertEquals("EIS status unknown", result(7, 1, 6).label)
     }
 
     @Test fun `mismatch needs a second fresh result after the grace period and clears on recovery`() {
@@ -57,7 +57,7 @@ class LiveStabilizationTest {
         assertNull(result(0, 0).warning)
         assertNull(result(0, 0, 1_000_000_000L).warning) // polling one frame is not sustained evidence
         assertNotNull(result(1_000_000_000L, 0).warning)
-        assertEquals("EIS 미적용", result(1_100_000_000L, 0).label)
+        assertEquals("EIS inactive", result(1_100_000_000L, 0).label)
         assertNull(result(1_200_000_000L, 1).warning)
         assertNull(result(1_300_000_000L, 0).warning)
     }
@@ -66,7 +66,7 @@ class LiveStabilizationTest {
         val tracker = LiveEisTracker()
         tracker.update("a", true, LiveStabilization.PREVIEW, 0, 1, 0, true)
         val result = tracker.update("a", true, LiveStabilization.PREVIEW, 1_000_000_000L, 1, 1_000_000_000L, true)
-        assertEquals("EIS 적용됨", result.label)
+        assertEquals("EIS active", result.label)
         assertTrue(result.warning!!.contains("EIS (Preview + Video)"))
         assertTrue(result.warning!!.contains("EIS (Video)"))
     }
