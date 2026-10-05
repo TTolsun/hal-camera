@@ -88,3 +88,9 @@ EIS inactive이며 불일치 경고가 없으면 Live 상태 뷰를 GONE으로 �
 ### EIS 표시에서 Live Streams 진입
 
 EIS 표시도 기존 크기 표시와 같은 onSizesClick을 호출합니다. 최소 48×48dp 터치 영역·리플·포커스와 설정 진입 접근성 설명을 추가했으며 setSizesEnabled는 두 진입점을 함께 제어합니다. Galaxy S25+ (Android 16/API 36)에서 `EIS: P, V`를 눌러 Live Streams가 열리고 뒤로 가기로 Live가 재개되는 것을 확인했습니다. assembleRelease·lintDebug가 통과했습니다. 기존 카메라 수명주기·진입 차단 계약은 변경하지 않았습니다.
+
+### 0.19.0 릴리스 전 전체 리뷰
+
+PR #217의 전체 소스·테스트·문서 변경을 검토했습니다. 결과 최신성·세션/녹화 전환·사진 결과 제외·경고 지연·Auto 처리와 UI 약어·미적용 숨김·48dp 설정 진입·녹화/저장 중 차단을 대조했고 병합을 막는 결함은 발견하지 못했습니다. 독립 리뷰를 뜻하지 않으며 Sourcery 리뷰는 사용량 제한으로 수행되지 않았습니다.
+
+0.19.0(628) 후보에서 JVM 테스트 633개가 실패·오류·SKIP 없이 통과했고 assembleRelease·lintDebug도 통과했습니다. APK 서명 인증서 SHA-256은 기존 0.18.0과 동일한 `f2432413635645cc35e674e498e88ff518abb878065c21f17bb3c2128487b5c1`입니다. Galaxy S25+에서 기존 앱 위에 설치하고 versionName 0.19.0·versionCode 628 및 MainActivity 실행을 확인했습니다. 버전 변경은 엔진·측정·문서 아키텍처 계약에 영향을 주지 않습니다.
