@@ -26,6 +26,8 @@ internal class CameraXVideoSnapshot(
     private val library: MediaLibrary,
     private val mediaIo: Executor,
     private val host: Host,
+    private val takePicture: (ImageCapture, Executor, ImageCapture.OnImageCapturedCallback) -> Unit =
+        { capture, executor, callback -> capture.takePicture(executor, callback) },
 ) {
     interface Host {
         /** The ImageCapture bound with the recording, or null when the recording runs without a photo use case. */
@@ -39,6 +41,7 @@ internal class CameraXVideoSnapshot(
     }
 
     private val claimed = AtomicBoolean(false)
+    private var pending: SnapshotRequest<PhotoResult>? = null
     val inFlight: Boolean get() = claimed.get()
 
     fun capture(requestId: String?, done: (Result<PhotoResult>) -> Unit) {
@@ -46,42 +49,55 @@ internal class CameraXVideoSnapshot(
         if (useCase == null || !host.active) { done(Result.failure(IllegalStateException("Snapshot unavailable: recording is not ready."))); return }
         if (!claimed.compareAndSet(false, true)) { done(Result.failure(IllegalStateException("Saving the last shot… One masterpiece at a time."))); return }
         val name = library.name()
-        val answered = AtomicBoolean(false)
-        fun finish(result: Result<PhotoResult>, notice: String) {
-            if (!answered.compareAndSet(false, true)) return
-            claimed.set(false)
-            main.post { done(result); host.notice(notice) }
+        lateinit var timeout: Runnable
+        val request = SnapshotRequest<PhotoResult> { result ->
+            main.removeCallbacks(timeout)
+            main.post {
+                pending = null
+                claimed.set(false)
+                done(result)
+                host.notice(result.fold({ "Snapshot saved. The show goes on." }, { "Snapshot failed: ${it.message}" }))
+            }
             result.exceptionOrNull()?.let { telemetry.event(sessionId, "video_snapshot_failed", mapOf("message" to it.message)) }
         }
-        host.updateRotation()
-        telemetry.event(sessionId, "video_snapshot_submit", mapOf("api" to "ImageCapture.takePicture", "flash" to host.flashName,
-            "zoomRequested" to host.zoomRequested, "size" to useCase.resolutionInfo?.resolution?.toString()))
+        timeout = Runnable { request.failCapture(IllegalStateException("No photo arrived within 5 seconds.")) }
+        pending = request
+        main.postDelayed(timeout, TIMEOUT_MS)
         try {
-            useCase.takePicture(mainExecutor, object : ImageCapture.OnImageCapturedCallback() {
+            host.updateRotation()
+            telemetry.event(sessionId, "video_snapshot_submit", mapOf("api" to "ImageCapture.takePicture", "flash" to host.flashName,
+                "zoomRequested" to host.zoomRequested, "size" to useCase.resolutionInfo?.resolution?.toString()))
+            takePicture(useCase, mainExecutor, object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
-                    // A timed-out request must not save a late image after reporting failure.
-                    if (answered.get()) { image.close(); return }
-                    val timestamp = image.imageInfo.timestamp
+                    if (!request.acceptImage()) { image.close(); return }
+                    main.removeCallbacks(timeout)
+                    var timestamp = 0L
                     val bytes = try {
+                        timestamp = image.imageInfo.timestamp
                         if (host.active) telemetry.image(sessionId, timestamp, image.width, image.height, image.format, host.snapshotStream)
                         val buffer = image.planes[0].buffer
                         ByteArray(buffer.remaining()).also { buffer.get(it) }
-                    } catch (e: Exception) { finish(Result.failure(e), "Snapshot failed: ${e.message}"); return } finally { image.close() }
+                    } catch (e: Exception) { request.finishSave(Result.failure(e)); return } finally { image.close() }
                     try {
                         mediaIo.execute {
                             val saved = runCatching { library.savePhotos(name, null, bytes) }
                             saved.onSuccess { telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp,
                                 "source" to "video_snapshot", "uris" to it.map { uri -> uri.toString() })) }
-                            finish(saved.map { PhotoResult(requestId, name, timestamp, it) },
-                                saved.fold({ "Snapshot saved. The show goes on." }, { "Snapshot save failed: ${it.message}" }))
+                            request.finishSave(saved.map { PhotoResult(requestId, name, timestamp, it) })
                         }
-                    } catch (e: RejectedExecutionException) { finish(Result.failure(e), "Snapshot failed: The camera closed before the photo could be saved.") }
+                    } catch (e: RejectedExecutionException) {
+                        request.finishSave(Result.failure(IllegalStateException("The camera closed before the photo could be saved.", e)))
+                    }
                 }
                 override fun onError(exception: ImageCaptureException) =
-                    finish(Result.failure(exception), "Snapshot failed: ${exception.message}")
+                    request.failCapture(exception)
             })
-        } catch (e: Exception) { finish(Result.failure(e), "Snapshot failed: ${e.message}"); return }
-        main.postDelayed({ finish(Result.failure(IllegalStateException("No photo arrived within 5 seconds.")), "Snapshot failed: No photo arrived within 5 seconds.") }, TIMEOUT_MS)
+        } catch (e: Exception) { request.failCapture(e) }
+    }
+
+    /** Main thread. A copied JPEG keeps saving; a camera request still waiting for its image is interrupted. */
+    fun release(reason: String) {
+        pending?.failCapture(IllegalStateException("$reason: photo capture was interrupted."))
     }
 
     private companion object { const val TIMEOUT_MS = 5000L }

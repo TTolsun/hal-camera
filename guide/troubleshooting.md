@@ -141,13 +141,13 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.17.0 (versionCode 625)
+- 검증 기준 앱 버전: 0.19.0 (versionCode 628)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 원고 `layer-isolation` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
+| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 원고 `layer-isolation` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
 
 <!-- omm:end id=status -->
 

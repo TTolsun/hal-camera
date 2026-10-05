@@ -61,15 +61,32 @@
 <a href="assets/screenshots/live.png" aria-label="Camera2 Live 사진 모드와 실시간 정보 원본 보기"><img src="assets/screenshots/live.png" alt="Camera2 Live 사진 모드와 실시간 정보" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>Camera2의 사진 모드입니다. 하단에서 실시간 정보, 줌, 셔터와 최근 썸네일을 확인할 수 있습니다. <a href="assets/screenshots/live.png">원본 보기</a></figcaption>
 </figure><p>녹화 중에는 셔터 아래에 경과 시간이 표시됩니다. 줌은 계속 바꿀 수 있지만 엔진·카메라·모드 변경, 일시정지, 갤러리와 다른 도구 진입은 제한됩니다. 녹화를 마치면 사진용 프리뷰로 돌아오며 동영상 모드 선택은 유지됩니다.</p>
+<h3 id="수동-촬영-조건을-고정하세요">수동 촬영 조건을 고정하세요</h3>
+<ol>
+<li>Camera2 Live 상단의 화살표를 펼치고 <code>M</code>을 누릅니다. 셔터 위에 Manual 패널이 열립니다.</li>
+<li><code>ISO</code> 또는 <code>Shutter</code>에서 노출을 <code>Manual</code>으로 바꿉니다. 두 값은 현재 관측값을 지원 범위에 맞춰 함께 고정합니다. 범위 때문에 값이 달라지면 안내합니다.</li>
+<li>슬라이더로 값을 조절합니다. 파란 숫자를 누르면 직접 입력할 수 있습니다. 셔터는 ms 또는 <code>1/125</code> 형식을 받습니다. 범위를 벗어나면 입력창에 오류를 표시합니다.</li>
+<li><code>Focus</code>에서는 Auto/Manual과 diopter를, <code>WB</code>에서는 기기가 지원하는 프리셋을 선택합니다. 수동 gains와 3×3 matrix는 해당 capability가 있는 기기의 수동 노출에서 사용합니다. Kelvin 값으로 변환하지 않습니다.</li>
+<li>입력한 숫자와 패널 아래의 실제 적용값을 비교합니다. 선택한 항목의 실제값은 하단 측정줄에서 중복 표시하지 않습니다. <code>Hide</code>와 시스템 뒤로 가기는 값을 유지하며, <code>Reset</code>은 노출·초점·WB를 자동으로 되돌립니다.</li>
+</ol>
+<p>수동 노출에서는 AE 잠금·EV·자동/강제 플래시를 사용할 수 없으며 torch는 지원 기기에서 유지됩니다. 수동 초점에서는 화면 터치가 AF를 다시 켜지 않습니다. 수동 노출의 최대 시간은 현재 FPS와 센서 범위로 제한하며 Auto FPS에서는 30fps를 요청합니다. 출력 조합 때문에 실제 FPS가 다를 수 있으므로 프리뷰 수치를 확인하세요.</p>
+<p>프리뷰·사진·녹화와 녹화 중 사진에 같은 수동 설정을 적용합니다. 동영상 모드 전환으로 노출 범위가 줄면 값을 조정하고 안내합니다. 카메라·엔진·스트림 구성을 바꾸면 자동으로 초기화합니다. CameraX에서는 미지원 사유와 기존 상단 엔진 버튼의 위치를 안내합니다. Benchmark의 측정 계약에는 영향을 주지 않습니다.</p>
 <h3 id="live-스트림을-설정하세요">Live 스트림을 설정하세요</h3>
 <ol>
 <li>Live 옆의 크기 표시를 누릅니다. <code>Lab → Settings → Live Streams</code>에서도 같은 설정을 열 수 있습니다.</li>
 <li>Preview 크기와 YUV·JPEG의 크기 또는 <code>Off</code>를 선택합니다. 둘 다 끄면 프리뷰만 실행하며 사진 셔터는 비활성화됩니다.</li>
 <li>프리뷰 FPS를 고르고 녹화는 Format → Resolution → Frame Rate 순서로 선택합니다. 해상도는 큰 순서로 표시합니다. 녹화는 Preview + Encoder로 전환하며, 고속 세션은 제공하지 않습니다.</li>
 <li><code>저장</code>을 누르면 진입한 화면으로 돌아가며 현재 Camera2·CameraX 엔진에 적용합니다. Live에서 직접 열었다면 바로 프리뷰로 복귀합니다. 상단·시스템 뒤로 가기는 저장하지 않고 돌아갑니다.</li>
-<li>Live의 P·Y·J 표시에서 적용 크기를 확인합니다. 녹화 중에는 P·R과 H264·HEVC·Auto가 표시됩니다. 실패하면 설정 화면에서 이유를 확인하고 <code>직전 정상 구성</code>으로 복구합니다. 개별 크기를 지원해도 출력 조합은 거부될 수 있습니다.</li>
+<li>Live의 P·Y·J 표시에서 적용 크기를 확인합니다. 녹화 중에는 P·R과 H264·HEVC·Auto가 표시됩니다. 실패하면 설정 화면에서 이유를 확인하고 실패 시에만 나타나는 <code>이전 설정으로 복원</code> 버튼으로 복구합니다. 개별 크기를 지원해도 출력 조합은 거부될 수 있습니다.</li>
 </ol>
 <p>설정은 카메라와 엔진마다 구분합니다. CameraX 녹화 포맷은 Auto이며 코덱은 라이브러리가 선택합니다. Live 설정은 Benchmark의 profile을 바꾸지 않습니다. API별 구성 검사와 저장 방식은 <a href="engine.html#camera2-엔진">Camera2 엔진</a>에서 확인합니다.</p>
+<h3 id="손떨림-보정을-선택하세요">손떨림 보정을 선택하세요</h3>
+<ol>
+<li>촬영·녹화를 끝내고 Live Streams를 엽니다.</li>
+<li>Stabilization의 Mode에서 모드를 선택합니다. 두 엔진 모두 Auto·Off와 지원되는 보정 모드를 표시합니다. CameraX의 EIS (Video)는 녹화 중에 적용됩니다.</li>
+<li>저장하여 프리뷰를 재개합니다. Auto는 카메라 요청 템플릿의 기본값으로 복귀합니다.</li>
+<li>Live 상단의 P·Y·J 크기 표시 옆에서 실제 모드를 확인합니다. EIS: V는 Video, EIS: P, V는 Preview + Video이며, EIS: ?는 확인 불가입니다. EIS 표시를 누르면 Live Streams 설정을 엽니다. 정상적인 미적용 상태에서는 상태 영역을 숨깁니다. 요청과 다른 모드가 1초 이상 보고되면 주황색으로 요청값과 결과값을 표시합니다. 이 상태는 카메라의 결과 메타데이터이며 실제 흔들림 감소량을 뜻하지 않습니다.</li>
+</ol>
 <h3 id="초점과-노출을-조절하세요">초점과 노출을 조절하세요</h3>
 <p>상단 가운데 화살표로 제어 줄을 펼칩니다. 선택한 Flash·AF·AE와 EV는 제어 줄을 접어도 유지됩니다. AF·AE 잠금은 같은 버튼으로 해제하고, 플래시는 <code>Off</code>로, EV는 눈금 옆 <code>0</code>으로 초기화합니다. 카메라나 엔진을 바꾸면 제어가 기본값으로 돌아갑니다.</p>
 <table>
@@ -114,11 +131,11 @@
 </tr>
 <tr>
 <td><code>versionName</code></td>
-<td><code>0.17.0</code></td>
+<td><code>0.19.0</code></td>
 </tr>
 <tr>
 <td><code>versionCode</code></td>
-<td><code>625</code></td>
+<td><code>628</code></td>
 </tr>
 <tr>
 <td><code>minSdk</code></td>

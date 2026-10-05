@@ -1,0 +1,1 @@
+LiveStreamSettings는 Live에서 선택한 출력 크기·FPS·녹화 설정을 담습니다. LiveStreamCapabilities는 Camera2·CameraX와 인코더가 보고한 후보를 모으며, LiveSessionCheck는 Camera2의 출력 조합과 최소 프레임 시간을 확인합니다. 개별 크기를 지원하는 것과 세션 구성이 성공하는 것은 구분합니다. Benchmark의 StreamSpec과 Live 설정은 분리되어 있습니다.

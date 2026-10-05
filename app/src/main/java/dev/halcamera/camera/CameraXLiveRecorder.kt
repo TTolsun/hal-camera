@@ -44,6 +44,7 @@ internal class CameraXLiveRecorder(
     interface Host {
         val active: Boolean
         val settings: LiveVideo?
+        val stabilization: LiveStabilization
         val cameraInfo: androidx.camera.core.CameraInfo?
         val stillInFlight: Boolean
         /** Surface.ROTATION_* of the display now; the recording keeps it as its orientation hint. */
@@ -102,7 +103,9 @@ internal class CameraXLiveRecorder(
                 .setTargetVideoEncodingBitRate(settings?.bitrate ?: 10_000_000)
                 .build()
             val fps = settings?.fps ?: 30
-            val useCase = VideoCapture.Builder(recorder).setTargetFrameRate(Range(fps, fps)).setTargetRotation(host.displayRotation).build()
+            val builder = VideoCapture.Builder(recorder).setTargetFrameRate(Range(fps, fps)).setTargetRotation(host.displayRotation)
+            CameraXStabilizationPlan.forMode(host.stabilization).video?.let(builder::setVideoStabilizationEnabled)
+            val useCase = builder.build()
             video = useCase
             host.bindRecording(useCase)
             if (settings != null) require(useCase.resolutionInfo?.resolution == settings.size.androidSize()) {

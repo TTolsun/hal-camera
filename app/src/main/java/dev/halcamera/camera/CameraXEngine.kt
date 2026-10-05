@@ -108,6 +108,7 @@ class CameraXEngine(
     private val video: CameraXLiveRecorder = CameraXLiveRecorder(context, main, telemetry, session, library, mediaIo, object : CameraXLiveRecorder.Host {
         override val active: Boolean get() = this@CameraXEngine.active
         override val settings: LiveVideo? get() = liveStreams?.video
+        override val stabilization: LiveStabilization get() = liveStreams?.stabilization ?: LiveStabilization.AUTO
         override val cameraInfo: CameraInfo? get() = camera?.cameraInfo
         override val stillInFlight: Boolean get() = stills.inFlight
         override val displayRotation: Int get() = displayRotation()
@@ -136,6 +137,7 @@ class CameraXEngine(
                 "snapshot" to if (photoBound) photo!!.resolutionInfo?.resolution?.toString() else null))
         }
         override fun unbindRecording(video: VideoCapture<Recorder>) {
+            snapshots.release("Recording ended")
             val provider = provider ?: return
             provider.unbind(*listOfNotNull<UseCase>(video, if (photoBound) capture else null).toTypedArray())
             recording = null; photoBound = false
@@ -158,7 +160,19 @@ class CameraXEngine(
             if (!active) return@addListener
             try {
                 provider = future.get()
+                val info = provider!!.availableCameraInfos.first { Camera2CameraInfo.from(it).cameraId == cameraId }
+                val characteristics = context.getSystemService(CameraManager::class.java).getCameraCharacteristics(cameraId)
+                val mode = liveStreams?.stabilization ?: LiveStabilization.AUTO
+                require(mode in cameraXStabilizationModes(info, hardwareStabilizationModes(characteristics))) {
+                    "Unsupported stabilization mode. Select Auto or a supported mode."
+                }
+                val stabilization = CameraXStabilizationPlan.forMode(mode)
                 val builder = Preview.Builder()
+                stabilization.preview?.let(builder::setPreviewStabilizationEnabled)
+                if (CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE in characteristics.availableCaptureRequestKeys) {
+                    stabilization.optical?.let { Camera2Interop.Extender(builder)
+                        .setCaptureRequestOption(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, it) }
+                }
                 liveStreams?.let { settings ->
                     builder.setResolutionSelector(exactResolution(settings.preview))
                     settings.fps?.let { builder.setTargetFrameRate(Range(it.min, it.max)) }
@@ -199,9 +213,12 @@ class CameraXEngine(
                 telemetry.event(session, "bound", sizes)
                 streamsConfigured(sizes)
             } catch (e: Exception) {
-                status("CameraX: ${e.message}", false)
+                val reason = if (e.message?.contains("No supported surface combination") == true)
+                    "Unsupported output, size, FPS, or stabilization combination. Change Live Streams or restore the previous settings."
+                else e.message ?: "CameraX configuration failed"
+                status("CameraX: $reason", false)
                 telemetry.event(session, "camera_error", mapOf("message" to e.toString()))
-                streamsFailed(e.message ?: "CameraX configuration failed")
+                streamsFailed(reason)
             }
         }, main)
     }
@@ -286,6 +303,7 @@ class CameraXEngine(
         active = false
         analysis?.clearAnalyzer()
         stills.close()
+        snapshots.release("Camera closed")
         video.close { mediaIo.shutdown() }
         val info = camera?.cameraInfo
         val bound = listOfNotNull(preview, analysis, capture, recording).toTypedArray()

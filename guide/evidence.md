@@ -29,6 +29,10 @@ Live·CameraX 전환·사진 자동 고정·Recording 콜백·Probe 조회·CTS 
 
 2026년 9월 30일 같은 기기의 0.16.0(versionCode 593) 디자인 변경 빌드로 Live·Live 제어·CameraX·CLI 설정·ZIP 목록의 이미지 5개를 교체하고 Gallery·About·기기 정보·ZIP 작업 화면 7개를 추가했습니다. Gallery 첫 타일의 모서리를 실기기 리뷰에서 수정했습니다. Callback의 촬영·녹화 화면은 9월 27일 당시 검증 기록이며 이번 UI 변경의 검증 자료가 아닙니다. [Gallery·Lab UI 리뷰와 촬영 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/gallery-lab-ui-20260930.md)에서 코드 리뷰와 기기 관찰을 확인하세요.
 
+### 녹화 중 사진
+
+2026년 10월 5일 Galaxy S25+(SM-S936N)·Android 16의 0.19.0(versionCode 628)에서 후면·전면·초광각 녹화 중 사진을 확인했습니다. CameraX 1.6.2에서는 사진 시점에 약 두 프레임 길이의 영상 간격이 생겼고, Camera2 1080p 30fps에서는 사진 3장씩을 저장해도 같은 간격 증가가 없었습니다. HEVC 60fps와 정지 직후의 사진 결과, 공식 소스에서 확인한 요청 출력 구성, 남은 검증 조건은 [녹화 중 사진 후속 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md)에 있습니다. CameraX의 영상 간격 증가는 알려진 제약으로 수용하고 문서에만 안내합니다. 남은 실패 경로와 기기 조합은 [#220](https://github.com/TTolsun/hal-camera/issues/220)과 [#221](https://github.com/TTolsun/hal-camera/issues/221)에서 추적합니다.
+
 ### CTS 원문 케이스
 
 Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수행한 기록입니다. versionCode 108의 SKIP 판정을 적용한 결과는 40개 메서드 중 **PASS 33 · FAIL 1 · SKIP 6**입니다. 여러 실행과 재실행을 합친 기록입니다. 원본 요청 ID와 로그 해석은 [STATUS.md](https://github.com/TTolsun/hal-camera/blob/main/docs/STATUS.md)에 있습니다.
@@ -127,12 +131,12 @@ flowchart LR
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.17.0 (versionCode 625)
+- 검증 기준 앱 버전: 0.19.0 (versionCode 628)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 원고 `device-notes` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
+| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 원고 `device-notes` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
 
 <!-- omm:end id=status -->
 

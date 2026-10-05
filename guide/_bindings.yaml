@@ -124,11 +124,21 @@ sources:
       camera-engines/camera2-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+          - app/src/main/java/dev/halcamera/camera/PreviewTransform.kt
+          - app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt
+      camera-engines/camera2-engine/stream-settings:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/LiveStabilization.kt
           - app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt
           - app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt
           - app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt
-          - app/src/main/java/dev/halcamera/camera/PreviewTransform.kt
-          - app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt
+      camera-engines/camera2-engine/manual-controls:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/ManualControls.kt
+          - app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt
+      ui-widgets/manual-controls:
+        evidence:
+          - app/src/main/java/dev/halcamera/ui/ManualControlPanel.kt
       # Stills and LIVE recording moved out of Camera2Engine.kt (refactor after #192); each has its own element.
       camera-engines/camera2-engine/still-capture:
         evidence:

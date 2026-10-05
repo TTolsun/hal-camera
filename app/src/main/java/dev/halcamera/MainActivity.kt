@@ -9,6 +9,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
+import android.hardware.camera2.CaptureRequest
 import android.os.*
 import android.provider.Settings
 import android.view.*
@@ -154,7 +155,7 @@ class MainActivity : ComponentActivity() {
     private val streamSettings = mutableMapOf<String, LiveStreamSettings>()
     private val goodStreams = mutableMapOf<String, LiveStreamSettings?>()
     private val streamState = mutableMapOf<String, String>()
-    private val lastStreamFps = mutableMapOf<String, String>()
+    private val eisTracker = LiveEisTracker()
     private var ready = false
     private var zoomRatio = 1f
     private var zoomApplied = false
@@ -169,6 +170,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var callbackGraph: ResultCallbackGraph
     private lateinit var zoomControl: ExpandingZoomControl
     private lateinit var controlBar: LiveControlBar
+    private lateinit var manualPanel: ManualControlPanel
+    private var manualCapabilities = ManualSupport()
     private lateinit var cameraNotice: TextView
     private var savedNoticeShown = false
     private val clearNotice = Runnable { savedNoticeShown = false; if (ready || recordingVideo) cameraNotice.visibility = View.GONE }
@@ -214,6 +217,9 @@ class MainActivity : ComponentActivity() {
     private val graphBack = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() = showCallbacks(false)
     }
+    private val manualBack = object : OnBackPressedCallback(false) {
+        override fun handleOnBackPressed() { manualPanel.close(); isEnabled = false }
+    }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) restartCamera() else setStatus("Camera permission required · Reconnect Camera in Lab.", false)
     }
@@ -255,15 +261,29 @@ class MainActivity : ComponentActivity() {
             }
             val events = recorder.snapshot(10_000_000_000L)
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
-            if (engineName == "Camera2") frames.lastOrNull()?.values?.get("fpsRange")?.let { lastStreamFps[streamKey()] = it.toString() }
             val previewAt = if (engineName == "Camera2") lastPreviewFrameNs
                 else if (cameraXStreaming) frames.lastOrNull()?.atNs ?: 0L else 0L
-            liveIndicator.bind(resumed && !paused && !closing && engine != null &&
-                previewAt > 0L && time - previewAt < 1_500_000_000L)
+            val live = resumed && !paused && !closing && engine != null &&
+                previewAt > 0L && time - previewAt < 1_500_000_000L
+            liveIndicator.bind(live)
+            val eisFrame = frames.lastOrNull {
+                if (engineName == "Camera2") it.values["requestTag"] == if (recordingVideo) "recording" else "preview"
+                else when ((it.values["captureIntent"] as? Number)?.toInt()) {
+                    CaptureRequest.CONTROL_CAPTURE_INTENT_PREVIEW, CaptureRequest.CONTROL_CAPTURE_INTENT_VIDEO_RECORD -> true
+                    else -> false
+                }
+            }
+            liveIndicator.bindStabilization(eisTracker.update(sessionId, recordingVideo,
+                (streamSettings[streamKey()]?.stabilization ?: LiveStabilization.AUTO).eisComparisonMode(engineName, recordingVideo),
+                eisFrame?.atNs, (eisFrame?.values?.get("videoStabilization") as? Number)?.toInt(), time,
+                live && !stoppingRecording), recordingVideo)
             if (!closing && engine != null) {
                 liveIndicator.bindSizes(telemetry.sessions[sessionId]?.get("negotiatedStreams") as? Map<*, *>)
             }
-            readings.update(events, frames, time, sessionId, controlBar.controls, controlBar.support, zoomRatio)
+            readings.update(events, frames, time, sessionId, controlBar.controls, controlBar.support, zoomRatio, manualPanel.observedKey)
+            manualPanel.bind(controlBar.controls.manual, (ready || recordingVideo) && !stoppingRecording && cli.active == null,
+                manualCapabilities, frames.lastOrNull(), time)
+            manualBack.isEnabled = manualPanel.isExpanded
             if (callbackGraph.visibility == View.VISIBLE) callbackGraph.update(events, sessionId, time, telemetry.sessions[sessionId].orEmpty())
             recorder.finish()?.let(incidents::export)
             val remaining = recorder.remainingNs()
@@ -292,6 +312,7 @@ class MainActivity : ComponentActivity() {
         buildUi()
         recentMedia = RecentMediaThumbnail(this) { bitmap, video -> galleryButton.setThumbnail(bitmap, video) }
         onBackPressedDispatcher.addCallback(this, graphBack)
+        onBackPressedDispatcher.addCallback(this, manualBack)
         recorder.record("app", "clock_anchor", values = mapOf("wallTimeMs" to System.currentTimeMillis(), "uptimeMs" to SystemClock.uptimeMillis()))
     }
     override fun onSaveInstanceState(outState: Bundle) {
@@ -365,6 +386,7 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun restartCamera() {
+        eisTracker.reset()
         liveIndicator.bind(false)
         liveIndicator.bindSizes(null)
         lastPreviewFrameNs = 0L
@@ -402,6 +424,8 @@ class MainActivity : ComponentActivity() {
         val recordingState = { recording: Boolean ->
             if (thisSession == sessionId) {
                 recordingVideo = recording
+                eisTracker.reset()
+                liveIndicator.bindStabilization(LiveEisStatus(), recording)
                 if (!recording) stoppingRecording = false
                 if (recording) {
                     recordingStartedAt = SystemClock.elapsedRealtime()
@@ -460,8 +484,14 @@ class MainActivity : ComponentActivity() {
                 if (thisSession == sessionId && resumed && !closing && !paused) lastPreviewFrameNs = nowNs()
             }, recordingState = recordingState, notice = notice, status = status)
         }
-        previewHost.addView(FocusRing(this, { engine as? TouchMetering }) { controlBar.setAeLock(it) }, FrameLayout.LayoutParams(-1,-1))
-        try { engine?.start() } catch (e: Exception) { setStatus("Camera start failed: ${e.message}",false) }
+        previewHost.addView(FocusRing(this, { engine as? TouchMetering }) { controlBar.setAeLock(it) }.apply {
+            unavailableReason = { exposure ->
+                if (exposure && controlBar.controls.manual.exposure != null) "수동 노출 중입니다 · ISO와 Shutter로 조절하세요"
+                else if (!exposure && controlBar.controls.manual.focusDiopters != null) "수동 초점 중입니다 · Focus에서 Auto로 전환하세요"
+                else null
+            }
+        }, FrameLayout.LayoutParams(-1,-1))
+        try { engine?.start() } catch (e: Exception) { setStatus("시작 실패: ${e.message}",false) }
         updateCameraChoices()
     }
     /** Shown 2.5 s like a save notice, also while recording; [ready] stays as it is. */
@@ -537,7 +567,7 @@ class MainActivity : ComponentActivity() {
         listOf(engineButton,labButton,graphButton).forEach {
             it.background=cameraChrome(Color.TRANSPARENT)
             it.setTextColor(Color.WHITE)
-            it.setPadding(dp(12),0,dp(12),0)
+            it.setPadding(dp(8),0,dp(8),0)
             it.setSingleLine(true)
             it.minWidth=dp(48); it.minimumWidth=dp(48)
         }
@@ -556,7 +586,9 @@ class MainActivity : ComponentActivity() {
         controlBar=LiveControlBar(this,object : LiveControlBar.Host {
             override fun controlsChanged(controls: LiveControls) { (engine as? LiveTuning)?.setControls(controls) }
             override fun notice(text: String) = toast(text)
+            override fun manualRequested() { showCallbacks(false); manualPanel.toggle() }
         })
+        manualPanel = ManualControlPanel(this, { controlBar.setManual(it) }, ::toast)
         controls.gravity=Gravity.TOP
         controls.addView(leadingSlot,LinearLayout.LayoutParams(0,-2,1f))
         controls.addView(FrameLayout(this).apply {
@@ -580,10 +612,17 @@ class MainActivity : ComponentActivity() {
             background=GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,intArrayOf(Color.argb(180,0,0,0),Color.TRANSPARENT))
         }
         root.addView(captureChrome,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
+        root.addView(manualPanel.view, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
+            leftMargin = dp(12); rightMargin = dp(12)
+        })
+        captureChrome.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            val params = manualPanel.view.layoutParams as FrameLayout.LayoutParams
+            val margin = captureChrome.height + dp(8)
+            if (params.bottomMargin != margin) { params.bottomMargin = margin; manualPanel.view.layoutParams = params }
+        }
         captureChrome.addView(bottomBar,LinearLayout.LayoutParams(-1,-2))
         metrics=label("FPS — · ISO — · Exp —\nAE — · AF —",12,Look.onDark).apply {
             textSize=11f
-            maxLines=2
             gravity=Gravity.CENTER
             typeface=Look.mono
             setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
@@ -694,6 +733,12 @@ class MainActivity : ComponentActivity() {
         if (recordingVideo || !ready || videoMode==video) return
         pendingPermissionAction=null
         videoMode=video
+        refreshManualSupport()
+        val normalized = controlBar.controls.manual.normalized(manualCapabilities)
+        if (normalized != controlBar.controls.manual) {
+            toast("촬영 모드의 FPS 제한에 맞게 수동 설정을 조정했습니다: ${normalized.summary()}")
+            controlBar.setManual(normalized)
+        }
         updateMediaControls()
     }
     /**
@@ -771,7 +816,17 @@ class MainActivity : ComponentActivity() {
         engineName=name; resetControls(); updateCameraChoices(); restartCamera()
     }
     /** Locks, EV and flash start over for every camera and engine; the new session opens with the defaults. */
-    private fun resetControls()=controlBar.reset(if(cameraId.isEmpty()) LiveControlSupport.NONE else liveControlSupport(manager,cameraId))
+    private fun resetControls() {
+        controlBar.reset(if(cameraId.isEmpty()) LiveControlSupport.NONE else liveControlSupport(manager,cameraId))
+        refreshManualSupport()
+        manualPanel.reset(manualCapabilities)
+    }
+    private fun refreshManualSupport() {
+        val streams = streamSettings[streamKey()]
+        val fps = if (videoMode) maxOf(streams?.video?.fps ?: 30, streams?.fps?.max ?: 30) else streams?.fps?.max ?: 30
+        manualCapabilities = if (engineName != "Camera2") ManualSupport(camera2 = false)
+            else try { manualSupport(manager.getCameraCharacteristics(cameraId), fps) } catch (_: Exception) { ManualSupport() }
+    }
     private fun streamKey() = liveStreamSettingsKey(cameraId, engineName)
     private fun openLab() {
         openAfterClose("workbench_opened") {
@@ -793,8 +848,7 @@ class MainActivity : ComponentActivity() {
                 .putExtra(LiveStreamsActivity.EXTRA_SETTINGS, streamSettings[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_GOOD_SETTINGS, goodStreams[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_HAS_GOOD, goodStreams.containsKey(streamKey()))
-                .putExtra(LiveStreamsActivity.EXTRA_STATUS, (streamState[streamKey()] ?: "Not configured yet.") +
-                    lastStreamFps[streamKey()]?.let { "\nMeasured FPS: $it" }.orEmpty())
+                .putExtra(LiveStreamsActivity.EXTRA_STATUS, streamState[streamKey()].orEmpty())
     /**
      * Lab can launch CTS and Benchmark, so the live session must be closed and its close(done) received
      * before the next screen starts. Same sequence as the CLI CTS path; onStop's restartCamera() sees
@@ -839,6 +893,7 @@ class MainActivity : ComponentActivity() {
         (engine as? MediaCapture)?.stopRecording()
     }
     private fun showCallbacks(show: Boolean) {
+        if (show && ::manualPanel.isInitialized) manualPanel.close()
         callbackGraph.reset()
         callbackGraph.visibility = if (show) View.VISIBLE else View.GONE
         metrics.visibility = if (show) View.GONE else View.VISIBLE

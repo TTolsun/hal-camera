@@ -436,20 +436,20 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.17.0 (versionCode 625)
+- 검증 기준 앱 버전: 0.19.0 (versionCode 628)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
+| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
 | 구조 원본 `ui-camera-label` | 최신 | 검토 2026-09-28 @ `f30cd87` · Codex |
-| 구조 원본 `ui-tool-handoff` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
+| 구조 원본 `ui-tool-handoff` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `fcabbc9` · Codex-CameraX-stabilization-review |
 | 구조 원본 `ui-zoom` | 최신 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 원고 `overview` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 원고 `module-roles` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 원고 `runtime-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 원고 `constraints` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
+| 원고 `overview` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 원고 `module-roles` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 원고 `runtime-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 원고 `constraints` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
 
 <!-- omm:end id=status -->
 

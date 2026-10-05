@@ -11,14 +11,25 @@ import java.util.UUID
 class CliStoreInstrumentation : Instrumentation() {
     private var exportReports = false
     private var probeLaunchDiagnostics = false
+    private var snapshotFailures = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
         exportReports = arguments?.getString("export_reports") == "true"
         probeLaunchDiagnostics = arguments?.getString("probe_launch_diagnostics") == "true"
+        snapshotFailures = arguments?.getString("snapshot_failures") == "true"
         start()
     }
 
     override fun onStart() {
+        if (snapshotFailures) {
+            try {
+                val result = dev.halcamera.camera.SnapshotFailureChecks.run(this)
+                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
+            } catch (error: Throwable) {
+                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "SNAPSHOT_FAILURE_CHECKS_FAILED: ${error.stackTraceToString()}\n") })
+            }
+            return
+        }
         if (probeLaunchDiagnostics) {
             val power = targetContext.getSystemService(android.os.PowerManager::class.java)
             val probe = dev.halcamera.benchmark.platform.LaunchDiagnostics(

@@ -32,9 +32,9 @@ class LiveReadings(
     private var lastSystemNs = 0L
     private val samplingSystem = AtomicBoolean(false)
 
-    fun update(events: List<Event>, frames: List<Event>, time: Long, sessionId: String, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float) {
+    fun update(events: List<Event>, frames: List<Event>, time: Long, sessionId: String, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float, panelObservedKey: String? = null) {
         last = readout.read(events, sessionId, time)
-        if (metrics.visibility == View.VISIBLE) updateReadings(frames, time, controls, support, zoomRatio)
+        if (metrics.visibility == View.VISIBLE) updateReadings(frames, time, controls, support, zoomRatio, panelObservedKey)
         if (time - lastSystemNs >= 1_000_000_000L && samplingSystem.compareAndSet(false, true)) {
             lastSystemNs = time
             // PSS collection can block for tens of milliseconds. Never run it on the preview's UI thread.
@@ -42,7 +42,7 @@ class LiveReadings(
         }
     }
 
-    private fun updateReadings(frames: List<Event>, time: Long, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float) {
+    private fun updateReadings(frames: List<Event>, time: Long, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float, panelObservedKey: String?) {
         val frame = frames.lastOrNull()?.takeIf { time - it.atNs < 1_500_000_000L }
         fun num(key: String) = (frame?.values?.get(key) as? Number)?.toDouble()
         fun fmt(value: Double?, pattern: String) = value?.let { pattern.format(Locale.US, it) } ?: "—"
@@ -62,7 +62,12 @@ class LiveReadings(
         val room = (metrics.width - metrics.paddingLeft - metrics.paddingRight).toFloat()
         var state = listOfNotNull(LiveControlBar.aeState(num("ae")?.toInt()), LiveControlBar.flashState(num("flashState")?.toInt(), controls)).joinToString(" · ")
         for (extra in extras) { val next = "$state · $extra"; if (room > 0f && metrics.paint.measureText(next) <= room) state = next else break }
-        val text = "FPS ${fmt(num("resultFps"), "%.1f")} · ISO ${num("iso")?.toInt() ?: "—"} · Exp ${fmt(num("exposureNs")?.div(1e6), "%.2fms")}\n$state"
+        val measurement = listOfNotNull(
+            "FPS ${fmt(num("resultFps"), "%.1f")}",
+            "ISO ${num("iso")?.toInt() ?: "—"}".takeUnless { panelObservedKey == "iso" },
+            "Exp ${fmt(num("exposureNs")?.div(1e6), "%.2fms")}".takeUnless { panelObservedKey == "exposureNs" },
+        ).joinToString(" · ")
+        val text = "$measurement\n$state"
         if (metrics.text.toString() != text) metrics.text = text
     }
 
