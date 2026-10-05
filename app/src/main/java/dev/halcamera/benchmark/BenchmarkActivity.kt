@@ -57,7 +57,8 @@ class BenchmarkActivity : ComponentActivity() {
     private val benchmarkCli by lazy {
         BenchmarkController(cli, object : BenchmarkController.Driver {
             override fun busy() = screen == Screen.RUNNING || runner != null || historyLoading
-            override fun begin(camera: String): Boolean {
+            override fun begin(camera: String, profile: String): Boolean {
+                if (profile != this@BenchmarkActivity.profile.id) return false
                 val index = endpoints.indexOfFirst { it.logicalCameraId == camera && it.physicalCameraId == null }
                 if (index < 0) return false
                 selected = index; preflight()

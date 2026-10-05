@@ -16,6 +16,7 @@ class LiveController(private val commands: CommandCoordinator, private val drive
         fun stopPreview(done: () -> Unit)
         /** Hands the screen over to the CTS suite run for [command]; the suite screen completes the request. */
         fun cts(command: CliCommand)
+        fun benchmark(command: CliCommand)
         fun stopPreparing()
         fun busy(): Boolean
     }
@@ -36,9 +37,9 @@ class LiveController(private val commands: CommandCoordinator, private val drive
                 pending = null
                 commands.complete(command.id, JSONObject().put("camera_ready", false))
             }
-        } else if (command.command == "cts.run") {
+        } else if (command.command in setOf("cts.run", "benchmark.run")) {
             commands.beginHandover()
-            driver.cts(command)
+            if (command.command == "benchmark.run") driver.benchmark(command) else driver.cts(command)
             pending = null
         } else driver.prepare(command) { prepared = true }
     }

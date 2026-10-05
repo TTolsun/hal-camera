@@ -7,7 +7,7 @@ import java.io.File
 /** Bridges the existing UI run path to durable command completion after report persistence. */
 class BenchmarkController(private val commands: CommandCoordinator, private val driver: Driver) : CliHost {
     interface Driver {
-        fun begin(camera: String): Boolean
+        fun begin(camera: String, profile: String): Boolean
         fun abort()
         fun busy(): Boolean
     }
@@ -19,7 +19,7 @@ class BenchmarkController(private val commands: CommandCoordinator, private val 
         if (command.command != "benchmark.run") throw CliFailure("APP_NOT_FOREGROUND", "Open LIVE for this command")
         if (driver.busy()) throw CliFailure("BUSY", "Benchmark is already running")
         request = command
-        if (!driver.begin(requireNotNull(command.camera))) {
+        if (!driver.begin(requireNotNull(command.camera), requireNotNull(command.profile))) {
             request = null
             commands.fail(command.id, "PREFLIGHT_FAILED", "The selected camera/profile cannot start under current conditions")
         }
@@ -45,6 +45,7 @@ class BenchmarkController(private val commands: CommandCoordinator, private val 
             else -> null
         }
         commands.complete(command.id, JSONObject().put("run_id", runId).put("camera_id", command.camera)
+            .put("profile_id", command.profile).put("artifact_count", if (file == null) 0 else 1)
             .put("cancelled", aborted != null).put("report_schema_version", schemaVersion),
             file?.let { listOf(CliArtifact(it.name, "application/json", Uri.fromFile(it))) }.orEmpty(), failure)
     }

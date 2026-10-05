@@ -12,7 +12,9 @@ object AdbArguments {
     fun command(method: String, values: Map<String, Any?>, arg: String? = null): CliCommand {
         val command = if (method == "preview.start") "preview" else method
         val allowed = mutableSetOf("request_id", "timeout_ms")
-        if (command in CliCommand.CAMERA_COMMANDS) allowed += setOf("camera", "engine")
+        if (command in CliCommand.CAMERA_COMMANDS) allowed += "camera"
+        if (command in CliCommand.LIVE_CAMERA_COMMANDS) allowed += "engine"
+        if (command == "benchmark.run") allowed += "profile"
         if (command in setOf("preview", "capture", "record.start")) allowed += CliStreams.KEYS
         if (command == "record.start") allowed += "audio"
         if (command == "cts.run") allowed += "cases"
@@ -30,7 +32,9 @@ object AdbArguments {
         if (values.containsKey("audio") && audio !is Boolean) throw CliFailure("INVALID_ARGUMENT", "audio must be a boolean")
         return CliCommand(string("request_id") ?: UUID.randomUUID().toString(), command,
             if (command in CliCommand.CAMERA_COMMANDS) string("camera") ?: "0" else null,
-            null, (timeout as? Number)?.toLong() ?: when (command) {
+            if (command == "benchmark.run") string("profile") ?: CliCommand.BENCHMARK_PROFILE else null,
+            (timeout as? Number)?.toLong() ?: when (command) {
+                "benchmark.run" -> 600_000L
                 "record.start" -> 3_600_000L
                 "cts.run" -> 1_800_000L
                 else -> 30_000L

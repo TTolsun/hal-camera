@@ -55,6 +55,9 @@ class CliStoreInstrumentation : Instrumentation() {
             val decoded = CliJson.decode(fixture.getJSONObject("request"))
             check(decoded.command == "capture" && decoded.camera == "0" && decoded.timeoutMs == 30000L); passed++
             check(CliJson.encode(decoded).toString() == CliJson.encode(CliJson.decode(CliJson.encode(decoded))).toString()); passed++
+            val benchmark = AdbArguments.command("benchmark.run", mapOf("camera" to "1"))
+            check(CliJson.decode(CliJson.encode(benchmark)) == benchmark); passed++
+            check(benchmark.profile == dev.halcamera.benchmark.domain.BenchmarkProfile.CAMERA2_STANDARD_V2.id); passed++
             var clock = 1000L
             val store = CommandStore(directory) { clock }
             fun command() = CliCommand(UUID.randomUUID().toString(), "capture", "0", null, 30_000)
