@@ -145,7 +145,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/ui/LiveControlBar.kt</code>, <code>app/src/main/java/dev/halcamera/ui/FocusRing.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-05 @ <code>87286aa</code> · Codex-source-and-device-review</li>
+<li>검토 2026-10-05 @ <code>b662dc6</code> · Codex-label-review</li>
 </ul>
 </details><!-- omm:end id=contract --><h2 id="camera2-엔진">Camera2 엔진</h2>
 <!-- omm:begin id=camera2 --><p><strong>Camera2Engine은 앱에서 CaptureRequest를 직접 구성합니다.</strong> <code>request_observed</code>에 기록한 키를 HAL 로그와 대조할 수 있습니다. 엔진 자체는 세션, 요청 구성, 줌, Live 제어를 담당하고, 사진은 <code>Camera2StillCapture</code>, Live 녹화는 <code>Camera2LiveRecorder</code>, 터치 측광은 <code>Camera2TouchFocus</code>, 벤치마크 녹화는 <code>BenchmarkRecorder</code>가 맡습니다. 카메라 요청과 capture 콜백은 엔진이 만든 카메라 스레드 하나에서 처리하고, 버퍼 relay와 파일 저장은 각자의 스레드에서 처리합니다.</p>
@@ -154,7 +154,7 @@
 <p>Camera2 Live의 프리뷰·사진·녹화·녹화 중 사진 요청은 기존 제어와 터치 영역을 적용한 뒤 <code>applyManualControls</code>를 호출합니다. 수동 노출에서는 AE를 끄고 ISO·노출 시간·frame duration을 지정합니다. 수동 초점은 AF를 끄고 lens focus distance를 지정하므로 이전 터치가 모드를 덮어쓰지 못합니다. 자동으로 복귀하면 새 요청에는 수동 센서 키를 넣지 않습니다. Benchmark는 이 경로를 호출하지 않습니다.</p>
 <p>수동 frame duration은 Live FPS의 상한으로 정하며 Auto FPS에서는 30fps를 사용합니다. 노출 시간은 센서 범위와 frame duration 중 작은 값으로 제한합니다. 영상 출력 자체의 최소 프레임 시간이나 HAL 양자화 때문에 실제 값이 다를 수 있으므로 <code>capture_result</code>의 ISO·노출·frame duration을 함께 확인합니다. 수동 WB는 MANUAL_POST_PROCESSING과 관련 요청 키가 있고 수동 노출이 켜져 있을 때 gains와 transform을 사용합니다. 색온도를 추정하지 않습니다.</p>
 <h3 id="손떨림-보정">손떨림 보정</h3>
-<p>Live Streams의 Stabilization에서 Auto, Off와 기기가 지원하는 OIS·Video EIS·Preview stabilization을 선택합니다. Preview stabilization은 Android 13 이상에서 지원 목록과 요청 키가 모두 있을 때 제공합니다. OIS와 Video EIS는 동시에 요청하지 않으며, Preview stabilization에서는 플랫폼이 OIS를 제어합니다. Auto는 새 요청 템플릿의 기본값을 유지합니다.</p>
+<p>Live Streams의 Stabilization에서 Auto, Off와 기기가 지원하는 OIS·EIS (Video)·EIS (Preview + Video)를 선택합니다. EIS (Preview + Video)는 Android 13 이상에서 지원 목록과 요청 키가 모두 있을 때 제공합니다. OIS와 EIS (Video)는 동시에 요청하지 않으며, EIS (Preview + Video)에서는 플랫폼이 OIS를 제어합니다. Auto는 새 요청 템플릿의 기본값을 유지합니다.</p>
 <p>설정은 프리뷰·사진·녹화·녹화 중 사진 요청에 적용합니다. 촬영·녹화가 끝난 뒤 카메라를 닫고 재개하며 카메라와 엔진마다 값을 분리합니다. 지원 모드가 있어도 모든 크기·FPS에서 적용된다는 뜻은 아닙니다. Last session result의 요청값과 실제 OIS/EIS 결과를 대조하세요. <code>request_observed</code>와 <code>capture_result</code>에는 <code>opticalStabilization</code>, <code>videoStabilization</code>, <code>cropRegion</code>을 기록합니다. crop metadata는 보정 변환 전체나 실제 화각을 나타내지 않습니다. Benchmark의 요청은 이 설정을 읽지 않습니다.</p>
 <h3 id="세션-구성">세션 구성</h3>
 <p>Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성합니다. <code>Lab → Settings → Live Streams</code>에서 정확한 크기와 프리뷰 FPS 범위를 선택하고 YUV·JPEG를 각각 끌 수 있습니다. 프리뷰는 항상 켜집니다. 아래 표는 설정을 지정하지 않았을 때의 픽셀 예산입니다. 예산 이하 크기가 없으면 가장 작은 지원 크기를 고릅니다.</p>
@@ -251,7 +251,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStabilization.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillPair.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ManualControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-05 @ <code>87286aa</code> · Codex-source-and-device-review</li>
+<li>검토 2026-10-05 @ <code>b662dc6</code> · Codex-label-review</li>
 </ul>
 </details><!-- omm:end id=camera2 --><h2 id="camerax-엔진">CameraX 엔진</h2>
 <!-- omm:begin id=camerax --><p>CameraX의 Live Streams에는 Stabilization을 Auto로만 제공합니다. 수동 OIS/EIS 선택은 Camera2로 전환해야 하며, 엔진도 Auto 외의 요청을 거절합니다. 실제 결과 키가 전달되면 Last session result와 <code>capture_result</code>에서 확인할 수 있습니다. 키가 없으면 Off로 추정하지 않고 Unavailable로 표시합니다.</p>
@@ -324,7 +324,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/build.gradle.kts</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-05 @ <code>87286aa</code> · Codex-source-and-device-review</li>
+<li>검토 2026-10-05 @ <code>b662dc6</code> · Codex-label-review</li>
 </ul>
 </details><!-- omm:end id=camerax --><h2 id="두-엔진의-차이">두 엔진의 차이</h2>
 <!-- omm:begin id=comparison --><p><strong>두 엔진의 측정값을 비교하기 전에 아래 차이가 결과에 영향을 주는지 확인하세요.</strong> 같은 조작이라도 엔진이 카메라에 보내는 요청과 앱이 기록하는 시각이 다를 수 있습니다.</p>
@@ -358,7 +358,7 @@
 </tr>
 <tr>
 <td>손떨림 보정</td>
-<td>Auto·Off 및 지원 OIS·Video EIS·Preview stabilization을 선택하고 결과 메타데이터를 대조합니다.</td>
+<td>Auto·Off 및 지원 OIS·EIS (Video)·EIS (Preview + Video)를 선택하고 결과 메타데이터를 대조합니다.</td>
 <td>Auto만 제공하며 수동 선택은 Camera2 전환을 안내합니다.</td>
 </tr>
 <tr>
@@ -406,7 +406,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-05 @ <code>87286aa</code> · Codex-source-and-device-review</li>
+<li>검토 2026-10-05 @ <code>b662dc6</code> · Codex-label-review</li>
 </ul>
 </details><!-- omm:end id=comparison --><h3 id="기기에서-관찰한-차이">기기에서 관찰한 차이</h3>
 <p>Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 <a href="evidence.html#camerax-기기-관찰">Evidence</a>에 있습니다.</p>
@@ -426,27 +426,27 @@
 <tbody><tr>
 <td>구조 원본 <code>overall-architecture</code></td>
 <td>최신</td>
-<td>검토 2026-10-05 @ <code>87286aa</code> · Codex-source-and-device-review</td>
+<td>검토 2026-10-05 @ <code>b662dc6</code> · Codex-label-review</td>
 </tr>
 <tr>
 <td>원고 <code>contract</code></td>
 <td>최신</td>
-<td>검토 2026-10-05 @ <code>87286aa</code> · Codex-source-and-device-review</td>
+<td>검토 2026-10-05 @ <code>b662dc6</code> · Codex-label-review</td>
 </tr>
 <tr>
 <td>원고 <code>camera2</code></td>
 <td>최신</td>
-<td>검토 2026-10-05 @ <code>87286aa</code> · Codex-source-and-device-review</td>
+<td>검토 2026-10-05 @ <code>b662dc6</code> · Codex-label-review</td>
 </tr>
 <tr>
 <td>원고 <code>camerax</code></td>
 <td>최신</td>
-<td>검토 2026-10-05 @ <code>87286aa</code> · Codex-source-and-device-review</td>
+<td>검토 2026-10-05 @ <code>b662dc6</code> · Codex-label-review</td>
 </tr>
 <tr>
 <td>원고 <code>comparison</code></td>
 <td>최신</td>
-<td>검토 2026-10-05 @ <code>87286aa</code> · Codex-source-and-device-review</td>
+<td>검토 2026-10-05 @ <code>b662dc6</code> · Codex-label-review</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p>표의 <code>최신</code>은 기록된 근거와 원고가 검토 이후 바뀌지 않았다는 뜻입니다. 모든 기기에서 동작을 검증했다는 뜻은 아닙니다.</p>

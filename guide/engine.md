@@ -86,7 +86,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-05 @ `87286aa` · Codex-source-and-device-review
+- 검토 2026-10-05 @ `b662dc6` · Codex-label-review
 
 </details>
 
@@ -108,7 +108,7 @@ Camera2 Live의 프리뷰·사진·녹화·녹화 중 사진 요청은 기존 �
 
 ### 손떨림 보정
 
-Live Streams의 Stabilization에서 Auto, Off와 기기가 지원하는 OIS·Video EIS·Preview stabilization을 선택합니다. Preview stabilization은 Android 13 이상에서 지원 목록과 요청 키가 모두 있을 때 제공합니다. OIS와 Video EIS는 동시에 요청하지 않으며, Preview stabilization에서는 플랫폼이 OIS를 제어합니다. Auto는 새 요청 템플릿의 기본값을 유지합니다.
+Live Streams의 Stabilization에서 Auto, Off와 기기가 지원하는 OIS·EIS (Video)·EIS (Preview + Video)를 선택합니다. EIS (Preview + Video)는 Android 13 이상에서 지원 목록과 요청 키가 모두 있을 때 제공합니다. OIS와 EIS (Video)는 동시에 요청하지 않으며, EIS (Preview + Video)에서는 플랫폼이 OIS를 제어합니다. Auto는 새 요청 템플릿의 기본값을 유지합니다.
 
 설정은 프리뷰·사진·녹화·녹화 중 사진 요청에 적용합니다. 촬영·녹화가 끝난 뒤 카메라를 닫고 재개하며 카메라와 엔진마다 값을 분리합니다. 지원 모드가 있어도 모든 크기·FPS에서 적용된다는 뜻은 아닙니다. Last session result의 요청값과 실제 OIS/EIS 결과를 대조하세요. `request_observed`와 `capture_result`에는 `opticalStabilization`, `videoStabilization`, `cropRegion`을 기록합니다. crop metadata는 보정 변환 전체나 실제 화각을 나타내지 않습니다. Benchmark의 요청은 이 설정을 읽지 않습니다.
 
@@ -186,7 +186,7 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-05 @ `87286aa` · Codex-source-and-device-review
+- 검토 2026-10-05 @ `b662dc6` · Codex-label-review
 
 </details>
 
@@ -263,7 +263,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-05 @ `87286aa` · Codex-source-and-device-review
+- 검토 2026-10-05 @ `b662dc6` · Codex-label-review
 
 </details>
 
@@ -281,7 +281,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 | 요청 키 | 앱이 CaptureRequest를 직접 구성하며 `request_observed`에 기록합니다. | 3A 모드와 영역 일부를 CameraX가 정합니다. 앱이 직접 넣는 키는 `CONTROL_AE_LOCK`과 AF cancel trigger뿐입니다. |
 | 사진 쌍의 YUV | 같은 capture의 버퍼입니다. 센서 시각이 JPEG와 같습니다. | JPEG와 센서 시각이 가장 가까운 analysis 프레임입니다. 차이는 `yuvOffsetNs`에 기록됩니다. |
 | 스트림 선택 | Preview 크기와 YUV·JPEG 활성화·크기, FPS 범위를 선택합니다. | Preview·YUV·JPEG 크기와 출력 활성화를 선택합니다. 요청한 해상도만 필터에 남기며 조합은 bind 성공 여부로 확인합니다. |
-| 손떨림 보정 | Auto·Off 및 지원 OIS·Video EIS·Preview stabilization을 선택하고 결과 메타데이터를 대조합니다. | Auto만 제공하며 수동 선택은 Camera2 전환을 안내합니다. |
+| 손떨림 보정 | Auto·Off 및 지원 OIS·EIS (Video)·EIS (Preview + Video)를 선택하고 결과 메타데이터를 대조합니다. | Auto만 제공하며 수동 선택은 Camera2 전환을 안내합니다. |
 | 녹화 코덱 | 기본 H.264이며 지원 조합에서 HEVC도 선택합니다. 오디오는 AAC 128kbps 44.1kHz입니다. | 기기의 encoder profile을 따릅니다. |
 | 녹화 중 사진 | 녹화 세션에 JPEG 스트림을 넣고 `TEMPLATE_VIDEO_SNAPSHOT`으로 요청합니다. 조합을 거절하면 JPEG 없이 녹화합니다. | 녹화와 ImageCapture를 함께 bind하고 `takePicture`를 호출합니다. 거절하면 VideoCapture만 bind합니다. 두 엔진 모두 JPEG만 저장합니다. Galaxy S25+에서 Camera2는 영상 프레임 누락이 없었고, CameraX는 사진마다 프레임 1개가 빠졌습니다. |
 | AE 잠금 중 플래시 사진 | precapture를 건너뛰고 잠긴 노출로 촬영합니다(`Camera2StillCapture`). | ImageCapture가 자기 순서대로 precapture를 수행합니다. |
@@ -296,7 +296,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-05 @ `87286aa` · Codex-source-and-device-review
+- 검토 2026-10-05 @ `b662dc6` · Codex-label-review
 
 </details>
 
@@ -317,11 +317,11 @@ Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 [Evidence]
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-05 @ `87286aa` · Codex-source-and-device-review |
-| 원고 `contract` | 최신 | 검토 2026-10-05 @ `87286aa` · Codex-source-and-device-review |
-| 원고 `camera2` | 최신 | 검토 2026-10-05 @ `87286aa` · Codex-source-and-device-review |
-| 원고 `camerax` | 최신 | 검토 2026-10-05 @ `87286aa` · Codex-source-and-device-review |
-| 원고 `comparison` | 최신 | 검토 2026-10-05 @ `87286aa` · Codex-source-and-device-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-05 @ `b662dc6` · Codex-label-review |
+| 원고 `contract` | 최신 | 검토 2026-10-05 @ `b662dc6` · Codex-label-review |
+| 원고 `camera2` | 최신 | 검토 2026-10-05 @ `b662dc6` · Codex-label-review |
+| 원고 `camerax` | 최신 | 검토 2026-10-05 @ `b662dc6` · Codex-label-review |
+| 원고 `comparison` | 최신 | 검토 2026-10-05 @ `b662dc6` · Codex-label-review |
 
 <!-- omm:end id=status -->
 
