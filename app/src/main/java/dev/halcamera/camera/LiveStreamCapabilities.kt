@@ -57,5 +57,5 @@ fun liveStreamSupport(c: CameraCharacteristics): LiveStreamSupport {
             c[CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES]?.toList().orEmpty()
                 .takeIf { android.hardware.camera2.CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE in c.availableCaptureRequestKeys }.orEmpty(),
             android.os.Build.VERSION.SDK_INT),
-        "Support varies by resolution and FPS.")
+        "Stabilization may be unavailable at some resolutions or frame rates.")
 }
