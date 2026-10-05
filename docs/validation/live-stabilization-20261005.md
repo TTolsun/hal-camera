@@ -84,3 +84,7 @@ EIS inactive이며 불일치 경고가 없으면 Live 상태 뷰를 GONE으로 �
 정상 EIS 상태 카드를 없애고 P·Y·J 크기 행 오른쪽에 같은 10sp·색상으로 표시합니다. 결과 모드 1은 `EIS: V`, 2는 `EIS: P, V`, 확인 불가는 `EIS: ?`입니다. 미적용은 숨기되 불일치 경고가 있으면 `EIS: Off`와 다음 줄의 경고를 표시합니다. 접근성 설명에는 전체 모드명과 프리뷰·녹화 단계를 유지합니다. Galaxy S25+ (Android 16/API 36)에서 Auto의 숨김 및 Preview + Video의 `EIS: P, V`가 기존 크기와 함께 한 줄에 들어가는 것을 확인했습니다. assembleRelease·lintDebug가 통과했습니다. 변경은 표시 방식에 한정되며 판정·엔진·계층 계약은 유지됩니다.
 
 ![스트림 행의 EIS 약어](assets/live-stabilization/live-compact.png)
+
+### EIS 표시에서 Live Streams 진입
+
+EIS 표시도 기존 크기 표시와 같은 onSizesClick을 호출합니다. 최소 48×48dp 터치 영역·리플·포커스와 설정 진입 접근성 설명을 추가했으며 setSizesEnabled는 두 진입점을 함께 제어합니다. Galaxy S25+ (Android 16/API 36)에서 `EIS: P, V`를 눌러 Live Streams가 열리고 뒤로 가기로 Live가 재개되는 것을 확인했습니다. assembleRelease·lintDebug가 통과했습니다. 기존 카메라 수명주기·진입 차단 계약은 변경하지 않았습니다.

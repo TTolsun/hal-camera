@@ -40,6 +40,13 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
         textSize = 10f
         setTextColor(Look.onDarkMuted)
         gravity = Gravity.CENTER_VERTICAL
+        minimumWidth = Look.dp(context, 48)
+        minimumHeight = Look.dp(context, 48)
+        isFocusable = true
+        val ripple = TypedValue()
+        context.theme.resolveAttribute(android.R.attr.selectableItemBackground, ripple, true)
+        if (ripple.resourceId != 0) setBackgroundResource(ripple.resourceId)
+        setOnClickListener { onSizesClick?.invoke() }
         accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
     }
     private val eisWarning = TextView(context).apply {
@@ -82,12 +89,12 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
             else -> "EIS: ?"
         }
         if (eis.text.toString() != value) eis.text = value
-        eis.contentDescription = "${if (recording) "Recording" else "Preview"}, " + when (status.video) {
+        eis.contentDescription = "${if (recording) "Recording" else "Preview"}, " + (when (status.video) {
             0 -> "EIS inactive"
             1 -> "EIS active, Video mode"
             2 -> "EIS active, Preview and Video mode"
             else -> "EIS status unknown"
-        }
+        }) + ", open Live Streams settings"
         eis.setTextColor(when {
             status.warning != null -> Look.statusWarn
             status.video == null -> Look.onDarkMuted
@@ -112,7 +119,10 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
         sizes.visibility = if (value.isEmpty()) View.GONE else View.VISIBLE
     }
 
-    fun setSizesEnabled(enabled: Boolean) { sizes.isEnabled = enabled }
+    fun setSizesEnabled(enabled: Boolean) {
+        sizes.isEnabled = enabled
+        eis.isEnabled = enabled
+    }
 
     fun bind(running: Boolean) {
         if (!running) bindStabilization(LiveEisStatus(), recording)
