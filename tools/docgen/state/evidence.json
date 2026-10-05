@@ -3,16 +3,16 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "45fd0e48b149de8f",
+        "codeHash": "222e867496b05110",
         "modelHash": "08592662545bdd64",
         "at": "2026-10-05",
-        "commit": "d9316d0",
-        "reviewer": "Codex-EIS-link-review",
+        "commit": "a593425",
+        "reviewer": "Codex-release-review",
         "files": {
-          "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
+          "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "40971144e157f4e6cbe656834729ad5507b6d201",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -266,16 +266,16 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "bc0328c629433914",
-        "modelHash": "d89fb949f7df456b",
+        "codeHash": "476bd314565c80e2",
+        "modelHash": "ce65306ff07f143c",
         "at": "2026-10-05",
-        "commit": "d9316d0",
-        "reviewer": "Codex-EIS-link-review",
+        "commit": "a593425",
+        "reviewer": "Codex-release-facts-review",
         "files": {
-          "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
+          "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "40971144e157f4e6cbe656834729ad5507b6d201",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -451,10 +451,10 @@
       },
       "accepted": {
         "codeHash": "5c07725f9796bf9b",
-        "modelHash": "d1883bdc40052651",
+        "modelHash": "4ca75eb8f3cf46ed",
         "at": "2026-10-05",
-        "commit": "e4be664",
-        "reviewer": "Codex-live-EIS-review",
+        "commit": "a593425",
+        "reviewer": "Codex-release-facts-review",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "69751b9d6b832d1beff6c3391f52692610d94dbf",
@@ -501,10 +501,10 @@
       },
       "accepted": {
         "codeHash": "d7915d1cd6b9fb85",
-        "modelHash": "d2586d2c1aa7242a",
+        "modelHash": "b968b604f82bc1cf",
         "at": "2026-10-05",
-        "commit": "e4be664",
-        "reviewer": "Codex-live-EIS-review",
+        "commit": "a593425",
+        "reviewer": "Codex-release-facts-review",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "69751b9d6b832d1beff6c3391f52692610d94dbf",
@@ -548,13 +548,13 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "45fd0e48b149de8f",
-        "modelHash": "6fc1396c7a4485c7",
+        "codeHash": "222e867496b05110",
+        "modelHash": "1ada0bef907c9ea4",
         "at": "2026-10-05",
-        "commit": "d9316d0",
-        "reviewer": "Codex-EIS-link-review",
+        "commit": "a593425",
+        "reviewer": "Codex-release-facts-review",
         "files": {
-          "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
+          "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "40971144e157f4e6cbe656834729ad5507b6d201",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -722,18 +722,18 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "45fd0e48b149de8f",
-        "modelHash": "20ebb4395c122065",
+        "codeHash": "222e867496b05110",
+        "modelHash": "4209430faf0edb8b",
         "at": "2026-10-05",
-        "commit": "d9316d0",
-        "reviewer": "Codex-EIS-link-review",
+        "commit": "a593425",
+        "reviewer": "Codex-release-facts-review",
         "files": {
-          "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
+          "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "40971144e157f4e6cbe656834729ad5507b6d201",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -901,7 +901,7 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "omm:ui-camera-label": {
@@ -952,16 +952,16 @@
     },
     "content:engine.md/contract": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "45fd0e48b149de8f",
-        "modelHash": "651f221e9b461cec",
+        "codeHash": "222e867496b05110",
+        "modelHash": "21ea700f18763611",
         "at": "2026-10-05",
-        "commit": "d9316d0",
-        "reviewer": "Codex-EIS-link-review",
+        "commit": "a593425",
+        "reviewer": "Codex-release-facts-review",
         "files": {
-          "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
+          "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "40971144e157f4e6cbe656834729ad5507b6d201",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -1131,16 +1131,16 @@
     },
     "content:engine.md/camera2": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "45fd0e48b149de8f",
-        "modelHash": "738ff3a9433511a9",
+        "codeHash": "222e867496b05110",
+        "modelHash": "36f70f29c2e2740c",
         "at": "2026-10-05",
-        "commit": "d9316d0",
-        "reviewer": "Codex-EIS-link-review",
+        "commit": "a593425",
+        "reviewer": "Codex-release-facts-review",
         "files": {
-          "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
+          "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "40971144e157f4e6cbe656834729ad5507b6d201",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -1310,16 +1310,16 @@
     },
     "content:engine.md/camerax": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "45fd0e48b149de8f",
-        "modelHash": "07cd9abc1d806d4e",
+        "codeHash": "222e867496b05110",
+        "modelHash": "0826ee5954f8b588",
         "at": "2026-10-05",
-        "commit": "d9316d0",
-        "reviewer": "Codex-EIS-link-review",
+        "commit": "a593425",
+        "reviewer": "Codex-release-facts-review",
         "files": {
-          "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
+          "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "40971144e157f4e6cbe656834729ad5507b6d201",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -1489,16 +1489,16 @@
     },
     "content:engine.md/comparison": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "45fd0e48b149de8f",
-        "modelHash": "1cd3c62e0e90574c",
+        "codeHash": "222e867496b05110",
+        "modelHash": "0b5b6fb0f4927f2c",
         "at": "2026-10-05",
-        "commit": "d9316d0",
-        "reviewer": "Codex-EIS-link-review",
+        "commit": "a593425",
+        "reviewer": "Codex-release-facts-review",
         "files": {
-          "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
+          "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "40971144e157f4e6cbe656834729ad5507b6d201",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -1668,16 +1668,16 @@
     },
     "content:evidence.md/device-notes": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "45fd0e48b149de8f",
-        "modelHash": "f84233f29db90a5a",
+        "codeHash": "222e867496b05110",
+        "modelHash": "5ad41438f14615bb",
         "at": "2026-10-05",
-        "commit": "d9316d0",
-        "reviewer": "Codex-EIS-link-review",
+        "commit": "a593425",
+        "reviewer": "Codex-release-facts-review",
         "files": {
-          "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
+          "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
           "app/src/main/java/dev/halcamera/CameraProbeActivity.kt": "40971144e157f4e6cbe656834729ad5507b6d201",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
