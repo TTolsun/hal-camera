@@ -5,8 +5,8 @@ enum class LiveStabilization(val label: String, val optical: Int?, val video: In
     AUTO("Auto (camera defaults)", null, null),
     OFF("Off", 0, 0),
     OIS("OIS", 1, 0),
-    VIDEO("Video EIS", 0, 1),
-    PREVIEW("Preview stabilization", 0, 2);
+    VIDEO("EIS (Video)", 0, 1),
+    PREVIEW("EIS (Preview + Video)", 0, 2);
 
     companion object {
         fun supported(optical: List<Int>, video: List<Int>, api: Int): List<LiveStabilization> =

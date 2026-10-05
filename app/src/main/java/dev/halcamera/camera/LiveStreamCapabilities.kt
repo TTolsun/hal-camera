@@ -57,6 +57,6 @@ fun liveStreamSupport(c: CameraCharacteristics): LiveStreamSupport {
             c[CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES]?.toList().orEmpty()
                 .takeIf { android.hardware.camera2.CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE in c.availableCaptureRequestKeys }.orEmpty(),
             android.os.Build.VERSION.SDK_INT),
-        "OIS and Video EIS are exclusive. Availability depends on size and FPS; check the reported result. " +
+        "OIS and EIS (Video) are exclusive. Availability depends on size and FPS; check the reported result. " +
             "Auto restores camera defaults.")
 }

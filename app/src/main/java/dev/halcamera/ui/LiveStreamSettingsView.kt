@@ -102,7 +102,7 @@ object LiveStreamSettingsView {
             it?.let { rate -> "$rate fps" } ?: "지원 정보 없음"
         }
         val stabilizationGroup = section("Stabilization")
-        choice(stabilizationGroup, "Requested mode", { support.stabilization }, { stabilization }, { stabilization = it }) { it.label }
+        choice(stabilizationGroup, "Mode", { support.stabilization }, { stabilization }, { stabilization = it }) { it.label }
         stabilizationGroup.addView(Look.text(themed, support.stabilizationNotice, 13, Look.inkMuted).apply {
             setPadding(dp(18), dp(14), dp(18), dp(14))
         })
