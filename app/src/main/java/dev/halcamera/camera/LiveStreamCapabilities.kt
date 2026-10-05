@@ -22,9 +22,14 @@ fun cameraXStreamSupport(context: android.content.Context, id: String, hardware:
     val default = videos.filter { it.fps == 30 && it.size.width.toLong() * it.size.height <= 1920L * 1080 }
         .maxByOrNull { it.size.width.toLong() * it.size.height } ?: videos.firstOrNull()
     return hardware.copy(videos = videos, defaultVideo = default,
-        stabilization = listOf(LiveStabilization.AUTO),
-        stabilizationNotice = "Switch to Camera2 for manual control.")
+        stabilization = cameraXStabilizationModes(info, hardware.stabilization),
+        stabilizationNotice = "Stabilization may be unavailable at some resolutions or frame rates.")
 }
+
+internal fun cameraXStabilizationModes(info: androidx.camera.core.CameraInfo, hardware: List<LiveStabilization>) =
+    LiveStabilization.supportedCameraX(hardware,
+        androidx.camera.video.Recorder.getVideoCapabilities(info).isStabilizationSupported,
+        androidx.camera.core.Preview.getPreviewCapabilities(info).isStabilizationSupported)
 
 /** Individual sizes and encoder limits are checked here; combinations still need a real session check. */
 fun liveStreamSupport(c: CameraCharacteristics): LiveStreamSupport {
@@ -51,11 +56,13 @@ fun liveStreamSupport(c: CameraCharacteristics): LiveStreamSupport {
     }
     return LiveStreamSupport(sizes(map.getOutputSizes(SurfaceTexture::class.java)), sizes(map.getOutputSizes(ImageFormat.YUV_420_888)),
         sizes(map.getOutputSizes(ImageFormat.JPEG)), fps, videos, defaultLiveVideo(videoSizes),
-        LiveStabilization.supported(
-            c[CameraCharacteristics.LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION]?.toList().orEmpty()
-                .takeIf { android.hardware.camera2.CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE in c.availableCaptureRequestKeys }.orEmpty(),
-            c[CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES]?.toList().orEmpty()
-                .takeIf { android.hardware.camera2.CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE in c.availableCaptureRequestKeys }.orEmpty(),
-            android.os.Build.VERSION.SDK_INT),
+        hardwareStabilizationModes(c),
         "Stabilization may be unavailable at some resolutions or frame rates.")
 }
+
+internal fun hardwareStabilizationModes(c: CameraCharacteristics) = LiveStabilization.supported(
+    c[CameraCharacteristics.LENS_INFO_AVAILABLE_OPTICAL_STABILIZATION]?.toList().orEmpty()
+        .takeIf { android.hardware.camera2.CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE in c.availableCaptureRequestKeys }.orEmpty(),
+    c[CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES]?.toList().orEmpty()
+        .takeIf { android.hardware.camera2.CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE in c.availableCaptureRequestKeys }.orEmpty(),
+    android.os.Build.VERSION.SDK_INT)

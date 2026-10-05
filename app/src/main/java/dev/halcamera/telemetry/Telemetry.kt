@@ -39,6 +39,7 @@ class Telemetry(val recorder: FlightRecorder) {
                     val stats = tracker.add(result.frameNumber, sensor)
                     recorder.record(sessionId, "capture_result", result.frameNumber, sensor, mapOf(
                         "partialResultsCount" to result.partialResults.size,
+                        "captureIntent" to request[CaptureRequest.CONTROL_CAPTURE_INTENT],
                         "ae" to result[CaptureResult.CONTROL_AE_STATE],
                         "af" to result[CaptureResult.CONTROL_AF_STATE],
                         "afMode" to (result[CaptureResult.CONTROL_AF_MODE] ?: request[CaptureRequest.CONTROL_AF_MODE]),

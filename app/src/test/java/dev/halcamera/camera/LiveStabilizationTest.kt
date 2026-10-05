@@ -4,6 +4,33 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class LiveStabilizationTest {
+    @Test fun `CameraX modes require both hardware and use case support`() {
+        val all = LiveStabilization.entries
+        assertEquals(all, LiveStabilization.supportedCameraX(all, true, true))
+        assertEquals(listOf(LiveStabilization.AUTO, LiveStabilization.OFF, LiveStabilization.OIS),
+            LiveStabilization.supportedCameraX(all, false, false))
+        assertFalse(LiveStabilization.VIDEO in LiveStabilization.supportedCameraX(all, false, true))
+        assertFalse(LiveStabilization.PREVIEW in LiveStabilization.supportedCameraX(all, true, false))
+        assertEquals(listOf(LiveStabilization.AUTO, LiveStabilization.OFF),
+            LiveStabilization.supportedCameraX(listOf(LiveStabilization.AUTO, LiveStabilization.OFF), true, true))
+    }
+
+    @Test fun `CameraX builder options avoid false veto and preserve Auto defaults`() {
+        assertEquals(CameraXStabilizationPlan(null, null, null), CameraXStabilizationPlan.forMode(LiveStabilization.AUTO))
+        assertEquals(CameraXStabilizationPlan(false, false, 0), CameraXStabilizationPlan.forMode(LiveStabilization.OFF))
+        assertEquals(CameraXStabilizationPlan(false, false, 1), CameraXStabilizationPlan.forMode(LiveStabilization.OIS))
+        assertEquals(CameraXStabilizationPlan(null, true, 0), CameraXStabilizationPlan.forMode(LiveStabilization.VIDEO))
+        assertEquals(CameraXStabilizationPlan(true, null, 0), CameraXStabilizationPlan.forMode(LiveStabilization.PREVIEW))
+    }
+
+    @Test fun `CameraX video mode is compared only while VideoCapture records`() {
+        assertEquals(LiveStabilization.AUTO, LiveStabilization.VIDEO.eisComparisonMode("CameraX", false))
+        assertEquals(LiveStabilization.VIDEO, LiveStabilization.VIDEO.eisComparisonMode("CameraX", true))
+        assertEquals(LiveStabilization.VIDEO, LiveStabilization.VIDEO.eisComparisonMode("Camera2", false))
+        assertEquals(LiveStabilization.PREVIEW, LiveStabilization.PREVIEW.eisComparisonMode("CameraX", false))
+        assertEquals(LiveStabilization.OFF, LiveStabilization.OFF.eisComparisonMode("CameraX", false))
+    }
+
     @Test fun `unsupported modes and pre API 33 preview stabilization are hidden`() {
         assertEquals(listOf(LiveStabilization.AUTO, LiveStabilization.OFF), LiveStabilization.supported(emptyList(), emptyList(), 36))
         val modes = LiveStabilization.supported(listOf(0, 1), listOf(0, 1, 2, 99), 32)
