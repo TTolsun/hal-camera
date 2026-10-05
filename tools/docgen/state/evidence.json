@@ -3,14 +3,14 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "841fb831a28e1b63",
+        "codeHash": "c4b6b0ab3b1029ce",
         "modelHash": "08592662545bdd64",
         "at": "2026-10-05",
-        "commit": "a0a1ab1",
-        "reviewer": "Codex-English-copy-review",
+        "commit": "9b70edf",
+        "reviewer": "Codex-inactive-visibility-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -159,7 +159,7 @@
           "app/src/main/java/dev/halcamera/ui/IncidentActions.kt": "86108be8bb85d67c852699525ee69c564a9732fe",
           "app/src/main/java/dev/halcamera/ui/LabDialog.kt": "cecb9e63383748663a8650362588ecdef9024766",
           "app/src/main/java/dev/halcamera/ui/LiveControlBar.kt": "f80c17db77a3dfa30d11fc5c32052d5d94c3b497",
-          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "460e7b676480782fb83e243f7a1043117c94c88a",
+          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "6bffe3e7885e57418bc6fb3bc2bfa437e95d4ddb",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
           "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
@@ -266,14 +266,14 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "3f0ee418e3ff4c31",
+        "codeHash": "34dda21e0c7f962a",
         "modelHash": "d89fb949f7df456b",
         "at": "2026-10-05",
-        "commit": "a0a1ab1",
-        "reviewer": "Codex-English-copy-review",
+        "commit": "9b70edf",
+        "reviewer": "Codex-inactive-visibility-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -422,7 +422,7 @@
           "app/src/main/java/dev/halcamera/ui/IncidentActions.kt": "86108be8bb85d67c852699525ee69c564a9732fe",
           "app/src/main/java/dev/halcamera/ui/LabDialog.kt": "cecb9e63383748663a8650362588ecdef9024766",
           "app/src/main/java/dev/halcamera/ui/LiveControlBar.kt": "f80c17db77a3dfa30d11fc5c32052d5d94c3b497",
-          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "460e7b676480782fb83e243f7a1043117c94c88a",
+          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "6bffe3e7885e57418bc6fb3bc2bfa437e95d4ddb",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
           "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
@@ -548,11 +548,11 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "841fb831a28e1b63",
+        "codeHash": "c4b6b0ab3b1029ce",
         "modelHash": "6fc1396c7a4485c7",
         "at": "2026-10-05",
-        "commit": "a0a1ab1",
-        "reviewer": "Codex-English-copy-review",
+        "commit": "9b70edf",
+        "reviewer": "Codex-inactive-visibility-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -701,7 +701,7 @@
           "app/src/main/java/dev/halcamera/ui/IncidentActions.kt": "86108be8bb85d67c852699525ee69c564a9732fe",
           "app/src/main/java/dev/halcamera/ui/LabDialog.kt": "cecb9e63383748663a8650362588ecdef9024766",
           "app/src/main/java/dev/halcamera/ui/LiveControlBar.kt": "f80c17db77a3dfa30d11fc5c32052d5d94c3b497",
-          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "460e7b676480782fb83e243f7a1043117c94c88a",
+          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "6bffe3e7885e57418bc6fb3bc2bfa437e95d4ddb",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
           "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
@@ -722,16 +722,16 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "841fb831a28e1b63",
+        "codeHash": "c4b6b0ab3b1029ce",
         "modelHash": "20ebb4395c122065",
         "at": "2026-10-05",
-        "commit": "a0a1ab1",
-        "reviewer": "Codex-English-copy-review",
+        "commit": "9b70edf",
+        "reviewer": "Codex-inactive-visibility-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -880,7 +880,7 @@
           "app/src/main/java/dev/halcamera/ui/IncidentActions.kt": "86108be8bb85d67c852699525ee69c564a9732fe",
           "app/src/main/java/dev/halcamera/ui/LabDialog.kt": "cecb9e63383748663a8650362588ecdef9024766",
           "app/src/main/java/dev/halcamera/ui/LiveControlBar.kt": "f80c17db77a3dfa30d11fc5c32052d5d94c3b497",
-          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "460e7b676480782fb83e243f7a1043117c94c88a",
+          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "6bffe3e7885e57418bc6fb3bc2bfa437e95d4ddb",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
           "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
@@ -901,7 +901,7 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "omm:ui-camera-label": {
@@ -952,14 +952,14 @@
     },
     "content:engine.md/contract": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "841fb831a28e1b63",
+        "codeHash": "c4b6b0ab3b1029ce",
         "modelHash": "651f221e9b461cec",
         "at": "2026-10-05",
-        "commit": "a0a1ab1",
-        "reviewer": "Codex-English-copy-review",
+        "commit": "9b70edf",
+        "reviewer": "Codex-inactive-visibility-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1108,7 +1108,7 @@
           "app/src/main/java/dev/halcamera/ui/IncidentActions.kt": "86108be8bb85d67c852699525ee69c564a9732fe",
           "app/src/main/java/dev/halcamera/ui/LabDialog.kt": "cecb9e63383748663a8650362588ecdef9024766",
           "app/src/main/java/dev/halcamera/ui/LiveControlBar.kt": "f80c17db77a3dfa30d11fc5c32052d5d94c3b497",
-          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "460e7b676480782fb83e243f7a1043117c94c88a",
+          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "6bffe3e7885e57418bc6fb3bc2bfa437e95d4ddb",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
           "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
@@ -1131,14 +1131,14 @@
     },
     "content:engine.md/camera2": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "841fb831a28e1b63",
+        "codeHash": "c4b6b0ab3b1029ce",
         "modelHash": "738ff3a9433511a9",
         "at": "2026-10-05",
-        "commit": "a0a1ab1",
-        "reviewer": "Codex-English-copy-review",
+        "commit": "9b70edf",
+        "reviewer": "Codex-inactive-visibility-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1287,7 +1287,7 @@
           "app/src/main/java/dev/halcamera/ui/IncidentActions.kt": "86108be8bb85d67c852699525ee69c564a9732fe",
           "app/src/main/java/dev/halcamera/ui/LabDialog.kt": "cecb9e63383748663a8650362588ecdef9024766",
           "app/src/main/java/dev/halcamera/ui/LiveControlBar.kt": "f80c17db77a3dfa30d11fc5c32052d5d94c3b497",
-          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "460e7b676480782fb83e243f7a1043117c94c88a",
+          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "6bffe3e7885e57418bc6fb3bc2bfa437e95d4ddb",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
           "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
@@ -1310,14 +1310,14 @@
     },
     "content:engine.md/camerax": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "841fb831a28e1b63",
+        "codeHash": "c4b6b0ab3b1029ce",
         "modelHash": "07cd9abc1d806d4e",
         "at": "2026-10-05",
-        "commit": "a0a1ab1",
-        "reviewer": "Codex-English-copy-review",
+        "commit": "9b70edf",
+        "reviewer": "Codex-inactive-visibility-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1466,7 +1466,7 @@
           "app/src/main/java/dev/halcamera/ui/IncidentActions.kt": "86108be8bb85d67c852699525ee69c564a9732fe",
           "app/src/main/java/dev/halcamera/ui/LabDialog.kt": "cecb9e63383748663a8650362588ecdef9024766",
           "app/src/main/java/dev/halcamera/ui/LiveControlBar.kt": "f80c17db77a3dfa30d11fc5c32052d5d94c3b497",
-          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "460e7b676480782fb83e243f7a1043117c94c88a",
+          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "6bffe3e7885e57418bc6fb3bc2bfa437e95d4ddb",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
           "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
@@ -1489,14 +1489,14 @@
     },
     "content:engine.md/comparison": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "841fb831a28e1b63",
+        "codeHash": "c4b6b0ab3b1029ce",
         "modelHash": "1cd3c62e0e90574c",
         "at": "2026-10-05",
-        "commit": "a0a1ab1",
-        "reviewer": "Codex-English-copy-review",
+        "commit": "9b70edf",
+        "reviewer": "Codex-inactive-visibility-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1645,7 +1645,7 @@
           "app/src/main/java/dev/halcamera/ui/IncidentActions.kt": "86108be8bb85d67c852699525ee69c564a9732fe",
           "app/src/main/java/dev/halcamera/ui/LabDialog.kt": "cecb9e63383748663a8650362588ecdef9024766",
           "app/src/main/java/dev/halcamera/ui/LiveControlBar.kt": "f80c17db77a3dfa30d11fc5c32052d5d94c3b497",
-          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "460e7b676480782fb83e243f7a1043117c94c88a",
+          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "6bffe3e7885e57418bc6fb3bc2bfa437e95d4ddb",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
           "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
@@ -1668,14 +1668,14 @@
     },
     "content:evidence.md/device-notes": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "841fb831a28e1b63",
+        "codeHash": "c4b6b0ab3b1029ce",
         "modelHash": "f84233f29db90a5a",
         "at": "2026-10-05",
-        "commit": "a0a1ab1",
-        "reviewer": "Codex-English-copy-review",
+        "commit": "9b70edf",
+        "reviewer": "Codex-inactive-visibility-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1824,7 +1824,7 @@
           "app/src/main/java/dev/halcamera/ui/IncidentActions.kt": "86108be8bb85d67c852699525ee69c564a9732fe",
           "app/src/main/java/dev/halcamera/ui/LabDialog.kt": "cecb9e63383748663a8650362588ecdef9024766",
           "app/src/main/java/dev/halcamera/ui/LiveControlBar.kt": "f80c17db77a3dfa30d11fc5c32052d5d94c3b497",
-          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "460e7b676480782fb83e243f7a1043117c94c88a",
+          "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "6bffe3e7885e57418bc6fb3bc2bfa437e95d4ddb",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
           "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
