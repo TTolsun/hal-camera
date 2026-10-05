@@ -31,7 +31,7 @@ Live·CameraX 전환·사진 자동 고정·Recording 콜백·Probe 조회·CTS 
 
 ### 녹화 중 사진
 
-2026년 10월 5일 Galaxy S25+(SM-S936N)·Android 16의 0.19.0(versionCode 628)에서 후면·전면·초광각 녹화 중 사진을 확인했습니다. CameraX 1.6.2에서는 사진 시점에 약 두 프레임 길이의 영상 간격이 생겼고, Camera2 1080p 30fps에서는 사진 3장씩을 저장해도 같은 간격 증가가 없었습니다. HEVC 60fps와 정지 직후의 사진 결과, 공식 소스에서 확인한 요청 출력 구성, 남은 검증 조건은 [녹화 중 사진 후속 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md)에 있습니다. 이 기록은 #213 전체의 완료를 뜻하지 않습니다.
+2026년 10월 5일 Galaxy S25+(SM-S936N)·Android 16의 0.19.0(versionCode 628)에서 후면·전면·초광각 녹화 중 사진을 확인했습니다. CameraX 1.6.2에서는 사진 시점에 약 두 프레임 길이의 영상 간격이 생겼고, Camera2 1080p 30fps에서는 사진 3장씩을 저장해도 같은 간격 증가가 없었습니다. HEVC 60fps와 정지 직후의 사진 결과, 공식 소스에서 확인한 요청 출력 구성, 남은 검증 조건은 [녹화 중 사진 후속 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md)에 있습니다. CameraX의 영상 간격 증가는 알려진 제약으로 수용하고 문서에만 안내합니다. 남은 실패 경로와 기기 조합은 [#220](https://github.com/TTolsun/hal-camera/issues/220)과 [#221](https://github.com/TTolsun/hal-camera/issues/221)에서 추적합니다.
 
 ### CTS 원문 케이스
 
