@@ -1,0 +1,21 @@
+SNAPSHOT_FAILURE_CHECKS_PASSED=11
+delayed_save_after_timeout_and_stop
+storage_open_failure_cleanup_and_notice
+storage_write_failure_cleanup
+publish_failure_cleanup
+copy_failure_closes_buffer
+executor_rejection
+close_before_image_answers_once
+timeout_discards_late_image
+next_capture_recovers_and_duplicate_image_is_closed
+partial_pair_rollback
+camera2_injected_configure_failure: outputs=3->2, video_saved, preview_restored; Recording without snapshots: this camera cannot combine video and JPEG.
+Snapshot saved. The show goes on.
+Snapshot failed: ENOSPC: injected storage failure
+Snapshot failed: write failed: EPIPE (Broken pipe)
+Snapshot failed: Cannot publish media entry
+Snapshot failed: unreadable JPEG
+Snapshot failed: The camera closed before the photo could be saved.
+Snapshot failed: Camera closed: photo capture was interrupted.
+Snapshot failed: No photo arrived within 5 seconds.
+Snapshot saved. The show goes on.

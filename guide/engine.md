@@ -92,7 +92,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-05 @ `fcabbc9` · Codex-CameraX-stabilization-review
+- 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review
 
 </details>
 
@@ -192,7 +192,7 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-05 @ `fcabbc9` · Codex-CameraX-stabilization-review
+- 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review
 
 </details>
 
@@ -271,7 +271,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-05 @ `fcabbc9` · Codex-CameraX-stabilization-review
+- 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review
 
 </details>
 
@@ -304,7 +304,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-05 @ `fcabbc9` · Codex-CameraX-stabilization-review
+- 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review
 
 </details>
 
@@ -313,6 +313,14 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 ### 기기에서 관찰한 차이
 
 Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 [Evidence](evidence.md#camerax-기기-관찰)에 있습니다.
+
+### 녹화 중 사진의 실패와 정지
+
+CameraX의 사진 수신 제한은 5초입니다. `SnapshotRequest`는 사진 수신 대기와 저장 중 상태를 구분합니다. JPEG를 받은 뒤에는 수신 타임아웃이나 녹화 종료로 실패를 덮어쓰지 않고, 저장 성공 또는 실패를 한 번만 전달합니다. 아직 사진을 받지 못한 상태에서 녹화 세션이나 카메라가 종료되면 중단으로 처리하고, 나중에 도착한 이미지는 저장하지 않고 닫습니다. 저장 중에는 다음 녹화 중 사진 요청을 받지 않습니다.
+
+Camera2도 JPEG를 받은 뒤에는 저장이 끝날 때까지 촬영 자리를 유지합니다. 이미지 바이트를 읽다가 예외가 나면 버퍼를 닫고 실패를 전달합니다. JPEG 포함 세션이 거부되면 `SnapshotSessionRetry`가 기존 세션의 종료 콜백과 재시도 중복을 구분하며 JPEG 없는 녹화 세션을 한 번 구성합니다. 정지하거나 카메라가 닫힌 상태에서는 새 녹화 세션을 만들지 않습니다.
+
+저장소 오류는 `MediaLibrary`의 생성·쓰기·공개 단계와 미완성 항목 정리를 검사합니다. 실제 기기 공간을 채우는 시험은 하지 않았습니다. 결정론적 오류 주입과 Galaxy S25+의 실제 조작 결과는 [실패·정지 경합 검증 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-failures-20261006.md)에 구분해 적었습니다.
 
 ## 문서 검토 상태
 
@@ -325,11 +333,11 @@ Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 [Evidence]
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-05 @ `fcabbc9` · Codex-CameraX-stabilization-review |
-| 원고 `contract` | 최신 | 검토 2026-10-05 @ `fcabbc9` · Codex-CameraX-stabilization-review |
-| 원고 `camera2` | 최신 | 검토 2026-10-05 @ `fcabbc9` · Codex-CameraX-stabilization-review |
-| 원고 `camerax` | 최신 | 검토 2026-10-05 @ `fcabbc9` · Codex-CameraX-stabilization-review |
-| 원고 `comparison` | 최신 | 검토 2026-10-05 @ `fcabbc9` · Codex-CameraX-stabilization-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 원고 `contract` | 최신 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 원고 `camera2` | 최신 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 원고 `camerax` | 최신 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 원고 `comparison` | 최신 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
 
 <!-- omm:end id=status -->
 

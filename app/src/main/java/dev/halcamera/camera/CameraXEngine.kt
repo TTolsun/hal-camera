@@ -137,6 +137,7 @@ class CameraXEngine(
                 "snapshot" to if (photoBound) photo!!.resolutionInfo?.resolution?.toString() else null))
         }
         override fun unbindRecording(video: VideoCapture<Recorder>) {
+            snapshots.release("Recording ended")
             val provider = provider ?: return
             provider.unbind(*listOfNotNull<UseCase>(video, if (photoBound) capture else null).toTypedArray())
             recording = null; photoBound = false
@@ -302,6 +303,7 @@ class CameraXEngine(
         active = false
         analysis?.clearAnalyzer()
         stills.close()
+        snapshots.release("Camera closed")
         video.close { mediaIo.shutdown() }
         val info = camera?.cameraInfo
         val bound = listOfNotNull(preview, analysis, capture, recording).toTypedArray()
