@@ -46,7 +46,7 @@ data class LiveStreamSupport(
     val preview: List<LiveSize>, val yuv: List<LiveSize>, val jpeg: List<LiveSize>,
     val fps: List<LiveFps>, val videos: List<LiveVideo>, val defaultVideo: LiveVideo? = null,
     val stabilization: List<LiveStabilization> = listOf(LiveStabilization.AUTO),
-    val stabilizationNotice: String = "Manual stabilization requires Camera2. Switch to Camera2 to select a mode.",
+    val stabilizationNotice: String = "Switch to Camera2 for manual control.",
 ) {
     fun rejection(value: LiveStreamSettings): String? = when {
         value.stabilization !in stabilization -> "Unsupported stabilization mode. Select Auto or a supported Camera2 mode."

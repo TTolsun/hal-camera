@@ -5,8 +5,8 @@ enum class LiveStabilization(val label: String, val optical: Int?, val video: In
     AUTO("Auto (camera defaults)", null, null),
     OFF("Off", 0, 0),
     OIS("OIS", 1, 0),
-    VIDEO("Video EIS", 0, 1),
-    PREVIEW("Preview stabilization", 0, 2);
+    VIDEO("EIS (Video)", 0, 1),
+    PREVIEW("EIS (Preview + Video)", 0, 2);
 
     companion object {
         fun supported(optical: List<Int>, video: List<Int>, api: Int): List<LiveStabilization> =
@@ -18,5 +18,59 @@ enum class LiveStabilization(val label: String, val optical: Int?, val video: In
             fun name(value: Int?, labels: List<String>) = value?.let { labels.getOrNull(it) ?: "Unknown ($it)" } ?: "Unavailable"
             return "OIS ${name(optical, listOf("Off", "On"))} · EIS ${name(video, listOf("Off", "On", "Preview"))}"
         }
+    }
+}
+
+/** Capture-result status, not a measurement of stabilization effectiveness. */
+data class LiveEisStatus(val video: Int? = null, val warning: String? = null) {
+    val label: String get() = when (video) {
+        0 -> "EIS inactive"
+        1, 2 -> "EIS active"
+        else -> "EIS status unknown"
+    }
+}
+
+/** Reject old phases/sessions and wait for sustained result mismatch before warning. */
+class LiveEisTracker {
+    private var context: Triple<String, Boolean, LiveStabilization>? = null
+    private var sinceNs = 0L
+    private var mismatchVideo: Int? = null
+    private var mismatchSinceNs = 0L
+
+    fun reset() {
+        context = null
+        mismatchVideo = null
+    }
+
+    fun update(session: String, recording: Boolean, requested: LiveStabilization,
+               resultAtNs: Long?, video: Int?, nowNs: Long, active: Boolean): LiveEisStatus {
+        if (!active) { reset(); return LiveEisStatus() }
+        val next = Triple(session, recording, requested)
+        if (context != next) {
+            context = next
+            sinceNs = nowNs
+            mismatchVideo = null
+        }
+        if (resultAtNs == null || resultAtNs < sinceNs || resultAtNs > nowNs ||
+            nowNs - resultAtNs >= 1_500_000_000L || video !in 0..2) {
+            mismatchVideo = null
+            return LiveEisStatus()
+        }
+        if (requested.video == null || requested.video == video) {
+            mismatchVideo = null
+            return LiveEisStatus(video)
+        }
+        if (mismatchVideo != video) {
+            mismatchVideo = video
+            mismatchSinceNs = resultAtNs
+        }
+        val actual = when (video) {
+            1 -> LiveStabilization.VIDEO.label
+            2 -> LiveStabilization.PREVIEW.label
+            else -> "EIS Off"
+        }
+        val warning = if (resultAtNs - mismatchSinceNs >= 1_000_000_000L)
+            "Mode mismatch\nRequested: ${requested.label}\nReported: $actual" else null
+        return LiveEisStatus(video, warning)
     }
 }

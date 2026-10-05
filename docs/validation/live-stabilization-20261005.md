@@ -49,3 +49,48 @@ Off가 적용된 상태에서 Auto를 선택하고 저장하지 않은 채 시�
 JDK 17, Android SDK 36에서 `assembleRelease`, `testDebugUnitTest`, `lintDebug`가 통과했습니다. JVM 테스트 628개는 실패·오류·SKIP이 모두 0개입니다. 새 테스트는 API·capability별 후보, OIS/EIS 배타 요청, Auto의 기본값 보존, 미지원 설정 거부, 직렬화, 알 수 없는 결과값 표시를 검증합니다. 문서 회귀 테스트 23개도 통과했습니다.
 
 이 기록은 한 기기의 지원 범위에서 요청·결과·저장·복귀를 확인한 결과입니다. 흔들림 감소량을 정량 평가하지 않았으며, 미연결 기기나 다른 해상도·FPS 조합을 검증한 것으로 확대하지 않습니다. 공식 API의 보정 제약은 [CaptureRequest 문서](https://developer.android.com/reference/android/hardware/camera2/CaptureRequest#CONTROL_VIDEO_STABILIZATION_MODE)에 있습니다. 사용 절차는 [빠른 시작](../../guide/getting-started.md#손떨림-보정을-선택하세요)을 확인하세요.
+
+## 후속 변경: Live EIS 상태 표시
+
+2026-10-05 Galaxy S25+ (SM-S936N), Android 16/API 36에서 후속 APK를 기존 데이터 유지 방식으로 설치하고 UI를 확인했습니다. 아래 내용은 앞선 설정 결과 화면을 대체한 후속 구현의 검증입니다.
+
+- Camera2 후면 0, Preview 1280×720, YUV 640×480, JPEG 1920×1080, Auto FPS에서 Auto는 `프리뷰 · EIS 미적용`으로 표시됐습니다.
+- EIS (Video)를 저장하면 `프리뷰 · EIS 적용됨`으로 바뀌었습니다. H264 1920×1080, 30fps 녹화에서는 `녹화 · EIS 적용됨`이 표시됐고, 녹화 종료·저장 후 프리뷰 상태로 돌아왔습니다.
+- Live Streams의 Mode와 한 문장 안내를 확인했습니다. 정상 구성에서 Last session result 영역은 사라졌고 저장·직전 정상 구성 복원 버튼은 유지됐습니다.
+- 상태 영역은 테두리 없는 어두운 배경과 밝은 글자로 표시합니다. 요청과 다른 결과가 1초 이상 이어지면 요청·결과를 주황색 텍스트로 함께 보여 줍니다. 실제 기기에서 불일치 조합은 이번에 재현하지 않았습니다.
+
+JVM 테스트 633개가 실패·오류·SKIP 없이 통과했습니다. 추가 테스트는 결과 누락·미지원 값·1.5초 이상 오래된 결과, 세션·프리뷰/녹화·요청 변경, 1초 불일치와 정상 복귀를 검증합니다. 같은 프레임을 반복 조회하는 것만으로 경고가 확정되지 않는 것도 확인했습니다. 최종 UI 조정 후 assembleRelease와 lintDebug를 다시 통과했습니다. Camera2 사진 결과는 상태 판정에서 제외합니다. 이 표시는 결과 메타데이터에 대한 판정이며 흔들림 감소량의 실측값은 아닙니다.
+
+문서 최신성 검토에서는 앞선 14개 바인딩의 코드 변경을 다시 대조했습니다. 엔진 계약·Camera2·CameraX·빠른 시작·화면 설계를 현재 상태 표시로 수정했고, 나머지 계층·수명주기·도구 전환 계약과 과거 기기 기록은 여전히 유효합니다.
+
+| EIS 미적용 | 녹화 중 EIS 적용 | 설정 결과 영역 삭제 |
+| --- | --- | --- |
+| ![EIS 미적용](assets/live-stabilization/live-off.png) | ![녹화 중 EIS 적용](assets/live-stabilization/live-recording.png) | ![설정 결과 영역 삭제](assets/live-stabilization/settings-no-result.png) |
+
+### Live 상태 문구 영어 적용
+
+Live에 추가한 문구를 `Preview`·`Recording`, `EIS active`·`EIS inactive`·`EIS status unknown`으로 변경했습니다. 불일치는 `Mode mismatch` 아래 `Requested`와 `Reported`를 각각 한 줄에 표시합니다. 색상만으로 상태를 구분하지 않으며, 기존 12sp 글자 크기·어두운 배경·접근성 알림 정책을 유지합니다. Galaxy S25+에서 최종 APK의 `Preview · EIS inactive`가 한 줄에 잘림 없이 표시되는 것을 확인했습니다. 기존 LiveStabilizationTest 9개, assembleRelease, lintDebug가 통과했습니다. 문구 변경은 상태 판정이나 기존 수명주기 계약을 바꾸지 않습니다.
+
+![영어 Live 상태](assets/live-stabilization/live-english.png)
+
+### 정상적인 EIS inactive 숨김
+
+EIS inactive이며 불일치 경고가 없으면 Live 상태 뷰를 GONE으로 처리합니다. 배경과 레이아웃 공간도 함께 사라집니다. EIS 적용 요청과 실제 결과가 다른 경우에는 기존 inactive 상태와 경고를 계속 표시합니다. Active·unknown 표시는 유지합니다. Galaxy S25+ (Android 16/API 36)의 Auto 프리뷰에서 영역 숨김을 확인했고 assembleRelease·lintDebug가 통과했습니다.
+
+![미적용 영역 숨김](assets/live-stabilization/live-inactive-hidden.png)
+
+### 스트림 정보 행에 EIS 약어 통합
+
+정상 EIS 상태 카드를 없애고 P·Y·J 크기 행 오른쪽에 같은 10sp·색상으로 표시합니다. 결과 모드 1은 `EIS: V`, 2는 `EIS: P, V`, 확인 불가는 `EIS: ?`입니다. 미적용은 숨기되 불일치 경고가 있으면 `EIS: Off`와 다음 줄의 경고를 표시합니다. 접근성 설명에는 전체 모드명과 프리뷰·녹화 단계를 유지합니다. Galaxy S25+ (Android 16/API 36)에서 Auto의 숨김 및 Preview + Video의 `EIS: P, V`가 기존 크기와 함께 한 줄에 들어가는 것을 확인했습니다. assembleRelease·lintDebug가 통과했습니다. 변경은 표시 방식에 한정되며 판정·엔진·계층 계약은 유지됩니다.
+
+![스트림 행의 EIS 약어](assets/live-stabilization/live-compact.png)
+
+### EIS 표시에서 Live Streams 진입
+
+EIS 표시도 기존 크기 표시와 같은 onSizesClick을 호출합니다. 최소 48×48dp 터치 영역·리플·포커스와 설정 진입 접근성 설명을 추가했으며 setSizesEnabled는 두 진입점을 함께 제어합니다. Galaxy S25+ (Android 16/API 36)에서 `EIS: P, V`를 눌러 Live Streams가 열리고 뒤로 가기로 Live가 재개되는 것을 확인했습니다. assembleRelease·lintDebug가 통과했습니다. 기존 카메라 수명주기·진입 차단 계약은 변경하지 않았습니다.
+
+### 0.19.0 릴리스 전 전체 리뷰
+
+PR #217의 전체 소스·테스트·문서 변경을 검토했습니다. 결과 최신성·세션/녹화 전환·사진 결과 제외·경고 지연·Auto 처리와 UI 약어·미적용 숨김·48dp 설정 진입·녹화/저장 중 차단을 대조했고 병합을 막는 결함은 발견하지 못했습니다. 독립 리뷰를 뜻하지 않으며 Sourcery 리뷰는 사용량 제한으로 수행되지 않았습니다.
+
+0.19.0(628) 후보에서 JVM 테스트 633개가 실패·오류·SKIP 없이 통과했고 assembleRelease·lintDebug도 통과했습니다. APK 서명 인증서 SHA-256은 기존 0.18.0과 동일한 `f2432413635645cc35e674e498e88ff518abb878065c21f17bb3c2128487b5c1`입니다. Galaxy S25+에서 기존 앱 위에 설치하고 versionName 0.19.0·versionCode 628 및 MainActivity 실행을 확인했습니다. 버전 변경은 엔진·측정·문서 아키텍처 계약에 영향을 주지 않습니다.

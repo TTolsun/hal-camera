@@ -23,7 +23,7 @@ fun cameraXStreamSupport(context: android.content.Context, id: String, hardware:
         .maxByOrNull { it.size.width.toLong() * it.size.height } ?: videos.firstOrNull()
     return hardware.copy(videos = videos, defaultVideo = default,
         stabilization = listOf(LiveStabilization.AUTO),
-        stabilizationNotice = "Manual stabilization requires Camera2. Switch to Camera2 to select a mode.")
+        stabilizationNotice = "Switch to Camera2 for manual control.")
 }
 
 /** Individual sizes and encoder limits are checked here; combinations still need a real session check. */
@@ -57,6 +57,5 @@ fun liveStreamSupport(c: CameraCharacteristics): LiveStreamSupport {
             c[CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES]?.toList().orEmpty()
                 .takeIf { android.hardware.camera2.CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE in c.availableCaptureRequestKeys }.orEmpty(),
             android.os.Build.VERSION.SDK_INT),
-        "OIS and Video EIS are exclusive. Availability depends on size and FPS; check the reported result. " +
-            "Auto restores camera defaults.")
+        "Stabilization may be unavailable at some resolutions or frame rates.")
 }
