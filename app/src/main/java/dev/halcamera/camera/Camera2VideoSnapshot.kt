@@ -123,10 +123,14 @@ internal class Camera2VideoSnapshot(
     private fun onImage(source: ImageReader) {
         val image = try { source.acquireNextImage() } catch (e: Exception) { null } ?: return
         val request = pending
-        val timestamp = image.timestamp
+        var timestamp = 0L
         val bytes = try {
+            timestamp = image.timestamp
             if (host.active) telemetry.image(sessionId, timestamp, image.width, image.height, image.format, "video_snapshot")
             if (request == null) null else ByteArray(image.planes[0].buffer.remaining()).also { image.planes[0].buffer.get(it) }
+        } catch (e: Exception) {
+            request?.let { fail(it, e.message ?: e.toString()) }
+            return
         } finally { image.close() }
         if (request == null || bytes == null) return
         pending = null // The slot stays claimed until the file is written.

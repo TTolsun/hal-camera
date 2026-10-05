@@ -36,6 +36,8 @@ internal class Camera2LiveRecorder(
     private val library: MediaLibrary,
     private val mediaIo: Executor,
     private val host: Host,
+    private val createSession: (CameraDevice, List<OutputConfiguration>, CameraCaptureSession.StateCallback, Handler) -> Unit =
+        { camera, outputs, callback, handler -> camera.createCaptureSessionByOutputConfigurations(outputs, callback, handler) },
 ) {
     interface Host : Camera2VideoSnapshot.Host {
         /** A benchmark engine never records LIVE video. */
@@ -158,7 +160,7 @@ internal class Camera2LiveRecorder(
                             if (Build.VERSION.SDK_INT >= 34) setReadoutTimestampEnabled(false)
                         }
                     } }
-                    var replaced = false
+                    val retry = SnapshotSessionRetry()
                     val sessionCallback = object : CameraCaptureSession.StateCallback() {
                         override fun onConfigured(session: CameraCaptureSession) {
                             if (!host.active || stopRequested) { session.close(); return }
@@ -182,23 +184,21 @@ internal class Camera2LiveRecorder(
                             } catch (e: Exception) { failure = e; host.fail(e); session.close() }
                         }
                         override fun onConfigureFailed(session: CameraCaptureSession) {
-                            if (snapshot != null && host.active && !stopRequested) {
-                                replaced = true
+                            if (retry.onRejected(snapshot != null, host.active, stopRequested) {
                                 snapshotUnsupported = VideoSnapshotPlan.REFUSED_REASON
                                 telemetry.event(sessionId, "video_snapshot_unavailable", mapOf("reason" to "configure_failed", "size" to snapshots.size?.toString()))
                                 snapshots.release("Session configuration failed")
                                 try {
                                     val (plain, plainCallback) = build(null)
-                                    camera.createCaptureSessionByOutputConfigurations(plain, plainCallback, handler)
+                                    createSession(camera, plain, plainCallback, handler)
                                 } catch (e: Exception) { failure = e; finish(); host.report("Video start failed: ${e.message} · Please try again.", host.session != null) }
-                                return
-                            }
+                            }) return
                             failure = IllegalStateException("Recording stream configuration rejected")
                             host.report("This recording stream configuration is not supported.", false)
                             session.close()
                         }
                         override fun onClosed(session: CameraCaptureSession) {
-                            if (replaced) return
+                            if (retry.replaced) return
                             if (host.session === session) host.onSessionConfigured(null)
                             surface = null
                             finish()
@@ -233,7 +233,7 @@ internal class Camera2LiveRecorder(
                         telemetry.event(sessionId, "live_recording_preflight", mapOf("result" to result))
                     }
                 }
-                camera.createCaptureSessionByOutputConfigurations(plan.first, plan.second, handler)
+                createSession(camera, plan.first, plan.second, handler)
             } catch (e: Exception) {
                 failure = e
                 finish()
