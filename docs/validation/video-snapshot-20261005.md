@@ -73,6 +73,8 @@ Google Maven의 공식 소스 JAR을 확인했습니다.
 
 앱 소스 변경이 없으므로 새 JVM 테스트·Android 빌드는 수행하지 않았습니다. 위 결과는 실기기 검증으로만 분류하며, 미검증 조건을 통과로 처리하지 않습니다.
 
+2026년 10월 6일에는 [망원·Torch·추가 FPS 및 코덱 조합](video-snapshot-combinations-20261006.md)을 후속 검증했습니다. Flash On/Auto는 현재 Video UI에서 제공하지 않아 SKIP했고, 초광각 CameraX에서 후면 Camera2로 전환한 첫 CLI 요청의 타임아웃은 두 번 재현됐습니다. 이전 관찰을 성공으로 바꾸거나 CameraX의 영상 간격 제약이 수정됐다고 판단하지 않습니다.
+
 ## 재현과 분석
 
 1. [HAL CAM CLI 스킬](../../skills/halcam-cli/SKILL.md)에 따라 `hello`에서 권한과 잠금 상태를 확인하고 기기 내 `halcam` 스크립트를 준비합니다.

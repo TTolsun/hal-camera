@@ -1,0 +1,888 @@
+[
+  {
+    "file": "c2-dark-3x-HAL_20261006_083506_613_bf1040_JPEG.jpg",
+    "bytes": 245002,
+    "sha256": "f057bd87f78bd9f756d64d482111a0ee66f1164209589f06bb853663add6ca21",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "c2-dark-3x-HAL_20261006_083509_715_840756_JPEG.jpg",
+    "bytes": 245801,
+    "sha256": "5fdcf43eca8b2d4a2a2ada99116f7ca9a003257f93209cbcd06f103b7c4da696",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "c2-dark-3x-HAL_20261006_083512_785_6dc896_JPEG.jpg",
+    "bytes": 246756,
+    "sha256": "ffc421e14a40e726215847f39a66fb398531885ac7f5d7d7e0de0e52e5b81337",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "c2-dark-3x-HAL_20261006_083516_993_6f7cf3.mp4",
+    "bytes": 18699678,
+    "sha256": "c81cff1b170d8aa1f812a379aa6a27ee1096106a20ec331236f233e3f7edb07b",
+    "codec": "avc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 435,
+    "seconds": 14.577177777777777,
+    "fps": 29.841167243163973,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "3015": 14,
+      "3016": 421
+    },
+    "modeIntervalMs": 33.51111111111111,
+    "gaps": [],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 33.51111111111111,
+      "maxMs": 33.51111111111111,
+      "gaps": []
+    }
+  },
+  {
+    "file": "c2-tele-3shots-HAL_20261006_082548_955_da8860_JPEG.jpg",
+    "bytes": 775933,
+    "sha256": "733864ac6ccb47f9cf95496b6cf1711473a057448562f1d703a848ca46d0ea0c",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "c2-tele-3shots-HAL_20261006_082552_040_07103a_JPEG.jpg",
+    "bytes": 776633,
+    "sha256": "65abcd5a959a822edb14e478b7619aeac60508ec7f328e204d54b44601f141b9",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "c2-tele-3shots-HAL_20261006_082555_111_28b466_JPEG.jpg",
+    "bytes": 775928,
+    "sha256": "51c3d57fb817893f00960467362828d08da9d4c59bd116ee7ac3b8b23be69a6f",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "c2-tele-3shots-HAL_20261006_082600_754_567587.mp4",
+    "bytes": 27531846,
+    "sha256": "a4789dcfea4d5306d95446860592b74dce6e3c6a3336d4400425f926a7882a3f",
+    "codec": "avc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 526,
+    "seconds": 17.52721111111111,
+    "fps": 30.010478944168717,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "2998": 25,
+      "2999": 501
+    },
+    "modeIntervalMs": 33.32222222222222,
+    "gaps": [],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 33.32222222222222,
+      "maxMs": 33.32222222222222,
+      "gaps": []
+    }
+  },
+  {
+    "file": "c2-torch-3shots-HAL_20261006_083856_792_73d478_JPEG.jpg",
+    "bytes": 309794,
+    "sha256": "4afaf8316e5f03d5e056c43791ad833b7a372ead7656ae89770b9f0c36828df8",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "c2-torch-3shots-HAL_20261006_083859_897_a67b96_JPEG.jpg",
+    "bytes": 310961,
+    "sha256": "10a303ef9b33f57cf109c454b489d9477cd555e734e98627e3db7cf658a756f0",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "c2-torch-3shots-HAL_20261006_083902_965_e51cc7_JPEG.jpg",
+    "bytes": 310797,
+    "sha256": "2a18e215146b364569c7c37d1ee5fcae34c777ddf848d9672754d0470b8bdc37",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "c2-torch-3shots-HAL_20261006_083908_213_d850d6.mp4",
+    "bytes": 21723681,
+    "sha256": "0e90ec168b44f0f25c3cb15e3de5f32019cfe6b713ffa40416b18aa343bade7e",
+    "codec": "avc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 508,
+    "seconds": 16.933622222222223,
+    "fps": 29.99948819770791,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "2997": 5,
+      "2998": 14,
+      "2999": 13,
+      "3000": 394,
+      "3001": 82
+    },
+    "modeIntervalMs": 33.333333333333336,
+    "gaps": [],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 33.333333333333336,
+      "maxMs": 33.34444444444444,
+      "gaps": []
+    }
+  },
+  {
+    "file": "cx-dark-3x-HAL_20261006_083636_043_cb3f84_JPEG.jpg",
+    "bytes": 329348,
+    "sha256": "b8a8e363513da5edacb7640d790b1ad4a25f503b96958ec384dccde21c4e599d",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-dark-3x-HAL_20261006_083639_145_745952_JPEG.jpg",
+    "bytes": 330889,
+    "sha256": "5d1da4aabe22cb2622f233b130a9f484d5a99cb22cfeb071acaf7e12185ebbb4",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-dark-3x-HAL_20261006_083642_199_8d9e98_JPEG.jpg",
+    "bytes": 330390,
+    "sha256": "d8e463f9fc6536b7243ff2ace6be52c6f85573c369f6a8eeecdc29b62c188292",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-dark-3x-HAL_20261006_083646_591_ac2359.mp4",
+    "bytes": 20709650,
+    "sha256": "79050873c6b23a8cd770836330aa14834f3ed4721888ff9ccf64eca97be99643",
+    "codec": "avc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 463,
+    "seconds": 15.608155555555555,
+    "fps": 29.66397908785578,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "3008": 459,
+      "6015": 2,
+      "6016": 2
+    },
+    "modeIntervalMs": 33.422222222222224,
+    "gaps": [
+      {
+        "sample": 0,
+        "decodeSeconds": 0,
+        "intervalMs": 66.84444444444445
+      },
+      {
+        "sample": 157,
+        "decodeSeconds": 5.280711111111111,
+        "intervalMs": 66.83333333333333
+      },
+      {
+        "sample": 249,
+        "decodeSeconds": 8.388966666666667,
+        "intervalMs": 66.83333333333333
+      },
+      {
+        "sample": 340,
+        "decodeSeconds": 11.4638,
+        "intervalMs": 66.84444444444445
+      }
+    ],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 33.422222222222224,
+      "maxMs": 66.84444444444445,
+      "gaps": [
+        {
+          "frame": 0,
+          "seconds": 0,
+          "intervalMs": 66.84444444444445
+        },
+        {
+          "frame": 157,
+          "seconds": 5.280711111111111,
+          "intervalMs": 66.83333333333333
+        },
+        {
+          "frame": 249,
+          "seconds": 8.388966666666667,
+          "intervalMs": 66.83333333333333
+        },
+        {
+          "frame": 340,
+          "seconds": 11.4638,
+          "intervalMs": 66.84444444444445
+        }
+      ]
+    }
+  },
+  {
+    "file": "cx-tele-3shots-HAL_20261006_082651_501_15d958_JPEG.jpg",
+    "bytes": 565907,
+    "sha256": "349eb0280b1df75f589a518c4c7c992d08df81d1589eb0df96159aa8f34890e7",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-tele-3shots-HAL_20261006_082654_593_1d589e_JPEG.jpg",
+    "bytes": 574768,
+    "sha256": "395fd1d09d771f1f30c64aab6bb42452b14bb71d4d88a91a0d3489c6df2032ee",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-tele-3shots-HAL_20261006_082657_647_a08056_JPEG.jpg",
+    "bytes": 574730,
+    "sha256": "c87d539e16786a98e964caa8146f43de3d4d3c9cc4472010df54202984b4399d",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-tele-3shots-HAL_20261006_082703_137_91e7d9.mp4",
+    "bytes": 28923090,
+    "sha256": "8cbe79fa4b2f834698502e018af745d519acd0b2a5da3b0cb351f6ac0970995a",
+    "codec": "avc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 543,
+    "seconds": 18.227255555555555,
+    "fps": 29.790551756130775,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "2999": 539,
+      "5998": 4
+    },
+    "modeIntervalMs": 33.32222222222222,
+    "gaps": [
+      {
+        "sample": 0,
+        "decodeSeconds": 0,
+        "intervalMs": 66.64444444444445
+      },
+      {
+        "sample": 204,
+        "decodeSeconds": 6.831055555555555,
+        "intervalMs": 66.64444444444445
+      },
+      {
+        "sample": 296,
+        "decodeSeconds": 9.930022222222222,
+        "intervalMs": 66.64444444444445
+      },
+      {
+        "sample": 386,
+        "decodeSeconds": 12.962344444444444,
+        "intervalMs": 66.64444444444445
+      }
+    ],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 33.32222222222222,
+      "maxMs": 66.64444444444445,
+      "gaps": [
+        {
+          "frame": 0,
+          "seconds": 0,
+          "intervalMs": 66.64444444444445
+        },
+        {
+          "frame": 204,
+          "seconds": 6.831055555555555,
+          "intervalMs": 66.64444444444445
+        },
+        {
+          "frame": 296,
+          "seconds": 9.930022222222222,
+          "intervalMs": 66.64444444444445
+        },
+        {
+          "frame": 386,
+          "seconds": 12.962344444444444,
+          "intervalMs": 66.64444444444445
+        }
+      ]
+    }
+  },
+  {
+    "file": "cx-tele-control-HAL_20261006_082733_925_323cba.mp4",
+    "bytes": 30436754,
+    "sha256": "ac8ac60c2c11a23c6829ded76b9d88eefabbf936cded252736828f59878369b8",
+    "codec": "avc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 587,
+    "seconds": 19.593466666666668,
+    "fps": 29.958965913808004,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "2999": 586,
+      "5998": 1
+    },
+    "modeIntervalMs": 33.32222222222222,
+    "gaps": [
+      {
+        "sample": 0,
+        "decodeSeconds": 0,
+        "intervalMs": 66.64444444444445
+      }
+    ],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 33.32222222222222,
+      "maxMs": 66.64444444444445,
+      "gaps": [
+        {
+          "frame": 0,
+          "seconds": 0,
+          "intervalMs": 66.64444444444445
+        }
+      ]
+    }
+  },
+  {
+    "file": "cx-torch-3shots-HAL_20261006_083748_056_0e0d12_JPEG.jpg",
+    "bytes": 320337,
+    "sha256": "988d3167f0be54cc3e80e58ffb04296bac05d1ecd9d8f750ead3e02f2efd4143",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-torch-3shots-HAL_20261006_083751_126_bcbffd_JPEG.jpg",
+    "bytes": 319323,
+    "sha256": "a5231d438a219df5b51040bfd415766160118bdf89d2895533f5e1709d2d055c",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-torch-3shots-HAL_20261006_083754_212_505e36_JPEG.jpg",
+    "bytes": 319251,
+    "sha256": "f689970a82547c8f417395ee82506f013935759089da20bdcb5432afb2f3bbe2",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-torch-3shots-HAL_20261006_083758_628_2cd3a1.mp4",
+    "bytes": 20686141,
+    "sha256": "3b103d8501ccc0c37e6c31dea22d37e41edcf510aa9a171f45bc059922a7c6c9",
+    "codec": "avc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 469,
+    "seconds": 15.765933333333333,
+    "fps": 29.747683824617635,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "2997": 7,
+      "2998": 20,
+      "2999": 5,
+      "3000": 433,
+      "6000": 4
+    },
+    "modeIntervalMs": 33.333333333333336,
+    "gaps": [
+      {
+        "sample": 0,
+        "decodeSeconds": 0,
+        "intervalMs": 66.66666666666667
+      },
+      {
+        "sample": 162,
+        "decodeSeconds": 5.4326,
+        "intervalMs": 66.66666666666667
+      },
+      {
+        "sample": 253,
+        "decodeSeconds": 8.499266666666667,
+        "intervalMs": 66.66666666666667
+      },
+      {
+        "sample": 344,
+        "decodeSeconds": 11.565933333333334,
+        "intervalMs": 66.66666666666667
+      }
+    ],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 33.333333333333336,
+      "maxMs": 66.66666666666667,
+      "gaps": [
+        {
+          "frame": 0,
+          "seconds": 0,
+          "intervalMs": 66.66666666666667
+        },
+        {
+          "frame": 162,
+          "seconds": 5.4326,
+          "intervalMs": 66.66666666666667
+        },
+        {
+          "frame": 253,
+          "seconds": 8.499266666666667,
+          "intervalMs": 66.66666666666667
+        },
+        {
+          "frame": 344,
+          "seconds": 11.565933333333334,
+          "intervalMs": 66.66666666666667
+        }
+      ]
+    }
+  },
+  {
+    "file": "cx-uwide-transition-HAL_20261006_082938_418_a86e19_JPEG.jpg",
+    "bytes": 317713,
+    "sha256": "9b47b291e0c98f6e69f7654a9a0ab78fcdfcd1b9fb0c220f3e1799b58eaf92b3",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-uwide-transition-HAL_20261006_082941_520_d9d383_JPEG.jpg",
+    "bytes": 316354,
+    "sha256": "5e8e2938309fc5c28a6c2da84429f3f8663aa4d294e9b2ad69dd1acb26d3b837",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-uwide-transition-HAL_20261006_082944_606_c33bca_JPEG.jpg",
+    "bytes": 316898,
+    "sha256": "df8a767d2d2b337a9f18dce76b348023275bd8bbe48f3c04a416e5d5256419a9",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx-uwide-transition-HAL_20261006_082948_369_ce24f4.mp4",
+    "bytes": 19044873,
+    "sha256": "9f40be1b98a792721a4198d8fa92e7ab800c5ba2b9ef95d66fd5981e6f83b536",
+    "codec": "avc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 433,
+    "seconds": 14.668633333333334,
+    "fps": 29.518769074146874,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "3021": 429,
+      "6042": 4
+    },
+    "modeIntervalMs": 33.56666666666667,
+    "gaps": [
+      {
+        "sample": 0,
+        "decodeSeconds": 0,
+        "intervalMs": 67.13333333333334
+      },
+      {
+        "sample": 146,
+        "decodeSeconds": 4.9343,
+        "intervalMs": 67.13333333333334
+      },
+      {
+        "sample": 238,
+        "decodeSeconds": 8.056,
+        "intervalMs": 67.13333333333334
+      },
+      {
+        "sample": 329,
+        "decodeSeconds": 11.144133333333333,
+        "intervalMs": 67.13333333333334
+      }
+    ],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 33.56666666666667,
+      "maxMs": 67.13333333333334,
+      "gaps": [
+        {
+          "frame": 0,
+          "seconds": 0,
+          "intervalMs": 67.13333333333334
+        },
+        {
+          "frame": 146,
+          "seconds": 4.9343,
+          "intervalMs": 67.13333333333334
+        },
+        {
+          "frame": 238,
+          "seconds": 8.056,
+          "intervalMs": 67.13333333333334
+        },
+        {
+          "frame": 329,
+          "seconds": 11.144133333333333,
+          "intervalMs": 67.13333333333334
+        }
+      ]
+    }
+  },
+  {
+    "file": "cx60-3shots-HAL_20261006_082051_247_e6ea23_JPEG.jpg",
+    "bytes": 331928,
+    "sha256": "8ee1701c74020342b65d744f9392eacab3733ba702bfb338b9b89753d2493463",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx60-3shots-HAL_20261006_082054_333_d511d6_JPEG.jpg",
+    "bytes": 332129,
+    "sha256": "00368f03979dd7239659138c34463911ed94a3b0d737cbcfdd5acbde9b8e97ea",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx60-3shots-HAL_20261006_082057_419_9f39a3_JPEG.jpg",
+    "bytes": 331724,
+    "sha256": "dac4d079a6abc53293aa5c0fd64ad147bf9cc552aa1957dbd98e3c3c8abb0cb8",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "cx60-3shots-HAL_20261006_082103_236_b2dfe5.mp4",
+    "bytes": 29836741,
+    "sha256": "d9c86b7010cae7f228a33fc26ecf98dc351e6a59631c6e0ce7d5cb3fe08eb694",
+    "codec": "avc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 1092,
+    "seconds": 18.28942222222222,
+    "fps": 59.70664281965046,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "1500": 544,
+      "1501": 543,
+      "3001": 5
+    },
+    "modeIntervalMs": 16.666666666666668,
+    "gaps": [
+      {
+        "sample": 0,
+        "decodeSeconds": 0,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 388,
+        "decodeSeconds": 6.4855,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 572,
+        "decodeSeconds": 9.569855555555556,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 640,
+        "decodeSeconds": 10.720244444444445,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 755,
+        "decodeSeconds": 12.654222222222222,
+        "intervalMs": 33.34444444444444
+      }
+    ],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 16.677777777777777,
+      "maxMs": 33.34444444444444,
+      "gaps": [
+        {
+          "frame": 0,
+          "seconds": 0,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 388,
+          "seconds": 6.4855,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 572,
+          "seconds": 9.569855555555556,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 640,
+          "seconds": 10.720244444444445,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 755,
+          "seconds": 12.654222222222222,
+          "intervalMs": 33.34444444444444
+        }
+      ]
+    }
+  },
+  {
+    "file": "cx60-control-HAL_20261006_082210_701_a211d6.mp4",
+    "bytes": 32070765,
+    "sha256": "ab0762fffd2483ef5cb32ffcd4afe488496f6d4fb1d86e2e40f3715e29b514d3",
+    "codec": "avc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 1193,
+    "seconds": 19.913255555555555,
+    "fps": 59.90984229935057,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "1501": 1192,
+      "3001": 1
+    },
+    "modeIntervalMs": 16.677777777777777,
+    "gaps": [
+      {
+        "sample": 0,
+        "decodeSeconds": 0,
+        "intervalMs": 33.34444444444444
+      }
+    ],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 16.677777777777777,
+      "maxMs": 33.34444444444444,
+      "gaps": [
+        {
+          "frame": 0,
+          "seconds": 0,
+          "intervalMs": 33.34444444444444
+        }
+      ]
+    }
+  },
+  {
+    "file": "cx60-control-main-HAL_20261006_084019_365_1514f6.mp4",
+    "bytes": 19843857,
+    "sha256": "ec49d70d9bfdf9eca63e829bba402dbf02411c2e59a4ec2fec9282347590ccad",
+    "codec": "avc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 868,
+    "seconds": 14.688222222222223,
+    "fps": 59.094966488645476,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "1500": 428,
+      "1501": 427,
+      "3001": 13
+    },
+    "modeIntervalMs": 16.666666666666668,
+    "gaps": [
+      {
+        "sample": 0,
+        "decodeSeconds": 0,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 29,
+        "decodeSeconds": 0.5001666666666666,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 105,
+        "decodeSeconds": 1.7839333333333334,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 180,
+        "decodeSeconds": 3.051022222222222,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 256,
+        "decodeSeconds": 4.334777777777778,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 332,
+        "decodeSeconds": 5.618544444444445,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 408,
+        "decodeSeconds": 6.9023,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 484,
+        "decodeSeconds": 8.186066666666667,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 559,
+        "decodeSeconds": 9.453155555555556,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 635,
+        "decodeSeconds": 10.73691111111111,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 711,
+        "decodeSeconds": 12.020677777777777,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 786,
+        "decodeSeconds": 13.287766666666666,
+        "intervalMs": 33.34444444444444
+      },
+      {
+        "sample": 862,
+        "decodeSeconds": 14.571522222222223,
+        "intervalMs": 33.34444444444444
+      }
+    ],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 16.677777777777777,
+      "maxMs": 33.34444444444444,
+      "gaps": [
+        {
+          "frame": 0,
+          "seconds": 0,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 29,
+          "seconds": 0.5001666666666666,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 105,
+          "seconds": 1.7839333333333334,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 180,
+          "seconds": 3.051022222222222,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 256,
+          "seconds": 4.334777777777778,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 332,
+          "seconds": 5.618544444444445,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 408,
+          "seconds": 6.9023,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 484,
+          "seconds": 8.186066666666667,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 559,
+          "seconds": 9.453155555555556,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 635,
+          "seconds": 10.73691111111111,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 711,
+          "seconds": 12.020677777777777,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 786,
+          "seconds": 13.287766666666666,
+          "intervalMs": 33.34444444444444
+        },
+        {
+          "frame": 862,
+          "seconds": 14.571522222222223,
+          "intervalMs": 33.34444444444444
+        }
+      ]
+    }
+  },
+  {
+    "file": "hevc30-control-HAL_20261006_082009_818_3c9234.mp4",
+    "bytes": 27297930,
+    "sha256": "3c42d22f104cf1fe1113ab4ac941e317d06c31fbb0d5dd45b5364b7a226ae98a",
+    "codec": "hvc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 510,
+    "seconds": 17.000977777777777,
+    "fps": 29.998274609042095,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "3000": 422,
+      "3001": 88
+    },
+    "modeIntervalMs": 33.333333333333336,
+    "gaps": [],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 33.333333333333336,
+      "maxMs": 33.34444444444444,
+      "gaps": []
+    }
+  },
+  {
+    "file": "hevc30-HAL_20261006_081818_961_c86942_JPEG.jpg",
+    "bytes": 536910,
+    "sha256": "415dc658136abc9cd2db60e34ae0ba7ebccf790b83f9f46f87a5297407f6f06d",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "hevc30-HAL_20261006_081821_047_934bb3_JPEG.jpg",
+    "bytes": 536653,
+    "sha256": "c23a6dc6553f8e97143750f96628688f1e455c93cd5435874956dde9ac2627a1",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "hevc30-HAL_20261006_081823_149_6ff6dd_JPEG.jpg",
+    "bytes": 536689,
+    "sha256": "306adbdeb3ebed6259641f6ba6a1c36aae097597b4109b0b8c74dfdaaa237dc3",
+    "width": 1920,
+    "height": 1080
+  },
+  {
+    "file": "hevc30-HAL_20261006_081827_961_60e050.mp4",
+    "bytes": 64315950,
+    "sha256": "14a865972418afd3a02659305e639c152052bfb840ca1de52aed8b56b04d0a43",
+    "codec": "hvc1",
+    "width": 1920,
+    "height": 1080,
+    "frames": 1212,
+    "seconds": 40.402322222222224,
+    "fps": 29.99827567667315,
+    "timescale": 90000,
+    "decodeIntervalTicks": {
+      "3000": 1003,
+      "3001": 209
+    },
+    "modeIntervalMs": 33.333333333333336,
+    "gaps": [],
+    "hasCompositionOffsets": false,
+    "presentation": {
+      "medianMs": 33.333333333333336,
+      "maxMs": 33.34444444444444,
+      "gaps": []
+    }
+  }
+]

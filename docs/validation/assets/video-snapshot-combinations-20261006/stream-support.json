@@ -1,0 +1,974 @@
+[
+  {
+    "file": "streams-camera2.json",
+    "result": {
+      "protocol_version": 1,
+      "request_id": "aa713a02-c3e3-44b2-83d4-5c51e2831355",
+      "state": "succeeded",
+      "completed": true,
+      "created_at_ms": 1791242145404,
+      "expires_at_ms": 1791328545485,
+      "result": {
+        "camera_id": "0",
+        "engine": "Camera2",
+        "streams": {
+          "preview": [
+            "176x144",
+            "320x240",
+            "352x288",
+            "640x360",
+            "640x480",
+            "720x480",
+            "960x720",
+            "1280x720",
+            "1088x1088",
+            "1232x1008",
+            "1440x1080",
+            "1920x824",
+            "1920x1080",
+            "2336x1080",
+            "2400x1080",
+            "1920x1440",
+            "2560x1440",
+            "4000x1716",
+            "4032x1728",
+            "4000x1848",
+            "3840x2160",
+            "2992x2992",
+            "4000x2252",
+            "3648x2736",
+            "4000x3000",
+            "4080x3060"
+          ],
+          "yuv": [
+            "176x144",
+            "320x240",
+            "352x288",
+            "640x360",
+            "640x480",
+            "720x480",
+            "960x720",
+            "1280x720",
+            "1088x1088",
+            "1232x1008",
+            "1440x1080",
+            "1920x824",
+            "1920x1080",
+            "2336x1080",
+            "2400x1080",
+            "1920x1440",
+            "2560x1440",
+            "4000x1716",
+            "4032x1728",
+            "4000x1848",
+            "3840x2160",
+            "2992x2992",
+            "4000x2252",
+            "3648x2736",
+            "4000x3000",
+            "4080x3060"
+          ],
+          "jpeg": [
+            "176x144",
+            "320x240",
+            "352x288",
+            "640x360",
+            "640x480",
+            "720x480",
+            "960x720",
+            "1280x720",
+            "1088x1088",
+            "1232x1008",
+            "1440x1080",
+            "1920x824",
+            "1920x1080",
+            "2336x1080",
+            "2400x1080",
+            "1920x1440",
+            "2560x1440",
+            "4000x1716",
+            "4032x1728",
+            "4000x1848",
+            "3840x2160",
+            "2992x2992",
+            "4000x2252",
+            "3648x2736",
+            "4000x3000",
+            "4080x3060"
+          ],
+          "video": [
+            {
+              "size": "176x144",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "176x144",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "320x240",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "320x240",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "352x288",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "352x288",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "640x360",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "640x360",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "640x480",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "640x480",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "720x480",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "720x480",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "960x720",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "960x720",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "1280x720",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "1280x720",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "1280x720",
+              "fps": 60,
+              "codec": "H264"
+            },
+            {
+              "size": "1088x1088",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "1088x1088",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "1232x1008",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "1232x1008",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "1440x1080",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "1440x1080",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "1440x1080",
+              "fps": 60,
+              "codec": "H264"
+            },
+            {
+              "size": "1920x824",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "1920x824",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "1920x824",
+              "fps": 60,
+              "codec": "H264"
+            },
+            {
+              "size": "1920x1080",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "1920x1080",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "1920x1080",
+              "fps": 60,
+              "codec": "H264"
+            },
+            {
+              "size": "2336x1080",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "2336x1080",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "2336x1080",
+              "fps": 60,
+              "codec": "H264"
+            },
+            {
+              "size": "2400x1080",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "2400x1080",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "2400x1080",
+              "fps": 60,
+              "codec": "H264"
+            },
+            {
+              "size": "1920x1440",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "1920x1440",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "1920x1440",
+              "fps": 60,
+              "codec": "H264"
+            },
+            {
+              "size": "2560x1440",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "2560x1440",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "4000x1716",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "4000x1716",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "4032x1728",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "4032x1728",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "4000x1848",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "4000x1848",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "3840x2160",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "3840x2160",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "2992x2992",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "2992x2992",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "4000x2252",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "4000x2252",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "3648x2736",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "3648x2736",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "4000x3000",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "4000x3000",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "4080x3060",
+              "fps": 24,
+              "codec": "H264"
+            },
+            {
+              "size": "4080x3060",
+              "fps": 30,
+              "codec": "H264"
+            },
+            {
+              "size": "176x144",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "176x144",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "320x240",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "320x240",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "352x288",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "352x288",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "640x360",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "640x360",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "640x480",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "640x480",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "720x480",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "720x480",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "960x720",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "960x720",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1280x720",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1280x720",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1280x720",
+              "fps": 60,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1088x1088",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1088x1088",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1232x1008",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1232x1008",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1440x1080",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1440x1080",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1440x1080",
+              "fps": 60,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1920x824",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1920x824",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1920x824",
+              "fps": 60,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1920x1080",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1920x1080",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1920x1080",
+              "fps": 60,
+              "codec": "HEVC"
+            },
+            {
+              "size": "2336x1080",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "2336x1080",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "2336x1080",
+              "fps": 60,
+              "codec": "HEVC"
+            },
+            {
+              "size": "2400x1080",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "2400x1080",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "2400x1080",
+              "fps": 60,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1920x1440",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1920x1440",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "1920x1440",
+              "fps": 60,
+              "codec": "HEVC"
+            },
+            {
+              "size": "2560x1440",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "2560x1440",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4000x1716",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4000x1716",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4032x1728",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4032x1728",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4000x1848",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4000x1848",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "3840x2160",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "3840x2160",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "2992x2992",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "2992x2992",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4000x2252",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4000x2252",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "3648x2736",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "3648x2736",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4000x3000",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4000x3000",
+              "fps": 30,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4080x3060",
+              "fps": 24,
+              "codec": "HEVC"
+            },
+            {
+              "size": "4080x3060",
+              "fps": 30,
+              "codec": "HEVC"
+            }
+          ]
+        }
+      },
+      "error": null,
+      "artifacts": []
+    }
+  },
+  {
+    "file": "streams-camerax.json",
+    "result": {
+      "protocol_version": 1,
+      "request_id": "4071bab1-793a-4d82-b275-e4bb7089ac0f",
+      "state": "succeeded",
+      "completed": true,
+      "created_at_ms": 1791242148450,
+      "expires_at_ms": 1791328548590,
+      "result": {
+        "camera_id": "0",
+        "engine": "CameraX",
+        "streams": {
+          "preview": [
+            "176x144",
+            "320x240",
+            "352x288",
+            "640x360",
+            "640x480",
+            "720x480",
+            "960x720",
+            "1280x720",
+            "1088x1088",
+            "1232x1008",
+            "1440x1080",
+            "1920x824",
+            "1920x1080",
+            "2336x1080",
+            "2400x1080",
+            "1920x1440",
+            "2560x1440",
+            "4000x1716",
+            "4032x1728",
+            "4000x1848",
+            "3840x2160",
+            "2992x2992",
+            "4000x2252",
+            "3648x2736",
+            "4000x3000",
+            "4080x3060"
+          ],
+          "yuv": [
+            "176x144",
+            "320x240",
+            "352x288",
+            "640x360",
+            "640x480",
+            "720x480",
+            "960x720",
+            "1280x720",
+            "1088x1088",
+            "1232x1008",
+            "1440x1080",
+            "1920x824",
+            "1920x1080",
+            "2336x1080",
+            "2400x1080",
+            "1920x1440",
+            "2560x1440",
+            "4000x1716",
+            "4032x1728",
+            "4000x1848",
+            "3840x2160",
+            "2992x2992",
+            "4000x2252",
+            "3648x2736",
+            "4000x3000",
+            "4080x3060"
+          ],
+          "jpeg": [
+            "176x144",
+            "320x240",
+            "352x288",
+            "640x360",
+            "640x480",
+            "720x480",
+            "960x720",
+            "1280x720",
+            "1088x1088",
+            "1232x1008",
+            "1440x1080",
+            "1920x824",
+            "1920x1080",
+            "2336x1080",
+            "2400x1080",
+            "1920x1440",
+            "2560x1440",
+            "4000x1716",
+            "4032x1728",
+            "4000x1848",
+            "3840x2160",
+            "2992x2992",
+            "4000x2252",
+            "3648x2736",
+            "4000x3000",
+            "4080x3060"
+          ],
+          "video": [
+            {
+              "size": "720x480",
+              "fps": 24,
+              "codec": "Auto"
+            },
+            {
+              "size": "720x480",
+              "fps": 30,
+              "codec": "Auto"
+            },
+            {
+              "size": "1280x720",
+              "fps": 24,
+              "codec": "Auto"
+            },
+            {
+              "size": "1280x720",
+              "fps": 30,
+              "codec": "Auto"
+            },
+            {
+              "size": "1280x720",
+              "fps": 60,
+              "codec": "Auto"
+            },
+            {
+              "size": "1920x1080",
+              "fps": 24,
+              "codec": "Auto"
+            },
+            {
+              "size": "1920x1080",
+              "fps": 30,
+              "codec": "Auto"
+            },
+            {
+              "size": "1920x1080",
+              "fps": 60,
+              "codec": "Auto"
+            },
+            {
+              "size": "3840x2160",
+              "fps": 24,
+              "codec": "Auto"
+            },
+            {
+              "size": "3840x2160",
+              "fps": 30,
+              "codec": "Auto"
+            }
+          ]
+        }
+      },
+      "error": null,
+      "artifacts": []
+    }
+  },
+  {
+    "file": "cameras.json",
+    "result": {
+      "protocol_version": 1,
+      "request_id": "5663f400-8f08-4a5c-be27-7d00b283c130",
+      "state": "succeeded",
+      "completed": true,
+      "created_at_ms": 1791242151521,
+      "expires_at_ms": 1791328551530,
+      "result": {
+        "cameras": [
+          {
+            "logicalCameraId": "0",
+            "physicalCameraId": null,
+            "role": "MAIN",
+            "facing": 1,
+            "independentlyOpenable": true,
+            "selectableByZoom": true,
+            "exposedToCameraX": null,
+            "equivalentFocalMm": 22.90764820252069,
+            "timestampSource": 1,
+            "hardwareLevel": 3,
+            "zoomRatioMin": 0.6,
+            "zoomRatioMax": 10,
+            "selectable": true
+          },
+          {
+            "logicalCameraId": "0",
+            "physicalCameraId": "2",
+            "role": "ULTRA_WIDE",
+            "facing": 1,
+            "independentlyOpenable": false,
+            "selectableByZoom": false,
+            "exposedToCameraX": null,
+            "equivalentFocalMm": 13.59914368124958,
+            "timestampSource": 1,
+            "hardwareLevel": 0,
+            "zoomRatioMin": 1,
+            "zoomRatioMax": 8,
+            "selectable": false
+          },
+          {
+            "logicalCameraId": "0",
+            "physicalCameraId": "5",
+            "role": "MAIN",
+            "facing": 1,
+            "independentlyOpenable": false,
+            "selectableByZoom": false,
+            "exposedToCameraX": null,
+            "equivalentFocalMm": 22.90764820252069,
+            "timestampSource": 1,
+            "hardwareLevel": 3,
+            "zoomRatioMin": 1,
+            "zoomRatioMax": 8,
+            "selectable": false
+          },
+          {
+            "logicalCameraId": "0",
+            "physicalCameraId": "6",
+            "role": "TELE",
+            "facing": 1,
+            "independentlyOpenable": false,
+            "selectableByZoom": false,
+            "exposedToCameraX": null,
+            "equivalentFocalMm": 66.42324548242954,
+            "timestampSource": 1,
+            "hardwareLevel": 0,
+            "zoomRatioMin": 1,
+            "zoomRatioMax": 8,
+            "selectable": false
+          },
+          {
+            "logicalCameraId": "1",
+            "physicalCameraId": null,
+            "role": "FRONT",
+            "facing": 0,
+            "independentlyOpenable": true,
+            "selectableByZoom": false,
+            "exposedToCameraX": null,
+            "equivalentFocalMm": 25.4983922405667,
+            "timestampSource": 1,
+            "hardwareLevel": 1,
+            "zoomRatioMin": 1,
+            "zoomRatioMax": 8,
+            "selectable": true
+          },
+          {
+            "logicalCameraId": "2",
+            "physicalCameraId": null,
+            "role": "ULTRA_WIDE",
+            "facing": 1,
+            "independentlyOpenable": true,
+            "selectableByZoom": false,
+            "exposedToCameraX": null,
+            "equivalentFocalMm": 13.59914368124958,
+            "timestampSource": 1,
+            "hardwareLevel": 0,
+            "zoomRatioMin": 1,
+            "zoomRatioMax": 8,
+            "selectable": true
+          },
+          {
+            "logicalCameraId": "3",
+            "physicalCameraId": null,
+            "role": "FRONT",
+            "facing": 0,
+            "independentlyOpenable": true,
+            "selectableByZoom": false,
+            "exposedToCameraX": null,
+            "equivalentFocalMm": 30.06885890381359,
+            "timestampSource": 1,
+            "hardwareLevel": 1,
+            "zoomRatioMin": 1,
+            "zoomRatioMax": 8,
+            "selectable": true
+          }
+        ]
+      },
+      "error": null,
+      "artifacts": []
+    }
+  }
+]
