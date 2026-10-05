@@ -20,3 +20,57 @@ enum class LiveStabilization(val label: String, val optical: Int?, val video: In
         }
     }
 }
+
+/** Capture-result status, not a measurement of stabilization effectiveness. */
+data class LiveEisStatus(val video: Int? = null, val warning: String? = null) {
+    val label: String get() = when (video) {
+        0 -> "EIS 미적용"
+        1, 2 -> "EIS 적용됨"
+        else -> "EIS 확인 불가"
+    }
+}
+
+/** Reject old phases/sessions and wait for sustained result mismatch before warning. */
+class LiveEisTracker {
+    private var context: Triple<String, Boolean, LiveStabilization>? = null
+    private var sinceNs = 0L
+    private var mismatchVideo: Int? = null
+    private var mismatchSinceNs = 0L
+
+    fun reset() {
+        context = null
+        mismatchVideo = null
+    }
+
+    fun update(session: String, recording: Boolean, requested: LiveStabilization,
+               resultAtNs: Long?, video: Int?, nowNs: Long, active: Boolean): LiveEisStatus {
+        if (!active) { reset(); return LiveEisStatus() }
+        val next = Triple(session, recording, requested)
+        if (context != next) {
+            context = next
+            sinceNs = nowNs
+            mismatchVideo = null
+        }
+        if (resultAtNs == null || resultAtNs < sinceNs || resultAtNs > nowNs ||
+            nowNs - resultAtNs >= 1_500_000_000L || video !in 0..2) {
+            mismatchVideo = null
+            return LiveEisStatus()
+        }
+        if (requested.video == null || requested.video == video) {
+            mismatchVideo = null
+            return LiveEisStatus(video)
+        }
+        if (mismatchVideo != video) {
+            mismatchVideo = video
+            mismatchSinceNs = resultAtNs
+        }
+        val actual = when (video) {
+            1 -> LiveStabilization.VIDEO.label
+            2 -> LiveStabilization.PREVIEW.label
+            else -> "EIS Off"
+        }
+        val warning = if (resultAtNs - mismatchSinceNs >= 1_000_000_000L)
+            "요청과 다름 · 요청: ${requested.label} / 결과: $actual" else null
+        return LiveEisStatus(video, warning)
+    }
+}

@@ -81,7 +81,7 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 앱의 `Lab → Settin
 1. 촬영·녹화를 끝내고 Live Streams를 엽니다.
 2. Stabilization의 Mode에서 모드를 선택합니다. Camera2는 Auto·Off와 기기가 지원하는 모드를 표시합니다. CameraX에서 수동 보정을 사용하려면 Live에서 Camera2로 전환합니다.
 3. 저장하여 프리뷰를 재개합니다. Auto는 카메라 요청 템플릿의 기본값으로 복귀합니다.
-4. 다시 설정을 열어 Last session result의 Requested와 Reported를 대조합니다. 결과 키가 없으면 Unavailable이며, crop metadata는 보정 변환 전체를 보여주지 않습니다. EIS (Video)는 일부 크기·FPS에서 Off로 보고될 수 있습니다.
+4. Live 상단에서 현재 프리뷰·녹화의 EIS 적용됨·미적용·확인 불가를 확인합니다. 요청과 다른 모드가 1초 이상 보고되면 주황색으로 요청값과 결과값을 표시합니다. 이 상태는 카메라의 결과 메타데이터이며 실제 흔들림 감소량을 뜻하지 않습니다.
 
 ### 초점과 노출을 조절하세요
 

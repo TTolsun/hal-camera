@@ -150,8 +150,7 @@ class MainActivity : ComponentActivity() {
     private val streamSettings = mutableMapOf<String, LiveStreamSettings>()
     private val goodStreams = mutableMapOf<String, LiveStreamSettings?>()
     private val streamState = mutableMapOf<String, String>()
-    private val lastStreamFps = mutableMapOf<String, String>()
-    private val lastStabilization = mutableMapOf<String, String>()
+    private val eisTracker = LiveEisTracker()
     private var ready = false
     private var zoomRatio = 1f
     private var zoomApplied = false
@@ -257,17 +256,18 @@ class MainActivity : ComponentActivity() {
             }
             val events = recorder.snapshot(10_000_000_000L)
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
-            if (engineName == "Camera2") frames.lastOrNull()?.values?.get("fpsRange")?.let { lastStreamFps[streamKey()] = it.toString() }
-            frames.lastOrNull()?.takeIf { time - it.atNs < 1_500_000_000L }?.values?.let { values ->
-                val phase = if (values["requestTag"] == "recording") ":recording" else ""
-                lastStabilization[streamKey() + phase] = "Requested: ${(streamSettings[streamKey()]?.stabilization ?: LiveStabilization.AUTO).label}\nReported: " + LiveStabilization.observed(
-                    (values["opticalStabilization"] as? Number)?.toInt(), (values["videoStabilization"] as? Number)?.toInt()) +
-                    "\nCrop metadata: ${values["cropRegion"] ?: "Unavailable"}"
-            }
             val previewAt = if (engineName == "Camera2") lastPreviewFrameNs
                 else if (cameraXStreaming) frames.lastOrNull()?.atNs ?: 0L else 0L
-            liveIndicator.bind(resumed && !paused && !closing && engine != null &&
-                previewAt > 0L && time - previewAt < 1_500_000_000L)
+            val live = resumed && !paused && !closing && engine != null &&
+                previewAt > 0L && time - previewAt < 1_500_000_000L
+            liveIndicator.bind(live)
+            val eisFrame = frames.lastOrNull {
+                engineName != "Camera2" || it.values["requestTag"] == if (recordingVideo) "recording" else "preview"
+            }
+            liveIndicator.bindStabilization(eisTracker.update(sessionId, recordingVideo,
+                streamSettings[streamKey()]?.stabilization ?: LiveStabilization.AUTO,
+                eisFrame?.atNs, (eisFrame?.values?.get("videoStabilization") as? Number)?.toInt(), time,
+                live && !stoppingRecording), recordingVideo)
             if (!closing && engine != null) {
                 liveIndicator.bindSizes(telemetry.sessions[sessionId]?.get("negotiatedStreams") as? Map<*, *>)
             }
@@ -377,6 +377,7 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun restartCamera() {
+        eisTracker.reset()
         liveIndicator.bind(false)
         liveIndicator.bindSizes(null)
         lastPreviewFrameNs = 0L
@@ -403,9 +404,6 @@ class MainActivity : ComponentActivity() {
         val thisSession = sessionId
         val thisCamera = cameraId
         val thisKey = streamKey()
-        lastStabilization.remove(thisKey)
-        lastStabilization.remove("$thisKey:recording")
-        lastStreamFps.remove(thisKey)
         val requestedStreams = streamSettings[thisKey]
         if (engineName == "Camera2") streamState[thisKey] = "Configuring… Getting the pixels in line."
         zoomApplied = false
@@ -417,6 +415,8 @@ class MainActivity : ComponentActivity() {
         val recordingState = { recording: Boolean ->
             if (thisSession == sessionId) {
                 recordingVideo = recording
+                eisTracker.reset()
+                liveIndicator.bindStabilization(LiveEisStatus(), recording)
                 if (!recording) stoppingRecording = false
                 if (recording) {
                     recordingStartedAt = SystemClock.elapsedRealtime()
@@ -839,10 +839,7 @@ class MainActivity : ComponentActivity() {
                 .putExtra(LiveStreamsActivity.EXTRA_SETTINGS, streamSettings[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_GOOD_SETTINGS, goodStreams[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_HAS_GOOD, goodStreams.containsKey(streamKey()))
-                .putExtra(LiveStreamsActivity.EXTRA_STATUS, (streamState[streamKey()] ?: "Not configured yet.") +
-                    lastStreamFps[streamKey()]?.let { "\nReported FPS range: $it" }.orEmpty() +
-                    lastStabilization[streamKey()]?.let { "\nPreview result\n$it" }.orEmpty() +
-                    lastStabilization["${streamKey()}:recording"]?.let { "\nRecording result\n$it" }.orEmpty())
+                .putExtra(LiveStreamsActivity.EXTRA_STATUS, streamState[streamKey()].orEmpty())
     /**
      * Lab can launch CTS and Benchmark, so the live session must be closed and its close(done) received
      * before the next screen starts. Same sequence as the CLI CTS path; onStop's restartCamera() sees

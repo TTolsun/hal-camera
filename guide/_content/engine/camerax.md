@@ -19,7 +19,7 @@ decisions: []
 verifications: []
 ---
 
-CameraX의 Live Streams에는 Stabilization을 Auto로만 제공합니다. 수동 OIS/EIS 선택은 Camera2로 전환해야 하며, 엔진도 Auto 외의 요청을 거절합니다. 실제 결과 키가 전달되면 Last session result와 `capture_result`에서 확인할 수 있습니다. 키가 없으면 Off로 추정하지 않고 Unavailable로 표시합니다.
+CameraX의 Live Streams에는 Stabilization을 Auto로만 제공합니다. 수동 OIS/EIS 선택은 Camera2로 전환해야 하며, 엔진도 Auto 외의 요청을 거절합니다. 실제 EIS 결과 키가 전달되면 Live 상단의 현재 프리뷰·녹화 상태와 `capture_result`에서 확인할 수 있습니다. 키가 없거나 결과가 오래됐으면 확인 불가로 표시합니다. Auto는 특정 EIS 모드를 요구하지 않으므로 불일치 경고를 표시하지 않습니다.
 
 **CameraXEngine은 CameraX use case로 Live 촬영과 제어를 제공하지만, 요청 키 일부는 CameraX가 정합니다.** Live 스트림 설정에서 Preview·YUV·JPEG 크기와 출력 활성화를 선택할 수 있습니다. 앱이 CameraX 1.6.2에 직접 넣는 Camera2 키는 AE 잠금(`CONTROL_AE_LOCK`)과 AF 잠금 해제용 cancel trigger뿐입니다. 엔진 자체는 use case bind, 줌, 수명 주기를 담당하고, 사진은 `CameraXStillCapture`, 녹화는 `CameraXLiveRecorder`, Live 제어와 터치 측광은 `CameraXControls`가 맡습니다.
 

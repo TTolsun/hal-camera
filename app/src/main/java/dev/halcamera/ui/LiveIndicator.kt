@@ -9,6 +9,7 @@ import android.view.View
 import android.util.TypedValue
 import android.widget.TextView
 import android.widget.LinearLayout
+import dev.halcamera.camera.LiveEisStatus
 
 /** A small preview heartbeat. Both the dot and label pulse together, independently of recording. */
 class LiveIndicator(context: Context) : LinearLayout(context) {
@@ -35,17 +36,41 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
     }
     private var running = false
     private var pulse: ObjectAnimator? = null
+    private val eis = TextView(context).apply {
+        textSize = 12f
+        setTextColor(Look.onDarkMuted)
+        background = Look.cardBackground(context, Look.cameraGlass, android.graphics.Color.TRANSPARENT)
+        setPadding(Look.dp(context, 8), Look.dp(context, 6), Look.dp(context, 8), Look.dp(context, 6))
+        accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+    }
+    private var recording = false
 
     init {
-        orientation = HORIZONTAL
-        gravity = Gravity.CENTER_VERTICAL
+        orientation = VERTICAL
         heartbeat.text = "Live"
         heartbeat.compoundDrawablePadding = Look.dp(context, 4)
         heartbeat.setCompoundDrawablesRelative(dot, null, null, null)
-        addView(heartbeat, LayoutParams(-2, -2))
-        addView(sizes, LayoutParams(0, -2, 1f).apply { marginStart = Look.dp(context, 8) })
+        addView(LinearLayout(context).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            addView(heartbeat, LayoutParams(-2, -2))
+            addView(sizes, LayoutParams(0, -2, 1f).apply { marginStart = Look.dp(context, 8) })
+        }, LayoutParams(-1, -2))
+        addView(eis, LayoutParams(-1, -2))
         setPadding(Look.dp(context, 12), 0, Look.dp(context, 12), 0)
+        bindStabilization(LiveEisStatus(), false)
         render()
+    }
+
+    fun bindStabilization(status: LiveEisStatus, recording: Boolean) {
+        this.recording = recording
+        val value = "${if (recording) "녹화" else "프리뷰"} · ${status.label}" +
+            status.warning?.let { "\n$it" }.orEmpty()
+        if (eis.text.toString() != value) eis.text = value
+        eis.setTextColor(when {
+            status.warning != null -> Look.statusWarn
+            status.video == null -> Look.onDarkMuted
+            else -> Look.onDark
+        })
     }
 
     fun bindSizes(streams: Map<*, *>?) {
@@ -68,6 +93,7 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
     fun setSizesEnabled(enabled: Boolean) { sizes.isEnabled = enabled }
 
     fun bind(running: Boolean) {
+        if (!running) bindStabilization(LiveEisStatus(), recording)
         if (this.running == running) return
         this.running = running
         render()

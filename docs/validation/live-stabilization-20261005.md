@@ -49,3 +49,20 @@ Off가 적용된 상태에서 Auto를 선택하고 저장하지 않은 채 시�
 JDK 17, Android SDK 36에서 `assembleRelease`, `testDebugUnitTest`, `lintDebug`가 통과했습니다. JVM 테스트 628개는 실패·오류·SKIP이 모두 0개입니다. 새 테스트는 API·capability별 후보, OIS/EIS 배타 요청, Auto의 기본값 보존, 미지원 설정 거부, 직렬화, 알 수 없는 결과값 표시를 검증합니다. 문서 회귀 테스트 23개도 통과했습니다.
 
 이 기록은 한 기기의 지원 범위에서 요청·결과·저장·복귀를 확인한 결과입니다. 흔들림 감소량을 정량 평가하지 않았으며, 미연결 기기나 다른 해상도·FPS 조합을 검증한 것으로 확대하지 않습니다. 공식 API의 보정 제약은 [CaptureRequest 문서](https://developer.android.com/reference/android/hardware/camera2/CaptureRequest#CONTROL_VIDEO_STABILIZATION_MODE)에 있습니다. 사용 절차는 [빠른 시작](../../guide/getting-started.md#손떨림-보정을-선택하세요)을 확인하세요.
+
+## 후속 변경: Live EIS 상태 표시
+
+2026-10-05 Galaxy S25+ (SM-S936N), Android 16/API 36에서 후속 APK를 기존 데이터 유지 방식으로 설치하고 UI를 확인했습니다. 아래 내용은 앞선 설정 결과 화면을 대체한 후속 구현의 검증입니다.
+
+- Camera2 후면 0, Preview 1280×720, YUV 640×480, JPEG 1920×1080, Auto FPS에서 Auto는 `프리뷰 · EIS 미적용`으로 표시됐습니다.
+- EIS (Video)를 저장하면 `프리뷰 · EIS 적용됨`으로 바뀌었습니다. H264 1920×1080, 30fps 녹화에서는 `녹화 · EIS 적용됨`이 표시됐고, 녹화 종료·저장 후 프리뷰 상태로 돌아왔습니다.
+- Live Streams의 Mode와 한 문장 안내를 확인했습니다. 정상 구성에서 Last session result 영역은 사라졌고 저장·직전 정상 구성 복원 버튼은 유지됐습니다.
+- 상태 영역은 테두리 없는 어두운 배경과 밝은 글자로 표시합니다. 요청과 다른 결과가 1초 이상 이어지면 요청·결과를 주황색 텍스트로 함께 보여 줍니다. 실제 기기에서 불일치 조합은 이번에 재현하지 않았습니다.
+
+JVM 테스트 633개가 실패·오류·SKIP 없이 통과했습니다. 추가 테스트는 결과 누락·미지원 값·1.5초 이상 오래된 결과, 세션·프리뷰/녹화·요청 변경, 1초 불일치와 정상 복귀를 검증합니다. 같은 프레임을 반복 조회하는 것만으로 경고가 확정되지 않는 것도 확인했습니다. 최종 UI 조정 후 assembleRelease와 lintDebug를 다시 통과했습니다. Camera2 사진 결과는 상태 판정에서 제외합니다. 이 표시는 결과 메타데이터에 대한 판정이며 흔들림 감소량의 실측값은 아닙니다.
+
+문서 최신성 검토에서는 앞선 14개 바인딩의 코드 변경을 다시 대조했습니다. 엔진 계약·Camera2·CameraX·빠른 시작·화면 설계를 현재 상태 표시로 수정했고, 나머지 계층·수명주기·도구 전환 계약과 과거 기기 기록은 여전히 유효합니다.
+
+| EIS 미적용 | 녹화 중 EIS 적용 | 설정 결과 영역 삭제 |
+| --- | --- | --- |
+| ![EIS 미적용](assets/live-stabilization/live-off.png) | ![녹화 중 EIS 적용](assets/live-stabilization/live-recording.png) | ![설정 결과 영역 삭제](assets/live-stabilization/settings-no-result.png) |
