@@ -1,0 +1,697 @@
+{
+  "date": "2026-10-06",
+  "timezone": "Asia/Seoul",
+  "device": {
+    "model": "SM-S936N",
+    "android": "16",
+    "sdk": 36,
+    "appVersion": "0.19.0",
+    "versionCode": 628,
+    "apkSha256": "d931cd07da15bbf6161b007efc3a177c2c74064e54583057ea797c1d9abd0484"
+  },
+  "reviewedCommit": "8d2c51f",
+  "notes": [
+    "Physical IDs and Flash Fired were sampled from the Live readout, not inspected for every encoded frame.",
+    "Screenshots and original media remain local; only their names and SHA-256 values are published.",
+    "Tap logs use the first /proc/uptime field in seconds; they are shell input observations, not app callback times or MP4 PTS.",
+    "The cx60-control case used 0.6x / physical ID 2 and is excluded from the matched main-sensor comparison.",
+    "The main-sensor 60fps control and photo recording used different scene/lighting conditions; do not infer photo causality from their gap-count difference."
+  ],
+  "cases": [
+    {
+      "id": "hevc30",
+      "engine": "Camera2",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 1,
+        "flash": "OFF",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 30,
+        "codec": "HEVC"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": 5,
+        "physicalIdDuringRecordingSamples": 5,
+        "flashFiredInReadout": false,
+        "savedJpegs": 3,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "hevc30-HAL_20261006_081818_961_c86942_JPEG.jpg",
+        "hevc30-HAL_20261006_081821_047_934bb3_JPEG.jpg",
+        "hevc30-HAL_20261006_081823_149_6ff6dd_JPEG.jpg",
+        "hevc30-HAL_20261006_081827_961_60e050.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "hevc30-control-finished.png",
+          "sha256": "55b6c66abb843e3c43c914383e916690a02c5e4d45f35ee41cc3a3d20e6131b3"
+        },
+        {
+          "file": "hevc30-control-photos.png",
+          "sha256": "5e8c00166d741f3a3ee90f34dbf9ccbb6834e2db3ae221895cb131e79e1c8069"
+        },
+        {
+          "file": "hevc30-control-start.png",
+          "sha256": "64055bd9eecb99aa5d81d3c4eaf7d0c2e33bb8254474fb1ae2cfefb0b8c48cff"
+        },
+        {
+          "file": "hevc30-finished.png",
+          "sha256": "8752b3b5d9a9ac568419b8050260dd195a8f1810b061839eb51ae51e55588c52"
+        },
+        {
+          "file": "hevc30-photos.png",
+          "sha256": "2aff6450f3f815c84e0a90d8e16a2937631e47756112d84f26063f7c99c2bfbd"
+        },
+        {
+          "file": "hevc30-ready.png",
+          "sha256": "e062ab8015a87ae5e30998593ed055498ddc5085bff2082926f5f4d08d64cceb"
+        },
+        {
+          "file": "hevc30-recording.png",
+          "sha256": "c6f0c33fc2573b4428cfd1657bcf14662d226490c241296f2112fab66f6ba6f8"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "hevc30-start-time.txt",
+          "text": "26748.45 53558.07\n26750.53 53569.58\n"
+        },
+        {
+          "file": "hevc30-photo-times.txt",
+          "text": "photo1\n26781.44 53707.14\nphoto2\n26783.54 53716.18\nphoto3\n26785.63 53725.37\nstop\n26789.84 53743.18\n"
+        }
+      ]
+    },
+    {
+      "id": "hevc30-control",
+      "engine": "Camera2",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 1,
+        "flash": "OFF",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 30,
+        "codec": "HEVC"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": 5,
+        "physicalIdDuringRecordingSamples": 5,
+        "flashFiredInReadout": false,
+        "savedJpegs": 0,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "hevc30-control-HAL_20261006_082009_818_3c9234.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "hevc30-control-finished.png",
+          "sha256": "55b6c66abb843e3c43c914383e916690a02c5e4d45f35ee41cc3a3d20e6131b3"
+        },
+        {
+          "file": "hevc30-control-photos.png",
+          "sha256": "5e8c00166d741f3a3ee90f34dbf9ccbb6834e2db3ae221895cb131e79e1c8069"
+        },
+        {
+          "file": "hevc30-control-start.png",
+          "sha256": "64055bd9eecb99aa5d81d3c4eaf7d0c2e33bb8254474fb1ae2cfefb0b8c48cff"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "hevc30-control-times.txt",
+          "text": "start-before\n26874.05 54149.19\nstart-after\n26874.09 54149.39\nstop-before\n26891.73 54227.36\nstop-after\n26891.77 54227.46\n"
+        }
+      ]
+    },
+    {
+      "id": "cx60-3shots",
+      "engine": "CameraX",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 1,
+        "flash": "OFF",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 60,
+        "codec": "Auto"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": 5,
+        "physicalIdDuringRecordingSamples": 5,
+        "flashFiredInReadout": false,
+        "savedJpegs": 3,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "cx60-3shots-HAL_20261006_082051_247_e6ea23_JPEG.jpg",
+        "cx60-3shots-HAL_20261006_082054_333_d511d6_JPEG.jpg",
+        "cx60-3shots-HAL_20261006_082057_419_9f39a3_JPEG.jpg",
+        "cx60-3shots-HAL_20261006_082103_236_b2dfe5.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "cx60-3shots-finished.png",
+          "sha256": "4d155e2573a9d35862dc2682e13a8bb79788cc2df61a02e80a2b2492cfd51320"
+        },
+        {
+          "file": "cx60-3shots-photos.png",
+          "sha256": "2c350a12380c9f537454af1e93798d08b3118597754e65dc2177ad8c4ebce5a4"
+        },
+        {
+          "file": "cx60-3shots-start.png",
+          "sha256": "576011e2e05ade7bbcfa093498e2a45fb43b77dacb532bde6a90bc8fef74d17c"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "cx60-3shots-times.txt",
+          "text": "start-before\n26926.47 54389.02\nstart-after\n26926.52 54389.11\nphoto1-before\n26933.73 54418.17\nphoto1-after\n26933.79 54418.37\nphoto2-before\n26936.82 54430.14\nphoto2-after\n26936.88 54430.29\nphoto3-before\n26939.91 54439.85\nphoto3-after\n26939.97 54439.99\nstop-before\n26945.61 54458.62\nstop-after\n26945.65 54458.75\n"
+        }
+      ]
+    },
+    {
+      "id": "cx60-control",
+      "engine": "CameraX",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 0.6,
+        "flash": "OFF",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 60,
+        "codec": "Auto"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": null,
+        "physicalIdDuringRecordingSamples": 2,
+        "flashFiredInReadout": false,
+        "savedJpegs": 0,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "cx60-control-HAL_20261006_082210_701_a211d6.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "cx60-control-finished.png",
+          "sha256": "1ffd24fc7b80c8a16308504c738dfc42d4de5ea233c6ea4744da209cb8a0b1d5"
+        },
+        {
+          "file": "cx60-control-main-finished.png",
+          "sha256": "daae4ac10643bca573e6c1cc103aa5a41635e16de766c62290e76304f0117327"
+        },
+        {
+          "file": "cx60-control-main-photos.png",
+          "sha256": "f94a3e262ba5d84220dd28de1c99dc0d19e9c2be03bd5aa9a2b80b319ca3fb5b"
+        },
+        {
+          "file": "cx60-control-main-ready.png",
+          "sha256": "71ac773434a81cb8c984b721520d053f1a3fda21ed3d8d98f0c8bdabd60470f1"
+        },
+        {
+          "file": "cx60-control-main-start.png",
+          "sha256": "1c5c0602d227a96a27e740c5c8a2ca0e6d048504dffab988e7c313561072dab1"
+        },
+        {
+          "file": "cx60-control-photos.png",
+          "sha256": "60db11aef1300c78eb3c8675e6e9d686833aec7a040d97f9751e29f0f90da1d1"
+        },
+        {
+          "file": "cx60-control-start.png",
+          "sha256": "2143023ca7b0513495ae41b2a3deb0485fbfb6f3a1eef07d922cd568cb568a1f"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "cx60-control-times.txt",
+          "text": "start-before\n26992.14 54679.76\nstart-after\n26992.19 54680.02\nstop-before\n27013.08 54760.97\nstop-after\n27013.13 54761.08\n"
+        }
+      ]
+    },
+    {
+      "id": "cx60-control-main",
+      "engine": "CameraX",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 1,
+        "flash": "OFF",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 60,
+        "codec": "Auto"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": 5,
+        "physicalIdDuringRecordingSamples": 5,
+        "flashFiredInReadout": false,
+        "savedJpegs": 0,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "cx60-control-main-HAL_20261006_084019_365_1514f6.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "cx60-control-main-finished.png",
+          "sha256": "daae4ac10643bca573e6c1cc103aa5a41635e16de766c62290e76304f0117327"
+        },
+        {
+          "file": "cx60-control-main-photos.png",
+          "sha256": "f94a3e262ba5d84220dd28de1c99dc0d19e9c2be03bd5aa9a2b80b319ca3fb5b"
+        },
+        {
+          "file": "cx60-control-main-ready.png",
+          "sha256": "71ac773434a81cb8c984b721520d053f1a3fda21ed3d8d98f0c8bdabd60470f1"
+        },
+        {
+          "file": "cx60-control-main-start.png",
+          "sha256": "1c5c0602d227a96a27e740c5c8a2ca0e6d048504dffab988e7c313561072dab1"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "cx60-control-main-times.txt",
+          "text": "start-before\n28085.96 60680.85\nstart-after\n28086.02 60681.17\nstop-before\n28101.77 60744.91\nstop-after\n28101.81 60745.00\n"
+        }
+      ]
+    },
+    {
+      "id": "c2-tele-3shots",
+      "engine": "Camera2",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 3,
+        "flash": "OFF",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 30,
+        "codec": "H264"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": 6,
+        "physicalIdDuringRecordingSamples": 6,
+        "flashFiredInReadout": false,
+        "savedJpegs": 3,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "c2-tele-3shots-HAL_20261006_082548_955_da8860_JPEG.jpg",
+        "c2-tele-3shots-HAL_20261006_082552_040_07103a_JPEG.jpg",
+        "c2-tele-3shots-HAL_20261006_082555_111_28b466_JPEG.jpg",
+        "c2-tele-3shots-HAL_20261006_082600_754_567587.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "c2-tele-3shots-finished.png",
+          "sha256": "86307e16a01f9f3dfcbaf990bbd93abae407724d82e30ce2956acde606901296"
+        },
+        {
+          "file": "c2-tele-3shots-photos.png",
+          "sha256": "834340cafa11126c7f55fb3c592d3aa74b1ddb9feb1beaddea7f65f87969e5bc"
+        },
+        {
+          "file": "c2-tele-3shots-start.png",
+          "sha256": "d36d0a54153c16321293f77d6633488d452f228f07b387ac9dc7daf51fece882"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "c2-tele-3shots-times.txt",
+          "text": "start-before\n27224.51 55801.16\nstart-after\n27224.55 55801.32\nphoto1-before\n27231.44 55834.95\nphoto1-after\n27231.50 55835.14\nphoto2-before\n27234.53 55848.53\nphoto2-after\n27234.59 55848.70\nphoto3-before\n27237.61 55861.60\nphoto3-after\n27237.65 55861.71\nstop-before\n27242.60 55883.62\nstop-after\n27242.63 55883.74\n"
+        }
+      ]
+    },
+    {
+      "id": "cx-tele-3shots",
+      "engine": "CameraX",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 3,
+        "flash": "OFF",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 30,
+        "codec": "Auto"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": 6,
+        "physicalIdDuringRecordingSamples": 6,
+        "flashFiredInReadout": false,
+        "savedJpegs": 3,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "cx-tele-3shots-HAL_20261006_082651_501_15d958_JPEG.jpg",
+        "cx-tele-3shots-HAL_20261006_082654_593_1d589e_JPEG.jpg",
+        "cx-tele-3shots-HAL_20261006_082657_647_a08056_JPEG.jpg",
+        "cx-tele-3shots-HAL_20261006_082703_137_91e7d9.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "cx-tele-3shots-finished.png",
+          "sha256": "334f6320a86500a344acec8c6d9167e664a3c397c4c2f05d81f7708479e80714"
+        },
+        {
+          "file": "cx-tele-3shots-photos.png",
+          "sha256": "b03e10a49d8051d1e32a5b3fbb1ba5c34057a9e74f52b843c6de4554b827ad5d"
+        },
+        {
+          "file": "cx-tele-3shots-start.png",
+          "sha256": "426b93231424a373f41170f444b142fec98dd255723215b9843b3a2dffbbd3d2"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "cx-tele-3shots-times.txt",
+          "text": "start-before\n27286.45 56099.75\nstart-after\n27286.52 56100.06\nphoto1-before\n27293.97 56135.48\nphoto1-after\n27294.05 56135.81\nphoto2-before\n27297.08 56149.95\nphoto2-after\n27297.13 56150.12\nphoto3-before\n27300.15 56162.63\nphoto3-after\n27300.19 56162.76\nstop-before\n27305.50 56186.18\nstop-after\n27305.54 56186.35\n"
+        }
+      ]
+    },
+    {
+      "id": "cx-tele-control",
+      "engine": "CameraX",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 3,
+        "flash": "OFF",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 30,
+        "codec": "Auto"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": 6,
+        "physicalIdDuringRecordingSamples": 6,
+        "flashFiredInReadout": false,
+        "savedJpegs": 0,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "cx-tele-control-HAL_20261006_082733_925_323cba.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "cx-tele-control-finished.png",
+          "sha256": "059f31aadda11cf779f238d783205e6232881b467e8e7d42a2e32453e06060ec"
+        },
+        {
+          "file": "cx-tele-control-photos.png",
+          "sha256": "94b14cf44eb2bf378fd33a241142a20a30652a4e3a65b81d493a36d68d7fc5c0"
+        },
+        {
+          "file": "cx-tele-control-start.png",
+          "sha256": "18b147a4985283c833cd63ab59ebbb8e0f227b070539f6da67def9409ec6e8d9"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "cx-tele-control-times.txt",
+          "text": "start-before\n27315.93 56233.55\nstart-after\n27315.96 56233.70\nstop-before\n27336.30 56325.45\nstop-after\n27336.34 56325.55\n"
+        }
+      ]
+    },
+    {
+      "id": "cx-uwide-transition",
+      "engine": "CameraX",
+      "logicalCameraId": "2",
+      "requested": {
+        "zoom": 1,
+        "flash": "OFF",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 30,
+        "codec": "Auto"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": null,
+        "physicalIdDuringRecordingSamples": null,
+        "flashFiredInReadout": false,
+        "savedJpegs": 3,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "cx-uwide-transition-HAL_20261006_082938_418_a86e19_JPEG.jpg",
+        "cx-uwide-transition-HAL_20261006_082941_520_d9d383_JPEG.jpg",
+        "cx-uwide-transition-HAL_20261006_082944_606_c33bca_JPEG.jpg",
+        "cx-uwide-transition-HAL_20261006_082948_369_ce24f4.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "cx-uwide-transition-finished.png",
+          "sha256": "d7a6bfcb5af6272a80db72a813a5920dd2a3b3d1b7c853f4f1455da29e82824f"
+        },
+        {
+          "file": "cx-uwide-transition-photos.png",
+          "sha256": "ff4201f7523edd85cfedf2c02af97370c110b32ff95f9d30c5c9eefca9901718"
+        },
+        {
+          "file": "cx-uwide-transition-start.png",
+          "sha256": "51393ecf7347a934ea96649341616c3d9fb4da5b05a68c47195d736755dcc432"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "cx-uwide-transition-times.txt",
+          "text": "start-before\n27455.15 56972.55\nstart-after\n27455.23 56972.92\nphoto1-before\n27460.89 57002.27\nphoto1-after\n27460.97 57002.56\nphoto2-before\n27464.01 57017.43\nphoto2-after\n27464.07 57017.65\nphoto3-before\n27467.10 57031.40\nphoto3-after\n27467.14 57031.54\nstop-before\n27470.75 57048.60\nstop-after\n27470.78 57048.70\n"
+        }
+      ]
+    },
+    {
+      "id": "c2-dark-3x",
+      "engine": "Camera2",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 3,
+        "flash": "OFF",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 30,
+        "codec": "H264"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": 5,
+        "physicalIdDuringRecordingSamples": 5,
+        "flashFiredInReadout": false,
+        "savedJpegs": 3,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "c2-dark-3x-HAL_20261006_083506_613_bf1040_JPEG.jpg",
+        "c2-dark-3x-HAL_20261006_083509_715_840756_JPEG.jpg",
+        "c2-dark-3x-HAL_20261006_083512_785_6dc896_JPEG.jpg",
+        "c2-dark-3x-HAL_20261006_083516_993_6f7cf3.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "c2-dark-3x-finished.png",
+          "sha256": "3179299733baa1ec3d506071518ae10257b3409543f74f1f909067542ed475f4"
+        },
+        {
+          "file": "c2-dark-3x-photos.png",
+          "sha256": "f3392f10ba98b2491c08f77bcf81f656315a5c110416ff6d3a25e3b0660a2601"
+        },
+        {
+          "file": "c2-dark-3x-ready.png",
+          "sha256": "77ca320538bcb26250620ed655e67acb5f67e2dbe48fdc7eb6e2f13907252e32"
+        },
+        {
+          "file": "c2-dark-3x-start.png",
+          "sha256": "6a5309b12fed10cc0e83702105ef0e79b048c5673bac5914c27617475773a05d"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "c2-dark-3x-times.txt",
+          "text": "start-before\n27783.42 59150.75\nstart-after\n27783.47 59150.97\nphoto1-before\n27789.09 59178.26\nphoto1-after\n27789.16 59178.51\nphoto2-before\n27792.20 59192.02\nphoto2-after\n27792.25 59192.20\nphoto3-before\n27795.28 59204.72\nphoto3-after\n27795.32 59204.85\nstop-before\n27798.88 59219.72\nstop-after\n27798.91 59219.84\n"
+        }
+      ]
+    },
+    {
+      "id": "cx-dark-3x",
+      "engine": "CameraX",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 3,
+        "flash": "OFF",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 30,
+        "codec": "Auto"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": 5,
+        "physicalIdDuringRecordingSamples": 6,
+        "flashFiredInReadout": false,
+        "savedJpegs": 3,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "cx-dark-3x-HAL_20261006_083636_043_cb3f84_JPEG.jpg",
+        "cx-dark-3x-HAL_20261006_083639_145_745952_JPEG.jpg",
+        "cx-dark-3x-HAL_20261006_083642_199_8d9e98_JPEG.jpg",
+        "cx-dark-3x-HAL_20261006_083646_591_ac2359.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "cx-dark-3x-finished.png",
+          "sha256": "a1fd0d991b420c4246698f6fb078f50505f40c214f6f8847d5cde9a12b26d730"
+        },
+        {
+          "file": "cx-dark-3x-photos.png",
+          "sha256": "4e3280618769918fe2a81bcd2327f7c0c7c6aa40eb64f7c3138b288a2e0235b7"
+        },
+        {
+          "file": "cx-dark-3x-start.png",
+          "sha256": "03858ab1203da9f63d7080c182ce390d3feca13c01c733731a932f758431231b"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "cx-dark-3x-times.txt",
+          "text": "start-before\n27872.21 59635.88\nstart-after\n27872.28 59636.19\nphoto1-before\n27878.52 59666.56\nphoto1-after\n27878.59 59666.85\nphoto2-before\n27881.63 59680.69\nphoto2-after\n27881.67 59680.86\nphoto3-before\n27884.70 59693.91\nphoto3-after\n27884.74 59694.03\nstop-before\n27888.94 59712.55\nstop-after\n27888.96 59712.64\n"
+        }
+      ]
+    },
+    {
+      "id": "cx-torch-3shots",
+      "engine": "CameraX",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 1,
+        "flash": "TORCH",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 30,
+        "codec": "Auto"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": 5,
+        "physicalIdDuringRecordingSamples": 5,
+        "flashFiredInReadout": true,
+        "savedJpegs": 3,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "cx-torch-3shots-HAL_20261006_083748_056_0e0d12_JPEG.jpg",
+        "cx-torch-3shots-HAL_20261006_083751_126_bcbffd_JPEG.jpg",
+        "cx-torch-3shots-HAL_20261006_083754_212_505e36_JPEG.jpg",
+        "cx-torch-3shots-HAL_20261006_083758_628_2cd3a1.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "cx-torch-3shots-finished.png",
+          "sha256": "81c0d50ed041542adc49ce4683be6aec517855f3a5de37cd0d50ca9a817abdb0"
+        },
+        {
+          "file": "cx-torch-3shots-photos.png",
+          "sha256": "bb3b356ad976ac67d109aec2194f1c41c09ef1c35f92c397970222ec6359633d"
+        },
+        {
+          "file": "cx-torch-3shots-start.png",
+          "sha256": "31ff62a14f818fa32c972639b6c131e3f90a6a5b119c8d1cb61a532e9ec45b36"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "cx-torch-3shots-times.txt",
+          "text": "start-before\n27944.10 59989.27\nstart-after\n27944.17 59989.58\nphoto1-before\n27950.54 60019.56\nphoto1-after\n27950.59 60019.71\nphoto2-before\n27953.62 60033.32\nphoto2-after\n27953.67 60033.50\nphoto3-before\n27956.70 60045.39\nphoto3-after\n27956.74 60045.53\nstop-before\n27961.02 60062.80\nstop-after\n27961.05 60062.94\n"
+        }
+      ]
+    },
+    {
+      "id": "c2-torch-3shots",
+      "engine": "Camera2",
+      "logicalCameraId": "0",
+      "requested": {
+        "zoom": 1,
+        "flash": "TORCH",
+        "preview": "1280x720",
+        "analysis": "640x480",
+        "jpeg": "1920x1080",
+        "video": "1920x1080",
+        "fps": 30,
+        "codec": "H264"
+      },
+      "observed": {
+        "physicalIdBeforeRecording": 5,
+        "physicalIdDuringRecordingSamples": 5,
+        "flashFiredInReadout": true,
+        "savedJpegs": 3,
+        "savedMp4s": 1,
+        "previewRecovered": true
+      },
+      "media": [
+        "c2-torch-3shots-HAL_20261006_083856_792_73d478_JPEG.jpg",
+        "c2-torch-3shots-HAL_20261006_083859_897_a67b96_JPEG.jpg",
+        "c2-torch-3shots-HAL_20261006_083902_965_e51cc7_JPEG.jpg",
+        "c2-torch-3shots-HAL_20261006_083908_213_d850d6.mp4"
+      ],
+      "screenshots": [
+        {
+          "file": "c2-torch-3shots-finished.png",
+          "sha256": "5aedc5fb87bcdca1687fbfc51c19db66e6afdaa2b0fe1f4b2a220afa1720eff9"
+        },
+        {
+          "file": "c2-torch-3shots-photos.png",
+          "sha256": "8f9bc9d923a8f5aa7dc36e7c2b707ba6effaaca3afaba61a8b853a12625fd0cd"
+        },
+        {
+          "file": "c2-torch-3shots-start.png",
+          "sha256": "9d42da7cd8ce17cb8d562b836fcfec3a34374fb744a362eb4c1baf2a626f0e67"
+        }
+      ],
+      "tapLogs": [
+        {
+          "file": "c2-torch-3shots-times.txt",
+          "text": "start-before\n28012.46 60298.80\nstart-after\n28012.54 60299.12\nphoto1-before\n28019.29 60329.99\nphoto1-after\n28019.34 60330.25\nphoto2-before\n28022.39 60343.65\nphoto2-after\n28022.44 60343.79\nphoto3-before\n28025.46 60355.31\nphoto3-after\n28025.51 60355.46\nstop-before\n28030.13 60374.31\nstop-after\n28030.17 60374.48\n"
+        }
+      ]
+    }
+  ],
+  "skipped": [
+    {
+      "condition": "Flash On/Auto while recording",
+      "reason": "Current Video UI offers Off/Torch and coerces On/Auto to Off; app limitation, not HAL unsupported result."
+    }
+  ]
+}

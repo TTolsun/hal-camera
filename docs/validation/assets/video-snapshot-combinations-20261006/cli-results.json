@@ -1,0 +1,412 @@
+{
+  "previews": [
+    {
+      "file": "c2-tele-preview-status.json",
+      "request": {
+        "protocol_version": 1,
+        "request_id": "4a65e375-2f63-41d2-b4c1-e446dff99375",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791242699193,
+        "expires_at_ms": 1791329100036,
+        "result": {
+          "camera_id": "0",
+          "camera_ready": true,
+          "engine": "Camera2",
+          "streams": {
+            "preview": "1280x720",
+            "analysis": "640x480",
+            "jpeg": "1920x1080",
+            "afMode": 4,
+            "fpsRange": null
+          }
+        },
+        "error": null,
+        "artifacts": []
+      }
+    },
+    {
+      "file": "c2-torch-preview-status.json",
+      "request": {
+        "protocol_version": 1,
+        "request_id": "8456c197-5685-4d68-9099-41d5d6229d8c",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791243490272,
+        "expires_at_ms": 1791329891198,
+        "result": {
+          "camera_id": "0",
+          "camera_ready": true,
+          "engine": "Camera2",
+          "streams": {
+            "preview": "1280x720",
+            "analysis": "640x480",
+            "jpeg": "1920x1080",
+            "afMode": 4,
+            "fpsRange": null
+          }
+        },
+        "error": null,
+        "artifacts": []
+      }
+    },
+    {
+      "file": "cx-dark-preview-status.json",
+      "request": {
+        "protocol_version": 1,
+        "request_id": "a8983927-98a9-4563-a785-cd8c481b4475",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791243326464,
+        "expires_at_ms": 1791329727125,
+        "result": {
+          "camera_id": "0",
+          "camera_ready": true,
+          "engine": "CameraX",
+          "streams": {
+            "preview": "1280x720",
+            "analysis": "640x480",
+            "jpeg": "1920x1080"
+          }
+        },
+        "error": null,
+        "artifacts": []
+      }
+    },
+    {
+      "file": "cx-tele-fresh-preview-status.json",
+      "request": {
+        "protocol_version": 1,
+        "request_id": "ee7d5d5f-859b-4962-a159-552523e05071",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791242773351,
+        "expires_at_ms": 1791329173897,
+        "result": {
+          "camera_id": "0",
+          "camera_ready": true,
+          "engine": "CameraX",
+          "streams": {
+            "preview": "1280x720",
+            "analysis": "640x480",
+            "jpeg": "1920x1080"
+          }
+        },
+        "error": null,
+        "artifacts": []
+      }
+    },
+    {
+      "file": "cx-tele-preview-status.json",
+      "request": {
+        "protocol_version": 1,
+        "request_id": "3f978b65-ba74-4f71-8a81-fe97e2812489",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791242613498,
+        "expires_at_ms": 1791329013952,
+        "result": {
+          "camera_id": "0",
+          "camera_ready": true,
+          "engine": "CameraX",
+          "streams": {
+            "preview": "1280x720",
+            "analysis": "640x480",
+            "jpeg": "1920x1080"
+          }
+        },
+        "error": null,
+        "artifacts": []
+      }
+    },
+    {
+      "file": "cx-torch-preview-status.json",
+      "request": {
+        "protocol_version": 1,
+        "request_id": "0da4869e-30a0-41ea-87c4-0013d4d5b4b1",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791243416837,
+        "expires_at_ms": 1791329817415,
+        "result": {
+          "camera_id": "0",
+          "camera_ready": true,
+          "engine": "CameraX",
+          "streams": {
+            "preview": "1280x720",
+            "analysis": "640x480",
+            "jpeg": "1920x1080"
+          }
+        },
+        "error": null,
+        "artifacts": []
+      }
+    },
+    {
+      "file": "cx60-control-main-preview-status.json",
+      "request": {
+        "protocol_version": 1,
+        "request_id": "34a8745e-c5b6-49dd-9f93-0ba048fd6cc6",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791243560039,
+        "expires_at_ms": 1791329960862,
+        "result": {
+          "camera_id": "0",
+          "camera_ready": true,
+          "engine": "CameraX",
+          "streams": {
+            "preview": "1280x720",
+            "analysis": "640x480",
+            "jpeg": "1920x1080"
+          }
+        },
+        "error": null,
+        "artifacts": []
+      }
+    },
+    {
+      "file": "cx60-preview-status.json",
+      "request": {
+        "protocol_version": 1,
+        "request_id": "997cb96c-060c-41c1-a4b4-b02ed67d0e2c",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791242422847,
+        "expires_at_ms": 1791328823503,
+        "result": {
+          "camera_id": "0",
+          "camera_ready": true,
+          "engine": "CameraX",
+          "streams": {
+            "preview": "1280x720",
+            "analysis": "640x480",
+            "jpeg": "1920x1080"
+          }
+        },
+        "error": null,
+        "artifacts": []
+      }
+    },
+    {
+      "file": "hevc30-preview-status.json",
+      "request": {
+        "protocol_version": 1,
+        "request_id": "5c28c561-c6a6-4d22-9a1f-49a13d85f3f4",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791242221404,
+        "expires_at_ms": 1791328622202,
+        "result": {
+          "camera_id": "0",
+          "camera_ready": true,
+          "engine": "Camera2",
+          "streams": {
+            "preview": "1280x720",
+            "analysis": "640x480",
+            "jpeg": "1920x1080",
+            "afMode": 4,
+            "fpsRange": null
+          }
+        },
+        "error": null,
+        "artifacts": []
+      }
+    },
+    {
+      "file": "uwide-preview-status.json",
+      "request": {
+        "protocol_version": 1,
+        "request_id": "36527cab-a603-48b4-b844-2b1f6662daa8",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791242920226,
+        "expires_at_ms": 1791329321278,
+        "result": {
+          "camera_id": "2",
+          "camera_ready": true,
+          "engine": "CameraX",
+          "streams": {
+            "preview": "1280x720",
+            "analysis": "640x480",
+            "jpeg": "1920x1080"
+          }
+        },
+        "error": null,
+        "artifacts": []
+      }
+    }
+  ],
+  "transitions": [
+    {
+      "cycle": 1,
+      "engine": "Camera2",
+      "camera": "0",
+      "exit_code": 1,
+      "request": {
+        "protocol_version": 1,
+        "request_id": "b1247b43-aecf-4033-9714-da408aaf0262",
+        "state": "failed",
+        "completed": true,
+        "created_at_ms": 1791242998747,
+        "expires_at_ms": 1791329428751,
+        "result": null,
+        "error": {
+          "code": "EXECUTION_TIMEOUT",
+          "message": "Operation cancelled before capture"
+        },
+        "artifacts": []
+      }
+    },
+    {
+      "cycle": 2,
+      "engine": "CameraX",
+      "camera": "2",
+      "exit_code": 0,
+      "request": {
+        "protocol_version": 1,
+        "request_id": "a558cab1-7ee0-4991-894e-34ad502b146c",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791243153387,
+        "expires_at_ms": 1791329553756,
+        "result": {
+          "camera_id": "2",
+          "camera_ready": true,
+          "engine": "CameraX",
+          "streams": {
+            "preview": "1280x720",
+            "analysis": "640x480",
+            "jpeg": "1920x1080"
+          }
+        },
+        "error": null,
+        "artifacts": []
+      }
+    },
+    {
+      "cycle": 2,
+      "engine": "Camera2",
+      "camera": "0",
+      "exit_code": 1,
+      "request": {
+        "protocol_version": 1,
+        "request_id": "634692dd-8f50-4b99-a5ab-9f3f70c505b5",
+        "state": "failed",
+        "completed": true,
+        "created_at_ms": 1791243160537,
+        "expires_at_ms": 1791329590544,
+        "result": null,
+        "error": {
+          "code": "EXECUTION_TIMEOUT",
+          "message": "Operation cancelled before capture"
+        },
+        "artifacts": []
+      }
+    }
+  ],
+  "retries": [
+    {
+      "protocol_version": 1,
+      "request_id": "996267a1-f93e-450b-810c-070c0f7b8773",
+      "state": "succeeded",
+      "completed": true,
+      "created_at_ms": 1791243089423,
+      "expires_at_ms": 1791329489900,
+      "result": {
+        "camera_id": "0",
+        "camera_ready": true,
+        "engine": "Camera2",
+        "streams": {
+          "preview": "1280x720",
+          "analysis": "640x480",
+          "jpeg": "1920x1080",
+          "afMode": 4,
+          "fpsRange": null
+        }
+      },
+      "error": null,
+      "artifacts": []
+    },
+    {
+      "protocol_version": 1,
+      "request_id": "7132ff5a-8853-41d2-a9ca-eefeb08122cf",
+      "state": "succeeded",
+      "completed": true,
+      "created_at_ms": 1791243268367,
+      "expires_at_ms": 1791329668870,
+      "result": {
+        "camera_id": "0",
+        "camera_ready": true,
+        "engine": "Camera2",
+        "streams": {
+          "preview": "1280x720",
+          "analysis": "640x480",
+          "jpeg": "1920x1080",
+          "afMode": 4,
+          "fpsRange": null
+        }
+      },
+      "error": null,
+      "artifacts": []
+    }
+  ],
+  "recovery": [
+    {
+      "protocol_version": 1,
+      "request_id": "fccb21b6-fb49-4944-8d5b-85671fea6967",
+      "state": "succeeded",
+      "completed": true,
+      "created_at_ms": 1791243629356,
+      "expires_at_ms": 1791330030521,
+      "result": {
+        "camera_id": "0",
+        "capture_id": "HAL_20261006_084029_996_7ed9f4",
+        "sensor_timestamp_ns": 28112898629517,
+        "artifact_count": 1
+      },
+      "error": null,
+      "artifacts": [
+        {
+          "artifact_id": "file-0",
+          "name": "HAL_20261006_084029_996_7ed9f4_JPEG.jpg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 212357,
+          "sha256": "534f3af7e5be22af3e0d6e527faaf926cdc9fd0e4802bf392f487090b5b869c8"
+        }
+      ]
+    },
+    {
+      "protocol_version": 1,
+      "request_id": "7b0e9ab4-ccf8-4ec9-b210-984cc97de6af",
+      "state": "succeeded",
+      "completed": true,
+      "created_at_ms": 1791243639256,
+      "expires_at_ms": 1791330040552,
+      "result": {
+        "camera_id": "0",
+        "capture_id": "HAL_20261006_084040_120_e7b59c",
+        "sensor_timestamp_ns": 28122963046600,
+        "artifact_count": 1
+      },
+      "error": null,
+      "artifacts": [
+        {
+          "artifact_id": "file-0",
+          "name": "HAL_20261006_084040_120_e7b59c_JPEG.jpg",
+          "mime_type": "image/jpeg",
+          "size_bytes": 398571,
+          "sha256": "9dd9f0c1306e29dea2640c19355d81aca81ec17dd9e05cc6d37a6feba0a57ab5"
+        }
+      ]
+    }
+  ],
+  "finalStatus": {
+    "protocol_version": 1,
+    "foreground": true,
+    "screen": "live",
+    "busy": false,
+    "request_id": null,
+    "locked": false
+  }
+}
