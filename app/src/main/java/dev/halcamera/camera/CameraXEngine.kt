@@ -160,6 +160,9 @@ class CameraXEngine(
                 provider = future.get()
                 val builder = Preview.Builder()
                 liveStreams?.let { settings ->
+                    require(settings.stabilization == LiveStabilization.AUTO) {
+                        "Manual stabilization requires Camera2. Switch to Camera2 or select Auto."
+                    }
                     builder.setResolutionSelector(exactResolution(settings.preview))
                     settings.fps?.let { builder.setTargetFrameRate(Range(it.min, it.max)) }
                 }

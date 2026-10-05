@@ -4,6 +4,7 @@ confidence: code
 sources:
   - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
   - app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt
+  - app/src/main/java/dev/halcamera/camera/LiveStabilization.kt
   - app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt
   - app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt
   - app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt
@@ -37,6 +38,12 @@ verifications: []
 Camera2 Live의 프리뷰·사진·녹화·녹화 중 사진 요청은 기존 제어와 터치 영역을 적용한 뒤 `applyManualControls`를 호출합니다. 수동 노출에서는 AE를 끄고 ISO·노출 시간·frame duration을 지정합니다. 수동 초점은 AF를 끄고 lens focus distance를 지정하므로 이전 터치가 모드를 덮어쓰지 못합니다. 자동으로 복귀하면 새 요청에는 수동 센서 키를 넣지 않습니다. Benchmark는 이 경로를 호출하지 않습니다.
 
 수동 frame duration은 Live FPS의 상한으로 정하며 Auto FPS에서는 30fps를 사용합니다. 노출 시간은 센서 범위와 frame duration 중 작은 값으로 제한합니다. 영상 출력 자체의 최소 프레임 시간이나 HAL 양자화 때문에 실제 값이 다를 수 있으므로 `capture_result`의 ISO·노출·frame duration을 함께 확인합니다. 수동 WB는 MANUAL_POST_PROCESSING과 관련 요청 키가 있고 수동 노출이 켜져 있을 때 gains와 transform을 사용합니다. 색온도를 추정하지 않습니다.
+
+### 손떨림 보정
+
+Live Streams의 Stabilization에서 Auto, Off와 기기가 지원하는 OIS·Video EIS·Preview stabilization을 선택합니다. Preview stabilization은 Android 13 이상에서 지원 목록과 요청 키가 모두 있을 때 제공합니다. OIS와 Video EIS는 동시에 요청하지 않으며, Preview stabilization에서는 플랫폼이 OIS를 제어합니다. Auto는 새 요청 템플릿의 기본값을 유지합니다.
+
+설정은 프리뷰·사진·녹화·녹화 중 사진 요청에 적용합니다. 촬영·녹화가 끝난 뒤 카메라를 닫고 재개하며 카메라와 엔진마다 값을 분리합니다. 지원 모드가 있어도 모든 크기·FPS에서 적용된다는 뜻은 아닙니다. Last session result의 요청값과 실제 OIS/EIS 결과를 대조하세요. `request_observed`와 `capture_result`에는 `opticalStabilization`, `videoStabilization`, `cropRegion`을 기록합니다. crop metadata는 보정 변환 전체나 실제 화각을 나타내지 않습니다. Benchmark의 요청은 이 설정을 읽지 않습니다.
 
 ### 세션 구성
 

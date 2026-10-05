@@ -128,6 +128,7 @@ sources:
           - app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt
       camera-engines/camera2-engine/stream-settings:
         evidence:
+          - app/src/main/java/dev/halcamera/camera/LiveStabilization.kt
           - app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt
           - app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt
           - app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt

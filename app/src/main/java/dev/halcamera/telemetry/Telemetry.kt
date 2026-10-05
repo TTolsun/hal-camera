@@ -54,6 +54,8 @@ class Telemetry(val recorder: FlightRecorder) {
                         "focusDiopters" to result[CaptureResult.LENS_FOCUS_DISTANCE],
                         "zoomRatio" to if (android.os.Build.VERSION.SDK_INT >= 30) result[CaptureResult.CONTROL_ZOOM_RATIO] else null,
                         "cropRegion" to result[CaptureResult.SCALER_CROP_REGION]?.toShortString(),
+                        "opticalStabilization" to result[CaptureResult.LENS_OPTICAL_STABILIZATION_MODE],
+                        "videoStabilization" to result[CaptureResult.CONTROL_VIDEO_STABILIZATION_MODE],
                         // What LIVE's EV, lock and flash requests became; the request side is in request_observed.
                         "aeLock" to result[CaptureResult.CONTROL_AE_LOCK],
                         "evApplied" to result[CaptureResult.CONTROL_AE_EXPOSURE_COMPENSATION],
@@ -88,6 +90,8 @@ class Telemetry(val recorder: FlightRecorder) {
         "colorGains" to r[CaptureRequest.COLOR_CORRECTION_GAINS]?.let { listOf(it.red, it.greenEven, it.greenOdd, it.blue) },
         "colorTransform" to r[CaptureRequest.COLOR_CORRECTION_TRANSFORM]?.let { m -> List(9) { m.getElement(it % 3, it / 3).toFloat() } },
         "cropRegion" to r[CaptureRequest.SCALER_CROP_REGION]?.toShortString(), "requestTag" to r.tag?.toString(),
+        "opticalStabilization" to r[CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE],
+        "videoStabilization" to r[CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE],
         "zoomRatio" to if (android.os.Build.VERSION.SDK_INT >= 30) r[CaptureRequest.CONTROL_ZOOM_RATIO] else null,
         "aeLock" to r[CaptureRequest.CONTROL_AE_LOCK], "evIndex" to r[CaptureRequest.CONTROL_AE_EXPOSURE_COMPENSATION],
         "flashMode" to r[CaptureRequest.FLASH_MODE], "afTrigger" to r[CaptureRequest.CONTROL_AF_TRIGGER],

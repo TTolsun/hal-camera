@@ -224,7 +224,9 @@ Live 배치는 `MainActivity.kt`, 셔터·줌·선택 목록은 `ui/ShutterButto
 
 ### Live 스트림 크기 표시와 설정 진입
 
-Live 표시등 옆에 P·Y·J 크기를 한 줄로 표시하며 꺼진 사진 출력은 Off로 표시합니다. 녹화 중에는 P·R과 H264·HEVC·Auto를 표시합니다. 크기 글씨는 Look.onDarkMuted를 사용하고 깜빡이지 않으며 폭에 맞춰 크기를 줄입니다. 48dp 높이의 터치 영역을 누르면 기존 카메라 close(done) 뒤 Live Streams로 이동합니다. 이 경로의 저장·뒤로 가기는 Live 프리뷰로 복귀하고 Lab 경로는 Lab으로 복귀합니다. 녹화·저장·세션 종료·CLI 작업·권한 요청 중에는 진입을 막습니다. 두 엔진 모두 출력 활성화와 크기를 선택하며 일반 설명 대신 실패한 구성의 이유만 표시합니다.
+Live 표시등 옆에 P·Y·J 크기를 한 줄로 표시하며 꺼진 사진 출력은 Off로 표시합니다. 녹화 중에는 P·R과 H264·HEVC·Auto를 표시합니다. 크기 글씨는 Look.onDarkMuted를 사용하고 깜빡이지 않으며 폭에 맞춰 크기를 줄입니다. 48dp 높이의 터치 영역을 누르면 기존 카메라 close(done) 뒤 Live Streams로 이동합니다. 이 경로의 저장·뒤로 가기는 Live 프리뷰로 복귀하고 Lab 경로는 Lab으로 복귀합니다. 녹화·저장·세션 종료·CLI 작업·권한 요청 중에는 진입을 막습니다. 두 엔진 모두 출력 활성화와 크기를 선택하며 실패 이유와 마지막 세션의 보정 결과를 표시합니다.
+
+Live Streams의 Stabilization은 카메라별 지원 모드 중 하나를 고릅니다. Auto·Off·OIS·Video EIS·Preview stabilization을 구분하며 CameraX에는 Auto와 Camera2 전환 안내만 제공합니다. Requested mode는 초안이고 저장해야 적용됩니다. Last session result는 마지막 프리뷰·녹화의 요청값, 실제 OIS/EIS 결과와 crop metadata를 구분합니다. 미수신 키는 Unavailable로 표시하며 crop을 전체 보정 변환으로 해석하지 않습니다. 기존 녹화·저장 중 진입 차단과 close(done) 이후 재개 정책을 따릅니다.
 
 ## Lab 대화상자와 About
 
