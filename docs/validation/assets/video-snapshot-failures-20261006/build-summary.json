@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-06",
+  "timezone": "Asia/Seoul",
+  "base_commit": "f866ded",
+  "app_version": "0.19.0",
+  "version_code": 628,
+  "apk_sha256": "d931cd07da15bbf6161b007efc3a177c2c74064e54583057ea797c1d9abd0484",
+  "device_model": "SM-S936N",
+  "android": "16",
+  "app_jvm_tests": 635,
+  "ctsvendor_jvm_tests": 12,
+  "lint": "passed",
+  "android_injected_scenarios": 11,
+  "hardware_natural_rejection": "CameraX 3840x2160 video with 4080x3060 JPEG",
+  "camera2_rejection": "injected configure failure; real 1280x720 recording and preview recovery"
+}
