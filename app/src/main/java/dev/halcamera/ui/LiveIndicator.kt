@@ -37,8 +37,14 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
     private var running = false
     private var pulse: ObjectAnimator? = null
     private val eis = TextView(context).apply {
-        textSize = 12f
+        textSize = 10f
         setTextColor(Look.onDarkMuted)
+        gravity = Gravity.CENTER_VERTICAL
+        accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+    }
+    private val eisWarning = TextView(context).apply {
+        textSize = 12f
+        setTextColor(Look.statusWarn)
         background = Look.cardBackground(context, Look.cameraGlass, android.graphics.Color.TRANSPARENT)
         setPadding(Look.dp(context, 8), Look.dp(context, 6), Look.dp(context, 8), Look.dp(context, 6))
         accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
@@ -54,8 +60,9 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
             gravity = Gravity.CENTER_VERTICAL
             addView(heartbeat, LayoutParams(-2, -2))
             addView(sizes, LayoutParams(0, -2, 1f).apply { marginStart = Look.dp(context, 8) })
+            addView(eis, LayoutParams(-2, -2).apply { marginStart = Look.dp(context, 8) })
         }, LayoutParams(-1, -2))
-        addView(eis, LayoutParams(-1, -2))
+        addView(eisWarning, LayoutParams(-1, -2))
         setPadding(Look.dp(context, 12), 0, Look.dp(context, 12), 0)
         bindStabilization(LiveEisStatus(), false)
         render()
@@ -65,14 +72,26 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
         this.recording = recording
         val hidden = status.video == 0 && status.warning == null
         eis.visibility = if (hidden) View.GONE else View.VISIBLE
-        if (hidden) return
-        val value = "${if (recording) "Recording" else "Preview"} · ${status.label}" +
-            status.warning?.let { "\n$it" }.orEmpty()
+        eisWarning.visibility = if (status.warning == null) View.GONE else View.VISIBLE
+        val warning = status.warning.orEmpty()
+        if (eisWarning.text.toString() != warning) eisWarning.text = warning
+        val value = when (status.video) {
+            0 -> "EIS: Off"
+            1 -> "EIS: V"
+            2 -> "EIS: P, V"
+            else -> "EIS: ?"
+        }
         if (eis.text.toString() != value) eis.text = value
+        eis.contentDescription = "${if (recording) "Recording" else "Preview"}, " + when (status.video) {
+            0 -> "EIS inactive"
+            1 -> "EIS active, Video mode"
+            2 -> "EIS active, Preview and Video mode"
+            else -> "EIS status unknown"
+        }
         eis.setTextColor(when {
             status.warning != null -> Look.statusWarn
             status.video == null -> Look.onDarkMuted
-            else -> Look.onDark
+            else -> Look.onDarkMuted
         })
     }
 
