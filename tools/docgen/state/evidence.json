@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "39f1ff7048a243f1",
+        "codeHash": "391cd4f931332294",
         "modelHash": "08592662545bdd64",
         "at": "2026-10-05",
-        "commit": "b662dc6",
+        "commit": "f7b1e4e",
         "reviewer": "Codex-label-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
@@ -77,8 +77,8 @@
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "50b190449e588a3938a2f84e0ca812cdf8eb0c4c",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
           "app/src/main/java/dev/halcamera/camera/LiveStabilization.kt": "065280396cf1f40f5d2599c83778cc5609ff6421",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "b99d72c106db81e839a20208c2f3a024d0da8a3a",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "af7d4930258762ccd1a00d9531263e697748e0e6",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "51d9ed274050315ab1aaa242cbf1f0465364dbf8",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "7cfe50e0357ac265632a34b4cb03b4d559a927f0",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f4a2848c02b7dd9eb076fc4e99dd869e2db7a782",
@@ -269,10 +269,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "80f55485dd698f2e",
+        "codeHash": "cda37017cd2e2eda",
         "modelHash": "d89fb949f7df456b",
         "at": "2026-10-05",
-        "commit": "b662dc6",
+        "commit": "f7b1e4e",
         "reviewer": "Codex-label-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
@@ -340,8 +340,8 @@
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "50b190449e588a3938a2f84e0ca812cdf8eb0c4c",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
           "app/src/main/java/dev/halcamera/camera/LiveStabilization.kt": "065280396cf1f40f5d2599c83778cc5609ff6421",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "b99d72c106db81e839a20208c2f3a024d0da8a3a",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "af7d4930258762ccd1a00d9531263e697748e0e6",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "51d9ed274050315ab1aaa242cbf1f0465364dbf8",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "7cfe50e0357ac265632a34b4cb03b4d559a927f0",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f4a2848c02b7dd9eb076fc4e99dd869e2db7a782",
@@ -548,10 +548,10 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "39f1ff7048a243f1",
+        "codeHash": "391cd4f931332294",
         "modelHash": "6fc1396c7a4485c7",
         "at": "2026-10-05",
-        "commit": "b662dc6",
+        "commit": "f7b1e4e",
         "reviewer": "Codex-label-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
@@ -619,8 +619,8 @@
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "50b190449e588a3938a2f84e0ca812cdf8eb0c4c",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
           "app/src/main/java/dev/halcamera/camera/LiveStabilization.kt": "065280396cf1f40f5d2599c83778cc5609ff6421",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "b99d72c106db81e839a20208c2f3a024d0da8a3a",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "af7d4930258762ccd1a00d9531263e697748e0e6",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "51d9ed274050315ab1aaa242cbf1f0465364dbf8",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "7cfe50e0357ac265632a34b4cb03b4d559a927f0",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f4a2848c02b7dd9eb076fc4e99dd869e2db7a782",
@@ -727,10 +727,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "39f1ff7048a243f1",
+        "codeHash": "391cd4f931332294",
         "modelHash": "20ebb4395c122065",
         "at": "2026-10-05",
-        "commit": "b662dc6",
+        "commit": "f7b1e4e",
         "reviewer": "Codex-label-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
@@ -798,8 +798,8 @@
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "50b190449e588a3938a2f84e0ca812cdf8eb0c4c",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
           "app/src/main/java/dev/halcamera/camera/LiveStabilization.kt": "065280396cf1f40f5d2599c83778cc5609ff6421",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "b99d72c106db81e839a20208c2f3a024d0da8a3a",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "af7d4930258762ccd1a00d9531263e697748e0e6",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "51d9ed274050315ab1aaa242cbf1f0465364dbf8",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "7cfe50e0357ac265632a34b4cb03b4d559a927f0",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f4a2848c02b7dd9eb076fc4e99dd869e2db7a782",
@@ -955,10 +955,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "39f1ff7048a243f1",
+        "codeHash": "391cd4f931332294",
         "modelHash": "45ab1c41fd678fa5",
         "at": "2026-10-05",
-        "commit": "b662dc6",
+        "commit": "f7b1e4e",
         "reviewer": "Codex-label-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
@@ -1026,8 +1026,8 @@
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "50b190449e588a3938a2f84e0ca812cdf8eb0c4c",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
           "app/src/main/java/dev/halcamera/camera/LiveStabilization.kt": "065280396cf1f40f5d2599c83778cc5609ff6421",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "b99d72c106db81e839a20208c2f3a024d0da8a3a",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "af7d4930258762ccd1a00d9531263e697748e0e6",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "51d9ed274050315ab1aaa242cbf1f0465364dbf8",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "7cfe50e0357ac265632a34b4cb03b4d559a927f0",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f4a2848c02b7dd9eb076fc4e99dd869e2db7a782",
@@ -1134,10 +1134,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "39f1ff7048a243f1",
+        "codeHash": "391cd4f931332294",
         "modelHash": "40c8afb36d36b005",
         "at": "2026-10-05",
-        "commit": "b662dc6",
+        "commit": "f7b1e4e",
         "reviewer": "Codex-label-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
@@ -1205,8 +1205,8 @@
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "50b190449e588a3938a2f84e0ca812cdf8eb0c4c",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
           "app/src/main/java/dev/halcamera/camera/LiveStabilization.kt": "065280396cf1f40f5d2599c83778cc5609ff6421",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "b99d72c106db81e839a20208c2f3a024d0da8a3a",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "af7d4930258762ccd1a00d9531263e697748e0e6",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "51d9ed274050315ab1aaa242cbf1f0465364dbf8",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "7cfe50e0357ac265632a34b4cb03b4d559a927f0",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f4a2848c02b7dd9eb076fc4e99dd869e2db7a782",
@@ -1313,10 +1313,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "39f1ff7048a243f1",
+        "codeHash": "391cd4f931332294",
         "modelHash": "d444993f8811818e",
         "at": "2026-10-05",
-        "commit": "b662dc6",
+        "commit": "f7b1e4e",
         "reviewer": "Codex-label-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
@@ -1384,8 +1384,8 @@
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "50b190449e588a3938a2f84e0ca812cdf8eb0c4c",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
           "app/src/main/java/dev/halcamera/camera/LiveStabilization.kt": "065280396cf1f40f5d2599c83778cc5609ff6421",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "b99d72c106db81e839a20208c2f3a024d0da8a3a",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "af7d4930258762ccd1a00d9531263e697748e0e6",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "51d9ed274050315ab1aaa242cbf1f0465364dbf8",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "7cfe50e0357ac265632a34b4cb03b4d559a927f0",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f4a2848c02b7dd9eb076fc4e99dd869e2db7a782",
@@ -1492,10 +1492,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "39f1ff7048a243f1",
+        "codeHash": "391cd4f931332294",
         "modelHash": "1cd3c62e0e90574c",
         "at": "2026-10-05",
-        "commit": "b662dc6",
+        "commit": "f7b1e4e",
         "reviewer": "Codex-label-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
@@ -1563,8 +1563,8 @@
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "50b190449e588a3938a2f84e0ca812cdf8eb0c4c",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
           "app/src/main/java/dev/halcamera/camera/LiveStabilization.kt": "065280396cf1f40f5d2599c83778cc5609ff6421",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "b99d72c106db81e839a20208c2f3a024d0da8a3a",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "af7d4930258762ccd1a00d9531263e697748e0e6",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "51d9ed274050315ab1aaa242cbf1f0465364dbf8",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "7cfe50e0357ac265632a34b4cb03b4d559a927f0",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f4a2848c02b7dd9eb076fc4e99dd869e2db7a782",
@@ -1671,10 +1671,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "39f1ff7048a243f1",
+        "codeHash": "391cd4f931332294",
         "modelHash": "f84233f29db90a5a",
         "at": "2026-10-05",
-        "commit": "b662dc6",
+        "commit": "f7b1e4e",
         "reviewer": "Codex-label-review",
         "files": {
           "app/build.gradle.kts": "aa50c9f065c223bc91d7a8f0457a7c0ce9081b25",
@@ -1742,8 +1742,8 @@
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "50b190449e588a3938a2f84e0ca812cdf8eb0c4c",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
           "app/src/main/java/dev/halcamera/camera/LiveStabilization.kt": "065280396cf1f40f5d2599c83778cc5609ff6421",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "b99d72c106db81e839a20208c2f3a024d0da8a3a",
-          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "af7d4930258762ccd1a00d9531263e697748e0e6",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt": "51d9ed274050315ab1aaa242cbf1f0465364dbf8",
+          "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "7cfe50e0357ac265632a34b4cb03b4d559a927f0",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f4a2848c02b7dd9eb076fc4e99dd869e2db7a782",
