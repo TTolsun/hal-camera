@@ -21,6 +21,8 @@ for(const file of fs.readdirSync(dir).filter(f=>/\.(mp4|jpg)$/.test(f))){
   function boxes(start,end){const out=[];for(let at=start;at+8<=end;){let n=b.readUInt32BE(at),h=8;if(n===1){n=Number(b.readBigUInt64BE(at+8));h=16;}if(n===0)n=end-at;if(n<h||at+n>end)throw Error('Invalid MP4 bounds');out.push({type:b.toString('ascii',at+4,at+8),start:at+h,end:at+n});at+=n;}return out;}
   const find=(p,t)=>boxes(p.start,p.end).find(x=>x.type===t);
   const moov=find({start:0,end:b.length},'moov');
+  if(!moov)throw Error(`Unsupported MP4: ${file} has no moov box; use a finalized, self-contained recording`);
+  if(find(moov,'mvex')||find({start:0,end:b.length},'moof'))throw Error(`Unsupported MP4: ${file} is fragmented; only non-fragmented recordings are supported`);
   for(const trak of boxes(moov.start,moov.end).filter(x=>x.type==='trak')){
    const mdia=find(trak,'mdia'),h=find(mdia,'hdlr');if(b.toString('ascii',h.start+8,h.start+12)!=='vide')continue;
    const mdhd=find(mdia,'mdhd'),ts=b.readUInt32BE(mdhd.start+(b[mdhd.start]===1?20:12));
