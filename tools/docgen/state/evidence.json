@@ -3,14 +3,14 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "222e867496b05110",
+        "codeHash": "ecbce86c844f2e8d",
         "modelHash": "08592662545bdd64",
         "at": "2026-10-05",
-        "commit": "a593425",
-        "reviewer": "Codex-release-review",
+        "commit": "3fa73a6",
+        "reviewer": "Codex-restore-UI-review",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -162,7 +162,7 @@
           "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "14d57e05ed2b588f7ab4c8e6bf288fdff6992e0e",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
-          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
+          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "9d92569f455a1f0a6bd5bd3048e5d5fdc1462b88",
           "app/src/main/java/dev/halcamera/ui/Look.kt": "ad54cba10f0dceccfc70a29f2abc4c96c46cfa7d",
           "app/src/main/java/dev/halcamera/ui/ManualControlPanel.kt": "57c4fdb997e42ce63bc47bbafed99f3d4a9f775b",
           "app/src/main/java/dev/halcamera/ui/MetricBars.kt": "ec24afee69b8e29203346dac2c6eca388f00f847",
@@ -266,14 +266,14 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "476bd314565c80e2",
+        "codeHash": "cbbc615e4c47fe5d",
         "modelHash": "ce65306ff07f143c",
         "at": "2026-10-05",
-        "commit": "a593425",
-        "reviewer": "Codex-release-facts-review",
+        "commit": "3fa73a6",
+        "reviewer": "Codex-restore-UI-review",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -425,7 +425,7 @@
           "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "14d57e05ed2b588f7ab4c8e6bf288fdff6992e0e",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
-          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
+          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "9d92569f455a1f0a6bd5bd3048e5d5fdc1462b88",
           "app/src/main/java/dev/halcamera/ui/Look.kt": "ad54cba10f0dceccfc70a29f2abc4c96c46cfa7d",
           "app/src/main/java/dev/halcamera/ui/ManualControlPanel.kt": "57c4fdb997e42ce63bc47bbafed99f3d4a9f775b",
           "app/src/main/java/dev/halcamera/ui/MetricBars.kt": "ec24afee69b8e29203346dac2c6eca388f00f847",
@@ -548,11 +548,11 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "222e867496b05110",
+        "codeHash": "ecbce86c844f2e8d",
         "modelHash": "1ada0bef907c9ea4",
         "at": "2026-10-05",
-        "commit": "a593425",
-        "reviewer": "Codex-release-facts-review",
+        "commit": "3fa73a6",
+        "reviewer": "Codex-restore-UI-review",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -704,7 +704,7 @@
           "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "14d57e05ed2b588f7ab4c8e6bf288fdff6992e0e",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
-          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
+          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "9d92569f455a1f0a6bd5bd3048e5d5fdc1462b88",
           "app/src/main/java/dev/halcamera/ui/Look.kt": "ad54cba10f0dceccfc70a29f2abc4c96c46cfa7d",
           "app/src/main/java/dev/halcamera/ui/ManualControlPanel.kt": "57c4fdb997e42ce63bc47bbafed99f3d4a9f775b",
           "app/src/main/java/dev/halcamera/ui/MetricBars.kt": "ec24afee69b8e29203346dac2c6eca388f00f847",
@@ -722,16 +722,16 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "222e867496b05110",
+        "codeHash": "ecbce86c844f2e8d",
         "modelHash": "4209430faf0edb8b",
         "at": "2026-10-05",
-        "commit": "a593425",
-        "reviewer": "Codex-release-facts-review",
+        "commit": "3fa73a6",
+        "reviewer": "Codex-restore-UI-review",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -883,7 +883,7 @@
           "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "14d57e05ed2b588f7ab4c8e6bf288fdff6992e0e",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
-          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
+          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "9d92569f455a1f0a6bd5bd3048e5d5fdc1462b88",
           "app/src/main/java/dev/halcamera/ui/Look.kt": "ad54cba10f0dceccfc70a29f2abc4c96c46cfa7d",
           "app/src/main/java/dev/halcamera/ui/ManualControlPanel.kt": "57c4fdb997e42ce63bc47bbafed99f3d4a9f775b",
           "app/src/main/java/dev/halcamera/ui/MetricBars.kt": "ec24afee69b8e29203346dac2c6eca388f00f847",
@@ -901,7 +901,7 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "omm:ui-camera-label": {
@@ -952,14 +952,14 @@
     },
     "content:engine.md/contract": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "222e867496b05110",
+        "codeHash": "ecbce86c844f2e8d",
         "modelHash": "21ea700f18763611",
         "at": "2026-10-05",
-        "commit": "a593425",
-        "reviewer": "Codex-release-facts-review",
+        "commit": "3fa73a6",
+        "reviewer": "Codex-restore-UI-review",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1111,7 +1111,7 @@
           "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "14d57e05ed2b588f7ab4c8e6bf288fdff6992e0e",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
-          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
+          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "9d92569f455a1f0a6bd5bd3048e5d5fdc1462b88",
           "app/src/main/java/dev/halcamera/ui/Look.kt": "ad54cba10f0dceccfc70a29f2abc4c96c46cfa7d",
           "app/src/main/java/dev/halcamera/ui/ManualControlPanel.kt": "57c4fdb997e42ce63bc47bbafed99f3d4a9f775b",
           "app/src/main/java/dev/halcamera/ui/MetricBars.kt": "ec24afee69b8e29203346dac2c6eca388f00f847",
@@ -1131,14 +1131,14 @@
     },
     "content:engine.md/camera2": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "222e867496b05110",
-        "modelHash": "36f70f29c2e2740c",
+        "codeHash": "ecbce86c844f2e8d",
+        "modelHash": "9a6e4654d2221ce3",
         "at": "2026-10-05",
-        "commit": "a593425",
-        "reviewer": "Codex-release-facts-review",
+        "commit": "3fa73a6",
+        "reviewer": "Codex-restore-UI-review",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1290,7 +1290,7 @@
           "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "14d57e05ed2b588f7ab4c8e6bf288fdff6992e0e",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
-          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
+          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "9d92569f455a1f0a6bd5bd3048e5d5fdc1462b88",
           "app/src/main/java/dev/halcamera/ui/Look.kt": "ad54cba10f0dceccfc70a29f2abc4c96c46cfa7d",
           "app/src/main/java/dev/halcamera/ui/ManualControlPanel.kt": "57c4fdb997e42ce63bc47bbafed99f3d4a9f775b",
           "app/src/main/java/dev/halcamera/ui/MetricBars.kt": "ec24afee69b8e29203346dac2c6eca388f00f847",
@@ -1310,14 +1310,14 @@
     },
     "content:engine.md/camerax": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "222e867496b05110",
+        "codeHash": "ecbce86c844f2e8d",
         "modelHash": "0826ee5954f8b588",
         "at": "2026-10-05",
-        "commit": "a593425",
-        "reviewer": "Codex-release-facts-review",
+        "commit": "3fa73a6",
+        "reviewer": "Codex-restore-UI-review",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1469,7 +1469,7 @@
           "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "14d57e05ed2b588f7ab4c8e6bf288fdff6992e0e",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
-          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
+          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "9d92569f455a1f0a6bd5bd3048e5d5fdc1462b88",
           "app/src/main/java/dev/halcamera/ui/Look.kt": "ad54cba10f0dceccfc70a29f2abc4c96c46cfa7d",
           "app/src/main/java/dev/halcamera/ui/ManualControlPanel.kt": "57c4fdb997e42ce63bc47bbafed99f3d4a9f775b",
           "app/src/main/java/dev/halcamera/ui/MetricBars.kt": "ec24afee69b8e29203346dac2c6eca388f00f847",
@@ -1489,14 +1489,14 @@
     },
     "content:engine.md/comparison": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "222e867496b05110",
+        "codeHash": "ecbce86c844f2e8d",
         "modelHash": "0b5b6fb0f4927f2c",
         "at": "2026-10-05",
-        "commit": "a593425",
-        "reviewer": "Codex-release-facts-review",
+        "commit": "3fa73a6",
+        "reviewer": "Codex-restore-UI-review",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1648,7 +1648,7 @@
           "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "14d57e05ed2b588f7ab4c8e6bf288fdff6992e0e",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
-          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
+          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "9d92569f455a1f0a6bd5bd3048e5d5fdc1462b88",
           "app/src/main/java/dev/halcamera/ui/Look.kt": "ad54cba10f0dceccfc70a29f2abc4c96c46cfa7d",
           "app/src/main/java/dev/halcamera/ui/ManualControlPanel.kt": "57c4fdb997e42ce63bc47bbafed99f3d4a9f775b",
           "app/src/main/java/dev/halcamera/ui/MetricBars.kt": "ec24afee69b8e29203346dac2c6eca388f00f847",
@@ -1668,14 +1668,14 @@
     },
     "content:evidence.md/device-notes": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "222e867496b05110",
+        "codeHash": "ecbce86c844f2e8d",
         "modelHash": "5ad41438f14615bb",
         "at": "2026-10-05",
-        "commit": "a593425",
-        "reviewer": "Codex-release-facts-review",
+        "commit": "3fa73a6",
+        "reviewer": "Codex-restore-UI-review",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1827,7 +1827,7 @@
           "app/src/main/java/dev/halcamera/ui/LiveIndicator.kt": "14d57e05ed2b588f7ab4c8e6bf288fdff6992e0e",
           "app/src/main/java/dev/halcamera/ui/LiveReadings.kt": "597450f8cf0fa2cdd14e3b70060da0641f77ddef",
           "app/src/main/java/dev/halcamera/ui/LiveReadout.kt": "3f599e31c9eecd3f48c7467632c1c948f02bbdfc",
-          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "4529f602fe82d8486d8270dc1afb3362b54aadfd",
+          "app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt": "9d92569f455a1f0a6bd5bd3048e5d5fdc1462b88",
           "app/src/main/java/dev/halcamera/ui/Look.kt": "ad54cba10f0dceccfc70a29f2abc4c96c46cfa7d",
           "app/src/main/java/dev/halcamera/ui/ManualControlPanel.kt": "57c4fdb997e42ce63bc47bbafed99f3d4a9f775b",
           "app/src/main/java/dev/halcamera/ui/MetricBars.kt": "ec24afee69b8e29203346dac2c6eca388f00f847",
