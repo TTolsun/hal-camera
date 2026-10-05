@@ -34,6 +34,7 @@ class FocusRing(
     /** Takes or releases the AE lock; false when the camera or engine has none. */
     private val lockExposure: (Boolean) -> Boolean,
 ) : View(context) {
+    var unavailableReason: (Boolean) -> String? = { null }
     private class Mark { var token = 0; var phase: TouchPhase? = null; var x = 0f; var y = 0f; var scale = 1f; var dim = false }
 
     private val focus = Mark()
@@ -72,7 +73,7 @@ class FocusRing(
         val t = start(focus, x, y)
         removeCallbacks(hideFocus)
         if (engine()?.meterAt(x, y, false) { p -> if (t == focus.token) showFocus(p) } != true) {
-            focus.phase = null; say("Tap focus is unavailable. The lens is not taking requests.", x, y); return
+            focus.phase = null; say(unavailableReason(false) ?: "터치 초점을 쓸 수 없는 카메라이거나 준비 중입니다", x, y); return
         }
         // Covers a tap the engine accepted but never answered, such as one that raced a session rebuild.
         postDelayed(hideFocus, TouchMeter.SCAN_TIMEOUT_MS + TouchMeter.HOLD_MS + 1000)
@@ -86,7 +87,7 @@ class FocusRing(
         focus.token++; focus.phase = null
         val t = start(exposure, x, y)
         if (engine()?.meterAt(x, y, true) { p -> if (t == exposure.token) showExposure(p) } != true) {
-            exposure.phase = null; say("Tap exposure is unavailable. The light meter is off duty.", x, y); return
+            exposure.phase = null; say(unavailableReason(true) ?: "터치 노출을 쓸 수 없는 카메라이거나 준비 중입니다", x, y); return
         }
         postDelayed(hideExposure, AeRelock.TIMEOUT_MS + 1000)
     }

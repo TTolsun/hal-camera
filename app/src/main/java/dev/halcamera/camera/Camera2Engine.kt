@@ -323,7 +323,7 @@ class Camera2Engine(
             set(CaptureRequest.CONTROL_AF_MODE, afMode(chars))
             (spec?.fpsRange ?: liveStreams?.fps?.let { android.util.Range(it.min, it.max) })?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, it) }
             applyZoom(this, chars)
-            if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus) }
+            if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus); applyManual(chars) }
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
             aeTrigger?.let { set(CaptureRequest.CONTROL_AE_PRECAPTURE_TRIGGER, it) }
             setTag("preview")
@@ -337,7 +337,7 @@ class Camera2Engine(
             set(CaptureRequest.CONTROL_AF_MODE, if (CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO in modes)
                 CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO else CaptureRequest.CONTROL_AF_MODE_OFF)
             applyZoom(this, c)
-            applyLiveControls(requestControls()); applyTouch(touchFocus)
+            applyLiveControls(requestControls()); applyTouch(touchFocus); applyManual(c, recording = true)
             afTrigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER, it) }
             setTag("recording")
         }.let { buildRequest(it, configuredOutputs.repeating) }
@@ -355,7 +355,7 @@ class Camera2Engine(
             set(CaptureRequest.CONTROL_AF_MODE, if (CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO in modes)
                 CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO else CaptureRequest.CONTROL_AF_MODE_OFF)
             applyZoom(this, c)
-            applyLiveControls(requestControls()); applyTouch(touchFocus)
+            applyLiveControls(requestControls()); applyTouch(touchFocus); applyManual(c, recording = true)
             setTag(tag)
         }.let { buildRequest(it, configuredOutputs.outputs) }
     /** Whichever LIVE request is repeating now: the recording one while the recorder runs, the preview one otherwise. */
@@ -375,6 +375,7 @@ class Camera2Engine(
         return try { submit(camera, session, c); true }
         catch (e: IllegalStateException) { telemetry.event(sessionId, "request_skipped", mapOf("for" to kind, "reason" to e.toString())); false }
         catch (e: CameraAccessException) { telemetry.event(sessionId, "request_skipped", mapOf("for" to kind, "reason" to e.toString())); false }
+        catch (e: IllegalArgumentException) { telemetry.event(sessionId, "request_rejected", mapOf("for" to kind, "reason" to e.toString())); false }
         catch (e: Exception) { fail(e); false }
     }
     private fun submitRepeating(kind: String, values: Map<String, Any?>): Boolean = withLiveSession(kind) { camera, session, c ->
@@ -395,6 +396,18 @@ class Camera2Engine(
     private fun relockFocus() { if (spec == null && controls.afLock) sendAfTrigger(true) }
     /** [controls] as the requests carry them: AE stays unlocked while [aeRelock] waits for a rebuilt session. */
     private fun requestControls(): LiveControls = if (aeRelock.waiting) controls.copy(aeLock = false) else controls
+    private fun CaptureRequest.Builder.applyManual(c: CameraCharacteristics, recording: Boolean = false) {
+        val fps = if (recording) liveStreams?.video?.fps ?: 30 else liveStreams?.fps?.max ?: 30
+        val support = manualSupport(c, fps)
+        // A recording may impose a shorter frame than preview. Report this instead of silently changing exposure.
+        val request = controls.manual.normalized(support)
+        if (request != controls.manual) {
+            telemetry.event(sessionId, "manual_limited", mapOf("requested" to controls.manual.summary(), "appliedRequest" to request.summary()))
+            main.post { if (active) notice("현재 스트림 제한에 맞게 수동 설정을 조정했습니다: ${request.summary()}") }
+            controls = controls.copy(manual = request)
+        }
+        applyManualControls(request, support.frameNs)
+    }
     /**
      * Called on every new LIVE session before its first request. With the lock on, the session starts unlocked and
      * [relockStep] locks it once AE has settled; a timeout locks it anyway so a scene AE never settles on still
@@ -415,6 +428,7 @@ class Camera2Engine(
     override fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean {
         val c = chars ?: return false
         val (af, ae) = touchSupport(c)
+        if (if (exposure) controls.manual.exposure != null else controls.manual.focusDiopters != null) return false
         if (spec != null || !active || !(if (exposure) ae else af)) return false
         val (u, v) = view.naturalPoint(x, y) ?: return false
         handler.post {
@@ -443,21 +457,38 @@ class Camera2Engine(
      * one turn therefore sends no trigger, which matches the final state.
      */
     override fun setControls(next: LiveControls, restore: Boolean) {
+        if (spec != null || !active) return
         requestedControls = next
         if (restore) restoreQueued.set(true)
         if (!controlsQueued.compareAndSet(false, true)) return
         handler.post {
             controlsQueued.set(false)
+            if (!active) return@post
             val old = controls
-            val now = requestedControls
+            val c = chars ?: try { manager.getCameraCharacteristics(cameraId) } catch (e: Exception) {
+                telemetry.event(sessionId, "request_rejected", mapOf("for" to "controls_set", "reason" to e.toString()))
+                main.post { if (active) notice("카메라 정보를 읽을 수 없어 설정을 적용하지 못했습니다.") }
+                return@post
+            }
+            val fps = if (video.surface != null) liveStreams?.video?.fps ?: 30 else liveStreams?.fps?.max ?: 30
+            val requested = requestedControls
+            val manual = requested.manual.normalized(manualSupport(c, fps))
+            val now = requested.copy(manual = manual).coerce(liveControlSupport(c), video.surface != null)
             controls = now
             // A restored lock meets a session that has just started metering: relock it like a rebuilt one.
             if (old.aeLock != now.aeLock) { if (restoreQueued.getAndSet(false) && now.aeLock) startRelock() else aeRelock.lockChanged(now.aeLock) }
             restoreQueued.set(false)
-            if (old.afLock && !now.afLock) touchFocus.dropFocus()
-            if (old.aeLock && !now.aeLock) touchFocus.dropExposure()
-            submitRepeating("controls_set", mapOf("evIndex" to now.evIndex, "aeLock" to now.aeLock, "afLock" to now.afLock, "flash" to now.flash.name))
-            if (old.afLock != now.afLock) sendAfTrigger(now.afLock)
+            if (old.afLock && !now.afLock || now.manual.focusDiopters != null) touchFocus.dropFocus()
+            if (old.aeLock && !now.aeLock || now.manual.exposure != null) touchFocus.dropExposure()
+            val sent = submitRepeating("controls_set", mapOf("evIndex" to now.evIndex, "aeLock" to now.aeLock, "afLock" to now.afLock, "flash" to now.flash.name,
+                "manualIso" to manual.exposure?.iso, "manualExposureNs" to manual.exposure?.timeNs,
+                "manualFocusDiopters" to manual.focusDiopters, "wb" to manual.wb.name))
+            if (!sent && captureSession != null && !video.blocksRequests) {
+                controls = old
+                submitRepeating("controls_restored", emptyMap())
+                main.post { if (active) notice("설정 요청이 거부되어 이전 설정으로 복구했습니다. 실제 적용값을 확인하세요.") }
+            }
+            if (sent && old.afLock != now.afLock && manual.focusDiopters == null) sendAfTrigger(now.afLock)
         }
     }
     /** API 30+ uses CONTROL_ZOOM_RATIO (ultra-wide below 1x possible). Older devices crop the active array, so only >= 1x. */
@@ -526,7 +557,7 @@ class Camera2Engine(
             set(CaptureRequest.CONTROL_AF_MODE, afMode(c))
             applyZoom(this, c)
             // Same AE mode, EV, lock and torch as the preview, so the still is exposed as the preview showed it.
-            if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus) }
+            if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus); applyManual(c) }
             setTag(tag)
         }.let { buildRequest(it, configuredOutputs.still) }
 

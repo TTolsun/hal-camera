@@ -61,6 +61,16 @@
 <a href="assets/screenshots/live.png" aria-label="Camera2 Live 사진 모드와 실시간 정보 원본 보기"><img src="assets/screenshots/live.png" alt="Camera2 Live 사진 모드와 실시간 정보" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>Camera2의 사진 모드입니다. 하단에서 실시간 정보, 줌, 셔터와 최근 썸네일을 확인할 수 있습니다. <a href="assets/screenshots/live.png">원본 보기</a></figcaption>
 </figure><p>녹화 중에는 셔터 아래에 경과 시간이 표시됩니다. 줌은 계속 바꿀 수 있지만 엔진·카메라·모드 변경, 일시정지, 갤러리와 다른 도구 진입은 제한됩니다. 녹화를 마치면 사진용 프리뷰로 돌아오며 동영상 모드 선택은 유지됩니다.</p>
+<h3 id="수동-촬영-조건을-고정하세요">수동 촬영 조건을 고정하세요</h3>
+<ol>
+<li>Camera2 Live 상단의 화살표를 펼치고 <code>M</code>을 누릅니다. 셔터 위에 Manual 패널이 열립니다.</li>
+<li><code>ISO</code> 또는 <code>Shutter</code>에서 노출을 <code>Manual</code>으로 바꿉니다. 두 값은 현재 관측값을 지원 범위에 맞춰 함께 고정합니다. 범위 때문에 값이 달라지면 안내합니다.</li>
+<li>슬라이더로 값을 조절합니다. 파란 숫자를 누르면 직접 입력할 수 있습니다. 셔터는 ms 또는 <code>1/125</code> 형식을 받습니다. 범위를 벗어나면 입력창에 오류를 표시합니다.</li>
+<li><code>Focus</code>에서는 Auto/Manual과 diopter를, <code>WB</code>에서는 기기가 지원하는 프리셋을 선택합니다. 수동 gains와 3×3 matrix는 해당 capability가 있는 기기의 수동 노출에서 사용합니다. Kelvin 값으로 변환하지 않습니다.</li>
+<li>입력한 숫자와 패널 아래의 실제 적용값을 비교합니다. 선택한 항목의 실제값은 하단 측정줄에서 중복 표시하지 않습니다. <code>Hide</code>와 시스템 뒤로 가기는 값을 유지하며, <code>Reset</code>은 노출·초점·WB를 자동으로 되돌립니다.</li>
+</ol>
+<p>수동 노출에서는 AE 잠금·EV·자동/강제 플래시를 사용할 수 없으며 torch는 지원 기기에서 유지됩니다. 수동 초점에서는 화면 터치가 AF를 다시 켜지 않습니다. 수동 노출의 최대 시간은 현재 FPS와 센서 범위로 제한하며 Auto FPS에서는 30fps를 요청합니다. 출력 조합 때문에 실제 FPS가 다를 수 있으므로 프리뷰 수치를 확인하세요.</p>
+<p>프리뷰·사진·녹화와 녹화 중 사진에 같은 수동 설정을 적용합니다. 동영상 모드 전환으로 노출 범위가 줄면 값을 조정하고 안내합니다. 카메라·엔진·스트림 구성을 바꾸면 자동으로 초기화합니다. CameraX에서는 미지원 사유와 기존 상단 엔진 버튼의 위치를 안내합니다. Benchmark의 측정 계약에는 영향을 주지 않습니다.</p>
 <h3 id="live-스트림을-설정하세요">Live 스트림을 설정하세요</h3>
 <ol>
 <li>Live 옆의 크기 표시를 누릅니다. <code>Lab → Settings → Live Streams</code>에서도 같은 설정을 열 수 있습니다.</li>
@@ -114,11 +124,11 @@
 </tr>
 <tr>
 <td><code>versionName</code></td>
-<td><code>0.17.0</code></td>
+<td><code>0.18.0</code></td>
 </tr>
 <tr>
 <td><code>versionCode</code></td>
-<td><code>625</code></td>
+<td><code>627</code></td>
 </tr>
 <tr>
 <td><code>minSdk</code></td>
