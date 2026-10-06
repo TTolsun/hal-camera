@@ -37,3 +37,9 @@ History favors short imperative subjects, such as `Add adb-only camera controls 
 ## Configuration & Documentation
 
 Keep local SDK configuration, signing keys, and credentials untracked. Never uninstall to bypass signing mismatches. Read `guide/AGENTS.md` before editing documentation. With Node.js 24, run `node tools/docgen/docflow.mjs check --build`; regenerate marked blocks and generated `docs/` HTML rather than editing them manually.
+
+## Maintaining the Distributed CLI Skill
+
+`skills/halcam-cli/SKILL.md` is the self-contained file distributed to teammates with a compatible APK. Do not distribute `.claude/skills/halcam-cli/SKILL.md` alone: it is only a repository-local entrypoint. Record the APK version and matching skill revision when handing off a bundle; do not add personal workstation paths or internal device identifiers to the public sources.
+
+When the CLI contract changes, compare `CliCommand.COMMANDS`, `AdbArguments`, `app/src/main/assets/halcam.sh`, `guide/cli.md`, and the distributed skill. Keep the wrapper's `description` in sync. Keep user-facing Agents instructions in `guide/coding-agents.md`, contributor maintenance details here, and historical design in `docs/design/CLI.md`. Validate the skill without assuming a checkout or access to external documentation.
