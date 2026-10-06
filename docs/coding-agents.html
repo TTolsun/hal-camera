@@ -37,7 +37,7 @@
 </ol>
 <p>예를 들어 “halcam-cli 스킬을 읽고 연결된 기기의 카메라 0으로 사진을 촬영한 뒤 결과를 ./photos에 받아 줘”처럼 요청할 수 있습니다.</p>
 <h2 id="실행-범위와-권한">실행 범위와 권한</h2>
-<p>스킬은 사용자의 작업 지시와 권한 승인을 대신하지 않습니다. 기기의 ADB CLI 허용 스위치와 런타임 권한은 사람이 직접 설정합니다. 에이전트는 지원 명령을 확인하고, 진행 중인 작업이나 연결 오류가 있으면 <a href="cli.html#요청이-끝나지-않거나-파일이-없을-때">CLI 오류 대응</a>에 따라 처리합니다.</p>
+<p>스킬은 사용자의 작업 지시와 권한 승인을 대신하지 않습니다. ADB CLI는 기본으로 허용되며, 사용자가 꺼 둔 경우에는 앱에서 다시 켜야 합니다. 런타임 권한은 사람이 직접 허용합니다. 에이전트는 지원 명령을 확인하고, 진행 중인 작업이나 연결 오류가 있으면 <a href="cli.html#요청이-끝나지-않거나-파일이-없을-때">CLI 오류 대응</a>에 따라 처리합니다.</p>
 <p>CLI에서 지원하지 않는 Benchmark 실행을 요청받으면 앱 화면에서 실행해야 한다고 안내합니다. 지원 범위를 넓히는 우회 경로를 만들지 않습니다.</p>
 <h2 id="스킬을-유지하는-방법">스킬을 유지하는 방법</h2>
 <p>명령 계약을 바꿀 때에는 <code>CliCommand.COMMANDS</code>, <code>AdbArguments</code>, <code>app/src/main/assets/halcam.sh</code>, <a href="cli.html">CLI</a>, <code>skills/halcam-cli/SKILL.md</code>, 그리고 같은 <code>description</code>을 복사해 둔 <code>.claude/skills/halcam-cli/SKILL.md</code>를 함께 대조합니다. 가이드에는 명령의 의미와 제한을, 스킬에는 에이전트가 확인하고 실행할 순서를 적습니다.</p>

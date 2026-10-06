@@ -5,3 +5,5 @@
 녹화 요청은 실제 시작 콜백에서 `result.recording=true`를 기록합니다. `record.stop`은 새 요청을 만들지 않고 현재 CLI 녹화를 멈추므로 BUSY 상태에서도 사용할 수 있습니다. MP4가 MediaStore에 저장된 뒤 artifact를 등록합니다. 무음 녹화는 마이크 권한을 요구하지 않습니다. 녹화 준비는 30초, 전체 실행은 기본 1시간 이내이며 시간 초과는 failed로 기록합니다. 화면 이탈로 종료된 녹화는 RECORDING_INTERRUPTED로 구분합니다.
 
 `complete`는 saving으로 옮긴 뒤 IO 스레드에서 artifact의 크기와 SHA-256을 계산하고 terminal state를 정합니다. 취소 코드가 `EXECUTION_TIMEOUT`이면 failed, 결과가 `cancelled`이거나 실패가 `CANCELLED`면 cancelled, 그 밖에는 succeeded입니다. 이미 saving에 들어간 요청은 취소해도 실제 결과로 끝나며 `cancel_effective`로 늦은 취소를 표시합니다. `release`는 active 요청과 timeout을 정리하고, `CommandStore.cleanup`은 만료·초과 기록을 지우면서 `onExpire`로 그 요청의 artifact 디렉터리도 함께 지웁니다.
+
+ADB CLI는 저장된 설정이 없으면 허용합니다. 사용자가 명시적으로 끈 설정은 업데이트 후에도 유지하며, 비활성화하면 실행 중인 요청을 취소합니다.

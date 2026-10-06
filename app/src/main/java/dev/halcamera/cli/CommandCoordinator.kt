@@ -51,7 +51,8 @@ class CommandCoordinator private constructor(private val context: Context) {
     private var handover = false
     private var timeout: Runnable? = null
     @Volatile private var cancellationCode: String? = null
-    val enabled: Boolean get() = context.getSharedPreferences("cli", Context.MODE_PRIVATE).getBoolean("enabled", false)
+    // Default to ADB access; preserve an explicit opt-out across app updates.
+    val enabled: Boolean get() = context.getSharedPreferences("cli", Context.MODE_PRIVATE).getBoolean("enabled", true)
     val busy: Boolean get() = active != null || uiBusy
 
     fun setEnabled(value: Boolean) {
