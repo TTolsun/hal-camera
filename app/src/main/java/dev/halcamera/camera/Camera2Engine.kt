@@ -53,6 +53,9 @@ class Camera2Engine(
     private var closeDone: (() -> Unit)? = null
     override val mediaBusy: Boolean get() = stills.inFlight || video.busy || bench.recording
     private var previewSeen = false
+    /** LIVE only: a benchmark measures its one open as it happened. Camera thread only. */
+    private val openRetry = CameraOpenRetry()
+    private var retryDelayMs: Long? = null
     private val mediaIo = Executors.newSingleThreadExecutor()
     private val library = MediaLibrary(context)
     @Volatile private var zoomRatio = 1f
@@ -219,18 +222,46 @@ class Camera2Engine(
                 }
                 override fun onDisconnected(camera: CameraDevice) {
                     opening = false
-                    report("Camera disconnected", false)
+                    retryDelayMs = retryDelay(CameraOpenRetry.Cause.DISCONNECTED, "disconnected")
+                    if (retryDelayMs == null) openFailed("Camera disconnected")
                     camera.close()
                 }
                 override fun onError(camera: CameraDevice, error: Int) {
                     opening = false
-                    report("Camera2 error $error", false)
                     telemetry.event(sessionId, "camera_error", mapOf("code" to error))
+                    retryDelayMs = retryDelay(CameraOpenRetry.Cause.fromStateError(error), "error $error")
+                    if (retryDelayMs == null) openFailed("Camera2 error $error")
                     camera.close()
                 }
-                override fun onClosed(camera: CameraDevice) { device = null; finishClose() }
+                override fun onClosed(camera: CameraDevice) {
+                    device = null
+                    val delay = retryDelayMs.also { retryDelayMs = null }
+                    if (active && delay != null) handler.postDelayed({ open() }, delay) else finishClose()
+                }
             }, handler)
-        } catch (e: Exception) { opening = false; fail(e); if (!active) finishClose() }
+        } catch (e: Exception) {
+            opening = false
+            val cause = (e as? CameraAccessException)?.let { CameraOpenRetry.Cause.fromAccessReason(it.reason) }
+            val delay = cause?.let { retryDelay(it, e.toString()) }
+            if (delay != null) handler.postDelayed({ open() }, delay) else { fail(e); if (!active) finishClose() }
+        }
+    }
+    /**
+     * A LIVE open that fails before the first frame is tried again (#224); the device is reopened from onClosed.
+     * The partial session goes with it, so configure() starts clean on the next device.
+     */
+    private fun retryDelay(cause: CameraOpenRetry.Cause, detail: String): Long? {
+        if (!active || spec != null || previewSeen) return null
+        val delay = openRetry.next(cause) ?: return null
+        captureSession = null
+        configuredOutputs = StreamConfiguration(emptyList())
+        telemetry.event(sessionId, "open_retry", mapOf("cause" to detail, "attempt" to openRetry.attempts, "delayMs" to delay))
+        return delay
+    }
+    /** Before the first frame nothing else would end a pending CLI preview, so the failure is reported at once. */
+    private fun openFailed(message: String) {
+        report(message, false)
+        if (spec == null && !previewSeen) main.post { if (active) streamsFailed(message) }
     }
     private fun choose(sizes: Array<Size>, maxPixels: Long): Size =
         sizes.filter { it.width.toLong() * it.height <= maxPixels }.maxByOrNull { it.width.toLong() * it.height }
