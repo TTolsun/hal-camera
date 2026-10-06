@@ -330,7 +330,8 @@ class Camera2Engine(
             val sessionCallback = object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(session: CameraCaptureSession) {
                     telemetry.event(sessionId, "session_configured", sizes)
-                    if (!active) { session.close(); return }
+                    // A session of a device that a retry already replaced (#224) is no longer this engine's.
+                    if (!active || device !== camera) { session.close(); return }
                     captureSession = session
                     configuredOutputs = outputs
                     telemetry.configureCallbackStreams(sessionId, outputs.metadata())
@@ -347,6 +348,7 @@ class Camera2Engine(
                 }
                 override fun onConfigureFailed(session: CameraCaptureSession) {
                     session.close()
+                    if (device !== camera) return
                     telemetry.event(sessionId, "configure_failed", sizes)
                     report("Camera2 stream combination rejected; select another camera", false)
                     if (spec == null) main.post { if (active) streamsFailed("The camera rejected the requested stream combination.") }
