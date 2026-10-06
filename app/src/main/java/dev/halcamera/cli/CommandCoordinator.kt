@@ -85,7 +85,7 @@ class CommandCoordinator private constructor(private val context: Context) {
     }
 
     fun hello(): JSONObject {
-        if (!enabled) return CliJson.failure("CLI_DISABLED", "Enable ADB CLI in Tools > Settings > ADB CLI")
+        if (!enabled) return CliJson.failure("CLI_DISABLED", "Enable ADB CLI in Lab > ADB CLI")
         val info = context.packageManager.getPackageInfo(context.packageName, 0)
         return CliJson.envelope().put("enabled", true).put("app_version", info.versionName)
             .put("commands", JSONArray(CliCommand.COMMANDS))
