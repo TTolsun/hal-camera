@@ -97,21 +97,24 @@ object ProgressPresenter {
     fun headline(phase: BenchmarkRunner.Phase, iteration: Int, total: Int, records: Boolean = false): String {
         val visible = phases(records)
         val step = visible.indexOf(phase) + 1
-        val suffix = if (countsLaunchCycles(phase, total)) "  ${iteration + 1}/$total" else ""
+        val suffix = if (countsLaunchCycles(phase, total) || (phase == BenchmarkRunner.Phase.RECORDING && total > 0)) "  ${iteration + 1}/$total" else ""
         return "$step / ${visible.size}  ${phaseText(phase)}$suffix"
     }
 
-    fun percent(phase: BenchmarkRunner.Phase, iteration: Int, total: Int, records: Boolean = false): Int {
+    fun percent(phase: BenchmarkRunner.Phase, iteration: Int, total: Int, records: Boolean = false, recordingFraction: Double = 0.0): Int {
         val visible = phases(records)
         val totalSeconds = visible.sumOf { PHASE_SECONDS[it] ?: 0.0 }
         val before = visible.takeWhile { it != phase }.sumOf { PHASE_SECONDS[it] ?: 0.0 }
-        val elapsed = before + (PHASE_SECONDS[phase] ?: 0.0) * launchFraction(phase, iteration, total)
+        val fraction = if (phase == BenchmarkRunner.Phase.RECORDING && total > 0)
+            ((iteration + recordingFraction.coerceIn(0.0, 1.0)) / total).coerceIn(0.0, 1.0)
+        else launchFraction(phase, iteration, total)
+        val elapsed = before + (PHASE_SECONDS[phase] ?: 0.0) * fraction
         return ((elapsed / totalSeconds) * 100).roundToInt().coerceIn(0, 100)
     }
 
     /**
      * [BenchmarkRunner.progress] reports `iteration = total = launchIterations` for every phase after the launch
-     * cycles, because the observation session is the eleventh open. Taken at face value that reads as cycle
+     * cycles except RECORDING, which reports its own cycle index/count. The observation session is the eleventh open. Taken at face value that reads as cycle
      * 11/10 and drives the bar to the end of each phase the moment it starts, so the counter is confined here to
      * the one phase it describes rather than changing the runner's contract, which other callers already read.
      */
@@ -120,6 +123,14 @@ object ProgressPresenter {
 
     private fun launchFraction(phase: BenchmarkRunner.Phase, iteration: Int, total: Int): Double =
         if (countsLaunchCycles(phase, total)) (iteration.toDouble() / total).coerceIn(0.0, 1.0) else 0.0
+
+    fun recordingDetail(step: BenchmarkRunner.Step, elapsedMs: Long, durationMs: Long): String = when (step) {
+        BenchmarkRunner.Step.RECORD_PREPARE -> "Preparing recorder"
+        BenchmarkRunner.Step.RECORD_START -> "Starting recorder"
+        BenchmarkRunner.Step.RECORD_RUN -> String.format(Locale.US, "Recording · %.1f / %.1f s", elapsedMs.coerceAtLeast(0) / 1000.0, durationMs / 1000.0)
+        BenchmarkRunner.Step.RECORD_STOP -> "Saving recording"
+        else -> ""
+    }
 
     /**
      * The whole progress line. The percentage is placed first on purpose, because it is the part that has to

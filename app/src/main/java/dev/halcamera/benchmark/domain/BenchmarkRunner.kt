@@ -105,7 +105,7 @@ class BenchmarkRunner(
     }
 
     interface Listener {
-        /** [iteration] and [total] count launch cycles; both are 0 outside the launch phase. */
+        /** Zero-based cycle index and count: recording cycles in RECORDING, launch cycles otherwise. */
         fun onProgress(phase: Phase, step: Step, iteration: Int, total: Int)
         fun onFinished(result: Result)
     }
@@ -451,8 +451,8 @@ class BenchmarkRunner(
             Step.RECORD_PREPARE, Step.RECORD_START, Step.RECORD_RUN, Step.RECORD_STOP -> Phase.RECORDING
             else -> Phase.CAMERA_CLOSE
         }
-        val iteration = if (onObservationSession) profile.launchIterations else cycleIndex
-        listener.onProgress(phase, step, iteration, profile.launchIterations)
+        val iteration = if (onRecordStep) recordIndex else if (onObservationSession) profile.launchIterations else cycleIndex
+        listener.onProgress(phase, step, iteration, if (onRecordStep) profile.recordIterations ?: 0 else profile.launchIterations)
     }
 
     /** A timeout or a camera error. Inside a launch cycle it fails that cycle; anywhere else it ends the run. */

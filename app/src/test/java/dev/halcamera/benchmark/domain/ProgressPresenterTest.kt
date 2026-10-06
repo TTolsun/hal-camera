@@ -8,6 +8,23 @@ import org.junit.Test
 
 /** The progress screen contract of 8.3: the six phases, a time-weighted bar and the live preview numbers. */
 class ProgressPresenterTest {
+    @Test fun recordingShowsItsCycleAndAdvancesWithinTheCycle() {
+        assertEquals("6 / 7  Recording  2/5", ProgressPresenter.headline(Phase.RECORDING, 1, 5, true))
+        val start = ProgressPresenter.percent(Phase.RECORDING, 1, 5, true, 0.0)
+        val middle = ProgressPresenter.percent(Phase.RECORDING, 1, 5, true, 0.5)
+        val end = ProgressPresenter.percent(Phase.RECORDING, 1, 5, true, 1.0)
+        assertTrue(start < middle && middle < end)
+        assertEquals(end, ProgressPresenter.percent(Phase.RECORDING, 2, 5, true, 0.0))
+        assertEquals(end, ProgressPresenter.percent(Phase.RECORDING, 1, 5, true, 20.0))
+        assertTrue(ProgressPresenter.percent(Phase.RECORDING, 4, 5, true, 1.0) < 100)
+    }
+
+    @Test fun recordingDistinguishesPreparationTimedRecordingAndSaving() {
+        assertEquals("Preparing recorder", ProgressPresenter.recordingDetail(BenchmarkRunner.Step.RECORD_PREPARE, 0, 9000))
+        assertEquals("Starting recorder", ProgressPresenter.recordingDetail(BenchmarkRunner.Step.RECORD_START, 0, 9000))
+        assertEquals("Recording · 2.5 / 9.0 s", ProgressPresenter.recordingDetail(BenchmarkRunner.Step.RECORD_RUN, 2500, 9000))
+        assertEquals("Saving recording", ProgressPresenter.recordingDetail(BenchmarkRunner.Step.RECORD_STOP, 9500, 9000))
+    }
 
     // ---- headline ----
 

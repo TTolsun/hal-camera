@@ -114,6 +114,11 @@ class BenchmarkActivity : ComponentActivity() {
     private var engine: Camera2Engine? = null
     private var thermal: ThermalTracker? = null
     private val liveStats = LiveFrameStats()
+    private val recordingStats = LiveFrameStats()
+    private var progressStep = BenchmarkRunner.Step.OPEN
+    private var progressIteration = 0
+    private var progressTotal = 0
+    private var recordingStartedNs = 0L
     private var livePhase: BenchmarkRunner.Phase? = null
     private var ticker: Runnable? = null
     /** Re-runs preflight while the card is blocked on heat, so START returns by itself once the device cools. */
@@ -669,8 +674,17 @@ class BenchmarkActivity : ComponentActivity() {
                 // launch cycles that came before and are measured separately.
                 if (phase != livePhase && phase == BenchmarkRunner.Phase.FIRST_PREVIEW) liveStats.reset()
                 livePhase = phase
+                progressStep = step
+                progressIteration = iteration
+                progressTotal = total
+                if (step == BenchmarkRunner.Step.RECORD_PREPARE) {
+                    recordingStats.reset()
+                    recordingStartedNs = 0L
+                }
+                if (step == BenchmarkRunner.Step.RECORD_RUN) recordingStartedNs = nowNs()
                 progressHeadline?.text = ProgressPresenter.headline(phase, iteration, total, profile.records)
                 progressBar?.text = ProgressPresenter.barLine(ProgressPresenter.percent(phase, iteration, total, profile.records))
+                updateStats()
             }
             override fun onFinished(result: BenchmarkRunner.Result) { finishRun(result) }
         }
@@ -710,7 +724,22 @@ class BenchmarkActivity : ComponentActivity() {
     }
 
     private fun updateStats() {
-        progressStats?.text = ProgressPresenter.statLines(liveStats.snapshot(), thermal?.current)
+        val recording = livePhase == BenchmarkRunner.Phase.RECORDING
+        progressStats?.text = (if (recording) "Recording frames (this cycle)\n" else "") +
+            ProgressPresenter.statLines((if (recording) recordingStats else liveStats).snapshot(), thermal?.current)
+        if (recording) {
+            val elapsedMs = if (recordingStartedNs == 0L) 0L else (nowNs() - recordingStartedNs) / 1_000_000
+            val durationMs = profile.recordDurationMs ?: 0L
+            val fraction = when (progressStep) {
+                BenchmarkRunner.Step.RECORD_STOP -> 1.0
+                BenchmarkRunner.Step.RECORD_RUN -> if (durationMs > 0) elapsedMs.toDouble() / durationMs else 0.0
+                else -> 0.0
+            }
+            progressHeadline?.text = ProgressPresenter.headline(BenchmarkRunner.Phase.RECORDING, progressIteration, progressTotal, true) +
+                "\n" + ProgressPresenter.recordingDetail(progressStep, elapsedMs, durationMs)
+            progressBar?.text = ProgressPresenter.barLine(ProgressPresenter.percent(BenchmarkRunner.Phase.RECORDING,
+                progressIteration, progressTotal, true, fraction))
+        }
     }
 
     /** Maps Camera2Engine telemetry events to runner signals. Runs on the main thread. */
@@ -755,8 +784,12 @@ class BenchmarkActivity : ComponentActivity() {
                     }
                 }
             }
-            "capture_result" -> (e.values["requestTag"] as? String)?.takeIf { it.startsWith("still-") }
-                ?.let { r.stillResult(s, it, e.sensorNs, e.atNs) }
+            "capture_result" -> {
+                val tag = e.values["requestTag"] as? String
+                if (s == r.currentSession && livePhase == BenchmarkRunner.Phase.RECORDING && tag == RecordCycle.tag(progressIteration))
+                    recordingStats.frame(e.sensorNs)
+                tag?.takeIf { it.startsWith("still-") }?.let { r.stillResult(s, it, e.sensorNs, e.atNs) }
+            }
             "closed" -> r.signal(s, BenchmarkRunner.Signal.CLOSED, e.atNs)
             "camera_error", "configure_failed", "capture_timeout" ->
                 r.signal(s, BenchmarkRunner.Signal.ERROR, e.atNs, e.kind)
