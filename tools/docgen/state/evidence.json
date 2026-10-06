@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6e6039b51b3b11b7",
+        "codeHash": "846d7dce18b037c7",
         "modelHash": "e41299a58809d6d8",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/build.gradle.kts": "2594c31664723439dfae44e2115552bb48822f56",
@@ -59,7 +59,7 @@
           "app/src/main/java/dev/halcamera/benchmark/platform/SubjectPrefs.kt": "bb75f4114f254b1f0340ae20da629c862922b75f",
           "app/src/main/java/dev/halcamera/benchmark/platform/ThermalTracker.kt": "5572c02cd6ed7ad1f8fcd9285c02b03cb3f60ee1",
           "app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt": "f15c520fa871ff94c5c1069ad962d36cf485b85b",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt": "cdc01c7e9cc4da75ecfc990cab41e434ac409b10",
           "app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt": "f4d02ed651f16ea42a7592ac4e7382bedc53e03e",
           "app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt": "4beb2d0fbb76b95755dc1d6d9a8e583b9cda318e",
@@ -188,10 +188,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "f560ac466a82ea37",
+        "codeHash": "4349a000821bbd59",
         "modelHash": "ab8e108ba372e37b",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -212,7 +212,7 @@
           "app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt": "31d23aa58a7f511f67b0998ebb2b8f3b950c20ce",
           "app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt": "cb8a23b1587af5faf4409d01b075f2a615987c62",
           "app/src/main/java/dev/halcamera/benchmark/platform/DeviceInstance.kt": "de92f80d56a8fdd9c6123516e25595a0f309bd48",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "518c730a1dd2c1e011fbe4792d1c72a8ba351ae1",
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "fa8061d45b3317db29c8c3d9db361fc7f3d84fe6",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f4a2848c02b7dd9eb076fc4e99dd869e2db7a782",
@@ -237,10 +237,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "07c5d55c8f3a9769",
+        "codeHash": "a8e14717841325f1",
         "modelHash": "8c42f705d599b497",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/src/main/java/dev/halcamera/MainActivity.kt": "8a5b3199c0a3ffff2800943b307f40ace9f697c5",
@@ -251,7 +251,7 @@
           "app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt": "f5f61d7831bc80cbb6d127dc804bd148b8653ef1",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt": "4273abbd87e60cc98b9b416d0856b5b84a8b7561",
           "app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt": "df32b7ff015c81cb44407884ea02deda965752df",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "fa8061d45b3317db29c8c3d9db361fc7f3d84fe6",
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "586757ab962be12cb4604062da5d0042fe04cb01",
@@ -272,10 +272,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e6d3fdbd81421f63",
+        "codeHash": "d5ec41b9653f8315",
         "modelHash": "f50f9f3d567d411e",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/build.gradle.kts": "2594c31664723439dfae44e2115552bb48822f56",
@@ -325,7 +325,7 @@
           "app/src/main/java/dev/halcamera/benchmark/platform/SubjectPrefs.kt": "bb75f4114f254b1f0340ae20da629c862922b75f",
           "app/src/main/java/dev/halcamera/benchmark/platform/ThermalTracker.kt": "5572c02cd6ed7ad1f8fcd9285c02b03cb3f60ee1",
           "app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt": "f15c520fa871ff94c5c1069ad962d36cf485b85b",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt": "cdc01c7e9cc4da75ecfc990cab41e434ac409b10",
           "app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt": "f4d02ed651f16ea42a7592ac4e7382bedc53e03e",
           "app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt": "4beb2d0fbb76b95755dc1d6d9a8e583b9cda318e",
@@ -456,10 +456,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6efe84974ed5e30b",
+        "codeHash": "c411ffe79e1bda15",
         "modelHash": "4ebc3ee2439b698e",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -481,7 +481,7 @@
           "app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt": "cb8a23b1587af5faf4409d01b075f2a615987c62",
           "app/src/main/java/dev/halcamera/benchmark/platform/DeviceInstance.kt": "de92f80d56a8fdd9c6123516e25595a0f309bd48",
           "app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt": "c406e4887c0617d8b57eb4b3c91263f427953372",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "518c730a1dd2c1e011fbe4792d1c72a8ba351ae1",
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "fa8061d45b3317db29c8c3d9db361fc7f3d84fe6",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "f4a2848c02b7dd9eb076fc4e99dd869e2db7a782",
@@ -506,10 +506,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "acef6f51a601cf16",
+        "codeHash": "8ae4dbdc3d4665c4",
         "modelHash": "c411ad0f2781f492",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -530,7 +530,7 @@
           "app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt": "31d23aa58a7f511f67b0998ebb2b8f3b950c20ce",
           "app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt": "cb8a23b1587af5faf4409d01b075f2a615987c62",
           "app/src/main/java/dev/halcamera/benchmark/platform/DeviceInstance.kt": "de92f80d56a8fdd9c6123516e25595a0f309bd48",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "518c730a1dd2c1e011fbe4792d1c72a8ba351ae1",
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "fa8061d45b3317db29c8c3d9db361fc7f3d84fe6",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "d4f32c9e84ffb23b5317685ac4bcb5a2bf161388",
@@ -554,10 +554,10 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "6e6039b51b3b11b7",
+        "codeHash": "846d7dce18b037c7",
         "modelHash": "713a829c5704c118",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/build.gradle.kts": "2594c31664723439dfae44e2115552bb48822f56",
@@ -607,7 +607,7 @@
           "app/src/main/java/dev/halcamera/benchmark/platform/SubjectPrefs.kt": "bb75f4114f254b1f0340ae20da629c862922b75f",
           "app/src/main/java/dev/halcamera/benchmark/platform/ThermalTracker.kt": "5572c02cd6ed7ad1f8fcd9285c02b03cb3f60ee1",
           "app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt": "f15c520fa871ff94c5c1069ad962d36cf485b85b",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt": "cdc01c7e9cc4da75ecfc990cab41e434ac409b10",
           "app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt": "f4d02ed651f16ea42a7592ac4e7382bedc53e03e",
           "app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt": "4beb2d0fbb76b95755dc1d6d9a8e583b9cda318e",
@@ -736,10 +736,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "6e6039b51b3b11b7",
+        "codeHash": "846d7dce18b037c7",
         "modelHash": "7aff015aae33de0a",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/build.gradle.kts": "2594c31664723439dfae44e2115552bb48822f56",
@@ -789,7 +789,7 @@
           "app/src/main/java/dev/halcamera/benchmark/platform/SubjectPrefs.kt": "bb75f4114f254b1f0340ae20da629c862922b75f",
           "app/src/main/java/dev/halcamera/benchmark/platform/ThermalTracker.kt": "5572c02cd6ed7ad1f8fcd9285c02b03cb3f60ee1",
           "app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt": "f15c520fa871ff94c5c1069ad962d36cf485b85b",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt": "cdc01c7e9cc4da75ecfc990cab41e434ac409b10",
           "app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt": "f4d02ed651f16ea42a7592ac4e7382bedc53e03e",
           "app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt": "4beb2d0fbb76b95755dc1d6d9a8e583b9cda318e",
@@ -967,10 +967,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6e6039b51b3b11b7",
+        "codeHash": "846d7dce18b037c7",
         "modelHash": "a1522959353184e9",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/build.gradle.kts": "2594c31664723439dfae44e2115552bb48822f56",
@@ -1020,7 +1020,7 @@
           "app/src/main/java/dev/halcamera/benchmark/platform/SubjectPrefs.kt": "bb75f4114f254b1f0340ae20da629c862922b75f",
           "app/src/main/java/dev/halcamera/benchmark/platform/ThermalTracker.kt": "5572c02cd6ed7ad1f8fcd9285c02b03cb3f60ee1",
           "app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt": "f15c520fa871ff94c5c1069ad962d36cf485b85b",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt": "cdc01c7e9cc4da75ecfc990cab41e434ac409b10",
           "app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt": "f4d02ed651f16ea42a7592ac4e7382bedc53e03e",
           "app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt": "4beb2d0fbb76b95755dc1d6d9a8e583b9cda318e",
@@ -1149,10 +1149,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6e6039b51b3b11b7",
+        "codeHash": "846d7dce18b037c7",
         "modelHash": "cf76edecaea86aa6",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/build.gradle.kts": "2594c31664723439dfae44e2115552bb48822f56",
@@ -1202,7 +1202,7 @@
           "app/src/main/java/dev/halcamera/benchmark/platform/SubjectPrefs.kt": "bb75f4114f254b1f0340ae20da629c862922b75f",
           "app/src/main/java/dev/halcamera/benchmark/platform/ThermalTracker.kt": "5572c02cd6ed7ad1f8fcd9285c02b03cb3f60ee1",
           "app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt": "f15c520fa871ff94c5c1069ad962d36cf485b85b",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt": "cdc01c7e9cc4da75ecfc990cab41e434ac409b10",
           "app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt": "f4d02ed651f16ea42a7592ac4e7382bedc53e03e",
           "app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt": "4beb2d0fbb76b95755dc1d6d9a8e583b9cda318e",
@@ -1331,10 +1331,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6e6039b51b3b11b7",
+        "codeHash": "846d7dce18b037c7",
         "modelHash": "544938bff6fa9eed",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/build.gradle.kts": "2594c31664723439dfae44e2115552bb48822f56",
@@ -1384,7 +1384,7 @@
           "app/src/main/java/dev/halcamera/benchmark/platform/SubjectPrefs.kt": "bb75f4114f254b1f0340ae20da629c862922b75f",
           "app/src/main/java/dev/halcamera/benchmark/platform/ThermalTracker.kt": "5572c02cd6ed7ad1f8fcd9285c02b03cb3f60ee1",
           "app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt": "f15c520fa871ff94c5c1069ad962d36cf485b85b",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt": "cdc01c7e9cc4da75ecfc990cab41e434ac409b10",
           "app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt": "f4d02ed651f16ea42a7592ac4e7382bedc53e03e",
           "app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt": "4beb2d0fbb76b95755dc1d6d9a8e583b9cda318e",
@@ -1513,10 +1513,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6e6039b51b3b11b7",
+        "codeHash": "846d7dce18b037c7",
         "modelHash": "9bfa23b67619703a",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/build.gradle.kts": "2594c31664723439dfae44e2115552bb48822f56",
@@ -1566,7 +1566,7 @@
           "app/src/main/java/dev/halcamera/benchmark/platform/SubjectPrefs.kt": "bb75f4114f254b1f0340ae20da629c862922b75f",
           "app/src/main/java/dev/halcamera/benchmark/platform/ThermalTracker.kt": "5572c02cd6ed7ad1f8fcd9285c02b03cb3f60ee1",
           "app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt": "f15c520fa871ff94c5c1069ad962d36cf485b85b",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt": "cdc01c7e9cc4da75ecfc990cab41e434ac409b10",
           "app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt": "f4d02ed651f16ea42a7592ac4e7382bedc53e03e",
           "app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt": "4beb2d0fbb76b95755dc1d6d9a8e583b9cda318e",
@@ -1695,10 +1695,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6e6039b51b3b11b7",
+        "codeHash": "846d7dce18b037c7",
         "modelHash": "18642376d849faa5",
         "at": "2026-10-06",
-        "commit": "a2e66c4",
+        "commit": "f8a4220",
         "reviewer": "Claude-issue224-review",
         "files": {
           "app/build.gradle.kts": "2594c31664723439dfae44e2115552bb48822f56",
@@ -1748,7 +1748,7 @@
           "app/src/main/java/dev/halcamera/benchmark/platform/SubjectPrefs.kt": "bb75f4114f254b1f0340ae20da629c862922b75f",
           "app/src/main/java/dev/halcamera/benchmark/platform/ThermalTracker.kt": "5572c02cd6ed7ad1f8fcd9285c02b03cb3f60ee1",
           "app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt": "f15c520fa871ff94c5c1069ad962d36cf485b85b",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "1e410c7a36581ef6faa6023d810bc95178219071",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "dc31315fd51734d94fef72114e2b34955014df9a",
           "app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt": "cdc01c7e9cc4da75ecfc990cab41e434ac409b10",
           "app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt": "f4d02ed651f16ea42a7592ac4e7382bedc53e03e",
           "app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt": "4beb2d0fbb76b95755dc1d6d9a8e583b9cda318e",
