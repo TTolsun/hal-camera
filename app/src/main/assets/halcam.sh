@@ -24,7 +24,7 @@ Stream options for preview/capture/record start:
 Omitted stream fields use defaults. CameraX recording codec is Auto.
 Options: --timeout SECONDS (operation deadline), --no-wait (return request ID)
 Default camera: 0. Microphone is enabled unless --no-audio is given.
-Only one operation runs at a time. Unlock the device and allow ADB CLI in the app.
+Only one operation runs at a time. Unlock the device. ADB CLI is allowed by default.
 Example: adb shell sh /data/local/tmp/halcam capture --camera 0
 EOF
 }

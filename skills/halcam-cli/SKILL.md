@@ -9,13 +9,15 @@ PC에 필요한 것은 `adb` 하나입니다. 명령을 해석하고 완료를 �
 
 ## 1. 준비 (기기마다 한 번, APK를 갱신한 뒤에도 같은 명령)
 
-가장 먼저 기기 상태를 읽습니다. 응답의 `enabled`, `camera_permission`, `locked`가 아래 1·2번 중 무엇을 사람에게 요청해야 하는지 알려 주므로, 명령을 시도하다가 오류로 알아내는 것보다 빠릅니다.
+Windows(PowerShell·CMD)와 WSL에서 같은 명령을 사용합니다. 환경별 ADB 연결과 파일 경로는 `guide/cli.md`의 Windows·WSL 연결 안내를 따릅니다.
+
+가장 먼저 기기 상태를 읽습니다. 응답의 `error`, `camera_permission`, `locked`가 아래 1·2번 중 무엇을 사람에게 요청해야 하는지 알려 주므로, 명령을 시도하다가 오류로 알아내는 것보다 빠릅니다.
 
 ```sh
 adb exec-out content read --uri content://dev.halcamera.cli/v1/hello
 ```
 
-1. `enabled`가 `false`이면 사용자에게 요청합니다. Live 화면의 **도구 → 설정 · 앱 정보 → ADB CLI 설정**에서 **ADB CLI 허용**을 켜야 합니다. 초기값이 꺼짐이므로 사람이 직접 켜야 하며, 꺼져 있으면 provider에 닿는 모든 명령이 `CLI_DISABLED`로 끝납니다. 스크립트가 자체적으로 처리하는 `help`만 예외입니다.
+1. `CLI_DISABLED` 오류이면 사용자에게 앱의 **Lab → ADB CLI**에서 **ADB CLI 허용**을 켜 달라고 요청합니다. 기본값은 켜짐이며, 사용자가 저장한 꺼짐 설정은 업데이트 후에도 유지합니다. 꺼져 있으면 provider에 닿는 모든 명령이 `CLI_DISABLED`로 끝납니다. 스크립트가 자체적으로 처리하는 `help`만 예외입니다.
 2. `camera_permission`이 `false`이거나 `locked`가 `true`이면 카메라 권한 허용과 화면 잠금 해제를 요청합니다. 소리를 포함한 녹화에는 마이크 권한도 필요합니다.
 3. 기기에 스크립트를 내려놓습니다.
 

@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "038823cae69f2329",
+        "codeHash": "9deb9084a20f498f",
         "modelHash": "08592662545bdd64",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -104,7 +104,7 @@
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
           "app/src/main/java/dev/halcamera/cli/CliStreams.kt": "5b127e2dea9ae4b70d5e8cdb600d060d31254cc3",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -187,11 +187,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "a9d7f0bc8287f1b2",
+        "codeHash": "85e41f7ecf72d88a",
         "modelHash": "1107124340c17721",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "823b905e55712b061d2d081b10f59ccb8b95b659",
@@ -219,7 +219,7 @@
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "c4ef5a864976fa43c2a808015b2d5edc2a45ed6c",
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -236,11 +236,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1440f9e809436b82",
-        "modelHash": "dceb14c9e080ed39",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "codeHash": "c437807ccaeb4ac6",
+        "modelHash": "d0b7efc5208a144f",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/src/main/java/dev/halcamera/MainActivity.kt": "823b905e55712b061d2d081b10f59ccb8b95b659",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "d14ce6485246ed0dbb3dfa85fb9fb88dba49f8cd",
@@ -255,7 +255,7 @@
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "c4ef5a864976fa43c2a808015b2d5edc2a45ed6c",
           "app/src/main/java/dev/halcamera/cli/CliCommand.kt": "b66e24e66b27af1256a9c285165bd005b9254aac",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -271,11 +271,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e57c42bc71ae2ca4",
+        "codeHash": "a1426fb213b59a18",
         "modelHash": "ce65306ff07f143c",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -369,7 +369,7 @@
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
           "app/src/main/java/dev/halcamera/cli/CliStreams.kt": "5b127e2dea9ae4b70d5e8cdb600d060d31254cc3",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -454,11 +454,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "ad83556bdf0325f3",
+        "codeHash": "12a7fb22cfc4ebc2",
         "modelHash": "4ca75eb8f3cf46ed",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "823b905e55712b061d2d081b10f59ccb8b95b659",
@@ -487,7 +487,7 @@
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "c4ef5a864976fa43c2a808015b2d5edc2a45ed6c",
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -504,11 +504,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "ef6a2eb0d45ce155",
-        "modelHash": "b968b604f82bc1cf",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "codeHash": "f77eb48530cfb78b",
+        "modelHash": "d48e52acfaf3d53e",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "823b905e55712b061d2d081b10f59ccb8b95b659",
@@ -538,7 +538,7 @@
           "app/src/main/java/dev/halcamera/cli/CliCommand.kt": "b66e24e66b27af1256a9c285165bd005b9254aac",
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -552,11 +552,11 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "038823cae69f2329",
+        "codeHash": "9deb9084a20f498f",
         "modelHash": "1ada0bef907c9ea4",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -650,7 +650,7 @@
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
           "app/src/main/java/dev/halcamera/cli/CliStreams.kt": "5b127e2dea9ae4b70d5e8cdb600d060d31254cc3",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -733,11 +733,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "038823cae69f2329",
+        "codeHash": "9deb9084a20f498f",
         "modelHash": "4209430faf0edb8b",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -831,7 +831,7 @@
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
           "app/src/main/java/dev/halcamera/cli/CliStreams.kt": "5b127e2dea9ae4b70d5e8cdb600d060d31254cc3",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -963,11 +963,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "038823cae69f2329",
+        "codeHash": "9deb9084a20f498f",
         "modelHash": "40b8e02b98b7d00d",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1061,7 +1061,7 @@
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
           "app/src/main/java/dev/halcamera/cli/CliStreams.kt": "5b127e2dea9ae4b70d5e8cdb600d060d31254cc3",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -1144,11 +1144,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "038823cae69f2329",
+        "codeHash": "9deb9084a20f498f",
         "modelHash": "9a6e4654d2221ce3",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1242,7 +1242,7 @@
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
           "app/src/main/java/dev/halcamera/cli/CliStreams.kt": "5b127e2dea9ae4b70d5e8cdb600d060d31254cc3",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -1325,11 +1325,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "038823cae69f2329",
+        "codeHash": "9deb9084a20f498f",
         "modelHash": "2047086003075a8e",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1423,7 +1423,7 @@
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
           "app/src/main/java/dev/halcamera/cli/CliStreams.kt": "5b127e2dea9ae4b70d5e8cdb600d060d31254cc3",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -1506,11 +1506,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "038823cae69f2329",
+        "codeHash": "9deb9084a20f498f",
         "modelHash": "dad5a67f5f4e6cbc",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1604,7 +1604,7 @@
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
           "app/src/main/java/dev/halcamera/cli/CliStreams.kt": "5b127e2dea9ae4b70d5e8cdb600d060d31254cc3",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
@@ -1687,11 +1687,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "038823cae69f2329",
+        "codeHash": "9deb9084a20f498f",
         "modelHash": "5ad41438f14615bb",
-        "at": "2026-10-05",
-        "commit": "2216f02",
-        "reviewer": "Codex-issue220-code-review",
+        "at": "2026-10-06",
+        "commit": "a63c5de",
+        "reviewer": "Codex-cli-default",
         "files": {
           "app/build.gradle.kts": "731d14f81e4678841b74567b6c2a78df76187a01",
           "app/src/main/AndroidManifest.xml": "49756f91a09e9b211fd870433f752862f0742ceb",
@@ -1785,7 +1785,7 @@
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "b866b11a522b16b52e05533fa1acf81363fd8eb4",
           "app/src/main/java/dev/halcamera/cli/CliStreams.kt": "5b127e2dea9ae4b70d5e8cdb600d060d31254cc3",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "a57b83d5440ca8df7b97578fe27f392b7583cea3",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "6b364ef4dd637aaaec1e4fa6f2d3014058d86046",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "38c5b4fc9dfb7e4349efee10c8ea97d77643a237",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "0980e1ed39f267e62610883a352f4e38cfa0c9c4",
           "app/src/main/java/dev/halcamera/cli/LiveController.kt": "4ee217c397ab15db2ec04f2a6f9b574b8a4c14ec",
