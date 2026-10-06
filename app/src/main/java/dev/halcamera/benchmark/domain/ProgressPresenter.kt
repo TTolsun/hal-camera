@@ -97,21 +97,24 @@ object ProgressPresenter {
     fun headline(phase: BenchmarkRunner.Phase, iteration: Int, total: Int, records: Boolean = false): String {
         val visible = phases(records)
         val step = visible.indexOf(phase) + 1
-        val suffix = if (countsLaunchCycles(phase, total)) "  ${iteration + 1}/$total" else ""
+        val suffix = if (countsLaunchCycles(phase, total) || (phase == BenchmarkRunner.Phase.RECORDING && total > 0)) "  ${iteration + 1}/$total" else ""
         return "$step / ${visible.size}  ${phaseText(phase)}$suffix"
     }
 
-    fun percent(phase: BenchmarkRunner.Phase, iteration: Int, total: Int, records: Boolean = false): Int {
+    fun percent(phase: BenchmarkRunner.Phase, iteration: Int, total: Int, records: Boolean = false, recordingFraction: Double = 0.0): Int {
         val visible = phases(records)
         val totalSeconds = visible.sumOf { PHASE_SECONDS[it] ?: 0.0 }
         val before = visible.takeWhile { it != phase }.sumOf { PHASE_SECONDS[it] ?: 0.0 }
-        val elapsed = before + (PHASE_SECONDS[phase] ?: 0.0) * launchFraction(phase, iteration, total)
+        val fraction = if (phase == BenchmarkRunner.Phase.RECORDING && total > 0)
+            ((iteration + recordingFraction.coerceIn(0.0, 1.0)) / total).coerceIn(0.0, 1.0)
+        else launchFraction(phase, iteration, total)
+        val elapsed = before + (PHASE_SECONDS[phase] ?: 0.0) * fraction
         return ((elapsed / totalSeconds) * 100).roundToInt().coerceIn(0, 100)
     }
 
     /**
      * [BenchmarkRunner.progress] reports `iteration = total = launchIterations` for every phase after the launch
-     * cycles, because the observation session is the eleventh open. Taken at face value that reads as cycle
+     * cycles except RECORDING and STILL, which report their own index/count. The observation session is the eleventh open. Taken at face value that reads as cycle
      * 11/10 and drives the bar to the end of each phase the moment it starts, so the counter is confined here to
      * the one phase it describes rather than changing the runner's contract, which other callers already read.
      */
@@ -120,6 +123,35 @@ object ProgressPresenter {
 
     private fun launchFraction(phase: BenchmarkRunner.Phase, iteration: Int, total: Int): Double =
         if (countsLaunchCycles(phase, total)) (iteration.toDouble() / total).coerceIn(0.0, 1.0) else 0.0
+
+    fun recordingDetail(step: BenchmarkRunner.Step, elapsedMs: Long, durationMs: Long): String = when (step) {
+        BenchmarkRunner.Step.RECORD_PREPARE -> "Preparing recorder"
+        BenchmarkRunner.Step.RECORD_START -> "Starting recorder"
+        BenchmarkRunner.Step.RECORD_RUN -> String.format(Locale.US, "Recording · %.1f / %.1f s", elapsedMs.coerceAtLeast(0) / 1000.0, durationMs / 1000.0)
+        BenchmarkRunner.Step.RECORD_STOP -> "Saving recording"
+        else -> ""
+    }
+
+    /** One short supporting line; timers describe waiting, not fabricated camera progress. */
+    fun detail(phase: BenchmarkRunner.Phase, step: BenchmarkRunner.Step, iteration: Int, total: Int,
+               elapsedMs: Long, profile: BenchmarkProfile): String {
+        fun timed(label: String, durationMs: Long? = null): String = if (durationMs == null)
+            String.format(Locale.US, "%s · %.1f s", label, elapsedMs.coerceAtLeast(0) / 1000.0)
+        else String.format(Locale.US, "%s · %.1f / %.1f s", label, elapsedMs.coerceAtLeast(0) / 1000.0, durationMs / 1000.0)
+        if (phase == BenchmarkRunner.Phase.THREE_A) return "Checking focus & exposure"
+        if (phase == BenchmarkRunner.Phase.RECORDING) return recordingDetail(step, elapsedMs, profile.recordDurationMs ?: 0)
+        return when (step) {
+            BenchmarkRunner.Step.OPEN -> timed("Opening camera")
+            BenchmarkRunner.Step.CONFIGURE -> timed("Preparing preview")
+            BenchmarkRunner.Step.FIRST_FRAME -> timed("Waiting for first frame")
+            BenchmarkRunner.Step.CYCLE_CLOSE -> timed("Closing this cycle")
+            BenchmarkRunner.Step.WARMUP -> timed("Warming up", profile.warmupMs)
+            BenchmarkRunner.Step.OBSERVE -> timed("Observing frames", profile.observeMs)
+            BenchmarkRunner.Step.STILL -> timed("Capturing ${iteration + 1}/$total")
+            BenchmarkRunner.Step.CLOSE -> timed("Closing camera")
+            else -> ""
+        }
+    }
 
     /**
      * The whole progress line. The percentage is placed first on purpose, because it is the part that has to

@@ -23,7 +23,7 @@ verifications: []
 
 | 단계 | 담당 코드 | 책임 |
 | --- | --- | --- |
-| CLI 제어 | `CliProvider`, `CommandCoordinator`, `assets/halcam.sh` | ADB 명령으로 스트림 지원 목록을 조회하고 엔진·크기를 지정한 프리뷰·사진·녹화·CTS 경로에 연결하며 요청 상태와 검증 가능한 결과 파일을 반환합니다. Python 도구는 선택 사항이며 벤치마크 실행은 CLI에서 제외합니다. |
+| CLI 제어 | `CliProvider`, `CommandCoordinator`, `assets/halcam.sh` | ADB 명령으로 스트림 지원 목록을 조회하고 엔진·크기를 지정한 프리뷰·사진·녹화·CTS 경로에 연결하며 요청 상태와 검증 가능한 결과 파일을 반환합니다. Python 도구는 선택 사항이며 `benchmark.run`은 화면과 같은 Camera2 표준 v2 측정과 JSON 저장 경로에 연결합니다. |
 | 카메라 구동 | `CameraEngine`, `Camera2Engine`, `CameraXEngine` | 엔진 수명주기와 카메라 요청을 처리합니다. 계약과 두 엔진의 차이는 [Engine](engine.md)에 있습니다. |
 | 콜백 기록 | `Telemetry`, `FlightRecorder` | 세션·프레임·시각·메타데이터를 이벤트로 기록합니다. |
 | 지표 계산 | `BenchmarkRunner`, `RunAssembler`, `BenchmarkEvaluator`, `metrics/MetricExtractor` | 러너의 실행 시각과 콜백을 합쳐 측정값을 만듭니다. |

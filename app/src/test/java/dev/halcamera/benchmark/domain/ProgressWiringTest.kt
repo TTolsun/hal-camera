@@ -28,10 +28,12 @@ class ProgressWiringTest {
     private val scheduler = FakeScheduler(clock)
     private val driver = FakeDriver()
     private val shown = ArrayList<Shown>()
+    private val stillCounts = ArrayList<Pair<Int, Int>>()
     private val phaseOf = HashMap<BenchmarkRunner.Phase, MutableList<Shown>>()
 
     private val listener = object : BenchmarkRunner.Listener {
         override fun onProgress(phase: BenchmarkRunner.Phase, step: BenchmarkRunner.Step, iteration: Int, total: Int) {
+            if (step == BenchmarkRunner.Step.STILL) stillCounts += iteration to total
             val entry = Shown(
                 ProgressPresenter.headline(phase, iteration, total),
                 ProgressPresenter.percent(phase, iteration, total)
@@ -120,6 +122,7 @@ class ProgressWiringTest {
 
     @Test fun allSixPhasesReachTheScreen() {
         runToEnd()
+        assertEquals((0 until profile.stillCount).map { it to profile.stillCount }, stillCounts)
         // RECORDING belongs to a profile with a RECORD stage; camera2-standard-v1 has none, so a run of it
         // reaches the other six and the headline counts to six (BenchmarkRunnerRecordTest covers the seventh).
         assertEquals(

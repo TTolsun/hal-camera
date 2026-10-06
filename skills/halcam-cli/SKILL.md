@@ -1,11 +1,11 @@
 ---
 name: halcam-cli
-description: HAL CAM 앱을 adb로 조작하는 절차. 기기에서 스트림 크기·프리뷰·사진·녹화·probe·CTS를 실행하거나, 결과 파일을 PC로 가져오거나, CLI 요청 상태·취소·BUSY·CLI_DISABLED 같은 오류를 다룰 때 사용한다. 계약 원본은 guide/cli.md와 app/src/main/java/dev/halcamera/cli/이다.
+description: HAL CAM 앱을 adb로 조작하는 절차. 기기에서 스트림 크기·프리뷰·사진·녹화·probe·CTS·벤치마크를 실행하거나, 결과 파일을 PC로 가져오거나, CLI 요청 상태·취소·BUSY·CLI_DISABLED 같은 오류를 다룰 때 사용한다. 계약 원본은 guide/cli.md와 app/src/main/java/dev/halcamera/cli/이다.
 ---
 
 # HAL CAM CLI를 adb로 운전하기
 
-PC에 필요한 것은 `adb` 하나입니다. 명령을 해석하고 완료를 기다리는 스크립트(`halcam.sh`)는 APK 안에 들어 있으며 기기에서 실행됩니다. Python 패키지 `tools/halcam`은 선택 도구이므로 기본 경로에서는 설치하지 않습니다. `benchmark.run`은 CLI 계약에서 빠졌습니다. 벤치마크는 앱 화면에서만 실행하므로, 측정을 요청받으면 CLI로 우회하지 말고 화면 조작이 필요하다고 알립니다.
+PC에 필요한 것은 `adb` 하나입니다. 명령을 해석하고 완료를 기다리는 스크립트(`halcam.sh`)는 APK 안에 들어 있으며 기기에서 실행됩니다. Python 패키지 `tools/halcam`은 선택 도구이므로 기본 경로에서는 설치하지 않습니다. `benchmark run --camera 0`은 앱과 같은 `camera2-standard-v2` 프로파일을 실행하고 원본 JSON을 회수합니다. 실행 제한은 기본 600초이며 `--timeout`으로 최대 3,600초까지 지정합니다. `--profile camera2-standard-v2`는 생략할 수 있으며 다른 프로파일·엔진·Live 스트림 옵션은 받지 않습니다.
 
 ## 1. 준비 (기기마다 한 번, APK를 갱신한 뒤에도 같은 명령)
 
@@ -17,13 +17,14 @@ Windows(PowerShell·CMD)와 WSL에서 같은 명령을 사용합니다. 환경�
 adb exec-out content read --uri content://dev.halcamera.cli/v1/hello
 ```
 
-1. `CLI_DISABLED` 오류이면 사용자에게 앱의 **Lab → ADB CLI**에서 **ADB CLI 허용**을 켜 달라고 요청합니다. 기본값은 켜짐이며, 사용자가 저장한 꺼짐 설정은 업데이트 후에도 유지합니다. 꺼져 있으면 provider에 닿는 모든 명령이 `CLI_DISABLED`로 끝납니다. 스크립트가 자체적으로 처리하는 `help`만 예외입니다.
+1. `CLI_DISABLED` 오류이면 사용자에게 앱의 **Lab → ADB CLI**에서 **ADB CLI 허용**을 켜 달라고 요청합니다. 기본값은 켜짐이며, 사용자가 저장한 꺼짐 설정은 업데이트 후에도 유지합니다. 꺼져 있으면 작업과 상태 조회가 `CLI_DISABLED`로 끝납니다. 스크립트를 내려받는 `/v1/shell`과 스크립트 자체의 `help`는 사용할 수 있습니다.
 2. `camera_permission`이 `false`이거나 `locked`가 `true`이면 카메라 권한 허용과 화면 잠금 해제를 요청합니다. 소리를 포함한 녹화에는 마이크 권한도 필요합니다.
 3. 기기에 스크립트를 내려놓습니다.
 
 ```sh
 adb shell "content read --uri content://dev.halcamera.cli/v1/shell > /data/local/tmp/halcam"
 adb shell sh /data/local/tmp/halcam help
+adb shell sh /data/local/tmp/halcam doctor
 ```
 
 `hello` 응답의 `commands` 배열은 이 빌드가 접수하는 작업 명령이고, 상태 조회와 취소처럼 작업을 만들지 않는 조작은 `controls` 배열(`record.stop`, `status`, `request`, `request.cancel`)에 따로 있습니다. 기기가 여러 대이면 모든 명령에 `adb -s SERIAL`을 붙입니다.
@@ -57,22 +58,24 @@ adb shell sh /data/local/tmp/halcam preview stop
 adb shell sh /data/local/tmp/halcam record start --camera 0 --no-audio
 adb shell sh /data/local/tmp/halcam record stop                # MP4 저장 완료까지 대기
 adb shell sh /data/local/tmp/halcam probe                      # 카메라를 열지 않고 사양 JSON·TXT 생성
+adb shell sh /data/local/tmp/halcam benchmark run --camera 0    # Camera2 표준 v2 측정과 JSON 회수
 adb shell sh /data/local/tmp/halcam cts cases
 adb shell sh /data/local/tmp/halcam cts run --cases custom:fast_on_off
 adb shell sh /data/local/tmp/halcam status                     # 마지막 제출 요청, ID를 주면 그 요청
+adb shell sh /data/local/tmp/halcam status --app               # 이전 요청과 관계없이 현재 앱 상태 조회
 adb shell sh /data/local/tmp/halcam cancel
 adb shell sh /data/local/tmp/halcam fetch [REQUEST_ID]         # 촬영을 반복하지 않고 파일만 다시 준비. ID를 생략하면 마지막 요청
 ```
 
-스크립트가 앱 실행, 요청 ID 생성, 완료 대기를 모두 처리합니다. 첫 줄에 `request_id=UUID`를 출력하고 마지막에 완료된 요청 JSON을 출력하며, 성공이면 0, 오류면 1을 반환합니다. S25+에서 `capture`는 앱 실행을 포함해 약 10초가 걸립니다.
+스크립트가 앱 실행, 요청 ID 생성, 완료 대기를 모두 처리합니다. 작업을 제출하면 첫 줄에 `request_id=UUID`를 출력하고, 완료 시 명령에 따라 결과 JSON이나 완료 안내를 출력합니다. 성공이면 0, 오류나 성공하지 않은 완료 상태이면 1을 반환합니다. S25+에서 `capture`는 앱 실행을 포함해 약 10초가 걸립니다.
 
 `--camera`에는 `cameras` 결과에서 `selectable: true`인 논리 ID만 넣습니다. 물리 endpoint(예: `logicalCameraId: "0"`, `physicalCameraId: "2"`)는 단독으로 열 수 없으므로 카메라 ID로 전달하면 거부됩니다. 다른 카메라로 자동 대체하지 않습니다.
 
-실행 제한의 기본값은 프리뷰·사진·probe가 30초, `record start`가 3,600초, `cts run`이 1,800초이며 상한은 3,600초입니다. 스크립트에서는 `--timeout 초`로 줄입니다. `--no-wait`을 주면 접수 직후 요청 ID만 남기고 반환하므로, 무선 연결이 끊겼을 때에는 같은 작업을 다시 실행하지 말고 재연결 후 `status`나 `fetch`로 이어갑니다.
+실행 제한의 기본값은 프리뷰·사진·probe가 30초, 벤치마크가 600초, `record start`가 3,600초, `cts run`이 1,800초이며 상한은 3,600초입니다. 스크립트에서는 `--timeout 초`로 줄입니다. `--no-wait`을 주면 접수 직후 요청 ID만 남기고 반환하므로, 무선 연결이 끊겼을 때에는 같은 작업을 다시 실행하지 말고 재연결 후 `status`나 `fetch`로 이어갑니다.
 
 ## 3. 결과 파일을 PC로 가져오기
 
-결과가 있는 요청은 기기의 `Download/HALCamera-cli/요청ID`에 크기와 SHA-256을 검증한 복사본을 만들고, PC로 받는 `adb pull` 명령 한 줄을 출력합니다. 그 줄을 그대로 실행합니다.
+결과가 있는 요청은 기기의 `Download/HALCamera-cli/요청ID`에 크기와 SHA-256을 검증한 복사본을 만들고, PC로 받는 `adb pull` 명령 한 줄을 출력합니다. 연결이 하나이면 그 줄을 그대로 실행합니다. 여러 연결이면 실행할 때와 같은 `-s SERIAL`을 `adb pull`에도 붙입니다.
 
 ```sh
 adb pull /sdcard/Download/HALCamera-cli/REQUEST_ID ./artifacts
@@ -91,7 +94,7 @@ adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/REQUEST_
 스크립트를 거치지 않고 provider를 직접 호출합니다. 응답은 Base64가 아니라 평문 JSON이고 `Result: Bundle[{json=...}]` 형태로 감싸여 나옵니다.
 
 ```sh
-adb shell am start -W -n dev.halcamera/.cli.CliLaunchActivity          # 프리뷰·사진·녹화·CTS 전에 Live를 연다
+adb shell am start -W -n dev.halcamera/.cli.CliLaunchActivity          # 프리뷰·사진·녹화·CTS·벤치마크 전에 Live를 연다
 adb shell content call --uri content://dev.halcamera.cli --method capture --extra camera:s:0
 adb shell content call --uri content://dev.halcamera.cli --method record.start --extra camera:s:0 --extra audio:b:false
 adb shell content call --uri content://dev.halcamera.cli --method record.stop
@@ -113,7 +116,7 @@ CTS 항목만 `--arg`로 전달하고 `--extra cases:s:...`를 쓰지 않습니�
 | `CLI_DISABLED` | 앱의 **ADB CLI 허용** 스위치가 꺼져 있습니다. 사람이 앱에서 켜야 하며 adb로 켤 수 없습니다. |
 | `PERMISSION_REQUIRED` | 카메라 또는 마이크 권한이 없습니다. 앱에서 허용한 뒤 다시 실행합니다. |
 | `BUSY` | 화면이나 다른 CLI 요청이 작업을 소유하고 있습니다. 대기열이 없으므로 `status`로 확인하고 끝난 뒤 다시 제출합니다. `record stop`과 `cancel`은 실행 중에도 받습니다. |
-| `APP_NOT_FOREGROUND` | Live 화면이 앞에 없습니다. 프리뷰·사진·녹화·CTS는 Live를 요구하므로 `CliLaunchActivity`로 앱을 열고 다시 제출합니다. 준비 단계(accepted·preparing)에서 앱이 뒤로 물러나도 같은 코드로 실패합니다. |
+| `APP_NOT_FOREGROUND` | Live 화면이 앞에 없습니다. 프리뷰·사진·녹화·CTS·벤치마크는 Live를 요구하므로 `CliLaunchActivity`로 앱을 열고 다시 제출합니다. 준비 단계(accepted·preparing)에서 앱이 뒤로 물러나도 같은 코드로 실패합니다. |
 | `DEVICE_LOCKED` | 화면이 잠겨 있습니다. 사람이 잠금을 풀어야 하며 adb로 풀지 않습니다. |
 | `UNSUPPORTED_CAMERA` | `--camera`에 단독으로 열 수 없는 ID를 주었습니다. `cameras`에서 `selectable: true`인 논리 ID를 고릅니다. |
 | `NOT_RECORDING` | 멈출 CLI 녹화가 없습니다. `record start`가 먼저 성공했는지 `status`로 확인합니다. 화면에서 시작한 녹화는 CLI가 멈추지 않습니다. |
@@ -130,6 +133,6 @@ CTS 항목만 `--arg`로 전달하고 `--extra cases:s:...`를 쓰지 않습니�
 
 - `adb`가 PATH에 없으면 Android SDK의 `platform-tools/adb`를 전체 경로로 호출합니다. 위치는 PC마다 다르므로 `adb version`이 실패하면 사용자에게 SDK 경로를 확인합니다.
 - Windows의 Git Bash(MSYS)는 `/data/local/tmp/halcam` 같은 기기 경로 인자를 Windows 경로로 바꿔 버려서 `sh: C:/Program: No such file or directory`가 납니다. adb를 호출하기 전에 `export MSYS2_ARG_CONV_EXCL='*' MSYS_NO_PATHCONV=1`을 설정하거나 명령 전체를 따옴표로 감쌉니다. PowerShell과 CMD, macOS·Linux 셸에는 이 문제가 없습니다.
-- 사진·프리뷰·녹화·CTS는 Live 화면이 필요합니다. 스크립트는 직접 열지만, `content call`을 직접 쓸 때에는 `CliLaunchActivity`를 먼저 실행합니다. `probe`와 `cts cases`는 화면이 필요 없습니다.
+- 사진·프리뷰·녹화·CTS·벤치마크는 Live 화면이 필요합니다. 스크립트는 직접 열지만, `content call`을 직접 쓸 때에는 `CliLaunchActivity`를 먼저 실행합니다. `probe`와 `cts cases`는 화면이 필요 없습니다.
 - 기기 화면을 사람이 만지면 진행 중인 CLI 작업이 취소될 수 있습니다. 측정 중에는 화면을 건드리지 않습니다.
 - 이 스킬의 서술과 `guide/cli.md`가 다르면 `guide/cli.md`와 `app/src/main/java/dev/halcamera/cli/`의 코드가 원본입니다. 명령 집합을 바꾸면 `CliCommand.COMMANDS`, `AdbArguments`, `app/src/main/assets/halcam.sh`, `guide/cli.md`, 그리고 이 파일과 같은 `description`을 가진 `.claude/skills/halcam-cli/SKILL.md`를 함께 갱신합니다.

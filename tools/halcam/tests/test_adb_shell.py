@@ -115,6 +115,44 @@ sha256sum() {
         proc, _ = self.run_client(["capture"], result={"state": "failed", "error": {"code": "CAPTURE_FAILED"}})
         self.assertNotEqual(proc.returncode, 0)
 
+    def test_cancelled_request_without_error_never_reports_photos_saved(self):
+        proc, _ = self.run_client(["capture"], result={"state": "cancelled", "error": None})
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertNotIn("Photos saved", proc.stdout)
+        self.assertIn("fetch " + RID, proc.stderr)
+
+    def test_doctor_checks_readiness_without_submitting_or_reading_last_request(self):
+        proc, calls = self.run_client(["doctor"], remember=True, hello={
+            "protocol_version": 1, "enabled": True, "camera_permission": True, "locked": False})
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("Basic setup is ready", proc.stdout)
+        self.assertIn("v1/hello", calls)
+        self.assertIn("v1/status", calls)
+        self.assertNotIn("call", calls)
+        self.assertNotIn("v1/requests", calls)
+
+    def test_doctor_reports_permission_lock_and_busy_conditions(self):
+        proc, calls = self.run_client(["doctor"], busy=True, hello={
+            "protocol_version": 1, "enabled": True, "camera_permission": False, "locked": True})
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("Allow camera", proc.stderr)
+        self.assertIn("Unlock", proc.stderr)
+        self.assertIn("Another operation", proc.stderr)
+        self.assertNotIn("call", calls)
+
+    def test_doctor_disabled_explains_where_to_enable_cli(self):
+        proc, calls = self.run_client(["doctor"], hello={
+            "protocol_version": 1, "error": {"code": "CLI_DISABLED"}})
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("Lab > ADB CLI", proc.stderr)
+        self.assertNotIn("v1/status", calls)
+
+    def test_app_status_ignores_remembered_request(self):
+        proc, calls = self.run_client(["status", "--app"], remember=True, busy=True)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("v1/status", calls)
+        self.assertNotIn("v1/requests", calls)
+
     def test_status_recovers_last_request_without_resubmitting(self):
         proc, calls = self.run_client(["status"], remember=True)
         self.assertEqual(proc.returncode, 0, proc.stderr)
@@ -139,8 +177,26 @@ sha256sum() {
         self.assertIn("recording.mp4", self.downloads)
         self.assertNotIn("--method", calls)
 
-    def test_invalid_usage_and_benchmark_do_not_touch_device(self):
-        for args in (["benchmark", "run"], ["capture", "--camera"], ["capture", "--timeout", "0"], ["capture", "--timeout", "3601"], ["capture", "--typo"], ["status", "../foo"]):
+    def test_benchmark_submits_fixed_profile_and_can_return_without_waiting(self):
+        proc, calls = self.run_client(["benchmark", "run", "--camera", "1", "--profile", "camera2-standard-v2", "--no-wait"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("--method benchmark.run", calls)
+        self.assertIn("camera:s:1", calls)
+        self.assertIn("profile:s:camera2-standard-v2", calls)
+        self.assertIn("v1/status", calls)
+        self.assertNotIn("v1/requests", calls)
+
+    def test_benchmark_waits_for_report(self):
+        proc, calls = self.run_client(["benchmark", "run"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("v1/requests/" + RID, calls)
+        self.assertIn('"state":"succeeded"', proc.stdout)
+
+    def test_invalid_usage_does_not_touch_device(self):
+        for args in (["benchmark"], ["benchmark", "run", "--engine", "CameraX"],
+                     ["benchmark", "run", "--profile", "camera2-standard-v1"],
+                     ["benchmark", "run", "--no-audio"], ["capture", "--profile", "camera2-standard-v2"],
+                     ["capture", "--camera"], ["capture", "--timeout", "0"], ["capture", "--timeout", "3601"], ["capture", "--typo"], ["status", "../foo"]):
             proc, calls = self.run_client(args)
             self.assertNotEqual(proc.returncode, 0, args)
             self.assertEqual(calls, "", args)

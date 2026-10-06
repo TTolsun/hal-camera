@@ -105,7 +105,7 @@ class BenchmarkRunner(
     }
 
     interface Listener {
-        /** [iteration] and [total] count launch cycles; both are 0 outside the launch phase. */
+        /** Zero-based index and count: recording cycles in RECORDING, captures in STILL, launch cycles otherwise. */
         fun onProgress(phase: Phase, step: Step, iteration: Int, total: Int)
         fun onFinished(result: Result)
     }
@@ -371,7 +371,7 @@ class BenchmarkRunner(
                     enter(Step.STILL)
                 }
             }
-            Step.STILL -> { stillIndex = 0; progress(); submitStill() }
+            Step.STILL -> { stillIndex = 0; submitStill() }
             // The record steps arm their timeout before calling the driver, not after. A driver that answers
             // synchronously (a refused combination is known without waiting for the camera) would otherwise
             // have already moved the runner on by the time the arm ran, leaving a timer for a step that is over.
@@ -451,8 +451,9 @@ class BenchmarkRunner(
             Step.RECORD_PREPARE, Step.RECORD_START, Step.RECORD_RUN, Step.RECORD_STOP -> Phase.RECORDING
             else -> Phase.CAMERA_CLOSE
         }
-        val iteration = if (onObservationSession) profile.launchIterations else cycleIndex
-        listener.onProgress(phase, step, iteration, profile.launchIterations)
+        val iteration = if (onRecordStep) recordIndex else if (step == Step.STILL) stillIndex else if (onObservationSession) profile.launchIterations else cycleIndex
+        val total = if (onRecordStep) profile.recordIterations ?: 0 else if (step == Step.STILL) profile.stillCount else profile.launchIterations
+        listener.onProgress(phase, step, iteration, total)
     }
 
     /** A timeout or a camera error. Inside a launch cycle it fails that cycle; anywhere else it ends the run. */
@@ -518,6 +519,7 @@ class BenchmarkRunner(
 
     private fun submitStill() {
         cancelTimer()
+        progress()
         // The submission time is provisional until the engine reports capture_submit for this request.
         stills += PendingStill(stillIndex, profile.excludeFirst && stillIndex == 0, clock())
         driver.still(session)

@@ -4,6 +4,15 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class AdbArgumentsTest {
+    @Test fun `benchmark defaults match the UI profile and accepts explicit camera and deadline`() {
+        val defaults = AdbArguments.command("benchmark.run", emptyMap())
+        assertEquals("0", defaults.camera)
+        assertEquals(dev.halcamera.benchmark.domain.BenchmarkProfile.CAMERA2_STANDARD_V2.id, defaults.profile)
+        assertEquals(600_000L, defaults.timeoutMs)
+        val selected = AdbArguments.command("benchmark.run", mapOf("camera" to "1", "profile" to defaults.profile, "timeout_ms" to 120_000L))
+        assertEquals("1", selected.camera)
+        assertEquals(120_000L, selected.timeoutMs)
+    }
     @Test fun `simple commands create unique ids and supply camera defaults`() {
         val first = AdbArguments.command("capture", emptyMap())
         val second = AdbArguments.command("capture", emptyMap())
@@ -29,7 +38,11 @@ class AdbArgumentsTest {
             "capture" to mapOf("audio" to false), "capture" to mapOf("camera" to 0),
             "capture" to mapOf("timeout_ms" to "30000"), "record.start" to mapOf("audio" to "false"),
             "capture" to mapOf("timeout_ms" to 0), "preview.stop" to mapOf("camera" to "0"),
-            "benchmark.run" to emptyMap(), "cts.run" to emptyMap()
+            "benchmark.run" to mapOf("profile" to "camera2-standard-v1"),
+            "benchmark.run" to mapOf("engine" to "Camera2"),
+            "benchmark.run" to mapOf("preview_size" to "1280x720"),
+            "benchmark.run" to mapOf("audio" to false),
+            "capture" to mapOf("profile" to "camera2-standard-v2"), "cts.run" to emptyMap()
         )
         invalid.forEach { (name, values) ->
             try { AdbArguments.command(name, values); fail("Accepted $name $values") }

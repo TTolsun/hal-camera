@@ -110,6 +110,10 @@ class MainActivity : ComponentActivity() {
                 Intent(this@MainActivity, dev.halcamera.cts.suite.CtsSuiteRunActivity::class.java)
                     .putExtra(dev.halcamera.cts.suite.CtsSuiteRunActivity.EXTRA_KEYS, command.cases.orEmpty().toTypedArray())
             }
+            override fun benchmark(command: dev.halcamera.cli.CliCommand) = handOver(command) {
+                Intent(this@MainActivity, dev.halcamera.benchmark.BenchmarkActivity::class.java)
+                    .putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_CAMERA_ID, command.camera)
+            }
             /** Closes the Live camera first: the next screen must open a free camera, and close(done) is the only way to know. */
             private fun handOver(command: dev.halcamera.cli.CliCommand, intent: () -> Intent) {
                 val old = engine; engine = null; closing = true; ready = false

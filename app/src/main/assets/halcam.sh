@@ -8,6 +8,7 @@ die() { echo "halcam: $*" >&2; exit 1; }
 help() {
     cat <<'EOF'
 HAL CAM — adb only
+  doctor                                Check setup without starting a camera
   preview [start|stop] [--camera ID]
   capture [--camera ID]                  Save YUV + JPEG photos
   record start [--camera ID] [--no-audio] Start recording and return when ready
@@ -15,7 +16,9 @@ HAL CAM — adb only
   streams [--camera ID] [--engine Camera2|CameraX]  List supported sizes
   cameras | probe | cts cases
   cts run --cases KEY[,KEY...]
-  status [REQUEST_ID] | cancel [REQUEST_ID]
+  benchmark run [--camera ID] [--profile camera2-standard-v2]
+                                        Run the fixed Camera2 benchmark; export JSON
+  status [REQUEST_ID|--app] | cancel [REQUEST_ID]
   fetch [REQUEST_ID]                     Prepare files and show one adb pull command
 Stream options for preview/capture/record start:
   --engine Camera2|CameraX (default Camera2)
@@ -26,6 +29,7 @@ Options: --timeout SECONDS (operation deadline), --no-wait (return request ID)
 Default camera: 0. Microphone is enabled unless --no-audio is given.
 Only one operation runs at a time. Unlock the device. ADB CLI is allowed by default.
 Example: adb shell sh /data/local/tmp/halcam capture --camera 0
+With multiple connections, use the same adb -s SERIAL for every command and pull.
 EOF
 }
 call() {
@@ -39,7 +43,16 @@ check_response() {
         *) die "Cannot reach HAL CAM. Install the APK and run this command again. $1" ;;
     esac
     case "$1" in
-        *'"error":{'*) if [ "${2:-false}" != true ]; then echo "$1" >&2; exit 1; fi ;;
+        *'"error":{'*) if [ "${2:-false}" != true ]; then
+            echo "$1" >&2
+            case "$1" in
+                *'"CLI_DISABLED"'*) echo 'Enable ADB CLI in HAL CAM: Lab > ADB CLI.' >&2 ;;
+                *'"PERMISSION_REQUIRED"'*) echo 'Allow the required permission in the app. For silent recording use --no-audio.' >&2 ;;
+                *'"DEVICE_LOCKED"'*) echo 'Unlock the device, then retry.' >&2 ;;
+                *'"REQUEST_NOT_FOUND"'*) echo 'Use status --app for current app state. Completed requests expire after 24 hours or 200 records.' >&2 ;;
+            esac
+            exit 1
+        fi ;;
     esac
 }
 last_id() {
@@ -68,6 +81,7 @@ downloads() {
     done || die "Could not prepare all files; retry fetch $rid"
     echo "Files ready. Copy to this PC with:"
     echo "adb pull $dest ."
+    echo 'If using adb -s SERIAL, add the same -s SERIAL to the pull command.'
 }
 wait_for() {
     # A bounded client wait never cancels accepted work; status/fetch can recover it.
@@ -77,6 +91,10 @@ wait_for() {
         check_response "$result"
         case "$result" in
             *'"completed":true'*)
+                case "$result" in
+                    *'"state":"succeeded"'*) ;;
+                    *) echo "$result" >&2; die "Request did not succeed. Use fetch $rid to recover any saved files." ;;
+                esac
                 case "$method" in
                     preview) echo 'Preview is ready.' ;;
                     preview.stop) echo 'Preview stopped.' ;;
@@ -102,19 +120,42 @@ case "$method" in
     help|-h|--help) help; exit 0 ;;
     preview)
         case "${1:-}" in start) shift ;; stop) method=preview.stop; shift ;; esac ;;
-    record|cts)
+    record|cts|benchmark)
         [ $# -gt 0 ] || die "$method needs a subcommand; use help"
         method=$method.$1; shift ;;
 esac
 case "$method" in
-    streams|cameras|preview|preview.stop|capture|record.start|record.stop|probe|cts.cases|cts.run|status|cancel|fetch) ;;
-    *) die "Unknown command: $method. Use help. Benchmark is available in the app only." ;;
+    doctor|streams|cameras|preview|preview.stop|capture|record.start|record.stop|probe|cts.cases|cts.run|benchmark.run|status|cancel|fetch) ;;
+    *) die "Unknown command: $method. Use help." ;;
 esac
 
 case "$method" in
+    doctor)
+        [ $# -eq 0 ] || die 'doctor takes no options'
+        hello=$(content read --uri "$URI/v1/hello")
+        check_response "$hello"
+        echo "$hello"
+        ready=true
+        case "$hello" in
+            *'"camera_permission":true'*) ;;
+            *) echo 'Allow camera access in HAL CAM.' >&2; ready=false ;;
+        esac
+        case "$hello" in
+            *'"locked":false'*) ;;
+            *) echo 'Unlock the device before camera operations.' >&2; ready=false ;;
+        esac
+        result=$(content read --uri "$URI/v1/status")
+        check_response "$result"
+        echo "$result"
+        case "$result" in
+            *'"busy":true'*) echo 'Another operation is running. Use status --app to inspect it.' >&2; ready=false ;;
+        esac
+        [ "$ready" = true ] || exit 1
+        echo 'Basic setup is ready. Recording with audio also needs microphone permission; Android 8-9 saving needs storage permission.'
+        exit 0 ;;
     status|cancel|fetch)
         [ $# -le 1 ] || die 'Expected at most one request ID'
-        if [ "$method" = status ] && [ $# -eq 0 ] && [ ! -f "$LAST" ]; then
+        if [ "$method" = status ] && { [ "${1:-}" = --app ] || { [ $# -eq 0 ] && [ ! -f "$LAST" ]; }; }; then
             result=$(content read --uri "$URI/v1/status")
             check_response "$result"
             echo "$result"
@@ -148,6 +189,7 @@ no_wait=false
 wait_seconds=45
 timeout=
 camera=
+profile=
 audio=
 cases=
 stream_options=
@@ -159,17 +201,25 @@ while [ $# -gt 0 ]; do
             key=$(echo "${1#--}" | tr '-' '_')
             stream_options="$stream_options $key:s:$2"
             shift 2 ;;
-        --camera|--timeout|--cases)
+        --camera|--timeout|--cases|--profile)
             [ $# -ge 2 ] || die "$1 needs a value"
             [ -n "$2" ] || die "$1 needs a nonempty value"
-            case "$1" in --camera) camera=$2 ;; --timeout) timeout=$2 ;; --cases) cases=$2 ;; esac
+            case "$1" in --camera) camera=$2 ;; --timeout) timeout=$2 ;; --cases) cases=$2 ;; --profile) profile=$2 ;; esac
             shift 2 ;;
         --no-audio) audio=false; shift ;;
         --no-wait) no_wait=true; shift ;;
         *) die "Unknown option: $1. Use help." ;;
     esac
 done
+if [ -n "$profile" ]; then
+    [ "$method" = benchmark.run ] || die '--profile is only for benchmark run'
+    [ "$profile" = camera2-standard-v2 ] || die 'Supported benchmark profile: camera2-standard-v2'
+fi
+if [ "$method" = benchmark.run ]; then
+    [ -z "$stream_options$audio$cases" ] || die 'Benchmark uses a fixed Camera2 profile; stream, audio and CTS options are not supported'
+fi
 set -- --method "$method" --extra "request_id:s:$rid"
+[ -z "$profile" ] || set -- "$@" --extra "profile:s:$profile"
 if [ -n "$camera" ]; then
     case "$camera" in *[!a-zA-Z0-9_.-]*) die 'Invalid camera ID' ;; esac
     set -- "$@" --extra "camera:s:$camera"
@@ -186,12 +236,13 @@ if [ -n "$timeout" ]; then
     set -- "$@" --extra "timeout_ms:l:$((timeout * 1000))"
     wait_seconds=$((timeout + 15))
 elif [ "$method" = cts.run ]; then wait_seconds=1815
+elif [ "$method" = benchmark.run ]; then wait_seconds=615
 fi
 
 hello=$(content read --uri "$URI/v1/hello")
 check_response "$hello"
 case "$method" in
-    preview|preview.stop|capture|record.start|cts.run)
+    preview|preview.stop|capture|record.start|cts.run|benchmark.run)
         status=$(content read --uri "$URI/v1/status")
         check_response "$status"
         case "$status" in *'"busy":true'*) die 'Another operation is running. Use status or record stop.' ;; esac
