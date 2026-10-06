@@ -92,7 +92,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-06 @ `20b5efb` · Codex-cli-default-review
+- 검토 2026-10-06 @ `bd1ad3f` · Claude-issue224-review
 
 </details>
 
@@ -133,6 +133,8 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 명시한 Live 설정도 작은 크기로 대체하지 않습니다. `LiveStreamSupport`는 개별 크기·일반 FPS 범위·녹화 인코더 지원을 검사하고, 엔진은 출력의 최소 프레임 시간과 FPS 하한을 대조합니다. Android 10 이상에서는 `isSessionConfigurationSupported`로 출력 조합을 조회합니다. 조회를 지원하지 않거나 Android 9 이하이면 지원 여부를 미확인으로 기록하고 실제 세션 구성으로 확인합니다. 조합 조회만으로 FPS 지원을 확정하지 않으며 `capture_result.fpsRange`와 `frameDurationNs`로 실제 결과를 확인합니다.
 
 설정 적용은 기존 엔진의 `close(done)` 뒤 새 엔진을 여는 순서입니다. 실패 이유는 화면에 남고, 설정 적용에 실패했고 정상 구성 기록이 있을 때만 오류 아래에 나타나는 `이전 설정으로 복원` 버튼으로 해당 카메라에서 마지막으로 구성이 성공했던 값으로 돌아갑니다. 사진·녹화·저장 중에는 적용하지 않습니다. 카메라와 엔진마다 설정을 분리하고 Activity 재생성 시 복원합니다. CameraX도 같은 설정 화면에서 출력과 크기를 선택합니다. Live 옆의 크기 표시를 누르면 설정을 바로 열며 이 경로의 뒤로 가기와 저장은 Live로 돌아갑니다. Benchmark는 Live 설정을 읽지 않습니다. CLI는 기본값에 명시한 크기 옵션을 적용하며 이전 화면 설정을 이어받지 않습니다.
+
+Live에서 첫 프레임 전에 카메라 열기가 `onDisconnected`나 `onError`(사용 중, 최대 개수 초과, 기기·서비스 오류) 또는 같은 원인의 `CameraAccessException`으로 실패하면, `CameraOpenRetry`에 따라 200·400·800·1600·2000ms 간격으로 최대 5번 다시 엽니다(#224). 다른 엔진이 카메라를 놓은 직후 카메라 서비스가 열기를 잠깐 거부할 수 있기 때문입니다. 다음 열기는 실패한 기기의 `onClosed` 뒤에 예약하고, 시도마다 `open_retry` 이벤트에 원인·회차·지연을 남깁니다. 카메라가 비활성화됐거나 재시도를 모두 쓰면 실패를 바로 알려 대기 중인 CLI 요청이 타임아웃까지 기다리지 않습니다. 벤치마크와 첫 프레임 이후의 오류는 다시 열지 않습니다.
 
 `StreamConfiguration`은 세션을 만드는 출력, 요청의 대상, Callback 그래프가 표시하는 스트림을 같은 목록에서 만듭니다. Android 13 이상의 Live에서는 `PreviewBufferRelay`가 PRIVATE 프리뷰 버퍼를 먼저 받아 도착 시각을 기록한 뒤 TextureView로 넘깁니다. 픽셀은 복사하지 않습니다. 그보다 낮은 버전에서는 TextureView에 직접 연결하고, 프리뷰 출력을 관측할 수 없다고 표시합니다.
 
@@ -190,9 +192,9 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-06 @ `20b5efb` · Codex-cli-default-review
+- 검토 2026-10-06 @ `bd1ad3f` · Claude-issue224-review
 
 </details>
 
@@ -271,7 +273,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-06 @ `20b5efb` · Codex-cli-default-review
+- 검토 2026-10-06 @ `bd1ad3f` · Claude-issue224-review
 
 </details>
 
@@ -304,7 +306,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-06 @ `20b5efb` · Codex-cli-default-review
+- 검토 2026-10-06 @ `bd1ad3f` · Claude-issue224-review
 
 </details>
 
@@ -333,11 +335,11 @@ Camera2도 JPEG를 받은 뒤에는 저장이 끝날 때까지 촬영 자리를 
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-06 @ `20b5efb` · Codex-cli-default-review |
-| 원고 `contract` | 최신 | 검토 2026-10-06 @ `20b5efb` · Codex-cli-default-review |
-| 원고 `camera2` | 최신 | 검토 2026-10-06 @ `20b5efb` · Codex-cli-default-review |
-| 원고 `camerax` | 최신 | 검토 2026-10-06 @ `20b5efb` · Codex-cli-default-review |
-| 원고 `comparison` | 최신 | 검토 2026-10-06 @ `20b5efb` · Codex-cli-default-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-06 @ `bd1ad3f` · Claude-issue224-review |
+| 원고 `contract` | 최신 | 검토 2026-10-06 @ `bd1ad3f` · Claude-issue224-review |
+| 원고 `camera2` | 최신 | 검토 2026-10-06 @ `bd1ad3f` · Claude-issue224-review |
+| 원고 `camerax` | 최신 | 검토 2026-10-06 @ `bd1ad3f` · Claude-issue224-review |
+| 원고 `comparison` | 최신 | 검토 2026-10-06 @ `bd1ad3f` · Claude-issue224-review |
 
 <!-- omm:end id=status -->
 
