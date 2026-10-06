@@ -52,9 +52,14 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(args.yuv_size, "off")
         self.assertEqual(parser().parse_args(["streams", "--camera", "0"]).command, "streams")
 
-    def test_benchmark_is_not_exposed(self):
-        with self.assertRaises(CliError):
-            parser().parse_args(["benchmark", "run", "--camera", "0", "--output", "out"])
+    def test_benchmark_uses_fixed_profile_and_rejects_live_overrides(self):
+        args = parser().parse_args(["benchmark", "run", "--output", "out"])
+        self.assertEqual(args.camera, "0")
+        self.assertEqual(args.profile, "camera2-standard-v2")
+        self.assertEqual(args.timeout, 600)
+        for options in (["--engine", "CameraX"], ["--profile", "camera2-standard-v1"], ["--yuv-size", "off"]):
+            with self.assertRaises(CliError):
+                parser().parse_args(["benchmark", "run", "--output", "out", *options])
 
     def test_request_id_rejects_traversal_and_noncanonical_uuid(self):
         for value in ["../file", "1-1-1-1-1", RID.upper(), "", RID + "/x"]:
@@ -233,6 +238,15 @@ class ProbeAndCtsTests(unittest.TestCase):
         self.assertEqual(got["payload"]["command"], "cts.cases")
         self.assertEqual(got["payload"]["params"], {})
         self.assertFalse(got["launched"])
+
+    def test_benchmark_launches_live_and_submits_profile_without_stream_overrides(self):
+        with patch("sys.stdout", new_callable=io.StringIO):
+            got = self.submitted(["benchmark", "run", "--camera", "1", "--output", "out"],
+                                 status={"protocol_version": 1, "foreground": False, "screen": None, "busy": False})
+        self.assertTrue(got["launched"])
+        self.assertEqual(got["payload"]["command"], "benchmark.run")
+        self.assertEqual(got["payload"]["params"], {"camera_id": "1", "profile_id": "camera2-standard-v2"})
+        self.assertEqual(got["payload"]["execution_timeout_ms"], 600000)
 
     def test_cts_run_sends_every_case_in_order_and_needs_live(self):
         with patch("sys.stdout", new_callable=io.StringIO):

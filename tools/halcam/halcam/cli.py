@@ -60,6 +60,16 @@ def parser():
     cts_run.add_argument("--output", required=True)
     cts_run.add_argument("--transfer-timeout", type=positive, default=60)
     execution_options(cts_run, 1800)
+    benchmark = commands.add_parser("benchmark")
+    common(benchmark)
+    benchmark_commands = benchmark.add_subparsers(dest="benchmark_command", required=True)
+    benchmark_run = benchmark_commands.add_parser("run")
+    common(benchmark_run)
+    benchmark_run.add_argument("--camera", default="0")
+    benchmark_run.add_argument("--profile", choices=("camera2-standard-v2",), default="camera2-standard-v2")
+    benchmark_run.add_argument("--output", required=True)
+    benchmark_run.add_argument("--transfer-timeout", type=positive, default=60)
+    execution_options(benchmark_run, 600)
     return root
 
 
@@ -82,6 +92,8 @@ SCREENLESS = ("streams", "cameras", "probe", "cts.cases")
 
 
 def app_command(args):
+    if args.command == "benchmark":
+        return "benchmark." + args.benchmark_command
     if args.command == "cts":
         return "cts." + args.cts_command
     return args.command

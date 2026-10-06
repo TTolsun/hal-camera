@@ -118,7 +118,7 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review
+- 검토 2026-10-06 @ `9d132c1` · Codex-user-requested-release-review
 
 </details>
 
@@ -141,13 +141,13 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.19.0 (versionCode 628)
+- 검증 기준 앱 버전: 0.20.0 (versionCode 629)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
-| 원고 `layer-isolation` | 최신 | 검토 2026-10-05 @ `2216f02` · Codex-issue220-code-review |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-10-06 @ `9d132c1` · Codex-user-requested-release-review |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-06 @ `9d132c1` · Codex-user-requested-release-review |
+| 원고 `layer-isolation` | 최신 | 검토 2026-10-06 @ `9d132c1` · Codex-user-requested-release-review |
 
 <!-- omm:end id=status -->
 

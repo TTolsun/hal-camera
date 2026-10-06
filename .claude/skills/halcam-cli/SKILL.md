@@ -1,6 +1,6 @@
 ---
 name: halcam-cli
-description: HAL CAM 앱을 adb로 조작하는 절차. 기기에서 스트림 크기·프리뷰·사진·녹화·probe·CTS를 실행하거나, 결과 파일을 PC로 가져오거나, CLI 요청 상태·취소·BUSY·CLI_DISABLED 같은 오류를 다룰 때 사용한다. 계약 원본은 guide/cli.md와 app/src/main/java/dev/halcamera/cli/이다.
+description: HAL CAM 앱을 adb로 조작하는 절차. 기기에서 스트림 크기·프리뷰·사진·녹화·probe·CTS·벤치마크를 실행하거나, 결과 파일을 PC로 가져오거나, CLI 요청 상태·취소·BUSY·CLI_DISABLED 같은 오류를 다룰 때 사용한다. 계약 원본은 guide/cli.md와 app/src/main/java/dev/halcamera/cli/이다.
 ---
 
 # HAL CAM CLI 스킬 (본문 위치 안내)

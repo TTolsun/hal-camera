@@ -1,0 +1,233 @@
+{
+  "commit": "6c128c7",
+  "requests": {
+    "background": {
+      "request": {
+        "protocol_version": 1,
+        "request_id": "29598c58-90d4-40f3-8264-49e116abad95",
+        "state": "cancelled",
+        "completed": true,
+        "created_at_ms": 1791244406516,
+        "expires_at_ms": 1791330818587,
+        "result": {
+          "run_id": "20261006-085326-754",
+          "camera_id": "0",
+          "profile_id": "camera2-standard-v2",
+          "artifact_count": 1,
+          "cancelled": true,
+          "report_schema_version": 5
+        },
+        "error": {
+          "code": "CANCELLED",
+          "message": "Benchmark aborted: background"
+        },
+        "artifacts": [
+          {
+            "artifact_id": "file-0",
+            "name": "20261006-085326-754.json",
+            "mime_type": "application/json",
+            "size_bytes": 606009,
+            "sha256": "8f9c163d25aa2def2f5c74c60220971eeb9b15278ec020dcf0ba61fc6534383a"
+          }
+        ]
+      },
+      "verified_reports": [
+        {
+          "bytes": 606009,
+          "schema": 5,
+          "sha256": "8f9c163d25aa2def2f5c74c60220971eeb9b15278ec020dcf0ba61fc6534383a",
+          "name": "20261006-085326-754.json",
+          "aborted": "background",
+          "validity": {
+            "validity_rule_version": "validity-v3",
+            "measurement_valid": false,
+            "comparison_eligible": false,
+            "scoring_eligible": false,
+            "flags": [
+              "ABORTED",
+              "HARD_FAILURE",
+              "INSUFFICIENT_SAMPLES",
+              "PREFLIGHT_MISMATCH",
+              "RECORD_NOT_MEASURED"
+            ]
+          }
+        }
+      ]
+    },
+    "normal": {
+      "request": {
+        "protocol_version": 1,
+        "request_id": "e2fae080-dc40-4533-bd62-71bc0731253f",
+        "state": "succeeded",
+        "completed": true,
+        "created_at_ms": 1791244270093,
+        "expires_at_ms": 1791330741689,
+        "result": {
+          "run_id": "20261006-085110-324",
+          "camera_id": "0",
+          "profile_id": "camera2-standard-v2",
+          "artifact_count": 1,
+          "cancelled": false,
+          "report_schema_version": 5
+        },
+        "error": null,
+        "artifacts": [
+          {
+            "artifact_id": "file-0",
+            "name": "20261006-085110-324.json",
+            "mime_type": "application/json",
+            "size_bytes": 6073520,
+            "sha256": "52d4b5c36c19cd5162378fb10fcb22e85d2175f5e4de6c4ec248b6dc4c9b5c09"
+          }
+        ]
+      },
+      "verified_reports": [
+        {
+          "bytes": 6073520,
+          "schema": 5,
+          "sha256": "52d4b5c36c19cd5162378fb10fcb22e85d2175f5e4de6c4ec248b6dc4c9b5c09",
+          "name": "20261006-085110-324.json",
+          "aborted": null,
+          "validity": {
+            "validity_rule_version": "validity-v3",
+            "measurement_valid": true,
+            "comparison_eligible": true,
+            "scoring_eligible": true,
+            "flags": []
+          }
+        }
+      ]
+    },
+    "invalid_camera": {
+      "request": {
+        "protocol_version": 1,
+        "request_id": "4b94fb4c-00b8-4d8b-bcaa-0e9ded42813a",
+        "state": "failed",
+        "completed": true,
+        "created_at_ms": 1791244422084,
+        "expires_at_ms": 1791330822089,
+        "result": null,
+        "error": {
+          "code": "UNSUPPORTED_CAMERA",
+          "message": "Camera is not independently openable"
+        },
+        "artifacts": []
+      },
+      "verified_reports": []
+    },
+    "timeout": {
+      "request": {
+        "protocol_version": 1,
+        "request_id": "d2dea896-a4cc-4add-a05c-0001a4932299",
+        "state": "failed",
+        "completed": true,
+        "created_at_ms": 1791244357043,
+        "expires_at_ms": 1791330762303,
+        "result": {
+          "run_id": "20261006-085237-274",
+          "camera_id": "0",
+          "profile_id": "camera2-standard-v2",
+          "artifact_count": 1,
+          "cancelled": true,
+          "report_schema_version": 5
+        },
+        "error": {
+          "code": "EXECUTION_TIMEOUT",
+          "message": "App execution deadline exceeded"
+        },
+        "artifacts": [
+          {
+            "artifact_id": "file-0",
+            "name": "20261006-085237-274.json",
+            "mime_type": "application/json",
+            "size_bytes": 88204,
+            "sha256": "2283527419aaca5c9a6409e59c380ee9add73f77294d8e700cb3ea2cebc04075"
+          }
+        ],
+        "cancel_effective": true
+      },
+      "verified_reports": [
+        {
+          "bytes": 88204,
+          "schema": 5,
+          "sha256": "2283527419aaca5c9a6409e59c380ee9add73f77294d8e700cb3ea2cebc04075",
+          "name": "20261006-085237-274.json",
+          "aborted": "cli",
+          "validity": {
+            "validity_rule_version": "validity-v3",
+            "measurement_valid": false,
+            "comparison_eligible": false,
+            "scoring_eligible": false,
+            "flags": [
+              "ABORTED",
+              "HARD_FAILURE",
+              "INSUFFICIENT_SAMPLES",
+              "PREFLIGHT_MISMATCH",
+              "RECORD_NOT_MEASURED"
+            ]
+          }
+        }
+      ]
+    },
+    "cancel": {
+      "request": {
+        "protocol_version": 1,
+        "request_id": "ae06199e-feba-4404-b938-e207fd4c76c0",
+        "state": "cancelled",
+        "completed": true,
+        "created_at_ms": 1791244380903,
+        "expires_at_ms": 1791330791722,
+        "result": {
+          "run_id": "20261006-085301-127",
+          "camera_id": "0",
+          "profile_id": "camera2-standard-v2",
+          "artifact_count": 1,
+          "cancelled": true,
+          "report_schema_version": 5
+        },
+        "error": {
+          "code": "CANCELLED",
+          "message": "Benchmark aborted: cli"
+        },
+        "artifacts": [
+          {
+            "artifact_id": "file-0",
+            "name": "20261006-085301-127.json",
+            "mime_type": "application/json",
+            "size_bytes": 534502,
+            "sha256": "5bd548a304244bd96d01a3abeab817639c8db0da90b473458ac6c7d5350ab844"
+          }
+        ],
+        "cancel_effective": true
+      },
+      "verified_reports": [
+        {
+          "bytes": 534502,
+          "schema": 5,
+          "sha256": "5bd548a304244bd96d01a3abeab817639c8db0da90b473458ac6c7d5350ab844",
+          "name": "20261006-085301-127.json",
+          "aborted": "cli",
+          "validity": {
+            "validity_rule_version": "validity-v3",
+            "measurement_valid": false,
+            "comparison_eligible": false,
+            "scoring_eligible": false,
+            "flags": [
+              "ABORTED",
+              "HARD_FAILURE",
+              "INSUFFICIENT_SAMPLES",
+              "PREFLIGHT_MISMATCH",
+              "RECORD_NOT_MEASURED"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "version_code": 628,
+  "previous_request_preserved": true,
+  "apk_sha256": "4e8408b9544c894655db3e46dcc5cb09daa522030317fd68a0c24b4621231495",
+  "app_version": "0.19.0",
+  "device": "SM-S936N",
+  "android": "16"
+}

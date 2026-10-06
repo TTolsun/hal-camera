@@ -34,9 +34,11 @@ class BenchmarkRunnerRecordTest {
     private val driver = FakeDriver()
     private val listener = object : BenchmarkRunner.Listener {
         val phases = ArrayList<BenchmarkRunner.Phase>()
+        val recordingProgress = ArrayList<Triple<BenchmarkRunner.Step, Int, Int>>()
         var result: BenchmarkRunner.Result? = null
         override fun onProgress(phase: BenchmarkRunner.Phase, step: BenchmarkRunner.Step, iteration: Int, total: Int) {
             if (phases.lastOrNull() != phase) phases += phase
+            if (phase == BenchmarkRunner.Phase.RECORDING) recordingProgress += Triple(step, iteration, total)
         }
         override fun onFinished(result: BenchmarkRunner.Result) { this.result = result }
     }
@@ -130,6 +132,9 @@ class BenchmarkRunnerRecordTest {
         assertEquals(1, result.records.count { it.warmup })
         assertEquals(profile.expectedRecordSamples, result.validRecordSamples)
         assertEquals(0, scheduler.pending)
+        assertEquals((0 until recordIterations).toList(), listener.recordingProgress
+            .filter { it.first == BenchmarkRunner.Step.RECORD_RUN }.map { it.second })
+        assertTrue(listener.recordingProgress.all { it.third == recordIterations })
         // Recording is its own phase, and it comes between the stills and the close.
         assertEquals(
             listOf(BenchmarkRunner.Phase.STILL_CAPTURE, BenchmarkRunner.Phase.RECORDING, BenchmarkRunner.Phase.CAMERA_CLOSE),

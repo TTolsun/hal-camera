@@ -2,6 +2,7 @@ graph TB
     live["Live · MainActivity"] --> engines["Camera2 / CameraX<br/>CameraEngine"]
     cli["ADB · CliProvider"] -->|"LiveController"| live
     bench["Benchmark<br/>화면 · Runner"] -->|"Camera2 Driver"| engines
+    live -->|"close(done) 뒤 CLI 인계"| bench
     engines --> api["Android Camera API"]
     engines --> events["콜백 기록<br/>Telemetry · FlightRecorder"]
     bench -->|"실행 시각"| evaluate["측정 · 유효성 · 점수<br/>RunAssembler"]
