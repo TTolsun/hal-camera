@@ -97,6 +97,7 @@ class BenchmarkActivity : ComponentActivity() {
 
     // Views the running screen updates in place instead of rebuilding on every frame.
     private var progressHeadline: TextView? = null
+    private var progressDetail: TextView? = null
     private var progressBar: TextView? = null
     private var progressStats: TextView? = null
     private var buildInput: EditText? = null
@@ -119,6 +120,7 @@ class BenchmarkActivity : ComponentActivity() {
     private var progressIteration = 0
     private var progressTotal = 0
     private var recordingStartedNs = 0L
+    private var progressStartedNs = 0L
     private var livePhase: BenchmarkRunner.Phase? = null
     private var ticker: Runnable? = null
     /** Re-runs preflight while the card is blocked on heat, so START returns by itself once the device cools. */
@@ -474,7 +476,7 @@ class BenchmarkActivity : ComponentActivity() {
 
     /** 8.2. */
     private fun renderCard() {
-        progressHeadline = null; progressBar = null; progressStats = null
+        progressHeadline = null; progressDetail = null; progressBar = null; progressStats = null
         cardRecheck?.let { main.removeCallbacks(it) }; cardRecheck = null
         val card = Look.card(this, dark = false)
         val state = startCard
@@ -566,6 +568,7 @@ class BenchmarkActivity : ComponentActivity() {
         // The first phase is shown before the runner starts, so the card never appears blank for a frame.
         val first = ProgressPresenter.headline(BenchmarkRunner.Phase.CAMERA_OPEN, 0, profile.launchIterations, profile.records)
         progressHeadline = Look.text(this, first, 14, Look.ink, mono = true).also { card.addView(it, lp(top = 10)) }
+        progressDetail = Look.text(this, "Preparing camera", 13, Look.inkMuted).also { card.addView(it, lp(top = 4)) }
         progressBar = Look.text(this, ProgressPresenter.barLine(0), 13, Look.primary, mono = true)
             .also { it.maxLines = 1; card.addView(it, lp(top = 4)) }
         progressStats = Look.text(this, "", 12, Look.inkMuted, mono = true).also { card.addView(it, lp(top = 10)) }
@@ -576,7 +579,7 @@ class BenchmarkActivity : ComponentActivity() {
 
     /** 8.4. The verdict leads, four key metrics follow with bars, and everything else folds (mockup v7). */
     private fun renderResult() {
-        progressHeadline = null; progressBar = null; progressStats = null
+        progressHeadline = null; progressDetail = null; progressBar = null; progressStats = null
         val run = lastRun
         if (run == null) {
             val card = Look.card(this, dark = false)
@@ -674,6 +677,7 @@ class BenchmarkActivity : ComponentActivity() {
                 // launch cycles that came before and are measured separately.
                 if (phase != livePhase && phase == BenchmarkRunner.Phase.FIRST_PREVIEW) liveStats.reset()
                 livePhase = phase
+                progressStartedNs = nowNs()
                 progressStep = step
                 progressIteration = iteration
                 progressTotal = total
@@ -727,6 +731,10 @@ class BenchmarkActivity : ComponentActivity() {
         val recording = livePhase == BenchmarkRunner.Phase.RECORDING
         progressStats?.text = (if (recording) "Recording frames (this cycle)\n" else "") +
             ProgressPresenter.statLines((if (recording) recordingStats else liveStats).snapshot(), thermal?.current)
+        livePhase?.let { phase ->
+            progressDetail?.text = ProgressPresenter.detail(phase, progressStep, progressIteration, progressTotal,
+                if (progressStartedNs == 0L) 0L else (nowNs() - progressStartedNs) / 1_000_000, profile)
+        }
         if (recording) {
             val elapsedMs = if (recordingStartedNs == 0L) 0L else (nowNs() - recordingStartedNs) / 1_000_000
             val durationMs = profile.recordDurationMs ?: 0L
@@ -735,8 +743,7 @@ class BenchmarkActivity : ComponentActivity() {
                 BenchmarkRunner.Step.RECORD_RUN -> if (durationMs > 0) elapsedMs.toDouble() / durationMs else 0.0
                 else -> 0.0
             }
-            progressHeadline?.text = ProgressPresenter.headline(BenchmarkRunner.Phase.RECORDING, progressIteration, progressTotal, true) +
-                "\n" + ProgressPresenter.recordingDetail(progressStep, elapsedMs, durationMs)
+            progressHeadline?.text = ProgressPresenter.headline(BenchmarkRunner.Phase.RECORDING, progressIteration, progressTotal, true)
             progressBar?.text = ProgressPresenter.barLine(ProgressPresenter.percent(BenchmarkRunner.Phase.RECORDING,
                 progressIteration, progressTotal, true, fraction))
         }
@@ -799,6 +806,7 @@ class BenchmarkActivity : ComponentActivity() {
     private fun finishRun(result: BenchmarkRunner.Result) {
         runner = null
         ticker?.let { main.removeCallbacks(it) }
+        progressDetail?.text = "Saving results"
         val thermalEnd = thermal?.stop()
         val events = recorder.snapshot()
         val endEnv = probe.environment()

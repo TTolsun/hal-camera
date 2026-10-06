@@ -114,7 +114,7 @@ object ProgressPresenter {
 
     /**
      * [BenchmarkRunner.progress] reports `iteration = total = launchIterations` for every phase after the launch
-     * cycles except RECORDING, which reports its own cycle index/count. The observation session is the eleventh open. Taken at face value that reads as cycle
+     * cycles except RECORDING and STILL, which report their own index/count. The observation session is the eleventh open. Taken at face value that reads as cycle
      * 11/10 and drives the bar to the end of each phase the moment it starts, so the counter is confined here to
      * the one phase it describes rather than changing the runner's contract, which other callers already read.
      */
@@ -130,6 +130,27 @@ object ProgressPresenter {
         BenchmarkRunner.Step.RECORD_RUN -> String.format(Locale.US, "Recording · %.1f / %.1f s", elapsedMs.coerceAtLeast(0) / 1000.0, durationMs / 1000.0)
         BenchmarkRunner.Step.RECORD_STOP -> "Saving recording"
         else -> ""
+    }
+
+    /** One short supporting line; timers describe waiting, not fabricated camera progress. */
+    fun detail(phase: BenchmarkRunner.Phase, step: BenchmarkRunner.Step, iteration: Int, total: Int,
+               elapsedMs: Long, profile: BenchmarkProfile): String {
+        fun timed(label: String, durationMs: Long? = null): String = if (durationMs == null)
+            String.format(Locale.US, "%s · %.1f s", label, elapsedMs.coerceAtLeast(0) / 1000.0)
+        else String.format(Locale.US, "%s · %.1f / %.1f s", label, elapsedMs.coerceAtLeast(0) / 1000.0, durationMs / 1000.0)
+        if (phase == BenchmarkRunner.Phase.THREE_A) return "Checking focus & exposure"
+        if (phase == BenchmarkRunner.Phase.RECORDING) return recordingDetail(step, elapsedMs, profile.recordDurationMs ?: 0)
+        return when (step) {
+            BenchmarkRunner.Step.OPEN -> timed("Opening camera")
+            BenchmarkRunner.Step.CONFIGURE -> timed("Preparing preview")
+            BenchmarkRunner.Step.FIRST_FRAME -> timed("Waiting for first frame")
+            BenchmarkRunner.Step.CYCLE_CLOSE -> timed("Closing this cycle")
+            BenchmarkRunner.Step.WARMUP -> timed("Warming up", profile.warmupMs)
+            BenchmarkRunner.Step.OBSERVE -> timed("Observing frames", profile.observeMs)
+            BenchmarkRunner.Step.STILL -> timed("Capturing ${iteration + 1}/$total")
+            BenchmarkRunner.Step.CLOSE -> timed("Closing camera")
+            else -> ""
+        }
     }
 
     /**

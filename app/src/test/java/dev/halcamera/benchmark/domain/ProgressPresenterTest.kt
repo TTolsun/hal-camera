@@ -8,6 +8,20 @@ import org.junit.Test
 
 /** The progress screen contract of 8.3: the six phases, a time-weighted bar and the live preview numbers. */
 class ProgressPresenterTest {
+    @Test fun eachWaitingStepExplainsWhatIsHappening() {
+        val p = BenchmarkProfile.CAMERA2_STANDARD_V2
+        fun detail(step: BenchmarkRunner.Step, phase: Phase = Phase.CAMERA_OPEN) =
+            ProgressPresenter.detail(phase, step, 2, 10, 1200, p)
+        assertEquals("Opening camera · 1.2 s", detail(BenchmarkRunner.Step.OPEN))
+        assertEquals("Preparing preview · 1.2 s", detail(BenchmarkRunner.Step.CONFIGURE))
+        assertEquals("Waiting for first frame · 1.2 s", detail(BenchmarkRunner.Step.FIRST_FRAME))
+        assertEquals("Closing this cycle · 1.2 s", detail(BenchmarkRunner.Step.CYCLE_CLOSE))
+        assertEquals("Capturing 3/10 · 1.2 s", detail(BenchmarkRunner.Step.STILL, Phase.STILL_CAPTURE))
+        assertEquals("Closing camera · 1.2 s", detail(BenchmarkRunner.Step.CLOSE, Phase.CAMERA_CLOSE))
+        assertEquals("Checking focus & exposure", detail(BenchmarkRunner.Step.OBSERVE, Phase.THREE_A))
+        assertTrue(detail(BenchmarkRunner.Step.WARMUP).startsWith("Warming up · 1.2 / "))
+        assertTrue(detail(BenchmarkRunner.Step.OBSERVE).startsWith("Observing frames · 1.2 / "))
+    }
     @Test fun recordingShowsItsCycleAndAdvancesWithinTheCycle() {
         assertEquals("6 / 7  Recording  2/5", ProgressPresenter.headline(Phase.RECORDING, 1, 5, true))
         val start = ProgressPresenter.percent(Phase.RECORDING, 1, 5, true, 0.0)
