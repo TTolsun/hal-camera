@@ -30,8 +30,8 @@
     <h1 lang="en">Control the camera with adb.</h1><p>Windows(PowerShell·CMD)와 WSL에서 <code>adb</code>로 카메라를 제어합니다. Git·Python·pip·JDK·Android Studio는 필요하지 않습니다. <strong>ADB CLI 허용은 기본으로 켜져 있으며</strong>, 사용자가 직접 꺼 둔 설정은 업데이트 후에도 유지합니다.</p>
 <h2 id="처음-실행하세요">처음 실행하세요</h2>
 <ol>
-<li>HAL CAM APK를 <code>adb install -r HALCamera.apk</code>로 설치하고 앱에서 카메라 권한을 허용합니다. 서명이 맞지 않으면 기존 앱을 삭제하지 말고 같은 서명의 APK를 준비합니다. 화면 잠금을 해제합니다. 소리가 있는 녹화에는 마이크 권한도 필요합니다.</li>
 <li>사용할 터미널에서 <code>adb devices -l</code>로 연결된 기기를 확인합니다. <code>unauthorized</code>이면 기기에서 디버깅을 허용하고, <code>offline</code>이면 연결을 복구합니다. 환경별 연결 방법은 아래를 참고하세요.</li>
+<li>HAL CAM APK를 <code>adb install -r HALCamera.apk</code>로 설치하고 앱에서 카메라 권한을 허용합니다. 서명이 맞지 않으면 기존 앱을 삭제하지 말고 같은 서명의 APK를 준비합니다. 화면 잠금을 해제합니다. 소리가 있는 녹화에는 마이크 권한도 필요합니다.</li>
 <li>앱에 포함된 스크립트를 기기에 준비한 뒤 촬영합니다. APK를 업데이트하면 첫 번째 명령으로 스크립트도 갱신합니다.</li>
 </ol>
 <pre><code class="language-sh">adb shell &quot;content read --uri content://dev.halcamera.cli/v1/shell &gt; /data/local/tmp/halcam&quot;
