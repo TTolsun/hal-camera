@@ -145,6 +145,8 @@ class MainActivity : ComponentActivity() {
     private val recorder = FlightRecorder(::nowNs)
     private val telemetry = Telemetry(recorder)
     private var engine: CameraEngine? = null
+    /** The camera [engine] opened. A CLI request changes [cameraId] before the old engine closes. */
+    private var engineCameraId: String? = null
     private var closing = false
     private var resumed = false
     private var destroyed = false
@@ -395,21 +397,24 @@ class MainActivity : ComponentActivity() {
         if (closing) return
         ready=false; mediaButton.isEnabled=false; reportButton.isEnabled=false
         val old = engine; engine = null
+        val released = engineCameraId.takeIf { old != null }
         if (old != null) {
             closing = true; setStatus("Closing camera… Letting the lens clock out.", false)
             old.close {
                 closing = false
-                if (destroyed) cameraWorker.shutdown() else openCamera()
+                if (destroyed) cameraWorker.shutdown() else openCamera(released)
             }
         } else openCamera()
     }
-    private fun openCamera() {
+    /** [released] is the camera the previous engine just closed; Camera2 waits for its release before opening (#230). */
+    private fun openCamera(released: String? = null) {
         if (!resumed || destroyed || paused || !hasPermission()) {
             if (paused) setStatus("Preview paused · Reconnect Camera in Lab.", false)
             return
         }
         if (cameraId.isEmpty()) { setStatus("No cameras available.", false); return }
         sessionId = UUID.randomUUID().toString()
+        engineCameraId = cameraId
         val thisSession = sessionId
         val thisCamera = cameraId
         val thisKey = streamKey()
@@ -461,7 +466,7 @@ class MainActivity : ComponentActivity() {
         } else {
             val view = TextureView(this)
             previewHost.addView(view, FrameLayout.LayoutParams(-1,-1))
-            Camera2Engine(this, view, cameraId, sessionId, telemetry, liveStreams = requestedStreams,
+            Camera2Engine(this, view, cameraId, sessionId, telemetry, liveStreams = requestedStreams, releasedCameraId = released,
                 streamsConfigured = { values ->
                     if (thisSession == sessionId && resumed && !closing) {
                         goodStreams[thisKey] = requestedStreams

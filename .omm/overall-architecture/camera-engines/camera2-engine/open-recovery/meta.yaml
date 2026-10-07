@@ -1,0 +1,10 @@
+kind: module
+title: open-recovery
+children: []
+parentPath:
+  - camera-engines
+  - camera2-engine
+created: 2026-10-07T14:50:00.000Z
+updated: 2026-10-07T14:50:00.000Z
+update_count: 1
+last_field: description
