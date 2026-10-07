@@ -124,7 +124,6 @@ sources:
       camera-engines/camera2-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
-          - app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt
           - app/src/main/java/dev/halcamera/camera/PreviewTransform.kt
           - app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt
       camera-engines/camera2-engine/stream-settings:
@@ -144,6 +143,10 @@ sources:
       camera-engines/camera2-engine/still-capture:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt
+      camera-engines/camera2-engine/open-recovery:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt
+          - app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt
       camera-engines/camera2-engine/still-output:
         evidence:
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
