@@ -58,7 +58,7 @@ adb shell sh /data/local/tmp/halcam record stop
 
 ```sh
 adb shell sh /data/local/tmp/halcam cameras                    # 논리 카메라와 물리 endpoint 목록
-adb shell sh /data/local/tmp/halcam capture --camera 0         # 사진 두 장 (YUV 변환 JPEG + 카메라 JPEG)
+adb shell sh /data/local/tmp/halcam capture --camera 0         # YUV 변환 JPEG + 카메라 JPEG + 촬영 JSON
 adb shell sh /data/local/tmp/halcam preview --camera 0         # 첫 프레임까지 대기, 이후 프리뷰 유지
 adb shell sh /data/local/tmp/halcam preview stop
 adb shell sh /data/local/tmp/halcam record start --camera 0 --no-audio

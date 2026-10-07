@@ -9,7 +9,8 @@ import android.graphics.YuvImage
 import java.io.ByteArrayOutputStream
 
 /** A YUV frame copied out of its Image as NV21, so the Image can go back to its reader at once. */
-internal class YuvFrame(val bytes: ByteArray, val width: Int, val height: Int)
+internal class YuvFrame(val bytes: ByteArray, val width: Int, val height: Int,
+    val original: OriginalYuv? = null)
 
 /**
  * The YUV half of a LIVE still pair as a JPEG: NV21 compressed at quality 95, then turned upright by [rotation]

@@ -75,7 +75,8 @@ class LiveController(private val commands: CommandCoordinator, private val drive
             result.fold({ photo ->
                 commands.complete(command.id, JSONObject().put("camera_id", command.camera)
                     .put("capture_id", photo.name).put("sensor_timestamp_ns", photo.sensorTimestamp).put("artifact_count", photo.uris.size),
-                    photo.uris.mapIndexed { index, uri -> CliArtifact("${photo.name}_${driver.photoLabels()[index]}.jpg", "image/jpeg", uri) })
+                    if (photo.artifacts.isNotEmpty()) photo.artifacts.map { CliArtifact(it.name, it.mime, it.uri) }
+                    else photo.uris.mapIndexed { index, uri -> CliArtifact("${photo.name}_${driver.photoLabels()[index]}.jpg", "image/jpeg", uri) })
             }, { commands.fail(command.id, "CAPTURE_FAILED", it.message ?: "Capture failed") })
         }
     }

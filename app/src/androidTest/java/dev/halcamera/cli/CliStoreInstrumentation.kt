@@ -12,15 +12,26 @@ class CliStoreInstrumentation : Instrumentation() {
     private var exportReports = false
     private var probeLaunchDiagnostics = false
     private var snapshotFailures = false
+    private var originalYuv = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
         exportReports = arguments?.getString("export_reports") == "true"
         probeLaunchDiagnostics = arguments?.getString("probe_launch_diagnostics") == "true"
         snapshotFailures = arguments?.getString("snapshot_failures") == "true"
+        originalYuv = arguments?.getString("original_yuv") == "true"
         start()
     }
 
     override fun onStart() {
+        if (originalYuv) {
+            try {
+                val result = dev.halcamera.camera.OriginalYuvCheck.run(targetContext)
+                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
+            } catch (error: Throwable) {
+                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "ORIGINAL_YUV_FAILED: ${error.stackTraceToString()}\n") })
+            }
+            return
+        }
         if (snapshotFailures) {
             try {
                 val result = dev.halcamera.camera.SnapshotFailureChecks.run(this)

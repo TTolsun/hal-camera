@@ -159,6 +159,7 @@ class CameraXEngine(
         future.addListener({
             if (!active) return@addListener
             try {
+                require(liveStreams?.yuvSaveFormat != YuvSaveFormat.NV21) { "NV21 requires Camera2." }
                 provider = future.get()
                 val info = provider!!.availableCameraInfos.first { Camera2CameraInfo.from(it).cameraId == cameraId }
                 val characteristics = context.getSystemService(CameraManager::class.java).getCameraCharacteristics(cameraId)

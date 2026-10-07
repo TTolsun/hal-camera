@@ -43,6 +43,7 @@ internal class Camera2StillCapture(
         val recordingBusy: Boolean
         val captureYuv: Boolean
         val captureJpeg: Boolean
+        val yuvSaveFormat: YuvSaveFormat
         /** Flash auto or on with AE not locked on the request the still will carry. */
         val needsPrecapture: Boolean
         val flashName: String
@@ -58,8 +59,10 @@ internal class Camera2StillCapture(
         fun fail(e: Exception)
     }
 
-    private class Photo(val name: String, val rotation: Int, val requestId: String?, val done: ((Result<PhotoResult>) -> Unit)?) {
-        val pair = StillPair<YuvFrame, ByteArray>()
+    private class Photo(val name: String, val rotation: Int, val requestId: String?, val done: ((Result<PhotoResult>) -> Unit)?,
+                        val yuvSaveFormat: YuvSaveFormat) {
+        val pair = StillPair<YuvFrame, ByteArray>(2)
+        var captureMetadata: Map<String, Any?>? = null
         val delivered = java.util.concurrent.atomic.AtomicBoolean(false)
     }
 
@@ -100,9 +103,13 @@ internal class Camera2StillCapture(
                 pending.pair.jpeg(image.timestamp, ByteArray(image.planes[0].buffer.remaining()).also { image.planes[0].buffer.get(it) })
             } else if (pending.pair.accepts(image.timestamp)) {
                 val crop = image.cropRect
-                pending.pair.yuv(image.timestamp, YuvFrame(YuvPacking.nv21(image.planes.map {
+                val planes = image.planes.map {
                     YuvPacking.Plane(it.buffer, it.rowStride, it.pixelStride)
-                }, crop.left, crop.top, crop.width(), crop.height()), crop.width(), crop.height()))
+                }
+                val original = if (pending.yuvSaveFormat == YuvSaveFormat.NV21) OriginalYuv.copy(planes, image.width, image.height,
+                    crop.left, crop.top, crop.width(), crop.height()) else null
+                pending.pair.yuv(image.timestamp, YuvFrame(original?.bytes ?: YuvPacking.nv21(planes,
+                    crop.left, crop.top, crop.width(), crop.height()), crop.width(), crop.height(), original))
             }
             savePhotoIfComplete(pending)
         } else if (stream == "still" && benchmark) {
@@ -123,6 +130,7 @@ internal class Camera2StillCapture(
     }
 
     private fun deliverPhoto(pending: Photo, result: Result<PhotoResult>) {
+        pending.pair.clear() // Timeout callbacks may retain Photo for 5 s; never retain its pixel buffers.
         if (pending.delivered.compareAndSet(false, true)) main.post { pending.done?.invoke(result) }
     }
 
@@ -177,11 +185,11 @@ internal class Camera2StillCapture(
         try {
             val tag = "still-${android.os.SystemClock.elapsedRealtimeNanos()}"
             val c = host.characteristics
-            val pending = if (!benchmark) Photo(library.name(), host.orientation(c), requestId, done) else null
+            val pending = if (!benchmark) Photo(library.name(), host.orientation(c), requestId, done, host.yuvSaveFormat) else null
             val request = host.stillRequest(camera, c, tag, pending?.rotation)
             inFlight = true
             photo = pending
-            if (pending != null) host.report("Capturing ${photoLabel()}… Say cheese.", false)
+            if (pending != null) host.report("Capturing ${photoLabel()}…", false)
             telemetry.event(sessionId, "capture_submit", mapOf("requestTag" to tag, "api" to "CameraCaptureSession.capture", "zoomRequested" to host.zoomRequested))
             session.capture(request, if (pending == null) host.captureCallback else photoCallback(pending), handler)
             handler.postDelayed({
@@ -208,7 +216,21 @@ internal class Camera2StillCapture(
         }
         override fun onCaptureCompleted(session: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
             cb.onCaptureCompleted(session, request, result)
-            if (photo === pending) { result[CaptureResult.SENSOR_TIMESTAMP]?.let { pending.pair.timestamp = it }; savePhotoIfComplete(pending) }
+            if (photo === pending) {
+                result[CaptureResult.SENSOR_TIMESTAMP]?.let { timestamp ->
+                    pending.pair.timestamp = timestamp
+                    pending.captureMetadata = mapOf(
+                        "cameraId" to host.camera?.id, "requestId" to pending.requestId, "requestTag" to request.tag?.toString(),
+                        "sensorTimestampNs" to timestamp, "frameNumber" to result.frameNumber,
+                        "sensorTimestampSource" to host.characteristics[CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE],
+                        "exposureTimeNs" to result[CaptureResult.SENSOR_EXPOSURE_TIME],
+                        "sensitivityIso" to result[CaptureResult.SENSOR_SENSITIVITY],
+                        "frameDurationNs" to result[CaptureResult.SENSOR_FRAME_DURATION],
+                        "aeState" to result[CaptureResult.CONTROL_AE_STATE],
+                        "jpegOrientationDegrees" to pending.rotation)
+                }
+                savePhotoIfComplete(pending)
+            }
         }
         override fun onCaptureFailed(session: CameraCaptureSession, request: CaptureRequest, failure: CaptureFailure) {
             cb.onCaptureFailed(session, request, failure)
@@ -222,25 +244,32 @@ internal class Camera2StillCapture(
 
     private fun savePhotoIfComplete(pending: Photo) {
         val timestamp = pending.pair.timestamp ?: return
+        if (pending.captureMetadata == null) return
         val (yuvFrame, jpegBytes) = pending.pair.selected(host.captureYuv, host.captureJpeg) ?: return
+        pending.pair.clear() // Only the IO job owns the selected buffers from this point.
         photo = null // Keep inFlight until the pair has been written.
+        host.report("Saving…", false)
         mediaIo.execute {
-            val result = runCatching { library.savePhotos(pending.name, yuvFrame?.let { encodeYuvStill(it, pending.rotation) }, jpegBytes) }
-            result.onSuccess { uris ->
-                telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "uris" to uris.map { it.toString() }))
+            val result = runCatching { library.saveCapture(pending.name,
+                yuvFrame?.takeIf { pending.yuvSaveFormat == YuvSaveFormat.JPEG }?.let { encodeYuvStill(it, pending.rotation) },
+                jpegBytes, yuvFrame?.original, requireNotNull(pending.captureMetadata)) }
+            result.onSuccess { files ->
+                telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "uris" to files.map { it.uri.toString() }))
             }
-            deliverPhoto(pending, result.map { PhotoResult(pending.requestId, pending.name, timestamp, it) })
+            deliverPhoto(pending, result.map { files ->
+                PhotoResult(pending.requestId, pending.name, timestamp, files.map { it.uri }, files)
+            })
             main.post {
                 if (!host.active || result.isFailure) {
-                    val message = result.fold({ "Saved ${it.size} ${photoLabel()} shots. Pixels secured." }, { "Photo save failed: ${it.message}" })
+                    val message = result.fold({ "Saved ${it.size} files" }, { "Photo save failed: ${it.message}" })
                     Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
                 }
             }
             handler.post {
                 inFlight = false
                 result.fold({
-                    host.report("Saved ${it.size} ${photoLabel()} shots. Pixels secured.", true)
-                }, { host.report("Photo save failed: ${it.message} · Ready for another shot.", true) })
+                    host.report("Saved ${it.size} files", true)
+                }, { host.report("Save failed: ${it.message}", true) })
             }
         }
     }

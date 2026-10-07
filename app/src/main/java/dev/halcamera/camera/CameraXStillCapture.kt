@@ -161,16 +161,20 @@ internal class CameraXStillCapture(
             Triple(t, j, p)
         }
         mediaIo.execute {
-            val result = runCatching { library.savePhotos(pending.name,
-                picked?.value?.let { encodeYuvStill(it.yuv, it.rotation) }, jpeg) }
+            val metadata = captureMetadata(telemetry, sessionId, timestamp, pending.requestId) + mapOf(
+                "yuvSensorTimestampNs" to picked?.key, "yuvOffsetNs" to picked?.key?.minus(timestamp),
+                "yuvCapture" to picked?.let { captureMetadata(telemetry, sessionId, it.key, pending.requestId) },
+                "yuvRotationDegrees" to picked?.value?.rotation)
+            val result = runCatching { library.saveCapture(pending.name,
+                picked?.value?.let { encodeYuvStill(it.yuv, it.rotation) }, jpeg, null, metadata) }
             result.onSuccess { uris ->
                 telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "yuvOffsetNs" to picked?.key?.minus(timestamp),
-                    "uris" to uris.map { it.toString() }))
+                    "uris" to uris.map { it.uri.toString() }))
             }
-            deliver(pending, result.map { PhotoResult(pending.requestId, pending.name, timestamp, it) })
+            deliver(pending, result.map { PhotoResult(pending.requestId, pending.name, timestamp, it.map { file -> file.uri }, it) })
             main.post {
                 inFlight = false
-                val message = result.fold({ "Saved ${it.size} shots. Pixels secured." }, { "Photo save failed: ${it.message}" })
+                val message = result.fold({ "Saved ${it.size} files" }, { "Photo save failed: ${it.message}" })
                 if (!host.active || result.isFailure) Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
                 if (host.active) host.report(result.fold({ message }, { "$message · Ready for another shot." }), true)
             }
