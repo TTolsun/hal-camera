@@ -124,6 +124,7 @@ sources:
       camera-engines/camera2-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+          - app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt
           - app/src/main/java/dev/halcamera/camera/PreviewTransform.kt
           - app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt
       camera-engines/camera2-engine/stream-settings:
