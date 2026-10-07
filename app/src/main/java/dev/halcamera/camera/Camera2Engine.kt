@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.Build
 import android.os.HandlerThread
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Size
 import android.view.Surface
 import android.view.TextureView
@@ -26,6 +27,8 @@ class Camera2Engine(
     /** Benchmark profile streams. LIVE uses liveStreams or the default pixel budgets. */
     private val spec: StreamSpec? = null,
     private val liveStreams: LiveStreamSettings? = null,
+    /** LIVE only: the camera the previous engine just closed; the first open waits for its release (#230). */
+    private val releasedCameraId: String? = null,
     private val streamsConfigured: (Map<String, Any?>) -> Unit = {},
     private val streamsFailed: (String) -> Unit = {},
     private val previewReady: () -> Unit = {},
@@ -56,6 +59,12 @@ class Camera2Engine(
     /** LIVE only: a benchmark measures its one open as it happened. Camera thread only. */
     private val openRetry = CameraOpenRetry()
     private var retryDelayMs: Long? = null
+    /** Camera thread only. Set while the first LIVE open waits for [releasedCameraId]. */
+    private var releaseWait: CameraReleaseWait? = null
+    private var releaseCallback: CameraManager.AvailabilityCallback? = null
+    private var releaseWaitStartedMs = 0L
+    private var releaseChecked = spec != null || releasedCameraId == null
+    private val releaseTimeout = Runnable { releaseWait?.let { if (it.timedOut()) releaseDone(it) } }
     private val mediaIo = Executors.newSingleThreadExecutor()
     private val library = MediaLibrary(context)
     @Volatile private var zoomRatio = 1f
@@ -209,7 +218,11 @@ class Camera2Engine(
     }
     @SuppressLint("MissingPermission")
     private fun open() {
-        if (!active || opening || device != null) return
+        if (!active || opening || device != null || releaseWait != null) return
+        if (!releaseChecked) {
+            releaseChecked = true
+            if (waitForRelease(requireNotNull(releasedCameraId))) return
+        }
         try {
             opening = true
             telemetry.event(sessionId, "open_call", mapOf("api" to "CameraManager.openCamera"))
@@ -245,6 +258,37 @@ class Camera2Engine(
             val delay = cause?.let { retryDelay(it, e.toString()) }
             if (delay != null) handler.postDelayed({ open() }, delay) else { fail(e); if (!active) finishClose() }
         }
+    }
+    /**
+     * Waits for the previous engine's camera to be released before the first LIVE open (#230); see
+     * [CameraReleaseWait]. A camera this manager does not list is never reported, so it is not waited for.
+     * Registering the callback reports every camera's current availability, so a camera already free opens at once.
+     */
+    private fun waitForRelease(id: String): Boolean {
+        if (runCatching { id !in manager.cameraIdList }.getOrDefault(true)) return false
+        val wait = CameraReleaseWait(id)
+        val callback = object : CameraManager.AvailabilityCallback() {
+            override fun onCameraAvailable(cameraId: String) { if (wait.available(cameraId)) releaseDone(wait) }
+        }
+        releaseWait = wait
+        releaseCallback = callback
+        releaseWaitStartedMs = SystemClock.elapsedRealtime()
+        telemetry.event(sessionId, "release_wait", mapOf("camera" to id, "limitMs" to CameraReleaseWait.LIMIT_MS))
+        manager.registerAvailabilityCallback(callback, handler)
+        handler.postDelayed(releaseTimeout, CameraReleaseWait.LIMIT_MS)
+        return true
+    }
+    private fun releaseDone(wait: CameraReleaseWait) {
+        stopReleaseWait()
+        telemetry.event(sessionId, "release_waited", mapOf("camera" to wait.cameraId, "outcome" to wait.outcome?.label,
+            "waitMs" to SystemClock.elapsedRealtime() - releaseWaitStartedMs))
+        open()
+    }
+    private fun stopReleaseWait() {
+        handler.removeCallbacks(releaseTimeout)
+        releaseCallback?.let { manager.unregisterAvailabilityCallback(it) }
+        releaseCallback = null
+        releaseWait = null
     }
     /**
      * A LIVE open that fails before the first frame is tried again (#224); the device is reopened from onClosed.
@@ -666,6 +710,7 @@ class Camera2Engine(
     private fun finishClose() {
         if (finished) return
         finished = true
+        if (releaseWait?.cancel() == true) stopReleaseWait()
         stills.close()
         video.finish()
         bench.release()
