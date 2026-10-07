@@ -1,1 +1,3 @@
 LIVE의 StillPair는 센서 타임스탬프가 같은 YUV와 JPEG를 묶습니다. Camera2는 켜진 출력만 기다리며 단일 출력도 capture 센서 시각이 확정되어야 저장합니다. YuvPacking은 Image plane의 stride를 처리해 YUV 데이터를 복사하고, MediaLibrary.savePhotos는 선택한 한 장 또는 두 장을 MediaStore의 DCIM/HALCamera에 저장합니다. 일부 저장에 실패하면 이번 촬영의 항목을 정리합니다. savePair는 CameraX의 기존 사진 쌍 저장을 유지합니다. 이 저장 경로는 픽셀을 포함하지 않는 benchmark JSON과 incident ZIP 경로와 별개입니다.
+
+Camera2의 originalYuv 옵션은 Android 10 이상에서 NV21 샘플과 JSON 메타데이터를 Download/HALCamera의 YUV.zip으로 추가 저장합니다. OriginalYuv는 짝수 crop을 손실 없이 packed NV21으로 복사하며 16 MiB 한도를 검사합니다. 원본 이미지의 크기·crop·stride와 출력 plane의 offset·stride를 구분해 기록하고 회전·색 변환·패딩 복사는 하지 않습니다. ZIP과 JPEG 쓰기가 모두 성공한 후 pending을 순서대로 해제하며, 실패 시 이번 요청의 항목만 삭제를 시도합니다. PhotoResult.artifacts는 ZIP의 실제 파일명과 MIME을 전달합니다.

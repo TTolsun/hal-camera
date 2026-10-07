@@ -7,6 +7,26 @@ import org.junit.runners.JUnit4
 
 @RunWith(JUnit4::class)
 class StillPairTest {
+    @Test fun `completed or failed capture releases buffers even if timeout retains its pair`() {
+        val pair = StillPair<ByteArray, ByteArray>(2).apply {
+            timestamp = 200; yuv(200, byteArrayOf(1)); jpeg(200, byteArrayOf(2))
+        }
+        val selected = pair.complete()!!
+        pair.clear()
+        assertNull(pair.selected(true, true))
+        assertNull(pair.selected(true, false))
+        assertArrayEquals(byteArrayOf(1), selected.first)
+    }
+    @Test fun `bounded original frames discard oldest pre-result images and prune other timestamps`() {
+        val pair = StillPair<String, String>(2)
+        pair.yuv(100, "old"); pair.yuv(200, "middle"); pair.yuv(300, "new")
+        pair.timestamp = 300
+        assertEquals("new" to null, pair.selected(true, false))
+        pair.timestamp = 200
+        assertNull(pair.selected(true, false))
+        pair.timestamp = 100
+        assertNull(pair.selected(true, false))
+    }
     @Test fun `single JPEG waits for matching capture timestamp but never waits for disabled YUV`() {
         val pair = StillPair<String, String>()
         pair.jpeg(100, "stale"); pair.jpeg(200, "requested")

@@ -34,11 +34,12 @@ data class LiveStreamSettings(
     val fps: LiveFps?,
     val video: LiveVideo? = null,
     val stabilization: LiveStabilization = LiveStabilization.AUTO,
+    val originalYuv: Boolean = false,
 ) : java.io.Serializable {
     val canCapture get() = yuv != null || jpeg != null
     fun metadata(): Map<String, Any?> = mapOf("preview" to preview.toString(), "analysis" to yuv?.toString(),
         "jpeg" to jpeg?.toString(), "fpsRange" to fps?.toString(), "video" to video?.toString(),
-        "stabilization" to stabilization.name)
+        "stabilization" to stabilization.name, "originalYuv" to originalYuv)
     fun summary() = "Preview $preview · YUV ${yuv ?: "Off"} · JPEG ${jpeg ?: "Off"} · ${fps ?: "Auto FPS"}"
 }
 
@@ -47,8 +48,13 @@ data class LiveStreamSupport(
     val fps: List<LiveFps>, val videos: List<LiveVideo>, val defaultVideo: LiveVideo? = null,
     val stabilization: List<LiveStabilization> = listOf(LiveStabilization.AUTO),
     val stabilizationNotice: String = "Stabilization may be unavailable at some resolutions or frame rates.",
+    val originalYuv: Boolean = false,
 ) {
     fun rejection(value: LiveStreamSettings): String? = when {
+        value.originalYuv && !originalYuv -> "Original YUV export requires Camera2 on Android 10 or later."
+        value.originalYuv && value.yuv == null -> "Enable a YUV output to save original YUV."
+        value.originalYuv && value.yuv != null && !OriginalYuv.supports(value.yuv.width, value.yuv.height) ->
+            "Original YUV requires even dimensions and at most 16 MiB per frame. Choose a smaller YUV size."
         value.stabilization !in stabilization -> "Unsupported stabilization mode. Select Auto or a supported mode."
         value.preview !in preview -> "Unsupported preview size."
         value.yuv != null && value.yuv !in yuv -> "Unsupported YUV size."

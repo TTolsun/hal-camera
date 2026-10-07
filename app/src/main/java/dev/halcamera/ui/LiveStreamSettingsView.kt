@@ -84,10 +84,18 @@ object LiveStreamSettingsView {
         var jpeg = current.jpeg
         var fps = current.fps
         var stabilization = current.stabilization
+        var originalYuv = current.originalYuv
         val outputs = section("Outputs")
         choice(outputs, "Preview", { sizes(support.preview) }, { preview }, { preview = it }) { it.toString() }
         choice(outputs, "YUV", { sizes(support.yuv) + listOf(null) }, { yuv }, { yuv = it }) { it?.toString() ?: "Off" }
         choice(outputs, "JPEG", { sizes(support.jpeg) + listOf(null) }, { jpeg }, { jpeg = it }) { it?.toString() ?: "Off" }
+        choice(outputs, "YUV 원본 추가 저장", { if (support.originalYuv) listOf(false, true) else emptyList() },
+            { originalYuv }, { originalYuv = it }) { if (it) "NV21 + 메타데이터 ZIP" else "끄기" }
+        outputs.addView(Look.text(themed, if (support.originalYuv)
+            "사진 촬영 시 JPEG와 함께 Download/HALCamera에 원본 ZIP을 저장합니다. 크기는 YUV 해상도를 따르며, 최대 16 MiB입니다. 저장 중에는 다음 촬영을 기다립니다."
+            else "YUV 원본 저장은 Android 10 이상의 Camera2에서 지원합니다. Camera2로 전환해 사용하세요.", 13, Look.inkMuted).apply {
+            setPadding(dp(18), dp(14), dp(18), dp(14))
+        })
         val timing = section("Frame Rate")
         choice(timing, "Preview FPS", { listOf(null) + support.fps }, { fps }, { fps = it }) { it?.toString() ?: "Auto" }
         val recording = section("Recording")
@@ -106,7 +114,7 @@ object LiveStreamSettingsView {
         stabilizationGroup.addView(Look.text(themed, support.stabilizationNotice, 13, Look.inkMuted).apply {
             setPadding(dp(18), dp(14), dp(18), dp(14))
         })
-        refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization)) }
+        refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, originalYuv)) }
         refreshers.forEach { it() }
         if (actual.startsWith("Failed:") || actual.startsWith("실패:")) {
             section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
@@ -117,7 +125,7 @@ object LiveStreamSettingsView {
         }
         val scroll = ScrollView(themed).apply { isFillViewport = true; addView(content) }
         content.addView(Look.primaryButton(themed, "저장") {
-            val settings = LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization)
+            val settings = LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, originalYuv)
             val rejection = support.rejection(settings)
             if (rejection == null) apply(settings)
             else AlertDialog.Builder(themed, R.style.LabDialogTheme).setMessage(rejection).setPositiveButton("OK", null).show()

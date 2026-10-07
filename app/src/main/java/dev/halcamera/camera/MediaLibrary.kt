@@ -50,10 +50,33 @@ class MediaLibrary(context: Context) {
         return savePhotos(name, yuvJpeg, cameraJpeg)
     }
 
-    fun savePhotos(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?): List<Uri> {
+    fun savePhotos(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?,
+                   original: OriginalYuv? = null, captureMetadata: Map<String, Any?> = emptyMap()): List<Uri> {
         require(yuvJpeg != null || cameraJpeg != null)
         val entries = mutableListOf<Uri>()
         try {
+            if (original != null) {
+                if (Build.VERSION.SDK_INT < 29) error("Original YUV requires Android 10 or later")
+                val values = ContentValues().apply {
+                    put(MediaStore.MediaColumns.DISPLAY_NAME, "${name}_YUV.zip")
+                    put(MediaStore.MediaColumns.MIME_TYPE, "application/zip")
+                    put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/HALCamera")
+                    put(MediaStore.MediaColumns.IS_PENDING, 1)
+                }
+                val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values)
+                    ?: error("Cannot create YUV archive")
+                entries += uri
+                write(uri) { stream ->
+                    java.util.zip.ZipOutputStream(stream).use { zip ->
+                        zip.putNextEntry(java.util.zip.ZipEntry("frame.nv21"))
+                        zip.write(original.bytes)
+                        zip.closeEntry()
+                        zip.putNextEntry(java.util.zip.ZipEntry("metadata.json"))
+                        zip.write(org.json.JSONObject(original.metadata + mapOf("capture" to captureMetadata)).toString(2).toByteArray(Charsets.UTF_8))
+                        zip.closeEntry()
+                    }
+                }
+            }
             if (yuvJpeg != null) {
                 val yuv = create("${name}_YUV.jpg", false).also { entries += it }
                 write(yuv) { it.write(yuvJpeg) }
