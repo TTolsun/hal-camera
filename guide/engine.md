@@ -92,7 +92,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-07 @ `9bd40ec` · Codex-code-review
+- 검토 2026-10-07 @ `6ce2f25` · Codex-code-review
 
 </details>
 
@@ -153,7 +153,7 @@ Live에서 첫 프레임 전에 카메라 열기가 `onDisconnected`나 `onError
 
 #### YUV 원본 추가 저장
 
-Android 10 이상의 Camera2에서는 Live Streams의 `YUV 원본 추가 저장`을 켜면 기존 JPEG와 함께 `Download/HALCamera/<촬영명>_YUV.zip`을 저장합니다. YUV 출력을 켜야 하며 짝수 크기, 프레임당 16 MiB 이하만 허용합니다. CameraX에서는 이 옵션을 지원하지 않고 Camera2 전환 안내를 표시합니다. 녹화 중 사진과 CLI의 기본 촬영은 이 옵션을 사용하지 않습니다.
+Android 10 이상의 Camera2에서는 Live Streams의 `Original YUV`을 켜면 기존 JPEG와 함께 `Download/HALCamera/<촬영명>_YUV.zip`을 저장합니다. YUV 출력을 켜야 하며 짝수 크기, 프레임당 16 MiB 이하만 허용합니다. CameraX에서는 이 옵션을 지원하지 않고 Camera2 전환 안내를 표시합니다. 녹화 중 사진과 CLI의 기본 촬영은 이 옵션을 사용하지 않습니다.
 
 ZIP의 `frame.nv21`은 YUV_420_888의 크롭 영역에 있는 8비트 샘플을 손실 없이 다시 배열한 파일입니다. Y를 행 순서로 쓰고 V·U를 교대로 쓰며 패딩, 회전, JPEG 압축, 색 변환을 적용하지 않습니다. `metadata.json`에는 출력 크기·바이트 수·각 plane의 offset/rowStride/pixelStride와 원본 이미지 크기·crop·plane stride를 기록합니다. 원본 plane의 패딩이나 크롭 밖 픽셀은 보존하지 않으며, 색 행렬과 범위를 임의로 가정하지 않습니다. 저장소의 `docs/design/ORIGINAL-YUV.md`에 복원 규칙이 있습니다.
 
@@ -204,7 +204,7 @@ ZIP의 `frame.nv21`은 YUV_420_888의 크롭 영역에 있는 8비트 샘플을 
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-07 @ `9bd40ec` · Codex-code-review
+- 검토 2026-10-07 @ `6ce2f25` · Codex-code-review
 
 </details>
 
@@ -285,7 +285,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-07 @ `9bd40ec` · Codex-code-review
+- 검토 2026-10-07 @ `6ce2f25` · Codex-code-review
 
 </details>
 
@@ -319,7 +319,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-07 @ `9bd40ec` · Codex-code-review
+- 검토 2026-10-07 @ `6ce2f25` · Codex-code-review
 
 </details>
 
@@ -348,11 +348,11 @@ Camera2도 JPEG를 받은 뒤에는 저장이 끝날 때까지 촬영 자리를 
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-07 @ `9bd40ec` · Codex-code-review |
-| 원고 `contract` | 최신 | 검토 2026-10-07 @ `9bd40ec` · Codex-code-review |
-| 원고 `camera2` | 최신 | 검토 2026-10-07 @ `9bd40ec` · Codex-code-review |
-| 원고 `camerax` | 최신 | 검토 2026-10-07 @ `9bd40ec` · Codex-code-review |
-| 원고 `comparison` | 최신 | 검토 2026-10-07 @ `9bd40ec` · Codex-code-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-07 @ `6ce2f25` · Codex-code-review |
+| 원고 `contract` | 최신 | 검토 2026-10-07 @ `6ce2f25` · Codex-code-review |
+| 원고 `camera2` | 최신 | 검토 2026-10-07 @ `6ce2f25` · Codex-code-review |
+| 원고 `camerax` | 최신 | 검토 2026-10-07 @ `6ce2f25` · Codex-code-review |
+| 원고 `comparison` | 최신 | 검토 2026-10-07 @ `6ce2f25` · Codex-code-review |
 
 <!-- omm:end id=status -->
 

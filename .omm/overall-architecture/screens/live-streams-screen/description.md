@@ -2,4 +2,6 @@ Live Streams는 Lab 또는 Live의 크기 표시에서 열 수 있으며 카메�
 
 LiveStreamSettingsView는 LabTheme·Look.titleBar·페이지 여백을 사용하는 전체 페이지입니다. 영어 제목과 간결한 한국어 안내, 둥근 회색 그룹, 파란 선택값을 사용합니다. 해상도는 픽셀 수 내림차순이며 녹화는 Format → Resolution → Frame Rate 순서로 포맷별 지원 후보를 제공합니다. 초기 표시값과 녹화기는 기본 크기 선택 함수를 공유합니다. 지원 정보 조회는 작업 스레드에서 수행하고 화면이 닫힌 뒤의 결과는 버립니다.
 
-Outputs의 YUV 원본 추가 저장은 Android 10 이상 Camera2에서 NV21과 메타데이터 ZIP을 추가합니다. 기본값은 꺼짐이며 YUV 출력과 16 MiB 이하 짝수 크기를 요구합니다. CameraX에서는 선택을 비활성화하고 Camera2로 전환하라는 안내를 표시합니다. 저장 경로는 Download/HALCamera이며 사진 모드에만 적용합니다.
+Outputs의 Original YUV 옵션은 Android 10 이상 Camera2에서 NV21과 메타데이터 ZIP을 추가합니다. 기본값은 꺼짐이며 YUV 출력과 16 MiB 이하 짝수 크기를 요구합니다. CameraX에서는 선택을 비활성화하고 Camera2로 전환하라는 안내를 표시합니다. 저장 경로는 Download/HALCamera이며 사진 모드에만 적용합니다.
+
+선택값은 Off 또는 NV21 + JSON으로 표시합니다. 지원하는 엔진에서는 옵션이 켜졌을 때만 ZIP 저장 경로를 표시하며, 미지원 환경에서는 Camera2·Android 10+ 조건을 짧게 표시합니다.

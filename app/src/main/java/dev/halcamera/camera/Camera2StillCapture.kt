@@ -194,7 +194,7 @@ internal class Camera2StillCapture(
             val request = host.stillRequest(camera, c, tag, pending?.rotation)
             inFlight = true
             photo = pending
-            if (pending != null) host.report("Capturing ${photoLabel()}… Say cheese.", false)
+            if (pending != null) host.report("Capturing ${photoLabel()}…", false)
             telemetry.event(sessionId, "capture_submit", mapOf("requestTag" to tag, "api" to "CameraCaptureSession.capture", "zoomRequested" to host.zoomRequested))
             session.capture(request, if (pending == null) host.captureCallback else photoCallback(pending), handler)
             handler.postDelayed({
@@ -253,7 +253,7 @@ internal class Camera2StillCapture(
         val (yuvFrame, jpegBytes) = pending.pair.selected(host.captureYuv, host.captureJpeg) ?: return
         pending.pair.clear() // Only the IO job owns the selected buffers from this point.
         photo = null // Keep inFlight until the pair has been written.
-        host.report(if (pending.originalYuv) "Saving JPEG and original YUV ZIP to Download/HALCamera…" else "Saving photos…", false)
+        host.report(if (pending.originalYuv) "Saving JPEG + NV21…" else "Saving JPEG…", false)
         mediaIo.execute {
             val result = runCatching { library.savePhotos(pending.name, yuvFrame?.let { encodeYuvStill(it, pending.rotation) }, jpegBytes,
                 yuvFrame?.original, pending.captureMetadata.orEmpty()) }
@@ -279,12 +279,12 @@ internal class Camera2StillCapture(
                 inFlight = false
                 result.fold({
                     host.report(savedMessage(pending, it.size), true)
-                }, { host.report("Photo save failed: ${it.message} · Ready for another shot.", true) })
+                }, { host.report("Save failed: ${it.message}", true) })
             }
         }
     }
     private fun savedMessage(pending: Photo, count: Int) = if (pending.originalYuv)
-        "Saved $count files. Original YUV ZIP: Download/HALCamera/${pending.name}_YUV.zip"
-        else "Saved $count ${photoLabel()} shots. Pixels secured."
+        "Saved $count files · JPEG + NV21"
+        else "Saved $count JPEG"
     private fun photoLabel() = listOfNotNull(if (host.captureYuv) "YUV" else null, if (host.captureJpeg) "JPEG" else null).joinToString(" · ")
 }

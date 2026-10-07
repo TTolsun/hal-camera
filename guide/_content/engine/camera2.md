@@ -83,7 +83,7 @@ Live에서 첫 프레임 전에 카메라 열기가 `onDisconnected`나 `onError
 
 #### YUV 원본 추가 저장
 
-Android 10 이상의 Camera2에서는 Live Streams의 `YUV 원본 추가 저장`을 켜면 기존 JPEG와 함께 `Download/HALCamera/<촬영명>_YUV.zip`을 저장합니다. YUV 출력을 켜야 하며 짝수 크기, 프레임당 16 MiB 이하만 허용합니다. CameraX에서는 이 옵션을 지원하지 않고 Camera2 전환 안내를 표시합니다. 녹화 중 사진과 CLI의 기본 촬영은 이 옵션을 사용하지 않습니다.
+Android 10 이상의 Camera2에서는 Live Streams의 `Original YUV`을 켜면 기존 JPEG와 함께 `Download/HALCamera/<촬영명>_YUV.zip`을 저장합니다. YUV 출력을 켜야 하며 짝수 크기, 프레임당 16 MiB 이하만 허용합니다. CameraX에서는 이 옵션을 지원하지 않고 Camera2 전환 안내를 표시합니다. 녹화 중 사진과 CLI의 기본 촬영은 이 옵션을 사용하지 않습니다.
 
 ZIP의 `frame.nv21`은 YUV_420_888의 크롭 영역에 있는 8비트 샘플을 손실 없이 다시 배열한 파일입니다. Y를 행 순서로 쓰고 V·U를 교대로 쓰며 패딩, 회전, JPEG 압축, 색 변환을 적용하지 않습니다. `metadata.json`에는 출력 크기·바이트 수·각 plane의 offset/rowStride/pixelStride와 원본 이미지 크기·crop·plane stride를 기록합니다. 원본 plane의 패딩이나 크롭 밖 픽셀은 보존하지 않으며, 색 행렬과 범위를 임의로 가정하지 않습니다. 저장소의 `docs/design/ORIGINAL-YUV.md`에 복원 규칙이 있습니다.
 

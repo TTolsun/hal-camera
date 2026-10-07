@@ -1,12 +1,12 @@
 # Live YUV 원본 저장
 
-Camera2의 Live Streams에서 **YUV 원본 추가 저장**을 켜면 사진마다 기존 JPEG와 원본 ZIP을 저장합니다. Android 10 이상에서 YUV 출력을 켠 경우에 사용할 수 있습니다. CameraX, 녹화 중 사진, Benchmark에는 적용하지 않습니다. RAW/DNG는 #177의 후속 작업으로 남아 있습니다.
+Camera2의 Live Streams에서 **Original YUV**을 켜면 사진마다 기존 JPEG와 원본 ZIP을 저장합니다. Android 10 이상에서 YUV 출력을 켠 경우에 사용할 수 있습니다. CameraX, 녹화 중 사진, Benchmark에는 적용하지 않습니다. RAW/DNG는 #177의 후속 작업으로 남아 있습니다.
 
 ## 사용 순서
 
 1. Camera2 Live에서 크기 표시를 눌러 Live Streams를 엽니다.
 2. YUV 해상도를 선택합니다. 가로·세로가 짝수이며 NV21 크기가 16 MiB 이하인 해상도만 원본 저장을 허용합니다.
-3. `YUV 원본 추가 저장`에서 `NV21 + 메타데이터 ZIP`을 선택하고 저장합니다.
+3. `Original YUV`에서 `NV21 + JSON`을 선택하고 저장합니다.
 4. 사진을 촬영합니다. 저장 중에는 새 사진 요청을 받지 않습니다.
 5. 파일 앱의 `Download/HALCamera/<촬영명>_YUV.zip`을 엽니다. 기존 JPEG는 `DCIM/HALCamera`에 있습니다.
 
