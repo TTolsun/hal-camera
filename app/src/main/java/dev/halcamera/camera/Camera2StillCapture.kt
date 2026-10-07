@@ -43,7 +43,7 @@ internal class Camera2StillCapture(
         val recordingBusy: Boolean
         val captureYuv: Boolean
         val captureJpeg: Boolean
-        val originalYuv: Boolean
+        val yuvSaveFormat: YuvSaveFormat
         /** Flash auto or on with AE not locked on the request the still will carry. */
         val needsPrecapture: Boolean
         val flashName: String
@@ -60,8 +60,8 @@ internal class Camera2StillCapture(
     }
 
     private class Photo(val name: String, val rotation: Int, val requestId: String?, val done: ((Result<PhotoResult>) -> Unit)?,
-                        val originalYuv: Boolean) {
-        val pair = StillPair<YuvFrame, ByteArray>(if (originalYuv) 2 else 8)
+                        val yuvSaveFormat: YuvSaveFormat) {
+        val pair = StillPair<YuvFrame, ByteArray>(2)
         var captureMetadata: Map<String, Any?>? = null
         val delivered = java.util.concurrent.atomic.AtomicBoolean(false)
     }
@@ -79,11 +79,6 @@ internal class Camera2StillCapture(
 
     fun capture(requestId: String?, done: ((Result<PhotoResult>) -> Unit)?) {
         handler.post {
-            if (!benchmark && host.originalYuv && (!host.captureYuv || android.os.Build.VERSION.SDK_INT < 29)) {
-                main.post { done?.invoke(Result.failure(IllegalStateException("Original YUV requires a YUV output and Android 10 or later"))) }
-                host.report("Original YUV requires a YUV output and Android 10 or later", true)
-                return@post
-            }
             if (!benchmark && !host.captureYuv && !host.captureJpeg) {
                 main.post { done?.invoke(Result.failure(IllegalStateException("Photo output is off. Enable YUV or JPEG in Live stream settings."))) }
                 host.report("Photo output is off. Enable YUV or JPEG in Live stream settings.", true)
@@ -111,7 +106,7 @@ internal class Camera2StillCapture(
                 val planes = image.planes.map {
                     YuvPacking.Plane(it.buffer, it.rowStride, it.pixelStride)
                 }
-                val original = if (pending.originalYuv) OriginalYuv.copy(planes, image.width, image.height,
+                val original = if (pending.yuvSaveFormat == YuvSaveFormat.NV21) OriginalYuv.copy(planes, image.width, image.height,
                     crop.left, crop.top, crop.width(), crop.height()) else null
                 pending.pair.yuv(image.timestamp, YuvFrame(original?.bytes ?: YuvPacking.nv21(planes,
                     crop.left, crop.top, crop.width(), crop.height()), crop.width(), crop.height(), original))
@@ -190,7 +185,7 @@ internal class Camera2StillCapture(
         try {
             val tag = "still-${android.os.SystemClock.elapsedRealtimeNanos()}"
             val c = host.characteristics
-            val pending = if (!benchmark) Photo(library.name(), host.orientation(c), requestId, done, host.originalYuv) else null
+            val pending = if (!benchmark) Photo(library.name(), host.orientation(c), requestId, done, host.yuvSaveFormat) else null
             val request = host.stillRequest(camera, c, tag, pending?.rotation)
             inFlight = true
             photo = pending
@@ -249,42 +244,34 @@ internal class Camera2StillCapture(
 
     private fun savePhotoIfComplete(pending: Photo) {
         val timestamp = pending.pair.timestamp ?: return
-        if (pending.originalYuv && pending.captureMetadata == null) return
+        if (pending.captureMetadata == null) return
         val (yuvFrame, jpegBytes) = pending.pair.selected(host.captureYuv, host.captureJpeg) ?: return
         pending.pair.clear() // Only the IO job owns the selected buffers from this point.
         photo = null // Keep inFlight until the pair has been written.
-        host.report(if (pending.originalYuv) "Saving JPEG + NV21…" else "Saving JPEG…", false)
+        host.report("Saving…", false)
         mediaIo.execute {
-            val result = runCatching { library.savePhotos(pending.name, yuvFrame?.let { encodeYuvStill(it, pending.rotation) }, jpegBytes,
-                yuvFrame?.original, pending.captureMetadata.orEmpty()) }
-            result.onSuccess { uris ->
-                telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "uris" to uris.map { it.toString() }))
+            val result = runCatching { library.saveCapture(pending.name,
+                yuvFrame?.takeIf { pending.yuvSaveFormat == YuvSaveFormat.JPEG }?.let { encodeYuvStill(it, pending.rotation) },
+                jpegBytes, yuvFrame?.original, requireNotNull(pending.captureMetadata)) }
+            result.onSuccess { files ->
+                telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "uris" to files.map { it.uri.toString() }))
             }
-            deliverPhoto(pending, result.map { uris ->
-                val files = buildList {
-                    if (pending.originalYuv) add("${pending.name}_YUV.zip" to "application/zip")
-                    if (yuvFrame != null) add("${pending.name}_YUV.jpg" to "image/jpeg")
-                    if (jpegBytes != null) add("${pending.name}_JPEG.jpg" to "image/jpeg")
-                }
-                PhotoResult(pending.requestId, pending.name, timestamp, uris,
-                    files.zip(uris) { (name, mime), uri -> PhotoArtifact(name, mime, uri) })
+            deliverPhoto(pending, result.map { files ->
+                PhotoResult(pending.requestId, pending.name, timestamp, files.map { it.uri }, files)
             })
             main.post {
                 if (!host.active || result.isFailure) {
-                    val message = result.fold({ savedMessage(pending, it.size) }, { "Photo save failed: ${it.message}" })
+                    val message = result.fold({ "Saved ${it.size} files" }, { "Photo save failed: ${it.message}" })
                     Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
                 }
             }
             handler.post {
                 inFlight = false
                 result.fold({
-                    host.report(savedMessage(pending, it.size), true)
+                    host.report("Saved ${it.size} files", true)
                 }, { host.report("Save failed: ${it.message}", true) })
             }
         }
     }
-    private fun savedMessage(pending: Photo, count: Int) = if (pending.originalYuv)
-        "Saved $count files · JPEG + NV21"
-        else "Saved $count JPEG"
     private fun photoLabel() = listOfNotNull(if (host.captureYuv) "YUV" else null, if (host.captureJpeg) "JPEG" else null).joinToString(" · ")
 }

@@ -152,7 +152,7 @@ class Camera2Engine(
         override val recordingBusy: Boolean get() = video.busy
         override val captureYuv: Boolean get() = liveStreams == null || liveStreams.yuv != null
         override val captureJpeg: Boolean get() = liveStreams == null || liveStreams.jpeg != null
-        override val originalYuv: Boolean get() = liveStreams?.originalYuv == true
+        override val yuvSaveFormat get() = liveStreams?.yuvSaveFormat ?: YuvSaveFormat.JPEG
         override val needsPrecapture: Boolean get() = requestControls().needsPrecapture
         override val flashName: String get() = controls.flash.name
         override val zoomRequested: Float get() = zoomRatio

@@ -1,40 +1,35 @@
-# Live YUV 원본 저장
+# YUV 저장 포맷과 촬영 메타데이터
 
-Camera2의 Live Streams에서 **Original YUV**을 켜면 사진마다 기존 JPEG와 원본 ZIP을 저장합니다. Android 10 이상에서 YUV 출력을 켠 경우에 사용할 수 있습니다. CameraX, 녹화 중 사진, Benchmark에는 적용하지 않습니다. RAW/DNG는 #177의 후속 작업으로 남아 있습니다.
+Live Streams의 **YUV Save Format**에서 기존 JPEG 또는 NV21을 선택합니다. 기본값은 JPEG입니다. 사진 모드는 포맷과 관계없이 촬영 메타데이터 JSON을 함께 저장합니다.
 
-## 사용 순서
+| 선택 | YUV 파일 | 저장 위치 |
+| --- | --- | --- |
+| JPEG | `<촬영명>_YUV.jpg` | DCIM/HALCamera |
+| NV21 | `<촬영명>_YUV.nv21` | Download/HALCamera |
+| 공통 메타데이터 | `<촬영명>_metadata.json` | Download/HALCamera |
 
-1. Camera2 Live에서 크기 표시를 눌러 Live Streams를 엽니다.
-2. YUV 해상도를 선택합니다. 가로·세로가 짝수이며 NV21 크기가 16 MiB 이하인 해상도만 원본 저장을 허용합니다.
-3. `Original YUV`에서 `NV21 + JSON`을 선택하고 저장합니다.
-4. 사진을 촬영합니다. 저장 중에는 새 사진 요청을 받지 않습니다.
-5. 파일 앱의 `Download/HALCamera/<촬영명>_YUV.zip`을 엽니다. 기존 JPEG는 `DCIM/HALCamera`에 있습니다.
+YUV 파일은 선택한 포맷 하나만 만듭니다. 별도 JPEG 출력을 켜면 카메라가 생성한 `<촬영명>_JPEG.jpg`도 DCIM/HALCamera에 저장합니다. YUV 출력이 꺼져 있어도 JPEG 촬영의 JSON은 저장합니다. JPEG는 갤러리에서, NV21과 JSON은 파일 앱에서 확인합니다. 파일명 앞부분으로 같은 촬영을 연결합니다.
 
-이 옵션은 YUV 원본을 **추가** 저장합니다. JPEG를 원본 YUV라고 표시하지 않습니다. 일반 CLI 명령은 UI 설정을 이어받지 않으므로 이 옵션을 켜지 않습니다.
+NV21은 Camera2에서만 지원하며 가로·세로가 짝수이고 프레임당 16 MiB 이하여야 합니다. CameraX는 JPEG와 JSON을 저장합니다. 녹화 중 JPEG snapshot과 Benchmark는 이 사진 모드 계약에 포함하지 않습니다. 일반 CLI 촬영은 UI 설정을 이어받지 않으므로 기본 JPEG 포맷과 JSON을 사용합니다. RAW/DNG는 #177의 후속 작업입니다.
 
-## ZIP 형식: schema 1
+## JSON 형식: schema 1
 
-`frame.nv21`과 UTF-8 `metadata.json`으로 구성합니다. `frame.nv21`은 Image의 crop 영역에서 읽은 8비트 Y·U·V 샘플을 재배열한 값입니다. 원본 plane 전체 메모리 덤프가 아니며, 행 패딩과 crop 밖 픽셀은 포함하지 않습니다. JPEG 압축, 색 변환, 리사이즈, 회전은 적용하지 않습니다.
+UTF-8 JSON의 최상위 필드는 `schema`, `capture`, `outputs`입니다. `outputs`는 이미지 파일별 실제 `file`, `mime`, `byteLength`, `format`을 기록하며 JSON 파일 자체는 포함하지 않습니다.
 
-| 메타데이터 | 의미 |
-| --- | --- |
-| `width`, `height` | 저장된 crop 영역의 가로·세로 픽셀 수입니다. |
-| `byteLength` | `width × height × 3 / 2`이며 파일 크기와 같아야 합니다. |
-| `planes` | Y·U·V 각각의 파일 내 offset, rowStride, pixelStride, width, height를 나타냅니다. 단위는 offset·stride가 바이트이고 크기는 샘플 수입니다. |
-| `source` | 원래 Image의 크기, crop, Y·U·V plane의 bufferPosition·rowStride·pixelStride를 기록합니다. 이 stride를 packed 파일에 적용하지 않습니다. |
-| `rotationAppliedDegrees` | 항상 0입니다. 파일 픽셀은 회전하지 않습니다. |
-| `capture` | 같은 센서 타임스탬프를 가진 최종 CaptureResult와 요청 식별자를 기록합니다. 없는 값은 null이며 0으로 대체하지 않습니다. |
+Camera2의 `capture`는 이미지와 같은 SENSOR_TIMESTAMP를 가진 최종 CaptureResult에서 cameraId, requestId, requestTag, sensorTimestampNs, frameNumber, sensorTimestampSource, exposureTimeNs, sensitivityIso, frameDurationNs, aeState, jpegOrientationDegrees를 기록합니다. 없는 값은 null입니다. 센서 시각은 timestamp source가 REALTIME일 때만 앱의 elapsedRealtimeNanos와 비교합니다.
 
-Y plane은 offset 0, rowStride `width`, pixelStride 1입니다. V는 offset `width × height`, U는 그 다음 바이트부터 시작하며 둘 다 rowStride `width`, pixelStride 2, 크기 `width/2 × height/2`입니다. 각 plane의 `(x, y)` 샘플은 `file[offset + y × rowStride + x × pixelStride]`로 읽습니다. 출력 plane 설명만으로 샘플을 복원할 수 있습니다. YUV_420_888은 색 행렬·범위를 단독으로 확정하지 않으므로 메타데이터에 임의의 BT.601/BT.709 또는 full/limited range를 선언하지 않습니다.
+CameraX는 JPEG와 가장 가까운 analysis 프레임을 짝지으므로 `yuvSensorTimestampNs`, `yuvOffsetNs`, `yuvCapture`를 구분합니다. 기록된 결과 중 각 이미지와 센서 시각이 일치하는 결과만 사용합니다. 결과가 없으면 `resultStatus: unavailable`과 null 값을 저장하며 다른 프레임의 노출 값으로 대체하지 않습니다.
 
-`capture`에는 cameraId, requestId, requestTag, sensorTimestampNs, frameNumber, sensorTimestampSource, exposureTimeNs, sensitivityIso, frameDurationNs, aeState, jpegOrientationDegrees가 있습니다. UI 촬영은 requestId가 null일 수 있습니다. 시각은 나노초이며 sensorTimestampSource가 REALTIME인 경우에만 앱의 elapsedRealtimeNanos와 비교합니다. jpegOrientationDegrees는 JPEG에 요청한 방향이고 원본 NV21에 적용된 회전이 아닙니다.
+## NV21 배치
+
+NV21은 Image의 crop 영역에서 읽은 8비트 Y·U·V 샘플을 재배열한 파일입니다. 패딩과 crop 밖 픽셀은 포함하지 않으며 압축·색 변환·리사이즈·회전을 적용하지 않습니다. JPEG 선택 시에는 기존 압축과 방향 보정을 적용합니다.
+
+NV21 출력 항목에는 width, height, byteLength, planes, source, rotationAppliedDegrees를 기록합니다. `source`는 원래 이미지 크기·crop·plane의 bufferPosition/rowStride/pixelStride입니다. `planes`는 저장된 파일의 배치이므로 원본 stride와 구분합니다.
+
+Y는 offset 0, rowStride width, pixelStride 1입니다. V는 offset width×height, U는 그 다음 바이트에서 시작하며 rowStride width, pixelStride 2입니다. 각 plane의 샘플은 `file[offset + y × rowStride + x × pixelStride]`로 복원합니다. 파일 크기는 width×height×3/2이며 회전은 0입니다. 색 행렬과 full/limited range는 임의로 선언하지 않습니다.
 
 ## 수명과 실패 처리
 
-이미지 콜백에서는 데이터를 복사하고 Image를 즉시 닫습니다. JPEG 변환과 ZIP 쓰기는 전용 mediaIo 실행기에서 합니다. 원본 저장을 선택하면 센서 타임스탬프가 확정되기 전에는 출력별 두 프레임만 보관하며, 확정 뒤 다른 시각의 데이터를 제거합니다. 한 요청의 저장이 끝나기 전에는 다음 요청을 받지 않습니다.
+이미지 콜백은 데이터를 복사하고 Image를 닫습니다. JPEG 변환과 파일 쓰기는 mediaIo에서 처리합니다. Camera2는 센서 시각 확정 전 출력별 최대 두 프레임을 보관하고, 확정 뒤 다른 시각의 버퍼를 제거합니다. 이미지나 최종 결과가 누락되면 5초 뒤 실패합니다. 저장 완료 전에는 새 촬영을 받지 않습니다.
 
-원본은 같은 시각의 최종 CaptureResult까지 기다립니다. 이미지나 결과가 누락되면 5초 타임아웃으로 실패하고 프리뷰 결과를 대신 사용하지 않습니다. 저장 전 카메라를 닫으면 요청을 실패로 끝내며, 이미 저장을 시작했으면 카메라와 무관하게 저장을 마칩니다.
-
-MediaStore 항목은 pending 상태로 만든 뒤 파일 쓰기가 모두 성공하면 순서대로 공개합니다. 쓰기나 공개 중 오류가 발생하면 이번 요청에서 생성한 항목 모두의 삭제를 시도하고 실패 결과를 전달합니다. 공개와 정리는 여러 MediaStore 항목에 걸친 원자적 트랜잭션이 아니므로, 프로세스 강제 종료·전원 차단 또는 삭제 자체의 실패까지 완전 정리를 보장하지 않습니다. 기존 파일은 삭제하지 않습니다.
-
-관련 구현과 동작은 [Camera2 가이드](../../guide/engine.md)에 있습니다.
+저장 전에 카메라를 닫으면 요청을 실패로 끝내고, 이미 시작한 파일 쓰기는 완료합니다. Android 10 이상에서는 모든 파일 쓰기가 성공한 뒤 MediaStore pending을 순서대로 해제합니다. 오류가 발생하면 이번 요청에서 만든 항목의 삭제를 시도합니다. 여러 항목의 공개는 원자적 트랜잭션이 아니므로 강제 종료·전원 차단·삭제 실패까지 완전 정리를 보장하지 않습니다.

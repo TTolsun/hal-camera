@@ -44,12 +44,12 @@ class OriginalYuvTest {
     @Test fun `original export requires Camera2 support YUV and a bounded size`() {
         val size = LiveSize(640, 480)
         val huge = LiveSize(6000, 4000)
-        val support = LiveStreamSupport(listOf(size), listOf(size, huge), listOf(size), emptyList(), emptyList(), originalYuv = true)
+        val support = LiveStreamSupport(listOf(size), listOf(size, huge), listOf(size), emptyList(), emptyList(), yuvSaveFormats = YuvSaveFormat.entries)
         val defaults = support.defaults()
-        assertFalse(defaults.originalYuv)
-        assertNull(support.rejection(defaults.copy(originalYuv = true)))
-        assertNotNull(support.copy(originalYuv = false).rejection(defaults.copy(originalYuv = true)))
-        assertNotNull(support.rejection(defaults.copy(yuv = null, originalYuv = true)))
-        assertNotNull(support.rejection(defaults.copy(yuv = huge, originalYuv = true)))
+        assertEquals(YuvSaveFormat.JPEG, defaults.yuvSaveFormat)
+        assertNull(support.rejection(defaults.copy(yuvSaveFormat = YuvSaveFormat.NV21)))
+        assertNotNull(support.copy(yuvSaveFormats = listOf(YuvSaveFormat.JPEG)).rejection(defaults.copy(yuvSaveFormat = YuvSaveFormat.NV21)))
+        assertNull(support.rejection(defaults.copy(yuv = null, yuvSaveFormat = YuvSaveFormat.NV21)))
+        assertNotNull(support.rejection(defaults.copy(yuv = huge, yuvSaveFormat = YuvSaveFormat.NV21)))
     }
 }

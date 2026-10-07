@@ -4,4 +4,4 @@ CameraX는 앱이 analysis 스트림을 still 요청의 대상에 넣을 방법�
 
 촬영 직전에 ImageCapture와 ImageAnalysis의 targetRotation을 현재 화면 회전으로 맞춥니다. 카메라 JPEG는 요청의 방향 정보를 그대로 담고, YUV 쪽은 프레임의 rotationDegrees만큼 픽셀을 돌려 JPEG으로 만듭니다. 이 변환은 두 엔진이 함께 쓰는 encodeYuvStill(StillEncoding.kt)입니다. 플래시 Auto·On의 precapture는 ImageCapture가 직접 수행하므로 이 클래스에는 측광 단계가 없습니다. 녹화 중에는 촬영을 거절합니다.
 
-JPEG 단독 출력은 analysis를 기다리지 않습니다. YUV 단독 출력은 촬영 요청 뒤의 analysis 프레임을 저장하며 ImageCapture 요청은 하지 않습니다. 둘 다 꺼진 구성은 촬영을 거부합니다. MediaLibrary.savePhotos는 켜진 출력만 저장하고 결과 URI 수를 반환합니다.
+JPEG 단독 출력은 analysis를 기다리지 않습니다. YUV 단독 출력은 촬영 요청 뒤의 analysis 프레임을 저장하며 ImageCapture 요청은 하지 않습니다. 둘 다 꺼진 구성은 촬영을 거부합니다. MediaLibrary.saveCapture는 켜진 출력과 촬영 JSON을 저장하고 파일명·MIME·URI를 반환합니다. CaptureMetadata는 센서 시각이 일치하는 결과만 사용하며 없으면 unavailable로 표시합니다. JPEG와 선택한 analysis 프레임의 시각·결과를 구분합니다.

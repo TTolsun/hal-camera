@@ -75,19 +75,19 @@ Live에서 첫 프레임 전에 카메라 열기가 `onDisconnected`나 `onError
 1. `capture()`나 `capturePhoto()`를 받으면, 플래시가 Auto·On이고 AE가 잠겨 있지 않은 경우에만 AE precapture를 먼저 실행합니다. trigger를 프리뷰 capture 하나로 보내고, AE 상태가 PRECAPTURE를 지나 벗어날 때까지 기다립니다. PRECAPTURE 없이 안정 상태가 결과 3개 연속으로 이어지면 이 순서를 건너뛰는 기기로 보고, 3초 안에 끝나지 않으면 `precapture_timeout`을 남기고 그대로 촬영합니다.
 2. still 요청 하나에 켜진 YUV·JPEG 출력을 대상으로 지정하고, 화면 방향을 `JPEG_ORIENTATION`으로, 품질을 95로 설정합니다. 둘 다 꺼져 있으면 셔터를 비활성화하고 엔진도 촬영을 거절합니다.
 3. `StillPair`가 센서 타임스탬프로 요청한 버퍼만 기다립니다. 단일 출력도 capture의 센서 시각과 일치해야 하며 꺼진 출력은 기다리지 않습니다. 기다리는 동안에는 reader가 `acquireLatestImage` 대신 `acquireNextImage`로 이미지를 순서대로 꺼냅니다. 최신 이미지만 꺼내면 촬영 대상인 YUV 프레임을 버릴 수 있기 때문입니다.
-4. 이미지 콜백에서 `YuvPacking`이 stride와 crop을 고려해 NV21으로 복사하고 Image를 닫습니다. 별도 저장 스레드에서 `encodeYuvStill`이 JPEG로 압축한 뒤 화면 방향만큼 회전합니다.
-5. `MediaLibrary.savePhotos`가 선택한 한 장 또는 두 장을 `DCIM/HALCamera`에 쓰고 파일 쓰기가 모두 성공한 뒤 공개합니다. 실패하면 이번 촬영에서 만든 항목의 삭제를 시도합니다. 기본 YUV 저장은 JPEG 변환이며, 원본 추가 저장은 아래 옵션으로 선택합니다.
+4. 이미지 콜백에서 stride와 crop을 고려해 NV21으로 복사하고 Image를 닫습니다. YUV Save Format이 JPEG이면 저장 스레드에서 `encodeYuvStill`로 압축하고 화면 방향만큼 회전합니다. NV21이면 복사한 샘플을 그대로 저장합니다.
+5. `MediaLibrary.saveCapture`가 선택한 이미지와 촬영 JSON을 쓰고 모두 성공한 뒤 공개합니다. 실패하면 이번 촬영에서 만든 항목의 삭제를 시도합니다.
 6. 5초 안에 짝이 완성되지 않으면 `capture_timeout`으로 끝냅니다. 녹화 중에는 촬영 요청을 거절합니다.
 
 벤치마크 still은 JPEG만 대상으로 하고, JPEG 도착이 측정값이며 저장하지 않습니다.
 
-#### YUV 원본 추가 저장
+#### YUV 저장 포맷
 
-Android 10 이상의 Camera2에서는 Live Streams의 `Original YUV`을 켜면 기존 JPEG와 함께 `Download/HALCamera/<촬영명>_YUV.zip`을 저장합니다. YUV 출력을 켜야 하며 짝수 크기, 프레임당 16 MiB 이하만 허용합니다. CameraX에서는 이 옵션을 지원하지 않고 Camera2 전환 안내를 표시합니다. 녹화 중 사진과 CLI의 기본 촬영은 이 옵션을 사용하지 않습니다.
+YUV Save Format에서 JPEG 또는 NV21을 선택합니다. JPEG는 기존 `_YUV.jpg`를, NV21은 `_YUV.nv21`을 저장하며 두 파일을 함께 만들지 않습니다. 사진 모드는 선택한 포맷과 관계없이 `_metadata.json`을 함께 저장합니다. JPEG는 DCIM/HALCamera에, NV21과 JSON은 Download/HALCamera에 있습니다. NV21은 Camera2에서만 지원하고 짝수 크기·프레임당 16 MiB 이하를 요구합니다. 녹화 중 사진에는 적용하지 않으며 일반 CLI 촬영은 기본 JPEG 포맷을 사용합니다.
 
-ZIP의 `frame.nv21`은 YUV_420_888의 크롭 영역에 있는 8비트 샘플을 손실 없이 다시 배열한 파일입니다. Y를 행 순서로 쓰고 V·U를 교대로 쓰며 패딩, 회전, JPEG 압축, 색 변환을 적용하지 않습니다. `metadata.json`에는 출력 크기·바이트 수·각 plane의 offset/rowStride/pixelStride와 원본 이미지 크기·crop·plane stride를 기록합니다. 원본 plane의 패딩이나 크롭 밖 픽셀은 보존하지 않으며, 색 행렬과 범위를 임의로 가정하지 않습니다. 저장소의 `docs/design/ORIGINAL-YUV.md`에 복원 규칙이 있습니다.
+`_YUV.nv21`은 YUV_420_888의 crop 영역에 있는 8비트 샘플을 손실 없이 재배열한 파일입니다. Y를 행 순서로 쓰고 V·U를 교대로 쓰며 패딩·회전·압축·색 변환을 적용하지 않습니다. JSON의 outputs에는 실제 파일명·MIME·크기를, NV21에는 출력 plane의 offset/rowStride/pixelStride와 원본 크기·crop·stride를 함께 기록합니다. 저장소의 `docs/design/ORIGINAL-YUV.md`에 복원 규칙이 있습니다.
 
-원본 저장은 이미지와 같은 `SENSOR_TIMESTAMP`를 가진 최종 CaptureResult까지 기다립니다. 메타데이터에 카메라 ID, 요청 ID·태그, 프레임 번호, 센서 시각과 시각 소스, 실제 노출 시간·ISO·프레임 주기·AE 상태, JPEG 방향을 보존합니다. 결과가 없으면 5초 뒤 실패하며 다른 프리뷰 결과로 대체하지 않습니다. 타임스탬프를 알기 전에는 출력마다 최대 두 프레임만 보관하고, 알게 되면 다른 시각의 버퍼를 버립니다. 저장이 끝날 때까지 다음 촬영을 받지 않으며, 이미 저장을 시작한 촬영은 화면이 닫혀도 완료 결과를 전달합니다. RAW/DNG 저장은 아직 제공하지 않습니다.
+JPEG와 NV21 촬영 모두 이미지와 같은 SENSOR_TIMESTAMP의 최종 CaptureResult를 기다립니다. JSON의 capture에는 카메라 ID, 요청 ID·태그, 프레임 번호, 센서 시각과 시각 소스, 노출 시간·ISO·프레임 주기·AE 상태, JPEG 방향을 저장합니다. 결과가 없으면 5초 뒤 실패하며 프리뷰 결과로 대체하지 않습니다. 출력별 최대 두 프레임을 보관하고 시각 확정 뒤 다른 버퍼를 버립니다. 저장이 끝날 때까지 다음 촬영을 받지 않습니다. RAW/DNG는 아직 제공하지 않습니다.
 
 ### 녹화
 

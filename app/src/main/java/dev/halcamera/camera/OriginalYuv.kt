@@ -14,7 +14,7 @@ class OriginalYuv private constructor(val bytes: ByteArray, val metadata: Map<St
             val bytes = YuvPacking.nv21(planes, left, top, width, height)
             val pixels = width * height
             return OriginalYuv(bytes, linkedMapOf(
-                "schema" to 1, "file" to "frame.nv21", "format" to "NV21", "byteLength" to bytes.size,
+                "schema" to 1, "format" to "NV21", "byteLength" to bytes.size,
                 "width" to width, "height" to height, "bitsPerSample" to 8,
                 "rotationAppliedDegrees" to 0,
                 "packing" to "Cropped Y samples in row order followed by interleaved V,U samples; no padding, rotation, compression or color conversion.",

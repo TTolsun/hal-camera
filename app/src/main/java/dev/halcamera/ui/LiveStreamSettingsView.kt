@@ -84,20 +84,23 @@ object LiveStreamSettingsView {
         var jpeg = current.jpeg
         var fps = current.fps
         var stabilization = current.stabilization
-        var originalYuv = current.originalYuv
+        var yuvSaveFormat = current.yuvSaveFormat
         val outputs = section("Outputs")
         choice(outputs, "Preview", { sizes(support.preview) }, { preview }, { preview = it }) { it.toString() }
         choice(outputs, "YUV", { sizes(support.yuv) + listOf(null) }, { yuv }, { yuv = it }) { it?.toString() ?: "Off" }
         choice(outputs, "JPEG", { sizes(support.jpeg) + listOf(null) }, { jpeg }, { jpeg = it }) { it?.toString() ?: "Off" }
-        choice(outputs, "Original YUV", { if (support.originalYuv) listOf(false, true) else emptyList() },
-            { originalYuv }, { originalYuv = it }) { if (it) "NV21 + JSON" else "Off" }
+        choice(outputs, "YUV Save Format", { if (yuv != null) support.yuvSaveFormats else emptyList() },
+            { yuvSaveFormat }, { yuvSaveFormat = it }) { it.name }
         val exportHint = Look.text(themed, "", 13, Look.inkMuted).apply {
             setPadding(dp(18), dp(14), dp(18), dp(14))
         }
         outputs.addView(exportHint)
         refreshers += {
-            exportHint.text = if (support.originalYuv) "ZIP · Download/HALCamera" else "Camera2 · Android 10+ required"
-            exportHint.visibility = if (originalYuv || !support.originalYuv) View.VISIBLE else View.GONE
+            exportHint.text = when {
+                yuv == null -> "YUV Off · Metadata: JSON"
+                YuvSaveFormat.NV21 !in support.yuvSaveFormats -> "Metadata: JSON · NV21: Camera2 only"
+                else -> "Metadata: JSON · Both formats"
+            }
         }
         val timing = section("Frame Rate")
         choice(timing, "Preview FPS", { listOf(null) + support.fps }, { fps }, { fps = it }) { it?.toString() ?: "Auto" }
@@ -117,7 +120,7 @@ object LiveStreamSettingsView {
         stabilizationGroup.addView(Look.text(themed, support.stabilizationNotice, 13, Look.inkMuted).apply {
             setPadding(dp(18), dp(14), dp(18), dp(14))
         })
-        refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, originalYuv)) }
+        refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, yuvSaveFormat)) }
         refreshers.forEach { it() }
         if (actual.startsWith("Failed:") || actual.startsWith("실패:")) {
             section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
@@ -128,7 +131,7 @@ object LiveStreamSettingsView {
         }
         val scroll = ScrollView(themed).apply { isFillViewport = true; addView(content) }
         content.addView(Look.primaryButton(themed, "저장") {
-            val settings = LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, originalYuv)
+            val settings = LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, yuvSaveFormat)
             val rejection = support.rejection(settings)
             if (rejection == null) apply(settings)
             else AlertDialog.Builder(themed, R.style.LabDialogTheme).setMessage(rejection).setPositiveButton("OK", null).show()

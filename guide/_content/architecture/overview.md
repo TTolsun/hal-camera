@@ -44,5 +44,5 @@ verifications: []
 
 Live의 사진·동영상은 MediaLibrary를 거쳐 DCIM/HALCamera 앨범에 저장하며 GalleryActivity에서 조회합니다. 측정 파일과 미디어 파일의 저장 경로를 구분하려면 아래 모듈 역할을 확인하세요.
 
-Camera2의 YUV 원본 추가 저장은 별도 ZIP으로 Download/HALCamera에 저장하며 파일 앱에서 조회합니다. 벤치마크 JSON과 incident ZIP에는 이미지 픽셀을 넣지 않습니다.
+YUV Save Format에서 JPEG 또는 NV21을 선택합니다. JPEG는 기존 `_YUV.jpg`를, NV21은 `_YUV.nv21`을 저장하며 두 파일을 함께 만들지 않습니다. 사진 모드는 선택한 포맷과 관계없이 `_metadata.json`을 함께 저장합니다. JPEG는 DCIM/HALCamera에, NV21과 JSON은 Download/HALCamera에 있습니다. 벤치마크 JSON과 incident ZIP에는 이미지 픽셀을 넣지 않습니다.
 
