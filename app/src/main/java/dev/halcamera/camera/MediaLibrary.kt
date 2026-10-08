@@ -54,7 +54,7 @@ class MediaLibrary(context: Context) {
     fun savePhotos(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?): List<Uri> =
         saveFiles(name, yuvJpeg, cameraJpeg, null, null).map { it.uri }
 
-    fun saveCapture(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?,
+    internal fun saveCapture(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?,
                     original: OriginalYuv?, captureMetadata: Map<String, Any?>, dng: DngOutput? = null): List<PhotoArtifact> =
         saveFiles(name, yuvJpeg, cameraJpeg, original, captureMetadata, dng)
 
