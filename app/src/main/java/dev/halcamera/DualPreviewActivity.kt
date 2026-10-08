@@ -212,7 +212,14 @@ class DualPreviewActivity : ComponentActivity() {
         val camera = cameras.firstOrNull { it.logicalId == logicalId } ?: return
         val (first, second) = pair ?: return
         when (val result = DualPreviewPlanner.plan(camera, first, second, Build.VERSION.SDK_INT)) {
-            is DualPreviewPlanner.Result.Refused -> setStatus("시작하지 않음: ${result.reason.label}")
+            is DualPreviewPlanner.Result.Refused -> {
+                // Nothing streams for a refused pair, so the previous pair's counts must not stay on screen.
+                streamingSize = null
+                stats = null
+                lastSkewNs = null
+                refreshInfo()
+                setStatus("시작하지 않음: ${result.reason.label}")
+            }
             is DualPreviewPlanner.Result.Ready -> {
                 streamingSize = null
                 stats = PhysicalOutputStats(first) to PhysicalOutputStats(second)
@@ -266,7 +273,12 @@ class DualPreviewActivity : ComponentActivity() {
             val s = current?.let { if (i == 0) it.first else it.second }?.takeIf { it.physicalId == id }
             infos[i]?.text = outputReport(lens, id, s)
         }
-        skewText?.text = "A−B 타임스탬프: ${lastSkewNs?.let { String.format(Locale.US, "%.3f ms", it / 1e6) } ?: "—"}"
+        skewText?.text = "A−B 타임스탬프: " + when (val skew = lastSkewNs) {
+            null -> "—"
+            // Some HALs copy the logical timestamp into every physical result; equal values say nothing about sync.
+            0L -> "0 (두 물리 결과가 같은 값을 보고 · 센서 간 오차 아님)"
+            else -> String.format(Locale.US, "%.3f ms", skew / 1e6)
+        }
     }
 
     private fun outputReport(lens: PhysicalLens?, id: String, s: PhysicalOutputStats?): String = listOf(
