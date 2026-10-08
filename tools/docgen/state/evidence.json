@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6bf8de361425cdb1",
+        "codeHash": "48cedf5460f281ac",
         "modelHash": "b90ff470ac52ae2d",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/build.gradle.kts": "e3feda88ac1ce3342e06ed564b737e0a5c8e07c7",
@@ -85,7 +85,7 @@
           "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "03eaada3b1e8294b3fba6707c42c4f24613d4692",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/OriginalYuv.kt": "a38dc5019d243b785e3f60a544d33df85fbda93f",
           "app/src/main/java/dev/halcamera/camera/PhotoResult.kt": "1e53d9f4a1f88f48217e62da0fecf27b61930a3a",
           "app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt": "135eb236cdc8054d2d1ad89b703c7a6975eff44b",
@@ -193,10 +193,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "c80d420615b8ac13",
+        "codeHash": "44f326c5e00174d3",
         "modelHash": "559ab4d9b5505a6d",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -220,7 +220,7 @@
           "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "e612f2712d4eb39e74565c3ef88bc3d2cc52c9c8",
           "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "518c730a1dd2c1e011fbe4792d1c72a8ba351ae1",
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "a290adb1490152df591a5c7bed7a76e09f95859f",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "586757ab962be12cb4604062da5d0042fe04cb01",
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
@@ -277,10 +277,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "ffdab75684674775",
+        "codeHash": "1fc8044880a814a5",
         "modelHash": "8379255418e2d288",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/build.gradle.kts": "e3feda88ac1ce3342e06ed564b737e0a5c8e07c7",
@@ -356,7 +356,7 @@
           "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "03eaada3b1e8294b3fba6707c42c4f24613d4692",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/OriginalYuv.kt": "a38dc5019d243b785e3f60a544d33df85fbda93f",
           "app/src/main/java/dev/halcamera/camera/PhotoResult.kt": "1e53d9f4a1f88f48217e62da0fecf27b61930a3a",
           "app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt": "135eb236cdc8054d2d1ad89b703c7a6975eff44b",
@@ -466,10 +466,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "7e02f6eb89a8bfc2",
+        "codeHash": "d71e431b9dc83fd2",
         "modelHash": "45053b7eff22b4a7",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -494,7 +494,7 @@
           "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "e612f2712d4eb39e74565c3ef88bc3d2cc52c9c8",
           "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "518c730a1dd2c1e011fbe4792d1c72a8ba351ae1",
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "a290adb1490152df591a5c7bed7a76e09f95859f",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "586757ab962be12cb4604062da5d0042fe04cb01",
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "073e461100a03c9606faa4809898a1ee8578c9a6",
@@ -516,10 +516,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "5018f95b4fa3cb83",
+        "codeHash": "ee32c257c76b90cb",
         "modelHash": "1ec9c11d9fe01413",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "b12658d73a33c35d0b34065bcede5c066c4215d7",
@@ -544,7 +544,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "518c730a1dd2c1e011fbe4792d1c72a8ba351ae1",
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "a290adb1490152df591a5c7bed7a76e09f95859f",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "5387235f88d1041bd19655f6b525453fa0232db9",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "586757ab962be12cb4604062da5d0042fe04cb01",
           "app/src/main/java/dev/halcamera/cli/CliCommand.kt": "22336e0e48daaa7f76849abf7f59b5ade6964b7a",
@@ -564,10 +564,10 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "6bf8de361425cdb1",
+        "codeHash": "48cedf5460f281ac",
         "modelHash": "9ee75caf5cad12d8",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/build.gradle.kts": "e3feda88ac1ce3342e06ed564b737e0a5c8e07c7",
@@ -643,7 +643,7 @@
           "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "03eaada3b1e8294b3fba6707c42c4f24613d4692",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/OriginalYuv.kt": "a38dc5019d243b785e3f60a544d33df85fbda93f",
           "app/src/main/java/dev/halcamera/camera/PhotoResult.kt": "1e53d9f4a1f88f48217e62da0fecf27b61930a3a",
           "app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt": "135eb236cdc8054d2d1ad89b703c7a6975eff44b",
@@ -751,10 +751,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "6bf8de361425cdb1",
+        "codeHash": "48cedf5460f281ac",
         "modelHash": "9c17fedf071811e2",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/build.gradle.kts": "e3feda88ac1ce3342e06ed564b737e0a5c8e07c7",
@@ -830,7 +830,7 @@
           "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "03eaada3b1e8294b3fba6707c42c4f24613d4692",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/OriginalYuv.kt": "a38dc5019d243b785e3f60a544d33df85fbda93f",
           "app/src/main/java/dev/halcamera/camera/PhotoResult.kt": "1e53d9f4a1f88f48217e62da0fecf27b61930a3a",
           "app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt": "135eb236cdc8054d2d1ad89b703c7a6975eff44b",
@@ -987,10 +987,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6bf8de361425cdb1",
+        "codeHash": "48cedf5460f281ac",
         "modelHash": "191bb9266b60a35a",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/build.gradle.kts": "e3feda88ac1ce3342e06ed564b737e0a5c8e07c7",
@@ -1066,7 +1066,7 @@
           "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "03eaada3b1e8294b3fba6707c42c4f24613d4692",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/OriginalYuv.kt": "a38dc5019d243b785e3f60a544d33df85fbda93f",
           "app/src/main/java/dev/halcamera/camera/PhotoResult.kt": "1e53d9f4a1f88f48217e62da0fecf27b61930a3a",
           "app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt": "135eb236cdc8054d2d1ad89b703c7a6975eff44b",
@@ -1174,10 +1174,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6bf8de361425cdb1",
+        "codeHash": "48cedf5460f281ac",
         "modelHash": "38480b5e0ffb6d47",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/build.gradle.kts": "e3feda88ac1ce3342e06ed564b737e0a5c8e07c7",
@@ -1253,7 +1253,7 @@
           "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "03eaada3b1e8294b3fba6707c42c4f24613d4692",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/OriginalYuv.kt": "a38dc5019d243b785e3f60a544d33df85fbda93f",
           "app/src/main/java/dev/halcamera/camera/PhotoResult.kt": "1e53d9f4a1f88f48217e62da0fecf27b61930a3a",
           "app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt": "135eb236cdc8054d2d1ad89b703c7a6975eff44b",
@@ -1361,10 +1361,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6bf8de361425cdb1",
+        "codeHash": "48cedf5460f281ac",
         "modelHash": "f09f67bfba64d611",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/build.gradle.kts": "e3feda88ac1ce3342e06ed564b737e0a5c8e07c7",
@@ -1440,7 +1440,7 @@
           "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "03eaada3b1e8294b3fba6707c42c4f24613d4692",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/OriginalYuv.kt": "a38dc5019d243b785e3f60a544d33df85fbda93f",
           "app/src/main/java/dev/halcamera/camera/PhotoResult.kt": "1e53d9f4a1f88f48217e62da0fecf27b61930a3a",
           "app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt": "135eb236cdc8054d2d1ad89b703c7a6975eff44b",
@@ -1548,10 +1548,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6bf8de361425cdb1",
+        "codeHash": "48cedf5460f281ac",
         "modelHash": "96cc3e048a51731b",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/build.gradle.kts": "e3feda88ac1ce3342e06ed564b737e0a5c8e07c7",
@@ -1627,7 +1627,7 @@
           "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "03eaada3b1e8294b3fba6707c42c4f24613d4692",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/OriginalYuv.kt": "a38dc5019d243b785e3f60a544d33df85fbda93f",
           "app/src/main/java/dev/halcamera/camera/PhotoResult.kt": "1e53d9f4a1f88f48217e62da0fecf27b61930a3a",
           "app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt": "135eb236cdc8054d2d1ad89b703c7a6975eff44b",
@@ -1735,10 +1735,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6bf8de361425cdb1",
+        "codeHash": "48cedf5460f281ac",
         "modelHash": "f096d1cd26578ce3",
         "at": "2026-10-08",
-        "commit": "fa8d908",
+        "commit": "aa1ad53",
         "reviewer": "unspecified",
         "files": {
           "app/build.gradle.kts": "e3feda88ac1ce3342e06ed564b737e0a5c8e07c7",
@@ -1814,7 +1814,7 @@
           "app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt": "03eaada3b1e8294b3fba6707c42c4f24613d4692",
           "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/ManualControls.kt": "35cf74089bea32c23fdc617f6a3c2151bc11e395",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "84b86e020b7c0d618b01c511f00c07a1537c6b34",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "9c9a57fd8ce65fdafd12edb8b09c80124b2facdb",
           "app/src/main/java/dev/halcamera/camera/OriginalYuv.kt": "a38dc5019d243b785e3f60a544d33df85fbda93f",
           "app/src/main/java/dev/halcamera/camera/PhotoResult.kt": "1e53d9f4a1f88f48217e62da0fecf27b61930a3a",
           "app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt": "135eb236cdc8054d2d1ad89b703c7a6975eff44b",
