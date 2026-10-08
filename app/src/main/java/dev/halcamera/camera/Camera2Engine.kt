@@ -52,6 +52,8 @@ class Camera2Engine(
     private var previewRelay: PreviewBufferRelay? = null
     private var yuv: ImageReader? = null
     private var jpeg: ImageReader? = null
+    /** LIVE RAW_SENSOR for DNG (#177); never part of a benchmark session. */
+    private var raw: ImageReader? = null
     private var finished = false
     private var closeDone: (() -> Unit)? = null
     override val mediaBusy: Boolean get() = stills.inFlight || video.busy || bench.recording
@@ -153,6 +155,7 @@ class Camera2Engine(
         override val captureYuv: Boolean get() = liveStreams == null || liveStreams.yuv != null
         override val captureJpeg: Boolean get() = liveStreams == null || liveStreams.jpeg != null
         override val yuvSaveFormat get() = liveStreams?.yuvSaveFormat ?: YuvSaveFormat.JPEG
+        override val captureRaw: Boolean get() = spec == null && liveStreams?.raw != null
         override val needsPrecapture: Boolean get() = requestControls().needsPrecapture
         override val flashName: String get() = controls.flash.name
         override val zoomRequested: Float get() = zoomRatio
@@ -319,7 +322,7 @@ class Camera2Engine(
     @Suppress("DEPRECATION")
     private fun configure(camera: CameraDevice) {
         try {
-            yuv?.close(); jpeg?.close()
+            yuv?.close(); jpeg?.close(); raw?.close(); raw = null
             if (previewRelay == null) { previewSurface?.release(); displaySurface?.release() }
             val chars = manager.getCameraCharacteristics(cameraId).also { this.chars = it }
             val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP] ?: error("No stream configuration")
@@ -341,6 +344,7 @@ class Camera2Engine(
                 ?: if (liveStreams != null) liveStreams.yuv?.androidSize() else choose(map.getOutputSizes(ImageFormat.YUV_420_888), 640L * 480)
             val jpegSize = spec?.jpeg?.also { require(it in map.getOutputSizes(ImageFormat.JPEG)) { "jpeg $it unsupported" } }
                 ?: if (liveStreams != null) liveStreams.jpeg?.androidSize() else choose(map.getOutputSizes(ImageFormat.JPEG), 1920L * 1080)
+            val rawSize = if (spec == null) liveStreams?.raw?.androidSize() else null
             val texture = view.surfaceTexture ?: error("Preview surface unavailable")
             texture.setDefaultBufferSize(size.width, size.height)
             // A recording session and its replacement preview session reuse the same display producer.
@@ -361,14 +365,18 @@ class Camera2Engine(
             val jpegOutput = OutputDescriptor("still", OutputKind.JPEG, repeating = false, stillCapture = true)
             yuv = yuvSize?.let { reader(it, ImageFormat.YUV_420_888, yuvOutput) }
             jpeg = jpegSize?.let { reader(it, ImageFormat.JPEG, jpegOutput) }
+            val rawOutput = OutputDescriptor("raw", OutputKind.RAW, repeating = false, stillCapture = true)
+            // Two buffers: one still is in flight at a time and each frame is copied out before its Image closes.
+            raw = rawSize?.let { reader(it, ImageFormat.RAW_SENSOR, rawOutput, maxImages = 2) }
             val outputs = StreamConfiguration(listOfNotNull(ConfiguredOutput(previewOutput, previewSurface!!),
-                yuv?.let { ConfiguredOutput(yuvOutput, it.surface) }, jpeg?.let { ConfiguredOutput(jpegOutput, it.surface) }))
+                yuv?.let { ConfiguredOutput(yuvOutput, it.surface) }, jpeg?.let { ConfiguredOutput(jpegOutput, it.surface) },
+                raw?.let { ConfiguredOutput(rawOutput, it.surface) }))
             // The effective values go into the event so conditions.effective in the run JSON reports what the
             // camera actually ran with, not what the profile asked for (3.1, fixed-focus cameras run AF OFF).
             val sizes = mapOf(
                 "preview" to size.toString(), "analysis" to yuvSize?.toString(), "jpeg" to jpegSize?.toString(),
                 "afMode" to afMode(chars), "fpsRange" to (spec?.fpsRange?.toString() ?: liveStreams?.fps?.toString())
-            )
+            ) + (rawSize?.let { mapOf("raw" to it.toString()) } ?: emptyMap())
             if (spec != null) telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
             telemetry.event(sessionId, "configure_requested", sizes)
             val configurations = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
@@ -616,8 +624,8 @@ class Camera2Engine(
         val modes = chars[CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES] ?: intArrayOf()
         return if (modes.contains(CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)) CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE else CaptureRequest.CONTROL_AF_MODE_OFF
     }
-    private fun reader(size: Size, format: Int, output: OutputDescriptor): ImageReader =
-        ImageReader.newInstance(size.width, size.height, format, 3).also { reader ->
+    private fun reader(size: Size, format: Int, output: OutputDescriptor, maxImages: Int = 3): ImageReader =
+        ImageReader.newInstance(size.width, size.height, format, maxImages).also { reader ->
             val target = reader.surface
             reader.setOnImageAvailableListener({ source ->
                 if (configuredOutputs.outputs.none { it.descriptor.id == output.id && it.target === target }) return@setOnImageAvailableListener
@@ -718,6 +726,7 @@ class Camera2Engine(
         captureSession?.close(); captureSession = null
         yuv?.close(); yuv = null
         jpeg?.close(); jpeg = null
+        raw?.close(); raw = null
         if (Build.VERSION.SDK_INT >= 33) previewRelay?.close()
         previewRelay = null
         previewSurface?.release(); previewSurface = null

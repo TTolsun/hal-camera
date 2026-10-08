@@ -11,7 +11,6 @@ sources:
   - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
   - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
   - app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt
   - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
   - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
   - app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt
@@ -27,7 +26,6 @@ verifications: []
 | 카메라 구동 | `CameraEngine`, `Camera2Engine`, `CameraXEngine` | 엔진 수명주기와 카메라 요청을 처리합니다. 계약과 두 엔진의 차이는 [Engine](engine.md)에 있습니다. |
 | 콜백 기록 | `Telemetry`, `FlightRecorder` | 세션·프레임·시각·메타데이터를 이벤트로 기록합니다. |
 | 지표 계산 | `BenchmarkRunner`, `RunAssembler`, `BenchmarkEvaluator`, `metrics/MetricExtractor` | 러너의 실행 시각과 콜백을 합쳐 측정값을 만듭니다. |
-| 내부 점수 | `ScoreComposer` | 검토한 calibration의 범위에 맞는 적격 release run에 점수와 카테고리 평균을 계산합니다. |
 | 저장·비교·표시 | `BenchmarkReport`, `BaselineManager`, `RegressionDetector`, 각 Activity | JSON 저장과 화면을 구성하고, 현재 기준에 따른 비교 결과를 계산합니다. |
 
 `MainActivity`가 런처이며 앱을 열면 바로 Live 프리뷰를 표시합니다. Live에서는 프리뷰와 촬영 조작부, 선택한 관측 정보를 표시합니다. Lab 버튼으로 바로 여는 `WorkbenchActivity`는 기기 식별 정보, 검사 도구, 저장된 결과와 설정을 모읍니다. `BenchmarkActivity`는 정해진 profile을 실행하고 결과를 저장합니다. `HistoryActivity`는 저장된 실행을 찾아 필터링하고 두 실행을 비교하거나 내보냅니다. 파일은 앱 내부에 저장하며 서버나 데이터베이스를 사용하지 않습니다.

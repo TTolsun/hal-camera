@@ -5,7 +5,7 @@ graph TB
     live -->|"close(done) 뒤 CLI 인계"| bench
     engines --> api["Android Camera API"]
     engines --> events["콜백 기록<br/>Telemetry · FlightRecorder"]
-    bench -->|"실행 시각"| evaluate["측정 · 유효성 · 점수<br/>RunAssembler"]
+    bench -->|"실행 시각"| evaluate["측정 · 유효성<br/>RunAssembler"]
     events -->|"관측 표본"| evaluate
     evaluate --> files["실행 JSON 저장<br/>BenchmarkStore"]
     files --> results["실행 기록 · 비교 · CSV"]

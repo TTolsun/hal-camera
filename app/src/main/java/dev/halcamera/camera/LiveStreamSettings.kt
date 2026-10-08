@@ -37,12 +37,15 @@ data class LiveStreamSettings(
     val video: LiveVideo? = null,
     val stabilization: LiveStabilization = LiveStabilization.AUTO,
     val yuvSaveFormat: YuvSaveFormat = YuvSaveFormat.JPEG,
+    /** RAW_SENSOR still saved as DNG (#177). Camera2 only; off by default. */
+    val raw: LiveSize? = null,
 ) : java.io.Serializable {
-    val canCapture get() = yuv != null || jpeg != null
+    val canCapture get() = yuv != null || jpeg != null || raw != null
     fun metadata(): Map<String, Any?> = mapOf("preview" to preview.toString(), "analysis" to yuv?.toString(),
         "jpeg" to jpeg?.toString(), "fpsRange" to fps?.toString(), "video" to video?.toString(),
-        "stabilization" to stabilization.name, "yuvSaveFormat" to yuvSaveFormat.name)
-    fun summary() = "Preview $preview · YUV ${yuv ?: "Off"} · JPEG ${jpeg ?: "Off"} · ${fps ?: "Auto FPS"}"
+        "stabilization" to stabilization.name, "yuvSaveFormat" to yuvSaveFormat.name, "raw" to raw?.toString())
+    fun summary() = "Preview $preview · YUV ${yuv ?: "Off"} · JPEG ${jpeg ?: "Off"}" +
+        (raw?.let { " · RAW $it" } ?: "") + " · ${fps ?: "Auto FPS"}"
 }
 
 data class LiveStreamSupport(
@@ -51,6 +54,8 @@ data class LiveStreamSupport(
     val stabilization: List<LiveStabilization> = listOf(LiveStabilization.AUTO),
     val stabilizationNotice: String = "Stabilization may be unavailable at some resolutions or frame rates.",
     val yuvSaveFormats: List<YuvSaveFormat> = listOf(YuvSaveFormat.JPEG),
+    /** RAW_SENSOR sizes; empty without Camera2 or the RAW capability. */
+    val raw: List<LiveSize> = emptyList(),
 ) {
     fun rejection(value: LiveStreamSettings): String? = when {
         value.yuvSaveFormat !in yuvSaveFormats -> "NV21 requires Camera2."
@@ -59,6 +64,8 @@ data class LiveStreamSupport(
         value.stabilization !in stabilization -> "Unsupported stabilization mode. Select Auto or a supported mode."
         value.preview !in preview -> "Unsupported preview size."
         value.yuv != null && value.yuv !in yuv -> "Unsupported YUV size."
+        value.raw != null && raw.isEmpty() -> "RAW/DNG requires Camera2 and a RAW-capable camera."
+        value.raw != null && value.raw !in raw -> "Unsupported RAW size."
         value.jpeg != null && value.jpeg !in jpeg -> "Unsupported JPEG size."
         value.fps != null && value.fps !in fps -> "Unsupported FPS range for a regular session."
         value.video != null && value.video !in videos -> "The camera and encoder do not support these recording settings."

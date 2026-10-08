@@ -10,7 +10,7 @@ Live Streams의 **YUV Save Format**에서 기존 JPEG 또는 NV21을 선택합�
 
 YUV 파일은 선택한 포맷 하나만 만듭니다. 별도 JPEG 출력을 켜면 카메라가 생성한 `<촬영명>_JPEG.jpg`도 DCIM/HALCamera에 저장합니다. YUV 출력이 꺼져 있어도 JPEG 촬영의 JSON은 저장합니다. JPEG는 갤러리에서, NV21과 JSON은 파일 앱에서 확인합니다. 파일명 앞부분으로 같은 촬영을 연결합니다.
 
-NV21은 Camera2에서만 지원하며 가로·세로가 짝수이고 프레임당 16 MiB 이하여야 합니다. CameraX는 JPEG와 JSON을 저장합니다. 녹화 중 JPEG snapshot과 Benchmark는 이 사진 모드 계약에 포함하지 않습니다. 일반 CLI 촬영은 UI 설정을 이어받지 않으므로 기본 JPEG 포맷과 JSON을 사용합니다. RAW/DNG는 #177의 후속 작업입니다.
+NV21은 Camera2에서만 지원하며 가로·세로가 짝수이고 프레임당 16 MiB 이하여야 합니다. CameraX는 JPEG와 JSON을 저장합니다. 녹화 중 JPEG snapshot과 Benchmark는 이 사진 모드 계약에 포함하지 않습니다. 일반 CLI 촬영은 UI 설정을 이어받지 않으므로 기본 JPEG 포맷과 JSON을 사용합니다. RAW/DNG는 아래 RAW/DNG 절을 참고합니다.
 
 ## JSON 형식: schema 1
 
@@ -27,6 +27,12 @@ NV21은 Image의 crop 영역에서 읽은 8비트 Y·U·V 샘플을 재배열한
 NV21 출력 항목에는 width, height, byteLength, planes, source, rotationAppliedDegrees를 기록합니다. `source`는 원래 이미지 크기·crop·plane의 bufferPosition/rowStride/pixelStride입니다. `planes`는 저장된 파일의 배치이므로 원본 stride와 구분합니다.
 
 Y는 offset 0, rowStride width, pixelStride 1입니다. V는 offset width×height, U는 그 다음 바이트에서 시작하며 rowStride width, pixelStride 2입니다. 각 plane의 샘플은 `file[offset + y × rowStride + x × pixelStride]`로 복원합니다. 파일 크기는 width×height×3/2이며 회전은 0입니다. 색 행렬과 full/limited range는 임의로 선언하지 않습니다.
+
+## RAW/DNG
+
+Live Streams의 **RAW (DNG)**에서 RAW_SENSOR 크기를 고르면 `<촬영명>_RAW.dng`를 DCIM/HALCamera에 함께 저장합니다. 기본값은 Off이며 Camera2와 RAW capability가 있는 카메라에서만 선택할 수 있습니다. CameraX에서 RAW를 요청하면 구성을 거절하고 Camera2로 전환하라고 안내합니다.
+
+RAW 프레임은 이미지 콜백에서 행 패딩을 뺀 16비트 샘플로 직접 버퍼에 복사하고 Image를 바로 닫습니다. 저장 스레드에서 `DngCreator`가 카메라 특성과 같은 SENSOR_TIMESTAMP의 최종 CaptureResult로 DNG를 씁니다. 화면 방향은 DNG 방향 태그로만 기록하고 샘플은 회전하지 않습니다. JSON의 DNG 항목에는 width, height, sensorTimestampNs, orientationDegrees, cfaArrangement, whiteLevel, blackLevelPattern을 기록합니다. RAW reader 버퍼는 두 개이며 벤치마크·녹화 세션에는 RAW 출력을 넣지 않습니다.
 
 ## 수명과 실패 처리
 

@@ -17,5 +17,4 @@ children:
   - result-presentation
   - run-assembler
   - run-validity
-  - score-composer
 parentPath: []

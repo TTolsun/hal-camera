@@ -47,7 +47,7 @@ object BenchmarkResultCards {
         val endpointName = CameraLabel.full(run.endpoint)
         val view = ResultPresenter.present(run, comparison, comparedTo, isBaseline, deviceName, endpointName)
 
-        // Headline card: the verdict, what it was measured against, and the score.
+        // Headline card: the verdict and what it was measured against.
         val head = ResultPresenter.headline(run, comparison, comparedTo, isBaseline, endpointName)
         val card = Look.card(context, dark = false)
         val headColor = when (head.tone) {
@@ -62,13 +62,6 @@ object BenchmarkResultCards {
         comparison?.conditionMismatches?.takeIf { it.isNotEmpty() }?.let { mismatches ->
             val lines = listOf("비교 시점 조건 차이") + mismatches.map { "· ${ResultPresenter.conditionText(it)}" }
             card.addView(Look.text(context, lines.joinToString("\n"), 13, Look.warningInk), lp(8))
-        }
-        ResultPresenter.scoreValue(run)?.let { total ->
-            val scoreRow = Look.row(context)
-            scoreRow.addView(Look.text(context, total.toString(), 30, Look.ink, bold = true, mono = true))
-            scoreRow.addView(Look.text(context, "/ 1000 · Camera Endpoint Score · internal draft", 12, Look.inkMuted),
-                LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(8) })
-            card.addView(scoreRow, lp(12))
         }
         content.addView(card)
 
@@ -139,9 +132,6 @@ object BenchmarkResultCards {
             factRow.addView(Look.text(context, label, 12, Look.inkMuted), LinearLayout.LayoutParams(dp(96), -2))
             factRow.addView(Look.text(context, fact, 12, Look.ink), LinearLayout.LayoutParams(0, -2, 1f))
             details.addView(factRow, lp(if (i == 0) 4 else 8))
-        }
-        ResultPresenter.scoreValue(run)?.let {
-            details.addView(Look.text(context, "점수는 같은 기기·카메라의 변화를 보기 위한 내부 초안입니다. 기기 간 순위가 아닙니다.", 11, Look.inkMuted), lp(12))
         }
         metricsCard.addView(Look.disclosure(context, "Run Details", details), lp(4))
         content.addView(metricsCard, lp(10))
