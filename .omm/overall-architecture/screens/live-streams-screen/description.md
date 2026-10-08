@@ -7,3 +7,5 @@ YUV Save Format에서 JPEG 또는 NV21을 선택합니다. JPEG는 기존 `_YUV.
 YUV Save Format의 기본값은 JPEG입니다. YUV 출력이 꺼져 있으면 포맷 선택을 비활성화하고, CameraX에서는 JPEG만 제공합니다. 상시 Metadata 안내는 표시하지 않습니다. 화면 하단의 Apply 버튼은 스크롤과 독립적으로 유지하며, 변경된 설정이나 실패한 구성의 재적용이 있을 때 활성화합니다. 뒤로 가기는 초안을 적용하지 않습니다.
 
 RAW (DNG)는 RAW capability가 있는 Camera2 카메라에서만 RAW_SENSOR 크기와 Off를 제공하며 기본값은 Off입니다. 선택하면 사진당 예상 크기를 안내하고, 지원하지 않으면 선택을 비활성화하고 이유를 표시합니다.
+
+Dual에서 진입하면 현재 엔진·물리 ID·프리뷰 크기와 녹화 구성을 읽기 전용으로 표시합니다. Dual이 적용하지 않는 단일 카메라 설정과 Apply는 표시하지 않습니다.

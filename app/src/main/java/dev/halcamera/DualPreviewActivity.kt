@@ -170,6 +170,7 @@ class DualPreviewActivity : ComponentActivity() {
 
     override fun onStop() {
         started = false
+        root.keepScreenOn = false
         recentMedia.stop()
         recorder.finish("screen_stopped")?.let(::exportIncident)
         main.removeCallbacks(tick)
@@ -216,9 +217,10 @@ class DualPreviewActivity : ComponentActivity() {
         controls.addView(FrameLayout(this).apply {
             addView(engineButton, FrameLayout.LayoutParams(-2, dp(48)))
         }, LinearLayout.LayoutParams(0, dp(48), 1f))
-        controls.addView(IconButton(this, R.drawable.ic_chevron_down, "듀얼 카메라 선택", dark = true) {
-            choosePair()
-        }.also { pairButtons += it }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        controls.addView(IconButton(this, R.drawable.ic_chevron_down, "촬영 제어 · Dual 미지원", dark = true) {}.apply {
+            isEnabled = false
+            alpha = 0.4f
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
         val trailing = Look.row(this).apply { gravity = Gravity.END or Gravity.CENTER_VERTICAL }
         trailing.addView(chromeButton("Callback") {
             callbackGraph.visibility = if (callbackGraph.visibility == View.VISIBLE) View.GONE else View.VISIBLE
@@ -228,7 +230,7 @@ class DualPreviewActivity : ComponentActivity() {
         trailing.addView(labButton, LinearLayout.LayoutParams(-2, dp(48)).apply { marginStart = dp(4) })
         controls.addView(trailing, LinearLayout.LayoutParams(0, dp(48), 1f))
         topBar.addView(controls)
-        liveIndicator = LiveIndicator(this).apply { onSizesClick = ::showInfo }
+        liveIndicator = LiveIndicator(this).apply { onSizesClick = { openTool(LiveStreamsActivity::class.java) } }
         topBar.addView(liveIndicator)
         statusText = Look.text(this, "", 12, Look.onDark).apply {
             gravity = Gravity.CENTER
@@ -591,6 +593,8 @@ class DualPreviewActivity : ComponentActivity() {
     private fun busy() = closing || recording || recordPending
 
     private fun updateControls() {
+        root.keepScreenOn = started && !closing && !failed && streamingSize != null
+        liveIndicator.setSizesEnabled(!busy())
         engineButton.text = engineName
         engineButton.isEnabled = !busy()
         engineButton.alpha = if (busy()) 0.4f else 1f
@@ -665,9 +669,18 @@ class DualPreviewActivity : ComponentActivity() {
 
     private fun openTool(destination: Class<*>) {
         if (busy()) return
+        val tool = Intent(this, destination)
+            .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, logicalId)
+            .putExtra(WorkbenchActivity.EXTRA_ENGINE, engineName)
+            .putExtra(LiveStreamsActivity.EXTRA_DUAL, true)
+            .putExtra(EXTRA_VIDEO, videoMode)
+            .putExtra(LiveStreamsActivity.EXTRA_DUAL_SIZE, streamingSize?.toString())
+            .putExtra(LiveStreamsActivity.EXTRA_DUAL_PAIR, "${pair?.first ?: "—"} / ${pair?.second ?: "—"}")
+            .putExtra(LiveStreamsActivity.EXTRA_FROM_LIVE, destination == LiveStreamsActivity::class.java)
         started = false
+        updateControls()
         closeSession {
-            startActivity(Intent(this, destination).putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, logicalId))
+            startActivity(tool)
         }
     }
 

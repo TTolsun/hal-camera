@@ -51,6 +51,13 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     var controls = LiveControls(); private set
     private var video = false
     private var enabled = true
+    private var manualAvailable = true
+
+    fun setManualAvailable(available: Boolean) {
+        if (manualAvailable == available) return
+        manualAvailable = available
+        render()
+    }
 
     private val mainRow = LinearLayout(context).apply { gravity = Gravity.CENTER }
     private val flashRow = LinearLayout(context).apply { gravity = Gravity.CENTER; visibility = View.GONE }
@@ -238,8 +245,10 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             "노출 보정, 현재 ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "조절기 접기" else "조절기 펼치기"}")
         // Dim while the bar is off (camera not ready, recording being saved, a CLI command running), as MainActivity
         // dims every other Live control, so a tap that does nothing never looks like one that should.
-        manual.show(null, "M", controls.manual.active, false, true, "Manual 수동 촬영 제어")
+        manual.show(null, "M", controls.manual.active, false, manualAvailable,
+            if (manualAvailable) "Manual 수동 촬영 제어" else "Manual · CameraX 미지원")
         listOf(flash, afLock, aeLock, ev, manual).forEach { it.isEnabled = enabled; if (!enabled) it.alpha = 0.4f }
+        manual.isEnabled = enabled && manualAvailable
         // Keep the visible handle to one glyph; requested values remain in its accessible name.
         val on = listOfNotNull(
             controls.flash.takeIf { it != FlashMode.OFF }?.label,

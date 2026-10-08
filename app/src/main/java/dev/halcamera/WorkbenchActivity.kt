@@ -166,7 +166,10 @@ class WorkbenchActivity : ComponentActivity() {
             entry(results, "ZIP Archives", "공유 · 저장 · 삭제") { incidents.showList() }
         }
         section("Settings") { settings ->
-            entry(settings, "Live Streams", "해상도·출력·FPS와 녹화 설정") { streamSettings.launch(Intent(this, LiveStreamsActivity::class.java).putExtras(intent)) }
+            entry(settings, "Live Streams", if (intent.getBooleanExtra(LiveStreamsActivity.EXTRA_DUAL, false)) "현재 Dual 출력" else "해상도·출력·FPS와 녹화 설정") {
+                streamSettings.launch(Intent(this, LiveStreamsActivity::class.java).putExtras(intent)
+                    .putExtra(LiveStreamsActivity.EXTRA_FROM_LIVE, false))
+            }
             entry(settings, "ADB CLI", if (cli.enabled) "허용됨" else "꺼짐") {
                 LabDialog(this, "ADB CLI").apply {
                     group {
