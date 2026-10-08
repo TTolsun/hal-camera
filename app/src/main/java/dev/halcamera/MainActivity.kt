@@ -472,8 +472,7 @@ class MainActivity : ComponentActivity() {
                     if (thisSession == sessionId && resumed && !closing) {
                         goodStreams[thisKey] = requestedStreams
                         liveIndicator.bindSizes(values)
-                        streamState[thisKey] = "Configured · Preview ${values["preview"]} · YUV ${values["analysis"] ?: "Off"} · JPEG ${values["jpeg"] ?: "Off"}" +
-                            (values["raw"]?.let { " · RAW $it" } ?: "")
+                        streamState[thisKey] = "Configured · Preview ${values["preview"]} · YUV ${values["analysis"] ?: "Off"} · JPEG ${values["jpeg"] ?: "Off"}"
                     }
                 }, streamsFailed = { reason ->
                     if (thisSession == sessionId) cli.active?.takeIf { it.command in setOf("preview", "capture", "record.start") }?.let { cli.fail(it.id, "PREFLIGHT_FAILED", reason) }
