@@ -275,6 +275,7 @@ class GalleryActivity : ComponentActivity() {
                     item.video -> "▶ ${duration(item.duration)}"
                     item.name.endsWith("_YUV.jpg", true) -> "YUV"
                     item.name.endsWith("_JPEG.jpg", true) -> "JPEG"
+                    item.name.endsWith("_RAW.dng", true) -> "RAW"
                     else -> ""
                 }
                 tile.badge.visibility = if (tile.badge.text.isEmpty()) View.GONE else View.VISIBLE
@@ -570,7 +571,8 @@ class GalleryActivity : ComponentActivity() {
     private fun share(media: List<Item>) {
         if (media.isEmpty()) return
         val intent = Intent(if (media.size == 1) Intent.ACTION_SEND else Intent.ACTION_SEND_MULTIPLE).apply {
-            type = if (media.all { it.video }) "video/mp4" else if (media.none { it.video }) "image/jpeg" else "*/*"
+            val types = media.map { contentResolver.getType(it.uri) ?: if (it.video) "video/mp4" else "image/*" }.distinct()
+            type = types.singleOrNull() ?: if (types.all { it.startsWith("image/") }) "image/*" else "*/*"
             if (media.size == 1) putExtra(Intent.EXTRA_STREAM, media.single().uri)
             else putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(media.map { it.uri }))
             clipData = ClipData.newUri(contentResolver, "HALCamera", media.first().uri).also { clip ->

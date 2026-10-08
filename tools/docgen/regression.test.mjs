@@ -114,7 +114,7 @@ test('all configured elements fit the prompt budget and exclude descendant field
         assert.ok(input.files.length > 0); count++;
       }
     }
-    assert.equal(count, 89); // Includes manual requests/UI, the split stream-settings and open-recovery evidence, and Dual Preview; score-composer removed (#162).
+    assert.equal(count, 92); // Includes separate Dual Camera2, CameraX, and video-pair evidence.
   `));
 });
 

@@ -288,7 +288,14 @@ internal class Camera2StillCapture(
             handler.post {
                 inFlight = false
                 result.fold({
-                    host.report("Saved ${it.size} files · ${formatBytes(it.sumOf { file -> file.bytes })}", true)
+                    val formats = it.map { file -> when {
+                        file.name.endsWith("_YUV.jpg") -> "YUV JPEG"
+                        file.name.endsWith(".nv21") -> "NV21"
+                        file.mime == MediaLibrary.DNG_MIME -> "DNG"
+                        file.mime == "application/json" -> "JSON"
+                        else -> "JPEG"
+                    } }.joinToString(" · ")
+                    host.report("Saved $formats / ${formatBytes(it.sumOf { file -> file.bytes })}", true)
                 }, { host.report("Save failed: ${it.message}", true) })
             }
         }

@@ -129,4 +129,23 @@ class MediaLibrary(context: Context) {
             throw e
         }
     }
+
+    /** Both videos share a capture name; rollback every entry if either copy or publish fails. */
+    fun saveVideoPair(name: String, files: List<Pair<String, File>>): List<Uri> {
+        require(files.size == 2)
+        val entries = mutableListOf<Uri>()
+        try {
+            files.forEachIndexed { index, (physicalId, file) ->
+                val id = physicalId.replace(Regex("[^A-Za-z0-9_-]"), "_")
+                val uri = create("${name}_${if (index == 0) "A" else "B"}_cam${id}.mp4", true)
+                entries += uri
+                write(uri) { target -> file.inputStream().use { it.copyTo(target) } }
+            }
+            entries.forEach(::publish)
+            return entries
+        } catch (e: Exception) {
+            entries.forEach { runCatching { resolver.delete(it, null, null) } }
+            throw e
+        }
+    }
 }

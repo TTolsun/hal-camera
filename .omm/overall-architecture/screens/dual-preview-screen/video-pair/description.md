@@ -1,0 +1,1 @@
+DualVideoRecording은 physical camera별 H.264 MediaRecorder 두 개를 준비하고 MediaLibrary를 통해 카메라 ID가 포함된 MP4 쌍을 저장합니다. 출력 오류가 발생하면 저장 쌍을 무효화합니다. 장치와 GPU relay의 출력 종료 이후 인코더를 중지하며, 쓰기 또는 공개 실패 시 이번 MediaStore 항목을 롤백합니다. 무음이며 두 파일의 정확한 시작·종료 동기는 보장하지 않습니다.

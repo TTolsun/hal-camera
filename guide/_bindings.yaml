@@ -245,8 +245,18 @@ sources:
       screens/dual-preview-screen:
         evidence:
           - app/src/main/java/dev/halcamera/DualPreviewActivity.kt
+      screens/dual-preview-screen/camera2-session:
+        evidence:
           - app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt
           - app/src/main/java/dev/halcamera/camera/DualPreviewSession.kt
+      screens/dual-preview-screen/camerax-session:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt
+          - app/src/main/java/dev/halcamera/camera/DualPreviewRelay.kt
+      screens/dual-preview-screen/video-pair:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/DualVideoRecording.kt
+          - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
       screens/probe-screen:
         evidence:
           - app/src/main/java/dev/halcamera/CameraProbeActivity.kt

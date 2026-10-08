@@ -159,7 +159,6 @@ class WorkbenchActivity : ComponentActivity() {
             entry(tools, "Probe", "사양 확인") { open(CameraProbeActivity::class.java) }
             entry(tools, "CTS", "동작 검증") { open(CtsEntryActivity::class.java) }
             entry(tools, "Benchmark", "성능 측정") { open(BenchmarkActivity::class.java) }
-            entry(tools, "Dual Preview", "후면 물리 카메라 2개 동시 보기") { open(DualPreviewActivity::class.java) }
         }
         section("Results") { results ->
             entry(results, "Run History", "비교 · 내보내기") { open(HistoryActivity::class.java) }

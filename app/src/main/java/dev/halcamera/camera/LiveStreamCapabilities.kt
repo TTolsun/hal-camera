@@ -58,7 +58,10 @@ fun liveStreamSupport(c: CameraCharacteristics): LiveStreamSupport {
         sizes(map.getOutputSizes(ImageFormat.JPEG)), fps, videos, defaultLiveVideo(videoSizes),
         hardwareStabilizationModes(c),
         "Stabilization may be unavailable at some resolutions or frame rates.",
-        yuvSaveFormats = YuvSaveFormat.entries, raw = rawSizes(c))
+        yuvSaveFormats = YuvSaveFormat.entries, raw = rawSizes(c),
+        rawUnavailableReason = if (CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW !in
+            (c[CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES] ?: IntArray(0))) "RAW capability 없음"
+            else "RAW_SENSOR 지원 크기 없음")
 }
 
 /** RAW_SENSOR sizes for DNG (#177), only when the camera advertises the RAW capability that DngCreator needs. */

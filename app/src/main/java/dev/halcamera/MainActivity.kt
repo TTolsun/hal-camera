@@ -196,6 +196,8 @@ class MainActivity : ComponentActivity() {
     private lateinit var mediaButton: ShutterButton
     private lateinit var photoModeButton: Button
     private lateinit var videoModeButton: Button
+    private lateinit var dualPreviewButton: Button
+    private lateinit var dualVideoButton: Button
     private lateinit var modeControls: LinearLayout
     private lateinit var recordingTime: TextView
     private lateinit var galleryButton: RecentMediaButton
@@ -230,6 +232,12 @@ class MainActivity : ComponentActivity() {
     private var returningFromSettings = false
     private val labLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val data = result.data
+        if (result.resultCode == RESULT_OK && data?.hasExtra(DualPreviewActivity.EXTRA_RETURN_VIDEO) == true) {
+            videoMode = data.getBooleanExtra(DualPreviewActivity.EXTRA_RETURN_VIDEO, false)
+            data.getStringExtra(DualPreviewActivity.EXTRA_ENGINE)?.takeIf { it == "Camera2" || it == "CameraX" }?.let {
+                if (engineName != it) { engineName = it; resetControls() }
+            }
+        }
         if (result.resultCode == RESULT_OK && data?.hasExtra(LiveStreamsActivity.EXTRA_SETTINGS) == true &&
             data.getStringExtra(WorkbenchActivity.EXTRA_CAMERA_ID) == cameraId) {
             @Suppress("DEPRECATION")
@@ -675,12 +683,15 @@ class MainActivity : ComponentActivity() {
         modeControls=row().apply { gravity=Gravity.CENTER }
         photoModeButton=button("Photo") { selectMode(false) }
         videoModeButton=button("Video") { selectMode(true) }
-        listOf(photoModeButton,videoModeButton).forEach {
+        dualPreviewButton=button("Dual · P") { openDual(false) }
+        dualVideoButton=button("Dual · V") { openDual(true) }
+        listOf(photoModeButton,videoModeButton,dualPreviewButton,dualVideoButton).forEach {
             it.background=cameraChrome(Color.TRANSPARENT)
             it.textSize=12f
-            modeControls.addView(it,LinearLayout.LayoutParams(dp(80),dp(48)))
+            it.setPadding(dp(4),0,dp(4),0)
+            modeControls.addView(it,LinearLayout.LayoutParams(0,dp(48),1f))
         }
-        modeRow.addView(modeControls,FrameLayout.LayoutParams(-2,-1,Gravity.CENTER))
+        modeRow.addView(modeControls,FrameLayout.LayoutParams(-1,-1,Gravity.CENTER))
         recordingTime=label("● REC  00:00",14,coral,true).apply { gravity=Gravity.CENTER; typeface=Look.mono; visibility=View.GONE }
         modeRow.addView(recordingTime,FrameLayout.LayoutParams(-1,-1))
 
@@ -775,7 +786,7 @@ class MainActivity : ComponentActivity() {
             button.isEnabled=ready && !recordingVideo
             button.setTextColor(if(selected) Look.onDark else Look.onDarkMuted)
             button.setTypeface(null,if(selected) Typeface.BOLD else Typeface.NORMAL)
-            button.contentDescription=if(index==0) "Photo mode: save selected YUV and JPEG outputs" else "Video mode with audio"
+            button.contentDescription=if(index==0) "Photo mode: save selected YUV, JPEG and RAW outputs" else "Video mode with audio"
             ViewCompat.setStateDescription(button,if(selected) "Selected" else null)
         }
         pausedOverlay.visibility=if(paused) View.VISIBLE else View.GONE
@@ -789,7 +800,7 @@ class MainActivity : ComponentActivity() {
         mediaButton.isEnabled=(ready || recordingVideo) && !stoppingRecording
         if (!videoMode && streamSettings[streamKey()]?.canCapture == false) {
             mediaButton.isEnabled = false
-            mediaButton.contentDescription = "Photo output is off: enable YUV or JPEG in Live streams"
+            mediaButton.contentDescription = "Photo output is off: enable YUV, JPEG or RAW in Live streams"
         }
         engineButton.isEnabled=!recordingVideo
         cameraShortcut.isEnabled=!recordingVideo && cameraId.isNotEmpty()
@@ -809,6 +820,13 @@ class MainActivity : ComponentActivity() {
         galleryButton.isEnabled=!recordingVideo
         labButton.isEnabled=!recordingVideo && !stoppingRecording && !closing && (engine as? MediaCapture)?.mediaBusy != true
         liveIndicator.setSizesEnabled(labButton.isEnabled && cli.active == null && pendingPermissionAction == null && cameraId.isNotEmpty())
+        listOf(dualPreviewButton,dualVideoButton).forEach {
+            it.isEnabled = labButton.isEnabled && cli.active == null && pendingPermissionAction == null
+            it.setTextColor(Look.onDarkMuted)
+            it.alpha = if (it.isEnabled) 1f else 0.4f
+        }
+        dualPreviewButton.contentDescription = "Dual preview: two physical cameras"
+        dualVideoButton.contentDescription = "Dual video: record two physical cameras"
         if (cli.active != null) {
             listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, labButton, reportButton).forEach { it.isEnabled = false }
         }
@@ -837,6 +855,14 @@ class MainActivity : ComponentActivity() {
     private fun openLab() {
         openAfterClose("workbench_opened") {
             streamSettingsIntent(WorkbenchActivity::class.java)
+        }
+    }
+    private fun openDual(video: Boolean) {
+        if (cli.active != null || recordingVideo || stoppingRecording || closing ||
+            pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true) return
+        openAfterClose("dual_opened") {
+            Intent(this, DualPreviewActivity::class.java).putExtra(DualPreviewActivity.EXTRA_VIDEO, video)
+                .putExtra(DualPreviewActivity.EXTRA_ENGINE, engineName)
         }
     }
     private fun openLiveStreams() {

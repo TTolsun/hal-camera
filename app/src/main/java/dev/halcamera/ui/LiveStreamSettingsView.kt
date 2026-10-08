@@ -10,16 +10,18 @@ import dev.halcamera.camera.*
 
 /** A draft is committed only by Apply; dismissing a selector or this panel never changes the camera. */
 object LiveStreamSettingsView {
+    data class Page(val root: LinearLayout, val scroll: ScrollView)
     fun create(context: Context, support: LiveStreamSupport, current: LiveStreamSettings,
              actual: String, restore: (() -> Unit)?, back: () -> Unit, changed: (LiveStreamSettings) -> Unit, apply: (LiveStreamSettings) -> Unit,
-             backDescription: String = "Lab으로 돌아가기"): ScrollView {
+             backDescription: String = "Lab으로 돌아가기", baseline: LiveStreamSettings = current,
+             engine: String = "Camera2"): Page {
         val themed = context
         fun dp(value: Int) = Look.dp(themed, value)
         val content = LinearLayout(themed).apply {
             orientation = LinearLayout.VERTICAL
 
         }
-        content.addView(Look.titleBar(themed, "Live Streams", 34, backDescription, back))
+        content.addView(Look.titleBar(themed, "Live Streams", 24, backDescription, back))
         fun section(title: String): LinearLayout {
             content.addView(Look.text(themed, title, 13, Look.inkMuted, bold = true),
                 LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(20); bottomMargin = dp(8) })
@@ -100,11 +102,11 @@ object LiveStreamSettingsView {
         outputs.addView(exportHint)
         refreshers += {
             exportHint.text = when {
-                yuv == null -> "YUV Off · Metadata: JSON"
-                YuvSaveFormat.NV21 !in support.yuvSaveFormats -> "Metadata: JSON · NV21: Camera2 only"
-                else -> "Metadata: JSON · Both formats"
-            } + if (support.raw.isEmpty()) " · RAW: Camera2 + RAW capability only"
-                else raw?.let { " · RAW: DNG ≈ ${it.width.toLong() * it.height * 2 / 1_000_000} MB/shot" }.orEmpty()
+                engine == "CameraX" -> "RAW / NV21: CameraX 미지원"
+                support.raw.isEmpty() -> support.rawUnavailableReason
+                else -> raw?.let { "DNG ≈ ${it.width.toLong() * it.height * 2 / 1_000_000} MB/shot" }.orEmpty()
+            }
+            exportHint.visibility = if (exportHint.text.isEmpty()) View.GONE else View.VISIBLE
         }
         val timing = section("Frame Rate")
         choice(timing, "Preview FPS", { listOf(null) + support.fps }, { fps }, { fps = it }) { it?.toString() ?: "Auto" }
@@ -125,7 +127,6 @@ object LiveStreamSettingsView {
             setPadding(dp(18), dp(14), dp(18), dp(14))
         })
         refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, yuvSaveFormat, raw)) }
-        refreshers.forEach { it() }
         if (actual.startsWith("Failed:") || actual.startsWith("실패:")) {
             section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
                 setPadding(dp(18), dp(14), dp(18), dp(14))
@@ -134,12 +135,24 @@ object LiveStreamSettingsView {
                 LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
         val scroll = ScrollView(themed).apply { isFillViewport = true; addView(content) }
-        content.addView(Look.primaryButton(themed, "저장") {
+        val applyButton = Look.primaryButton(themed, "Apply") {
             val settings = LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, yuvSaveFormat, raw)
             val rejection = support.rejection(settings)
             if (rejection == null) apply(settings)
             else AlertDialog.Builder(themed, R.style.LabDialogTheme).setMessage(rejection).setPositiveButton("OK", null).show()
-        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(24) })
-        return scroll
+        }
+        refreshers += {
+            val pending = LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, yuvSaveFormat, raw)
+            applyButton.isEnabled = pending != baseline || actual.startsWith("Failed:") || actual.startsWith("실패:")
+            applyButton.alpha = if (applyButton.isEnabled) 1f else 0.5f
+            applyButton.contentDescription = if (applyButton.isEnabled) "Apply stream settings" else "변경된 설정 없음"
+        }
+        refreshers.forEach { it() }
+        val root = LinearLayout(themed).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+            addView(applyButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
+        }
+        return Page(root, scroll)
     }
 }

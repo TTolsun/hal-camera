@@ -3,6 +3,7 @@ package dev.halcamera
 import android.content.Intent
 import android.hardware.camera2.CameraManager
 import android.os.Bundle
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import androidx.activity.ComponentActivity
@@ -44,9 +45,11 @@ class LiveStreamsActivity : ComponentActivity() {
                     }) else null
                     val page = LiveStreamSettingsView.create(this, support, draft ?: support.defaults(),
                         intent.getStringExtra(EXTRA_STATUS).orEmpty(), restore, ::finish, { draft = it }, ::save,
-                        backDescription)
-                    showPage(page)
-                    savedInstanceState?.getInt("scroll_y")?.let { y -> page.post { page.scrollTo(0, y) } }
+                        backDescription,
+                        (intent.getSerializableExtra(EXTRA_SETTINGS) as? LiveStreamSettings) ?: support.defaults(),
+                        intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE) ?: "Camera2")
+                    showPage(page.root, page.scroll)
+                    savedInstanceState?.getInt("scroll_y")?.let { y -> page.scroll.post { page.scroll.scrollTo(0, y) } }
                 }, { showMessage("지원 정보를 불러오지 못했습니다. ${it.message.orEmpty()}") })
             }
         }
@@ -68,8 +71,8 @@ class LiveStreamsActivity : ComponentActivity() {
         showPage(ScrollView(this).apply { addView(body) })
     }
 
-    private fun showPage(page: ScrollView) {
-        scroll = page
+    private fun showPage(page: View, scrolling: ScrollView? = page as? ScrollView) {
+        scroll = scrolling
         page.setBackgroundColor(Look.canvas)
         setContentView(page)
         ViewCompat.setOnApplyWindowInsetsListener(page) { view, insets ->
