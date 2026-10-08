@@ -48,6 +48,7 @@ object OriginalYuvCheck {
                 override val recordingBusy = false
                 override val captureYuv get() = useYuv
                 override val captureJpeg get() = useJpeg
+                override val captureRaw = false
                 override val yuvSaveFormat get() = format
                 override val needsPrecapture = false
                 override val flashName = "OFF"
