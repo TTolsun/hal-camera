@@ -21,7 +21,7 @@ fun cameraXStreamSupport(context: android.content.Context, id: String, hardware:
     val videos = hardware.videos.filter { it.size in resolutions }.map { it.copy(codec = "Auto") }.distinct()
     val default = videos.filter { it.fps == 30 && it.size.width.toLong() * it.size.height <= 1920L * 1080 }
         .maxByOrNull { it.size.width.toLong() * it.size.height } ?: videos.firstOrNull()
-    return hardware.copy(videos = videos, defaultVideo = default, yuvSaveFormats = listOf(YuvSaveFormat.JPEG),
+    return hardware.copy(videos = videos, defaultVideo = default, yuvSaveFormats = listOf(YuvSaveFormat.JPEG), raw = emptyList(),
         stabilization = cameraXStabilizationModes(info, hardware.stabilization),
         stabilizationNotice = "Stabilization may be unavailable at some resolutions or frame rates.")
 }
@@ -58,7 +58,15 @@ fun liveStreamSupport(c: CameraCharacteristics): LiveStreamSupport {
         sizes(map.getOutputSizes(ImageFormat.JPEG)), fps, videos, defaultLiveVideo(videoSizes),
         hardwareStabilizationModes(c),
         "Stabilization may be unavailable at some resolutions or frame rates.",
-        yuvSaveFormats = YuvSaveFormat.entries)
+        yuvSaveFormats = YuvSaveFormat.entries, raw = rawSizes(c))
+}
+
+/** RAW_SENSOR sizes for DNG (#177), only when the camera advertises the RAW capability that DngCreator needs. */
+internal fun rawSizes(c: CameraCharacteristics): List<LiveSize> {
+    val raw = CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_RAW in (c[CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES] ?: IntArray(0))
+    if (!raw) return emptyList()
+    return c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]?.getOutputSizes(ImageFormat.RAW_SENSOR).orEmpty()
+        .map { LiveSize(it.width, it.height) }.distinct().sortedBy { it.width.toLong() * it.height }
 }
 
 internal fun hardwareStabilizationModes(c: CameraCharacteristics) = LiveStabilization.supported(

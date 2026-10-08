@@ -19,10 +19,10 @@ class MediaLibrary(context: Context) {
     fun name() = "HAL_" + SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(Date()) + "_" + UUID.randomUUID().toString().take(6)
 
     @Suppress("DEPRECATION")
-    private fun create(name: String, video: Boolean): Uri {
+    private fun create(name: String, video: Boolean, mime: String = if (video) "video/mp4" else "image/jpeg"): Uri {
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
-            put(MediaStore.MediaColumns.MIME_TYPE, if (video) "video/mp4" else "image/jpeg")
+            put(MediaStore.MediaColumns.MIME_TYPE, mime)
             if (Build.VERSION.SDK_INT >= 29) {
                 put(MediaStore.MediaColumns.RELATIVE_PATH, "DCIM/HALCamera")
                 put(MediaStore.MediaColumns.IS_PENDING, 1)
@@ -55,8 +55,8 @@ class MediaLibrary(context: Context) {
         saveFiles(name, yuvJpeg, cameraJpeg, null, null).map { it.uri }
 
     fun saveCapture(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?,
-                    original: OriginalYuv?, captureMetadata: Map<String, Any?>): List<PhotoArtifact> =
-        saveFiles(name, yuvJpeg, cameraJpeg, original, captureMetadata)
+                    original: OriginalYuv?, captureMetadata: Map<String, Any?>, dng: DngOutput? = null): List<PhotoArtifact> =
+        saveFiles(name, yuvJpeg, cameraJpeg, original, captureMetadata, dng)
 
     @Suppress("DEPRECATION")
     private fun createData(name: String, mime: String): Uri {
@@ -78,23 +78,31 @@ class MediaLibrary(context: Context) {
     }
 
     private fun saveFiles(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?,
-                          original: OriginalYuv?, captureMetadata: Map<String, Any?>?): List<PhotoArtifact> {
-        require(yuvJpeg != null || cameraJpeg != null || original != null)
+                          original: OriginalYuv?, captureMetadata: Map<String, Any?>?, dng: DngOutput? = null): List<PhotoArtifact> {
+        require(yuvJpeg != null || cameraJpeg != null || original != null || dng != null)
         require(yuvJpeg == null || original == null) { "Select one YUV save format" }
         val entries = mutableListOf<PhotoArtifact>()
         val outputs = mutableListOf<Map<String, Any?>>()
-        fun save(filename: String, mime: String, bytes: ByteArray, metadata: Map<String, Any?> = emptyMap()) {
-            val uri = if (mime == "image/jpeg") create(filename, false) else createData(filename, mime)
+        fun saveStream(filename: String, mime: String, metadata: Map<String, Any?>, writer: (OutputStream) -> Unit) {
+            val uri = if (mime.startsWith("image/")) create(filename, false, mime) else createData(filename, mime)
             entries += PhotoArtifact(filename, mime, uri)
-            write(uri) { it.write(bytes) }
-            outputs += metadata + mapOf("file" to filename, "mime" to mime, "byteLength" to bytes.size)
+            var written = 0L
+            write(uri) { target -> writer(object : java.io.FilterOutputStream(target) {
+                override fun write(b: Int) { out.write(b); written++ }
+                override fun write(b: ByteArray, off: Int, len: Int) { out.write(b, off, len); written += len }
+            }) }
+            entries[entries.lastIndex] = entries.last().copy(bytes = written)
+            outputs += metadata + mapOf("file" to filename, "mime" to mime, "byteLength" to written)
         }
+        fun save(filename: String, mime: String, bytes: ByteArray, metadata: Map<String, Any?> = emptyMap()) =
+            saveStream(filename, mime, metadata) { it.write(bytes) }
         try {
             if (original != null) save("${name}_YUV.nv21", "application/octet-stream", original.bytes, original.metadata)
             if (yuvJpeg != null) save("${name}_YUV.jpg", "image/jpeg", yuvJpeg,
                 mapOf("source" to "YUV_420_888", "format" to "JPEG"))
             if (cameraJpeg != null) save("${name}_JPEG.jpg", "image/jpeg", cameraJpeg,
                 mapOf("source" to "camera", "format" to "JPEG"))
+            if (dng != null) saveStream("${name}_RAW.dng", DNG_MIME, dng.metadata(), dng::write)
             if (captureMetadata != null) {
                 val json = org.json.JSONObject(mapOf("schema" to 1, "capture" to captureMetadata, "outputs" to outputs))
                 save("${name}_metadata.json", "application/json", json.toString(2).toByteArray(Charsets.UTF_8))
@@ -106,6 +114,10 @@ class MediaLibrary(context: Context) {
             throw e
         }
     }
+    companion object {
+        const val DNG_MIME = "image/x-adobe-dng"
+    }
+
     fun saveVideo(file: File): Uri {
         val uri = create("${name()}.mp4", true)
         try {
