@@ -263,6 +263,8 @@ data class BenchmarkRun(
     val referenceRef: RunRef?,
     val metrics: List<BenchmarkMetric>,
     val regressionRuleVersion: String = RegressionRules.VERSION,
+    // The score draft was removed (#162). Both fields stay so run files that carry them still round-trip; new
+    // runs leave them null.
     val scoringRuleVersion: String? = null,
     val endpointScore: Int? = null,
     val raw: Map<String, Any?> = emptyMap(),

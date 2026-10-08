@@ -2,7 +2,6 @@ graph TB
     events["Telemetry / FlightRecorder<br/>콜백 이벤트"] --> frames["MetricExtractor<br/>프레임 연결 · 관측 표본"]
     marks["BenchmarkRunner<br/>실행 단계 시각"] --> assemble["RunAssembler<br/>측정값 · validity 조립"]
     frames --> assemble
-    assemble --> score["ScoreComposer<br/>적격 실행의 내부 점수"]
-    score --> json["BenchmarkReport<br/>schema 5 JSON 저장"]
+    assemble --> json["BenchmarkReport<br/>schema 5 JSON 저장"]
     json --> compare["BaselineManager / RegressionDetector<br/>저장된 실행으로 비교 재계산"]
     compare --> screen["결과 화면 · 실행 기록"]

@@ -12,7 +12,7 @@ Android 카메라의 **launch · preview · capture 성능을 반복 측정하�
 | PREVIEW | 프레임 간격 p50 / p95, partial 지연, buffer 지연, jitter |
 | CAPTURE | 촬영 지연, 결과 metadata 지연, 연속 촬영 간격 |
 | STABILITY | stall 횟수, 콜백 실패 횟수, 촬영 중 stall |
-| 3A | AE / AF / AWB 수렴 시간 (정보용, 점수 가중치 0) |
+| 3A | AE / AF / AWB 수렴 시간 (정보용) |
 
 지표의 시작점과 종료점, 시계 종류, 통계 규칙은 [METRICS.md](docs/METRICS.md)에 정의되어 있습니다.
 
@@ -55,9 +55,9 @@ open 10회 반복 → 3초 warm-up → 10초 관측 → 정지 영상 10장 → 
 - run은 세 단계로 걸러집니다. 측정 유효 → 비교 가능 → 점수 가능. 충전 중인 run은 비교에는 쓰이지만 점수에서는 빠집니다.
 - thermal, 절전 모드, 충전 상태, 노출 부하가 크게 다르면 비교 시점 조건 차이로 표시합니다.
 
-## 내부 점수 초안
+## 점수
 
-검토한 정상 측정 분포가 있는 Galaxy S25+ (`SM-S936N`)의 `Camera · 0 (Wide · Rear)` endpoint에는 `score-v1-draft` Camera Endpoint Score와 카테고리 점수를 표시합니다. release 빌드·적격 환경·동일 측정 계약이 필요하며, 3A는 점수에서 제외합니다. 다른 기기와의 순위를 나타내는 공개 점수는 아닙니다. 계산 규칙과 검증 범위는 [SCORING.md](docs/SCORING.md)를 참고하십시오.
+내부 Camera Endpoint Score 초안(`score-v1-draft`)은 제거했습니다. 스트레스 조건에서 오히려 점수가 오르는 등 설계 근거가 부족했고, 성능 저하 판정은 baseline 비교가 담당합니다. 결정 근거는 [이슈 #162](https://github.com/TTolsun/hal-camera/issues/162)와 보관한 [초안 문서](docs/archive/SCORING-v1-draft.md)에 있습니다. 예전 run JSON의 `endpoint_score`는 그대로 읽히며 새 run에서는 `null`입니다.
 
 ## 빌드
 
@@ -175,7 +175,7 @@ camera/     Camera2 / CameraX 엔진, 카메라 엔드포인트 열거
 telemetry/  Telemetry, FlightRecorder(30초 순환 버퍼), incident ZIP
 metrics/    이벤트 → 지표 계산. 화면도 판정도 모르는 leaf
 benchmark/  Benchmark·실행 기록·비교 화면(Activity)만 루트에 둔다
-  domain/     profile, runner, 통계, validity, 점수, 비교 규칙, presenter. Android 의존 없음
+  domain/     profile, runner, 통계, validity, 비교 규칙, presenter. Android 의존 없음
   platform/   BenchmarkStore, BenchmarkReport(org.json 경계), DeviceInstance, ThermalTracker 같은 파일·기기 어댑터
 cli/        ADB 명령 접수·상태 저장, 화면 어댑터(LiveController, BenchmarkController)
 cts/        앱 안에서 실행하는 CTS 카메라 케이스

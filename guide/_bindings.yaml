@@ -85,7 +85,6 @@ sources:
       benchmark/run-assembler:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt
-          - app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt
       benchmark/run-validity:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt
@@ -109,10 +108,6 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/MetricInfo.kt
           - app/src/main/java/dev/halcamera/metrics/MetricModel.kt
-      benchmark/score-composer:
-        evidence:
-          - app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt
-          - app/src/main/java/dev/halcamera/benchmark/domain/S25PlusScoreDraft.kt
       camera-engines:
         evidence:
           - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
@@ -382,7 +377,6 @@ sources:
       - app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt
       - app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt
       - app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt
-      - app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt
       - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt
       - app/src/main/java/dev/halcamera/benchmark/platform/DeviceInstance.kt
       - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
