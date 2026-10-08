@@ -210,7 +210,7 @@ object RunAssembler {
                 subjectLabeled = !context.subject.isUnlabeled
             )
         )
-        return ScoreComposer.apply(BenchmarkRun(
+        return BenchmarkRun(
             runId = result.runId,
             exportedAtUtc = context.exportedAtUtc,
             aborted = result.aborted,
@@ -240,6 +240,6 @@ object RunAssembler {
                 "observe_session" to result.observeSession,
                 "observe_warmup_frames" to obs.warmupFrames
             )
-        ), S25PlusScoreDraft.calibration)
+        )
     }
 }

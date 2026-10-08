@@ -92,15 +92,13 @@ data class ResultView(
     val sections: List<ResultSection>,
     val threeALine: String?,
     val baselineButton: String,
-    val baselineButtonEnabled: Boolean,
-    val scoreLine: String? = null
+    val baselineButtonEnabled: Boolean
 ) {
     fun render(): String = buildString {
         appendLine("Camera benchmark")
         appendLine(titleLine)
         appendLine(subLine)
         appendLine(eligibilityLine)
-        scoreLine?.let { appendLine(it) }
         appendLine()
         appendLine(comparisonLine)
         identityLine?.let { appendLine("                $it") }
@@ -238,21 +236,6 @@ object ResultPresenter {
         )
     }
 
-    fun scoreLine(run: BenchmarkRun): String? {
-        if (run.scoringRuleVersion != ScoreComposer.VERSION || run.endpointScore == null) return null
-        val score = ScoreComposer.compose(run, S25PlusScoreDraft.calibration) ?: return null
-        val categoryText = score.categories.entries.joinToString(" · ") {
-            "${categoryLabel(it.key)} ${String.format(Locale.US, "%.0f", it.value)}"
-        }
-        return "Camera Endpoint Score ${score.total} / 1000\nInternal draft · ${ScoreComposer.VERSION}\n$categoryText\nTracks changes on the same model and camera · not a cross-device ranking"
-    }
-
-    /** The score total alone, for the headline card; null under the same conditions as [scoreLine]. */
-    fun scoreValue(run: BenchmarkRun): Int? {
-        if (run.scoringRuleVersion != ScoreComposer.VERSION || run.endpointScore == null) return null
-        return ScoreComposer.compose(run, S25PlusScoreDraft.calibration)?.total
-    }
-
     fun present(
         run: BenchmarkRun,
         comparison: RunComparison?,
@@ -271,7 +254,6 @@ object ResultPresenter {
                 run.subject.subjectBuildLabel?.takeIf { it.isNotBlank() } ?: "(subject 없음)"
             ).joinToString(" · "),
             eligibilityLine = eligibilityLine(run),
-            scoreLine = scoreLine(run),
             comparisonLine = comparisonLine(run, comparison, comparedTo, isBaseline),
             identityLine = comparison?.identity?.let(::identityLine),
             conditionLine = comparison?.let(::conditionLine),

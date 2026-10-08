@@ -10,7 +10,6 @@ sources:
   - app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt
   - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
   - app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt
-  - app/src/main/java/dev/halcamera/benchmark/domain/ScoreComposer.kt
   - app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt
   - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt
   - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt
@@ -34,7 +33,7 @@ verifications: []
 
 1. `BenchmarkRunner`는 `Driver`, `Scheduler`, `clock`을 통해 카메라와 시계에 접근합니다. 지표·통계·회귀 계산은 `benchmark/domain/`과 `metrics/`에 두어 JVM에서 테스트하며, Android 화면은 Activity와 `ui/`, 파일·기기 어댑터는 `benchmark/platform/`에 둡니다. 새 파일에 `android.*` import가 필요하면 역할에 맞는 경계에 두거나 인터페이스로 주입합니다.
 2. 벤치마크의 `org.json`은 파일 경계에서 사용합니다. `BenchmarkReportCodec`의 데이터 계약은 `Map<String, Any?>`로 전달합니다. schema 5를 쓰되 schema 3·4도 읽습니다. CLI protocol v1은 별도로 JSON 명령·상태를 정의하며 측정 보고서 schema를 바꾸지 않습니다.
-3. `RunValidity`는 flag 규칙에서 measurement·comparison·scoring eligibility를 계산합니다. 알 수 없는 flag는 비교와 점수 산정을 막습니다. `ScoreComposer`는 release 빌드와 기록된 환경값도 확인하며, calibration과 모델·endpoint·계약이 다르거나 필수 지표가 누락되면 내부 점수를 계산하지 않습니다.
+3. `RunValidity`는 flag 규칙에서 measurement·comparison·scoring eligibility를 계산합니다. 알 수 없는 flag는 비교를 막습니다. 내부 점수 초안은 제거했으며(이슈 #162), scoring eligibility는 충전·디버그 빌드 같은 flag가 없는 run을 표시하는 용도로만 남습니다.
 4. 회귀 임계값은 `RegressionRules`에서 관리합니다. baseline은 자동으로 지정하지 않으며 임의의 두 실행을 고르는 동작도 baseline을 바꾸지 않습니다.
 5. 파일 삭제 실패 시 baseline 목록에서 먼저 빼지 않습니다. 목록 정리 실패 후 남은 잘못된 참조는 `BaselineManager`가 이후 조회에서 정리합니다.
 

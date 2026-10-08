@@ -1,5 +1,7 @@
 # 작업 상태
 
+2026-10-08 · 내부 점수 초안(`score-v1-draft`)을 앱에서 제거했습니다([이슈 #162](https://github.com/TTolsun/hal-camera/issues/162)). 표준 profile이 v2가 된 뒤 v1 calibration으로는 새 run에 점수가 나오지 않았고, v2 재검증에서는 발열·점유 경쟁 run이 정상보다 높은 점수를 받았습니다. 성능 저하 판정은 baseline 비교(`RegressionDetector`)가 이미 맡고 있으므로 점수 계산·결과 화면의 점수 줄·관련 테스트를 지웠습니다. run JSON의 `scoring_rule_version`·`endpoint_score`·`metrics[].score` 필드와 `scoring_eligible` validity 단계는 호환을 위해 남기며, 새 run에서는 점수 필드가 `null`입니다. 이전 설계는 [보관 문서](archive/SCORING-v1-draft.md)에 있습니다.
+
 2026-09-30 · HAL CAM 0.17.0(versionCode 594)은 Live 스트림 표시와 CameraX CLI 크기 설정, Gallery·About의 Runway 디자인, 설정·ZIP 대화상자의 Apple 디자인과 launch 진단 도구를 포함합니다. 기존 캐릭터와 저장 데이터를 유지합니다. [릴리스 노트](releases/0.17.0.md)에서 변경 사항과 검증 범위를 확인하세요.
 
 2026-09-27 · HAL CAM 0.15.0은 Callback 그래프, CameraX 사진·동영상 저장, 터치 초점·노출 제어와 정리된 개발자 문서를 포함합니다. Galaxy S25+에서 versionCode 543 서명 APK를 기존 앱 위에 설치하고 Camera2·CameraX 프리뷰와 Callback 표시를 확인했습니다. [릴리스 노트](releases/0.15.0.md)를 참고하세요.
@@ -51,8 +53,8 @@
 | M2 Measurement correctness | 완료. Galaxy S25+ 실기기 확인 |
 | M3 Product conversion | 완료 |
 | M4 Developer workflow | 완료. baseline 지정과 vs baseline / vs previous 열을 실기기에서 확인. 2026-09-28 baseline 집합과 범위 판정으로 변경, 확인 측정 완료(#165) |
-| M5a Internal score | 내부 점수 초안 구현. 2026-09-26 v2 민감도 재검증에서 저조도·발열·점유 경쟁 모두 저하 기준 미달([검증 기록](validation/score-sensitivity-20260926.md)). 점수 설계 검토([#162](https://github.com/TTolsun/hal-camera/issues/162))가 남음 |
-| M5b Public endpoint score | 데이터 확보 대기. 여러 제조사·성능군의 5–10개 기기 분포 필요 |
+| M5a Internal score | 중단. 2026-10-08 점수 초안 제거([#162](https://github.com/TTolsun/hal-camera/issues/162)). 2026-09-26 v2 민감도 재검증에서 저조도·발열·점유 경쟁 모두 저하 기준 미달([검증 기록](validation/score-sensitivity-20260926.md)) |
+| M5b Public endpoint score | 중단. M5a 제거와 함께 진행하지 않음 |
 | M6 History / export | 완료. Results 필터, 두 run 비교·삭제, JSON·CSV 내보내기, PC 집계, subject 재사용 (PR #39, 이슈 #10 종료) |
 
 M4의 내용은 계획보다 앞당겨 M3 2단계에서 함께 구현하고 검증했습니다.
@@ -67,7 +69,7 @@ M4의 내용은 계획보다 앞당겨 M3 2단계에서 함께 구현하고 검�
 - PR #47에서 `.omm/`의 Doctor 요소를 제거하고 개발자 가이드와 docgen 근거 검사를 갱신했습니다. 이전 STATUS에 적혀 있던 아키텍처 문서 정리는 완료되었습니다.
 - PR #81·#82에서 Live 개발자 진입점을 "현재 세션이 열려 있어야 의미가 있는가"로 나눴습니다. Probe·CTS·Benchmark는 상단 `도구` 메뉴의 독립 화면이고, Readout·그래프·Mark·incident는 `진단` 패널입니다. CTS·Benchmark는 Live 카메라의 `close(done)` 뒤에 열리며(S25+에서 약 260 ms), Probe는 대기 없이 엽니다. 배치 기준은 `docs/design/APP-UI.md`에 있습니다.
 
-## M5 현재 데이터와 구현 (2026-09-12)
+## M5 데이터와 구현 기록 (2026-09-12, 2026-10-08 제거)
 
 Galaxy S25+ (`SM-S936N`, Android SDK 36)에서 무선 ADB로 수집했습니다. 측정 앱은 0.5.0 release(`app.debuggable=false`)이며, 기기 빌드는 `BP4A.251205.006.S936NKSSCCZH2`, profile은 `camera2-standard-v1`, endpoint는 `Camera · 0 (Wide · Rear)`입니다.
 
@@ -81,7 +83,7 @@ Galaxy S25+ (`SM-S936N`, Android SDK 36)에서 무선 ADB로 수집했습니다.
 
 원본 JSON과 수집 스크립트는 상위 작업 폴더의 `reviews/m5-20260912/`에 있습니다. `runs/`는 밝은 조건, `low-light/`는 저조도, `uncertain-lighting/`는 제외 데이터입니다. 저장소에는 [지표값·원본 해시·계수·비교 결과](data/m5-s25-main-20260912.json)를 보관합니다.
 
-`ScoreComposer`와 `S25PlusScoreDraft`는 16개 지표, 네 카테고리의 동일 가중치, 0–1000 Camera Endpoint Score를 구현합니다. 3A의 가중치는 0입니다. 다른 모델·endpoint·계약, 디버그 빌드, 부적격 환경과 누락 지표에는 점수를 내지 않습니다. 결과 화면은 내부 초안임을 표시하고 JSON의 기존 `scoring_rule_version`, `summary.endpoint_score`, `metrics[].score` 필드에 저장합니다. 규칙은 [SCORING.md](SCORING.md)에 기록했습니다.
+`ScoreComposer`와 `S25PlusScoreDraft`는 16개 지표, 네 카테고리의 동일 가중치, 0–1000 Camera Endpoint Score를 구현합니다. 3A의 가중치는 0입니다. 다른 모델·endpoint·계약, 디버그 빌드, 부적격 환경과 누락 지표에는 점수를 내지 않습니다. 결과 화면은 내부 초안임을 표시하고 JSON의 기존 `scoring_rule_version`, `summary.endpoint_score`, `metrics[].score` 필드에 저장합니다. 규칙은 [보관 문서](archive/SCORING-v1-draft.md)에 있습니다. 2026-10-08에 계산과 표시를 제거했습니다.
 
 밝은 학습 데이터 점수는 786–834점(중앙값 805점), 저조도는 787·830·784점(중앙값 787점)입니다. 범위가 겹치고 저조도 1회가 정상 중앙값보다 높아, 저조도에서 일관되게 점수가 감소한다는 검증은 완료하지 못했습니다. 스트레스 결과에 맞춰 학습 계수나 가중치를 바꾸지 않았습니다.
 
@@ -107,12 +109,9 @@ Galaxy S25+ (`SM-S936N`, Android SDK 36)에서 무선 ADB로 수집했습니다.
 
 이 백업 점검 당시에는 연결 기기가 없었고 기존 데이터만으로 M5a를 시작할 수 없었습니다. 이후 무선 연결과 조명 조건 확인을 거쳐 위의 새 데이터를 수집했습니다. 구버전 백업은 새 calibration에 사용하지 않았습니다.
 
-## M5를 이어서 진행하는 순서
+## 점수를 다시 만든다면
 
-1. 2026-09-26 v2 재검증([검증 기록](validation/score-sensitivity-20260926.md))에서 저조도·발열·점유 경쟁 각 6회가 모두 저하 기준을 만족하지 않았습니다. 원인은 척도 하한(중앙값의 15%)과, 측정 직전 기기 상태에 따라 두 갈래로 나뉘는 launch 지표입니다.
-2. 이 두 원인을 점수 설계에서 어떻게 다룰지 [이슈 #162](https://github.com/TTolsun/hal-camera/issues/162)에서 검토합니다. 결과에 맞춰 계수를 바꾸지 않으며, 설계를 바꾸면 scoring rule 버전을 올리고 다시 측정합니다.
-3. 점수 설계 검토 결과를 보고 M5a 완료 여부를 결정합니다.
-4. 제조사와 성능군이 다른 5–10개 기기의 적격 분포로 공개 curve를 확정한 뒤 `score-v1`로 전환합니다. M5a와 M5b의 완료 근거를 확인한 후 #9와 #4를 종료합니다.
+[이슈 #162](https://github.com/TTolsun/hal-camera/issues/162)의 재검토 코멘트에서 시작합니다. 개선 보상 제거와 1.9(first open) 추가가 후보이며, 규칙과 판정 기준을 측정 전에 고정한 뒤 새 측정(정상 10회, 대조군·스트레스 조건별 6회)으로 확인합니다. 기기 간 비교용 공개 점수는 5–10개 기기의 분포가 있어야 합니다.
 
 ## M3에서 한 일
 
@@ -141,8 +140,7 @@ Live는 측정한 것을 모두 유지하고 판정한 것을 모두 버렸습�
 
 ## 아직 하지 않은 것
 
-- 점수(M5)의 민감도 검증과 공개 기준 확정. 내부 초안은 구현했으며 위 검증 결과와 남은 작업을 참고하십시오.
-- 녹화(3.x) 지표의 비충전 상태 측정. 기능 확인은 끝났으나 네 run 모두 `CHARGING`이라 점수용 자료가 아닙니다.
+- 녹화(3.x) 지표의 비충전 상태 측정. 기능 확인은 끝났으나 네 run 모두 `CHARGING`입니다.
 - 3.3 encoder drop(`MediaCodec` 전환이 필요함)과 3.5 장시간 drift(10분 녹화 별도 시나리오).
 - 여러 제조사 기기에서의 분포 수집.
 
