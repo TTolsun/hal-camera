@@ -50,26 +50,62 @@ class MediaLibrary(context: Context) {
         return savePhotos(name, yuvJpeg, cameraJpeg)
     }
 
-    fun savePhotos(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?): List<Uri> {
-        require(yuvJpeg != null || cameraJpeg != null)
-        val entries = mutableListOf<Uri>()
+    /** Legacy snapshot adapter. Photo-mode captures use saveCapture with their capture metadata. */
+    fun savePhotos(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?): List<Uri> =
+        saveFiles(name, yuvJpeg, cameraJpeg, null, null).map { it.uri }
+
+    fun saveCapture(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?,
+                    original: OriginalYuv?, captureMetadata: Map<String, Any?>): List<PhotoArtifact> =
+        saveFiles(name, yuvJpeg, cameraJpeg, original, captureMetadata)
+
+    @Suppress("DEPRECATION")
+    private fun createData(name: String, mime: String): Uri {
+        val values = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, name)
+            put(MediaStore.MediaColumns.MIME_TYPE, mime)
+            if (Build.VERSION.SDK_INT >= 29) {
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "Download/HALCamera")
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            } else {
+                val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "HALCamera")
+                check(directory.isDirectory || directory.mkdirs()) { "Cannot create capture directory" }
+                put(MediaStore.MediaColumns.DATA, File(directory, name).absolutePath)
+            }
+        }
+        val collection = if (Build.VERSION.SDK_INT >= 29) MediaStore.Downloads.EXTERNAL_CONTENT_URI
+            else MediaStore.Files.getContentUri("external")
+        return resolver.insert(collection, values) ?: error("Cannot create capture file")
+    }
+
+    private fun saveFiles(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?,
+                          original: OriginalYuv?, captureMetadata: Map<String, Any?>?): List<PhotoArtifact> {
+        require(yuvJpeg != null || cameraJpeg != null || original != null)
+        require(yuvJpeg == null || original == null) { "Select one YUV save format" }
+        val entries = mutableListOf<PhotoArtifact>()
+        val outputs = mutableListOf<Map<String, Any?>>()
+        fun save(filename: String, mime: String, bytes: ByteArray, metadata: Map<String, Any?> = emptyMap()) {
+            val uri = if (mime == "image/jpeg") create(filename, false) else createData(filename, mime)
+            entries += PhotoArtifact(filename, mime, uri)
+            write(uri) { it.write(bytes) }
+            outputs += metadata + mapOf("file" to filename, "mime" to mime, "byteLength" to bytes.size)
+        }
         try {
-            if (yuvJpeg != null) {
-                val yuv = create("${name}_YUV.jpg", false).also { entries += it }
-                write(yuv) { it.write(yuvJpeg) }
+            if (original != null) save("${name}_YUV.nv21", "application/octet-stream", original.bytes, original.metadata)
+            if (yuvJpeg != null) save("${name}_YUV.jpg", "image/jpeg", yuvJpeg,
+                mapOf("source" to "YUV_420_888", "format" to "JPEG"))
+            if (cameraJpeg != null) save("${name}_JPEG.jpg", "image/jpeg", cameraJpeg,
+                mapOf("source" to "camera", "format" to "JPEG"))
+            if (captureMetadata != null) {
+                val json = org.json.JSONObject(mapOf("schema" to 1, "capture" to captureMetadata, "outputs" to outputs))
+                save("${name}_metadata.json", "application/json", json.toString(2).toByteArray(Charsets.UTF_8))
             }
-            if (cameraJpeg != null) {
-                val jpeg = create("${name}_JPEG.jpg", false).also { entries += it }
-                write(jpeg) { it.write(cameraJpeg) }
-            }
-            entries.forEach(::publish)
+            entries.forEach { publish(it.uri) }
             return entries
         } catch (e: Exception) {
-            entries.forEach { runCatching { resolver.delete(it, null, null) } }
+            entries.forEach { runCatching { resolver.delete(it.uri, null, null) } }
             throw e
         }
     }
-
     fun saveVideo(file: File): Uri {
         val uri = create("${name()}.mp4", true)
         try {

@@ -108,8 +108,8 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 [CLI](cli.md)를 따�
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.20.0` |
-| `versionCode` | `629` |
+| `versionName` | `0.21.0` |
+| `versionCode` | `630` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |

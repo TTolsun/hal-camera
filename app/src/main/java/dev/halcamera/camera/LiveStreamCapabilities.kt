@@ -21,7 +21,7 @@ fun cameraXStreamSupport(context: android.content.Context, id: String, hardware:
     val videos = hardware.videos.filter { it.size in resolutions }.map { it.copy(codec = "Auto") }.distinct()
     val default = videos.filter { it.fps == 30 && it.size.width.toLong() * it.size.height <= 1920L * 1080 }
         .maxByOrNull { it.size.width.toLong() * it.size.height } ?: videos.firstOrNull()
-    return hardware.copy(videos = videos, defaultVideo = default,
+    return hardware.copy(videos = videos, defaultVideo = default, yuvSaveFormats = listOf(YuvSaveFormat.JPEG),
         stabilization = cameraXStabilizationModes(info, hardware.stabilization),
         stabilizationNotice = "Stabilization may be unavailable at some resolutions or frame rates.")
 }
@@ -57,7 +57,8 @@ fun liveStreamSupport(c: CameraCharacteristics): LiveStreamSupport {
     return LiveStreamSupport(sizes(map.getOutputSizes(SurfaceTexture::class.java)), sizes(map.getOutputSizes(ImageFormat.YUV_420_888)),
         sizes(map.getOutputSizes(ImageFormat.JPEG)), fps, videos, defaultLiveVideo(videoSizes),
         hardwareStabilizationModes(c),
-        "Stabilization may be unavailable at some resolutions or frame rates.")
+        "Stabilization may be unavailable at some resolutions or frame rates.",
+        yuvSaveFormats = YuvSaveFormat.entries)
 }
 
 internal fun hardwareStabilizationModes(c: CameraCharacteristics) = LiveStabilization.supported(

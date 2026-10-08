@@ -152,6 +152,8 @@ sources:
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
           - app/src/main/java/dev/halcamera/camera/StillPair.kt
           - app/src/main/java/dev/halcamera/camera/YuvPacking.kt
+          - app/src/main/java/dev/halcamera/camera/OriginalYuv.kt
+          - app/src/main/java/dev/halcamera/camera/CaptureMetadata.kt
           - app/src/main/java/dev/halcamera/camera/StillEncoding.kt
       camera-engines/camera2-engine/live-recorder:
         evidence:
