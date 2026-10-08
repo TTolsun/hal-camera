@@ -30,7 +30,7 @@ class RawFrameTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun `truncated plane is rejected`() {
-        RawFrame.copy(ByteBuffer.wrap(ByteArray(10)), 6, 2, 2, 2)
+        RawFrame.copy(ByteBuffer.wrap(ByteArray(9)), 6, 2, 2, 2)
     }
 
     @Test(expected = IllegalArgumentException::class)
