@@ -4,6 +4,9 @@ update_count: 1
 last_field: description
 kind: nested-class
 title: dual-preview-screen
-children: []
+children:
+  - camera2-session
+  - camerax-session
+  - video-pair
 parentPath:
   - screens

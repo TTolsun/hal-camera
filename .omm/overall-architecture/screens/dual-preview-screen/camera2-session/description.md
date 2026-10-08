@@ -1,0 +1,1 @@
+DualPreviewSession은 공개 논리 카메라의 물리 출력 두 개를 구성합니다. DualPreviewPlanner가 공통 크기를 선택하고 세션 구성 거부 시 다음 후보를 시도합니다. Camera2는 physical ID별 OutputConfiguration에 프리뷰와 녹화 surface를 공유하며, 장치 onClosed 이후 surface와 인코더를 해제합니다. 카메라 또는 녹화 오류는 저장 쌍을 무효화합니다.

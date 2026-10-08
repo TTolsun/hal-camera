@@ -1,6 +1,8 @@
 package dev.halcamera.camera
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.media.MediaRecorder
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.CameraAccessException
 import android.hardware.camera2.CameraCaptureSession
@@ -19,6 +21,8 @@ import android.os.Looper
 import android.view.Surface
 import androidx.annotation.RequiresApi
 import java.util.concurrent.Executor
+import dev.halcamera.telemetry.Telemetry
+import android.hardware.camera2.CaptureFailure
 
 /** Reads the rear logical multi-cameras and their physical lenses (#171). Characteristics only; nothing is opened. */
 fun readLogicalMultiCameras(manager: CameraManager): List<LogicalMultiCamera> {
@@ -55,12 +59,21 @@ private fun physicalLens(manager: CameraManager, id: String): PhysicalLens {
  *
  * Callbacks arrive on the main thread. Only [start] needs API 28; [close] is safe on any device.
  */
+interface DualCameraSession {
+    fun start()
+    fun startRecording()
+    fun close(done: () -> Unit)
+}
+
 class DualPreviewSession(
     private val manager: CameraManager,
     private val plan: DualPreviewPlan,
     private val textures: Pair<SurfaceTexture, SurfaceTexture>,
-    private val listener: Listener
-) {
+    private val listener: Listener,
+    private val videoContext: Context? = null,
+    private val telemetry: Telemetry? = null,
+    private val sessionId: String = "dual"
+) : DualCameraSession {
     interface Listener {
         fun onStatus(message: String)
         /** The size every output streams at; called once the repeating request is running. */
@@ -68,6 +81,8 @@ class DualPreviewSession(
         /** Per physical id, the SENSOR_TIMESTAMP of its result, or null when that physical result was missing. */
         fun onResult(physical: Map<String, Long?>)
         fun onFailed(message: String)
+        fun onRecording() {}
+        fun onVideoSaved(result: Result<Int>) {}
     }
 
     private val thread = HandlerThread("CD.DualPreview").apply { start() }
@@ -77,24 +92,44 @@ class DualPreviewSession(
     private val openRetry = CameraOpenRetry()
     @Volatile private var active = true
     private var device: CameraDevice? = null
+    private var opening = false
+    private var finished = false
     private var session: CameraCaptureSession? = null
     private var surfaces: List<Surface> = emptyList()
     private var sizeIndex = 0
+    private var lastConfigurationFailure = ""
     private var onClosed: (() -> Unit)? = null
+    private var video: DualVideoRecording? = null
+    private var recording = false
+    private val timelineCallback = telemetry?.callback(sessionId, alive = { active })
+
+    override fun startRecording() { handler.post {
+        if (!active || session == null || recording) return@post
+        try {
+            checkNotNull(video).start()
+            val request = checkNotNull(device).createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
+                surfaces.forEach(::addTarget)
+                video?.surfaces?.forEach(::addTarget)
+            }.build()
+            checkNotNull(session).setRepeatingRequest(request, captureCallback, handler)
+            recording = true
+            main.post { if (active) listener.onRecording() }
+        } catch (e: Exception) { fail("Dual video 시작 실패: ${e.message.orEmpty()}") }
+    } }
 
     @RequiresApi(28)
-    fun start() = handler.post { open() }
+    override fun start() { handler.post { open() } }
 
     /** [done] runs on the main thread after the device has closed. */
-    fun close(done: () -> Unit) = handler.post {
+    override fun close(done: () -> Unit) { handler.post {
         active = false
         onClosed = done
         runCatching { session?.stopRepeating() }
         runCatching { session?.close() }
         session = null
         val camera = device
-        if (camera == null) finish() else camera.close()
-    }
+        if (camera != null) camera.close() else if (!opening) finish()
+    } }
 
     @RequiresApi(28)
     @SuppressLint("MissingPermission")
@@ -102,16 +137,22 @@ class DualPreviewSession(
         if (!active) return
         status("카메라 ${plan.logicalId} 여는 중")
         try {
+            opening = true
             manager.openCamera(plan.logicalId, object : CameraDevice.StateCallback() {
                 override fun onOpened(camera: CameraDevice) {
+                    opening = false
                     device = camera
                     if (!active) camera.close() else configure(camera)
                 }
                 override fun onDisconnected(camera: CameraDevice) {
+                    opening = false
+                    device = camera
                     retryOrFail(CameraOpenRetry.Cause.DISCONNECTED, "카메라 연결이 끊겼습니다.")
                     camera.close()
                 }
                 override fun onError(camera: CameraDevice, error: Int) {
+                    opening = false
+                    device = camera
                     retryOrFail(CameraOpenRetry.Cause.fromStateError(error), "Camera2 오류 $error")
                     camera.close()
                 }
@@ -123,9 +164,11 @@ class DualPreviewSession(
                 }
             }, handler)
         } catch (e: CameraAccessException) {
+            opening = false
             val delay = if (active && session == null) openRetry.next(CameraOpenRetry.Cause.fromAccessReason(e.reason)) else null
             if (delay != null) handler.postDelayed({ open() }, delay) else fail("카메라를 열지 못했습니다. ${e.message.orEmpty()}")
         } catch (e: Exception) {
+            opening = false
             fail("카메라를 열지 못했습니다. ${e.message.orEmpty()}")
         }
     }
@@ -143,20 +186,41 @@ class DualPreviewSession(
     private fun configure(camera: CameraDevice) {
         if (!active) return
         val size = plan.sizes.getOrNull(sizeIndex)
-            ?: return fail("이 물리 카메라 조합을 받아주는 크기가 없습니다. 시도: ${plan.sizes.joinToString()}")
+            ?: return fail("출력 조합 미지원 · $lastConfigurationFailure · 시도: ${plan.sizes.joinToString()}")
         surfaces.forEach { it.release() }
+        video?.discard()
+        video = null
+        if (videoContext != null) {
+            val supported = runCatching { listOf(plan.first.id, plan.second.id).all { id ->
+                manager.getCameraCharacteristics(id)[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
+                    ?.getOutputSizes(MediaRecorder::class.java)?.any { it.width == size.width && it.height == size.height } == true
+            } }.getOrElse { return fail("MediaRecorder 크기 조회 실패: ${it.message.orEmpty()}") }
+            if (!supported) return nextSize(camera, "$size MediaRecorder 출력 미지원")
+            try {
+                video = DualVideoRecording(videoContext, listOf(plan.first.id, plan.second.id), size) {
+                    handler.post { if (active) fail("Dual video encoder 오류") }
+                }
+            } catch (e: Exception) { return nextSize(camera, "$size encoder 구성 실패: ${e.message.orEmpty()}") }
+        }
         textures.first.setDefaultBufferSize(size.width, size.height)
         textures.second.setDefaultBufferSize(size.width, size.height)
         surfaces = listOf(Surface(textures.first), Surface(textures.second))
-        val outputs = listOf(
-            OutputConfiguration(surfaces[0]).apply { setPhysicalCameraId(plan.first.id) },
-            OutputConfiguration(surfaces[1]).apply { setPhysicalCameraId(plan.second.id) })
+        val outputs = listOf(plan.first.id, plan.second.id).mapIndexed { index, id ->
+            OutputConfiguration(surfaces[index]).apply {
+                setPhysicalCameraId(id)
+                video?.let { enableSurfaceSharing(); addSurface(it.surfaces[index]) }
+            }
+        }
         val callback = object : CameraCaptureSession.StateCallback() {
             override fun onConfigured(s: CameraCaptureSession) {
                 if (!active) { s.close(); return }
                 session = s
                 try {
-                    val request = camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW).apply {
+                    val characteristics = manager.getCameraCharacteristics(plan.logicalId)
+                    telemetry?.sessions?.put(sessionId, mapOf("engine" to "Camera2", "cameraId" to plan.logicalId,
+                        "physicalIds" to listOf(plan.first.id, plan.second.id),
+                        "timestampSource" to characteristics[CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE]))
+                    val request = camera.createCaptureRequest(if (video != null) CameraDevice.TEMPLATE_RECORD else CameraDevice.TEMPLATE_PREVIEW).apply {
                         surfaces.forEach(::addTarget)
                     }.build()
                     s.setRepeatingRequest(request, captureCallback, handler)
@@ -166,7 +230,7 @@ class DualPreviewSession(
                     fail("프리뷰 요청을 시작하지 못했습니다. ${e.message.orEmpty()}")
                 }
             }
-            override fun onConfigureFailed(s: CameraCaptureSession) { nextSize(camera, "$size 구성 거부") }
+            override fun onConfigureFailed(s: CameraCaptureSession) { s.close(); nextSize(camera, "$size 구성 거부") }
         }
         val config = SessionConfiguration(SessionConfiguration.SESSION_REGULAR, outputs, executor, callback)
         if (Build.VERSION.SDK_INT >= 29) {
@@ -182,19 +246,34 @@ class DualPreviewSession(
 
     @RequiresApi(28)
     private fun nextSize(camera: CameraDevice, reason: String) {
+        lastConfigurationFailure = reason
         status(reason)
         sizeIndex++
         configure(camera)
     }
 
     private val captureCallback = object : CameraCaptureSession.CaptureCallback() {
+        override fun onCaptureStarted(s: CameraCaptureSession, request: CaptureRequest, timestamp: Long, frameNumber: Long) {
+            timelineCallback?.onCaptureStarted(s, request, timestamp, frameNumber)
+        }
+        override fun onCaptureProgressed(s: CameraCaptureSession, request: CaptureRequest, result: CaptureResult) {
+            timelineCallback?.onCaptureProgressed(s, request, result)
+        }
+        override fun onCaptureFailed(s: CameraCaptureSession, request: CaptureRequest, failure: CaptureFailure) {
+            timelineCallback?.onCaptureFailed(s, request, failure)
+        }
+        override fun onCaptureBufferLost(s: CameraCaptureSession, request: CaptureRequest, target: Surface, frameNumber: Long) {
+            timelineCallback?.onCaptureBufferLost(s, request, target, frameNumber)
+        }
         @RequiresApi(28)
         @Suppress("DEPRECATION")
         override fun onCaptureCompleted(s: CameraCaptureSession, request: CaptureRequest, result: TotalCaptureResult) {
+            timelineCallback?.onCaptureCompleted(s, request, result)
             val physical = result.physicalCameraResults
             val timestamps = listOf(plan.first.id, plan.second.id).associateWith { id ->
                 physical[id]?.get(CaptureResult.SENSOR_TIMESTAMP)
             }
+            telemetry?.event(sessionId, "dual_physical_result", timestamps.mapValues { it.value?.toString() })
             main.post { if (active) listener.onResult(timestamps) }
         }
     }
@@ -203,6 +282,7 @@ class DualPreviewSession(
 
     /** A failure stops the stream and frees the camera; the screen keeps the message until it is left or retried. */
     private fun fail(message: String) {
+        video?.invalidate()
         main.post { if (active) listener.onFailed(message) }
         runCatching { session?.close() }
         session = null
@@ -210,6 +290,11 @@ class DualPreviewSession(
     }
 
     private fun finish() {
+        if (finished) return
+        finished = true
+        val saved = video?.finish()
+        video = null
+        if (saved != null) main.post { listener.onVideoSaved(saved) }
         surfaces.forEach { it.release() }
         surfaces = emptyList()
         thread.quitSafely()

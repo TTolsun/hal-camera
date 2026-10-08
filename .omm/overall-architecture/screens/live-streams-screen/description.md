@@ -4,6 +4,6 @@ LiveStreamSettingsView는 LabTheme·Look.titleBar·페이지 여백을 사용하
 
 YUV Save Format에서 JPEG 또는 NV21을 선택합니다. JPEG는 기존 `_YUV.jpg`를, NV21은 `_YUV.nv21`을 저장하며 두 파일을 함께 만들지 않습니다. 사진 모드는 선택한 포맷과 관계없이 `_metadata.json`을 함께 저장합니다. JPEG는 DCIM/HALCamera에, NV21과 JSON은 Download/HALCamera에 있습니다. NV21은 Camera2에서만 지원하며 짝수 크기와 프레임당 16 MiB 제한이 있습니다.
 
-YUV Save Format의 기본값은 JPEG입니다. YUV 출력이 꺼져 있으면 포맷 선택을 비활성화하고, CameraX에서는 JPEG만 제공합니다. Metadata: JSON 안내는 포맷에 관계없이 표시합니다.
+YUV Save Format의 기본값은 JPEG입니다. YUV 출력이 꺼져 있으면 포맷 선택을 비활성화하고, CameraX에서는 JPEG만 제공합니다. 상시 Metadata 안내는 표시하지 않습니다. 화면 하단의 Apply 버튼은 스크롤과 독립적으로 유지하며, 변경된 설정이나 실패한 구성의 재적용이 있을 때 활성화합니다. 뒤로 가기는 초안을 적용하지 않습니다.
 
 RAW (DNG)는 RAW capability가 있는 Camera2 카메라에서만 RAW_SENSOR 크기와 Off를 제공하며 기본값은 Off입니다. 선택하면 사진당 예상 크기를 안내하고, 지원하지 않으면 선택을 비활성화하고 이유를 표시합니다.

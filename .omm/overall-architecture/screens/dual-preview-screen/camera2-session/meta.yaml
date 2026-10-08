@@ -1,0 +1,6 @@
+kind: nested-class
+title: camera2-session
+children: []
+parentPath:
+  - screens
+  - dual-preview-screen
