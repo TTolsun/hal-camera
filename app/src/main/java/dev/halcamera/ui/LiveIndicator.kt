@@ -104,7 +104,7 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
 
     fun bindSizes(streams: Map<*, *>?) {
         val labels = listOf(Triple("preview", "P", "Preview"), Triple("analysis", "Y", "YUV"),
-            Triple("jpeg", "J", "JPEG"), Triple("recording", "R", "Recording"))
+            Triple("jpeg", "J", "JPEG"), Triple("raw", "RAW", "RAW"), Triple("recording", "R", "Recording"))
         val active = labels.filter { streams?.containsKey(it.first) == true }
         val recordingFormat = streams?.get("recordingFormat")?.toString()?.takeIf { it.isNotBlank() } ?: "Auto"
         val value = active.joinToString("   ") { (key, label, _) ->

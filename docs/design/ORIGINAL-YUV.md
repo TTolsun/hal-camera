@@ -32,7 +32,7 @@ Y는 offset 0, rowStride width, pixelStride 1입니다. V는 offset width×heigh
 
 Live Streams의 **RAW (DNG)**에서 RAW_SENSOR 크기를 고르면 `<촬영명>_RAW.dng`를 DCIM/HALCamera에 함께 저장합니다. 기본값은 Off이며 Camera2와 RAW capability가 있는 카메라에서만 선택할 수 있습니다. CameraX에서 RAW를 요청하면 구성을 거절하고 Camera2로 전환하라고 안내합니다.
 
-RAW 프레임은 이미지 콜백에서 행 패딩을 뺀 16비트 샘플로 직접 버퍼에 복사하고 Image를 바로 닫습니다. 저장 스레드에서 `DngCreator`가 카메라 특성과 같은 SENSOR_TIMESTAMP의 최종 CaptureResult로 DNG를 씁니다. 화면 방향은 DNG 방향 태그로만 기록하고 샘플은 회전하지 않습니다. JSON의 DNG 항목에는 width, height, sensorTimestampNs, orientationDegrees, cfaArrangement, whiteLevel, blackLevelPattern을 기록합니다. RAW reader 버퍼는 두 개이며 벤치마크·녹화 세션에는 RAW 출력을 넣지 않습니다.
+RAW 프레임은 이미지 콜백에서 행 패딩을 뺀 16비트 샘플로 직접 버퍼에 복사하고 Image를 바로 닫습니다. 저장 스레드에서 `DngCreator`가 카메라 특성과 같은 SENSOR_TIMESTAMP의 최종 CaptureResult로 DNG를 씁니다. 화면 방향은 DNG 방향 태그로만 기록하고 샘플은 회전하지 않습니다. JSON의 DNG 항목에는 width, height, sensorTimestampNs, orientationDegrees, cfaArrangement, whiteLevel, blackLevelPattern을 기록합니다. whiteLevel과 blackLevelPattern은 카메라 특성의 고정값입니다. 카메라가 프레임별 값을 보고하면 DngCreator는 그 값을 DNG에 쓰므로, 같은 값을 dynamicBlackLevel과 dynamicWhiteLevel에도 기록합니다(Android 9 이상). Live 상단 스트림 표시에는 RAW 크기가 함께 나옵니다. RAW reader 버퍼는 두 개이며 벤치마크·녹화 세션에는 RAW 출력을 넣지 않습니다.
 
 ## 수명과 실패 처리
 
