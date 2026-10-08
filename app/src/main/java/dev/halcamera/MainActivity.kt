@@ -398,6 +398,7 @@ class MainActivity : ComponentActivity() {
         ready=false; mediaButton.isEnabled=false; reportButton.isEnabled=false
         val old = engine; engine = null
         val released = engineCameraId.takeIf { old != null }
+        (old as? CameraXEngine)?.releaseOnClose = engineName != "CameraX"
         if (old != null) {
             closing = true; setStatus("Closing camera… Letting the lens clock out.", false)
             old.close {
@@ -406,7 +407,7 @@ class MainActivity : ComponentActivity() {
             }
         } else openCamera()
     }
-    /** [released] is the camera the previous engine just closed; Camera2 waits for its release before opening (#230). */
+    /** [released]: the camera the previous engine closed, which Camera2 waits for (#230). */
     private fun openCamera(released: String? = null) {
         if (!resumed || destroyed || paused || !hasPermission()) {
             if (paused) setStatus("Preview paused · Reconnect Camera in Lab.", false)

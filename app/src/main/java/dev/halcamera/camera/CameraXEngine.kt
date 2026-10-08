@@ -1,5 +1,6 @@
 package dev.halcamera.camera
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraManager
@@ -9,6 +10,7 @@ import android.hardware.camera2.CaptureResult
 import android.hardware.camera2.TotalCaptureResult
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Range
 import android.view.Surface
 import androidx.camera.camera2.interop.Camera2CameraInfo
@@ -54,6 +56,13 @@ class CameraXEngine(
     private val streamsFailed: (String) -> Unit = {},
 ) : CameraEngine, MediaCapture, LiveTuning, TouchMetering {
     @Volatile private var active = true
+    /**
+     * Whether close() shuts CameraX down so the camera service releases the camera at once (#230). CameraX 1.6
+     * keeps a closed camera open for 1 s in case it is bound again, so a Camera2 open or another screen right after
+     * close(done) finds it still held. LIVE clears it when the next engine is CameraX, which reopens through the
+     * same provider and would pay a new provider instead.
+     */
+    @Volatile var releaseOnClose = true
     private var provider: ProcessCameraProvider? = null
     private var selector: CameraSelector? = null
     @Volatile private var camera: Camera? = null
@@ -316,7 +325,7 @@ class CameraXEngine(
             finished = true
             info.cameraState.removeObserver(observer)
             telemetry.event(session, "closed")
-            done()
+            if (releaseOnClose) shutDown(done) else done()
         }
         observer = Observer { if (it.type == CameraState.Type.CLOSED) finish() }
         // Observe forever so releasing the camera also completes while the Activity is stopped.
@@ -325,5 +334,24 @@ class CameraXEngine(
         if (info.cameraState.value?.type == CameraState.Type.CLOSED) finish()
     }
 
+    /** [done] waits for the shutdown, at most [SHUTDOWN_LIMIT_MS]; the Camera2 open still waits for the release. */
+    @SuppressLint("VisibleForTests")
+    private fun shutDown(done: () -> Unit) {
+        val started = SystemClock.elapsedRealtime()
+        var called = false
+        val finish = Runnable { if (!called) { called = true; done() } }
+        provider!!.shutdownAsync().addListener({
+            telemetry.event(session, "provider_shutdown", mapOf("ms" to SystemClock.elapsedRealtime() - started))
+            handler.removeCallbacks(finish)
+            finish.run()
+        }, main)
+        handler.postDelayed(finish, SHUTDOWN_LIMIT_MS)
+    }
+
     private fun report(message: String, ok: Boolean) { handler.post { if (active) status(message, ok) } }
+
+    companion object {
+        /** shutdownAsync took about 175 ms on device; a slower one must not hold the next engine for long. */
+        const val SHUTDOWN_LIMIT_MS = 1000L
+    }
 }
