@@ -4,6 +4,7 @@ import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CaptureResult
 import android.hardware.camera2.DngCreator
 import android.media.ExifInterface
+import android.os.Build
 import android.util.Size
 import java.io.OutputStream
 
@@ -30,7 +31,10 @@ internal class DngOutput(private val frame: RawFrame, private val characteristic
         "whiteLevel" to characteristics[CameraCharacteristics.SENSOR_INFO_WHITE_LEVEL],
         "blackLevelPattern" to characteristics[CameraCharacteristics.SENSOR_BLACK_LEVEL_PATTERN]?.let { pattern ->
             IntArray(4).also { pattern.copyTo(it, 0) }.toList()
-        })
+        },
+        // The per-frame values DngCreator writes when the camera reports them; the static ones above can differ.
+        "dynamicBlackLevel" to if (Build.VERSION.SDK_INT >= 28) result[CaptureResult.SENSOR_DYNAMIC_BLACK_LEVEL]?.toList() else null,
+        "dynamicWhiteLevel" to if (Build.VERSION.SDK_INT >= 28) result[CaptureResult.SENSOR_DYNAMIC_WHITE_LEVEL] else null)
 
     companion object {
         fun exifOrientation(rotation: Int) = when ((rotation % 360 + 360) % 360) {
