@@ -850,6 +850,7 @@ class MainActivity : ComponentActivity() {
         val fps = if (videoMode) maxOf(streams?.video?.fps ?: 30, streams?.fps?.max ?: 30) else streams?.fps?.max ?: 30
         manualCapabilities = if (engineName != "Camera2") ManualSupport(camera2 = false)
             else try { manualSupport(manager.getCameraCharacteristics(cameraId), fps) } catch (_: Exception) { ManualSupport() }
+        controlBar.setManualAvailable(manualCapabilities.camera2)
     }
     private fun streamKey() = liveStreamSettingsKey(cameraId, engineName)
     private fun openLab() {

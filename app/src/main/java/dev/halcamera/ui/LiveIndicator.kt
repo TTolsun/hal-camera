@@ -94,7 +94,7 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
             1 -> "EIS active, Video mode"
             2 -> "EIS active, Preview and Video mode"
             else -> "EIS status unknown"
-        }) + ", open Live Streams settings"
+        }) + ", open Live Streams"
         eis.setTextColor(when {
             status.warning != null -> Look.statusWarn
             status.video == null -> Look.onDarkMuted
@@ -115,7 +115,7 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
         sizes.contentDescription = active.joinToString(", ") { (key, _, name) ->
             val prefix = if (key == "recording") "$name $recordingFormat" else name
             "$prefix ${streams?.get(key) ?: "Off"}"
-        } + ", open stream size settings"
+        } + ", open Live Streams"
         sizes.visibility = if (value.isEmpty()) View.GONE else View.VISIBLE
     }
 

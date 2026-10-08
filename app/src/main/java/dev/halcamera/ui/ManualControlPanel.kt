@@ -32,8 +32,9 @@ class ManualControlPanel(
     private val reset = button("Reset") { commit(ManualControls()) }.apply { contentDescription = "노출·초점·WB를 모두 자동으로 초기화" }
     private val fold = button("Hide") { expanded = false; render() }.apply { contentDescription = "설정을 유지하고 패널 접기" }
     private val body = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
+    private val tabRow = LinearLayout(context)
     private val scroll = ScrollView(context).apply { addView(body); isFillViewport = false }
-    private val actual = text(12)
+    private val actual = text(12).apply { minLines = 2; maxLines = 2 }
     private var expanded = false
     val isExpanded get() = expanded
     val observedKey get() = if (expanded && support.camera2) when (selected) {
@@ -55,8 +56,10 @@ class ManualControlPanel(
         header.addView(title, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(reset); header.addView(fold)
         view.addView(header)
-        view.addView(scroll, LinearLayout.LayoutParams(-1, -2))
+        view.addView(tabRow)
+        view.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         view.addView(actual)
+        view.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateHeight() }
         view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(v: View) = Unit
             override fun onViewDetachedFromWindow(v: View) { inputDialog?.dismiss() }
@@ -69,7 +72,7 @@ class ManualControlPanel(
         render()
     }
 
-    fun toggle() { expanded = !expanded; render() }
+    fun toggle() { if (support.camera2) { expanded = !expanded; render() } }
     fun close(): Boolean { if (!expanded) return false; expanded = false; render(); return true }
 
     fun bind(value: ManualControls, enabled: Boolean, nextSupport: ManualSupport, frame: Event?, nowNs: Long) {
@@ -90,7 +93,9 @@ class ManualControlPanel(
     }
 
     private fun render() {
+        if (!support.camera2) expanded = false
         view.visibility = if (expanded || current.active) View.VISIBLE else View.GONE
+        updateHeight()
         title.text = if (expanded) "Manual" else current.summary()
         title.textSize = if (expanded) 16f else 12f
         title.isClickable = !expanded
@@ -99,37 +104,33 @@ class ManualControlPanel(
         reset.isEnabled = enabled; reset.alpha = if (enabled) 1f else 0.4f
         fold.visibility = if (expanded) View.VISIBLE else View.GONE
         scroll.visibility = if (expanded) View.VISIBLE else View.GONE
+        tabRow.visibility = if (expanded) View.VISIBLE else View.GONE
         actual.visibility = if (expanded && support.camera2) View.VISIBLE else View.GONE
         body.removeAllViews()
+        tabRow.removeAllViews()
         if (!expanded) return
-        if (!support.camera2) {
-            body.addView(text(14).apply { text = "수동 촬영은 Camera2에서 지원합니다. 상단의 CameraX를 눌러 전환하세요." })
-            scroll.layoutParams = scroll.layoutParams.apply { height = -2 }
-            return
-        }
-        val row = LinearLayout(context)
         tabs.forEachIndexed { index, label ->
-            row.addView(button(label) { selected = index; render() }.apply {
+            tabRow.addView(button(label) { selected = index; scroll.scrollTo(0, 0); render() }.apply {
                 setTextColor(if (index == selected) Look.primaryOnDark else Look.onDark)
                 typeface = if (index == selected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
                 isSelected = index == selected
                 contentDescription = "$label 조절${if (index == selected) ", 선택됨" else ""}"
             }, LinearLayout.LayoutParams(0, -2, listOf(0.8f, 1.3f, 1.1f, 0.8f)[index]))
         }
-        body.addView(row)
         when (selected) {
             0, 1 -> exposureEditor()
             2 -> focusEditor()
             else -> wbEditor()
         }
         renderActual(SystemClock.elapsedRealtimeNanos())
-        // Only constrain unusually large content; ordinary editors fit without scrolling.
-        scroll.post {
-            if (!expanded) return@post
-            body.measure(View.MeasureSpec.makeMeasureSpec(scroll.width, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED))
-            val cap = (view.rootView.height * 0.40f - header.measuredHeight - actual.measuredHeight).toInt().coerceAtLeast(dp(96))
-            scroll.layoutParams = scroll.layoutParams.apply { height = body.measuredHeight.coerceAtMost(cap) }
-        }
+    }
+
+    private fun updateHeight() {
+        val params = view.layoutParams ?: return
+        // Keep the header and tabs at the same coordinates across parameters and Auto/Manual.
+        // Only the editor body scrolls, including with a large system font.
+        val height = if (expanded) (view.rootView.height * 0.40f).toInt().coerceAtLeast(dp(240)) else -2
+        if (params.height != height) { params.height = height; view.layoutParams = params }
     }
 
     private fun exposureEditor() {

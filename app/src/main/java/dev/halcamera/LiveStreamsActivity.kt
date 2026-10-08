@@ -28,6 +28,10 @@ class LiveStreamsActivity : ComponentActivity() {
         setTheme(R.style.LabTheme)
         super.onCreate(savedInstanceState)
         Look.configureLabWindow(this)
+        if (intent.getBooleanExtra(EXTRA_DUAL, false)) {
+            showDualStreams()
+            return
+        }
         draft = (savedInstanceState?.getSerializable(EXTRA_SETTINGS)
             ?: intent.getSerializableExtra(EXTRA_SETTINGS)) as? LiveStreamSettings
         showMessage("설정을 불러오는 중입니다.")
@@ -53,6 +57,26 @@ class LiveStreamsActivity : ComponentActivity() {
                 }, { showMessage("지원 정보를 불러오지 못했습니다. ${it.message.orEmpty()}") })
             }
         }
+    }
+
+    /** Dual owns its output combination; never offer single-camera controls that it cannot apply. */
+    private fun showDualStreams() {
+        val video = intent.getBooleanExtra(DualPreviewActivity.EXTRA_VIDEO, false)
+        val engine = intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE) ?: "Camera2"
+        val body = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            addView(Look.titleBar(this@LiveStreamsActivity, "Live Streams", 34, backDescription, ::finish))
+        }
+        fun row(label: String, value: String) {
+            body.addView(Look.text(this, label, 13, Look.inkMuted), LinearLayout.LayoutParams(-1, -2).apply { topMargin = Look.dp(this@LiveStreamsActivity, 24) })
+            body.addView(Look.text(this, value, 17, Look.ink), LinearLayout.LayoutParams(-1, -2))
+        }
+        row("Mode", "$engine · Dual · ${if (video) "V" else "P"}")
+        row("Physical ID · 1 / 2", intent.getStringExtra(EXTRA_DUAL_PAIR) ?: "—")
+        row("Preview × 2 · ${if (video && engine == "CameraX") "고정" else "자동"}",
+            intent.getStringExtra(EXTRA_DUAL_SIZE)?.replace('x', '×') ?: "—")
+        if (video) row("Recording · 고정", "H.264 · MP4 × 2 · 무음")
+        showPage(ScrollView(this).apply { addView(body) })
     }
 
     private fun save(settings: LiveStreamSettings?) {
@@ -99,6 +123,9 @@ class LiveStreamsActivity : ComponentActivity() {
     }
 
     companion object {
+        const val EXTRA_DUAL = "live_stream_dual"
+        const val EXTRA_DUAL_SIZE = "live_stream_dual_size"
+        const val EXTRA_DUAL_PAIR = "live_stream_dual_pair"
         const val EXTRA_SETTINGS = "live_stream_settings"
         const val EXTRA_GOOD_SETTINGS = "live_stream_good_settings"
         const val EXTRA_HAS_GOOD = "live_stream_has_good"
