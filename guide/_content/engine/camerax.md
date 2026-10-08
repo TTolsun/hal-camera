@@ -31,6 +31,8 @@ CameraX의 Live Streams도 Auto·Off 및 지원되는 OIS·EIS 모드를 제공�
 
 Preview에 `Camera2Interop.Extender.setSessionCaptureCallback`으로 Camera2 엔진과 같은 `Telemetry` 콜백을 붙입니다. 엔진은 이 콜백을 한 번 감싸서, 모든 repeating 결과를 `CameraXControls`에도 넘깁니다. AE 재잠금과 길게 누르기 측광이 결과의 AE 상태를 읽기 때문입니다. Callback 그래프에는 프리뷰(관측 불가), analysis, still 출력을 등록합니다. CameraX는 프리뷰와 인코더 버퍼를 앱에 넘겨주지 않으므로 두 출력의 도착 시각은 기록하지 않습니다.
 
+CameraX 1.6.2는 닫은 카메라를 다시 bind할 경우를 대비해 1초 동안 열어 둡니다. 그래서 `close(done)`이 끝난 뒤에도 카메라 서비스는 그 카메라를 놓지 않고, 바로 이어지는 Camera2 열기는 거부되거나 기다려야 했습니다(#230). 이제 엔진은 `CameraState.CLOSED`를 받은 뒤 `ProcessCameraProvider.shutdownAsync()`로 CameraX를 종료하고, 종료가 끝나면 `done`을 부릅니다. 종료가 1초 안에 끝나지 않으면 기다리지 않고 `done`을 부르며, 걸린 시간은 `provider_shutdown` 이벤트에 남깁니다. Live에서 다음 엔진도 CameraX이면 종료하지 않습니다. 같은 provider로 카메라를 바로 바꾸므로 대기가 생기지 않고, 종료하면 provider를 다시 만드는 비용만 늘어나기 때문입니다.
+
 ### 사진
 
 CameraX에는 analysis 스트림을 still 요청의 대상에 넣는 공개 API가 없습니다. 그래서 두 버퍼가 한 capture에서 나오는 Camera2와 달리, YUV는 JPEG와 센서 시각이 가장 가까운 analysis 프레임을 씁니다.

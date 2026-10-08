@@ -92,7 +92,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-08 @ `732ab38` · Claude-issue162-review
+- 검토 2026-10-08 @ `78b3102` · Claude-issue162-review
 
 </details>
 
@@ -204,7 +204,7 @@ JPEG와 NV21 촬영 모두 이미지와 같은 SENSOR_TIMESTAMP의 최종 Captur
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-08 @ `732ab38` · Claude-issue162-review
+- 검토 2026-10-08 @ `78b3102` · Claude-issue162-review
 
 </details>
 
@@ -225,6 +225,8 @@ CameraX의 Live Streams도 Auto·Off 및 지원되는 OIS·EIS 모드를 제공�
 `ProcessCameraProvider`로 Preview, ImageAnalysis(`STRATEGY_KEEP_ONLY_LATEST`), ImageCapture(`CAPTURE_MODE_MINIMIZE_LATENCY`)를 Activity 수명 주기에 bind합니다. 기본값은 Camera2 엔진의 프리뷰·YUV·JPEG 세 스트림에 대응하는 구성입니다. 명시한 크기는 ResolutionSelector의 필터로 해당 해상도만 남기고, 꺼진 출력의 use case는 만들지 않습니다. Preview는 항상 유지하며 ImageAnalysis가 없는 구성에서도 PreviewView의 STREAMING으로 프리뷰 준비를 알립니다. 크기 후보가 없거나 bind가 실패하면 다른 크기로 바꾸지 않고 오류를 표시합니다. 카메라는 `Camera2CameraInfo`의 카메라 ID로 거르므로 전면·후면이 아닌 특정 카메라를 열 수 있습니다.
 
 Preview에 `Camera2Interop.Extender.setSessionCaptureCallback`으로 Camera2 엔진과 같은 `Telemetry` 콜백을 붙입니다. 엔진은 이 콜백을 한 번 감싸서, 모든 repeating 결과를 `CameraXControls`에도 넘깁니다. AE 재잠금과 길게 누르기 측광이 결과의 AE 상태를 읽기 때문입니다. Callback 그래프에는 프리뷰(관측 불가), analysis, still 출력을 등록합니다. CameraX는 프리뷰와 인코더 버퍼를 앱에 넘겨주지 않으므로 두 출력의 도착 시각은 기록하지 않습니다.
+
+CameraX 1.6.2는 닫은 카메라를 다시 bind할 경우를 대비해 1초 동안 열어 둡니다. 그래서 `close(done)`이 끝난 뒤에도 카메라 서비스는 그 카메라를 놓지 않고, 바로 이어지는 Camera2 열기는 거부되거나 기다려야 했습니다(#230). 이제 엔진은 `CameraState.CLOSED`를 받은 뒤 `ProcessCameraProvider.shutdownAsync()`로 CameraX를 종료하고, 종료가 끝나면 `done`을 부릅니다. 종료가 1초 안에 끝나지 않으면 기다리지 않고 `done`을 부르며, 걸린 시간은 `provider_shutdown` 이벤트에 남깁니다. Live에서 다음 엔진도 CameraX이면 종료하지 않습니다. 같은 provider로 카메라를 바로 바꾸므로 대기가 생기지 않고, 종료하면 provider를 다시 만드는 비용만 늘어나기 때문입니다.
 
 ### 사진
 
@@ -285,7 +287,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-08 @ `732ab38` · Claude-issue162-review
+- 검토 2026-10-08 @ `78b3102` · Claude-issue162-review
 
 </details>
 
@@ -319,7 +321,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다. 다만 CameraX
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-08 @ `732ab38` · Claude-issue162-review
+- 검토 2026-10-08 @ `78b3102` · Claude-issue162-review
 
 </details>
 
@@ -348,11 +350,11 @@ Camera2도 JPEG를 받은 뒤에는 저장이 끝날 때까지 촬영 자리를 
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-08 @ `732ab38` · Claude-issue162-review |
-| 원고 `contract` | 최신 | 검토 2026-10-08 @ `732ab38` · Claude-issue162-review |
-| 원고 `camera2` | 최신 | 검토 2026-10-08 @ `732ab38` · Claude-issue162-review |
-| 원고 `camerax` | 최신 | 검토 2026-10-08 @ `732ab38` · Claude-issue162-review |
-| 원고 `comparison` | 최신 | 검토 2026-10-08 @ `732ab38` · Claude-issue162-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-08 @ `78b3102` · Claude-issue162-review |
+| 원고 `contract` | 최신 | 검토 2026-10-08 @ `78b3102` · Claude-issue162-review |
+| 원고 `camera2` | 최신 | 검토 2026-10-08 @ `78b3102` · Claude-issue162-review |
+| 원고 `camerax` | 최신 | 검토 2026-10-08 @ `78b3102` · Claude-issue162-review |
+| 원고 `comparison` | 최신 | 검토 2026-10-08 @ `78b3102` · Claude-issue162-review |
 
 <!-- omm:end id=status -->
 

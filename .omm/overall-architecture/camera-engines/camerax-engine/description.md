@@ -4,6 +4,6 @@ ProcessCameraProvider로 Preview, ImageAnalysis(KEEP_ONLY_LATEST), ImageCapture(
 
 카메라는 `Camera2CameraInfo.from(it).cameraId`로 거르는 CameraSelector로 고르므로 전면·후면이 아닌 특정 카메라 ID를 열 수 있습니다. 줌은 zoomState 범위로 제한한 `CameraControl.setZoomRatio`이며, 녹화 중에도 bind된 세션에 그대로 적용됩니다. 녹화 시작과 정지는 use case를 다시 bind하므로 그때마다 줌과 제어를 새 세션에 다시 보냅니다. 협상된 해상도는 각 use case의 resolutionInfo에서 읽어 Camera2와 같은 방식으로 세션 맵에 저장합니다.
 
-닫는 경로가 가장 까다롭습니다. Activity가 멈춘 상태에서도 해제가 끝나도록 수명 주기에 묶인 observer 대신 observeForever로 cameraState를 관찰합니다. unbind가 돌아올 때 이미 CLOSED인 경우를 위해 finished 플래그로 finish()를 한 번만 실행합니다. 녹화 중에 닫히면 VideoCapture도 함께 unbind하고, 파일 저장이 mediaIo에 들어간 뒤에 그 실행기를 종료합니다.
+닫는 경로가 가장 까다롭습니다. Activity가 멈춘 상태에서도 해제가 끝나도록 수명 주기에 묶인 observer 대신 observeForever로 cameraState를 관찰합니다. unbind가 돌아올 때 이미 CLOSED인 경우를 위해 finished 플래그로 finish()를 한 번만 실행합니다. 녹화 중에 닫히면 VideoCapture도 함께 unbind하고, 파일 저장이 mediaIo에 들어간 뒤에 그 실행기를 종료합니다. CameraX 1.6은 닫은 카메라를 1초 동안 열어 두므로, CLOSED 뒤에 ProcessCameraProvider.shutdownAsync()로 카메라를 바로 놓고 나서 done을 부릅니다(#230). 종료는 최대 1초만 기다리고 provider_shutdown 이벤트를 남깁니다. Live에서 다음 엔진도 CameraX이면 releaseOnClose를 꺼서 종료하지 않습니다.
 
 LiveStreamSettings의 정확한 크기는 ResolutionSelector 필터로 선택합니다. 꺼진 YUV·JPEG의 use case는 생성하지 않습니다. 프리뷰 단독 구성에서는 PreviewView STREAMING이 준비 완료를 알립니다. 구성 결과는 negotiatedStreams에 기록하고 실패는 화면과 CLI에 전달합니다.
