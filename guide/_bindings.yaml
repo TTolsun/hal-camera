@@ -242,6 +242,11 @@ sources:
           - app/src/main/java/dev/halcamera/WorkbenchActivity.kt
           - app/src/main/java/dev/halcamera/ui/DeviceIdentity.kt
           - app/src/main/AndroidManifest.xml
+      screens/dual-preview-screen:
+        evidence:
+          - app/src/main/java/dev/halcamera/DualPreviewActivity.kt
+          - app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt
+          - app/src/main/java/dev/halcamera/camera/DualPreviewSession.kt
       screens/probe-screen:
         evidence:
           - app/src/main/java/dev/halcamera/CameraProbeActivity.kt
