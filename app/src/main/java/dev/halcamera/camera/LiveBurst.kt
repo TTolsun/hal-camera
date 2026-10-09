@@ -46,6 +46,37 @@ class LiveBurst(
         burst.start()
     }
 
+    /**
+     * Exposure bracketing (#178): three stills at [BracketPlan] EVs around [base], then [base] again. Before each
+     * shot the EV goes to the camera and the shot waits [SETTLE_MS] for AE to follow, because a camera that does not
+     * apply controls per frame would otherwise take the shot at the previous exposure. The wait is not a check: the
+     * exposure each shot actually got is in its capture metadata, next to the EV its request id asked for.
+     */
+    fun bracket(session: String, base: LiveControls, support: LiveControlSupport) {
+        val range = support.evRange
+        if (run != null || camera() == null || !ready() || range == null) return
+        val tuning = camera() as? LiveTuning ?: return
+        val evs = BracketPlan.evIndices(base.evIndex, range, support.evStep)
+        val id = SimpleDateFormat("HHmmss_SSS", Locale.US).format(Date())
+        val burst = BurstRun<PhotoResult>(id, evs.size, 0L, clock, schedule,
+            { ready() && camera()?.mediaBusy == false },
+            { requestId, done -> camera()?.capturePhoto(requestId, done) ?: done(Result.failure(IllegalStateException("Camera closed"))) },
+            { changed() },
+            { summary ->
+                run = null
+                tuning.setControls(base)
+                event(session, "bracket_done", fields(summary) + ("evRequested" to evs.map { support.evLabel(it) }))
+                report(describeBracket(summary, evs.map { support.evLabel(it) }))
+                changed()
+            },
+            name = { "bracket-$id-${it + 1}-${BracketPlan.tag(evs[it], support.evStep)}" },
+            prepare = { index, go -> tuning.setControls(base.copy(evIndex = evs[index])); schedule(SETTLE_MS, go) })
+        run = burst
+        event(session, "bracket_start", mapOf("burstId" to id, "evRequested" to evs.map { support.evLabel(it) }, "settleMs" to SETTLE_MS))
+        changed()
+        burst.start()
+    }
+
     /** The shutter was let go: no further shot. The one in flight is still saved. */
     fun release() { run?.cancel(RELEASED) }
 
@@ -63,6 +94,15 @@ class LiveBurst(
 
     companion object {
         const val RELEASED = "Released"
+        /** How long a bracket shot waits after its EV is sent; about 15 preview frames at 30 fps. */
+        const val SETTLE_MS = 500L
+
+        /** "Bracket · 3/3 saved (EV 0, EV −2.0, EV +2.0)". */
+        fun describeBracket(summary: BurstSummary<*>, evs: List<String>): String = buildString {
+            append("Bracket · ${summary.saved}/${summary.requested} saved (${evs.joinToString(", ")})")
+            summary.failedShots.forEach { append(" · #${it.index + 1} failed: ${it.result.exceptionOrNull()?.message ?: "unknown"}") }
+            summary.stopReason?.let { append(" ($it)") }
+        }
 
         /** "Burst · 7 saved · #4 failed: Capture timed out". A hold has no target count, so none is shown. */
         fun describe(summary: BurstSummary<*>): String = buildString {

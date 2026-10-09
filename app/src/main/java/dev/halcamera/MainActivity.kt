@@ -673,7 +673,7 @@ class MainActivity : ComponentActivity() {
                 if(recordingVideo) stopRecording()
                 else if(videoMode) {
                     withMediaPermissions(true) { (engine as? MediaCapture)?.startRecording() }
-                } else withMediaPermissions(false) { engine?.capture() }
+                } else withMediaPermissions(false) { controlBar.controls.let { if (it.bracket) bursts.bracket(sessionId, it, controlBar.support) else engine?.capture() } }
             }
             setOnLongClickListener { (!videoMode && !mediaBusy()).also { if (it) withMediaPermissions(false) { if (isPressed) bursts.hold(sessionId) } } }
             setOnTouchListener { _, e -> if (e.actionMasked in listOf(MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL)) bursts.release(); false }
