@@ -9,8 +9,8 @@
         "codeHash": "85f1678955bf151a",
         "modelHash": "10b9647ac0d990cd",
         "at": "2026-10-09",
-        "commit": "06d279d",
-        "reviewer": "Claude",
+        "commit": "559fee08",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -293,8 +293,8 @@
         "codeHash": "1f47f67b495a851a",
         "modelHash": "ca20a08020622035",
         "at": "2026-10-09",
-        "commit": "06d279d",
-        "reviewer": "Claude",
+        "commit": "559fee08",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -494,10 +494,10 @@
       },
       "accepted": {
         "codeHash": "8b51aab4db5b2ac8",
-        "modelHash": "c187bc9dfde23e9b",
+        "modelHash": "2c63f99bd92041ea",
         "at": "2026-10-09",
-        "commit": "8bc5634c",
-        "reviewer": "Claude",
+        "commit": "e2e7f4a9",
+        "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "f793554fbe52e51105cafacdfcc207ce5f03792d",
@@ -543,10 +543,10 @@
       },
       "accepted": {
         "codeHash": "d460b40aa47bf62e",
-        "modelHash": "0323752cae38edde",
+        "modelHash": "70345d02ddf475c2",
         "at": "2026-10-09",
-        "commit": "8bc5634c",
-        "reviewer": "Claude",
+        "commit": "e2e7f4a9",
+        "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "f793554fbe52e51105cafacdfcc207ce5f03792d",
@@ -590,10 +590,10 @@
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "85f1678955bf151a",
-        "modelHash": "c25b4f2972f4fb26",
+        "modelHash": "45f3cc637b58d333",
         "at": "2026-10-09",
-        "commit": "06d279d",
-        "reviewer": "Claude",
+        "commit": "559fee08",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -793,8 +793,8 @@
         "codeHash": "85f1678955bf151a",
         "modelHash": "00c87e82ca4b893e",
         "at": "2026-10-09",
-        "commit": "06d279d",
-        "reviewer": "Claude",
+        "commit": "559fee08",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -1043,8 +1043,8 @@
         "codeHash": "85f1678955bf151a",
         "modelHash": "e3a21ee73ee5b556",
         "at": "2026-10-09",
-        "commit": "06d279d",
-        "reviewer": "Claude",
+        "commit": "559fee08",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -1244,8 +1244,8 @@
         "codeHash": "85f1678955bf151a",
         "modelHash": "b90966dce0dd8b35",
         "at": "2026-10-09",
-        "commit": "06d279d",
-        "reviewer": "Claude",
+        "commit": "559fee08",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -1445,8 +1445,8 @@
         "codeHash": "85f1678955bf151a",
         "modelHash": "9f8931b822c88b12",
         "at": "2026-10-09",
-        "commit": "06d279d",
-        "reviewer": "Claude",
+        "commit": "559fee08",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -1646,8 +1646,8 @@
         "codeHash": "85f1678955bf151a",
         "modelHash": "29fb0e263d6fa496",
         "at": "2026-10-09",
-        "commit": "06d279d",
-        "reviewer": "Claude",
+        "commit": "559fee08",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -1847,8 +1847,8 @@
         "codeHash": "85f1678955bf151a",
         "modelHash": "1df7ace866a207db",
         "at": "2026-10-09",
-        "commit": "06d279d",
-        "reviewer": "Claude",
+        "commit": "559fee08",
+        "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",

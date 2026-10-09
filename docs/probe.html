@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Probe · HALCamera 개발자 가이드</title>
-  <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
+  <title>Probe · HALCamera 사용 가이드</title>
+  <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
   <script type="module" src="./assets/search.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
@@ -14,22 +14,19 @@
   <header class="site-header">
     <a class="brand" href="./index.html">HAL CAMERA</a>
     <nav class="site-nav" aria-label="문서 메뉴">
-      <a href="./architecture.html">Architecture</a>
-      <a href="./engine.html">Engine</a>
+      <a href="./getting-started.html">시작하기</a>
+      <a href="./live.html">Live</a>
       <a href="./probe.html" aria-current="page">Probe</a>
       <a href="./cts.html">CTS</a>
       <a href="./benchmark.html">Benchmark</a>
       <a href="./callback.html">Callback</a>
-      <a href="./cli.html">CLI</a>
-      <a href="./coding-agents.html">Agents</a>
-      <a href="./evidence.html">Evidence</a>
-      <a href="./getting-started.html">Quickstart</a>
-      <a href="./troubleshooting.html">Debugging</a>
+      <a href="./automation.html">자동화</a>
+      <a href="./troubleshooting.html">문제 찾기</a>
     </nav>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="document">
-    <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
+    <p class="eyebrow page-label">HAL CAMERA / 사용 가이드</p>
     <h1 lang="en">What the HAL claims.</h1><p><strong>Probe에서 카메라가 공개한 사양을 확인하세요.</strong> 카메라를 열지 않고 <code>CameraCharacteristics</code>를 읽어, Camera2 HAL이 공개한 사양을 카메라별 표로 보여 줍니다. 이 값은 지원 사양이며 실측 결과는 아닙니다. 그 선언대로 통과하는지는 <a href="cts.html">CTS</a>가, 실제로 얼마나 걸리는지는 <a href="benchmark.html">Benchmark</a>가 답합니다.</p>
 <p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p><figure class="app-screenshot" id="screen-probe">
 <a href="assets/screenshots/probe.png" aria-label="Probe에서 조회한 카메라 0의 Identity 사양 원본 보기"><img src="assets/screenshots/probe.png" alt="Probe에서 조회한 카메라 0의 Identity 사양" width="1440" height="3120" loading="lazy" decoding="async"></a>
@@ -78,7 +75,8 @@
 </details><p><strong>다음 단계:</strong> 사양 표에서 본 스트림 조합이 실제로 열리고 판정을 통과하는지 <a href="cts.html">CTS</a>로 확인하세요.</p>
 
   </main>
-  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <nav class="reference-nav" aria-label="참고 자료"><span>참고 자료</span><a href="./engine.html">엔진 차이</a><a href="./evidence.html">검증 기록</a><a href="./architecture.html">내부 구조</a><a href="./building.html">앱 빌드</a><a href="./contributing.html">문서 관리</a></nav>
+  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>사용 가이드 <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">
       <div class="search-head"><h2 id="search-title">문서 찾기</h2><button class="search-close" type="button">닫기 <kbd>Esc</kbd></button></div>

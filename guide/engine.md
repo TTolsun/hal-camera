@@ -1,10 +1,10 @@
 ---
-title: Engine
+title: 엔진 차이
 nav_order: 5
 ---
-<h1 lang="en">Two engines.<br>One camera contract.</h1>
+<h1 lang="en">Know what differs.</h1>
 
-**Live가 Camera2와 CameraX 중 어느 엔진으로 열렸는지 확인하세요.** 같은 조작이라도 요청 구성과 관측 가능한 버퍼가 다릅니다. 이 페이지는 엔진의 구현을 설명하며, 화면 조작은 [Quickstart](getting-started.md#live에서-촬영하세요), 그래프 해석은 [Callback](callback.md)에서 확인합니다.
+**Live가 Camera2와 CameraX 중 어느 엔진으로 열렸는지 확인하세요.** 같은 조작이라도 요청 구성과 관측 가능한 버퍼가 다릅니다. 화면 조작은 [Live](live.md), 그래프 해석은 [Callback](callback.md)에서 확인합니다.
 
 | 궁금한 내용 | 자세히 |
 | --- | --- |
@@ -13,7 +13,7 @@ nav_order: 5
 | CameraX 엔진이 같은 기능을 제공하는 방법을 확인합니다. | [CameraX 엔진](#camerax-엔진) |
 | 두 엔진의 결과가 달라질 수 있는 지점을 확인합니다. | [두 엔진의 차이](#두-엔진의-차이) |
 
-엔진이 앱 전체 구조에서 차지하는 위치는 [아키텍처](architecture.md#패키지별-역할)에 있습니다.
+내부 구현은 아래에서 필요한 항목만 펼쳐 보세요.
 
 ## 두 엔진의 차이
 
@@ -55,7 +55,7 @@ Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `06d279d` · Claude
+- 검토 2026-10-09 @ `559fee08` · Codex
 
 </details>
 
@@ -124,6 +124,9 @@ CameraX 1.6.2로 녹화 중 사진을 찍으면 영상 간격이 늘어날 수 �
 </div>
 
 ## 엔진 계약
+
+<details markdown="1" id="engine-contract" data-search-section>
+<summary>엔진 계약의 구현과 근거</summary>
 
 <!-- omm:begin id=contract -->
 
@@ -205,13 +208,18 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `06d279d` · Claude
+- 검토 2026-10-09 @ `559fee08` · Codex
 
 </details>
 
 <!-- omm:end id=contract -->
 
+</details>
+
 ## Camera2 엔진
+
+<details markdown="1" id="camera2-internals" data-search-section>
+<summary>Camera2 엔진의 구현과 근거</summary>
 
 <!-- omm:begin id=camera2 -->
 
@@ -577,13 +585,18 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `06d279d` · Claude
+- 검토 2026-10-09 @ `559fee08` · Codex
 
 </details>
 
 <!-- omm:end id=camera2 -->
 
+</details>
+
 ## CameraX 엔진
+
+<details markdown="1" id="camerax-internals" data-search-section>
+<summary>CameraX 엔진의 구현과 근거</summary>
 
 <!-- omm:begin id=camerax -->
 
@@ -815,12 +828,14 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `06d279d` · Claude
+- 검토 2026-10-09 @ `559fee08` · Codex
 
 </details>
 
 <!-- omm:end id=camerax -->
 
+
+</details>
 
 ## 문서 검토 상태
 
@@ -833,11 +848,11 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-09 @ `06d279d` · Claude |
-| 원고 `contract` | 최신 | 검토 2026-10-09 @ `06d279d` · Claude |
-| 원고 `camera2` | 최신 | 검토 2026-10-09 @ `06d279d` · Claude |
-| 원고 `camerax` | 최신 | 검토 2026-10-09 @ `06d279d` · Claude |
-| 원고 `comparison` | 최신 | 검토 2026-10-09 @ `06d279d` · Claude |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-09 @ `559fee08` · Codex |
+| 원고 `contract` | 최신 | 검토 2026-10-09 @ `559fee08` · Codex |
+| 원고 `camera2` | 최신 | 검토 2026-10-09 @ `559fee08` · Codex |
+| 원고 `camerax` | 최신 | 검토 2026-10-09 @ `559fee08` · Codex |
+| 원고 `comparison` | 최신 | 검토 2026-10-09 @ `559fee08` · Codex |
 
 <!-- omm:end id=status -->
 

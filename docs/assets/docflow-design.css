@@ -74,3 +74,7 @@ table{width:100%;border-collapse:collapse;display:block;overflow:auto;margin:28p
   .doc-timeline > div { grid-template-columns: 84px minmax(0, 1fr) 44px; gap: 8px; }
   .doc-timeline { font-size: 12px; }
 }
+
+/* Task navigation and secondary references share the existing editorial tokens. */
+.task-contents a{grid-template-columns:1fr 1fr 24px}.reference-nav{width:min(1120px,calc(100% - 96px));margin-inline:auto;display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px;padding:24px 0;border-top:1px solid var(--line);font-size:13px}.reference-nav span{color:var(--muted)}.reference-nav a{padding-block:6px}
+@media(max-width:700px){.reference-nav{width:calc(100% - 40px)}.task-contents a{grid-template-columns:1fr 24px}.task-contents .description{grid-column:1;grid-row:2}.task-contents .arrow{grid-column:2;grid-row:1 / 3}}
