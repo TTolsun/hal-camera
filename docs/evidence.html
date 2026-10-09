@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Evidence · HALCamera 개발자 가이드</title>
-  <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
+  <title>검증 기록 · HALCamera 사용 가이드</title>
+  <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
   <script type="module" src="./assets/search.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
@@ -14,22 +14,19 @@
   <header class="site-header">
     <a class="brand" href="./index.html">HAL CAMERA</a>
     <nav class="site-nav" aria-label="문서 메뉴">
-      <a href="./architecture.html">Architecture</a>
-      <a href="./engine.html">Engine</a>
+      <a href="./getting-started.html">시작하기</a>
+      <a href="./live.html">Live</a>
       <a href="./probe.html">Probe</a>
       <a href="./cts.html">CTS</a>
       <a href="./benchmark.html">Benchmark</a>
       <a href="./callback.html">Callback</a>
-      <a href="./cli.html">CLI</a>
-      <a href="./coding-agents.html">Agents</a>
-      <a href="./evidence.html" aria-current="page">Evidence</a>
-      <a href="./getting-started.html">Quickstart</a>
-      <a href="./troubleshooting.html">Debugging</a>
+      <a href="./automation.html">자동화</a>
+      <a href="./troubleshooting.html">문제 찾기</a>
     </nav>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="document">
-    <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
+    <p class="eyebrow page-label">HAL CAMERA / 사용 가이드</p>
     <h1 lang="en">Trust starts with a trace.</h1><p><strong>코드로 확인한 동작과 기기에서 관찰한 결과를 구분하세요.</strong> 아래에서 근거의 종류와 기기 검증 기록을 확인하세요. 문서 갱신 절차는 <a href="contributing.html">문서 관리</a>에 있습니다.</p>
 <h2 id="근거와-검토-범위">근거와 검토 범위</h2>
 <table>
@@ -64,6 +61,9 @@
 <p>Live·CameraX 전환·사진 자동 고정·Recording 콜백·Probe 조회·CTS 실행·Benchmark 완료와 기록 저장을 확인했습니다. CTS 원문 목록, CLI 허용 설정, ZIP 기록은 화면 조회만 확인했습니다. 자세한 절차와 한계는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/2026-09-27-app-screenshots.md">촬영 기록</a>에 있습니다. 화면에 보이는 수치는 해당 순간의 관찰이며 기기의 대표 성능값이 아닙니다.</p>
 <p>2026년 9월 29일 같은 기기의 Lab 디자인 적용 빌드로 Probe, CTS 4개, Benchmark 4개, CLI 설정, ZIP 목록의 기존 이미지 11개를 교체했습니다. 설치 빌드는 기존 데이터 보존을 위해 versionCode 590을 유지했습니다. Rapid Open / Close는 35초 PASS로 완료했고, Benchmark 완료·결과·기록을 확인했습니다. Live 관련 이미지는 이전 촬영본입니다. <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/lab-ui-20260929.md">Lab 검증 기록</a>에서 확인 범위를 구분합니다.</p>
 <p>2026년 9월 30일 같은 기기의 0.16.0(versionCode 593) 디자인 변경 빌드로 Live·Live 제어·CameraX·CLI 설정·ZIP 목록의 이미지 5개를 교체하고 Gallery·About·기기 정보·ZIP 작업 화면 7개를 추가했습니다. Gallery 첫 타일의 모서리를 실기기 리뷰에서 수정했습니다. Callback의 촬영·녹화 화면은 9월 27일 당시 검증 기록이며 이번 UI 변경의 검증 자료가 아닙니다. <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/gallery-lab-ui-20260930.md">Gallery·Lab UI 리뷰와 촬영 기록</a>에서 코드 리뷰와 기기 관찰을 확인하세요.</p>
+<h3 id="연사와-aeb">연사와 AEB</h3>
+<p>2026년 10월 9일 Galaxy S25+·Android 16의 후면 기본 카메라에서 Camera2와 CameraX의 연사·AEB를 확인했습니다. 연사는 손을 떼면 멈췄고, AEB는 사진 3장을 저장한 뒤 EV를 복원했습니다. 요청한 ±2 EV와 실제 노출 차이는 같지 않을 수 있었습니다. 어두운 장면에서는 노출 시간과 ISO 상한 때문에 밝게 만드는 범위가 제한됐습니다.</p>
+<p><a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/live-burst-bracketing-20261009.md">실기기 검증 기록</a>에 측정 조건과 결과가 있습니다. 이 기록은 HDR 합성의 검증 결과가 아닙니다. 저장 공간 부족·일부 촬영 실패·촬영 중 화면 종료는 단위 테스트 범위이며, Android 8~9의 권한 대화상자 동작도 실기기에서는 확인하지 않았습니다.</p>
 <h3 id="녹화-중-사진">녹화 중 사진</h3>
 <p>2026년 10월 5일 Galaxy S25+(SM-S936N)·Android 16의 0.19.0(versionCode 628)에서 후면·전면·초광각 녹화 중 사진을 확인했습니다. CameraX 1.6.2에서는 사진 시점에 약 두 프레임 길이의 영상 간격이 생겼고, Camera2 1080p 30fps에서는 사진 3장씩을 저장해도 같은 간격 증가가 없었습니다. HEVC 60fps와 정지 직후의 사진 결과, 공식 소스에서 확인한 요청 출력 구성, 남은 검증 조건은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md">녹화 중 사진 후속 기록</a>에 있습니다. CameraX의 영상 간격 증가는 알려진 제약으로 수용하고 문서에만 안내합니다. 남은 실패 경로와 기기 조합은 <a href="https://github.com/TTolsun/hal-camera/issues/220">#220</a>과 <a href="https://github.com/TTolsun/hal-camera/issues/221">#221</a>에서 추적합니다.</p>
 <h3 id="cts-원문-케이스">CTS 원문 케이스</h3>
@@ -135,7 +135,7 @@
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code></li>
 <li>기기 검증: <code>V-002</code></li>
 <li>근거 수준: 기기 검증</li>
-<li>검토 2026-10-09 @ <code>06d279d</code> · Claude</li>
+<li>검토 2026-10-09 @ <code>559fee08</code> · Codex</li>
 </ul>
 </details><!-- omm:end id=device-notes --><h2 id="문서를-수정하고-검증하세요">문서를 수정하고 검증하세요</h2>
 <p>원본 위치, 생성 명령, 검사 순서는 <a href="contributing.html">문서 관리</a>로 옮겼습니다.</p>
@@ -155,18 +155,19 @@
 <tbody><tr>
 <td>구조 원본 <code>overall-architecture</code></td>
 <td>최신</td>
-<td>검토 2026-10-09 @ <code>06d279d</code> · Claude</td>
+<td>검토 2026-10-09 @ <code>559fee08</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>device-notes</code></td>
 <td>최신</td>
-<td>검토 2026-10-09 @ <code>06d279d</code> · Claude</td>
+<td>검토 2026-10-09 @ <code>559fee08</code> · Codex</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p><strong>다음 단계:</strong> 구현 구조는 <a href="architecture.html">Architecture</a>, 과거의 선택은 <a href="_inputs/decisions.html">설계 결정 원문</a>에서 확인하세요.</p>
 
   </main>
-  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <nav class="reference-nav" aria-label="참고 자료"><span>참고 자료</span><a href="./engine.html">엔진 차이</a><a href="./evidence.html">검증 기록</a><a href="./architecture.html">내부 구조</a><a href="./building.html">앱 빌드</a><a href="./contributing.html">문서 관리</a></nav>
+  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>사용 가이드 <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">
       <div class="search-head"><h2 id="search-title">문서 찾기</h2><button class="search-close" type="button">닫기 <kbd>Esc</kbd></button></div>

@@ -3,6 +3,8 @@ title: Agents
 ---
 <h1 lang="en">Hand the camera to a coding agent.</h1>
 
+[자동화](automation.md)에서 다른 실행 방법도 확인할 수 있습니다.
+
 **팀에서 전달받은 HAL CAM APK와 `halcam-cli/SKILL.md`로 에이전트에게 기기 작업을 맡기세요.** Windows 또는 WSL에서 로컬 명령을 실행할 수 있는 에이전트와 `adb`가 필요합니다. 앱 소스나 빌드 도구는 필요하지 않습니다.
 
 ## 작업을 준비하세요

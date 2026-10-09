@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HAL 검증 가이드 · HALCamera 사용 가이드</title>
+  <title>자동화 · HALCamera 사용 가이드</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
   <script type="module" src="./assets/search.js"></script>
@@ -20,40 +20,44 @@
       <a href="./cts.html">CTS</a>
       <a href="./benchmark.html">Benchmark</a>
       <a href="./callback.html">Callback</a>
-      <a href="./automation.html">자동화</a>
+      <a href="./automation.html" aria-current="page">자동화</a>
       <a href="./troubleshooting.html">문제 찾기</a>
     </nav>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
-  <main id="main-content" class="home">
-    
-    <section class="hero" aria-labelledby="hero-title">
-  <p class="eyebrow">HAL CAMERA / 사용 가이드</p>
-  <h1 id="hero-title" lang="en">Engineering<br>the invisible.</h1>
-  <p class="intro" lang="en">Camera systems are complicated.<br>The documentation doesn't have to be.</p>
-  <p class="intro">촬영 조건을 맞추고, HAL 동작을 관찰하고,<br>측정 결과와 재현 자료를 확인합니다.</p>
-  <div class="hero-bottom">
-    <a href="getting-started.html">처음이라면, 앱 실행부터 <span aria-hidden="true">↗</span></a>
-    <span class="signature" lang="en">by K.H. Kim</span>
-  </div>
-</section><nav class="contents task-contents" aria-label="검증 작업별 문서">
-  <a href="getting-started.html"><span class="name">시작하기</span><span class="description">APK를 설치하고 첫 화면을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="live.html"><span class="name">Live</span><span class="description">사진·녹화와 촬영 조건을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="probe.html"><span class="name">Probe</span><span class="description">카메라가 보고한 지원 사양을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="cts.html"><span class="name">CTS</span><span class="description">테스트를 실행하고 판정을 읽습니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="benchmark.html"><span class="name">Benchmark</span><span class="description">반복 측정하고 결과를 비교합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="callback.html"><span class="name">Callback</span><span class="description">프레임별 콜백과 시각을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="automation.html"><span class="name">자동화</span><span class="description">PC 명령이나 에이전트로 반복 실행합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="troubleshooting.html"><span class="name">문제 찾기</span><span class="description">증상을 좁히고 재현 자료를 모읍니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-</nav><section class="feature" aria-labelledby="scope-title">
-  <div class="feature-heading"><h2 id="scope-title">측정값은 어디에서 왔나요?</h2></div>
-  <p>HALCamera는 앱이 받은 콜백과 이미지, 결과 메타데이터를 관찰합니다. 콜백 간격만으로 HAL 내부 처리 시간이나 프레임 드롭을 확정할 수는 없습니다.</p>
-  <p>결과를 비교할 때에는 엔진·카메라·출력 조건과 시각 기준을 먼저 맞추세요. 차이가 남으면 앱 기록과 시스템 트레이스를 함께 확인하세요.</p>
-  <a href="engine.html">엔진별 관측 차이 확인 <span aria-hidden="true">→</span></a>
-</section><p class="editorial" lang="en">Good measurements should explain<br>the system, not just produce numbers.</p><section class="closing" aria-label="문서 작성 원칙">
-  <p class="statement" lang="en">Built from the codebase.<br>Designed to stay useful.</p>
-  <div><p>구현, 설계 의도, 기기 검증을 구분합니다.<br>기록되지 않은 이유는 확인이 필요한 상태로 남깁니다.</p><a href="evidence.html">문서의 근거를 확인하세요 <span aria-hidden="true">→</span></a></div>
-</section>
+  <main id="main-content" class="document">
+    <p class="eyebrow page-label">HAL CAMERA / 사용 가이드</p>
+    <h1 lang="en">Run. Repeat. Collect.</h1><p><strong>직접 명령을 실행할지, 에이전트에게 맡길지 고르세요.</strong> 두 방법 모두 PC의 ADB로 기기에 연결하고 같은 앱 명령을 사용합니다.</p>
+<table>
+<thead>
+<tr>
+<th>실행 방법</th>
+<th>시작할 문서</th>
+<th>필요한 것</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>터미널이나 스크립트에서 실행합니다.</td>
+<td><a href="cli.html">CLI 명령</a></td>
+<td>ADB가 있는 PC와 연결한 기기가 필요합니다.</td>
+</tr>
+<tr>
+<td>코딩 에이전트에게 촬영·측정을 요청합니다.</td>
+<td><a href="coding-agents.html">에이전트 사용법</a></td>
+<td>PC에서 ADB를 실행할 수 있는 에이전트와 halcam-cli 스킬이 필요합니다.</td>
+</tr>
+</tbody></table>
+<h2 id="처음-연결하세요">처음 연결하세요</h2>
+<ol>
+<li>기기에 APK를 설치하고 USB 디버깅 연결을 승인합니다.</li>
+<li>PC에서 <code>adb devices -l</code>로 대상 기기를 확인합니다.</li>
+<li><a href="cli.html">CLI 준비 절차</a> 또는 <a href="coding-agents.html">에이전트 준비 절차</a>에 따라 실행 도구를 준비합니다.</li>
+</ol>
+<p>ADB CLI는 기본으로 허용됩니다. 직접 꺼 둔 경우에는 앱의 <code>Lab → ADB CLI</code>에서 다시 켜세요. 무선 연결과 여러 기기의 구분은 CLI 문서에서 안내합니다.</p>
+<h2 id="완료와-결과를-확인하세요">완료와 결과를 확인하세요</h2>
+<p><strong>요청 접수는 촬영이나 파일 저장의 완료가 아닙니다.</strong> 요청 ID로 최종 상태를 확인하고, PC로 받은 파일의 크기와 SHA-256을 확인하세요. 연결이 끊겼다면 같은 촬영을 다시 제출하기 전에 기존 요청의 상태를 조회하세요.</p>
+<p>벤치마크 실행이 성공해도 비교나 점수에 사용할 수 없는 결과가 있을 수 있습니다. 결과의 validity와 실행 조건을 함께 확인하세요.</p>
+<p><strong>다음 단계:</strong> <a href="cli.html#요청과-완료를-구분하세요">CLI 요청 흐름</a>에서 완료 확인과 파일 회수 순서를 확인하세요.</p>
 
   </main>
   <nav class="reference-nav" aria-label="참고 자료"><span>참고 자료</span><a href="./engine.html">엔진 차이</a><a href="./evidence.html">검증 기록</a><a href="./architecture.html">내부 구조</a><a href="./building.html">앱 빌드</a><a href="./contributing.html">문서 관리</a></nav>
