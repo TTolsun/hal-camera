@@ -55,7 +55,7 @@ PC에서 같은 기능을 실행하려면 [CLI](cli.md)를 사용합니다. `Cli
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/WorkbenchActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 상태: 관련 소스 변경됨: 재검토 필요
+- 검토 2026-10-09 @ `491997a5` · Codex (user-requested code and documentation review; device evidence recorded separately)
 
 </details>
 
@@ -365,7 +365,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 상태: 관련 소스 변경됨: 재검토 필요
+- 검토 2026-10-09 @ `491997a5` · Codex (user-requested code and documentation review; device evidence recorded separately)
 
 </details>
 
@@ -634,15 +634,15 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-10-09 @ `491997a5` · Codex (user-requested code and documentation review; device evidence recorded separately) |
 | 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
-| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-09 @ `491997a5` · Codex (user-requested code and documentation review; device evidence recorded separately) |
 | 구조 원본 `ui-camera-label` | 최신 | 검토 2026-10-09 @ `fab768a7` · Codex |
 | 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
 | 구조 원본 `ui-zoom` | 최신 | 검토 2026-10-09 @ `fab768a7` · Codex |
-| 원고 `overview` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
+| 원고 `overview` | 최신 | 검토 2026-10-09 @ `491997a5` · Codex (user-requested code and documentation review; device evidence recorded separately) |
 | 원고 `module-roles` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
-| 원고 `runtime-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
+| 원고 `runtime-flow` | 최신 | 검토 2026-10-09 @ `491997a5` · Codex (user-requested code and documentation review; device evidence recorded separately) |
 | 원고 `constraints` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
 
 <!-- omm:end id=status -->

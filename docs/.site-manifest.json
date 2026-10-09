@@ -4,7 +4,7 @@
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "_inputs/decisions.html": "74410055a21243cc476b2c96fd2e4ee1283f908cbccb91a71cdeec3367a37f96",
     "_inputs/device-verification.yaml": "1852f48d52f75733b4db973418fc7fad1f0f9d340a8b4b555cf9d49aa7016215",
-    "architecture.html": "5addbf13121c1e01513015df31cf5ac03ed5a10f8a3eec72cace5f57ae3cba1b",
+    "architecture.html": "602e0408144e0ac440cca8ff14c36fbdd73ecbb164dc9fe2a9e80e5c629d6e20",
     "assets/docflow-design.css": "29de950fbe15ca1dc54b0c006703bc7bc0ba339df63f3c690cdc5524539e1099",
     "assets/screenshots/about.png": "954960e376ba576cef4e9043d91061b2e9af93f16663716c3b7549c1aa743123",
     "assets/screenshots/benchmark-history.png": "ad2a3605235e7bace1c7e2d08c32ae29d65fe066c45085d8cc7368aadc4025af",
@@ -48,6 +48,6 @@
     "index.html": "da4060be4ba08875d325d9b489ea0071de1992354e0832da968a2bc7296e0238",
     "live.html": "a8c7796f766555fd7e5bf7403e8cacae283f9261f13e83b4b161c119be682dab",
     "probe.html": "ac1228c42939a308b62c688a024e68f77369f0d2fe25288f9de03136256ba8ea",
-    "troubleshooting.html": "2c4d3cfa9d013fc43215ce982b3ec6705554e06ee7e27b553deac3aa8af96c42"
+    "troubleshooting.html": "fef43e45f093c938038f43d2ae8687f8dc1da24cd1871ab30fcedcb0f3428848"
   }
 }
