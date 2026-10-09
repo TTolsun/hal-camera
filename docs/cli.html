@@ -300,6 +300,7 @@ adb exec-out content read --uri content://dev.halcamera.cli/v1/status
 <summary>선택 도구: Python 클라이언트</summary><p><span id="python-advanced"></span></p>
 <p>이 영역의 <code>halcam</code>은 PC에 설치한 Python 명령입니다. ADB 접두어를 붙이지 않습니다.</p>
 <p><strong>처음에는 <code>halcam</code>을 실행해 시작 작업을 고르세요.</strong> 기본 출력은 결과 상태·저장 위치와 다음 명령을 보여 줍니다. 대기 중에는 상태나 저장 장수가 바뀔 때만 알립니다. 자동화나 전체 메타데이터가 필요하면 <code>--json</code>을 붙입니다. 취소·대기 시간 초과 후에는 출력된 요청 ID로 상태를 확인하거나 파일을 회수하며, 촬영 명령을 다시 실행하지 않습니다.</p>
+<p>인자 없는 실행은 짧은 시작 안내만 보여 줍니다. 전체 문법은 <code>halcam --help</code>, 공통 실행의 예시는 <code>halcam run --help</code>에서 확인합니다. Python <code>doctor</code>는 연결뿐 아니라 카메라 권한·잠금·실행 중 작업을 확인하며, 준비가 되지 않았으면 원인과 조치를 표시하고 실패 코드로 종료합니다. 보관 한도 미리보기는 아직 변경하지 않았음을 표시하고, 적용하려면 입력할 확인 명령을 따로 제공합니다.</p>
 <p>저장소를 받은 PC에서 Python 3.11 이상으로 설치합니다. 단순 실행에는 앞의 ADB 스크립트를 사용하고, Python 자동화가 필요한 경우에만 아래 도구를 설치하세요. 녹화·프리뷰 제어도 지원합니다.</p>
 <pre><code class="language-sh">python -m pip install ./tools/halcam
 halcam --serial DEVICE doctor --json
