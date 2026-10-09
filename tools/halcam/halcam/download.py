@@ -26,10 +26,10 @@ def collect(adb, response, output, timeout=60):
             raise CliError("PROTOCOL_ERROR", "Invalid artifact metadata", request_id=request_id)
         name, aid = artifact.get("name"), artifact.get("artifact_id")
         size, checksum = artifact.get("size_bytes"), artifact.get("sha256")
-        if (not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_-]+\.(?:jpg|json|txt|zip)", name)
+        if (not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_-]+\.(?:jpg|jpeg|json|txt|zip|mp4|dng|nv21|csv|bin)", name)
                 or name.split(".")[0].upper() in {"CON", "PRN", "AUX", "NUL", *[f"COM{i}" for i in range(1, 10)], *[f"LPT{i}" for i in range(1, 10)]}
                 or name.lower() in names or not isinstance(aid, str) or not re.fullmatch(r"[A-Za-z0-9_-]+", aid)
-                or not isinstance(size, int) or isinstance(size, bool) or not 0 < size <= 128 * 1024 * 1024
+                or not isinstance(size, int) or isinstance(size, bool) or not 0 < size <= 64 * 1024 * 1024 * 1024
                 or not isinstance(checksum, str) or not re.fullmatch(r"[0-9a-f]{64}", checksum)):
             raise CliError("PROTOCOL_ERROR", "Invalid artifact metadata", request_id=request_id)
         names.add(name.lower())

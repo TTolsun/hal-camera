@@ -1,0 +1,1 @@
+MainCliBridge는 LiveController.Driver의 화면 쪽 구현입니다. 명령별 스트림과 수동 설정을 검증하고 프리뷰 준비, 사진·연사·AEB·녹화·스냅샷, 측광과 진단 저장을 기존 화면·엔진에 연결합니다. 다른 카메라 화면으로 이동할 때 현재 엔진의 close(done)를 기다립니다. 화면 배치와 앱 생명주기는 MainActivity가 유지합니다.

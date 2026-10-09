@@ -1,6 +1,6 @@
 ---
 name: halcam-cli
-description: HAL CAM 앱을 adb로 조작하는 절차. 기기에서 스트림 크기·프리뷰·사진·녹화·probe·CTS·벤치마크를 실행하거나, 결과 파일을 PC로 가져오거나, CLI 요청 상태·취소·BUSY·CLI_DISABLED 같은 오류를 다룰 때 사용한다. Windows·WSL에서 연결된 Android 기기를 조작하고 결과를 로컬 PC로 회수할 때 사용한다.
+description: HAL CAM 앱을 adb로 조작하는 절차. 기기에서 스트림·수동 촬영·연사·AEB·Dual·결과·갤러리·진단 ZIP·CTS·벤치마크를 실행하거나, 결과 파일을 PC로 가져오거나, CLI 요청 상태·취소·BUSY·CLI_DISABLED 같은 오류를 다룰 때 사용한다. Windows·WSL에서 연결된 Android 기기를 조작하고 결과를 로컬 PC로 회수할 때 사용한다.
 ---
 
 # HAL CAM CLI로 기기 작업 수행하기
@@ -48,7 +48,7 @@ adb shell sh /data/local/tmp/halcam record start --camera 0 --video-size 1280x72
 adb shell sh /data/local/tmp/halcam record stop
 ```
 
-`--preview-size`, `--yuv-size`, `--jpeg-size`, `--video-size`는 `너비x높이` 형식을 사용합니다. YUV와 JPEG는 `off`로 끌 수 있지만, `capture`에는 적어도 하나가 필요합니다. `--video-fps`는 녹화 프레임 레이트이고 `--codec`은 Camera2에서 H264·HEVC, CameraX에서 Auto를 사용합니다. CameraX의 실제 녹화 코덱은 라이브러리가 선택합니다.
+`--preview-size`, `--yuv-size`, `--jpeg-size`, `--video-size`는 `너비x높이` 형식을 사용합니다. YUV·JPEG·RAW는 `off`로 끌 수 있지만, `capture`에는 적어도 하나의 출력이 필요합니다. `--video-fps`는 녹화 프레임 레이트이고 `--codec`은 Camera2에서 H264·HEVC, CameraX에서 Auto를 사용합니다. CameraX의 실제 녹화 코덱은 라이브러리가 선택합니다.
 
 생략한 값은 기본 설정을 사용하며 이전 UI·CLI 설정을 이어받지 않습니다. 적용한 설정은 명령 완료 후 Live에 남지만 다음 CLI 카메라 명령은 다시 기본값과 명시한 옵션으로 구성합니다. 지원하지 않는 값은 `PREFLIGHT_FAILED`로 거부하며 다른 크기로 자동 변경하지 않습니다. 지원 목록은 개별 크기와 인코더 조건을 나타내며 출력 조합의 성공까지 보장하지 않습니다. 실제 세션 구성에서 실패할 수도 있습니다.
 
@@ -159,3 +159,79 @@ Windows `adb.exe`로 파일을 받을 때에는 `adb pull /sdcard/Download/HALCa
 기기 SERIAL·모델·Android 버전, `hello`의 앱 버전, 실행한 명령과 요청 ID, 최종 상태, PC 파일 경로와 검증 결과를 보고합니다. `record start` 성공은 녹화 시작일 뿐이며 지정한 시점에 `record stop`으로 저장 완료를 확인합니다. 벤치마크는 원본 JSON의 validity·측정 결과를 실행 상태와 구분하고, 벤치마크 산출물에는 이미지 픽셀이나 녹화 MP4가 포함되지 않음을 설명합니다. 확인하지 못한 항목은 검증 완료로 표시하지 않습니다.
 
 최신 명령 계약은 [CLI 가이드](https://ttolsun.github.io/hal-camera/cli.html)를 참고합니다. 사내 환경에서 외부 링크에 접근할 수 없어도 이 파일과 설치된 앱의 `hello`·`help`로 기본 작업을 수행할 수 있습니다.
+
+
+## 7. 전체 기능을 CLI에서 사용하기
+
+`help`는 처음 사용할 작업 다섯 개만 보여줍니다. `help all`은 전체 명령을, `help controls`는 수동 촬영 옵션을 보여줍니다. 아래 예시의 `halcam` 앞에는 모두 `adb shell sh /data/local/tmp/`를 붙입니다. 파일을 만드는 작업은 끝난 뒤 출력하는 `adb pull` 한 줄로 회수합니다.
+
+### 사진과 촬영 설정
+
+| 할 일 | 명령 | 확인할 결과 |
+| --- | --- | --- |
+| 지원 옵션을 확인합니다. | `halcam streams --camera 0` | 크기·RAW·FPS·보정 모드와 줌·EV·수동 제어 범위를 확인합니다. 수동 노출 시간은 30 FPS 기준이며 실제 선택 FPS에 따라 다시 검사합니다. |
+| 세 번 연속 촬영합니다. | `halcam burst --camera 0 --count 3 --interval-ms 500` | 저장한 장수와 목표 장수를 확인합니다. `cancel`은 다음 촬영을 멈추며 이미 제출한 저장은 완료합니다. |
+| 노출을 달리하여 촬영합니다. | `halcam bracket --camera 0` | 세 원본과 HDR 결과를 확인합니다. JPEG 원본이 부족하면 HDR 생략 이유를 확인합니다. |
+| RAW만 저장합니다. | `halcam capture --camera 0 --yuv-size off --jpeg-size off --raw-size WIDTHxHEIGHT` | `streams`에 표시된 RAW 크기를 사용합니다. Camera2와 RAW 지원 기기가 필요합니다. |
+| 원본 YUV를 저장합니다. | `halcam capture --yuv-format NV21` | NV21과 메타데이터를 회수합니다. Camera2에서 지원합니다. |
+
+`--fps 15-30`, `--stabilization OIS`, `--zoom 2`, `--ev -2`, `--flash OFF`처럼 원하는 항목만 지정합니다. EV 값은 EV 단위가 아니라 카메라의 보정 단계입니다. `streams`의 `ev_step`을 곱하면 EV가 됩니다. 예를 들어 단계가 1/3 EV이면 `--ev -3`은 −1 EV입니다.
+
+수동 노출은 ISO와 시간을 함께 지정합니다. `--iso 100 --exposure-ns 10000000`은 ISO 100과 10 ms입니다. `--focus`는 디옵터이며 0은 무한대입니다. `--wb`는 `AUTO`, `DAYLIGHT`, `CLOUDY`, `SHADE` 등의 모드를 받습니다. `CUSTOM`은 수동 노출과 함께 사용하며 `--gains`는 네 값, `--matrix`는 아홉 값을 쉼표로 구분합니다. 지원하지 않는 값이나 조합은 자동으로 바꾸지 않고 거부합니다.
+
+### 현재 프리뷰와 녹화
+
+1. `halcam preview --camera 0`으로 프리뷰를 시작합니다.
+2. `halcam live set --zoom 2`로 프리뷰나 CLI 녹화를 유지하면서 설정을 바꿉니다. 생략한 제어는 유지합니다. `halcam live reset`은 줌과 수동 제어를 기본값으로 되돌립니다.
+3. `halcam meter --x 0.5 --y 0.5 --meter focus`로 프리뷰 가운데에 초점을 요청합니다. 좌표는 화면의 왼쪽 위 0에서 오른쪽 아래 1까지입니다. 노출 측광에는 `--meter exposure`를 씁니다.
+4. `halcam live info`로 최근 콜백과 적용 요청을 확인합니다. 명령 접수는 센서가 그 값을 적용했다는 뜻이 아니므로 실제 값은 콜백·사진 메타데이터와 대조합니다.
+
+`record snapshot`은 진행 중인 CLI 녹화에 사진 저장을 요청합니다. `status`의 `snapshot_pending`, `snapshot_count`, `snapshot_error`를 확인합니다. 사진 저장 중에 `record stop`을 실행하면 저장 완료 후 녹화를 끝냅니다. MP4와 사진은 녹화 요청의 `fetch`로 함께 받습니다. CameraX 등 엔진의 기존 snapshot 제한은 그대로 적용합니다.
+
+### 두 카메라를 함께 사용하기
+
+1. `halcam dual cameras`로 논리 ID와 물리 ID를 확인합니다.
+2. `halcam dual preview --camera 0 --first 2 --second 3`에서 ID를 조회 결과로 바꿉니다. 임의의 다른 센서로 대체하지 않습니다.
+3. 같은 ID 옵션으로 `dual capture` 또는 `dual record`를 실행합니다. Dual 사진과 수동 제어는 Camera2에서 지원합니다. Dual 영상은 두 개의 무음 MP4로 저장하며 `record stop`으로 종료합니다.
+
+Dual의 출력 크기는 기존 앱의 공통 크기 선택 규칙을 따릅니다. 물리 ID가 존재하더라도 해당 조합이 기기에서 동작한다는 보장은 없으며, 세션 실패는 CLI 실패로 보고합니다. CameraX Dual에서 지원하지 않는 수동 제어를 Camera2로 자동 전환하지 않습니다.
+
+### 측정 결과와 기준 실행
+
+| 할 일 | 명령 | 결과 |
+| --- | --- | --- |
+| 실행 목록과 상세를 읽습니다. | `results list`, `results show --run ID` | 목록에서 ID를 고른 뒤 원본과 현재 baseline 집합에 대한 판정을 읽습니다. baseline이 없으면 이전 실행 대비 변화량만 표시합니다. |
+| 두 실행을 비교합니다. | `results compare --run ID --reference ID` | 화면의 두 실행 비교와 같이 명시한 참조를 이번 비교의 기준으로 사용합니다. 저장된 baseline은 바꾸지 않습니다. |
+| 정상 실행을 기준에 추가하거나 뺍니다. | `baseline add --run ID`, `baseline remove --run ID` | 비교 가능한 실행만 추가합니다. 제거해도 실행 파일은 남습니다. |
+| JSON과 CSV를 받습니다. | `results export --run ID` | 두 파일을 한 번에 회수합니다. |
+| 실행 하나를 삭제합니다. | `results delete --run ID --confirm true` | 해당 실행과 그 baseline 등록을 함께 제거합니다. |
+
+`benchmark run --build "Candidate A" --note "Same room"`으로 이번 측정의 라벨을 명시할 수 있습니다. `--commit`, `--branch`도 받습니다. CLI 측정은 라벨을 생략하면 빈 라벨을 사용하므로 이전 화면 입력을 이번 측정의 조건으로 오인하지 않습니다. 콜론이 포함된 라벨은 아래 Python JSON 경로를 사용합니다.
+
+### 파일과 저장 공간
+
+| 할 일 | 명령 | 결과 |
+| --- | --- | --- |
+| 촬영 파일을 찾고 받습니다. | `gallery list`, `gallery export --media ID` | HALCamera 폴더의 사진·영상·RAW·NV21·메타데이터를 조회하고 파일 하나를 회수합니다. |
+| 촬영 파일 하나를 삭제합니다. | `gallery delete --media ID --confirm true` | Android가 소유자 승인을 요구하면 Gallery에서 삭제하도록 안내합니다. |
+| 현재 이벤트를 저장합니다. | `events` | 기존 10초 이전·5초 이후 수집 규칙으로 이미지 픽셀 없는 ZIP을 저장합니다. |
+| 저장된 ZIP을 찾고 받습니다. | `incidents list`, `incidents export --incident ID` | 과거 ZIP을 다시 회수합니다. 삭제는 `incidents delete --incident ID --confirm true`로 요청합니다. |
+| 보관 한도를 확인하고 변경합니다. | `settings show`, `settings limit --limit 20` | 먼저 삭제 예정 실행을 보여줍니다. 같은 명령에 `--confirm true`를 붙이면 적용합니다. 0은 무제한이며 baseline은 보관 한도로 삭제하지 않습니다. |
+
+갤러리의 확대·축소·동영상 재생·공유 대상 선택은 파일 회수 후 PC의 뷰어나 공유 도구에서 수행합니다. 권한 허용, 잠금 해제, ADB CLI 허용 스위치를 다시 켜는 동작은 Android 화면에서 수행합니다. CLI는 이 보호 동작을 우회하지 않습니다.
+
+### JSON을 쓰는 기존 Python 클라이언트
+
+선택 도구인 Python 클라이언트에도 전체 작업을 제출하는 공통 경로가 있습니다. `halcam run OPERATION --option KEY=VALUE --stream KEY=VALUE`를 사용합니다. 앱이 `doctor`에서 제공한 명령만 받으며, 결과 파일이 필요하면 `--output DIRECTORY`를 붙입니다. JPEG·MP4·DNG·NV21·JSON·TXT·CSV·ZIP 파일을 크기와 SHA-256으로 검증하며 파일당 최대 64 GiB를 받습니다. 갤러리에서 내보낸 파일은 안전한 `media_ID.확장자` 이름으로 받고 원래 이름은 `original_name`에 남깁니다.
+
+```sh
+halcam run burst --camera 0 --option count=3 --stream yuv_format=NV21 --output ./photos
+halcam run results.export --option run=RUN_ID --output ./results
+halcam run benchmark.run --option "build=Candidate: A" --timeout 600 --output ./run
+halcam control live.set --option zoom=2
+halcam control record.stop
+```
+
+`live info`, `meter`, `events`, `preview stop`은 현재 열린 Live 또는 Dual 화면에 적용됩니다. `live set`과 `live reset`은 Dual 프리뷰·CLI 녹화에도 적용되며 엔진이 지원하지 않는 제어는 거부합니다.
+
+`control`은 새 작업을 만들지 않고 기존 프리뷰·녹화를 제어합니다. `record.stop`은 접수 상태를 반환하므로 저장이 끝났는지는 `status --request UUID`로 확인합니다. 자동으로 완료까지 기다리는 기본 경로는 APK에 포함된 셸 스크립트입니다.

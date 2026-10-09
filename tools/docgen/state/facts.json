@@ -33,6 +33,12 @@
           ]
         },
         {
+          "tag": "CliSequence",
+          "sources": [
+            "app/src/main/java/dev/halcamera/cli/CliSequence.kt"
+          ]
+        },
+        {
           "tag": "DualPreview",
           "sources": [
             "app/src/main/java/dev/halcamera/camera/DualPreviewSession.kt"

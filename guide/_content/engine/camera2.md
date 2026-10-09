@@ -245,7 +245,7 @@ Android 10 이상에서는 `IS_PENDING`으로 쓰는 중인 항목의 공개를 
 | NV21 | `_YUV.nv21` | `Download/HALCamera` | Camera2만 지원하며, 짝수 크기·프레임당 16 MiB 이하여야 합니다. |
 | 촬영 정보 (자동 저장) | `_metadata.json` | `Download/HALCamera` | 사진 모드에서 두 포맷 모두 함께 저장합니다. |
 
-이 선택은 녹화 중 사진에는 적용하지 않습니다. 일반 CLI 촬영은 기본 JPEG 포맷을 사용합니다.
+이 선택은 녹화 중 사진에는 적용하지 않습니다. CLI 촬영의 기본 YUV 저장 포맷은 JPEG이며, `--yuv-format NV21`로 NV21을 지정할 수 있습니다. RAW 크기는 `--raw-size`로 따로 지정합니다.
 
 `_YUV.nv21`은 YUV_420_888의 crop 영역에 있는 8비트 샘플을 손실 없이 재배열한 파일입니다. Y를 행 순서로 쓰고 V·U를 교대로 쓰며 패딩·회전·압축·색 변환을 적용하지 않습니다. JSON의 outputs에는 실제 파일명·MIME·크기를, NV21에는 출력 plane의 offset/rowStride/pixelStride와 원본 크기·crop·stride를 함께 기록합니다. 저장소의 `docs/design/ORIGINAL-YUV.md`에 복원 규칙이 있습니다.
 

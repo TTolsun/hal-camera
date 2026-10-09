@@ -191,6 +191,9 @@ sources:
           - app/src/main/java/dev/halcamera/MainActivity.kt
       # MainActivity 하나만으로도 스캔 입력이 6만 자 한도에 가깝습니다. 최근 촬영물 조회는 화면 배치와 별개의
       # 주제이므로 하위 요소로 내려, 둘 다 한도 안에서 스캔되게 합니다.
+      screens/expert-screen/cli-adapter:
+        evidence:
+          - app/src/main/java/dev/halcamera/MainCliBridge.kt
       screens/expert-screen/recent-media:
         evidence:
           - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
@@ -253,6 +256,9 @@ sources:
       screens/dual-preview-screen:
         evidence:
           - app/src/main/java/dev/halcamera/DualPreviewActivity.kt
+      screens/dual-preview-screen/cli-adapter:
+        evidence:
+          - app/src/main/java/dev/halcamera/DualCliBridge.kt
       screens/dual-preview-screen/camera2-session:
         evidence:
           - app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt
@@ -429,6 +435,8 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt
           - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt
+      cli-artifacts:
+        evidence:
           - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
           - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
@@ -499,6 +507,10 @@ sources:
       - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
       - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
       - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
+      - app/src/main/java/dev/halcamera/cli/CliOptions.kt
+      - app/src/main/java/dev/halcamera/cli/CliStreams.kt
+      - app/src/main/java/dev/halcamera/cli/CliSequence.kt
+      - app/src/main/java/dev/halcamera/cli/CliLibrary.kt
       - app/src/main/java/dev/halcamera/cli/CliCommand.kt
       - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
       - app/src/main/java/dev/halcamera/cli/CommandStore.kt
@@ -519,6 +531,12 @@ sources:
           - app/src/main/java/dev/halcamera/cli/CommandStore.kt
           - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
           - app/src/main/java/dev/halcamera/cli/CliCommand.kt
+      cli-request/operations:
+        evidence:
+          - app/src/main/java/dev/halcamera/cli/CliOptions.kt
+          - app/src/main/java/dev/halcamera/cli/CliStreams.kt
+          - app/src/main/java/dev/halcamera/cli/CliSequence.kt
+          - app/src/main/java/dev/halcamera/cli/CliLibrary.kt
           - app/src/main/java/dev/halcamera/cli/LiveController.kt
           - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
           - app/src/main/java/dev/halcamera/cli/CtsController.kt
@@ -562,11 +580,15 @@ sources:
     kind: omm
     diagram_type: sequence
     evidence:
+      - app/src/main/java/dev/halcamera/MainCliBridge.kt
       - app/src/main/java/dev/halcamera/MainActivity.kt
     elements:
       .:
         evidence:
           - app/src/main/java/dev/halcamera/MainActivity.kt
+      cli-handoff:
+        evidence:
+          - app/src/main/java/dev/halcamera/MainCliBridge.kt
 
   ui-zoom:
     kind: omm

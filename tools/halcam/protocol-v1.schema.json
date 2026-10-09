@@ -21,6 +21,30 @@
     },
     "command": {
       "enum": [
+        "settings.show",
+        "settings.limit",
+        "incidents.list",
+        "incidents.export",
+        "incidents.delete",
+        "burst",
+        "bracket",
+        "meter",
+        "events",
+        "live.info",
+        "dual.cameras",
+        "dual.preview",
+        "dual.capture",
+        "dual.record",
+        "results.list",
+        "results.show",
+        "results.export",
+        "results.compare",
+        "results.delete",
+        "baseline.add",
+        "baseline.remove",
+        "gallery.list",
+        "gallery.export",
+        "gallery.delete",
         "streams",
         "cameras",
         "preview",
@@ -29,7 +53,8 @@
         "record.start",
         "probe",
         "cts.cases",
-        "cts.run"
+        "cts.run",
+        "benchmark.run"
       ]
     },
     "execution_timeout_ms": {
@@ -38,70 +63,7 @@
       "maximum": 3600000
     },
     "params": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "camera_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 64,
-          "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 256,
-            "pattern": "^(custom|vendored):"
-          }
-        },
-        "audio": {
-          "type": "boolean"
-        },
-        "engine": {
-          "enum": [
-            "Camera2",
-            "CameraX"
-          ]
-        },
-        "streams": {
-          "type": "object",
-          "additionalProperties": false,
-          "minProperties": 1,
-          "properties": {
-            "preview_size": {
-              "type": "string",
-              "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-            },
-            "yuv_size": {
-              "type": "string",
-              "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-            },
-            "jpeg_size": {
-              "type": "string",
-              "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-            },
-            "video_size": {
-              "type": "string",
-              "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-            },
-            "video_fps": {
-              "type": "string",
-              "pattern": "^(0*[1-9]|0*[1-9][0-9]|0*1[0-9]{2}|0*2[0-3][0-9]|0*240)$"
-            },
-            "codec": {
-              "enum": [
-                "H264",
-                "HEVC",
-                "Auto"
-              ]
-            }
-          }
-        }
-      }
+      "type": "object"
     }
   },
   "allOf": [
@@ -109,38 +71,17 @@
       "if": {
         "properties": {
           "command": {
-            "enum": [
-              "cameras",
-              "preview.stop",
-              "probe",
-              "cts.cases"
-            ]
+            "const": "settings.show"
           }
         }
       },
       "then": {
         "properties": {
           "params": {
-            "required": [],
-            "not": {
-              "anyOf": [
-                {
-                  "required": [
-                    "camera_id"
-                  ]
-                },
-                {
-                  "required": [
-                    "cases"
-                  ]
-                },
-                {
-                  "required": [
-                    "audio"
-                  ]
-                }
-              ]
-            }
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
           }
         }
       }
@@ -149,33 +90,206 @@
       "if": {
         "properties": {
           "command": {
-            "enum": [
-              "preview",
-              "capture"
-            ]
+            "const": "settings.limit"
           }
         }
       },
       "then": {
         "properties": {
           "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "limit": {
+                    "type": "string"
+                  },
+                  "confirm": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "limit"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "incidents.list"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "incidents.export"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "incident": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "incident"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "incidents.delete"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "incident": {
+                    "type": "string"
+                  },
+                  "confirm": {
+                    "const": "true"
+                  }
+                },
+                "required": [
+                  "incident",
+                  "confirm"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "burst"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "camera_id": {
+                "$ref": "#/$defs/camera_id"
+              },
+              "engine": {
+                "$ref": "#/$defs/engine"
+              },
+              "streams": {
+                "$ref": "#/$defs/streams"
+              },
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "zoom": {
+                    "type": "string"
+                  },
+                  "ev": {
+                    "type": "string"
+                  },
+                  "ae_lock": {
+                    "type": "string"
+                  },
+                  "af_lock": {
+                    "type": "string"
+                  },
+                  "flash": {
+                    "type": "string"
+                  },
+                  "iso": {
+                    "type": "string"
+                  },
+                  "exposure_ns": {
+                    "type": "string"
+                  },
+                  "focus": {
+                    "type": "string"
+                  },
+                  "wb": {
+                    "type": "string"
+                  },
+                  "gains": {
+                    "type": "string"
+                  },
+                  "matrix": {
+                    "type": "string"
+                  },
+                  "count": {
+                    "type": "string"
+                  },
+                  "interval_ms": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
             "required": [
               "camera_id"
-            ],
-            "not": {
-              "anyOf": [
-                {
-                  "required": [
-                    "cases"
-                  ]
-                },
-                {
-                  "required": [
-                    "audio"
-                  ]
-                }
-              ]
-            }
+            ]
           }
         }
       }
@@ -184,27 +298,69 @@
       "if": {
         "properties": {
           "command": {
-            "enum": [
-              "record.start"
-            ]
+            "const": "bracket"
           }
         }
       },
       "then": {
         "properties": {
           "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "camera_id": {
+                "$ref": "#/$defs/camera_id"
+              },
+              "engine": {
+                "$ref": "#/$defs/engine"
+              },
+              "streams": {
+                "$ref": "#/$defs/streams"
+              },
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "zoom": {
+                    "type": "string"
+                  },
+                  "ev": {
+                    "type": "string"
+                  },
+                  "ae_lock": {
+                    "type": "string"
+                  },
+                  "af_lock": {
+                    "type": "string"
+                  },
+                  "flash": {
+                    "type": "string"
+                  },
+                  "iso": {
+                    "type": "string"
+                  },
+                  "exposure_ns": {
+                    "type": "string"
+                  },
+                  "focus": {
+                    "type": "string"
+                  },
+                  "wb": {
+                    "type": "string"
+                  },
+                  "gains": {
+                    "type": "string"
+                  },
+                  "matrix": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
             "required": [
               "camera_id"
-            ],
-            "not": {
-              "anyOf": [
-                {
-                  "required": [
-                    "cases"
-                  ]
-                }
-              ]
-            }
+            ]
           }
         }
       }
@@ -213,32 +369,667 @@
       "if": {
         "properties": {
           "command": {
-            "enum": [
-              "cts.run"
-            ]
+            "const": "meter"
           }
         }
       },
       "then": {
         "properties": {
           "params": {
-            "required": [
-              "cases"
-            ],
-            "not": {
-              "anyOf": [
-                {
-                  "required": [
-                    "camera_id"
-                  ]
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "x": {
+                    "type": "string"
+                  },
+                  "y": {
+                    "type": "string"
+                  },
+                  "meter": {
+                    "type": "string"
+                  }
                 },
-                {
-                  "required": [
-                    "audio"
-                  ]
-                }
-              ]
-            }
+                "required": [
+                  "x",
+                  "y"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "events"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "live.info"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "dual.cameras"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "dual.preview"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "camera_id": {
+                "$ref": "#/$defs/camera_id"
+              },
+              "engine": {
+                "$ref": "#/$defs/engine"
+              },
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "zoom": {
+                    "type": "string"
+                  },
+                  "ev": {
+                    "type": "string"
+                  },
+                  "ae_lock": {
+                    "type": "string"
+                  },
+                  "af_lock": {
+                    "type": "string"
+                  },
+                  "flash": {
+                    "type": "string"
+                  },
+                  "iso": {
+                    "type": "string"
+                  },
+                  "exposure_ns": {
+                    "type": "string"
+                  },
+                  "focus": {
+                    "type": "string"
+                  },
+                  "wb": {
+                    "type": "string"
+                  },
+                  "gains": {
+                    "type": "string"
+                  },
+                  "matrix": {
+                    "type": "string"
+                  },
+                  "first": {
+                    "type": "string"
+                  },
+                  "second": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "first",
+                  "second"
+                ]
+              }
+            },
+            "required": [
+              "camera_id",
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "dual.capture"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "camera_id": {
+                "$ref": "#/$defs/camera_id"
+              },
+              "engine": {
+                "$ref": "#/$defs/engine"
+              },
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "zoom": {
+                    "type": "string"
+                  },
+                  "ev": {
+                    "type": "string"
+                  },
+                  "ae_lock": {
+                    "type": "string"
+                  },
+                  "af_lock": {
+                    "type": "string"
+                  },
+                  "flash": {
+                    "type": "string"
+                  },
+                  "iso": {
+                    "type": "string"
+                  },
+                  "exposure_ns": {
+                    "type": "string"
+                  },
+                  "focus": {
+                    "type": "string"
+                  },
+                  "wb": {
+                    "type": "string"
+                  },
+                  "gains": {
+                    "type": "string"
+                  },
+                  "matrix": {
+                    "type": "string"
+                  },
+                  "first": {
+                    "type": "string"
+                  },
+                  "second": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "first",
+                  "second"
+                ]
+              }
+            },
+            "required": [
+              "camera_id",
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "dual.record"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "camera_id": {
+                "$ref": "#/$defs/camera_id"
+              },
+              "engine": {
+                "$ref": "#/$defs/engine"
+              },
+              "audio": {
+                "const": false
+              },
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "zoom": {
+                    "type": "string"
+                  },
+                  "ev": {
+                    "type": "string"
+                  },
+                  "ae_lock": {
+                    "type": "string"
+                  },
+                  "af_lock": {
+                    "type": "string"
+                  },
+                  "flash": {
+                    "type": "string"
+                  },
+                  "iso": {
+                    "type": "string"
+                  },
+                  "exposure_ns": {
+                    "type": "string"
+                  },
+                  "focus": {
+                    "type": "string"
+                  },
+                  "wb": {
+                    "type": "string"
+                  },
+                  "gains": {
+                    "type": "string"
+                  },
+                  "matrix": {
+                    "type": "string"
+                  },
+                  "first": {
+                    "type": "string"
+                  },
+                  "second": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "first",
+                  "second"
+                ]
+              }
+            },
+            "required": [
+              "camera_id",
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "results.list"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "results.show"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "run": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "run"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "results.export"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "run": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "run"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "results.compare"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "run": {
+                    "type": "string"
+                  },
+                  "reference": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "run",
+                  "reference"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "results.delete"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "run": {
+                    "type": "string"
+                  },
+                  "confirm": {
+                    "const": "true"
+                  }
+                },
+                "required": [
+                  "run",
+                  "confirm"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "baseline.add"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "run": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "run"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "baseline.remove"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "run": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "run"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "gallery.list"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "gallery.export"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "media": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "media"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "gallery.delete"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "media": {
+                    "type": "string"
+                  },
+                  "confirm": {
+                    "const": "true"
+                  }
+                },
+                "required": [
+                  "media",
+                  "confirm"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
           }
         }
       }
@@ -254,28 +1045,19 @@
       "then": {
         "properties": {
           "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "camera_id": {
+                "$ref": "#/$defs/camera_id"
+              },
+              "engine": {
+                "$ref": "#/$defs/engine"
+              }
+            },
             "required": [
               "camera_id"
-            ],
-            "not": {
-              "anyOf": [
-                {
-                  "required": [
-                    "streams"
-                  ]
-                },
-                {
-                  "required": [
-                    "cases"
-                  ]
-                },
-                {
-                  "required": [
-                    "audio"
-                  ]
-                }
-              ]
-            }
+            ]
           }
         }
       }
@@ -284,36 +1066,454 @@
       "if": {
         "properties": {
           "command": {
-            "enum": [
-              "cameras",
-              "preview.stop",
-              "probe",
-              "cts.cases",
-              "cts.run"
-            ]
+            "const": "cameras"
           }
         }
       },
       "then": {
         "properties": {
           "params": {
-            "not": {
-              "anyOf": [
-                {
-                  "required": [
-                    "engine"
-                  ]
-                },
-                {
-                  "required": [
-                    "streams"
-                  ]
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "preview"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "camera_id": {
+                "$ref": "#/$defs/camera_id"
+              },
+              "engine": {
+                "$ref": "#/$defs/engine"
+              },
+              "streams": {
+                "$ref": "#/$defs/streams"
+              },
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "zoom": {
+                    "type": "string"
+                  },
+                  "ev": {
+                    "type": "string"
+                  },
+                  "ae_lock": {
+                    "type": "string"
+                  },
+                  "af_lock": {
+                    "type": "string"
+                  },
+                  "flash": {
+                    "type": "string"
+                  },
+                  "iso": {
+                    "type": "string"
+                  },
+                  "exposure_ns": {
+                    "type": "string"
+                  },
+                  "focus": {
+                    "type": "string"
+                  },
+                  "wb": {
+                    "type": "string"
+                  },
+                  "gains": {
+                    "type": "string"
+                  },
+                  "matrix": {
+                    "type": "string"
+                  }
                 }
-              ]
-            }
+              }
+            },
+            "required": [
+              "camera_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "preview.stop"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "capture"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "camera_id": {
+                "$ref": "#/$defs/camera_id"
+              },
+              "engine": {
+                "$ref": "#/$defs/engine"
+              },
+              "streams": {
+                "$ref": "#/$defs/streams"
+              },
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "zoom": {
+                    "type": "string"
+                  },
+                  "ev": {
+                    "type": "string"
+                  },
+                  "ae_lock": {
+                    "type": "string"
+                  },
+                  "af_lock": {
+                    "type": "string"
+                  },
+                  "flash": {
+                    "type": "string"
+                  },
+                  "iso": {
+                    "type": "string"
+                  },
+                  "exposure_ns": {
+                    "type": "string"
+                  },
+                  "focus": {
+                    "type": "string"
+                  },
+                  "wb": {
+                    "type": "string"
+                  },
+                  "gains": {
+                    "type": "string"
+                  },
+                  "matrix": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "camera_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "record.start"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "camera_id": {
+                "$ref": "#/$defs/camera_id"
+              },
+              "engine": {
+                "$ref": "#/$defs/engine"
+              },
+              "streams": {
+                "$ref": "#/$defs/streams"
+              },
+              "audio": {
+                "$ref": "#/$defs/audio"
+              },
+              "options": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": false,
+                "properties": {
+                  "zoom": {
+                    "type": "string"
+                  },
+                  "ev": {
+                    "type": "string"
+                  },
+                  "ae_lock": {
+                    "type": "string"
+                  },
+                  "af_lock": {
+                    "type": "string"
+                  },
+                  "flash": {
+                    "type": "string"
+                  },
+                  "iso": {
+                    "type": "string"
+                  },
+                  "exposure_ns": {
+                    "type": "string"
+                  },
+                  "focus": {
+                    "type": "string"
+                  },
+                  "wb": {
+                    "type": "string"
+                  },
+                  "gains": {
+                    "type": "string"
+                  },
+                  "matrix": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "camera_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "probe"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "cts.cases"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "cts.run"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "cases": {
+                "$ref": "#/$defs/cases"
+              }
+            },
+            "required": [
+              "cases"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "benchmark.run"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "camera_id": {
+                "$ref": "#/$defs/camera_id"
+              },
+              "profile_id": {
+                "$ref": "#/$defs/profile_id"
+              },
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "build": {
+                    "type": "string"
+                  },
+                  "commit": {
+                    "type": "string"
+                  },
+                  "branch": {
+                    "type": "string"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "required": [
+              "camera_id",
+              "profile_id"
+            ]
           }
         }
       }
     }
-  ]
+  ],
+  "$defs": {
+    "camera_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^(custom|vendored):"
+      }
+    },
+    "audio": {
+      "type": "boolean"
+    },
+    "engine": {
+      "enum": [
+        "Camera2",
+        "CameraX"
+      ]
+    },
+    "streams": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "preview_size": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
+        },
+        "yuv_size": {
+          "type": "string",
+          "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
+        },
+        "jpeg_size": {
+          "type": "string",
+          "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
+        },
+        "video_size": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
+        },
+        "video_fps": {
+          "type": "string",
+          "pattern": "^(0*[1-9]|0*[1-9][0-9]|0*1[0-9]{2}|0*2[0-3][0-9]|0*240)$"
+        },
+        "codec": {
+          "enum": [
+            "H264",
+            "HEVC",
+            "Auto"
+          ]
+        },
+        "raw_size": {
+          "type": "string",
+          "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
+        },
+        "fps": {
+          "type": "string",
+          "pattern": "^(auto|[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?)$"
+        },
+        "stabilization": {
+          "enum": [
+            "AUTO",
+            "OFF",
+            "OIS",
+            "VIDEO",
+            "PREVIEW"
+          ]
+        },
+        "yuv_format": {
+          "enum": [
+            "JPEG",
+            "NV21"
+          ]
+        }
+      }
+    },
+    "profile_id": {
+      "const": "camera2-standard-v2"
+    }
+  }
 }

@@ -153,6 +153,8 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         if (enabled) action()
     }
 
+    fun applyRequested(next: LiveControls) { update(next) }
+
     private fun update(next: LiveControls) {
         controls = next.coerce(support, video)
         host.controlsChanged(controls)

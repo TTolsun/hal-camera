@@ -5,7 +5,7 @@ URI=content://dev.halcamera.cli
 LAST=/data/local/tmp/halcam-last-request
 
 die() { echo "halcam: $*" >&2; exit 1; }
-help() {
+help_all() {
     cat <<'EOF'
 HAL CAM — adb only
   doctor                                Check setup without starting a camera
@@ -20,16 +20,53 @@ HAL CAM — adb only
                                         Run the fixed Camera2 benchmark; export JSON
   status [REQUEST_ID|--app] | cancel [REQUEST_ID]
   fetch [REQUEST_ID]                     Prepare files and show one adb pull command
-Stream options for preview/capture/record start:
+More tasks (start with the list command to find an ID):
+  burst --count 3 [--interval-ms 500]     Save a fixed number of photos
+  bracket                               Save three AEB photos and HDR when possible
+  record snapshot                       Take a photo during CLI recording
+  meter --x 0.5 --y 0.5 [--meter focus|exposure]
+  live set --zoom 2 | live reset         Adjust current preview/CLI recording or reset controls
+  live info | events                    Read callbacks / save Events ZIP
+  dual cameras                          List logical and physical camera IDs
+  dual preview|capture|record --camera ID --first ID --second ID
+                                        Dual video is silent; stop with record stop
+  results list | results show --run ID
+  results compare --run ID --reference ID
+  results export --run ID                Export JSON and CSV
+  baseline add|remove --run ID           Explicitly choose normal reference runs
+  gallery list | gallery export --media ID
+  incidents list | incidents export --incident ID
+  incidents delete --incident ID --confirm true
+  settings show | settings limit --limit 0|10|20|...|100
+                                        Preview deletions; add --confirm true to apply
+  benchmark run --build LABEL --commit SHA --branch NAME --note TEXT
+  results delete --run ID --confirm true
+  gallery delete --media ID --confirm true
+Stream options for preview/capture/burst/bracket/record start:
   --engine Camera2|CameraX (default Camera2)
   --preview-size WxH --yuv-size WxH|off --jpeg-size WxH|off
   --video-size WxH --video-fps FPS --codec H264|HEVC|Auto
+  --raw-size WxH|off --yuv-format JPEG|NV21 --fps FPS|MIN-MAX|auto
+  --stabilization AUTO|OFF|OIS|VIDEO|PREVIEW
+For zoom, flash and manual controls: help controls
 Omitted stream fields use defaults. CameraX recording codec is Auto.
 Options: --timeout SECONDS (operation deadline), --no-wait (return request ID)
 Default camera: 0. Microphone is enabled unless --no-audio is given.
 Only one operation runs at a time. Unlock the device. ADB CLI is allowed by default.
 Example: adb shell sh /data/local/tmp/halcam capture --camera 0
 With multiple connections, use the same adb -s SERIAL for every command and pull.
+EOF
+}
+help() {
+    cat <<'EOF'
+HAL CAM: start with one task.
+  1. Check connection: doctor
+  2. Take a photo:     capture --camera 0
+  3. Record a video:   record start --no-audio   (finish: record stop)
+  4. Read results:     results list
+  5. Find files:       gallery list
+More commands: help all    Camera controls: help controls
+After a saved result, copy the printed adb pull command to your PC terminal.
 EOF
 }
 call() {
@@ -49,6 +86,9 @@ check_response() {
                 *'"CLI_DISABLED"'*) echo 'Enable ADB CLI in HAL CAM: Lab > ADB CLI.' >&2 ;;
                 *'"PERMISSION_REQUIRED"'*) echo 'Allow the required permission in the app. For silent recording use --no-audio.' >&2 ;;
                 *'"DEVICE_LOCKED"'*) echo 'Unlock the device, then retry.' >&2 ;;
+                *'"PREFLIGHT_FAILED"'*) echo 'Run streams for supported options. Adjust the named option, then retry.' >&2 ;;
+                *'"CONFIRM_REQUIRED"'*) echo 'Read the ID with results list or gallery list. To delete just that item, add --confirm true.' >&2 ;;
+                *'"BUSY"'*) echo 'Run status. Wait for completion, or use cancel to stop and keep saved files.' >&2 ;;
                 *'"REQUEST_NOT_FOUND"'*) echo 'Use status --app for current app state. Completed requests expire after 24 hours or 200 records.' >&2 ;;
             esac
             exit 1
@@ -86,9 +126,14 @@ downloads() {
 wait_for() {
     # A bounded client wait never cancels accepted work; status/fetch can recover it.
     end=$(( $(date +%s) + wait_seconds ))
+    last_progress=
     while :; do
         result=$(read_request "$rid")
-        check_response "$result"
+        case "$result" in *'"completed":true'*) check_response "$result" true ;; *) check_response "$result" ;; esac
+        state=$(echo "$result" | sed -n 's/.*"state":"\([a-z]*\)".*/\1/p')
+        saved=$(echo "$result" | sed -n 's/.*"saved":\([0-9][0-9]*\).*/\1/p')
+        progress="$state${saved:+: $saved photos saved}"
+        if [ "$progress" != "$last_progress" ]; then echo "$progress"; last_progress=$progress; fi
         case "$result" in
             *'"completed":true'*)
                 case "$result" in
@@ -106,7 +151,7 @@ wait_for() {
                 downloads "$result"
                 return ;;
         esac
-        if [ "$method" = record.start ]; then
+        if { [ "$method" = record.start ] || [ "$method" = dual.record ]; }; then
             case "$result" in *'"recording":true'*) echo "Recording started. Stop with: adb shell sh /data/local/tmp/halcam record stop"; return ;; esac
         fi
         [ "$(date +%s)" -lt "$end" ] || die "Wait timed out; operation may still run. Use status $rid."
@@ -117,15 +162,30 @@ wait_for() {
 [ $# -gt 0 ] || { help; exit 0; }
 method=$1; shift
 case "$method" in
-    help|-h|--help) help; exit 0 ;;
+    help|-h|--help)
+        case "${1:-}" in
+            controls) cat <<'EOF'
+Photo controls (preview, capture, burst, bracket, record start):
+  --zoom RATIO --ev STEPS --flash OFF|AUTO|ON|TORCH
+  --ae-lock true|false --af-lock true|false
+  --iso NUMBER --exposure-ns NANOSECONDS (use both)
+  --focus DIOPTERS --wb AUTO|DAYLIGHT|CLOUDY|SHADE|CUSTOM
+  --gains R,GE,GO,B --matrix M1,M2,M3,M4,M5,M6,M7,M8,M9
+Run streams first. Unsupported values are rejected, never silently replaced.
+EOF
+            ;;
+            all) help_all ;;
+            *) help ;;
+        esac
+        exit 0 ;;
     preview)
         case "${1:-}" in start) shift ;; stop) method=preview.stop; shift ;; esac ;;
-    record|cts|benchmark)
+    record|cts|benchmark|results|baseline|gallery|dual|live|settings|incidents)
         [ $# -gt 0 ] || die "$method needs a subcommand; use help"
         method=$method.$1; shift ;;
 esac
 case "$method" in
-    doctor|streams|cameras|preview|preview.stop|capture|record.start|record.stop|probe|cts.cases|cts.run|benchmark.run|status|cancel|fetch) ;;
+    settings.show|settings.limit|incidents.list|incidents.export|incidents.delete|live.set|live.reset|doctor|streams|cameras|preview|preview.stop|capture|burst|bracket|meter|events|live.info|dual.cameras|dual.preview|dual.capture|dual.record|results.list|results.show|results.export|results.compare|results.delete|baseline.add|baseline.remove|gallery.list|gallery.export|gallery.delete|record.start|record.stop|record.snapshot|probe|cts.cases|cts.run|benchmark.run|status|cancel|fetch) ;;
     *) die "Unknown command: $method. Use help." ;;
 esac
 
@@ -172,6 +232,13 @@ case "$method" in
             case "$result" in *'"completed":true'*) downloads "$result" ;; *) die 'Still running; use status first' ;; esac
         fi
         exit 0 ;;
+    record.snapshot)
+        [ $# -eq 0 ] || die 'record snapshot takes no options'
+        result=$(call --method record.snapshot)
+        check_response "$result"
+        echo "$result"
+        echo 'Snapshot requested. Use status to check snapshot_count or snapshot_error; record stop exports the files.'
+        exit 0 ;;
     record.stop)
         [ $# -eq 0 ] || die 'record stop takes no options'
         result=$(call --method record.stop)
@@ -193,13 +260,23 @@ profile=
 audio=
 cases=
 stream_options=
+build=
+commit=
+branch=
+note=
 while [ $# -gt 0 ]; do
     case "$1" in
-        --engine|--preview-size|--yuv-size|--jpeg-size|--video-size|--video-fps|--codec)
+        --engine|--preview-size|--yuv-size|--jpeg-size|--video-size|--video-fps|--codec|--raw-size|--fps|--stabilization|--yuv-format|--zoom|--ev|--flash|--ae-lock|--af-lock|--iso|--exposure-ns|--focus|--wb|--gains|--matrix|--count|--interval-ms|--x|--y|--meter|--run|--reference|--media|--confirm|--first|--second|--incident|--limit)
             [ $# -ge 2 ] || die "$1 needs a value"
-            case "$2" in ''|*[!a-zA-Z0-9x]*) die 'Invalid stream option value' ;; esac
+            case "$2" in ''|*[!a-zA-Z0-9x.,_-]*) die 'Invalid stream option value' ;; esac
             key=$(echo "${1#--}" | tr '-' '_')
             stream_options="$stream_options $key:s:$2"
+            shift 2 ;;
+        --build|--commit|--branch|--note)
+            [ $# -ge 2 ] || die "$1 needs a value"
+            [ "$method" = benchmark.run ] || die 'Build labels are only for benchmark run'
+            case "$2" in *:*) die 'Use the Python JSON client for labels containing colons' ;; esac
+            case "$1" in --build) build=$2 ;; --commit) commit=$2 ;; --branch) branch=$2 ;; --note) note=$2 ;; esac
             shift 2 ;;
         --camera|--timeout|--cases|--profile)
             [ $# -ge 2 ] || die "$1 needs a value"
@@ -218,7 +295,12 @@ fi
 if [ "$method" = benchmark.run ]; then
     [ -z "$stream_options$audio$cases" ] || die 'Benchmark uses a fixed Camera2 profile; stream, audio and CTS options are not supported'
 fi
-set -- --method "$method" --extra "request_id:s:$rid"
+set -- --method "$method"
+case "$method" in live.set|live.reset) ;; *) set -- "$@" --extra "request_id:s:$rid" ;; esac
+[ -z "$build" ] || set -- "$@" --extra "build:s:$build"
+[ -z "$commit" ] || set -- "$@" --extra "commit:s:$commit"
+[ -z "$branch" ] || set -- "$@" --extra "branch:s:$branch"
+[ -z "$note" ] || set -- "$@" --extra "note:s:$note"
 [ -z "$profile" ] || set -- "$@" --extra "profile:s:$profile"
 if [ -n "$camera" ]; then
     case "$camera" in *[!a-zA-Z0-9_.-]*) die 'Invalid camera ID' ;; esac
@@ -242,19 +324,23 @@ fi
 hello=$(content read --uri "$URI/v1/hello")
 check_response "$hello"
 case "$method" in
-    preview|preview.stop|capture|record.start|cts.run|benchmark.run)
+    preview|preview.stop|capture|burst|bracket|meter|events|live.info|dual.preview|dual.capture|dual.record|record.start|cts.run|benchmark.run)
         status=$(content read --uri "$URI/v1/status")
         check_response "$status"
         case "$status" in *'"busy":true'*) die 'Another operation is running. Use status or record stop.' ;; esac
+        target_screen=live
+        case "$method:$status" in
+            meter:*'"screen":"dual"'*|events:*'"screen":"dual"'*|live.info:*'"screen":"dual"'*|preview.stop:*'"screen":"dual"'*) target_screen=dual ;;
+        esac
         case "$status" in
-            *'"screen":"live"'*) ;;
+            *\"screen\":\"$target_screen\"*) ;;
             *) am start -W -n dev.halcamera/.cli.CliLaunchActivity >/dev/null || die 'Unlock the device and open HAL CAM' ;;
         esac
         attempts=0
         while :; do
             status=$(content read --uri "$URI/v1/status")
             check_response "$status"
-            case "$status" in *'"screen":"live"'*) break ;; esac
+            case "$status" in *\"screen\":\"$target_screen\"*) break ;; esac
             attempts=$((attempts + 1))
             [ "$attempts" -lt 10 ] || die 'Unlock the device and open Live in HAL CAM'
             sleep 1
@@ -262,6 +348,7 @@ case "$method" in
 esac
 result=$(call "$@")
 check_response "$result"
+case "$method" in live.set|live.reset) echo "$result"; exit 0 ;; esac
 echo "$rid" > "$LAST"
 echo "request_id=$rid"
 if [ "$no_wait" = true ]; then echo "$result"; else wait_for; fi

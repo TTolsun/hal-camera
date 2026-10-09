@@ -55,7 +55,7 @@ Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `678893a2` · Codex (code review; emulator UI only)
+- 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately)
 
 </details>
 
@@ -208,7 +208,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `678893a2` · Codex (code review; emulator UI only)
+- 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately)
 
 </details>
 
@@ -434,7 +434,7 @@ Android 10 이상에서는 `IS_PENDING`으로 쓰는 중인 항목의 공개를 
 | NV21 | `_YUV.nv21` | `Download/HALCamera` | Camera2만 지원하며, 짝수 크기·프레임당 16 MiB 이하여야 합니다. |
 | 촬영 정보 (자동 저장) | `_metadata.json` | `Download/HALCamera` | 사진 모드에서 두 포맷 모두 함께 저장합니다. |
 
-이 선택은 녹화 중 사진에는 적용하지 않습니다. 일반 CLI 촬영은 기본 JPEG 포맷을 사용합니다.
+이 선택은 녹화 중 사진에는 적용하지 않습니다. CLI 촬영의 기본 YUV 저장 포맷은 JPEG이며, `--yuv-format NV21`로 NV21을 지정할 수 있습니다. RAW 크기는 `--raw-size`로 따로 지정합니다.
 
 `_YUV.nv21`은 YUV_420_888의 crop 영역에 있는 8비트 샘플을 손실 없이 재배열한 파일입니다. Y를 행 순서로 쓰고 V·U를 교대로 쓰며 패딩·회전·압축·색 변환을 적용하지 않습니다. JSON의 outputs에는 실제 파일명·MIME·크기를, NV21에는 출력 plane의 offset/rowStride/pixelStride와 원본 크기·crop·stride를 함께 기록합니다. 저장소의 `docs/design/ORIGINAL-YUV.md`에 복원 규칙이 있습니다.
 
@@ -585,7 +585,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `678893a2` · Codex (code review; emulator UI only)
+- 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately)
 
 </details>
 
@@ -828,7 +828,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `678893a2` · Codex (code review; emulator UI only)
+- 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately)
 
 </details>
 
@@ -848,11 +848,11 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-09 @ `678893a2` · Codex (code review; emulator UI only) |
-| 원고 `contract` | 최신 | 검토 2026-10-09 @ `678893a2` · Codex (code review; emulator UI only) |
-| 원고 `camera2` | 최신 | 검토 2026-10-09 @ `678893a2` · Codex (code review; emulator UI only) |
-| 원고 `camerax` | 최신 | 검토 2026-10-09 @ `678893a2` · Codex (code review; emulator UI only) |
-| 원고 `comparison` | 최신 | 검토 2026-10-09 @ `678893a2` · Codex (code review; emulator UI only) |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
+| 원고 `contract` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
+| 원고 `camera2` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
+| 원고 `camerax` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
+| 원고 `comparison` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
 
 <!-- omm:end id=status -->
 
