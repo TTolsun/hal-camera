@@ -13,7 +13,7 @@
   <a class="skip-link" href="#main-content">본문으로 이동</a>
   <header class="site-header">
     <a class="brand" href="./index.html">HAL CAMERA</a>
-    <nav class="site-nav" aria-label="문서 메뉴" lang="en">
+    <nav class="site-nav" aria-label="Documentation" lang="en">
       <a href="./getting-started.html">Quickstart</a>
       <a href="./live.html">Live</a>
       <a href="./probe.html">Probe</a>
@@ -72,7 +72,7 @@
 </ul>
 </details><p>항목 하나만 보려면 행의 <code>›</code>를 누릅니다. 커스텀 케이스는 한 단계가 실패해도 나머지를 계속 실행합니다. CTS 원문은 중단 처리에 몇 초가 걸릴 수 있습니다.</p>
 <details id="cts-run-internals" data-search-section>
-<summary>단일 항목 실행과 내부 처리</summary><p>항목 하나만 따로 보려면 행의 <code>›</code>를 누릅니다. 커스텀 케이스는 <code>CtsCaseActivity</code>, CTS 원문은 <code>VendoredCaseActivity</code>가 열리며, <code>실행</code>·<code>중단</code>·<code>복사</code>·<code>공유</code>의 동작은 아래와 같고 결과 표시만 그 항목 하나에 맞춰져 있습니다.</p>
+<summary>단일 항목 실행과 내부 처리</summary><p>항목 하나만 따로 보려면 행의 <code>›</code>를 누릅니다. 커스텀 케이스는 <code>CtsCaseActivity</code>, CTS 원문은 <code>VendoredCaseActivity</code>가 열립니다. <code>실행</code>·<code>중단</code>·<code>복사</code>·<code>공유</code>는 목록 실행과 같은 방식으로 조작하며, 결과는 해당 항목만 표시합니다.</p>
 <p>커스텀 케이스는 한 단계가 실패해도 나머지 단계와 카메라를 계속 실행합니다. 화면의 SurfaceView가 CTS의 <code>Camera2SurfaceViewCtsActivity</code> 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 <code>surfaceChanged</code>를 기다린 뒤 세션을 엽니다. 카메라 열기·세션 구성·첫 결과·닫기의 대기 시간은 CTS <code>CameraTestUtils</code>와 같은 3초입니다.</p>
 <p>CTS 원문 케이스의 한 번 실행은 다릅니다. <code>실행</code>을 누르면 카메라와 마이크 권한을 확인한 뒤 JUnit이 테스트 메서드를 작업 스레드에서 돌립니다. 테스트는 카메라 전부를 스스로 순회하므로 진행 중에는 경과 시간만 갱신되고, 실패가 생기면 그 즉시 실패 카드가 추가됩니다. <code>중단</code>은 실행 중인 테스트가 쥔 카메라를 닫아 테스트를 실패시키는 방식이라 몇 초 뒤에 <code>중단됨</code>으로 끝납니다. JUnit에는 실행 중인 본문을 멈출 수단이 없기 때문입니다. 실행 화면 자체가 CTS의 <code>Camera2SurfaceViewCtsActivity</code>를 상속하므로 테스트의 <code>updatePreviewSurface</code>가 같은 SurfaceView를 그대로 씁니다.</p>
 </details><h2 id="검사-방식의-차이">검사 방식의 차이</h2>

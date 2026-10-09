@@ -39,7 +39,7 @@ title: CTS
 <details markdown="1" id="cts-run-internals" data-search-section>
 <summary>단일 항목 실행과 내부 처리</summary>
 
-항목 하나만 따로 보려면 행의 `›`를 누릅니다. 커스텀 케이스는 `CtsCaseActivity`, CTS 원문은 `VendoredCaseActivity`가 열리며, `실행`·`중단`·`복사`·`공유`의 동작은 아래와 같고 결과 표시만 그 항목 하나에 맞춰져 있습니다.
+항목 하나만 따로 보려면 행의 `›`를 누릅니다. 커스텀 케이스는 `CtsCaseActivity`, CTS 원문은 `VendoredCaseActivity`가 열립니다. `실행`·`중단`·`복사`·`공유`는 목록 실행과 같은 방식으로 조작하며, 결과는 해당 항목만 표시합니다.
 
 커스텀 케이스는 한 단계가 실패해도 나머지 단계와 카메라를 계속 실행합니다. 화면의 SurfaceView가 CTS의 `Camera2SurfaceViewCtsActivity` 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 `surfaceChanged`를 기다린 뒤 세션을 엽니다. 카메라 열기·세션 구성·첫 결과·닫기의 대기 시간은 CTS `CameraTestUtils`와 같은 3초입니다.
 
