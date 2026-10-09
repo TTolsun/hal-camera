@@ -12,7 +12,7 @@ title: Benchmark
 1. Live에서 `Lab → Benchmark`를 엽니다.
 2. 카메라와 [profile](glossary.md#profile)을 확인합니다. Live의 출력 설정과는 별개입니다.
 3. 측정을 실행하고 완료될 때까지 기다립니다.
-4. 판정과 `실행 정보`를 확인합니다. 무효·표본 부족이면 사유를 확인한 뒤 다시 측정합니다.
+4. 판정과 `Run Details`를 확인합니다. 무효·표본 부족이면 사유를 확인한 뒤 다시 측정합니다.
 
 **현재 앱은 종합 점수를 계산하지 않습니다.** 지표별 측정값과 baseline 대비 저하 판정을 확인하세요.
 
@@ -40,7 +40,7 @@ title: Benchmark
 | --- | --- |
 | 카메라와 profile | `camera2-standard-v1`과 녹화를 포함하는 `camera2-standard-v2`는 서로 비교하지 않습니다. v2의 baseline은 기기별로 새로 지정합니다. |
 | 관측 창과 워밍업 | 카메라를 다시 여는 반복 측정과 프리뷰 관측 세션은 구분됩니다. 관측 시작 전에 도착한 프레임은 워밍업으로 제외합니다. |
-| 유효성과 환경 | 표본 수, 발열, 충전 상태, 빌드 정보를 `실행 정보`에서 확인합니다. 비교 조건이 맞지 않으면 이유를 표시합니다. |
+| 유효성과 환경 | 표본 수, 발열, 충전 상태, 빌드 정보를 `Run Details`에서 확인합니다. 비교 조건이 맞지 않으면 이유를 표시합니다. |
 
 <div id="screen-benchmark-setup">
 <details markdown="1" id="detail-624444c9fe" data-search-section>
@@ -90,11 +90,11 @@ title: Benchmark
 
 | 판정 | 의미와 다음 행동 |
 | --- | --- |
-| `Measurement invalid` | 측정 유효성 조건을 충족하지 못했습니다. **실행 정보에서 무효 사유를 확인**하고 조건을 바로잡은 뒤 다시 측정하세요. |
+| `Measurement invalid` | 측정 유효성 조건을 충족하지 못했습니다. **Run Details에서 무효 사유를 확인**하고 조건을 바로잡은 뒤 다시 측정하세요. |
 | `First run` | 비교할 실행이 없습니다. **이번 조건과 측정값을 확인**하고 같은 조건으로 다음 실행을 측정하세요. |
 | `This run is the baseline` | 현재 실행이 기준입니다. **비교할 다른 실행을 선택**하세요. |
 | `No baseline` | 이전 실행과의 변화량만 보입니다. 저하 판정이 필요하면 **정상 실행을 baseline에 추가**하세요. |
-| `No verdict` | 기준은 있지만 비교 조건을 충족한 지표가 없습니다. **실행 정보에서 비교 불가 사유를 확인**하세요. |
+| `No verdict` | 기준은 있지만 비교 조건을 충족한 지표가 없습니다. **Run Details에서 비교 불가 사유를 확인**하세요. |
 | `N metrics degraded` | 저하된 지표가 N개입니다. **해당 지표와 실행 조건 차이를 확인**하고 같은 조건에서 재현되는지 측정하세요. |
 | `No degradation` | 판정한 지표에는 저하가 없습니다. **제외된 지표와 경고도 확인**하세요. 모든 HAL 동작이 정상이라는 뜻은 아닙니다. |
 
@@ -132,7 +132,7 @@ title: Benchmark
 
 </details>
 
-`실행 정보`에는 기기, 카메라, OS 빌드, subject, 표본 수, 발열, 비고, 파일과 비교 기준의 정보가 있습니다. validity flag는 화면에서는 뜻을 풀어 쓰고 JSON과 CSV에는 원래 코드를 유지합니다. `내보내기`로 결과 파일을 공유합니다.
+`Run Details`에는 기기, 카메라, OS 빌드, subject, 표본 수, 발열, 비고, 파일과 비교 기준의 정보가 있습니다. validity flag는 화면에서는 뜻을 풀어 쓰고 JSON과 CSV에는 원래 코드를 유지합니다. `Export`로 결과 파일을 공유합니다.
 
 ## 실행 기록에서 비교하고 내보내세요
 
@@ -152,7 +152,7 @@ title: Benchmark
 | --- | --- |
 | 실행 하나를 관리합니다. | 행의 `⋮` 메뉴를 누르거나 길게 누릅니다. baseline 추가·빼기, 비교, JSON·CSV 내보내기, 삭제를 고릅니다. |
 | 실행을 삭제합니다. | 확인 후 삭제하며, baseline에서도 빠집니다. |
-| 현재 목록을 내보냅니다. | `목록 CSV 내보내기`를 누릅니다. 현재 필터에 맞는 실행을 CSV 하나로 저장합니다. |
+| 현재 목록을 내보냅니다. | `Export CSV`를 누릅니다. 현재 필터에 맞는 실행을 CSV 하나로 저장합니다. |
 
 <div id="screen-benchmark-history">
 <details markdown="1" id="detail-fe7587d315" data-search-section>
@@ -166,12 +166,19 @@ title: Benchmark
 </details>
 </div>
 
-기본 상태 필터는 `전체`이므로 중단·무효 실행도 보입니다. 찾는 실행이 없으면 profile·camera 조건을 확인하거나 `필터 초기화`를 누르세요. PC의 `tools/aggregate.py`는 기존 점수 적격성 조건으로 필터링합니다. 점수의 유무와는 별개이며, 전체 실행이 필요하면 `--eligibility all`을 사용합니다.
+기본 상태 필터는 `전체`이므로 중단·무효 실행도 보입니다. 찾는 실행이 없으면 profile·camera 조건을 확인하거나 `Reset Filters`를 누르세요.
+
+<details markdown="1" id="benchmark-pc-filter" data-search-section>
+<summary>PC 집계에서 실행 개수가 다를 때</summary>
+
+PC의 `tools/aggregate.py`는 기존 점수 적격성 조건으로 필터링합니다. 점수의 유무와는 별개이며, 전체 실행이 필요하면 `--eligibility all`을 사용합니다.
+
+</details>
 
 <details markdown="1" id="benchmark-retention" data-search-section>
 <summary>오래된 실행의 자동 삭제와 손상 파일 처리</summary>
 
-저장 직후에는 `설정 → 최대 보관 개수`를 적용해 오래된 실행부터 삭제합니다. 한도는 10부터 100까지 10 단위로 선택하거나 `무제한`으로 지정하며 기본값은 `무제한`입니다. baseline에 든 실행은 자동 삭제하지 않습니다. 손상된 JSON은 별도로 알리며, baseline 파일을 읽지 못하면 baseline 변경과 삭제를 중단합니다.
+저장 직후에는 `Storage → Storage Limit`에서 정한 한도를 적용해 오래된 실행부터 삭제합니다. 한도는 10부터 100까지 10 단위로 선택하거나 `무제한`으로 지정하며 기본값은 `무제한`입니다. baseline에 든 실행은 자동 삭제하지 않습니다. 손상된 JSON은 별도로 알리며, baseline 파일을 읽지 못하면 baseline 변경과 삭제를 중단합니다.
 
 </details>
 

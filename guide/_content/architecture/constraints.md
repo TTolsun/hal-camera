@@ -24,7 +24,7 @@ verifications: []
 
 ### 실행과 측정의 제약
 
-1. 카메라를 점유하는 `CameraEngine`은 하나만 유지합니다. `close(done)`은 기기를 실제로 반환한 뒤 완료 콜백을 호출해야 합니다.
+1. 카메라를 점유하는 `CameraEngine`은 하나만 유지합니다. Live는 기존 엔진의 `close(done)` 완료 콜백을 받은 뒤 다음 엔진을 엽니다. 현재 CameraX는 공급자 종료가 1초 안에 끝나지 않아도 완료 콜백을 호출할 수 있으므로, 완료 통지를 카메라 서비스의 가용 상태와 같다고 보지 않습니다. [카메라 열기와 닫기](architecture.md#카메라-열기와-닫기)에서 다음 Camera2 엔진의 가용 대기를, [실행 흐름](architecture.md#실행에서-저장까지)에서 BenchmarkRunner의 닫기 제한 시간을 확인하세요.
 2. 앱의 시각은 `elapsedRealtimeNanos`를 사용합니다. 센서 시각은 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 앱 시각과 직접 비교합니다.
 3. 카메라 열거에는 공개 Camera2 API만 사용합니다. 논리 카메라의 물리 endpoint를 독립적으로 열 수 있다고 가정하지 않습니다.
 4. 벤치마크 JSON과 incident ZIP에는 관측 이벤트·메타데이터를 저장하며 이미지 픽셀을 저장하지 않습니다.

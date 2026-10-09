@@ -507,7 +507,7 @@ sequenceDiagram
 
 <!-- omm:end id=tool-handoff-diagram -->
 
-Live Streams는 Lab을 거치지 않습니다.
+Live의 크기 표시로 Live Streams를 열면 Lab을 거치지 않습니다. Lab의 Settings에서도 같은 설정 화면을 열 수 있습니다.
 
 ```mermaid
 sequenceDiagram

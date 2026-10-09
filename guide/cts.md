@@ -8,19 +8,19 @@ title: CTS
 ## 선택한 항목을 실행하세요
 
 1. Live의 `Lab → CTS`를 엽니다.
-2. `커스텀 케이스` 또는 `CTS 원문 케이스`를 고릅니다. 원문 케이스는 **Android 14 이상**에서 사용할 수 있습니다. [방식 비교](#검사-방식의-차이)에서 차이를 확인하세요.
+2. `Custom Checks` 또는 `AOSP CTS`를 고릅니다. 원문 케이스는 **Android 14 이상**에서 사용할 수 있습니다. [방식 비교](#검사-방식의-차이)에서 차이를 확인하세요.
 3. 실행할 항목을 체크합니다. 하단에서 선택 개수와 예상 시간을 확인합니다.
-4. `실행`을 누르고 필요한 권한을 허용합니다.
+4. `Run Selected (선택 개수)`를 누르고 필요한 권한을 허용합니다.
 5. 끝난 카드를 눌러 결과를 확인합니다.
 
 **확인할 결과:** 선택한 항목에 판정과 소요 시간이 표시됩니다. 실패나 SKIP이 있으면 [판정 읽기](#판정을-읽으세요)에서 다음 확인 항목을 찾으세요.
 
 | 필요할 때 | 조작과 결과 |
 | --- | --- |
-| 한꺼번에 선택합니다. | 그룹의 `전체 선택`을 누릅니다. 선택은 다음에 열 때도 유지됩니다. |
-| 도중에 멈춥니다. | `중단`을 누릅니다. 현재 항목은 `중단됨`, 나머지는 `실행 안 함`으로 남습니다. |
-| 결과를 가져갑니다. | `복사`는 전체 보고서를 클립보드에 넣습니다. `공유`는 같은 내용을 다른 앱으로 보냅니다. |
-| 다시 검사합니다. | `다시 실행`을 누르면 같은 항목을 처음부터 실행합니다. |
+| 한꺼번에 선택합니다. | 그룹의 `Select All`을 누릅니다. 선택은 다음에 열 때도 유지됩니다. |
+| 도중에 멈춥니다. | `Stop`을 누릅니다. 현재 항목은 `중단됨`, 나머지는 `실행 안 함`으로 남습니다. |
+| 결과를 가져갑니다. | `Copy`는 전체 보고서를 클립보드에 넣습니다. `Share`는 같은 내용을 다른 앱으로 보냅니다. |
+| 다시 검사합니다. | `Run Again`을 누르면 같은 항목을 처음부터 실행합니다. |
 
 <details markdown="1" id="detail-aeaf43fd9f" data-search-section>
 <summary>권한·예상 시간·실행 순서</summary>
@@ -39,11 +39,11 @@ title: CTS
 <details markdown="1" id="cts-run-internals" data-search-section>
 <summary>단일 항목 실행과 내부 처리</summary>
 
-단일 항목은 커스텀 케이스의 `CtsCaseActivity` 또는 CTS 원문의 `VendoredCaseActivity`에서 실행합니다. `실행`·`중단`·`복사`·`공유`는 목록 실행과 같은 방식으로 조작하며, 결과는 해당 항목만 표시합니다.
+단일 항목은 커스텀 케이스의 `CtsCaseActivity` 또는 CTS 원문의 `VendoredCaseActivity`에서 실행합니다. `Run`·`Stop`·`Copy`·`Share`는 목록 실행과 같은 방식으로 조작하며, 결과는 해당 항목만 표시합니다.
 
 커스텀 케이스는 한 단계가 실패해도 나머지 단계와 카메라를 계속 실행합니다. 화면의 SurfaceView가 CTS의 `Camera2SurfaceViewCtsActivity` 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 `surfaceChanged`를 기다린 뒤 세션을 엽니다. 카메라 열기·세션 구성·첫 결과·닫기의 대기 시간은 CTS `CameraTestUtils`와 같은 3초입니다.
 
-CTS 원문 케이스의 한 번 실행은 다릅니다. `실행`을 누르면 카메라와 마이크 권한을 확인한 뒤 JUnit이 테스트 메서드를 작업 스레드에서 돌립니다. 테스트는 카메라 전부를 스스로 순회하므로 진행 중에는 경과 시간만 갱신되고, 실패가 생기면 그 즉시 실패 카드가 추가됩니다. `중단`은 실행 중인 테스트가 쥔 카메라를 닫아 테스트를 실패시키는 방식이라 몇 초 뒤에 `중단됨`으로 끝납니다. JUnit에는 실행 중인 본문을 멈출 수단이 없기 때문입니다. 실행 화면 자체가 CTS의 `Camera2SurfaceViewCtsActivity`를 상속하므로 테스트의 `updatePreviewSurface`가 같은 SurfaceView를 그대로 씁니다.
+CTS 원문 케이스의 한 번 실행은 다릅니다. `Run`을 누르면 카메라와 마이크 권한을 확인한 뒤 JUnit이 테스트 메서드를 작업 스레드에서 돌립니다. 테스트는 카메라 전부를 스스로 순회하므로 진행 중에는 경과 시간만 갱신되고, 실패가 생기면 그 즉시 실패 카드가 추가됩니다. `Stop`은 실행 중인 테스트가 쥔 카메라를 닫아 테스트를 실패시키는 방식이라 몇 초 뒤에 `중단됨`으로 끝납니다. JUnit에는 실행 중인 본문을 멈출 수단이 없기 때문입니다. 실행 화면 자체가 CTS의 `Camera2SurfaceViewCtsActivity`를 상속하므로 테스트의 `updatePreviewSurface`가 같은 SurfaceView를 그대로 씁니다.
 
 </details>
 
@@ -80,7 +80,7 @@ sequenceDiagram
 
 한 번의 실행에는 한 종류만 들어갑니다. 취소하면 남은 항목은 실행하지 않으며, 다음 케이스는 현재 케이스의 정리가 끝난 뒤 시작합니다.
 
-두 목록은 모두 체크리스트이고, 체크한 항목을 `실행`하면 `CtsSuiteRunActivity`가 위에서부터 차례로 돌립니다.
+두 목록은 모두 체크리스트이고, 체크한 항목을 `Run Selected`로 실행하면 `CtsSuiteRunActivity`가 위에서부터 차례로 돌립니다.
 
 실행 화면은 `Camera2SurfaceViewCtsActivity`를 상속하고 커스텀 러너의 `PreviewHost`를 구현해 SurfaceView를 공유합니다.
 
@@ -141,11 +141,16 @@ JPEG 크기 전부와 프리뷰 크기(1080p 이하) 전부의 조합마다 세�
 </details>
 </div>
 
-`custom#` 원본은 CTS 클래스에 그대로 대응하는 메서드가 없는 케이스입니다. 검사 문구는 CTS `CameraTestUtils`에 같은 검사가 있으면 그 문구를 따릅니다. `RecordingTest#testBasicRecording`은 커스텀 케이스에 없습니다. 원문 그대로 실행하는 쪽이 옮겨 적는 쪽보다 정확하므로 CTS 원문 케이스로만 제공하며, 녹화 판정 규칙(`BasicRecordingRules`)은 카메라 전환과 동영상 스냅샷이 계속 공유합니다.
+<details markdown="1" id="cts-custom-source" data-search-section>
+<summary>커스텀 검사와 CTS 원본의 관계</summary>
+
+`custom#` 원본은 CTS 클래스에 그대로 대응하는 메서드가 없는 케이스입니다. 검사 문구는 CTS `CameraTestUtils`에 같은 검사가 있으면 그 문구를 따릅니다. `RecordingTest#testBasicRecording`은 CTS 원문 케이스로만 제공하며, 녹화 판정 규칙(`BasicRecordingRules`)은 카메라 전환과 동영상 스냅샷이 공유합니다.
+
+</details>
 
 ## CTS 원문 메서드를 선택하세요
 
-CTS 원문 케이스 목록은 `:ctsvendor` 모듈에 가져온 테스트 클래스의 `@Test` 메서드를 reflection으로 나열합니다. 지금 가져온 클래스는 세 개입니다.
+검사할 기능에 맞는 클래스를 고르세요. Android 14 이상에서 사용할 수 있습니다.
 
 | 클래스 | 검사하는 범위 |
 | --- | --- |
@@ -167,7 +172,12 @@ CTS 원문 케이스 목록은 `:ctsvendor` 모듈에 가져온 테스트 클래
 </details>
 </div>
 
-가져온 소스는 AOSP `android16-release` 브랜치의 `cts/tests/camera`와 `frameworks/ex/camera2/public`이며, 원본 커밋과 적용한 패치 여덟 건(`@TestApi`·`@FlaggedApi` 호출을 공개 API로 바꾸거나 제거하고, shell 권한 행을 만들지 않게 한 것)은 `ctsvendor/UPSTREAM.md`에 있습니다. Android 14(API 34) 아래 기기에서는 이 경로가 비활성화됩니다. 업스트림이 이 파일 집합을 `min_sdk_version 34`로 빌드하기 때문입니다.
+<details markdown="1" id="cts-upstream-source" data-search-section>
+<summary>원문 출처와 앱 실행을 위한 변경</summary>
+
+목록은 `:ctsvendor` 모듈에 가져온 클래스의 `@Test` 메서드를 reflection으로 나열합니다. 소스는 AOSP `android16-release`의 `cts/tests/camera`와 `frameworks/ex/camera2/public`입니다. 원본 커밋과 적용한 패치 여덟 건(`@TestApi`·`@FlaggedApi` 호출 변경과 shell 권한 행 제거)은 `ctsvendor/UPSTREAM.md`에 있습니다. 업스트림의 `min_sdk_version 34`에 따라 Android 14 아래에서는 이 경로가 비활성화됩니다.
+
+</details>
 
 <div id="screen-cts-running">
 <details markdown="1" id="detail-5459e791e2" data-search-section>
