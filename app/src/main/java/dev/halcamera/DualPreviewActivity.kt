@@ -58,6 +58,11 @@ import androidx.core.content.FileProvider
 import androidx.core.view.WindowCompat
 import java.util.Locale
 import java.util.concurrent.Executors
+import dev.halcamera.camera.*
+import dev.halcamera.ui.ExpandingZoomControl
+import dev.halcamera.ui.LiveControlBar
+import dev.halcamera.ui.ManualControlPanel
+import dev.halcamera.ui.FocusRing
 
 /**
  * Live Dual modes: a main physical camera and a draggable inset from another physical camera.
@@ -90,6 +95,13 @@ class DualPreviewActivity : ComponentActivity() {
     private var videoMode = false
     private var recording = false
     private var recordPending = false
+    private var photoPending = false
+    private var mainControls: DualMainControls? = null
+    private lateinit var controlBar: LiveControlBar
+    private lateinit var manualPanel: ManualControlPanel
+    private lateinit var zoomControl: ExpandingZoomControl
+    private var zoomRatio = 1f
+    private var zoomAvailable = false
     private var recordingSince = 0L
     private var recordButton: ShutterButton? = null
     private var recordLabel: TextView? = null
@@ -143,19 +155,23 @@ class DualPreviewActivity : ComponentActivity() {
         pipX = positionPrefs.getFloat("pip_x", 1f)
         pipY = positionPrefs.getFloat("pip_y", 0.12f)
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() { leave(videoMode) }
+            override fun handleOnBackPressed() {
+                if (manualPanel.close()) return
+                if (callbackGraph.visibility == View.VISIBLE) { showCallbacks(false); return }
+                if (!photoPending) leave(videoMode)
+            }
         })
         logicalId = savedInstanceState?.getString(KEY_LOGICAL)
         pair = savedInstanceState?.getStringArray(KEY_PAIR)?.takeIf { it.size == 2 }?.let { it[0] to it[1] }
         body = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         showPage()
         recentMedia = RecentMediaThumbnail(this) { bitmap, video -> galleryButton.setThumbnail(bitmap, video) }
-        message("카메라 정보를 읽는 중입니다.")
+        message("Loading camera information…")
         io.execute {
             val read = runCatching { readLogicalMultiCameras(manager) }
             runOnUiThread {
                 if (isDestroyed || isFinishing) return@runOnUiThread
-                read.fold({ cameras = it; render(); startIfReady() }, { message("카메라 정보를 읽지 못했습니다. ${it.message.orEmpty()}") })
+                read.fold({ cameras = it; render(); startIfReady() }, { message("Could not load camera information. ${it.message.orEmpty()}") })
             }
         }
     }
@@ -217,14 +233,16 @@ class DualPreviewActivity : ComponentActivity() {
         controls.addView(FrameLayout(this).apply {
             addView(engineButton, FrameLayout.LayoutParams(-2, dp(48)))
         }, LinearLayout.LayoutParams(0, dp(48), 1f))
-        controls.addView(IconButton(this, R.drawable.ic_chevron_down, "촬영 제어 · Dual 미지원", dark = true) {}.apply {
-            isEnabled = false
-            alpha = 0.4f
-        }, LinearLayout.LayoutParams(dp(48), dp(48)))
+        controlBar = LiveControlBar(this, object : LiveControlBar.Host {
+            override fun controlsChanged(controls: LiveControls) { session?.setControls(controls) }
+            override fun notice(text: String) { Toast.makeText(this@DualPreviewActivity, text, Toast.LENGTH_LONG).show() }
+            override fun manualRequested() { showCallbacks(false); manualPanel.toggle() }
+        })
+        manualPanel = ManualControlPanel(this, { controlBar.setManual(it) }, { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
+        controls.addView(controlBar.handle, LinearLayout.LayoutParams(dp(48), dp(48)))
         val trailing = Look.row(this).apply { gravity = Gravity.END or Gravity.CENTER_VERTICAL }
         trailing.addView(chromeButton("Callback") {
-            callbackGraph.visibility = if (callbackGraph.visibility == View.VISIBLE) View.GONE else View.VISIBLE
-            metricsText.visibility = if (callbackGraph.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+            showCallbacks(callbackGraph.visibility != View.VISIBLE)
         }, LinearLayout.LayoutParams(-2, dp(48)))
         labButton = chromeButton("Lab") { openTool(WorkbenchActivity::class.java) }
         trailing.addView(labButton, LinearLayout.LayoutParams(-2, dp(48)).apply { marginStart = dp(4) })
@@ -232,13 +250,17 @@ class DualPreviewActivity : ComponentActivity() {
         topBar.addView(controls)
         liveIndicator = LiveIndicator(this).apply { onSizesClick = { openTool(LiveStreamsActivity::class.java) } }
         topBar.addView(liveIndicator)
+        topBar.addView(controlBar.view, lp(4))
         statusText = Look.text(this, "", 12, Look.onDark).apply {
             gravity = Gravity.CENTER
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
         }.also { topBar.addView(it, lp(4)) }
-        retryButton = chromeButton("다시 시작") { if (!busy()) restart() }.apply { visibility = View.GONE }
+        retryButton = chromeButton("Retry") { if (!busy()) restart() }.apply { visibility = View.GONE }
             .also { topBar.addView(it, lp(4)) }
         root.addView(topBar, FrameLayout.LayoutParams(-1, -2, Gravity.TOP))
+        topBar.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            pipStage?.let { stage -> pipView?.let { positionPip(stage, it) } }
+        }
 
         val captureChrome = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -254,15 +276,16 @@ class DualPreviewActivity : ComponentActivity() {
             setOnClickListener { showInfo() }
         }
         bottomBar.addView(metricsText, lp(0))
-        bottomBar.addView(chromeButton("1 ↔ 2") {
-            if (!busy()) { pair = pair?.let { it.second to it.first }; restart() }
-        }.also { pairButtons += it }, LinearLayout.LayoutParams(-2, dp(48)))
+        zoomControl = ExpandingZoomControl(this) { ratio ->
+            zoomRatio = ratio; session?.setZoom(ratio)
+        }
+        bottomBar.addView(zoomControl.viewport(), LinearLayout.LayoutParams(-2, dp(48)))
         captureRow = Look.row(this).apply { gravity = Gravity.CENTER_VERTICAL }
         galleryButton = RecentMediaButton(this) { openTool(GalleryActivity::class.java) }
         captureRow!!.addView(FrameLayout(this).apply {
             addView(galleryButton, FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
         }, LinearLayout.LayoutParams(0, dp(64), 1f))
-        recordButton = ShutterButton(this).apply { setOnClickListener { toggleRecording() } }
+        recordButton = ShutterButton(this).apply { setOnClickListener { if (videoMode) toggleRecording() else takePhoto() } }
         captureRow!!.addView(recordButton, LinearLayout.LayoutParams(dp(64), dp(64)).apply {
             marginStart = dp(12); marginEnd = dp(12)
         })
@@ -309,6 +332,14 @@ class DualPreviewActivity : ComponentActivity() {
             insets
         }
         ViewCompat.requestApplyInsets(root)
+        root.addView(manualPanel.view, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
+            leftMargin = dp(12); rightMargin = dp(12)
+        })
+        captureChrome.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+            val params = manualPanel.view.layoutParams as FrameLayout.LayoutParams
+            val margin = captureChrome.height + dp(8)
+            if (params.bottomMargin != margin) { params.bottomMargin = margin; manualPanel.view.layoutParams = params }
+        }
         updateControls()
     }
 
@@ -325,9 +356,9 @@ class DualPreviewActivity : ComponentActivity() {
     }
 
     private fun render() {
-        if (Build.VERSION.SDK_INT < 28) return message("Android 9 (API 28) 이상이 필요합니다.")
+        if (Build.VERSION.SDK_INT < 28) return message("Requires Android 9 (API 28) or later.")
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
-            return message("카메라 권한이 필요합니다. Live에서 권한을 허용한 뒤 다시 여세요.")
+            return message("Camera permission required. Allow access in Live, then reopen Dual.")
         val candidates = DualPreviewPlanner.candidates(cameras)
         if (candidates.isEmpty()) return message(unsupportedReport())
         val camera = candidates.firstOrNull { it.logicalId == logicalId } ?: candidates.first()
@@ -335,10 +366,25 @@ class DualPreviewActivity : ComponentActivity() {
         val selected = pair?.takeIf { (a, b) -> a != b && camera.physical.any { it.id == a } && camera.physical.any { it.id == b } }
             ?: DualPreviewPlanner.defaultPair(camera)
         pair = selected
+        mainControls = if (engineName == "Camera2" && selected != null) runCatching {
+            DualMainControls(selected.first, manager.getCameraCharacteristics(camera.logicalId), manager.getCameraCharacteristics(selected.first))
+        }.getOrNull() else null
+        controlBar.reset(mainControls?.support ?: LiveControlSupport.NONE)
+        controlBar.setManualAvailable(mainControls != null)
+        manualPanel.reset(mainControls?.manual ?: ManualSupport(camera2 = false))
+        zoomRatio = 1f
+        zoomAvailable = mainControls != null
+        zoomControl.setChoices(zoomPresets(1f to (mainControls?.maxZoom ?: 1f)), zoomRatio)
         header()
 
         val stage = FrameLayout(this).apply { clipChildren = true }
         stage.addView(previewColumn(0), FrameLayout.LayoutParams(-1, -1))
+        stage.addView(FocusRing(this, { object : TouchMetering {
+            override fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean {
+                val point = views[0]?.naturalPoint(x, y) ?: return false
+                return (session as? DualPreviewSession)?.meterAt(point.first, point.second, exposure, feedback) ?: false
+            }
+        } }, { controlBar.setAeLock(it) }), FrameLayout.LayoutParams(-1, -1))
         val pip = previewColumn(1).apply {
             background = GradientDrawable().apply { setColor(Color.BLACK); cornerRadius = dp(16).toFloat(); setStroke(dp(1), Look.cameraOutline) }
             clipToOutline = true
@@ -348,11 +394,6 @@ class DualPreviewActivity : ComponentActivity() {
         stage.addView(pip, FrameLayout.LayoutParams(dp(112), dp(176)))
         pipStage = stage; pipView = pip
         stage.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            val width = (stage.width * 0.32f).toInt().coerceAtLeast(dp(96)).coerceAtMost(stage.width)
-            val height = (width * 16 / 9).coerceAtMost(stage.height)
-            if (pip.layoutParams.width != width || pip.layoutParams.height != height) {
-                pip.layoutParams = FrameLayout.LayoutParams(width, height)
-            }
             positionPip(stage, pip)
             stage.post { positionPip(stage, pip) }
         }
@@ -395,6 +436,8 @@ class DualPreviewActivity : ComponentActivity() {
             override fun onSurfaceTextureUpdated(texture: SurfaceTexture) {
                 if (views[index] === view && index == 0) lastPreviewMs = SystemClock.elapsedRealtime()
                 if (views[index] === view && session != null) stats?.let { (a, b) -> (if (index == 0) a else b).frame(SystemClock.elapsedRealtime()) }
+                if (views[index] === view && session != null) recorder.record(sessionId, "preview_available", sensorNs = texture.timestamp,
+                    values = mapOf("stream" to if (index == 0) "preview_main" else "preview_sub"))
             }
         }
         views[index] = view
@@ -417,7 +460,7 @@ class DualPreviewActivity : ComponentActivity() {
                 stats = null
                 lastSkewNs = null
                 refreshInfo()
-                setStatus("시작하지 않음: ${result.reason.label}")
+                setStatus("Unavailable: ${result.reason.label}")
             }
             is DualPreviewPlanner.Result.Ready -> {
                 failed = false
@@ -430,13 +473,18 @@ class DualPreviewActivity : ComponentActivity() {
                 session = if (engineName == "CameraX") DualCameraXSession(applicationContext, this,
                     result.plan, a to b, videoMode, sessionListener, telemetry, sessionId)
                 else DualPreviewSession(manager, result.plan, a to b, sessionListener,
-                    if (videoMode) applicationContext else null, telemetry, sessionId)
+                    if (videoMode) applicationContext else null, telemetry, sessionId, applicationContext, mainControls)
                 session?.start()
             }
         }
     }
 
     private val sessionListener = object : DualPreviewSession.Listener {
+        override fun onZoomRange(range: Pair<Float, Float>) {
+            zoomAvailable = true
+            zoomControl.setChoices(zoomPresets(range), zoomRatio)
+            updateControls()
+        }
         override fun onStatus(message: String) = setStatus(message)
         override fun onStreaming(size: LiveSize) {
             streamingSize = size
@@ -457,6 +505,7 @@ class DualPreviewActivity : ComponentActivity() {
             retryButton?.visibility = View.VISIBLE
             refreshInfo()
             recordPending = false
+            photoPending = false
             closeSession { updateControls() }
         }
         override fun onRecording() {
@@ -467,6 +516,12 @@ class DualPreviewActivity : ComponentActivity() {
         override fun onVideoSaved(result: Result<Int>) {
             result.fold({ Toast.makeText(this@DualPreviewActivity, "MP4 2개 저장 완료", Toast.LENGTH_SHORT).show() },
                 { Toast.makeText(this@DualPreviewActivity, "저장 실패: ${it.message}", Toast.LENGTH_LONG).show() })
+        }
+        override fun onPhotoSaved(result: Result<Int>) {
+            photoPending = false
+            result.fold({ Toast.makeText(this@DualPreviewActivity, "두 센서 사진 ${it}개 저장 완료", Toast.LENGTH_SHORT).show() },
+                { Toast.makeText(this@DualPreviewActivity, "동시 사진 저장 실패: ${it.message}", Toast.LENGTH_LONG).show() })
+            updateControls()
         }
     }
 
@@ -522,11 +577,14 @@ class DualPreviewActivity : ComponentActivity() {
     private fun refreshInfo() {
         val current = stats
         fun fps(value: PhysicalOutputStats?) = value?.fps()?.let { String.format(Locale.US, "%.1f", it) } ?: "—"
-        metricsText.text = "FPS ${fps(current?.first)} / ${fps(current?.second)} · Phys ${pair?.first ?: "—"} / ${pair?.second ?: "—"}\n" +
-            if (videoMode) "${streamingSize ?: "—"} · MP4 × 2 · 무음" else "${streamingSize ?: "—"} · Dual preview"
+        metricsText.text = "FPS ${fps(current?.first)} / ${fps(current?.second)}\n" +
+            if (photoPending) "Capturing…"
+            else "Phys ${pair?.first ?: "—"} / ${pair?.second ?: "—"}" + if (videoMode) " · Silent" else ""
         liveIndicator.bind(started && !closing && !failed && streamingSize != null && SystemClock.elapsedRealtime() - lastPreviewMs < 1500)
         val events = recorder.snapshot()
         val latest = events.lastOrNull { it.session == sessionId && it.kind == "capture_result" }
+        val primary = events.lastOrNull { it.session == sessionId && it.kind == "dual_main_result" }
+        manualPanel.bind(controlBar.controls.manual, !busy(), mainControls?.manual ?: ManualSupport(camera2 = false), primary, SystemClock.elapsedRealtimeNanos())
         liveIndicator.bindStabilization(dev.halcamera.camera.LiveEisStatus(
             (latest?.values?.get("videoStabilization") as? Number)?.toInt()), recording)
         if (callbackGraph.visibility == View.VISIBLE)
@@ -551,9 +609,9 @@ class DualPreviewActivity : ComponentActivity() {
 
     private fun unsupportedReport(): String {
         val rear = cameras.filter { it.facing == CameraLabel.FACING_BACK }
-        if (rear.isEmpty()) return "후면 카메라가 없어 사용할 수 없습니다."
-        return "이 기기에서는 사용할 수 없습니다.\n" + rear.joinToString("\n") { c ->
-            "${CameraLabel.short(c.logicalId)}: ${DualPreviewPlanner.refusal(c, Build.VERSION.SDK_INT)?.label ?: "지원"}"
+        if (rear.isEmpty()) return "Unavailable: no rear camera."
+        return "Dual preview is unavailable on this device.\n" + rear.joinToString("\n") { c ->
+            "${CameraLabel.short(c.logicalId)}: ${DualPreviewPlanner.refusal(c, Build.VERSION.SDK_INT)?.label ?: "Supported"}"
         }
     }
 
@@ -590,10 +648,12 @@ class DualPreviewActivity : ComponentActivity() {
         return android.widget.HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(row) }
     }
 
-    private fun busy() = closing || recording || recordPending
+    private fun busy() = closing || recording || recordPending || photoPending
 
     private fun updateControls() {
         root.keepScreenOn = started && !closing && !failed && streamingSize != null
+        controlBar.bind(videoMode, mainControls != null && !closing && !recordPending && !photoPending && streamingSize != null)
+        zoomControl.isEnabled = zoomAvailable && !closing && !recordPending && !photoPending && streamingSize != null
         liveIndicator.setSizesEnabled(!busy())
         engineButton.text = engineName
         engineButton.isEnabled = !busy()
@@ -602,9 +662,9 @@ class DualPreviewActivity : ComponentActivity() {
         pairButtons.forEach { it.isEnabled = !busy(); it.alpha = if (it.isEnabled) 1f else 0.45f }
         pipSelector?.isEnabled = !busy()
         pipSelector?.alpha = if (busy()) 0.45f else 1f
-        recordButton?.isEnabled = videoMode && !closing && !recordPending && !failed && streamingSize != null
+        recordButton?.isEnabled = (videoMode || mainControls != null) && !closing && !recordPending && !photoPending && !failed && streamingSize != null
         recordButton?.setCaptureState(videoMode = videoMode, recording = recording)
-        recordButton?.contentDescription = if (!videoMode) "Dual · P: 프리뷰 전용" else if (recording) "두 카메라 녹화 정지" else "두 카메라 무음 녹화 시작"
+        recordButton?.contentDescription = if (!videoMode) "두 센서 동시 사진 촬영" else if (recording) "두 카메라 녹화 정지" else "두 카메라 무음 녹화 시작"
         modeRow?.visibility = if (recording || recordPending) View.INVISIBLE else View.VISIBLE
         recordLabel?.visibility = if (recording || recordPending) View.VISIBLE else View.GONE
         if (recordPending) recordLabel?.text = "Starting…"
@@ -639,6 +699,24 @@ class DualPreviewActivity : ComponentActivity() {
         updateControls()
     }
 
+    @Suppress("DEPRECATION")
+    private fun takePhoto() {
+        if (busy() || mainControls == null || streamingSize == null) return
+        if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 7); return
+        }
+        photoPending = true
+        updateControls()
+        val degrees = when (windowManager.defaultDisplay.rotation) { 1 -> 90; 2 -> 180; 3 -> 270; else -> 0 }
+        session?.capturePhoto(degrees)
+    }
+
+    private fun showCallbacks(show: Boolean) {
+        if (show) manualPanel.close()
+        callbackGraph.visibility = if (show) View.VISIBLE else View.GONE
+        metricsText.visibility = if (show) View.GONE else View.VISIBLE
+    }
+
     private fun leave(video: Boolean) {
         if (closing) return
         started = false
@@ -651,10 +729,11 @@ class DualPreviewActivity : ComponentActivity() {
 
     private fun choosePair() {
         if (busy()) return
-        val options = arrayOf("Camera 1 · ${pair?.first ?: "—"}", "Camera 2 · ${pair?.second ?: "—"}", "Logical · ${logicalId ?: "—"}")
+        val options = arrayOf("메인 · ${pair?.first ?: "—"}", "보조 · ${pair?.second ?: "—"}", "Logical · ${logicalId ?: "—"}", "메인 ↔ 보조 교환")
         AlertDialog.Builder(this, R.style.LabDialogTheme).setTitle("Dual cameras")
             .setItems(options) { _, index ->
-                if (index < 2) selectLens(index) else {
+                if (index == 3) { if (!busy()) { pair = pair?.let { it.second to it.first }; restart() } }
+                else if (index < 2) selectLens(index) else {
                     val choices = DualPreviewPlanner.candidates(cameras)
                     AlertDialog.Builder(this, R.style.LabDialogTheme).setTitle("Logical camera")
                         .setSingleChoiceItems(choices.map { it.logicalId }.toTypedArray(), choices.indexOfFirst { it.logicalId == logicalId }) { dialog, selected ->
@@ -707,6 +786,7 @@ class DualPreviewActivity : ComponentActivity() {
         val camera = cameras.firstOrNull { it.logicalId == logicalId }
         val details = buildString {
             appendLine("$engineName · Logical $logicalId · Sync ${DualPreviewPlanner.syncLabel(camera?.syncType)}")
+            if (engineName == "CameraX") appendLine("Photo & main controls: Camera2 only")
             stats?.let { (a, b) ->
                 appendLine("\nCamera 1\n" + outputReport(camera?.physical?.firstOrNull { it.id == a.physicalId }, a.physicalId, a))
                 appendLine("\nCamera 2\n" + outputReport(camera?.physical?.firstOrNull { it.id == b.physicalId }, b.physicalId, b))
@@ -714,6 +794,11 @@ class DualPreviewActivity : ComponentActivity() {
             }
             appendLine("Result timestamp Δ (1−2): ${lastSkewNs?.let { String.format(Locale.US, "%.3f ms", it / 1e6) } ?: "—"}")
             appendLine("동일한 보고값은 실제 센서 동기를 입증하지 않습니다.")
+            listOf("메인" to "dual_main_result", "보조" to "dual_sub_result").forEach { (label, kind) ->
+                recorder.snapshot().lastOrNull { it.session == sessionId && it.kind == kind }?.let { e ->
+                    appendLine("\n$label 적용값\n" + e.values.entries.joinToString("\n") { "${it.key}: ${it.value}" })
+                }
+            }
             if (videoMode) appendLine(if (engineName == "CameraX") "\nCameraX · H.264 · GPU relay · 무음 · MP4 × 2"
                 else "\nH.264 · 30 fps 요청 · 무음 · MP4 × 2")
             append(status)
@@ -723,6 +808,13 @@ class DualPreviewActivity : ComponentActivity() {
     }
 
     private fun positionPip(stage: FrameLayout, pip: View) {
+        val available = ((bottomBar.parent as View).top - topBar.bottom - dp(16)).coerceAtLeast(0)
+        val wanted = (stage.width * 0.32f).toInt().coerceAtLeast(dp(96)).coerceAtMost(stage.width)
+        val height = (wanted * 16 / 9).coerceAtMost(available)
+        val width = (height * 9 / 16).coerceAtMost(wanted)
+        if (pip.layoutParams.width != width || pip.layoutParams.height != height) {
+            pip.layoutParams = FrameLayout.LayoutParams(width, height)
+        }
         val bounds = pipBounds(stage, pip)
         pip.x = bounds.left + pipX.coerceIn(0f, 1f) * bounds.width()
         pip.y = bounds.top + pipY.coerceIn(0f, 1f) * bounds.height()

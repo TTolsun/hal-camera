@@ -5,6 +5,20 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ResultCallbackSeriesTest {
+    @Test fun physicalBuffersMatchTheirLogicalRequestWithoutSharingSensorTimestamps() {
+        val events = listOf(
+            Event(100_000_000, "s", "capture_started", 8, 900, mapOf("firstStart" to true)),
+            Event(160_000_000, "s", "preview_available", sensorNs = 901, values = mapOf("stream" to "preview_main")),
+            Event(170_000_000, "s", "preview_available", sensorNs = 905, values = mapOf("stream" to "preview_sub")),
+            Event(180_000_000, "s", "dual_physical_result", 8, values = mapOf("timestamps" to mapOf("5" to 901L, "6" to 905L)))
+        )
+        val config = metadata(
+            stream("preview_main") + ("eventKind" to "preview_available"),
+            stream("preview_sub") + ("eventKind" to "preview_available"))
+        val tracks = ResultCallbackSeries.read(events, "s", 200_000_000, config).tracks
+        assertEquals(60.0, tracks[2].points.single().latencyMs!!, 0.001)
+        assertEquals(70.0, tracks[3].points.single().latencyMs!!, 0.001)
+    }
     @Test fun previewUsesBufferReceiptAndIgnoresLaterDisplayUpdates() {
         val config = metadata(stream("preview", "Preview") + ("eventKind" to "preview_available"))
         val events = listOf(

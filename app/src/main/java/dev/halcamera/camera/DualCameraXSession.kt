@@ -59,11 +59,12 @@ class DualCameraXSession(
     private var unbound = false
     private var saving = false
     private var deviceOpen = false
+    private var boundCameras = emptyList<androidx.camera.core.Camera>()
     private val stateObservers = mutableMapOf<CameraInfo, Observer<CameraState>>()
     private val size = if (videoMode) LiveSize(1280, 720) else plan.sizes.first()
     private val ids = listOf(plan.first.id, plan.second.id)
     private val callback = telemetry.callback(sessionId, alive = { active })
-    private val openingTimeout = Runnable { if (active && !streaming) fail("CameraX 듀얼 프리뷰 시작 시간 초과") }
+    private val openingTimeout = Runnable { if (active && !streaming) fail("CameraX dual preview start timed out") }
 
     override fun start() {
         loading = true
@@ -75,13 +76,14 @@ class DualCameraXSession(
                 provider = future.get()
                 if (!active) releaseProvider() else bind()
             } catch (e: Exception) {
-                if (active) fail("CameraX 구성 실패", e) else finish()
+                if (active) fail("CameraX configuration failed", e) else finish()
             }
         }, main)
     }
 
     private fun bind() {
         telemetry.sessions[sessionId] = mapOf("engine" to "CameraX", "cameraId" to plan.logicalId, "physicalIds" to ids)
+        telemetry.configureCallbackStreams(sessionId, dualCallbackStreams().take(2))
         val configs = ids.mapIndexed { index, physicalId ->
             val selector = CameraSelector.Builder()
                 .addCameraFilter { infos -> infos.filter { Camera2CameraInfo.from(it).cameraId == plan.logicalId } }
@@ -91,7 +93,7 @@ class DualCameraXSession(
                     ResolutionStrategy(Size(size.width, size.height), ResolutionStrategy.FALLBACK_RULE_NONE)).build())
             if (index == 0) Camera2Interop.Extender(builder).setDeviceStateCallback(object : CameraDevice.StateCallback() {
                 override fun onOpened(camera: CameraDevice) { main.execute { deviceOpen = true } }
-                override fun onDisconnected(camera: CameraDevice) { main.execute { if (active) fail("CameraX 연결 해제") } }
+                override fun onDisconnected(camera: CameraDevice) { main.execute { if (active) fail("CameraX disconnected") } }
                 override fun onError(camera: CameraDevice, error: Int) { main.execute { if (active) fail("CameraX camera error $error") } }
                 override fun onClosed(camera: CameraDevice) { main.execute { deviceOpen = false; finishOutputs() } }
             }).setSessionCaptureCallback(object : CameraCaptureSession.CaptureCallback() {
@@ -105,10 +107,14 @@ class DualCameraXSession(
                     callback.onCaptureCompleted(s, r, result)
                     if (android.os.Build.VERSION.SDK_INT >= 28) {
                         val values = ids.associateWith { result.physicalCameraResults[it]?.get(CaptureResult.SENSOR_TIMESTAMP) }
-                        telemetry.event(sessionId, "dual_physical_result", values.mapValues { it.value?.toString() })
+                        telemetry.recorder.record(sessionId, "dual_physical_result", result.frameNumber,
+                            values = mapOf("timestamps" to values))
                         main.execute { if (active) {
                             if (!streaming) {
                                 streaming = true; handler.removeCallbacks(openingTimeout)
+                                boundCameras.firstOrNull()?.cameraInfo?.zoomState?.value?.let {
+                                    listener.onZoomRange(it.minZoomRatio to it.maxZoomRatio)
+                                }
                                 listener.onStreaming(size)
                                 listener.onStatus("CameraX · ${ids.joinToString(" + ")}")
                             }
@@ -130,7 +136,7 @@ class DualCameraXSession(
                             request.willNotProvideSurface()
                             relay.close { main.execute { pendingSurfaces--; finishOutputs() } }
                         }
-                        if (active) fail("CameraX 프리뷰 처리 실패", error)
+                        if (active) fail("CameraX preview processing failed", error)
                     }
                 }
                 relays += relay
@@ -144,7 +150,11 @@ class DualCameraXSession(
             }
             ConcurrentCamera.SingleCameraConfig(selector, UseCaseGroup.Builder().addUseCase(preview).build(), owner)
         }
-        checkNotNull(provider).bindToLifecycle(configs).cameras.map { it.cameraInfo }.distinct().forEach { info ->
+        boundCameras = checkNotNull(provider).bindToLifecycle(configs).cameras
+        boundCameras.firstOrNull()?.cameraInfo?.zoomState?.value?.let {
+            listener.onZoomRange(it.minZoomRatio to it.maxZoomRatio)
+        }
+        boundCameras.map { it.cameraInfo }.distinct().forEach { info ->
             val observer = Observer<CameraState> { state ->
                 if (active && state.error != null) fail("CameraX camera error ${state.error!!.code}", state.error!!.cause)
                 if (closing) finishOutputs()
@@ -155,11 +165,21 @@ class DualCameraXSession(
         }
     }
 
+    override fun setZoom(ratio: Float) {
+        if (!active) return
+        boundCameras.map { it.cameraControl }.distinct().forEach { control ->
+            val future = control.setZoomRatio(ratio)
+            future.addListener({ runCatching { future.get() }.onFailure {
+                if (active) listener.onStatus("Zoom failed: ${it.cause?.message ?: it.message}")
+            } }, main)
+        }
+    }
+
     override fun startRecording() {
         if (!active || !videoMode || recordingRequested || !streaming || relays.size != 2) return
         recordingRequested = true
         try {
-            val output = DualVideoRecording(context, ids, size) { main.execute { fail("CameraX 인코더 오류") } }
+            val output = DualVideoRecording(context, ids, size) { main.execute { fail("CameraX encoder error") } }
             recording = output
             output.start()
             var attached = 0
@@ -167,7 +187,7 @@ class DualCameraXSession(
                 attached++
                 if (active && attached == 2) listener.onRecording()
             } } }
-        } catch (e: Exception) { fail("CameraX 녹화 시작 실패", e) }
+        } catch (e: Exception) { fail("CameraX recording start failed", e) }
     }
 
     private fun fail(message: String, cause: Throwable? = null) {
