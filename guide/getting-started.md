@@ -1,9 +1,11 @@
 ---
-title: 시작하기
+title: Quickstart
 ---
 <h1 lang="en">Install. Open. Check.</h1>
 
 **배포된 APK를 설치하고 Live 프리뷰부터 확인하세요.** 이 가이드는 HALCamera로 기기를 검증하는 Camera HAL 개발자를 위한 문서입니다. 앱 소스를 빌드할 필요는 없습니다.
+
+용어가 낯설면 [Glossary](glossary.md)에서 필요한 뜻만 확인하세요.
 
 ## APK를 설치하세요
 
@@ -16,7 +18,7 @@ title: 시작하기
 
 3. HAL CAMERA를 열고 카메라 권한을 허용합니다. 소리를 녹음하려면 마이크 권한도 허용합니다.
 
-업데이트에서 서명 오류가 나면 기존 설치와 같은 서명의 APK를 받으세요. 앱을 삭제하면 내부 실행 기록이 사라집니다. 소스 빌드가 필요한 경우에는 [앱 빌드](building.md)를 확인하세요.
+업데이트에서 서명 오류가 나면 기존 설치와 같은 서명의 APK를 받으세요. 앱을 삭제하면 내부 실행 기록이 사라집니다. 소스 빌드가 필요한 경우에는 [Build](building.md)를 확인하세요.
 
 ## 첫 화면을 확인하세요
 
@@ -34,8 +36,8 @@ title: 시작하기
 | 촬영 조건을 바꾸고 파일을 확인합니다. | [Live](live.md) |
 | 지원 사양을 확인하고 테스트합니다. | [Probe](probe.md) · [CTS](cts.md) |
 | 지연을 반복 측정하거나 콜백을 관찰합니다. | [Benchmark](benchmark.md) · [Callback](callback.md) |
-| PC에서 반복 실행하고 결과를 받습니다. | [자동화](automation.md) |
-| 예상과 다른 결과의 원인을 좁힙니다. | [문제 찾기](troubleshooting.md) |
+| PC에서 반복 실행하고 결과를 받습니다. | [Automation](automation.md) |
+| 예상과 다른 결과의 원인을 좁힙니다. | [Troubleshooting](troubleshooting.md) |
 
 ## 앱 버전을 기록하세요
 

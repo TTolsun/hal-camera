@@ -5,6 +5,16 @@ title: Probe
 
 **Probe에서 카메라가 공개한 사양을 확인하세요.** 카메라를 열지 않고 `CameraCharacteristics`를 읽어, Camera2 HAL이 공개한 사양을 카메라별 표로 보여 줍니다. 이 값은 지원 사양이며 실측 결과는 아닙니다. 그 선언대로 통과하는지는 [CTS](cts.md)가, 실제로 얼마나 걸리는지는 [Benchmark](benchmark.md)가 답합니다.
 
+## 앱에서 Probe를 여세요
+
+1. Live에서 `Lab → Probe`를 엽니다.
+2. 확인할 카메라를 선택합니다. 처음에는 Live에서 고른 카메라가 표시됩니다.
+3. 필터에 `JPEG`처럼 찾을 단어를 입력하고 결과를 누릅니다.
+
+**확인할 결과:** 선택한 카메라의 사양과 지원 값이 표시됩니다. 읽지 못한 항목은 실패 목록에 남습니다. 실제 출력 조합이 동작하는지는 [CTS](cts.md)로 따로 확인하세요.
+
+다른 검사를 하려면 Lab으로 돌아갑니다. Probe는 카메라를 열지 않습니다.
+
 <p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
 
 <figure class="app-screenshot" id="screen-probe">
@@ -29,14 +39,11 @@ title: Probe
 
 `TXT`와 `JSON`은 모든 카메라의 사양을 파일로 공유하고, `복사`는 현재 카메라만 클립보드에 넣습니다. 이미지 픽셀은 포함되지 않습니다. 같은 기기의 빌드 전후를 비교하거나, 다른 기기의 HAL이 무엇을 공개하는지 나란히 볼 때 JSON을 씁니다. Benchmark 결과 JSON과는 별개 파일이며 자동으로 연결되지 않습니다.
 
-## 앱에서 Probe를 여세요
-
-Live에서 Lab을 연 뒤 Probe로 이동합니다. Live 카메라는 Lab 진입 전에 닫히며 Probe 자체는 카메라를 열지 않습니다. Live에서 고른 카메라 ID를 초기값으로 받고 화면 안에서 다시 고를 수 있습니다. 다른 검사로 옮길 때에는 Lab으로 돌아갑니다. 배치 기준은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)의 "Lab과 독립 화면"에 있습니다.
-
 <details>
 <summary>구현과 코드 근거</summary>
+<p>Live 카메라는 Lab 진입 전에 닫힙니다. 화면 배치 기준은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md">APP-UI.md</a>의 “Lab과 독립 화면”에 있습니다.</p>
 <p><code>CameraProbeReader</code>가 카메라 사양을 읽고, <code>CameraProbeSnapshot</code> 모델을 거쳐 화면 표·TXT·JSON으로 만듭니다. Reader만 <code>CameraManager</code>를 알며, 모델과 렌더러는 JVM 테스트로 검증합니다.</p>
-<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/camera/</code>에서 <code>CameraProbe.kt</code>(모델·TXT·JSON 렌더러), <code>CameraProbeReader.kt</code>(CameraManager 읽기)와 <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>(화면)를 확인하세요. 코드 확인과 기기 검증의 범위는 <a href="evidence.html">Evidence</a>에서 구분합니다.</p>
+<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/camera/</code>에서 <code>CameraProbe.kt</code>(모델·TXT·JSON 렌더러), <code>CameraProbeReader.kt</code>(CameraManager 읽기)와 <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>(화면)를 확인하세요. 코드 확인과 기기 검증의 범위는 <a href="evidence.html">Validation</a>에서 구분합니다.</p>
 </details>
 
 **다음 단계:** 사양 표에서 본 스트림 조합이 실제로 열리고 판정을 통과하는지 [CTS](cts.md)로 확인하세요.

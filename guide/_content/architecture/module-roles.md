@@ -50,10 +50,10 @@ verifications: []
 | 영역 | 하는 일 | 자세히 |
 | --- | --- | --- |
 | `cli/`, `assets/halcam.sh`, `tools/halcam/` | PC 명령을 앱 기능에 연결합니다. | [CLI](cli.md) |
-| `camera/` | 카메라를 열고 촬영합니다. | [Engine](engine.md) |
+| `camera/` | 카메라를 열고 촬영합니다. | [Engine Comparison](engine.md) |
 | `metrics/` | 이벤트로 지표를 계산합니다. | [측정 흐름](#주요-실행-흐름) |
 | `benchmark/` | 측정·저장·비교를 처리합니다. | [Benchmark](benchmark.md) |
-| `telemetry/` | 이벤트를 기록하고 ZIP으로 내보냅니다. | [디버깅](troubleshooting.md) |
+| `telemetry/` | 이벤트를 기록하고 ZIP으로 내보냅니다. | [Troubleshooting](troubleshooting.md) |
 | `cts/` | 앱에서 카메라 검사를 실행합니다. | [CTS](cts.md) |
 | `ctsvendor/` (별도 Gradle 모듈) | AOSP CTS 원문과 호환 패치를 담습니다. | [CTS 원문](cts.md#cts-원문-메서드를-선택하세요) |
 | `ui/`와 `MainActivity.kt` | 화면과 공통 디자인을 구성합니다. | [Live](live.md) |
@@ -76,7 +76,7 @@ verifications: []
 
 - 엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다.
 - `close(done)` 완료 전에 다음 카메라를 열지 않습니다.
-- 엔진 계약(`MediaCapture`, `LiveTuning`, `TouchMetering`)과 두 엔진의 구현, 두 엔진의 차이는 [Engine](engine.md)에 있습니다.
+- 엔진 계약(`MediaCapture`, `LiveTuning`, `TouchMetering`)과 두 엔진의 구현, 두 엔진의 차이는 [Engine Comparison](engine.md)에 있습니다.
 - 벤치마크 RECORD 단계의 recorder 상태 기계는 `BenchmarkRecorder`가 담당하고 `Camera2Engine`은 그 호출을 위임합니다.
 - 카메라를 화면에 적는 이름(`Camera · 0 (Wide · Rear)`)도 이 패키지의 `CameraLabel` 하나가 만들며, Live·Benchmark·Probe·CTS가 모두 그것을 부릅니다.
 - 렌즈 이름을 붙이지 못한 카메라에는 HAL이 보고한 35mm 환산 초점거리를 덧붙여 `Camera · 1 (Front · 26 mm)`처럼 적으므로, 전면 카메라가 둘인 기기에서도 목록이 두 항목을 구별합니다.
@@ -150,7 +150,7 @@ verifications: []
 
 `BenchmarkReport`는 schema 5를 쓰고 schema 3·4·5를 읽습니다. `BenchmarkStore`는 실행 파일과 baseline 인덱스를 관리합니다. 인덱스는 측정 계약·endpoint마다 baseline 실행 목록을 저장합니다. 삭제한 실행은 목록에서 빼며, 기존 실행 JSON은 비교 상태가 바뀌어도 다시 쓰지 않습니다.
 
-`camera/MediaLibrary`는 두 엔진이 만든 사진 쌍과 동영상을 MediaStore에 저장합니다. 사진 쌍을 만드는 순서는 엔진마다 다르며 [Engine](engine.md)에 있습니다. `GalleryActivity`는 HALCamera 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다.
+`camera/MediaLibrary`는 두 엔진이 만든 사진 쌍과 동영상을 MediaStore에 저장합니다. 사진 쌍을 만드는 순서는 엔진마다 다르며 [Engine Comparison](engine.md)에 있습니다. `GalleryActivity`는 HALCamera 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다.
 
 저장 포맷과 폴더는 [Engine의 저장 파일 표](engine.md#yuv-저장-포맷)를 확인하세요. `OriginalYuv`가 NV21의 샘플과 plane 배치를 준비하고 `MediaLibrary`가 파일과 JSON을 저장합니다. Camera2의 RAW (DNG)는 `RawFrame`이 RAW 샘플을 복사하고 `DngOutput`이 `DngCreator`로 `_RAW.dng`를 씁니다.
 

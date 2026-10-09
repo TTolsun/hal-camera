@@ -4,12 +4,12 @@
 # 페이지는 이 디렉터리 바로 아래의 *.md 와 _inputs/*.md 이며 _layouts/default.html 로 감쌉니다.
 # assets/ 와 _inputs/ 의 나머지 파일은 그대로 복사합니다.
 # 밑줄로 시작하는 다른 디렉터리(_content, _layouts)와 exclude 목록은 배포하지 않습니다.
-title: HALCamera 사용 가이드
+title: HALCamera User Guide
 description: Camera HAL 개발자를 위한 촬영·측정·검증 가이드
 lang: ko
 
 # 홈이 아닌 페이지 상단의 표지 문구.
-page_label: HAL CAMERA / 사용 가이드
+page_label: HAL CAMERA / User Guide
 
 # 배포 대상 경로. 산출물 정리도 이 목록과 매니페스트 안에서만 수행합니다.
 output: docs
@@ -21,7 +21,7 @@ exclude:
 # HAL 검증 작업 순서. 내부 구조와 검증 기록은 하단 참고 자료로 연결합니다.
 nav:
   - path: getting-started.html
-    label: 시작하기
+    label: Quickstart
   - path: live.html
     label: Live
   - path: probe.html
@@ -33,6 +33,6 @@ nav:
   - path: callback.html
     label: Callback
   - path: automation.html
-    label: 자동화
+    label: Automation
   - path: troubleshooting.html
-    label: 문제 찾기
+    label: Troubleshooting

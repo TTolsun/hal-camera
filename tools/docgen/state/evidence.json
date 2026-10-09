@@ -492,7 +492,7 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "1fd74361ec271a71",
@@ -788,7 +788,7 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       }
     },
     "content:architecture.md/constraints": {

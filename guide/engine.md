@@ -1,5 +1,5 @@
 ---
-title: 엔진 차이
+title: Engine Comparison
 nav_order: 5
 ---
 <h1 lang="en">Know what differs.</h1>
@@ -63,7 +63,7 @@ Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 �
 
 ### 기기에서 관찰한 차이
 
-Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 [Evidence](evidence.md#camerax-기기-관찰)에 있습니다.
+Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 [Validation](evidence.md#camerax-기기-관찰)에 있습니다.
 
 ### 녹화 중 사진의 실패와 정지
 

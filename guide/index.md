@@ -1,9 +1,9 @@
 ---
-title: HAL 검증 가이드
+title: HAL Validation Guide
 home: true
 ---
 <section class="hero" aria-labelledby="hero-title">
-  <p class="eyebrow">HAL CAMERA / 사용 가이드</p>
+  <p class="eyebrow">HAL CAMERA / User Guide</p>
   <h1 id="hero-title" lang="en">Engineering<br>the invisible.</h1>
   <p class="intro" lang="en">Camera systems are complicated.<br>The documentation doesn't have to be.</p>
   <p class="intro">촬영 조건을 맞추고, HAL 동작을 관찰하고,<br>측정 결과와 재현 자료를 확인합니다.</p>
@@ -14,14 +14,14 @@ home: true
 </section>
 
 <nav class="contents task-contents" aria-label="검증 작업별 문서">
-  <a href="getting-started.html"><span class="name">시작하기</span><span class="description">APK를 설치하고 첫 화면을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="getting-started.html"><span class="name">Quickstart</span><span class="description">APK를 설치하고 첫 화면을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="live.html"><span class="name">Live</span><span class="description">사진·녹화와 촬영 조건을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="probe.html"><span class="name">Probe</span><span class="description">카메라가 보고한 지원 사양을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="cts.html"><span class="name">CTS</span><span class="description">테스트를 실행하고 판정을 읽습니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="benchmark.html"><span class="name">Benchmark</span><span class="description">반복 측정하고 결과를 비교합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="callback.html"><span class="name">Callback</span><span class="description">프레임별 콜백과 시각을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="automation.html"><span class="name">자동화</span><span class="description">PC 명령이나 에이전트로 반복 실행합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="troubleshooting.html"><span class="name">문제 찾기</span><span class="description">증상을 좁히고 재현 자료를 모읍니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="automation.html"><span class="name">Automation</span><span class="description">PC 명령이나 에이전트로 반복 실행합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="troubleshooting.html"><span class="name">Troubleshooting</span><span class="description">증상을 좁히고 재현 자료를 모읍니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
 </nav>
 
 <section class="feature" aria-labelledby="scope-title">

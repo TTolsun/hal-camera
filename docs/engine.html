@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>엔진 차이 · HALCamera 사용 가이드</title>
+  <title>Engine Comparison · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
   <script type="module" src="./assets/search.js"></script>
@@ -13,20 +13,20 @@
   <a class="skip-link" href="#main-content">본문으로 이동</a>
   <header class="site-header">
     <a class="brand" href="./index.html">HAL CAMERA</a>
-    <nav class="site-nav" aria-label="문서 메뉴">
-      <a href="./getting-started.html">시작하기</a>
+    <nav class="site-nav" aria-label="Documentation" lang="en">
+      <a href="./getting-started.html">Quickstart</a>
       <a href="./live.html">Live</a>
       <a href="./probe.html">Probe</a>
       <a href="./cts.html">CTS</a>
       <a href="./benchmark.html">Benchmark</a>
       <a href="./callback.html">Callback</a>
-      <a href="./automation.html">자동화</a>
-      <a href="./troubleshooting.html">문제 찾기</a>
+      <a href="./automation.html">Automation</a>
+      <a href="./troubleshooting.html">Troubleshooting</a>
     </nav>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="document">
-    <p class="eyebrow page-label">HAL CAMERA / 사용 가이드</p>
+    <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
     <h1 lang="en">Know what differs.</h1><p><strong>Live가 Camera2와 CameraX 중 어느 엔진으로 열렸는지 확인하세요.</strong> 같은 조작이라도 요청 구성과 관측 가능한 버퍼가 다릅니다. 화면 조작은 <a href="live.html">Live</a>, 그래프 해석은 <a href="callback.html">Callback</a>에서 확인합니다.</p>
 <table>
 <thead>
@@ -162,7 +162,7 @@
 <li>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</li>
 </ul>
 </details><!-- omm:end id=comparison --><h3 id="기기에서-관찰한-차이">기기에서 관찰한 차이</h3>
-<p>Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 <a href="evidence.html#camerax-기기-관찰">Evidence</a>에 있습니다.</p>
+<p>Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 <a href="evidence.html#camerax-기기-관찰">Validation</a>에 있습니다.</p>
 <h3 id="녹화-중-사진의-실패와-정지">녹화 중 사진의 실패와 정지</h3>
 <p><strong>JPEG를 받기 전에는 촬영이 중단될 수 있지만, 받은 뒤에는 저장 결과를 기다립니다.</strong> 사진 요청과 녹화는 별개의 상태입니다. 사진 한 장의 실패가 녹화를 끝내지는 않습니다.</p>
 <pre><code class="language-mermaid">stateDiagram-v2
@@ -902,8 +902,8 @@
 <p><strong>다음 단계:</strong> 엔진에서 나온 이벤트가 지표로 바뀌는 순서는 <a href="architecture.html#주요-실행-흐름">주요 실행 흐름</a>에서 확인하세요.</p>
 
   </main>
-  <nav class="reference-nav" aria-label="참고 자료"><span>참고 자료</span><a href="./engine.html">엔진 차이</a><a href="./evidence.html">검증 기록</a><a href="./architecture.html">내부 구조</a><a href="./building.html">앱 빌드</a><a href="./contributing.html">문서 관리</a></nav>
-  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>사용 가이드 <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
+  <footer class="site-footer" lang="en"><span>HAL CAMERA · Engineering the invisible.</span><span>User Guide <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">
       <div class="search-head"><h2 id="search-title">문서 찾기</h2><button class="search-close" type="button">닫기 <kbd>Esc</kbd></button></div>

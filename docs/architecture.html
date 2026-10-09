@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Architecture · HALCamera 사용 가이드</title>
+  <title>Architecture · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
   <script type="module" src="./assets/search.js"></script>
@@ -13,20 +13,20 @@
   <a class="skip-link" href="#main-content">본문으로 이동</a>
   <header class="site-header">
     <a class="brand" href="./index.html">HAL CAMERA</a>
-    <nav class="site-nav" aria-label="문서 메뉴">
-      <a href="./getting-started.html">시작하기</a>
+    <nav class="site-nav" aria-label="Documentation" lang="en">
+      <a href="./getting-started.html">Quickstart</a>
       <a href="./live.html">Live</a>
       <a href="./probe.html">Probe</a>
       <a href="./cts.html">CTS</a>
       <a href="./benchmark.html">Benchmark</a>
       <a href="./callback.html">Callback</a>
-      <a href="./automation.html">자동화</a>
-      <a href="./troubleshooting.html">문제 찾기</a>
+      <a href="./automation.html">Automation</a>
+      <a href="./troubleshooting.html">Troubleshooting</a>
     </nav>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="document">
-    <p class="eyebrow page-label">HAL CAMERA / 사용 가이드</p>
+    <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
     <h1 lang="en">One system.<br>Clear responsibilities.</h1><p><strong>수정할 기능과 연결된 코드부터 찾으세요.</strong> 이 문서는 카메라 구동부터 이벤트 기록, 지표 계산, 결과 표시까지의 책임과 변경 시 지켜야 할 제약을 설명합니다.</p>
 <table>
 <thead>
@@ -56,7 +56,7 @@
 <td><a href="#변경-시-지켜야-할-제약">변경 시 지켜야 할 제약</a></td>
 </tr>
 </tbody></table>
-<p>앱 소스를 빌드하려면 <a href="building.html">앱 빌드</a>를 확인하세요. 아래의 <code>코드 확인</code>은 구현을 대조했다는 뜻이며, 기기 실측을 뜻하지 않습니다.</p>
+<p>앱 소스를 빌드하려면 <a href="building.html">Build</a>를 확인하세요. 아래의 <code>코드 확인</code>은 구현을 대조했다는 뜻이며, 기기 실측을 뜻하지 않습니다.</p>
 <h2 id="앱의-역할과-평가-경로">앱의 역할과 평가 경로</h2>
 <!-- omm:begin id=overview --><p><strong>카메라 콜백을 기록하고, 측정값으로 바꾼 뒤, 저장된 실행과 비교합니다.</strong> 앱 모듈은 화면과 측정을 담당합니다. 별도 모듈인 <code>:ctsvendor</code>는 AOSP CTS 원문을 실행합니다.</p>
 <table>
@@ -127,7 +127,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/WorkbenchActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</li>
+<li>검토 2026-10-09 @ <code>559fee08</code> · Codex</li>
 </ul>
 </details><!-- omm:end id=overview --><h2 id="전체-구조도">전체 구조도</h2>
 <p>화살표는 코드를 사용하는 방향입니다. 이벤트와 파일이 이동하는 순서는 <a href="#이벤트와-결과가-전달되는-경로">데이터 흐름</a>에서 확인하세요.</p>
@@ -163,7 +163,7 @@
 <tr>
 <td><code>camera/</code></td>
 <td>카메라를 열고 촬영합니다.</td>
-<td><a href="engine.html">Engine</a></td>
+<td><a href="engine.html">Engine Comparison</a></td>
 </tr>
 <tr>
 <td><code>metrics/</code></td>
@@ -178,7 +178,7 @@
 <tr>
 <td><code>telemetry/</code></td>
 <td>이벤트를 기록하고 ZIP으로 내보냅니다.</td>
-<td><a href="troubleshooting.html">디버깅</a></td>
+<td><a href="troubleshooting.html">Troubleshooting</a></td>
 </tr>
 <tr>
 <td><code>cts/</code></td>
@@ -210,7 +210,7 @@
 <summary>camera/</summary><ul>
 <li>엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다.</li>
 <li><code>close(done)</code> 완료 전에 다음 카메라를 열지 않습니다.</li>
-<li>엔진 계약(<code>MediaCapture</code>, <code>LiveTuning</code>, <code>TouchMetering</code>)과 두 엔진의 구현, 두 엔진의 차이는 <a href="engine.html">Engine</a>에 있습니다.</li>
+<li>엔진 계약(<code>MediaCapture</code>, <code>LiveTuning</code>, <code>TouchMetering</code>)과 두 엔진의 구현, 두 엔진의 차이는 <a href="engine.html">Engine Comparison</a>에 있습니다.</li>
 <li>벤치마크 RECORD 단계의 recorder 상태 기계는 <code>BenchmarkRecorder</code>가 담당하고 <code>Camera2Engine</code>은 그 호출을 위임합니다.</li>
 <li>카메라를 화면에 적는 이름(<code>Camera · 0 (Wide · Rear)</code>)도 이 패키지의 <code>CameraLabel</code> 하나가 만들며, Live·Benchmark·Probe·CTS가 모두 그것을 부릅니다.</li>
 <li>렌즈 이름을 붙이지 못한 카메라에는 HAL이 보고한 35mm 환산 초점거리를 덧붙여 <code>Camera · 1 (Front · 26 mm)</code>처럼 적으므로, 전면 카메라가 둘인 기기에서도 목록이 두 항목을 구별합니다.</li>
@@ -259,14 +259,14 @@
 <summary>저장·목록·썸네일 구현</summary><p><code>BenchmarkActivity</code>는 실행 완료 후 별도 입출력 스레드에서 조립·저장·비교를 처리하고 <code>ResultPresenter</code>와 <code>ComparePresenter</code>의 결과를 표시합니다. 시작 카드와 진행률에는 <code>StartCardPresenter</code>와 <code>ProgressPresenter</code>를 사용합니다.</p>
 <p><code>HistoryActivity</code>는 같은 저장소를 읽습니다. <code>RunIndex</code>는 이벤트와 표본 배열을 제거한 목록 데이터를 유지하고, 결과를 열 때 원본 JSON을 다시 읽습니다. 파일 읽기·삭제·CSV 생성은 별도 스레드에서 처리합니다. <code>BenchmarkCsv</code>는 지표당 한 행을 작성하고 FileProvider로 공유합니다.</p>
 <p><code>BenchmarkReport</code>는 schema 5를 쓰고 schema 3·4·5를 읽습니다. <code>BenchmarkStore</code>는 실행 파일과 baseline 인덱스를 관리합니다. 인덱스는 측정 계약·endpoint마다 baseline 실행 목록을 저장합니다. 삭제한 실행은 목록에서 빼며, 기존 실행 JSON은 비교 상태가 바뀌어도 다시 쓰지 않습니다.</p>
-<p><code>camera/MediaLibrary</code>는 두 엔진이 만든 사진 쌍과 동영상을 MediaStore에 저장합니다. 사진 쌍을 만드는 순서는 엔진마다 다르며 <a href="engine.html">Engine</a>에 있습니다. <code>GalleryActivity</code>는 HALCamera 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다.</p>
+<p><code>camera/MediaLibrary</code>는 두 엔진이 만든 사진 쌍과 동영상을 MediaStore에 저장합니다. 사진 쌍을 만드는 순서는 엔진마다 다르며 <a href="engine.html">Engine Comparison</a>에 있습니다. <code>GalleryActivity</code>는 HALCamera 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다.</p>
 <p>저장 포맷과 폴더는 <a href="engine.html#yuv-저장-포맷">Engine의 저장 파일 표</a>를 확인하세요. <code>OriginalYuv</code>가 NV21의 샘플과 plane 배치를 준비하고 <code>MediaLibrary</code>가 파일과 JSON을 저장합니다. Camera2의 RAW (DNG)는 <code>RawFrame</code>이 RAW 샘플을 복사하고 <code>DngOutput</code>이 <code>DngCreator</code>로 <code>_RAW.dng</code>를 씁니다.</p>
 <p><code>camera/RecentMediaThumbnail</code>은 저장 완료된 앨범 항목의 썸네일을 별도 작업 스레드에서 읽고 <code>ui/RecentMediaButton</code>에 전달합니다. 화면을 나가면 관찰을 중단하고 뒤늦은 조회 결과는 반영하지 않습니다. <code>ui/RecentMediaButton</code>은 받은 썸네일을 원형으로 그리며, 항목이 동영상이면 가운데에 재생 표시를 겹쳐 접근성 설명뿐 아니라 화면으로도 종류를 알 수 있게 합니다.</p>
 </details><details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/BenchmarkController.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/ui/Look.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCatalog.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/Camera2Ops.kt</code>, <code>app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt</code>, <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbe.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</li>
+<li>검토 2026-10-09 @ <code>bfa81ff6</code> · Codex</li>
 </ul>
 </details><!-- omm:end id=module-roles --><h2 id="주요-실행-흐름">주요 실행 흐름</h2>
 <!-- omm:begin id=runtime-flow --><p><strong>실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.</strong> 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.</p>
@@ -334,7 +334,7 @@
 <p>콜백의 <code>alive()</code>가 거짓이면 이미 닫힌 세션의 늦은 이벤트를 버립니다.</p>
 <p><code>request_observed</code>는 요청 제출 시각이 아니라 <code>onCaptureStarted</code>에서 관측한 요청 내용입니다.</p>
 <p>Live 제어를 확인할 수 있도록 <code>request_observed</code>에는 요청한 줌·EV·AE 잠금·플래시 모드·AF/precapture trigger를, <code>capture_result</code>에는 적용된 AE 잠금·EV·플래시 상태와 논리 카메라가 알려 주는 물리 카메라 ID(API 29 이상)를 함께 기록합니다.</p>
-<p>Live 제어, AE 재잠금, 터치 측광이 남기는 이벤트는 <a href="engine.html#두-엔진이-함께-남기는-기록">Engine</a>에 있습니다.</p>
+<p>Live 제어, AE 재잠금, 터치 측광이 남기는 이벤트는 <a href="engine.html#두-엔진이-함께-남기는-기록">Engine Comparison</a>에 있습니다.</p>
 <p>러너는 API 호출과 완료 신호 사이의 시각 차이를 기록합니다. <code>RunAssembler</code>는 관측 세션의 프레임 중 관측 시작 이전에 도착한 프레임 수를 워밍업으로 계산합니다. <code>MetricExtractor</code>가 이벤트를 표본으로 연결하고, <code>BenchmarkEvaluator</code>가 profile에 따라 초기 반복을 제외하고 통계를 계산합니다. 3A 수렴은 관측 세션의 첫 결과부터 계산합니다.</p>
 <p><code>RunAssembler.ObservationInput.observedFrames</code>는 워밍업을 제외한 <code>steadyFrames</code>의 수입니다. 이 값은 <code>RunValidityEvaluator</code>의 표본 수 검사에 전달됩니다. <code>RunAssembler</code>가 구성한 <code>BenchmarkRun</code>은 <code>BenchmarkReportCodec</code>에서 schema 5로 직렬화하며, 파일 쓰기는 조립기 밖에서 처리합니다.</p>
 <p><code>BenchmarkActivity</code>는 <code>LaunchDiagnostics</code>의 조회 함수를 러너에 주입합니다.</p>
@@ -357,7 +357,7 @@
 </code></pre>
 <p>기준 선택과 판정의 의미는 <a href="benchmark.html">Benchmark</a>에서 확인하세요.</p>
 <h3 id="live에서-촬영과-저장">Live에서 촬영과 저장</h3>
-<p>Live 셔터는 현재 엔진의 <code>MediaCapture</code>로 사진이나 동영상을 저장하며, 촬영을 위해 엔진을 바꾸지 않습니다. 기본 사진은 YUV·JPEG 쌍이며 두 엔진 모두 Live 스트림에서 켠 출력만 저장할 수도 있습니다. 저장은 별도 작업 스레드에서 처리하고, 완료된 파일만 앨범에 공개합니다. 엔진별 요청 구성과 저장 순서는 <a href="engine.html">Engine</a>에 있습니다.</p>
+<p>Live 셔터는 현재 엔진의 <code>MediaCapture</code>로 사진이나 동영상을 저장하며, 촬영을 위해 엔진을 바꾸지 않습니다. 기본 사진은 YUV·JPEG 쌍이며 두 엔진 모두 Live 스트림에서 켠 출력만 저장할 수도 있습니다. 저장은 별도 작업 스레드에서 처리하고, 완료된 파일만 앨범에 공개합니다. 엔진별 요청 구성과 저장 순서는 <a href="engine.html">Engine Comparison</a>에 있습니다.</p>
 <p>Lab은 <code>WorkbenchActivity</code>가 담당하며 카메라를 직접 열지 않습니다. Live의 <code>close(done)</code>이 끝나면 Lab을 엽니다. 선택한 카메라 ID는 Probe와 Benchmark에, 엔진은 Benchmark에 전달합니다.</p>
 <p>녹화·저장·세션 종료·CLI 작업 중에는 Lab 버튼을 비활성화합니다. Live Streams도 카메라를 닫은 뒤 열며, 저장하거나 뒤로 가면 진입한 화면으로 돌아갑니다. 화면 조작은 <a href="live.html#추가-설정">Live</a>를 확인하세요.</p>
 <h3 id="갤러리-항목의-조회-경로">갤러리 항목의 조회 경로</h3>
@@ -377,7 +377,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>tools/halcam/halcam/download.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/GalleryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</li>
+<li>검토 2026-10-09 @ <code>bfa81ff6</code> · Codex</li>
 </ul>
 </details><!-- omm:end id=runtime-flow --><h3 id="이벤트와-결과가-전달되는-경로">이벤트와 결과가 전달되는 경로</h3>
 <!-- omm:begin id=runtime-diagram --><pre><code class="language-mermaid">graph TB
@@ -575,11 +575,11 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandStore.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</li>
+<li>검토 2026-10-09 @ <code>559fee08</code> · Codex</li>
 </ul>
 </details><!-- omm:end id=constraints --><h2 id="변경-후-검증">변경 후 검증</h2>
 <p>Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 확인할 수 있습니다. 저장소 루트에서 실행하세요.</p>
-<p>테스트 실행 명령과 개발 환경은 <a href="building.html#앱을-빌드하고-실행하세요">앱 빌드</a>을 확인하세요.</p>
+<p>테스트 실행 명령과 개발 환경은 <a href="building.html#앱을-빌드하고-실행하세요">Build</a>을 확인하세요.</p>
 <p><code>BenchmarkRunnerTest</code>, <code>RunAssemblerTest</code>, <code>RegressionDetectorTest</code>, <code>MetricExtractorTest</code>에서 단계 전이와 계산 규칙을 확인합니다. 테스트가 통과해도 문서의 조건·예외가 코드와 맞는지 대조해야 합니다. 기기에서의 검증은 별도로 기록합니다.</p>
 <h2 id="미완성-기능과-추가-검증">미완성 기능과 추가 검증</h2>
 <!-- omm:begin id=open-questions --><p>다음 항목은 구조 스캔에서 확인한 제약이나 추가 검증이 필요한 사항입니다.</p>
@@ -614,17 +614,17 @@
 <tbody><tr>
 <td>구조 원본 <code>data-flow</code></td>
 <td>최신</td>
-<td>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</td>
+<td>검토 2026-10-09 @ <code>8bc5634c</code> · Claude</td>
 </tr>
 <tr>
 <td>구조 원본 <code>overall-architecture</code></td>
 <td>최신</td>
-<td>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</td>
+<td>검토 2026-10-09 @ <code>559fee08</code> · Codex</td>
 </tr>
 <tr>
 <td>구조 원본 <code>state-transitions</code></td>
 <td>최신</td>
-<td>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</td>
+<td>검토 2026-10-09 @ <code>8bc5634c</code> · Claude</td>
 </tr>
 <tr>
 <td>구조 원본 <code>ui-camera-label</code></td>
@@ -634,7 +634,7 @@
 <tr>
 <td>구조 원본 <code>ui-tool-handoff</code></td>
 <td>최신</td>
-<td>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</td>
+<td>검토 2026-10-09 @ <code>8bc5634c</code> · Claude</td>
 </tr>
 <tr>
 <td>구조 원본 <code>ui-zoom</code></td>
@@ -644,22 +644,22 @@
 <tr>
 <td>원고 <code>overview</code></td>
 <td>최신</td>
-<td>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</td>
+<td>검토 2026-10-09 @ <code>559fee08</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>module-roles</code></td>
 <td>최신</td>
-<td>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</td>
+<td>검토 2026-10-09 @ <code>bfa81ff6</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>runtime-flow</code></td>
 <td>최신</td>
-<td>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</td>
+<td>검토 2026-10-09 @ <code>bfa81ff6</code> · Codex</td>
 </tr>
 <tr>
 <td>원고 <code>constraints</code></td>
 <td>최신</td>
-<td>검토 2026-10-09 @ <code>678893a2</code> · Codex (code review; emulator UI only)</td>
+<td>검토 2026-10-09 @ <code>559fee08</code> · Codex</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p>표의 <code>최신</code>은 기록된 근거와 원고가 검토 이후 바뀌지 않았다는 뜻입니다. 모든 기기에서 동작을 검증했다는 뜻은 아닙니다.</p>
@@ -673,8 +673,8 @@
 <p><strong>다음 단계:</strong> <a href="troubleshooting.html#앱과-프레임워크hal을-구분하세요">디버깅 절차</a>에 따라 원시 이벤트와 계산 결과를 대조하세요.</p>
 
   </main>
-  <nav class="reference-nav" aria-label="참고 자료"><span>참고 자료</span><a href="./engine.html">엔진 차이</a><a href="./evidence.html">검증 기록</a><a href="./architecture.html">내부 구조</a><a href="./building.html">앱 빌드</a><a href="./contributing.html">문서 관리</a></nav>
-  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>사용 가이드 <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
+  <footer class="site-footer" lang="en"><span>HAL CAMERA · Engineering the invisible.</span><span>User Guide <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">
       <div class="search-head"><h2 id="search-title">문서 찾기</h2><button class="search-close" type="button">닫기 <kbd>Esc</kbd></button></div>
