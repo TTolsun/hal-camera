@@ -9,6 +9,7 @@ from . import __version__
 from .adb import Adb
 from .download import collect
 from .protocol import CliError, TERMINAL, identifier, raise_app_error, validate_request
+from .presentation import progress, render
 
 
 class ArgumentParser(argparse.ArgumentParser):
@@ -25,7 +26,8 @@ def common(parser, root=False):
 
 
 def parser():
-    root = ArgumentParser(prog="halcam", description="Control HALCamera through ADB")
+    root = ArgumentParser(prog="halcam", description="Control HALCamera through ADB", formatter_class=argparse.RawDescriptionHelpFormatter,
+                          epilog="Start with one task:\n  1. Check setup: halcam doctor\n  2. Take a photo: halcam capture --camera 0 --output ./captures\n  3. Record: halcam run record.start --no-audio\n     Finish: halcam control record.stop\n  4. Read results: halcam run results.list\n  5. Find files: halcam run gallery.list\nUse --json for complete machine-readable results.")
     common(root, True)
     root.add_argument("--version", action="version", version=__version__)
     commands = root.add_subparsers(dest="command", required=True)
@@ -79,6 +81,7 @@ def parser():
     run.add_argument("operation")
     run.add_argument("--camera")
     run.add_argument("--engine", choices=("Camera2", "CameraX"))
+    run.add_argument("--no-audio", action="store_true", help="Silent recording (record.start or dual.record)")
     run.add_argument("--option", action="append", default=[], metavar="KEY=VALUE")
     run.add_argument("--stream", action="append", default=[], metavar="KEY=VALUE")
     run.add_argument("--output")
@@ -122,10 +125,15 @@ def request_status(adb, rid):
     return validate_request(data, rid)
 
 
-def wait(adb, rid, seconds):
+def wait(adb, rid, seconds, report=None):
     deadline = time.monotonic() + seconds
+    previous = None
     while True:
         data = request_status(adb, rid)
+        current = progress(data)
+        if report and current != previous:
+            report(current)
+        previous = current
         if data["state"] in TERMINAL:
             return data
         if time.monotonic() >= deadline:
@@ -180,8 +188,6 @@ def execute(args, context):
     if args.timeout is None:
         args.timeout = {"record.start": 3600, "dual.record": 3600, "cts.run": 1800, "benchmark.run": 600}.get(app_command(args), 30)
     rid = identifier(args.request_id) if args.request_id else str(uuid.uuid4())
-    context["request_id"] = rid
-    print(f"request_id={rid}", file=sys.stderr, flush=True)
     payload = {"protocol_version": 1, "request_id": rid, "command": app_command(args),
                "params": {}, "execution_timeout_ms": int(args.timeout * 1000)}
     if getattr(args, "camera", None) is not None:
@@ -198,6 +204,10 @@ def execute(args, context):
         payload["params"]["cases"] = list(args.cases)
 
     if args.command == "run":
+        if args.no_audio:
+            if args.operation not in ("record.start", "dual.record"):
+                raise CliError("INVALID_ARGUMENT", "--no-audio requires record.start or dual.record")
+            payload["params"]["audio"] = False
         def pairs(items):
             values = {}
             for item in items:
@@ -228,7 +238,7 @@ def execute(args, context):
     if previous is None and app_command(args) not in SCREENLESS and not app_command(args).startswith(("results.", "baseline.", "gallery.", "settings.", "incidents.")) and app_command(args) != "dual.cameras":
         status = raise_app_error(adb.read("/v1/status"))
         if status.get("busy"):
-            raise CliError("BUSY", "An app operation is already running", request_id=rid)
+            raise CliError("BUSY", "An app operation is already running")
         target_screen = "dual" if status.get("screen") == "dual" and app_command(args) in ("live.info", "events", "meter", "preview.stop") else "live"
         if not status.get("foreground") or status.get("screen") != target_screen:
             adb.launch()
@@ -238,13 +248,17 @@ def execute(args, context):
                 if status.get("foreground") and status.get("screen") == target_screen:
                     break
                 if time.monotonic() >= deadline:
-                    raise CliError("APP_NOT_FOREGROUND", "Unlock device and open HALCamera", request_id=rid)
+                    raise CliError("APP_NOT_FOREGROUND", "Unlock device and open HALCamera")
                 time.sleep(0.25)
     # Reusing an ID still submits its payload once, so the app can detect conflicts.
+    context["request_id"] = rid
     data = adb.call("submit", payload)
     if "state" not in data:
+        if data.get("error"):
+            context.pop("request_id", None)  # The app explicitly refused submission.
         raise_app_error(data)
     validate_request(data, rid)
+    print(f"request_id={rid}", file=sys.stderr, flush=True)
     if args.no_wait:
         return data
     if app_command(args) in ("record.start", "dual.record"):
@@ -255,12 +269,16 @@ def execute(args, context):
             time.sleep(0.25)
             data = request_status(adb, rid)
         return data
-    data = wait(adb, rid, args.wait_timeout or (args.timeout + 15))
+    report = None if args.json else lambda message: print(message, file=sys.stderr, flush=True)
+    data = wait(adb, rid, args.wait_timeout or (args.timeout + 15), report)
     return finish(adb, data, args)
 
 
 def main(argv=None):
     raw_args = sys.argv[1:] if argv is None else argv
+    if not raw_args:
+        parser().print_help()
+        return 0
     args = argparse.Namespace(json="--json" in raw_args)
     context = {}
     try:
@@ -288,5 +306,5 @@ def main(argv=None):
     if args.json:
         print(json.dumps(data, ensure_ascii=False, separators=(",", ":")))
     else:
-        print(json.dumps(data, ensure_ascii=False, indent=2))
+        print(render(data, args))
     return code

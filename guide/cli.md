@@ -219,6 +219,8 @@ CTS 항목만 `--extra`가 아니라 `--arg`로 전달합니다. `--extra`는 �
 
 이 영역의 `halcam`은 PC에 설치한 Python 명령입니다. ADB 접두어를 붙이지 않습니다.
 
+**처음에는 `halcam`을 실행해 시작 작업을 고르세요.** 기본 출력은 결과 상태·저장 위치와 다음 명령을 보여 줍니다. 대기 중에는 상태나 저장 장수가 바뀔 때만 알립니다. 자동화나 전체 메타데이터가 필요하면 `--json`을 붙입니다. 취소·대기 시간 초과 후에는 출력된 요청 ID로 상태를 확인하거나 파일을 회수하며, 촬영 명령을 다시 실행하지 않습니다.
+
 저장소를 받은 PC에서 Python 3.11 이상으로 설치합니다. 단순 실행에는 앞의 ADB 스크립트를 사용하고, Python 자동화가 필요한 경우에만 아래 도구를 설치하세요. 녹화·프리뷰 제어도 지원합니다.
 
 ```sh
@@ -242,10 +244,13 @@ halcam run burst --camera 0 --option count=3 --stream yuv_format=NV21 --output .
 halcam run results.export --option run=RUN_ID --output ./results
 halcam run benchmark.run --option "build=Candidate: A" --timeout 600 --output ./run
 halcam control live.set --option zoom=2
+halcam run record.start --no-audio
 halcam control record.stop
 ```
 
 `control`은 새 작업을 만들지 않고 기존 프리뷰·녹화를 제어합니다. `record.stop`은 접수 상태를 반환하므로 저장이 끝났는지는 `status --request UUID`로 확인합니다. 자동으로 완료까지 기다리는 기본 경로는 APK에 포함된 셸 스크립트입니다.
+
+`--no-audio`는 `run record.start`와 `run dual.record`에서만 받습니다. 프리뷰 종료는 `halcam run preview.stop`으로 요청합니다.
 
 </details>
 

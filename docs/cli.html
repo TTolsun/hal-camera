@@ -299,6 +299,7 @@ adb exec-out content read --uri content://dev.halcamera.cli/v1/status
 </details><details id="python-client" data-search-section>
 <summary>선택 도구: Python 클라이언트</summary><p><span id="python-advanced"></span></p>
 <p>이 영역의 <code>halcam</code>은 PC에 설치한 Python 명령입니다. ADB 접두어를 붙이지 않습니다.</p>
+<p><strong>처음에는 <code>halcam</code>을 실행해 시작 작업을 고르세요.</strong> 기본 출력은 결과 상태·저장 위치와 다음 명령을 보여 줍니다. 대기 중에는 상태나 저장 장수가 바뀔 때만 알립니다. 자동화나 전체 메타데이터가 필요하면 <code>--json</code>을 붙입니다. 취소·대기 시간 초과 후에는 출력된 요청 ID로 상태를 확인하거나 파일을 회수하며, 촬영 명령을 다시 실행하지 않습니다.</p>
 <p>저장소를 받은 PC에서 Python 3.11 이상으로 설치합니다. 단순 실행에는 앞의 ADB 스크립트를 사용하고, Python 자동화가 필요한 경우에만 아래 도구를 설치하세요. 녹화·프리뷰 제어도 지원합니다.</p>
 <pre><code class="language-sh">python -m pip install ./tools/halcam
 halcam --serial DEVICE doctor --json
@@ -315,9 +316,11 @@ halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json
 halcam run results.export --option run=RUN_ID --output ./results
 halcam run benchmark.run --option &quot;build=Candidate: A&quot; --timeout 600 --output ./run
 halcam control live.set --option zoom=2
+halcam run record.start --no-audio
 halcam control record.stop
 </code></pre>
 <p><code>control</code>은 새 작업을 만들지 않고 기존 프리뷰·녹화를 제어합니다. <code>record.stop</code>은 접수 상태를 반환하므로 저장이 끝났는지는 <code>status --request UUID</code>로 확인합니다. 자동으로 완료까지 기다리는 기본 경로는 APK에 포함된 셸 스크립트입니다.</p>
+<p><code>--no-audio</code>는 <code>run record.start</code>와 <code>run dual.record</code>에서만 받습니다. 프리뷰 종료는 <code>halcam run preview.stop</code>으로 요청합니다.</p>
 </details><h2 id="요청과-완료를-구분하세요">요청과 완료를 구분하세요</h2>
 <p><strong>접수 응답을 받아도 촬영이나 저장이 끝난 것은 아닙니다.</strong> 파일을 만드는 명령은 결과 파일이 등록된 뒤 회수합니다.</p>
 <pre><code class="language-mermaid">sequenceDiagram
