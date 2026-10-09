@@ -1,5 +1,5 @@
 ---
-title: 문서 관리
+title: Contributing
 ---
 <h1 lang="en">Keep the guide current.</h1>
 
@@ -45,4 +45,4 @@ title: 문서 관리
 
 한국어 문장은 [fluent-korean](https://github.com/snflkd/fluent-korean)과 [공통 집필 규칙](https://github.com/TTolsun/omm-doc-workflow/blob/main/style/README.md)에 따라 다듬습니다. 사용법은 해당 기능 페이지에 한 번만 설명하고, 다른 페이지에서는 필요한 부분으로 연결합니다.
 
-검증 결과와 기기 기록은 [Evidence](evidence.md)를 확인하세요.
+검증 결과와 기기 기록은 [Validation](evidence.md)를 확인하세요.

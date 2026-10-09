@@ -3,7 +3,7 @@ title: Agents
 ---
 <h1 lang="en">Hand the camera to a coding agent.</h1>
 
-[자동화](automation.md)에서 다른 실행 방법도 확인할 수 있습니다.
+[Automation](automation.md)에서 다른 실행 방법도 확인할 수 있습니다.
 
 **팀에서 전달받은 HAL CAM APK와 `halcam-cli/SKILL.md`로 에이전트에게 기기 작업을 맡기세요.** Windows 또는 WSL에서 로컬 명령을 실행할 수 있는 에이전트와 `adb`가 필요합니다. 앱 소스나 빌드 도구는 필요하지 않습니다.
 
@@ -37,4 +37,4 @@ halcam-cli/SKILL.md를 읽고 기기 SERIAL의 카메라 0에서 표준 벤치�
 
 에이전트가 보고한 기기·앱 버전, 요청 ID와 최종 상태, PC에 받은 파일 경로와 크기·SHA-256 검증 결과를 확인합니다. 연결이 끊기면 같은 촬영이나 측정을 다시 제출하기 전에 기존 요청을 조회합니다. 벤치마크의 실행 성공은 보고서 저장 완료를 뜻하므로 점수·비교에 사용할 수 있는지는 JSON의 validity를 따로 확인합니다.
 
-**다음 단계:** 결과를 공유할 때에는 [Evidence](evidence.md)의 검증 범위를 확인하세요.
+**다음 단계:** 결과를 공유할 때에는 [Validation](evidence.md)의 검증 범위를 확인하세요.

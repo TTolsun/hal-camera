@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>검증 기록 · HALCamera 사용 가이드</title>
+  <title>Validation · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
   <script type="module" src="./assets/search.js"></script>
@@ -13,21 +13,21 @@
   <a class="skip-link" href="#main-content">본문으로 이동</a>
   <header class="site-header">
     <a class="brand" href="./index.html">HAL CAMERA</a>
-    <nav class="site-nav" aria-label="문서 메뉴">
-      <a href="./getting-started.html">시작하기</a>
+    <nav class="site-nav" aria-label="Documentation" lang="en">
+      <a href="./getting-started.html">Quickstart</a>
       <a href="./live.html">Live</a>
       <a href="./probe.html">Probe</a>
       <a href="./cts.html">CTS</a>
       <a href="./benchmark.html">Benchmark</a>
       <a href="./callback.html">Callback</a>
-      <a href="./automation.html">자동화</a>
-      <a href="./troubleshooting.html">문제 찾기</a>
+      <a href="./automation.html">Automation</a>
+      <a href="./troubleshooting.html">Troubleshooting</a>
     </nav>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="document">
-    <p class="eyebrow page-label">HAL CAMERA / 사용 가이드</p>
-    <h1 lang="en">Trust starts with a trace.</h1><p><strong>코드로 확인한 동작과 기기에서 관찰한 결과를 구분하세요.</strong> 아래에서 근거의 종류와 기기 검증 기록을 확인하세요. 문서 갱신 절차는 <a href="contributing.html">문서 관리</a>에 있습니다.</p>
+    <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
+    <h1 lang="en">Trust starts with a trace.</h1><p><strong>코드로 확인한 동작과 기기에서 관찰한 결과를 구분하세요.</strong> 아래에서 근거의 종류와 기기 검증 기록을 확인하세요. 문서 갱신 절차는 <a href="contributing.html">Contributing</a>에 있습니다.</p>
 <h2 id="근거와-검토-범위">근거와 검토 범위</h2>
 <table>
 <thead>
@@ -53,7 +53,7 @@
 <td><a href="_inputs/decisions.html">설계 결정 원문</a>의 D-번호를 확인합니다.</td>
 </tr>
 </tbody></table>
-<p><a href="architecture.html">Architecture</a>·<a href="engine.html">Engine</a>·<a href="troubleshooting.html">디버깅</a>과 이 페이지 끝의 <strong>문서 검토 상태</strong>에는 해당 페이지에 연결된 구조 근거와 생성 원고의 기준 버전·검토 커밋이 있습니다. 관련 소스나 원고가 바뀌면 다시 검토해야 합니다. 이 상태는 수동으로 작성한 Probe·CTS·Benchmark·Callback 등 다른 페이지의 검토까지 보장하지 않습니다.</p>
+<p><a href="architecture.html">Architecture</a>·<a href="engine.html">Engine Comparison</a>·<a href="troubleshooting.html">Troubleshooting</a>과 이 페이지 끝의 <strong>문서 검토 상태</strong>에는 해당 페이지에 연결된 구조 근거와 생성 원고의 기준 버전·검토 커밋이 있습니다. 관련 소스나 원고가 바뀌면 다시 검토해야 합니다. 이 상태는 수동으로 작성한 Probe·CTS·Benchmark·Callback 등 다른 페이지의 검토까지 보장하지 않습니다.</p>
 <h2 id="기기-검증-기록">기기 검증 기록</h2>
 <p>검증 날짜, 앱 빌드, 기기와 실행 조건을 함께 확인하세요. 앱 화면 촬영 기록과 이전 기기 검증 기록은 수행 시점과 확인 범위가 다릅니다.</p>
 <h3 id="앱-화면-촬영">앱 화면 촬영</h3>
@@ -138,7 +138,7 @@
 <li>검토 2026-10-09 @ <code>559fee08</code> · Codex</li>
 </ul>
 </details><!-- omm:end id=device-notes --><h2 id="문서를-수정하고-검증하세요">문서를 수정하고 검증하세요</h2>
-<p>원본 위치, 생성 명령, 검사 순서는 <a href="contributing.html">문서 관리</a>로 옮겼습니다.</p>
+<p>원본 위치, 생성 명령, 검사 순서는 <a href="contributing.html">Contributing</a>로 옮겼습니다.</p>
 <h2 id="문서-검토-상태">문서 검토 상태</h2>
 <p>아래 표는 이 페이지에 연결된 CameraX 기기 관찰 원고의 검토 상태입니다. 위 CTS 요약을 포함한 수동 본문의 검토 범위는 PR 기록에서 확인합니다.</p>
 <!-- omm:begin id=status --><ul>
@@ -166,8 +166,8 @@
 <!-- omm:end id=status --><p><strong>다음 단계:</strong> 구현 구조는 <a href="architecture.html">Architecture</a>, 과거의 선택은 <a href="_inputs/decisions.html">설계 결정 원문</a>에서 확인하세요.</p>
 
   </main>
-  <nav class="reference-nav" aria-label="참고 자료"><span>참고 자료</span><a href="./engine.html">엔진 차이</a><a href="./evidence.html">검증 기록</a><a href="./architecture.html">내부 구조</a><a href="./building.html">앱 빌드</a><a href="./contributing.html">문서 관리</a></nav>
-  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>사용 가이드 <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
+  <footer class="site-footer" lang="en"><span>HAL CAMERA · Engineering the invisible.</span><span>User Guide <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">
       <div class="search-head"><h2 id="search-title">문서 찾기</h2><button class="search-close" type="button">닫기 <kbd>Esc</kbd></button></div>

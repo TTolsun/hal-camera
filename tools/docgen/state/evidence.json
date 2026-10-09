@@ -494,9 +494,9 @@
       },
       "accepted": {
         "codeHash": "8b51aab4db5b2ac8",
-        "modelHash": "2c63f99bd92041ea",
+        "modelHash": "1bdb99f4113849b9",
         "at": "2026-10-09",
-        "commit": "e2e7f4a9",
+        "commit": "bfa81ff6",
         "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
@@ -590,9 +590,9 @@
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "85f1678955bf151a",
-        "modelHash": "45f3cc637b58d333",
+        "modelHash": "756db137f7a3fb00",
         "at": "2026-10-09",
-        "commit": "559fee08",
+        "commit": "bfa81ff6",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",

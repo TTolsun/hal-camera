@@ -3,7 +3,7 @@ title: Benchmark
 ---
 <h1 lang="en">Measurements with meaning.</h1>
 
-**같은 조건에서 측정한 실행을 비교하세요.** Benchmark는 카메라 열기, 프리뷰, 촬영, 녹화에 걸린 시간과 콜백을 기록합니다. 결과 화면에서 baseline 대비 변화를 읽고, 실행 기록에서 비교 대상을 선택하거나 파일을 내보낼 수 있습니다.
+**같은 조건에서 측정한 실행을 비교하세요.** Benchmark는 카메라 열기, 프리뷰, 촬영, 녹화에 걸린 시간과 콜백을 기록합니다. 결과 화면에서 [baseline](glossary.md#baseline) 대비 변화를 읽고, 실행 기록에서 비교 대상을 선택하거나 파일을 내보낼 수 있습니다.
 
 <p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
 
@@ -73,15 +73,15 @@ title: Benchmark
 <figcaption>이 예시에서는 20 ms 더 걸렸습니다. 실제 저하 판정은 비교 조건과 지표별 임계값으로 결정합니다. 실측 결과나 앱 화면이 아닙니다.</figcaption>
 </figure>
 
-| 판정 | 의미 |
+| 판정 | 의미와 다음 행동 |
 | --- | --- |
-| `Measurement invalid` | 실행의 측정 유효성 조건을 충족하지 못했습니다. |
-| `First run` | 비교할 실행이 없습니다. |
-| `This run is the baseline` | 현재 실행이 지정된 baseline입니다. |
-| `No baseline` | 지정된 baseline 없이 이전 실행 대비 변화량을 표시합니다. 저하·개선은 판정하지 않습니다. |
-| `No verdict` | baseline은 있지만 비교 조건을 충족한 지표가 없습니다. |
-| `N metrics degraded` | baseline보다 저하된 지표가 N개입니다. |
-| `No degradation` | 판정한 지표 중 저하된 지표가 없습니다. |
+| `Measurement invalid` | 측정 유효성 조건을 충족하지 못했습니다. **실행 정보에서 무효 사유를 확인**하고 조건을 바로잡은 뒤 다시 측정하세요. |
+| `First run` | 비교할 실행이 없습니다. **이번 조건과 측정값을 확인**하고 같은 조건으로 다음 실행을 측정하세요. |
+| `This run is the baseline` | 현재 실행이 기준입니다. **비교할 다른 실행을 선택**하세요. |
+| `No baseline` | 이전 실행과의 변화량만 보입니다. 저하 판정이 필요하면 **정상 실행을 baseline에 추가**하세요. |
+| `No verdict` | 기준은 있지만 비교 조건을 충족한 지표가 없습니다. **실행 정보에서 비교 불가 사유를 확인**하세요. |
+| `N metrics degraded` | 저하된 지표가 N개입니다. **해당 지표와 실행 조건 차이를 확인**하고 같은 조건에서 재현되는지 측정하세요. |
+| `No degradation` | 판정한 지표에는 저하가 없습니다. **제외된 지표와 경고도 확인**하세요. 모든 HAL 동작이 정상이라는 뜻은 아닙니다. |
 
 <div id="screen-benchmark-result">
 <details markdown="1" id="detail-ee38b8ed09" data-search-section>
@@ -154,7 +154,7 @@ title: Benchmark
 
 ## 구현과 검증 범위를 확인하세요
 
-실행 순서와 저장 경로는 [Architecture](architecture.md#주요-실행-흐름), 표본 누락과 시각 해석은 [디버깅](troubleshooting.md)에 있습니다. 이 페이지는 코드에 따른 사용법이며 기기 실측 결과는 [Evidence](evidence.md)에서 별도로 확인합니다.
+실행 순서와 저장 경로는 [Architecture](architecture.md#주요-실행-흐름), 표본 누락과 시각 해석은 [Troubleshooting](troubleshooting.md)에 있습니다. 이 페이지는 코드에 따른 사용법이며 기기 실측 결과는 [Validation](evidence.md)에서 별도로 확인합니다.
 
 <details>
 <summary>코드 근거를 확인하세요</summary>
