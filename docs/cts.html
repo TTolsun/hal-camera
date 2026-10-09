@@ -31,9 +31,9 @@
 <h2 id="선택한-항목을-실행하세요">선택한 항목을 실행하세요</h2>
 <ol>
 <li>Live의 <code>Lab → CTS</code>를 엽니다.</li>
-<li><code>커스텀 케이스</code> 또는 <code>CTS 원문 케이스</code>를 고릅니다. 원문 케이스는 <strong>Android 14 이상</strong>에서 사용할 수 있습니다. <a href="#검사-방식의-차이">방식 비교</a>에서 차이를 확인하세요.</li>
+<li><code>Custom Checks</code> 또는 <code>AOSP CTS</code>를 고릅니다. 원문 케이스는 <strong>Android 14 이상</strong>에서 사용할 수 있습니다. <a href="#검사-방식의-차이">방식 비교</a>에서 차이를 확인하세요.</li>
 <li>실행할 항목을 체크합니다. 하단에서 선택 개수와 예상 시간을 확인합니다.</li>
-<li><code>실행</code>을 누르고 필요한 권한을 허용합니다.</li>
+<li><code>Run Selected (선택 개수)</code>를 누르고 필요한 권한을 허용합니다.</li>
 <li>끝난 카드를 눌러 결과를 확인합니다.</li>
 </ol>
 <p><strong>확인할 결과:</strong> 선택한 항목에 판정과 소요 시간이 표시됩니다. 실패나 SKIP이 있으면 <a href="#판정을-읽으세요">판정 읽기</a>에서 다음 확인 항목을 찾으세요.</p>
@@ -46,19 +46,19 @@
 </thead>
 <tbody><tr>
 <td>한꺼번에 선택합니다.</td>
-<td>그룹의 <code>전체 선택</code>을 누릅니다. 선택은 다음에 열 때도 유지됩니다.</td>
+<td>그룹의 <code>Select All</code>을 누릅니다. 선택은 다음에 열 때도 유지됩니다.</td>
 </tr>
 <tr>
 <td>도중에 멈춥니다.</td>
-<td><code>중단</code>을 누릅니다. 현재 항목은 <code>중단됨</code>, 나머지는 <code>실행 안 함</code>으로 남습니다.</td>
+<td><code>Stop</code>을 누릅니다. 현재 항목은 <code>중단됨</code>, 나머지는 <code>실행 안 함</code>으로 남습니다.</td>
 </tr>
 <tr>
 <td>결과를 가져갑니다.</td>
-<td><code>복사</code>는 전체 보고서를 클립보드에 넣습니다. <code>공유</code>는 같은 내용을 다른 앱으로 보냅니다.</td>
+<td><code>Copy</code>는 전체 보고서를 클립보드에 넣습니다. <code>Share</code>는 같은 내용을 다른 앱으로 보냅니다.</td>
 </tr>
 <tr>
 <td>다시 검사합니다.</td>
-<td><code>다시 실행</code>을 누르면 같은 항목을 처음부터 실행합니다.</td>
+<td><code>Run Again</code>을 누르면 같은 항목을 처음부터 실행합니다.</td>
 </tr>
 </tbody></table>
 <details id="detail-aeaf43fd9f" data-search-section>
@@ -72,9 +72,9 @@
 </ul>
 </details><p>항목 하나만 보려면 행의 <code>›</code>를 누릅니다. 커스텀 케이스는 한 단계가 실패해도 나머지를 계속 실행합니다. CTS 원문은 중단 처리에 몇 초가 걸릴 수 있습니다.</p>
 <details id="cts-run-internals" data-search-section>
-<summary>단일 항목 실행과 내부 처리</summary><p>단일 항목은 커스텀 케이스의 <code>CtsCaseActivity</code> 또는 CTS 원문의 <code>VendoredCaseActivity</code>에서 실행합니다. <code>실행</code>·<code>중단</code>·<code>복사</code>·<code>공유</code>는 목록 실행과 같은 방식으로 조작하며, 결과는 해당 항목만 표시합니다.</p>
+<summary>단일 항목 실행과 내부 처리</summary><p>단일 항목은 커스텀 케이스의 <code>CtsCaseActivity</code> 또는 CTS 원문의 <code>VendoredCaseActivity</code>에서 실행합니다. <code>Run</code>·<code>Stop</code>·<code>Copy</code>·<code>Share</code>는 목록 실행과 같은 방식으로 조작하며, 결과는 해당 항목만 표시합니다.</p>
 <p>커스텀 케이스는 한 단계가 실패해도 나머지 단계와 카메라를 계속 실행합니다. 화면의 SurfaceView가 CTS의 <code>Camera2SurfaceViewCtsActivity</code> 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 <code>surfaceChanged</code>를 기다린 뒤 세션을 엽니다. 카메라 열기·세션 구성·첫 결과·닫기의 대기 시간은 CTS <code>CameraTestUtils</code>와 같은 3초입니다.</p>
-<p>CTS 원문 케이스의 한 번 실행은 다릅니다. <code>실행</code>을 누르면 카메라와 마이크 권한을 확인한 뒤 JUnit이 테스트 메서드를 작업 스레드에서 돌립니다. 테스트는 카메라 전부를 스스로 순회하므로 진행 중에는 경과 시간만 갱신되고, 실패가 생기면 그 즉시 실패 카드가 추가됩니다. <code>중단</code>은 실행 중인 테스트가 쥔 카메라를 닫아 테스트를 실패시키는 방식이라 몇 초 뒤에 <code>중단됨</code>으로 끝납니다. JUnit에는 실행 중인 본문을 멈출 수단이 없기 때문입니다. 실행 화면 자체가 CTS의 <code>Camera2SurfaceViewCtsActivity</code>를 상속하므로 테스트의 <code>updatePreviewSurface</code>가 같은 SurfaceView를 그대로 씁니다.</p>
+<p>CTS 원문 케이스의 한 번 실행은 다릅니다. <code>Run</code>을 누르면 카메라와 마이크 권한을 확인한 뒤 JUnit이 테스트 메서드를 작업 스레드에서 돌립니다. 테스트는 카메라 전부를 스스로 순회하므로 진행 중에는 경과 시간만 갱신되고, 실패가 생기면 그 즉시 실패 카드가 추가됩니다. <code>Stop</code>은 실행 중인 테스트가 쥔 카메라를 닫아 테스트를 실패시키는 방식이라 몇 초 뒤에 <code>중단됨</code>으로 끝납니다. JUnit에는 실행 중인 본문을 멈출 수단이 없기 때문입니다. 실행 화면 자체가 CTS의 <code>Camera2SurfaceViewCtsActivity</code>를 상속하므로 테스트의 <code>updatePreviewSurface</code>가 같은 SurfaceView를 그대로 씁니다.</p>
 </details><h2 id="검사-방식의-차이">검사 방식의 차이</h2>
 <table>
 <thead>
@@ -115,7 +115,7 @@
     end
 </code></pre>
 <p>한 번의 실행에는 한 종류만 들어갑니다. 취소하면 남은 항목은 실행하지 않으며, 다음 케이스는 현재 케이스의 정리가 끝난 뒤 시작합니다.</p>
-<p>두 목록은 모두 체크리스트이고, 체크한 항목을 <code>실행</code>하면 <code>CtsSuiteRunActivity</code>가 위에서부터 차례로 돌립니다.</p>
+<p>두 목록은 모두 체크리스트이고, 체크한 항목을 <code>Run Selected</code>로 실행하면 <code>CtsSuiteRunActivity</code>가 위에서부터 차례로 돌립니다.</p>
 <p>실행 화면은 <code>Camera2SurfaceViewCtsActivity</code>를 상속하고 커스텀 러너의 <code>PreviewHost</code>를 구현해 SurfaceView를 공유합니다.</p>
 <p>커스텀 케이스의 규칙은 카메라를 모르는 순수 Kotlin이라 JVM 테스트로 검증하고, 러너가 CTS가 기기에서 읽는 값을 채워 넣습니다.</p>
 <p>다섯 케이스는 같은 <code>CtsRunner</code> 계약을 구현하므로 화면은 케이스를 구분하지 않습니다.</p>
@@ -166,9 +166,10 @@
 <a href="assets/screenshots/cts-custom.png" aria-label="CTS 커스텀 케이스 목록에서 빠른 켜기 끄기 선택 원본 보기"><img src="assets/screenshots/cts-custom.png" alt="CTS 커스텀 케이스 목록에서 빠른 켜기 끄기 선택" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>커스텀 케이스에서 빠른 켜기·끄기 한 개를 선택했습니다. 하단 실행 버튼은 선택한 항목 수를 표시합니다. <a href="assets/screenshots/cts-custom.png">원본 보기</a></figcaption>
 </figure></details>
-</div><p><code>custom#</code> 원본은 CTS 클래스에 그대로 대응하는 메서드가 없는 케이스입니다. 검사 문구는 CTS <code>CameraTestUtils</code>에 같은 검사가 있으면 그 문구를 따릅니다. <code>RecordingTest#testBasicRecording</code>은 커스텀 케이스에 없습니다. 원문 그대로 실행하는 쪽이 옮겨 적는 쪽보다 정확하므로 CTS 원문 케이스로만 제공하며, 녹화 판정 규칙(<code>BasicRecordingRules</code>)은 카메라 전환과 동영상 스냅샷이 계속 공유합니다.</p>
-<h2 id="cts-원문-메서드를-선택하세요">CTS 원문 메서드를 선택하세요</h2>
-<p>CTS 원문 케이스 목록은 <code>:ctsvendor</code> 모듈에 가져온 테스트 클래스의 <code>@Test</code> 메서드를 reflection으로 나열합니다. 지금 가져온 클래스는 세 개입니다.</p>
+</div><details id="cts-custom-source" data-search-section>
+<summary>커스텀 검사와 CTS 원본의 관계</summary><p><code>custom#</code> 원본은 CTS 클래스에 그대로 대응하는 메서드가 없는 케이스입니다. 검사 문구는 CTS <code>CameraTestUtils</code>에 같은 검사가 있으면 그 문구를 따릅니다. <code>RecordingTest#testBasicRecording</code>은 CTS 원문 케이스로만 제공하며, 녹화 판정 규칙(<code>BasicRecordingRules</code>)은 카메라 전환과 동영상 스냅샷이 공유합니다.</p>
+</details><h2 id="cts-원문-메서드를-선택하세요">CTS 원문 메서드를 선택하세요</h2>
+<p>검사할 기능에 맞는 클래스를 고르세요. Android 14 이상에서 사용할 수 있습니다.</p>
 <table>
 <thead>
 <tr>
@@ -196,8 +197,9 @@
 <a href="assets/screenshots/cts-vendored.png" aria-label="CTS 원문 메서드 선택 목록 원본 보기"><img src="assets/screenshots/cts-vendored.png" alt="CTS 원문 메서드 선택 목록" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>AOSP 원문 메서드 목록을 연 화면입니다. 이 장면에서는 항목을 선택하거나 원문 테스트를 실행하지 않았습니다. <a href="assets/screenshots/cts-vendored.png">원본 보기</a></figcaption>
 </figure></details>
-</div><p>가져온 소스는 AOSP <code>android16-release</code> 브랜치의 <code>cts/tests/camera</code>와 <code>frameworks/ex/camera2/public</code>이며, 원본 커밋과 적용한 패치 여덟 건(<code>@TestApi</code>·<code>@FlaggedApi</code> 호출을 공개 API로 바꾸거나 제거하고, shell 권한 행을 만들지 않게 한 것)은 <code>ctsvendor/UPSTREAM.md</code>에 있습니다. Android 14(API 34) 아래 기기에서는 이 경로가 비활성화됩니다. 업스트림이 이 파일 집합을 <code>min_sdk_version 34</code>로 빌드하기 때문입니다.</p>
-<div id="screen-cts-running">
+</div><details id="cts-upstream-source" data-search-section>
+<summary>원문 출처와 앱 실행을 위한 변경</summary><p>목록은 <code>:ctsvendor</code> 모듈에 가져온 클래스의 <code>@Test</code> 메서드를 reflection으로 나열합니다. 소스는 AOSP <code>android16-release</code>의 <code>cts/tests/camera</code>와 <code>frameworks/ex/camera2/public</code>입니다. 원본 커밋과 적용한 패치 여덟 건(<code>@TestApi</code>·<code>@FlaggedApi</code> 호출 변경과 shell 권한 행 제거)은 <code>ctsvendor/UPSTREAM.md</code>에 있습니다. 업스트림의 <code>min_sdk_version 34</code>에 따라 Android 14 아래에서는 이 경로가 비활성화됩니다.</p>
+</details><div id="screen-cts-running">
 <details id="detail-5459e791e2" data-search-section>
 <summary>실제 화면 보기</summary><figure class="app-screenshot">
 <a href="assets/screenshots/cts-running.png" aria-label="빠른 켜기 끄기 CTS 검사 실행 중 원본 보기"><img src="assets/screenshots/cts-running.png" alt="빠른 켜기 끄기 CTS 검사 실행 중" width="1440" height="3120" loading="lazy" decoding="async"></a>

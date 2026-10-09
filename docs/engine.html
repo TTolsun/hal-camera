@@ -211,7 +211,7 @@
 </figure><h3 id="녹화-중-사진의-알려진-제약">녹화 중 사진의 알려진 제약</h3>
 <p>CameraX 1.6.2로 녹화 중 사진을 찍으면 영상 간격이 늘어날 수 있습니다. Galaxy S25+·Android 16의 후면·전면·초광각에서 사진마다 약 33.5ms 간격이 약 67ms로 늘어났습니다. 녹화 연속성이 중요하면 같은 기기에서 확인한 <strong>Camera2 1080p 30fps</strong> 경로를 권장합니다. 다른 기기·FPS·코덱까지 연속성을 보장하는 의미는 아닙니다.</p>
 <p>이 동작은 알려진 제약으로 수용하며 CameraX 내부 API를 통한 우회 수정은 현재 계획하지 않습니다. 안내는 문서에만 제공하고 앱 경고는 추가하지 않습니다. JPEG 기본 크기는 엔진별로 유지합니다. 근거는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md">검증 기록</a>에 있으며, 남은 실패 경로는 <a href="https://github.com/TTolsun/hal-camera/issues/220">#220</a>, 기기 조합은 <a href="https://github.com/TTolsun/hal-camera/issues/221">#221</a>에서 추적합니다.</p>
-<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p><div id="screen-engine-camerax">
+<p class="doc-evidence">아래 화면은 2026년 9월 30일 Galaxy S25+·Android 16에서 HAL CAMERA 0.16.0(versionCode 593)을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p><div id="screen-engine-camerax">
 <details id="detail-35df4f15e9" data-search-section>
 <summary>실제 화면 보기</summary><figure class="app-screenshot">
 <a href="assets/screenshots/engine-camerax.png" aria-label="CameraX로 전환한 Live 프리뷰 원본 보기"><img src="assets/screenshots/engine-camerax.png" alt="CameraX로 전환한 Live 프리뷰" width="1440" height="3120" loading="lazy" decoding="async"></a>
@@ -519,7 +519,6 @@
     end
 </code></pre>
 <p>Android 10 이상에서는 <code>IS_PENDING</code>으로 쓰는 중인 항목의 공개를 미룹니다. 이전 버전에는 이 보호가 없으며, 여러 항목의 공개와 실패 후 삭제를 완전한 원자적 처리로 보장하지 않습니다. 생성·쓰기·공개 중 예외가 나면 이미 만든 항목의 삭제를 시도합니다.</p>
-<p>벤치마크 still은 JPEG만 대상으로 하고, JPEG 도착이 측정값이며 저장하지 않습니다.</p>
 </details><h4 id="yuv-저장-포맷">YUV 저장 포맷</h4>
 <p><strong>사진 파일을 열어 보려면 JPEG를, 변환 전 YUV 샘플을 분석하려면 NV21을 선택하세요.</strong> YUV Save Format에서 둘 중 하나를 고릅니다. 두 포맷을 동시에 저장하지 않습니다.</p>
 <table>
@@ -668,7 +667,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStabilization.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillPair.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/OriginalYuv.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RawFrame.kt</code>, <code>app/src/main/java/dev/halcamera/camera/DngOutput.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ManualControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-09 @ <code>69497ebf</code> · Codex (user-requested code and documentation review; device evidence recorded separately)</li>
+<li>검토 2026-10-09 @ <code>84058c8b</code> · Codex (independent documentation and code review; no new device test)</li>
 </ul>
 </details><!-- omm:end id=camera2 --></details><h2 id="camerax-엔진">CameraX 엔진</h2>
 <details id="camerax-internals" data-search-section>
@@ -879,7 +878,7 @@
 <tr>
 <td>원고 <code>camera2</code></td>
 <td>최신</td>
-<td>검토 2026-10-09 @ <code>69497ebf</code> · Codex (user-requested code and documentation review; device evidence recorded separately)</td>
+<td>검토 2026-10-09 @ <code>84058c8b</code> · Codex (independent documentation and code review; no new device test)</td>
 </tr>
 <tr>
 <td>원고 <code>camerax</code></td>

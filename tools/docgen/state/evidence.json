@@ -555,14 +555,14 @@
     },
     "content:troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1b6e4edcc788ea9f",
-        "modelHash": "bf523b84cbabd495",
+        "codeHash": "e4424ab802db9c1e",
+        "modelHash": "0ac3e7e38b21e0b8",
         "at": "2026-10-09",
-        "commit": "69497ebf",
-        "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
+        "commit": "84058c8b",
+        "reviewer": "Codex (independent documentation and code review; no new device test)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "6852a20e3c1432467b96f5300de0d50e2b6114d9",
@@ -585,6 +585,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "518c730a1dd2c1e011fbe4792d1c72a8ba351ae1",
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "a290adb1490152df591a5c7bed7a76e09f95859f",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "3e2f653654f7696accd12b04defde0fa44c0d3a3",
+          "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "10c7a557529d4bae4c682c743466ff5b9ff5bbf0",
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "586757ab962be12cb4604062da5d0042fe04cb01",
@@ -610,10 +611,10 @@
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "5288bc7a0512a409",
-        "modelHash": "44b9a0ab90a6f9f8",
+        "modelHash": "59faf0813599065f",
         "at": "2026-10-09",
-        "commit": "69497ebf",
-        "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
+        "commit": "84058c8b",
+        "reviewer": "Codex (independent documentation and code review; no new device test)",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -817,10 +818,10 @@
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "5288bc7a0512a409",
-        "modelHash": "faf8c8defc94a6c7",
+        "modelHash": "e2a35c25f3d1b4c9",
         "at": "2026-10-09",
-        "commit": "69497ebf",
-        "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
+        "commit": "84058c8b",
+        "reviewer": "Codex (independent documentation and code review; no new device test)",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -1281,10 +1282,10 @@
       },
       "accepted": {
         "codeHash": "5288bc7a0512a409",
-        "modelHash": "fc2066749828f95d",
+        "modelHash": "ca608113eabe6b3f",
         "at": "2026-10-09",
-        "commit": "69497ebf",
-        "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
+        "commit": "84058c8b",
+        "reviewer": "Codex (independent documentation and code review; no new device test)",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
