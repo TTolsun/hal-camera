@@ -550,7 +550,7 @@
 <td>사진 모드에서 두 포맷 모두 함께 저장합니다.</td>
 </tr>
 </tbody></table>
-<p>이 선택은 녹화 중 사진에는 적용하지 않습니다. 일반 CLI 촬영은 기본 JPEG 포맷을 사용합니다.</p>
+<p>이 선택은 녹화 중 사진에는 적용하지 않습니다. CLI 촬영의 기본 YUV 저장 포맷은 JPEG이며, <code>--yuv-format NV21</code>로 NV21을 지정할 수 있습니다. RAW 크기는 <code>--raw-size</code>로 따로 지정합니다.</p>
 <p><code>_YUV.nv21</code>은 YUV_420_888의 crop 영역에 있는 8비트 샘플을 손실 없이 재배열한 파일입니다. Y를 행 순서로 쓰고 V·U를 교대로 쓰며 패딩·회전·압축·색 변환을 적용하지 않습니다. JSON의 outputs에는 실제 파일명·MIME·크기를, NV21에는 출력 plane의 offset/rowStride/pixelStride와 원본 크기·crop·stride를 함께 기록합니다. 저장소의 <code>docs/design/ORIGINAL-YUV.md</code>에 복원 규칙이 있습니다.</p>
 <p>JPEG와 NV21 촬영 모두 이미지와 같은 SENSOR_TIMESTAMP의 최종 CaptureResult를 기다립니다. JSON의 capture에는 카메라 ID, 요청 ID·태그, 프레임 번호, 센서 시각과 시각 소스, 노출 시간·ISO·프레임 주기·AE 상태, JPEG 방향을 저장합니다. 결과가 없으면 5초 뒤 실패하며 프리뷰 결과로 대체하지 않습니다. 출력별 최대 두 프레임을 보관하고 시각 확정 뒤 다른 버퍼를 버립니다. 저장이 끝날 때까지 다음 촬영을 받지 않습니다.</p>
 <h4 id="rawdng">RAW/DNG</h4>

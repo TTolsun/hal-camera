@@ -3,9 +3,9 @@ title: CLI
 ---
 <h1 lang="en">Control the camera with adb.</h1>
 
-[Automation](automation.md)에서 다른 실행 방법도 확인할 수 있습니다.
+**기기를 연결하고 아래 준비 명령으로 사진을 한 번 촬영하세요.** Windows(PowerShell·CMD) 또는 WSL과 `adb`가 필요합니다. 앱 소스나 빌드 도구는 필요하지 않습니다.
 
-Windows(PowerShell·CMD)와 WSL에서 `adb`로 카메라를 제어합니다. Git·Python·pip·JDK·Android Studio는 필요하지 않습니다. **ADB CLI 허용은 기본으로 켜져 있으며**, 사용자가 직접 꺼 둔 설정은 업데이트 후에도 유지합니다.
+ADB CLI는 기본으로 허용됩니다. 직접 꺼 둔 경우에는 앱의 `Lab → ADB CLI`에서 켜세요. 꺼 둔 설정은 업데이트 후에도 유지됩니다.
 
 ## 처음 실행하세요
 
@@ -170,7 +170,7 @@ adb shell sh /data/local/tmp/halcam fetch REQUEST_ID
 
 Provider에 JSON으로 직접 제출할 때에는 `command: "benchmark.run"`, `params.camera_id`, `params.profile_id: "camera2-standard-v2"`, `execution_timeout_ms`를 명시합니다. 셸의 `--profile`과 직접 호출의 `--extra profile:s:...`가 JSON의 `profile_id`에 대응합니다.
 
-완료 결과에는 `run_id`, `camera_id`, `profile_id`, `report_schema_version`, `artifact_count`가 들어 있습니다. 요청 성공은 보고서 저장 완료를 뜻하며 점수 유효성이나 회귀 판정 통과를 뜻하지 않습니다. 원본 JSON의 validity·측정 결과를 확인합니다. 보고서에는 이미지 픽셀이 포함되지 않으며 녹화 MP4를 CLI 산출물로 내보내지 않습니다.
+완료 결과에는 `run_id`, `camera_id`, `profile_id`, `report_schema_version`, `artifact_count`가 들어 있습니다. 요청 성공은 보고서 저장 완료를 뜻합니다. 측정·비교 가능 여부와 성능 저하 판정은 원본 JSON에서 따로 확인하세요. 보고서에는 이미지 픽셀이 포함되지 않으며 녹화 MP4를 CLI 산출물로 내보내지 않습니다.
 
 열 상태·절전 상태·지원 조건이 맞지 않으면 `PREFLIGHT_FAILED`, 실행 중 실패는 `BENCHMARK_FAILED`, 중단은 `CANCELLED`, 실행 제한 초과는 `EXECUTION_TIMEOUT`으로 기록됩니다. 실패·취소 후에도 저장된 JSON이 있으면 `fetch REQUEST_ID`로 회수할 수 있습니다. 앱 프로세스가 종료되면 `interrupted`로 남으며 자동으로 재실행하지 않습니다.
 

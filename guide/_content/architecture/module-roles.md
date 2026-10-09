@@ -5,6 +5,9 @@ sources:
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
   - app/src/main/java/dev/halcamera/cli/LiveController.kt
   - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
+  - app/src/main/java/dev/halcamera/cli/CliLibrary.kt
+  - app/src/main/java/dev/halcamera/MainCliBridge.kt
+  - app/src/main/java/dev/halcamera/DualCliBridge.kt
   - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
   - app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt
   - app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt
@@ -64,8 +67,9 @@ verifications: []
 - shell 호출자 검사, 영속 요청 상태, artifact 등록과 PC 파일 수집을 담당합니다.
 - 화면 어댑터 `LiveController`, `CtsController`, `BenchmarkController`도 이 패키지에 둡니다.
 - Activity는 이 어댑터를 연결하며 카메라 엔진과 순수 benchmark/domain은 CLI를 알지 못합니다.
-- `LiveController`는 프리뷰·사진·녹화를 연결하고 `CtsController.reportSaved`와 `BenchmarkController.reportSaved`는 결과와 보고서 파일을 스칼라로 받으므로 `cli/`는 benchmark·cts 결과 타입을 알지 못합니다.
-- `streams`·`probe`·`cts.cases`는 화면 없이 `CommandCoordinator`가 직접 처리하며, 이때만 `cli/`가 카메라 스트림 지원 정보·`camera/CameraProbeReader`·`cts/` 카탈로그를 읽습니다.
+- `MainCliBridge`와 `DualCliBridge`는 Activity의 카메라 동작을 연결합니다. `LiveController`는 프리뷰·사진·녹화와 저장 완료를 관리하며 `CliSequence`는 연속 촬영과 AEB의 일부 저장 결과도 보존합니다.
+- `CtsController.reportSaved`와 `BenchmarkController.reportSaved`는 완료 결과와 보고서 파일을 받습니다. 저장된 결과를 조회·비교하는 `CliLibrary`는 기존 benchmark 도메인 타입과 저장소를 재사용하며, 도메인에서 CLI로 향하는 의존성은 없습니다.
+- `streams`·`probe`·`cts.cases`는 화면 없이 `CommandCoordinator`가 처리합니다. 결과·baseline·갤러리·진단 ZIP·보관 한도는 `CliLibrary`가 IO 스레드에서 처리합니다.
 - `CliStreams`는 요청별 크기 옵션을 검증하며 Camera2·CameraX 설정으로 변환합니다.
 - protocol v1을 변경할 때 양쪽 검증기를 함께 확인합니다.
 

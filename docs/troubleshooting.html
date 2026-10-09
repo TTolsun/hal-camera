@@ -56,22 +56,21 @@
 <td><a href="#cli-작업이-끝나지-않을-때">기존 요청의 상태</a>를 조회합니다.</td>
 </tr>
 </tbody></table>
-<h2 id="재현-자료를-모으세요">재현 자료를 모으세요</h2>
-<p>증상이 반복되면 아래 순서로 조건과 로그를 남기세요.</p>
+<p><span id="재현-자료를-모으세요"></span></p>
 <h2 id="문제-발생-시-수집할-정보">문제 발생 시 수집할 정보</h2>
-<p>재현 조건과 기기에 설치한 앱 버전을 함께 남기세요. 문서의 빌드 정보가 설치한 APK와 같다고 가정하지 않습니다.</p>
 <ol>
-<li>기기 모델과 Android 빌드 번호를 기록합니다.</li>
-<li>사용한 엔진인 Camera2 또는 CameraX와 카메라 엔드포인트를 기록합니다.</li>
-<li>재현 절차와 반복 횟수 중 문제가 발생한 횟수를 기록합니다.</li>
-<li><code>이벤트 저장 · ZIP</code>으로 생성한 번들과 관련 로그를 확보합니다.</li>
+<li>기기 모델, Android 빌드 번호와 <strong>설치된 앱 버전</strong>을 기록합니다.</li>
+<li>엔진·카메라와 출력 크기·FPS·촬영 설정을 기록합니다.</li>
+<li>재현 절차와 전체 시도 중 문제가 발생한 횟수를 기록합니다.</li>
+<li>Live의 <code>Save Events · ZIP</code>을 눌러 진단 기록을 저장합니다.</li>
 </ol>
 <h2 id="로그와-진단-자료">로그와 진단 자료</h2>
-<p>Live의 <code>이벤트 저장 · ZIP</code>은 직전 10초와 이후 5초의 이벤트를 incident ZIP으로 저장합니다. 저장한 파일은 <code>Lab → ZIP Archives</code>에서 공유합니다.</p>
+<p><code>Save Events · ZIP</code>은 직전 10초와 이후 5초의 이벤트·메타데이터를 저장합니다. 이미지 픽셀은 포함하지 않습니다. 저장이 끝나면 <code>Lab → ZIP Archives</code>에서 공유하세요.</p>
 <p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p><figure class="app-screenshot" id="screen-incident-history">
 <a href="assets/screenshots/incident-history.png" aria-label="앱의 Incident ZIP 기록 목록 원본 보기"><img src="assets/screenshots/incident-history.png" alt="앱의 Incident ZIP 기록 목록" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>Lab → ZIP Archives에서 기기에 저장된 incident 목록을 열었습니다. 기존 기록을 조회한 화면이며 이 촬영에서 ZIP 생성이나 공유를 실행하지 않았습니다. <a href="assets/screenshots/incident-history.png">원본 보기</a></figcaption>
-</figure><p>아래는 현재 추출기가 <code>TAG</code> 상수와 <code>Log.*</code> 호출에서 찾은 로그 태그입니다. 목록에 없다는 이유만으로 코드 전체에서 해당 태그를 사용하지 않는다고 단정할 수는 없습니다.</p>
+</figure><details id="diagnostic-log-tags" data-search-section>
+<summary>개발자용: logcat 태그와 조회 명령</summary><p>아래는 현재 추출기가 <code>TAG</code> 상수와 <code>Log.*</code> 호출에서 찾은 로그 태그입니다. 목록에 없다는 이유만으로 코드 전체에서 해당 태그를 사용하지 않는다고 단정할 수는 없습니다.</p>
 <!-- omm:begin id=log-tags --><table>
 <thead>
 <tr>
@@ -128,8 +127,7 @@
 </details><!-- omm:end id=log-tags --><p>다음 명령으로 이 태그의 로그를 확인합니다.</p>
 <pre><code class="language-powershell">adb logcat -s BenchmarkReport BenchmarkStore ProfileCompatibility
 </code></pre>
-<p>incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽셀은 저장하지 않습니다.</p>
-<h2 id="앱과-프레임워크hal을-구분하세요">앱과 프레임워크·HAL을 구분하세요</h2>
+</details><h2 id="앱과-프레임워크hal을-구분하세요">앱과 프레임워크·HAL을 구분하세요</h2>
 <!-- omm:begin id=layer-isolation --><p><strong>먼저 앱의 필터와 계산 규칙을 확인한 뒤 원시 이벤트를 대조하세요.</strong> 프레임워크에서 받은 값과 앱이 계산한 지표를 구분해야 원인 계층을 좁힐 수 있습니다.</p>
 <p><code>Event.atNs</code>는 <code>FlightRecorder</code>가 주입받은 시계로 기록한 앱 시각이며, 앱에서는 <code>elapsedRealtimeNanos</code>를 사용합니다. 카메라가 제공한 센서 시각은 별도 필드인 <code>sensorNs</code>입니다. <code>intervalMs</code>, <code>resultFps</code>, <code>observedResultGap</code>은 앱이 계산한 파생값이므로 HAL 내부 상태의 직접 측정으로 해석하지 않습니다.</p>
 <ol>
@@ -226,7 +224,7 @@
 <li><code>app/src/main/java/dev/halcamera/telemetry/</code>에서 이벤트 기록과 incident 내보내기를 확인합니다.</li>
 <li><code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>에서 지표 계산 규칙을 확인합니다.</li>
 </ul>
-<p><strong>다음 단계:</strong> <a href="#문제-발생-시-수집할-정보">문제 발생 시 수집할 정보</a>의 첫 단계에 따라 문제 실행의 <code>unknownReason</code>과 입력 조건을 확인하세요.</p>
+<p><strong>다음 단계:</strong> <a href="#문제-발생-시-수집할-정보">수집할 정보</a>를 따라 설치된 앱 버전부터 기록하세요.</p>
 
   </main>
   <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>

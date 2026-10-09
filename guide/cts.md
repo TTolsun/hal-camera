@@ -39,7 +39,7 @@ title: CTS
 <details markdown="1" id="cts-run-internals" data-search-section>
 <summary>단일 항목 실행과 내부 처리</summary>
 
-항목 하나만 따로 보려면 행의 `›`를 누릅니다. 커스텀 케이스는 `CtsCaseActivity`, CTS 원문은 `VendoredCaseActivity`가 열립니다. `실행`·`중단`·`복사`·`공유`는 목록 실행과 같은 방식으로 조작하며, 결과는 해당 항목만 표시합니다.
+단일 항목은 커스텀 케이스의 `CtsCaseActivity` 또는 CTS 원문의 `VendoredCaseActivity`에서 실행합니다. `실행`·`중단`·`복사`·`공유`는 목록 실행과 같은 방식으로 조작하며, 결과는 해당 항목만 표시합니다.
 
 커스텀 케이스는 한 단계가 실패해도 나머지 단계와 카메라를 계속 실행합니다. 화면의 SurfaceView가 CTS의 `Camera2SurfaceViewCtsActivity` 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 `surfaceChanged`를 기다린 뒤 세션을 엽니다. 카메라 열기·세션 구성·첫 결과·닫기의 대기 시간은 CTS `CameraTestUtils`와 같은 3초입니다.
 
@@ -54,7 +54,7 @@ CTS 원문 케이스의 한 번 실행은 다릅니다. `실행`을 누르면 �
 | 커스텀 케이스 | CTS 규칙과 상수를 앱의 Kotlin으로 옮긴 다섯 가지 검사입니다. | 카메라와 단계별로 판정합니다. |
 | CTS 원문 케이스 | AOSP의 Java 테스트를 앱 안의 JUnit으로 실행합니다. | 테스트 메서드 하나에 판정 하나를 냅니다. |
 
-두 방식 모두 Benchmark의 반복 측정과 회귀 점수에는 포함하지 않습니다.
+CTS 판정과 Benchmark의 성능 저하 판정은 별개입니다.
 
 <details markdown="1" id="detail-611a303ae2" data-search-section>
 <summary>검사 실행 구조</summary>
@@ -82,7 +82,7 @@ sequenceDiagram
 
 두 목록은 모두 체크리스트이고, 체크한 항목을 `실행`하면 `CtsSuiteRunActivity`가 위에서부터 차례로 돌립니다.
 
-이 화면은 가져온 `Camera2SurfaceViewCtsActivity`를 상속하면서 커스텀 러너의 `PreviewHost`도 구현하므로 SurfaceView 하나로 두 종류를 다 호스트하지만, 목록이 분리되어 있으므로 한 번의 실행에는 한 종류만 들어갑니다.
+실행 화면은 `Camera2SurfaceViewCtsActivity`를 상속하고 커스텀 러너의 `PreviewHost`를 구현해 SurfaceView를 공유합니다.
 
 커스텀 케이스의 규칙은 카메라를 모르는 순수 Kotlin이라 JVM 테스트로 검증하고, 러너가 CTS가 기기에서 읽는 값을 채워 넣습니다.
 
@@ -247,6 +247,9 @@ FAIL의 상세 문구는 CTS의 assertion 메시지와 같으므로 원본 테�
 
 ## 케이스를 추가하세요
 
+<details markdown="1" id="cts-contributing" data-search-section>
+<summary>개발자용: 커스텀·AOSP 케이스 추가 절차</summary>
+
 커스텀 케이스를 추가하려면 다음 순서를 따릅니다.
 
 1. 케이스별 하위 패키지(`cts/onoff/`처럼)에 판정을 담은 순수 Kotlin `…Rules`와 카메라를 다루는 `…Runner`를 둡니다. 러너는 `CameraCaseRunner`를 상속해 `runCamera`(카메라마다) 또는 `runCameras`(카메라를 섞어 쓰는 경우)를 구현합니다.
@@ -258,6 +261,8 @@ CTS 원문 클래스를 추가하려면 테스트마다 코드를 쓰지 않습�
 1. AOSP 같은 브랜치에서 테스트 클래스 파일을 `ctsvendor/src/main/java/`의 같은 패키지 경로에 복사합니다. `Camera2SurfaceViewTestCase`나 `Camera2AndroidTestRule` 계열이 아니면 그 기반 클래스도 함께 가져옵니다.
 2. `./gradlew :ctsvendor:compileDebugJavaWithJavac`로 컴파일합니다. 오류가 난 호출이 곧 `@TestApi`·`@FlaggedApi` 목록이므로, `UPSTREAM.md`의 패치처럼 공개 API로 바꾸거나 그 메서드를 제거하고 패치 목록에 적습니다.
 3. `VendoredCatalog.classes`에 클래스를 넣습니다. `@Test` 메서드는 reflection으로 나열되므로 목록은 자동으로 늘어납니다.
+
+</details>
 
 <details>
 <summary>코드 근거를 확인하세요</summary>
