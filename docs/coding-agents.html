@@ -47,6 +47,7 @@
 원본 JSON을 ./runs에 받고 실행 완료 여부와 측정 validity를 구분해서 알려 줘.
 </code></pre>
 <p>촬영·녹화·Probe·CTS·벤치마크를 지원합니다. 설치된 APK의 지원 명령을 먼저 확인하며, 벤치마크는 <code>camera2-standard-v2</code> 프로파일을 사용합니다. 녹화를 요청할 때에는 길이와 소리 포함 여부도 지정합니다. 명령과 옵션은 <a href="cli.html">CLI 가이드</a>에서 확인하세요.</p>
+<p>요청 접수와 파일 저장 완료의 차이는 <a href="cli.html#요청과-완료를-구분하세요">CLI 요청 흐름</a>을 확인하세요.</p>
 <h2 id="결과를-확인하세요">결과를 확인하세요</h2>
 <p>에이전트가 보고한 기기·앱 버전, 요청 ID와 최종 상태, PC에 받은 파일 경로와 크기·SHA-256 검증 결과를 확인합니다. 연결이 끊기면 같은 촬영이나 측정을 다시 제출하기 전에 기존 요청을 조회합니다. 벤치마크의 실행 성공은 보고서 저장 완료를 뜻하므로 점수·비교에 사용할 수 있는지는 JSON의 validity를 따로 확인합니다.</p>
 <p><strong>다음 단계:</strong> 결과를 공유할 때에는 <a href="evidence.html">Evidence</a>의 검증 범위를 확인하세요.</p>
@@ -189,9 +190,13 @@
           svg.style.width = '100%';
           svg.style.maxWidth = `${width}px`;
           svg.style.minWidth = `${width * .875}px`;
-          let heading = node.previousElementSibling;
-          while (heading && !/^H[1-3]$/.test(heading.tagName)) heading = heading.previousElementSibling;
-          const label = heading?.textContent.trim() || document.querySelector('h1')?.textContent.trim() || '다이어그램';
+          // Diagrams inside details still belong to the preceding section heading.
+          const headings = [...document.querySelectorAll('main h1, main h2, main h3, main h4')]
+            .filter(heading => heading.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING);
+          const heading = headings.at(-1);
+          const section = headings.findLast(heading => heading.tagName === 'H2');
+          const label = [section, heading].filter((heading, index, all) => heading && all.indexOf(heading) === index)
+            .map(heading => heading.textContent.trim()).join(' · ') || '다이어그램';
           node.tabIndex = 0;
           node.setAttribute('role', 'button');
           node.setAttribute('aria-label', `그림 확대: ${label}`);
@@ -210,6 +215,7 @@
             }
           });
         });
+        window.dispatchEvent(new Event('halcamera:diagrams-ready'));
       } catch (error) {
         console.error('Mermaid rendering failed', error);
       }

@@ -181,7 +181,41 @@ halcam --serial DEVICE probe --output ./probe --json
 halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json
 </code></pre>
 <p>Python 도구의 <code>--json</code>은 stdout에 JSON 하나를 출력하며, <code>--wait-timeout</code>은 PC에서 기다리는 시간만 제한합니다. ADB 스크립트는 진행 메시지와 요청별 결과를 출력하고 성공 시 0, 오류 시 1을 반환합니다. 기계적으로 JSON만 처리하려면 직접 <code>content read</code>를 사용합니다.</p>
-</details><h2 id="요청이-끝나지-않거나-파일이-없을-때">요청이 끝나지 않거나 파일이 없을 때</h2>
+</details><h2 id="요청과-완료를-구분하세요">요청과 완료를 구분하세요</h2>
+<p><strong>접수 응답을 받아도 촬영이나 저장이 끝난 것은 아닙니다.</strong> 파일을 만드는 명령은 결과 파일이 등록된 뒤 회수합니다.</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant P as PC
+    participant C as 요청 처리
+    participant A as 앱 작업
+    P-&gt;&gt;C: 요청 ID와 명령
+    C-&gt;&gt;C: 요청 기록
+    par 접수 응답
+        C--&gt;&gt;P: 접수된 요청 정보
+    and 예약한 작업 실행
+        C-&gt;&gt;A: 작업 실행
+        A--&gt;&gt;C: 저장 결과와 파일
+        C-&gt;&gt;C: 파일 등록과 완료 기록
+    end
+    P-&gt;&gt;C: 요청 ID로 상태 확인
+    C--&gt;&gt;P: 결과와 파일 정보
+    P-&gt;&gt;P: 파일 받기와 크기·SHA-256 확인
+</code></pre>
+<p>같은 요청 ID와 같은 명령을 다시 보내면 기존 상태나 결과를 돌려줍니다. 같은 ID에 다른 인자를 보내면 충돌로 처리합니다. 조회 명령처럼 파일을 만들지 않는 작업에는 파일 회수 단계가 없습니다.</p>
+<h2 id="요청이-끝나지-않거나-파일이-없을-때">요청이 끝나지 않거나 파일이 없을 때</h2>
+<pre><code class="language-mermaid">sequenceDiagram
+    participant P as PC
+    participant A as 앱
+    Note over P,A: PC 대기가 끝나거나 연결이 끊김
+    P-&gt;&gt;A: 같은 요청 ID로 상태 확인
+    alt 아직 실행 중
+        A--&gt;&gt;P: 진행 상태
+        Note over P: 기다린 뒤 다시 확인
+    else 완료됨
+        A--&gt;&gt;P: 결과와 파일 정보
+        P-&gt;&gt;P: 필요한 파일만 다시 받기
+    end
+</code></pre>
+<p>PC 대기 종료는 앱의 실패나 취소를 뜻하지 않습니다. 결과를 확인하기 전에 새 ID로 같은 촬영을 다시 요청하지 마세요.</p>
 <p><code>--no-wait</code>은 접수 직후 반환합니다. <code>status</code>, <code>fetch</code>, <code>cancel</code>에서 ID를 생략하면 마지막 제출 요청을 사용합니다. <code>cancel UUID</code>로 취소할 수 있지만 이미 제출한 사진 저장은 완료될 수 있습니다.</p>
 <p>결과 파일은 기기의 <code>Download/HALCamera-cli/요청ID</code>에 크기와 SHA-256을 검증한 복사본으로 준비합니다. 이 복사본은 자동으로 삭제하지 않습니다.</p>
 <ol>
@@ -366,9 +400,13 @@ halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json
           svg.style.width = '100%';
           svg.style.maxWidth = `${width}px`;
           svg.style.minWidth = `${width * .875}px`;
-          let heading = node.previousElementSibling;
-          while (heading && !/^H[1-3]$/.test(heading.tagName)) heading = heading.previousElementSibling;
-          const label = heading?.textContent.trim() || document.querySelector('h1')?.textContent.trim() || '다이어그램';
+          // Diagrams inside details still belong to the preceding section heading.
+          const headings = [...document.querySelectorAll('main h1, main h2, main h3, main h4')]
+            .filter(heading => heading.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING);
+          const heading = headings.at(-1);
+          const section = headings.findLast(heading => heading.tagName === 'H2');
+          const label = [section, heading].filter((heading, index, all) => heading && all.indexOf(heading) === index)
+            .map(heading => heading.textContent.trim()).join(' · ') || '다이어그램';
           node.tabIndex = 0;
           node.setAttribute('role', 'button');
           node.setAttribute('aria-label', `그림 확대: ${label}`);
@@ -387,6 +425,7 @@ halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json
             }
           });
         });
+        window.dispatchEvent(new Event('halcamera:diagrams-ready'));
       } catch (error) {
         console.error('Mermaid rendering failed', error);
       }

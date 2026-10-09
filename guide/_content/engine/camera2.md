@@ -135,13 +135,32 @@ Benchmark는 Live 설정을 읽지 않습니다.
 
 CLI는 기본값에 명시한 크기 옵션을 적용하며 이전 화면 설정을 이어받지 않습니다.
 
-Live에서 첫 프레임 전에 카메라 열기가 `onDisconnected`나 `onError`(사용 중, 최대 개수 초과, 기기·서비스 오류) 또는 같은 원인의 `CameraAccessException`으로 실패하면, `CameraOpenRetry`에 따라 200·400·800·1600·2000ms 간격으로 최대 5번 다시 엽니다(#224). 다른 엔진이 카메라를 놓은 직후 카메라 서비스가 열기를 잠깐 거부할 수 있기 때문입니다.
+#### 처음 열기에 실패하면 어떻게 하나요?
 
-다음 열기는 실패한 기기의 `onClosed` 뒤에 예약하고, 시도마다 `open_retry` 이벤트에 원인·회차·지연을 남깁니다.
+Live는 첫 프레임 전의 일부 열기 오류만 다시 시도합니다. Benchmark와 첫 프레임 이후의 오류에는 이 규칙을 적용하지 않습니다.
 
-카메라가 비활성화됐거나 재시도를 모두 쓰면 실패를 바로 알려 대기 중인 CLI 요청이 타임아웃까지 기다리지 않습니다.
+```mermaid
+stateDiagram-v2
+    state "열기와 첫 프레임 대기" as Opening
+    state "종료 정리와 재시도 대기" as Wait
+    state "프리뷰 준비" as Ready
+    state "실패 알림" as Failed
+    [*] --> Opening
+    Opening --> Ready: 첫 프레임
+    Opening --> Wait: 재시도 대상 오류
+    Wait --> Opening: 종료 처리 뒤 대기 시간 경과
+    Opening --> Failed: 대상 밖 오류 또는 횟수 소진
+    Ready --> [*]
+    Failed --> [*]
+```
 
-벤치마크와 첫 프레임 이후의 오류는 다시 열지 않습니다.
+| 조건 | 처리 |
+| --- | --- |
+| `onDisconnected`, 사용 중·최대 개수 초과·기기·서비스 오류 | `CameraOpenRetry`가 200·400·800·1600·2000ms 간격으로 최대 5번 다시 엽니다. 같은 원인의 `CameraAccessException`도 대상입니다. |
+| 실패한 기기가 열려 있습니다. | `onClosed` 뒤 다음 열기를 예약합니다. 시도마다 `open_retry`에 원인·회차·지연을 남깁니다. |
+| 엔진이 비활성화되거나 재시도를 모두 썼습니다. | 새 열기를 진행하지 않습니다. 실패를 바로 알려 CLI가 제한 시간까지 기다리지 않게 합니다. |
+
+다른 엔진이 카메라를 놓은 직후 서비스가 잠시 열기를 거부할 수 있어 이 재시도를 둡니다(#224).
 
 엔진이나 카메라를 바꿀 때 Live의 첫 Camera2 열기는 이전 엔진이 쓰던 카메라가 실제로 해제될 때까지 기다립니다(#230). CameraX는 `CameraState.CLOSED` 뒤 `close(done)`을 부르지만 카메라 서비스는 그 카메라를 약 1초 더 잡고 있어, 그 사이의 열기가 거부되고 재시도 간격이 해제 시점을 늦게 맞혔기 때문입니다.
 
@@ -164,24 +183,53 @@ Live에서 첫 프레임 전에 카메라 열기가 `onDisconnected`나 `onError
 <details markdown="1" id="detail-902b2a5546" data-search-section>
 <summary>사진 구현</summary>
 
-1. `capture()`나 `capturePhoto()`를 받으면, 플래시가 Auto·On이고 AE가 잠겨 있지 않은 경우에만 AE precapture를 먼저 실행합니다.
+아래는 Live 사진의 흐름입니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
 
-   trigger를 프리뷰 capture 하나로 보내고, AE 상태가 PRECAPTURE를 지나 벗어날 때까지 기다립니다. PRECAPTURE 없이 안정 상태가 결과 3개 연속으로 이어지면 이 순서를 건너뛰는 기기로 보고, 3초 안에 끝나지 않으면 `precapture_timeout`을 남기고 그대로 촬영합니다.
-2. still 요청 하나에 켜진 YUV·JPEG·RAW 출력을 대상으로 지정합니다.
+```mermaid
+sequenceDiagram
+    participant A as 촬영 요청
+    participant C as 카메라
+    participant P as 자료 모으기
+    participant S as 파일 저장
+    A->>C: 켜진 출력으로 still 요청
+    par 이미지 수신
+        C-->>P: 요청한 이미지 버퍼
+    and 최종 결과 수신
+        C-->>P: 최종 CaptureResult
+    end
+    P->>P: 같은 센서 시각으로 연결
+    P->>S: 필요한 자료가 모두 모이면 저장
+```
 
-   JPEG에는 화면 방향을 `JPEG_ORIENTATION`으로, 품질을 95로 설정합니다. 세 출력이 모두 꺼져 있으면 셔터를 비활성화하고 엔진도 촬영을 거절합니다. RAW만 켜도 촬영할 수 있습니다.
-3. `StillPair`가 센서 타임스탬프로 요청한 버퍼만 기다립니다.
+이미지와 결과의 도착 순서는 고정되지 않습니다. 꺼진 출력은 기다리지 않습니다. 다음 표는 연결·저장 과정의 조건입니다.
 
-   단일 출력도 capture의 센서 시각과 일치해야 하며 꺼진 출력은 기다리지 않습니다. 기다리는 동안에는 reader가 `acquireLatestImage` 대신 `acquireNextImage`로 이미지를 순서대로 꺼냅니다. 최신 이미지만 꺼내면 촬영 대상인 YUV 프레임을 버릴 수 있기 때문입니다.
-4. 이미지 콜백에서 stride와 crop을 고려해 NV21으로 복사하고 Image를 닫습니다.
+| 단계 | 조건과 예외 |
+| --- | --- |
+| 플래시 측광 | Auto·On이고 AE 잠금이 꺼져 있을 때만 precapture를 실행합니다. PRECAPTURE를 벗어나거나, PRECAPTURE 없이 안정 결과가 3개 연속 오면 촬영합니다. 3초가 지나면 `precapture_timeout`을 남기고 촬영을 계속합니다. |
+| 출력 선택 | 켜진 YUV·JPEG·RAW만 대상으로 합니다. RAW 단독도 가능하며, 모두 꺼져 있으면 셔터와 촬영 요청을 거절합니다. JPEG 방향은 화면 방향, 품질은 95입니다. |
+| 버퍼 연결 | `StillPair`는 단일 출력도 capture의 센서 시각과 맞춥니다. 대기 중에는 `acquireNextImage`로 순서대로 읽어 대상 프레임을 버리지 않습니다. |
+| 이미지 반납 | 콜백에서 stride·crop을 고려해 YUV를 NV21으로 복사하고 Image를 닫습니다. JPEG 포맷이면 저장 스레드에서 압축·회전하며 NV21이면 복사한 샘플을 그대로 씁니다. |
+| 저장과 제한 시간 | `MediaLibrary.saveCapture`로 이미지·JSON을 씁니다. 5초 안에 필요한 자료가 모이지 않으면 `capture_timeout`으로 끝납니다. 사진 모드의 이 요청은 녹화 중에 받지 않습니다. 녹화 중 사진은 별도 경로입니다. |
 
-   YUV Save Format이 JPEG이면 저장 스레드에서 `encodeYuvStill`로 압축하고 화면 방향만큼 회전합니다. NV21이면 복사한 샘플을 그대로 저장합니다.
-5. `MediaLibrary.saveCapture`가 선택한 이미지와 촬영 JSON을 쓰고 모두 성공한 뒤 공개합니다.
+#### 파일은 언제 공개하나요?
 
-   실패하면 이번 촬영에서 만든 항목의 삭제를 시도합니다.
-6. 5초 안에 짝이 완성되지 않으면 `capture_timeout`으로 끝냅니다.
+```mermaid
+sequenceDiagram
+    participant S as 저장 작업
+    participant M as MediaLibrary
+    S->>M: 이미지와 촬영 정보 전달
+    M->>M: 항목 생성과 파일 쓰기
+    alt 모든 쓰기 성공
+        M->>M: 항목 공개
+        M-->>S: 파일 목록
+    else 생성·쓰기·공개 실패
+        M->>M: 이번 촬영 항목 삭제 시도
+        M-->>S: 실패
+    end
+```
 
-   녹화 중에는 촬영 요청을 거절합니다.
+Android 10 이상에서는 `IS_PENDING`으로 쓰는 중인 항목의 공개를 미룹니다. 이전 버전에는 이 보호가 없으며, 여러 항목의 공개와 실패 후 삭제를 완전한 원자적 처리로 보장하지 않습니다. 생성·쓰기·공개 중 예외가 나면 이미 만든 항목의 삭제를 시도합니다.
+
 
 벤치마크 still은 JPEG만 대상으로 하고, JPEG 도착이 측정값이며 저장하지 않습니다.
 
@@ -216,6 +264,26 @@ RAW reader는 버퍼 두 개로 열고 still 요청에만 포함합니다. 이�
 <details markdown="1" id="detail-11a053d988" data-search-section>
 <summary>녹화 구현</summary>
 
+```mermaid
+sequenceDiagram
+    participant U as Live
+    participant R as 녹화 처리
+    participant S as 저장
+    U->>R: 녹화 시작
+    R->>R: 녹화 세션 구성과 시작
+    R-->>U: 녹화 시작 통지
+    U->>R: 정지 요청
+    R->>R: 세션 종료와 파일 마무리
+    par 파일 저장
+        R->>S: 저장 가능한 MP4 저장 예약
+        S-->>U: 저장 결과
+    and 프리뷰 복구
+        R->>R: 활성 카메라의 프리뷰 세션 복구
+    end
+```
+
+정상 정지의 순서입니다. 파일 저장과 프리뷰 복구는 별도로 진행하므로 프리뷰가 돌아왔다고 저장이 끝난 것은 아닙니다. 짧거나 실패한 파일은 저장하지 않고 이유를 알립니다.
+
 `Camera2LiveRecorder`의 기본값은 MediaRecorder가 지원하는 가로 크기 중 1920×1080 픽셀 예산으로 고른 크기, H.264, 30fps, 10Mbps입니다.
 
 Live 스트림 설정에서는 카메라 크기·고정 AE FPS 범위·인코더의 surface 입력, 크기·프레임률·비트레이트 지원을 만족하는 H.264/HEVC 조합을 선택합니다.
@@ -229,7 +297,7 @@ Live 스트림 설정에서는 카메라 크기·고정 AE FPS 범위·인코더
 1. 녹화를 시작하면 프리뷰와 인코더, 그리고 녹화 중 사진용 JPEG 스트림으로 새 세션을 만듭니다. YUV 스트림은 이 세션에 없으므로 녹화 중 사진은 JPEG만 저장합니다. 카메라가 이 조합을 거절하면 JPEG 없이 프리뷰와 인코더만으로 다시 구성하고, 이 경우 녹화 중 사진을 지원하지 않는다는 이유를 화면에 알립니다.
 2. Android 13 이상에서는 `RecordingBufferRelay`가 인코더로 가는 PRIVATE 버퍼를 먼저 받아 도착 시각을 기록합니다. 그보다 낮은 버전에서는 인코더에 직접 연결하고, 녹화 출력을 관측할 수 없다고 표시합니다.
 3. 녹화 요청은 `TEMPLATE_RECORD`이며, 연속 동영상 AF(`CONTINUOUS_VIDEO`)를 지원하면 사용합니다. 줌과 Live 제어는 녹화 중에도 같은 요청을 다시 만들어 적용합니다.
-4. 정지하면 세션을 닫고, 파일을 `MediaLibrary.saveVideo`로 앨범에 공개한 뒤 프리뷰 세션을 다시 만듭니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
+4. 정지하면 세션을 닫고 파일을 마무리합니다. `MediaLibrary.saveVideo`로 저장을 예약하고 활성 카메라의 프리뷰 세션을 다시 만듭니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
 
 **녹화 중 사진(`Camera2VideoSnapshot`)은 녹화를 멈추지 않고 JPEG 한 장을 저장합니다.** 녹화 세션의 JPEG 크기는 요청한 크기(없으면 1080p 이하 중 가장 큰 크기)를 먼저 시도하고, 세션 조합 조회(`isSessionConfigurationSupported`)가 거절하면 녹화 크기 안에 들어가는 가장 큰 크기로 내려갑니다.
 
@@ -272,7 +340,21 @@ Live 스트림 설정에서 JPEG을 끄면 녹화 중 사진도 지원하지 않
 | 토치 | `FLASH_MODE_TORCH` |
 | AF 잠금 | 키가 아니라 연속 AF 모드에서 보내는 `CONTROL_AF_TRIGGER_START` 한 번입니다. 잠금을 풀 때는 `CANCEL`을 보냅니다. |
 
-녹화 시작·정지로 세션이 바뀌면 `AeRelock`이 새 세션을 잠금 없이 시작합니다. AE 상태가 결과 2개 연속으로 안정되거나 2초가 지나면 다시 잠급니다. 새 세션의 첫 요청부터 잠그면 아직 수렴하지 않은 노출이 고정되기 때문입니다. 다시 잠근 노출이 이전보다 1/3 EV 넘게 다르면 "Exposure locked again · 0.8 EV darker" 같은 안내를 표시합니다. AF 잠금도 새 세션에서 trigger를 다시 보냅니다.
+#### 노출은 언제 다시 잠그나요?
+
+AE 잠금을 켠 채 녹화 시작·정지로 세션이 바뀌면 `AeRelock`이 노출을 다시 맞춥니다.
+
+```mermaid
+stateDiagram-v2
+    state "잠금 해제와 안정 대기" as Wait
+    state "다시 잠금" as Lock
+    [*] --> Wait
+    Wait --> Lock: 안정 결과 2개 연속
+    Wait --> Lock: 또는 2초 경과
+    Lock --> [*]
+```
+
+새 세션의 첫 요청부터 잠그면 아직 수렴하지 않은 노출이 고정될 수 있습니다. 다시 잠근 노출이 이전보다 1/3 EV 넘게 다르면 차이를 알립니다. AF 잠금도 새 세션에서 trigger를 다시 보냅니다. 이 상태도는 AE 잠금이 켜진 경우의 재잠금 과정만 보여 줍니다.
 
 줌과 제어는 입력마다 요청을 보내지 않습니다. 값을 먼저 저장하고 카메라 스레드에 요청 하나만 예약하므로, 빠른 드래그는 스레드 한 차례에 요청 하나로 합쳐집니다.
 
@@ -284,6 +366,21 @@ Live 스트림 설정에서 JPEG을 끄면 녹화 중 사진도 지원하지 않
 
 <details markdown="1" id="detail-1a7dfc7f16" data-search-section>
 <summary>터치 측광 구현</summary>
+
+```mermaid
+stateDiagram-v2
+    state "초점 결과 기다림" as Wait
+    state "결과와 지점 표시" as Result
+    state "연속 AF로 복귀" as Auto
+    state "잠긴 지점 유지" as Locked
+    [*] --> Wait
+    Wait --> Result: 결과 수신 또는 3초 제한
+    Result --> Auto: AF 잠금 꺼짐, 결과 후 5초
+    Result --> Locked: AF 잠금 켜짐
+    Auto --> [*]
+```
+
+Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE 측광이며 아래 4번 규칙을 따릅니다. 다른 지점을 누르거나 카메라를 닫는 동작은 이 한 번의 요청 그림에서 생략했습니다.
 
 `Camera2TouchFocus`는 탭한 AF 지점과 길게 누른 AE 지점을 따로 가집니다.
 

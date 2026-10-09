@@ -3,7 +3,7 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
@@ -246,7 +246,7 @@
     },
     "omm:state-transitions": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "8c4267400109be77",
@@ -281,7 +281,7 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "8fb88aec6173a763",
@@ -478,7 +478,7 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "0fce21b3472f493e",
@@ -527,7 +527,7 @@
     },
     "content:troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "f45e04beeb7b5f55",
@@ -767,7 +767,7 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       }
     },
     "content:architecture.md/constraints": {
@@ -962,12 +962,12 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       }
     },
     "omm:ui-camera-label": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "50f8d9ff0212902a",
@@ -983,7 +983,7 @@
     },
     "omm:ui-tool-handoff": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "1661469dde9fd803",
@@ -998,7 +998,7 @@
     },
     "omm:ui-zoom": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "2c5d8f9d00fc0771",
@@ -1013,7 +1013,7 @@
     },
     "content:engine.md/contract": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
@@ -1208,7 +1208,7 @@
     },
     "content:engine.md/camera2": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
@@ -1403,7 +1403,7 @@
     },
     "content:engine.md/camerax": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
@@ -1598,7 +1598,7 @@
     },
     "content:engine.md/comparison": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
@@ -1793,7 +1793,7 @@
     },
     "content:evidence.md/device-notes": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",

@@ -160,7 +160,49 @@ Python 도구의 `--json`은 stdout에 JSON 하나를 출력하며, `--wait-time
 
 </details>
 
+## 요청과 완료를 구분하세요
+
+**접수 응답을 받아도 촬영이나 저장이 끝난 것은 아닙니다.** 파일을 만드는 명령은 결과 파일이 등록된 뒤 회수합니다.
+
+```mermaid
+sequenceDiagram
+    participant P as PC
+    participant C as 요청 처리
+    participant A as 앱 작업
+    P->>C: 요청 ID와 명령
+    C->>C: 요청 기록
+    par 접수 응답
+        C-->>P: 접수된 요청 정보
+    and 예약한 작업 실행
+        C->>A: 작업 실행
+        A-->>C: 저장 결과와 파일
+        C->>C: 파일 등록과 완료 기록
+    end
+    P->>C: 요청 ID로 상태 확인
+    C-->>P: 결과와 파일 정보
+    P->>P: 파일 받기와 크기·SHA-256 확인
+```
+
+같은 요청 ID와 같은 명령을 다시 보내면 기존 상태나 결과를 돌려줍니다. 같은 ID에 다른 인자를 보내면 충돌로 처리합니다. 조회 명령처럼 파일을 만들지 않는 작업에는 파일 회수 단계가 없습니다.
+
 ## 요청이 끝나지 않거나 파일이 없을 때
+
+```mermaid
+sequenceDiagram
+    participant P as PC
+    participant A as 앱
+    Note over P,A: PC 대기가 끝나거나 연결이 끊김
+    P->>A: 같은 요청 ID로 상태 확인
+    alt 아직 실행 중
+        A-->>P: 진행 상태
+        Note over P: 기다린 뒤 다시 확인
+    else 완료됨
+        A-->>P: 결과와 파일 정보
+        P->>P: 필요한 파일만 다시 받기
+    end
+```
+
+PC 대기 종료는 앱의 실패나 취소를 뜻하지 않습니다. 결과를 확인하기 전에 새 ID로 같은 촬영을 다시 요청하지 마세요.
 
 `--no-wait`은 접수 직후 반환합니다. `status`, `fetch`, `cancel`에서 ID를 생략하면 마지막 제출 요청을 사용합니다. `cancel UUID`로 취소할 수 있지만 이미 제출한 사진 저장은 완료될 수 있습니다.
 
