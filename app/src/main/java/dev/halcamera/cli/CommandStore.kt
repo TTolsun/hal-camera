@@ -78,6 +78,12 @@ class CommandStore(
         return record
     }
 
+    /** Update metadata without reviving a cancelling or completed request. */
+    @Synchronized fun update(id: String, mutate: (JSONObject) -> Unit): JSONObject {
+        val record = read(id) ?: throw CliFailure("REQUEST_NOT_FOUND", "Unknown request")
+        return transition(id, record.getString("state"), mutate)
+    }
+
     @Synchronized fun cleanup() {
         val records = directory.listFiles().orEmpty().filter { it.extension == "json" }.mapNotNull { file ->
             runCatching { read(file.nameWithoutExtension) }.getOrNull()?.takeIf { it.optBoolean("completed") }

@@ -619,7 +619,9 @@ class BenchmarkActivity : ComponentActivity() {
         refreshCard()
         if (startCard?.canStart != true) { render(); return }
         val endpoint = endpoints[selected]
-        runSubject = readSubject()
+        runSubject = if (fromCli) cli.active?.options?.values?.let { values -> SubjectLabel(
+            subjectBuildLabel = values["build"], subjectCommit = values["commit"], subjectBranch = values["branch"], note = values["note"]
+        ) } ?: SubjectLabel() else readSubject()
         subjectPrefs.save(runSubject)
 
         // Each run file carries only its own events. The recorder keeps 180 s, which is long enough for two runs.

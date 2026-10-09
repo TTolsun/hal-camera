@@ -37,6 +37,14 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(CliError(record["error"]["code"], record["error"]["message"]).exit_code, 5)
         self.assertEqual(request["params"], {"camera_id": "0"})
 
+    def test_generic_operations_and_controls_have_explicit_options(self):
+        args = parser().parse_args(["run", "burst", "--option", "count=3", "--stream", "raw_size=640x480"])
+        self.assertEqual(args.operation, "burst")
+        self.assertEqual(args.option, ["count=3"])
+        self.assertEqual(args.stream, ["raw_size=640x480"])
+        control = parser().parse_args(["control", "live.set", "--option", "zoom=2"])
+        self.assertEqual(control.operation, "live.set")
+
     def test_globals_work_before_or_after_subcommands(self):
         for argv in [["--serial", "phone", "capture", "--camera", "0", "--output", "out", "--json"],
                      ["capture", "--serial", "phone", "--camera", "0", "--output", "out", "--json"],
@@ -162,6 +170,13 @@ class DownloadTests(unittest.TestCase):
             process.assert_not_called()
         self.assertFalse(list(Path(self.tmp.name).rglob("*.part")))
 
+    def test_new_media_formats_are_downloaded_and_verified(self):
+        for extension in ("mp4", "dng", "nv21", "csv", "zip"):
+            self.data["artifacts"][0]["name"] = "export." + extension
+            with patch("halcam.download.subprocess.Popen", self.process(self.content)):
+                files = collect(self.adb, self.data, self.tmp.name)
+            self.assertEqual(Path(files[0]).read_bytes(), self.content)
+
     def test_corruption_never_creates_final_file(self):
         with patch("halcam.download.subprocess.Popen", self.process(b"truncated")):
             with self.assertRaises(CliError) as caught:
@@ -214,13 +229,31 @@ class ProbeAndCtsTests(unittest.TestCase):
             status.update(foreground=True, screen="live")
 
         with patch.object(Adb, "select", lambda self: self), patch.object(Adb, "installed", lambda self: self), \
-                patch.object(Adb, "hello", lambda self: {"protocol_version": 1, "enabled": True}), \
+                patch.object(Adb, "hello", lambda self: {"protocol_version": 1, "enabled": True, "commands": ["results.show", "burst", "live.info", "record.start"]}), \
                 patch.object(Adb, "call", lambda self, m, p: call(m, p)), patch.object(Adb, "read", lambda self, p: read(p)), \
                 patch.object(Adb, "launch", lambda self: launch()), patch("halcam.cli.wait", return_value=response()), \
                 patch("halcam.cli.collect", return_value=[]):
             self.assertEqual(main(argv + ["--request-id", RID, "--json"]), 0)
         submitted.setdefault("launched", False)
         return submitted
+
+    def test_generic_library_operation_does_not_open_camera(self):
+        with patch("sys.stdout", new_callable=io.StringIO):
+            got = self.submitted(["run", "results.show", "--option", "run=20261009-123000-123"])
+        self.assertFalse(got["launched"])
+        self.assertEqual(got["payload"]["params"], {"options": {"run": "20261009-123000-123"}})
+
+    def test_generic_recording_uses_one_hour_deadline(self):
+        with patch("sys.stdout", new_callable=io.StringIO):
+            got = self.submitted(["run", "record.start", "--no-wait"])
+        self.assertEqual(got["payload"]["execution_timeout_ms"], 3600000)
+        self.assertEqual(got["payload"]["params"]["camera_id"], "0")
+
+    def test_generic_diagnostics_preserve_dual_screen(self):
+        with patch("sys.stdout", new_callable=io.StringIO):
+            got = self.submitted(["run", "live.info"], status={"protocol_version": 1, "foreground": True, "screen": "dual", "busy": False})
+        self.assertFalse(got["launched"])
+        self.assertEqual(got["payload"]["command"], "live.info")
 
     def test_probe_submits_without_camera_and_without_launching(self):
         with patch("sys.stdout", new_callable=io.StringIO):

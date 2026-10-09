@@ -9,6 +9,20 @@ class CliParityTest {
         try { action(); fail("Expected $code") } catch (e: CliFailure) { assertEquals(code, e.code) }
     }
 
+    @Test fun `zoom update preserves manual exposure and reset defaults stay separate`() {
+        val base = LiveControls(manual = ManualControls(exposure = ManualExposure(200, 1000000)))
+        val support = ManualSupport(100..800, 1000L..30000000L)
+        assertEquals(base, CliOptions(mapOf("zoom" to "2")).controls(LiveControlSupport.NONE, support, false, base))
+    }
+
+    @Test fun `retention previews need valid limits and benchmark labels remain request scoped`() {
+        rejects { AdbArguments.command("settings.limit", mapOf("limit" to "5")) }
+        assertEquals("10", AdbArguments.command("settings.limit", mapOf("limit" to "10")).options!!.values["limit"])
+        val command = AdbArguments.command("benchmark.run", mapOf("build" to "Candidate A", "note" to "Same room"))
+        assertEquals("Candidate A", command.options!!.values["build"])
+        rejects { AdbArguments.command("capture", mapOf("build" to "Candidate A")) }
+    }
+
     @Test fun `raw only capture is valid and cannot silently fall back`() {
         val command = AdbArguments.command("capture", mapOf("raw_size" to "640x480", "yuv_size" to "off", "jpeg_size" to "off"))
         val size = LiveSize(640, 480)

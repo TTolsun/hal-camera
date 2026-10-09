@@ -70,6 +70,10 @@ def parser():
     benchmark_run.add_argument("--output", required=True)
     benchmark_run.add_argument("--transfer-timeout", type=positive, default=60)
     execution_options(benchmark_run, 600)
+    control = commands.add_parser("control", help="Control the current preview or CLI recording")
+    common(control)
+    control.add_argument("operation", choices=("record.stop", "record.snapshot", "live.set", "live.reset"))
+    control.add_argument("--option", action="append", default=[], metavar="KEY=VALUE")
     run = commands.add_parser("run", help="Execute any command listed by doctor (advanced JSON-compatible path)")
     common(run)
     run.add_argument("operation")
@@ -79,7 +83,7 @@ def parser():
     run.add_argument("--stream", action="append", default=[], metavar="KEY=VALUE")
     run.add_argument("--output")
     run.add_argument("--transfer-timeout", type=positive, default=60)
-    execution_options(run)
+    execution_options(run, None)
     return root
 
 
@@ -149,6 +153,17 @@ def execute(args, context):
         adb.launch()
         return {"protocol_version": 1, "completed": True, "camera_ready": False}
     hello = adb.hello()
+    if args.command == "control":
+        options = {}
+        for item in args.option:
+            key, sep, value = item.partition("=")
+            if not sep or not key or not value or key in options:
+                raise CliError("INVALID_ARGUMENT", "Use each KEY=VALUE once")
+            options[key] = value
+        payload = {"operation": args.operation}
+        if options:
+            payload["options"] = options
+        return raise_app_error(adb.call("control", payload))
     if args.command == "doctor":
         return hello
     if args.command == "status":
@@ -162,6 +177,8 @@ def execute(args, context):
             return finish(adb, data, args)
         return raise_app_error(adb.call("cancel", {"protocol_version": 1, "request_id": rid}))
 
+    if args.timeout is None:
+        args.timeout = {"record.start": 3600, "dual.record": 3600, "cts.run": 1800, "benchmark.run": 600}.get(app_command(args), 30)
     rid = identifier(args.request_id) if args.request_id else str(uuid.uuid4())
     context["request_id"] = rid
     print(f"request_id={rid}", file=sys.stderr, flush=True)
@@ -208,16 +225,17 @@ def execute(args, context):
         except CliError as error:
             if error.code != "REQUEST_NOT_FOUND":
                 raise
-    if previous is None and app_command(args) not in SCREENLESS and not app_command(args).startswith(("results.", "baseline.", "gallery.")) and app_command(args) != "dual.cameras":
+    if previous is None and app_command(args) not in SCREENLESS and not app_command(args).startswith(("results.", "baseline.", "gallery.", "settings.", "incidents.")) and app_command(args) != "dual.cameras":
         status = raise_app_error(adb.read("/v1/status"))
         if status.get("busy"):
             raise CliError("BUSY", "An app operation is already running", request_id=rid)
-        if not status.get("foreground") or status.get("screen") != "live":
+        target_screen = "dual" if status.get("screen") == "dual" and app_command(args) in ("live.info", "events", "meter", "preview.stop") else "live"
+        if not status.get("foreground") or status.get("screen") != target_screen:
             adb.launch()
             deadline = time.monotonic() + 10
             while True:
                 status = raise_app_error(adb.read("/v1/status"))
-                if status.get("foreground") and status.get("screen") == "live":
+                if status.get("foreground") and status.get("screen") == target_screen:
                     break
                 if time.monotonic() >= deadline:
                     raise CliError("APP_NOT_FOREGROUND", "Unlock device and open HALCamera", request_id=rid)
@@ -228,6 +246,14 @@ def execute(args, context):
         raise_app_error(data)
     validate_request(data, rid)
     if args.no_wait:
+        return data
+    if app_command(args) in ("record.start", "dual.record"):
+        deadline = time.monotonic() + (args.wait_timeout or 45)
+        while not data.get("completed") and not (data.get("result") or {}).get("recording"):
+            if time.monotonic() >= deadline:
+                raise CliError("WAIT_TIMEOUT", "Recording may still be preparing; use status", request_id=rid)
+            time.sleep(0.25)
+            data = request_status(adb, rid)
         return data
     data = wait(adb, rid, args.wait_timeout or (args.timeout + 15))
     return finish(adb, data, args)

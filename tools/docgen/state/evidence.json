@@ -3,7 +3,7 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "5ee3d30ccfd38f57",
@@ -205,7 +205,7 @@
     },
     "omm:data-flow": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "f110275499b1e57e",
@@ -253,7 +253,7 @@
     },
     "omm:state-transitions": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "e8ab9a93ab885a61",
@@ -288,7 +288,7 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "fc78f167ebc38add",
@@ -492,7 +492,7 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "1fd74361ec271a71",
@@ -541,7 +541,7 @@
     },
     "content:troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "6cb5e949742513a1",
@@ -788,7 +788,7 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       }
     },
     "content:architecture.md/constraints": {
@@ -990,7 +990,7 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       }
     },
     "omm:ui-camera-label": {
@@ -1011,7 +1011,7 @@
     },
     "omm:ui-tool-handoff": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "b447b4803705bfdf",
@@ -1041,7 +1041,7 @@
     },
     "content:engine.md/contract": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "5ee3d30ccfd38f57",
@@ -1243,7 +1243,7 @@
     },
     "content:engine.md/camera2": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "5ee3d30ccfd38f57",
@@ -1445,7 +1445,7 @@
     },
     "content:engine.md/camerax": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "5ee3d30ccfd38f57",
@@ -1647,7 +1647,7 @@
     },
     "content:engine.md/comparison": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "5ee3d30ccfd38f57",
@@ -1849,7 +1849,7 @@
     },
     "content:evidence.md/device-notes": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "5ee3d30ccfd38f57",

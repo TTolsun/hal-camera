@@ -2,6 +2,8 @@
 
 > 2026-10-06 범위 변경: 기본 CLI는 `adb`와 APK에 포함된 기기용 `halcam.sh`입니다. 프리뷰·사진·녹화·Probe·CTS에 더해 `benchmark run`을 지원합니다. 벤치마크는 화면과 같은 `camera2-standard-v2` 프로파일로 실행하며 기본 제한은 600초입니다. 현재 계약은 [CLI 가이드](../../guide/cli.md)를 따릅니다. 아래 내용은 최초 구현의 설계 기록이므로 Python 필수 조건, v1 프로파일, 180초 기본 제한은 현재 계약에 적용하지 않습니다.
 
+> 2026-10-09 확장: 현재 CLI는 수동 제어·RAW/NV21·연사·AEB/HDR·녹화 스냅샷·Dual·결과/baseline·갤러리·진단 ZIP·보관 한도를 포함합니다. 현재 계약과 예시는 [CLI 가이드](../../guide/cli.md), 코드별 대응과 실제 검증 수준은 [전체 CLI 검증 기록](../validation/cli-parity-20261009.md)을 따릅니다. 아래 v0.1의 후속 범위·갤러리 제외 설명은 과거 설계 기록입니다.
+
 
 작성일: 2026-09-12 · 상태: 0.6.0 릴리스 검증 · 관련 이슈: [#56](https://github.com/TTolsun/hal-camera/issues/56)
 

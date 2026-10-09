@@ -95,6 +95,16 @@ class CliStoreInstrumentation : Instrumentation() {
             store.transition(first.id, "failed") { it.put("error", CliJson.error("TEST", "late callback")) }
             check(store.read(first.id)?.getString("state") == "succeeded"); passed++
 
+            val cancelling = command(); store.create(cancelling)
+            store.transition(cancelling.id, "preparing"); store.transition(cancelling.id, "running")
+            store.transition(cancelling.id, "cancelling")
+            store.update(cancelling.id) { it.put("snapshot_count", 1) }
+            check(store.read(cancelling.id)?.getString("state") == "cancelling"); passed++
+            check(store.read(cancelling.id)?.getInt("snapshot_count") == 1); passed++
+            store.transition(cancelling.id, "saving"); store.transition(cancelling.id, "cancelled")
+            store.update(cancelling.id) { it.put("snapshot_count", 2) }
+            check(store.read(cancelling.id)?.getInt("snapshot_count") == 1); passed++
+
             val interrupted = command(); store.create(interrupted)
             val original = File(directory, "${interrupted.id}.json")
             check(original.renameTo(File(directory, "${interrupted.id}.json.bak")))

@@ -14,6 +14,8 @@ import java.io.File
 class CliLibrary(private val context: Context, private val commands: CommandCoordinator) {
     fun execute(command: CliCommand) {
         val options = command.options?.values.orEmpty()
+        if (command.command.startsWith("incidents.")) { incidents(command); return }
+        if (command.command.startsWith("settings.")) { settings(command); return }
         if (command.command.startsWith("gallery.")) { gallery(command); return }
         val store = BenchmarkStore(context)
         val report = BenchmarkReport(store)
@@ -23,17 +25,27 @@ class CliLibrary(private val context: Context, private val commands: CommandCoor
         val baselines = BaselineManager(catalog)
         fun load(id: String): BenchmarkRun = catalog.load(id) ?: throw CliFailure("RESULT_NOT_FOUND", "Run is missing or unreadable; use results list")
         val id = options["run"]
-        val run = id?.let(::load)
+        val run = id?.takeUnless { command.command == "results.delete" }?.let(::load)
         val result = when (command.command) {
             "results.list" -> JSONObject().put("runs", CliJson.of(store.files().map { file ->
                 val value = catalog.load(file.nameWithoutExtension)
                 mapOf("run_id" to file.nameWithoutExtension, "readable" to (value != null),
-                    "baseline" to (value?.let(baselines::isBaseline) ?: false))
+                    "baseline" to (value?.let(baselines::isBaseline) ?: false), "camera" to value?.endpoint?.key,
+                    "profile" to value?.contract?.profileId, "subject" to value?.subject?.toJsonMap(),
+                    "comparison_eligible" to value?.validity?.comparisonEligible)
             }))
-            "results.show" -> CliJson.of(BenchmarkReportCodec.toJsonMap(run!!)) as JSONObject
+            "results.show" -> {
+                val current = run!!
+                val resolved = baselines.resolve(current)
+                val view = ResultPresenter.present(current, resolved.comparison(current), resolved.comparedTo,
+                    baselines.isBaseline(current), current.device.model, current.endpoint.key)
+                (CliJson.of(BenchmarkReportCodec.toJsonMap(current)) as JSONObject).put("summary", view.render())
+                    .put("compared_to", resolved.comparedTo.name).put("reference_ids", CliJson.of(resolved.runs.map { it.runId }))
+            }
             "results.compare" -> {
                 val reference = load(options.getValue("reference"))
-                val kind = if (baselines.isBaseline(reference)) ComparedTo.BASELINE else ComparedTo.PREVIOUS
+                // Like History: an explicitly selected reference is the baseline for this comparison only.
+                val kind = ComparedTo.BASELINE
                 val view = ComparePresenter.present(reference, run!!, RegressionDetector.compare(reference, run), kind, selectedReference = true)
                 JSONObject().put("comparison", view.render()).put("compared_to", kind.name)
             }
@@ -58,6 +70,42 @@ class CliLibrary(private val context: Context, private val commands: CommandCoor
             else -> throw CliFailure("INVALID_ARGUMENT", "Unknown library command")
         }
         commands.complete(command.id, result)
+    }
+
+    private fun incidents(command: CliCommand) {
+        val dir = File(context.filesDir, "incidents")
+        val files = dir.listFiles()?.filter { it.isFile && it.extension == "zip" }.orEmpty()
+        if (command.command == "incidents.list") {
+            commands.complete(command.id, JSONObject().put("incidents", CliJson.of(files.sortedByDescending { it.name }.map {
+                mapOf("incident_id" to it.nameWithoutExtension, "bytes" to it.length())
+            }))); return
+        }
+        val file = files.firstOrNull { it.nameWithoutExtension == command.options!!.values["incident"] }
+            ?: throw CliFailure("ARTIFACT_MISSING", "ZIP not found; use incidents list")
+        if (command.command == "incidents.delete") {
+            if (!file.delete()) throw CliFailure("DELETE_FAILED", "ZIP could not be deleted")
+            commands.complete(command.id, JSONObject().put("deleted", file.nameWithoutExtension))
+        } else commands.complete(command.id, JSONObject().put("artifact_count", 1), listOf(CliArtifact(file.name, "application/zip", Uri.fromFile(file))))
+    }
+
+    private fun settings(command: CliCommand) {
+        val prefs = BenchmarkPrefs(context)
+        if (command.command == "settings.show") {
+            commands.complete(command.id, commands.hello().put("run_limit", prefs.runLimit)); return
+        }
+        val store = BenchmarkStore(context)
+        store.index()
+        if (store.lastIndexError != null) throw CliFailure("INDEX_UNREADABLE", "Baseline index is unreadable")
+        val limit = command.options!!.values.getValue("limit").toInt()
+        val protected = store.index().allRunIds
+        val deleting = RunRetention.toDelete(store.files().map { it.nameWithoutExtension }, protected, limit)
+        val apply = command.options.values["confirm"] == "true"
+        if (apply) {
+            deleting.forEach { if (!store.deleteRun(it)) throw CliFailure("DELETE_FAILED", "Could not delete $it; retention setting was not changed") }
+            prefs.runLimit = limit
+        }
+        commands.complete(command.id, JSONObject().put("run_limit", limit).put("applied", apply)
+            .put("delete_runs", CliJson.of(deleting)).put("next", if (apply) "settings show" else "settings limit --limit $limit --confirm true"))
     }
 
     data class Media(val id: String, val name: String, val mime: String, val bytes: Long, val uri: Uri)
@@ -90,7 +138,8 @@ class CliLibrary(private val context: Context, private val commands: CommandCoor
             } catch (e: SecurityException) { throw CliFailure("PERMISSION_REQUIRED", "Android requires owner approval; delete this file in Gallery") }
             commands.complete(command.id, JSONObject().put("deleted", item.id))
         } else {
-            commands.complete(command.id, JSONObject().put("artifact_count", 1), listOf(CliArtifact(item.name, item.mime, item.uri)))
+            commands.complete(command.id, JSONObject().put("artifact_count", 1).put("original_name", item.name), listOf(CliArtifact(
+                "media_${item.id}." + item.name.substringAfterLast('.', "bin").takeIf { it.matches(Regex("[A-Za-z0-9]+")) }.orEmpty().ifEmpty { "bin" }, item.mime, item.uri)))
         }
     }
 }

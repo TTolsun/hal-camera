@@ -16,7 +16,7 @@ RID = "b616d5cc-7706-4983-b49e-4e4d5c0ef816"
 
 @unittest.skipUnless(BASH, "A POSIX shell is needed for client tests")
 class AdbShellTests(unittest.TestCase):
-    def run_client(self, args, *, hello=None, busy=False, result=None, remember=False, corrupt=False):
+    def run_client(self, args, *, hello=None, busy=False, result=None, remember=False, corrupt=False, screen="live"):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             script = root / "halcam.sh"
@@ -29,7 +29,7 @@ class AdbShellTests(unittest.TestCase):
                 state.update(result)
             env = os.environ | {
                 "TEST_HELLO": json.dumps(hello or {"protocol_version": 1, "enabled": True}, separators=(",", ":")),
-                "TEST_STATUS": json.dumps({"protocol_version": 1, "screen": "live", "busy": busy}, separators=(",", ":")),
+                "TEST_STATUS": json.dumps({"protocol_version": 1, "screen": screen, "busy": busy}, separators=(",", ":")),
                 "TEST_RESULT": json.dumps(state, separators=(",", ":")),
                 "TEST_RID": RID,
                 "TEST_MANIFEST": "file-0\trecording.mp4\t13\t" + ("0" * 64 if corrupt else hashlib.sha256(b"video\x00bytes\r\n").hexdigest()),
@@ -60,6 +60,43 @@ sha256sum() {
             calls = (root / "calls").read_text() if (root / "calls").exists() else ""
             self.downloads = {p.name: p.read_bytes() for p in (root / "downloads").rglob("*") if p.is_file()}
             return proc, calls
+
+    def test_extended_capture_options_reach_provider(self):
+        proc, calls = self.run_client(["burst", "--count", "3", "--raw-size", "640x480", "--ev", "-2", "--fps", "15-30"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        for value in ("--method burst", "count:s:3", "raw_size:s:640x480", "ev:s:-2", "fps:s:15-30"):
+            self.assertIn(value, calls)
+
+    def test_diagnostics_keep_the_dual_screen(self):
+        proc, calls = self.run_client(["live", "info"], screen="dual")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("--method live.info", calls)
+
+    def test_results_do_not_launch_camera(self):
+        proc, calls = self.run_client(["results", "show", "--run", "20261009-123000-123"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("--method results.show", calls)
+        self.assertNotIn("v1/status", calls)
+
+    def test_benchmark_label_is_one_argument(self):
+        proc, calls = self.run_client(["benchmark", "run", "--build", "Candidate A", "--note", "Same room"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("build:s:Candidate A", calls)
+        self.assertIn("note:s:Same room", calls)
+
+    def test_live_update_does_not_start_another_request(self):
+        proc, calls = self.run_client(["live", "set", "--zoom", "2"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("--method live.set", calls)
+        self.assertNotIn("request_id:s:", calls)
+        self.assertNotIn("v1/status", calls)
+
+    def test_help_starts_with_five_tasks(self):
+        proc, calls = self.run_client(["help"])
+        self.assertEqual(proc.returncode, 0)
+        self.assertLess(len(proc.stdout.splitlines()), 12)
+        self.assertIn("help all", proc.stdout)
+        self.assertEqual(calls, "")
 
     def test_stream_options_reach_provider_as_strings(self):
         proc, calls = self.run_client(["preview", "--engine", "CameraX", "--preview-size", "1280x720", "--yuv-size", "off"])

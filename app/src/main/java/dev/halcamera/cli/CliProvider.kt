@@ -26,7 +26,7 @@ class CliProvider : ContentProvider() {
 
     override fun call(method: String, arg: String?, extras: Bundle?): Bundle {
         authorize()
-        val encoded = method == "submit" || method == "cancel"
+        val encoded = method == "submit" || method == "cancel" || method == "control"
         val result = json {
             if (!commands.enabled) throw CliFailure("CLI_DISABLED", "Enable ADB CLI in the app")
             if (!encoded) return@json direct(method, arg, extras)
@@ -36,6 +36,20 @@ class CliProvider : ContentProvider() {
             require(decoded.size <= 8192) { "Request too large" }
             val request = JSONObject(decoded.toString(Charsets.UTF_8))
             when (method) {
+                "control" -> {
+                    require(request.keys().asSequence().all { it in setOf("operation", "options") }) { "Unknown control field" }
+                    val operation = request.getString("operation")
+                    val obj = request.optJSONObject("options")
+                    require(!request.has("options") || obj != null) { "options must be an object" }
+                    val options = obj?.keys()?.asSequence()?.associateWith { obj.opt(it) as? String ?: throw CliFailure("INVALID_ARGUMENT", "Control values must be strings") }?.let(::CliOptions)
+                    when (operation) {
+                        "live.set" -> commands.tune(options, false)
+                        "live.reset" -> { require(options == null); commands.tune(null, true) }
+                        "record.stop" -> { require(options == null); commands.stopRecording(null) }
+                        "record.snapshot" -> { require(options == null); commands.snapshot() }
+                        else -> throw CliFailure("INVALID_ARGUMENT", "Unknown control")
+                    }
+                }
                 "submit" -> commands.submit(CliJson.decode(request))
                 "cancel" -> {
                     require(request.keys().asSequence().toSet() == setOf("protocol_version", "request_id")) { "Invalid cancellation" }
@@ -54,6 +68,11 @@ class CliProvider : ContentProvider() {
     @Suppress("DEPRECATION")
     private fun direct(method: String, arg: String?, extras: Bundle?): JSONObject {
         val values = extras?.keySet()?.associateWith { extras.get(it) }.orEmpty()
+        if (method == "live.set" || method == "live.reset") {
+            require(arg == null)
+            if (method == "live.reset") { require(values.isEmpty()); return commands.tune(null, true) }
+            return commands.tune(CliOptions(values.mapValues { it.value as? String ?: throw CliFailure("INVALID_ARGUMENT", "Controls must be strings") }), false)
+        }
         if (method in setOf("hello", "status", "request", "request.cancel", "record.stop", "record.snapshot")) {
             require(values.isEmpty()) { "Unexpected extras" }
             return when (method) {

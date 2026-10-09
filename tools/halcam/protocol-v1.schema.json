@@ -21,6 +21,11 @@
     },
     "command": {
       "enum": [
+        "settings.show",
+        "settings.limit",
+        "incidents.list",
+        "incidents.export",
+        "incidents.delete",
         "burst",
         "bracket",
         "meter",
@@ -58,172 +63,160 @@
       "maximum": 3600000
     },
     "params": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "camera_id": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 128
-        },
-        "cases": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 64,
-          "uniqueItems": true,
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 256,
-            "pattern": "^(custom|vendored):"
-          }
-        },
-        "audio": {
-          "type": "boolean"
-        },
-        "engine": {
-          "enum": [
-            "Camera2",
-            "CameraX"
-          ]
-        },
-        "streams": {
-          "type": "object",
-          "additionalProperties": false,
-          "minProperties": 1,
-          "properties": {
-            "preview_size": {
-              "type": "string",
-              "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-            },
-            "yuv_size": {
-              "type": "string",
-              "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-            },
-            "jpeg_size": {
-              "type": "string",
-              "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-            },
-            "video_size": {
-              "type": "string",
-              "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-            },
-            "video_fps": {
-              "type": "string",
-              "pattern": "^(0*[1-9]|0*[1-9][0-9]|0*1[0-9]{2}|0*2[0-3][0-9]|0*240)$"
-            },
-            "codec": {
-              "enum": [
-                "H264",
-                "HEVC",
-                "Auto"
-              ]
-            },
-            "raw_size": {
-              "type": "string",
-              "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-            },
-            "fps": {
-              "type": "string",
-              "pattern": "^(auto|[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?)$"
-            },
-            "stabilization": {
-              "enum": [
-                "AUTO",
-                "OFF",
-                "OIS",
-                "VIDEO",
-                "PREVIEW"
-              ]
-            },
-            "yuv_format": {
-              "enum": [
-                "JPEG",
-                "NV21"
-              ]
-            }
-          }
-        },
-        "profile_id": {
-          "const": "camera2-standard-v2"
-        },
-        "options": {
-          "type": "object",
-          "minProperties": 1,
-          "additionalProperties": false,
-          "properties": {
-            "ae_lock": {
-              "type": "string"
-            },
-            "af_lock": {
-              "type": "string"
-            },
-            "confirm": {
-              "type": "string"
-            },
-            "count": {
-              "type": "string"
-            },
-            "ev": {
-              "type": "string"
-            },
-            "exposure_ns": {
-              "type": "string"
-            },
-            "first": {
-              "type": "string"
-            },
-            "flash": {
-              "type": "string"
-            },
-            "focus": {
-              "type": "string"
-            },
-            "gains": {
-              "type": "string"
-            },
-            "interval_ms": {
-              "type": "string"
-            },
-            "iso": {
-              "type": "string"
-            },
-            "matrix": {
-              "type": "string"
-            },
-            "media": {
-              "type": "string"
-            },
-            "meter": {
-              "type": "string"
-            },
-            "reference": {
-              "type": "string"
-            },
-            "run": {
-              "type": "string"
-            },
-            "second": {
-              "type": "string"
-            },
-            "wb": {
-              "type": "string"
-            },
-            "x": {
-              "type": "string"
-            },
-            "y": {
-              "type": "string"
-            },
-            "zoom": {
-              "type": "string"
-            }
-          }
-        }
-      }
+      "type": "object"
     }
   },
   "allOf": [
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "settings.show"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "settings.limit"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "limit": {
+                    "type": "string"
+                  },
+                  "confirm": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "limit"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "incidents.list"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "incidents.export"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "incident": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "incident"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "incidents.delete"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "incident": {
+                    "type": "string"
+                  },
+                  "confirm": {
+                    "const": "true"
+                  }
+                },
+                "required": [
+                  "incident",
+                  "confirm"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
     {
       "if": {
         "properties": {
@@ -239,72 +232,13 @@
             "additionalProperties": false,
             "properties": {
               "camera_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
+                "$ref": "#/$defs/camera_id"
               },
               "engine": {
-                "enum": [
-                  "Camera2",
-                  "CameraX"
-                ]
+                "$ref": "#/$defs/engine"
               },
               "streams": {
-                "type": "object",
-                "additionalProperties": false,
-                "minProperties": 1,
-                "properties": {
-                  "preview_size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-                  },
-                  "yuv_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "jpeg_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "video_size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-                  },
-                  "video_fps": {
-                    "type": "string",
-                    "pattern": "^(0*[1-9]|0*[1-9][0-9]|0*1[0-9]{2}|0*2[0-3][0-9]|0*240)$"
-                  },
-                  "codec": {
-                    "enum": [
-                      "H264",
-                      "HEVC",
-                      "Auto"
-                    ]
-                  },
-                  "raw_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "fps": {
-                    "type": "string",
-                    "pattern": "^(auto|[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?)$"
-                  },
-                  "stabilization": {
-                    "enum": [
-                      "AUTO",
-                      "OFF",
-                      "OIS",
-                      "VIDEO",
-                      "PREVIEW"
-                    ]
-                  },
-                  "yuv_format": {
-                    "enum": [
-                      "JPEG",
-                      "NV21"
-                    ]
-                  }
-                }
+                "$ref": "#/$defs/streams"
               },
               "options": {
                 "type": "object",
@@ -375,72 +309,13 @@
             "additionalProperties": false,
             "properties": {
               "camera_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
+                "$ref": "#/$defs/camera_id"
               },
               "engine": {
-                "enum": [
-                  "Camera2",
-                  "CameraX"
-                ]
+                "$ref": "#/$defs/engine"
               },
               "streams": {
-                "type": "object",
-                "additionalProperties": false,
-                "minProperties": 1,
-                "properties": {
-                  "preview_size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-                  },
-                  "yuv_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "jpeg_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "video_size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-                  },
-                  "video_fps": {
-                    "type": "string",
-                    "pattern": "^(0*[1-9]|0*[1-9][0-9]|0*1[0-9]{2}|0*2[0-3][0-9]|0*240)$"
-                  },
-                  "codec": {
-                    "enum": [
-                      "H264",
-                      "HEVC",
-                      "Auto"
-                    ]
-                  },
-                  "raw_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "fps": {
-                    "type": "string",
-                    "pattern": "^(auto|[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?)$"
-                  },
-                  "stabilization": {
-                    "enum": [
-                      "AUTO",
-                      "OFF",
-                      "OIS",
-                      "VIDEO",
-                      "PREVIEW"
-                    ]
-                  },
-                  "yuv_format": {
-                    "enum": [
-                      "JPEG",
-                      "NV21"
-                    ]
-                  }
-                }
+                "$ref": "#/$defs/streams"
               },
               "options": {
                 "type": "object",
@@ -604,15 +479,10 @@
             "additionalProperties": false,
             "properties": {
               "camera_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
+                "$ref": "#/$defs/camera_id"
               },
               "engine": {
-                "enum": [
-                  "Camera2",
-                  "CameraX"
-                ]
+                "$ref": "#/$defs/engine"
               },
               "options": {
                 "type": "object",
@@ -688,15 +558,10 @@
             "additionalProperties": false,
             "properties": {
               "camera_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
+                "$ref": "#/$defs/camera_id"
               },
               "engine": {
-                "enum": [
-                  "Camera2",
-                  "CameraX"
-                ]
+                "$ref": "#/$defs/engine"
               },
               "options": {
                 "type": "object",
@@ -772,15 +637,10 @@
             "additionalProperties": false,
             "properties": {
               "camera_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
+                "$ref": "#/$defs/camera_id"
               },
               "engine": {
-                "enum": [
-                  "Camera2",
-                  "CameraX"
-                ]
+                "$ref": "#/$defs/engine"
               },
               "audio": {
                 "const": false
@@ -1189,15 +1049,10 @@
             "additionalProperties": false,
             "properties": {
               "camera_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
+                "$ref": "#/$defs/camera_id"
               },
               "engine": {
-                "enum": [
-                  "Camera2",
-                  "CameraX"
-                ]
+                "$ref": "#/$defs/engine"
               }
             },
             "required": [
@@ -1241,72 +1096,13 @@
             "additionalProperties": false,
             "properties": {
               "camera_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
+                "$ref": "#/$defs/camera_id"
               },
               "engine": {
-                "enum": [
-                  "Camera2",
-                  "CameraX"
-                ]
+                "$ref": "#/$defs/engine"
               },
               "streams": {
-                "type": "object",
-                "additionalProperties": false,
-                "minProperties": 1,
-                "properties": {
-                  "preview_size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-                  },
-                  "yuv_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "jpeg_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "video_size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-                  },
-                  "video_fps": {
-                    "type": "string",
-                    "pattern": "^(0*[1-9]|0*[1-9][0-9]|0*1[0-9]{2}|0*2[0-3][0-9]|0*240)$"
-                  },
-                  "codec": {
-                    "enum": [
-                      "H264",
-                      "HEVC",
-                      "Auto"
-                    ]
-                  },
-                  "raw_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "fps": {
-                    "type": "string",
-                    "pattern": "^(auto|[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?)$"
-                  },
-                  "stabilization": {
-                    "enum": [
-                      "AUTO",
-                      "OFF",
-                      "OIS",
-                      "VIDEO",
-                      "PREVIEW"
-                    ]
-                  },
-                  "yuv_format": {
-                    "enum": [
-                      "JPEG",
-                      "NV21"
-                    ]
-                  }
-                }
+                "$ref": "#/$defs/streams"
               },
               "options": {
                 "type": "object",
@@ -1390,72 +1186,13 @@
             "additionalProperties": false,
             "properties": {
               "camera_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
+                "$ref": "#/$defs/camera_id"
               },
               "engine": {
-                "enum": [
-                  "Camera2",
-                  "CameraX"
-                ]
+                "$ref": "#/$defs/engine"
               },
               "streams": {
-                "type": "object",
-                "additionalProperties": false,
-                "minProperties": 1,
-                "properties": {
-                  "preview_size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-                  },
-                  "yuv_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "jpeg_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "video_size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-                  },
-                  "video_fps": {
-                    "type": "string",
-                    "pattern": "^(0*[1-9]|0*[1-9][0-9]|0*1[0-9]{2}|0*2[0-3][0-9]|0*240)$"
-                  },
-                  "codec": {
-                    "enum": [
-                      "H264",
-                      "HEVC",
-                      "Auto"
-                    ]
-                  },
-                  "raw_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "fps": {
-                    "type": "string",
-                    "pattern": "^(auto|[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?)$"
-                  },
-                  "stabilization": {
-                    "enum": [
-                      "AUTO",
-                      "OFF",
-                      "OIS",
-                      "VIDEO",
-                      "PREVIEW"
-                    ]
-                  },
-                  "yuv_format": {
-                    "enum": [
-                      "JPEG",
-                      "NV21"
-                    ]
-                  }
-                }
+                "$ref": "#/$defs/streams"
               },
               "options": {
                 "type": "object",
@@ -1520,75 +1257,16 @@
             "additionalProperties": false,
             "properties": {
               "camera_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
+                "$ref": "#/$defs/camera_id"
               },
               "engine": {
-                "enum": [
-                  "Camera2",
-                  "CameraX"
-                ]
+                "$ref": "#/$defs/engine"
               },
               "streams": {
-                "type": "object",
-                "additionalProperties": false,
-                "minProperties": 1,
-                "properties": {
-                  "preview_size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-                  },
-                  "yuv_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "jpeg_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "video_size": {
-                    "type": "string",
-                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
-                  },
-                  "video_fps": {
-                    "type": "string",
-                    "pattern": "^(0*[1-9]|0*[1-9][0-9]|0*1[0-9]{2}|0*2[0-3][0-9]|0*240)$"
-                  },
-                  "codec": {
-                    "enum": [
-                      "H264",
-                      "HEVC",
-                      "Auto"
-                    ]
-                  },
-                  "raw_size": {
-                    "type": "string",
-                    "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
-                  },
-                  "fps": {
-                    "type": "string",
-                    "pattern": "^(auto|[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?)$"
-                  },
-                  "stabilization": {
-                    "enum": [
-                      "AUTO",
-                      "OFF",
-                      "OIS",
-                      "VIDEO",
-                      "PREVIEW"
-                    ]
-                  },
-                  "yuv_format": {
-                    "enum": [
-                      "JPEG",
-                      "NV21"
-                    ]
-                  }
-                }
+                "$ref": "#/$defs/streams"
               },
               "audio": {
-                "type": "boolean"
+                "$ref": "#/$defs/audio"
               },
               "options": {
                 "type": "object",
@@ -1691,16 +1369,7 @@
             "additionalProperties": false,
             "properties": {
               "cases": {
-                "type": "array",
-                "minItems": 1,
-                "maxItems": 64,
-                "uniqueItems": true,
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 256,
-                  "pattern": "^(custom|vendored):"
-                }
+                "$ref": "#/$defs/cases"
               }
             },
             "required": [
@@ -1725,12 +1394,29 @@
             "additionalProperties": false,
             "properties": {
               "camera_id": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 128
+                "$ref": "#/$defs/camera_id"
               },
               "profile_id": {
-                "const": "camera2-standard-v2"
+                "$ref": "#/$defs/profile_id"
+              },
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "properties": {
+                  "build": {
+                    "type": "string"
+                  },
+                  "commit": {
+                    "type": "string"
+                  },
+                  "branch": {
+                    "type": "string"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
               }
             },
             "required": [
@@ -1741,5 +1427,93 @@
         }
       }
     }
-  ]
+  ],
+  "$defs": {
+    "camera_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^(custom|vendored):"
+      }
+    },
+    "audio": {
+      "type": "boolean"
+    },
+    "engine": {
+      "enum": [
+        "Camera2",
+        "CameraX"
+      ]
+    },
+    "streams": {
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "preview_size": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
+        },
+        "yuv_size": {
+          "type": "string",
+          "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
+        },
+        "jpeg_size": {
+          "type": "string",
+          "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
+        },
+        "video_size": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
+        },
+        "video_fps": {
+          "type": "string",
+          "pattern": "^(0*[1-9]|0*[1-9][0-9]|0*1[0-9]{2}|0*2[0-3][0-9]|0*240)$"
+        },
+        "codec": {
+          "enum": [
+            "H264",
+            "HEVC",
+            "Auto"
+          ]
+        },
+        "raw_size": {
+          "type": "string",
+          "pattern": "^(off|[1-9][0-9]{0,4}x[1-9][0-9]{0,4})$"
+        },
+        "fps": {
+          "type": "string",
+          "pattern": "^(auto|[1-9][0-9]{0,2}(-[1-9][0-9]{0,2})?)$"
+        },
+        "stabilization": {
+          "enum": [
+            "AUTO",
+            "OFF",
+            "OIS",
+            "VIDEO",
+            "PREVIEW"
+          ]
+        },
+        "yuv_format": {
+          "enum": [
+            "JPEG",
+            "NV21"
+          ]
+        }
+      }
+    },
+    "profile_id": {
+      "const": "camera2-standard-v2"
+    }
+  }
 }

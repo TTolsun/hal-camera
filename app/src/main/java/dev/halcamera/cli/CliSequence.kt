@@ -26,7 +26,7 @@ class CliSequence(private val context: Context) {
         run = BurstRun(command.id, count, command.options?.values?.get("interval_ms")?.toLong() ?: 0,
             SystemClock::elapsedRealtime, { delay, block -> main.postDelayed(block, delay) },
             { !camera.mediaBusy }, camera::capturePhoto,
-            { progress -> CommandCoordinator.get(context).store.transition(command.id, "running") {
+            { progress -> progress(command.id) {
                 it.put("progress", JSONObject().put("saved", progress.saved).put("total", count).put("phase", "capturing"))
             } },
             { summary ->
@@ -42,6 +42,9 @@ class CliSequence(private val context: Context) {
                     else if (summary.saved != count) CliFailure("CAPTURE_FAILED", "Not all photos saved; use fetch to recover saved files") else null
                 val sources = photos.mapNotNull(BracketFusion::pick)
                 if (bracket && failure == null && sources.size == 3) {
+                    progress(command.id) {
+                        it.put("progress", JSONObject().put("saved", 3).put("total", 3).put("phase", "HDR"))
+                    }
                     val fusion = BracketFusion(context)
                     fusion.fuse(command.id, sources) { fused ->
                         fused.getOrNull()?.let { artifacts += CliArtifact(it.name, it.mime, it.uri) }
@@ -60,6 +63,13 @@ class CliSequence(private val context: Context) {
                 else go()
             })
         run!!.start()
+    }
+
+    private fun progress(id: String, update: (JSONObject) -> Unit) {
+        // Progress is advisory. Keep draining in-flight saves even if the status disk is full;
+        // the final durable completion reports STORE_FAILED without abandoning saved photos.
+        runCatching { CommandCoordinator.get(context).store.update(id, update) }
+            .onFailure { android.util.Log.w("CliSequence", "Cannot write progress", it) }
     }
 
     fun cancel() { cancelled = true; run?.cancel("Cancelled") }

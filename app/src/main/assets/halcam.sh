@@ -25,6 +25,7 @@ More tasks (start with the list command to find an ID):
   bracket                               Save three AEB photos and HDR when possible
   record snapshot                       Take a photo during CLI recording
   meter --x 0.5 --y 0.5 [--meter focus|exposure]
+  live set --zoom 2 | live reset         Adjust current preview/CLI recording or reset controls
   live info | events                    Read callbacks / save Events ZIP
   dual cameras                          List logical and physical camera IDs
   dual preview|capture|record --camera ID --first ID --second ID
@@ -34,6 +35,11 @@ More tasks (start with the list command to find an ID):
   results export --run ID                Export JSON and CSV
   baseline add|remove --run ID           Explicitly choose normal reference runs
   gallery list | gallery export --media ID
+  incidents list | incidents export --incident ID
+  incidents delete --incident ID --confirm true
+  settings show | settings limit --limit 0|10|20|...|100
+                                        Preview deletions; add --confirm true to apply
+  benchmark run --build LABEL --commit SHA --branch NAME --note TEXT
   results delete --run ID --confirm true
   gallery delete --media ID --confirm true
 Stream options for preview/capture/burst/bracket/record start:
@@ -120,9 +126,14 @@ downloads() {
 wait_for() {
     # A bounded client wait never cancels accepted work; status/fetch can recover it.
     end=$(( $(date +%s) + wait_seconds ))
+    last_progress=
     while :; do
         result=$(read_request "$rid")
-        check_response "$result"
+        case "$result" in *'"completed":true'*) check_response "$result" true ;; *) check_response "$result" ;; esac
+        state=$(echo "$result" | sed -n 's/.*"state":"\([a-z]*\)".*/\1/p')
+        saved=$(echo "$result" | sed -n 's/.*"saved":\([0-9][0-9]*\).*/\1/p')
+        progress="$state${saved:+: $saved photos saved}"
+        if [ "$progress" != "$last_progress" ]; then echo "$progress"; last_progress=$progress; fi
         case "$result" in
             *'"completed":true'*)
                 case "$result" in
@@ -169,12 +180,12 @@ EOF
         exit 0 ;;
     preview)
         case "${1:-}" in start) shift ;; stop) method=preview.stop; shift ;; esac ;;
-    record|cts|benchmark|results|baseline|gallery|dual|live)
+    record|cts|benchmark|results|baseline|gallery|dual|live|settings|incidents)
         [ $# -gt 0 ] || die "$method needs a subcommand; use help"
         method=$method.$1; shift ;;
 esac
 case "$method" in
-    doctor|streams|cameras|preview|preview.stop|capture|burst|bracket|meter|events|live.info|dual.cameras|dual.preview|dual.capture|dual.record|results.list|results.show|results.export|results.compare|results.delete|baseline.add|baseline.remove|gallery.list|gallery.export|gallery.delete|record.start|record.stop|record.snapshot|probe|cts.cases|cts.run|benchmark.run|status|cancel|fetch) ;;
+    settings.show|settings.limit|incidents.list|incidents.export|incidents.delete|live.set|live.reset|doctor|streams|cameras|preview|preview.stop|capture|burst|bracket|meter|events|live.info|dual.cameras|dual.preview|dual.capture|dual.record|results.list|results.show|results.export|results.compare|results.delete|baseline.add|baseline.remove|gallery.list|gallery.export|gallery.delete|record.start|record.stop|record.snapshot|probe|cts.cases|cts.run|benchmark.run|status|cancel|fetch) ;;
     *) die "Unknown command: $method. Use help." ;;
 esac
 
@@ -249,13 +260,23 @@ profile=
 audio=
 cases=
 stream_options=
+build=
+commit=
+branch=
+note=
 while [ $# -gt 0 ]; do
     case "$1" in
-        --engine|--preview-size|--yuv-size|--jpeg-size|--video-size|--video-fps|--codec|--raw-size|--fps|--stabilization|--yuv-format|--zoom|--ev|--flash|--ae-lock|--af-lock|--iso|--exposure-ns|--focus|--wb|--gains|--matrix|--count|--interval-ms|--x|--y|--meter|--run|--reference|--media|--confirm|--first|--second)
+        --engine|--preview-size|--yuv-size|--jpeg-size|--video-size|--video-fps|--codec|--raw-size|--fps|--stabilization|--yuv-format|--zoom|--ev|--flash|--ae-lock|--af-lock|--iso|--exposure-ns|--focus|--wb|--gains|--matrix|--count|--interval-ms|--x|--y|--meter|--run|--reference|--media|--confirm|--first|--second|--incident|--limit)
             [ $# -ge 2 ] || die "$1 needs a value"
             case "$2" in ''|*[!a-zA-Z0-9x.,_-]*) die 'Invalid stream option value' ;; esac
             key=$(echo "${1#--}" | tr '-' '_')
             stream_options="$stream_options $key:s:$2"
+            shift 2 ;;
+        --build|--commit|--branch|--note)
+            [ $# -ge 2 ] || die "$1 needs a value"
+            [ "$method" = benchmark.run ] || die 'Build labels are only for benchmark run'
+            case "$2" in *:*) die 'Use the Python JSON client for labels containing colons' ;; esac
+            case "$1" in --build) build=$2 ;; --commit) commit=$2 ;; --branch) branch=$2 ;; --note) note=$2 ;; esac
             shift 2 ;;
         --camera|--timeout|--cases|--profile)
             [ $# -ge 2 ] || die "$1 needs a value"
@@ -274,7 +295,12 @@ fi
 if [ "$method" = benchmark.run ]; then
     [ -z "$stream_options$audio$cases" ] || die 'Benchmark uses a fixed Camera2 profile; stream, audio and CTS options are not supported'
 fi
-set -- --method "$method" --extra "request_id:s:$rid"
+set -- --method "$method"
+case "$method" in live.set|live.reset) ;; *) set -- "$@" --extra "request_id:s:$rid" ;; esac
+[ -z "$build" ] || set -- "$@" --extra "build:s:$build"
+[ -z "$commit" ] || set -- "$@" --extra "commit:s:$commit"
+[ -z "$branch" ] || set -- "$@" --extra "branch:s:$branch"
+[ -z "$note" ] || set -- "$@" --extra "note:s:$note"
 [ -z "$profile" ] || set -- "$@" --extra "profile:s:$profile"
 if [ -n "$camera" ]; then
     case "$camera" in *[!a-zA-Z0-9_.-]*) die 'Invalid camera ID' ;; esac
@@ -302,15 +328,19 @@ case "$method" in
         status=$(content read --uri "$URI/v1/status")
         check_response "$status"
         case "$status" in *'"busy":true'*) die 'Another operation is running. Use status or record stop.' ;; esac
+        target_screen=live
+        case "$method:$status" in
+            meter:*'"screen":"dual"'*|events:*'"screen":"dual"'*|live.info:*'"screen":"dual"'*|preview.stop:*'"screen":"dual"'*) target_screen=dual ;;
+        esac
         case "$status" in
-            *'"screen":"live"'*) ;;
+            *\"screen\":\"$target_screen\"*) ;;
             *) am start -W -n dev.halcamera/.cli.CliLaunchActivity >/dev/null || die 'Unlock the device and open HAL CAM' ;;
         esac
         attempts=0
         while :; do
             status=$(content read --uri "$URI/v1/status")
             check_response "$status"
-            case "$status" in *'"screen":"live"'*) break ;; esac
+            case "$status" in *\"screen\":\"$target_screen\"*) break ;; esac
             attempts=$((attempts + 1))
             [ "$attempts" -lt 10 ] || die 'Unlock the device and open Live in HAL CAM'
             sleep 1
@@ -318,6 +348,7 @@ case "$method" in
 esac
 result=$(call "$@")
 check_response "$result"
+case "$method" in live.set|live.reset) echo "$result"; exit 0 ;; esac
 echo "$rid" > "$LAST"
 echo "request_id=$rid"
 if [ "$no_wait" = true ]; then echo "$result"; else wait_for; fi

@@ -1,0 +1,1 @@
+CommandCoordinator는 저장된 결과의 URI를 읽어 크기와 SHA-256을 계산하고 요청 파일 목록을 등록합니다. 실제 픽셀 저장은 MediaLibrary가 담당하며 진단 ZIP·벤치마크 보고서와 분리합니다. MediaStore에 저장된 촬영물은 RecentMediaThumbnail이 UI에서 조회합니다. terminal 요청의 늦은 콜백은 상태를 바꾸지 않으며 파일 다운로드는 등록된 URI만 허용합니다.

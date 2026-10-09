@@ -1,0 +1,1 @@
+CliOptions와 CliStreams는 입력을 검증하고 미지원 조합을 자동 보정하지 않습니다. LiveController는 화면 준비·저장 콜백을 요청 완료에 연결합니다. CliSequence는 BurstRun을 사용하여 촬영별 저장 결과와 AEB 합성 결과를 등록합니다. 취소 중의 진행 갱신은 cancelling 상태를 유지합니다. 녹화 스냅샷은 원래 요청에 등록하며 사진 저장 중 정지는 콜백 이후 수행합니다. CliLibrary는 기존 결과·baseline·MediaStore·진단 ZIP·보관 한도를 처리합니다. 삭제는 대상과 명시적 확인을 요구하고 보관 한도는 적용 전 삭제 대상을 보여 줍니다.

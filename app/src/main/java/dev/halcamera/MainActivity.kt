@@ -32,147 +32,17 @@ import java.util.concurrent.Executors
 
 /** Live launcher: preview, capture and observation. Benchmark owns baseline comparisons and verdicts. */
 class MainActivity : ComponentActivity() {
-    private val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
-    private val cliSequence by lazy { dev.halcamera.cli.CliSequence(this) }
-    private val liveCli by lazy {
-        LiveController(cli, object : LiveController.Driver {
-            override fun busy() = recordingVideo || stoppingRecording || pendingPermissionAction != null || mediaBusy()
-            override fun prepare(command: dev.halcamera.cli.CliCommand, ready: () -> Unit) {
-                // Capability work can initialize CameraX; keep it off the main thread.
-                io.execute {
-                    val selected = runCatching {
-                        val id = requireNotNull(command.camera)
-                        if (command.streams == null) null else {
-                            var support = liveStreamSupport(getSystemService(CameraManager::class.java).getCameraCharacteristics(id))
-                            if (command.engine == "CameraX") support = cameraXStreamSupport(this@MainActivity, id, support)
-                            command.streams.resolve(support)
-                        }
-                    }
-                    main.post {
-                        if (cli.active?.id != command.id || !resumed) return@post
-                        selected.fold({ settings ->
-                            if (command.command in setOf("capture", "burst", "bracket") && settings?.canCapture == false) {
-                                cli.fail(command.id, "PREFLIGHT_FAILED", "Capture requires YUV or JPEG output")
-                                return@fold
-                            }
-                            showCallbacks(false)
-                            cameraId = requireNotNull(command.camera); engineName = command.engine ?: "Camera2"
-                            paused = false; zoomRatio = 1f
-                            if (settings == null) streamSettings.remove(streamKey()) else streamSettings[streamKey()] = settings
-                            videoMode = command.command == "record.start"
-                            resetControls()
-                            try {
-                                command.options?.let { options ->
-                                    val controls = options.controls(controlBar.support, manualCapabilities, videoMode)
-                                    val zoom = options.values["zoom"]?.toFloat() ?: 1f
-                                    val range = zoomRange(manager, cameraId)
-                                    if (zoom !in range.first..range.second) throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Zoom outside supported range")
-                                    zoomRatio = zoom
-                                    controlBar.applyRequested(controls)
-                                }
-                                updateCameraChoices(); restartCamera(); ready()
-                            } catch (e: Exception) { cli.fail(command.id, (e as? dev.halcamera.cli.CliFailure)?.code ?: "PREFLIGHT_FAILED", e.message ?: "Invalid controls") }
-                        }, { cli.fail(command.id, (it as? dev.halcamera.cli.CliFailure)?.code ?: "PREFLIGHT_FAILED", it.message ?: "Invalid stream settings") })
-                    }
-                }
-            }
-            override fun streamInfo(): Map<String, Any?> =
-                (telemetry.sessions[sessionId]?.get("negotiatedStreams") as? Map<*, *>)?.entries
-                    ?.associate { it.key.toString() to it.value }.orEmpty()
-            override fun photoLabels(): List<String> {
-                val settings = streamSettings[streamKey()]
-                return listOfNotNull("YUV".takeIf { settings == null || settings.yuv != null },
-                    "JPEG".takeIf { settings == null || settings.jpeg != null })
-            }
-            override fun capture(id: String, done: (Result<PhotoResult>) -> Unit) {
-                val camera = engine as? MediaCapture
-                if (camera == null) done(Result.failure(IllegalStateException("Media capture unavailable; camera not ready"))) else camera.capturePhoto(id, done)
-                updateMediaControls()
-            }
-            override fun sequence(command: dev.halcamera.cli.CliCommand, done: (org.json.JSONObject, List<dev.halcamera.cli.CliArtifact>, dev.halcamera.cli.CliFailure?) -> Unit) {
-                cliSequence.start(command, engine as? MediaCapture, controlBar.controls, controlBar.support, done)
-            }
-            override fun cancelSequence() { cliSequence.cancel() }
-            override fun inspect(command: dev.halcamera.cli.CliCommand) {
-                when (command.command) {
-                    "live.info" -> cli.complete(command.id, dev.halcamera.cli.CliJson.of(mapOf("camera_id" to cameraId, "engine" to engineName,
-                        "ready" to ready, "zoom" to zoomRatio, "streams" to streamInfo(), "controls" to controlBar.controls.toString(),
-                        "events" to recorder.snapshot(1_000_000_000L).takeLast(100).map { mapOf("kind" to it.kind, "at_ns" to it.atNs.toString(), "values" to it.values) })) as org.json.JSONObject)
-                    "events" -> {
-                        if (!recorder.trigger(command.id)) throw dev.halcamera.cli.CliFailure("BUSY", "Events are already being saved")
-                        cli.state(command.id, "running")
-                    }
-                    "meter" -> {
-                        val v = previewHost.getChildAt(0) ?: throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Start preview first")
-                        val opts = command.options!!.values
-                        val accepted = (engine as? TouchMetering)?.meterAt(opts.getValue("x").toFloat() * v.width,
-                            opts.getValue("y").toFloat() * v.height, opts["meter"] == "exposure") { } == true
-                        if (!accepted) throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Metering unavailable. Start preview with automatic focus/exposure.")
-                        cli.complete(command.id, org.json.JSONObject().put("submitted", true).put("note", "Metering requested; inspect live.info for capture results"))
-                    }
-                }
-            }
-            override fun dual(command: dev.halcamera.cli.CliCommand) = handOver(command) {
-                Intent(this@MainActivity, DualPreviewActivity::class.java)
-                    .putExtra(DualPreviewActivity.EXTRA_ENGINE, command.engine ?: "Camera2")
-                    .putExtra(DualPreviewActivity.EXTRA_VIDEO, command.command == "dual.record")
-            }
-            override fun snapshot(done: (Result<PhotoResult>) -> Unit) {
-                (engine as? MediaCapture)?.captureSnapshot(done) ?: done(Result.failure(IllegalStateException("Camera unavailable")))
-            }
-            override fun record(audio: Boolean, started: () -> Unit, done: (Result<android.net.Uri>) -> Unit) {
-                videoMode = true
-                val camera = engine as? MediaCapture
-                if (camera == null) done(Result.failure(IllegalStateException("Media capture unavailable; camera not ready")))
-                else camera.startRecording(audio, started, done)
-                updateMediaControls()
-            }
-            override fun stopRecording() {
-                stoppingRecording = true
-                (engine as? MediaCapture)?.stopRecording()
-                updateMediaControls()
-            }
-            override fun stopPreview(done: () -> Unit) {
-                bursts.close()
-                paused = true; ready = false
-                val old = engine; engine = null
-                closing = old != null
-                val closed = {
-                    closing = false
-                    setStatus("Preview paused · Reconnect Camera in Lab.", false)
-                    done()
-                }
-                if (old == null) closed() else old.close(closed)
-            }
-            override fun cts(command: dev.halcamera.cli.CliCommand) = handOver(command) {
-                Intent(this@MainActivity, dev.halcamera.cts.suite.CtsSuiteRunActivity::class.java)
-                    .putExtra(dev.halcamera.cts.suite.CtsSuiteRunActivity.EXTRA_KEYS, command.cases.orEmpty().toTypedArray())
-            }
-            override fun benchmark(command: dev.halcamera.cli.CliCommand) = handOver(command) {
-                Intent(this@MainActivity, dev.halcamera.benchmark.BenchmarkActivity::class.java)
-                    .putExtra(dev.halcamera.benchmark.BenchmarkActivity.EXTRA_CAMERA_ID, command.camera)
-            }
-            /** Closes the Live camera first: the next screen must open a free camera, and close(done) is the only way to know. */
-            private fun handOver(command: dev.halcamera.cli.CliCommand, intent: () -> Intent) {
-                bursts.close()
-                val old = engine; engine = null; closing = true; ready = false
-                val open = {
-                    closing = false
-                    if (resumed && cli.active?.id == command.id) startActivity(intent().putExtra("cli_request_id", command.id))
-                    else cli.fail(command.id, "APP_NOT_FOREGROUND", "App left foreground before ${command.command}")
-                }
-                if (old == null) open() else old.close { open() }
-            }
-            override fun stopPreparing() { paused = true; restartCamera() }
-        })
-    }
-    private fun exportCliIncident(incident: Incident) {
+    internal val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
+    internal val cliSequence by lazy { dev.halcamera.cli.CliSequence(this) }
+    private val liveCli by lazy { createLiveCli() }
+    internal fun exportCliIncident(incident: Incident) {
         if (cli.active?.let { it.id == incident.id && it.command == "events" } == true) {
             val sessions = telemetry.sessions.toMap()
             io.execute {
                 try {
                     val file = IncidentExporter(this).export(incident, sessions)
-                    cli.complete(incident.id, org.json.JSONObject().put("artifact_count", 1),
+                    cli.complete(incident.id, org.json.JSONObject().put("artifact_count", 1)
+                        .put("cancelled", cli.store.read(incident.id)?.optString("state") == "cancelling"),
                         listOf(dev.halcamera.cli.CliArtifact(file.name, "application/zip", android.net.Uri.fromFile(file))))
                 } catch (e: Exception) { cli.fail(incident.id, "SAVE_FAILED", e.message ?: "Events export failed") }
             }
@@ -188,33 +58,33 @@ class MainActivity : ComponentActivity() {
     private val muted = dev.halcamera.ui.Look.onDarkMuted
     private val coral = dev.halcamera.ui.Look.statusFail
     private val glass = Look.cameraGlass
-    private val main = Handler(Looper.getMainLooper())
+    internal val main = Handler(Looper.getMainLooper())
     /** Buttons refuse taps while an ADB command drives the camera. */
     private val widgets by lazy { dev.halcamera.ui.CameraWidgets(this) { cli.active == null } }
     private val cameraWorker = Executors.newSingleThreadExecutor()
-    private val io = Executors.newSingleThreadExecutor()
-    private val recorder = FlightRecorder(::nowNs)
-    private val telemetry = Telemetry(recorder)
-    private var engine: CameraEngine? = null
+    internal val io = Executors.newSingleThreadExecutor()
+    internal val recorder = FlightRecorder(::nowNs)
+    internal val telemetry = Telemetry(recorder)
+    internal var engine: CameraEngine? = null
     /** The camera [engine] opened. A CLI request changes [cameraId] before the old engine closes. */
     private var engineCameraId: String? = null
-    private var closing = false
-    private var resumed = false
+    internal var closing = false
+    internal var resumed = false
     private var destroyed = false
-    private var paused = false
-    private var engineName = "CameraX"
-    private var cameraId = ""
-    private var sessionId = ""
-    private val streamSettings = mutableMapOf<String, LiveStreamSettings>()
+    internal var paused = false
+    internal var engineName = "CameraX"
+    internal var cameraId = ""
+    internal var sessionId = ""
+    internal val streamSettings = mutableMapOf<String, LiveStreamSettings>()
     private val goodStreams = mutableMapOf<String, LiveStreamSettings?>()
     private val streamState = mutableMapOf<String, String>()
     private val eisTracker = LiveEisTracker()
-    private var ready = false
-    private var zoomRatio = 1f
+    internal var ready = false
+    internal var zoomRatio = 1f
     private var zoomApplied = false
     private var saveFile: File? = null
-    private lateinit var manager: CameraManager
-    private lateinit var previewHost: FrameLayout
+    internal lateinit var manager: CameraManager
+    internal lateinit var previewHost: FrameLayout
     /** Sits over the frozen frame while the preview is paused. */
     private lateinit var pausedOverlay: TextView
     private lateinit var topBar: LinearLayout
@@ -222,9 +92,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var graphButton: Button
     private lateinit var callbackGraph: ResultCallbackGraph
     private lateinit var zoomControl: ExpandingZoomControl
-    private lateinit var controlBar: LiveControlBar
+    internal lateinit var controlBar: LiveControlBar
     private lateinit var manualPanel: ManualControlPanel
-    private var manualCapabilities = ManualSupport()
+    internal var manualCapabilities = ManualSupport()
     private lateinit var cameraNotice: TextView
     private var savedNoticeShown = false
     private val clearNotice = Runnable { savedNoticeShown = false; if (ready || recordingVideo) cameraNotice.visibility = View.GONE }
@@ -259,13 +129,13 @@ class MainActivity : ComponentActivity() {
     /** Logical id to endpoint, so [cameraLabel] can name the lens without re-reading CameraCharacteristics. */
     private var cameraEndpoints = emptyMap<String, CameraEndpoint>()
     private lateinit var labButton: Button
-    private var videoMode = false
-    private var recordingVideo = false
-    private var stoppingRecording = false
+    internal var videoMode = false
+    internal var recordingVideo = false
+    internal var stoppingRecording = false
     private var recordingStartedAt = 0L
-    private var pendingPermissionAction: (() -> Unit)? = null
-    private val captureFeedback by lazy { CaptureFeedback(this) }
-    private val bursts by lazy {
+    internal var pendingPermissionAction: (() -> Unit)? = null
+    internal val captureFeedback by lazy { CaptureFeedback(this) }
+    internal val bursts by lazy {
         LiveBurst(SystemClock::elapsedRealtime, { d, b -> main.postDelayed(b, d) },
             { engine as? MediaCapture }, { ready && cli.active == null && !videoMode }, telemetry::event, ::updateMediaControls,
             { if (resumed) captureFeedback.showResult(it) }, BracketFusion(this))
@@ -455,7 +325,7 @@ class MainActivity : ComponentActivity() {
             startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName")))
         }
     }
-    private fun restartCamera() {
+    internal fun restartCamera() {
         bursts.close()
         eisTracker.reset()
         liveIndicator.bind(false)
@@ -577,7 +447,7 @@ class MainActivity : ComponentActivity() {
         main.removeCallbacks(clearNotice); savedNoticeShown = true
         cameraNotice.text = text; cameraNotice.visibility = View.VISIBLE; main.postDelayed(clearNotice, 2500)
     }
-    private fun setStatus(text: String, ok: Boolean) {
+    internal fun setStatus(text: String, ok: Boolean) {
         // Keep a save notice across routine LIVE reports, but let errors replace it.
         val saved = ok && text.contains("saved", ignoreCase = true)
         if (captureFeedback.coversStatus(text)) cameraNotice.visibility = View.GONE
@@ -834,7 +704,7 @@ class MainActivity : ComponentActivity() {
         if(id.isEmpty()) return "No camera"
         return cameraEndpoints[id]?.let(CameraLabel::full) ?: CameraLabel.short(id)
     }
-    private fun updateCameraChoices() {
+    internal fun updateCameraChoices() {
         if(cameraId.isNotEmpty()) {
             val presets=zoomPresets(zoomRange(manager,cameraId))
             if(zoomRatio !in presets) zoomRatio=presets.minByOrNull { kotlin.math.abs(it-zoomRatio) } ?: 1f
@@ -845,7 +715,7 @@ class MainActivity : ComponentActivity() {
         cameraShortcut.tooltipText=cameraShortcut.contentDescription
         zoomControl.setChoices(if(cameraId.isEmpty()) listOf(1f) else zoomPresets(zoomRange(manager,cameraId)),zoomRatio)
     }
-    private fun updateMediaControls() {
+    internal fun updateMediaControls() {
         if (!resumed || paused || closing || engine == null) liveIndicator.bind(false)
         val idle=!recordingVideo && bursts.run==null
         cli.setUiBusy(liveCli, recordingVideo || stoppingRecording || pendingPermissionAction != null || mediaBusy())
@@ -862,7 +732,12 @@ class MainActivity : ComponentActivity() {
         modeControls.visibility=if(recordingVideo) View.INVISIBLE else View.VISIBLE
         recordingTime.visibility=if(recordingVideo) View.VISIBLE else View.GONE
         mediaButton.setCaptureState(videoMode,recordingVideo,bursts.run != null,controlBar.controls.bracket,bursts.label)
-        captureFeedback.bind(bursts.label,controlBar.controls.bracket && !videoMode)
+        val cliProgress = cli.active?.takeIf { it.command in setOf("burst", "bracket", "capture", "events") }?.let { command ->
+            val record = cli.store.read(command.id)
+            val progress = record?.optJSONObject("progress")
+            if (progress != null) "CLI · ${progress.optInt("saved")}/${progress.optInt("total")} saved · ${progress.optString("phase")}" else "CLI · ${record?.optString("state") ?: "preparing"}"
+        }
+        captureFeedback.bind(cliProgress ?: bursts.label,controlBar.controls.bracket && !videoMode)
         if(stoppingRecording) {
             mediaButton.contentDescription="Saving video"
             ViewCompat.setStateDescription(mediaButton,"Saving")
@@ -911,7 +786,7 @@ class MainActivity : ComponentActivity() {
         engineName=name; resetControls(); updateCameraChoices(); restartCamera()
     }
     /** Locks, EV and flash start over for every camera and engine; the new session opens with the defaults. */
-    private fun resetControls() {
+    internal fun resetControls() {
         controlBar.reset(if(cameraId.isEmpty()) LiveControlSupport.NONE else liveControlSupport(manager,cameraId))
         refreshManualSupport()
         manualPanel.reset(manualCapabilities)
@@ -923,7 +798,7 @@ class MainActivity : ComponentActivity() {
             else try { manualSupport(manager.getCameraCharacteristics(cameraId), fps) } catch (_: Exception) { ManualSupport() }
         controlBar.setManualAvailable(manualCapabilities.camera2)
     }
-    private fun streamKey() = liveStreamSettingsKey(cameraId, engineName)
+    internal fun streamKey() = liveStreamSettingsKey(cameraId, engineName)
     private fun openLab() {
         openAfterClose("workbench_opened") {
             streamSettingsIntent(WorkbenchActivity::class.java)
@@ -971,7 +846,7 @@ class MainActivity : ComponentActivity() {
         }
         if (old == null) open() else old.close { open() }
     }
-    private fun mediaBusy() = (engine as? MediaCapture)?.mediaBusy == true || bursts.run != null
+    internal fun mediaBusy() = (engine as? MediaCapture)?.mediaBusy == true || bursts.run != null
     /** One snapshot at a time; failures leave recording active and unsupported cameras explain why. */
     private fun takeSnapshot() {
         if (cli.active != null) return
@@ -990,7 +865,7 @@ class MainActivity : ComponentActivity() {
         updateMediaControls()
         (engine as? MediaCapture)?.stopRecording()
     }
-    private fun showCallbacks(show: Boolean) {
+    internal fun showCallbacks(show: Boolean) {
         if (show && ::manualPanel.isInitialized) manualPanel.close()
         callbackGraph.reset()
         callbackGraph.visibility = if (show) View.VISIBLE else View.GONE

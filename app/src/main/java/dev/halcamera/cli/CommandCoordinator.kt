@@ -33,6 +33,7 @@ interface CliHost {
     fun isBusy(): Boolean = false
     fun execute(command: CliCommand)
     fun cancel(command: CliCommand)
+    fun tune(options: CliOptions?, reset: Boolean): JSONObject { throw CliFailure("APP_NOT_FOREGROUND", "Open Live before changing controls") }
     fun snapshot(command: CliCommand) { throw CliFailure("PREFLIGHT_FAILED", "Snapshot unavailable on this screen") }
     fun stopRecording(command: CliCommand) { throw CliFailure("INVALID_ARGUMENT", "No recording on this screen") }
 }
@@ -91,7 +92,7 @@ class CommandCoordinator private constructor(private val context: Context) {
         val info = context.packageManager.getPackageInfo(context.packageName, 0)
         return CliJson.envelope().put("enabled", true).put("app_version", info.versionName)
             .put("commands", JSONArray(CliCommand.COMMANDS))
-            .put("controls", JSONArray(listOf("record.snapshot", "record.stop", "status", "request", "request.cancel")))
+            .put("controls", JSONArray(listOf("live.set", "live.reset", "record.snapshot", "record.stop", "status", "request", "request.cancel")))
             .put("retention_ms", CommandStore.RETENTION_MS).put("max_completed_requests", CommandStore.MAX_RECORDS)
             .put("camera_permission", permission(Manifest.permission.CAMERA)).put("locked", locked())
             .put("completed", true)
@@ -116,7 +117,7 @@ class CommandCoordinator private constructor(private val context: Context) {
         main.post {
             if (active?.id != command.id) return@post
             timeout = Runnable { cancelWithCode(command.id, "EXECUTION_TIMEOUT") }.also { main.postDelayed(it, command.timeoutMs) }
-            if (command.command == "record.start") main.postDelayed({
+            if (command.command in setOf("record.start", "dual.record")) main.postDelayed({
                 if (active?.id == command.id && store.read(command.id)?.optJSONObject("result")?.optBoolean("recording") != true)
                     cancelWithCode(command.id, "EXECUTION_TIMEOUT")
             }, 30_000)
@@ -124,7 +125,7 @@ class CommandCoordinator private constructor(private val context: Context) {
                 if (!enabled) throw CliFailure("CLI_DISABLED", "CLI was disabled")
                 if (uiBusy) throw CliFailure("BUSY", "A UI operation is running")
                 if (host?.isBusy() == true) throw CliFailure("BUSY", "A UI operation is running")
-                if (!(command.command.startsWith("results.") || command.command.startsWith("baseline.") || command.command.startsWith("gallery.") || command.command == "cts.cases") && !permission(Manifest.permission.CAMERA)) throw CliFailure("PERMISSION_REQUIRED", "Allow camera access in the app")
+                if (!(command.command.startsWith("results.") || command.command.startsWith("baseline.") || command.command.startsWith("gallery.") || command.command.startsWith("settings.") || command.command.startsWith("incidents.") || command.command == "cts.cases") && !permission(Manifest.permission.CAMERA)) throw CliFailure("PERMISSION_REQUIRED", "Allow camera access in the app")
                 if (!state(command.id, "preparing")) return@post
                 when (command.command) {
                     "cameras" -> {
@@ -135,10 +136,14 @@ class CommandCoordinator private constructor(private val context: Context) {
                     "dual.cameras" -> complete(command.id, JSONObject().put("cameras", CliJson.of(dev.halcamera.camera.readLogicalMultiCameras(context.getSystemService(CameraManager::class.java)).map {
                         mapOf("camera_id" to it.logicalId, "physical" to it.physical.map { lens -> mapOf("id" to lens.id, "role" to lens.role.name) })
                     })))
+                    "settings.show", "settings.limit", "incidents.list", "incidents.export", "incidents.delete",
                     "results.list", "results.show", "results.compare", "results.export", "results.delete", "baseline.add", "baseline.remove",
-                    "gallery.list", "gallery.export", "gallery.delete" -> io.execute {
-                        try { CliLibrary(context, this).execute(command) }
-                        catch (e: Exception) { fail(command.id, (e as? CliFailure)?.code ?: "LIBRARY_FAILED", e.message ?: "Library operation failed") }
+                    "gallery.list", "gallery.export", "gallery.delete" -> {
+                        if (!state(command.id, "running")) return@post
+                        io.execute {
+                            try { CliLibrary(context, this).execute(command) }
+                            catch (e: Exception) { fail(command.id, (e as? CliFailure)?.code ?: "LIBRARY_FAILED", e.message ?: "Library operation failed") }
+                        }
                     }
                     "streams" -> streamSupport(command)
                     "probe" -> probe(command)
@@ -158,7 +163,7 @@ class CommandCoordinator private constructor(private val context: Context) {
                             if (command.camera !in cameraIds) throw CliFailure("UNSUPPORTED_CAMERA", "Camera is not independently openable")
                         }
                         val screen = host ?: throw CliFailure("APP_NOT_FOREGROUND", "Open Live before executing a camera command")
-                        if (screen.screen != "live") throw CliFailure("APP_NOT_FOREGROUND", "Open Live before executing a camera command")
+                        if (screen.screen != "live" && !(screen.screen == "dual" && command.command in setOf("live.info", "events", "meter", "preview.stop"))) throw CliFailure("APP_NOT_FOREGROUND", "Open Live before executing a camera command")
                         screen.execute(command)
                     }
                 }
@@ -236,8 +241,8 @@ class CommandCoordinator private constructor(private val context: Context) {
         true
     } catch (error: Exception) { fail(command.id, "STORE_FAILED", error.message ?: "Cannot persist recording state"); false }
 
-    fun complete(id: String, result: JSONObject, artifacts: List<CliArtifact> = emptyList(), failure: CliFailure? = null) {
-        if (store.read(id)?.optString("state") in CliStates.terminal) return
+    @Synchronized fun complete(id: String, result: JSONObject, artifacts: List<CliArtifact> = emptyList(), failure: CliFailure? = null) {
+        if (store.read(id)?.optString("state") in CliStates.terminal + "saving") return
         if (!state(id, "saving")) return
         io.execute {
             try {
@@ -306,14 +311,29 @@ class CommandCoordinator private constructor(private val context: Context) {
         return request(command.id)
     }
 
+    fun tune(options: CliOptions?, reset: Boolean): JSONObject {
+        if (!reset && (options == null || options.values.keys.any { it !in CliOptions.CONTROL_KEYS })) throw CliFailure("INVALID_ARGUMENT", "live set requires camera control options")
+        val task = java.util.concurrent.FutureTask<JSONObject> {
+            if (!enabled) throw CliFailure("CLI_DISABLED", "Enable ADB CLI in the app")
+            if (locked()) throw CliFailure("DEVICE_LOCKED", "Unlock the device")
+            if (active != null && active?.command !in setOf("record.start", "dual.record")) throw CliFailure("BUSY", "Wait for the current operation")
+            if (active == null && (uiBusy || host?.isBusy() == true)) throw CliFailure("BUSY", "A UI operation is running")
+            (host ?: throw CliFailure("APP_NOT_FOREGROUND", "Start preview first")).tune(options, reset)
+        }
+        main.post(task)
+        return try { task.get(5, java.util.concurrent.TimeUnit.SECONDS) }
+        catch (e: java.util.concurrent.ExecutionException) { throw (e.cause as? CliFailure ?: CliFailure("EXECUTION_FAILED", e.cause?.message ?: "Control update failed")) }
+        catch (e: java.util.concurrent.TimeoutException) { task.cancel(false); throw CliFailure("EXECUTION_TIMEOUT", "Control update timed out; inspect live info before retrying") }
+    }
+
     fun snapshot(): JSONObject {
         val command = active?.takeIf { it.command == "record.start" } ?: throw CliFailure("NOT_RECORDING", "Start a CLI recording first")
         main.post {
             if (active?.id != command.id) return@post
             try { host?.snapshot(command) ?: throw CliFailure("APP_NOT_FOREGROUND", "Recording screen unavailable") }
-            catch (e: Exception) { store.transition(command.id, store.read(command.id)!!.getString("state")) {
+            catch (e: Exception) { runCatching { store.update(command.id) {
                 it.put("snapshot_error", e.message ?: "Snapshot failed")
-            } }
+            } } }
         }
         return request(command.id)
     }
@@ -330,6 +350,8 @@ class CommandCoordinator private constructor(private val context: Context) {
             fail(id, code, "Operation cancelled before capture")
         } else {
             state(id, "cancelling")
+            if (command.command.startsWith("results.") || command.command.startsWith("baseline.") ||
+                command.command.startsWith("gallery.") || command.command.startsWith("settings.") || command.command.startsWith("incidents.")) return
             host?.cancel(command) ?: fail(id, code, "Activity is no longer available")
         }
     }

@@ -8,8 +8,10 @@ import org.json.JSONObject
 class LiveController(private val commands: CommandCoordinator, private val driver: Driver) : CliHost {
     interface Driver {
         fun prepare(command: CliCommand, ready: () -> Unit)
+        fun tune(options: CliOptions?, reset: Boolean): JSONObject
         fun sequence(command: CliCommand, done: (JSONObject, List<CliArtifact>, CliFailure?) -> Unit)
         fun cancelSequence()
+        fun cancelEvents()
         fun inspect(command: CliCommand)
         fun dual(command: CliCommand)
         fun snapshot(done: (Result<PhotoResult>) -> Unit)
@@ -27,6 +29,7 @@ class LiveController(private val commands: CommandCoordinator, private val drive
     }
     override val screen = "live"
     override fun isBusy() = driver.busy()
+    override fun tune(options: CliOptions?, reset: Boolean) = driver.tune(options, reset)
     private var pending: CliCommand? = null
     private var prepared = false
     private var submitted = false
@@ -103,6 +106,7 @@ class LiveController(private val commands: CommandCoordinator, private val drive
     override fun cancel(command: CliCommand) {
         cancelled = true
         if (!submitted) { pending = null; driver.stopPreparing() }
+        else if (command.command == "events") driver.cancelEvents()
         else if (command.command == "record.start") stopRecording(command)
         else if (command.command in setOf("burst", "bracket")) driver.cancelSequence()
         else if (command.command != "capture") commands.fail(command.id, "CANCELLED", "Operation cancelled")
@@ -114,16 +118,18 @@ class LiveController(private val commands: CommandCoordinator, private val drive
             throw CliFailure("BUSY", "Wait until recording or the previous snapshot is ready")
         snapshotPending = true
         commands.store.transition(command.id, "running") { it.put("snapshot_pending", true) }
-        driver.snapshot { result ->
+        val finish: (Result<PhotoResult>) -> Unit = { result ->
             snapshotPending = false
             result.getOrNull()?.let { photo -> snapshots += photo.artifacts.ifEmpty { photo.uris.mapIndexed { i, uri ->
                 dev.halcamera.camera.PhotoArtifact("${photo.name}_snapshot_$i.jpg", "image/jpeg", uri)
             } }.map { CliArtifact(it.name, it.mime, it.uri) } }
-            if (commands.active?.id == command.id) commands.store.transition(command.id, commands.store.read(command.id)!!.getString("state")) {
+            if (commands.active?.id == command.id) runCatching { commands.store.update(command.id) {
                 it.put("snapshot_count", snapshots.size).put("snapshot_pending", false).put("snapshot_error", result.exceptionOrNull()?.message)
-            }
+            } }
             if (stopAfterSnapshot && commands.active?.id == command.id) stopRecording(command)
         }
+        try { driver.snapshot(finish) }
+        catch (e: Exception) { finish(Result.failure(e)) }
     }
 
     override fun stopRecording(command: CliCommand) {

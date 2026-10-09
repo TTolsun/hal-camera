@@ -26,6 +26,8 @@ data class CliCommand(
         if (options?.values?.keys?.any { it !in CliOptions.allowed(command) } == true)
             throw CliFailure("INVALID_ARGUMENT", "Unexpected option for $command")
         val required = when (command) {
+            "settings.limit" -> setOf("limit")
+            "incidents.export", "incidents.delete" -> setOf("incident")
             "results.show", "results.export", "results.delete", "baseline.add", "baseline.remove" -> setOf("run")
             "results.compare" -> setOf("run", "reference")
             "gallery.export", "gallery.delete" -> setOf("media")
@@ -61,7 +63,7 @@ data class CliCommand(
     }
 
     companion object {
-        val COMMANDS = listOf("burst", "bracket", "meter", "events", "live.info", "dual.cameras", "dual.preview", "dual.capture", "dual.record", "results.list", "results.show", "results.export", "results.compare", "results.delete", "baseline.add", "baseline.remove", "gallery.list", "gallery.export", "gallery.delete", "streams", "cameras", "preview", "preview.stop", "capture", "record.start", "probe", "cts.cases", "cts.run", "benchmark.run")
+        val COMMANDS = listOf("settings.show", "settings.limit", "incidents.list", "incidents.export", "incidents.delete", "burst", "bracket", "meter", "events", "live.info", "dual.cameras", "dual.preview", "dual.capture", "dual.record", "results.list", "results.show", "results.export", "results.compare", "results.delete", "baseline.add", "baseline.remove", "gallery.list", "gallery.export", "gallery.delete", "streams", "cameras", "preview", "preview.stop", "capture", "record.start", "probe", "cts.cases", "cts.run", "benchmark.run")
         val STREAM_COMMANDS = setOf("preview", "capture", "record.start", "burst", "bracket")
         val LIVE_CAMERA_COMMANDS = STREAM_COMMANDS + setOf("streams", "dual.preview", "dual.capture", "dual.record")
         val CAMERA_COMMANDS = LIVE_CAMERA_COMMANDS + "benchmark.run"

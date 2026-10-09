@@ -71,40 +71,23 @@ import dev.halcamera.ui.FocusRing
  * while it is visible and closes it in onStop; LIVE reopens its own preview when the user returns.
  */
 class DualPreviewActivity : ComponentActivity() {
-    private val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
-    private var cliRequest: dev.halcamera.cli.CliCommand? = null
+    internal val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
+    internal var cliRequest: dev.halcamera.cli.CliCommand? = null
     private var cliSubmitted = false
-    private var cliStopping = false
-    private val cliArtifacts = mutableListOf<dev.halcamera.cli.CliArtifact>()
-    private val cliHost = object : dev.halcamera.cli.CliHost {
-        override val screen = "dual"
-        override fun isBusy() = closing || recording || recordPending || photoPending
-        override fun execute(command: dev.halcamera.cli.CliCommand) {
-            cliRequest = command
-            logicalId = command.camera
-            pair = command.options!!.values.getValue("first") to command.options.values.getValue("second")
-            if (command.command == "dual.capture" && engineName == "CameraX") {
-                cli.fail(command.id, "PREFLIGHT_FAILED", "Dual photos require Camera2"); return
-            }
-            if (cameras.isNotEmpty()) { render(); startIfReady() }
-        }
-        override fun cancel(command: dev.halcamera.cli.CliCommand) {
-            cliStopping = true
-            closeSession { if (cli.active?.id == command.id) cli.complete(command.id,
-                org.json.JSONObject().put("cancelled", true), cliArtifacts.toList(), dev.halcamera.cli.CliFailure("CANCELLED", "Dual operation stopped")) }
-        }
-        override fun stopRecording(command: dev.halcamera.cli.CliCommand) {
-            cliStopping = true
-            closeSession { if (cli.active?.id == command.id && cliArtifacts.isEmpty()) cli.fail(command.id, "RECORDING_FAILED", "No videos were saved") }
-        }
-    }
+    internal var cliStopping = false
+    internal var cliCancelled = false
+    private var cliInterrupted = false
+    internal var cliZoomRange = 1f to 1f
+    internal val cliFrames = booleanArrayOf(false, false)
+    internal val cliArtifacts = mutableListOf<dev.halcamera.cli.CliArtifact>()
+    private val cliHost by lazy { createDualCliHost() }
     private fun cliReady() {
         val command = cliRequest ?: return
-        if (cliSubmitted || cli.active?.id != command.id) return
+        if (cliSubmitted || cli.active?.id != command.id || streamingSize == null || !cliFrames.all { it }) return
         cliSubmitted = true
-        cli.state(command.id, "running")
+        if (!cli.state(command.id, "running")) return
         val zoom = command.options?.values?.get("zoom")?.toFloat() ?: 1f
-        if (engineName == "Camera2" && zoom !in 1f..(mainControls?.maxZoom ?: 1f)) {
+        if (zoom !in cliZoomRange.first..cliZoomRange.second) {
             cli.fail(command.id, "PREFLIGHT_FAILED", "Dual zoom is outside the supported range"); return
         }
         try {
@@ -112,10 +95,12 @@ class DualPreviewActivity : ComponentActivity() {
             controlBar.applyRequested(requested)
             session?.setControls(requested)
         } catch (e: Exception) { cli.fail(command.id, "PREFLIGHT_FAILED", e.message ?: "Unsupported Dual controls"); return }
+        zoomRatio = zoom
+        zoomControl.setChoices(zoomPresets(cliZoomRange), zoom)
         session?.setZoom(zoom)
         when (command.command) {
             "dual.preview" -> cli.complete(command.id, org.json.JSONObject().put("camera_ready", true).put("size", streamingSize.toString()))
-            "dual.capture" -> { photoPending = true; session?.capturePhoto(0) }
+            "dual.capture" -> { photoPending = true; session?.capturePhoto(displayDegrees()) }
             "dual.record" -> { recordPending = true; session?.startRecording() }
         }
     }
@@ -123,32 +108,32 @@ class DualPreviewActivity : ComponentActivity() {
     private val main = Handler(Looper.getMainLooper())
     private val manager by lazy { getSystemService(CameraManager::class.java) }
     private lateinit var body: LinearLayout
-    private var cameras: List<LogicalMultiCamera> = emptyList()
-    private var logicalId: String? = null
-    private var pair: Pair<String, String>? = null
-    private var session: DualCameraSession? = null
-    private var engineName = "Camera2"
+    internal var cameras: List<LogicalMultiCamera> = emptyList()
+    internal var logicalId: String? = null
+    internal var pair: Pair<String, String>? = null
+    internal var session: DualCameraSession? = null
+    internal var engineName = "Camera2"
     private lateinit var engineButton: Button
-    private var closing = false
+    internal var closing = false
     private var started = false
-    private var streamingSize: LiveSize? = null
+    internal var streamingSize: LiveSize? = null
     private var status = ""
     private var stats: Pair<PhysicalOutputStats, PhysicalOutputStats>? = null
     private var lastSkewNs: Long? = null
-    private val views = arrayOfNulls<TextureView>(2)
+    internal val views = arrayOfNulls<TextureView>(2)
     private val textures = arrayOfNulls<SurfaceTexture>(2)
     private var statusText: TextView? = null
     private var retryButton: View? = null
     private var failed = false
-    private var videoMode = false
-    private var recording = false
-    private var recordPending = false
-    private var photoPending = false
-    private var mainControls: DualMainControls? = null
-    private lateinit var controlBar: LiveControlBar
+    internal var videoMode = false
+    internal var recording = false
+    internal var recordPending = false
+    internal var photoPending = false
+    internal var mainControls: DualMainControls? = null
+    internal lateinit var controlBar: LiveControlBar
     private lateinit var manualPanel: ManualControlPanel
-    private lateinit var zoomControl: ExpandingZoomControl
-    private var zoomRatio = 1f
+    internal lateinit var zoomControl: ExpandingZoomControl
+    internal var zoomRatio = 1f
     private var zoomAvailable = false
     private var recordingSince = 0L
     private var recordButton: ShutterButton? = null
@@ -171,7 +156,7 @@ class DualPreviewActivity : ComponentActivity() {
     private lateinit var reportButton: Button
     private lateinit var recentMedia: RecentMediaThumbnail
     private var modeRow: LinearLayout? = null
-    private val recorder = FlightRecorder(SystemClock::elapsedRealtimeNanos)
+    internal val recorder = FlightRecorder(SystemClock::elapsedRealtimeNanos)
     private val telemetry = Telemetry(recorder)
     private var sessionId = "dual"
     private var lastPreviewMs = 0L
@@ -181,6 +166,8 @@ class DualPreviewActivity : ComponentActivity() {
     private val widgets by lazy { CameraWidgets(this) }
     private val tick = object : Runnable {
         override fun run() {
+            if (cliRequest != null && cli.active?.id != cliRequest?.id) cliRequest = null
+            updateControls()
             refreshInfo()
             recorder.finish()?.let(::exportIncident)
             val remaining = recorder.remainingNs()
@@ -234,7 +221,13 @@ class DualPreviewActivity : ComponentActivity() {
     }
 
     override fun onStop() {
-        cliRequest?.takeIf { cli.active?.id == it.id }?.let { cliHost.cancel(it) }
+        cliRequest?.takeIf { cli.active?.id == it.id }?.let { command ->
+            cliInterrupted = true; cliStopping = true
+            closeSession {
+                if (cli.active?.id == command.id && cli.store.read(command.id)?.optString("state") !in dev.halcamera.cli.CliStates.terminal + "saving")
+                    cli.complete(command.id, org.json.JSONObject().put("artifact_count", cliArtifacts.size), cliArtifacts.toList(), dev.halcamera.cli.CliFailure("RECORDING_INTERRUPTED", "Dual screen left foreground"))
+            }
+        }
         cli.detach(cliHost)
         started = false
         root.keepScreenOn = false
@@ -406,7 +399,7 @@ class DualPreviewActivity : ComponentActivity() {
         }, LinearLayout.LayoutParams(-1, -1))
     }
 
-    private fun render() {
+    internal fun render() {
         if (Build.VERSION.SDK_INT < 28) { cliRequest?.let { cli.fail(it.id, "PREFLIGHT_FAILED", "Dual requires Android 9 or later") }; return message("Requires Android 9 (API 28) or later.") }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
             return message("Camera permission required. Allow access in Live, then reopen Dual.")
@@ -493,6 +486,7 @@ class DualPreviewActivity : ComponentActivity() {
                 return false
             }
             override fun onSurfaceTextureUpdated(texture: SurfaceTexture) {
+                if (views[index] === view && session != null) { cliFrames[index] = true; cliReady() }
                 if (views[index] === view && index == 0) lastPreviewMs = SystemClock.elapsedRealtime()
                 if (views[index] === view && session != null) stats?.let { (a, b) -> (if (index == 0) a else b).frame(SystemClock.elapsedRealtime()) }
                 if (views[index] === view && session != null) recorder.record(sessionId, "preview_available", sensorNs = texture.timestamp,
@@ -505,9 +499,9 @@ class DualPreviewActivity : ComponentActivity() {
 
     }
 
-    private fun startIfReady() {
+    internal fun startIfReady() {
         if (Build.VERSION.SDK_INT < 28) return
-        if (!started || closing || session != null) return
+        if (!started || closing || cliStopping || session != null) return
         val a = textures[0] ?: return
         val b = textures[1] ?: return
         val camera = cameras.firstOrNull { it.logicalId == logicalId } ?: return
@@ -541,6 +535,7 @@ class DualPreviewActivity : ComponentActivity() {
 
     private val sessionListener = object : DualPreviewSession.Listener {
         override fun onZoomRange(range: Pair<Float, Float>) {
+            cliZoomRange = range
             zoomAvailable = true
             zoomControl.setChoices(zoomPresets(range), zoomRatio)
             updateControls()
@@ -575,15 +570,19 @@ class DualPreviewActivity : ComponentActivity() {
             cliArtifacts += uris.mapIndexed { index, uri -> dev.halcamera.cli.CliArtifact("dual_${request.id}_$index.${if (video) "mp4" else "jpg"}", if (video) "video/mp4" else "image/jpeg", uri) }
         }
         override fun onRecording() {
-            cliRequest?.let { cli.recordingStarted(it, mapOf("size" to streamingSize.toString(), "audio" to false)) }
+            cliRequest?.takeIf { cli.active?.id == it.id }?.let {
+                if (cliStopping || !cli.recordingStarted(it, mapOf("size" to streamingSize.toString(), "audio" to false))) {
+                    closeSession { updateControls() }; return
+                }
+            }
             recordPending = false; recording = true
             recordingSince = SystemClock.elapsedRealtime()
             updateControls()
         }
         override fun onVideoSaved(result: Result<Int>) {
             cliRequest?.let { request ->
-                result.fold({ cli.complete(request.id, org.json.JSONObject().put("artifact_count", cliArtifacts.size).put("recording", false), cliArtifacts.toList(),
-                    if (cliStopping) null else dev.halcamera.cli.CliFailure("RECORDING_INTERRUPTED", "Recording stopped unexpectedly")) },
+                result.fold({ cli.complete(request.id, org.json.JSONObject().put("artifact_count", cliArtifacts.size).put("recording", false).put("cancelled", cliCancelled), cliArtifacts.toList(),
+                    if (cliStopping && !cliInterrupted) null else dev.halcamera.cli.CliFailure("RECORDING_INTERRUPTED", "Recording stopped unexpectedly")) },
                     { cli.fail(request.id, "RECORDING_FAILED", it.message ?: "Dual recording failed") })
             }
             result.fold({ Toast.makeText(this@DualPreviewActivity, "MP4 2개 저장 완료", Toast.LENGTH_SHORT).show() },
@@ -600,13 +599,13 @@ class DualPreviewActivity : ComponentActivity() {
     }
 
     /** Closes the whole device; [then] runs once it is closed, so the next pair never shares buffers with this one. */
-    private fun closeSession(then: () -> Unit) {
+    internal fun closeSession(then: () -> Unit) {
         val old = session ?: return then()
         session = null
         closing = true
         old.close {
             closing = false
-            recording = false; recordPending = false
+            recording = false; recordPending = false; photoPending = false
             retiredTextures.forEach { it.release() }; retiredTextures.clear()
             then()
             updateControls()
@@ -616,6 +615,7 @@ class DualPreviewActivity : ComponentActivity() {
 
     private fun restart() {
         if (busy()) return
+        cliRequest = null; cliStopping = false; cliSubmitted = false
         failed = false
         streamingSize = null; stats = null; lastSkewNs = null
         setStatus("Restarting…")
@@ -689,9 +689,9 @@ class DualPreviewActivity : ComponentActivity() {
         }
     }
 
-    private fun copyReport() {
-        val camera = cameras.firstOrNull { it.logicalId == logicalId } ?: return
-        val report = buildString {
+    internal fun dualReport(): String {
+        val camera = cameras.firstOrNull { it.logicalId == logicalId } ?: return "Dual camera unavailable"
+        return buildString {
             appendLine("HAL CAM Dual Preview")
             appendLine("logical ${camera.logicalId} · sync ${DualPreviewPlanner.syncLabel(camera.syncType)} · API ${Build.VERSION.SDK_INT}")
             stats?.let { (a, b) ->
@@ -703,7 +703,10 @@ class DualPreviewActivity : ComponentActivity() {
             appendLine("Result timestamp A-B ns ${lastSkewNs ?: "-"} (not proof of sensor synchronization)")
             append("status $status")
         }
-        getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("HAL CAM dual preview", report))
+    }
+
+    private fun copyReport() {
+        getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("HAL CAM dual preview", dualReport()))
         Toast.makeText(this, "보고서를 복사했습니다.", Toast.LENGTH_SHORT).show()
     }
 
@@ -775,6 +778,8 @@ class DualPreviewActivity : ComponentActivity() {
     }
 
     @Suppress("DEPRECATION")
+    private fun displayDegrees() = when (windowManager.defaultDisplay.rotation) { 1 -> 90; 2 -> 180; 3 -> 270; else -> 0 }
+
     private fun takePhoto() {
         if (busy() || mainControls == null || streamingSize == null) return
         if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -782,8 +787,7 @@ class DualPreviewActivity : ComponentActivity() {
         }
         photoPending = true
         updateControls()
-        val degrees = when (windowManager.defaultDisplay.rotation) { 1 -> 90; 2 -> 180; 3 -> 270; else -> 0 }
-        session?.capturePhoto(degrees)
+        session?.capturePhoto(displayDegrees())
     }
 
     private fun showCallbacks(show: Boolean) {
@@ -838,10 +842,17 @@ class DualPreviewActivity : ComponentActivity() {
         }
     }
 
-    private fun exportIncident(incident: dev.halcamera.telemetry.Incident) {
+    internal fun exportIncident(incident: dev.halcamera.telemetry.Incident) {
         val sessions = telemetry.sessions.toMap()
         io.execute {
             val result = runCatching { IncidentExporter(applicationContext).export(incident, sessions) }
+            if (cli.active?.let { it.id == incident.id && it.command == "events" } == true) {
+                result.fold({ file -> cli.complete(incident.id, org.json.JSONObject().put("artifact_count", 1)
+                    .put("cancelled", cli.store.read(incident.id)?.optString("state") == "cancelling"),
+                    listOf(dev.halcamera.cli.CliArtifact(file.name, "application/zip", android.net.Uri.fromFile(file)))) },
+                    { cli.fail(incident.id, "SAVE_FAILED", it.message ?: "Events export failed") })
+                return@execute
+            }
             main.post {
                 if (isDestroyed || !started) return@post
                 result.fold({ file ->
