@@ -189,30 +189,32 @@ sequenceDiagram
 
 ## 요청이 끝나지 않거나 파일이 없을 때
 
-```mermaid
-sequenceDiagram
-    participant P as PC
-    participant A as 앱
-    Note over P,A: PC 대기가 끝나거나 연결이 끊김
-    P->>A: 같은 요청 ID로 상태 확인
-    alt 아직 실행 중
-        A-->>P: 진행 상태
-        Note over P: 기다린 뒤 다시 확인
-    else 완료됨
-        A-->>P: 결과와 파일 정보
-        P->>P: 필요한 파일만 다시 받기
-    end
-```
+**같은 촬영을 새로 요청하기 전에 기존 요청의 상태를 확인하세요.** PC의 대기 종료나 연결 끊김만으로 앱 작업이 실패한 것은 아닙니다.
 
-PC 대기 종료는 앱의 실패나 취소를 뜻하지 않습니다. 결과를 확인하기 전에 새 ID로 같은 촬영을 다시 요청하지 마세요.
+1. 아래 명령에서 `REQUEST_ID`를 기존 요청 ID로 바꿔 상태를 조회합니다.
 
-`--no-wait`은 접수 직후 반환합니다. `status`, `fetch`, `cancel`에서 ID를 생략하면 마지막 제출 요청을 사용합니다. `cancel UUID`로 취소할 수 있지만 이미 제출한 사진 저장은 완료될 수 있습니다.
+   ~~~sh
+   adb shell sh /data/local/tmp/halcam status REQUEST_ID
+   ~~~
 
-결과 파일은 기기의 `Download/HALCamera-cli/요청ID`에 크기와 SHA-256을 검증한 복사본으로 준비합니다. 이 복사본은 자동으로 삭제하지 않습니다.
+2. 아직 실행 중이면 기다린 뒤 다시 조회합니다. 중단해야 한다면 `cancel REQUEST_ID`를 사용합니다. 이미 제출한 사진은 저장될 수 있습니다.
+3. 파일이 생성됐으면 아래 명령으로 회수를 다시 준비합니다. 실패·취소한 요청에도 파일이 남을 수 있습니다.
 
-1. `status UUID`로 앱의 상태를 확인합니다. PC의 대기 시간 종료는 앱 실행 실패를 뜻하지 않습니다.
-2. 이미 파일이 생성되었다면 `fetch UUID`로 회수를 재시도합니다. 실패하거나 취소된 요청에도 파일이 남을 수 있습니다.
-3. 파일 복사 오류와 앱의 촬영 오류를 구분합니다. 연결이 끊겼다는 이유만으로 새 요청을 제출하지 않습니다.
+   ~~~sh
+   adb shell sh /data/local/tmp/halcam fetch REQUEST_ID
+   ~~~
+
+4. 출력된 `adb pull` 명령으로 파일을 PC에 받습니다. 복사 실패와 촬영 실패를 구분하세요.
+
+<details markdown="1" id="cli-request-recovery" data-search-section>
+<summary>요청 ID 생략과 기기의 회수용 파일</summary>
+
+`--no-wait`은 접수 직후 반환합니다. `status`·`fetch`·`cancel`에서 ID를 생략하면 마지막 제출 요청을 사용합니다. 다른 작업과 혼동하지 않도록 복구할 때에는 기존 ID를 지정하세요.
+
+회수용 파일은 기기의 `Download/HALCamera-cli/요청ID`에 크기와 SHA-256을 검증한 복사본으로 준비합니다. 이 복사본은 자동으로 삭제하지 않습니다.
+
+</details>
+
 
 | 상태·오류 | 다음 행동 |
 | --- | --- |
