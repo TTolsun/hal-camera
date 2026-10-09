@@ -19,7 +19,7 @@
 
 - `npm test --prefix tools/docgen`: 29개 통과했습니다. 접힌 본문과 중첩된 펼침 영역을 검색했을 때 정확한 링크를 반환하는 회귀 검사를 추가했습니다.
 - `docflow.mjs coverage --check`, `generate --check`, `site check`: 통과했습니다.
-- `docflow.mjs check`: 디자인과 사실 추출 검사를 통과한 뒤, 수정 원고 7개의 사람 검토 기록이 없어 최신성 단계에서 멈춥니다. `accepted` 기록을 임의로 갱신하지 않았습니다.
+- 초안의 `docflow.mjs check`는 수정 원고 7개의 검토 기록 대기로 멈췄습니다. 후속 리뷰·머지 요청에 따라 검토를 마치고 기록을 갱신합니다. 최종 전체 검사 결과는 PR의 CI에서 확인합니다.
 
 ## 브라우저 확인
 
@@ -37,6 +37,8 @@
 
 ![데스크톱 엔진 비교표](doc-clarity/engine-desktop.png)
 
-## 남은 검토
+## 후속 리뷰
 
-`tools/docgen/README.md`의 검토 규칙에 따라 사람의 원고 검토가 필요합니다. 대상은 Architecture의 overview·module-roles·runtime-flow, Engine의 camera2·camerax·comparison, Debugging의 layer-isolation입니다. 승인 후 깨끗한 작업 트리에서 검토 기록을 반영하고 사이트를 재생성한 다음 전체 검사를 다시 실행합니다.
+사용자가 2026-10-09에 PR의 리뷰와 머지를 명시적으로 요청했습니다. Codex가 Architecture의 overview·module-roles·runtime-flow, Engine의 camera2·camerax·comparison, Debugging의 layer-isolation을 대조했습니다. 검토자는 Codex로 기록하며 사용자가 원고를 직접 읽었다거나 기기 실측을 새로 수행했다는 의미로 기록하지 않습니다.
+
+리뷰에서 접힌 설명 앞뒤의 본문이 같은 검색 링크로 중복되는 문제를 수정하고 회귀 검사에 추가했습니다. Camera2 사진 설명도 실제 촬영 조건에 맞춰 RAW 단독 촬영 예외를 반영했습니다. 사진 절차의 보충 문단은 각 단계 안으로 들여써 번호 목록이 끊어지지 않게 고쳤습니다. 수치·타임아웃·판정 예외와 코드 확인·기기 관찰의 구분도 대조했습니다.

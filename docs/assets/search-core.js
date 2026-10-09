@@ -59,5 +59,13 @@ export function extractSections(doc, url) {
   }
   visit(main);
   sections.push(current);
-  return sections.map(section => ({ ...section, heading: section.heading.normalize('NFC'), text: section.text.normalize('NFC').replace(/\s+/g, ' ').trim() }));
+  // Disclosures split an enclosing section into pieces. Merge those pieces so
+  // each destination appears once and terms on either side remain searchable.
+  const merged = new Map();
+  for (const section of sections) {
+    const existing = merged.get(section.url);
+    if (existing) existing.text += ` ${section.text}`;
+    else merged.set(section.url, { ...section });
+  }
+  return [...merged.values()].map(section => ({ ...section, heading: section.heading.normalize('NFC'), text: section.text.normalize('NFC').replace(/\s+/g, ' ').trim() }));
 }

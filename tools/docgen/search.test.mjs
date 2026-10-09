@@ -56,4 +56,6 @@ test('closed details have direct search links and do not absorb the following se
   assert.equal(search(result, '다시 상위')[0].url, '/cts.html#parent');
   assert.equal(search(result, '다음 내용')[0].url, '/cts.html#next');
   assert.equal(search(result, 'SkipDiagnosis 다시').length, 0);
+  assert.equal(search(result, '상위 설명').filter(section => section.url === '/cts.html#parent').length, 1);
+  assert.equal(search(result, '펼치기 다시')[0].url, '/cts.html#parent');
 });

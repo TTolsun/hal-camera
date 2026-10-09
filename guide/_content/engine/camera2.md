@@ -166,30 +166,22 @@ Live에서 첫 프레임 전에 카메라 열기가 `onDisconnected`나 `onError
 
 1. `capture()`나 `capturePhoto()`를 받으면, 플래시가 Auto·On이고 AE가 잠겨 있지 않은 경우에만 AE precapture를 먼저 실행합니다.
 
-trigger를 프리뷰 capture 하나로 보내고, AE 상태가 PRECAPTURE를 지나 벗어날 때까지 기다립니다.
+   trigger를 프리뷰 capture 하나로 보내고, AE 상태가 PRECAPTURE를 지나 벗어날 때까지 기다립니다. PRECAPTURE 없이 안정 상태가 결과 3개 연속으로 이어지면 이 순서를 건너뛰는 기기로 보고, 3초 안에 끝나지 않으면 `precapture_timeout`을 남기고 그대로 촬영합니다.
+2. still 요청 하나에 켜진 YUV·JPEG·RAW 출력을 대상으로 지정합니다.
 
-PRECAPTURE 없이 안정 상태가 결과 3개 연속으로 이어지면 이 순서를 건너뛰는 기기로 보고, 3초 안에 끝나지 않으면 `precapture_timeout`을 남기고 그대로 촬영합니다.
-2. still 요청 하나에 켜진 YUV·JPEG 출력을 대상으로 지정하고, 화면 방향을 `JPEG_ORIENTATION`으로, 품질을 95로 설정합니다.
-
-둘 다 꺼져 있으면 셔터를 비활성화하고 엔진도 촬영을 거절합니다.
+   JPEG에는 화면 방향을 `JPEG_ORIENTATION`으로, 품질을 95로 설정합니다. 세 출력이 모두 꺼져 있으면 셔터를 비활성화하고 엔진도 촬영을 거절합니다. RAW만 켜도 촬영할 수 있습니다.
 3. `StillPair`가 센서 타임스탬프로 요청한 버퍼만 기다립니다.
 
-단일 출력도 capture의 센서 시각과 일치해야 하며 꺼진 출력은 기다리지 않습니다.
-
-기다리는 동안에는 reader가 `acquireLatestImage` 대신 `acquireNextImage`로 이미지를 순서대로 꺼냅니다.
-
-최신 이미지만 꺼내면 촬영 대상인 YUV 프레임을 버릴 수 있기 때문입니다.
+   단일 출력도 capture의 센서 시각과 일치해야 하며 꺼진 출력은 기다리지 않습니다. 기다리는 동안에는 reader가 `acquireLatestImage` 대신 `acquireNextImage`로 이미지를 순서대로 꺼냅니다. 최신 이미지만 꺼내면 촬영 대상인 YUV 프레임을 버릴 수 있기 때문입니다.
 4. 이미지 콜백에서 stride와 crop을 고려해 NV21으로 복사하고 Image를 닫습니다.
 
-YUV Save Format이 JPEG이면 저장 스레드에서 `encodeYuvStill`로 압축하고 화면 방향만큼 회전합니다.
-
-NV21이면 복사한 샘플을 그대로 저장합니다.
+   YUV Save Format이 JPEG이면 저장 스레드에서 `encodeYuvStill`로 압축하고 화면 방향만큼 회전합니다. NV21이면 복사한 샘플을 그대로 저장합니다.
 5. `MediaLibrary.saveCapture`가 선택한 이미지와 촬영 JSON을 쓰고 모두 성공한 뒤 공개합니다.
 
-실패하면 이번 촬영에서 만든 항목의 삭제를 시도합니다.
+   실패하면 이번 촬영에서 만든 항목의 삭제를 시도합니다.
 6. 5초 안에 짝이 완성되지 않으면 `capture_timeout`으로 끝냅니다.
 
-녹화 중에는 촬영 요청을 거절합니다.
+   녹화 중에는 촬영 요청을 거절합니다.
 
 벤치마크 still은 JPEG만 대상으로 하고, JPEG 도착이 측정값이며 저장하지 않습니다.
 
