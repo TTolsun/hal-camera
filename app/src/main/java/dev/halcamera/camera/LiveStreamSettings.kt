@@ -56,7 +56,7 @@ data class LiveStreamSupport(
     val yuvSaveFormats: List<YuvSaveFormat> = listOf(YuvSaveFormat.JPEG),
     /** RAW_SENSOR sizes; empty without Camera2 or the RAW capability. */
     val raw: List<LiveSize> = emptyList(),
-    val rawUnavailableReason: String = "RAW_SENSOR 지원 크기 없음",
+    val rawUnavailableReason: String = "No supported RAW_SENSOR sizes",
 ) {
     fun rejection(value: LiveStreamSettings): String? = when {
         value.yuvSaveFormat !in yuvSaveFormats -> "NV21 requires Camera2."

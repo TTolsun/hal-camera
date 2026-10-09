@@ -136,7 +136,7 @@ class IncidentActions(
     private fun showSaved(file: File, marked: LiveReading?) {
         if (host.destroyed || activity.isFinishing) return
         fun ms(v: Double?) = v?.let { String.format(Locale.US, "%.1f ms", it) } ?: "—"
-        val savedMessage = "진단 ZIP을 앱에 저장했습니다.\nLab → ZIP Archives에서 다시 열 수 있습니다.\nZIP Archives에서 Save as를 선택하면 원하는 외부 위치에 복사합니다.\n\nSaved the previous 10 and next 5 seconds."
+        val savedMessage = "Diagnostics saved in the app.\nOpen Lab → ZIP Archives to find this ZIP.\nUse Save as there to copy it elsewhere.\n\nSaved the previous 10 and next 5 seconds."
         val body = if (marked == null) savedMessage else listOf(
             savedMessage,
             "Values recorded when you tapped Save Events.",

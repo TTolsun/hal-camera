@@ -32,7 +32,7 @@ internal class DualStillCapture(
     private var configuring = false
     private var outcome: Result<List<Pair<String, ByteArray>>>? = null
     private val ids = listOf(plan.first.id, plan.second.id)
-    private val timeout = Runnable { finish(Result.failure(IllegalStateException("두 센서 사진 수신 시간 초과: ${pair.diagnostic()}"))) }
+    private val timeout = Runnable { finish(Result.failure(IllegalStateException("Timed out waiting for both sensor images: ${pair.diagnostic()}"))) }
 
     fun start() {
         handler.postDelayed(timeout, 10_000)
@@ -40,7 +40,7 @@ internal class DualStillCapture(
             val sizes = ids.map { id -> manager.getCameraCharacteristics(id)[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
                 ?.getOutputSizes(ImageFormat.YUV_420_888)?.map { LiveSize(it.width, it.height) }.orEmpty() }
             val size = DualPreviewPlanner.commonSizes(sizes[0], sizes[1]).firstOrNull()
-                ?: error("두 센서의 공통 YUV 사진 크기가 없습니다.")
+                ?: error("No common YUV photo size for both sensors.")
             ids.forEachIndexed { index, _ ->
                 val reader = ImageReader.newInstance(size.width, size.height, ImageFormat.YUV_420_888, 3)
                 // Retain each reader immediately so a later allocation/listener failure closes earlier ones.
@@ -84,7 +84,7 @@ internal class DualStillCapture(
                                     callback?.onCaptureCompleted(s, r, result)
                                     if (closing) return
                                     val timestamps = ids.map { result.physicalCameraResults[it]?.get(CaptureResult.SENSOR_TIMESTAMP) }
-                                    if (timestamps.any { it == null }) { finish(Result.failure(IllegalStateException("두 센서 촬영 결과가 누락되었습니다."))); return }
+                                    if (timestamps.any { it == null }) { finish(Result.failure(IllegalStateException("Capture results are missing for one or both sensors."))); return }
                                     telemetry?.recorder?.record(sessionId, "dual_physical_result", result.frameNumber,
                                         values = mapOf("timestamps" to ids.zip(timestamps).toMap()))
                                     pair.result(timestamps[0]!!, timestamps[1]!!, result[CaptureResult.SENSOR_TIMESTAMP])
@@ -92,7 +92,7 @@ internal class DualStillCapture(
                                 }
                                 override fun onCaptureFailed(s: CameraCaptureSession, r: CaptureRequest, f: CaptureFailure) {
                                     callback?.onCaptureFailed(s, r, f)
-                                    finish(Result.failure(IllegalStateException("두 센서 촬영 실패: ${f.reason}")))
+                                    finish(Result.failure(IllegalStateException("Dual capture failed: ${f.reason}")))
                                 }
                             }, handler)
                         } catch (e: Exception) { finish(Result.failure(e)) }
@@ -101,7 +101,7 @@ internal class DualStillCapture(
                         configuring = false
                         session = s
                         if (closing) { s.close(); return }
-                        finish(Result.failure(IllegalStateException("두 센서 동시 사진 출력 조합을 지원하지 않습니다.")))
+                        finish(Result.failure(IllegalStateException("Simultaneous photo outputs are unsupported for these sensors.")))
                     }
                     override fun onClosed(s: CameraCaptureSession) { release() }
                 }))
@@ -119,7 +119,7 @@ internal class DualStillCapture(
         })
     }
 
-    fun cancel() = finish(Result.failure(IllegalStateException("촬영이 취소되었습니다.")))
+    fun cancel() = finish(Result.failure(IllegalStateException("Capture cancelled.")))
     private fun finish(result: Result<List<Pair<String, ByteArray>>>) {
         if (closing) return
         closing = true; outcome = result
@@ -131,6 +131,6 @@ internal class DualStillCapture(
         if (finished) return
         finished = true
         readers.forEach { it.close() }; readers = emptyList()
-        done(outcome ?: Result.failure(IllegalStateException("촬영 세션이 종료되었습니다.")))
+        done(outcome ?: Result.failure(IllegalStateException("Capture session closed.")))
     }
 }

@@ -101,8 +101,8 @@ object DualPreviewPlanner {
     fun syncLabel(syncType: Int?): String = when (syncType) {
         0 -> "APPROXIMATE"
         1 -> "CALIBRATED"
-        null -> "미보고"
-        else -> "알 수 없음 ($syncType)"
+        null -> "Not reported"
+        else -> "Unknown ($syncType)"
     }
 
     sealed class Result {

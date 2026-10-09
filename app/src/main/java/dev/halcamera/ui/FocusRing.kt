@@ -76,7 +76,7 @@ class FocusRing(
         val t = start(focus, x, y)
         removeCallbacks(hideFocus)
         if (engine()?.meterAt(x, y, false) { p -> if (t == focus.token) showFocus(p) } != true) {
-            focus.phase = null; say(unavailableReason(false) ?: "터치 초점을 쓸 수 없는 카메라이거나 준비 중입니다", x, y); return
+            focus.phase = null; say(unavailableReason(false) ?: "Touch focus is unavailable or the camera is not ready.", x, y); return
         }
         // Covers a tap the engine accepted but never answered, such as one that raced a session rebuild.
         postDelayed(hideFocus, TouchMeter.SCAN_TIMEOUT_MS + TouchMeter.HOLD_MS + 1000)
@@ -91,7 +91,7 @@ class FocusRing(
         focus.token++; focus.phase = null
         val t = start(exposure, x, y)
         if (engine()?.meterAt(x, y, true) { p -> if (t == exposure.token) showExposure(p) } != true) {
-            exposure.phase = null; say(unavailableReason(true) ?: "터치 노출을 쓸 수 없는 카메라이거나 준비 중입니다", x, y); return
+            exposure.phase = null; say(unavailableReason(true) ?: "Touch exposure is unavailable or the camera is not ready.", x, y); return
         }
         postDelayed(hideExposure, AeRelock.TIMEOUT_MS + 1000)
     }

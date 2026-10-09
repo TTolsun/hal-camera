@@ -62,16 +62,16 @@ data class ManualSupport(
         ManualExposure(iso.coerceIn(this.iso!!), ns.coerceIn(exposureNs!!.first, maxExposureNs!!)) else null
 
     fun rejection(value: ManualControls): String? = when {
-        !camera2 && value.active -> "수동 촬영은 Camera2에서 지원합니다."
-        value.exposure != null && !canExpose -> "이 카메라는 수동 노출을 지원하지 않습니다."
-        value.exposure != null && value.exposure.iso !in iso!! -> "ISO 지원 범위는 ${iso.first}–${iso.last}입니다."
+        !camera2 && value.active -> "Manual capture requires Camera2."
+        value.exposure != null && !canExpose -> "This camera does not support manual exposure."
+        value.exposure != null && value.exposure.iso !in iso!! -> "Supported ISO range: ${iso.first}–${iso.last}."
         value.exposure != null && value.exposure.timeNs !in exposureNs!!.first..maxExposureNs!! ->
-            "현재 FPS에서 노출 시간은 ${exposureNs.first / 1e6}–${maxExposureNs!! / 1e6} ms입니다."
+            "Exposure range at the current FPS: ${exposureNs.first / 1e6}–${maxExposureNs!! / 1e6} ms."
         value.focusDiopters != null && (maxFocus <= 0f || !value.focusDiopters.isFinite() || value.focusDiopters !in 0f..maxFocus) ->
-            "초점 지원 범위는 0–$maxFocus D입니다."
-        value.wb !in whiteBalances -> "이 카메라는 선택한 WB 모드를 지원하지 않습니다."
-        value.wb == WhiteBalance.CUSTOM && value.exposure == null -> "수동 WB는 수동 노출에서 사용합니다."
-        value.wb == WhiteBalance.CUSTOM && !value.color.valid() -> "Gains는 1–100의 4개 값, matrix는 −100–100의 9개 값이 필요합니다."
+            "Supported focus range: 0–$maxFocus D."
+        value.wb !in whiteBalances -> "This camera does not support the selected white balance mode."
+        value.wb == WhiteBalance.CUSTOM && value.exposure == null -> "Custom white balance requires manual exposure."
+        value.wb == WhiteBalance.CUSTOM && !value.color.valid() -> "Gains require four values from 1–100; the matrix requires nine values from −100–100."
         else -> null
     }
 }

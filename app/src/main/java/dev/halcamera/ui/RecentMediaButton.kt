@@ -11,9 +11,6 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.view.Gravity
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import dev.halcamera.R
@@ -23,7 +20,6 @@ class RecentMediaButton(context: Context, action: () -> Unit) : Button(context) 
     private val placeholder = ContextCompat.getDrawable(context, R.drawable.ic_gallery)
     private var thumbnail: Drawable? = null
     private var video = false
-    private var caption: TextView? = null
     private val outline = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Look.cameraOutline
         style = Paint.Style.STROKE
@@ -56,29 +52,6 @@ class RecentMediaButton(context: Context, action: () -> Unit) : Button(context) 
             else "Latest ${if (video) "video" else "photo"} preview, open HALCamera Gallery"
         tooltipText = contentDescription
         invalidate()
-    }
-
-    /** A thumbnail alone does not explain that this opens all saved media. */
-    fun labeledView() = LinearLayout(context).apply {
-        orientation = LinearLayout.VERTICAL
-        gravity = Gravity.CENTER
-        minimumHeight = Look.dp(context, 72)
-        addView(this@RecentMediaButton, LinearLayout.LayoutParams(Look.dp(context, 48), Look.dp(context, 48)))
-        addView(TextView(context).apply {
-            text = "사진·영상"
-            textSize = 12f
-            setTextColor(Look.onDark)
-            gravity = Gravity.CENTER
-            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-            setOnClickListener { if (this@RecentMediaButton.isEnabled) this@RecentMediaButton.performClick() }
-            alpha = if (this@RecentMediaButton.isEnabled) 1f else 0.38f
-            caption = this
-        }, LinearLayout.LayoutParams(-2, -2))
-    }
-
-    override fun setEnabled(enabled: Boolean) {
-        super.setEnabled(enabled)
-        caption?.alpha = if (enabled) 1f else 0.38f
     }
 
     override fun onDraw(canvas: Canvas) {

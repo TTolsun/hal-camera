@@ -73,6 +73,6 @@ class DualPreviewPlanTest {
         assertEquals(-200L, physicalTimestampSkewNs(1_000L, 1_200L))
         assertNull(physicalTimestampSkewNs(1_000L, null))
         assertEquals("APPROXIMATE", DualPreviewPlanner.syncLabel(0))
-        assertEquals("미보고", DualPreviewPlanner.syncLabel(null))
+        assertEquals("Not reported", DualPreviewPlanner.syncLabel(null))
     }
 }

@@ -9,7 +9,6 @@ class CaptureFeedback(context: Context) : TextView(context) {
     private var progress: String? = null
     private var result: String? = null
     private var bracket = false
-    private var photoHint = false
 
     init {
         textSize = 12f
@@ -20,15 +19,14 @@ class CaptureFeedback(context: Context) : TextView(context) {
         visibility = INVISIBLE
     }
 
-    fun bind(progress: String?, bracket: Boolean, photoHint: Boolean = false) {
+    fun bind(progress: String?, bracket: Boolean) {
         if (this.progress == null && progress != null) result = null
         this.progress = progress; this.bracket = bracket
-        this.photoHint = photoHint
         render()
     }
 
     fun showResult(value: String) {
-        result = "촬영 종료 · $value"
+        result = value
         render()
     }
 
@@ -40,11 +38,7 @@ class CaptureFeedback(context: Context) : TextView(context) {
         (message.startsWith("Capturing") || message == "Saving…" || message.startsWith("Saved "))
 
     private fun render() {
-        val value = progress ?: result ?: when {
-            bracket -> "AEB"
-            photoHint -> "셔터: 한 번 누르면 사진 · 길게 누르면 연사"
-            else -> ""
-        }
+        val value = progress ?: result ?: if (bracket) "AEB" else ""
         if (text.toString() != value) text = value
         visibility = if (value.isEmpty()) INVISIBLE else VISIBLE
     }
