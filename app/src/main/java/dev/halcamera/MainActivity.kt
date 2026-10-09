@@ -42,7 +42,7 @@ class MainActivity : ComponentActivity() {
     private val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
     private val liveCli by lazy {
         LiveController(cli, object : LiveController.Driver {
-            override fun busy() = recordingVideo || stoppingRecording || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true
+            override fun busy() = recordingVideo || stoppingRecording || pendingPermissionAction != null || mediaBusy()
             override fun prepare(command: dev.halcamera.cli.CliCommand, ready: () -> Unit) {
                 // Capability work can initialize CameraX; keep it off the main thread.
                 io.execute {
@@ -96,6 +96,7 @@ class MainActivity : ComponentActivity() {
                 updateMediaControls()
             }
             override fun stopPreview(done: () -> Unit) {
+                cancelBurst("Camera closed")
                 paused = true; ready = false
                 val old = engine; engine = null
                 closing = old != null
@@ -116,6 +117,7 @@ class MainActivity : ComponentActivity() {
             }
             /** Closes the Live camera first: the next screen must open a free camera, and close(done) is the only way to know. */
             private fun handOver(command: dev.halcamera.cli.CliCommand, intent: () -> Intent) {
+                cancelBurst("Camera closed")
                 val old = engine; engine = null; closing = true; ready = false
                 val open = {
                     closing = false
@@ -213,6 +215,8 @@ class MainActivity : ComponentActivity() {
     private var stoppingRecording = false
     private var recordingStartedAt = 0L
     private var pendingPermissionAction: (() -> Unit)? = null
+    /** The LIVE burst in progress (#178); the shutter stops it, and anything that closes the camera cancels it. */
+    private var burst: BurstRun<PhotoResult>? = null
     private val mediaPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
         val action = pendingPermissionAction.also { pendingPermissionAction = null }
         if (grants.values.all { it }) action?.invoke() else toast("Allow the requested permissions to save media.")
@@ -396,6 +400,7 @@ class MainActivity : ComponentActivity() {
         }
     }
     private fun restartCamera() {
+        cancelBurst("Camera closed")
         eisTracker.reset()
         liveIndicator.bind(false)
         liveIndicator.bindSizes(null)
@@ -662,11 +667,17 @@ class MainActivity : ComponentActivity() {
         captureRow.addView(gallerySlot,LinearLayout.LayoutParams(0,captureSize,1f))
         mediaButton=ShutterButton(this).apply {
             setOnClickListener {
+                burst?.let { it.cancel("Stopped"); return@setOnClickListener }
                 if (cli.active != null) return@setOnClickListener
                 if(recordingVideo) stopRecording()
                 else if(videoMode) {
                     withMediaPermissions(true) { (engine as? MediaCapture)?.startRecording() }
                 } else withMediaPermissions(false) { engine?.capture() }
+            }
+            // A long press in photo mode offers a burst (#178): first how many shots, then how far apart.
+            setOnLongClickListener {
+                if (cli.active != null || videoMode || recordingVideo || burst != null || !ready || mediaBusy()) return@setOnLongClickListener false
+                chooseBurst(this); true
             }
         }
         captureRow.addView(mediaButton,LinearLayout.LayoutParams(captureSize,captureSize).apply { marginStart=dp(12); marginEnd=dp(12) })
@@ -779,11 +790,11 @@ class MainActivity : ComponentActivity() {
     }
     private fun updateMediaControls() {
         if (!resumed || paused || closing || engine == null) liveIndicator.bind(false)
-        cli.setUiBusy(liveCli, recordingVideo || stoppingRecording || pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true)
+        cli.setUiBusy(liveCli, recordingVideo || stoppingRecording || pendingPermissionAction != null || mediaBusy())
         listOf(photoModeButton,videoModeButton).forEachIndexed { index, button ->
             val selected=(index==1)==videoMode
             button.isSelected=selected
-            button.isEnabled=ready && !recordingVideo
+            button.isEnabled=ready && !recordingVideo && burst == null
             button.setTextColor(if(selected) Look.onDark else Look.onDarkMuted)
             button.setTypeface(null,if(selected) Typeface.BOLD else Typeface.NORMAL)
             button.contentDescription=if(index==0) "Photo mode: save selected YUV, JPEG and RAW outputs" else "Video mode with audio"
@@ -797,13 +808,17 @@ class MainActivity : ComponentActivity() {
             mediaButton.contentDescription="Saving video"
             ViewCompat.setStateDescription(mediaButton,"Saving")
         }
-        mediaButton.isEnabled=(ready || recordingVideo) && !stoppingRecording
+        mediaButton.isEnabled=(ready || recordingVideo || burst != null) && !stoppingRecording
         if (!videoMode && streamSettings[streamKey()]?.canCapture == false) {
             mediaButton.isEnabled = false
             mediaButton.contentDescription = "Photo output is off: enable YUV, JPEG or RAW in Live streams"
         }
-        engineButton.isEnabled=!recordingVideo
-        cameraShortcut.isEnabled=!recordingVideo && cameraId.isNotEmpty()
+        burst?.let {
+            mediaButton.contentDescription="Stop burst: ${it.saved} of ${it.count} saved"
+            ViewCompat.setStateDescription(mediaButton,"Burst")
+        }
+        engineButton.isEnabled=!recordingVideo && burst == null
+        cameraShortcut.isEnabled=!recordingVideo && burst == null && cameraId.isNotEmpty()
         val snapshot=(engine as? MediaCapture)?.snapshot ?: SnapshotStatus.NONE
         cameraShortcut.visibility=if(recordingVideo) View.GONE else View.VISIBLE
         snapshotButton.visibility=if(recordingVideo) View.VISIBLE else View.GONE
@@ -817,8 +832,8 @@ class MainActivity : ComponentActivity() {
         // The engine reports "REC" as not-ready, so a running recording counts as ready here, as for the shutter.
         zoomControl.isEnabled=(ready || recordingVideo) && !stoppingRecording
         controlBar.bind(videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null)
-        galleryButton.isEnabled=!recordingVideo
-        labButton.isEnabled=!recordingVideo && !stoppingRecording && !closing && (engine as? MediaCapture)?.mediaBusy != true
+        galleryButton.isEnabled=!recordingVideo && burst == null
+        labButton.isEnabled=!recordingVideo && !stoppingRecording && !closing && !mediaBusy()
         liveIndicator.setSizesEnabled(labButton.isEnabled && cli.active == null && pendingPermissionAction == null && cameraId.isNotEmpty())
         listOf(dualPreviewButton,dualVideoButton).forEach {
             it.isEnabled = labButton.isEnabled && cli.active == null && pendingPermissionAction == null
@@ -860,7 +875,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun openDual(video: Boolean) {
         if (cli.active != null || recordingVideo || stoppingRecording || closing ||
-            pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true) return
+            pendingPermissionAction != null || mediaBusy()) return
         openAfterClose("dual_opened") {
             Intent(this, DualPreviewActivity::class.java).putExtra(DualPreviewActivity.EXTRA_VIDEO, video)
                 .putExtra(DualPreviewActivity.EXTRA_ENGINE, engineName)
@@ -868,7 +883,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun openLiveStreams() {
         if (cli.active != null || recordingVideo || stoppingRecording || closing ||
-            pendingPermissionAction != null || (engine as? MediaCapture)?.mediaBusy == true || cameraId.isEmpty()) return
+            pendingPermissionAction != null || mediaBusy() || cameraId.isEmpty()) return
         openAfterClose("live_stream_settings_opened") {
             streamSettingsIntent(LiveStreamsActivity::class.java)
                 .putExtra(LiveStreamsActivity.EXTRA_FROM_LIVE, true)
@@ -889,6 +904,7 @@ class MainActivity : ComponentActivity() {
      */
     private fun openAfterClose(reason: String, intent: () -> Intent) {
         if (closing) return
+        cancelBurst("Camera closed")
         recorder.finish(reason)?.let(incidents::export)
         showCallbacks(false)
         val old = engine; engine = null; closing = true; ready = false
@@ -903,6 +919,47 @@ class MainActivity : ComponentActivity() {
         }
         if (old == null) open() else old.close { open() }
     }
+    /** The engine is taking or saving a still or a recording, or a burst is between its shots. */
+    private fun mediaBusy() = (engine as? MediaCapture)?.mediaBusy == true || burst != null
+    private fun chooseBurst(anchor: View) {
+        val counts=listOf(3,5,10,BurstRun.MAX_COUNT)
+        val intervals=listOf(0L,500L,1000L,2000L)
+        selectChoice(anchor,counts.map { "Burst · $it shots" },-1) { c ->
+            selectChoice(anchor,listOf("As fast as possible","Every 0.5 s","Every 1 s","Every 2 s"),0) { i ->
+                withMediaPermissions(false) { startBurst(counts[c],intervals[i]) }
+            }
+        }
+    }
+    /**
+     * Takes [count] stills through the engine's ordinary photo path, one after another (#178). Each shot is saved
+     * like a single photo and carries "burst-<id>-NN" as its request id in the capture metadata. The summary says
+     * how many were saved, which failed and how many were never taken.
+     */
+    private fun startBurst(count: Int, intervalMs: Long) {
+        if (burst != null || cli.active != null || videoMode || recordingVideo || !ready || engine !is MediaCapture) return
+        val session = sessionId
+        val run = BurstRun<PhotoResult>(SimpleDateFormat("HHmmss_SSS",Locale.US).format(Date()), count, intervalMs,
+            SystemClock::elapsedRealtime, { delay, block -> main.postDelayed(block, delay) },
+            { ready && (engine as? MediaCapture)?.mediaBusy == false },
+            { id, done -> (engine as? MediaCapture)?.capturePhoto(id, done)
+                ?: done(Result.failure(IllegalStateException("Camera closed"))) },
+            { updateMediaControls() },
+            { summary ->
+                burst = null
+                telemetry.event(session, "burst_done", mapOf("burstId" to summary.id, "requested" to summary.requested,
+                    "intervalMs" to summary.intervalMs, "saved" to summary.saved, "notTaken" to summary.notTaken,
+                    "stopReason" to summary.stopReason, "startGapsMs" to summary.startGapsMs,
+                    "shots" to summary.shots.map { shot -> mapOf("requestId" to shot.requestId,
+                        "name" to shot.result.getOrNull()?.name, "error" to shot.result.exceptionOrNull()?.message) }))
+                toast(summary.describe())
+                updateMediaControls()
+            })
+        burst = run
+        telemetry.event(session, "burst_start", mapOf("burstId" to run.id, "count" to count, "intervalMs" to intervalMs))
+        updateMediaControls()
+        run.start()
+    }
+    private fun cancelBurst(reason: String) { burst?.cancel(reason) }
     /**
      * A JPEG from the running recording (#175). One at a time: a tap while another is in flight, or while the
      * recording stops, does nothing. A camera that cannot do it says why instead. The engine reports the result as
