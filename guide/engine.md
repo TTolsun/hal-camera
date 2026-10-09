@@ -52,7 +52,7 @@ nav_order: 5
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 상태: 원본이 갱신됨: 검토 대기
+- 검토 2026-10-09 @ `b3a08493` · Codex
 
 </details>
 
@@ -440,7 +440,7 @@ Live 스트림 설정에서 JPEG을 끄면 녹화 중 사진도 지원하지 않
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 상태: 원본이 갱신됨: 검토 대기
+- 검토 2026-10-09 @ `b3a08493` · Codex
 
 </details>
 
@@ -624,7 +624,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 상태: 원본이 갱신됨: 검토 대기
+- 검토 2026-10-09 @ `b3a08493` · Codex
 
 </details>
 
@@ -644,9 +644,9 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다.
 | --- | --- | --- |
 | 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-08 @ `28349da` · Codex |
 | 원고 `contract` | 최신 | 검토 2026-10-08 @ `28349da` · Codex |
-| 원고 `camera2` | 원본이 갱신됨: 검토 대기 | 검토 2026-10-08 @ `28349da` · Codex |
-| 원고 `camerax` | 원본이 갱신됨: 검토 대기 | 검토 2026-10-08 @ `28349da` · Codex |
-| 원고 `comparison` | 원본이 갱신됨: 검토 대기 | 검토 2026-10-08 @ `28349da` · Codex |
+| 원고 `camera2` | 최신 | 검토 2026-10-09 @ `b3a08493` · Codex |
+| 원고 `camerax` | 최신 | 검토 2026-10-09 @ `b3a08493` · Codex |
+| 원고 `comparison` | 최신 | 검토 2026-10-09 @ `b3a08493` · Codex |
 
 <!-- omm:end id=status -->
 
