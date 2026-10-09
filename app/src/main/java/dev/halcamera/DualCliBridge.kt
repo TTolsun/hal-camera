@@ -23,7 +23,9 @@ override fun execute(command: dev.halcamera.cli.CliCommand) {
         "live.info" -> {
             cli.complete(command.id, org.json.JSONObject().put("camera_id", logicalId).put("engine", engineName)
                 .put("first", pair?.first).put("second", pair?.second).put("ready", streamingSize != null)
-                .put("size", streamingSize?.toString()).put("zoom", zoomRatio).put("controls", controlBar.controls.toString())
+                .put("size", streamingSize?.toString()).put("zoom", zoomRatio)
+                .put("zoom_range", dev.halcamera.cli.CliJson.of(listOf(cliZoomRange.first, cliZoomRange.second)))
+                .put("controls", controlBar.controls.toString())
                 .put("report", dualReport()).put("events", dev.halcamera.cli.CliJson.of(recorder.snapshot(1_000_000_000L).takeLast(100)
                     .map { mapOf("kind" to it.kind, "at_ns" to it.atNs.toString(), "values" to it.values) })))
             return

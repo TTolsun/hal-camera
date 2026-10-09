@@ -81,7 +81,7 @@ class CliStoreInstrumentation : Instrumentation() {
             check(CliJson.decode(CliJson.encode(benchmark)) == benchmark); passed++
             check(benchmark.profile == dev.halcamera.benchmark.domain.BenchmarkProfile.CAMERA2_STANDARD_V2.id); passed++
             var clock = 1000L
-            val store = CommandStore(directory) { clock }
+            val store = CommandStore(directory, now = { clock })
             fun command() = CliCommand(UUID.randomUUID().toString(), "capture", "0", null, 30_000)
             fun finish(id: String, owner: CommandStore = store) {
                 owner.transition(id, "preparing"); owner.transition(id, "running")
@@ -108,7 +108,7 @@ class CliStoreInstrumentation : Instrumentation() {
             val interrupted = command(); store.create(interrupted)
             val original = File(directory, "${interrupted.id}.json")
             check(original.renameTo(File(directory, "${interrupted.id}.json.bak")))
-            val recovered = CommandStore(directory) { clock }
+            val recovered = CommandStore(directory, now = { clock })
             check(recovered.read(interrupted.id)?.getString("state") == "interrupted"); passed++
             check(recovered.read(first.id)?.getString("state") == "succeeded"); passed++
 
@@ -132,7 +132,7 @@ class CliStoreInstrumentation : Instrumentation() {
 
             val unwritable = command()
             val blockedDirectory = File(directory, "blocked-store")
-            val blockedStore = CommandStore(blockedDirectory) { clock }
+            val blockedStore = CommandStore(blockedDirectory, now = { clock })
             check(blockedDirectory.delete())
             blockedDirectory.writeText("not a directory")
             try { blockedStore.create(unwritable); error("Write failure was accepted") }
@@ -141,7 +141,7 @@ class CliStoreInstrumentation : Instrumentation() {
             recovered.failInMemory(active.id, "disk full")
             check(recovered.read(active.id)?.getString("state") == "failed" &&
                 recovered.read(active.id)?.getBoolean("durable") == false); passed++
-            check(CommandStore(directory) { clock }.read(active.id)?.getString("state") == "interrupted"); passed++
+            check(CommandStore(directory, now = { clock }).read(active.id)?.getString("state") == "interrupted"); passed++
 
             val privateRecord = JSONObject().put("request", JSONObject()).put("artifacts",
                 org.json.JSONArray().put(JSONObject().put("source_uri", "file:///private").put("artifact_id", "file-0")))

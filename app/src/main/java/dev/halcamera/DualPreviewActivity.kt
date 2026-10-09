@@ -426,7 +426,8 @@ class DualPreviewActivity : ComponentActivity() {
         manualPanel.reset(mainControls?.manual ?: ManualSupport(camera2 = false))
         zoomRatio = 1f
         zoomAvailable = mainControls != null
-        zoomControl.setChoices(zoomPresets(1f to (mainControls?.maxZoom ?: 1f)), zoomRatio)
+        cliZoomRange = 1f to (mainControls?.maxZoom ?: 1f).coerceAtLeast(1f)
+        zoomControl.setChoices(zoomPresets(cliZoomRange), zoomRatio)
         header()
 
         val stage = FrameLayout(this).apply { clipChildren = true }
