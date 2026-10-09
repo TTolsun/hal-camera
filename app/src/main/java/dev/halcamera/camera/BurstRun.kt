@@ -47,6 +47,7 @@ class BurstRun<T>(
     val saved: Int get() = shots.count { it.result.isSuccess }
     val failed: Int get() = shots.count { it.result.isFailure }
     val running: Boolean get() = !done
+    val stopping: Boolean get() = stopReason != null
 
     fun start() { next() }
 

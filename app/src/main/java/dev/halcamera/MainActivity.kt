@@ -30,14 +30,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
 
-/**
- * LIVE (docs/PLAN-BenchMarker-v0.3.md 8.1), and the launcher since M3.
- *
- * The screen shows what the camera is doing right now and nothing more. It used to also diagnose: a health banner
- * with OK / WATCH / WARNING, a verdict card, a DIAGNOSIS card naming a rule and a cause layer, and a consumer mode
- * that said all of it in plain words. Every one of those is gone. The judgement the app can defend is a run
- * compared against a baseline the developer chose, and that is what BENCHMARK does.
- */
+/** Live launcher: preview, capture and observation. Benchmark owns baseline comparisons and verdicts. */
 class MainActivity : ComponentActivity() {
     private val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
     private val liveCli by lazy {
@@ -215,9 +208,11 @@ class MainActivity : ComponentActivity() {
     private var stoppingRecording = false
     private var recordingStartedAt = 0L
     private var pendingPermissionAction: (() -> Unit)? = null
+    private val captureFeedback by lazy { CaptureFeedback(this) }
     private val bursts by lazy {
         LiveBurst(SystemClock::elapsedRealtime, { d, b -> main.postDelayed(b, d) },
-            { engine as? MediaCapture }, { ready && cli.active == null && !videoMode }, telemetry::event, ::updateMediaControls, ::toast, BracketFusion(this))
+            { engine as? MediaCapture }, { ready && cli.active == null && !videoMode }, telemetry::event, ::updateMediaControls,
+            { if (resumed) captureFeedback.showResult(it) }, BracketFusion(this))
     }
     private val mediaPermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { grants ->
         val action = pendingPermissionAction.also { pendingPermissionAction = null }
@@ -297,7 +292,7 @@ class MainActivity : ComponentActivity() {
                 liveIndicator.bindSizes(telemetry.sessions[sessionId]?.get("negotiatedStreams") as? Map<*, *>)
             }
             readings.update(events, frames, time, sessionId, controlBar.controls, controlBar.support, zoomRatio, manualPanel.observedKey)
-            manualPanel.bind(controlBar.controls.manual, (ready || recordingVideo) && !stoppingRecording && cli.active == null,
+            manualPanel.bind(controlBar.controls.manual, (ready || recordingVideo) && !stoppingRecording && cli.active == null && !bursts.controlsLocked,
                 manualCapabilities, frames.lastOrNull(), time)
             manualBack.isEnabled = manualPanel.isExpanded
             if (callbackGraph.visibility == View.VISIBLE) callbackGraph.update(events, sessionId, time, telemetry.sessions[sessionId].orEmpty())
@@ -384,6 +379,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onDestroy() {
         destroyed = true
+        bursts.dispose()
         recentMedia.close()
         io.shutdown()
         if (!closing && engine == null) cameraWorker.shutdown()
@@ -506,6 +502,7 @@ class MainActivity : ComponentActivity() {
             }, recordingState = recordingState, notice = notice, status = status)
         }
         previewHost.addView(FocusRing(this, { engine as? TouchMetering }) { controlBar.setAeLock(it) }.apply {
+            canInteract = { !bursts.controlsLocked && cli.active == null }
             unavailableReason = { exposure ->
                 if (exposure && controlBar.controls.manual.exposure != null) "수동 노출 중입니다 · ISO와 Shutter로 조절하세요"
                 else if (!exposure && controlBar.controls.manual.focusDiopters != null) "수동 초점 중입니다 · Focus에서 Auto로 전환하세요"
@@ -521,11 +518,10 @@ class MainActivity : ComponentActivity() {
         cameraNotice.text = text; cameraNotice.visibility = View.VISIBLE; main.postDelayed(clearNotice, 2500)
     }
     private fun setStatus(text: String, ok: Boolean) {
-        // A save notice stays for its 2.5 s even when the engine's "· LIVE" report follows it. Stopping a recording
-        // rebuilds the preview session, and that report used to arrive right after the video notice and hide it.
-        // Only that one routine report waits; a failure or any other notice still replaces the save notice.
+        // Keep a save notice across routine LIVE reports, but let errors replace it.
         val saved = ok && text.contains("saved", ignoreCase = true)
-        if (!(savedNoticeShown && ok && text.endsWith("· LIVE"))) {
+        if (captureFeedback.coversStatus(text)) cameraNotice.visibility = View.GONE
+        else if (!(savedNoticeShown && ok && text.endsWith("· LIVE"))) {
             main.removeCallbacks(clearNotice)
             savedNoticeShown = saved
             cameraNotice.text = text
@@ -605,11 +601,11 @@ class MainActivity : ComponentActivity() {
         // Only the side slots share spare width; the centred expander needs a 48dp touch target.
         // Giving it a third of the row squeezed the two trailing labels and wrapped "Callback".
         controlBar=LiveControlBar(this,object : LiveControlBar.Host {
-            override fun controlsChanged(controls: LiveControls) { (engine as? LiveTuning)?.setControls(controls) }
+            override fun controlsChanged(controls: LiveControls) { if (!bursts.controlsLocked) (engine as? LiveTuning)?.setControls(controls) }
             override fun notice(text: String) = toast(text)
             override fun manualRequested() { showCallbacks(false); manualPanel.toggle() }
         })
-        manualPanel = ManualControlPanel(this, { controlBar.setManual(it) }, ::toast)
+        manualPanel = ManualControlPanel(this, { if (!bursts.controlsLocked) controlBar.setManual(it) }, ::toast)
         controls.gravity=Gravity.TOP
         controls.addView(leadingSlot,LinearLayout.LayoutParams(0,-2,1f))
         controls.addView(FrameLayout(this).apply {
@@ -653,11 +649,12 @@ class MainActivity : ComponentActivity() {
         readings=LiveReadings(this,metrics,recorder,io)
         bottomBar.addView(metrics,lp())
         zoomControl=ExpandingZoomControl(this) { ratio ->
-            if (cli.active != null) return@ExpandingZoomControl
+            if (cli.active != null || bursts.controlsLocked) return@ExpandingZoomControl
             zoomRatio=ratio; engine?.setZoom(ratio)
         }
         val zoomViewport=zoomControl.viewport()
         bottomBar.addView(zoomViewport,LinearLayout.LayoutParams(-2,dp(48)))
+        bottomBar.addView(captureFeedback,lp())
         val captureRow=row().apply { gravity=Gravity.CENTER_VERTICAL }
         bottomBar.addView(captureRow,lp(top=4))
         galleryButton=RecentMediaButton(this) {
@@ -670,13 +667,15 @@ class MainActivity : ComponentActivity() {
         mediaButton=ShutterButton(this).apply {
             setOnClickListener {
                 if (cli.active != null) return@setOnClickListener
-                if(recordingVideo) stopRecording()
+                if (bursts.run == null) captureFeedback.clearResult()
+                if(bursts.run != null) bursts.stop()
+                else if(recordingVideo) stopRecording()
                 else if(videoMode) {
                     withMediaPermissions(true) { (engine as? MediaCapture)?.startRecording() }
                 } else withMediaPermissions(false) { controlBar.controls.let { if (it.bracket) bursts.bracket(sessionId, it, controlBar.support) else engine?.capture() } }
             }
-            setOnLongClickListener { (!videoMode && !mediaBusy()).also { if (it) withMediaPermissions(false) { if (isPressed) bursts.hold(sessionId) } } }
-            setOnTouchListener { _, e -> if (e.actionMasked in listOf(MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL)) bursts.release(); false }
+            bindBurstInput({ !videoMode && !mediaBusy() && !controlBar.controls.bracket && cli.active == null },
+                { withMediaPermissions(false,it) }, { bursts.hold(sessionId) }, bursts::release)
         }
         captureRow.addView(mediaButton,LinearLayout.LayoutParams(captureSize,captureSize).apply { marginStart=dp(12); marginEnd=dp(12) })
         cameraShortcut=IconButton(this,R.drawable.ic_camera_select,"Choose camera",filled=true) { selectCamera(cameraShortcut) }
@@ -802,17 +801,19 @@ class MainActivity : ComponentActivity() {
         pausedOverlay.visibility=if(paused) View.VISIBLE else View.GONE
         modeControls.visibility=if(recordingVideo) View.INVISIBLE else View.VISIBLE
         recordingTime.visibility=if(recordingVideo) View.VISIBLE else View.GONE
-        mediaButton.setCaptureState(videoMode,recordingVideo)
+        mediaButton.setCaptureState(videoMode,recordingVideo,bursts.run != null,controlBar.controls.bracket)
+        captureFeedback.bind(bursts.label,controlBar.controls.bracket && !videoMode)
         if(stoppingRecording) {
             mediaButton.contentDescription="Saving video"
             ViewCompat.setStateDescription(mediaButton,"Saving")
         }
         mediaButton.isEnabled=(ready || recordingVideo || bursts.run != null) && !stoppingRecording
+        if (bursts.fusing && controlBar.controls.bracket) mediaButton.isEnabled=false
         if (!videoMode && streamSettings[streamKey()]?.canCapture == false) {
             mediaButton.isEnabled = false
             mediaButton.contentDescription = "Photo output is off: enable YUV, JPEG or RAW in Live streams"
         }
-        bursts.label?.let { mediaButton.contentDescription=it }
+        bursts.label?.let { ViewCompat.setStateDescription(mediaButton,it) }
         engineButton.isEnabled=idle
         cameraShortcut.isEnabled=idle && cameraId.isNotEmpty()
         val snapshot=(engine as? MediaCapture)?.snapshot ?: SnapshotStatus.NONE
@@ -826,8 +827,8 @@ class MainActivity : ComponentActivity() {
         }
         // Zoom stays live while recording (#174): the engine changes the recording request in place.
         // The engine reports "REC" as not-ready, so a running recording counts as ready here, as for the shutter.
-        zoomControl.isEnabled=(ready || recordingVideo) && !stoppingRecording
-        controlBar.bind(videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null)
+        zoomControl.isEnabled=(ready || recordingVideo) && !stoppingRecording && !bursts.controlsLocked
+        controlBar.bind(videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null && !bursts.controlsLocked)
         galleryButton.isEnabled=idle
         labButton.isEnabled=!recordingVideo && !stoppingRecording && !closing && !mediaBusy()
         liveIndicator.setSizesEnabled(labButton.isEnabled && cli.active == null && pendingPermissionAction == null && cameraId.isNotEmpty())
@@ -893,11 +894,7 @@ class MainActivity : ComponentActivity() {
                 .putExtra(LiveStreamsActivity.EXTRA_GOOD_SETTINGS, goodStreams[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_HAS_GOOD, goodStreams.containsKey(streamKey()))
                 .putExtra(LiveStreamsActivity.EXTRA_STATUS, streamState[streamKey()].orEmpty())
-    /**
-     * Lab can launch CTS and Benchmark, so the live session must be closed and its close(done) received
-     * before the next screen starts. Same sequence as the CLI CTS path; onStop's restartCamera() sees
-     * `closing` and stays out of the way, and onResume applies the Lab result before reopening the camera.
-     */
+    /** Wait for close(done) before handing the camera to Lab/CTS/Benchmark; onStop respects closing. */
     private fun openAfterClose(reason: String, intent: () -> Intent) {
         if (closing) return
         bursts.close()
@@ -916,11 +913,7 @@ class MainActivity : ComponentActivity() {
         if (old == null) open() else old.close { open() }
     }
     private fun mediaBusy() = (engine as? MediaCapture)?.mediaBusy == true || bursts.run != null
-    /**
-     * A JPEG from the running recording (#175). One at a time: a tap while another is in flight, or while the
-     * recording stops, does nothing. A camera that cannot do it says why instead. The engine reports the result as
-     * a notice, and a failed photo never ends the recording.
-     */
+    /** One snapshot at a time; failures leave recording active and unsupported cameras explain why. */
     private fun takeSnapshot() {
         if (cli.active != null) return
         val camera=engine as? MediaCapture ?: return

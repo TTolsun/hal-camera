@@ -68,7 +68,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     private val bracket = QuickButton(context) { tap { toggleBracket() } }
     private val manual = QuickButton(context) { tap { setExpanded(false); host.manualRequested() } }
     private val ruler = EvRuler(context) { index ->
-        controls = controls.copy(evIndex = index); host.controlsChanged(controls); render(); scheduleFold()
+        if (enabled) { controls = controls.copy(evIndex = index); host.controlsChanged(controls); render(); scheduleFold() }
     }.apply {
         visibility = View.GONE
     }
@@ -165,7 +165,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         flashRow.removeAllViews()
         support.flashModes(video || controls.manual.exposure != null).forEach { mode ->
             val option = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
-            val button = QuickButton(context) { flashRow.visibility = View.GONE; mainRow.visibility = View.VISIBLE; update(controls.copy(flash = mode)) }
+            val button = QuickButton(context) { tap { flashRow.visibility = View.GONE; mainRow.visibility = View.VISIBLE; update(controls.copy(flash = mode)) } }
             button.show(icon = flashIcon(mode), text = null, active = mode == controls.flash, locked = false, available = true,
                 description = "${mode.label}${if (mode == controls.flash) ", Selected" else ""}")
             option.addView(button, LinearLayout.LayoutParams(dp(48), dp(48)))
@@ -223,7 +223,6 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         if (controls.manual.exposure != null) { host.notice("수동 노출에서는 브라케팅을 사용할 수 없습니다."); return }
         if (support.evRange == null) { host.notice("이 카메라는 노출 보정(EV)을 지원하지 않아 브라케팅을 할 수 없습니다"); return }
         update(controls.copy(bracket = !controls.bracket))
-        host.notice(if (controls.bracket) "브라케팅 켜짐 · 셔터를 누르면 지금 EV와 −2·+2 EV로 3장을 찍습니다" else "브라케팅 꺼짐")
     }
 
     private fun scheduleFold() {
