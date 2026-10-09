@@ -3,13 +3,13 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
-        "modelHash": "93722cb0b57eed64",
+        "modelHash": "e55cfa83a12dc4d2",
         "at": "2026-10-09",
-        "commit": "f18f8df0",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -246,13 +246,13 @@
     },
     "omm:state-transitions": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "8c4267400109be77",
-        "modelHash": "8c42f705d599b497",
+        "modelHash": "786b02456d3ce8f0",
         "at": "2026-10-09",
-        "commit": "f18f8df0",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/MainActivity.kt": "3dead8857f15f6a783f34f066846c809aad673d4",
@@ -281,13 +281,13 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "8fb88aec6173a763",
-        "modelHash": "797c3949001924ba",
+        "modelHash": "16be4c70571447e5",
         "at": "2026-10-09",
-        "commit": "27ae1d2e",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -478,13 +478,13 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "0fce21b3472f493e",
-        "modelHash": "4a84e2a71811d109",
+        "modelHash": "c187bc9dfde23e9b",
         "at": "2026-10-09",
-        "commit": "27ae1d2e",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "f59ec707103b91820dee008e2181546b6dbfeb1e",
@@ -527,13 +527,13 @@
     },
     "content:troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "f45e04beeb7b5f55",
-        "modelHash": "def046811feafca3",
+        "modelHash": "0323752cae38edde",
         "at": "2026-10-09",
-        "commit": "27ae1d2e",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "f59ec707103b91820dee008e2181546b6dbfeb1e",
@@ -578,9 +578,9 @@
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
-        "modelHash": "db865b7408d3ff47",
+        "modelHash": "d22fa58f2106c451",
         "at": "2026-10-09",
-        "commit": "f18f8df0",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -767,15 +767,15 @@
         }
       },
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       }
     },
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
-        "modelHash": "d815f56cd9a7ca33",
+        "modelHash": "06bea8f9b39eac2f",
         "at": "2026-10-09",
-        "commit": "f18f8df0",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -962,18 +962,18 @@
         }
       },
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       }
     },
     "omm:ui-camera-label": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "50f8d9ff0212902a",
-        "modelHash": "3a5055221b4a743a",
-        "at": "2026-09-28",
-        "commit": "f30cd87",
+        "modelHash": "55a43f0afc66e140",
+        "at": "2026-10-09",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/camera/CameraEndpoint.kt": "e6b4cba31e14ee2af51744094c6f986141190528",
@@ -983,13 +983,13 @@
     },
     "omm:ui-tool-handoff": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "1661469dde9fd803",
-        "modelHash": "5e5d53010778369a",
+        "modelHash": "e9d7613eecfb53e2",
         "at": "2026-10-09",
-        "commit": "f18f8df0",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/MainActivity.kt": "3dead8857f15f6a783f34f066846c809aad673d4"
@@ -998,14 +998,14 @@
     },
     "omm:ui-zoom": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "2c5d8f9d00fc0771",
-        "modelHash": "2d9219ac22c10f20",
-        "at": "2026-09-30",
-        "commit": "36c255c",
-        "reviewer": "Codex-code-review",
+        "modelHash": "37c1e7f89718755e",
+        "at": "2026-10-09",
+        "commit": "fab768a7",
+        "reviewer": "Codex",
         "files": {
           "app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt": "cfda54636bf432b87ce40a46c33111ec6e96014f"
         }
@@ -1013,13 +1013,13 @@
     },
     "content:engine.md/contract": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
-        "modelHash": "588f96ad984ad1b4",
+        "modelHash": "8145a9795bf020ca",
         "at": "2026-10-09",
-        "commit": "f18f8df0",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -1208,13 +1208,13 @@
     },
     "content:engine.md/camera2": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
-        "modelHash": "cd51956c339fa6e4",
+        "modelHash": "c10cbc90687c4c4b",
         "at": "2026-10-09",
-        "commit": "f18f8df0",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -1403,13 +1403,13 @@
     },
     "content:engine.md/camerax": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
-        "modelHash": "0fb2deb6cb7c1c04",
+        "modelHash": "3e0e4263f984fc1c",
         "at": "2026-10-09",
-        "commit": "f18f8df0",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -1598,13 +1598,13 @@
     },
     "content:engine.md/comparison": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
-        "modelHash": "6fd3860b131c7afe",
+        "modelHash": "82a886d5ba9157d6",
         "at": "2026-10-09",
-        "commit": "f18f8df0",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -1793,13 +1793,13 @@
     },
     "content:evidence.md/device-notes": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "30d99d2fb361ed57",
-        "modelHash": "b71c4646c00c7e7a",
+        "modelHash": "96971bf40cb2bd4f",
         "at": "2026-10-09",
-        "commit": "f18f8df0",
+        "commit": "fab768a7",
         "reviewer": "Codex",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
