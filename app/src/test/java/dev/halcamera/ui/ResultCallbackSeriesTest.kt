@@ -14,10 +14,21 @@ class ResultCallbackSeriesTest {
         )
         val config = metadata(
             stream("preview_main") + ("eventKind" to "preview_available"),
-            stream("preview_sub") + ("eventKind" to "preview_available"))
+            stream("preview_sub") + ("eventKind" to "preview_available")) + ("physicalIds" to listOf("5", "6"))
         val tracks = ResultCallbackSeries.read(events, "s", 200_000_000, config).tracks
         assertEquals(60.0, tracks[2].points.single().latencyMs!!, 0.001)
         assertEquals(70.0, tracks[3].points.single().latencyMs!!, 0.001)
+    }
+    @Test fun matchingTimestampOnOtherSensorDoesNotSelectTheWrongFrame() {
+        val events = listOf(
+            Event(100_000_000, "s", "capture_started", 8, 900, mapOf("firstStart" to true)),
+            Event(130_000_000, "s", "capture_started", 9, 930, mapOf("previousStartAtNs" to 100_000_000L)),
+            Event(150_000_000, "s", "dual_physical_result", 8, values = mapOf("timestamps" to mapOf("5" to 901L, "6" to 905L))),
+            Event(160_000_000, "s", "dual_physical_result", 9, values = mapOf("timestamps" to mapOf("5" to 931L, "6" to 901L))),
+            Event(170_000_000, "s", "preview_available", sensorNs = 901, values = mapOf("stream" to "preview_main")))
+        val config = metadata(stream("preview_main") + ("eventKind" to "preview_available")) +
+            ("physicalIds" to listOf("5", "6"))
+        assertEquals(100_000_000L, ResultCallbackSeries.read(events, "s", 200_000_000, config).tracks[2].points.single().startAtNs)
     }
     @Test fun previewUsesBufferReceiptAndIgnoresLaterDisplayUpdates() {
         val config = metadata(stream("preview", "Preview") + ("eventKind" to "preview_available"))

@@ -101,6 +101,7 @@ class DualPreviewSession(
     private var device: CameraDevice? = null
     private var opening = false
     private var finished = false
+    private var failed = false
     private var session: CameraCaptureSession? = null
     private var surfaces: List<Surface> = emptyList()
     private var sizeIndex = 0
@@ -131,7 +132,7 @@ class DualPreviewSession(
     }
 
     private fun repeat() {
-        if (!active || photoPending || session == null) return
+        if (!active || failed || photoPending || session == null) return
         try { session?.setRepeatingRequest(request(), captureCallback, handler) }
         catch (e: Exception) { status("Main controls failed: ${e.message}") }
     }
@@ -207,23 +208,24 @@ class DualPreviewSession(
 
     @android.annotation.SuppressLint("NewApi")
     override fun capturePhoto(displayDegrees: Int) { handler.post {
-        if (!active || photoPending || recording || session == null) return@post
+        if (!active || failed || photoPending || recording || session == null) return@post
         val context = photoContext ?: return@post
         val controls = mainControls ?: return@post
         photoPending = true
         status("Capturing both sensors…")
         afterSessionClosed = {
-            if (active) {
-                still = DualStillCapture(checkNotNull(device), manager, plan, handler, controls, telemetry, sessionId, displayDegrees, timelineCallback) { result ->
+            val camera = device
+            if (active && !failed && camera != null) {
+                still = DualStillCapture(camera, manager, plan, handler, controls, telemetry, sessionId, displayDegrees, timelineCallback) { result ->
                     still = null
                     val saved = result.mapCatching {
-                        check(active) { "화면이 닫혀 촬영을 취소했습니다." }
+                        check(active && !failed) { "Capture cancelled: camera closed." }
                         MediaLibrary(context).saveDualPhotos(it).size
                     }
                     saved.exceptionOrNull()?.let { android.util.Log.w("DualPreview", "Dual photo failed", it) }
                     photoPending = false
-                    main.post { listener.onPhotoSaved(saved) }
-                    if (active) configure(checkNotNull(device))
+                    main.post { if (active && !failed) listener.onPhotoSaved(saved) }
+                    if (active && !failed) device?.let(::configure)
                 }.also { it.start() }
             }
         }
@@ -426,6 +428,10 @@ class DualPreviewSession(
 
     /** A failure stops the stream and frees the camera; the screen keeps the message until it is left or retried. */
     private fun fail(message: String) {
+        if (!active || failed) return
+        failed = true
+        afterSessionClosed = null
+        if (Build.VERSION.SDK_INT >= 28) still?.cancel()
         video?.invalidate()
         main.post { if (active) listener.onFailed(message) }
         runCatching { session?.close() }

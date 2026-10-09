@@ -41,8 +41,11 @@ internal class DualStillCapture(
                 ?.getOutputSizes(ImageFormat.YUV_420_888)?.map { LiveSize(it.width, it.height) }.orEmpty() }
             val size = DualPreviewPlanner.commonSizes(sizes[0], sizes[1]).firstOrNull()
                 ?: error("두 센서의 공통 YUV 사진 크기가 없습니다.")
-            readers = ids.mapIndexed { index, _ ->
-                ImageReader.newInstance(size.width, size.height, ImageFormat.YUV_420_888, 3).apply {
+            ids.forEachIndexed { index, _ ->
+                val reader = ImageReader.newInstance(size.width, size.height, ImageFormat.YUV_420_888, 3)
+                // Retain each reader immediately so a later allocation/listener failure closes earlier ones.
+                readers = readers + reader
+                reader.apply {
                     setOnImageAvailableListener({ reader ->
                         if (closing) return@setOnImageAvailableListener
                         try {
