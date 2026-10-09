@@ -66,7 +66,7 @@ internal class CameraXStillCapture(
             main.post { done?.invoke(Result.failure(IllegalStateException("Camera not ready or busy"))) }
             return
         }
-        val pending = Photo(library.name(), requestId, done)
+        val pending = Photo(BracketFiles.named(library.name(), requestId), requestId, done)
         synchronized(lock) { photo = pending }
         inFlight = true
         host.updateRotation()

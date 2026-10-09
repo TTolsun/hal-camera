@@ -15,11 +15,11 @@ import java.util.UUID
 
 /** Publishes only complete files. A failed pair is removed instead of leaving half a capture. */
 class MediaLibrary(context: Context) {
-    private val resolver = context.applicationContext.contentResolver
+    internal val resolver = context.applicationContext.contentResolver
     fun name() = "HAL_" + SimpleDateFormat("yyyyMMdd_HHmmss_SSS", Locale.US).format(Date()) + "_" + UUID.randomUUID().toString().take(6)
 
     @Suppress("DEPRECATION")
-    private fun create(name: String, video: Boolean, mime: String = if (video) "video/mp4" else "image/jpeg"): Uri {
+    internal fun create(name: String, video: Boolean, mime: String = if (video) "video/mp4" else "image/jpeg"): Uri {
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, mime)
@@ -36,11 +36,11 @@ class MediaLibrary(context: Context) {
             ?: error("Cannot create media entry")
     }
 
-    private fun write(uri: Uri, writer: (OutputStream) -> Unit) {
+    internal fun write(uri: Uri, writer: (OutputStream) -> Unit) {
         (resolver.openOutputStream(uri) ?: error("Cannot open media entry")).use(writer)
     }
 
-    private fun publish(uri: Uri) {
+    internal fun publish(uri: Uri) {
         if (Build.VERSION.SDK_INT >= 29) check(resolver.update(uri, ContentValues().apply {
             put(MediaStore.MediaColumns.IS_PENDING, 0)
         }, null, null) == 1) { "Cannot publish media entry" }
@@ -79,7 +79,7 @@ class MediaLibrary(context: Context) {
         saveFiles(name, yuvJpeg, cameraJpeg, original, captureMetadata, dng)
 
     @Suppress("DEPRECATION")
-    private fun createData(name: String, mime: String): Uri {
+    internal fun createData(name: String, mime: String): Uri {
         val values = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, name)
             put(MediaStore.MediaColumns.MIME_TYPE, mime)
