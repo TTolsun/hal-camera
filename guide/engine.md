@@ -1,10 +1,10 @@
 ---
-title: Engine
+title: 엔진 차이
 nav_order: 5
 ---
-<h1 lang="en">Two engines.<br>One camera contract.</h1>
+<h1 lang="en">Know what differs.</h1>
 
-**Live가 Camera2와 CameraX 중 어느 엔진으로 열렸는지 확인하세요.** 같은 조작이라도 요청 구성과 관측 가능한 버퍼가 다릅니다. 이 페이지는 엔진의 구현을 설명하며, 화면 조작은 [Quickstart](getting-started.md#live에서-촬영하세요), 그래프 해석은 [Callback](callback.md)에서 확인합니다.
+**Live가 Camera2와 CameraX 중 어느 엔진으로 열렸는지 확인하세요.** 같은 조작이라도 요청 구성과 관측 가능한 버퍼가 다릅니다. 화면 조작은 [Live](live.md), 그래프 해석은 [Callback](callback.md)에서 확인합니다.
 
 | 궁금한 내용 | 자세히 |
 | --- | --- |
@@ -13,7 +13,7 @@ nav_order: 5
 | CameraX 엔진이 같은 기능을 제공하는 방법을 확인합니다. | [CameraX 엔진](#camerax-엔진) |
 | 두 엔진의 결과가 달라질 수 있는 지점을 확인합니다. | [두 엔진의 차이](#두-엔진의-차이) |
 
-엔진이 앱 전체 구조에서 차지하는 위치는 [아키텍처](architecture.md#패키지별-역할)에 있습니다.
+내부 구현은 아래에서 필요한 항목만 펼쳐 보세요.
 
 ## 두 엔진의 차이
 
@@ -125,6 +125,9 @@ CameraX 1.6.2로 녹화 중 사진을 찍으면 영상 간격이 늘어날 수 �
 
 ## 엔진 계약
 
+<details markdown="1" id="engine-contract" data-search-section>
+<summary>엔진 계약의 구현과 근거</summary>
+
 <!-- omm:begin id=contract -->
 
 **화면은 엔진 클래스가 아니라 엔진이 구현한 인터페이스로 기능을 확인합니다.** 그래서 Live의 셔터, 상단 제어, 프리뷰 터치는 Camera2와 CameraX에서 같은 코드로 동작하고, 엔진을 바꾸지 않습니다.
@@ -211,7 +214,12 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 <!-- omm:end id=contract -->
 
+</details>
+
 ## Camera2 엔진
+
+<details markdown="1" id="camera2-internals" data-search-section>
+<summary>Camera2 엔진의 구현과 근거</summary>
 
 <!-- omm:begin id=camera2 -->
 
@@ -583,7 +591,12 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 <!-- omm:end id=camera2 -->
 
+</details>
+
 ## CameraX 엔진
+
+<details markdown="1" id="camerax-internals" data-search-section>
+<summary>CameraX 엔진의 구현과 근거</summary>
 
 <!-- omm:begin id=camerax -->
 
@@ -821,6 +834,8 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 <!-- omm:end id=camerax -->
 
+
+</details>
 
 ## 문서 검토 상태
 

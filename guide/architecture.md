@@ -14,7 +14,7 @@ nav_order: 4
 | 카메라 종료와 스레드 제약을 확인합니다. | [생명주기와 스레드](#생명주기와-스레드) |
 | 변경 후 지켜야 할 규칙과 검증 방법을 확인합니다. | [변경 시 지켜야 할 제약](#변경-시-지켜야-할-제약) |
 
-아직 빌드하지 않았다면 [빠른 시작](getting-started.md)을 먼저 진행하세요. 아래의 `코드 확인`은 구현을 대조했다는 뜻이며, 기기 실측을 뜻하지 않습니다.
+앱 소스를 빌드하려면 [앱 빌드](building.md)를 확인하세요. 아래의 `코드 확인`은 구현을 대조했다는 뜻이며, 기기 실측을 뜻하지 않습니다.
 
 ## 앱의 역할과 평가 경로
 
@@ -104,7 +104,7 @@ flowchart TB
 | `telemetry/` | 이벤트를 기록하고 ZIP으로 내보냅니다. | [디버깅](troubleshooting.md) |
 | `cts/` | 앱에서 카메라 검사를 실행합니다. | [CTS](cts.md) |
 | `ctsvendor/` (별도 Gradle 모듈) | AOSP CTS 원문과 호환 패치를 담습니다. | [CTS 원문](cts.md#cts-원문-메서드를-선택하세요) |
-| `ui/`와 `MainActivity.kt` | 화면과 공통 디자인을 구성합니다. | [Quickstart](getting-started.md) |
+| `ui/`와 `MainActivity.kt` | 화면과 공통 디자인을 구성합니다. | [Live](live.md) |
 
 <details markdown="1" id="detail-6a4f150e2a" data-search-section>
 <summary>cli/, assets/halcam.sh, tools/halcam/</summary>
@@ -227,7 +227,7 @@ flowchart TB
 
 각 화면을 어떻게 읽고 조작하는지는 해당 화면을 담당하는 문서에 있습니다.
 
-결과 화면과 실행 기록은 [Benchmark](benchmark.md), 사양 표는 [Probe](probe.md), 케이스 실행과 판정은 [CTS](cts.md), 프레임별 그래프는 [Callback](callback.md), ADB 명령의 사용법은 [CLI](cli.md)에서 확인하세요. Live 조작은 [빠른 시작](getting-started.md)에 있습니다.
+결과 화면과 실행 기록은 [Benchmark](benchmark.md), 사양 표는 [Probe](probe.md), 케이스 실행과 판정은 [CTS](cts.md), 프레임별 그래프는 [Callback](callback.md), ADB 명령의 사용법은 [CLI](cli.md)에서 확인하세요. Live 조작은 [Live](live.md에 있습니다.
 
 배치·간격·애니메이션·접근성 문구 같은 앱의 조작 규칙은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)가 관리합니다.
 
@@ -329,7 +329,7 @@ Live 셔터는 현재 엔진의 `MediaCapture`로 사진이나 동영상을 저�
 
 Lab은 `WorkbenchActivity`가 담당하며 카메라를 직접 열지 않습니다. Live의 `close(done)`이 끝나면 Lab을 엽니다. 선택한 카메라 ID는 Probe와 Benchmark에, 엔진은 Benchmark에 전달합니다.
 
-녹화·저장·세션 종료·CLI 작업 중에는 Lab 버튼을 비활성화합니다. Live Streams도 카메라를 닫은 뒤 열며, 저장하거나 뒤로 가면 진입한 화면으로 돌아갑니다. 화면 조작은 [Quickstart](getting-started.md#추가-설정)를 확인하세요.
+녹화·저장·세션 종료·CLI 작업 중에는 Lab 버튼을 비활성화합니다. Live Streams도 카메라를 닫은 뒤 열며, 저장하거나 뒤로 가면 진입한 화면으로 돌아갑니다. 화면 조작은 [Live](live.md#추가-설정)를 확인하세요.
 
 ### 갤러리 항목의 조회 경로
 
@@ -591,7 +591,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 확인할 수 있습니다. 저장소 루트에서 실행하세요.
 
-테스트 실행 명령과 개발 환경은 [빠른 시작](getting-started.md#앱을-빌드하고-실행하세요)을 확인하세요.
+테스트 실행 명령과 개발 환경은 [앱 빌드](building.md#앱을-빌드하고-실행하세요)을 확인하세요.
 
 `BenchmarkRunnerTest`, `RunAssemblerTest`, `RegressionDetectorTest`, `MetricExtractorTest`에서 단계 전이와 계산 규칙을 확인합니다. 테스트가 통과해도 문서의 조건·예외가 코드와 맞는지 대조해야 합니다. 기기에서의 검증은 별도로 기록합니다.
 

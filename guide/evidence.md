@@ -1,5 +1,5 @@
 ---
-title: Evidence
+title: 검증 기록
 ---
 <h1 lang="en">Trust starts with a trace.</h1>
 

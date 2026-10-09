@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CLI · HALCamera 개발자 가이드</title>
-  <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
+  <title>CLI · HALCamera 사용 가이드</title>
+  <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
   <script type="module" src="./assets/search.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
@@ -14,23 +14,21 @@
   <header class="site-header">
     <a class="brand" href="./index.html">HAL CAMERA</a>
     <nav class="site-nav" aria-label="문서 메뉴">
-      <a href="./architecture.html">Architecture</a>
-      <a href="./engine.html">Engine</a>
+      <a href="./getting-started.html">시작하기</a>
+      <a href="./live.html">Live</a>
       <a href="./probe.html">Probe</a>
       <a href="./cts.html">CTS</a>
       <a href="./benchmark.html">Benchmark</a>
       <a href="./callback.html">Callback</a>
-      <a href="./cli.html" aria-current="page">CLI</a>
-      <a href="./coding-agents.html">Agents</a>
-      <a href="./evidence.html">Evidence</a>
-      <a href="./getting-started.html">Quickstart</a>
-      <a href="./troubleshooting.html">Debugging</a>
+      <a href="./automation.html">자동화</a>
+      <a href="./troubleshooting.html">문제 찾기</a>
     </nav>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="document">
-    <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
-    <h1 lang="en">Control the camera with adb.</h1><p>Windows(PowerShell·CMD)와 WSL에서 <code>adb</code>로 카메라를 제어합니다. Git·Python·pip·JDK·Android Studio는 필요하지 않습니다. <strong>ADB CLI 허용은 기본으로 켜져 있으며</strong>, 사용자가 직접 꺼 둔 설정은 업데이트 후에도 유지합니다.</p>
+    <p class="eyebrow page-label">HAL CAMERA / 사용 가이드</p>
+    <h1 lang="en">Control the camera with adb.</h1><p><a href="automation.html">자동화</a>에서 다른 실행 방법도 확인할 수 있습니다.</p>
+<p>Windows(PowerShell·CMD)와 WSL에서 <code>adb</code>로 카메라를 제어합니다. Git·Python·pip·JDK·Android Studio는 필요하지 않습니다. <strong>ADB CLI 허용은 기본으로 켜져 있으며</strong>, 사용자가 직접 꺼 둔 설정은 업데이트 후에도 유지합니다.</p>
 <h2 id="처음-실행하세요">처음 실행하세요</h2>
 <ol>
 <li>사용할 터미널에서 <code>adb devices -l</code>로 연결된 기기를 확인합니다. <code>unauthorized</code>이면 기기에서 디버깅을 허용하고, <code>offline</code>이면 연결을 복구합니다. 환경별 연결 방법은 아래를 참고하세요.</li>
@@ -263,7 +261,8 @@ halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json
 <p><strong>다음 단계:</strong> 에이전트에게 작업을 맡기는 방법은 <a href="coding-agents.html">Agents</a>를 확인하세요.</p>
 
   </main>
-  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <nav class="reference-nav" aria-label="참고 자료"><span>참고 자료</span><a href="./engine.html">엔진 차이</a><a href="./evidence.html">검증 기록</a><a href="./architecture.html">내부 구조</a><a href="./building.html">앱 빌드</a><a href="./contributing.html">문서 관리</a></nav>
+  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>사용 가이드 <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">
       <div class="search-head"><h2 id="search-title">문서 찾기</h2><button class="search-close" type="button">닫기 <kbd>Esc</kbd></button></div>

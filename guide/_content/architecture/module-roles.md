@@ -56,7 +56,7 @@ verifications: []
 | `telemetry/` | 이벤트를 기록하고 ZIP으로 내보냅니다. | [디버깅](troubleshooting.md) |
 | `cts/` | 앱에서 카메라 검사를 실행합니다. | [CTS](cts.md) |
 | `ctsvendor/` (별도 Gradle 모듈) | AOSP CTS 원문과 호환 패치를 담습니다. | [CTS 원문](cts.md#cts-원문-메서드를-선택하세요) |
-| `ui/`와 `MainActivity.kt` | 화면과 공통 디자인을 구성합니다. | [Quickstart](getting-started.md) |
+| `ui/`와 `MainActivity.kt` | 화면과 공통 디자인을 구성합니다. | [Live](live.md) |
 
 <details markdown="1" id="detail-6a4f150e2a" data-search-section>
 <summary>cli/, assets/halcam.sh, tools/halcam/</summary>

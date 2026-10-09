@@ -3,6 +3,8 @@ title: CLI
 ---
 <h1 lang="en">Control the camera with adb.</h1>
 
+[자동화](automation.md)에서 다른 실행 방법도 확인할 수 있습니다.
+
 Windows(PowerShell·CMD)와 WSL에서 `adb`로 카메라를 제어합니다. Git·Python·pip·JDK·Android Studio는 필요하지 않습니다. **ADB CLI 허용은 기본으로 켜져 있으며**, 사용자가 직접 꺼 둔 설정은 업데이트 후에도 유지합니다.
 
 ## 처음 실행하세요

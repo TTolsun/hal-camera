@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Engine · HALCamera 개발자 가이드</title>
-  <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
+  <title>엔진 차이 · HALCamera 사용 가이드</title>
+  <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
   <script type="module" src="./assets/search.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
@@ -14,23 +14,20 @@
   <header class="site-header">
     <a class="brand" href="./index.html">HAL CAMERA</a>
     <nav class="site-nav" aria-label="문서 메뉴">
-      <a href="./architecture.html">Architecture</a>
-      <a href="./engine.html" aria-current="page">Engine</a>
+      <a href="./getting-started.html">시작하기</a>
+      <a href="./live.html">Live</a>
       <a href="./probe.html">Probe</a>
       <a href="./cts.html">CTS</a>
       <a href="./benchmark.html">Benchmark</a>
       <a href="./callback.html">Callback</a>
-      <a href="./cli.html">CLI</a>
-      <a href="./coding-agents.html">Agents</a>
-      <a href="./evidence.html">Evidence</a>
-      <a href="./getting-started.html">Quickstart</a>
-      <a href="./troubleshooting.html">Debugging</a>
+      <a href="./automation.html">자동화</a>
+      <a href="./troubleshooting.html">문제 찾기</a>
     </nav>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="document">
-    <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
-    <h1 lang="en">Two engines.<br>One camera contract.</h1><p><strong>Live가 Camera2와 CameraX 중 어느 엔진으로 열렸는지 확인하세요.</strong> 같은 조작이라도 요청 구성과 관측 가능한 버퍼가 다릅니다. 이 페이지는 엔진의 구현을 설명하며, 화면 조작은 <a href="getting-started.html#live에서-촬영하세요">Quickstart</a>, 그래프 해석은 <a href="callback.html">Callback</a>에서 확인합니다.</p>
+    <p class="eyebrow page-label">HAL CAMERA / 사용 가이드</p>
+    <h1 lang="en">Know what differs.</h1><p><strong>Live가 Camera2와 CameraX 중 어느 엔진으로 열렸는지 확인하세요.</strong> 같은 조작이라도 요청 구성과 관측 가능한 버퍼가 다릅니다. 화면 조작은 <a href="live.html">Live</a>, 그래프 해석은 <a href="callback.html">Callback</a>에서 확인합니다.</p>
 <table>
 <thead>
 <tr>
@@ -55,7 +52,7 @@
 <td><a href="#두-엔진의-차이">두 엔진의 차이</a></td>
 </tr>
 </tbody></table>
-<p>엔진이 앱 전체 구조에서 차지하는 위치는 <a href="architecture.html#패키지별-역할">아키텍처</a>에 있습니다.</p>
+<p>내부 구현은 아래에서 필요한 항목만 펼쳐 보세요.</p>
 <h2 id="두-엔진의-차이">두 엔진의 차이</h2>
 <!-- omm:begin id=comparison --><p><strong>두 엔진의 측정값을 비교하기 전에 아래 차이가 결과에 영향을 주는지 확인하세요.</strong> 같은 조작이라도 엔진이 카메라에 보내는 요청과 앱이 기록하는 시각이 다를 수 있습니다.</p>
 <table>
@@ -221,7 +218,8 @@
 <figcaption>CameraX로 전환한 뒤 프리뷰와 실시간 정보가 갱신되는 화면입니다. 상단의 엔진 이름으로 현재 경로를 확인합니다. <a href="assets/screenshots/engine-camerax.png">원본 보기</a></figcaption>
 </figure></details>
 </div><h2 id="엔진-계약">엔진 계약</h2>
-<!-- omm:begin id=contract --><p><strong>화면은 엔진 클래스가 아니라 엔진이 구현한 인터페이스로 기능을 확인합니다.</strong> 그래서 Live의 셔터, 상단 제어, 프리뷰 터치는 Camera2와 CameraX에서 같은 코드로 동작하고, 엔진을 바꾸지 않습니다.</p>
+<details id="engine-contract" data-search-section>
+<summary>엔진 계약의 구현과 근거</summary><!-- omm:begin id=contract --><p><strong>화면은 엔진 클래스가 아니라 엔진이 구현한 인터페이스로 기능을 확인합니다.</strong> 그래서 Live의 셔터, 상단 제어, 프리뷰 터치는 Camera2와 CameraX에서 같은 코드로 동작하고, 엔진을 바꾸지 않습니다.</p>
 <pre><code class="language-mermaid">classDiagram
     direction TB
     class CameraEngine { &lt;&lt;interface&gt;&gt; }
@@ -347,8 +345,9 @@
 <li>근거 수준: 코드 확인</li>
 <li>검토 2026-10-09 @ <code>8bc5634c</code> · Claude</li>
 </ul>
-</details><!-- omm:end id=contract --><h2 id="camera2-엔진">Camera2 엔진</h2>
-<!-- omm:begin id=camera2 --><p><strong>Camera2Engine은 앱에서 CaptureRequest를 직접 구성합니다.</strong> <code>request_observed</code>에 기록한 키를 HAL 로그와 대조할 수 있습니다. 엔진 자체는 세션, 요청 구성, 줌, Live 제어를 담당하고, 사진은 <code>Camera2StillCapture</code>, Live 녹화는 <code>Camera2LiveRecorder</code>, 터치 측광은 <code>Camera2TouchFocus</code>, 벤치마크 녹화는 <code>BenchmarkRecorder</code>가 맡습니다. 카메라 요청과 capture 콜백은 엔진이 만든 카메라 스레드 하나에서 처리하고, 버퍼 relay와 파일 저장은 각자의 스레드에서 처리합니다.</p>
+</details><!-- omm:end id=contract --></details><h2 id="camera2-엔진">Camera2 엔진</h2>
+<details id="camera2-internals" data-search-section>
+<summary>Camera2 엔진의 구현과 근거</summary><!-- omm:begin id=camera2 --><p><strong>Camera2Engine은 앱에서 CaptureRequest를 직접 구성합니다.</strong> <code>request_observed</code>에 기록한 키를 HAL 로그와 대조할 수 있습니다. 엔진 자체는 세션, 요청 구성, 줌, Live 제어를 담당하고, 사진은 <code>Camera2StillCapture</code>, Live 녹화는 <code>Camera2LiveRecorder</code>, 터치 측광은 <code>Camera2TouchFocus</code>, 벤치마크 녹화는 <code>BenchmarkRecorder</code>가 맡습니다. 카메라 요청과 capture 콜백은 엔진이 만든 카메라 스레드 하나에서 처리하고, 버퍼 relay와 파일 저장은 각자의 스레드에서 처리합니다.</p>
 <h3 id="수동-촬영">수동 촬영</h3>
 <p><strong>Camera2에서 노출·초점·WB를 고정할 수 있습니다.</strong> 요청한 값과 실제 적용값을 함께 확인하세요.</p>
 <details id="detail-611519fe59" data-search-section>
@@ -671,8 +670,9 @@
 <li>근거 수준: 코드 확인</li>
 <li>검토 2026-10-09 @ <code>8bc5634c</code> · Claude</li>
 </ul>
-</details><!-- omm:end id=camera2 --><h2 id="camerax-엔진">CameraX 엔진</h2>
-<!-- omm:begin id=camerax --><p><strong>CameraXEngine은 CameraX use case로 Live 촬영과 제어를 제공하지만, 요청 키 일부는 CameraX가 정합니다.</strong> Live 스트림 설정에서 Preview·YUV·JPEG 크기와 출력 활성화를 선택할 수 있습니다. 앱이 CameraX 1.6.2에 직접 넣는 Camera2 키에는 AE 잠금(<code>CONTROL_AE_LOCK</code>), AF 잠금 해제용 cancel trigger, 광학 보정(<code>LENS_OPTICAL_STABILIZATION_MODE</code>)이 있습니다. 엔진 자체는 use case bind, 줌, 수명 주기를 담당하고, 사진은 <code>CameraXStillCapture</code>, 녹화는 <code>CameraXLiveRecorder</code>, Live 제어와 터치 측광은 <code>CameraXControls</code>가 맡습니다.</p>
+</details><!-- omm:end id=camera2 --></details><h2 id="camerax-엔진">CameraX 엔진</h2>
+<details id="camerax-internals" data-search-section>
+<summary>CameraX 엔진의 구현과 근거</summary><!-- omm:begin id=camerax --><p><strong>CameraXEngine은 CameraX use case로 Live 촬영과 제어를 제공하지만, 요청 키 일부는 CameraX가 정합니다.</strong> Live 스트림 설정에서 Preview·YUV·JPEG 크기와 출력 활성화를 선택할 수 있습니다. 앱이 CameraX 1.6.2에 직접 넣는 Camera2 키에는 AE 잠금(<code>CONTROL_AE_LOCK</code>), AF 잠금 해제용 cancel trigger, 광학 보정(<code>LENS_OPTICAL_STABILIZATION_MODE</code>)이 있습니다. 엔진 자체는 use case bind, 줌, 수명 주기를 담당하고, 사진은 <code>CameraXStillCapture</code>, 녹화는 <code>CameraXLiveRecorder</code>, Live 제어와 터치 측광은 <code>CameraXControls</code>가 맡습니다.</p>
 <h3 id="camerax-손떨림-보정">CameraX 손떨림 보정</h3>
 <p><strong>CameraX와 하드웨어가 함께 지원하는 보정 모드만 표시합니다.</strong> 영상용 EIS는 녹화 중에 적용합니다.</p>
 <details id="detail-9947135f73" data-search-section>
@@ -853,7 +853,7 @@
 <li>근거 수준: 코드 확인</li>
 <li>검토 2026-10-09 @ <code>8bc5634c</code> · Claude</li>
 </ul>
-</details><!-- omm:end id=camerax --><h2 id="문서-검토-상태">문서 검토 상태</h2>
+</details><!-- omm:end id=camerax --></details><h2 id="문서-검토-상태">문서 검토 상태</h2>
 <details id="detail-f9c230aa61" data-search-section>
 <summary>기준 앱 버전과 검토 커밋 확인</summary><!-- omm:begin id=status --><ul>
 <li>검증 기준 앱 버전: 0.22.0 (versionCode 650)</li>
@@ -902,7 +902,8 @@
 <p><strong>다음 단계:</strong> 엔진에서 나온 이벤트가 지표로 바뀌는 순서는 <a href="architecture.html#주요-실행-흐름">주요 실행 흐름</a>에서 확인하세요.</p>
 
   </main>
-  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <nav class="reference-nav" aria-label="참고 자료"><span>참고 자료</span><a href="./engine.html">엔진 차이</a><a href="./evidence.html">검증 기록</a><a href="./architecture.html">내부 구조</a><a href="./building.html">앱 빌드</a><a href="./contributing.html">문서 관리</a></nav>
+  <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>사용 가이드 <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">
       <div class="search-head"><h2 id="search-title">문서 찾기</h2><button class="search-close" type="button">닫기 <kbd>Esc</kbd></button></div>
