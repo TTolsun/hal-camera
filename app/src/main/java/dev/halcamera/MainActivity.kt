@@ -675,7 +675,7 @@ class MainActivity : ComponentActivity() {
                     withMediaPermissions(true) { (engine as? MediaCapture)?.startRecording() }
                 } else withMediaPermissions(false) { engine?.capture() }
             }
-            setOnLongClickListener { (!videoMode && !mediaBusy()).also { if (it) withMediaPermissions(false) { bursts.hold(sessionId) } } }
+            setOnLongClickListener { (!videoMode && !mediaBusy()).also { if (it) withMediaPermissions(false) { if (isPressed) bursts.hold(sessionId) } } }
             setOnTouchListener { _, e -> if (e.actionMasked in listOf(MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL)) bursts.release(); false }
         }
         captureRow.addView(mediaButton,LinearLayout.LayoutParams(captureSize,captureSize).apply { marginStart=dp(12); marginEnd=dp(12) })
