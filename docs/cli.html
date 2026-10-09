@@ -206,7 +206,9 @@ halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json
 <pre><code class="language-sh">adb shell sh /data/local/tmp/halcam status REQUEST_ID
 </code></pre>
 </li>
-<li><p>아직 실행 중이면 기다린 뒤 다시 조회합니다. 중단해야 한다면 <code>cancel REQUEST_ID</code>를 사용합니다. 이미 제출한 사진은 저장될 수 있습니다.</p>
+<li><p>아직 실행 중이면 기다린 뒤 다시 조회합니다. 중단해야 한다면 아래 명령으로 취소합니다. 이미 제출한 사진은 저장될 수 있습니다.</p>
+<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam cancel REQUEST_ID
+</code></pre>
 </li>
 <li><p>파일이 생성됐으면 아래 명령으로 회수를 다시 준비합니다. 실패·취소한 요청에도 파일이 남을 수 있습니다.</p>
 <pre><code class="language-sh">adb shell sh /data/local/tmp/halcam fetch REQUEST_ID

@@ -6,6 +6,8 @@ sources:
   - tools/halcam/halcam/cli.py
   - app/src/main/java/dev/halcamera/MainActivity.kt
   - app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt
+  - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+  - app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt
   - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
   - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
   - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
@@ -51,7 +53,9 @@ Camera2의 기본 사진 저장에는 센서 타임스탬프가 일치하는 YUV
 
 Camera2의 Flash Auto·On에서 precapture 측광이 3초 안에 끝나지 않으면 안내 문구를 표시하고 촬영을 진행합니다. 촬영 지연을 확인할 때 이 대기 시간도 구분하세요. CameraX의 플래시 측광은 ImageCapture가 처리합니다.
 
-AE 잠금을 켠 채 녹화를 시작하거나 멈추면 새 세션에서 노출을 다시 맞춘 뒤 잠급니다. 잠금 전과 1/3 EV 넘게 달라지면 차이를 알립니다. Camera2 녹화에서는 노출 시간이 30fps의 프레임 길이인 약 33 ms로 제한되므로 어두운 장면의 노출이 달라질 수 있습니다. 요청과 적용 결과는 `request_observed`·`capture_result`·`ae_relocked` 이벤트로 대조합니다.
+AE 잠금을 켠 채 녹화를 시작하거나 멈추면 새 세션에서 노출을 다시 맞춘 뒤 잠급니다. 잠금 전과 1/3 EV 넘게 달라지면 차이를 알립니다.
+
+Camera2의 수동 노출 시간은 선택한 녹화 FPS와 센서 범위로 제한합니다. 프레임 길이는 30fps에서 약 33 ms, 60fps에서 약 17 ms이므로 어두운 장면의 노출이 달라질 수 있습니다. 요청과 적용 결과는 `request_observed`·`capture_result`·`ae_relocked` 이벤트로 대조합니다.
 
 ### 실행 기록과 CSV의 개수가 다를 때
 

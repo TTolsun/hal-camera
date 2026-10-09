@@ -544,11 +544,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6cb5e949742513a1",
-        "modelHash": "70345d02ddf475c2",
+        "codeHash": "62c6fa1f7d1d292e",
+        "modelHash": "70f2f78f51613504",
         "at": "2026-10-09",
-        "commit": "678893a2",
-        "reviewer": "Codex (code review; emulator UI only)",
+        "commit": "939d48e5",
+        "reviewer": "Codex (code review only; no device test)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "029ef5f2d480e1a7b117026ba42658be1a5f9d6a",
@@ -571,6 +571,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "518c730a1dd2c1e011fbe4792d1c72a8ba351ae1",
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "a290adb1490152df591a5c7bed7a76e09f95859f",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "3e2f653654f7696accd12b04defde0fa44c0d3a3",
+          "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "10c7a557529d4bae4c682c743466ff5b9ff5bbf0",
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "586757ab962be12cb4604062da5d0042fe04cb01",
