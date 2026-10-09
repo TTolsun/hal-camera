@@ -801,7 +801,7 @@ class MainActivity : ComponentActivity() {
         pausedOverlay.visibility=if(paused) View.VISIBLE else View.GONE
         modeControls.visibility=if(recordingVideo) View.INVISIBLE else View.VISIBLE
         recordingTime.visibility=if(recordingVideo) View.VISIBLE else View.GONE
-        mediaButton.setCaptureState(videoMode,recordingVideo,bursts.run != null,controlBar.controls.bracket)
+        mediaButton.setCaptureState(videoMode,recordingVideo,bursts.run != null,controlBar.controls.bracket,bursts.label)
         captureFeedback.bind(bursts.label,controlBar.controls.bracket && !videoMode)
         if(stoppingRecording) {
             mediaButton.contentDescription="Saving video"
@@ -813,7 +813,6 @@ class MainActivity : ComponentActivity() {
             mediaButton.isEnabled = false
             mediaButton.contentDescription = "Photo output is off: enable YUV, JPEG or RAW in Live streams"
         }
-        bursts.label?.let { ViewCompat.setStateDescription(mediaButton,it) }
         engineButton.isEnabled=idle
         cameraShortcut.isEnabled=idle && cameraId.isNotEmpty()
         val snapshot=(engine as? MediaCapture)?.snapshot ?: SnapshotStatus.NONE

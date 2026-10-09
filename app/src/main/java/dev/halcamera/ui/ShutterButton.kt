@@ -56,7 +56,7 @@ class ShutterButton(context: Context) : Button(context) {
         }
     }
 
-    fun setCaptureState(videoMode: Boolean, recording: Boolean, sequence: Boolean = false, bracket: Boolean = false) {
+    fun setCaptureState(videoMode: Boolean, recording: Boolean, sequence: Boolean = false, bracket: Boolean = false, state: String? = null) {
         shutter.videoMode = videoMode
         shutter.recording = recording
         shutter.sequence = sequence
@@ -68,7 +68,7 @@ class ShutterButton(context: Context) : Button(context) {
             bracket -> "Take 3 exposure bracket photos"
             else -> "Take a photo"
         }
-        ViewCompat.setStateDescription(this, if (recording) "Recording" else null)
+        ViewCompat.setStateDescription(this, state ?: if (recording) "Recording" else null)
         val allowBurst = accessibleBurst != null && !videoMode && !sequence && !bracket
         isLongClickable = allowBurst
         if (burstAccessible != allowBurst) {
