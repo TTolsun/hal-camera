@@ -31,7 +31,7 @@ Android 앱과 문서 사이트는 이 문서를 단일 디자인 기준으로 �
 4. 앱에서 관찰할 수 있는 범위를 짧게 설명하고 엔진 차이를 연결합니다.
 5. 짧은 편집 문장과 근거 확인 링크로 마무리합니다.
 
-상단 탭과 브라우저 제목은 같은 이름을 사용합니다. 상단 메뉴와 홈 목차의 제목, 하단 참고 링크, 브라우저 제목, User Guide 표지는 영어로 표시합니다. 페이지의 대표 제목은 짧은 영어 문장으로 쓰고 절 제목·설명·절차는 한국어로 작성합니다. 하단 참고 자료에는 Engine Comparison·Validation·Architecture·Build·Contributing을 연결합니다. 기존 문서 주소는 보존합니다.
+상단 탭과 브라우저 제목은 같은 이름을 사용합니다. 상단 메뉴와 홈 목차의 제목, 하단 참고 링크, 브라우저 제목, User Guide 표지는 영어로 표시합니다. 페이지의 대표 제목은 짧은 영어 문장으로 쓰고 절 제목·설명·절차는 한국어로 작성합니다. 하단 References에는 Glossary·Engine Comparison·Validation·Architecture·Build·Contributing을 연결합니다. 기존 문서 주소는 보존합니다.
 
 ## 시각 토큰
 
@@ -133,3 +133,5 @@ Mermaid는 한 그림에 한 흐름만 담고 긴 클래스 목록은 표로 옮
 CSS 원본은 공용 실행기의 custom 프리셋으로 연결합니다. `node tools/docgen/docflow.mjs design`을 실행하면 사이트의 `guide/assets/docflow-design.css`가 갱신됩니다.
 
 custom CSS는 공용 엔진이 원본 스타일시트를 그대로 복사하여 생성합니다. `node tools/docgen/docflow.mjs design --check`로 생성 결과를 확인합니다.
+
+Glossary는 상단 탭을 추가하지 않고 References의 첫 링크와 Quickstart에서 연결합니다. 본문의 용어는 첫 등장 등 필요한 위치에서 해당 정의로 연결하며, 뜻은 한국어로 짧게 설명합니다. 각 용어는 직접 링크와 본문 검색이 가능한 제목을 가집니다.

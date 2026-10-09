@@ -29,7 +29,8 @@
     <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
     <h1 lang="en">One frame.<br>Every callback.</h1><p><strong>Live 화면의 <code>Callback</code>을 누르면 한 프레임의 콜백이 앱에 도착한 시각을 비교할 수 있습니다.</strong> Shutter·Metadata와 현재 세션의 출력 스트림을 같은 시간축에 표시합니다. 점의 위치는 도착 시각이고, 오른쪽 고정 열은 그 값을 ms로 보여 줍니다.</p>
 <p>그래프를 켜면 FPS·ISO·노출·AF·AE 정보 두 줄을 숨깁니다. 촬영·녹화 조작부는 그대로 사용할 수 있으며 <code>Callback</code>을 다시 누르면 그래프가 닫힙니다.</p>
-<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p><h2 id="시간-기준을-확인하세요">시간 기준을 확인하세요</h2>
+<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p><p>앱 시각과 센서 시각의 차이는 <a href="glossary.html#timestamp">Timestamp</a>에서 확인하세요.</p>
+<h2 id="시간-기준을-확인하세요">시간 기준을 확인하세요</h2>
 <p><strong>0ms는 이전 프레임의 <code>onCaptureStarted</code> 콜백을 앱에서 받은 시점입니다.</strong> 현재 프레임의 Shutter부터 Metadata와 각 출력까지 모두 이 기준에서 경과한 시간을 표시합니다. 요청을 생성하거나 HAL에 전달한 시점을 기준으로 삼지 않습니다.</p>
 <figure class="doc-visual" aria-labelledby="callback-example-title">
 <p id="callback-example-title"><strong>이전 Shutter부터 잰 시간</strong> · 설명용 예시</p>
@@ -198,7 +199,7 @@
 </details><p><strong>다음 단계:</strong> 반복 측정과 저장된 실행의 비교는 <a href="benchmark.html">Benchmark</a>에서 확인하세요.</p>
 
   </main>
-  <nav class="reference-nav" aria-label="참고 자료" lang="en"><span>References</span><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
+  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
   <footer class="site-footer" lang="en"><span>HAL CAMERA · Engineering the invisible.</span><span>User Guide <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Build · HALCamera User Guide</title>
+  <title>Glossary · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
   <script type="module" src="./assets/search.js"></script>
@@ -27,30 +27,53 @@
   </header>
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
-    <h1 lang="en">Build the app.</h1><p><strong>소스에서 APK를 만들어야 할 때만 이 절차를 사용하세요.</strong> 배포된 앱을 사용하는 절차는 <a href="getting-started.html">시작하기</a>에 있습니다.</p>
-<h2 id="실행-전에-준비하세요">실행 전에 준비하세요</h2>
-<p>JDK 17과 Android SDK 36, <code>adb</code>가 필요합니다. PowerShell에서 <code>$env:JAVA_HOME</code>을 JDK 설치 경로로 설정합니다. SDK와 JVM 대상 버전은 <a href="getting-started.html#앱-버전과-빌드-설정">아래 빌드 정보</a>를 확인하세요.</p>
-<p>Android SDK 경로는 저장소 루트의 <code>local.properties</code>에 설정합니다. 이 파일은 개인 환경 설정이므로 커밋하지 않습니다. 기기에서 USB 디버깅을 켜고 PC의 연결 요청을 허용한 뒤 <code>adb devices</code>로 연결 상태를 확인하세요.</p>
-<h2 id="앱을-빌드하고-실행하세요">앱을 빌드하고 실행하세요</h2>
-<ol>
-<li><p>디버그 APK를 빌드합니다.</p>
-<pre><code class="language-powershell">.\gradlew.bat :app:assembleDebug
-</code></pre>
-</li>
-<li><p>JVM 단위 테스트를 실행합니다.</p>
-<pre><code class="language-powershell">.\gradlew.bat :app:testDebugUnitTest
-</code></pre>
-</li>
-<li><p>연결한 기기에 APK를 설치합니다.</p>
-<pre><code class="language-powershell">adb install -r app/build/outputs/apk/debug/app-debug.apk
-</code></pre>
-</li>
-<li><p>앱을 열고 카메라 권한을 허용합니다. Live에서 프리뷰가 나오는지 확인합니다.</p>
-</li>
-</ol>
-<p>PC 터미널에서 촬영·녹화·CTS를 실행하려면 <a href="cli.html">CLI</a>를 따르세요. ADB CLI는 기본으로 허용되며, 직접 꺼 둔 경우에만 앱의 <code>Lab → ADB CLI</code>에서 다시 켭니다. PC에는 <code>adb</code>만 있으면 되며, 프리뷰·사진·녹화 명령과 무선 연결 절차도 그 페이지에 있습니다.</p>
-<p>빌드와 테스트가 통과하면 APK 생성과 JVM 테스트 결과를 확인한 것입니다. 측정 정확성과 기기 동작은 별도로 검증해야 합니다. 검증 자료의 구분과 기록 위치는 <a href="evidence.html">Evidence</a>를 확인하세요.</p>
-<p><strong>다음 단계:</strong> <a href="live.html">Live</a>에서 설치한 앱의 첫 촬영을 확인하세요.</p>
+    <h1 lang="en">Find the meaning.</h1><p><strong>모르는 용어만 골라 읽으세요.</strong> HALCamera의 화면과 결과 파일에서 쓰는 뜻을 정리했습니다. 위의 <strong>문서 찾기</strong>에서도 영어 이름이나 한국어 설명으로 검색할 수 있습니다. 설명을 읽은 뒤 브라우저의 뒤로 가기로 원래 문서에 돌아가세요.</p>
+<p>자주 찾는 용어: <a href="#baseline">Baseline</a> · <a href="#validity">Validity</a> · <a href="#profile">Profile</a> · <a href="#aeb">AEB</a> · <a href="#timestamp">Timestamp</a></p>
+<table>
+<thead>
+<tr>
+<th>찾는 내용</th>
+<th>바로 가기</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>카메라와 출력 조건</td>
+<td><a href="#camera-streams">카메라와 출력</a></td>
+</tr>
+<tr>
+<td>사진과 노출</td>
+<td><a href="#capture-exposure">사진과 노출</a></td>
+</tr>
+<tr>
+<td>측정값과 판정</td>
+<td><a href="#measurements-verdicts">측정값과 판정</a></td>
+</tr>
+<tr>
+<td>시각과 결과 파일</td>
+<td><a href="#timing-files">시각과 결과 파일</a></td>
+</tr>
+</tbody></table>
+<h2 id="camera-streams" >카메라와 출력</h2><h3 id="engine">Engine · 카메라를 구동하는 방식</h3><p>Live에서 선택하는 Camera2 또는 CameraX입니다. 같은 카메라라도 요청 구성과 관찰 가능한 콜백이 다릅니다. 결과를 비교할 때 엔진도 함께 기록하세요. <a href="engine.html">차이 확인</a></p>
+<h3 id="endpoint">Endpoint · 검사할 카메라 대상</h3><p>어떤 논리 카메라와 물리 카메라를 사용할지 구분하는 대상입니다. Probe에 사양이 표시되는 물리 카메라라도 앱에서 단독으로 열 수 있다고 보장하지는 않습니다. <a href="probe.html#사양-표를-읽으세요">카메라 목록 확인</a></p>
+<h3 id="stream">Stream · 이미지가 나오는 출력 경로</h3><p>Preview·YUV·JPEG·Recording 같은 출력입니다. 각 출력은 크기와 형식 등의 조건을 가집니다. 개별 크기를 지원해도 여러 출력을 함께 사용하는 조합은 실패할 수 있습니다. <a href="live.html#live-스트림을-설정하세요">출력 설정</a></p>
+<h3 id="profile">Profile · 벤치마크 실행 조건</h3><p>출력 크기, 반복 횟수와 관측·촬영·녹화 조건을 묶은 설정입니다. Live의 스트림 설정과 별개입니다. 서로 다른 profile의 결과를 같은 조건의 측정으로 비교하지 마세요. <a href="benchmark.html#비교-기준을-고르세요">비교 조건</a></p>
+<h2 id="capture-exposure" >사진과 노출</h2><h3 id="yuv">YUV · 밝기와 색 정보로 구성한 이미지</h3><p>HALCamera는 YUV 이미지를 JPEG로 변환해 저장할 수 있습니다. Camera2는 NV21 형식 저장도 지원합니다. 따라서 파일 이름에 YUV가 있어도 JPEG 파일일 수 있습니다. <a href="engine.html#yuv-저장-포맷">저장 포맷</a></p>
+<h3 id="raw">RAW / DNG · 센서 원본 계열 출력과 저장 형식</h3><p>RAW는 센서 원본 계열 이미지 데이터이며, DNG는 이를 저장하는 파일 형식입니다. HALCamera에서는 RAW를 지원하는 카메라의 Camera2 엔진으로 DNG를 저장합니다. <a href="engine.html#두-엔진의-차이">엔진별 지원</a></p>
+<h3 id="3a">3A · 자동 노출·초점·화이트밸런스</h3><p>AE는 자동 노출, AF는 자동 초점, AWB는 자동 화이트밸런스입니다. 수렴은 각 자동 제어가 안정된 상태로 가는 과정입니다. 장면 영향을 크게 받으므로 Benchmark의 3A는 변화량만 표시하고 저하 판정에 넣지 않습니다.</p>
+<h3 id="ev">EV · 노출 보정 단위</h3><p>자동 노출을 기준보다 밝게 또는 어둡게 요청할 때 쓰는 단위입니다. 요청한 EV와 실제 노출 변화는 다를 수 있습니다. 센서 한계나 AE 동작의 영향을 보려면 저장된 노출 시간과 ISO도 확인하세요. <a href="live.html#aeb">AEB 사용법</a></p>
+<h3 id="aeb">AEB · 노출을 바꿔 연속 촬영</h3><p>Auto Exposure Bracketing의 약자입니다. HALCamera에서는 현재 EV, 2 EV 어둡게, 2 EV 밝게 사진 3장을 요청합니다. 지원 범위 끝에서는 EV가 제한됩니다. 일반 연사와 조작이 다릅니다. <a href="live.html#aeb">촬영 방법</a></p>
+<h3 id="hdr">HDR · 이 앱에서는 AEB 사진의 노출 융합</h3><p><code>_AEB_HDR.jpg</code>는 AEB 원본 세 장을 앱이 합친 이미지입니다. 이 파일명만으로 센서의 HDR 모드나 Ultra HDR 형식이라고 해석하지 마세요. 합성 조건과 성공·생략·실패 안내는 <a href="live.html#aeb">AEB 결과 표</a>에서 확인하세요.</p>
+<h2 id="measurements-verdicts" >측정값과 판정</h2><h3 id="baseline">Baseline · 저하 판정의 기준</h3><p>성능 변화를 판단하기 위해 명시적으로 지정한 실행 또는 실행 집합입니다. baseline 없이 이전 실행을 자동으로 비교할 때에는 변화량만 표시합니다. <code>두 실행 비교</code>에서는 먼저 고른 실행을 그 비교의 기준으로 씁니다. <a href="benchmark.html#비교-기준을-고르세요">기준 선택</a></p>
+<h3 id="validity">Validity · 측정 결과를 사용할 수 있는 조건</h3><p>표본 수와 실행 상태 등을 바탕으로 측정·비교·점수에 사용할 수 있는지 구분합니다. 작업이 성공해 JSON이 저장됐다는 뜻과는 다릅니다. 결과가 무효라면 성능 저하로 판단하기 전에 실행 정보의 사유를 확인하세요. <a href="benchmark.html#판정과-막대를-읽으세요">결과 해석</a></p>
+<h3 id="warmup">Warmup · 본 관측 전 준비 구간</h3><p>Benchmark는 관측 시작 전의 프레임을 프리뷰 관측 통계에서 제외합니다. 워밍업과 관측 조건이 다른 실행을 같은 표본으로 취급하지 마세요. 지표별 표본 규칙은 <a href="benchmark.html#실행-조건을-확인하세요">실행 조건</a>에서 확인하세요.</p>
+<h3 id="percentile">p50 / p95 · 반복 측정값의 분포</h3><p>p50은 중앙값이며, p95는 큰 값 쪽의 95백분위수입니다. 평균과는 다릅니다. 표본이 적으면 p95가 사실상 최댓값이 될 수 있으므로 표본 수도 함께 읽으세요. <a href="benchmark.html#실행-조건을-확인하세요">녹화 표본 예시</a></p>
+<h3 id="verdict">Verdict · 검사 결과에 대한 판정</h3><p>측정값 자체와 그 값을 규칙에 대입한 판정은 다릅니다. CTS의 PASS·FAIL·SKIP과 Benchmark의 성능 저하 판정도 서로 다른 규칙을 사용합니다. 앱의 CTS 결과는 공식 CTS 인증 판정을 대신하지 않습니다. <a href="cts.html#판정을-읽으세요">CTS 판정</a></p>
+<h2 id="timing-files" >시각과 결과 파일</h2><h3 id="callback">Callback · 앱이 받는 처리 알림</h3><p>촬영 시작, 결과 메타데이터, 이미지 도착 등을 앱에 알리는 호출입니다. 콜백을 받은 시각은 HAL 내부 처리가 일어난 시각과 같지 않습니다. JPEG 도착도 파일 저장 완료를 뜻하지 않습니다. <a href="callback.html#스트림별-도착-시각을-읽으세요">관측 지점</a></p>
+<h3 id="timestamp">Timestamp · 어떤 시계로 기록한 시각</h3><p>앱 시각과 센서 시각을 구분해야 합니다. 센서의 timestamp source가 REALTIME일 때만 앱의 <code>elapsedRealtimeNanos</code> 시각과 직접 비교합니다. Callback 그래프의 0 ms는 이전 Shutter 콜백 수신 시각입니다. <a href="callback.html#시간-기준을-확인하세요">그래프 시간 기준</a></p>
+<h3 id="metadata">Metadata · 이미지와 함께 기록되는 정보</h3><p>노출 시간, ISO, 센서 시각처럼 촬영 조건과 결과를 설명하는 값입니다. 요청한 설정과 결과 메타데이터를 대조하면 실제 적용 여부를 확인하는 데 도움이 됩니다. 메타데이터 자체는 이미지 픽셀이 아닙니다.</p>
+<h3 id="request-id">Request ID · 자동화 작업의 식별자</h3><p>CLI가 접수한 작업을 다시 조회하거나 파일을 받을 때 쓰는 ID입니다. 연결이 끊겼다면 이 ID로 기존 작업부터 확인하세요. 다시 촬영할 필요 없이 파일만 회수할 수도 있습니다. <a href="cli.html#요청과-완료를-구분하세요">완료 확인</a></p>
+<h3 id="artifact">Artifact / Incident ZIP · 작업 파일과 진단 기록</h3><p>artifact는 CLI 작업이 만든 사진·보고서 같은 결과 파일입니다. incident ZIP은 문제 분석용 이벤트·메타데이터 묶음이며 이미지 픽셀을 담지 않습니다. 사진 파일과 진단 ZIP을 구분해서 공유하세요. <a href="troubleshooting.html#로그와-진단-자료">로그 수집</a></p>
+<p><strong>다음 단계:</strong> 처음 사용하는 기능이라면 <a href="getting-started.html">Quickstart</a>에서 작업을 선택하세요.</p>
 
   </main>
   <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>

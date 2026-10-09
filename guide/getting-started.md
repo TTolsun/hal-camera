@@ -5,6 +5,8 @@ title: Quickstart
 
 **배포된 APK를 설치하고 Live 프리뷰부터 확인하세요.** 이 가이드는 HALCamera로 기기를 검증하는 Camera HAL 개발자를 위한 문서입니다. 앱 소스를 빌드할 필요는 없습니다.
 
+용어가 낯설면 [Glossary](glossary.md)에서 필요한 뜻만 확인하세요.
+
 ## APK를 설치하세요
 
 1. [배포 페이지](https://github.com/TTolsun/hal-camera/releases/latest)의 Assets에서 APK를 받습니다. 팀에서 지정한 검증 빌드가 있다면 그 APK를 사용합니다.
