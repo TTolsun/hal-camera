@@ -29,8 +29,8 @@ class ManualControlPanel(
     }
     private val header = LinearLayout(context).apply { gravity = Gravity.CENTER_VERTICAL }
     private val title = button("Manual") { toggle() }.apply { gravity = Gravity.START or Gravity.CENTER_VERTICAL }
-    private val reset = button("Reset") { commit(ManualControls()) }.apply { contentDescription = "노출·초점·WB를 모두 자동으로 초기화" }
-    private val fold = button("Hide") { expanded = false; render() }.apply { contentDescription = "설정을 유지하고 패널 접기" }
+    private val reset = button("Reset") { commit(ManualControls()) }.apply { contentDescription = "Reset exposure, focus and white balance to Auto" }
+    private val fold = button("Hide") { expanded = false; render() }.apply { contentDescription = "Collapse panel and keep settings" }
     private val body = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
     private val tabRow = LinearLayout(context)
     private val scroll = ScrollView(context).apply { addView(body); isFillViewport = false }
@@ -99,7 +99,7 @@ class ManualControlPanel(
         title.text = if (expanded) "Manual" else current.summary()
         title.textSize = if (expanded) 16f else 12f
         title.isClickable = !expanded
-        title.contentDescription = if (expanded) "수동 촬영" else "${current.summary()}, 수동 촬영 패널 펼치기"
+        title.contentDescription = if (expanded) "Manual capture" else "${current.summary()}, expand manual controls"
         reset.visibility = if (expanded && support.camera2 && current.active) View.VISIBLE else View.GONE
         reset.isEnabled = enabled; reset.alpha = if (enabled) 1f else 0.4f
         fold.visibility = if (expanded) View.VISIBLE else View.GONE
@@ -114,7 +114,7 @@ class ManualControlPanel(
                 setTextColor(if (index == selected) Look.primaryOnDark else Look.onDark)
                 typeface = if (index == selected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
                 isSelected = index == selected
-                contentDescription = "$label 조절${if (index == selected) ", 선택됨" else ""}"
+                contentDescription = "$label adjust${if (index == selected) ", Selected" else ""}"
             }, LinearLayout.LayoutParams(0, -2, listOf(0.8f, 1.3f, 1.1f, 0.8f)[index]))
         }
         when (selected) {
@@ -134,21 +134,21 @@ class ManualControlPanel(
     }
 
     private fun exposureEditor() {
-        if (!support.canExpose) { explanation("이 카메라는 수동 노출을 지원하지 않습니다."); return }
+        if (!support.canExpose) { explanation("This camera does not support manual exposure."); return }
         modes(current.exposure != null, "Exposure") { manual ->
             val e = if (manual) support.exposure(number("iso")?.toInt() ?: support.iso!!.first,
                 number("exposureNs")?.toLong() ?: 10_000_000L) else null
             if (e != null && (e.iso != number("iso")?.toInt() || e.timeNs != number("exposureNs")?.toLong()))
-                notice("현재 관측값을 수동 지원 범위에 맞췄습니다: ISO ${e.iso} · ${fmt(e.timeNs / 1e6)} ms")
+                notice("Current readings adjusted to supported manual ranges: ISO ${e.iso} · ${fmt(e.timeNs / 1e6)} ms")
             commit(current.copy(exposure = e, wb = if (!manual && current.wb == WhiteBalance.CUSTOM) WhiteBalance.AUTO else current.wb))
         }
-        val e = current.exposure ?: run { explanation("Manual을 선택하면 현재 ISO와 노출 시간으로 시작합니다."); return }
+        val e = current.exposure ?: run { explanation("Select Manual to start with the current ISO and exposure time."); return }
         if (selected == 0) {
             numeric("ISO ${e.iso}", e.iso.toDouble(), support.iso!!.first.toDouble(), support.iso!!.last.toDouble(), true,
                 "ISO", e.iso.toString()) { raw -> raw.toIntOrNull()?.let { commit(current.copy(exposure = e.copy(iso = it))) } ?: invalid() }
         } else {
             numeric("${ManualControls.shutter(e.timeNs)} · ${fmt(e.timeNs / 1e6)} ms", e.timeNs / 1e6,
-                support.exposureNs!!.first / 1e6, support.maxExposureNs!! / 1e6, true, "노출 시간 (ms 또는 1/125)", fmt(e.timeNs / 1e6)) { raw ->
+                support.exposureNs!!.first / 1e6, support.maxExposureNs!! / 1e6, true, "Exposure time (ms or 1/125)", fmt(e.timeNs / 1e6)) { raw ->
                 val ns = parseExposure(raw)
                 if (ns == null) invalid() else commit(current.copy(exposure = e.copy(timeNs = ns)))
             }
@@ -156,12 +156,12 @@ class ManualControlPanel(
     }
 
     private fun focusEditor() {
-        if (support.maxFocus <= 0f) { explanation("고정 초점이거나 수동 초점을 지원하지 않는 카메라입니다."); return }
+        if (support.maxFocus <= 0f) { explanation("This camera has fixed focus or does not support manual focus."); return }
         modes(current.focusDiopters != null, "Focus") { manual -> commit(current.copy(focusDiopters =
             if (manual) (number("focusDiopters")?.toFloat() ?: 0f).coerceIn(0f, support.maxFocus) else null)) }
         val focus = current.focusDiopters ?: return
         numeric("${fmt(focus.toDouble())} D", focus.toDouble(), 0.0, support.maxFocus.toDouble(), false,
-            "초점 (diopter)", focus.toString()) { raw -> raw.toFloatOrNull()?.let { commit(current.copy(focusDiopters = it)) } ?: invalid() }
+            "Focus (diopters)", focus.toString()) { raw -> raw.toFloatOrNull()?.let { commit(current.copy(focusDiopters = it)) } ?: invalid() }
     }
 
     private fun wbEditor() {
@@ -183,7 +183,7 @@ class ManualControlPanel(
         row.addView(text(14).apply { text = label }, LinearLayout.LayoutParams(0, -2, 1f))
         listOf(false to "Auto", true to "Manual").forEach { (m, name) -> row.addView(button(name) { if (enabled) set(m) }.apply {
             isEnabled = enabled; setTextColor(if (m == manual) Look.primaryOnDark else Look.onDarkMuted)
-            contentDescription = "$label $name${if (m == manual) ", 선택됨" else ""}"
+            contentDescription = "$label $name${if (m == manual) ", Selected" else ""}"
         }) }
         body.addView(row)
     }
@@ -191,7 +191,7 @@ class ManualControlPanel(
     private fun numeric(label: String, value: Double, min: Double, max: Double, logarithmic: Boolean, hint: String,
                         raw: String, set: (String) -> Unit) {
         val valueButton = button(label) { if (enabled) edit(hint, raw, set) }.apply {
-            isEnabled = enabled; typeface = Look.mono; contentDescription = "$hint 값 직접 입력, $label"
+            isEnabled = enabled; typeface = Look.mono; contentDescription = "$hint enter a value, $label"
             setTextColor(Look.primaryOnDark)
         }
         val row = LinearLayout(context).apply { gravity = Gravity.CENTER_VERTICAL }
@@ -201,7 +201,7 @@ class ManualControlPanel(
         row.addView(valueButton, LinearLayout.LayoutParams(-1, -2))
         body.addView(row)
         body.addView(SeekBar(context).apply {
-            this.max = 1000; progress = position; isEnabled = enabled; contentDescription = "$hint 조절"
+            this.max = 1000; progress = position; isEnabled = enabled; contentDescription = "$hint adjust"
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
                     if (!fromUser || !enabled) return
@@ -237,7 +237,7 @@ class ManualControlPanel(
                 2 -> raw.toFloatOrNull()?.let { current.copy(focusDiopters = it) }
                 else -> null
             }
-            val error = candidate?.let(support::rejection) ?: if (candidate == null) "올바른 숫자를 입력하세요." else null
+            val error = candidate?.let(support::rejection) ?: if (candidate == null) "Enter a valid number." else null
             if (error != null) input.error = error else { set(raw); inputDialog?.dismiss() }
         }
         input.requestFocus(); input.selectAll()
@@ -247,15 +247,15 @@ class ManualControlPanel(
     private fun editColor() {
         if (!enabled) return
         val fields = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), 0, dp(16), 0) }
-        fields.addView(text(12).apply { text = "수동 노출에서 gains와 행렬을 직접 적용합니다." })
+        fields.addView(text(12).apply { text = "Apply gains and a color matrix in manual exposure." })
         val gains = EditText(context).apply { setText(current.color.gains.joinToString(" ")); hint = "R G(even) G(odd) B" }
-        val matrix = EditText(context).apply { setText(current.color.transform.chunked(3).joinToString("\n") { it.joinToString(" ") }); hint = "3×3 matrix (행 순서)"; minLines = 3 }
-        fields.addView(text(12).apply { text = "Gains · R / G(even) / G(odd) / B · 각 1–100" })
+        val matrix = EditText(context).apply { setText(current.color.transform.chunked(3).joinToString("\n") { it.joinToString(" ") }); hint = "3×3 matrix (row order)"; minLines = 3 }
+        fields.addView(text(12).apply { text = "Gains · R / G(even) / G(odd) / B · 1–100 each" })
         fields.addView(gains)
-        fields.addView(text(12).apply { text = "3×3 색 변환 행렬 · 행 순서 · 각 −100–100" })
+        fields.addView(text(12).apply { text = "3×3 color matrix · row order · −100–100 each" })
         fields.addView(matrix)
         fields.addView(text(12).apply {
-            text = "실제 gains\n${observedColor("colorGains")}\n실제 matrix\n${observedColor("colorTransform", 3)}"
+            text = "Applied gains\n${observedColor("colorGains")}\nApplied matrix\n${observedColor("colorTransform", 3)}"
         })
         inputDialog = AlertDialog.Builder(context).setTitle("WB Gains / Matrix")
             .setView(ScrollView(context).apply { addView(fields) }).setNegativeButton("Cancel", null)
@@ -278,20 +278,20 @@ class ManualControlPanel(
             else -> number("awbMode")?.toInt()?.let { key -> WhiteBalance.entries.find { it.key == key }?.label }
         }
         var label = when {
-            pending && now - changedNs < 2_000_000_000L -> "적용 중 · 실제 ${observed ?: "확인 중"}"
-            observed == null -> "실제 적용값 확인 불가"
-            else -> "실제 $observed"
+            pending && now - changedNs < 2_000_000_000L -> "Applying · Actual ${observed ?: "checking"}"
+            observed == null -> "Applied values unavailable"
+            else -> "Actual $observed"
         }
-        if (selected in 0..1 && current.exposure != null) label += "\nISO·셔터 함께 고정 · 최대 ${fmt(support.maxExposureNs!! / 1e6)} ms"
-        if (selected == 2 && current.focusDiopters != null) label += "\n0 D 무한대 · ${fmt(support.maxFocus.toDouble())} D 근거리"
+        if (selected in 0..1 && current.exposure != null) label += "\nISO and shutter locked together · max ${fmt(support.maxExposureNs!! / 1e6)} ms"
+        if (selected == 2 && current.focusDiopters != null) label += "\n0 D infinity · ${fmt(support.maxFocus.toDouble())} D near"
         if (actual.text.toString() != label) actual.text = label
     }
 
     private fun number(key: String) = (latest?.values?.get(key) as? Number)?.toDouble()
     private fun observedColor(key: String, columns: Int = 4): String =
         (latest?.values?.get(key) as? List<*>)?.mapNotNull { (it as? Number)?.toDouble()?.let(::fmt) }
-            ?.chunked(columns)?.joinToString("\n") { it.joinToString(" / ") } ?: "확인 불가"
-    private fun invalid() = notice("지원 범위 안의 숫자를 입력하세요.")
+            ?.chunked(columns)?.joinToString("\n") { it.joinToString(" / ") } ?: "Unavailable"
+    private fun invalid() = notice("Enter a number in the supported range.")
     private fun explanation(value: String) { body.addView(text(12).apply { text = value }) }
     private fun text(size: Int) = TextView(context).apply { textSize = size.toFloat(); setTextColor(Look.onDarkMuted); gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(4), 0, dp(4)) }
     private fun button(label: String, action: () -> Unit) = Button(context).apply {

@@ -204,7 +204,7 @@ internal class CameraXLiveRecorder(
         }
     }
     private fun saveFailure(message: String) {
-        if (host.active) host.notice("$message\nSave Events · ZIP에서 진단을 저장하세요.")
+        if (host.active) host.notice("$message\nSave diagnostics with Save Events · ZIP.")
         else Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
     }
 }

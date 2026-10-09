@@ -13,7 +13,7 @@ object LiveStreamSettingsView {
     data class Page(val root: LinearLayout, val scroll: ScrollView)
     fun create(context: Context, support: LiveStreamSupport, current: LiveStreamSettings,
              actual: String, restore: (() -> Unit)?, back: () -> Unit, changed: (LiveStreamSettings) -> Unit, apply: (LiveStreamSettings) -> Unit,
-             backDescription: String = "Lab으로 돌아가기", baseline: LiveStreamSettings = current,
+             backDescription: String = "Back to Lab", baseline: LiveStreamSettings = current,
              engine: String = "Camera2"): Page {
         val themed = context
         fun dp(value: Int) = Look.dp(themed, value)
@@ -75,7 +75,7 @@ object LiveStreamSettingsView {
                         change(options[index])
                         refreshers.forEach { it() }
                         dialog.dismiss()
-                    }.setNegativeButton("취소", null).show()
+                    }.setNegativeButton("Cancel", null).show()
             }
             group.addView(row, LinearLayout.LayoutParams(-1, -2))
 
@@ -102,7 +102,7 @@ object LiveStreamSettingsView {
         outputs.addView(exportHint)
         refreshers += {
             exportHint.text = when {
-                engine == "CameraX" -> "RAW / NV21: CameraX 미지원"
+                engine == "CameraX" -> "RAW / NV21: unavailable in CameraX"
                 support.raw.isEmpty() -> support.rawUnavailableReason
                 else -> raw?.let { "DNG ≈ ${it.width.toLong() * it.height * 2 / 1_000_000} MB/shot" }.orEmpty()
             }
@@ -113,13 +113,13 @@ object LiveStreamSettingsView {
         val recording = section("Recording")
         val video = LiveVideoDraft(support, current.video)
         choice(recording, "Format", { video.formats }, { video.value?.codec.orEmpty() }, video::selectFormat) {
-            it.ifEmpty { "지원 정보 없음" }
+            it.ifEmpty { "Capabilities unavailable" }
         }
         choice(recording, "Resolution", { video.sizes() }, { video.value?.size }, { it?.let(video::selectSize) }) {
-            it?.toString() ?: "지원 정보 없음"
+            it?.toString() ?: "Capabilities unavailable"
         }
         choice(recording, "Frame Rate", { video.rates() }, { video.value?.fps }, { it?.let(video::selectRate) }) {
-            it?.let { rate -> "$rate fps" } ?: "지원 정보 없음"
+            it?.let { rate -> "$rate fps" } ?: "Capabilities unavailable"
         }
         val stabilizationGroup = section("Stabilization")
         choice(stabilizationGroup, "Mode", { support.stabilization }, { stabilization }, { stabilization = it }) { it.label }
@@ -131,7 +131,7 @@ object LiveStreamSettingsView {
             section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
                 setPadding(dp(18), dp(14), dp(18), dp(14))
             })
-            if (restore != null) content.addView(Look.ghostButton(themed, "이전 설정으로 복원", action = restore),
+            if (restore != null) content.addView(Look.ghostButton(themed, "Restore previous settings", action = restore),
                 LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
         val scroll = ScrollView(themed).apply { isFillViewport = true; addView(content) }
@@ -145,7 +145,7 @@ object LiveStreamSettingsView {
             val pending = LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, yuvSaveFormat, raw)
             applyButton.isEnabled = pending != baseline || actual.startsWith("Failed:") || actual.startsWith("실패:")
             applyButton.alpha = if (applyButton.isEnabled) 1f else 0.5f
-            applyButton.contentDescription = if (applyButton.isEnabled) "Apply stream settings" else "변경된 설정 없음"
+            applyButton.contentDescription = if (applyButton.isEnabled) "Apply stream settings" else "No changes"
         }
         refreshers.forEach { it() }
         val root = LinearLayout(themed).apply {

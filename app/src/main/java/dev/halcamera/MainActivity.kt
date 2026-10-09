@@ -434,8 +434,8 @@ class MainActivity : ComponentActivity() {
         previewHost.addView(FocusRing(this, { engine as? TouchMetering }) { controlBar.setAeLock(it) }.apply {
             canInteract = { !bursts.controlsLocked && cli.active == null }
             unavailableReason = { exposure ->
-                if (exposure && controlBar.controls.manual.exposure != null) "수동 노출 중입니다 · ISO와 Shutter로 조절하세요"
-                else if (!exposure && controlBar.controls.manual.focusDiopters != null) "수동 초점 중입니다 · Focus에서 Auto로 전환하세요"
+                if (exposure && controlBar.controls.manual.exposure != null) "Manual exposure · Adjust ISO and Shutter"
+                else if (!exposure && controlBar.controls.manual.focusDiopters != null) "Manual focus · Select Auto in Focus"
                 else null
             }
         }, FrameLayout.LayoutParams(-1,-1))
@@ -592,9 +592,9 @@ class MainActivity : ComponentActivity() {
             if (cli.active != null) return@RecentMediaButton
             withMediaPermissions(false) { startActivity(Intent(this, GalleryActivity::class.java)) }
         }
-        val gallerySlot=galleryButton.labeledView()
+        val gallerySlot=FrameLayout(this).apply { addView(galleryButton,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER)) }
         val captureSize=dp(64)
-        captureRow.addView(gallerySlot,LinearLayout.LayoutParams(0,-2,1f))
+        captureRow.addView(gallerySlot,LinearLayout.LayoutParams(0,captureSize,1f))
         mediaButton=ShutterButton(this).apply {
             setOnClickListener {
                 if (cli.active != null) return@setOnClickListener
@@ -692,7 +692,7 @@ class MainActivity : ComponentActivity() {
         refreshManualSupport()
         val normalized = controlBar.controls.manual.normalized(manualCapabilities)
         if (normalized != controlBar.controls.manual) {
-            toast("촬영 모드의 FPS 제한에 맞게 수동 설정을 조정했습니다: ${normalized.summary()}")
+            toast("Manual settings adjusted to the capture FPS limit: ${normalized.summary()}")
             controlBar.setManual(normalized)
         }
         updateMediaControls()
@@ -738,8 +738,7 @@ class MainActivity : ComponentActivity() {
             val progress = record?.optJSONObject("progress")
             if (progress != null) "CLI · ${progress.optInt("saved")}/${progress.optInt("total")} saved · ${progress.optString("phase")}" else "CLI · ${record?.optString("state") ?: "preparing"}"
         }
-        captureFeedback.bind(cliProgress ?: bursts.label,controlBar.controls.bracket && !videoMode,
-            photoHint = !videoMode && ready && cli.active == null)
+        captureFeedback.bind(cliProgress ?: bursts.label,controlBar.controls.bracket && !videoMode)
         if(stoppingRecording) {
             mediaButton.contentDescription="Saving video"
             ViewCompat.setStateDescription(mediaButton,"Saving")

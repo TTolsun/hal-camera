@@ -326,12 +326,14 @@ class DualPreviewActivity : ComponentActivity() {
         bottomBar.addView(zoomControl.viewport(), LinearLayout.LayoutParams(-2, dp(48)))
         captureRow = Look.row(this).apply { gravity = Gravity.CENTER_VERTICAL }
         galleryButton = RecentMediaButton(this) { openTool(GalleryActivity::class.java) }
-        captureRow!!.addView(galleryButton.labeledView(), LinearLayout.LayoutParams(0, -2, 1f))
+        captureRow!!.addView(FrameLayout(this).apply {
+            addView(galleryButton, FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
+        }, LinearLayout.LayoutParams(0, dp(64), 1f))
         recordButton = ShutterButton(this).apply { setOnClickListener { if (videoMode) toggleRecording() else takePhoto() } }
         captureRow!!.addView(recordButton, LinearLayout.LayoutParams(dp(64), dp(64)).apply {
             marginStart = dp(12); marginEnd = dp(12)
         })
-        val cameraButton = IconButton(this, R.drawable.ic_camera_select, "듀얼 카메라 선택", dark = true, filled = true) { choosePair() }
+        val cameraButton = IconButton(this, R.drawable.ic_camera_select, "Choose dual cameras", dark = true, filled = true) { choosePair() }
         pairButtons += cameraButton
         captureRow!!.addView(FrameLayout(this).apply {
             addView(cameraButton, FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
@@ -440,7 +442,7 @@ class DualPreviewActivity : ComponentActivity() {
             background = GradientDrawable().apply { setColor(Color.BLACK); cornerRadius = dp(16).toFloat(); setStroke(dp(1), Look.cameraOutline) }
             clipToOutline = true
             elevation = dp(8).toFloat()
-            contentDescription = "Camera 2 서브 프리뷰. 드래그하여 이동"
+            contentDescription = "Camera 2 picture-in-picture preview. Drag to move"
         }
         stage.addView(pip, FrameLayout.LayoutParams(dp(112), dp(176)))
         pipStage = stage; pipView = pip
@@ -461,7 +463,7 @@ class DualPreviewActivity : ComponentActivity() {
         }.apply {
             textSize = 11f; isSingleLine = true; setPadding(dp(4), 0, dp(4), 0)
             setTextColor(Look.onDark); setBackgroundColor(Look.cameraGlass)
-            contentDescription = "Camera ${index + 1}: physical ${lens?.let(::lensLabel)} 선택"
+            contentDescription = "Camera ${index + 1}: physical ${lens?.let(::lensLabel)} select"
         }
         if (index == 1) pipSelector = selector
 
@@ -584,15 +586,15 @@ class DualPreviewActivity : ComponentActivity() {
                     if (cliStopping && !cliInterrupted) null else dev.halcamera.cli.CliFailure("RECORDING_INTERRUPTED", "Recording stopped unexpectedly")) },
                     { cli.fail(request.id, "RECORDING_FAILED", it.message ?: "Dual recording failed") })
             }
-            result.fold({ Toast.makeText(this@DualPreviewActivity, "MP4 2개 저장 완료", Toast.LENGTH_SHORT).show() },
-                { Toast.makeText(this@DualPreviewActivity, "저장 실패: ${it.message}", Toast.LENGTH_LONG).show() })
+            result.fold({ Toast.makeText(this@DualPreviewActivity, "Saved 2 MP4 files", Toast.LENGTH_SHORT).show() },
+                { Toast.makeText(this@DualPreviewActivity, "Save failed: ${it.message}", Toast.LENGTH_LONG).show() })
         }
         override fun onPhotoSaved(result: Result<Int>) {
             cliRequest?.let { request -> result.fold({ cli.complete(request.id, org.json.JSONObject().put("artifact_count", cliArtifacts.size), cliArtifacts.toList()) },
                 { cli.fail(request.id, "CAPTURE_FAILED", it.message ?: "Dual photo failed") }) }
             photoPending = false
-            result.fold({ Toast.makeText(this@DualPreviewActivity, "두 센서 사진 ${it}개 저장 완료", Toast.LENGTH_SHORT).show() },
-                { Toast.makeText(this@DualPreviewActivity, "동시 사진 저장 실패: ${it.message}", Toast.LENGTH_LONG).show() })
+            result.fold({ Toast.makeText(this@DualPreviewActivity, "Saved ${it} photos from both sensors", Toast.LENGTH_SHORT).show() },
+                { Toast.makeText(this@DualPreviewActivity, "Dual photo save failed: ${it.message}", Toast.LENGTH_LONG).show() })
             updateControls()
         }
     }
@@ -638,7 +640,7 @@ class DualPreviewActivity : ComponentActivity() {
                     restart()
                 }
                 dialog.dismiss()
-            }.setNegativeButton("취소", null).show()
+            }.setNegativeButton("Cancel", null).show()
     }
 
     private fun setStatus(text: String) {
@@ -670,7 +672,7 @@ class DualPreviewActivity : ComponentActivity() {
 
     private fun outputReport(lens: PhysicalLens?, id: String, s: PhysicalOutputStats?): String = listOf(
         "ID $id · ${lens?.let(::lensLabel)?.substringAfter(" · ", "") ?: ""}".trimEnd(' ', '·'),
-        "크기 ${streamingSize ?: "—"}",
+        "Size ${streamingSize ?: "—"}",
         "${if (failed) "Last " else ""}${s?.fps()?.let { String.format(Locale.US, "%.1f fps", it) } ?: "— fps"} · ${s?.delivered ?: 0} frames",
         "Meta ${s?.metadata ?: 0} · Missing ${s?.missing ?: 0}"
     ).joinToString("\n")
@@ -706,7 +708,7 @@ class DualPreviewActivity : ComponentActivity() {
 
     private fun copyReport() {
         getSystemService(ClipboardManager::class.java).setPrimaryClip(ClipData.newPlainText("HAL CAM dual preview", dualReport()))
-        Toast.makeText(this, "보고서를 복사했습니다.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Report copied.", Toast.LENGTH_SHORT).show()
     }
 
     private fun chips(options: List<Pair<String, String>>, selected: String?, pick: (String) -> Unit): View {
@@ -718,7 +720,7 @@ class DualPreviewActivity : ComponentActivity() {
             button.textSize = 14f
             button.minHeight = dp(48); button.minimumHeight = dp(48)
             button.setPadding(dp(14), dp(8), dp(14), dp(8))
-            ViewCompat.setStateDescription(button, if (chosen) "선택됨" else "선택 안 됨")
+            ViewCompat.setStateDescription(button, if (chosen) "Selected" else "Not selected")
             row.addView(button, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = dp(8) })
         }
         return android.widget.HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(row) }
@@ -741,7 +743,7 @@ class DualPreviewActivity : ComponentActivity() {
         pipSelector?.alpha = if (busy()) 0.45f else 1f
         recordButton?.isEnabled = cli.active == null && (videoMode || mainControls != null) && !closing && !recordPending && !photoPending && !failed && streamingSize != null
         recordButton?.setCaptureState(videoMode = videoMode, recording = recording)
-        recordButton?.contentDescription = if (!videoMode) "두 센서 동시 사진 촬영" else if (recording) "두 카메라 녹화 정지" else "두 카메라 무음 녹화 시작"
+        recordButton?.contentDescription = if (!videoMode) "Capture photos from both sensors" else if (recording) "Stop both recordings" else "Start silent recording on both cameras"
         modeRow?.visibility = if (recording || recordPending) View.INVISIBLE else View.VISIBLE
         recordLabel?.visibility = if (recording || recordPending) View.VISIBLE else View.GONE
         if (recordPending) recordLabel?.text = "Starting…"
@@ -756,7 +758,7 @@ class DualPreviewActivity : ComponentActivity() {
             button.setTypeface(null, if (button.isSelected) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
             button.setTextColor(if (button.isSelected) Look.onDark else Look.onDarkMuted)
             button.alpha = if (button.isEnabled) 1f else 0.45f
-            ViewCompat.setStateDescription(button, if (button.isSelected) "선택됨" else "선택 안 됨")
+            ViewCompat.setStateDescription(button, if (button.isSelected) "Selected" else "Not selected")
         }
     }
 
@@ -807,7 +809,7 @@ class DualPreviewActivity : ComponentActivity() {
 
     private fun choosePair() {
         if (busy()) return
-        val options = arrayOf("메인 · ${pair?.first ?: "—"}", "보조 · ${pair?.second ?: "—"}", "Logical · ${logicalId ?: "—"}", "메인 ↔ 보조 교환")
+        val options = arrayOf("Main · ${pair?.first ?: "—"}", "Secondary · ${pair?.second ?: "—"}", "Logical · ${logicalId ?: "—"}", "Swap main and secondary")
         AlertDialog.Builder(this, R.style.LabDialogTheme).setTitle("Dual cameras")
             .setItems(options) { _, index ->
                 if (index == 3) { if (!busy()) { pair = pair?.let { it.second to it.first }; restart() } }
@@ -819,9 +821,9 @@ class DualPreviewActivity : ComponentActivity() {
                                 logicalId = choices[selected].logicalId; pair = null; restart()
                             }
                             dialog.dismiss()
-                        }.setNegativeButton("취소", null).show()
+                        }.setNegativeButton("Cancel", null).show()
                 }
-            }.setNegativeButton("취소", null).show()
+            }.setNegativeButton("Cancel", null).show()
     }
 
     private fun openTool(destination: Class<*>) {
@@ -855,14 +857,14 @@ class DualPreviewActivity : ComponentActivity() {
             main.post {
                 if (isDestroyed || !started) return@post
                 result.fold({ file ->
-                    AlertDialog.Builder(this, R.style.LabDialogTheme).setTitle("Events ZIP 저장 완료")
-                        .setMessage(file.name).setPositiveButton("닫기", null)
-                        .setNeutralButton("공유") { _, _ ->
+                    AlertDialog.Builder(this, R.style.LabDialogTheme).setTitle("Events ZIP saved")
+                        .setMessage(file.name).setPositiveButton("Close", null)
+                        .setNeutralButton("Share") { _, _ ->
                             val uri = FileProvider.getUriForFile(this, "$packageName.files", file)
                             startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("application/zip")
                                 .putExtra(Intent.EXTRA_STREAM, uri).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION), "Events ZIP"))
                         }.show()
-                }, { Toast.makeText(this, "저장 실패: ${it.message}", Toast.LENGTH_LONG).show() })
+                }, { Toast.makeText(this, "Save failed: ${it.message}", Toast.LENGTH_LONG).show() })
             }
         }
     }
@@ -878,18 +880,18 @@ class DualPreviewActivity : ComponentActivity() {
                 appendLine("\nSENSOR_TIMESTAMP (ns)\n1 ${a.lastSensorTimestampNs ?: "—"}\n2 ${b.lastSensorTimestampNs ?: "—"}")
             }
             appendLine("Result timestamp Δ (1−2): ${lastSkewNs?.let { String.format(Locale.US, "%.3f ms", it / 1e6) } ?: "—"}")
-            appendLine("동일한 보고값은 실제 센서 동기를 입증하지 않습니다.")
-            listOf("메인" to "dual_main_result", "보조" to "dual_sub_result").forEach { (label, kind) ->
+            appendLine("Matching reported values do not prove sensor synchronization.")
+            listOf("Main" to "dual_main_result", "Secondary" to "dual_sub_result").forEach { (label, kind) ->
                 recorder.snapshot().lastOrNull { it.session == sessionId && it.kind == kind }?.let { e ->
-                    appendLine("\n$label 적용값\n" + e.values.entries.joinToString("\n") { "${it.key}: ${it.value}" })
+                    appendLine("\n$label Applied values\n" + e.values.entries.joinToString("\n") { "${it.key}: ${it.value}" })
                 }
             }
-            if (videoMode) appendLine(if (engineName == "CameraX") "\nCameraX · H.264 · GPU relay · 무음 · MP4 × 2"
-                else "\nH.264 · 30 fps 요청 · 무음 · MP4 × 2")
+            if (videoMode) appendLine(if (engineName == "CameraX") "\nCameraX · H.264 · GPU relay · Silent · MP4 × 2"
+                else "\nH.264 · 30 fps requested · Silent · MP4 × 2")
             append(status)
         }
         AlertDialog.Builder(this, R.style.LabDialogTheme).setTitle("Dual · Info").setMessage(details)
-            .setNeutralButton("보고서 복사") { _, _ -> copyReport() }.setPositiveButton("닫기", null).show()
+            .setNeutralButton("Copy report") { _, _ -> copyReport() }.setPositiveButton("Close", null).show()
     }
 
     private fun positionPip(stage: FrameLayout, pip: View) {
@@ -941,9 +943,9 @@ class DualPreviewActivity : ComponentActivity() {
             }
             true
         }
-        listOf("왼쪽 위" to (0f to 0f), "오른쪽 위" to (1f to 0f),
-            "왼쪽 아래" to (0f to 1f), "오른쪽 아래" to (1f to 1f)).forEach { (label, point) ->
-            ViewCompat.addAccessibilityAction(pip, "$label 이동") { _, _ ->
+        listOf("Top left" to (0f to 0f), "Top right" to (1f to 0f),
+            "Bottom left" to (0f to 1f), "Bottom right" to (1f to 1f)).forEach { (label, point) ->
+            ViewCompat.addAccessibilityAction(pip, "Move to $label") { _, _ ->
                 pipX = point.first; pipY = point.second; positionPip(stage, pip); remember(); true
             }
         }

@@ -186,8 +186,8 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
 
     private fun toggleAf() {
-        if (controls.manual.focusDiopters != null) { host.notice("수동 초점에서는 AF 잠금을 사용할 수 없습니다."); return }
-        if (!support.afLock) { host.notice("초점이 고정된 카메라라서 AF 잠금이 없습니다"); return }
+        if (controls.manual.focusDiopters != null) { host.notice("AF lock is unavailable in manual focus."); return }
+        if (!support.afLock) { host.notice("AF lock is unavailable on a fixed-focus camera."); return }
         update(controls.copy(afLock = !controls.afLock))
     }
 
@@ -203,14 +203,14 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
 
     private fun toggleAe() {
-        if (controls.manual.exposure != null) { host.notice("수동 노출에서는 AE 잠금을 사용할 수 없습니다."); return }
-        if (!support.aeLock) { host.notice("이 카메라는 AE 잠금을 지원하지 않습니다"); return }
+        if (controls.manual.exposure != null) { host.notice("AE lock is unavailable in manual exposure."); return }
+        if (!support.aeLock) { host.notice("This camera does not support AE lock."); return }
         update(controls.copy(aeLock = !controls.aeLock))
     }
 
     private fun toggleRuler() {
-        if (controls.manual.exposure != null) { host.notice("수동 노출에서는 ISO와 Shutter로 밝기를 조절합니다."); return }
-        val range = support.evRange ?: run { host.notice("이 카메라는 노출 보정(EV)을 지원하지 않습니다"); return }
+        if (controls.manual.exposure != null) { host.notice("Adjust ISO and Shutter in manual exposure."); return }
+        val range = support.evRange ?: run { host.notice("This camera does not support exposure compensation (EV)."); return }
         if (ruler.visibility == View.VISIBLE) { closePanels(); return }
         closePanels()
         ruler.set(range, support.evStep, controls.evIndex)
@@ -221,9 +221,9 @@ class LiveControlBar(private val context: Context, private val host: Host) {
 
     /** Exposure bracketing (#178): with it on, the shutter takes three stills at EV steps around the EV button's value. */
     private fun toggleBracket() {
-        if (video) { host.notice("브라케팅은 사진 모드에서만 사용할 수 있습니다."); return }
-        if (controls.manual.exposure != null) { host.notice("수동 노출에서는 브라케팅을 사용할 수 없습니다."); return }
-        if (support.evRange == null) { host.notice("이 카메라는 노출 보정(EV)을 지원하지 않아 브라케팅을 할 수 없습니다"); return }
+        if (video) { host.notice("Bracketing is available in Photo mode only."); return }
+        if (controls.manual.exposure != null) { host.notice("Bracketing is unavailable in manual exposure."); return }
+        if (support.evRange == null) { host.notice("Bracketing requires exposure compensation (EV), which this camera does not support."); return }
         update(controls.copy(bracket = !controls.bracket))
     }
 
@@ -245,21 +245,21 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     private fun render() {
         evPanel.visibility = ruler.visibility
         flash.show(flashIcon(controls.flash), null, controls.flash != FlashMode.OFF, false, support.flash,
-            "플래시, 현재 ${controls.flash.label}")
+            "Flash, current: ${controls.flash.label}")
         afLock.show(null, "AF", controls.afLock, controls.afLock, support.afLock && controls.manual.focusDiopters == null,
-            if (controls.afLock) "AF 잠금 켜짐, 누르면 해제" else "AF 잠금, 누르면 초점을 맞추고 잠금")
+            if (controls.afLock) "AF lock on, tap to unlock" else "AF lock, tap to focus and lock")
         aeLock.show(null, "AE", controls.aeLock, controls.aeLock, support.aeLock && controls.manual.exposure == null,
-            if (controls.aeLock) "AE 잠금 켜짐, 누르면 해제" else "AE 잠금, 누르면 현재 노출을 잠금")
+            if (controls.aeLock) "AE lock on, tap to unlock" else "AE lock, tap to lock the current exposure")
         val evText = if (controls.evIndex == 0) null else support.evLabel(controls.evIndex).removePrefix("EV ")
         ev.show(if (evText == null) R.drawable.ic_exposure else null, evText,
             controls.evIndex != 0 || ruler.visibility == View.VISIBLE, false, support.evRange != null && controls.manual.exposure == null,
-            "노출 보정, 현재 ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "조절기 접기" else "조절기 펼치기"}")
+            "Exposure compensation, current: ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "collapse adjustment" else "expand adjustment"}")
         bracket.show(null, "AEB", controls.bracket, false, support.evRange != null && controls.manual.exposure == null && !video,
-            if (controls.bracket) "브라케팅 켜짐, 셔터 한 번에 3장, 누르면 끄기" else "브라케팅, 누르면 셔터 한 번에 노출을 바꿔 3장")
+            if (controls.bracket) "Bracketing on, three exposures per shutter press, tap to turn off" else "Bracketing, tap for three exposures per shutter press")
         // Dim while the bar is off (camera not ready, recording being saved, a CLI command running), as MainActivity
         // dims every other Live control, so a tap that does nothing never looks like one that should.
         manual.show(null, "M", controls.manual.active, false, manualAvailable,
-            if (manualAvailable) "Manual 수동 촬영 제어" else "Manual · CameraX 미지원")
+            if (manualAvailable) "Manual capture controls" else "Manual · Unavailable in CameraX")
         listOf(flash, afLock, aeLock, ev, bracket, manual).forEach { it.isEnabled = enabled; if (!enabled) it.alpha = 0.4f }
         manual.isEnabled = enabled && manualAvailable
         // Keep the visible handle to one glyph; requested values remain in its accessible name.

@@ -21,7 +21,7 @@ class LiveStreamsActivity : ComponentActivity() {
     private val io = Executors.newSingleThreadExecutor()
     private var draft: LiveStreamSettings? = null
     private var scroll: ScrollView? = null
-    private val backDescription get() = if (intent.getBooleanExtra(EXTRA_FROM_LIVE, false)) "Live 프리뷰로 돌아가기" else "Lab으로 돌아가기"
+    private val backDescription get() = if (intent.getBooleanExtra(EXTRA_FROM_LIVE, false)) "Back to Live preview" else "Back to Lab"
 
     @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +34,7 @@ class LiveStreamsActivity : ComponentActivity() {
         }
         draft = (savedInstanceState?.getSerializable(EXTRA_SETTINGS)
             ?: intent.getSerializableExtra(EXTRA_SETTINGS)) as? LiveStreamSettings
-        showMessage("설정을 불러오는 중입니다.")
+        showMessage("Loading settings.")
         val id = intent.getStringExtra(WorkbenchActivity.EXTRA_CAMERA_ID).orEmpty()
         io.execute {
             val result = runCatching {
@@ -54,7 +54,7 @@ class LiveStreamsActivity : ComponentActivity() {
                         intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE) ?: "Camera2")
                     showPage(page.root, page.scroll)
                     savedInstanceState?.getInt("scroll_y")?.let { y -> page.scroll.post { page.scroll.scrollTo(0, y) } }
-                }, { showMessage("지원 정보를 불러오지 못했습니다. ${it.message.orEmpty()}") })
+                }, { showMessage("Could not load capabilities. ${it.message.orEmpty()}") })
             }
         }
     }
@@ -73,9 +73,9 @@ class LiveStreamsActivity : ComponentActivity() {
         }
         row("Mode", "$engine · Dual · ${if (video) "V" else "P"}")
         row("Physical ID · 1 / 2", intent.getStringExtra(EXTRA_DUAL_PAIR) ?: "—")
-        row("Preview × 2 · ${if (video && engine == "CameraX") "고정" else "자동"}",
+        row("Preview × 2 · ${if (video && engine == "CameraX") "Fixed" else "Auto"}",
             intent.getStringExtra(EXTRA_DUAL_SIZE)?.replace('x', '×') ?: "—")
-        if (video) row("Recording · 고정", "H.264 · MP4 × 2 · 무음")
+        if (video) row("Recording · Fixed", "H.264 · MP4 × 2 · Silent")
         showPage(ScrollView(this).apply { addView(body) })
     }
 
