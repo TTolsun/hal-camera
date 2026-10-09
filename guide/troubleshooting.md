@@ -44,6 +44,7 @@ Live의 `이벤트 저장 · ZIP`은 직전 10초와 이후 5초의 이벤트를
 | `BenchmarkReport` | `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt` |
 | `BenchmarkStore` | `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt` |
 | `Camera2Ops` | `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt` |
+| `DualPreview` | `app/src/main/java/dev/halcamera/camera/DualPreviewSession.kt` |
 | `FastOnOffRunner` | `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRunner.kt` |
 | `ProfileCompatibility` | `app/src/main/java/dev/halcamera/benchmark/platform/ProfileCompatibilityChecker.kt` |
 | `StillPreviewCombinationRunner` | `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRunner.kt` |
@@ -120,7 +121,7 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `72370cb1` · Claude
+- 검토 2026-10-09 @ `27ae1d2e` · Codex
 
 </details>
 
@@ -147,9 +148,9 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-10-09 @ `72370cb1` · Claude |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-09 @ `72370cb1` · Claude |
-| 원고 `layer-isolation` | 최신 | 검토 2026-10-09 @ `72370cb1` · Claude |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-10-09 @ `27ae1d2e` · Codex |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-09 @ `f18f8df0` · Codex |
+| 원고 `layer-isolation` | 최신 | 검토 2026-10-09 @ `27ae1d2e` · Codex |
 
 <!-- omm:end id=status -->
 

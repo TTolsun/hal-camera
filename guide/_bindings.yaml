@@ -249,6 +249,10 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt
           - app/src/main/java/dev/halcamera/camera/DualPreviewSession.kt
+          - app/src/main/java/dev/halcamera/camera/DualMainControls.kt
+          - app/src/main/java/dev/halcamera/camera/DualStillCapture.kt
+          - app/src/main/java/dev/halcamera/camera/DualStillPair.kt
+          - app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt
       screens/dual-preview-screen/camerax-session:
         evidence:
           - app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt

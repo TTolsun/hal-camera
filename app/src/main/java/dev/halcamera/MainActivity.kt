@@ -415,7 +415,7 @@ class MainActivity : ComponentActivity() {
         val released = engineCameraId.takeIf { old != null }
         (old as? CameraXEngine)?.releaseOnClose = engineName != "CameraX"
         if (old != null) {
-            closing = true; setStatus("Closing camera… Letting the lens clock out.", false)
+            closing = true; setStatus("Closing camera…", false)
             old.close {
                 closing = false
                 if (destroyed) cameraWorker.shutdown() else openCamera(released)
@@ -438,7 +438,7 @@ class MainActivity : ComponentActivity() {
         if (engineName == "Camera2") streamState[thisKey] = "Configuring… Getting the pixels in line."
         zoomApplied = false
         updateCameraChoices()
-        setStatus("$engineName · ${CameraLabel.short(cameraId)} · Connecting… Waking the pixels.", false)
+        setStatus("$engineName · ${CameraLabel.short(cameraId)} · Connecting…", false)
         (previewHost.getChildAt(0) as? PreviewView)?.previewStreamState?.removeObservers(this)
         previewHost.removeAllViews()
         val previewReady = { if (thisSession == sessionId && resumed && !closing) liveCli.previewReady() }
@@ -512,7 +512,7 @@ class MainActivity : ComponentActivity() {
                 else null
             }
         }, FrameLayout.LayoutParams(-1,-1))
-        try { engine?.start() } catch (e: Exception) { setStatus("시작 실패: ${e.message}",false) }
+        try { engine?.start() } catch (e: Exception) { setStatus("Start failed: ${e.message}",false) }
         updateCameraChoices()
     }
     /** Shown 2.5 s like a save notice, also while recording; [ready] stays as it is. */
@@ -904,7 +904,7 @@ class MainActivity : ComponentActivity() {
         recorder.finish(reason)?.let(incidents::export)
         showCallbacks(false)
         val old = engine; engine = null; closing = true; ready = false
-        setStatus("Closing camera… Letting the lens clock out.", false)
+        setStatus("Closing camera…", false)
         updateMediaControls()
         val open = {
             closing = false
@@ -927,14 +927,14 @@ class MainActivity : ComponentActivity() {
         val state=camera.snapshot
         when {
             state.phase==SnapshotStatus.Phase.UNSUPPORTED -> toast(state.reason.orEmpty())
-            state.canCapture -> { showNotice("Capturing snapshot… Stealing a frame."); camera.captureSnapshot(); updateMediaControls() }
+            state.canCapture -> { showNotice("Capturing…"); camera.captureSnapshot(); updateMediaControls() }
         }
     }
     /** Ends the recording and says so on both stop buttons, whichever one the user reached. */
     private fun stopRecording() {
         if (!recordingVideo || stoppingRecording) return
         stoppingRecording = true
-        recordingTime.text = "Saving… Wrapping the reel."
+        recordingTime.text = "Saving…"
         updateMediaControls()
         (engine as? MediaCapture)?.stopRecording()
     }
