@@ -326,9 +326,7 @@ class DualPreviewActivity : ComponentActivity() {
         bottomBar.addView(zoomControl.viewport(), LinearLayout.LayoutParams(-2, dp(48)))
         captureRow = Look.row(this).apply { gravity = Gravity.CENTER_VERTICAL }
         galleryButton = RecentMediaButton(this) { openTool(GalleryActivity::class.java) }
-        captureRow!!.addView(FrameLayout(this).apply {
-            addView(galleryButton, FrameLayout.LayoutParams(dp(48), dp(48), Gravity.CENTER))
-        }, LinearLayout.LayoutParams(0, dp(64), 1f))
+        captureRow!!.addView(galleryButton.labeledView(), LinearLayout.LayoutParams(0, -2, 1f))
         recordButton = ShutterButton(this).apply { setOnClickListener { if (videoMode) toggleRecording() else takePhoto() } }
         captureRow!!.addView(recordButton, LinearLayout.LayoutParams(dp(64), dp(64)).apply {
             marginStart = dp(12); marginEnd = dp(12)

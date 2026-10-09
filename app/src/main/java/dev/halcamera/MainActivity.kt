@@ -442,10 +442,11 @@ class MainActivity : ComponentActivity() {
         try { engine?.start() } catch (e: Exception) { setStatus("Start failed: ${e.message}",false) }
         updateCameraChoices()
     }
-    /** Shown 2.5 s like a save notice, also while recording; [ready] stays as it is. */
+    /** Save failures remain visible; routine tuning notices expire without changing [ready]. */
     private fun showNotice(text: String) {
         main.removeCallbacks(clearNotice); savedNoticeShown = true
-        cameraNotice.text = text; cameraNotice.visibility = View.VISIBLE; main.postDelayed(clearNotice, 2500)
+        cameraNotice.text = text; cameraNotice.visibility = View.VISIBLE
+        if (!text.startsWith("Video not saved") && !text.startsWith("Video save failed")) main.postDelayed(clearNotice, 2500)
     }
     internal fun setStatus(text: String, ok: Boolean) {
         // Keep a save notice across routine LIVE reports, but let errors replace it.
@@ -456,7 +457,7 @@ class MainActivity : ComponentActivity() {
             savedNoticeShown = saved
             cameraNotice.text = text
             cameraNotice.visibility = if ((!ok && !recordingVideo) || (text.contains("실패") || text.contains("failed", ignoreCase = true)) || saved) View.VISIBLE else View.GONE
-            if (saved) main.postDelayed(clearNotice, 2500)
+            // A saved result stays visible until another operation changes the status.
         }
         ready=ok; reportButton.isEnabled=ok && recorder.remainingNs()==null
         if (ok || recordingVideo) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -591,9 +592,9 @@ class MainActivity : ComponentActivity() {
             if (cli.active != null) return@RecentMediaButton
             withMediaPermissions(false) { startActivity(Intent(this, GalleryActivity::class.java)) }
         }
-        val gallerySlot=FrameLayout(this).apply { addView(galleryButton,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER)) }
+        val gallerySlot=galleryButton.labeledView()
         val captureSize=dp(64)
-        captureRow.addView(gallerySlot,LinearLayout.LayoutParams(0,captureSize,1f))
+        captureRow.addView(gallerySlot,LinearLayout.LayoutParams(0,-2,1f))
         mediaButton=ShutterButton(this).apply {
             setOnClickListener {
                 if (cli.active != null) return@setOnClickListener
@@ -737,7 +738,8 @@ class MainActivity : ComponentActivity() {
             val progress = record?.optJSONObject("progress")
             if (progress != null) "CLI · ${progress.optInt("saved")}/${progress.optInt("total")} saved · ${progress.optString("phase")}" else "CLI · ${record?.optString("state") ?: "preparing"}"
         }
-        captureFeedback.bind(cliProgress ?: bursts.label,controlBar.controls.bracket && !videoMode)
+        captureFeedback.bind(cliProgress ?: bursts.label,controlBar.controls.bracket && !videoMode,
+            photoHint = !videoMode && ready && cli.active == null)
         if(stoppingRecording) {
             mediaButton.contentDescription="Saving video"
             ViewCompat.setStateDescription(mediaButton,"Saving")

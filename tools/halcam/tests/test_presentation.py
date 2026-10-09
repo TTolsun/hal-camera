@@ -15,6 +15,37 @@ def record(state="succeeded", **extra):
 
 
 class PresentationTests(unittest.TestCase):
+    def test_doctor_distinguishes_connection_from_camera_readiness(self):
+        from halcam.cli import execute, parser
+        for permission, locked, busy, expected in ((False, False, False, "PERMISSION_REQUIRED"),
+                (True, True, False, "DEVICE_LOCKED"), (True, False, True, "BUSY"), (True, False, False, None)):
+            with self.subTest(expected=expected), patch("halcam.cli.Adb") as factory:
+                adb = factory.return_value
+                adb.hello.return_value = {"commands": ["capture"], "camera_permission": permission, "locked": locked}
+                adb.read.return_value = {"busy": busy, "locked": locked}
+                data = execute(parser().parse_args(["doctor"]), {})
+                self.assertEqual(data["ready"], expected is None)
+                self.assertEqual((data.get("error") or {}).get("code"), expected)
+                if expected:
+                    self.assertNotIn("Ready.", render(data, argparse.Namespace()))
+
+    def test_permanent_errors_do_not_repeat_the_failed_operation(self):
+        for code in ("CLI_DISABLED", "REQUEST_NOT_FOUND", "ARTIFACT_EXPIRED"):
+            text = render(dict(completed=False, request_id=RID, error={"code": code, "message": "Unavailable"}), argparse.Namespace())
+            self.assertNotIn("Next: halcam doctor", text)
+            self.assertNotIn("Next: halcam status --request", text)
+            self.assertIn("Lab > ADB CLI" if code == "CLI_DISABLED" else "gallery.list", text)
+
+    def test_retention_preview_explains_no_change_and_uses_python_confirmation(self):
+        for limit in (0, 10):
+            for deleting in ([], ["run-a", "run-b"]):
+                data = record(result={"run_limit": limit, "applied": False, "delete_runs": deleting})
+                text = render(data, argparse.Namespace(serial="phone"))
+                self.assertTrue(text.startswith("Preview only. Nothing has changed."))
+                self.assertIn(f"halcam --serial phone run settings.limit --option limit={limit} --option confirm=true", text)
+                data["result"]["applied"] = True
+                self.assertNotIn("confirm=true", render(data, argparse.Namespace()))
+
     def test_no_arguments_shows_start_tasks_without_contacting_device(self):
         with patch("halcam.cli.Adb") as adb, patch("sys.stdout", new_callable=io.StringIO) as output:
             self.assertEqual(main([]), 0)

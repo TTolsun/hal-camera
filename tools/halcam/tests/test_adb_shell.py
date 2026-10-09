@@ -16,6 +16,15 @@ RID = "b616d5cc-7706-4983-b49e-4e4d5c0ef816"
 
 @unittest.skipUnless(BASH, "A POSIX shell is needed for client tests")
 class AdbShellTests(unittest.TestCase):
+    def test_terminal_status_explains_partial_file_recovery_without_downloading(self):
+        for state in ("cancelled", "failed", "interrupted"):
+            for artifacts in ([], [{"artifact_id": "file-0", "name": "photo.jpg"}]):
+                proc, calls = self.run_client(["status", RID], result={"state": state, "completed": True,
+                    "error": {"code": "CANCELLED", "message": "Stopped"}, "artifacts": artifacts})
+                self.assertEqual(proc.returncode, 1)
+                self.assertIn(f"fetch {RID}" if artifacts else "No files are registered", proc.stdout)
+                self.assertNotIn("/files", calls)
+
     def run_client(self, args, *, hello=None, busy=False, result=None, remember=False, corrupt=False, screen="live"):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

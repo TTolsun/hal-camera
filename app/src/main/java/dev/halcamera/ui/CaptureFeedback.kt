@@ -1,9 +1,7 @@
 package dev.halcamera.ui
 
 import android.content.Context
-import android.os.Build
 import android.view.Gravity
-import android.view.accessibility.AccessibilityManager
 import android.widget.TextView
 
 /** One compact line next to the shutter: progress takes priority over a recent result. */
@@ -11,7 +9,7 @@ class CaptureFeedback(context: Context) : TextView(context) {
     private var progress: String? = null
     private var result: String? = null
     private var bracket = false
-    private val clear = Runnable { result = null; render() }
+    private var photoHint = false
 
     init {
         textSize = 12f
@@ -22,37 +20,33 @@ class CaptureFeedback(context: Context) : TextView(context) {
         visibility = INVISIBLE
     }
 
-    fun bind(progress: String?, bracket: Boolean) {
-        if (this.progress == null && progress != null) { result = null; removeCallbacks(clear) }
+    fun bind(progress: String?, bracket: Boolean, photoHint: Boolean = false) {
+        if (this.progress == null && progress != null) result = null
         this.progress = progress; this.bracket = bracket
+        this.photoHint = photoHint
         render()
     }
 
     fun showResult(value: String) {
-        result = value
-        removeCallbacks(clear)
-        val accessibility = context.getSystemService(AccessibilityManager::class.java)
-        val timeout = if (Build.VERSION.SDK_INT >= 29)
-            accessibility.getRecommendedTimeoutMillis(5000, AccessibilityManager.FLAG_CONTENT_TEXT) else 5000
-        postDelayed(clear, timeout.toLong())
+        result = "촬영 종료 · $value"
         render()
     }
 
-    fun clearResult() { result = null; removeCallbacks(clear); render() }
+    /** Keep the outcome available after an interruption; the next capture clears it explicitly. */
+    fun clearResult() { result = null; render() }
 
     /** Sequence progress already covers routine per-shot notices; errors still use the camera notice. */
     fun coversStatus(message: String) = (progress != null || result != null) &&
         (message.startsWith("Capturing") || message == "Saving…" || message.startsWith("Saved "))
 
     private fun render() {
-        val value = progress ?: result ?: if (bracket) "AEB" else ""
+        val value = progress ?: result ?: when {
+            bracket -> "AEB"
+            photoHint -> "셔터: 한 번 누르면 사진 · 길게 누르면 연사"
+            else -> ""
+        }
         if (text.toString() != value) text = value
         visibility = if (value.isEmpty()) INVISIBLE else VISIBLE
     }
 
-    override fun onDetachedFromWindow() {
-        removeCallbacks(clear)
-        result = null
-        super.onDetachedFromWindow()
-    }
 }
