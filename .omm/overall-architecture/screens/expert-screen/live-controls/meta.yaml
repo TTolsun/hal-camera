@@ -6,6 +6,7 @@ kind: nested-class
 title: live-controls
 children:
   - touch-focus
+  - capture-sequence
 parentPath:
   - screens
   - expert-screen

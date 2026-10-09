@@ -66,9 +66,12 @@ class FocusRing(
     }
 
     @Suppress("ClickableViewAccessibility")
-    override fun onTouchEvent(event: MotionEvent): Boolean = detector.onTouchEvent(event)
+    override fun onTouchEvent(event: MotionEvent): Boolean = if (canInteract()) detector.onTouchEvent(event) else true
+
+    var canInteract: () -> Boolean = { true }
 
     private fun tap(x: Float, y: Float) {
+        if (!canInteract()) return
         releaseExposure()
         val t = start(focus, x, y)
         removeCallbacks(hideFocus)
@@ -80,6 +83,7 @@ class FocusRing(
     }
 
     private fun press(x: Float, y: Float) {
+        if (!canInteract()) return
         performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
         releaseExposure()
         // A lock taken with the AE button would keep AE from metering the new point, so a long press always re-meters.
