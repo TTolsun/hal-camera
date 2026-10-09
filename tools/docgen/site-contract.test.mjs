@@ -9,6 +9,19 @@ const docs = path.join(root, 'docs');
 const config = fs.readFileSync(path.join(root, 'guide/_config.yml'), 'utf8');
 const nav = [...config.matchAll(/- path: (\S+)\s+label: ([^\r\n]+)/g)];
 
+test('every published page loads full-text search relative to the site root', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(docs, '.site-manifest.json'), 'utf8'));
+  assert.ok(manifest.files['assets/search.js']);
+  assert.ok(manifest.files['assets/search-core.js']);
+  for (const target of Object.keys(manifest.files).filter(file => file.endsWith('.html'))) {
+    const html = fs.readFileSync(path.join(docs, target), 'utf8');
+    const rootPrefix = target.includes('/') ? '../' : './';
+    assert.ok(html.includes(`src="${rootPrefix}assets/search.js"`), `${target}: search module`);
+    assert.ok(html.includes('id="search-dialog"'), `${target}: search dialog`);
+    assert.ok(html.includes('id="search-status" role="status"'), `${target}: accessible status`);
+  }
+});
+
 test('every navigation target has a matching title and exactly one active tab', () => {
   assert.ok(nav.length > 0);
   for (const [, target, label] of nav) {

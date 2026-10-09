@@ -6,11 +6,13 @@
   <title>CTS · HALCamera 개발자 가이드</title>
   <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
+  <script type="module" src="./assets/search.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">본문으로 이동</a>
   <header class="site-header">
     <a class="brand" href="./index.html">HAL CAMERA</a>
+    <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden>문서 찾기 <kbd>Ctrl K</kbd></button>
     <nav class="site-nav" aria-label="문서 메뉴">
       <a href="./architecture.html">Architecture</a>
       <a href="./engine.html">Engine</a>
@@ -144,6 +146,14 @@
 
   </main>
   <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <dialog id="search-dialog" aria-labelledby="search-title">
+    <div class="search-head"><h2 id="search-title">문서 찾기</h2><button class="search-close" type="button">닫기 <kbd>Esc</kbd></button></div>
+    <label for="search-input">문서 제목과 본문을 검색합니다.</label>
+    <input id="search-input" type="search" autocomplete="off" spellcheck="false" placeholder="예: 센서 시각, SENSOR_TIMESTAMP" aria-describedby="search-status" autofocus>
+    <p id="search-status" role="status"></p>
+    <button class="search-retry" type="button" hidden>문서 다시 불러오기</button>
+    <ol id="search-results" aria-label="검색 결과"></ol>
+  </dialog>
   <dialog class="diagram-dialog" aria-labelledby="diagram-title">
     <div class="diagram-toolbar">
       <h2 id="diagram-title">그림 크게 보기</h2>
