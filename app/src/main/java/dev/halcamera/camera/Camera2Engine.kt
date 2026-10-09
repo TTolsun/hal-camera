@@ -504,7 +504,7 @@ class Camera2Engine(
         val request = controls.manual.normalized(support)
         if (request != controls.manual) {
             telemetry.event(sessionId, "manual_limited", mapOf("requested" to controls.manual.summary(), "appliedRequest" to request.summary()))
-            main.post { if (active) notice("현재 스트림 제한에 맞게 수동 설정을 조정했습니다: ${request.summary()}") }
+            main.post { if (active) notice("Manual settings adjusted to stream limits: ${request.summary()}") }
             controls = controls.copy(manual = request)
         }
         applyManualControls(request, support.frameNs)
@@ -568,7 +568,7 @@ class Camera2Engine(
             val old = controls
             val c = chars ?: try { manager.getCameraCharacteristics(cameraId) } catch (e: Exception) {
                 telemetry.event(sessionId, "request_rejected", mapOf("for" to "controls_set", "reason" to e.toString()))
-                main.post { if (active) notice("카메라 정보를 읽을 수 없어 설정을 적용하지 못했습니다.") }
+                main.post { if (active) notice("Could not apply settings: camera information unavailable.") }
                 return@post
             }
             val fps = if (video.surface != null) liveStreams?.video?.fps ?: 30 else liveStreams?.fps?.max ?: 30
@@ -587,7 +587,7 @@ class Camera2Engine(
             if (!sent && captureSession != null && !video.blocksRequests) {
                 controls = old
                 submitRepeating("controls_restored", emptyMap())
-                main.post { if (active) notice("설정 요청이 거부되어 이전 설정으로 복구했습니다. 실제 적용값을 확인하세요.") }
+                main.post { if (active) notice("Settings rejected. Previous settings restored; check the applied values.") }
             }
             if (sent && old.afLock != now.afLock && manual.focusDiopters == null) sendAfTrigger(now.afLock)
         }

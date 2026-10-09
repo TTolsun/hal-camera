@@ -50,6 +50,26 @@ class MediaLibrary(context: Context) {
         return savePhotos(name, yuvJpeg, cameraJpeg)
     }
 
+    /** Both physical images are published together; an incomplete pair leaves no gallery entry. */
+    fun saveDualPhotos(images: List<Pair<String, ByteArray>>): List<Uri> {
+        require(images.size == 2 && images.map { it.first }.distinct().size == 2)
+        val base = name()
+        val entries = mutableListOf<Uri>()
+        try {
+            images.forEachIndexed { index, (physicalId, bytes) ->
+                val id = physicalId.replace(Regex("[^A-Za-z0-9_-]"), "_")
+                val uri = create("${base}_${if (index == 0) "A" else "B"}_cam${id}_YUV.jpg", false)
+                entries += uri
+                write(uri) { it.write(bytes) }
+            }
+            entries.forEach(::publish)
+            return entries
+        } catch (e: Exception) {
+            entries.forEach { runCatching { resolver.delete(it, null, null) } }
+            throw e
+        }
+    }
+
     /** Legacy snapshot adapter. Photo-mode captures use saveCapture with their capture metadata. */
     fun savePhotos(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?): List<Uri> =
         saveFiles(name, yuvJpeg, cameraJpeg, null, null).map { it.uri }

@@ -108,7 +108,8 @@ internal class DualPreviewRelay(
         vertices.position(0); GLES20.glVertexAttribPointer(p,2,GLES20.GL_FLOAT,false,16,vertices); GLES20.glEnableVertexAttribArray(p)
         vertices.position(2); GLES20.glVertexAttribPointer(uv,2,GLES20.GL_FLOAT,false,16,vertices); GLES20.glEnableVertexAttribArray(uv)
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP,0,4)
-        if (target == encoder) EGLExt.eglPresentationTimeANDROID(display,target,timestamp)
+        // Preserve the sensor equality key on the view surface as well as the encoder.
+        EGLExt.eglPresentationTimeANDROID(display,target,timestamp)
         check(EGL14.eglSwapBuffers(display,target))
     }
 

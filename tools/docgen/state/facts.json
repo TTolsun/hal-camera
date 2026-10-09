@@ -33,6 +33,12 @@
           ]
         },
         {
+          "tag": "DualPreview",
+          "sources": [
+            "app/src/main/java/dev/halcamera/camera/DualPreviewSession.kt"
+          ]
+        },
+        {
           "tag": "FastOnOffRunner",
           "sources": [
             "app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRunner.kt"

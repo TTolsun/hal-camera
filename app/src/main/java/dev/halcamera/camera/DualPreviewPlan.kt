@@ -28,11 +28,11 @@ data class LogicalMultiCamera(
 
 /** Why a logical camera, or a pair on it, cannot be streamed. Shown as-is; nothing here is guessed. */
 enum class DualPreviewRefusal(val label: String) {
-    API_TOO_OLD("Android 9 (API 28) 이상이 필요합니다."),
-    NOT_LOGICAL("논리 멀티 카메라가 아닙니다 (LOGICAL_MULTI_CAMERA 없음)."),
-    TOO_FEW_PHYSICAL("물리 카메라가 2개 미만입니다."),
-    SAME_LENS("서로 다른 물리 카메라 2개를 골라야 합니다."),
-    NO_COMMON_SIZE("두 물리 카메라가 함께 지원하는 프리뷰 크기가 없습니다.")
+    API_TOO_OLD("Requires Android 9 (API 28) or later."),
+    NOT_LOGICAL("Not a logical multi-camera (no LOGICAL_MULTI_CAMERA capability)."),
+    TOO_FEW_PHYSICAL("Fewer than two physical cameras."),
+    SAME_LENS("Select two different physical cameras."),
+    NO_COMMON_SIZE("No common preview size for these physical cameras.")
 }
 
 data class DualPreviewPlan(

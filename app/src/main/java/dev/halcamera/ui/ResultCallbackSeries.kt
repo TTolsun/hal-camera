@@ -26,11 +26,26 @@ data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frame
                 }
             }.toMap()
             val sensorStarts = current.filter { it.kind == "capture_started" && it.sensorNs != null }.associateBy { it.sensorNs }
+            val physicalIds = (metadata["physicalIds"] as? List<*>)?.filterIsInstance<String>().orEmpty()
+            val physicalStarts = current.filter { it.kind == "dual_physical_result" }.flatMap { event ->
+                val start = starts[event.frame] ?: return@flatMap emptyList()
+                (event.values["timestamps"] as? Map<*, *>)?.entries.orEmpty().mapNotNull { (id, value) ->
+                    (value as? Number)?.toLong()?.let { (id to it) to start }
+                }
+            }.toMap()
             val window = current.filter { it.atNs >= nowNs - WINDOW_NS }
             fun points(kind: String, stream: String? = null) = window.filter {
                 it.kind == kind && (stream == null || it.values["stream"] == stream)
             }.sortedBy { it.atNs }.map { event ->
-                val start = if (stream == null) event.frame?.let { starts[it] } else event.sensorNs?.let { sensorStarts[it] }
+                val physicalId = when (stream) {
+                    "preview_main", "photo_main" -> physicalIds.getOrNull(0)
+                    "preview_sub", "photo_sub" -> physicalIds.getOrNull(1)
+                    else -> null
+                }
+                val start = if (stream == null) event.frame?.let { starts[it] }
+                    else event.sensorNs?.let { timestamp ->
+                        physicalStarts[physicalId to timestamp] ?: sensorStarts[timestamp]
+                    }
                 val latency = start?.let { origins[it.atNs] }?.let { event.atNs - it }?.div(1e6)
                 ResultCallbackPoint(event.atNs, latency, start?.atNs)
             }
