@@ -50,3 +50,27 @@ table{width:100%;border-collapse:collapse;display:block;overflow:auto;margin:28p
 .search-help kbd{margin-right:4px;background:white}
 @media(max-width:700px){.site-header{position:relative}.site-header .brand{max-width:calc(100% - 120px)}.search-open{position:absolute;right:0;top:14px}.search-open kbd{display:none}#search-dialog{width:calc(100% - 16px);height:calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin-top:max(16px,env(safe-area-inset-top));border-radius:6px}.search-controls{padding:12px 16px 0}.search-head{margin-bottom:8px}.search-head h2{font-size:18px}.search-close kbd{display:none}.search-body{padding:4px 8px}#search-results a{padding:14px 8px}.search-suggestions{padding:16px 8px}.search-help{display:none}}
 @media print{.site-header,.site-footer,.skip-link,.diagram-dialog,#search-dialog{display:none}main{width:100%;padding:0}pre,.mermaid{break-inside:avoid}a{color:inherit}.hero{padding-top:0}}
+
+/* Short explanatory figures remain readable without a diagram runtime. */
+.doc-visual { margin: 24px 0; padding: 24px; border: 1px solid var(--line); border-radius: 12px; background: var(--soft); }
+.doc-visual > p:first-child { margin-top: 0; }
+.doc-visual figcaption { margin-top: 16px; color: var(--muted); font-size: 14px; line-height: 1.7; }
+.doc-pair-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.doc-pair-grid p { margin: 8px 0 0; }
+.doc-timeline { display: grid; gap: 16px; font-size: 14px; }
+.doc-timeline > div { display: grid; grid-template-columns: 104px minmax(0, 1fr) 48px; align-items: center; gap: 16px; }
+.doc-timeline b { text-align: right; font-variant-numeric: tabular-nums; }
+.doc-time-track { position: relative; height: 2px; margin: 0 6px; background: var(--line); }
+.doc-time-track i { position: absolute; top: -4px; left: var(--at); width: 10px; height: 10px; border-radius: 50%; background: var(--blue); transform: translateX(-50%); }
+.doc-metric-track { position: relative; height: 28px; background: var(--line); border-radius: 4px; margin: 24px 0 16px; }
+.doc-metric-bar { display: block; width: 80%; height: 100%; background: var(--muted); border-radius: 4px; }
+.doc-metric-baseline { position: absolute; left: 66.6667%; top: -6px; height: 40px; border-left: 3px solid var(--ink); }
+.doc-metric-key { display: flex; flex-wrap: wrap; gap: 16px 40px; margin: 0; }
+.doc-metric-key dt { font-size: 14px; color: var(--muted); }
+.doc-metric-key dd { margin: 4px 0 0; font-size: 18px; font-weight: 650; }
+@media (max-width: 600px) {
+  .doc-visual { padding: 16px; }
+  .doc-pair-grid { grid-template-columns: 1fr; gap: 20px; }
+  .doc-timeline > div { grid-template-columns: 84px minmax(0, 1fr) 44px; gap: 8px; }
+  .doc-timeline { font-size: 12px; }
+}

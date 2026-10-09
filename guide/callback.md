@@ -13,13 +13,25 @@ title: Callback
 
 **0ms는 이전 프레임의 `onCaptureStarted` 콜백을 앱에서 받은 시점입니다.** 현재 프레임의 Shutter부터 Metadata와 각 출력까지 모두 이 기준에서 경과한 시간을 표시합니다. 요청을 생성하거나 HAL에 전달한 시점을 기준으로 삼지 않습니다.
 
-| 예시 행 | 표시값 | 읽는 방법 |
-| --- | --- | --- |
-| Shutter | 33ms | 이전 프레임의 Shutter를 받은 뒤 33ms에 현재 프레임의 Shutter를 받았습니다. |
-| Metadata | 90ms | 같은 기준에서 90ms에 최종 메타데이터를 받았습니다. 현재 프레임의 Shutter와는 57ms 차이입니다. |
-| Preview | 95ms | 같은 기준에서 95ms에 Preview 버퍼를 받았습니다. 현재 프레임의 Shutter와는 62ms 차이입니다. |
+<figure class="doc-visual" aria-labelledby="callback-example-title">
+<p id="callback-example-title"><strong>이전 Shutter부터 잰 시간</strong> · 설명용 예시</p>
+<div class="doc-timeline" aria-hidden="true">
+<div><span>이전 Shutter</span><span class="doc-time-track"><i style="--at:0%"></i></span><b>0 ms</b></div>
+<div><span>현재 Shutter</span><span class="doc-time-track"><i style="--at:33%"></i></span><b>33 ms</b></div>
+<div><span>Metadata</span><span class="doc-time-track"><i style="--at:90%"></i></span><b>90 ms</b></div>
+<div><span>Preview</span><span class="doc-time-track"><i style="--at:95%"></i></span><b>95 ms</b></div>
+</div>
+<figcaption>이전 Shutter가 0 ms입니다. 현재 Shutter는 33 ms, Metadata는 90 ms, Preview는 95 ms에 도착했습니다. 실측 결과가 아닙니다.</figcaption>
+</figure>
 
-이 표는 읽는 법을 설명하기 위한 예시이며 실측 결과가 아닙니다. 구성 후 첫 프레임의 Shutter는 0ms이고, 이후 Shutter 값은 직전 프레임과의 콜백 간격을 나타냅니다. 기준 시각을 연결할 수 없으면 임의의 0을 넣지 않고 `No start time`으로 표시합니다.
+**현재 Shutter부터 걸린 시간은 33 ms를 빼서 구합니다.**
+
+| 구간 | 계산 | 걸린 시간 |
+| --- | --- | --- |
+| 현재 Shutter → Metadata | 90 − 33 | **57 ms** |
+| 현재 Shutter → Preview | 95 − 33 | **62 ms** |
+
+구성 후 첫 프레임의 Shutter는 0 ms입니다. 이후 Shutter 값은 직전 프레임과의 콜백 간격입니다. 기준 시각을 연결할 수 없으면 `No start time`으로 표시합니다. 값을 임의로 0으로 채우지 않습니다.
 
 시간축은 값에 맞춰 자동으로 늘어납니다. 작은 범위가 3초 동안 유지되면 줄어들며, 자동 고정 중에는 늦게 도착한 결과를 담기 위한 확장만 합니다. 사용자가 범위를 설정할 필요는 없습니다.
 
@@ -36,10 +48,17 @@ title: Callback
 | JPEG | JPEG 이미지 수신 시점입니다. 파일 저장 완료 시점은 아닙니다. |
 | Recording | Camera2의 Android 13 이상에서 PRIVATE 버퍼를 받아 인코더로 전달하기 전의 시점입니다. |
 
-<figure class="app-screenshot" id="screen-callback-recording">
+<div id="screen-callback-recording">
+<details markdown="1" id="detail-fb127fe169" data-search-section>
+<summary>실제 화면 보기</summary>
+
+<figure class="app-screenshot">
 <a href="assets/screenshots/callback-recording.png" aria-label="녹화 중 Shutter Metadata Preview Recording 콜백 그래프 원본 보기"><img src="assets/screenshots/callback-recording.png" alt="녹화 중 Shutter Metadata Preview Recording 콜백 그래프" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>2026-09-27의 0.15.0 촬영본입니다. 현재 ZIP 버튼 문구는 Save Events · ZIP입니다. Camera2로 녹화하면서 Preview·Recording 값을 확인한 장면입니다. Real-time Frame에서는 시간 버튼이 숨겨지고 프레임이 계속 갱신됩니다. <a href="assets/screenshots/callback-recording.png">원본 보기</a></figcaption>
 </figure>
+
+</details>
+</div>
 
 Camera2의 Android 12 이하와 CameraX에서는 Preview·Recording 버퍼 도착을 직접 관측하지 못하므로 `No callback`을 표시합니다. CameraX도 선택한 엔진에서 녹화하며, 녹화 세션에는 Preview·Recording 행이 표시됩니다.
 
@@ -74,10 +93,17 @@ flowchart TB
 3. 일시정지 표시가 나타난 동안 값을 읽습니다. 늦게 도착한 같은 프레임의 결과도 채워집니다.
 4. 시간이 지나면 갱신이 재개됩니다. 곧바로 돌아가려면 `Live`를 누릅니다.
 
-<figure class="app-screenshot" id="screen-callback-event">
+<div id="screen-callback-event">
+<details markdown="1" id="detail-8d0a8ea66f" data-search-section>
+<summary>실제 화면 보기</summary>
+
+<figure class="app-screenshot">
 <a href="assets/screenshots/callback-event.png" aria-label="사진 촬영 후 YUV와 JPEG 도착 시각을 자동 고정한 Callback 원본 보기"><img src="assets/screenshots/callback-event.png" alt="사진 촬영 후 YUV와 JPEG 도착 시각을 자동 고정한 Callback" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>2026-09-27의 0.15.0 촬영본입니다. 현재 ZIP 버튼 문구는 Save Events · ZIP입니다. 고정 시간이 10초인 상태에서 사진을 촬영했습니다. 일시정지 표시와 같은 프레임의 YUV 1·JPEG 값을 확인할 수 있습니다. <a href="assets/screenshots/callback-event.png">원본 보기</a></figcaption>
 </figure>
+
+</details>
+</div>
 
 ## 값이 없는 이유를 확인하세요
 

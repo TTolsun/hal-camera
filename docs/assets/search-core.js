@@ -37,6 +37,18 @@ export function extractSections(doc, url) {
   function visit(node) {
     if (node.nodeType === 3) { current.text += `${node.textContent} `; return; }
     if (node.nodeType !== 1 || node.matches('script, style, noscript, nav, button, [hidden], [aria-hidden="true"]')) return;
+    if (node.matches('details[data-search-section][id]')) {
+      // A closed disclosure is searchable and has its own deep link.
+      const parent = { ...current, text: '' };
+      if (current.text.trim()) sections.push(current);
+      const summary = node.querySelector('summary');
+      current = { title, heading: summary?.textContent.trim() || parent.heading,
+        url: `${url}#${encodeURIComponent(node.id)}`, text: '' };
+      node.childNodes.forEach(child => { if (child !== summary) visit(child); });
+      if (current.text.trim()) sections.push(current);
+      current = parent;
+      return;
+    }
     if (/^H[1-6]$/.test(node.tagName)) {
       if (hasHeading || current.text.trim()) sections.push(current);
       current = { title, heading: node.textContent.trim(), url: node.id ? `${url}#${encodeURIComponent(node.id)}` : url, text: '' };
@@ -47,5 +59,13 @@ export function extractSections(doc, url) {
   }
   visit(main);
   sections.push(current);
-  return sections.map(section => ({ ...section, heading: section.heading.normalize('NFC'), text: section.text.normalize('NFC').replace(/\s+/g, ' ').trim() }));
+  // Disclosures split an enclosing section into pieces. Merge those pieces so
+  // each destination appears once and terms on either side remain searchable.
+  const merged = new Map();
+  for (const section of sections) {
+    const existing = merged.get(section.url);
+    if (existing) existing.text += ` ${section.text}`;
+    else merged.set(section.url, { ...section });
+  }
+  return [...merged.values()].map(section => ({ ...section, heading: section.heading.normalize('NFC'), text: section.text.normalize('NFC').replace(/\s+/g, ' ').trim() }));
 }

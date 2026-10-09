@@ -11,7 +11,20 @@ title: Benchmark
 
 1. Live의 `Lab → Benchmark`에서 카메라와 profile을 확인하고 실행합니다.
 2. 실행이 끝나면 판정과 `실행 정보`를 확인합니다. 측정이 무효이거나 표본이 부족하면 성능 저하로 해석하지 않습니다.
-3. 반복 측정의 기준으로 쓸 정상 실행을 `baseline에 추가`합니다. 다섯 개 이상 넣기를 권장합니다. 정상 실행끼리도 값이 퍼지므로, 이번 실행이 baseline 실행들 가운데 가장 나쁜 값보다 기준 이상 나쁠 때만 저하로 판정합니다. 3A(AE·AF·AWB 수렴)는 장면에 따라 크게 달라지므로 변화량만 표시하고 저하로 판정하지 않습니다. baseline이 없으면 이전의 비교 가능한 실행 대비 변화량만 표시합니다.
+3. 아래 표에서 비교 기준을 고릅니다.
+
+### 비교 기준을 고르세요
+
+**baseline은 성능 변화를 판단할 기준 실행입니다.** 반복 측정에서는 정상 실행을 다섯 개 이상 추가하기를 권장합니다.
+
+| 상황 | 기준 | 결과 |
+| --- | --- | --- |
+| 처음 측정했습니다. | 비교할 실행이 없습니다. | 측정값만 봅니다. |
+| baseline을 지정하지 않았습니다. | 이전의 비교 가능한 실행입니다. | 변화량만 표시합니다. 저하·개선은 판정하지 않습니다. |
+| 정상 실행을 `baseline에 추가`했습니다. | 추가한 정상 실행들의 집합입니다. | 집합의 가장 나쁜 값보다 임계값 이상 나쁠 때 저하로 판정합니다. |
+| 실행 기록에서 `두 실행 비교`를 골랐습니다. | 먼저 고른 실행을 이번 비교에만 씁니다. | 그 실행을 기준으로 저하·개선을 판정합니다. 저장된 baseline은 바뀌지 않습니다. |
+
+3A(AE·AF·AWB 수렴)는 장면에 따라 값이 크게 달라집니다. **3A는 변화량만 표시하며 저하로 판정하지 않습니다.**
 
 | 조건 | 비교할 때 확인할 내용 |
 | --- | --- |
@@ -19,15 +32,29 @@ title: Benchmark
 | 관측 창과 워밍업 | 카메라를 다시 여는 반복 측정과 프리뷰 관측 세션은 구분됩니다. 관측 시작 전에 도착한 프레임은 워밍업으로 제외합니다. |
 | 유효성과 환경 | 표본 수, 발열, 충전 상태, 빌드 정보를 `실행 정보`에서 확인합니다. 비교 조건이 맞지 않으면 이유를 표시합니다. |
 
-<figure class="app-screenshot" id="screen-benchmark-setup">
+<div id="screen-benchmark-setup">
+<details markdown="1" id="detail-624444c9fe" data-search-section>
+<summary>실제 화면 보기</summary>
+
+<figure class="app-screenshot">
 <a href="assets/screenshots/benchmark-setup.png" aria-label="Benchmark의 실행 조건과 문서 촬영용 빌드 이름 원본 보기"><img src="assets/screenshots/benchmark-setup.png" alt="Benchmark의 실행 조건과 문서 촬영용 빌드 이름" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>카메라 0에서 실행하기 전의 조건입니다. 기기에 저장된 측정 대상 빌드 이름을 그대로 표시합니다. <a href="assets/screenshots/benchmark-setup.png">원본 보기</a></figcaption>
 </figure>
 
-<figure class="app-screenshot" id="screen-benchmark-running">
+</details>
+</div>
+
+<div id="screen-benchmark-running">
+<details markdown="1" id="detail-f3b444d1dc" data-search-section>
+<summary>실제 화면 보기</summary>
+
+<figure class="app-screenshot">
 <a href="assets/screenshots/benchmark-running.png" aria-label="Benchmark 카메라 열기 반복 측정 진행 중 원본 보기"><img src="assets/screenshots/benchmark-running.png" alt="Benchmark 카메라 열기 반복 측정 진행 중" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>카메라 열기 반복 측정이 진행 중입니다. 현재 단계와 회차, 진행률을 확인할 수 있습니다. <a href="assets/screenshots/benchmark-running.png">원본 보기</a></figcaption>
 </figure>
+
+</details>
+</div>
 
 진행 화면은 단계 제목 아래에 준비·첫 프레임 대기·관측·촬영·저장 상태를 짧게 표시합니다. 워밍업과 관측에는 경과 시간과 예정 시간을, 사진에는 현재 촬영 순서를 표시합니다. 녹화 프레임 수는 현재 회차의 capture_result를 집계하므로 새 회차에서 초기화됩니다. 진행률은 표시용 추정치이며 측정값이나 점수의 입력이 아닙니다.
 
@@ -36,6 +63,15 @@ title: Benchmark
 녹화 표본이 부족하면 `녹화 측정이 부족함` flag가 붙습니다. 해당 flag만으로 측정 전체가 무효가 되지는 않으며 내부 비교는 가능하지만 교차 기기 점수에서는 제외됩니다. 카메라가 녹화 스트림 조합을 거부하면 남은 녹화 회차는 실행하지 않습니다.
 
 ## 판정과 막대를 읽으세요
+
+**판정을 먼저 읽고, 달라진 지표를 확인하세요.** 막대만 보고 성능 저하를 판단하지 마세요.
+
+<figure class="doc-visual" aria-labelledby="metric-example-title">
+<p id="metric-example-title"><strong>시간 지표 한 줄 읽기</strong> · 설명용 예시</p>
+<div class="doc-metric-track" aria-hidden="true"><span class="doc-metric-bar"></span><span class="doc-metric-baseline"></span></div>
+<dl class="doc-metric-key"><div><dt>막대 · 이번 값</dt><dd>120 ms</dd></div><div><dt>눈금 · 기준 값</dt><dd>100 ms</dd></div><div><dt>변화량</dt><dd>+20 ms (+20%)</dd></div></dl>
+<figcaption>이 예시에서는 20 ms 더 걸렸습니다. 실제 저하 판정은 비교 조건과 지표별 임계값으로 결정합니다. 실측 결과나 앱 화면이 아닙니다.</figcaption>
+</figure>
 
 | 판정 | 의미 |
 | --- | --- |
@@ -47,10 +83,17 @@ title: Benchmark
 | `N metrics degraded` | baseline보다 저하된 지표가 N개입니다. |
 | `No degradation` | 판정한 지표 중 저하된 지표가 없습니다. |
 
-<figure class="app-screenshot" id="screen-benchmark-result">
+<div id="screen-benchmark-result">
+<details markdown="1" id="detail-ee38b8ed09" data-search-section>
+<summary>실제 화면 보기</summary>
+
+<figure class="app-screenshot">
 <a href="assets/screenshots/benchmark-result.png" aria-label="Benchmark 결과와 baseline 대비 조건 차이 경고 원본 보기"><img src="assets/screenshots/benchmark-result.png" alt="Benchmark 결과와 baseline 대비 조건 차이 경고" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>실행 완료 후 기존 baseline과 비교한 화면입니다. 충전 중 측정의 점수 제외 안내가 표시되므로, 이 장면을 앱 버전 간 성능 저하의 증거로 해석하지 않습니다. <a href="assets/screenshots/benchmark-result.png">원본 보기</a></figcaption>
 </figure>
+
+</details>
+</div>
 
 지표는 `Launch`·`Preview`·`Capture`·`Stability`·`Record`·`3A`로 묶습니다. 막대는 비교 대상의 값, 눈금은 baseline 또는 이전 실행의 값입니다. 시간 값의 대표값은 중앙값이며, 각 지표 아래에는 측정한 Camera2 구간을 표시합니다. 지표 정의는 [METRICS.md](https://github.com/TTolsun/hal-camera/blob/main/docs/METRICS.md)를 확인하세요. Benchmark의 `Partial`은 `onCaptureStarted → onCaptureCompleted` 구간을 뜻하며, Camera2의 중간 메타데이터 콜백인 `onCaptureProgressed`를 뜻하지 않습니다.
 
@@ -81,14 +124,27 @@ title: Benchmark
 | `측정 무효`·`비교 불가`·`점수 제외` | 판정이 없을 때 적격성을 충족하지 못한 단계를 표시합니다. |
 | 없음 | 저하나 적격성 경고가 없는 실행이거나, 별도 `Baseline` 묶음에 있는 실행입니다. |
 
-1. `두 실행 비교`를 누르고 baseline으로 사용할 실행과 비교할 실행을 차례로 고릅니다. 먼저 고른 실행은 이번 비교에만 baseline으로 쓰이며, 저하·개선도 그 실행을 기준으로 판정합니다. 목록에 지정해 둔 baseline은 바뀌지 않습니다. 취소나 뒤로 가기로 선택을 해제합니다.
-2. 각 행의 `⋮` 메뉴 또는 길게 누르기로 baseline 추가·빼기, 비교, JSON·CSV 내보내기, 삭제를 선택합니다. 삭제는 확인 후 실행하며 삭제한 실행은 baseline에서도 빠집니다.
-3. `목록 CSV 내보내기`로 현재 필터에 맞는 실행 전체를 CSV 하나로 내보냅니다.
+1. `두 실행 비교`를 누릅니다.
+2. 기준으로 쓸 실행을 먼저 고릅니다.
+3. 비교할 실행을 고릅니다. 취소나 뒤로 가기로 선택을 해제할 수 있습니다.
 
-<figure class="app-screenshot" id="screen-benchmark-history">
+| 할 일 | 조작 |
+| --- | --- |
+| 실행 하나를 관리합니다. | 행의 `⋮` 메뉴를 누르거나 길게 누릅니다. baseline 추가·빼기, 비교, JSON·CSV 내보내기, 삭제를 고릅니다. |
+| 실행을 삭제합니다. | 확인 후 삭제하며, baseline에서도 빠집니다. |
+| 현재 목록을 내보냅니다. | `목록 CSV 내보내기`를 누릅니다. 현재 필터에 맞는 실행을 CSV 하나로 저장합니다. |
+
+<div id="screen-benchmark-history">
+<details markdown="1" id="detail-fe7587d315" data-search-section>
+<summary>실제 화면 보기</summary>
+
+<figure class="app-screenshot">
 <a href="assets/screenshots/benchmark-history.png" aria-label="저장된 Benchmark 실행 기록과 baseline 원본 보기"><img src="assets/screenshots/benchmark-history.png" alt="저장된 Benchmark 실행 기록과 baseline" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>저장된 실행을 최신 순서로 표시합니다. 기존 baseline은 별도 묶음에 남아 있습니다. <a href="assets/screenshots/benchmark-history.png">원본 보기</a></figcaption>
 </figure>
+
+</details>
+</div>
 
 기본 상태 필터는 `전체`이므로 중단·무효 실행도 보입니다. 찾는 실행이 없으면 profile·camera 조건을 확인하거나 `필터 초기화`를 누르세요. PC의 `tools/aggregate.py`는 기본적으로 점수 산정 가능한 실행만 내보내므로 전체 실행이 필요하면 `--eligibility all`을 사용합니다.
 
