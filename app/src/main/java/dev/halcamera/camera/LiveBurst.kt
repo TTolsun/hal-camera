@@ -71,7 +71,13 @@ class LiveBurst(
                 event(session, "bracket_done", fields(summary) + ("evRequested" to labels))
                 changed()
                 val sources = summary.shots.mapNotNull { it.result.getOrNull()?.let(BracketFusion::pick) }
-                if (fusion == null || summary.saved < evs.size || sources.size < evs.size) report(describeBracket(summary, labels))
+                val skipped = when {
+                    fusion == null -> ""
+                    summary.saved < evs.size -> " · HDR skipped: not every shot saved"
+                    sources.size < evs.size -> " · HDR skipped: no JPEG output"
+                    else -> null
+                }
+                if (skipped != null || fusion == null) report(describeBracket(summary, labels) + (skipped ?: ""))
                 // The fourth image: the shots fused. The camera is free meanwhile; the summary waits for it.
                 else fusion.fuse(id, sources) { fused ->
                     event(session, "bracket_fused", mapOf("burstId" to id, "file" to fused.getOrNull()?.name,
