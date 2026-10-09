@@ -179,12 +179,14 @@ adb devices
 </tbody></table>
 <p>갤러리의 확대·축소·동영상 재생·공유 대상 선택은 파일 회수 후 PC의 뷰어나 공유 도구에서 수행합니다. 권한 허용, 잠금 해제, ADB CLI 허용 스위치를 다시 켜는 동작은 Android 화면에서 수행합니다. CLI는 이 보호 동작을 우회하지 않습니다.</p>
 <h3 id="json을-쓰는-기존-python-클라이언트">JSON을 쓰는 기존 Python 클라이언트</h3>
+<p><strong>처음에는 <code>halcam</code>을 실행해 시작 작업을 고르세요.</strong> 기본 출력은 결과 상태·저장 위치와 다음 명령을 보여 줍니다. 대기 중에는 상태나 저장 장수가 바뀔 때만 알립니다. 자동화나 전체 메타데이터가 필요하면 <code>--json</code>을 붙입니다. 취소·대기 시간 초과 후에는 출력된 요청 ID로 상태를 확인하거나 파일을 회수하며, 촬영 명령을 다시 실행하지 않습니다.</p>
 <p>선택 도구인 Python 클라이언트에도 전체 작업을 제출하는 공통 경로가 있습니다. <code>halcam run OPERATION --option KEY=VALUE --stream KEY=VALUE</code>를 사용합니다. 앱이 <code>doctor</code>에서 제공한 명령만 받으며, 결과 파일이 필요하면 <code>--output DIRECTORY</code>를 붙입니다. JPEG·MP4·DNG·NV21·JSON·TXT·CSV·ZIP 파일을 크기와 SHA-256으로 검증하며 파일당 최대 64 GiB를 받습니다. 갤러리에서 내보낸 파일은 안전한 <code>media_ID.확장자</code> 이름으로 받고 원래 이름은 <code>original_name</code>에 남깁니다.</p>
 <pre><code class="language-sh">halcam run burst --camera 0 --option count=3 --stream yuv_format=NV21 --output ./photos
 halcam run results.export --option run=RUN_ID --output ./results
 halcam run benchmark.run --option &quot;build=Candidate: A&quot; --timeout 600 --output ./run
 halcam control live.set --option zoom=2
 halcam control record.stop
+halcam run record.start --no-audio
 </code></pre>
 <p><code>live info</code>, <code>meter</code>, <code>events</code>, <code>preview stop</code>은 현재 열린 Live 또는 Dual 화면에 적용됩니다. <code>live set</code>과 <code>live reset</code>은 Dual 프리뷰·CLI 녹화에도 적용되며 엔진이 지원하지 않는 제어는 거부합니다.</p>
 <p><code>control</code>은 새 작업을 만들지 않고 기존 프리뷰·녹화를 제어합니다. <code>record.stop</code>은 접수 상태를 반환하므로 저장이 끝났는지는 <code>status --request UUID</code>로 확인합니다. 자동으로 완료까지 기다리는 기본 경로는 APK에 포함된 셸 스크립트입니다.</p>
@@ -305,7 +307,7 @@ adb exec-out content read --uri content://dev.halcamera.cli/v1/status
 <p>직접 제출한 명령은 접수 결과를 반환합니다. 응답의 <code>request_id</code>로 <code>/v1/requests/UUID</code>를 읽어 완료를 확인합니다. <code>--extra request_id:s:UUID</code>로 같은 ID를 재사용하면 중복 촬영을 막을 수 있고, 다른 인자로 같은 ID를 쓰면 <code>REQUEST_CONFLICT</code>가 됩니다. <code>timeout_ms:l:30000</code>으로 실행 제한을 지정합니다. 알 수 없는 인자와 잘못된 타입은 거부합니다.</p>
 <p>기존 Python 도구의 <code>submit</code>·<code>cancel</code> Base64 전송은 유지합니다. 지원 명령은 <code>/v1/hello</code>의 <code>commands</code>, 상태 조회·취소 등의 조작은 <code>controls</code>에서 확인합니다.</p>
 </details><details>
-<summary>선택 도구: Python 클라이언트</summary><p>사진·probe·CTS·벤치마크 파일 수집을 자동화하려면 Python 3.11 이상에서 다음과 같이 설치합니다. 녹화와 프리뷰 종료는 위의 ADB 스크립트를 사용합니다.</p>
+<summary>선택 도구: Python 클라이언트</summary><p>사진·probe·CTS·벤치마크 파일 수집을 자동화하려면 Python 3.11 이상에서 다음과 같이 설치합니다. Python에서는 <code>run record.start</code>·<code>control record.stop</code>으로 녹화를, <code>run preview.stop</code>으로 프리뷰 종료를 요청합니다. 무음 녹화에는 <code>--no-audio</code>를 붙입니다.</p>
 <pre><code class="language-sh">python -m pip install ./tools/halcam
 halcam --serial DEVICE doctor --json
 halcam --serial DEVICE streams --camera 0 --engine CameraX --json
