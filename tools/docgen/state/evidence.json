@@ -492,14 +492,14 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "1fd74361ec271a71",
-        "modelHash": "2c63f99bd92041ea",
+        "modelHash": "1bdb99f4113849b9",
         "at": "2026-10-09",
-        "commit": "678893a2",
-        "reviewer": "Codex (code review; emulator UI only)",
+        "commit": "360a9d2b",
+        "reviewer": "Codex (code and guide comparison)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "029ef5f2d480e1a7b117026ba42658be1a5f9d6a",
@@ -592,10 +592,10 @@
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "5ee3d30ccfd38f57",
-        "modelHash": "1bbadc519f6b2a4a",
+        "modelHash": "f73f6f061bed4a03",
         "at": "2026-10-09",
-        "commit": "678893a2",
-        "reviewer": "Codex (code review; emulator UI only)",
+        "commit": "360a9d2b",
+        "reviewer": "Codex (code and guide comparison)",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -788,7 +788,7 @@
         }
       },
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       }
     },
     "content:architecture.md/constraints": {
