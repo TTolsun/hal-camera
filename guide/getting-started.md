@@ -93,9 +93,9 @@ title: Quickstart
 <p id="detail-f2bbad292d"><a href="live.html#detail-f2bbad292d">Live에서 보기</a></p>
 <p id="screen-live-controls"><a href="live.html#screen-live-controls">Live에서 보기</a></p>
 
-</details>
-
 <p id="실행-전에-준비하세요"><a href="building.html#실행-전에-준비하세요">소스 빌드 준비</a></p>
 <p id="앱을-빌드하고-실행하세요"><a href="building.html#앱을-빌드하고-실행하세요">소스 빌드와 실행</a></p>
+
+</details>
 
 **다음 단계:** [Live](live.md)에서 검증할 촬영 조건을 설정하세요.

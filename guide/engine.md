@@ -109,7 +109,7 @@ CameraX 1.6.2로 녹화 중 사진을 찍으면 영상 간격이 늘어날 수 �
 
 이 동작은 알려진 제약으로 수용하며 CameraX 내부 API를 통한 우회 수정은 현재 계획하지 않습니다. 안내는 문서에만 제공하고 앱 경고는 추가하지 않습니다. JPEG 기본 크기는 엔진별로 유지합니다. 근거는 [검증 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md)에 있으며, 남은 실패 경로는 [#220](https://github.com/TTolsun/hal-camera/issues/220), 기기 조합은 [#221](https://github.com/TTolsun/hal-camera/issues/221)에서 추적합니다.
 
-<p class="doc-evidence">아래 화면은 2026년 9월 27일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
+<p class="doc-evidence">아래 화면은 2026년 9월 30일 Galaxy S25+·Android 16에서 HAL CAMERA 0.16.0(versionCode 593)을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
 
 <div id="screen-engine-camerax">
 <details markdown="1" id="detail-35df4f15e9" data-search-section>
@@ -420,8 +420,6 @@ sequenceDiagram
 Android 10 이상에서는 `IS_PENDING`으로 쓰는 중인 항목의 공개를 미룹니다. 이전 버전에는 이 보호가 없으며, 여러 항목의 공개와 실패 후 삭제를 완전한 원자적 처리로 보장하지 않습니다. 생성·쓰기·공개 중 예외가 나면 이미 만든 항목의 삭제를 시도합니다.
 
 
-벤치마크 still은 JPEG만 대상으로 하고, JPEG 도착이 측정값이며 저장하지 않습니다.
-
 </details>
 
 #### YUV 저장 포맷
@@ -585,7 +583,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately)
+- 검토 2026-10-09 @ `84058c8b` · Codex (independent documentation and code review; no new device test)
 
 </details>
 
@@ -850,7 +848,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 | --- | --- | --- |
 | 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
 | 원고 `contract` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
-| 원고 `camera2` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
+| 원고 `camera2` | 최신 | 검토 2026-10-09 @ `84058c8b` · Codex (independent documentation and code review; no new device test) |
 | 원고 `camerax` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
 | 원고 `comparison` | 최신 | 검토 2026-10-09 @ `69497ebf` · Codex (user-requested code and documentation review; device evidence recorded separately) |
 

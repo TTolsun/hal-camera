@@ -213,10 +213,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "ae87d42b2eccc34e",
-        "modelHash": "5c92c2a5aafe08dd",
+        "codeHash": "1a6e9d28157a6e5f",
+        "modelHash": "6fb1dc396acf8c04",
         "at": "2026-10-09",
-        "commit": "491997a5",
+        "commit": "69497ebf",
         "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
@@ -251,7 +251,7 @@
           "app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt": "2dc23b55b00407ea5126dd19e3871fcb8f9fc5d4",
           "app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt": "f5148663814d0aec3ed45a44478bae4b0323e01d",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "92785c94fdb5c405203f5a7f47cf6548cc735215",
-          "tools/halcam/halcam/cli.py": "a459955fdd38e9130ac0751fea3c33e3f45a8347",
+          "tools/halcam/halcam/cli.py": "6f60a8688eb40c949098e182eb8d5459b2cb33bd",
           "tools/halcam/halcam/download.py": "6cb9875bdae0257330e0942386f7ecd64a34d690"
         }
       }
@@ -261,10 +261,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "287e22eec780a5d2",
+        "codeHash": "e28cbcba31225d36",
         "modelHash": "9c6ebe1505c8ff5b",
         "at": "2026-10-09",
-        "commit": "491997a5",
+        "commit": "69497ebf",
         "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
         "files": {
           "app/src/main/java/dev/halcamera/MainActivity.kt": "6852a20e3c1432467b96f5300de0d50e2b6114d9",
@@ -291,7 +291,7 @@
           "app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt": "2dc23b55b00407ea5126dd19e3871fcb8f9fc5d4",
           "app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt": "f5148663814d0aec3ed45a44478bae4b0323e01d",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "92785c94fdb5c405203f5a7f47cf6548cc735215",
-          "tools/halcam/halcam/cli.py": "a459955fdd38e9130ac0751fea3c33e3f45a8347"
+          "tools/halcam/halcam/cli.py": "6f60a8688eb40c949098e182eb8d5459b2cb33bd"
         }
       }
     },
@@ -300,10 +300,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "3d463ea7222b22e9",
-        "modelHash": "d732f93b64e25af9",
+        "codeHash": "353405cd5ef80816",
+        "modelHash": "ee5be97c3209e298",
         "at": "2026-10-09",
-        "commit": "491997a5",
+        "commit": "69497ebf",
         "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -499,7 +499,7 @@
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCts.kt": "b8282158956ec4049fa3a0cb3bc263fec62abaff",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredRun.kt": "cbfb48a13991b7a3e82184836c37ac7b872f2dee",
           "settings.gradle.kts": "b5671426df0ca48c05b321e171339958349871f9",
-          "tools/halcam/halcam/cli.py": "a459955fdd38e9130ac0751fea3c33e3f45a8347",
+          "tools/halcam/halcam/cli.py": "6f60a8688eb40c949098e182eb8d5459b2cb33bd",
           "tools/halcam/halcam/download.py": "6cb9875bdae0257330e0942386f7ecd64a34d690"
         }
       }
@@ -509,10 +509,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "a96ea949277b2911",
-        "modelHash": "c49773b2c3818a5d",
+        "codeHash": "1c0778aa4f5980aa",
+        "modelHash": "05efd9b7cccfcba3",
         "at": "2026-10-09",
-        "commit": "491997a5",
+        "commit": "69497ebf",
         "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
@@ -548,7 +548,7 @@
           "app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt": "2dc23b55b00407ea5126dd19e3871fcb8f9fc5d4",
           "app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt": "f5148663814d0aec3ed45a44478bae4b0323e01d",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "92785c94fdb5c405203f5a7f47cf6548cc735215",
-          "tools/halcam/halcam/cli.py": "a459955fdd38e9130ac0751fea3c33e3f45a8347",
+          "tools/halcam/halcam/cli.py": "6f60a8688eb40c949098e182eb8d5459b2cb33bd",
           "tools/halcam/halcam/download.py": "6cb9875bdae0257330e0942386f7ecd64a34d690"
         }
       }
@@ -558,11 +558,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "474520c8b123894e",
-        "modelHash": "e534325f4cda357e",
+        "codeHash": "e4424ab802db9c1e",
+        "modelHash": "0ac3e7e38b21e0b8",
         "at": "2026-10-09",
-        "commit": "491997a5",
-        "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
+        "commit": "84058c8b",
+        "reviewer": "Codex (independent documentation and code review; no new device test)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "6852a20e3c1432467b96f5300de0d50e2b6114d9",
@@ -585,6 +585,7 @@
           "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "518c730a1dd2c1e011fbe4792d1c72a8ba351ae1",
           "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "a290adb1490152df591a5c7bed7a76e09f95859f",
           "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "3e2f653654f7696accd12b04defde0fa44c0d3a3",
+          "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
           "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "10c7a557529d4bae4c682c743466ff5b9ff5bbf0",
           "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "586757ab962be12cb4604062da5d0042fe04cb01",
@@ -602,7 +603,7 @@
           "app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt": "2dc23b55b00407ea5126dd19e3871fcb8f9fc5d4",
           "app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt": "f5148663814d0aec3ed45a44478bae4b0323e01d",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "92785c94fdb5c405203f5a7f47cf6548cc735215",
-          "tools/halcam/halcam/cli.py": "a459955fdd38e9130ac0751fea3c33e3f45a8347",
+          "tools/halcam/halcam/cli.py": "6f60a8688eb40c949098e182eb8d5459b2cb33bd",
           "tools/halcam/halcam/download.py": "6cb9875bdae0257330e0942386f7ecd64a34d690"
         }
       }
@@ -610,10 +611,10 @@
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "5288bc7a0512a409",
-        "modelHash": "44b9a0ab90a6f9f8",
+        "modelHash": "59faf0813599065f",
         "at": "2026-10-09",
-        "commit": "69497ebf",
-        "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
+        "commit": "84058c8b",
+        "reviewer": "Codex (independent documentation and code review; no new device test)",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -817,10 +818,10 @@
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "5288bc7a0512a409",
-        "modelHash": "faf8c8defc94a6c7",
+        "modelHash": "e2a35c25f3d1b4c9",
         "at": "2026-10-09",
-        "commit": "69497ebf",
-        "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
+        "commit": "84058c8b",
+        "reviewer": "Codex (independent documentation and code review; no new device test)",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",
@@ -1281,10 +1282,10 @@
       },
       "accepted": {
         "codeHash": "5288bc7a0512a409",
-        "modelHash": "fc2066749828f95d",
+        "modelHash": "ca608113eabe6b3f",
         "at": "2026-10-09",
-        "commit": "69497ebf",
-        "reviewer": "Codex (user-requested code and documentation review; device evidence recorded separately)",
+        "commit": "84058c8b",
+        "reviewer": "Codex (independent documentation and code review; no new device test)",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
           "app/src/main/AndroidManifest.xml": "6614f8f4210aad448d25577d5a7582759f4e82ab",

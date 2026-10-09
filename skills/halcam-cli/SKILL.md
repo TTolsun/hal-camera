@@ -231,8 +231,8 @@ halcam run burst --camera 0 --option count=3 --stream yuv_format=NV21 --output .
 halcam run results.export --option run=RUN_ID --output ./results
 halcam run benchmark.run --option "build=Candidate: A" --timeout 600 --output ./run
 halcam control live.set --option zoom=2
-halcam control record.stop
 halcam run record.start --no-audio
+halcam control record.stop
 ```
 
 `live info`, `meter`, `events`, `preview stop`은 현재 열린 Live 또는 Dual 화면에 적용됩니다. `live set`과 `live reset`은 Dual 프리뷰·CLI 녹화에도 적용되며 엔진이 지원하지 않는 제어는 거부합니다.
