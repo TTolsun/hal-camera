@@ -29,6 +29,12 @@ Live·CameraX 전환·사진 자동 고정·Recording 콜백·Probe 조회·CTS 
 
 2026년 9월 30일 같은 기기의 0.16.0(versionCode 593) 디자인 변경 빌드로 Live·Live 제어·CameraX·CLI 설정·ZIP 목록의 이미지 5개를 교체하고 Gallery·About·기기 정보·ZIP 작업 화면 7개를 추가했습니다. Gallery 첫 타일의 모서리를 실기기 리뷰에서 수정했습니다. Callback의 촬영·녹화 화면은 9월 27일 당시 검증 기록이며 이번 UI 변경의 검증 자료가 아닙니다. [Gallery·Lab UI 리뷰와 촬영 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/gallery-lab-ui-20260930.md)에서 코드 리뷰와 기기 관찰을 확인하세요.
 
+### 연사와 AEB
+
+2026년 10월 9일 Galaxy S25+·Android 16의 후면 기본 카메라에서 Camera2와 CameraX의 연사·AEB를 확인했습니다. 연사는 손을 떼면 멈췄고, AEB는 사진 3장을 저장한 뒤 EV를 복원했습니다. 요청한 ±2 EV와 실제 노출 차이는 같지 않을 수 있었습니다. 어두운 장면에서는 노출 시간과 ISO 상한 때문에 밝게 만드는 범위가 제한됐습니다.
+
+[실기기 검증 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/live-burst-bracketing-20261009.md)에 측정 조건과 결과가 있습니다. 이 기록은 HDR 합성의 검증 결과가 아닙니다. 저장 공간 부족·일부 촬영 실패·촬영 중 화면 종료는 단위 테스트 범위이며, Android 8~9의 권한 대화상자 동작도 실기기에서는 확인하지 않았습니다.
+
 ### 녹화 중 사진
 
 2026년 10월 5일 Galaxy S25+(SM-S936N)·Android 16의 0.19.0(versionCode 628)에서 후면·전면·초광각 녹화 중 사진을 확인했습니다. CameraX 1.6.2에서는 사진 시점에 약 두 프레임 길이의 영상 간격이 생겼고, Camera2 1080p 30fps에서는 사진 3장씩을 저장해도 같은 간격 증가가 없었습니다. HEVC 60fps와 정지 직후의 사진 결과, 공식 소스에서 확인한 요청 출력 구성, 남은 검증 조건은 [녹화 중 사진 후속 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md)에 있습니다. CameraX의 영상 간격 증가는 알려진 제약으로 수용하고 문서에만 안내합니다. 남은 실패 경로와 기기 조합은 [#220](https://github.com/TTolsun/hal-camera/issues/220)과 [#221](https://github.com/TTolsun/hal-camera/issues/221)에서 추적합니다.
