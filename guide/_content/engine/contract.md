@@ -19,6 +19,25 @@ verifications: []
 
 **화면은 엔진 클래스가 아니라 엔진이 구현한 인터페이스로 기능을 확인합니다.** 그래서 Live의 셔터, 상단 제어, 프리뷰 터치는 Camera2와 CameraX에서 같은 코드로 동작하고, 엔진을 바꾸지 않습니다.
 
+```mermaid
+classDiagram
+    direction TB
+    class CameraEngine { <<interface>> }
+    class MediaCapture { <<interface>> }
+    class LiveTuning { <<interface>> }
+    class TouchMetering { <<interface>> }
+    CameraEngine <|.. Camera2Engine
+    CameraEngine <|.. CameraXEngine
+    MediaCapture <|.. Camera2Engine
+    MediaCapture <|.. CameraXEngine
+    LiveTuning <|.. Camera2Engine
+    LiveTuning <|.. CameraXEngine
+    TouchMetering <|.. Camera2Engine
+    TouchMetering <|.. CameraXEngine
+```
+
+점선 화살표는 인터페이스 구현을 뜻합니다. 실제로 사용할 수 있는 기능은 엔진의 실행 모드와 아래 조건에 따라 달라집니다.
+
 | 인터페이스 | 담당하는 동작 | 구현 |
 | --- | --- | --- |
 | `CameraEngine` | 카메라 열기(`start`), 촬영(`capture`), 줌(`setZoom`), 닫기(`close(done)`) | 두 엔진 |
@@ -34,6 +53,8 @@ verifications: []
 2. 엔진이나 카메라를 바꾸면 기존 엔진의 `close(done)` 완료 콜백을 받은 뒤에 새 엔진을 엽니다. 카메라를 점유하는 엔진은 항상 하나입니다.
 3. 엔진이나 카메라를 바꾸면 EV, AE·AF 잠금, 플래시는 기본값으로 돌아가고 상단 제어 줄이 접힙니다. 일시정지 후 재개처럼 같은 카메라를 다시 여는 경우에는 이전 제어 값을 `setControls(controls, restore = true)`로 다시 적용합니다.
 4. 녹화 중에는 API 버튼과 카메라 선택이 비활성화되어 엔진을 바꿀 수 없습니다.
+
+종료 통지와 다음 엔진의 대기 순서는 [엔진 전환 그림](architecture.md#카메라-열기와-닫기)을 확인하세요.
 
 ### Benchmark와 CLI가 쓰는 엔진
 
@@ -57,4 +78,14 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 `request_observed`의 `afRegions`·`aeRegions`와 `capture_result`의 `afRegions`·`aeRegions`를 비교하면, 요청한 영역과 HAL이 적용한 영역을 대조할 수 있습니다.
 
-손떨림 보정도 두 이벤트의 `opticalStabilization`·`videoStabilization`·`cropRegion`으로 요청과 결과를 구분합니다. 결과 키가 없으면 적용 여부를 알 수 없습니다. Live 상단은 현재 프리뷰·녹화의 EIS 결과를 표시합니다. 세션·촬영 단계·요청 모드가 바뀌면 이전 결과를 제외하며, 결과 키가 없거나 1.5초 이상 오래됐으면 확인 불가로 표시합니다. 명시적으로 요청한 EIS 모드와 다른 결과가 1초 이상 이어지면 경고하고 일치하는 결과를 받으면 해제합니다. 반복 조회한 프레임 하나로는 경고가 확정되지 않습니다. CameraX의 EIS (Video)는 VideoCapture가 연결된 녹화 중에만 대조하며 녹화 전에는 실제 결과만 표시합니다. 사진 결과는 Camera2의 요청 태그와 CameraX의 `captureIntent`로 제외합니다. 설정 화면은 구성 실패 오류만 표시하며 이전 세션 결과 목록을 제공하지 않습니다.
+손떨림 보정은 두 이벤트의 `opticalStabilization`·`videoStabilization`·`cropRegion`으로 요청과 실제 결과를 대조합니다.
+
+| 조건 | Live 표시와 판정 |
+| --- | --- |
+| 세션·촬영 단계·요청 모드가 바뀝니다. | 이전 결과를 제외합니다. |
+| 결과 키가 없거나 1.5초 이상 오래됐습니다. | 적용 여부를 확인할 수 없다고 표시합니다. |
+| 명시적으로 요청한 EIS 모드와 다른 결과가 1초 이상 이어집니다. | 경고합니다. 같은 프레임을 반복 조회한 것만으로는 경고하지 않습니다. |
+| 요청과 일치하는 새 결과가 옵니다. | 불일치 경고를 해제합니다. |
+| CameraX에서 EIS (Video)를 선택합니다. | VideoCapture가 연결된 녹화 중에 대조합니다. 녹화 전에는 실제 결과만 표시합니다. |
+
+사진 결과는 Camera2의 요청 태그와 CameraX의 `captureIntent`로 제외합니다. 설정 화면은 구성 실패 오류만 표시하며 이전 세션 결과 목록을 제공하지 않습니다.

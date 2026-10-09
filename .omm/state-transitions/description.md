@@ -1,4 +1,4 @@
-BenchmarkRunner는 열기·닫기 반복과 추가 관측 세션을 분리합니다. 반복은 OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE, 관측 세션은 WARMUP → OBSERVE → STILL → RECORD → CLOSE로 진행하며, 녹화 조건이 없는 profile은 RECORD를 건너뜁니다. 녹화 사이클의 실패는 그 사이클만 실패로 기록하고 실행 전체를 무효로 만들지 않습니다. 연속 사이클 실패 한도, 관측 세션 실패와 명시적 abort가 조기 종료 조건입니다.
+BenchmarkRunner는 OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE를 반복한 뒤 별도 세션에서 WARMUP → OBSERVE → STILL → RECORD → CLOSE를 수행합니다. 녹화 조건이 없으면 RECORD를 생략합니다. 녹화 사이클 실패만으로 실행 전체가 무효가 되지는 않습니다. 연속 실패 한도·관측 세션 실패·abort는 조기 종료 조건입니다.
 
 카메라 수명주기, FlightRecorder의 incident 창, validity와 회귀 판정은 서로 다른 상태입니다. HistoryActivity는 목록·두 실행 비교·작업 중 상태를 관리하며 삭제 확인 후 파일과 baseline 목록을 처리합니다. 두 실행 비교를 누르면 기준과 현재 실행을 차례로 고르며, 취소나 뒤로 가기로 선택을 해제합니다. 선택 중 상태와 기준 ID는 화면 재생성 때 복원합니다.
 
@@ -8,6 +8,6 @@ API 버튼을 누르면 Camera2와 CameraX 사이를 전환하며 기존 close �
 
 CLI는 accepted → preparing → running → saving → succeeded로 진행하며 실패·취소·프로세스 중단을 별도 terminal state로 기록합니다. 같은 요청 ID와 내용은 기존 상태를 반환하며 내용이 다르면 충돌로 거부합니다. 프로세스가 다시 시작되면 미완료 기록을 interrupted로 바꾸고 촬영이나 측정을 재실행하지 않습니다. 제출된 사진 저장의 취소는 실제 저장 결과와 경합할 수 있습니다.
 
-여러 실행을 묶어 비교하던 ProfileComparisonActivity는 제거되었습니다. 현재 두 실행 비교는 HistoryActivity가 담당합니다.
+제거된 ProfileComparisonActivity 대신 HistoryActivity에서 두 실행을 비교합니다.
 
 Live 스트림 적용은 사진·녹화·저장·권한 요청·CLI 작업 중에 거절합니다. 기존 close(done)가 끝난 뒤 새 엔진에 설정을 전달하고 구성 성공값을 카메라·엔진별로 보관합니다. 실패하면 크기를 자동 대체하지 않으며 사용자가 직전 정상 구성으로 복구할 수 있습니다. Activity 재생성에서도 요청값과 정상 구성을 복원합니다.

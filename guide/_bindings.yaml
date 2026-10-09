@@ -476,6 +476,7 @@ sources:
 
   state-transitions:
     kind: omm
+    diagram_type: sequence
     # data-flow 와 같은 규칙입니다: 요소 근거와 원고 인용의 합집합만 적습니다.
     evidence:
       - app/src/main/java/dev/halcamera/MainActivity.kt
@@ -532,8 +533,8 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt
 
   # 화면 조작 규칙. 위 세 관점은 코드 구조를 그리므로 화면에서 무엇이 어떤 순서로 바뀌는지는 담지 않습니다.
-  # diagram_type 이 관점 단위라서 그림 종류마다 관점을 하나씩 둡니다. docs/design/APP-UI.md 에 같은 그림의
-  # 사본이 있으며(<!-- omm-copy: ... -->), regression.test.mjs 가 두 그림이 같은지 확인합니다.
+  # UI의 근거는 주제별 관점으로 나눕니다. 이름·줌은 description 표, 화면 이동은 sequence 그림을 배치합니다.
+  # docs/design/APP-UI.md 의 사본도 regression.test.mjs 에서 원본과 대조합니다.
   # qwen3.5:4b 는 2026-09-25 시험에서 세 요소 모두 코드의 값 변경(3초→5초, 1mm→0.1mm, Probe 대기)을
   # 반영하지 못하고 형식 검사만 통과했습니다. 재검토 때 그림을 코드와 직접 대조합니다.
   ui-camera-label:
@@ -662,7 +663,7 @@ pages:
       - id: camera-label-diagram
         kind: omm
         source: ui-camera-label
-        field: diagram
+        field: description
         confidence: code
 
       - id: tool-handoff-diagram
@@ -674,7 +675,7 @@ pages:
       - id: zoom-diagram
         kind: omm
         source: ui-zoom
-        field: diagram
+        field: description
         confidence: code
 
       - id: constraints

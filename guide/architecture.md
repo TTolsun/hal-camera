@@ -55,7 +55,7 @@ PC에서 같은 기능을 실행하려면 [CLI](cli.md)를 사용합니다. `Cli
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/WorkbenchActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `749afeef` · Claude
+- 검토 2026-10-09 @ `cdfbf900` · Codex
 
 </details>
 
@@ -63,22 +63,20 @@ PC에서 같은 기능을 실행하려면 [CLI](cli.md)를 사용합니다. `Cli
 
 ## 전체 구조도
 
+화살표는 코드를 사용하는 방향입니다. 이벤트와 파일이 이동하는 순서는 [데이터 흐름](#이벤트와-결과가-전달되는-경로)에서 확인하세요.
+
 그림을 클릭하면 확대 화면이 열립니다. 키보드에서는 Tab으로 그림을 선택한 뒤 Enter 또는 Space를 누르세요.
 
 <!-- omm:begin id=overall-diagram -->
 
 ```mermaid
-graph TB
-    live["Live · MainActivity"] --> engines["Camera2 / CameraX<br/>CameraEngine"]
-    cli["ADB · CliProvider"] -->|"LiveController"| live
-    bench["Benchmark<br/>화면 · Runner"] -->|"Camera2 Driver"| engines
-    live -->|"close(done) 뒤 CLI 인계"| bench
-    engines --> api["Android Camera API"]
-    engines --> events["콜백 기록<br/>Telemetry · FlightRecorder"]
-    bench -->|"실행 시각"| evaluate["측정 · 유효성<br/>RunAssembler"]
-    events -->|"관측 표본"| evaluate
-    evaluate --> files["실행 JSON 저장<br/>BenchmarkStore"]
-    files --> results["실행 기록 · 비교 · CSV"]
+flowchart TB
+    screens["화면 · CLI 진입점"] --> adapters["Android 어댑터"]
+    adapters --> domain["순수 Kotlin 측정·판정"]
+    adapters --> camera["카메라 엔진"]
+    camera --> telemetry["이벤트 기록"]
+    camera --> api["Android Camera API"]
+    domain --> metrics["지표 추출"]
 ```
 
 <details class="doc-evidence" markdown="1">
@@ -213,7 +211,7 @@ graph TB
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/ui/Look.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `749afeef` · Claude
+- 검토 2026-10-09 @ `cdfbf900` · Codex
 
 </details>
 
@@ -237,11 +235,43 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 ### 실행에서 저장까지
 
-1. `BenchmarkActivity`가 선택한 카메라와 profile을 사전 확인합니다.
-2. `BenchmarkRunner`가 열기·닫기 반복을 수행합니다. 각 사이클은 OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE로 진행합니다.
-3. 별도 관측 세션에서 WARMUP → OBSERVE → STILL → RECORD → CLOSE를 진행하며 녹화 조건이 없는 profile은 RECORD를 건너뜁니다. profile은 반복 횟수와 관측·촬영 조건을 정합니다.
-4. `RunAssembler`가 러너 결과와 이벤트를 결합해 `BenchmarkEvaluator`와 `RunValidityEvaluator`를 호출합니다.
-5. `BenchmarkReport`가 실행 JSON을 저장합니다. Activity는 baseline 집합 또는 이전 실행을 찾아 비교 결과를 별도로 계산합니다. 저장 직후 `RunRetention`이 보관 정책을 적용하며, baseline에 든 실행은 보호합니다.
+**사전 확인이 끝나면 열기·닫기를 반복한 뒤, 별도 세션에서 관측·촬영합니다.** 아래는 세부 Step을 묶은 상태도이며 화면의 Phase와 일대일 대응하지 않습니다.
+
+```mermaid
+stateDiagram-v2
+    state "열기·닫기 반복" as Launch
+    state "관측용 세션 열기" as Open
+    state "워밍업과 관측" as Observe
+    state "사진 반복" as Still
+    state "녹화 반복" as Record
+    state "종료 처리" as Close
+    state "결과 조립·저장" as Save
+    [*] --> Launch
+    Launch --> Launch: 반복 횟수 남음
+    Launch --> Open: 반복 종료
+    Open --> Observe: 첫 프레임 수신
+    Observe --> Still: 관측 종료
+    Still --> Record: 녹화 조건 있음
+    Still --> Close: 녹화 조건 없음
+    Record --> Close: 완료 또는 남은 녹화 생략
+    Launch --> Close: 연속 실패 한도
+    Open --> Close: 관측 세션 실패
+    Observe --> Close: 관측 세션 실패
+    Close --> Save
+    Save --> [*]
+```
+
+| 조건 | 처리 |
+| --- | --- |
+| 열기·닫기 한 사이클 | OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE를 수행합니다. 프로세스를 새로 시작하는 cold launch가 아닙니다. |
+| 열기 사이클이 한 번 실패합니다. | 실패를 기록하고 다음 사이클로 진행합니다. 연속 실패 한도에 이르면 조기 종료합니다. |
+| 사진이나 녹화의 한 반복이 실패합니다. | 실패 표본을 남깁니다. 녹화 미지원 또는 녹화 연속 실패 한도에 이르면 남은 녹화를 생략합니다. |
+| 실행 중 중단을 요청합니다. | 진행 중인 단계의 정리와 종료 처리를 거쳐 결과를 남깁니다. 그림의 각 단계에서 가능한 경로입니다. |
+| 닫기 콜백이 오지 않습니다. | 기본 5초 뒤 종료 실패를 기록하고 진행합니다. 실제 종료 통지를 받은 경우와 구분하여 `close_completed=false`를 남깁니다. |
+
+관측용 추가 열기는 시작 지표의 반복 횟수에 포함하지 않습니다. 녹화는 RECORD_PREPARE → RECORD_START → RECORD_RUN → RECORD_STOP을 반복합니다.
+
+`RunAssembler`는 러너 결과와 이벤트로 측정값·validity를 계산하고, `BenchmarkReport`가 실행 JSON을 저장합니다. 저장 직후 `RunRetention`이 보관 정책을 적용하며 baseline 집합의 실행은 보호합니다. 비교는 아래처럼 따로 계산합니다.
 
 <details markdown="1" id="detail-2487d11343" data-search-section>
 <summary>이벤트·표본·진단 정보</summary>
@@ -278,7 +308,20 @@ Live 제어, AE 재잠금, 터치 측광이 남기는 이벤트는 [Engine](engi
 
 `RegressionDetector`는 두 실행의 측정 계약·endpoint·validity·환경 조건을 확인합니다. baseline 집합이나 두 실행 비교에서 먼저 선택한 실행을 기준으로 삼으면 회귀 판정을 표시합니다. 집합이면 집합 값의 범위를 벗어난 지표만 저하나 개선으로 판정합니다. 이전 실행을 자동 선택한 reference 비교에서는 변화량과 비교 불가 사유만 표시합니다. 단위가 다르면 각 단위를 유지하고 백분율을 표시하지 않습니다.
 
-측정값이 파일로 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다. 저장된 JSON에는 비교 결과가 들어 있지 않으며, 결과 화면과 실행 기록은 파일을 읽은 뒤 현재 기준으로 비교를 새로 계산합니다. 기준을 고르는 방법과 결과를 읽는 방법은 [Benchmark](benchmark.md)에 있습니다.
+**실행 JSON에는 비교 결과를 저장하지 않습니다.** 결과 화면과 실행 기록은 저장된 측정값으로 비교를 다시 계산합니다.
+
+```mermaid
+sequenceDiagram
+    participant U as 결과·기록 화면
+    participant F as 저장된 실행
+    participant C as 비교 계산
+    U->>F: 대상 실행과 기준 실행 읽기
+    F-->>U: 측정값과 조건
+    U->>C: 비교 조건 확인과 재계산
+    C-->>U: 판정 또는 변화량·비교 불가 사유
+```
+
+기준 선택과 판정의 의미는 [Benchmark](benchmark.md)에서 확인하세요.
 
 ### Live에서 촬영과 저장
 
@@ -308,7 +351,7 @@ CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩�
 
 스트림 지원 조회와 probe 파일 작업은 IO 스레드에서 실행하며, probe 파일은 요청별 `files/cli/artifacts/<request_id>/`에 두었다가 기록 정리와 함께 지웁니다.
 
-명령 접수와 실제 완료는 서로 다른 상태입니다.
+접수·완료·파일 회수의 순서는 [CLI 요청 흐름](cli.md#요청과-완료를-구분하세요)에 있습니다.
 
 PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 확인합니다. 같은 요청 ID와 같은 내용은 기존 결과를 반환하며 새로운 촬영을 시작하지 않습니다. 명령 사용법과 전송 실패 대응은 [CLI](cli.md)에 있습니다.
 
@@ -319,7 +362,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `749afeef` · Claude
+- 검토 2026-10-09 @ `cdfbf900` · Codex
 
 </details>
 
@@ -353,16 +396,27 @@ graph TB
 
 ### 카메라 열기와 닫기
 
-러너가 `Driver`를 통해 카메라를 열고 닫습니다. 다음 실행으로 넘어가기 전에 현재 엔진의 `close(done)` 완료 통지를 확인해야 합니다. incident 이벤트 보존은 러너와 별도로 동작합니다.
+**Live는 기존 엔진의 종료 통지를 받은 뒤 새 엔진을 엽니다.** 종료 통지와 카메라 서비스의 가용 상태는 다를 수 있습니다. 아래는 Live의 전환 순서이며, BenchmarkRunner의 종료 제한 시간은 [실행 흐름](#실행에서-저장까지)에서 따로 설명합니다.
 
 <!-- omm:begin id=lifecycle-diagram -->
 
 ```mermaid
-graph LR
-    start["열기 요청"] --> open["세션 구성 · 실행"]
-    open --> close["close(done) 호출"]
-    close --> wait["종료 완료 대기"]
-    wait -->|"done 수신"| next["다음 카메라 열기 허용"]
+sequenceDiagram
+    participant L as Live
+    participant O as 기존 엔진
+    participant N as 새 엔진
+    L->>O: close(done)
+    O->>O: 세션 종료와 자원 정리
+    opt CameraX 공급자도 종료하는 전환
+        O->>O: CLOSED 뒤 shutdownAsync 대기
+        Note over O: 공급자 종료 완료 또는 1초 제한
+    end
+    O-->>L: done
+    L->>N: 열기 요청
+    opt Camera2 Live의 전환 대기
+        N->>N: 가용 통지 또는 2초 제한까지 대기
+    end
+    N->>N: 새 카메라 열기
 ```
 
 <details class="doc-evidence" markdown="1">
@@ -391,28 +445,28 @@ graph LR
 
 ## 공통 UI의 상태와 전환
 
-위의 그림들은 코드가 어떤 순서로 호출되는지를 보여 줍니다. 이 절의 세 그림은 화면에서 무엇이 어떤 조건으로 바뀌는지를 보여 줍니다. 근거 코드가 바뀌면 문서 검사가 그림을 재검토 대상으로 표시합니다. 로컬 모델의 재생성은 코드에서 바뀐 값을 놓칠 수 있으므로, 재검토할 때 그림을 코드와 직접 대조하세요. [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)에도 같은 그림의 사본이 있으며, 회귀 검사가 두 그림이 같은지 확인합니다.
+이 절은 카메라 이름, 화면 이동, 줌의 동작 조건을 설명합니다. [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)의 사본과 함께 관리하며, 근거 코드가 바뀌면 표와 그림을 다시 대조합니다.
 
 ### 카메라 이름을 적는 방법
 
-같은 카메라를 모든 화면이 같은 이름으로 부르도록 `CameraLabel`이 괄호 안의 세 칸을 채우는 순서입니다.
+
 
 <!-- omm:begin id=camera-label-diagram -->
 
-```mermaid
-flowchart TB
-    key["카메라 키<br/>0 · 1 · 0.2"] --> lens["렌즈 역할이 알려지면<br/>Wide · UWide · Tele"]
-    lens --> facing["HAL의 LENS_FACING 우선<br/>없으면 FRONT 역할만 Front"]
-    facing --> focal["렌즈 칸이 비고 환산값이 있으면<br/>35mm 환산 초점거리를 1mm로 반올림"]
-    focal --> filled{"채운 칸이 있는가?"}
-    filled -->|"예"| label["채운 칸을 괄호 안에 연결<br/>Camera · 1 (Front · 26 mm)"]
-    filled -->|"아니오"| empty["채운 칸이 없으면 키만 표시<br/>Camera · 0"]
-```
+`CameraLabel`은 같은 카메라를 모든 화면에서 같은 이름으로 표시합니다.
+
+| 확인할 값 | 이름에 넣는 규칙 |
+| --- | --- |
+| 카메라 키 | `0`, `1`, `0.2`를 이름 앞에 넣습니다. |
+| 렌즈 역할 | 알려진 경우 `Wide`, `UWide`, `Tele` 등을 넣습니다. |
+| 방향 | HAL의 `LENS_FACING`을 우선합니다. 값이 없으면 FRONT 역할만 `Front`로 표시합니다. |
+| 초점거리 | 렌즈 역할 칸이 비어 있고 35mm 환산값이 있으면 1mm 단위로 반올림해 넣습니다. |
+| 완성된 이름 | 채운 값만 괄호로 묶습니다. 예: `Camera · 1 (Front · 26 mm)`. 값이 없으면 `Camera · 0`처럼 키만 표시합니다. |
 
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거: `.omm/ui-camera-label/diagram`
+- 근거: `.omm/ui-camera-label/description`
 - 근거 수준: 코드 확인
 
 </details>
@@ -421,29 +475,23 @@ flowchart TB
 
 ### 도구 화면으로 넘어가는 순서
 
-`CTS`와 `Benchmark`는 Live 카메라가 닫힌 뒤에 열리고, `Probe`는 기다리지 않고 바로 열립니다.
+Live에서 Lab으로 갈 때는 카메라가 닫힐 때까지 기다립니다. Lab에서 Probe를 열 때는 카메라를 새로 열지 않습니다.
 
 <!-- omm:begin id=tool-handoff-diagram -->
 
 ```mermaid
 sequenceDiagram
-    participant L as Live 화면
+    participant L as Live
     participant E as 카메라 엔진
     participant W as Lab
     participant T as 검사 화면
-    L->>E: Lab 선택: close(done)
-    E-->>L: done
-    L->>W: Lab 열기 (카메라 ID, 엔진)
-    W->>T: Probe / CTS / Benchmark 선택
-    T-->>W: 뒤로 가기
-    W-->>L: 복귀 또는 프리뷰 제어 결과
-    L->>E: onResume: 복귀 상태를 한 번 적용
-    participant S as Live Streams
-    L->>E: 크기 표시 선택: close(done)
-    E-->>L: done
-    L->>S: 직접 열기 (카메라 ID, 엔진)
-    S-->>L: 뒤로 가기 또는 설정 저장
-    L->>E: onResume: 설정 반영 후 프리뷰 재개
+    L->>E: 카메라 닫기
+    E-->>L: 종료 통지
+    L->>W: Lab 열기
+    W->>T: Probe 또는 CTS 또는 Benchmark
+    T-->>W: 돌아오기
+    W-->>L: 돌아오기
+    L->>E: 복귀 상태 적용 후 프리뷰 재개
 ```
 
 <details class="doc-evidence" markdown="1">
@@ -456,34 +504,43 @@ sequenceDiagram
 
 <!-- omm:end id=tool-handoff-diagram -->
 
+Live Streams는 Lab을 거치지 않습니다.
+
+```mermaid
+sequenceDiagram
+    participant L as Live
+    participant E as 카메라 엔진
+    participant S as Live Streams
+    L->>E: 크기 표시 선택 후 카메라 닫기
+    E-->>L: 종료 통지
+    L->>S: 설정 화면 열기
+    S-->>L: 저장 또는 뒤로 가기
+    L->>E: 설정 적용 후 프리뷰 재개
+```
+
 ### 줌 컨트롤의 상태
 
-줌 컨트롤이 펼쳐지고 접히는 조건입니다. 접근성 설정에 따라 달라지는 조건은 그림의 메모에 모았습니다.
+
 
 <!-- omm:begin id=zoom-diagram -->
 
-```mermaid
-stateDiagram-v2
-    state "접힘: 현재 배율만 표시" as Folded
-    state "펼침: 지원 배율 모두 표시" as Open
-    [*] --> Folded
-    Folded --> Open : 현재 배율 누름, 지원 배율 2개 이상, 260ms
-    Open --> Open : 배율 선택 또는 포커스, 접기 타이머 재시작
-    Open --> Folded : 마지막 조작 후 3초, 220ms
-    Open --> Folded : TalkBack 사용 중 배율 선택 즉시
-    Open --> Folded : 비활성화 시, 애니메이션 없음
-    note right of Open
-        가로 드래그 중에는 접기 타이머를 멈춤
-        TalkBack이 켜져 있으면 자동 접기 없음
-        3초는 API 29 이상에서 접근성 권장 시간으로 늘어날 수 있음
-        시스템 애니메이션이 꺼져 있으면 즉시 바뀜
-    end note
-```
+**현재 배율을 누르면 지원 배율이 펼쳐집니다.** 처음에는 현재 배율 하나만 보입니다.
+
+| 조건 | 동작 |
+| --- | --- |
+| 지원 배율이 2개 이상이고 현재 배율을 누릅니다. | 모든 지원 배율이 펼쳐집니다. |
+| 펼친 상태에서 배율을 고르거나 포커스를 옮깁니다. | 접기 타이머를 다시 시작합니다. |
+| 마지막 조작 후 3초가 지납니다. | 접힙니다. API 29 이상에서는 접근성 권장 시간에 따라 더 기다릴 수 있습니다. |
+| 가로로 드래그합니다. | 드래그하는 동안 접기 타이머를 멈춥니다. |
+| TalkBack이 켜져 있습니다. | 자동으로 접히지 않으며, 배율을 고르면 바로 접힙니다. |
+| 컨트롤이 비활성화됩니다. | 애니메이션 없이 접힙니다. |
+
+펼침 애니메이션은 260ms, 접힘은 220ms입니다. 시스템 애니메이션이 꺼져 있으면 즉시 바뀝니다.
 
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거: `.omm/ui-zoom/diagram`
+- 근거: `.omm/ui-zoom/description`
 - 근거 수준: 코드 확인
 
 </details>
@@ -524,7 +581,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `749afeef` · Claude
+- 검토 2026-10-09 @ `cdfbf900` · Codex
 
 </details>
 
@@ -574,16 +631,16 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
-| 구조 원본 `ui-camera-label` | 최신 | 검토 2026-09-28 @ `f30cd87` · Codex |
-| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
-| 구조 원본 `ui-zoom` | 최신 | 검토 2026-09-30 @ `36c255c` · Codex-code-review |
-| 원고 `overview` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
-| 원고 `module-roles` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
-| 원고 `runtime-flow` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
-| 원고 `constraints` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
+| 구조 원본 `ui-camera-label` | 최신 | 검토 2026-10-09 @ `fab768a7` · Codex |
+| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
+| 구조 원본 `ui-zoom` | 최신 | 검토 2026-10-09 @ `fab768a7` · Codex |
+| 원고 `overview` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
+| 원고 `module-roles` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
+| 원고 `runtime-flow` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
+| 원고 `constraints` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
 
 <!-- omm:end id=status -->
 

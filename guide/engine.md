@@ -55,7 +55,7 @@ Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `749afeef` · Claude
+- 검토 2026-10-09 @ `cdfbf900` · Codex
 
 </details>
 
@@ -67,9 +67,28 @@ Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 [Evidence]
 
 ### 녹화 중 사진의 실패와 정지
 
-CameraX의 사진 수신 제한은 5초입니다. `SnapshotRequest`는 사진 수신 대기와 저장 중 상태를 구분합니다. JPEG를 받은 뒤에는 수신 타임아웃이나 녹화 종료로 실패를 덮어쓰지 않고, 저장 성공 또는 실패를 한 번만 전달합니다. 아직 사진을 받지 못한 상태에서 녹화 세션이나 카메라가 종료되면 중단으로 처리하고, 나중에 도착한 이미지는 저장하지 않고 닫습니다. 저장 중에는 다음 녹화 중 사진 요청을 받지 않습니다.
+**JPEG를 받기 전에는 촬영이 중단될 수 있지만, 받은 뒤에는 저장 결과를 기다립니다.** 사진 요청과 녹화는 별개의 상태입니다. 사진 한 장의 실패가 녹화를 끝내지는 않습니다.
 
-Camera2도 JPEG를 받은 뒤에는 저장이 끝날 때까지 촬영 자리를 유지합니다. 이미지 바이트를 읽다가 예외가 나면 버퍼를 닫고 실패를 전달합니다. JPEG 포함 세션이 거부되면 `SnapshotSessionRetry`가 기존 세션의 종료 콜백과 재시도 중복을 구분하며 JPEG 없는 녹화 세션을 한 번 구성합니다. 정지하거나 카메라가 닫힌 상태에서는 새 녹화 세션을 만들지 않습니다.
+```mermaid
+stateDiagram-v2
+    state "이미지 기다림" as Waiting
+    state "저장 중" as Saving
+    state "완료" as Done
+    [*] --> Waiting
+    Waiting --> Saving: JPEG 수신
+    Waiting --> Done: 수신 실패·5초 제한·세션 종료
+    Saving --> Done: 저장 성공 또는 실패
+    Done --> [*]
+```
+
+| 조건 | 처리 |
+| --- | --- |
+| JPEG 수신 전에 세션이나 카메라가 끝납니다. | 요청을 중단합니다. 이후 도착한 이미지는 저장하지 않고 닫습니다. |
+| JPEG를 받은 뒤 녹화가 끝나거나 수신 제한 시간이 지납니다. | `SnapshotRequest`의 저장 결과를 덮어쓰지 않습니다. 결과는 한 번만 전달합니다. |
+| 사진을 저장하고 있습니다. | 다음 녹화 중 사진을 받지 않습니다. 이미지 바이트를 읽다가 실패해도 버퍼를 닫고 실패를 전달합니다. |
+| Camera2가 JPEG 포함 세션을 거절합니다. | `SnapshotSessionRetry`가 기존 세션 종료를 확인하고 JPEG 없는 녹화 세션을 한 번 구성합니다. 정지·카메라 종료 뒤에는 새 세션을 만들지 않습니다. |
+
+근거는 `camera/SnapshotRequest.kt`와 엔진별 `VideoSnapshot` 구현입니다.
 
 저장소 오류는 `MediaLibrary`의 생성·쓰기·공개 단계와 미완성 항목 정리를 검사합니다. 실제 기기 공간을 채우는 시험은 하지 않았습니다. 결정론적 오류 주입과 Galaxy S25+의 실제 조작 결과는 [실패·정지 경합 검증 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-failures-20261006.md)에 구분해 적었습니다.
 
@@ -106,22 +125,28 @@ CameraX 1.6.2로 녹화 중 사진을 찍으면 영상 간격이 늘어날 수 �
 
 ## 엔진 계약
 
-```mermaid
-flowchart TB
-    live["Live · MainActivity"] --> contract["CameraEngine<br/>촬영 · 제어 · 터치 측광"]
-    contract --> c2["Camera2Engine"]
-    contract --> cx["CameraXEngine"]
-    bench["Benchmark"] --> c2
-    cx --> camx["CameraX"]
-    c2 --> fw["Camera2 API"]
-    camx --> fw
-```
-
-화면에서 카메라 API까지의 호출 방향입니다. 클래스별 구현은 아래에서 설명합니다.
-
 <!-- omm:begin id=contract -->
 
 **화면은 엔진 클래스가 아니라 엔진이 구현한 인터페이스로 기능을 확인합니다.** 그래서 Live의 셔터, 상단 제어, 프리뷰 터치는 Camera2와 CameraX에서 같은 코드로 동작하고, 엔진을 바꾸지 않습니다.
+
+```mermaid
+classDiagram
+    direction TB
+    class CameraEngine { <<interface>> }
+    class MediaCapture { <<interface>> }
+    class LiveTuning { <<interface>> }
+    class TouchMetering { <<interface>> }
+    CameraEngine <|.. Camera2Engine
+    CameraEngine <|.. CameraXEngine
+    MediaCapture <|.. Camera2Engine
+    MediaCapture <|.. CameraXEngine
+    LiveTuning <|.. Camera2Engine
+    LiveTuning <|.. CameraXEngine
+    TouchMetering <|.. Camera2Engine
+    TouchMetering <|.. CameraXEngine
+```
+
+점선 화살표는 인터페이스 구현을 뜻합니다. 실제로 사용할 수 있는 기능은 엔진의 실행 모드와 아래 조건에 따라 달라집니다.
 
 | 인터페이스 | 담당하는 동작 | 구현 |
 | --- | --- | --- |
@@ -138,6 +163,8 @@ flowchart TB
 2. 엔진이나 카메라를 바꾸면 기존 엔진의 `close(done)` 완료 콜백을 받은 뒤에 새 엔진을 엽니다. 카메라를 점유하는 엔진은 항상 하나입니다.
 3. 엔진이나 카메라를 바꾸면 EV, AE·AF 잠금, 플래시는 기본값으로 돌아가고 상단 제어 줄이 접힙니다. 일시정지 후 재개처럼 같은 카메라를 다시 여는 경우에는 이전 제어 값을 `setControls(controls, restore = true)`로 다시 적용합니다.
 4. 녹화 중에는 API 버튼과 카메라 선택이 비활성화되어 엔진을 바꿀 수 없습니다.
+
+종료 통지와 다음 엔진의 대기 순서는 [엔진 전환 그림](architecture.md#카메라-열기와-닫기)을 확인하세요.
 
 ### Benchmark와 CLI가 쓰는 엔진
 
@@ -161,14 +188,24 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 `request_observed`의 `afRegions`·`aeRegions`와 `capture_result`의 `afRegions`·`aeRegions`를 비교하면, 요청한 영역과 HAL이 적용한 영역을 대조할 수 있습니다.
 
-손떨림 보정도 두 이벤트의 `opticalStabilization`·`videoStabilization`·`cropRegion`으로 요청과 결과를 구분합니다. 결과 키가 없으면 적용 여부를 알 수 없습니다. Live 상단은 현재 프리뷰·녹화의 EIS 결과를 표시합니다. 세션·촬영 단계·요청 모드가 바뀌면 이전 결과를 제외하며, 결과 키가 없거나 1.5초 이상 오래됐으면 확인 불가로 표시합니다. 명시적으로 요청한 EIS 모드와 다른 결과가 1초 이상 이어지면 경고하고 일치하는 결과를 받으면 해제합니다. 반복 조회한 프레임 하나로는 경고가 확정되지 않습니다. CameraX의 EIS (Video)는 VideoCapture가 연결된 녹화 중에만 대조하며 녹화 전에는 실제 결과만 표시합니다. 사진 결과는 Camera2의 요청 태그와 CameraX의 `captureIntent`로 제외합니다. 설정 화면은 구성 실패 오류만 표시하며 이전 세션 결과 목록을 제공하지 않습니다.
+손떨림 보정은 두 이벤트의 `opticalStabilization`·`videoStabilization`·`cropRegion`으로 요청과 실제 결과를 대조합니다.
+
+| 조건 | Live 표시와 판정 |
+| --- | --- |
+| 세션·촬영 단계·요청 모드가 바뀝니다. | 이전 결과를 제외합니다. |
+| 결과 키가 없거나 1.5초 이상 오래됐습니다. | 적용 여부를 확인할 수 없다고 표시합니다. |
+| 명시적으로 요청한 EIS 모드와 다른 결과가 1초 이상 이어집니다. | 경고합니다. 같은 프레임을 반복 조회한 것만으로는 경고하지 않습니다. |
+| 요청과 일치하는 새 결과가 옵니다. | 불일치 경고를 해제합니다. |
+| CameraX에서 EIS (Video)를 선택합니다. | VideoCapture가 연결된 녹화 중에 대조합니다. 녹화 전에는 실제 결과만 표시합니다. |
+
+사진 결과는 Camera2의 요청 태그와 CameraX의 `captureIntent`로 제외합니다. 설정 화면은 구성 실패 오류만 표시하며 이전 세션 결과 목록을 제공하지 않습니다.
 
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `749afeef` · Claude
+- 검토 2026-10-09 @ `cdfbf900` · Codex
 
 </details>
 
@@ -279,13 +316,32 @@ Benchmark는 Live 설정을 읽지 않습니다.
 
 CLI는 기본값에 명시한 크기 옵션을 적용하며 이전 화면 설정을 이어받지 않습니다.
 
-Live에서 첫 프레임 전에 카메라 열기가 `onDisconnected`나 `onError`(사용 중, 최대 개수 초과, 기기·서비스 오류) 또는 같은 원인의 `CameraAccessException`으로 실패하면, `CameraOpenRetry`에 따라 200·400·800·1600·2000ms 간격으로 최대 5번 다시 엽니다(#224). 다른 엔진이 카메라를 놓은 직후 카메라 서비스가 열기를 잠깐 거부할 수 있기 때문입니다.
+#### 처음 열기에 실패하면 어떻게 하나요?
 
-다음 열기는 실패한 기기의 `onClosed` 뒤에 예약하고, 시도마다 `open_retry` 이벤트에 원인·회차·지연을 남깁니다.
+Live는 첫 프레임 전의 일부 열기 오류만 다시 시도합니다. Benchmark와 첫 프레임 이후의 오류에는 이 규칙을 적용하지 않습니다.
 
-카메라가 비활성화됐거나 재시도를 모두 쓰면 실패를 바로 알려 대기 중인 CLI 요청이 타임아웃까지 기다리지 않습니다.
+```mermaid
+stateDiagram-v2
+    state "열기와 첫 프레임 대기" as Opening
+    state "종료 정리와 재시도 대기" as Wait
+    state "프리뷰 준비" as Ready
+    state "실패 알림" as Failed
+    [*] --> Opening
+    Opening --> Ready: 첫 프레임
+    Opening --> Wait: 재시도 대상 오류
+    Wait --> Opening: 종료 처리 뒤 대기 시간 경과
+    Opening --> Failed: 대상 밖 오류 또는 횟수 소진
+    Ready --> [*]
+    Failed --> [*]
+```
 
-벤치마크와 첫 프레임 이후의 오류는 다시 열지 않습니다.
+| 조건 | 처리 |
+| --- | --- |
+| `onDisconnected`, 사용 중·최대 개수 초과·기기·서비스 오류 | `CameraOpenRetry`가 200·400·800·1600·2000ms 간격으로 최대 5번 다시 엽니다. 같은 원인의 `CameraAccessException`도 대상입니다. |
+| 실패한 기기가 열려 있습니다. | `onClosed` 뒤 다음 열기를 예약합니다. 시도마다 `open_retry`에 원인·회차·지연을 남깁니다. |
+| 엔진이 비활성화되거나 재시도를 모두 썼습니다. | 새 열기를 진행하지 않습니다. 실패를 바로 알려 CLI가 제한 시간까지 기다리지 않게 합니다. |
+
+다른 엔진이 카메라를 놓은 직후 서비스가 잠시 열기를 거부할 수 있어 이 재시도를 둡니다(#224).
 
 엔진이나 카메라를 바꿀 때 Live의 첫 Camera2 열기는 이전 엔진이 쓰던 카메라가 실제로 해제될 때까지 기다립니다(#230). CameraX는 `CameraState.CLOSED` 뒤 `close(done)`을 부르지만 카메라 서비스는 그 카메라를 약 1초 더 잡고 있어, 그 사이의 열기가 거부되고 재시도 간격이 해제 시점을 늦게 맞혔기 때문입니다.
 
@@ -308,24 +364,53 @@ Live에서 첫 프레임 전에 카메라 열기가 `onDisconnected`나 `onError
 <details markdown="1" id="detail-902b2a5546" data-search-section>
 <summary>사진 구현</summary>
 
-1. `capture()`나 `capturePhoto()`를 받으면, 플래시가 Auto·On이고 AE가 잠겨 있지 않은 경우에만 AE precapture를 먼저 실행합니다.
+아래는 Live 사진의 흐름입니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
 
-   trigger를 프리뷰 capture 하나로 보내고, AE 상태가 PRECAPTURE를 지나 벗어날 때까지 기다립니다. PRECAPTURE 없이 안정 상태가 결과 3개 연속으로 이어지면 이 순서를 건너뛰는 기기로 보고, 3초 안에 끝나지 않으면 `precapture_timeout`을 남기고 그대로 촬영합니다.
-2. still 요청 하나에 켜진 YUV·JPEG·RAW 출력을 대상으로 지정합니다.
+```mermaid
+sequenceDiagram
+    participant A as 촬영 요청
+    participant C as 카메라
+    participant P as 자료 모으기
+    participant S as 파일 저장
+    A->>C: 켜진 출력으로 still 요청
+    par 이미지 수신
+        C-->>P: 요청한 이미지 버퍼
+    and 최종 결과 수신
+        C-->>P: 최종 CaptureResult
+    end
+    P->>P: 같은 센서 시각으로 연결
+    P->>S: 필요한 자료가 모두 모이면 저장
+```
 
-   JPEG에는 화면 방향을 `JPEG_ORIENTATION`으로, 품질을 95로 설정합니다. 세 출력이 모두 꺼져 있으면 셔터를 비활성화하고 엔진도 촬영을 거절합니다. RAW만 켜도 촬영할 수 있습니다.
-3. `StillPair`가 센서 타임스탬프로 요청한 버퍼만 기다립니다.
+이미지와 결과의 도착 순서는 고정되지 않습니다. 꺼진 출력은 기다리지 않습니다. 다음 표는 연결·저장 과정의 조건입니다.
 
-   단일 출력도 capture의 센서 시각과 일치해야 하며 꺼진 출력은 기다리지 않습니다. 기다리는 동안에는 reader가 `acquireLatestImage` 대신 `acquireNextImage`로 이미지를 순서대로 꺼냅니다. 최신 이미지만 꺼내면 촬영 대상인 YUV 프레임을 버릴 수 있기 때문입니다.
-4. 이미지 콜백에서 stride와 crop을 고려해 NV21으로 복사하고 Image를 닫습니다.
+| 단계 | 조건과 예외 |
+| --- | --- |
+| 플래시 측광 | Auto·On이고 AE 잠금이 꺼져 있을 때만 precapture를 실행합니다. PRECAPTURE를 벗어나거나, PRECAPTURE 없이 안정 결과가 3개 연속 오면 촬영합니다. 3초가 지나면 `precapture_timeout`을 남기고 촬영을 계속합니다. |
+| 출력 선택 | 켜진 YUV·JPEG·RAW만 대상으로 합니다. RAW 단독도 가능하며, 모두 꺼져 있으면 셔터와 촬영 요청을 거절합니다. JPEG 방향은 화면 방향, 품질은 95입니다. |
+| 버퍼 연결 | `StillPair`는 단일 출력도 capture의 센서 시각과 맞춥니다. 대기 중에는 `acquireNextImage`로 순서대로 읽어 대상 프레임을 버리지 않습니다. |
+| 이미지 반납 | 콜백에서 stride·crop을 고려해 YUV를 NV21으로 복사하고 Image를 닫습니다. JPEG 포맷이면 저장 스레드에서 압축·회전하며 NV21이면 복사한 샘플을 그대로 씁니다. |
+| 저장과 제한 시간 | `MediaLibrary.saveCapture`로 이미지·JSON을 씁니다. 5초 안에 필요한 자료가 모이지 않으면 `capture_timeout`으로 끝납니다. 사진 모드의 이 요청은 녹화 중에 받지 않습니다. 녹화 중 사진은 별도 경로입니다. |
 
-   YUV Save Format이 JPEG이면 저장 스레드에서 `encodeYuvStill`로 압축하고 화면 방향만큼 회전합니다. NV21이면 복사한 샘플을 그대로 저장합니다.
-5. `MediaLibrary.saveCapture`가 선택한 이미지와 촬영 JSON을 쓰고 모두 성공한 뒤 공개합니다.
+#### 파일은 언제 공개하나요?
 
-   실패하면 이번 촬영에서 만든 항목의 삭제를 시도합니다.
-6. 5초 안에 짝이 완성되지 않으면 `capture_timeout`으로 끝냅니다.
+```mermaid
+sequenceDiagram
+    participant S as 저장 작업
+    participant M as MediaLibrary
+    S->>M: 이미지와 촬영 정보 전달
+    M->>M: 항목 생성과 파일 쓰기
+    alt 모든 쓰기 성공
+        M->>M: 항목 공개
+        M-->>S: 파일 목록
+    else 생성·쓰기·공개 실패
+        M->>M: 이번 촬영 항목 삭제 시도
+        M-->>S: 실패
+    end
+```
 
-   녹화 중에는 촬영 요청을 거절합니다.
+Android 10 이상에서는 `IS_PENDING`으로 쓰는 중인 항목의 공개를 미룹니다. 이전 버전에는 이 보호가 없으며, 여러 항목의 공개와 실패 후 삭제를 완전한 원자적 처리로 보장하지 않습니다. 생성·쓰기·공개 중 예외가 나면 이미 만든 항목의 삭제를 시도합니다.
+
 
 벤치마크 still은 JPEG만 대상으로 하고, JPEG 도착이 측정값이며 저장하지 않습니다.
 
@@ -360,6 +445,26 @@ RAW reader는 버퍼 두 개로 열고 still 요청에만 포함합니다. 이�
 <details markdown="1" id="detail-11a053d988" data-search-section>
 <summary>녹화 구현</summary>
 
+```mermaid
+sequenceDiagram
+    participant U as Live
+    participant R as 녹화 처리
+    participant S as 저장
+    U->>R: 녹화 시작
+    R->>R: 녹화 세션 구성과 시작
+    R-->>U: 녹화 시작 통지
+    U->>R: 정지 요청
+    R->>R: 세션 종료와 파일 마무리
+    par 파일 저장
+        R->>S: 저장 가능한 MP4 저장 예약
+        S-->>U: 저장 결과
+    and 프리뷰 복구
+        R->>R: 활성 카메라의 프리뷰 세션 복구
+    end
+```
+
+정상 정지의 순서입니다. 파일 저장과 프리뷰 복구는 별도로 진행하므로 프리뷰가 돌아왔다고 저장이 끝난 것은 아닙니다. 짧거나 실패한 파일은 저장하지 않고 이유를 알립니다.
+
 `Camera2LiveRecorder`의 기본값은 MediaRecorder가 지원하는 가로 크기 중 1920×1080 픽셀 예산으로 고른 크기, H.264, 30fps, 10Mbps입니다.
 
 Live 스트림 설정에서는 카메라 크기·고정 AE FPS 범위·인코더의 surface 입력, 크기·프레임률·비트레이트 지원을 만족하는 H.264/HEVC 조합을 선택합니다.
@@ -373,7 +478,7 @@ Live 스트림 설정에서는 카메라 크기·고정 AE FPS 범위·인코더
 1. 녹화를 시작하면 프리뷰와 인코더, 그리고 녹화 중 사진용 JPEG 스트림으로 새 세션을 만듭니다. YUV 스트림은 이 세션에 없으므로 녹화 중 사진은 JPEG만 저장합니다. 카메라가 이 조합을 거절하면 JPEG 없이 프리뷰와 인코더만으로 다시 구성하고, 이 경우 녹화 중 사진을 지원하지 않는다는 이유를 화면에 알립니다.
 2. Android 13 이상에서는 `RecordingBufferRelay`가 인코더로 가는 PRIVATE 버퍼를 먼저 받아 도착 시각을 기록합니다. 그보다 낮은 버전에서는 인코더에 직접 연결하고, 녹화 출력을 관측할 수 없다고 표시합니다.
 3. 녹화 요청은 `TEMPLATE_RECORD`이며, 연속 동영상 AF(`CONTINUOUS_VIDEO`)를 지원하면 사용합니다. 줌과 Live 제어는 녹화 중에도 같은 요청을 다시 만들어 적용합니다.
-4. 정지하면 세션을 닫고, 파일을 `MediaLibrary.saveVideo`로 앨범에 공개한 뒤 프리뷰 세션을 다시 만듭니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
+4. 정지하면 세션을 닫고 파일을 마무리합니다. `MediaLibrary.saveVideo`로 저장을 예약하고 활성 카메라의 프리뷰 세션을 다시 만듭니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
 
 **녹화 중 사진(`Camera2VideoSnapshot`)은 녹화를 멈추지 않고 JPEG 한 장을 저장합니다.** 녹화 세션의 JPEG 크기는 요청한 크기(없으면 1080p 이하 중 가장 큰 크기)를 먼저 시도하고, 세션 조합 조회(`isSessionConfigurationSupported`)가 거절하면 녹화 크기 안에 들어가는 가장 큰 크기로 내려갑니다.
 
@@ -416,7 +521,21 @@ Live 스트림 설정에서 JPEG을 끄면 녹화 중 사진도 지원하지 않
 | 토치 | `FLASH_MODE_TORCH` |
 | AF 잠금 | 키가 아니라 연속 AF 모드에서 보내는 `CONTROL_AF_TRIGGER_START` 한 번입니다. 잠금을 풀 때는 `CANCEL`을 보냅니다. |
 
-녹화 시작·정지로 세션이 바뀌면 `AeRelock`이 새 세션을 잠금 없이 시작합니다. AE 상태가 결과 2개 연속으로 안정되거나 2초가 지나면 다시 잠급니다. 새 세션의 첫 요청부터 잠그면 아직 수렴하지 않은 노출이 고정되기 때문입니다. 다시 잠근 노출이 이전보다 1/3 EV 넘게 다르면 "Exposure locked again · 0.8 EV darker" 같은 안내를 표시합니다. AF 잠금도 새 세션에서 trigger를 다시 보냅니다.
+#### 노출은 언제 다시 잠그나요?
+
+AE 잠금을 켠 채 녹화 시작·정지로 세션이 바뀌면 `AeRelock`이 노출을 다시 맞춥니다.
+
+```mermaid
+stateDiagram-v2
+    state "잠금 해제와 안정 대기" as Wait
+    state "다시 잠금" as Lock
+    [*] --> Wait
+    Wait --> Lock: 안정 결과 2개 연속
+    Wait --> Lock: 또는 2초 경과
+    Lock --> [*]
+```
+
+새 세션의 첫 요청부터 잠그면 아직 수렴하지 않은 노출이 고정될 수 있습니다. 다시 잠근 노출이 이전보다 1/3 EV 넘게 다르면 차이를 알립니다. AF 잠금도 새 세션에서 trigger를 다시 보냅니다. 이 상태도는 AE 잠금이 켜진 경우의 재잠금 과정만 보여 줍니다.
 
 줌과 제어는 입력마다 요청을 보내지 않습니다. 값을 먼저 저장하고 카메라 스레드에 요청 하나만 예약하므로, 빠른 드래그는 스레드 한 차례에 요청 하나로 합쳐집니다.
 
@@ -428,6 +547,21 @@ Live 스트림 설정에서 JPEG을 끄면 녹화 중 사진도 지원하지 않
 
 <details markdown="1" id="detail-1a7dfc7f16" data-search-section>
 <summary>터치 측광 구현</summary>
+
+```mermaid
+stateDiagram-v2
+    state "초점 결과 기다림" as Wait
+    state "결과와 지점 표시" as Result
+    state "연속 AF로 복귀" as Auto
+    state "잠긴 지점 유지" as Locked
+    [*] --> Wait
+    Wait --> Result: 결과 수신 또는 3초 제한
+    Result --> Auto: AF 잠금 꺼짐, 결과 후 5초
+    Result --> Locked: AF 잠금 켜짐
+    Auto --> [*]
+```
+
+Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE 측광이며 아래 4번 규칙을 따릅니다. 다른 지점을 누르거나 카메라를 닫는 동작은 이 한 번의 요청 그림에서 생략했습니다.
 
 `Camera2TouchFocus`는 탭한 AF 지점과 길게 누른 AE 지점을 따로 가집니다.
 
@@ -443,7 +577,7 @@ Live 스트림 설정에서 JPEG을 끄면 녹화 중 사진도 지원하지 않
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `749afeef` · Claude
+- 검토 2026-10-09 @ `cdfbf900` · Codex
 
 </details>
 
@@ -530,11 +664,34 @@ CameraX에는 analysis 스트림을 still 요청의 대상에 넣는 공개 API�
 
 YUV 저장은 기존 JPEG 방식이며 NV21과 RAW/DNG는 지원하지 않습니다. 사진마다 JSON을 함께 저장하고, JPEG와 선택한 analysis 프레임의 센서 시각·차이를 구분합니다. 기록된 CaptureResult 중 각 이미지와 센서 시각이 일치하는 결과만 사용하며 없으면 resultStatus를 unavailable로 표시합니다. 다른 프레임의 노출 값을 대신 넣지 않습니다.
 
-1. 촬영 직전에 ImageCapture와 ImageAnalysis의 `targetRotation`을 현재 화면 회전으로 맞춥니다.
-2. 촬영 요청부터 짝이 정해질 때까지 analysis 프레임을 NV21로 복사해 최근 8개를 보관합니다. 평소에는 복사하지 않습니다.
-3. JPEG가 도착하면 그 센서 시각 이후의 프레임이 하나 올 때까지 최대 100ms 기다립니다. 이후 프레임이 가장 가까운 후보의 위쪽 경계가 되기 때문입니다. 아직 프레임이 하나도 없으면(still을 찍는 동안 repeating 스트림을 멈추는 HAL) 다음 프레임을 기다립니다.
-4. 가장 가까운 프레임을 `encodeYuvStill`로 JPEG로 만들고 프레임의 `rotationDegrees`만큼 회전한 뒤, Camera2와 공유하는 `MediaLibrary.saveCapture`로 켜진 출력과 촬영 JSON을 저장합니다.
-5. 두 시각의 차이를 `media_saved`의 `yuvOffsetNs`에 기록합니다. 5초 안에 끝나지 않으면 `capture_timeout`으로 실패를 돌려줍니다.
+```mermaid
+sequenceDiagram
+    participant A as 촬영 요청
+    participant C as ImageCapture
+    participant Y as Analysis
+    participant P as 연결·저장
+    A->>C: JPEG 촬영
+    par JPEG 수신
+        C-->>P: JPEG와 센서 시각
+    and analysis 수신
+        Y-->>P: 최근 프레임 보관
+    end
+    P->>P: JPEG와 가장 가까운 프레임 선택
+    P->>P: 켜진 출력과 JSON 저장
+```
+
+위 그림은 JPEG와 YUV를 모두 켠 경우입니다. 두 이미지를 같은 capture로 보장하지 않습니다.
+
+| 조건 | 처리 |
+| --- | --- |
+| 촬영 직전 | 두 use case의 `targetRotation`을 현재 화면 회전으로 맞춥니다. |
+| 요청부터 짝을 고를 때까지 | analysis를 NV21로 복사해 최근 8개를 보관합니다. 평소에는 복사하지 않습니다. |
+| JPEG가 도착합니다. | 이후 센서 시각의 프레임을 최대 100ms 기다려 가까운 후보를 고릅니다. 프레임이 하나도 없으면 다음 프레임을 기다립니다. |
+| 프레임을 골랐습니다. | `encodeYuvStill`로 JPEG를 만들고 `rotationDegrees`만큼 회전합니다. 센서 시각 차이를 `media_saved.yuvOffsetNs`에 기록합니다. |
+| 5초 안에 끝나지 않습니다. | `capture_timeout`으로 실패를 반환합니다. |
+
+파일 쓰기와 공개는 두 엔진이 공유하는 [MediaLibrary 저장 흐름](#파일은-언제-공개하나요)을 따릅니다.
+
 
 JPEG만 켜면 analysis 프레임을 기다리지 않습니다. YUV만 켜면 촬영 요청 뒤 도착한 analysis 프레임을 저장하며 ImageCapture 요청은 보내지 않습니다. 두 출력이 모두 꺼져 있으면 사진 촬영을 거절합니다.
 
@@ -548,6 +705,26 @@ JPEG만 켜면 analysis 프레임을 기다리지 않습니다. YUV만 켜면 �
 
 <details markdown="1" id="detail-a5fe53f9af" data-search-section>
 <summary>녹화 구현</summary>
+
+```mermaid
+sequenceDiagram
+    participant U as Live
+    participant R as CameraX Recorder
+    participant S as 저장 작업
+    U->>R: 녹화 시작 요청
+    R-->>U: Start
+    U->>R: 정지 요청
+    R-->>U: Finalize
+    U->>U: 활성 화면이면 프리뷰 구성 복구
+    alt 저장 가능한 결과와 비어 있지 않은 파일
+        U->>S: MP4 저장 예약
+        S-->>U: 저장 결과
+    else 오류 또는 빈 파일
+        U->>U: 파일 삭제와 실패 안내
+    end
+```
+
+정지 요청과 파일 저장 완료는 다른 시점입니다. 카메라 종료로 받은 Finalize도 아래 조건에 따라 저장합니다.
 
 `CameraXLiveRecorder`는 CameraX `Recorder`로 캐시 폴더의 임시 MP4에 기록하고, 끝나면 `MediaLibrary.saveVideo`로 앨범에 공개합니다.
 
@@ -590,9 +767,20 @@ Live 스트림 설정에서 JPEG을 끄면 bind할 ImageCapture가 없으므로 
 | AE 잠금 | `Camera2CameraControl`로 repeating 요청에 넣는 `CONTROL_AE_LOCK` |
 | AF 잠금 | 화면 전체를 대상으로 하는 FocusMeteringAction(`FLAG_AF`, 자동 취소 없음) |
 
-CameraX는 FocusMeteringAction을 하나만 유지하고, 새 action은 이전 action을 취소합니다.
+**CameraX는 AF 잠금·탭 AF·긴 누르기 AE를 하나의 action으로 합칩니다.** 새 action이 이전 action을 취소하기 때문입니다.
 
-그래서 `CameraXControls`는 AF 잠금, 탭한 AF 지점, 길게 누른 AE 지점을 하나의 action으로 합쳐 다시 보냅니다.
+```mermaid
+sequenceDiagram
+    participant U as Live 제어
+    participant C as CameraXControls
+    participant X as CameraControl
+    U->>C: 초점·노출 지점 또는 잠금 변경
+    C->>C: 유지할 AF·AE 지점 합치기
+    C->>X: 새 FocusMeteringAction
+    X-->>C: action 결과
+    C-->>U: 해당 탭의 첫 결과만 표시
+```
+
 
 CameraX의 자동 취소는 쓰지 않고, 탭한 지점은 결과가 나온 뒤 5초가 지나면 이 클래스가 직접 끝냅니다.
 
@@ -610,7 +798,7 @@ camera-pipe는 최종 요청을 만들 때 3A 상태를 요청 옵션보다 나�
 2. 이전 action이 잠근 AF는 interop 옵션에 `CONTROL_AF_TRIGGER_CANCEL`을 싣고, 그 trigger가 담긴 결과가 오면 옵션에서 뺍니다.
 3. AF가 들어간 action은 camera-pipe의 `lock3A(aeLockBehavior = null)`로 처리되므로 AE 잠금을 바꾸지 않습니다.
 
-AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다.
+AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-잠그나요)를 따릅니다.
 
 다만 CameraX는 `bindToLifecycle`이 반환된 뒤에 자기 실행기에서 세션을 다시 만들기 때문에, 이전 세션의 잠긴 결과가 늦게 도착합니다.
 
@@ -627,7 +815,7 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `749afeef` · Claude
+- 검토 2026-10-09 @ `cdfbf900` · Codex
 
 </details>
 
@@ -645,11 +833,11 @@ AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다.
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
-| 원고 `contract` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
-| 원고 `camera2` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
-| 원고 `camerax` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
-| 원고 `comparison` | 최신 | 검토 2026-10-09 @ `749afeef` · Claude |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
+| 원고 `contract` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
+| 원고 `camera2` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
+| 원고 `camerax` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
+| 원고 `comparison` | 최신 | 검토 2026-10-09 @ `cdfbf900` · Codex |
 
 <!-- omm:end id=status -->
 

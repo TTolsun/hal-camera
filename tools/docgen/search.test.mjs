@@ -1,5 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
 import { search, extractSections } from '../../guide/assets/search-core.js';
 
 const sections = [
@@ -58,4 +60,53 @@ test('closed details have direct search links and do not absorb the following se
   assert.equal(search(result, 'SkipDiagnosis 다시').length, 0);
   assert.equal(search(result, '상위 설명').filter(section => section.url === '/cts.html#parent').length, 1);
   assert.equal(search(result, '펼치기 다시')[0].url, '/cts.html#parent');
+});
+
+test('diagram syntax stays out of excerpts while prose and command examples remain searchable', () => {
+  const element = (tagName, text, mermaid = false) => ({
+    nodeType: 1, tagName, id: '', textContent: text,
+    childNodes: [{ nodeType: 3, textContent: text }],
+    matches: selector => mermaid && selector.includes('code.language-mermaid'),
+  });
+  const main = {
+    nodeType: 1, tagName: 'MAIN', matches: () => false,
+    childNodes: [
+      element('CODE', 'sequenceDiagram A->>B: 저장 alt 성공 end', true),
+      element('P', 'IS_PENDING으로 공개를 미룹니다.'),
+      element('CODE', 'halcam fetch UUID'),
+    ],
+  };
+  const sections = extractSections({ title: 'Engine · Guide', querySelector: () => main }, '/engine.html');
+  assert.equal(search(sections, 'sequenceDiagram').length, 0);
+  assert.equal(search(sections, 'IS_PENDING')[0].snippet, 'IS_PENDING으로 공개를 미룹니다. halcam fetch UUID');
+  assert.equal(search(sections, 'halcam fetch')[0].url, '/engine.html');
+});
+
+test('late diagrams realign a linked disclosure without overriding manual scrolling', () => {
+  const source = fs.readFileSync(new URL('../../guide/assets/section-links.js', import.meta.url), 'utf8');
+  function fixture() {
+    const events = new Map(), scrolls = [], detail = { open: false, parentElement: null };
+    const target = { closest: () => detail, querySelector: () => null, scrollIntoView: options => scrolls.push(options) };
+    const location = { hash: '#saved' };
+    vm.runInNewContext(source, {
+      location,
+      document: { getElementById: id => id === 'saved' ? target : null, addEventListener() {} },
+      window: { addEventListener: (name, callback) => events.set(name, callback) },
+      requestAnimationFrame: callback => callback(),
+    });
+    return { events, scrolls, detail, location };
+  }
+  const linked = fixture();
+  assert.equal(linked.detail.open, true);
+  linked.events.get('halcamera:diagrams-ready')();
+  assert.equal(linked.scrolls.length, 2);
+  assert.equal(linked.scrolls[1].behavior, 'instant');
+  const reading = fixture();
+  reading.events.get('wheel')();
+  reading.events.get('halcamera:diagrams-ready')();
+  assert.equal(reading.scrolls.length, 1);
+  const malformed = fixture();
+  malformed.location.hash = '#%broken';
+  assert.doesNotThrow(() => malformed.events.get('halcamera:diagrams-ready')());
+  assert.equal(malformed.scrolls.length, 1);
 });

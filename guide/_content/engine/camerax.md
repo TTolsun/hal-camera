@@ -96,11 +96,34 @@ CameraX에는 analysis 스트림을 still 요청의 대상에 넣는 공개 API�
 
 YUV 저장은 기존 JPEG 방식이며 NV21과 RAW/DNG는 지원하지 않습니다. 사진마다 JSON을 함께 저장하고, JPEG와 선택한 analysis 프레임의 센서 시각·차이를 구분합니다. 기록된 CaptureResult 중 각 이미지와 센서 시각이 일치하는 결과만 사용하며 없으면 resultStatus를 unavailable로 표시합니다. 다른 프레임의 노출 값을 대신 넣지 않습니다.
 
-1. 촬영 직전에 ImageCapture와 ImageAnalysis의 `targetRotation`을 현재 화면 회전으로 맞춥니다.
-2. 촬영 요청부터 짝이 정해질 때까지 analysis 프레임을 NV21로 복사해 최근 8개를 보관합니다. 평소에는 복사하지 않습니다.
-3. JPEG가 도착하면 그 센서 시각 이후의 프레임이 하나 올 때까지 최대 100ms 기다립니다. 이후 프레임이 가장 가까운 후보의 위쪽 경계가 되기 때문입니다. 아직 프레임이 하나도 없으면(still을 찍는 동안 repeating 스트림을 멈추는 HAL) 다음 프레임을 기다립니다.
-4. 가장 가까운 프레임을 `encodeYuvStill`로 JPEG로 만들고 프레임의 `rotationDegrees`만큼 회전한 뒤, Camera2와 공유하는 `MediaLibrary.saveCapture`로 켜진 출력과 촬영 JSON을 저장합니다.
-5. 두 시각의 차이를 `media_saved`의 `yuvOffsetNs`에 기록합니다. 5초 안에 끝나지 않으면 `capture_timeout`으로 실패를 돌려줍니다.
+```mermaid
+sequenceDiagram
+    participant A as 촬영 요청
+    participant C as ImageCapture
+    participant Y as Analysis
+    participant P as 연결·저장
+    A->>C: JPEG 촬영
+    par JPEG 수신
+        C-->>P: JPEG와 센서 시각
+    and analysis 수신
+        Y-->>P: 최근 프레임 보관
+    end
+    P->>P: JPEG와 가장 가까운 프레임 선택
+    P->>P: 켜진 출력과 JSON 저장
+```
+
+위 그림은 JPEG와 YUV를 모두 켠 경우입니다. 두 이미지를 같은 capture로 보장하지 않습니다.
+
+| 조건 | 처리 |
+| --- | --- |
+| 촬영 직전 | 두 use case의 `targetRotation`을 현재 화면 회전으로 맞춥니다. |
+| 요청부터 짝을 고를 때까지 | analysis를 NV21로 복사해 최근 8개를 보관합니다. 평소에는 복사하지 않습니다. |
+| JPEG가 도착합니다. | 이후 센서 시각의 프레임을 최대 100ms 기다려 가까운 후보를 고릅니다. 프레임이 하나도 없으면 다음 프레임을 기다립니다. |
+| 프레임을 골랐습니다. | `encodeYuvStill`로 JPEG를 만들고 `rotationDegrees`만큼 회전합니다. 센서 시각 차이를 `media_saved.yuvOffsetNs`에 기록합니다. |
+| 5초 안에 끝나지 않습니다. | `capture_timeout`으로 실패를 반환합니다. |
+
+파일 쓰기와 공개는 두 엔진이 공유하는 [MediaLibrary 저장 흐름](#파일은-언제-공개하나요)을 따릅니다.
+
 
 JPEG만 켜면 analysis 프레임을 기다리지 않습니다. YUV만 켜면 촬영 요청 뒤 도착한 analysis 프레임을 저장하며 ImageCapture 요청은 보내지 않습니다. 두 출력이 모두 꺼져 있으면 사진 촬영을 거절합니다.
 
@@ -114,6 +137,26 @@ JPEG만 켜면 analysis 프레임을 기다리지 않습니다. YUV만 켜면 �
 
 <details markdown="1" id="detail-a5fe53f9af" data-search-section>
 <summary>녹화 구현</summary>
+
+```mermaid
+sequenceDiagram
+    participant U as Live
+    participant R as CameraX Recorder
+    participant S as 저장 작업
+    U->>R: 녹화 시작 요청
+    R-->>U: Start
+    U->>R: 정지 요청
+    R-->>U: Finalize
+    U->>U: 활성 화면이면 프리뷰 구성 복구
+    alt 저장 가능한 결과와 비어 있지 않은 파일
+        U->>S: MP4 저장 예약
+        S-->>U: 저장 결과
+    else 오류 또는 빈 파일
+        U->>U: 파일 삭제와 실패 안내
+    end
+```
+
+정지 요청과 파일 저장 완료는 다른 시점입니다. 카메라 종료로 받은 Finalize도 아래 조건에 따라 저장합니다.
 
 `CameraXLiveRecorder`는 CameraX `Recorder`로 캐시 폴더의 임시 MP4에 기록하고, 끝나면 `MediaLibrary.saveVideo`로 앨범에 공개합니다.
 
@@ -156,9 +199,20 @@ Live 스트림 설정에서 JPEG을 끄면 bind할 ImageCapture가 없으므로 
 | AE 잠금 | `Camera2CameraControl`로 repeating 요청에 넣는 `CONTROL_AE_LOCK` |
 | AF 잠금 | 화면 전체를 대상으로 하는 FocusMeteringAction(`FLAG_AF`, 자동 취소 없음) |
 
-CameraX는 FocusMeteringAction을 하나만 유지하고, 새 action은 이전 action을 취소합니다.
+**CameraX는 AF 잠금·탭 AF·긴 누르기 AE를 하나의 action으로 합칩니다.** 새 action이 이전 action을 취소하기 때문입니다.
 
-그래서 `CameraXControls`는 AF 잠금, 탭한 AF 지점, 길게 누른 AE 지점을 하나의 action으로 합쳐 다시 보냅니다.
+```mermaid
+sequenceDiagram
+    participant U as Live 제어
+    participant C as CameraXControls
+    participant X as CameraControl
+    U->>C: 초점·노출 지점 또는 잠금 변경
+    C->>C: 유지할 AF·AE 지점 합치기
+    C->>X: 새 FocusMeteringAction
+    X-->>C: action 결과
+    C-->>U: 해당 탭의 첫 결과만 표시
+```
+
 
 CameraX의 자동 취소는 쓰지 않고, 탭한 지점은 결과가 나온 뒤 5초가 지나면 이 클래스가 직접 끝냅니다.
 
@@ -176,7 +230,7 @@ camera-pipe는 최종 요청을 만들 때 3A 상태를 요청 옵션보다 나�
 2. 이전 action이 잠근 AF는 interop 옵션에 `CONTROL_AF_TRIGGER_CANCEL`을 싣고, 그 trigger가 담긴 결과가 오면 옵션에서 뺍니다.
 3. AF가 들어간 action은 camera-pipe의 `lock3A(aeLockBehavior = null)`로 처리되므로 AE 잠금을 바꾸지 않습니다.
 
-AE 재잠금은 Camera2와 같은 `AeRelock` 규칙을 씁니다.
+AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-잠그나요)를 따릅니다.
 
 다만 CameraX는 `bindToLifecycle`이 반환된 뒤에 자기 실행기에서 세션을 다시 만들기 때문에, 이전 세션의 잠긴 결과가 늦게 도착합니다.
 
