@@ -21,6 +21,8 @@ class LiveBurst(
     private val event: (session: String, kind: String, values: Map<String, Any?>) -> Unit,
     private val changed: () -> Unit,
     private val report: (String) -> Unit,
+    /** Makes a bracket's fourth image from its three shots; null leaves a bracket at three files. */
+    private val fusion: BracketFusion? = null,
 ) {
     /** The burst in progress; letting go of the shutter stops it, and anything that closes the camera cancels it. */
     var run: BurstRun<PhotoResult>? = null
@@ -65,9 +67,17 @@ class LiveBurst(
             { summary ->
                 run = null
                 tuning.setControls(base)
-                event(session, "bracket_done", fields(summary) + ("evRequested" to evs.map { support.evLabel(it) }))
-                report(describeBracket(summary, evs.map { support.evLabel(it) }))
+                val labels = evs.map { support.evLabel(it) }
+                event(session, "bracket_done", fields(summary) + ("evRequested" to labels))
                 changed()
+                val sources = summary.shots.mapNotNull { it.result.getOrNull()?.let(BracketFusion::pick) }
+                if (fusion == null || summary.saved < evs.size || sources.size < evs.size) report(describeBracket(summary, labels))
+                // The fourth image: the shots fused. The camera is free meanwhile; the summary waits for it.
+                else fusion.fuse(id, sources) { fused ->
+                    event(session, "bracket_fused", mapOf("burstId" to id, "file" to fused.getOrNull()?.name,
+                        "error" to fused.exceptionOrNull()?.message))
+                    report(describeBracket(summary, labels) + (fused.exceptionOrNull()?.let { " · HDR failed: ${it.message}" } ?: " · HDR saved"))
+                }
             },
             name = { "bracket-$id-${it + 1}-${BracketPlan.tag(evs[it], support.evStep)}" },
             prepare = { index, go -> tuning.setControls(base.copy(evIndex = evs[index])); schedule(SETTLE_MS, go) })

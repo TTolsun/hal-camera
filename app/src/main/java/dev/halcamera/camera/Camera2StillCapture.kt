@@ -200,7 +200,7 @@ internal class Camera2StillCapture(
         try {
             val tag = "still-${android.os.SystemClock.elapsedRealtimeNanos()}"
             val c = host.characteristics
-            val pending = if (!benchmark) Photo(library.name(), host.orientation(c), requestId, done, host.yuvSaveFormat) else null
+            val pending = if (!benchmark) Photo(BracketFiles.named(library.name(), requestId), host.orientation(c), requestId, done, host.yuvSaveFormat) else null
             val request = host.stillRequest(camera, c, tag, pending?.rotation)
             inFlight = true
             photo = pending

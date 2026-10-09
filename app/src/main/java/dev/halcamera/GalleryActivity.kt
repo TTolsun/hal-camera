@@ -33,6 +33,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.ViewCompat
+import dev.halcamera.camera.BracketFiles
 import dev.halcamera.ui.GalleryCount
 import dev.halcamera.ui.GalleryImageView
 import dev.halcamera.ui.IconButton
@@ -273,6 +274,8 @@ class GalleryActivity : ComponentActivity() {
                 tile.image.setImageBitmap(thumbnails.get(item.key))
                 tile.badge.text = when {
                     item.video -> "▶ ${duration(item.duration)}"
+                    // Bracket shots and their fused image say which they are (#178).
+                    BracketFiles.badge(item.name) != null -> BracketFiles.badge(item.name)
                     item.name.endsWith("_YUV.jpg", true) -> "YUV"
                     item.name.endsWith("_JPEG.jpg", true) -> "JPEG"
                     item.name.endsWith("_RAW.dng", true) -> "RAW"
@@ -285,7 +288,7 @@ class GalleryActivity : ComponentActivity() {
                 tile.check.setTextColor(if (item.key in selected) Color.BLACK else Color.WHITE)
                 tile.image.alpha = if (item.key in selected) 0.6f else 1f
                 tile.isSelected = item.key in selected
-                tile.contentDescription = "${if (item.video) "동영상" else "사진"}, ${date(item.added)}, ${item.name}"
+                tile.contentDescription = listOfNotNull(if (item.video) "동영상" else "사진", BracketFiles.badge(item.name), date(item.added), item.name).joinToString(", ")
                 ViewCompat.setStateDescription(tile, if (selectionMode) { if (item.key in selected) "선택됨" else "선택 안 됨" } else null)
                 loadThumbnail(item)
                 return tile
