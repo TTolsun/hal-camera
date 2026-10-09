@@ -1,11 +1,7 @@
-graph TB
-    live["Live · MainActivity"] --> engines["Camera2 / CameraX<br/>CameraEngine"]
-    cli["ADB · CliProvider"] -->|"LiveController"| live
-    bench["Benchmark<br/>화면 · Runner"] -->|"Camera2 Driver"| engines
-    live -->|"close(done) 뒤 CLI 인계"| bench
-    engines --> api["Android Camera API"]
-    engines --> events["콜백 기록<br/>Telemetry · FlightRecorder"]
-    bench -->|"실행 시각"| evaluate["측정 · 유효성<br/>RunAssembler"]
-    events -->|"관측 표본"| evaluate
-    evaluate --> files["실행 JSON 저장<br/>BenchmarkStore"]
-    files --> results["실행 기록 · 비교 · CSV"]
+flowchart TB
+    screens["화면 · CLI 진입점"] --> adapters["Android 어댑터"]
+    adapters --> domain["순수 Kotlin 측정·판정"]
+    adapters --> camera["카메라 엔진"]
+    camera --> telemetry["이벤트 기록"]
+    camera --> api["Android Camera API"]
+    domain --> metrics["지표 추출"]

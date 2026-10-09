@@ -5,15 +5,6 @@ title: Probe
 
 **Probe에서 카메라가 공개한 사양을 확인하세요.** 카메라를 열지 않고 `CameraCharacteristics`를 읽어, Camera2 HAL이 공개한 사양을 카메라별 표로 보여 줍니다. 이 값은 지원 사양이며 실측 결과는 아닙니다. 그 선언대로 통과하는지는 [CTS](cts.md)가, 실제로 얼마나 걸리는지는 [Benchmark](benchmark.md)가 답합니다.
 
-```mermaid
-flowchart LR
-    A["CameraManager<br/>공개 카메라 ID 전부"] --> B["CameraProbeReader<br/>CameraCharacteristics 읽기"]
-    B --> C["CameraProbeSnapshot<br/>순수 Kotlin 모델"]
-    C --> D["화면 표 · TXT · JSON<br/>렌더러"]
-```
-
-이 그림은 사양 표가 만들어지는 개념적 순서입니다. `CameraProbeReader`만 `CameraManager`를 알고, 모델과 렌더러는 JVM 테스트로 검증합니다.
-
 <p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
 
 <figure class="app-screenshot" id="screen-probe">
@@ -43,7 +34,8 @@ flowchart LR
 Live에서 Lab을 연 뒤 Probe로 이동합니다. Live 카메라는 Lab 진입 전에 닫히며 Probe 자체는 카메라를 열지 않습니다. Live에서 고른 카메라 ID를 초기값으로 받고 화면 안에서 다시 고를 수 있습니다. 다른 검사로 옮길 때에는 Lab으로 돌아갑니다. 배치 기준은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)의 "Lab과 독립 화면"에 있습니다.
 
 <details>
-<summary>코드 근거를 확인하세요</summary>
+<summary>구현과 코드 근거</summary>
+<p><code>CameraProbeReader</code>가 카메라 사양을 읽고, <code>CameraProbeSnapshot</code> 모델을 거쳐 화면 표·TXT·JSON으로 만듭니다. Reader만 <code>CameraManager</code>를 알며, 모델과 렌더러는 JVM 테스트로 검증합니다.</p>
 <p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/camera/</code>에서 <code>CameraProbe.kt</code>(모델·TXT·JSON 렌더러), <code>CameraProbeReader.kt</code>(CameraManager 읽기)와 <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>(화면)를 확인하세요. 코드 확인과 기기 검증의 범위는 <a href="evidence.html">Evidence</a>에서 구분합니다.</p>
 </details>
 

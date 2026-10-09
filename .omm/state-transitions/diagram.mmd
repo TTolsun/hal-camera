@@ -1,5 +1,16 @@
-graph LR
-    start["열기 요청"] --> open["세션 구성 · 실행"]
-    open --> close["close(done) 호출"]
-    close --> wait["종료 완료 대기"]
-    wait -->|"done 수신"| next["다음 카메라 열기 허용"]
+sequenceDiagram
+    participant L as Live
+    participant O as 기존 엔진
+    participant N as 새 엔진
+    L->>O: close(done)
+    O->>O: 세션 종료와 자원 정리
+    opt CameraX 공급자도 종료하는 전환
+        O->>O: CLOSED 뒤 shutdownAsync 대기
+        Note over O: 공급자 종료 완료 또는 1초 제한
+    end
+    O-->>L: done
+    L->>N: 열기 요청
+    opt Camera2 Live의 전환 대기
+        N->>N: 가용 통지 또는 2초 제한까지 대기
+    end
+    N->>N: 새 카메라 열기

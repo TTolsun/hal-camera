@@ -51,16 +51,25 @@
 </tr>
 </tbody></table>
 <p>두 방식 모두 Benchmark의 반복 측정과 회귀 점수에는 포함하지 않습니다.</p>
-<pre><code class="language-mermaid">flowchart TB
-    entry[&quot;CTS · 방식 선택&quot;] --&gt; custom[&quot;커스텀 케이스 목록&quot;]
-    entry --&gt; vendored[&quot;CTS 원문 메서드 목록&quot;]
-    custom --&gt; suite[&quot;선택한 항목을 순서대로 실행&lt;br/&gt;CtsSuiteRunActivity&quot;]
-    vendored --&gt; suite
-    suite --&gt; rules[&quot;커스텀 Runner · Rules&lt;br/&gt;카메라와 단계별 판정&quot;]
-    suite --&gt; junit[&quot;VendoredRun · JUnit&lt;br/&gt;메서드별 판정&quot;]
+<pre><code class="language-mermaid">sequenceDiagram
+    participant U as 선택한 목록
+    participant S as 실행 화면
+    participant R as 실행기
+    U-&gt;&gt;S: 선택한 항목 실행
+    loop 목록 순서대로
+        alt 커스텀 케이스만 선택
+            S-&gt;&gt;R: Runner 실행
+            R-&gt;&gt;R: 정리와 카메라 종료
+            R--&gt;&gt;S: Rules의 단계별 판정
+        else CTS 원문만 선택
+            S-&gt;&gt;R: JUnit 실행
+            R-&gt;&gt;R: 테스트 종료와 카메라 정리
+            R--&gt;&gt;S: 메서드별 판정
+        end
+    end
 </code></pre>
 <details id="detail-611a303ae2" data-search-section>
-<summary>검사 실행 구조</summary><p>이 그림은 두 방식이 각각 진행되는 개념적 순서입니다.</p>
+<summary>검사 실행 구조</summary><p>한 번의 실행에는 한 종류만 들어갑니다. 취소하면 남은 항목은 실행하지 않으며, 다음 케이스는 현재 케이스의 정리가 끝난 뒤 시작합니다.</p>
 <p>두 목록은 모두 체크리스트이고, 체크한 항목을 <code>실행</code>하면 <code>CtsSuiteRunActivity</code>가 위에서부터 차례로 돌립니다.</p>
 <p>이 화면은 가져온 <code>Camera2SurfaceViewCtsActivity</code>를 상속하면서 커스텀 러너의 <code>PreviewHost</code>도 구현하므로 SurfaceView 하나로 두 종류를 다 호스트하지만, 목록이 분리되어 있으므로 한 번의 실행에는 한 종류만 들어갑니다.</p>
 <p>커스텀 케이스의 규칙은 카메라를 모르는 순수 Kotlin이라 JVM 테스트로 검증하고, 러너가 CTS가 기기에서 읽는 값을 채워 넣습니다.</p>
@@ -401,9 +410,13 @@
           svg.style.width = '100%';
           svg.style.maxWidth = `${width}px`;
           svg.style.minWidth = `${width * .875}px`;
-          let heading = node.previousElementSibling;
-          while (heading && !/^H[1-3]$/.test(heading.tagName)) heading = heading.previousElementSibling;
-          const label = heading?.textContent.trim() || document.querySelector('h1')?.textContent.trim() || '다이어그램';
+          // Diagrams inside details still belong to the preceding section heading.
+          const headings = [...document.querySelectorAll('main h1, main h2, main h3, main h4')]
+            .filter(heading => heading.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING);
+          const heading = headings.at(-1);
+          const section = headings.findLast(heading => heading.tagName === 'H2');
+          const label = [section, heading].filter((heading, index, all) => heading && all.indexOf(heading) === index)
+            .map(heading => heading.textContent.trim()).join(' · ') || '다이어그램';
           node.tabIndex = 0;
           node.setAttribute('role', 'button');
           node.setAttribute('aria-label', `그림 확대: ${label}`);
@@ -422,6 +435,7 @@
             }
           });
         });
+        window.dispatchEvent(new Event('halcamera:diagrams-ready'));
       } catch (error) {
         console.error('Mermaid rendering failed', error);
       }

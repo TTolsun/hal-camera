@@ -7,13 +7,6 @@ title: 문서 관리
 
 ## 문서를 수정하고 검증하세요
 
-```mermaid
-flowchart LR
-    source["원본 수정"] --> review["근거 대조 · 검토"]
-    review --> build["페이지 생성 · 검사"]
-    build --> browser["브라우저 확인 · PR"]
-```
-
 문서 도구에는 **Node.js 24**가 필요합니다. `npm ci --prefix tools/docgen --ignore-scripts`로 공용 엔진을 설치합니다. 문서 원본은 다음과 같이 나뉩니다.
 
 | 수정할 내용 | 원본 |
@@ -51,6 +44,5 @@ flowchart LR
 `docs-sync`는 main의 관련 변경에서 근거의 최신성을 확인합니다. PR에서 검토와 재생성을 마쳐 근거 해시가 같으면 추가 동기화 PR 없이 끝납니다. 운영과 실패 복구는 [문서 도구 안내](https://github.com/TTolsun/hal-camera/blob/main/tools/docgen/README.md)에 있습니다.
 
 한국어 문장은 [fluent-korean](https://github.com/snflkd/fluent-korean)과 [공통 집필 규칙](https://github.com/TTolsun/omm-doc-workflow/blob/main/style/README.md)에 따라 다듬습니다. 사용법은 해당 기능 페이지에 한 번만 설명하고, 다른 페이지에서는 필요한 부분으로 연결합니다.
-
 
 검증 결과와 기기 기록은 [Evidence](evidence.md)를 확인하세요.

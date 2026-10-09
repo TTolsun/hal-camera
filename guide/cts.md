@@ -13,19 +13,28 @@ title: CTS
 두 방식 모두 Benchmark의 반복 측정과 회귀 점수에는 포함하지 않습니다.
 
 ```mermaid
-flowchart TB
-    entry["CTS · 방식 선택"] --> custom["커스텀 케이스 목록"]
-    entry --> vendored["CTS 원문 메서드 목록"]
-    custom --> suite["선택한 항목을 순서대로 실행<br/>CtsSuiteRunActivity"]
-    vendored --> suite
-    suite --> rules["커스텀 Runner · Rules<br/>카메라와 단계별 판정"]
-    suite --> junit["VendoredRun · JUnit<br/>메서드별 판정"]
+sequenceDiagram
+    participant U as 선택한 목록
+    participant S as 실행 화면
+    participant R as 실행기
+    U->>S: 선택한 항목 실행
+    loop 목록 순서대로
+        alt 커스텀 케이스만 선택
+            S->>R: Runner 실행
+            R->>R: 정리와 카메라 종료
+            R-->>S: Rules의 단계별 판정
+        else CTS 원문만 선택
+            S->>R: JUnit 실행
+            R->>R: 테스트 종료와 카메라 정리
+            R-->>S: 메서드별 판정
+        end
+    end
 ```
 
 <details markdown="1" id="detail-611a303ae2" data-search-section>
 <summary>검사 실행 구조</summary>
 
-이 그림은 두 방식이 각각 진행되는 개념적 순서입니다.
+한 번의 실행에는 한 종류만 들어갑니다. 취소하면 남은 항목은 실행하지 않으며, 다음 케이스는 현재 케이스의 정리가 끝난 뒤 시작합니다.
 
 두 목록은 모두 체크리스트이고, 체크한 항목을 `실행`하면 `CtsSuiteRunActivity`가 위에서부터 차례로 돌립니다.
 

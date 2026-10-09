@@ -32,11 +32,6 @@
     <p class="eyebrow page-label">HAL CAMERA / Design Documentation</p>
     <h1 lang="en">Keep the guide current.</h1><p><strong>원본을 고친 뒤 페이지를 생성하고 검사하세요.</strong> 검토 기록은 실제로 읽고 확인한 범위를 남깁니다.</p>
 <h2 id="문서를-수정하고-검증하세요">문서를 수정하고 검증하세요</h2>
-<pre><code class="language-mermaid">flowchart LR
-    source[&quot;원본 수정&quot;] --&gt; review[&quot;근거 대조 · 검토&quot;]
-    review --&gt; build[&quot;페이지 생성 · 검사&quot;]
-    build --&gt; browser[&quot;브라우저 확인 · PR&quot;]
-</code></pre>
 <p>문서 도구에는 <strong>Node.js 24</strong>가 필요합니다. <code>npm ci --prefix tools/docgen --ignore-scripts</code>로 공용 엔진을 설치합니다. 문서 원본은 다음과 같이 나뉩니다.</p>
 <table>
 <thead>
@@ -228,9 +223,13 @@ node tools/docgen/docflow.mjs check --ci
           svg.style.width = '100%';
           svg.style.maxWidth = `${width}px`;
           svg.style.minWidth = `${width * .875}px`;
-          let heading = node.previousElementSibling;
-          while (heading && !/^H[1-3]$/.test(heading.tagName)) heading = heading.previousElementSibling;
-          const label = heading?.textContent.trim() || document.querySelector('h1')?.textContent.trim() || '다이어그램';
+          // Diagrams inside details still belong to the preceding section heading.
+          const headings = [...document.querySelectorAll('main h1, main h2, main h3, main h4')]
+            .filter(heading => heading.compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING);
+          const heading = headings.at(-1);
+          const section = headings.findLast(heading => heading.tagName === 'H2');
+          const label = [section, heading].filter((heading, index, all) => heading && all.indexOf(heading) === index)
+            .map(heading => heading.textContent.trim()).join(' · ') || '다이어그램';
           node.tabIndex = 0;
           node.setAttribute('role', 'button');
           node.setAttribute('aria-label', `그림 확대: ${label}`);
@@ -249,6 +248,7 @@ node tools/docgen/docflow.mjs check --ci
             }
           });
         });
+        window.dispatchEvent(new Event('halcamera:diagrams-ready'));
       } catch (error) {
         console.error('Mermaid rendering failed', error);
       }

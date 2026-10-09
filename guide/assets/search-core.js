@@ -36,7 +36,8 @@ export function extractSections(doc, url) {
   let hasHeading = false;
   function visit(node) {
     if (node.nodeType === 3) { current.text += `${node.textContent} `; return; }
-    if (node.nodeType !== 1 || node.matches('script, style, noscript, nav, button, [hidden], [aria-hidden="true"]')) return;
+    // Search the explanation around a diagram, not Mermaid's rendering syntax.
+    if (node.nodeType !== 1 || node.matches('script, style, noscript, nav, button, code.language-mermaid, [hidden], [aria-hidden="true"]')) return;
     if (node.matches('details[data-search-section][id]')) {
       // A closed disclosure is searchable and has its own deep link.
       const parent = { ...current, text: '' };

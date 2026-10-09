@@ -1,18 +1,12 @@
 sequenceDiagram
-    participant L as Live 화면
+    participant L as Live
     participant E as 카메라 엔진
     participant W as Lab
     participant T as 검사 화면
-    L->>E: Lab 선택: close(done)
-    E-->>L: done
-    L->>W: Lab 열기 (카메라 ID, 엔진)
-    W->>T: Probe / CTS / Benchmark 선택
-    T-->>W: 뒤로 가기
-    W-->>L: 복귀 또는 프리뷰 제어 결과
-    L->>E: onResume: 복귀 상태를 한 번 적용
-    participant S as Live Streams
-    L->>E: 크기 표시 선택: close(done)
-    E-->>L: done
-    L->>S: 직접 열기 (카메라 ID, 엔진)
-    S-->>L: 뒤로 가기 또는 설정 저장
-    L->>E: onResume: 설정 반영 후 프리뷰 재개
+    L->>E: 카메라 닫기
+    E-->>L: 종료 통지
+    L->>W: Lab 열기
+    W->>T: Probe 또는 CTS 또는 Benchmark
+    T-->>W: 돌아오기
+    W-->>L: 돌아오기
+    L->>E: 복귀 상태 적용 후 프리뷰 재개

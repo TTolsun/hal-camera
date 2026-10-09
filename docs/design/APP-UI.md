@@ -60,18 +60,19 @@ Lab 연결 화면은 제목 위에 Back 링크를 두고 공통 제목 줄은 `L
 
 괄호 안은 `렌즈 · 방향 · 화각`입니다. 렌즈는 35mm 환산 초점 거리로 추론한 `Wide`·`UWide`·`Tele`이고, 방향은 `Rear`·`Front`·`External`입니다. 전면과 외부 카메라는 렌즈를 추론하지 않으므로 방향만 적고, 대신 HAL이 보고한 35mm 환산 초점 거리를 1mm 단위로 반올림해 `Camera · 1 (Front · 26 mm)`처럼 덧붙입니다. 렌즈 이름이 붙은 카메라에는 화각을 적지 않습니다. 이름이 이미 렌즈를 지목하므로 수치는 군더더기이기 때문입니다. 셋 다 알 수 없으면 괄호를 생략하고 축약 형태로 되돌립니다. 논리 카메라 뒤의 물리 카메라는 `Camera · 0.2 (UWide · Rear)`처럼 점으로 이은 키를 사용합니다.
 
-괄호 안의 세 칸은 아래 순서로 채웁니다. 이 절과 아래 두 절의 그림은 `.omm/ui-*/diagram.mmd`를 그대로 옮긴 사본입니다. 코드가 바뀌어 `.omm` 그림을 고치면 이 사본도 함께 고쳐야 하며, 두 그림이 다르면 `npm test --prefix tools/docgen`이 실패합니다. 방향 칸은 HAL이 보고한 `LENS_FACING` 값을 먼저 따르며, 값이 없을 때 역할이 `FRONT`인 카메라만 `Front`로 적습니다. 역할이 `EXTERNAL`이어도 보고값이 없으면 방향을 적지 않습니다. 열거 과정이 `LENS_FACING`을 읽지 못한 카메라에도 `EXTERNAL`을 붙이기 때문입니다.
+아래 이름·줌 표는 `.omm/ui-*/description.md`, 화면 이동 그림은 `.omm/ui-tool-handoff/diagram.mmd`의 사본입니다. 원본을 바꾸면 이 사본도 갱신하며, 회귀 검사가 일치를 확인합니다. 방향은 HAL의 `LENS_FACING`을 우선합니다. 값이 없으면 FRONT 역할만 `Front`로 적습니다. `EXTERNAL` 역할만으로 방향을 추정하지 않습니다. 열거 중 방향 값을 읽지 못한 카메라에도 이 역할이 붙기 때문입니다.
 
-<!-- omm-copy: ui-camera-label -->
-```mermaid
-flowchart TB
-    key["카메라 키<br/>0 · 1 · 0.2"] --> lens["렌즈 역할이 알려지면<br/>Wide · UWide · Tele"]
-    lens --> facing["HAL의 LENS_FACING 우선<br/>없으면 FRONT 역할만 Front"]
-    facing --> focal["렌즈 칸이 비고 환산값이 있으면<br/>35mm 환산 초점거리를 1mm로 반올림"]
-    focal --> filled{"채운 칸이 있는가?"}
-    filled -->|"예"| label["채운 칸을 괄호 안에 연결<br/>Camera · 1 (Front · 26 mm)"]
-    filled -->|"아니오"| empty["채운 칸이 없으면 키만 표시<br/>Camera · 0"]
-```
+<!-- omm-text-copy: ui-camera-label -->
+`CameraLabel`은 같은 카메라를 모든 화면에서 같은 이름으로 표시합니다.
+
+| 확인할 값 | 이름에 넣는 규칙 |
+| --- | --- |
+| 카메라 키 | `0`, `1`, `0.2`를 이름 앞에 넣습니다. |
+| 렌즈 역할 | 알려진 경우 `Wide`, `UWide`, `Tele` 등을 넣습니다. |
+| 방향 | HAL의 `LENS_FACING`을 우선합니다. 값이 없으면 FRONT 역할만 `Front`로 표시합니다. |
+| 초점거리 | 렌즈 역할 칸이 비어 있고 35mm 환산값이 있으면 1mm 단위로 반올림해 넣습니다. |
+| 완성된 이름 | 채운 값만 괄호로 묶습니다. 예: `Camera · 1 (Front · 26 mm)`. 값이 없으면 `Camera · 0`처럼 키만 표시합니다. |
+<!-- /omm-text-copy -->
 
 화각을 덧붙이는 이유는 전면 카메라가 목록에서 id 말고는 구별되지 않았기 때문입니다. Galaxy S25+의 `Camera · 1`과 `Camera · 3`은 초점 거리 3.3mm인 전면 렌즈 하나를 센서 크롭만 달리해 노출한 것이고(35mm 환산 약 26mm와 30mm), 전면에 렌즈 추론을 적용해도 두 값이 모두 `Wide` 구간(20–35mm)에 들어가 구분되지 않습니다. 그래서 렌즈 이름을 새로 지어내는 대신 HAL이 보고한 수치를 그대로 적어 `Camera · 1 (Front · 26 mm)`과 `Camera · 3 (Front · 30 mm)`으로 갈라 둡니다. 이름이 아니라 보고값이므로 앱이 판단을 보태지 않는다는 원칙도 지켜집니다. 같은 규칙이 후면에도 적용됩니다. `LensRoles.dedupeMain`이 두 번째 `Wide` 후보를 `UNKNOWN`으로 내리면 그 카메라도 이름을 잃으므로 화각을 받습니다. 반올림하지 않은 값은 PROBE의 `35mm equivalent` 행에 그대로 남습니다.
 
@@ -124,23 +125,17 @@ Lab 진입은 Live 세션의 close(done)을 기다립니다. Lab 자체는 카�
 <!-- omm-copy: ui-tool-handoff -->
 ```mermaid
 sequenceDiagram
-    participant L as Live 화면
+    participant L as Live
     participant E as 카메라 엔진
     participant W as Lab
     participant T as 검사 화면
-    L->>E: Lab 선택: close(done)
-    E-->>L: done
-    L->>W: Lab 열기 (카메라 ID, 엔진)
-    W->>T: Probe / CTS / Benchmark 선택
-    T-->>W: 뒤로 가기
-    W-->>L: 복귀 또는 프리뷰 제어 결과
-    L->>E: onResume: 복귀 상태를 한 번 적용
-    participant S as Live Streams
-    L->>E: 크기 표시 선택: close(done)
-    E-->>L: done
-    L->>S: 직접 열기 (카메라 ID, 엔진)
-    S-->>L: 뒤로 가기 또는 설정 저장
-    L->>E: onResume: 설정 반영 후 프리뷰 재개
+    L->>E: 카메라 닫기
+    E-->>L: 종료 통지
+    L->>W: Lab 열기
+    W->>T: Probe 또는 CTS 또는 Benchmark
+    T-->>W: 돌아오기
+    W-->>L: 돌아오기
+    L->>E: 복귀 상태 적용 후 프리뷰 재개
 ```
 
 검사 화면에서 뒤로 가면 Lab으로 돌아옵니다. 다른 검사 도구는 Lab에서 선택합니다. Lab의 시스템 뒤로 가기와 상단 Live 링크은 기존 프리뷰 화면으로 돌아갑니다.
@@ -157,24 +152,20 @@ sequenceDiagram
 
 줌은 현재 배율만 표시하다가 누르면 지원 배율로 펼쳐집니다. 선택 후 3초 동안 추가 조작이 없으면 선택한 배율을 유지한 채 접힙니다. 선택된 흰 원의 지름은 28dp이고 터치 영역은 48dp입니다. 펼침은 260ms, 접힘은 220ms 동안 폭과 투명도·크기가 부드럽게 바뀝니다. 좁은 창에서는 가로 스크롤을 제공하고, 드래그 중에는 자동 접기를 미룹니다. 시스템 접근성 시간 제한을 반영하며 TalkBack에서는 자동 접기 없이 선택을 기다린 뒤 접힙니다. 시스템 애니메이션 비활성화 설정도 따릅니다.
 
-<!-- omm-copy: ui-zoom -->
-```mermaid
-stateDiagram-v2
-    state "접힘: 현재 배율만 표시" as Folded
-    state "펼침: 지원 배율 모두 표시" as Open
-    [*] --> Folded
-    Folded --> Open : 현재 배율 누름, 지원 배율 2개 이상, 260ms
-    Open --> Open : 배율 선택 또는 포커스, 접기 타이머 재시작
-    Open --> Folded : 마지막 조작 후 3초, 220ms
-    Open --> Folded : TalkBack 사용 중 배율 선택 즉시
-    Open --> Folded : 비활성화 시, 애니메이션 없음
-    note right of Open
-        가로 드래그 중에는 접기 타이머를 멈춤
-        TalkBack이 켜져 있으면 자동 접기 없음
-        3초는 API 29 이상에서 접근성 권장 시간으로 늘어날 수 있음
-        시스템 애니메이션이 꺼져 있으면 즉시 바뀜
-    end note
-```
+<!-- omm-text-copy: ui-zoom -->
+**현재 배율을 누르면 지원 배율이 펼쳐집니다.** 처음에는 현재 배율 하나만 보입니다.
+
+| 조건 | 동작 |
+| --- | --- |
+| 지원 배율이 2개 이상이고 현재 배율을 누릅니다. | 모든 지원 배율이 펼쳐집니다. |
+| 펼친 상태에서 배율을 고르거나 포커스를 옮깁니다. | 접기 타이머를 다시 시작합니다. |
+| 마지막 조작 후 3초가 지납니다. | 접힙니다. API 29 이상에서는 접근성 권장 시간에 따라 더 기다릴 수 있습니다. |
+| 가로로 드래그합니다. | 드래그하는 동안 접기 타이머를 멈춥니다. |
+| TalkBack이 켜져 있습니다. | 자동으로 접히지 않으며, 배율을 고르면 바로 접힙니다. |
+| 컨트롤이 비활성화됩니다. | 애니메이션 없이 접힙니다. |
+
+펼침 애니메이션은 260ms, 접힘은 220ms입니다. 시스템 애니메이션이 꺼져 있으면 즉시 바뀝니다.
+<!-- /omm-text-copy -->
 
 바깥 레일은 높이 36dp이며 버튼을 펼쳐도 셔터와 측정값의 높이는 움직이지 않습니다. 현재 배율, 모드와 셔터의 실행 동작은 접근성 이름과 상태 설명으로도 전달합니다.
 

@@ -71,12 +71,16 @@ CameraX의 YUV 행은 ImageAnalysis 수신 시점, JPEG 행은 ImageCapture 수�
 ## 촬영 프레임을 고정하세요
 
 ```mermaid
-flowchart TB
-    off["Real-time Frame<br/>실시간 갱신"] -->|"Hold"| waiting["Event Frame<br/>촬영 출력 대기"]
-    waiting -->|"출력 수신"| held["Event Frame · 일시정지 표시<br/>촬영 프레임 고정"]
-    held -->|"시간 경과"| waiting
-    waiting -->|"Live"| off
-    held -->|"Live"| off
+stateDiagram-v2
+    state "촬영 출력 기다림" as Waiting
+    state "촬영 프레임 고정" as Held
+    state "실시간 갱신" as Live
+    [*] --> Waiting
+    Waiting --> Held: 촬영 출력 수신
+    Held --> Waiting: 고정 시간 경과
+    Waiting --> Live: Live 누름
+    Held --> Live: Live 누름
+    Live --> Waiting: Hold 누름
 ```
 
 자동 고정은 처음에 켜져 있으며 기본 시간은 3초입니다. JPEG처럼 반복 요청하지 않는 출력이 도착하면 해당 프레임을 정해진 시간 동안 표시합니다. 카메라와 녹화는 계속 동작합니다.

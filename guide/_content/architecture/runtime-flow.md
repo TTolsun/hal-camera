@@ -41,11 +41,43 @@ Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 �
 
 ### 실행에서 저장까지
 
-1. `BenchmarkActivity`가 선택한 카메라와 profile을 사전 확인합니다.
-2. `BenchmarkRunner`가 열기·닫기 반복을 수행합니다. 각 사이클은 OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE로 진행합니다.
-3. 별도 관측 세션에서 WARMUP → OBSERVE → STILL → RECORD → CLOSE를 진행하며 녹화 조건이 없는 profile은 RECORD를 건너뜁니다. profile은 반복 횟수와 관측·촬영 조건을 정합니다.
-4. `RunAssembler`가 러너 결과와 이벤트를 결합해 `BenchmarkEvaluator`와 `RunValidityEvaluator`를 호출합니다.
-5. `BenchmarkReport`가 실행 JSON을 저장합니다. Activity는 baseline 집합 또는 이전 실행을 찾아 비교 결과를 별도로 계산합니다. 저장 직후 `RunRetention`이 보관 정책을 적용하며, baseline에 든 실행은 보호합니다.
+**사전 확인이 끝나면 열기·닫기를 반복한 뒤, 별도 세션에서 관측·촬영합니다.** 아래는 세부 Step을 묶은 상태도이며 화면의 Phase와 일대일 대응하지 않습니다.
+
+```mermaid
+stateDiagram-v2
+    state "열기·닫기 반복" as Launch
+    state "관측용 세션 열기" as Open
+    state "워밍업과 관측" as Observe
+    state "사진 반복" as Still
+    state "녹화 반복" as Record
+    state "종료 처리" as Close
+    state "결과 조립·저장" as Save
+    [*] --> Launch
+    Launch --> Launch: 반복 횟수 남음
+    Launch --> Open: 반복 종료
+    Open --> Observe: 첫 프레임 수신
+    Observe --> Still: 관측 종료
+    Still --> Record: 녹화 조건 있음
+    Still --> Close: 녹화 조건 없음
+    Record --> Close: 완료 또는 남은 녹화 생략
+    Launch --> Close: 연속 실패 한도
+    Open --> Close: 관측 세션 실패
+    Observe --> Close: 관측 세션 실패
+    Close --> Save
+    Save --> [*]
+```
+
+| 조건 | 처리 |
+| --- | --- |
+| 열기·닫기 한 사이클 | OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE를 수행합니다. 프로세스를 새로 시작하는 cold launch가 아닙니다. |
+| 열기 사이클이 한 번 실패합니다. | 실패를 기록하고 다음 사이클로 진행합니다. 연속 실패 한도에 이르면 조기 종료합니다. |
+| 사진이나 녹화의 한 반복이 실패합니다. | 실패 표본을 남깁니다. 녹화 미지원 또는 녹화 연속 실패 한도에 이르면 남은 녹화를 생략합니다. |
+| 실행 중 중단을 요청합니다. | 진행 중인 단계의 정리와 종료 처리를 거쳐 결과를 남깁니다. 그림의 각 단계에서 가능한 경로입니다. |
+| 닫기 콜백이 오지 않습니다. | 기본 5초 뒤 종료 실패를 기록하고 진행합니다. 실제 종료 통지를 받은 경우와 구분하여 `close_completed=false`를 남깁니다. |
+
+관측용 추가 열기는 시작 지표의 반복 횟수에 포함하지 않습니다. 녹화는 RECORD_PREPARE → RECORD_START → RECORD_RUN → RECORD_STOP을 반복합니다.
+
+`RunAssembler`는 러너 결과와 이벤트로 측정값·validity를 계산하고, `BenchmarkReport`가 실행 JSON을 저장합니다. 저장 직후 `RunRetention`이 보관 정책을 적용하며 baseline 집합의 실행은 보호합니다. 비교는 아래처럼 따로 계산합니다.
 
 <details markdown="1" id="detail-2487d11343" data-search-section>
 <summary>이벤트·표본·진단 정보</summary>
@@ -82,7 +114,20 @@ Live 제어, AE 재잠금, 터치 측광이 남기는 이벤트는 [Engine](engi
 
 `RegressionDetector`는 두 실행의 측정 계약·endpoint·validity·환경 조건을 확인합니다. baseline 집합이나 두 실행 비교에서 먼저 선택한 실행을 기준으로 삼으면 회귀 판정을 표시합니다. 집합이면 집합 값의 범위를 벗어난 지표만 저하나 개선으로 판정합니다. 이전 실행을 자동 선택한 reference 비교에서는 변화량과 비교 불가 사유만 표시합니다. 단위가 다르면 각 단위를 유지하고 백분율을 표시하지 않습니다.
 
-측정값이 파일로 저장되는 단계와, 화면에서 비교 결과를 다시 계산하는 단계는 서로 다릅니다. 저장된 JSON에는 비교 결과가 들어 있지 않으며, 결과 화면과 실행 기록은 파일을 읽은 뒤 현재 기준으로 비교를 새로 계산합니다. 기준을 고르는 방법과 결과를 읽는 방법은 [Benchmark](benchmark.md)에 있습니다.
+**실행 JSON에는 비교 결과를 저장하지 않습니다.** 결과 화면과 실행 기록은 저장된 측정값으로 비교를 다시 계산합니다.
+
+```mermaid
+sequenceDiagram
+    participant U as 결과·기록 화면
+    participant F as 저장된 실행
+    participant C as 비교 계산
+    U->>F: 대상 실행과 기준 실행 읽기
+    F-->>U: 측정값과 조건
+    U->>C: 비교 조건 확인과 재계산
+    C-->>U: 판정 또는 변화량·비교 불가 사유
+```
+
+기준 선택과 판정의 의미는 [Benchmark](benchmark.md)에서 확인하세요.
 
 ### Live에서 촬영과 저장
 
@@ -112,7 +157,7 @@ CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩�
 
 스트림 지원 조회와 probe 파일 작업은 IO 스레드에서 실행하며, probe 파일은 요청별 `files/cli/artifacts/<request_id>/`에 두었다가 기록 정리와 함께 지웁니다.
 
-명령 접수와 실제 완료는 서로 다른 상태입니다.
+접수·완료·파일 회수의 순서는 [CLI 요청 흐름](cli.md#요청과-완료를-구분하세요)에 있습니다.
 
 PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 확인합니다. 같은 요청 ID와 같은 내용은 기존 결과를 반환하며 새로운 촬영을 시작하지 않습니다. 명령 사용법과 전송 실패 대응은 [CLI](cli.md)에 있습니다.
 
