@@ -11,7 +11,7 @@ ADB CLI는 기본으로 허용됩니다. 직접 꺼 둔 경우에는 앱의 `Lab
 
 1. 사용할 터미널에서 `adb devices -l`로 연결된 기기를 확인합니다. `unauthorized`이면 기기에서 디버깅을 허용하고, `offline`이면 연결을 복구합니다. 환경별 연결 방법은 아래를 참고하세요.
 2. HAL CAM APK를 `adb install -r HALCamera.apk`로 설치하고 앱에서 카메라 권한을 허용합니다. 서명이 맞지 않으면 기존 앱을 삭제하지 말고 같은 서명의 APK를 준비합니다. 화면 잠금을 해제합니다. 소리가 있는 녹화에는 마이크 권한도 필요합니다.
-3. 앱에 포함된 스크립트를 기기에 준비한 뒤 촬영합니다. APK를 업데이트하면 첫 번째 명령으로 스크립트도 갱신합니다.
+3. 앱에 포함된 스크립트를 기기에 준비한 뒤 촬영합니다. `cameras` 결과에서 `selectable: true`인 ID로 마지막 명령의 `0`을 바꾸세요. APK를 업데이트하면 첫 번째 명령으로 스크립트도 갱신합니다.
 
 ```sh
 adb shell "content read --uri content://dev.halcamera.cli/v1/shell > /data/local/tmp/halcam"
@@ -47,7 +47,9 @@ Git Bash에서는 기기 경로가 Windows 경로로 바뀌지 않도록 먼저 
 
 ## 필요한 작업 하나를 고르세요
 
-`help`는 처음 사용할 작업 다섯 개만 보여줍니다. `help all`은 전체 명령을, `help controls`는 수동 촬영 옵션을 보여줍니다. 아래 예시의 `halcam` 앞에는 모두 `adb shell sh /data/local/tmp/`를 붙입니다. 파일을 만드는 작업은 끝난 뒤 출력하는 `adb pull` 한 줄로 회수합니다.
+`help`는 처음 사용할 작업 다섯 개만 보여줍니다. `help all`은 전체 명령을, `help controls`는 수동 촬영 옵션을 보여줍니다.
+
+**아래 표의 명령은 축약형입니다.** `halcam`으로 시작하면 앞에 `adb shell sh /data/local/tmp/`를 붙입니다. `results list`처럼 작업 이름만 있으면 `adb shell sh /data/local/tmp/halcam results list`로 실행합니다. 파일은 완료 후 출력된 `adb pull` 명령으로 받습니다.
 
 ### 사진과 촬영 설정
 
@@ -104,21 +106,9 @@ Dual의 출력 크기는 기존 앱의 공통 크기 선택 규칙을 따릅니�
 
 갤러리의 확대·축소·동영상 재생·공유 대상 선택은 파일 회수 후 PC의 뷰어나 공유 도구에서 수행합니다. 권한 허용, 잠금 해제, ADB CLI 허용 스위치를 다시 켜는 동작은 Android 화면에서 수행합니다. CLI는 이 보호 동작을 우회하지 않습니다.
 
-### JSON을 쓰는 기존 Python 클라이언트
-
-선택 도구인 Python 클라이언트에도 전체 작업을 제출하는 공통 경로가 있습니다. `halcam run OPERATION --option KEY=VALUE --stream KEY=VALUE`를 사용합니다. 앱이 `doctor`에서 제공한 명령만 받으며, 결과 파일이 필요하면 `--output DIRECTORY`를 붙입니다. JPEG·MP4·DNG·NV21·JSON·TXT·CSV·ZIP 파일을 크기와 SHA-256으로 검증하며 파일당 최대 64 GiB를 받습니다. 갤러리에서 내보낸 파일은 안전한 `media_ID.확장자` 이름으로 받고 원래 이름은 `original_name`에 남깁니다.
-
-```sh
-halcam run burst --camera 0 --option count=3 --stream yuv_format=NV21 --output ./photos
-halcam run results.export --option run=RUN_ID --output ./results
-halcam run benchmark.run --option "build=Candidate: A" --timeout 600 --output ./run
-halcam control live.set --option zoom=2
-halcam control record.stop
-```
-
 `live info`, `meter`, `events`, `preview stop`은 현재 열린 Live 또는 Dual 화면에 적용됩니다. `live set`과 `live reset`은 Dual 프리뷰·CLI 녹화에도 적용되며 엔진이 지원하지 않는 제어는 거부합니다.
 
-`control`은 새 작업을 만들지 않고 기존 프리뷰·녹화를 제어합니다. `record.stop`은 접수 상태를 반환하므로 저장이 끝났는지는 `status --request UUID`로 확인합니다. 자동으로 완료까지 기다리는 기본 경로는 APK에 포함된 셸 스크립트입니다.
+
 
 ## 기존 기본 명령
 
@@ -156,15 +146,19 @@ CTS 키는 `custom:fast_on_off`나 `vendored:android.hardware.camera2.cts.Record
 
 ## 벤치마크를 실행하세요
 
+화면을 켜고 잠금을 해제한 상태에서 다음 명령을 한 번 실행하세요. JSON 저장과 회수 준비까지 기다립니다.
+
 ```sh
 adb shell sh /data/local/tmp/halcam benchmark run --camera 0
-adb shell sh /data/local/tmp/halcam benchmark run --camera 0 --profile camera2-standard-v2 --no-wait
-adb shell sh /data/local/tmp/halcam status REQUEST_ID
-adb shell sh /data/local/tmp/halcam cancel REQUEST_ID
-adb shell sh /data/local/tmp/halcam fetch REQUEST_ID
 ```
 
-앞의 두 실행 예제 중 하나를 선택합니다. 기본 실행은 JSON 저장과 회수 준비까지 기다립니다. `--no-wait`은 접수 후 반환하므로 출력된 요청 ID로 상태를 조회합니다. Live 카메라의 종료 콜백을 받은 뒤 벤치마크 화면으로 이동하며, 화면과 동일한 preflight·Runner·판정·저장 경로를 사용합니다. 화면을 켜고 잠금을 해제한 상태를 유지해야 합니다.
+기다리지 않고 요청 ID만 받으려면 **위 명령 대신** 아래 명령을 사용하세요. 상태 조회·취소·파일 회수는 [기존 요청 복구 절차](#요청이-끝나지-않거나-파일이-없을-때)를 따릅니다.
+
+```sh
+adb shell sh /data/local/tmp/halcam benchmark run --camera 0 --profile camera2-standard-v2 --no-wait
+```
+
+앱 화면과 같은 조건 검사·측정·판정·저장 절차를 사용합니다.
 
 프로파일은 `camera2-standard-v2` 하나를 지원하며 생략하면 이 값을 사용합니다. Camera2의 warm reopen·관측·사진·녹화 시퀀스를 실행합니다. `--engine`, Live 스트림 크기, `--no-audio`는 받지 않습니다. 크기 자동 대체나 baseline 자동 지정도 하지 않습니다. 기본 실행 제한은 준비 시간을 포함한 600초이며 `--timeout 초`로 1–3,600초를 지정합니다.
 
@@ -218,10 +212,14 @@ CTS 항목만 `--extra`가 아니라 `--arg`로 전달합니다. `--extra`는 �
 
 </details>
 
-<details>
+<details markdown="1" id="python-client" data-search-section>
 <summary>선택 도구: Python 클라이언트</summary>
 
-사진·probe·CTS·벤치마크 파일 수집을 자동화하려면 Python 3.11 이상에서 다음과 같이 설치합니다. 녹화와 프리뷰 종료는 위의 ADB 스크립트를 사용합니다.
+<span id="python-advanced"></span>
+
+이 영역의 `halcam`은 PC에 설치한 Python 명령입니다. ADB 접두어를 붙이지 않습니다.
+
+저장소를 받은 PC에서 Python 3.11 이상으로 설치합니다. 단순 실행에는 앞의 ADB 스크립트를 사용하고, Python 자동화가 필요한 경우에만 아래 도구를 설치하세요. 녹화·프리뷰 제어도 지원합니다.
 
 ```sh
 python -m pip install ./tools/halcam
@@ -234,6 +232,20 @@ halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json
 ```
 
 Python 도구의 `--json`은 stdout에 JSON 하나를 출력하며, `--wait-timeout`은 PC에서 기다리는 시간만 제한합니다. ADB 스크립트는 진행 메시지와 요청별 결과를 출력하고 성공 시 0, 오류 시 1을 반환합니다. 기계적으로 JSON만 처리하려면 직접 `content read`를 사용합니다.
+
+### 전체 작업을 제출하세요
+
+선택 도구인 Python 클라이언트에도 전체 작업을 제출하는 공통 경로가 있습니다. `halcam run OPERATION --option KEY=VALUE --stream KEY=VALUE`를 사용합니다. 앱이 `doctor`에서 제공한 명령만 받으며, 결과 파일이 필요하면 `--output DIRECTORY`를 붙입니다. JPEG·MP4·DNG·NV21·JSON·TXT·CSV·ZIP 파일을 크기와 SHA-256으로 검증하며 파일당 최대 64 GiB를 받습니다. 갤러리에서 내보낸 파일은 안전한 `media_ID.확장자` 이름으로 받고 원래 이름은 `original_name`에 남깁니다.
+
+```sh
+halcam run burst --camera 0 --option count=3 --stream yuv_format=NV21 --output ./photos
+halcam run results.export --option run=RUN_ID --output ./results
+halcam run benchmark.run --option "build=Candidate: A" --timeout 600 --output ./run
+halcam control live.set --option zoom=2
+halcam control record.stop
+```
+
+`control`은 새 작업을 만들지 않고 기존 프리뷰·녹화를 제어합니다. `record.stop`은 접수 상태를 반환하므로 저장이 끝났는지는 `status --request UUID`로 확인합니다. 자동으로 완료까지 기다리는 기본 경로는 APK에 포함된 셸 스크립트입니다.
 
 </details>
 
@@ -264,30 +276,36 @@ sequenceDiagram
 
 ## 요청이 끝나지 않거나 파일이 없을 때
 
-```mermaid
-sequenceDiagram
-    participant P as PC
-    participant A as 앱
-    Note over P,A: PC 대기가 끝나거나 연결이 끊김
-    P->>A: 같은 요청 ID로 상태 확인
-    alt 아직 실행 중
-        A-->>P: 진행 상태
-        Note over P: 기다린 뒤 다시 확인
-    else 완료됨
-        A-->>P: 결과와 파일 정보
-        P->>P: 필요한 파일만 다시 받기
-    end
-```
+**같은 촬영을 새로 요청하기 전에 기존 요청의 상태를 확인하세요.** PC의 대기 종료나 연결 끊김만으로 앱 작업이 실패한 것은 아닙니다.
 
-PC 대기 종료는 앱의 실패나 취소를 뜻하지 않습니다. 결과를 확인하기 전에 새 ID로 같은 촬영을 다시 요청하지 마세요.
+1. 아래 명령에서 `REQUEST_ID`를 기존 요청 ID로 바꿔 상태를 조회합니다.
 
-`--no-wait`은 접수 직후 반환합니다. `status`, `fetch`, `cancel`에서 ID를 생략하면 마지막 제출 요청을 사용합니다. `cancel UUID`로 취소할 수 있지만 이미 제출한 사진 저장은 완료될 수 있습니다.
+   ~~~sh
+   adb shell sh /data/local/tmp/halcam status REQUEST_ID
+   ~~~
 
-결과 파일은 기기의 `Download/HALCamera-cli/요청ID`에 크기와 SHA-256을 검증한 복사본으로 준비합니다. 이 복사본은 자동으로 삭제하지 않습니다.
+2. 아직 실행 중이면 기다린 뒤 다시 조회합니다. 중단해야 한다면 아래 명령으로 취소합니다. 이미 제출한 사진은 저장될 수 있습니다.
 
-1. `status UUID`로 앱의 상태를 확인합니다. PC의 대기 시간 종료는 앱 실행 실패를 뜻하지 않습니다.
-2. 이미 파일이 생성되었다면 `fetch UUID`로 회수를 재시도합니다. 실패하거나 취소된 요청에도 파일이 남을 수 있습니다.
-3. 파일 복사 오류와 앱의 촬영 오류를 구분합니다. 연결이 끊겼다는 이유만으로 새 요청을 제출하지 않습니다.
+   ~~~sh
+   adb shell sh /data/local/tmp/halcam cancel REQUEST_ID
+   ~~~
+3. 파일이 생성됐으면 아래 명령으로 회수를 다시 준비합니다. 실패·취소한 요청에도 파일이 남을 수 있습니다.
+
+   ~~~sh
+   adb shell sh /data/local/tmp/halcam fetch REQUEST_ID
+   ~~~
+
+4. 출력된 `adb pull` 명령으로 파일을 PC에 받습니다. 복사 실패와 촬영 실패를 구분하세요.
+
+<details markdown="1" id="cli-request-recovery" data-search-section>
+<summary>요청 ID 생략과 기기의 회수용 파일</summary>
+
+`--no-wait`은 접수 직후 반환합니다. `status`·`fetch`·`cancel`에서 ID를 생략하면 마지막 제출 요청을 사용합니다. 다른 작업과 혼동하지 않도록 복구할 때에는 기존 ID를 지정하세요.
+
+회수용 파일은 기기의 `Download/HALCamera-cli/요청ID`에 크기와 SHA-256을 검증한 복사본으로 준비합니다. 이 복사본은 자동으로 삭제하지 않습니다.
+
+</details>
+
 
 | 상태·오류 | 다음 행동 |
 | --- | --- |
@@ -295,7 +313,7 @@ PC 대기 종료는 앱의 실패나 취소를 뜻하지 않습니다. 결과를
 | `PERMISSION_REQUIRED` | 앱에서 필요한 카메라·마이크·저장소 권한을 허용합니다. |
 | `BUSY` | UI 또는 CLI의 현재 작업이 끝날 때까지 기다립니다. 기존 작업을 제어하는 `record stop`과 `cancel`은 실행 중에도 사용할 수 있습니다. |
 | `interrupted` | 앱 프로세스가 종료된 미완료 기록입니다. 남은 파일을 확인한 뒤 재실행 여부를 정합니다. 자동으로 재실행하지 않습니다. |
-| `PREFLIGHT_FAILED` | `streams`로 지원 크기와 코덱을 확인하고 출력 조합을 줄입니다. |
+| `PREFLIGHT_FAILED` | 오류 사유부터 읽습니다. Benchmark의 발열·절전 문제는 기기를 식히거나 절전 상태를 해제한 뒤 다시 확인합니다. Live 출력 문제는 `streams`로 지원 조건을 확인하고 조합을 줄입니다. |
 | `UNKNOWN_CASE` | `cts cases`를 다시 조회하고 반환된 키를 그대로 사용합니다. |
 | `REQUEST_CONFLICT` | 같은 요청 ID에 다른 인자를 사용했습니다. 기존 요청을 조회하고, 별도 작업을 의도했다면 새 ID로 제출합니다. |
 

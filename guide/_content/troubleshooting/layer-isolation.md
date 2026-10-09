@@ -6,6 +6,8 @@ sources:
   - tools/halcam/halcam/cli.py
   - app/src/main/java/dev/halcamera/MainActivity.kt
   - app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt
+  - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+  - app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt
   - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
   - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
   - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
@@ -27,7 +29,8 @@ verifications: []
 3. 센서 타임스탬프가 REALTIME 소스일 때만 앱 시각과 직접 비교합니다. 다른 시계의 값을 빼면 지연을 해석할 수 없습니다.
 4. 앱 기록만으로 프레임워크와 HAL 중 원인을 확정하지 않습니다. 시스템 트레이스와 카메라 서비스 로그로 추가 확인해야 합니다.
 
-### 표본과 보존 규칙
+<details markdown="1" id="sample-retention-internals" data-search-section>
+<summary>개발자용: 표본 계산과 이벤트 보존 규칙</summary>
 
 | 규칙 | 확인할 코드와 영향 |
 | --- | --- |
@@ -39,6 +42,8 @@ verifications: []
 
 지표의 표본 부족과 실행 전체의 validity는 별도로 계산됩니다. `MetricExtractor`는 워밍업을 제외한 프레임 수와 지표별 가용 데이터로 표본의 `unknownReason`을 정합니다. `RunAssembler`는 `observation.steadyFrames.size`를 `ValidityInputs.observedFrames`로 전달하고, `RunValidityEvaluator`는 이 값이 기본 15개에 미달하거나 시작·촬영 표본이 profile의 기대 개수보다 적으면 실행에 `INSUFFICIENT_SAMPLES` flag를 붙입니다. 이 평가는 개별 지표의 `unknownReason`을 읽지 않습니다.
 
+</details>
+
 ### Callback에 값이 없을 때
 
 현재 엔진과 Android 버전, 표시 중인 프레임의 요청 대상을 확인합니다. `No callback`은 관측할 수 없는 경로이며 `Awaiting data`와 다릅니다. 행별 수신 지점과 시간 기준, 상태별 의미는 [Callback](callback.md)에서 확인하세요.
@@ -47,11 +52,24 @@ verifications: []
 
 **앨범에 YUV 사진이 없다면 저장 포맷부터 확인하세요.** NV21 파일은 파일 앱에서 찾아야 합니다. 파일명·폴더·지원 조건은 [저장 파일 표](engine.md#yuv-저장-포맷)를 확인하세요. Camera2 사진이 5초 뒤 실패한다면 같은 센서 시각의 최종 CaptureResult가 누락됐는지도 확인합니다.
 
-Camera2의 기본 사진 저장에는 센서 타임스탬프가 일치하는 YUV·JPEG 버퍼가 모두 필요합니다. Live 스트림에서 출력을 하나만 켰다면 해당 출력만 기다리며, 그 이미지도 요청의 센서 시각과 일치해야 합니다. CameraX는 두 출력을 켰을 때 JPEG와 시각이 가장 가까운 analysis 프레임을 연결하므로, `media_saved.yuvOffsetNs`로 차이를 확인합니다. CameraX의 JPEG 단독 촬영은 analysis를 기다리지 않으며, YUV 단독 촬영은 요청 뒤의 analysis 프레임을 저장합니다. 엔진별 연결 기준을 먼저 구분한 뒤 Callback과 저장 오류를 대조하세요. 저장 완료 안내와 녹화 조작법은 [Live](live.md#live에서-촬영하세요)에 있습니다.
+<details markdown="1" id="photo-pair-diagnostics" data-search-section>
+<summary>촬영 실패: 엔진별 이미지 연결 기준 확인</summary>
+
+Camera2의 기본 사진 저장에는 센서 타임스탬프가 일치하는 YUV·JPEG 버퍼가 모두 필요합니다. Live 스트림에서 출력을 하나만 켰다면 해당 출력만 기다리며, 그 이미지도 요청의 센서 시각과 일치해야 합니다.
+
+CameraX는 두 출력을 켰을 때 JPEG와 시각이 가장 가까운 analysis 프레임을 연결하므로, `media_saved.yuvOffsetNs`로 차이를 확인합니다. JPEG 단독 촬영은 analysis를 기다리지 않으며, YUV 단독 촬영은 요청 뒤의 analysis 프레임을 저장합니다. 엔진별 연결 기준을 구분한 뒤 Callback과 저장 오류를 대조하세요.
+
+</details>
+
+#### 플래시를 켜면 촬영이 늦어집니다
 
 Camera2의 Flash Auto·On에서 precapture 측광이 3초 안에 끝나지 않으면 안내 문구를 표시하고 촬영을 진행합니다. 촬영 지연을 확인할 때 이 대기 시간도 구분하세요. CameraX의 플래시 측광은 ImageCapture가 처리합니다.
 
-AE 잠금을 켠 채 녹화를 시작하거나 멈추면 새 세션에서 노출을 다시 맞춘 뒤 잠급니다. 잠금 전과 1/3 EV 넘게 달라지면 차이를 알립니다. Camera2 녹화에서는 노출 시간이 30fps의 프레임 길이인 약 33 ms로 제한되므로 어두운 장면의 노출이 달라질 수 있습니다. 요청과 적용 결과는 `request_observed`·`capture_result`·`ae_relocked` 이벤트로 대조합니다.
+#### 녹화 전후에 노출이 달라집니다
+
+AE 잠금을 켠 채 녹화를 시작하거나 멈추면 새 세션에서 노출을 다시 맞춘 뒤 잠급니다. 잠금 전과 1/3 EV 넘게 달라지면 차이를 알립니다.
+
+Camera2의 수동 노출 시간은 선택한 녹화 FPS와 센서 범위로 제한합니다. 프레임 길이는 30fps에서 약 33 ms, 60fps에서 약 17 ms이므로 어두운 장면의 노출이 달라질 수 있습니다. 요청과 적용 결과는 `request_observed`·`capture_result`·`ae_relocked` 이벤트로 대조합니다.
 
 ### 실행 기록과 CSV의 개수가 다를 때
 

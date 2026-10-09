@@ -48,11 +48,11 @@ decisions: []
 verifications: []
 ---
 
-**변경할 기능의 패키지부터 여세요.** 아래 경로는 `app/src/main/java/dev/halcamera/`를 기준으로 합니다.
+**변경할 기능의 패키지부터 여세요.** Kotlin 패키지는 `app/src/main/java/dev/halcamera/`를 기준으로 합니다. `app/src/main/assets/halcam.sh`, `tools/halcam/`, `ctsvendor/`는 저장소 루트 기준 경로입니다.
 
 | 영역 | 하는 일 | 자세히 |
 | --- | --- | --- |
-| `cli/`, `assets/halcam.sh`, `tools/halcam/` | PC 명령을 앱 기능에 연결합니다. | [CLI](cli.md) |
+| `cli/`, `app/src/main/assets/halcam.sh`, `tools/halcam/` | PC 명령을 앱 기능에 연결합니다. | [CLI](cli.md) |
 | `camera/` | 카메라를 열고 촬영합니다. | [Engine Comparison](engine.md) |
 | `metrics/` | 이벤트로 지표를 계산합니다. | [측정 흐름](#주요-실행-흐름) |
 | `benchmark/` | 측정·저장·비교를 처리합니다. | [Benchmark](benchmark.md) |
@@ -62,7 +62,7 @@ verifications: []
 | `ui/`와 `MainActivity.kt` | 화면과 공통 디자인을 구성합니다. | [Live](live.md) |
 
 <details markdown="1" id="detail-6a4f150e2a" data-search-section>
-<summary>cli/, assets/halcam.sh, tools/halcam/</summary>
+<summary>cli/, app/src/main/assets/halcam.sh, tools/halcam/</summary>
 
 - shell 호출자 검사, 영속 요청 상태, artifact 등록과 PC 파일 수집을 담당합니다.
 - 화면 어댑터 `LiveController`, `CtsController`, `BenchmarkController`도 이 패키지에 둡니다.

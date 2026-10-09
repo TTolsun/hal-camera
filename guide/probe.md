@@ -15,6 +15,8 @@ title: Probe
 
 다른 검사를 하려면 Lab으로 돌아갑니다.
 
+읽기 실패는 미지원 판정이 아닙니다. 실패 항목과 내보낸 JSON을 보존하고, 반복되면 [재현 자료](troubleshooting.md#문제-발생-시-수집할-정보)를 함께 기록하세요.
+
 <p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
 
 <figure class="app-screenshot" id="screen-probe">
@@ -43,7 +45,7 @@ STREAMS는 PRIVATE·JPEG 같은 출력 형식별로 나뉩니다. 이어서 HIGH
 
 ## 사양을 내보내세요
 
-`TXT`와 `JSON`은 모든 카메라의 사양을 파일로 공유하고, `복사`는 현재 카메라만 클립보드에 넣습니다. 이미지 픽셀은 포함되지 않습니다. 같은 기기의 빌드 전후를 비교하거나, 다른 기기의 HAL이 무엇을 공개하는지 나란히 볼 때 JSON을 씁니다. Benchmark 결과 JSON과는 별개 파일이며 자동으로 연결되지 않습니다.
+`TXT`와 `JSON`은 모든 카메라의 사양을 파일로 공유하고, `Copy`는 현재 카메라만 클립보드에 넣습니다. 이미지 픽셀은 포함되지 않습니다. 같은 기기의 빌드 전후를 비교하거나, 다른 기기의 HAL이 무엇을 공개하는지 나란히 볼 때 JSON을 씁니다. Benchmark 결과 JSON과는 별개 파일이며 자동으로 연결되지 않습니다.
 
 <details>
 <summary>구현과 코드 근거</summary>

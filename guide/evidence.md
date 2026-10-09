@@ -84,10 +84,6 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 
 <!-- omm:end id=device-notes -->
 
-## 문서를 수정하고 검증하세요
-
-원본 위치, 생성 명령, 검사 순서는 [Contributing](contributing.md)로 옮겼습니다.
-
 ## 문서 검토 상태
 
 아래 표는 이 페이지에 연결된 CameraX 기기 관찰 원고의 검토 상태입니다. 위 CTS 요약을 포함한 수동 본문의 검토 범위는 PR 기록에서 확인합니다.
