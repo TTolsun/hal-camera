@@ -1,5 +1,5 @@
 ---
-title: 자동화
+title: Automation
 ---
 <h1 lang="en">Run. Repeat. Collect.</h1>
 

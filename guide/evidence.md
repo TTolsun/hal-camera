@@ -1,5 +1,5 @@
 ---
-title: 검증 기록
+title: Validation
 ---
 <h1 lang="en">Trust starts with a trace.</h1>
 

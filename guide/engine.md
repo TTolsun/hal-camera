@@ -1,5 +1,5 @@
 ---
-title: 엔진 차이
+title: Engine Comparison
 nav_order: 5
 ---
 <h1 lang="en">Know what differs.</h1>

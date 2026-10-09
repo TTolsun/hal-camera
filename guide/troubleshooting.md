@@ -1,5 +1,5 @@
 ---
-title: 문제 찾기
+title: Troubleshooting
 nav_order: 7
 ---
 <h1 lang="en">Trace the cause.</h1>

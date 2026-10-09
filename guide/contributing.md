@@ -1,5 +1,5 @@
 ---
-title: 문서 관리
+title: Contributing
 ---
 <h1 lang="en">Keep the guide current.</h1>
 

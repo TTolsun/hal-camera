@@ -1,5 +1,5 @@
 ---
-title: 시작하기
+title: Quickstart
 ---
 <h1 lang="en">Install. Open. Check.</h1>
 

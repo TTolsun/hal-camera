@@ -1,5 +1,5 @@
 ---
-title: 앱 빌드
+title: Build
 ---
 <h1 lang="en">Build the app.</h1>
 
