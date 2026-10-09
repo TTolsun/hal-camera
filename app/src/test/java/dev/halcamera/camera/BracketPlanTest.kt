@@ -33,10 +33,10 @@ class BracketPlanTest {
         assertFalse(on.copy(manual = ManualControls(exposure = ManualExposure(iso = 100, timeNs = 10_000_000L))).coerce(rear, false).bracket)
     }
 
-    @Test fun `the summary names the EVs it asked for`() {
+    @Test fun `the compact summary reports saves and the failed shot`() {
         val shots = listOf(BurstShot(0, "a", 0, Result.success(1)), BurstShot(1, "b", 600, Result.failure(IllegalStateException("Capture timed out"))),
             BurstShot(2, "c", 1200, Result.success(1)))
-        assertEquals("Bracket · 2/3 saved (EV 0, EV −2.0, EV +2.0) · #2 failed: Capture timed out",
-            LiveBurst.describeBracket(BurstSummary("x", 3, 0, shots, null), listOf("EV 0", "EV −2.0", "EV +2.0")))
+        assertEquals("AEB · 2/3 saved · #2 failed: Capture timed out",
+            LiveBurst.describeBracket(BurstSummary("x", 3, 0, shots, null)))
     }
 }

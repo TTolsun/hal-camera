@@ -114,7 +114,7 @@ test('all configured elements fit the prompt budget and exclude descendant field
         assert.ok(input.files.length > 0); count++;
       }
     }
-    assert.equal(count, 92); // Includes separate Dual Camera2, CameraX, and video-pair evidence.
+    assert.equal(count, 93); // Includes separate capture-sequence evidence.
   `));
 });
 

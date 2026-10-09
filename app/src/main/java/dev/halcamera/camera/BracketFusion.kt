@@ -23,7 +23,7 @@ import kotlin.math.roundToInt
  * read in strips of [STRIP_ROWS] rows. The output keeps the first shot's EXIF orientation, because the camera's
  * JPEG stores its pixels sideways and says so only in EXIF.
  */
-class BracketFusion(context: Context) {
+class BracketFusion(context: Context) : AutoCloseable {
     private val resolver = context.applicationContext.contentResolver
     private val library = MediaLibrary(context)
     private val io = Executors.newSingleThreadExecutor()
@@ -38,6 +38,9 @@ class BracketFusion(context: Context) {
             main.post { done(result) }
         }
     }
+
+    /** Let accepted saves finish, then release the worker instead of retaining one per Activity. */
+    override fun close() { io.shutdown() }
 
     private fun fuseNow(bracketId: String, sources: List<Source>): PhotoArtifact {
         require(sources.size >= 2) { "Need at least two shots" }

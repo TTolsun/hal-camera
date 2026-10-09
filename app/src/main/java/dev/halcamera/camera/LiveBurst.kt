@@ -27,20 +27,28 @@ class LiveBurst(
     /** The burst in progress; letting go of the shutter stops it, and anything that closes the camera cancels it. */
     var run: BurstRun<PhotoResult>? = null
         private set
+    var bracketing = false
+        private set
+    var fusing = false
+        private set
+    private var disposed = false
+
+    /** All scene controls stay fixed until the last source has been saved. */
+    val controlsLocked get() = run != null
 
     /** The shutter is being held: start shooting, unless the screen is no longer ready. */
     fun hold(session: String) {
-        if (run != null || camera() == null || !ready()) return
+        if (disposed || run != null || camera() == null || !ready()) return
+        bracketing = false
         val burst = BurstRun<PhotoResult>(SimpleDateFormat("HHmmss_SSS", Locale.US).format(Date()), BurstRun.MAX_COUNT, 0L,
             clock, schedule,
             { ready() && camera()?.mediaBusy == false },
             { id, done -> camera()?.capturePhoto(id, done) ?: done(Result.failure(IllegalStateException("Camera closed"))) },
-            { changed() },
+            { if (!disposed) changed() },
             { summary ->
                 run = null
                 event(session, "burst_done", fields(summary))
-                report(describe(summary))
-                changed()
+                if (!disposed) { report(describe(summary)); changed() }
             })
         run = burst
         event(session, "burst_start", mapOf("burstId" to burst.id, "maxCount" to burst.count))
@@ -56,33 +64,45 @@ class LiveBurst(
      */
     fun bracket(session: String, base: LiveControls, support: LiveControlSupport) {
         val range = support.evRange
-        if (run != null || camera() == null || !ready() || range == null) return
+        if (disposed || fusing || run != null || camera() == null || !ready() || range == null ||
+            base.manual.exposure != null) return
         val tuning = camera() as? LiveTuning ?: return
+        bracketing = true
         val evs = BracketPlan.evIndices(base.evIndex, range, support.evStep)
         val id = SimpleDateFormat("HHmmss_SSS", Locale.US).format(Date())
         val burst = BurstRun<PhotoResult>(id, evs.size, 0L, clock, schedule,
             { ready() && camera()?.mediaBusy == false },
             { requestId, done -> camera()?.capturePhoto(requestId, done) ?: done(Result.failure(IllegalStateException("Camera closed"))) },
-            { changed() },
+            { if (!disposed) changed() },
             { summary ->
                 run = null
-                tuning.setControls(base)
+                bracketing = false
+                if (camera() === tuning) tuning.setControls(base)
                 val labels = evs.map { support.evLabel(it) }
                 event(session, "bracket_done", fields(summary) + ("evRequested" to labels))
-                changed()
+                if (disposed) return@BurstRun
                 val sources = summary.shots.mapNotNull { it.result.getOrNull()?.let(BracketFusion::pick) }
                 val skipped = when {
                     fusion == null -> ""
-                    summary.saved < evs.size -> " · HDR skipped: not every shot saved"
+                    summary.saved < evs.size -> " · HDR skipped"
                     sources.size < evs.size -> " · HDR skipped: no JPEG output"
                     else -> null
                 }
-                if (skipped != null || fusion == null) report(describeBracket(summary, labels) + (skipped ?: ""))
-                // The fourth image: the shots fused. The camera is free meanwhile; the summary waits for it.
-                else fusion.fuse(id, sources) { fused ->
-                    event(session, "bracket_fused", mapOf("burstId" to id, "file" to fused.getOrNull()?.name,
-                        "error" to fused.exceptionOrNull()?.message))
-                    report(describeBracket(summary, labels) + (fused.exceptionOrNull()?.let { " · HDR failed: ${it.message}" } ?: " · HDR saved"))
+                if (skipped != null || fusion == null) {
+                    report(describeBracket(summary) + (skipped ?: ""))
+                    changed()
+                } else {
+                    fusing = true
+                    changed()
+                    fusion.fuse(id, sources) { fused ->
+                        fusing = false
+                        event(session, "bracket_fused", mapOf("burstId" to id, "file" to fused.getOrNull()?.name,
+                            "error" to fused.exceptionOrNull()?.message))
+                        if (!disposed) {
+                            report(describeBracket(summary) + (fused.exceptionOrNull()?.let { " · HDR failed: ${it.message}" } ?: " · HDR saved"))
+                            changed()
+                        }
+                    }
                 }
             },
             name = { "bracket-$id-${it + 1}-${BracketPlan.tag(evs[it], support.evStep)}" },
@@ -94,13 +114,21 @@ class LiveBurst(
     }
 
     /** The shutter was let go: no further shot. The one in flight is still saved. */
-    fun release() { run?.cancel(RELEASED) }
+    fun release() { if (!bracketing) run?.cancel(RELEASED) }
+
+    /** Tapping the stop-shaped shutter cancels either sequence, keeping a shot already in flight. */
+    fun stop() { run?.cancel("Stopped"); if (!disposed) changed() }
 
     /** Anything that closes the camera ends the burst before its next shot. */
     fun close() { run?.cancel("Camera closed") }
 
+    /** Finish already accepted file work, but never deliver UI updates to a destroyed screen. */
+    fun dispose() { disposed = true; close(); fusion?.close() }
+
     /** The shutter's description while a burst runs, or null. */
-    val label: String? get() = run?.let { "Burst: ${it.saved} saved. Release to stop" }
+    val label: String? get() = run?.let {
+        if (it.stopping) "Stopping…" else if (bracketing) "AEB ${it.saved}/${it.count}" else "Burst · ${it.saved}"
+    } ?: if (fusing) "HDR…" else null
 
     private fun fields(summary: BurstSummary<PhotoResult>) = mapOf("burstId" to summary.id,
         "maxCount" to summary.requested, "saved" to summary.saved, "stopReason" to summary.stopReason,
@@ -113,9 +141,9 @@ class LiveBurst(
         /** How long a bracket shot waits after its EV is sent; about 15 preview frames at 30 fps. */
         const val SETTLE_MS = 500L
 
-        /** "Bracket · 3/3 saved (EV 0, EV −2.0, EV +2.0)". */
-        fun describeBracket(summary: BurstSummary<*>, evs: List<String>): String = buildString {
-            append("Bracket · ${summary.saved}/${summary.requested} saved (${evs.joinToString(", ")})")
+        /** Requested EVs stay in capture metadata; the shutter line reports the outcome. */
+        fun describeBracket(summary: BurstSummary<*>): String = buildString {
+            append("AEB · ${summary.saved}/${summary.requested} saved")
             summary.failedShots.forEach { append(" · #${it.index + 1} failed: ${it.result.exceptionOrNull()?.message ?: "unknown"}") }
             summary.stopReason?.let { append(" ($it)") }
         }

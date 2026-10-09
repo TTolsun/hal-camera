@@ -69,11 +69,12 @@
 <figcaption>Camera2의 사진 모드입니다. 하단에서 실시간 정보, 줌, 셔터와 최근 썸네일을 확인할 수 있습니다. <a href="assets/screenshots/live.png">원본 보기</a></figcaption>
 </figure><h3 id="연사">연사</h3>
 <ol>
-<li>사진 모드에서 셔터를 길게 누릅니다.</li>
+<li>사진 모드에서 AEB를 끄고 셔터를 길게 누릅니다.</li>
 <li>원하는 만큼 찍었으면 손을 뗍니다.</li>
 <li>저장한 장수와 실패 안내를 확인합니다.</li>
 </ol>
 <p><strong>저장 결과:</strong> 손을 뗄 때 이미 시작한 사진은 저장됩니다. 다음 사진은 찍지 않습니다.</p>
+<p>TalkBack에서는 <code>Start burst</code>로 시작하고 셔터의 <code>Stop burst</code>로 멈춥니다.</p>
 <details id="burst-limits" data-search-section>
 <summary>촬영 속도·중단 조건·파일 식별자</summary><ul>
 <li>앞 장의 저장이 끝나면 다음 장을 찍습니다. 장수나 간격은 고르지 않으며 카메라와 저장이 허용하는 속도로 촬영합니다.</li>
@@ -83,11 +84,12 @@
 </details><h3 id="aeb">AEB</h3>
 <ol>
 <li>상단 제어 줄에서 <a href="glossary.html#aeb">AEB</a>를 켭니다.</li>
-<li>셔터를 <strong>짧게 한 번</strong> 누릅니다. 길게 누르면 일반 연사로 동작합니다.</li>
-<li>촬영 결과와 HDR 저장 안내를 확인합니다.</li>
+<li>셔터를 한 번 누릅니다. AEB가 켜져 있으면 길게 눌러도 일반 연사로 바뀌지 않습니다.</li>
+<li>셔터 위의 진행 장수와 HDR 저장 결과를 확인합니다. 중단하려면 흰 정지 사각형으로 바뀐 셔터를 누릅니다.</li>
 </ol>
 <p><strong>저장 결과:</strong> 현재 EV, 2 EV 어둡게, 2 EV 밝게 원본 3장을 촬영합니다. 합성 조건을 충족하면 <code>_AEB_HDR.jpg</code>도 저장합니다. 촬영이 끝나면 원래 EV로 돌아갑니다.</p>
 <p>수동 노출·동영상 모드·EV 미지원 카메라에서는 AEB를 사용할 수 없습니다. 움직이는 물체는 합성 이미지에 겹쳐 보일 수 있습니다.</p>
+<p>촬영 중에는 EV·수동 제어·줌·터치 측광을 잠급니다. 합성 중에는 <code>HDR…</code>를 표시하며, 다음 AEB는 합성이 끝난 뒤 시작합니다.</p>
 <p>합성은 원본 3장이 모두 저장되고 각 장에 사용할 JPEG 파일이 있을 때 진행합니다. 카메라 JPEG를 먼저 사용하고, 없으면 YUV에서 변환한 JPEG를 사용합니다. NV21이나 RAW만 저장했다면 합성할 JPEG가 없습니다.</p>
 <table>
 <thead>
@@ -101,8 +103,8 @@
 <td>합성 이미지가 저장됐습니다.</td>
 </tr>
 <tr>
-<td><code>HDR skipped: not every shot saved</code></td>
-<td>원본 3장이 모두 저장되지 않아 합성을 시작하지 않았습니다.</td>
+<td><code>HDR skipped</code></td>
+<td>함께 표시된 저장 장수·중단·실패 결과를 확인하세요. 원본 3장이 모두 저장되지 않아 합성을 시작하지 않았습니다.</td>
 </tr>
 <tr>
 <td><code>HDR skipped: no JPEG output</code></td>
