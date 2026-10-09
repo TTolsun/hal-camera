@@ -8,6 +8,8 @@ ExpandingZoomControl은 현재 배율을 눌러 후보를 펼치고 선택 후 �
 
 모드 선택만으로 촬영하지 않습니다. Photo 셔터는 선택한 YUV·JPEG·RAW 출력을 저장합니다. Video 셔터는 오디오 권한 처리 후 녹화를 시작하고 정지 시 저장합니다. 녹화 중 셔터는 정지 사각형으로 바뀌고 모드 행은 녹화 시간으로 대체됩니다. 녹화 중에는 카메라·엔진·모드 변경을 막습니다. Gallery는 최근 저장 썸네일에서 엽니다.
 
+연사·AEB 촬영 중에도 셔터를 정지 사각형으로 표시하며 셔터 위 한 줄에서 저장 장수와 HDR 합성 상태를 확인합니다. 촬영 중에는 카메라·엔진·모드뿐 아니라 EV·수동 제어·줌·터치 측광도 잠급니다. 촬영 순서와 중단 처리는 LiveBurst, 진행·결과 표시는 CaptureFeedback이 담당합니다.
+
 Dual · P와 Dual · V는 Live의 close(done) 이후 DualPreviewActivity를 엽니다. 반환된 Photo·Video 모드와 엔진 선택을 반영한 뒤 Live를 재개합니다. 듀얼 화면과 녹화 구현은 dual-preview-screen 요소가 담당합니다. Live의 비동기 재오픈과 권한 대기 중에는 중복 진입을 막습니다.
 
 LiveIndicator의 크기 표시를 누르면 Live Streams를 엽니다. 설정과 직전 정상 구성은 카메라·엔진별로 유지하며, 적용 또는 취소 후 Live로 돌아옵니다. Lab도 Activity Result로 설정 변경을 전달합니다. Benchmark profile은 Live 설정과 분리합니다. 종료 완료 전에 다른 카메라를 열지 않으며, CLI 명령 중에는 UI의 충돌하는 조작을 비활성화합니다.

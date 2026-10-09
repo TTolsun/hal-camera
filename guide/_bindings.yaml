@@ -217,6 +217,14 @@ sources:
           - app/src/main/java/dev/halcamera/camera/TouchMeter.kt
           - app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt
           - app/src/main/java/dev/halcamera/ui/FocusRing.kt
+      screens/expert-screen/live-controls/capture-sequence:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/LiveBurst.kt
+          - app/src/main/java/dev/halcamera/camera/BurstRun.kt
+          - app/src/main/java/dev/halcamera/camera/BracketFusion.kt
+          - app/src/main/java/dev/halcamera/camera/ExposureFusion.kt
+          - app/src/main/java/dev/halcamera/ui/CaptureFeedback.kt
+          - app/src/main/java/dev/halcamera/ui/ShutterButton.kt
       screens/benchmark-screen:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
