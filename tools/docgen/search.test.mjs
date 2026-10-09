@@ -24,5 +24,13 @@ test('shows the matching body passage even near the end of a long section', () =
   const [result] = search([{ ...sections[0], text }], '희귀검색어');
   assert.ok(result.snippet.includes('희귀검색어'));
   assert.ok(result.snippet.startsWith('…'));
-  assert.ok(result.snippet.length <= 222);
+  assert.ok(result.snippet.length <= 132);
+});
+
+test('prefers a complete body phrase over scattered matches and keeps it in the excerpt', () => {
+  const scattered = { ...sections[0], heading: '도착 시각', text: '시각 설명입니다. '.repeat(30) + '센서 데이터', url: '/scattered' };
+  const exact = { ...sections[0], text: '설명입니다. '.repeat(30) + '센서 시각을 비교합니다.', url: '/exact' };
+  const [result] = search([scattered, exact], '센서 시각');
+  assert.equal(result.url, '/exact');
+  assert.ok(result.snippet.includes('센서 시각'));
 });

@@ -10,14 +10,20 @@ export function search(sections, query) {
     const heading = normalize(section.heading);
     const body = normalize(section.text);
     if (!terms.every(term => `${title} ${heading} ${body}`.includes(term))) return null;
-    const score = (heading.includes(phrase) ? 12 : 0) + (body.includes(phrase) ? 4 : 0)
+    const score = (heading.includes(phrase) ? 40 : 0) + (title.includes(phrase) ? 24 : 0) + (body.includes(phrase) ? 20 : 0)
       + terms.reduce((sum, term) => sum + (heading.includes(term) ? 8 : 0)
       + (title.includes(term) ? 4 : 0) + (body.includes(term) ? 1 : 0), 0);
     const positions = terms.map(term => body.indexOf(term)).filter(index => index >= 0);
     const position = body.includes(phrase) ? body.indexOf(phrase) : (positions.length ? Math.min(...positions) : 0);
-    const start = Math.max(0, position - 65);
-    const excerpt = section.text.slice(start, start + 220);
-    return { ...section, score, snippet: `${start ? '…' : ''}${excerpt}${start + 220 < section.text.length ? '…' : ''}` };
+    let start = Math.max(0, position - 32);
+    const nextSpace = body.indexOf(' ', start);
+    if (start && nextSpace >= start && nextSpace < position) start = nextSpace + 1;
+    const length = Math.max(130, phrase.length + 64);
+    const limit = Math.min(section.text.length, start + length);
+    const boundary = section.text.lastIndexOf(' ', limit);
+    const end = limit < section.text.length && boundary > position + phrase.length ? boundary : limit;
+    const excerpt = section.text.slice(start, end);
+    return { ...section, score, snippet: `${start ? '…' : ''}${excerpt}${end < section.text.length ? '…' : ''}` };
   }).filter(Boolean).sort((a, b) => b.score - a.score || a.url.localeCompare(b.url));
 }
 

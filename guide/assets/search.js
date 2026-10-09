@@ -7,6 +7,8 @@ const input = dialog.querySelector('input');
 const status = dialog.querySelector('#search-status');
 const results = dialog.querySelector('#search-results');
 const retry = dialog.querySelector('.search-retry');
+const suggestions = dialog.querySelector('.search-suggestions');
+const resultBody = dialog.querySelector('.search-body');
 const pages = new Map();
 let sections = [];
 let loading;
@@ -33,15 +35,17 @@ function highlight(element, value, terms) {
 
 function render() {
   results.replaceChildren();
+  resultBody.scrollTop = 0;
+  suggestions.hidden = Boolean(input.value.trim());
   retry.hidden = !failure;
   if (loading) { status.textContent = '문서 본문을 불러오고 있습니다…'; return; }
   const query = input.value.trim();
   const notice = failure ? `${failure} ` : '';
   if (!ready) { status.textContent = notice; return; }
-  if (!query) { status.textContent = `${notice}${pages.size}개 문서의 제목·본문·표·코드 예제를 검색할 수 있습니다.`; return; }
+  if (!query) { status.textContent = `${notice}${pages.size}개 문서에서 검색합니다.`; return; }
   const matches = search(sections, query);
   const visible = matches.slice(0, 50);
-  status.textContent = `${notice}${matches.length ? `${matches.length}개 절을 찾았습니다.${matches.length > 50 ? ' 상위 50개를 표시합니다.' : ''}` : '검색 결과가 없습니다. 다른 검색어를 입력해 보세요.'}`;
+  status.textContent = `${notice}${matches.length ? `${new Set(matches.map(match => match.url.split('#')[0])).size}개 문서에서 ${matches.length}개 결과를 찾았습니다.${matches.length > 50 ? ' 상위 50개를 표시합니다.' : ''}` : '검색 결과가 없습니다. 검색어를 줄이거나 API 이름으로 찾아보세요.'}`;
   const terms = normalize(query).split(/\s+/).filter(Boolean);
   for (const match of visible) {
     const item = document.createElement('li');
@@ -55,7 +59,8 @@ function render() {
     highlight(heading, match.heading, terms);
     const snippet = document.createElement('p');
     highlight(snippet, match.snippet, terms);
-    link.append(title, heading, snippet);
+    link.append(title, heading);
+    if (match.snippet) link.append(snippet);
     item.append(link);
     results.append(item);
   }
@@ -105,6 +110,7 @@ function open() {
   if (!dialog.open) {
     returnFocus = document.activeElement;
     dialog.showModal();
+    document.documentElement.classList.add('search-visible');
   }
   input.focus();
   input.select();
@@ -114,7 +120,25 @@ openButton.hidden = false;
 openButton.querySelector('kbd').textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
 openButton.addEventListener('click', open);
 dialog.querySelector('.search-close').addEventListener('click', () => dialog.close());
-dialog.addEventListener('close', () => returnFocus?.focus());
+dialog.addEventListener('close', () => {
+  document.documentElement.classList.remove('search-visible');
+  returnFocus?.focus({ preventScroll: true });
+});
+let backdropPress = false;
+function outside(event) {
+  const rect = dialog.getBoundingClientRect();
+  return event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom;
+}
+dialog.addEventListener('pointerdown', event => { backdropPress = event.target === dialog && outside(event); });
+dialog.addEventListener('click', event => {
+  if (backdropPress && event.target === dialog && outside(event)) dialog.close();
+  backdropPress = false;
+});
+suggestions.querySelectorAll('button').forEach(button => button.addEventListener('click', () => {
+  input.value = button.dataset.query;
+  input.focus();
+  render();
+}));
 retry.addEventListener('click', load);
 input.addEventListener('input', event => { if (!event.isComposing) render(); });
 input.addEventListener('compositionend', render);
