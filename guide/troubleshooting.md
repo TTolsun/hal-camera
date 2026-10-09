@@ -14,22 +14,18 @@ nav_order: 7
 | 실행 기록이나 CSV가 예상과 다릅니다. | [필터와 결과 조건](#실행-기록과-csv의-개수가-다를-때)을 확인합니다. |
 | PC 명령이 끝나지 않습니다. | [기존 요청의 상태](#cli-작업이-끝나지-않을-때)를 조회합니다. |
 
-## 재현 자료를 모으세요
-
-증상이 반복되면 아래 순서로 조건과 로그를 남기세요.
+<span id="재현-자료를-모으세요"></span>
 
 ## 문제 발생 시 수집할 정보
 
-재현 조건과 기기에 설치한 앱 버전을 함께 남기세요. 문서의 빌드 정보가 설치한 APK와 같다고 가정하지 않습니다.
-
-1. 기기 모델과 Android 빌드 번호를 기록합니다.
-2. 사용한 엔진인 Camera2 또는 CameraX와 카메라 엔드포인트를 기록합니다.
-3. 재현 절차와 반복 횟수 중 문제가 발생한 횟수를 기록합니다.
-4. `이벤트 저장 · ZIP`으로 생성한 번들과 관련 로그를 확보합니다.
+1. 기기 모델, Android 빌드 번호와 **설치된 앱 버전**을 기록합니다.
+2. 엔진·카메라와 출력 크기·FPS·촬영 설정을 기록합니다.
+3. 재현 절차와 전체 시도 중 문제가 발생한 횟수를 기록합니다.
+4. Live의 `Save Events · ZIP`을 눌러 진단 기록을 저장합니다.
 
 ## 로그와 진단 자료
 
-Live의 `이벤트 저장 · ZIP`은 직전 10초와 이후 5초의 이벤트를 incident ZIP으로 저장합니다. 저장한 파일은 `Lab → ZIP Archives`에서 공유합니다.
+`Save Events · ZIP`은 직전 10초와 이후 5초의 이벤트·메타데이터를 저장합니다. 이미지 픽셀은 포함하지 않습니다. 저장이 끝나면 `Lab → ZIP Archives`에서 공유하세요.
 
 <p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
 
@@ -37,6 +33,9 @@ Live의 `이벤트 저장 · ZIP`은 직전 10초와 이후 5초의 이벤트를
 <a href="assets/screenshots/incident-history.png" aria-label="앱의 Incident ZIP 기록 목록 원본 보기"><img src="assets/screenshots/incident-history.png" alt="앱의 Incident ZIP 기록 목록" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>Lab → ZIP Archives에서 기기에 저장된 incident 목록을 열었습니다. 기존 기록을 조회한 화면이며 이 촬영에서 ZIP 생성이나 공유를 실행하지 않았습니다. <a href="assets/screenshots/incident-history.png">원본 보기</a></figcaption>
 </figure>
+
+<details markdown="1" id="diagnostic-log-tags" data-search-section>
+<summary>개발자용: logcat 태그와 조회 명령</summary>
 
 아래는 현재 추출기가 `TAG` 상수와 `Log.*` 호출에서 찾은 로그 태그입니다. 목록에 없다는 이유만으로 코드 전체에서 해당 태그를 사용하지 않는다고 단정할 수는 없습니다.
 
@@ -70,7 +69,7 @@ Live의 `이벤트 저장 · ZIP`은 직전 10초와 이후 5초의 이벤트를
 adb logcat -s BenchmarkReport BenchmarkStore ProfileCompatibility
 ~~~
 
-incident 번들은 이벤트와 메타데이터를 담습니다. 이미지 픽셀은 저장하지 않습니다.
+</details>
 
 ## 앱과 프레임워크·HAL을 구분하세요
 
@@ -171,4 +170,4 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 - `app/src/main/java/dev/halcamera/telemetry/`에서 이벤트 기록과 incident 내보내기를 확인합니다.
 - `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`에서 지표 계산 규칙을 확인합니다.
 
-**다음 단계:** [문제 발생 시 수집할 정보](#문제-발생-시-수집할-정보)의 첫 단계에 따라 문제 실행의 `unknownReason`과 입력 조건을 확인하세요.
+**다음 단계:** [수집할 정보](#문제-발생-시-수집할-정보)를 따라 설치된 앱 버전부터 기록하세요.

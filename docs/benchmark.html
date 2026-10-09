@@ -30,10 +30,12 @@
     <h1 lang="en">Measurements with meaning.</h1><p><strong>같은 조건에서 측정한 실행을 비교하세요.</strong> Benchmark는 카메라 열기, 프리뷰, 촬영, 녹화에 걸린 시간과 콜백을 기록합니다. 결과 화면에서 <a href="glossary.html#baseline">baseline</a> 대비 변화를 읽고, 실행 기록에서 비교 대상을 선택하거나 파일을 내보낼 수 있습니다.</p>
 <p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p><h2 id="실행-조건을-확인하세요">실행 조건을 확인하세요</h2>
 <ol>
-<li>Live의 <code>Lab → Benchmark</code>에서 카메라와 profile을 확인하고 실행합니다.</li>
-<li>실행이 끝나면 판정과 <code>실행 정보</code>를 확인합니다. 측정이 무효이거나 표본이 부족하면 성능 저하로 해석하지 않습니다.</li>
-<li>아래 표에서 비교 기준을 고릅니다.</li>
+<li>Live에서 <code>Lab → Benchmark</code>를 엽니다.</li>
+<li>카메라와 <a href="glossary.html#profile">profile</a>을 확인합니다. Live의 출력 설정과는 별개입니다.</li>
+<li>측정을 실행하고 완료될 때까지 기다립니다.</li>
+<li>판정과 <code>실행 정보</code>를 확인합니다. 무효·표본 부족이면 사유를 확인한 뒤 다시 측정합니다.</li>
 </ol>
+<p><strong>현재 앱은 종합 점수를 계산하지 않습니다.</strong> 지표별 측정값과 baseline 대비 저하 판정을 확인하세요.</p>
 <h3 id="비교-기준을-고르세요">비교 기준을 고르세요</h3>
 <p><strong>baseline은 성능 변화를 판단할 기준 실행입니다.</strong> 반복 측정에서는 정상 실행을 다섯 개 이상 추가하기를 권장합니다.</p>
 <table>
@@ -98,10 +100,11 @@
 <a href="assets/screenshots/benchmark-running.png" aria-label="Benchmark 카메라 열기 반복 측정 진행 중 원본 보기"><img src="assets/screenshots/benchmark-running.png" alt="Benchmark 카메라 열기 반복 측정 진행 중" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>카메라 열기 반복 측정이 진행 중입니다. 현재 단계와 회차, 진행률을 확인할 수 있습니다. <a href="assets/screenshots/benchmark-running.png">원본 보기</a></figcaption>
 </figure></details>
-</div><p>진행 화면은 단계 제목 아래에 준비·첫 프레임 대기·관측·촬영·저장 상태를 짧게 표시합니다. 워밍업과 관측에는 경과 시간과 예정 시간을, 사진에는 현재 촬영 순서를 표시합니다. 녹화 프레임 수는 현재 회차의 capture_result를 집계하므로 새 회차에서 초기화됩니다. 진행률은 표시용 추정치이며 측정값이나 점수의 입력이 아닙니다.</p>
+</div><details id="benchmark-sampling" data-search-section>
+<summary>진행 표시와 녹화 표본의 세부 규칙</summary><p>진행 화면은 단계 제목 아래에 준비·첫 프레임 대기·관측·촬영·저장 상태를 짧게 표시합니다. 워밍업과 관측에는 경과 시간과 예정 시간을, 사진에는 현재 촬영 순서를 표시합니다. 녹화 프레임 수는 현재 회차의 capture_result를 집계하므로 새 회차에서 초기화됩니다. 진행률은 표시용 추정치이며 측정값에 영향을 주지 않습니다.</p>
 <p><code>camera2-standard-v2</code>는 사진 촬영을 마친 뒤 카메라를 닫지 않고 9초 녹화를 다섯 번 반복합니다. 첫 회를 워밍업으로 제외하므로 녹화 지표의 유효 표본은 네 개이며, 이때 p95는 사실상 최대값입니다. 녹화를 마지막에 실행하므로 녹화 세션 구성의 영향이 앞선 프리뷰 관측과 촬영 지연에 섞이지 않습니다.</p>
-<p>녹화 표본이 부족하면 <code>녹화 측정이 부족함</code> flag가 붙습니다. 해당 flag만으로 측정 전체가 무효가 되지는 않으며 내부 비교는 가능하지만 교차 기기 점수에서는 제외됩니다. 카메라가 녹화 스트림 조합을 거부하면 남은 녹화 회차는 실행하지 않습니다.</p>
-<h2 id="판정과-막대를-읽으세요">판정과 막대를 읽으세요</h2>
+<p>녹화 표본이 부족하면 <code>녹화 측정이 부족함</code> flag가 붙습니다. 이 flag만으로 측정 전체가 무효가 되지는 않습니다. 지표별 표본과 비교 가능 여부를 확인하세요. 카메라가 녹화 스트림 조합을 거부하면 남은 녹화 회차는 실행하지 않습니다.</p>
+</details><h2 id="판정과-막대를-읽으세요">판정과 막대를 읽으세요</h2>
 <p><strong>판정을 먼저 읽고, 달라진 지표를 확인하세요.</strong> 막대만 보고 성능 저하를 판단하지 마세요.</p>
 <figure class="doc-visual" aria-labelledby="metric-example-title">
 <p id="metric-example-title"><strong>시간 지표 한 줄 읽기</strong> · 설명용 예시</p>
@@ -150,7 +153,8 @@
 <a href="assets/screenshots/benchmark-result.png" aria-label="Benchmark 결과와 baseline 대비 조건 차이 경고 원본 보기"><img src="assets/screenshots/benchmark-result.png" alt="Benchmark 결과와 baseline 대비 조건 차이 경고" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>실행 완료 후 기존 baseline과 비교한 화면입니다. 충전 중 측정의 점수 제외 안내가 표시되므로, 이 장면을 앱 버전 간 성능 저하의 증거로 해석하지 않습니다. <a href="assets/screenshots/benchmark-result.png">원본 보기</a></figcaption>
 </figure></details>
-</div><p>지표는 <code>Launch</code>·<code>Preview</code>·<code>Capture</code>·<code>Stability</code>·<code>Record</code>·<code>3A</code>로 묶습니다. 막대는 비교 대상의 값, 눈금은 baseline 또는 이전 실행의 값입니다. 시간 값의 대표값은 중앙값이며, 각 지표 아래에는 측정한 Camera2 구간을 표시합니다. 지표 정의는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/METRICS.md">METRICS.md</a>를 확인하세요. Benchmark의 <code>Partial</code>은 <code>onCaptureStarted → onCaptureCompleted</code> 구간을 뜻하며, Camera2의 중간 메타데이터 콜백인 <code>onCaptureProgressed</code>를 뜻하지 않습니다.</p>
+</div><details id="benchmark-bars" data-search-section>
+<summary>막대·단위·프레임 지표 자세히 읽기</summary><p>지표는 <code>Launch</code>·<code>Preview</code>·<code>Capture</code>·<code>Stability</code>·<code>Record</code>·<code>3A</code>로 묶습니다. 막대는 비교 대상의 값, 눈금은 baseline 또는 이전 실행의 값입니다. 시간 값의 대표값은 중앙값이며, 각 지표 아래에는 측정한 Camera2 구간을 표시합니다. 지표 정의는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/METRICS.md">METRICS.md</a>를 확인하세요. Benchmark의 <code>Partial</code>은 <code>onCaptureStarted → onCaptureCompleted</code> 구간을 뜻하며, Camera2의 중간 메타데이터 콜백인 <code>onCaptureProgressed</code>를 뜻하지 않습니다.</p>
 <table>
 <thead>
 <tr>
@@ -193,7 +197,7 @@
 </tbody></table>
 <p><code>Stalls</code>·<code>Callback fail</code>·<code>Record stalls</code>는 막대 없이 개수를 표시하며, 기준과 같으면 변화량을 생략합니다. 0.1 ms보다 작은 시간 값은 µs로, 1 µs보다 작으면 ns로 표시합니다.</p>
 <p><code>Frame rate</code>는 프리뷰 간격 지표 <code>H.1</code>의 역수이며 판정은 <code>H.1</code>에 따릅니다. <code>Record fps</code>는 녹화 시작 3초를 제외한 뒤 1초 창에서 관측한 프레임 수를 바탕으로 계산하며, 값이 낮아질 때 저하로 판정합니다. <code>Stalls</code>와 <code>Record stalls</code>는 기준의 1.5배를 넘은 프레임 간격의 횟수이고, <code>Jitter</code>와 <code>Record jitter</code>는 간격의 편차입니다. 이 수치만으로 HAL 내부의 프레임 손실을 확정할 수는 없습니다.</p>
-<p><code>실행 정보</code>에는 기기, 카메라, OS 빌드, subject, 표본 수, 발열, 비고, 파일과 비교 기준의 정보가 있습니다. validity flag는 화면에서는 뜻을 풀어 쓰고 JSON과 CSV에는 원래 코드를 유지합니다. <code>내보내기</code>로 결과 파일을 공유합니다.</p>
+</details><p><code>실행 정보</code>에는 기기, 카메라, OS 빌드, subject, 표본 수, 발열, 비고, 파일과 비교 기준의 정보가 있습니다. validity flag는 화면에서는 뜻을 풀어 쓰고 JSON과 CSV에는 원래 코드를 유지합니다. <code>내보내기</code>로 결과 파일을 공유합니다.</p>
 <h2 id="실행-기록에서-비교하고-내보내세요">실행 기록에서 비교하고 내보내세요</h2>
 <p>실행 기록은 지정된 baseline을 위에, 나머지 실행을 최신순으로 표시합니다. 각 행에는 실행 시각과 촬영 지연, 카메라가 나오며 빌드 이름을 입력했다면 한 줄이 추가됩니다. 카메라 하나로 필터링한 목록에서는 행마다 카메라 이름을 반복하지 않습니다.</p>
 <table>
@@ -209,7 +213,7 @@
 </tr>
 <tr>
 <td><code>측정 무효</code>·<code>비교 불가</code>·<code>점수 제외</code></td>
-<td>판정이 없을 때 적격성을 충족하지 못한 단계를 표시합니다.</td>
+<td>결과의 사용 조건을 충족하지 못했습니다. <code>점수 제외</code>는 호환용 적격성 표시이며 현재 점수를 계산한다는 뜻은 아닙니다.</td>
 </tr>
 <tr>
 <td>없음</td>
@@ -247,10 +251,10 @@
 <a href="assets/screenshots/benchmark-history.png" aria-label="저장된 Benchmark 실행 기록과 baseline 원본 보기"><img src="assets/screenshots/benchmark-history.png" alt="저장된 Benchmark 실행 기록과 baseline" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>저장된 실행을 최신 순서로 표시합니다. 기존 baseline은 별도 묶음에 남아 있습니다. <a href="assets/screenshots/benchmark-history.png">원본 보기</a></figcaption>
 </figure></details>
-</div><p>기본 상태 필터는 <code>전체</code>이므로 중단·무효 실행도 보입니다. 찾는 실행이 없으면 profile·camera 조건을 확인하거나 <code>필터 초기화</code>를 누르세요. PC의 <code>tools/aggregate.py</code>는 기본적으로 점수 산정 가능한 실행만 내보내므로 전체 실행이 필요하면 <code>--eligibility all</code>을 사용합니다.</p>
-<p>저장 직후에는 <code>설정 → 최대 보관 개수</code>를 적용해 오래된 실행부터 삭제합니다. 한도는 10부터 100까지 10 단위로 선택하거나 <code>무제한</code>으로 지정하며 기본값은 <code>무제한</code>입니다. baseline에 든 실행은 자동 삭제하지 않습니다. 손상된 JSON은 별도로 알리며, baseline 파일을 읽지 못하면 baseline 변경과 삭제를 중단합니다.</p>
-<p>반복·실패·중단 순서는 <a href="architecture.html#실행에서-저장까지">벤치마크 실행 상태도</a>, 저장 후 비교 시점은 <a href="architecture.html#저장된-실행을-다시-계산하는-경로">비교 계산 흐름</a>을 확인하세요.</p>
-<h2 id="구현과-검증-범위를-확인하세요">구현과 검증 범위를 확인하세요</h2>
+</div><p>기본 상태 필터는 <code>전체</code>이므로 중단·무효 실행도 보입니다. 찾는 실행이 없으면 profile·camera 조건을 확인하거나 <code>필터 초기화</code>를 누르세요. PC의 <code>tools/aggregate.py</code>는 기존 점수 적격성 조건으로 필터링합니다. 점수의 유무와는 별개이며, 전체 실행이 필요하면 <code>--eligibility all</code>을 사용합니다.</p>
+<details id="benchmark-retention" data-search-section>
+<summary>오래된 실행의 자동 삭제와 손상 파일 처리</summary><p>저장 직후에는 <code>설정 → 최대 보관 개수</code>를 적용해 오래된 실행부터 삭제합니다. 한도는 10부터 100까지 10 단위로 선택하거나 <code>무제한</code>으로 지정하며 기본값은 <code>무제한</code>입니다. baseline에 든 실행은 자동 삭제하지 않습니다. 손상된 JSON은 별도로 알리며, baseline 파일을 읽지 못하면 baseline 변경과 삭제를 중단합니다.</p>
+</details><h2 id="구현과-검증-범위를-확인하세요">구현과 검증 범위를 확인하세요</h2>
 <p>실행 순서와 저장 경로는 <a href="architecture.html#주요-실행-흐름">Architecture</a>, 표본 누락과 시각 해석은 <a href="troubleshooting.html">Troubleshooting</a>에 있습니다. 이 페이지는 코드에 따른 사용법이며 기기 실측 결과는 <a href="evidence.html">Validation</a>에서 별도로 확인합니다.</p>
 <details>
 <summary>코드 근거를 확인하세요</summary>
