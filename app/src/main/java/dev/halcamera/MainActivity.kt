@@ -669,13 +669,15 @@ class MainActivity : ComponentActivity() {
         captureRow.addView(gallerySlot,LinearLayout.LayoutParams(0,captureSize,1f))
         mediaButton=ShutterButton(this).apply {
             setOnClickListener {
-                if (cli.active != null || bursts.stop()) return@setOnClickListener
+                if (cli.active != null) return@setOnClickListener
                 if(recordingVideo) stopRecording()
                 else if(videoMode) {
                     withMediaPermissions(true) { (engine as? MediaCapture)?.startRecording() }
                 } else withMediaPermissions(false) { engine?.capture() }
             }
-            setOnLongClickListener { (!videoMode && !mediaBusy()).also { if (it) chooseBurst(this) } }
+            // Holding the shutter in photo mode shoots a burst until it is let go (#178).
+            setOnLongClickListener { (!videoMode && !mediaBusy()).also { if (it) withMediaPermissions(false) { bursts.hold(sessionId) } } }
+            setOnTouchListener { _, e -> if (e.actionMasked == MotionEvent.ACTION_UP || e.actionMasked == MotionEvent.ACTION_CANCEL) bursts.release(); false }
         }
         captureRow.addView(mediaButton,LinearLayout.LayoutParams(captureSize,captureSize).apply { marginStart=dp(12); marginEnd=dp(12) })
         cameraShortcut=IconButton(this,R.drawable.ic_camera_select,"Choose camera",filled=true) { selectCamera(cameraShortcut) }
@@ -915,9 +917,6 @@ class MainActivity : ComponentActivity() {
         if (old == null) open() else old.close { open() }
     }
     private fun mediaBusy() = (engine as? MediaCapture)?.mediaBusy == true || bursts.run != null
-    private fun chooseBurst(anchor: View) = selectChoice(anchor,LiveBurst.COUNT_LABELS,-1) { c ->
-        selectChoice(anchor,LiveBurst.INTERVAL_LABELS,0) { i -> withMediaPermissions(false) { bursts.start(sessionId,c,i) } }
-    }
     /**
      * A JPEG from the running recording (#175). One at a time: a tap while another is in flight, or while the
      * recording stops, does nothing. A camera that cannot do it says why instead. The engine reports the result as

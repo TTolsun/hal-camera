@@ -96,8 +96,8 @@ class BurstRun<T>(
     }
 
     companion object {
-        /** Each still can hold tens of MB until it is written; LIVE never queues more than this. */
-        const val MAX_COUNT = 20
+        /** Bounds one burst: a held shutter stops here, and each shot waits for the previous save, so nothing queues. */
+        const val MAX_COUNT = 50
         const val READY_POLL_MS = 20L
         const val READY_TIMEOUT_MS = 5_000L
     }
