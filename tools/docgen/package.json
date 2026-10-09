@@ -15,6 +15,6 @@
     "generate": "node docflow.mjs generate",
     "site": "node docflow.mjs site build",
     "sync": "node docflow.mjs sync",
-    "test": "node --test regression.test.mjs workflow.test.mjs site-contract.test.mjs"
+    "test": "node --test regression.test.mjs workflow.test.mjs site-contract.test.mjs search.test.mjs"
   }
 }

@@ -6,6 +6,7 @@
   <title>Design Documentation · HALCamera 개발자 가이드</title>
   <meta name="description" content="Camera HAL 개발자를 위한 HALCamera 앱 가이드">
   <link rel="stylesheet" href="./assets/docflow-design.css">
+  <script type="module" src="./assets/search.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">본문으로 이동</a>
@@ -24,6 +25,7 @@
       <a href="./getting-started.html">Quickstart</a>
       <a href="./troubleshooting.html">Debugging</a>
     </nav>
+    <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="home">
     
@@ -69,6 +71,25 @@
 
   </main>
   <footer class="site-footer"><span>HAL CAMERA · Engineering the invisible.</span><span>Design Documentation <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
+  <dialog id="search-dialog" aria-labelledby="search-title">
+    <div class="search-controls">
+      <div class="search-head"><h2 id="search-title">문서 찾기</h2><button class="search-close" type="button">닫기 <kbd>Esc</kbd></button></div>
+      <label for="search-input">제목부터 본문 속 API까지 검색하세요.</label>
+      <input id="search-input" name="q" type="search" autocomplete="off" spellcheck="false" placeholder="예: 센서 시각, SENSOR_TIMESTAMP…" aria-describedby="search-status" enterkeyhint="search" autofocus>
+      <p id="search-status" role="status"></p>
+      <button class="search-retry" type="button" hidden>문서 다시 불러오기</button>
+    </div>
+    <div class="search-body">
+      <div class="search-suggestions">
+        <p>어디서 시작할지 모르겠다면</p>
+        <button type="button" data-query="센서 시각">센서 시각</button>
+        <button type="button" data-query="close(done)">close(done)</button>
+        <button type="button" data-query="YUV">YUV</button>
+      </div>
+      <ol id="search-results" aria-label="검색 결과"></ol>
+    </div>
+    <div class="search-help"><span><kbd>↑</kbd><kbd>↓</kbd> 선택</span><span><kbd>Enter</kbd> 열기</span></div>
+  </dialog>
   <dialog class="diagram-dialog" aria-labelledby="diagram-title">
     <div class="diagram-toolbar">
       <h2 id="diagram-title">그림 크게 보기</h2>
