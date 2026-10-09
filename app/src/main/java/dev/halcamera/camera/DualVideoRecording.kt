@@ -14,6 +14,8 @@ internal class DualVideoRecording(private val context: Context, private val ids:
     private val name = library.name()
     private val files = ids.indices.map { File(context.cacheDir, "${name}_dual_$it.mp4") }
     private val recorders = mutableListOf<MediaRecorder>()
+    var savedUris: List<android.net.Uri> = emptyList()
+        private set
     private var started = false
     @Volatile private var encoderFailed = false
     val surfaces: List<Surface> get() = recorders.map { it.surface }
@@ -60,7 +62,7 @@ internal class DualVideoRecording(private val context: Context, private val ids:
             check(!encoderFailed) { "Dual video encoder failed" }
             recorders.forEach { it.release() }
             recorders.clear()
-            library.saveVideoPair(name, ids.zip(files)).size
+            library.saveVideoPair(name, ids.zip(files)).also { savedUris = it }.size
         }.also { discard() }
     }
 

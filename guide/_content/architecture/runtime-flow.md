@@ -33,7 +33,7 @@ verifications: []
 
 각 화면을 어떻게 읽고 조작하는지는 해당 화면을 담당하는 문서에 있습니다.
 
-결과 화면과 실행 기록은 [Benchmark](benchmark.md), 사양 표는 [Probe](probe.md), 케이스 실행과 판정은 [CTS](cts.md), 프레임별 그래프는 [Callback](callback.md), ADB 명령의 사용법은 [CLI](cli.md)에서 확인하세요. Live 조작은 [Live](live.md에 있습니다.
+결과 화면과 실행 기록은 [Benchmark](benchmark.md), 사양 표는 [Probe](probe.md), 케이스 실행과 판정은 [CTS](cts.md), 프레임별 그래프는 [Callback](callback.md), ADB 명령의 사용법은 [CLI](cli.md)에서 확인하세요. Live 조작은 [Live](live.md)에 있습니다.
 
 배치·간격·애니메이션·접근성 문구 같은 앱의 조작 규칙은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)가 관리합니다.
 
@@ -154,6 +154,8 @@ CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩�
 `benchmark.run`은 Live 카메라 종료 뒤 벤치마크 화면으로 인계하며, `BenchmarkController`가 기존 Runner 실행과 JSON 저장 완료를 요청 결과에 연결합니다.
 
 `cameras`·`streams`·`probe`·`cts.cases`는 화면을 거치지 않고 coordinator가 처리합니다.
+
+`CliLibrary`는 저장된 결과·baseline·갤러리·진단 ZIP과 보관 한도를 처리합니다. 결과 비교에는 기존 presenter와 비교 규칙을 재사용합니다. 삭제는 대상 ID와 명시적 확인을 요구하고, 보관 한도 변경은 적용 전에 삭제할 실행 목록을 보여 줍니다.
 
 스트림 지원 조회와 probe 파일 작업은 IO 스레드에서 실행하며, probe 파일은 요청별 `files/cli/artifacts/<request_id>/`에 두었다가 기록 정리와 함께 지웁니다.
 

@@ -1,0 +1,453 @@
+{
+  "device": "SM-S936N",
+  "android": "16",
+  "test_build_codes": [
+    657,
+    658
+  ],
+  "instrumentation_passed": 20,
+  "existing_runs_preserved": 31,
+  "requests": [
+    {
+      "test": "baseline-add",
+      "command": "baseline.add",
+      "request_id": "26dcd575-0f60-48f4-a6fc-4d46660c6b4b",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "baseline-remove",
+      "command": "baseline.remove",
+      "request_id": "b2ec2fe2-1579-43bb-bda6-0fec2947ce4f",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "benchmark",
+      "command": "benchmark.run",
+      "request_id": "552f292e-febc-422f-a5b5-5926c83ddff2",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 1,
+      "download_verified": true
+    },
+    {
+      "test": "bracket",
+      "command": "bracket",
+      "request_id": "0194d82c-98f3-4173-a3ee-7c29298c4cfd",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 7,
+      "download_verified": true
+    },
+    {
+      "test": "burst-cancel",
+      "command": "burst",
+      "request_id": "55ae9e3b-1eac-47a8-a885-55c4e920e131",
+      "state": "cancelled",
+      "error_code": "CANCELLED",
+      "artifact_count": 8,
+      "download_verified": true
+    },
+    {
+      "test": "burst",
+      "command": "burst",
+      "request_id": "4b718613-879e-48fb-a4a2-e8cf93a80b37",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 6,
+      "download_verified": true
+    },
+    {
+      "test": "camerax-dual-video",
+      "command": "dual.record",
+      "request_id": "526c8a3a-a010-45e4-806c-8da672b40f45",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "camerax-photo",
+      "command": "capture",
+      "request_id": "5caafe3e-e4d2-48f2-b637-d55b952feb32",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "camerax-video",
+      "command": "record.start",
+      "request_id": "9358ff5c-1da1-4f76-ae8d-d8448a7dafcd",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "cts-cases",
+      "command": "cts.cases",
+      "request_id": "311f5913-461d-4d24-bbbd-d3712cb36e0f",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "cts-run",
+      "command": "cts.run",
+      "request_id": "492224be-06d4-4fa2-90d0-1a5bd0ed8b90",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "dual-cameras",
+      "command": "dual.cameras",
+      "request_id": "3abf23c0-0aa8-4e8f-aa66-969ae347acb8",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "dual-events",
+      "command": "events",
+      "request_id": "58d1b797-9d33-494b-ae8d-caefa22561d4",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 1,
+      "download_verified": true
+    },
+    {
+      "test": "dual-info-fixed",
+      "command": "live.info",
+      "request_id": "7713066b-44fe-4cc3-933e-4fa751832028",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "dual-info",
+      "command": "live.info",
+      "request_id": "31237ff8-a317-4e3d-bd89-29748b417bbe",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "dual-meter",
+      "command": "meter",
+      "request_id": "4139fbc5-3f89-4359-9fb3-2a46458efb8a",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "dual-photo",
+      "command": "dual.capture",
+      "request_id": "f8e56b88-c029-4bda-b5a6-53395ad6cca6",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "dual-preview",
+      "command": "dual.preview",
+      "request_id": "a9ebb3a6-f4cc-4e72-9405-386e385cb6ee",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "dual-video",
+      "command": "dual.record",
+      "request_id": "e7349562-1637-485a-b24d-88a2aade5588",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "dual-zoom-fixed",
+      "command": "dual.preview",
+      "request_id": "91c8a41b-f455-41f2-b588-d0107454eaff",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "events-cancel",
+      "command": "events",
+      "request_id": "c70f64c3-9321-4ace-9dbe-9b2738d396a1",
+      "state": "cancelled",
+      "error_code": "CANCELLED",
+      "artifact_count": 1,
+      "download_verified": true
+    },
+    {
+      "test": "events",
+      "command": "events",
+      "request_id": "7d89fbda-4b31-4c16-ac49-4fca2cedf812",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 1,
+      "download_verified": true
+    },
+    {
+      "test": "gallery-delete-test",
+      "command": "gallery.delete",
+      "request_id": "c2873bc1-ffe4-4212-8b77-4e26e4a56506",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "gallery-export",
+      "command": "gallery.export",
+      "request_id": "335b17be-8aba-4b7e-a45e-652e689045e1",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 1,
+      "download_verified": true
+    },
+    {
+      "test": "gallery-list",
+      "command": "gallery.list",
+      "request_id": "9325276f-7549-403e-8f09-d567a23f1ebd",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "incidents-delete-test",
+      "command": "incidents.delete",
+      "request_id": "922c4282-7257-4fd2-b15a-461356cb8805",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "incidents-export",
+      "command": "incidents.export",
+      "request_id": "6f91dfbd-3bbb-4296-bc0d-1f4b10e55abd",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 1,
+      "download_verified": true
+    },
+    {
+      "test": "incidents-list",
+      "command": "incidents.list",
+      "request_id": "d777bc85-d7e8-4895-8816-e4704ddeb8d7",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "manual",
+      "command": "capture",
+      "request_id": "5338f53a-5b7a-483c-bf87-260e7268ade4",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "meter",
+      "command": "meter",
+      "request_id": "d93a90a2-8ca6-4c9d-903f-a581ca1383ac",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "nv21",
+      "command": "capture",
+      "request_id": "013d48b5-c2c2-43fe-a20e-e005c87a68f5",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "preview-stop",
+      "command": "preview.stop",
+      "request_id": "f67bef20-2016-4c75-ab48-8e8ffc1c2eb1",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "probe",
+      "command": "probe",
+      "request_id": "ae8a341b-2326-49f0-97b5-b327636026d7",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "raw",
+      "command": "capture",
+      "request_id": "acefee76-ea1a-4685-b29e-520bccf4cd39",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "results-after",
+      "command": "results.list",
+      "request_id": "f88dd56a-b18f-4567-8f73-25c78c8ec5fe",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "results-before",
+      "command": "results.list",
+      "request_id": "4923ae10-1a81-4ee3-b544-e61283ffa13a",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "results-compare",
+      "command": "results.compare",
+      "request_id": "49c19bbb-f33e-4a29-94fb-2ab451fab2c1",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "results-delete-test",
+      "command": "results.delete",
+      "request_id": "dd765278-34b4-411f-91ff-528804ac278a",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "results-export",
+      "command": "results.export",
+      "request_id": "ee7deb7c-8b9a-4d65-a1aa-02166b5146ad",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "results-show",
+      "command": "results.show",
+      "request_id": "8c60f9ec-ad01-4b7d-aba7-e94b6d8ca92b",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "retention-preview",
+      "command": "settings.limit",
+      "request_id": "82cd64c1-5173-4e99-888a-b5c2585145b5",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "retention-restore-preview",
+      "command": "settings.limit",
+      "request_id": "666c4737-6ebf-4cbb-be62-e9bf7011ecec",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "retention-restored",
+      "command": "settings.limit",
+      "request_id": "428bc5b8-2373-4c06-87b1-ad43e6bb4646",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "retention-test-start",
+      "command": "settings.limit",
+      "request_id": "e696468b-f409-4e21-87b9-0d361efe6a19",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "settings-after",
+      "command": "settings.show",
+      "request_id": "59fb7a43-eff8-4831-a5b7-97a7a5234e54",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "settings-before",
+      "command": "settings.show",
+      "request_id": "966439d2-023e-46c5-94d1-17abebe9bef8",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "streams",
+      "command": "streams",
+      "request_id": "bbbc3cdc-c0a0-4dd4-840e-afee05ee7115",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 0,
+      "download_verified": false
+    },
+    {
+      "test": "video-cancel",
+      "command": "record.start",
+      "request_id": "52989ead-8b17-43fc-ac23-ed2467541f5b",
+      "state": "cancelled",
+      "error_code": "CANCELLED",
+      "artifact_count": 2,
+      "download_verified": true
+    },
+    {
+      "test": "video",
+      "command": "record.start",
+      "request_id": "ca40ba3e-8e28-49de-99e9-3ff9b162f3b3",
+      "state": "succeeded",
+      "error_code": null,
+      "artifact_count": 2,
+      "download_verified": true
+    }
+  ]
+}

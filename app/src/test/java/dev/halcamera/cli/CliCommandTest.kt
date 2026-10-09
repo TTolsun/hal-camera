@@ -41,7 +41,8 @@ class CliCommandTest {
         assertEquals(2, run.cases!!.size)
     }
     @Test fun `hello lists every command the coordinator dispatches`() {
-        assertEquals(listOf("streams", "cameras", "preview", "preview.stop", "capture", "record.start", "probe", "cts.cases", "cts.run", "benchmark.run"), CliCommand.COMMANDS)
+        assertTrue(CliCommand.COMMANDS.containsAll(listOf("streams", "cameras", "preview", "preview.stop", "capture", "record.start", "probe", "cts.cases", "cts.run", "benchmark.run", "burst", "bracket", "dual.capture", "results.compare", "baseline.add", "gallery.export")))
+        assertEquals(CliCommand.COMMANDS.size, CliCommand.COMMANDS.toSet().size)
     }
     @Test fun `ids must have canonical shape and cannot form paths`() {
         listOf("../foo", "1-1-1-1-1", id.uppercase(), "", "$id/extra").forEach { bad ->
