@@ -20,17 +20,25 @@ verifications: []
 | 항목 | Camera2 | CameraX |
 | --- | --- | --- |
 | 수동 촬영 | ISO·노출 시간·초점과 WB를 프리뷰·사진·녹화에 적용합니다. 지원 여부와 실제 적용값을 표시합니다. | Manual 버튼을 미지원 상태로 비활성화합니다. |
-| 요청 키 | 앱이 CaptureRequest를 직접 구성하며 `request_observed`에 기록합니다. | 3A 모드와 영역 일부를 CameraX가 정합니다. 앱은 `CONTROL_AE_LOCK`, AF cancel trigger, 광학 보정 키를 직접 넣습니다. |
 | 사진 쌍의 YUV | 같은 capture의 버퍼입니다. 센서 시각이 JPEG와 같습니다. | JPEG와 센서 시각이 가장 가까운 analysis 프레임입니다. 차이는 `yuvOffsetNs`에 기록됩니다. |
 | YUV 저장 포맷 | JPEG 또는 NV21 중 하나를 저장합니다. NV21은 프레임당 16 MiB 이하만 허용합니다. 두 포맷 모두 촬영 JSON을 저장합니다. | JPEG와 촬영 JSON을 저장하며 NV21은 지원하지 않습니다. |
 | RAW/DNG | RAW capability가 있는 카메라에서 DNG를 함께 저장합니다. | 지원하지 않으며 Camera2로 전환해야 합니다. |
+| 버퍼 도착 기록 (Android 13 이상) | 프리뷰와 녹화 버퍼의 도착 시각을 relay로 기록합니다. | 프리뷰와 녹화 버퍼는 직접 관측하지 못합니다. ImageAnalysis와 ImageCapture의 이미지 수신은 기록합니다. |
+| Benchmark | 지원합니다. | 지원하지 않으며 Camera2로 엽니다. |
+
+<details markdown="1" id="detail-c0e05167f7" data-search-section>
+<summary>제어·녹화·CLI 차이</summary>
+
+| 항목 | Camera2 | CameraX |
+| --- | --- | --- |
+| 요청 키 | 앱이 CaptureRequest를 직접 구성하며 `request_observed`에 기록합니다. | 3A 모드와 영역 일부를 CameraX가 정합니다. 앱은 `CONTROL_AE_LOCK`, AF cancel trigger, 광학 보정 키를 직접 넣습니다. |
 | 스트림 선택 | Preview 크기와 YUV·JPEG 활성화·크기, FPS 범위를 선택합니다. | Preview·YUV·JPEG 크기와 출력 활성화를 선택합니다. 요청한 해상도만 필터에 남기며 조합은 bind 성공 여부로 확인합니다. |
 | 손떨림 보정 | Auto·Off 및 지원 OIS·EIS (Video)·EIS (Preview + Video)를 선택하고 결과 메타데이터를 대조합니다. | 같은 모드를 하드웨어와 CameraX capability에 따라 제공합니다. EIS (Video)는 녹화 중에 적용하고, EIS (Preview + Video)는 프리뷰부터 적용합니다. 출력 조합에 따른 지원 범위는 다를 수 있습니다. |
 | 녹화 코덱 | 기본 H.264이며 지원 조합에서 HEVC도 선택합니다. 오디오는 AAC 128kbps 44.1kHz입니다. | 기기의 encoder profile을 따릅니다. |
-| 녹화 중 사진 | 녹화 세션에 JPEG 스트림을 넣고 `TEMPLATE_VIDEO_SNAPSHOT`으로 요청합니다. 조합을 거절하면 JPEG 없이 녹화합니다. | 녹화와 ImageCapture를 함께 bind하고 `takePicture`를 호출합니다. 거절하면 VideoCapture만 bind합니다. 두 엔진 모두 JPEG만 저장합니다. Galaxy S25+에서 Camera2는 영상 프레임 누락이 없었고, CameraX는 사진마다 프레임 1개가 빠졌습니다. |
+| 녹화 중 사진 | 녹화 세션에 JPEG 스트림을 넣고 `TEMPLATE_VIDEO_SNAPSHOT`으로 요청합니다. 조합을 거절하면 JPEG 없이 녹화합니다. | 녹화와 ImageCapture를 함께 bind하고 `takePicture`를 호출합니다. 거절하면 VideoCapture만 bind합니다. 두 엔진 모두 JPEG만 저장합니다. 기기 관찰은 [녹화 중 사진의 제약](#녹화-중-사진의-알려진-제약)을 확인하세요. |
 | AE 잠금 중 플래시 사진 | precapture를 건너뛰고 잠긴 노출로 촬영합니다(`Camera2StillCapture`). | ImageCapture가 자기 순서대로 precapture를 수행합니다. |
 | AF 잠금 중 길게 누르기 | 탭한 AF 지점이 없으면 AF trigger를 보내지 않습니다. 탭한 지점이 있으면 그 지점을 끝내면서 `AF_TRIGGER_CANCEL`을 보냅니다(`Camera2TouchFocus`). | AF 잠금도 FocusMeteringAction이므로, 합친 action을 다시 보내면서 AF가 한 번 더 스캔합니다. action에서 AF를 빼면 CameraX가 AF 잠금을 풀기 때문에 피할 수 없습니다(`CameraXControls`). |
-| 버퍼 도착 기록 (Android 13 이상) | 프리뷰와 녹화 버퍼의 도착 시각을 relay로 기록합니다. | 프리뷰와 녹화 버퍼는 직접 관측하지 못합니다. ImageAnalysis와 ImageCapture의 이미지 수신은 기록합니다. |
 | Live 표시의 프리뷰 판정 | TextureView의 화면 갱신 시각을 씁니다. | PreviewView가 STREAMING 상태이고 최근 capture 결과가 있는지로 판정합니다. |
-| Benchmark | 지원합니다. | 지원하지 않으며 Camera2로 엽니다. |
 | CLI | 기본 엔진입니다. 크기와 녹화 H264·HEVC를 지정합니다. | `--engine CameraX`로 선택합니다. 크기를 지정하며 녹화 코덱은 Auto입니다. |
+
+</details>

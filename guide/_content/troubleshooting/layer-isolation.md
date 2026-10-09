@@ -45,7 +45,7 @@ verifications: []
 
 ### 사진 저장이나 노출이 예상과 다를 때
 
-YUV Save Format이 NV21이면 파일 앱의 Download/HALCamera에서 `_YUV.nv21`을 확인합니다. JPEG이면 DCIM/HALCamera의 `_YUV.jpg`를 확인합니다. 두 포맷 모두 Download/HALCamera에 같은 촬영명의 `_metadata.json`을 저장합니다. NV21은 Camera2와 짝수 크기·프레임당 16 MiB 제한을 요구합니다. Camera2 사진은 최종 CaptureResult가 누락되면 5초 뒤 실패합니다.
+**앨범에 YUV 사진이 없다면 저장 포맷부터 확인하세요.** NV21 파일은 파일 앱에서 찾아야 합니다. 파일명·폴더·지원 조건은 [저장 파일 표](engine.md#yuv-저장-포맷)를 확인하세요. Camera2 사진이 5초 뒤 실패한다면 같은 센서 시각의 최종 CaptureResult가 누락됐는지도 확인합니다.
 
 Camera2의 기본 사진 저장에는 센서 타임스탬프가 일치하는 YUV·JPEG 버퍼가 모두 필요합니다. Live 스트림에서 출력을 하나만 켰다면 해당 출력만 기다리며, 그 이미지도 요청의 센서 시각과 일치해야 합니다. CameraX는 두 출력을 켰을 때 JPEG와 시각이 가장 가까운 analysis 프레임을 연결하므로, `media_saved.yuvOffsetNs`로 차이를 확인합니다. CameraX의 JPEG 단독 촬영은 analysis를 기다리지 않으며, YUV 단독 촬영은 요청 뒤의 analysis 프레임을 저장합니다. 엔진별 연결 기준을 먼저 구분한 뒤 Callback과 저장 오류를 대조하세요. 저장 완료 안내와 녹화 조작법은 [빠른 시작](getting-started.md#live에서-촬영하세요)에 있습니다.
 

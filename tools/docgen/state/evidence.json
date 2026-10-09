@@ -277,7 +277,7 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "6400cf74a79fe5a2",
@@ -470,7 +470,7 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "cfe77e762ef57a22",
@@ -519,7 +519,7 @@
     },
     "content:troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "f8d6dea86a753cf2",
@@ -755,7 +755,7 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       }
     },
     "content:architecture.md/constraints": {
@@ -1188,7 +1188,7 @@
     },
     "content:engine.md/camera2": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "285d212e79d6beeb",
@@ -1379,7 +1379,7 @@
     },
     "content:engine.md/camerax": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "285d212e79d6beeb",
@@ -1570,7 +1570,7 @@
     },
     "content:engine.md/comparison": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "285d212e79d6beeb",
