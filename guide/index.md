@@ -4,9 +4,8 @@ home: true
 ---
 <section class="hero" aria-labelledby="hero-title">
   <p class="eyebrow">HAL CAMERA / User Guide</p>
-  <h1 id="hero-title" lang="en">Engineering<br>the invisible.</h1>
-  <p class="intro" lang="en">Camera systems are complicated.<br>The documentation doesn't have to be.</p>
-  <p class="intro">촬영 조건을 맞추고, HAL 동작을 관찰하고,<br>측정 결과와 재현 자료를 확인합니다.</p>
+  <h1 id="hero-title" lang="en">Capture. Measure. Verify.</h1>
+  <p class="intro">처음 사용한다면 Quickstart에서 사진을 한 번 찍어 보세요.<br>이미 실행했다면 아래에서 필요한 작업만 고르세요.</p>
   <div class="hero-bottom">
     <a href="getting-started.html">처음이라면, 앱 실행부터 <span aria-hidden="true">↗</span></a>
     <span class="signature" lang="en">by K.H. Kim</span>
@@ -31,9 +30,4 @@ home: true
   <a href="engine.html">엔진별 관측 차이 확인 <span aria-hidden="true">→</span></a>
 </section>
 
-<p class="editorial" lang="en">Good measurements should explain<br>the system, not just produce numbers.</p>
-
-<section class="closing" aria-label="문서 작성 원칙">
-  <p class="statement" lang="en">Built from the codebase.<br>Designed to stay useful.</p>
-  <div><p>구현, 설계 의도, 기기 검증을 구분합니다.<br>기록되지 않은 이유는 확인이 필요한 상태로 남깁니다.</p><a href="evidence.html">문서의 근거를 확인하세요 <span aria-hidden="true">→</span></a></div>
-</section>
+<p>기기에서 확인한 조건과 한계는 <a href="evidence.html">Validation</a>에서 확인하세요.</p>

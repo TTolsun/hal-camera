@@ -26,7 +26,7 @@ title: Callback
 <figcaption>이전 Shutter가 0 ms입니다. 현재 Shutter는 33 ms, Metadata는 90 ms, Preview는 95 ms에 도착했습니다. 실측 결과가 아닙니다.</figcaption>
 </figure>
 
-**현재 Shutter부터 걸린 시간은 33 ms를 빼서 구합니다.**
+**이 예시에서는 현재 Shutter 값인 33 ms를 뺍니다.** 실제 그래프에서는 표시된 Shutter 값을 사용하세요.
 
 | 구간 | 계산 | 걸린 시간 |
 | --- | --- | --- |
@@ -35,7 +35,12 @@ title: Callback
 
 구성 후 첫 프레임의 Shutter는 0 ms입니다. 이후 Shutter 값은 직전 프레임과의 콜백 간격입니다. 기준 시각을 연결할 수 없으면 `No start time`으로 표시합니다. 값을 임의로 0으로 채우지 않습니다.
 
+<details markdown="1" id="callback-axis" data-search-section>
+<summary>시간축이 자동으로 바뀌는 조건</summary>
+
 시간축은 값에 맞춰 자동으로 늘어납니다. 작은 범위가 3초 동안 유지되면 줄어들며, 자동 고정 중에는 늦게 도착한 결과를 담기 위한 확장만 합니다. 사용자가 범위를 설정할 필요는 없습니다.
+
+</details>
 
 ## 스트림별 도착 시각을 읽으세요
 
@@ -72,19 +77,6 @@ CameraX의 YUV 행은 ImageAnalysis 수신 시점, JPEG 행은 ImageCapture 수�
 
 ## 촬영 프레임을 고정하세요
 
-```mermaid
-stateDiagram-v2
-    state "촬영 출력 기다림" as Waiting
-    state "촬영 프레임 고정" as Held
-    state "실시간 갱신" as Live
-    [*] --> Waiting
-    Waiting --> Held: 촬영 출력 수신
-    Held --> Waiting: 고정 시간 경과
-    Waiting --> Live: Live 누름
-    Held --> Live: Live 누름
-    Live --> Waiting: Hold 누름
-```
-
 자동 고정은 처음에 켜져 있으며 기본 시간은 3초입니다. JPEG처럼 반복 요청하지 않는 출력이 도착하면 해당 프레임을 정해진 시간 동안 표시합니다. 카메라와 녹화는 계속 동작합니다.
 
 | 표시·버튼 | 동작 |
@@ -100,6 +92,24 @@ stateDiagram-v2
 2. 사진을 촬영합니다. Camera2에서 YUV와 JPEG를 함께 요청했다면 같은 프레임의 두 행을 비교합니다.
 3. 일시정지 표시가 나타난 동안 값을 읽습니다. 늦게 도착한 같은 프레임의 결과도 채워집니다.
 4. 시간이 지나면 갱신이 재개됩니다. 곧바로 돌아가려면 `Live`를 누릅니다.
+
+<details markdown="1" id="callback-hold-flow" data-search-section>
+<summary>자동 고정 상태도</summary>
+
+```mermaid
+stateDiagram-v2
+    state "촬영 출력 기다림" as Waiting
+    state "촬영 프레임 고정" as Held
+    state "실시간 갱신" as Live
+    [*] --> Waiting
+    Waiting --> Held: 촬영 출력 수신
+    Held --> Waiting: 고정 시간 경과
+    Waiting --> Live: Live 누름
+    Held --> Live: Live 누름
+    Live --> Waiting: Hold 누름
+```
+
+</details>
 
 <div id="screen-callback-event">
 <details markdown="1" id="detail-8d0a8ea66f" data-search-section>

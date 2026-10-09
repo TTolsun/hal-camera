@@ -41,7 +41,7 @@
 <div><span>Preview</span><span class="doc-time-track"><i style="--at:95%"></i></span><b>95 ms</b></div>
 </div>
 <figcaption>이전 Shutter가 0 ms입니다. 현재 Shutter는 33 ms, Metadata는 90 ms, Preview는 95 ms에 도착했습니다. 실측 결과가 아닙니다.</figcaption>
-</figure><p><strong>현재 Shutter부터 걸린 시간은 33 ms를 빼서 구합니다.</strong></p>
+</figure><p><strong>이 예시에서는 현재 Shutter 값인 33 ms를 뺍니다.</strong> 실제 그래프에서는 표시된 Shutter 값을 사용하세요.</p>
 <table>
 <thead>
 <tr>
@@ -62,8 +62,9 @@
 </tr>
 </tbody></table>
 <p>구성 후 첫 프레임의 Shutter는 0 ms입니다. 이후 Shutter 값은 직전 프레임과의 콜백 간격입니다. 기준 시각을 연결할 수 없으면 <code>No start time</code>으로 표시합니다. 값을 임의로 0으로 채우지 않습니다.</p>
-<p>시간축은 값에 맞춰 자동으로 늘어납니다. 작은 범위가 3초 동안 유지되면 줄어들며, 자동 고정 중에는 늦게 도착한 결과를 담기 위한 확장만 합니다. 사용자가 범위를 설정할 필요는 없습니다.</p>
-<h2 id="스트림별-도착-시각을-읽으세요">스트림별 도착 시각을 읽으세요</h2>
+<details id="callback-axis" data-search-section>
+<summary>시간축이 자동으로 바뀌는 조건</summary><p>시간축은 값에 맞춰 자동으로 늘어납니다. 작은 범위가 3초 동안 유지되면 줄어들며, 자동 고정 중에는 늦게 도착한 결과를 담기 위한 확장만 합니다. 사용자가 범위를 설정할 필요는 없습니다.</p>
+</details><h2 id="스트림별-도착-시각을-읽으세요">스트림별 도착 시각을 읽으세요</h2>
 <p>세션 구성과 그래프는 같은 스트림 목록을 사용합니다. 표시 이름과 별개인 스트림 고유 ID로 결과를 연결하므로, YUV 출력이 여러 개여도 각각 추적합니다. 표시 중인 프레임이 요청하지 않은 출력도 행을 남겨 구분합니다.</p>
 <table>
 <thead>
@@ -108,17 +109,6 @@
 <p>CameraX의 YUV 행은 ImageAnalysis 수신 시점, JPEG 행은 ImageCapture 수신 시점입니다. 사진으로 저장하는 YUV는 JPEG와 시각이 가장 가까운 analysis 프레임이므로 두 행을 같은 촬영 요청의 결과로 해석하지 않습니다. 저장한 두 이미지의 시각 차이는 <code>media_saved</code>의 <code>yuvOffsetNs</code>에서 확인합니다.</p>
 <p>버퍼와 프레임은 센서 타임스탬프가 같은지 확인하여 연결하고, 표시 시간은 앱의 단조 시계로 계산합니다. 이 값은 앱 수신 시각이며 HAL 내부 처리 완료 시각을 직접 측정한 값은 아닙니다.</p>
 <h2 id="촬영-프레임을-고정하세요">촬영 프레임을 고정하세요</h2>
-<pre><code class="language-mermaid">stateDiagram-v2
-    state &quot;촬영 출력 기다림&quot; as Waiting
-    state &quot;촬영 프레임 고정&quot; as Held
-    state &quot;실시간 갱신&quot; as Live
-    [*] --&gt; Waiting
-    Waiting --&gt; Held: 촬영 출력 수신
-    Held --&gt; Waiting: 고정 시간 경과
-    Waiting --&gt; Live: Live 누름
-    Held --&gt; Live: Live 누름
-    Live --&gt; Waiting: Hold 누름
-</code></pre>
 <p>자동 고정은 처음에 켜져 있으며 기본 시간은 3초입니다. JPEG처럼 반복 요청하지 않는 출력이 도착하면 해당 프레임을 정해진 시간 동안 표시합니다. 카메라와 녹화는 계속 동작합니다.</p>
 <table>
 <thead>
@@ -158,7 +148,19 @@
 <li>일시정지 표시가 나타난 동안 값을 읽습니다. 늦게 도착한 같은 프레임의 결과도 채워집니다.</li>
 <li>시간이 지나면 갱신이 재개됩니다. 곧바로 돌아가려면 <code>Live</code>를 누릅니다.</li>
 </ol>
-<div id="screen-callback-event">
+<details id="callback-hold-flow" data-search-section>
+<summary>자동 고정 상태도</summary><pre><code class="language-mermaid">stateDiagram-v2
+    state &quot;촬영 출력 기다림&quot; as Waiting
+    state &quot;촬영 프레임 고정&quot; as Held
+    state &quot;실시간 갱신&quot; as Live
+    [*] --&gt; Waiting
+    Waiting --&gt; Held: 촬영 출력 수신
+    Held --&gt; Waiting: 고정 시간 경과
+    Waiting --&gt; Live: Live 누름
+    Held --&gt; Live: Live 누름
+    Live --&gt; Waiting: Hold 누름
+</code></pre>
+</details><div id="screen-callback-event">
 <details id="detail-8d0a8ea66f" data-search-section>
 <summary>실제 화면 보기</summary><figure class="app-screenshot">
 <a href="assets/screenshots/callback-event.png" aria-label="사진 촬영 후 YUV와 JPEG 도착 시각을 자동 고정한 Callback 원본 보기"><img src="assets/screenshots/callback-event.png" alt="사진 촬영 후 YUV와 JPEG 도착 시각을 자동 고정한 Callback" width="1440" height="3120" loading="lazy" decoding="async"></a>

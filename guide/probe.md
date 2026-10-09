@@ -3,7 +3,7 @@ title: Probe
 ---
 <h1 lang="en">What the HAL claims.</h1>
 
-**Probe에서 카메라가 공개한 사양을 확인하세요.** 카메라를 열지 않고 `CameraCharacteristics`를 읽어, Camera2 HAL이 공개한 사양을 카메라별 표로 보여 줍니다. 이 값은 지원 사양이며 실측 결과는 아닙니다. 그 선언대로 통과하는지는 [CTS](cts.md)가, 실제로 얼마나 걸리는지는 [Benchmark](benchmark.md)가 답합니다.
+**`Lab → Probe`에서 카메라와 찾을 사양을 고르세요.** 카메라가 공개한 지원 사양을 보여 주며, 실제 동작을 검사한 결과는 아닙니다.
 
 ## 앱에서 Probe를 여세요
 
@@ -13,7 +13,7 @@ title: Probe
 
 **확인할 결과:** 선택한 카메라의 사양과 지원 값이 표시됩니다. 읽지 못한 항목은 실패 목록에 남습니다. 실제 출력 조합이 동작하는지는 [CTS](cts.md)로 따로 확인하세요.
 
-다른 검사를 하려면 Lab으로 돌아갑니다. Probe는 카메라를 열지 않습니다.
+다른 검사를 하려면 Lab으로 돌아갑니다.
 
 <p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p>
 
@@ -26,14 +26,20 @@ title: Probe
 
 | 확인할 항목 | 확인하는 이유 |
 | --- | --- |
-| 카메라 목록 | 항목 이름은 앱 전체가 함께 쓰는 `Camera · 0 (Wide · Rear)` 표기이며, 뒤에 하드웨어 레벨이 붙습니다. 공개 ID뿐 아니라 논리 카메라 뒤의 물리 카메라도 `Camera · 0.2 (UWide · Rear)`처럼 별도 항목으로 읽습니다. 앱이 직접 열 수 없는 물리 카메라도 사양은 보입니다. |
-| 섹션 | IDENTITY, CAPABILITIES, SENSOR, LENS, CONTROL, PROCESSING, REQUEST, REQUEST · RESULT KEYS, SESSION KEYS(API 28 이상), MANDATORY STREAM COMBINATIONS(API 29 이상) 다음에 STREAMS가 출력 형식별로 나뉘어 옵니다(`STREAMS · PRIVATE (SurfaceTexture)`, `STREAMS · PRIVATE (MediaRecorder)`, `STREAMS · JPEG`처럼). 그 뒤에 HIGH SPEED VIDEO, REPROCESSING INPUTS, ALL CHARACTERISTICS입니다. 섹션 제목을 누르면 접거나 펼칩니다. |
-| enum 값의 이름 | `CameraMetadata` 상수에서 reflection으로 읽으므로 새 API 값도 숫자가 아니라 이름으로 표시됩니다. |
-| 읽지 못한 항목 | 카메라나 섹션을 읽지 못하면 빈칸이 아니라 실패 목록에 남깁니다. 내보낸 파일에도 무엇이 빠졌는지 적힙니다. |
-| key 이름 목록 | REQUEST · RESULT KEYS와 SESSION KEYS는 값이 아니라 key 이름의 목록입니다. 사양 표는 어떤 key를 요청에 넣을 수 있고 결과로 돌려받는지만 알고, 그 값은 요청마다 정해지므로 여기에 없습니다. |
-| 필터 | 단어를 넣으면 그 단어가 든 줄만 목록으로 나오고, 항목을 누르면 해당 줄로 이동합니다. 값이 여러 줄인 항목은 첫 줄과 남은 줄 수만 보입니다. 예: `JPEG`, `1080`, `✗`. |
+| 카메라 목록 | 논리 카메라와 그 안의 물리 카메라를 구분합니다. 사양이 보여도 단독으로 열 수 없는 물리 카메라가 있습니다. |
+| 섹션 | 제목을 눌러 접거나 펼칩니다. 출력 형식별 크기는 STREAMS에서 확인합니다. |
+| 필터 | 단어가 들어간 줄을 찾습니다. 결과를 누르면 해당 항목으로 이동합니다. |
+| 읽지 못한 항목 | 실패 목록과 내보낸 파일에서 누락 내용을 확인합니다. |
+| REQUEST · RESULT KEYS / SESSION KEYS | 요청·결과에서 지원하는 key 이름입니다. 실제 촬영값은 아닙니다. |
 
-<p class="editorial" lang="en">A capability table is a promise.<br>Measure before you trust it.</p>
+<details markdown="1" id="probe-fields" data-search-section>
+<summary>섹션 이름과 API별 표시 조건</summary>
+
+IDENTITY, CAPABILITIES, SENSOR, LENS, CONTROL, PROCESSING, REQUEST 뒤에 REQUEST · RESULT KEYS가 나옵니다. SESSION KEYS는 API 28 이상, MANDATORY STREAM COMBINATIONS는 API 29 이상에서 표시합니다.
+
+STREAMS는 PRIVATE·JPEG 같은 출력 형식별로 나뉩니다. 이어서 HIGH SPEED VIDEO, REPROCESSING INPUTS, ALL CHARACTERISTICS가 나옵니다. enum 값은 가능한 경우 숫자 대신 상수 이름을 표시합니다.
+
+</details>
 
 ## 사양을 내보내세요
 

@@ -64,7 +64,7 @@
 <h3 id="aeb">AEB · 노출을 바꿔 연속 촬영</h3><p>Auto Exposure Bracketing의 약자입니다. HALCamera에서는 현재 EV, 2 EV 어둡게, 2 EV 밝게 사진 3장을 요청합니다. 지원 범위 끝에서는 EV가 제한됩니다. 일반 연사와 조작이 다릅니다. <a href="live.html#aeb">촬영 방법</a></p>
 <h3 id="hdr">HDR · 이 앱에서는 AEB 사진의 노출 융합</h3><p><code>_AEB_HDR.jpg</code>는 AEB 원본 세 장을 앱이 합친 이미지입니다. 이 파일명만으로 센서의 HDR 모드나 Ultra HDR 형식이라고 해석하지 마세요. 합성 조건과 성공·생략·실패 안내는 <a href="live.html#aeb">AEB 결과 표</a>에서 확인하세요.</p>
 <h2 id="measurements-verdicts" >측정값과 판정</h2><h3 id="baseline">Baseline · 저하 판정의 기준</h3><p>성능 변화를 판단하기 위해 명시적으로 지정한 실행 또는 실행 집합입니다. baseline 없이 이전 실행을 자동으로 비교할 때에는 변화량만 표시합니다. <code>두 실행 비교</code>에서는 먼저 고른 실행을 그 비교의 기준으로 씁니다. <a href="benchmark.html#비교-기준을-고르세요">기준 선택</a></p>
-<h3 id="validity">Validity · 측정 결과를 사용할 수 있는 조건</h3><p>표본 수와 실행 상태 등을 바탕으로 측정·비교·점수에 사용할 수 있는지 구분합니다. 작업이 성공해 JSON이 저장됐다는 뜻과는 다릅니다. 결과가 무효라면 성능 저하로 판단하기 전에 실행 정보의 사유를 확인하세요. <a href="benchmark.html#판정과-막대를-읽으세요">결과 해석</a></p>
+<h3 id="validity">Validity · 측정 결과를 사용할 수 있는 조건</h3><p>표본 수와 실행 상태 등을 바탕으로 측정·비교에 사용할 수 있는지 구분합니다. JSON 저장 성공과는 별개입니다. 무효 사유는 실행 정보에서 확인하세요. 기존 점수 적격성 필드는 호환용으로 남아 있지만 현재 앱은 점수를 계산하지 않습니다. <a href="benchmark.html#판정과-막대를-읽으세요">결과 해석</a></p>
 <h3 id="warmup">Warmup · 본 관측 전 준비 구간</h3><p>Benchmark는 관측 시작 전의 프레임을 프리뷰 관측 통계에서 제외합니다. 워밍업과 관측 조건이 다른 실행을 같은 표본으로 취급하지 마세요. 지표별 표본 규칙은 <a href="benchmark.html#실행-조건을-확인하세요">실행 조건</a>에서 확인하세요.</p>
 <h3 id="percentile">p50 / p95 · 반복 측정값의 분포</h3><p>p50은 중앙값이며, p95는 큰 값 쪽의 95백분위수입니다. 평균과는 다릅니다. 표본이 적으면 p95가 사실상 최댓값이 될 수 있으므로 표본 수도 함께 읽으세요. <a href="benchmark.html#실행-조건을-확인하세요">녹화 표본 예시</a></p>
 <h3 id="verdict">Verdict · 검사 결과에 대한 판정</h3><p>측정값 자체와 그 값을 규칙에 대입한 판정은 다릅니다. CTS의 PASS·FAIL·SKIP과 Benchmark의 성능 저하 판정도 서로 다른 규칙을 사용합니다. 앱의 CTS 결과는 공식 CTS 인증 판정을 대신하지 않습니다. <a href="cts.html#판정을-읽으세요">CTS 판정</a></p>
