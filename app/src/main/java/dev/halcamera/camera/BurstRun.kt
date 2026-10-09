@@ -24,6 +24,13 @@ class BurstRun<T>(
     private val shoot: (requestId: String, done: (Result<T>) -> Unit) -> Unit,
     private val progress: (BurstRun<T>) -> Unit,
     private val finished: (BurstSummary<T>) -> Unit,
+    /** The request id of shot [index]; a bracket names the EV it asked for. */
+    private val name: (index: Int) -> String = { "burst-$id-${(it + 1).toString().padStart(2, '0')}" },
+    /**
+     * Runs before shot [index] once the engine is free, and calls `go` when the shot may fire. A bracket sets the
+     * shot's EV here and waits for AE; a cancel in the meantime is honoured when `go` is called.
+     */
+    private val prepare: (index: Int, go: () -> Unit) -> Unit = { _, go -> go() },
 ) {
     init {
         require(count in 1..MAX_COUNT) { "Burst count must be 1..$MAX_COUNT" }
@@ -50,7 +57,7 @@ class BurstRun<T>(
         if (!shooting) finish()
     }
 
-    fun requestId(index: Int) = "burst-$id-${(index + 1).toString().padStart(2, '0')}"
+    fun requestId(index: Int) = name(index)
 
     private fun next() {
         if (done) return
@@ -71,11 +78,22 @@ class BurstRun<T>(
 
     private fun fire() {
         val index = shots.size
+        shooting = true
+        progress(this)
+        var went = false
+        prepare(index) {
+            if (went) return@prepare
+            went = true
+            if (done) return@prepare
+            if (stopReason != null) { shooting = false; finish(); return@prepare }
+            shoot(index)
+        }
+    }
+
+    private fun shoot(index: Int) {
         val requestId = requestId(index)
         val startMs = clock()
         lastStartMs = startMs
-        shooting = true
-        progress(this)
         var answered = false
         shoot(requestId) { result ->
             if (answered) return@shoot

@@ -26,7 +26,7 @@ import dev.halcamera.camera.LiveControlText
 import dev.halcamera.camera.LiveControls
 
 /**
- * LIVE's quick controls for flash, AF lock, AE lock and EV (issues #169 and #176), laid out like the top row of a
+ * LIVE's quick controls for flash, AF lock, AE lock, EV and exposure bracketing (issues #169, #176 and #178), laid out like the top row of a
  * stock camera app: round glyph buttons under the status line, white when on, the same selection look as the
  * zoom rail. Two of them open in place instead of cycling blind:
  *
@@ -65,6 +65,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     private val afLock = QuickButton(context) { tap { toggleAf() } }
     private val aeLock = QuickButton(context) { tap { toggleAe() } }
     private val ev = QuickButton(context) { tap { toggleRuler() } }
+    private val bracket = QuickButton(context) { tap { toggleBracket() } }
     private val manual = QuickButton(context) { tap { setExpanded(false); host.manualRequested() } }
     private val ruler = EvRuler(context) { index ->
         controls = controls.copy(evIndex = index); host.controlsChanged(controls); render(); scheduleFold()
@@ -108,7 +109,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             }, LinearLayout.LayoutParams(dp(48), dp(48)))
         }
         view.addView(evPanel, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
-        listOf(flash, afLock, aeLock, ev, manual).forEach { button ->
+        listOf(flash, afLock, aeLock, ev, bracket, manual).forEach { button ->
             mainRow.addView(button, LinearLayout.LayoutParams(0, dp(48), 1f))
         }
         view.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
@@ -216,6 +217,15 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         scheduleFold()
     }
 
+    /** Exposure bracketing (#178): with it on, the shutter takes three stills at EV steps around the EV button's value. */
+    private fun toggleBracket() {
+        if (video) { host.notice("브라케팅은 사진 모드에서만 사용할 수 있습니다."); return }
+        if (controls.manual.exposure != null) { host.notice("수동 노출에서는 브라케팅을 사용할 수 없습니다."); return }
+        if (support.evRange == null) { host.notice("이 카메라는 노출 보정(EV)을 지원하지 않아 브라케팅을 할 수 없습니다"); return }
+        update(controls.copy(bracket = !controls.bracket))
+        host.notice(if (controls.bracket) "브라케팅 켜짐 · 셔터를 누르면 지금 EV와 −2·+2 EV로 3장을 찍습니다" else "브라케팅 꺼짐")
+    }
+
     private fun scheduleFold() {
         view.removeCallbacks(fold)
         if (ruler.isInteracting || accessibility.isTouchExplorationEnabled) return
@@ -243,21 +253,24 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         ev.show(if (evText == null) R.drawable.ic_exposure else null, evText,
             controls.evIndex != 0 || ruler.visibility == View.VISIBLE, false, support.evRange != null && controls.manual.exposure == null,
             "노출 보정, 현재 ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "조절기 접기" else "조절기 펼치기"}")
+        bracket.show(null, "AEB", controls.bracket, false, support.evRange != null && controls.manual.exposure == null && !video,
+            if (controls.bracket) "브라케팅 켜짐, 셔터 한 번에 3장, 누르면 끄기" else "브라케팅, 누르면 셔터 한 번에 노출을 바꿔 3장")
         // Dim while the bar is off (camera not ready, recording being saved, a CLI command running), as MainActivity
         // dims every other Live control, so a tap that does nothing never looks like one that should.
         manual.show(null, "M", controls.manual.active, false, manualAvailable,
             if (manualAvailable) "Manual 수동 촬영 제어" else "Manual · CameraX 미지원")
-        listOf(flash, afLock, aeLock, ev, manual).forEach { it.isEnabled = enabled; if (!enabled) it.alpha = 0.4f }
+        listOf(flash, afLock, aeLock, ev, bracket, manual).forEach { it.isEnabled = enabled; if (!enabled) it.alpha = 0.4f }
         manual.isEnabled = enabled && manualAvailable
         // Keep the visible handle to one glyph; requested values remain in its accessible name.
         val on = listOfNotNull(
             controls.flash.takeIf { it != FlashMode.OFF }?.label,
             "AF lock".takeIf { controls.afLock }, "AE lock".takeIf { controls.aeLock },
             support.evLabel(controls.evIndex).takeIf { controls.evIndex != 0 },
+            "Bracketing".takeIf { controls.bracket },
         )
         ViewCompat.setStateDescription(handle, if (expanded) "Expanded" else "Collapsed")
         handle.setIcon(if (expanded) R.drawable.ic_chevron_up else R.drawable.ic_chevron_down,
-            (if (expanded) "Collapse camera controls" else "Expand camera controls: flash, AF lock, AE lock, EV") +
+            (if (expanded) "Collapse camera controls" else "Expand camera controls: flash, AF lock, AE lock, EV, bracketing") +
                 if (on.isEmpty()) "" else ". On: ${on.joinToString(", ")}")
     }
 

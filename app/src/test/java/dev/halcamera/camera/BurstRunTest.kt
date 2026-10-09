@@ -119,6 +119,24 @@ class BurstRunTest {
         assertEquals(2, f.summary!!.saved); assertTrue(f.summary!!.failedShots.isEmpty())
     }
 
+    @Test fun `prepare runs before each shot and a cancel during it takes no shot`() {
+        val f = Fake()
+        val prepared = mutableListOf<Int>()
+        var go: (() -> Unit)? = null
+        val run = BurstRun<String>("b1", 3, 0, { f.now }, { _, block -> block() }, { true },
+            { id, done -> f.requests += id; f.pending += done }, {}, { f.summary = it },
+            name = { "bracket-$it" }, prepare = { index, next -> prepared += index; go = next })
+        run.start()
+        assertEquals(listOf(0), prepared); assertTrue(f.requests.isEmpty())
+        go!!(); assertEquals(listOf("bracket-0"), f.requests)
+        f.answer(Result.success("a"))
+        assertEquals(listOf(0, 1), prepared)
+        run.cancel("Camera closed")
+        assertNull(f.summary)
+        go!!()
+        assertEquals(1, f.requests.size); assertEquals(1, f.summary!!.saved); assertEquals("Camera closed", f.summary!!.stopReason)
+    }
+
     @Test(expected = IllegalArgumentException::class) fun `count above the limit is refused`() {
         Fake().run(BurstRun.MAX_COUNT + 1)
     }

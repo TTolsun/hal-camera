@@ -19,6 +19,11 @@ data class LiveControls(
     val afLock: Boolean = false,
     val flash: FlashMode = FlashMode.OFF,
     val manual: ManualControls = ManualControls(),
+    /**
+     * Exposure bracketing (#178): the shutter takes three stills at EV steps around [evIndex]. It is a request to
+     * the screen, not to the camera; no capture request carries it.
+     */
+    val bracket: Boolean = false,
 ) {
     /**
      * Drops what the camera or the capture mode cannot do. Auto and always flash exist for stills only: a
@@ -29,6 +34,7 @@ data class LiveControls(
         aeLock = aeLock && support.aeLock && manual.exposure == null,
         afLock = afLock && support.afLock && manual.focusDiopters == null,
         flash = if (flash in support.flashModes(video || manual.exposure != null)) flash else FlashMode.OFF,
+        bracket = bracket && !video && support.evRange != null && manual.exposure == null,
     )
 
     /**
@@ -238,4 +244,21 @@ class PrecaptureWatch {
         const val AE_STATE_FLASH_REQUIRED = 4
         const val AE_STATE_PRECAPTURE = 5
     }
+}
+
+/**
+ * The EV of each bracket shot (#178): the requested EV first, then darker, then brighter, [SPAN_EV] apart and kept
+ * inside what the camera supports. A step the range cuts short stays in the plan at the range's end, so the files
+ * still come in threes and the request id says which EV each one asked for.
+ */
+object BracketPlan {
+    const val SPAN_EV = 2.0
+
+    fun evIndices(base: Int, range: IntRange, step: Double): List<Int> {
+        val steps = if (step > 0) kotlin.math.max(1, kotlin.math.round(SPAN_EV / step).toInt()) else 0
+        return listOf(base, base - steps, base + steps).map { it.coerceIn(range) }
+    }
+
+    /** "ev+0.0", "ev-2.0": ASCII for the request id, which ends up in file metadata. */
+    fun tag(index: Int, step: Double): String = String.format(Locale.US, "ev%+.1f", index * step)
 }
