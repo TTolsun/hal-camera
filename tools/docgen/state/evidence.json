@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e0727bf56b06b046",
-        "modelHash": "497986a599c71ce0",
+        "codeHash": "85f1678955bf151a",
+        "modelHash": "10b9647ac0d990cd",
         "at": "2026-10-09",
-        "commit": "8bc5634c",
+        "commit": "06d279d",
         "reviewer": "Claude",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -90,7 +90,7 @@
           "app/src/main/java/dev/halcamera/camera/DualVideoRecording.kt": "48ea53da496566a2b512ba5a59725f530bd7936f",
           "app/src/main/java/dev/halcamera/camera/ExposureFusion.kt": "88ee16490643ec999e2bcc64debac88781745f2c",
           "app/src/main/java/dev/halcamera/camera/JpegOrientation.kt": "ac356e099b2ce193178ee66f9d1381cd059739b9",
-          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "0d274bf7effbfb95ba169cb27f39bd99ee91821d",
+          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "5b71e01f56fa262123441b0f24fbd85b69df818d",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "58d80b6da1c9e2491ae10f1aa070aee6d8cb2402",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
@@ -290,10 +290,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "3c8dfeb93d5081c5",
-        "modelHash": "3014598530b6f63a",
+        "codeHash": "1f47f67b495a851a",
+        "modelHash": "ca20a08020622035",
         "at": "2026-10-09",
-        "commit": "8bc5634c",
+        "commit": "06d279d",
         "reviewer": "Claude",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -374,7 +374,7 @@
           "app/src/main/java/dev/halcamera/camera/DualVideoRecording.kt": "48ea53da496566a2b512ba5a59725f530bd7936f",
           "app/src/main/java/dev/halcamera/camera/ExposureFusion.kt": "88ee16490643ec999e2bcc64debac88781745f2c",
           "app/src/main/java/dev/halcamera/camera/JpegOrientation.kt": "ac356e099b2ce193178ee66f9d1381cd059739b9",
-          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "0d274bf7effbfb95ba169cb27f39bd99ee91821d",
+          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "5b71e01f56fa262123441b0f24fbd85b69df818d",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "58d80b6da1c9e2491ae10f1aa070aee6d8cb2402",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
@@ -589,10 +589,10 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "e0727bf56b06b046",
-        "modelHash": "4d61d212b3949663",
+        "codeHash": "85f1678955bf151a",
+        "modelHash": "c25b4f2972f4fb26",
         "at": "2026-10-09",
-        "commit": "8bc5634c",
+        "commit": "06d279d",
         "reviewer": "Claude",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -673,7 +673,7 @@
           "app/src/main/java/dev/halcamera/camera/DualVideoRecording.kt": "48ea53da496566a2b512ba5a59725f530bd7936f",
           "app/src/main/java/dev/halcamera/camera/ExposureFusion.kt": "88ee16490643ec999e2bcc64debac88781745f2c",
           "app/src/main/java/dev/halcamera/camera/JpegOrientation.kt": "ac356e099b2ce193178ee66f9d1381cd059739b9",
-          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "0d274bf7effbfb95ba169cb27f39bd99ee91821d",
+          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "5b71e01f56fa262123441b0f24fbd85b69df818d",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "58d80b6da1c9e2491ae10f1aa070aee6d8cb2402",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
@@ -790,10 +790,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "e0727bf56b06b046",
-        "modelHash": "d7416c71ca937b73",
+        "codeHash": "85f1678955bf151a",
+        "modelHash": "00c87e82ca4b893e",
         "at": "2026-10-09",
-        "commit": "8bc5634c",
+        "commit": "06d279d",
         "reviewer": "Claude",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -874,7 +874,7 @@
           "app/src/main/java/dev/halcamera/camera/DualVideoRecording.kt": "48ea53da496566a2b512ba5a59725f530bd7936f",
           "app/src/main/java/dev/halcamera/camera/ExposureFusion.kt": "88ee16490643ec999e2bcc64debac88781745f2c",
           "app/src/main/java/dev/halcamera/camera/JpegOrientation.kt": "ac356e099b2ce193178ee66f9d1381cd059739b9",
-          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "0d274bf7effbfb95ba169cb27f39bd99ee91821d",
+          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "5b71e01f56fa262123441b0f24fbd85b69df818d",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "58d80b6da1c9e2491ae10f1aa070aee6d8cb2402",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
@@ -1040,10 +1040,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e0727bf56b06b046",
-        "modelHash": "011a385da790df95",
+        "codeHash": "85f1678955bf151a",
+        "modelHash": "e3a21ee73ee5b556",
         "at": "2026-10-09",
-        "commit": "8bc5634c",
+        "commit": "06d279d",
         "reviewer": "Claude",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -1124,7 +1124,7 @@
           "app/src/main/java/dev/halcamera/camera/DualVideoRecording.kt": "48ea53da496566a2b512ba5a59725f530bd7936f",
           "app/src/main/java/dev/halcamera/camera/ExposureFusion.kt": "88ee16490643ec999e2bcc64debac88781745f2c",
           "app/src/main/java/dev/halcamera/camera/JpegOrientation.kt": "ac356e099b2ce193178ee66f9d1381cd059739b9",
-          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "0d274bf7effbfb95ba169cb27f39bd99ee91821d",
+          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "5b71e01f56fa262123441b0f24fbd85b69df818d",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "58d80b6da1c9e2491ae10f1aa070aee6d8cb2402",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
@@ -1241,10 +1241,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e0727bf56b06b046",
-        "modelHash": "1b0764407ebd0e99",
+        "codeHash": "85f1678955bf151a",
+        "modelHash": "b90966dce0dd8b35",
         "at": "2026-10-09",
-        "commit": "8bc5634c",
+        "commit": "06d279d",
         "reviewer": "Claude",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -1325,7 +1325,7 @@
           "app/src/main/java/dev/halcamera/camera/DualVideoRecording.kt": "48ea53da496566a2b512ba5a59725f530bd7936f",
           "app/src/main/java/dev/halcamera/camera/ExposureFusion.kt": "88ee16490643ec999e2bcc64debac88781745f2c",
           "app/src/main/java/dev/halcamera/camera/JpegOrientation.kt": "ac356e099b2ce193178ee66f9d1381cd059739b9",
-          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "0d274bf7effbfb95ba169cb27f39bd99ee91821d",
+          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "5b71e01f56fa262123441b0f24fbd85b69df818d",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "58d80b6da1c9e2491ae10f1aa070aee6d8cb2402",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
@@ -1442,10 +1442,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e0727bf56b06b046",
-        "modelHash": "9e487c82d68f6e64",
+        "codeHash": "85f1678955bf151a",
+        "modelHash": "9f8931b822c88b12",
         "at": "2026-10-09",
-        "commit": "8bc5634c",
+        "commit": "06d279d",
         "reviewer": "Claude",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -1526,7 +1526,7 @@
           "app/src/main/java/dev/halcamera/camera/DualVideoRecording.kt": "48ea53da496566a2b512ba5a59725f530bd7936f",
           "app/src/main/java/dev/halcamera/camera/ExposureFusion.kt": "88ee16490643ec999e2bcc64debac88781745f2c",
           "app/src/main/java/dev/halcamera/camera/JpegOrientation.kt": "ac356e099b2ce193178ee66f9d1381cd059739b9",
-          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "0d274bf7effbfb95ba169cb27f39bd99ee91821d",
+          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "5b71e01f56fa262123441b0f24fbd85b69df818d",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "58d80b6da1c9e2491ae10f1aa070aee6d8cb2402",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
@@ -1643,10 +1643,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e0727bf56b06b046",
-        "modelHash": "ddda487d20df029a",
+        "codeHash": "85f1678955bf151a",
+        "modelHash": "29fb0e263d6fa496",
         "at": "2026-10-09",
-        "commit": "8bc5634c",
+        "commit": "06d279d",
         "reviewer": "Claude",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -1727,7 +1727,7 @@
           "app/src/main/java/dev/halcamera/camera/DualVideoRecording.kt": "48ea53da496566a2b512ba5a59725f530bd7936f",
           "app/src/main/java/dev/halcamera/camera/ExposureFusion.kt": "88ee16490643ec999e2bcc64debac88781745f2c",
           "app/src/main/java/dev/halcamera/camera/JpegOrientation.kt": "ac356e099b2ce193178ee66f9d1381cd059739b9",
-          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "0d274bf7effbfb95ba169cb27f39bd99ee91821d",
+          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "5b71e01f56fa262123441b0f24fbd85b69df818d",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "58d80b6da1c9e2491ae10f1aa070aee6d8cb2402",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
@@ -1844,10 +1844,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e0727bf56b06b046",
-        "modelHash": "e4adc5c5fe3d8b22",
+        "codeHash": "85f1678955bf151a",
+        "modelHash": "1df7ace866a207db",
         "at": "2026-10-09",
-        "commit": "8bc5634c",
+        "commit": "06d279d",
         "reviewer": "Claude",
         "files": {
           "app/build.gradle.kts": "c468347ce4251c6725de36abe712a20f042cdb88",
@@ -1928,7 +1928,7 @@
           "app/src/main/java/dev/halcamera/camera/DualVideoRecording.kt": "48ea53da496566a2b512ba5a59725f530bd7936f",
           "app/src/main/java/dev/halcamera/camera/ExposureFusion.kt": "88ee16490643ec999e2bcc64debac88781745f2c",
           "app/src/main/java/dev/halcamera/camera/JpegOrientation.kt": "ac356e099b2ce193178ee66f9d1381cd059739b9",
-          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "0d274bf7effbfb95ba169cb27f39bd99ee91821d",
+          "app/src/main/java/dev/halcamera/camera/LiveBurst.kt": "5b71e01f56fa262123441b0f24fbd85b69df818d",
           "app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt": "4dc1ead150fd828823aef96d5bec94be6e13cb4f",
           "app/src/main/java/dev/halcamera/camera/LiveControls.kt": "58d80b6da1c9e2491ae10f1aa070aee6d8cb2402",
           "app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt": "9fbb87213acc1852e1b5b4f3400e86c836335acc",
