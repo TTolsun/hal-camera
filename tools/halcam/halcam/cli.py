@@ -76,7 +76,9 @@ def parser():
     common(control)
     control.add_argument("operation", choices=("record.stop", "record.snapshot", "live.set", "live.reset"))
     control.add_argument("--option", action="append", default=[], metavar="KEY=VALUE")
-    run = commands.add_parser("run", help="Execute any command listed by doctor (advanced JSON-compatible path)")
+    run = commands.add_parser("run", help="Execute any command listed by doctor (advanced JSON-compatible path)",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="Examples:\n  halcam run burst --option count=3 --output ./photos\n  halcam run results.list\n  halcam run record.start --no-audio\nList available operations: halcam doctor --json")
     common(run)
     run.add_argument("operation")
     run.add_argument("--camera")
@@ -173,6 +175,13 @@ def execute(args, context):
             payload["options"] = options
         return raise_app_error(adb.call("control", payload))
     if args.command == "doctor":
+        status = raise_app_error(adb.read("/v1/status"))
+        problem = ("DEVICE_LOCKED", "Unlock the device before using the camera") if hello.get("locked") or status.get("locked") else (
+            ("PERMISSION_REQUIRED", "Allow camera access in HALCamera") if hello.get("camera_permission") is not True else (
+                ("BUSY", "An app operation is running; wait for it to finish") if status.get("busy") else None))
+        hello = dict(hello, ready=problem is None, busy=bool(status.get("busy")))
+        if problem:
+            hello["error"] = {"code": problem[0], "message": problem[1]}
         return hello
     if args.command == "status":
         return request_status(adb, args.request) if args.request else raise_app_error(adb.read("/v1/status"))
@@ -277,7 +286,8 @@ def execute(args, context):
 def main(argv=None):
     raw_args = sys.argv[1:] if argv is None else argv
     if not raw_args:
-        parser().print_help()
+        print(parser().epilog)
+        print("All commands and options: halcam --help")
         return 0
     args = argparse.Namespace(json="--json" in raw_args)
     context = {}

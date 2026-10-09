@@ -225,11 +225,23 @@ case "$method" in
         validate_id "$rid"
         if [ "$method" = cancel ]; then result=$(call --method request.cancel --arg "$rid")
         else result=$(read_request "$rid"); fi
-        if [ "$method" = fetch ]; then check_response "$result" true
-        else check_response "$result"; fi
+        case "$result" in
+            *'"completed":true'*) check_response "$result" true ;;
+            *) check_response "$result" ;;
+        esac
         echo "$result"
         if [ "$method" = fetch ]; then
             case "$result" in *'"completed":true'*) downloads "$result" ;; *) die 'Still running; use status first' ;; esac
+        else
+            case "$result" in
+                *'"completed":true'*)
+                    count=$(printf '%s' "$result" | grep -o '"artifact_id"' | wc -l | tr -d '[:space:]')
+                    if [ "$count" -gt 0 ]; then
+                        echo "Operation ended. $count saved file(s) remain available."
+                        echo "Next: adb shell sh /data/local/tmp/halcam fetch $rid"
+                    else echo 'Operation ended. No files are registered for this request.'; fi
+                    case "$result" in *'"error":{'*) exit 1 ;; esac ;;
+            esac
         fi
         exit 0 ;;
     record.snapshot)

@@ -284,14 +284,19 @@ internal class Camera2LiveRecorder(
                 } catch (e: Exception) {
                     main.post {
                         done?.invoke(Result.failure(e))
-                        Toast.makeText(context.applicationContext, "Video save failed: ${e.message}", Toast.LENGTH_LONG).show()
+                        saveFailure("Video save failed: ${e.message}")
                     }
                 } finally { file.delete() }
             }
         } else {
             file?.delete()
             main.post { done?.invoke(Result.failure(failure ?: IllegalStateException("Recording did not produce a playable video; record for longer before stopping"))) }
-            if (wasStarted) main.post { Toast.makeText(context.applicationContext, "Video not saved: recording was too short or failed.", Toast.LENGTH_LONG).show() }
+            if (wasStarted) main.post { saveFailure("Video not saved: recording was too short or failed.") }
         }
+    }
+
+    private fun saveFailure(message: String) {
+        if (host.active) host.notice("$message\nSave Events · ZIP에서 진단을 저장하세요.")
+        else Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
     }
 }

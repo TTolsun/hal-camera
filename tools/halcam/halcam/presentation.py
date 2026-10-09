@@ -42,6 +42,8 @@ def render(data, args):
         lines.append("Recording started. Stop to save the video.")
     elif data.get("busy"):
         lines.append("Busy. An app operation is running.")
+    elif "applied" in result:
+        lines.append("Retention limit applied." if result["applied"] else "Preview only. Nothing has changed.")
     else:
         lines.append(progress(data) if data.get("state") else "Ready.")
     if rid:
@@ -69,6 +71,10 @@ def render(data, args):
             lines.append(f"{key}: {result.get(key, data.get(key))}")
     if error and error["code"] in ("DEVICE_NOT_FOUND", "DEVICE_UNAUTHORIZED", "MULTIPLE_DEVICES", "ADB_NOT_FOUND"):
         next_step = command(args, "devices") if error["code"] != "ADB_NOT_FOUND" else "Install Android Platform Tools, then run halcam doctor."
+    elif error and error["code"] == "CLI_DISABLED":
+        next_step = "Open HALCamera > Lab > ADB CLI and enable access."
+    elif error and error["code"] in ("REQUEST_NOT_FOUND", "ARTIFACT_EXPIRED"):
+        next_step = command(args, "run", "gallery.list") + " (saved photos/videos may still be available; do not repeat capture)"
     elif (stopping or snapshot) and rid:
         next_step = command(args, "status", "--request", rid)
     elif result.get("recording"):
@@ -92,13 +98,15 @@ def render(data, args):
         next_step = "Unlock the device, then run " + command(args, "doctor")
     elif error and error["code"] == "PERMISSION_REQUIRED":
         next_step = "Allow the named permission in HALCamera. For silent recording, use --no-audio."
+    elif "applied" in result and not result["applied"]:
+        next_step = command(args, "run", "settings.limit", "--option", f"limit={result['run_limit']}", "--option", "confirm=true")
     elif error:
         next_step = command(args, "doctor")
     else:
         next_step = None
     if next_step:
         lines.append("Next: " + next_step)
-    if not result and "commands" in data:
+    if not error and not result and "commands" in data:
         lines.append(f"Connected. {len(data['commands'])} commands available. Use --json to list capabilities.")
     elif result and not any(key in result for key in ("summary", "comparison", "runs", "media", "incidents", "cameras", "cases", "streams")):
         lines.append("Use --json for complete result details.")

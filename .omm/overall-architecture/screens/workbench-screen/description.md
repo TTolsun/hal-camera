@@ -9,3 +9,5 @@ Lab은 Apple 참고안에 따라 흰 배경과 밝은 회색의 18dp 그룹 표�
 Probe·CTS·Benchmark·Run History와 상세 화면은 LabTheme, Look.titleBar, 밝은 그룹 표면을 공유합니다. Gallery와 About은 Runway 참고안을 적용합니다. Gallery는 어두운 미디어 격자와 흰색 기본 버튼을, About은 기존 로봇 캐릭터와 흰 배경·검은 버튼을 사용합니다. Device Info·ADB CLI와 ZIP 대화상자는 Apple 기반 LabDialog를 사용합니다. 제목은 영어, 보조 설명은 한글이며 About 소개는 사용자 지정 영어 문구를 유지합니다.
 
 Live Streams는 Lab 위에 LiveStreamsActivity를 열며 카메라를 열지 않습니다. 상단·시스템 뒤로가기는 변경을 버리고 Lab으로 돌아갑니다. 저장과 직전 정상 구성 복원도 Lab으로 돌아가며, Lab은 설정 결과를 보관했다가 Live로 복귀할 때 전달합니다. MainActivity는 이 결과를 반영한 뒤 프리뷰를 재개합니다. 화면 재생성 때에도 편집 중 초안과 저장한 결과를 각각 보존합니다.
+
+Run History에는 이전 측정 결과 · 비교 · 내보내기라는 설명을 표시해 새 측정을 시작하는 Benchmark와 구분합니다.

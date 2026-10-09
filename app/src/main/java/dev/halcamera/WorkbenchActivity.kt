@@ -161,7 +161,7 @@ class WorkbenchActivity : ComponentActivity() {
             entry(tools, "Benchmark", "성능 측정") { open(BenchmarkActivity::class.java) }
         }
         section("Results") { results ->
-            entry(results, "Run History", "비교 · 내보내기") { open(HistoryActivity::class.java) }
+            entry(results, "Run History", "이전 측정 결과 · 비교 · 내보내기") { open(HistoryActivity::class.java) }
             entry(results, "Gallery", "사진 · 동영상") { open(GalleryActivity::class.java) }
             entry(results, "ZIP Archives", "공유 · 저장 · 삭제") { incidents.showList() }
         }

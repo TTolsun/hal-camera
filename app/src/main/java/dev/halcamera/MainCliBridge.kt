@@ -26,6 +26,7 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
                         cli.fail(command.id, "PREFLIGHT_FAILED", "Capture requires YUV or JPEG output")
                         return@fold
                     }
+                    captureFeedback.clearResult()
                     showCallbacks(false)
                     cameraId = requireNotNull(command.camera); engineName = command.engine ?: "Camera2"
                     paused = false; zoomRatio = 1f

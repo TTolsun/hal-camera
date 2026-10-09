@@ -167,7 +167,7 @@ internal class CameraXLiveRecorder(
                     file.delete()
                     callback?.invoke(Result.failure(event.cause as? Exception
                         ?: IllegalStateException("Recording did not produce a playable video; record for longer before stopping")))
-                    Toast.makeText(context.applicationContext, "Video not saved: recording was too short or failed.", Toast.LENGTH_LONG).show()
+                    saveFailure("Video not saved: recording was too short or failed.")
                 }
                 afterClose?.let { afterClose = null; it() }
             }
@@ -198,9 +198,13 @@ internal class CameraXLiveRecorder(
             } catch (e: Exception) {
                 mainExecutor.execute {
                     done?.invoke(Result.failure(e))
-                    Toast.makeText(context.applicationContext, "Video save failed: ${e.message}", Toast.LENGTH_LONG).show()
+                    saveFailure("Video save failed: ${e.message}")
                 }
             } finally { file.delete() }
         }
+    }
+    private fun saveFailure(message: String) {
+        if (host.active) host.notice("$message\nSave Events · ZIP에서 진단을 저장하세요.")
+        else Toast.makeText(context.applicationContext, message, Toast.LENGTH_LONG).show()
     }
 }
