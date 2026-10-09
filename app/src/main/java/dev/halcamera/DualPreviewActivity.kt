@@ -71,6 +71,54 @@ import dev.halcamera.ui.FocusRing
  * while it is visible and closes it in onStop; LIVE reopens its own preview when the user returns.
  */
 class DualPreviewActivity : ComponentActivity() {
+    private val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
+    private var cliRequest: dev.halcamera.cli.CliCommand? = null
+    private var cliSubmitted = false
+    private var cliStopping = false
+    private val cliArtifacts = mutableListOf<dev.halcamera.cli.CliArtifact>()
+    private val cliHost = object : dev.halcamera.cli.CliHost {
+        override val screen = "dual"
+        override fun isBusy() = closing || recording || recordPending || photoPending
+        override fun execute(command: dev.halcamera.cli.CliCommand) {
+            cliRequest = command
+            logicalId = command.camera
+            pair = command.options!!.values.getValue("first") to command.options.values.getValue("second")
+            if (command.command == "dual.capture" && engineName == "CameraX") {
+                cli.fail(command.id, "PREFLIGHT_FAILED", "Dual photos require Camera2"); return
+            }
+            if (cameras.isNotEmpty()) { render(); startIfReady() }
+        }
+        override fun cancel(command: dev.halcamera.cli.CliCommand) {
+            cliStopping = true
+            closeSession { if (cli.active?.id == command.id) cli.complete(command.id,
+                org.json.JSONObject().put("cancelled", true), cliArtifacts.toList(), dev.halcamera.cli.CliFailure("CANCELLED", "Dual operation stopped")) }
+        }
+        override fun stopRecording(command: dev.halcamera.cli.CliCommand) {
+            cliStopping = true
+            closeSession { if (cli.active?.id == command.id && cliArtifacts.isEmpty()) cli.fail(command.id, "RECORDING_FAILED", "No videos were saved") }
+        }
+    }
+    private fun cliReady() {
+        val command = cliRequest ?: return
+        if (cliSubmitted || cli.active?.id != command.id) return
+        cliSubmitted = true
+        cli.state(command.id, "running")
+        val zoom = command.options?.values?.get("zoom")?.toFloat() ?: 1f
+        if (engineName == "Camera2" && zoom !in 1f..(mainControls?.maxZoom ?: 1f)) {
+            cli.fail(command.id, "PREFLIGHT_FAILED", "Dual zoom is outside the supported range"); return
+        }
+        try {
+            val requested = command.options!!.controls(mainControls?.support ?: LiveControlSupport.NONE, mainControls?.manual ?: ManualSupport(camera2 = false), videoMode)
+            controlBar.applyRequested(requested)
+            session?.setControls(requested)
+        } catch (e: Exception) { cli.fail(command.id, "PREFLIGHT_FAILED", e.message ?: "Unsupported Dual controls"); return }
+        session?.setZoom(zoom)
+        when (command.command) {
+            "dual.preview" -> cli.complete(command.id, org.json.JSONObject().put("camera_ready", true).put("size", streamingSize.toString()))
+            "dual.capture" -> { photoPending = true; session?.capturePhoto(0) }
+            "dual.record" -> { recordPending = true; session?.startRecording() }
+        }
+    }
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
     private val manager by lazy { getSystemService(CameraManager::class.java) }
@@ -179,12 +227,15 @@ class DualPreviewActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         started = true
+        if (intent.hasExtra("cli_request_id")) cli.continueHandover(cliHost) else cli.attach(cliHost)
         recentMedia.start()
         main.post(tick)
         startIfReady()
     }
 
     override fun onStop() {
+        cliRequest?.takeIf { cli.active?.id == it.id }?.let { cliHost.cancel(it) }
+        cli.detach(cliHost)
         started = false
         root.keepScreenOn = false
         recentMedia.stop()
@@ -356,11 +407,19 @@ class DualPreviewActivity : ComponentActivity() {
     }
 
     private fun render() {
-        if (Build.VERSION.SDK_INT < 28) return message("Requires Android 9 (API 28) or later.")
+        if (Build.VERSION.SDK_INT < 28) { cliRequest?.let { cli.fail(it.id, "PREFLIGHT_FAILED", "Dual requires Android 9 or later") }; return message("Requires Android 9 (API 28) or later.") }
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED)
             return message("Camera permission required. Allow access in Live, then reopen Dual.")
         val candidates = DualPreviewPlanner.candidates(cameras)
-        if (candidates.isEmpty()) return message(unsupportedReport())
+        if (candidates.isEmpty()) { cliRequest?.let { cli.fail(it.id, "PREFLIGHT_FAILED", "No supported Dual cameras") }; return message(unsupportedReport()) }
+        cliRequest?.let { request ->
+            val requested = candidates.firstOrNull { it.logicalId == request.camera }
+            val ids = pair
+            if (requested == null || ids == null || ids.first == ids.second || requested.physical.none { it.id == ids.first } || requested.physical.none { it.id == ids.second }) {
+                cli.fail(request.id, "PREFLIGHT_FAILED", "Unsupported physical pair; use dual cameras")
+                return message("Requested camera pair is unavailable")
+            }
+        }
         val camera = candidates.firstOrNull { it.logicalId == logicalId } ?: candidates.first()
         if (logicalId != camera.logicalId) { logicalId = camera.logicalId; pair = null }
         val selected = pair?.takeIf { (a, b) -> a != b && camera.physical.any { it.id == a } && camera.physical.any { it.id == b } }
@@ -461,6 +520,7 @@ class DualPreviewActivity : ComponentActivity() {
                 lastSkewNs = null
                 refreshInfo()
                 setStatus("Unavailable: ${result.reason.label}")
+                cliRequest?.let { cli.fail(it.id, "PREFLIGHT_FAILED", result.reason.label) }
             }
             is DualPreviewPlanner.Result.Ready -> {
                 failed = false
@@ -488,6 +548,7 @@ class DualPreviewActivity : ComponentActivity() {
         override fun onStatus(message: String) = setStatus(message)
         override fun onStreaming(size: LiveSize) {
             streamingSize = size
+            main.post { cliReady() }
             liveIndicator.bindSizes(mapOf("preview" to size.toString()))
             views.forEach { it?.fitPreview(Size(size.width, size.height)) }
             updateControls()
@@ -500,6 +561,7 @@ class DualPreviewActivity : ComponentActivity() {
             physicalTimestampSkewNs(ta, tb)?.let { lastSkewNs = it }
         }
         override fun onFailed(message: String) {
+            cliRequest?.let { cli.fail(it.id, "EXECUTION_FAILED", message) }
             failed = true
             setStatus("Stopped · $message")
             retryButton?.visibility = View.VISIBLE
@@ -508,16 +570,28 @@ class DualPreviewActivity : ComponentActivity() {
             photoPending = false
             closeSession { updateControls() }
         }
+        override fun onMediaSaved(uris: List<android.net.Uri>, video: Boolean) {
+            val request = cliRequest ?: return
+            cliArtifacts += uris.mapIndexed { index, uri -> dev.halcamera.cli.CliArtifact("dual_${request.id}_$index.${if (video) "mp4" else "jpg"}", if (video) "video/mp4" else "image/jpeg", uri) }
+        }
         override fun onRecording() {
+            cliRequest?.let { cli.recordingStarted(it, mapOf("size" to streamingSize.toString(), "audio" to false)) }
             recordPending = false; recording = true
             recordingSince = SystemClock.elapsedRealtime()
             updateControls()
         }
         override fun onVideoSaved(result: Result<Int>) {
+            cliRequest?.let { request ->
+                result.fold({ cli.complete(request.id, org.json.JSONObject().put("artifact_count", cliArtifacts.size).put("recording", false), cliArtifacts.toList(),
+                    if (cliStopping) null else dev.halcamera.cli.CliFailure("RECORDING_INTERRUPTED", "Recording stopped unexpectedly")) },
+                    { cli.fail(request.id, "RECORDING_FAILED", it.message ?: "Dual recording failed") })
+            }
             result.fold({ Toast.makeText(this@DualPreviewActivity, "MP4 2개 저장 완료", Toast.LENGTH_SHORT).show() },
                 { Toast.makeText(this@DualPreviewActivity, "저장 실패: ${it.message}", Toast.LENGTH_LONG).show() })
         }
         override fun onPhotoSaved(result: Result<Int>) {
+            cliRequest?.let { request -> result.fold({ cli.complete(request.id, org.json.JSONObject().put("artifact_count", cliArtifacts.size), cliArtifacts.toList()) },
+                { cli.fail(request.id, "CAPTURE_FAILED", it.message ?: "Dual photo failed") }) }
             photoPending = false
             result.fold({ Toast.makeText(this@DualPreviewActivity, "두 센서 사진 ${it}개 저장 완료", Toast.LENGTH_SHORT).show() },
                 { Toast.makeText(this@DualPreviewActivity, "동시 사진 저장 실패: ${it.message}", Toast.LENGTH_LONG).show() })
@@ -536,7 +610,7 @@ class DualPreviewActivity : ComponentActivity() {
             retiredTextures.forEach { it.release() }; retiredTextures.clear()
             then()
             updateControls()
-            if (!failed) startIfReady()
+            if (!failed && !cliStopping) startIfReady()
         }
     }
 
@@ -648,12 +722,13 @@ class DualPreviewActivity : ComponentActivity() {
         return android.widget.HorizontalScrollView(this).apply { isHorizontalScrollBarEnabled = false; addView(row) }
     }
 
-    private fun busy() = closing || recording || recordPending || photoPending
+    private fun busy() = cli.active != null || closing || recording || recordPending || photoPending
 
     private fun updateControls() {
+        cli.setUiBusy(cliHost, closing || recording || recordPending || photoPending)
         root.keepScreenOn = started && !closing && !failed && streamingSize != null
-        controlBar.bind(videoMode, mainControls != null && !closing && !recordPending && !photoPending && streamingSize != null)
-        zoomControl.isEnabled = zoomAvailable && !closing && !recordPending && !photoPending && streamingSize != null
+        controlBar.bind(videoMode, cli.active == null && mainControls != null && !closing && !recordPending && !photoPending && streamingSize != null)
+        zoomControl.isEnabled = cli.active == null && zoomAvailable && !closing && !recordPending && !photoPending && streamingSize != null
         liveIndicator.setSizesEnabled(!busy())
         engineButton.text = engineName
         engineButton.isEnabled = !busy()
@@ -662,7 +737,7 @@ class DualPreviewActivity : ComponentActivity() {
         pairButtons.forEach { it.isEnabled = !busy(); it.alpha = if (it.isEnabled) 1f else 0.45f }
         pipSelector?.isEnabled = !busy()
         pipSelector?.alpha = if (busy()) 0.45f else 1f
-        recordButton?.isEnabled = (videoMode || mainControls != null) && !closing && !recordPending && !photoPending && !failed && streamingSize != null
+        recordButton?.isEnabled = cli.active == null && (videoMode || mainControls != null) && !closing && !recordPending && !photoPending && !failed && streamingSize != null
         recordButton?.setCaptureState(videoMode = videoMode, recording = recording)
         recordButton?.contentDescription = if (!videoMode) "두 센서 동시 사진 촬영" else if (recording) "두 카메라 녹화 정지" else "두 카메라 무음 녹화 시작"
         modeRow?.visibility = if (recording || recordPending) View.INVISIBLE else View.VISIBLE

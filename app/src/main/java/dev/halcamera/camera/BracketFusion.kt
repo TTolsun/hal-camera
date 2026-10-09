@@ -29,6 +29,8 @@ class BracketFusion(context: Context) {
     private val io = Executors.newSingleThreadExecutor()
     private val main = Handler(Looper.getMainLooper())
 
+    fun close() { io.shutdown() }
+
     /** One source: the JPEG to read and the request id that says which EV it asked for. */
     data class Source(val uri: Uri, val requestId: String, val fileName: String)
 

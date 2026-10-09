@@ -33,6 +33,7 @@ interface CliHost {
     fun isBusy(): Boolean = false
     fun execute(command: CliCommand)
     fun cancel(command: CliCommand)
+    fun snapshot(command: CliCommand) { throw CliFailure("PREFLIGHT_FAILED", "Snapshot unavailable on this screen") }
     fun stopRecording(command: CliCommand) { throw CliFailure("INVALID_ARGUMENT", "No recording on this screen") }
 }
 
@@ -90,7 +91,7 @@ class CommandCoordinator private constructor(private val context: Context) {
         val info = context.packageManager.getPackageInfo(context.packageName, 0)
         return CliJson.envelope().put("enabled", true).put("app_version", info.versionName)
             .put("commands", JSONArray(CliCommand.COMMANDS))
-            .put("controls", JSONArray(listOf("record.stop", "status", "request", "request.cancel")))
+            .put("controls", JSONArray(listOf("record.snapshot", "record.stop", "status", "request", "request.cancel")))
             .put("retention_ms", CommandStore.RETENTION_MS).put("max_completed_requests", CommandStore.MAX_RECORDS)
             .put("camera_permission", permission(Manifest.permission.CAMERA)).put("locked", locked())
             .put("completed", true)
@@ -123,7 +124,7 @@ class CommandCoordinator private constructor(private val context: Context) {
                 if (!enabled) throw CliFailure("CLI_DISABLED", "CLI was disabled")
                 if (uiBusy) throw CliFailure("BUSY", "A UI operation is running")
                 if (host?.isBusy() == true) throw CliFailure("BUSY", "A UI operation is running")
-                if (!permission(Manifest.permission.CAMERA)) throw CliFailure("PERMISSION_REQUIRED", "Allow camera access in the app")
+                if (!(command.command.startsWith("results.") || command.command.startsWith("baseline.") || command.command.startsWith("gallery.") || command.command == "cts.cases") && !permission(Manifest.permission.CAMERA)) throw CliFailure("PERMISSION_REQUIRED", "Allow camera access in the app")
                 if (!state(command.id, "preparing")) return@post
                 when (command.command) {
                     "cameras" -> {
@@ -131,12 +132,20 @@ class CommandCoordinator private constructor(private val context: Context) {
                         val cameras = JSONArray(endpoints.map { JSONObject(it.toJsonMap()).put("selectable", it.independentlyOpenable && it.physicalCameraId == null) })
                         complete(command.id, JSONObject().put("cameras", cameras))
                     }
+                    "dual.cameras" -> complete(command.id, JSONObject().put("cameras", CliJson.of(dev.halcamera.camera.readLogicalMultiCameras(context.getSystemService(CameraManager::class.java)).map {
+                        mapOf("camera_id" to it.logicalId, "physical" to it.physical.map { lens -> mapOf("id" to lens.id, "role" to lens.role.name) })
+                    })))
+                    "results.list", "results.show", "results.compare", "results.export", "results.delete", "baseline.add", "baseline.remove",
+                    "gallery.list", "gallery.export", "gallery.delete" -> io.execute {
+                        try { CliLibrary(context, this).execute(command) }
+                        catch (e: Exception) { fail(command.id, (e as? CliFailure)?.code ?: "LIBRARY_FAILED", e.message ?: "Library operation failed") }
+                    }
                     "streams" -> streamSupport(command)
                     "probe" -> probe(command)
                     "cts.cases" -> complete(command.id, JSONObject().put("cases", CliJson.of(suiteItems())))
                     else -> {
                         if (locked()) throw CliFailure("DEVICE_LOCKED", "Unlock the device")
-                        if (command.command in setOf("capture", "record.start") && Build.VERSION.SDK_INT <= 28 &&
+                        if (command.command in setOf("capture", "record.start", "burst", "bracket", "dual.capture", "dual.record") && Build.VERSION.SDK_INT <= 28 &&
                             (!permission(Manifest.permission.WRITE_EXTERNAL_STORAGE) || !permission(Manifest.permission.READ_EXTERNAL_STORAGE)))
                             throw CliFailure("PERMISSION_REQUIRED", "Allow storage access for photos on Android 8–9")
                         if (command.command == "record.start" && command.audio != false && !permission(Manifest.permission.RECORD_AUDIO))
@@ -165,9 +174,19 @@ class CommandCoordinator private constructor(private val context: Context) {
                 if (command.camera !in manager.cameraIdList) throw CliFailure("UNSUPPORTED_CAMERA", "Camera is not independently openable")
                 var support = dev.halcamera.camera.liveStreamSupport(manager.getCameraCharacteristics(command.camera!!))
                 if (command.engine == "CameraX") support = dev.halcamera.camera.cameraXStreamSupport(context, command.camera, support)
+                val characteristics = manager.getCameraCharacteristics(command.camera)
+                val controls = dev.halcamera.camera.liveControlSupport(characteristics)
+                val manual = if (command.engine == "CameraX") dev.halcamera.camera.ManualSupport(camera2 = false) else dev.halcamera.camera.manualSupport(characteristics, 30)
                 complete(command.id, JSONObject().put("camera_id", command.camera).put("engine", command.engine ?: "Camera2")
+                    .put("controls", CliJson.of(mapOf("zoom" to dev.halcamera.camera.zoomRange(manager, command.camera).let { listOf(it.first, it.second) },
+                        "ev_steps" to controls.evRange?.let { listOf(it.first, it.last) }, "ev_step" to controls.evStep,
+                        "ae_lock" to controls.aeLock, "af_lock" to controls.afLock, "flash" to controls.flashModes(false).map { it.name },
+                        "iso" to manual.iso?.let { listOf(it.first, it.last) }, "exposure_ns" to manual.exposureNs?.let { listOf(it.first.toString(), manual.maxExposureNs.toString()) },
+                        "focus_max_diopters" to manual.maxFocus, "white_balance" to manual.whiteBalances.map { it.name })))
                     .put("streams", CliJson.of(mapOf("preview" to support.preview.map { it.toString() },
                         "yuv" to support.yuv.map { it.toString() }, "jpeg" to support.jpeg.map { it.toString() },
+                        "raw" to support.raw.map { it.toString() }, "fps" to support.fps.map { "${it.min}-${it.max}" },
+                        "stabilization" to support.stabilization.map { it.name }, "yuv_format" to support.yuvSaveFormats.map { it.name },
                         "video" to support.videos.map { mapOf("size" to it.size.toString(), "fps" to it.fps, "codec" to it.codec) }))))
             } catch (e: Exception) { fail(command.id, (e as? CliFailure)?.code ?: "PREFLIGHT_FAILED", e.message ?: "Cannot read stream capabilities") }
         }
@@ -274,7 +293,7 @@ class CommandCoordinator private constructor(private val context: Context) {
     /** Stop is a control of the original request, so recording's BUSY lock cannot block it. */
     fun stopRecording(id: String?): JSONObject {
         id?.let(CliCommand::validateId)
-        val command = active?.takeIf { it.command == "record.start" && (id == null || it.id == id) }
+        val command = active?.takeIf { it.command in setOf("record.start", "dual.record") && (id == null || it.id == id) }
             ?: throw CliFailure("NOT_RECORDING", "No matching CLI recording is active")
         main.post {
             if (active?.id != command.id) return@post
@@ -287,6 +306,18 @@ class CommandCoordinator private constructor(private val context: Context) {
         return request(command.id)
     }
 
+    fun snapshot(): JSONObject {
+        val command = active?.takeIf { it.command == "record.start" } ?: throw CliFailure("NOT_RECORDING", "Start a CLI recording first")
+        main.post {
+            if (active?.id != command.id) return@post
+            try { host?.snapshot(command) ?: throw CliFailure("APP_NOT_FOREGROUND", "Recording screen unavailable") }
+            catch (e: Exception) { store.transition(command.id, store.read(command.id)!!.getString("state")) {
+                it.put("snapshot_error", e.message ?: "Snapshot failed")
+            } }
+        }
+        return request(command.id)
+    }
+
     private fun cancelWithCode(id: String, code: String) {
         val command = active?.takeIf { it.id == id } ?: return
         if (cancellationCode != "EXECUTION_TIMEOUT") cancellationCode = code
@@ -295,7 +326,7 @@ class CommandCoordinator private constructor(private val context: Context) {
         if (current == "saving") return // Submitted saves complete with their actual result.
         if (current == "accepted" || current == "preparing") {
             // A screenless command never reached the host; telling Live to stop preparing would pause its preview.
-            if ((command.command in CliCommand.CAMERA_COMMANDS && command.command != "streams") || command.command in setOf("preview.stop", "cts.run")) host?.cancel(command)
+            if ((command.command in CliCommand.CAMERA_COMMANDS && command.command != "streams") || command.command in setOf("preview.stop", "cts.run", "events", "meter", "live.info")) host?.cancel(command)
             fail(id, code, "Operation cancelled before capture")
         } else {
             state(id, "cancelling")

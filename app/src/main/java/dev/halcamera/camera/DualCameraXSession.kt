@@ -222,7 +222,8 @@ class DualCameraXSession(
         saving = true
         io.execute {
             val result = recording?.finish()
-            main.execute { result?.let { listener.onVideoSaved(it) }; finish() }
+            val uris = recording?.savedUris.orEmpty()
+            main.execute { if (uris.isNotEmpty()) listener.onMediaSaved(uris, true); result?.let { listener.onVideoSaved(it) }; finish() }
         }
     }
 

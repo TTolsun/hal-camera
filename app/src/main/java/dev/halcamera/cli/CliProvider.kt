@@ -54,12 +54,13 @@ class CliProvider : ContentProvider() {
     @Suppress("DEPRECATION")
     private fun direct(method: String, arg: String?, extras: Bundle?): JSONObject {
         val values = extras?.keySet()?.associateWith { extras.get(it) }.orEmpty()
-        if (method in setOf("hello", "status", "request", "request.cancel", "record.stop")) {
+        if (method in setOf("hello", "status", "request", "request.cancel", "record.stop", "record.snapshot")) {
             require(values.isEmpty()) { "Unexpected extras" }
             return when (method) {
                 "hello" -> { require(arg == null); commands.hello() }
                 "status" -> { require(arg == null); commands.status() }
                 "request" -> commands.request(requireNotNull(arg) { "Request ID required" })
+                "record.snapshot" -> { require(arg == null); commands.snapshot() }
                 "request.cancel" -> commands.cancel(requireNotNull(arg) { "Request ID required" })
                 else -> commands.stopRecording(arg)
             }

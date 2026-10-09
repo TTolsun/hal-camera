@@ -87,6 +87,7 @@ class DualPreviewSession(
         fun onResult(physical: Map<String, Long?>)
         fun onFailed(message: String)
         fun onRecording() {}
+        fun onMediaSaved(uris: List<android.net.Uri>, video: Boolean) {}
         fun onVideoSaved(result: Result<Int>) {}
         fun onPhotoSaved(result: Result<Int>) {}
         fun onZoomRange(range: Pair<Float, Float>) {}
@@ -220,7 +221,7 @@ class DualPreviewSession(
                     still = null
                     val saved = result.mapCatching {
                         check(active && !failed) { "Capture cancelled: camera closed." }
-                        MediaLibrary(context).saveDualPhotos(it).size
+                        MediaLibrary(context).saveDualPhotos(it).also { uris -> main.post { listener.onMediaSaved(uris, false) } }.size
                     }
                     saved.exceptionOrNull()?.let { android.util.Log.w("DualPreview", "Dual photo failed", it) }
                     photoPending = false
@@ -443,6 +444,7 @@ class DualPreviewSession(
         if (finished) return
         finished = true
         val saved = video?.finish()
+        video?.savedUris?.takeIf { it.isNotEmpty() }?.let { uris -> main.post { listener.onMediaSaved(uris, true) } }
         video = null
         if (saved != null) main.post { listener.onVideoSaved(saved) }
         surfaces.forEach { it.release() }

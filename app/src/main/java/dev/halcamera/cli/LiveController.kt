@@ -8,6 +8,11 @@ import org.json.JSONObject
 class LiveController(private val commands: CommandCoordinator, private val driver: Driver) : CliHost {
     interface Driver {
         fun prepare(command: CliCommand, ready: () -> Unit)
+        fun sequence(command: CliCommand, done: (JSONObject, List<CliArtifact>, CliFailure?) -> Unit)
+        fun cancelSequence()
+        fun inspect(command: CliCommand)
+        fun dual(command: CliCommand)
+        fun snapshot(done: (Result<PhotoResult>) -> Unit)
         fun streamInfo(): Map<String, Any?>
         fun photoLabels(): List<String>
         fun capture(id: String, done: (Result<PhotoResult>) -> Unit)
@@ -27,10 +32,19 @@ class LiveController(private val commands: CommandCoordinator, private val drive
     private var submitted = false
     private var cancelled = false
     private var recordingStopped = false
+    private val snapshots = mutableListOf<CliArtifact>()
+    private var snapshotPending = false
+    private var stopAfterSnapshot = false
 
     override fun execute(command: CliCommand) {
+        snapshots.clear(); snapshotPending = false; stopAfterSnapshot = false
         pending = command; prepared = false; submitted = false; cancelled = false; recordingStopped = false
-        if (command.command == "preview.stop") {
+        if (command.command in setOf("live.info", "events", "meter")) {
+            submitted = true
+            driver.inspect(command)
+        } else if (command.command.startsWith("dual.")) {
+            commands.beginHandover(); driver.dual(command); pending = null
+        } else if (command.command == "preview.stop") {
             submitted = true
             commands.state(command.id, "running")
             driver.stopPreview {
@@ -49,7 +63,12 @@ class LiveController(private val commands: CommandCoordinator, private val drive
         if (!prepared || submitted || commands.active?.id != command.id) return
         submitted = true
         if (!commands.state(command.id, "running")) { pending = null; driver.stopPreparing(); return }
-        if (command.command == "preview") {
+        if (command.command in setOf("burst", "bracket")) {
+            driver.sequence(command) { result, artifacts, failure ->
+                pending = null
+                commands.complete(command.id, result, artifacts, failure)
+            }
+        } else if (command.command == "preview") {
             pending = null
             commands.complete(command.id, JSONObject().put("camera_id", command.camera).put("camera_ready", true)
                 .put("engine", command.engine ?: "Camera2").put("streams", CliJson.of(driver.streamInfo())))
@@ -66,7 +85,7 @@ class LiveController(private val commands: CommandCoordinator, private val drive
                     commands.complete(command.id, JSONObject().put("camera_id", command.camera)
                         .put("recording", false).put("audio", command.audio != false).put("cancelled", cancelled)
                         .put("engine", command.engine ?: "Camera2").put("streams", CliJson.of(recordingStreams))
-                        .put("artifact_count", 1), listOf(CliArtifact("recording_${command.id}.mp4", "video/mp4", uri)),
+                        .put("artifact_count", 1 + snapshots.size), listOf(CliArtifact("recording_${command.id}.mp4", "video/mp4", uri)) + snapshots,
                         if (!recordingStopped && !cancelled) CliFailure("RECORDING_INTERRUPTED", "Recording stopped without a CLI stop request") else null)
                 }, { commands.fail(command.id, if (cancelled) "CANCELLED" else "RECORDING_FAILED", it.message ?: "Recording failed") })
             }
@@ -84,11 +103,31 @@ class LiveController(private val commands: CommandCoordinator, private val drive
     override fun cancel(command: CliCommand) {
         cancelled = true
         if (!submitted) { pending = null; driver.stopPreparing() }
-        else if (command.command == "record.start") driver.stopRecording()
+        else if (command.command == "record.start") stopRecording(command)
+        else if (command.command in setOf("burst", "bracket")) driver.cancelSequence()
+        else if (command.command != "capture") commands.fail(command.id, "CANCELLED", "Operation cancelled")
         // A submitted capture completes through its saved-pair callback, even after Activity.stop.
     }
 
+    override fun snapshot(command: CliCommand) {
+        if (snapshotPending || recordingStopped || cancelled || commands.store.read(command.id)?.optJSONObject("result")?.optBoolean("recording") != true)
+            throw CliFailure("BUSY", "Wait until recording or the previous snapshot is ready")
+        snapshotPending = true
+        commands.store.transition(command.id, "running") { it.put("snapshot_pending", true) }
+        driver.snapshot { result ->
+            snapshotPending = false
+            result.getOrNull()?.let { photo -> snapshots += photo.artifacts.ifEmpty { photo.uris.mapIndexed { i, uri ->
+                dev.halcamera.camera.PhotoArtifact("${photo.name}_snapshot_$i.jpg", "image/jpeg", uri)
+            } }.map { CliArtifact(it.name, it.mime, it.uri) } }
+            if (commands.active?.id == command.id) commands.store.transition(command.id, commands.store.read(command.id)!!.getString("state")) {
+                it.put("snapshot_count", snapshots.size).put("snapshot_pending", false).put("snapshot_error", result.exceptionOrNull()?.message)
+            }
+            if (stopAfterSnapshot && commands.active?.id == command.id) stopRecording(command)
+        }
+    }
+
     override fun stopRecording(command: CliCommand) {
+        if (snapshotPending) { stopAfterSnapshot = true; return }
         if (pending?.id != command.id || command.command != "record.start")
             throw CliFailure("NOT_RECORDING", "No matching recording is active")
         if (!submitted) {

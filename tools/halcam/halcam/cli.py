@@ -70,6 +70,16 @@ def parser():
     benchmark_run.add_argument("--output", required=True)
     benchmark_run.add_argument("--transfer-timeout", type=positive, default=60)
     execution_options(benchmark_run, 600)
+    run = commands.add_parser("run", help="Execute any command listed by doctor (advanced JSON-compatible path)")
+    common(run)
+    run.add_argument("operation")
+    run.add_argument("--camera")
+    run.add_argument("--engine", choices=("Camera2", "CameraX"))
+    run.add_argument("--option", action="append", default=[], metavar="KEY=VALUE")
+    run.add_argument("--stream", action="append", default=[], metavar="KEY=VALUE")
+    run.add_argument("--output")
+    run.add_argument("--transfer-timeout", type=positive, default=60)
+    execution_options(run)
     return root
 
 
@@ -92,6 +102,8 @@ SCREENLESS = ("streams", "cameras", "probe", "cts.cases")
 
 
 def app_command(args):
+    if args.command == "run":
+        return args.operation
     if args.command == "benchmark":
         return "benchmark." + args.benchmark_command
     if args.command == "cts":
@@ -155,7 +167,7 @@ def execute(args, context):
     print(f"request_id={rid}", file=sys.stderr, flush=True)
     payload = {"protocol_version": 1, "request_id": rid, "command": app_command(args),
                "params": {}, "execution_timeout_ms": int(args.timeout * 1000)}
-    if hasattr(args, "camera"):
+    if getattr(args, "camera", None) is not None:
         payload["params"]["camera_id"] = args.camera
     if getattr(args, "engine", None):
         payload["params"]["engine"] = args.engine
@@ -168,6 +180,27 @@ def execute(args, context):
     if hasattr(args, "cases"):
         payload["params"]["cases"] = list(args.cases)
 
+    if args.command == "run":
+        def pairs(items):
+            values = {}
+            for item in items:
+                key, sep, value = item.partition("=")
+                if not sep or not key or not value or key in values:
+                    raise CliError("INVALID_ARGUMENT", "Use each KEY=VALUE once")
+                values[key] = value
+            return values
+        if args.option:
+            payload["params"]["options"] = pairs(args.option)
+        if args.stream:
+            payload["params"]["streams"] = pairs(args.stream)
+        camera_commands = {"preview", "capture", "burst", "bracket", "record.start", "streams", "dual.preview", "dual.capture", "dual.record", "benchmark.run"}
+        if args.operation in camera_commands:
+            payload["params"].setdefault("camera_id", "0")
+        if args.operation == "benchmark.run":
+            payload["params"]["profile_id"] = "camera2-standard-v2"
+        if args.operation not in hello.get("commands", []):
+            raise CliError("INVALID_ARGUMENT", "This APK does not list that command; run doctor")
+
     previous = None
     if args.request_id:
         try:
@@ -175,7 +208,7 @@ def execute(args, context):
         except CliError as error:
             if error.code != "REQUEST_NOT_FOUND":
                 raise
-    if previous is None and app_command(args) not in SCREENLESS:
+    if previous is None and app_command(args) not in SCREENLESS and not app_command(args).startswith(("results.", "baseline.", "gallery.")) and app_command(args) != "dual.cameras":
         status = raise_app_error(adb.read("/v1/status"))
         if status.get("busy"):
             raise CliError("BUSY", "An app operation is already running", request_id=rid)
