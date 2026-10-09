@@ -42,10 +42,13 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 [CLI](cli.md)를 따�
 
 ## Live에서 촬영하세요
 
-1. 상단에서 엔진과 카메라를 선택합니다. Camera2와 CameraX 모두 선택한 엔진에서 사진·동영상을 저장합니다.
-2. 사진 모드에서 셔터를 누릅니다. 기본 설정은 YUV를 변환한 JPEG와 카메라가 만든 JPEG 두 장을 `DCIM/HALCamera`에 저장합니다. Camera2에서 출력을 하나만 켜면 해당 사진만 저장합니다. 두 엔진이 사진 쌍을 구성하는 차이는 [Engine](engine.md#두-엔진의-차이)에서 확인합니다.
-3. 동영상 모드에서 셔터를 눌러 녹화를 시작하고 다시 눌러 종료합니다. 종료 처리 중에는 셔터를 사용할 수 없으며, 저장이 끝나면 안내 문구가 나타납니다.
-4. 최근 썸네일을 눌러 앨범을 확인합니다.
+1. 상단에서 엔진과 카메라를 선택합니다.
+2. 사진 모드에서 셔터를 누릅니다.
+3. 저장 완료 안내가 나오면 최근 썸네일을 눌러 사진을 확인합니다.
+
+**기본 설정에서는 사진 두 장이 저장됩니다.** YUV를 변환한 JPEG와 카메라가 만든 JPEG이며, `DCIM/HALCamera`에 있습니다. Camera2에서 출력을 하나만 켜면 해당 사진만 저장합니다. 두 엔진이 사진을 연결하는 차이는 [Engine](engine.md#사진-두-장은-어떻게-연결하나요)에 있습니다.
+
+동영상을 찍으려면 동영상 모드로 바꿉니다. 셔터를 한 번 눌러 시작하고 다시 눌러 끝냅니다. 종료 처리 중에는 셔터를 사용할 수 없습니다. 저장이 끝나면 안내 문구가 나타납니다. Camera2와 CameraX 모두 선택한 엔진에서 촬영합니다.
 
 <figure class="app-screenshot" id="screen-live">
 <a href="assets/screenshots/live.png" aria-label="Camera2 Live 사진 모드와 실시간 정보 원본 보기"><img src="assets/screenshots/live.png" alt="Camera2 Live 사진 모드와 실시간 정보" width="1440" height="3120" loading="lazy" decoding="async"></a>
@@ -54,7 +57,14 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 [CLI](cli.md)를 따�
 
 녹화 중에는 셔터 아래에 경과 시간이 표시됩니다. 줌은 계속 바꿀 수 있지만 엔진·카메라·모드 변경, 일시정지, 갤러리와 다른 도구 진입은 제한됩니다. 녹화를 마치면 사진용 프리뷰로 돌아오며 동영상 모드 선택은 유지됩니다.
 
+## 추가 설정
+
+**첫 촬영을 마쳤다면 필요한 설정만 골라 보세요.** 기본 촬영에는 아래 설정을 모두 읽을 필요가 없습니다.
+
 ### 수동 촬영 조건을 고정하세요
+
+<details markdown="1" id="detail-e76a9da117" data-search-section>
+<summary>수동 촬영 설정</summary>
 
 1. Camera2 Live 상단의 화살표를 펼치고 `M`을 누릅니다. 셔터 위에 Manual 패널이 열립니다.
 2. `ISO` 또는 `Shutter`에서 노출을 `Manual`으로 바꿉니다. 두 값은 현재 관측값을 지원 범위에 맞춰 함께 고정합니다. 범위 때문에 값이 달라지면 안내합니다.
@@ -66,7 +76,12 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 [CLI](cli.md)를 따�
 
 프리뷰·사진·녹화와 녹화 중 사진에 같은 수동 설정을 적용합니다. 동영상 모드 전환으로 노출 범위가 줄면 값을 조정하고 안내합니다. 카메라·엔진·스트림 구성을 바꾸면 자동으로 초기화합니다. CameraX에서는 미지원 사유와 기존 상단 엔진 버튼의 위치를 안내합니다. Benchmark의 측정 계약에는 영향을 주지 않습니다.
 
+</details>
+
 ### Live 스트림을 설정하세요
+
+<details markdown="1" id="detail-f29a963033" data-search-section>
+<summary>스트림 설정</summary>
 
 1. Live 옆의 크기 표시를 누릅니다. `Lab → Settings → Live Streams`에서도 같은 설정을 열 수 있습니다.
 2. Preview 크기와 YUV·JPEG·RAW의 크기 또는 `Off`를 선택합니다. 세 출력을 모두 끄면 프리뷰만 실행하며 사진 셔터는 비활성화됩니다.
@@ -76,7 +91,12 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 [CLI](cli.md)를 따�
 
 설정은 카메라와 엔진마다 구분합니다. CameraX 녹화 포맷은 Auto이며 코덱은 라이브러리가 선택합니다. Live 설정은 Benchmark의 profile을 바꾸지 않습니다. API별 구성 검사와 저장 방식은 [Camera2 엔진](engine.md#camera2-엔진)에서 확인합니다.
 
+</details>
+
 ### 두 물리 카메라를 함께 확인하세요
+
+<details markdown="1" id="detail-e8f4afe277" data-search-section>
+<summary>두 카메라 설정</summary>
 
 1. Live 상단에서 Camera2 또는 CameraX를 선택하고 하단에서 `Dual · P`를 선택합니다. Camera 1은 메인 화면, Camera 2는 작은 서브 프리뷰에 표시됩니다.
 2. 기존 카메라 선택 버튼이나 상단 펼침 버튼에서 Camera 1·2의 렌즈를 고릅니다. `1 ↔ 2`로 메인과 서브를 바꿀 수 있습니다.
@@ -86,14 +106,24 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 [CLI](cli.md)를 따�
 
 논리 멀티 카메라와 선택한 출력 조합을 지원하는 기기에서 사용할 수 있습니다. 두 파일의 시작 시각이나 길이가 같다고 보장하지 않습니다.
 
+</details>
+
 ### 손떨림 보정을 선택하세요
+
+<details markdown="1" id="detail-aa6a89b2d7" data-search-section>
+<summary>손떨림 보정 설정</summary>
 
 1. 촬영·녹화를 끝내고 Live Streams를 엽니다.
 2. Stabilization의 Mode에서 모드를 선택합니다. 두 엔진 모두 Auto·Off와 지원되는 보정 모드를 표시합니다. CameraX의 EIS (Video)는 녹화 중에 적용됩니다.
 3. 저장하여 프리뷰를 재개합니다. Auto는 카메라 요청 템플릿의 기본값으로 복귀합니다.
 4. Live 상단의 P·Y·J 크기 표시 옆에서 실제 모드를 확인합니다. EIS: V는 Video, EIS: P, V는 Preview + Video이며, EIS: ?는 확인 불가입니다. EIS 표시를 누르면 Live Streams 설정을 엽니다. 정상적인 미적용 상태에서는 상태 영역을 숨깁니다. 요청과 다른 모드가 1초 이상 보고되면 주황색으로 요청값과 결과값을 표시합니다. 이 상태는 카메라의 결과 메타데이터이며 실제 흔들림 감소량을 뜻하지 않습니다.
 
+</details>
+
 ### 초점과 노출을 조절하세요
+
+<details markdown="1" id="detail-f2bbad292d" data-search-section>
+<summary>초점·노출 조절</summary>
 
 상단 가운데 화살표로 제어 줄을 펼칩니다. 선택한 Flash·AF·AE와 EV는 제어 줄을 접어도 유지됩니다. AF·AE 잠금은 같은 버튼으로 해제하고, 플래시는 `Off`로, EV는 눈금 옆 `0`으로 초기화합니다. 카메라나 엔진을 바꾸면 제어가 기본값으로 돌아갑니다.
 
@@ -109,6 +139,8 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 [CLI](cli.md)를 따�
 </figure>
 
 프리뷰 정보의 `AE Locked`는 노출 잠금, `AF No focus`는 AF 잠금 상태에서 초점을 맞추지 못했음을 뜻합니다. [Callback](callback.md) 그래프를 켜면 이 정보 줄을 숨기고 프레임별 콜백을 표시합니다. 촬영 지연이나 노출 변화가 예상과 다르면 [디버깅](troubleshooting.md#앱과-프레임워크hal을-구분하세요)을 확인하세요.
+
+</details>
 
 ## 앱 버전과 빌드 설정
 
@@ -136,4 +168,4 @@ PC 터미널에서 촬영·녹화·CTS를 실행하려면 [CLI](cli.md)를 따�
 
 <!-- omm:end id=build-identity -->
 
-**다음 단계:** 반복 측정은 [Benchmark](benchmark.md), 문서 수정과 검증 절차는 [Evidence](evidence.md)를 확인하세요.
+**다음 단계:** 반복 측정은 [Benchmark](benchmark.md), 문서 수정과 검증 절차는 [문서 관리](contributing.md)를 확인하세요.
