@@ -5,12 +5,59 @@ title: CTS
 
 **`Lab → CTS`에서 검사 방식을 고르고 실행하세요.** 앱의 결과는 사전 점검용입니다. 공식 CTS 판정은 cts-tradefed의 `test_result.xml`로 확인합니다.
 
+## 선택한 항목을 실행하세요
+
+1. Live의 `Lab → CTS`를 엽니다.
+2. `커스텀 케이스` 또는 `CTS 원문 케이스`를 고릅니다. 차이가 궁금하면 [방식 비교](#검사-방식의-차이)를 확인하세요.
+3. 실행할 항목을 체크합니다. 하단에서 선택 개수와 예상 시간을 확인합니다.
+4. `실행`을 누르고 필요한 권한을 허용합니다.
+5. 끝난 카드를 눌러 결과를 확인합니다.
+
+**확인할 결과:** 선택한 항목에 판정과 소요 시간이 표시됩니다. 실패나 SKIP이 있으면 [판정 읽기](#판정을-읽으세요)에서 다음 확인 항목을 찾으세요.
+
+| 필요할 때 | 조작과 결과 |
+| --- | --- |
+| 한꺼번에 선택합니다. | 그룹의 `전체 선택`을 누릅니다. 선택은 다음에 열 때도 유지됩니다. |
+| 도중에 멈춥니다. | `중단`을 누릅니다. 현재 항목은 `중단됨`, 나머지는 `실행 안 함`으로 남습니다. |
+| 결과를 가져갑니다. | `복사`는 전체 보고서를 클립보드에 넣습니다. `공유`는 같은 내용을 다른 앱으로 보냅니다. |
+| 다시 검사합니다. | `다시 실행`을 누르면 같은 항목을 처음부터 실행합니다. |
+
+<details markdown="1" id="detail-aeaf43fd9f" data-search-section>
+<summary>권한·예상 시간·실행 순서</summary>
+
+- Live의 카메라가 `close(done)`을 마친 뒤 CTS를 엽니다.
+- 카메라 권한이 필요하며 녹화 항목은 마이크 권한도 확인합니다.
+- 항목마다 공개 카메라를 순회합니다. 컬러 출력이 없거나 외장 카메라이면 CTS와 같은 사유로 건너뜁니다.
+- 한 항목이 카메라를 닫고 결과를 보고한 뒤 다음 항목을 시작합니다.
+- 행마다 제목과 예상 시간을 표시합니다. 이력이 없는 원문 메서드는 `시간 미상`으로 표시하며, 커스텀 행에는 원본도 표시합니다.
+- 진행 중에는 단계별 결과를 바로 추가합니다. 완료 후에는 판정과 소요 시간을 표시하고 머리글에 전체 결과를 모읍니다.
+
+</details>
+
+항목 하나만 보려면 행의 `›`를 누릅니다. 커스텀 케이스는 한 단계가 실패해도 나머지를 계속 실행합니다. CTS 원문은 중단 처리에 몇 초가 걸릴 수 있습니다.
+
+<details markdown="1" id="cts-run-internals" data-search-section>
+<summary>단일 항목 실행과 내부 처리</summary>
+
+항목 하나만 따로 보려면 행의 `›`를 누릅니다. 커스텀 케이스는 `CtsCaseActivity`, CTS 원문은 `VendoredCaseActivity`가 열리며, `실행`·`중단`·`복사`·`공유`의 동작은 아래와 같고 결과 표시만 그 항목 하나에 맞춰져 있습니다.
+
+커스텀 케이스는 한 단계가 실패해도 나머지 단계와 카메라를 계속 실행합니다. 화면의 SurfaceView가 CTS의 `Camera2SurfaceViewCtsActivity` 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 `surfaceChanged`를 기다린 뒤 세션을 엽니다. 카메라 열기·세션 구성·첫 결과·닫기의 대기 시간은 CTS `CameraTestUtils`와 같은 3초입니다.
+
+CTS 원문 케이스의 한 번 실행은 다릅니다. `실행`을 누르면 카메라와 마이크 권한을 확인한 뒤 JUnit이 테스트 메서드를 작업 스레드에서 돌립니다. 테스트는 카메라 전부를 스스로 순회하므로 진행 중에는 경과 시간만 갱신되고, 실패가 생기면 그 즉시 실패 카드가 추가됩니다. `중단`은 실행 중인 테스트가 쥔 카메라를 닫아 테스트를 실패시키는 방식이라 몇 초 뒤에 `중단됨`으로 끝납니다. JUnit에는 실행 중인 본문을 멈출 수단이 없기 때문입니다. 실행 화면 자체가 CTS의 `Camera2SurfaceViewCtsActivity`를 상속하므로 테스트의 `updatePreviewSurface`가 같은 SurfaceView를 그대로 씁니다.
+
+</details>
+
+## 검사 방식의 차이
+
 | 방식 | 무엇을 실행하나요? | 판정 단위 |
 | --- | --- | --- |
 | 커스텀 케이스 | CTS 규칙과 상수를 앱의 Kotlin으로 옮긴 다섯 가지 검사입니다. | 카메라와 단계별로 판정합니다. |
 | CTS 원문 케이스 | AOSP의 Java 테스트를 앱 안의 JUnit으로 실행합니다. | 테스트 메서드 하나에 판정 하나를 냅니다. |
 
 두 방식 모두 Benchmark의 반복 측정과 회귀 점수에는 포함하지 않습니다.
+
+<details markdown="1" id="detail-611a303ae2" data-search-section>
+<summary>검사 실행 구조</summary>
 
 ```mermaid
 sequenceDiagram
@@ -30,9 +77,6 @@ sequenceDiagram
         end
     end
 ```
-
-<details markdown="1" id="detail-611a303ae2" data-search-section>
-<summary>검사 실행 구조</summary>
 
 한 번의 실행에는 한 종류만 들어갑니다. 취소하면 남은 항목은 실행하지 않으며, 다음 케이스는 현재 케이스의 정리가 끝난 뒤 시작합니다.
 
@@ -109,7 +153,7 @@ CTS 원문 케이스 목록은 `:ctsvendor` 모듈에 가져온 테스트 클래
 | `StillCaptureTest` | JPEG·HEIC·RAW·DNG 촬영, AE/AF 수렴, 줌, 회전, 초점 거리, 프리뷰와 정지 영상 크기 조합, 타임스탬프 등 21개 메서드입니다. |
 | `BurstCaptureTest` | JPEG·YUV·RAW 연속 촬영의 프레임 순서와 처리량을 검사하는 3개 메서드입니다. |
 
-업스트림 본문이 TODO뿐인 `testCameraRecorderOrdering`·`testMediaCodecRecording`·`testTimelapseRecording`은 목록에서 제외합니다. 측정 이력이 없는 메서드는 `시간 미상`으로 표시합니다. `UiAutomation`이나 `@TestApi`가 필요한 메서드는 초기화 단계에서 실패할 수 있습니다. 기존 기기별 결과와 소요 시간은 [Evidence](evidence.md#cts-원문-케이스)에 있습니다.
+업스트림 본문이 TODO뿐인 `testCameraRecorderOrdering`·`testMediaCodecRecording`·`testTimelapseRecording`은 목록에서 제외합니다. 측정 이력이 없는 메서드는 `시간 미상`으로 표시합니다. `UiAutomation`이나 `@TestApi`가 필요한 메서드는 초기화 단계에서 실패할 수 있습니다. 기존 기기별 결과와 소요 시간은 [Validation](evidence.md#cts-원문-케이스)에 있습니다.
 
 <div id="screen-cts-vendored">
 <details markdown="1" id="detail-4ad472febd" data-search-section>
@@ -124,41 +168,6 @@ CTS 원문 케이스 목록은 `:ctsvendor` 모듈에 가져온 테스트 클래
 </div>
 
 가져온 소스는 AOSP `android16-release` 브랜치의 `cts/tests/camera`와 `frameworks/ex/camera2/public`이며, 원본 커밋과 적용한 패치 여덟 건(`@TestApi`·`@FlaggedApi` 호출을 공개 API로 바꾸거나 제거하고, shell 권한 행을 만들지 않게 한 것)은 `ctsvendor/UPSTREAM.md`에 있습니다. Android 14(API 34) 아래 기기에서는 이 경로가 비활성화됩니다. 업스트림이 이 파일 집합을 `min_sdk_version 34`로 빌드하기 때문입니다.
-
-## 선택한 항목을 실행하세요
-
-1. Live의 `Lab → CTS`를 엽니다.
-2. `커스텀 케이스` 또는 `CTS 원문 케이스`를 고릅니다.
-3. 실행할 항목을 체크합니다. 하단에서 선택 개수와 예상 시간을 확인합니다.
-4. `실행`을 누르고 필요한 권한을 허용합니다.
-5. 끝난 카드를 눌러 결과를 확인합니다.
-
-| 필요할 때 | 조작과 결과 |
-| --- | --- |
-| 한꺼번에 선택합니다. | 그룹의 `전체 선택`을 누릅니다. 선택은 다음에 열 때도 유지됩니다. |
-| 도중에 멈춥니다. | `중단`을 누릅니다. 현재 항목은 `중단됨`, 나머지는 `실행 안 함`으로 남습니다. |
-| 결과를 가져갑니다. | `복사`는 전체 보고서를 클립보드에 넣습니다. `공유`는 같은 내용을 다른 앱으로 보냅니다. |
-| 다시 검사합니다. | `다시 실행`을 누르면 같은 항목을 처음부터 실행합니다. |
-
-<details markdown="1" id="detail-aeaf43fd9f" data-search-section>
-<summary>권한·예상 시간·실행 순서</summary>
-
-- Live의 카메라가 `close(done)`을 마친 뒤 CTS를 엽니다.
-- 카메라 권한이 필요하며 녹화 항목은 마이크 권한도 확인합니다.
-- 항목마다 공개 카메라를 순회합니다. 컬러 출력이 없거나 외장 카메라이면 CTS와 같은 사유로 건너뜁니다.
-- 한 항목이 카메라를 닫고 결과를 보고한 뒤 다음 항목을 시작합니다.
-- 행마다 제목과 예상 시간을 표시합니다. 이력이 없는 원문 메서드는 `시간 미상`으로 표시하며, 커스텀 행에는 원본도 표시합니다.
-- 진행 중에는 단계별 결과를 바로 추가합니다. 완료 후에는 판정과 소요 시간을 표시하고 머리글에 전체 결과를 모읍니다.
-
-</details>
-
-항목 하나만 따로 보려면 행의 `›`를 누릅니다. 커스텀 케이스는 `CtsCaseActivity`, CTS 원문은 `VendoredCaseActivity`가 열리며, `실행`·`중단`·`복사`·`공유`의 동작은 아래와 같고 결과 표시만 그 항목 하나에 맞춰져 있습니다.
-
-커스텀 케이스는 한 단계가 실패해도 나머지 단계와 카메라를 계속 실행합니다. 화면의 SurfaceView가 CTS의 `Camera2SurfaceViewCtsActivity` 역할을 하며, 러너가 필요한 크기로 버퍼를 바꾸고 `surfaceChanged`를 기다린 뒤 세션을 엽니다. 카메라 열기·세션 구성·첫 결과·닫기의 대기 시간은 CTS `CameraTestUtils`와 같은 3초입니다.
-
-CTS 원문 케이스의 한 번 실행은 다릅니다. `실행`을 누르면 카메라와 마이크 권한을 확인한 뒤 JUnit이 테스트 메서드를 작업 스레드에서 돌립니다. 테스트는 카메라 전부를 스스로 순회하므로 진행 중에는 경과 시간만 갱신되고, 실패가 생기면 그 즉시 실패 카드가 추가됩니다. `중단`은 실행 중인 테스트가 쥔 카메라를 닫아 테스트를 실패시키는 방식이라 몇 초 뒤에 `중단됨`으로 끝납니다. JUnit에는 실행 중인 본문을 멈출 수단이 없기 때문입니다. 실행 화면 자체가 CTS의 `Camera2SurfaceViewCtsActivity`를 상속하므로 테스트의 `updatePreviewSurface`가 같은 SurfaceView를 그대로 씁니다.
-
-
 
 <div id="screen-cts-running">
 <details markdown="1" id="detail-5459e791e2" data-search-section>
@@ -252,7 +261,7 @@ CTS 원문 클래스를 추가하려면 테스트마다 코드를 쓰지 않습�
 
 <details>
 <summary>코드 근거를 확인하세요</summary>
-<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cts/</code>에서 <code>CtsEntryActivity.kt</code>(방식 선택), <code>CtsCatalog.kt</code>(케이스 목록), <code>CtsRunner.kt</code>·<code>CameraCaseRunner.kt</code>·<code>Camera2Ops.kt</code>(공통 계약과 Camera2 호출), <code>CtsCaseListActivity.kt</code>·<code>CtsCaseActivity.kt</code>(화면), <code>CaseReportPresenter.kt</code>(보고서), <code>suite/</code>의 <code>CtsChecklistActivity.kt</code>·<code>CtsSuiteRunActivity.kt</code>(체크리스트와 차례 실행)와 <code>SuitePlan.kt</code>·<code>SuiteReport.kt</code>(선택·예상 시간·통합 보고서), 그리고 <code>onoff/</code>·<code>switching/</code>·<code>sizes/</code>·<code>combination/</code>·<code>snapshot/</code>의 <code>…Rules.kt</code>(판정)와 <code>…Runner.kt</code>(실행), 공유 규칙 <code>recording/BasicRecordingRules.kt</code>를 확인하세요. CTS 원문 경로는 <code>cts/vendored/</code>의 두 화면과 <code>ctsvendor/src/main/java/dev/halcamera/ctsvendor/</code>의 <code>VendoredCts.kt</code>·<code>VendoredRun.kt</code>·<code>VendoredCatalog.kt</code>, 패치 목록 <code>ctsvendor/UPSTREAM.md</code>입니다. JVM 테스트는 <code>app/src/test/java/dev/halcamera/cts/</code>에 있습니다. 코드 확인과 기기 검증의 범위는 <a href="evidence.html">Evidence</a>에서 구분합니다.</p>
+<p class="doc-evidence">저장소의 <code>app/src/main/java/dev/halcamera/cts/</code>에서 <code>CtsEntryActivity.kt</code>(방식 선택), <code>CtsCatalog.kt</code>(케이스 목록), <code>CtsRunner.kt</code>·<code>CameraCaseRunner.kt</code>·<code>Camera2Ops.kt</code>(공통 계약과 Camera2 호출), <code>CtsCaseListActivity.kt</code>·<code>CtsCaseActivity.kt</code>(화면), <code>CaseReportPresenter.kt</code>(보고서), <code>suite/</code>의 <code>CtsChecklistActivity.kt</code>·<code>CtsSuiteRunActivity.kt</code>(체크리스트와 차례 실행)와 <code>SuitePlan.kt</code>·<code>SuiteReport.kt</code>(선택·예상 시간·통합 보고서), 그리고 <code>onoff/</code>·<code>switching/</code>·<code>sizes/</code>·<code>combination/</code>·<code>snapshot/</code>의 <code>…Rules.kt</code>(판정)와 <code>…Runner.kt</code>(실행), 공유 규칙 <code>recording/BasicRecordingRules.kt</code>를 확인하세요. CTS 원문 경로는 <code>cts/vendored/</code>의 두 화면과 <code>ctsvendor/src/main/java/dev/halcamera/ctsvendor/</code>의 <code>VendoredCts.kt</code>·<code>VendoredRun.kt</code>·<code>VendoredCatalog.kt</code>, 패치 목록 <code>ctsvendor/UPSTREAM.md</code>입니다. JVM 테스트는 <code>app/src/test/java/dev/halcamera/cts/</code>에 있습니다. 코드 확인과 기기 검증의 범위는 <a href="evidence.html">Validation</a>에서 구분합니다.</p>
 </details>
 
 **다음 단계:** 판정에 쓰인 시간 규칙이 어디서 오는지 [Benchmark](benchmark.md)의 측정 범위와 비교해 읽으세요. CTS는 통과·실패를, Benchmark는 얼마나 걸리는지를 답합니다.

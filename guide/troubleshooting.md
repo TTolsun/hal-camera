@@ -132,7 +132,7 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 ## 알려진 제약
 
-미구현 지표와 추가 검증 사항은 [Architecture](architecture.md#미완성-기능과-추가-검증)에서 관리합니다. 기기에서 확인한 결과는 [Evidence](evidence.md)에 있습니다.
+미구현 지표와 추가 검증 사항은 [Architecture](architecture.md#미완성-기능과-추가-검증)에서 관리합니다. 기기에서 확인한 결과는 [Validation](evidence.md)에 있습니다.
 
 <details markdown="1" id="calculation-tests" data-search-section>
 <summary>앱 계산 규칙의 테스트 근거</summary>
@@ -141,7 +141,7 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 동일한 이벤트 목록을 `MetricExtractor`에 입력하는 JVM 테스트로 계산 규칙을 확인할 수 있습니다. `MetricExtractorTest`는 표본 수가 14개일 때 부족으로 판정하고, 15개일 때 정상으로 판정하는 경계를 검사합니다.
 
-앱의 결과 콜백 간격만으로 HAL 내부 프레임 드롭을 확정할 수 없습니다. 시스템 자료로 확인한 사실과 앱이 계산한 값을 구분해 기록하세요. 현재 기기 관찰 기록은 [Evidence](evidence.md)에서 확인할 수 있습니다.
+앱의 결과 콜백 간격만으로 HAL 내부 프레임 드롭을 확정할 수 없습니다. 시스템 자료로 확인한 사실과 앱이 계산한 값을 구분해 기록하세요. 현재 기기 관찰 기록은 [Validation](evidence.md)에서 확인할 수 있습니다.
 
 </details>
 

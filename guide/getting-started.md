@@ -18,7 +18,7 @@ title: Quickstart
 
 3. HAL CAMERA를 열고 카메라 권한을 허용합니다. 소리를 녹음하려면 마이크 권한도 허용합니다.
 
-업데이트에서 서명 오류가 나면 기존 설치와 같은 서명의 APK를 받으세요. 앱을 삭제하면 내부 실행 기록이 사라집니다. 소스 빌드가 필요한 경우에는 [앱 빌드](building.md)를 확인하세요.
+업데이트에서 서명 오류가 나면 기존 설치와 같은 서명의 APK를 받으세요. 앱을 삭제하면 내부 실행 기록이 사라집니다. 소스 빌드가 필요한 경우에는 [Build](building.md)를 확인하세요.
 
 ## 첫 화면을 확인하세요
 
@@ -36,8 +36,8 @@ title: Quickstart
 | 촬영 조건을 바꾸고 파일을 확인합니다. | [Live](live.md) |
 | 지원 사양을 확인하고 테스트합니다. | [Probe](probe.md) · [CTS](cts.md) |
 | 지연을 반복 측정하거나 콜백을 관찰합니다. | [Benchmark](benchmark.md) · [Callback](callback.md) |
-| PC에서 반복 실행하고 결과를 받습니다. | [자동화](automation.md) |
-| 예상과 다른 결과의 원인을 좁힙니다. | [문제 찾기](troubleshooting.md) |
+| PC에서 반복 실행하고 결과를 받습니다. | [Automation](automation.md) |
+| 예상과 다른 결과의 원인을 좁힙니다. | [Troubleshooting](troubleshooting.md) |
 
 ## 앱 버전을 기록하세요
 
