@@ -34,9 +34,9 @@ class LiveReadings(
     private var lastSystemNs = 0L
     private val samplingSystem = AtomicBoolean(false)
 
-    fun update(events: List<Event>, frames: List<Event>, time: Long, sessionId: String, controls: LiveControls, zoomRatio: Float) {
+    fun update(events: List<Event>, frames: List<Event>, time: Long, sessionId: String, controls: LiveControls) {
         last = readout.read(events, sessionId, time)
-        if (metrics.visibility == View.VISIBLE) updateReadings(frames, time, controls, zoomRatio)
+        if (metrics.visibility == View.VISIBLE) updateReadings(frames, time, controls)
         if (time - lastSystemNs >= 1_000_000_000L && samplingSystem.compareAndSet(false, true)) {
             lastSystemNs = time
             // PSS collection can block for tens of milliseconds. Never run it on the preview's UI thread.
@@ -44,17 +44,12 @@ class LiveReadings(
         }
     }
 
-    private fun updateReadings(frames: List<Event>, time: Long, controls: LiveControls, zoomRatio: Float) {
+    private fun updateReadings(frames: List<Event>, time: Long, controls: LiveControls) {
         val frame = frames.lastOrNull()?.takeIf { time - it.atNs < 1_500_000_000L }
         fun num(key: String) = (frame?.values?.get(key) as? Number)?.toDouble()
         // Measurements and camera state come first; active settings remain visible after the controls close.
-        // Only a sustained applied zoom mismatch is added below the measured state.
-        val recent = frames.takeLast(10)
-        fun differs(key: String, want: Double, tolerance: Double) = recent.size == 10 &&
-            recent.all { e -> (e.values[key] as? Number)?.toDouble()?.let { kotlin.math.abs(it - want) > tolerance } == true }
         val extras = listOfNotNull(
-            LiveControlBar.flashState(num("flashState")?.toInt(), controls),
-            num("zoomRatio")?.takeIf { differs("zoomRatio", zoomRatio.toDouble(), 0.01 * zoomRatio) }?.let { "Zoom ${"%.2f".format(Locale.US, it)}x applied" })
+            LiveControlBar.flashState(num("flashState")?.toInt(), controls))
         val settings = listOfNotNull(
             controls.flash.takeIf { it != FlashMode.OFF }?.label,
             "AE Lock".takeIf { controls.aeLock },

@@ -1,6 +1,6 @@
 # Live pinch zoom device validation
 
-On 2026-10-11, the signed release build based on main `102ac1dd` plus the pinch-zoom change was updated in place on a Samsung Galaxy S25+ (SM-S936N), Android 16. App version: 0.23.0 (660). Existing app data was retained.
+On 2026-10-11, the signed release build based on main `04c93ab9` plus the pinch-zoom change was updated in place on a Samsung Galaxy S25+ (SM-S936N), Android 16. App version: 0.23.0 (660). Existing app data was retained.
 
 ## Results
 
@@ -31,6 +31,8 @@ adb -s DEVICE shell am instrument -w -e pinch_zoom true dev.halcamera.test/dev.h
 ```
 
 Keep the device unlocked on Live and avoid concurrent UI automation. The test temporarily changes zoom and engine, returns to 1x, and restores the starting engine. Screenshots are written under the app's external-files `pinch-validation` directory.
+
+The live readout no longer displays zoom or applied-zoom mismatch text; the zoom button is the only on-screen zoom readout. Raw capture-result zoom metadata remains available.
 
 ## Code review
 

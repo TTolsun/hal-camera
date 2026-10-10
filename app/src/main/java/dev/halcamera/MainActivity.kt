@@ -222,7 +222,7 @@ class MainActivity : ComponentActivity() {
             if (!closing && engine != null) {
                 liveIndicator.bindSizes(telemetry.sessions[sessionId]?.get("negotiatedStreams") as? Map<*, *>)
             }
-            readings.update(events, frames, time, sessionId, controlBar.controls, zoomRatio)
+            readings.update(events, frames, time, sessionId, controlBar.controls)
             manualPanel.bind(controlBar.controls.manual, (ready || recordingVideo) && !stoppingRecording && cli.active == null && !bursts.controlsLocked,
                 manualCapabilities, frames.lastOrNull(), time)
             manualBack.isEnabled = manualPanel.isExpanded
