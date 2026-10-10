@@ -55,7 +55,7 @@ title: Callback
 | JPEG | JPEG 이미지 수신 시점입니다. 파일 저장 완료 시점은 아닙니다. |
 | Recording | Camera2의 Android 13 이상에서 PRIVATE 버퍼를 받아 인코더로 전달하기 전의 시점입니다. |
 
-Dual에서는 `Main display`와 `Sub display`가 각 화면의 갱신 시점을 표시합니다. 위의 `Preview` 버퍼 수신과는 다른 관측 지점입니다. Camera2 사진의 `Main photo`와 `Sub photo`는 두 센서 이미지 수신이며, 파일 저장 완료를 뜻하지 않습니다. 센서 ID와 타임스탬프로 요청을 연결하며 센서 동기화 성능으로 해석하지 않습니다.
+CLI 호환용 Dual에서는 `Main display`와 `Sub display`가 각 화면의 갱신 시점을 표시합니다. 위의 `Preview` 버퍼 수신과는 다른 관측 지점입니다. Camera2 사진의 `Main photo`와 `Sub photo`는 두 센서 이미지 수신이며, 파일 저장 완료를 뜻하지 않습니다. 센서 ID와 타임스탬프로 요청을 연결하며 센서 동기화 성능으로 해석하지 않습니다.
 
 <div id="screen-callback-recording">
 <details markdown="1" id="detail-fb127fe169" data-search-section>
