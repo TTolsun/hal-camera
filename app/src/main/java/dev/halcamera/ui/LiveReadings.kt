@@ -35,9 +35,9 @@ class LiveReadings(
     private var lastSystemNs = 0L
     private val samplingSystem = AtomicBoolean(false)
 
-    fun update(events: List<Event>, frames: List<Event>, time: Long, sessionId: String, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float, panelObservedKey: String? = null) {
+    fun update(events: List<Event>, frames: List<Event>, time: Long, sessionId: String, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float) {
         last = readout.read(events, sessionId, time)
-        if (metrics.visibility == View.VISIBLE) updateReadings(frames, time, controls, support, zoomRatio, panelObservedKey)
+        if (metrics.visibility == View.VISIBLE) updateReadings(frames, time, controls, support, zoomRatio)
         if (time - lastSystemNs >= 1_000_000_000L && samplingSystem.compareAndSet(false, true)) {
             lastSystemNs = time
             // PSS collection can block for tens of milliseconds. Never run it on the preview's UI thread.
@@ -45,10 +45,9 @@ class LiveReadings(
         }
     }
 
-    private fun updateReadings(frames: List<Event>, time: Long, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float, panelObservedKey: String?) {
+    private fun updateReadings(frames: List<Event>, time: Long, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float) {
         val frame = frames.lastOrNull()?.takeIf { time - it.atNs < 1_500_000_000L }
         fun num(key: String) = (frame?.values?.get(key) as? Number)?.toDouble()
-        fun fmt(value: Double?, pattern: String) = value?.let { pattern.format(Locale.US, it) } ?: "—"
         // Measurements and camera state come first; active settings remain visible after the controls close.
         // Optional observed extras join the state line only while they fit. An applied EV or
         // zoom that differs from the request appears only once the last ten results all differ, not for the few frames
@@ -61,13 +60,7 @@ class LiveReadings(
             LiveControlBar.evApplied(num("evApplied")?.toInt()?.takeIf { differs("evApplied", controls.evIndex.toDouble(), 0.5) }, controls, support),
             num("zoomRatio")?.takeIf { differs("zoomRatio", zoomRatio.toDouble(), 0.01 * zoomRatio) }?.let { "Zoom ${"%.2f".format(Locale.US, it)}x applied" })
         val room = (metrics.width - metrics.paddingLeft - metrics.paddingRight).toFloat()
-        val measurement = listOfNotNull(
-            "FPS ${fmt(num("resultFps"), "%.1f")}",
-            "ISO ${num("iso")?.toInt() ?: "—"}",
-            "Exp ${fmt(num("exposureNs")?.div(1e6), "%.2fms")}",
-            LiveControlBar.aeState(num("ae")?.toInt()),
-            LiveControlBar.afState(num("af")?.toInt()),
-        ).joinToString(" · ")
+        val measurement = LiveMeasurementText.format(frame?.values.orEmpty())
         val width = metrics.paint.measureText(measurement)
         if (room > 0 && width > room) metrics.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX,metrics.textSize*(room-1)/width)
         val settings = listOfNotNull(

@@ -24,3 +24,5 @@ PIP에서는 합성기에 입력된 각 SurfaceTexture의 프레임 수신을 �
 Physical 출력은 종류에 따라 `Preview (Phy)`, `YUV (Phy)`로 표시하며 일반 YUV 행은 번호 없이 `YUV`로 표시합니다. 같은 이름의 출력도 내부 ID로 구분합니다.
 
 Camera2와 CameraX 모두 PIP를 켤 때 메인 Service의 기존 YUV 분석 출력을 유지합니다. Callback에도 동일한 YUV 출력 ID를 전달하며, 추가된 서비스의 결과와 섞지 않습니다. 지원하지 않는 조합은 실패로 처리하고 YUV를 임의로 끄지 않습니다.
+
+LiveMeasurementText는 Single과 기존 Dual 화면의 FPS·ISO·노출·AE·AF 문자열을 같은 형식으로 만듭니다. Physical 출력 이름은 OutputDescriptor에서 만들며 그래프에서 다시 조합하지 않습니다. Hold 여부는 저장된 holdSeconds에서 유도합니다.

@@ -209,6 +209,7 @@ sources:
           - app/src/main/java/dev/halcamera/ui/ResultCallbackTimeline.kt
           - app/src/main/java/dev/halcamera/ui/CameraWidgets.kt
           - app/src/main/java/dev/halcamera/ui/LiveReadings.kt
+          - app/src/main/java/dev/halcamera/ui/LiveMeasurementText.kt
       # 상단 카메라 제어(플래시·AF/AE 잠금·EV)의 배치·다이얼과 요청값 모델. MainActivity·camera2-engine 입력 한도 때문에 따로 둡니다.
       screens/expert-screen/live-controls:
         evidence:
@@ -274,6 +275,9 @@ sources:
           - app/src/main/java/dev/halcamera/camera/PipSource.kt
           - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
           - app/src/main/java/dev/halcamera/camera/PipCallbacks.kt
+          - app/src/main/java/dev/halcamera/camera/PipOutputs.kt
+          - app/src/main/java/dev/halcamera/camera/PipMedia.kt
+          - app/src/main/java/dev/halcamera/camera/PipMediaAdapter.kt
           - app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt
           - app/src/main/java/dev/halcamera/ui/LivePipController.kt
           - app/src/main/java/dev/halcamera/ui/PipPositionStore.kt

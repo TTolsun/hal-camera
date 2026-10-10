@@ -10,8 +10,16 @@ data class OutputDescriptor(
     val kind: OutputKind,
     val repeating: Boolean,
     val stillCapture: Boolean = false,
-    val observable: Boolean = true
-)
+    val observable: Boolean = true,
+    val physicalId: String? = null,
+    val eventKind: String = kind.eventKind,
+    val displayName: String? = null
+) {
+    fun metadata(): Map<String, Any?> = mapOf(
+        "id" to id, "kind" to kind.name, "eventKind" to eventKind,
+        "label" to ((displayName ?: kind.label) + if (physicalId != null) " (Phy)" else ""),
+        "physicalId" to physicalId, "repeating" to repeating, "observable" to observable)
+}
 
 data class ConfiguredOutput<T>(val descriptor: OutputDescriptor, val target: T)
 
@@ -27,12 +35,5 @@ class StreamConfiguration<T>(outputs: List<ConfiguredOutput<T>>) {
     val repeating get() = outputs.filter { it.descriptor.repeating }
     val still get() = outputs.filter { it.descriptor.stillCapture }
 
-    fun metadata(): List<Map<String, Any?>> {
-        return outputs.map { output ->
-            val stream = output.descriptor
-            mapOf("id" to stream.id, "kind" to stream.kind.name, "eventKind" to stream.kind.eventKind,
-                "label" to stream.kind.label,
-                "repeating" to stream.repeating, "observable" to stream.observable)
-        }
-    }
+    fun metadata(): List<Map<String, Any?>> = outputs.map { it.descriptor.metadata() }
 }

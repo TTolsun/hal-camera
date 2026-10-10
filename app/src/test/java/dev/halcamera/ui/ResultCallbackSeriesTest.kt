@@ -1,6 +1,8 @@
 package dev.halcamera.ui
 
 import dev.halcamera.telemetry.Event
+import dev.halcamera.camera.OutputDescriptor
+import dev.halcamera.camera.OutputKind
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -26,7 +28,8 @@ class ResultCallbackSeriesTest {
             Event(180_000_000, "other-service", "capture_result", 8, 900,
                 mapOf("physicalTimestamps" to mapOf("9" to 905L))))
         val config = metadata(stream("preview") + ("eventKind" to "pip_preview_available"),
-            stream("pip") + mapOf("eventKind" to "pip_preview_available", "physicalId" to "2", "kind" to "YUV"))
+            OutputDescriptor("pip", OutputKind.YUV, true, physicalId = "2",
+                eventKind = "pip_preview_available").metadata())
         val tracks = ResultCallbackSeries.read(events, "s", 200_000_000, config).tracks
         assertEquals(listOf("start", "all", "metadata:2", "metadata:5", "preview", "pip"), tracks.map { it.id })
         assertEquals(listOf("Meta (Phy)", "Meta (Phy)", "preview", "YUV (Phy)"), tracks.drop(2).map { it.label })
@@ -75,7 +78,7 @@ class ResultCallbackSeriesTest {
 
     private fun stream(id: String, label: String = id, observable: Boolean = true) =
         mapOf("id" to id, "label" to label, "observable" to observable)
-    private fun metadata(vararg outputs: Map<String, Any>) = mapOf("callbackStreams" to outputs.toList(), "partialResultCount" to 2)
+    private fun metadata(vararg outputs: Map<String, Any?>) = mapOf("callbackStreams" to outputs.toList(), "partialResultCount" to 2)
 
     @Test fun metadataRowsAlwaysExistAndOutputsFollowConfigurationWithoutNeedingSamples() {
         val config = metadata(stream("preview"), stream("yuv"), stream("jpeg"), stream("raw"))

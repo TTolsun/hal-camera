@@ -54,14 +54,12 @@ internal class CameraXPipSession(
     private var finished = false
     private var readyState = false
     private var failureSent = false
-    private var capturing = false
-    private var recording = false
-    private var pending = false
     private val closeCallbacks = mutableListOf<() -> Unit>()
     private val observers = mutableListOf<Pair<Camera, Observer<CameraState>>>()
-    private var videoDone: ((Result<Uri>) -> Unit)? = null
     private val timeout = Runnable { if (!readyState) fail("PIP camera timed out") }
-    val busy get() = closing || !readyState || capturing || recording || pending
+    private var mediaClosed = false
+    private val media = pipMedia(context, main, { compositor }, { !closing && readyState }, photoFrame, recordingChanged, notice)
+    val busy get() = closing || !readyState || media.busy
 
     fun start() {
         try {
@@ -131,50 +129,9 @@ internal class CameraXPipSession(
 
     fun move(rect: PipRect) { compositor?.move(0,rect) }
 
-    fun capture(requestId: String?, done: (Result<PhotoResult>) -> Unit) {
-        if (busy) { done(Result.failure(IllegalStateException("Camera busy"))); return }
-        capturing = true
-        checkNotNull(compositor).capture { photo ->
-            val result = photo.mapCatching {
-                photoFrame(it.imageTimestampNs)
-                val library = MediaLibrary(context)
-                val name = "${library.name()}_PIP.jpg"
-                val uri = library.create(name,false)
-                try { library.write(uri) { stream -> stream.write(it.bytes) }; library.publish(uri) }
-                catch (e: Exception) { library.resolver.delete(uri,null,null); throw e }
-                PhotoResult(requestId,name,0,listOf(uri),listOf(PhotoArtifact(name,"image/jpeg",uri,it.bytes.size.toLong())))
-            }
-            main.post { capturing = false; done(result) }
-        }
-    }
-
-    fun startVideo(audio: Boolean, started: () -> Unit, done: ((Result<Uri>) -> Unit)?) {
-        if (busy) { done?.invoke(Result.failure(IllegalStateException("Camera busy"))); return }
-        pending = true; videoDone = done
-        checkNotNull(compositor).startVideo(MediaLibrary(context).name(),audio) { result -> main.post {
-            pending = false; recording = result.isSuccess
-            if (closing) return@post
-            recordingChanged(recording)
-            if (result.isSuccess) started() else {
-                videoDone?.invoke(Result.failure(result.exceptionOrNull()!!)); videoDone = null
-                notice("Video not saved")
-            }
-        } }
-    }
-
-    fun stopVideo() {
-        if (!recording || pending) return
-        pending = true
-        checkNotNull(compositor).stopVideo(true) { result -> main.post { finishVideo(result) } }
-    }
-
-    private fun finishVideo(result: Result<String>) {
-        pending = false; recording = false
-        recordingChanged(false)
-        videoDone?.invoke(result.map(Uri::parse)); videoDone = null
-        notice(if (result.isSuccess) "Saved video" else "Video not saved")
-        if (closing) finishClose()
-    }
+    fun capture(requestId: String?, done: (Result<PhotoResult>) -> Unit) = media.capture(requestId, done)
+    fun startVideo(audio: Boolean, started: () -> Unit, done: ((Result<Uri>) -> Unit)?) = media.start(audio, started, done)
+    fun stopVideo() = media.stop()
 
     fun close(done: () -> Unit) {
         if (finished) { done(); return }
@@ -182,19 +139,14 @@ internal class CameraXPipSession(
         if (closing) return
         closing = true; main.removeCallbacks(timeout)
         requests.filterNotNull().forEach { it.willNotProvideSurface() }
-        if (recording || pending) {
-            if (!pending || !recording) {
-                pending = true
-                compositor?.stopVideo(true) { result -> main.post { finishVideo(result) } }
-            }
-        }
+        media.close { mediaClosed = true; finishClose() }
         provider.unbindAll()
         finishClose()
     }
 
     /** SurfaceRequest completion AND both CameraState.CLOSED events precede disposing inputs/reopening. */
     private fun finishClose() {
-        if (!closing || disposed || provided != 0 || pending || recording ||
+        if (!closing || disposed || provided != 0 || !mediaClosed ||
             cameras.any { it.cameraInfo.cameraState.value?.type != CameraState.Type.CLOSED }) return
         disposed = true
         observers.forEach { (camera, observer) -> camera.cameraInfo.cameraState.removeObserver(observer) }

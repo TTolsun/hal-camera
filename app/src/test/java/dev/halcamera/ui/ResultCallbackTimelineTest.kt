@@ -10,7 +10,7 @@ import org.junit.Test
 
 class ResultCallbackTimelineTest {
     @Test fun eachUpdateShowsTheNewestCompleteFrameWithoutAnExtraRefreshDelay() {
-        val t = ResultCallbackTimeline().apply { autoHold = false }
+        val t = ResultCallbackTimeline().apply { holdSeconds = 0 }
         val events = frame(1, 0) + frame(2, 33) + frame(3, 66)
         update(t, events, 100)
         assertEquals(1L, t.displayed!!.number)
@@ -22,7 +22,7 @@ class ResultCallbackTimelineTest {
     }
 
     @Test fun missingOutputCannotKeepAnOldCompleteFrameDisplayedIndefinitely() {
-        val t = ResultCallbackTimeline().apply { autoHold = false }
+        val t = ResultCallbackTimeline().apply { holdSeconds = 0 }
         val events = frame(1, 0) + frame(2, 100).filter { it.kind != "preview_available" }
         update(t, events, 200)
         assertEquals(1L, t.displayed!!.number)
@@ -41,7 +41,7 @@ class ResultCallbackTimelineTest {
         assertEquals(listOf(0, 1, 3, 5, 10, 0), values)
     }
     @Test fun automaticAxisExpandsImmediatelyAndShrinksOnlyAfterThreeStableSeconds() {
-        val t = ResultCallbackTimeline().apply { autoHold = false }
+        val t = ResultCallbackTimeline().apply { holdSeconds = 0 }
         val slow = frame(1, 0).filter { it.kind != "preview_available" } +
             e(800, "preview_available", sensor = 1, values = mapOf("stream" to "preview"))
         update(t, slow, 800)
@@ -65,7 +65,7 @@ class ResultCallbackTimelineTest {
         assertEquals(2000, t.axisMs)
         update(t, late, 7000)
         assertEquals(2000, t.axisMs)
-        t.toggleAutoHold(7_000_000_000)
+        t.holdSeconds = 0; t.resume(7_000_000_000)
         update(t, frame(3, 8000), 8100)
         assertEquals(2000, t.axisMs)
     }
@@ -139,7 +139,7 @@ class ResultCallbackTimelineTest {
         assertEquals("Not requested", t.displayed!!.rows[2].state)
         assertEquals(listOf(33.0), t.displayed!!.rows[0].latenciesMs)
         assertEquals(listOf(133.0), t.displayed!!.rows[3].latenciesMs)
-        assertEquals(3, t.remainingSeconds(1_200_000_000))
+        assertEquals(4_200_000_000L, t.autoHoldUntilNs)
         update(t, events, 4199)
         assertEquals(2L, t.displayed!!.number)
         update(t, events, 4200)
@@ -150,10 +150,10 @@ class ResultCallbackTimelineTest {
     }
 
     @Test fun openingOverlayAndEnablingAutoHoldNeverReplayOldPhotos() {
-        val t = ResultCallbackTimeline().apply { autoHold = false }
+        val t = ResultCallbackTimeline().apply { holdSeconds = 0 }
         val events = frame(1, 0, true)
         update(t, events, 200)
-        t.autoHold = true
+        t.holdSeconds = 3
         update(t, events, 700)
         assertNull(t.autoHoldUntilNs)
         t.reset()
@@ -162,39 +162,39 @@ class ResultCallbackTimelineTest {
     }
 
     @Test fun disabledAutoHoldAndRepeatingOutputsDoNotFreeze() {
-        val t = ResultCallbackTimeline().apply { autoHold = false }
+        val t = ResultCallbackTimeline().apply { holdSeconds = 0 }
         update(t, frame(1, 0), 100)
         update(t, frame(1, 0) + frame(2, 1000, true), 1200)
         assertNull(t.autoHoldUntilNs)
-        t.autoHold = true
+        t.holdSeconds = 3
         update(t, frame(3, 2000), 2200)
         assertNull(t.autoHoldUntilNs)
     }
 
-    @Test fun buttonDisablesAutoHoldAndReenablingWaitsForTheNextPhotograph() {
+    @Test fun zeroDurationResumesAndNonzeroDurationWaitsForTheNextPhotograph() {
         val t = ResultCallbackTimeline().apply { holdSeconds = 3 }
         update(t, frame(1, 0), 100)
-        t.toggleAutoHold(100_000_000)
+        t.holdSeconds = 0; t.resume(100_000_000)
         val events = frame(1, 0) + frame(2, 1000, true)
         update(t, events, 1200)
         assertFalse(t.autoHold)
         assertNull(t.autoHoldUntilNs)
-        t.toggleAutoHold(1_200_000_000)
+        t.holdSeconds = 3; t.resume(1_200_000_000)
         update(t, events, 1300)
         assertTrue(t.autoHold)
         assertNull(t.autoHoldUntilNs)
         update(t, events + frame(3, 2000, true), 2100)
         assertEquals(3L, t.displayed!!.number)
         assertNotNull(t.autoHoldUntilNs)
-        t.toggleAutoHold(2_100_000_000)
+        t.holdSeconds = 0; t.resume(2_100_000_000)
         assertFalse(t.autoHold)
         assertNull(t.autoHoldUntilNs)
     }
 
     @Test fun enablingAutoHoldDoesNotFreezeTheCurrentPreviewFrame() {
-        val t = ResultCallbackTimeline().apply { autoHold = false }
+        val t = ResultCallbackTimeline().apply { holdSeconds = 0 }
         update(t, frame(1, 0), 100)
-        t.toggleAutoHold(100_000_000)
+        t.holdSeconds = 3; t.resume(100_000_000)
         update(t, frame(2, 1000), 1100)
         assertTrue(t.autoHold)
         assertEquals(2L, t.displayed!!.number)

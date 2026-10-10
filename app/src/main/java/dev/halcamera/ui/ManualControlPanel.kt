@@ -46,11 +46,6 @@ class ManualControlPanel(
     private var autoValue: TextView? = null
     private var expanded = false
     val isExpanded get() = expanded
-    val observedKey get() = if (expanded && support.camera2) when (selected) {
-        0 -> "iso"
-        1 -> "exposureNs"
-        else -> null
-    } else null
     private var selected = 0
     private var enabled = false
     private var support = ManualSupport()
