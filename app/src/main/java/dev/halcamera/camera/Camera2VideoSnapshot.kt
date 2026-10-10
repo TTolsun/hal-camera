@@ -58,17 +58,20 @@ internal class Camera2VideoSnapshot(
     private val claimed = AtomicBoolean(false)
     private var reader: ImageReader? = null
     private var pending: Pending? = null
+    private var fromYuv = false
+    private var rotation = 0
     /** True from the tap until the JPEG is saved or the snapshot failed; the main thread reads it for the button. */
     val inFlight: Boolean get() = claimed.get()
     var size: Size? = null
         private set
 
     /** Creates the JPEG stream for the next recording session. Camera thread. */
-    fun open(size: Size): ConfiguredOutput<Surface> {
+    fun open(size: Size, fromYuv: Boolean = false): ConfiguredOutput<Surface> {
         release("New recording")
         this.size = size
-        val output = OutputDescriptor("video_snapshot", OutputKind.JPEG, repeating = false, stillCapture = true)
-        val reader = ImageReader.newInstance(size.width, size.height, ImageFormat.JPEG, 2).also { this.reader = it }
+        this.fromYuv = fromYuv
+        val output = OutputDescriptor("video_snapshot", if (fromYuv) OutputKind.YUV else OutputKind.JPEG, repeating = false, stillCapture = true)
+        val reader = ImageReader.newInstance(size.width, size.height, if (fromYuv) ImageFormat.YUV_420_888 else ImageFormat.JPEG, 2).also { this.reader = it }
         reader.setOnImageAvailableListener({ source -> onImage(source) }, handler)
         return ConfiguredOutput(output, reader.surface)
     }
@@ -97,7 +100,8 @@ internal class Camera2VideoSnapshot(
             val tag = "snapshot-${SystemClock.elapsedRealtimeNanos()}"
             telemetry.event(sessionId, "video_snapshot_submit", mapOf("requestTag" to tag, "size" to size?.toString(),
                 "api" to "CameraCaptureSession.capture", "template" to "TEMPLATE_VIDEO_SNAPSHOT"))
-            session.capture(host.snapshotRequest(camera, c, tag, host.orientation(c)), callback(request), handler)
+            rotation = host.orientation(c)
+            session.capture(host.snapshotRequest(camera, c, tag, rotation), callback(request), handler)
             handler.postDelayed({ if (pending === request) fail(request, "No photo arrived within 5 seconds.") }, TIMEOUT_MS)
         } catch (e: Exception) { fail(request, e.message ?: e.toString()) }
     }
@@ -124,23 +128,30 @@ internal class Camera2VideoSnapshot(
         val image = try { source.acquireNextImage() } catch (e: Exception) { null } ?: return
         val request = pending
         var timestamp = 0L
+        var frame: YuvFrame? = null
+        val imageRotation = rotation
         val bytes = try {
             timestamp = image.timestamp
             if (host.active) telemetry.image(sessionId, timestamp, image.width, image.height, image.format, "video_snapshot")
-            if (request == null) null else ByteArray(image.planes[0].buffer.remaining()).also { image.planes[0].buffer.get(it) }
+            if (request == null) null else if (fromYuv) {
+                val crop = image.cropRect
+                frame = YuvFrame(YuvPacking.nv21(image.planes.map { YuvPacking.Plane(it.buffer, it.rowStride, it.pixelStride) },
+                    crop.left, crop.top, crop.width(), crop.height()), crop.width(), crop.height())
+                null
+            } else ByteArray(image.planes[0].buffer.remaining()).also { image.planes[0].buffer.get(it) }
         } catch (e: Exception) {
             request?.let { fail(it, e.message ?: e.toString()) }
             return
         } finally { image.close() }
-        if (request == null || bytes == null) return
+        if (request == null || (bytes == null && frame == null)) return
         pending = null // The slot stays claimed until the file is written.
         try {
-            mediaIo.execute { save(request, bytes, timestamp) }
+            mediaIo.execute { save(request, bytes, timestamp, frame, imageRotation) }
         } catch (e: RejectedExecutionException) { failNow(request, "The camera closed before the photo could be saved.") }
     }
 
-    private fun save(request: Pending, jpeg: ByteArray, timestamp: Long) {
-        val result = runCatching { library.savePhotos(request.name, null, jpeg) }
+    private fun save(request: Pending, jpeg: ByteArray?, timestamp: Long, frame: YuvFrame?, rotation: Int) {
+        val result = runCatching { library.savePhotos(request.name, frame?.let { encodeYuvStill(it, rotation) }, jpeg) }
         result.onSuccess { telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "source" to "video_snapshot",
             "uris" to it.map { uri -> uri.toString() })) }
         deliver(request, result.map { PhotoResult(request.requestId, request.name, timestamp, it) })

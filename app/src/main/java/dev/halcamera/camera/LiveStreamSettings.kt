@@ -40,6 +40,7 @@ data class LiveStreamSettings(
     val raw: LiveSize? = null,
 ) : java.io.Serializable {
     val canCapture get() = (jpegFromYuv && yuv != null) || jpeg != null || raw != null
+    fun forMode(videoMode: Boolean) = LiveModePolicy.forVideo(videoMode).apply(this)
     fun metadata(): Map<String, Any?> = mapOf("preview" to preview.toString(), "analysis" to yuv?.toString(),
         "jpeg" to jpeg?.toString(), "fpsRange" to fps?.toString(), "video" to video?.toString(),
         "stabilization" to stabilization.name, "jpegSource" to if (jpegFromYuv) "YUV" else "CAMERA", "raw" to raw?.toString())

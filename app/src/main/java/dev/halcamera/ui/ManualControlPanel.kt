@@ -45,6 +45,7 @@ class ManualControlPanel(
     private val actual = text(10).apply { maxLines = 2; gravity=Gravity.CENTER; setPadding(0,dp(8),0,0) }
     private var autoValue: TextView? = null
     private var expanded = false
+    private var wbExpanded = false
     val isExpanded get() = expanded
     private var selected = 0
     private var enabled = false
@@ -77,7 +78,11 @@ class ManualControlPanel(
     }
 
     fun toggle() { if (support.camera2) { expanded = !expanded; render() } }
-    fun close(): Boolean { if (!expanded) return false; expanded = false; render(); return true }
+    fun close(): Boolean {
+        if (!expanded) return false
+        if (wbExpanded) wbExpanded = false else expanded = false
+        render(); return true
+    }
 
     fun bind(value: ManualControls, enabled: Boolean, nextSupport: ManualSupport, frame: Event?, nowNs: Long) {
         latest = frame?.takeIf { nowNs - it.atNs < 1_500_000_000L }
@@ -98,6 +103,7 @@ class ManualControlPanel(
 
     private fun render() {
         if (!support.camera2) expanded = false
+        if (!expanded || !enabled || selected != 3) wbExpanded = false
         view.visibility = if (expanded) View.VISIBLE else View.GONE
         expandedChanged(expanded)
         updateHeight()
@@ -141,7 +147,7 @@ class ManualControlPanel(
             2 -> current.focusDiopters == null
             else -> true
         }
-        val height = if (expanded) dp(if (automatic) 232 else 280) else -2
+        val height = if (expanded) dp(if (wbExpanded) 380 else if (automatic) 232 else 280) else -2
         if (params.height != height) { params.height = height; view.layoutParams = params }
     }
 
@@ -177,12 +183,37 @@ class ManualControlPanel(
     }
 
     private fun wbEditor() {
-        val choices = support.whiteBalances
-        body.addView(button("WB · ${current.wb.label} ▾") {
-            if (!enabled) return@button
-            inputDialog = LiveChoiceSheet.show(context,"White balance",choices.map { LiveChoiceSheet.Choice(it.label) },
-                choices.indexOf(current.wb)) { index -> commit(current.copy(wb=choices[index])) }
-        }.apply { isEnabled = enabled })
+        val group = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            background = Look.cardBackground(context, Look.cameraControlGlass, Look.cameraOutline).apply { cornerRadius = dp(16).toFloat() }
+            clipToOutline = true
+        }
+        group.addView(button("WB · ${current.wb.label}   ${if (wbExpanded) "▴" else "▾"}") {
+            wbExpanded = !wbExpanded; scroll.scrollTo(0, 0); render()
+        }.apply {
+            isEnabled = enabled; gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            setPadding(dp(16), 0, dp(16), 0)
+            contentDescription = "White balance, ${current.wb.label}, ${if (wbExpanded) "collapse" else "expand"} options"
+        }, LinearLayout.LayoutParams(-1, -2))
+        if (wbExpanded) {
+            group.addView(View(context).apply { setBackgroundColor(Look.cameraOutline) }, LinearLayout.LayoutParams(-1, dp(1)))
+            support.whiteBalances.forEach { choice ->
+                val checked = choice == current.wb
+                group.addView(button("${choice.label}${if (checked) "   ✓" else ""}") {
+                    val next = current.copy(wb = choice)
+                    support.rejection(next)?.let { notice(it); return@button }
+                    wbExpanded = false; scroll.scrollTo(0, 0); commit(next)
+                }.apply {
+                    isEnabled = enabled; isSelected = checked
+                    gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                    setPadding(dp(16), 0, dp(16), 0)
+                    typeface = if (checked) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+                    background = Look.touchBackground(context, if (checked) Look.cameraOutline else Color.TRANSPARENT, Color.TRANSPARENT)
+                    contentDescription = "White balance ${choice.label}${if (checked) ", Selected" else ""}"
+                }, LinearLayout.LayoutParams(-1, -2))
+            }
+        }
+        body.addView(group, LinearLayout.LayoutParams(-1, -2))
         if (current.wb == WhiteBalance.CUSTOM) {
             body.addView(button("Gains / Matrix") { editColor() }.apply { isEnabled = enabled })
         }

@@ -55,7 +55,8 @@ class LiveStreamsActivity : ComponentActivity() {
                         (intent.getSerializableExtra(EXTRA_SETTINGS) as? LiveStreamSettings) ?: support.defaults(),
                         intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE) ?: "Camera2",
                         multiLimit, getSystemService(CameraManager::class.java).cameraIdList.size,
-                        savedMultiLimit(this), { multiLimit = it }, intent.getBooleanExtra(EXTRA_MULTI, false))
+                        savedMultiLimit(this), { multiLimit = it }, intent.getBooleanExtra(EXTRA_MULTI, false),
+                        videoMode = intent.getBooleanExtra(EXTRA_VIDEO_MODE, false))
                     showPage(page.root, page.scroll)
                     savedInstanceState?.getInt("scroll_y")?.let { y -> page.scroll.post { page.scroll.scrollTo(0, y) } }
                 }, { showMessage("Could not load capabilities. ${it.message.orEmpty()}") })
@@ -140,5 +141,6 @@ class LiveStreamsActivity : ComponentActivity() {
         const val EXTRA_HAS_GOOD = "live_stream_has_good"
         const val EXTRA_STATUS = "live_stream_status"
         const val EXTRA_FROM_LIVE = "live_stream_from_live"
+        const val EXTRA_VIDEO_MODE = "live_video_mode"
     }
 }

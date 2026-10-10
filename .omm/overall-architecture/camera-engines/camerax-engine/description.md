@@ -2,7 +2,7 @@ CameraXEngine은 Live의 CameraX 엔진입니다. MainActivity에서 Live 촬영
 
 ProcessCameraProvider로 Preview, ImageAnalysis(KEEP_ONLY_LATEST), ImageCapture(MINIMIZE_LATENCY)를 Activity 수명 주기에 bind합니다. Camera2Engine의 preview·YUV·JPEG 세 스트림에 대응하는 구성입니다. `Camera2Interop.Extender(builder).setSessionCaptureCallback(...)`으로 Camera2와 같은 Telemetry 콜백을 preview use case에 붙이므로 두 엔진이 같은 이벤트 종류를 만들고 수치를 비교할 수 있습니다. 엔진은 이 콜백을 한 번 감싸서 모든 repeating 결과를 controls에도 넘깁니다. AE 재잠금과 길게 누르기 측광이 AE 상태를 읽기 때문입니다.
 
-카메라는 `Camera2CameraInfo.from(it).cameraId`로 거르는 CameraSelector로 고르므로 전면·후면이 아닌 특정 카메라 ID를 열 수 있습니다. 줌은 zoomState 범위로 제한한 `CameraControl.setZoomRatio`이며, 녹화 중에도 bind된 세션에 그대로 적용됩니다. 녹화 시작과 정지는 use case를 다시 bind하므로 그때마다 줌과 제어를 새 세션에 다시 보냅니다. 협상된 해상도는 각 use case의 resolutionInfo에서 읽어 Camera2와 같은 방식으로 세션 맵에 저장합니다.
+카메라는 `Camera2CameraInfo.from(it).cameraId`로 거르는 CameraSelector로 고르므로 전면·후면이 아닌 특정 카메라 ID를 열 수 있습니다. 줌은 zoomState 범위로 제한한 `CameraControl.setZoomRatio`이며, 녹화 중에도 bind된 세션에 그대로 적용됩니다. VIDEO 진입 시 use case를 bind하며 녹화 시작·정지 때는 유지합니다. 출력 구성이 바뀔 때 줌과 제어를 새 세션에 다시 보냅니다. 협상된 해상도는 각 use case의 resolutionInfo에서 읽어 Camera2와 같은 방식으로 세션 맵에 저장합니다.
 
 닫는 경로가 가장 까다롭습니다. Activity가 멈춘 상태에서도 해제가 끝나도록 수명 주기에 묶인 observer 대신 observeForever로 cameraState를 관찰합니다. unbind가 돌아올 때 이미 CLOSED인 경우를 위해 finished 플래그로 finish()를 한 번만 실행합니다. 녹화 중에 닫히면 VideoCapture도 함께 unbind하고, 파일 저장이 mediaIo에 들어간 뒤에 그 실행기를 종료합니다. CameraX 1.6은 닫은 카메라를 1초 동안 열어 두므로, CLOSED 뒤에 ProcessCameraProvider.shutdownAsync()로 카메라를 바로 놓고 나서 done을 부릅니다(#230). 종료는 최대 1초만 기다리고 provider_shutdown 이벤트를 남깁니다. Live에서 다음 엔진도 CameraX이면 releaseOnClose를 꺼서 종료하지 않습니다.
 

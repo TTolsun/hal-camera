@@ -35,7 +35,7 @@ verifications: []
 
 CLI 호환용 Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.
 
-PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JPEG를 저장합니다. Camera2에서 RAW가 켜져 있으면 별도의 메인 원본 DNG와 원본 JSON을 함께 저장하며, 원본과 합성 프리뷰의 시각은 같다고 보장하지 않습니다. PIP 녹화 중 사진은 지원하지 않습니다. Multi의 PIP 변경은 전체 동시 세션을 재구성합니다.
+PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JPEG를 저장합니다. Camera2에서 RAW가 켜져 있으면 별도의 메인 원본 DNG와 원본 JSON을 함께 저장하며, 원본과 합성 프리뷰의 시각은 같다고 보장하지 않습니다. PIP 녹화 중 사진은 현재 합성 화면을 JPEG로 저장합니다. 크기는 PHOTO와 같은 합성 해상도이며 일반 스냅샷의 YUV·JPEG 크기 선택과는 별개입니다. VIDEO 진입 시 합성기의 인코더를 준비하고, 녹화 시작 때 카메라 세션은 유지합니다. Multi의 PIP 변경은 전체 동시 세션을 재구성합니다.
 
 <details markdown="1" id="detail-c0e05167f7" data-search-section>
 <summary>제어·녹화·CLI 차이</summary>

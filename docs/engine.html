@@ -110,7 +110,7 @@
 </tr>
 </tbody></table>
 <p>CLI 호환용 Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.</p>
-<p>PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JPEG를 저장합니다. Camera2에서 RAW가 켜져 있으면 별도의 메인 원본 DNG와 원본 JSON을 함께 저장하며, 원본과 합성 프리뷰의 시각은 같다고 보장하지 않습니다. PIP 녹화 중 사진은 지원하지 않습니다. Multi의 PIP 변경은 전체 동시 세션을 재구성합니다.</p>
+<p>PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JPEG를 저장합니다. Camera2에서 RAW가 켜져 있으면 별도의 메인 원본 DNG와 원본 JSON을 함께 저장하며, 원본과 합성 프리뷰의 시각은 같다고 보장하지 않습니다. PIP 녹화 중 사진은 현재 합성 화면을 JPEG로 저장합니다. 크기는 PHOTO와 같은 합성 해상도이며 일반 스냅샷의 YUV·JPEG 크기 선택과는 별개입니다. VIDEO 진입 시 합성기의 인코더를 준비하고, 녹화 시작 때 카메라 세션은 유지합니다. Multi의 PIP 변경은 전체 동시 세션을 재구성합니다.</p>
 <details id="detail-c0e05167f7" data-search-section>
 <summary>제어·녹화·CLI 차이</summary><table>
 <thead>
@@ -170,7 +170,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LivePipSession.kt</code>, <code>app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>102ac1dd</code> · Codex spacing/source comparison; not independent human approval</li>
+<li>검토 상태: 관련 소스 변경됨: 재검토 필요</li>
 </ul>
 </details><!-- omm:end id=comparison --><h3 id="기기에서-관찰한-차이">기기에서 관찰한 차이</h3>
 <p>Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 <a href="evidence.html#camerax-기기-관찰">Validation</a>에 있습니다.</p>
@@ -356,7 +356,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/ui/LiveControlBar.kt</code>, <code>app/src/main/java/dev/halcamera/ui/FocusRing.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>102ac1dd</code> · Codex spacing/source comparison; not independent human approval</li>
+<li>검토 상태: 관련 소스 변경됨: 재검토 필요</li>
 </ul>
 </details><!-- omm:end id=contract --></details><h2 id="camera2-엔진">Camera2 엔진</h2>
 <details id="camera2-internals" data-search-section>
@@ -374,12 +374,12 @@
 </details><h3 id="손떨림-보정">손떨림 보정</h3>
 <p><strong>지원 모드가 있어도 모든 크기와 FPS에서 적용되지는 않습니다.</strong> Live의 결과 표시로 실제 적용 상태를 확인하세요.</p>
 <details id="detail-c8f808cdf0" data-search-section>
-<summary>손떨림 보정 구현</summary><p>Live Streams의 Stabilization에서 Auto, Off와 기기가 지원하는 OIS·EIS (Video)·EIS (Preview + Video)를 선택합니다.</p>
+<summary>손떨림 보정 구현</summary><p>PHOTO에서는 손떨림 보정을 Off로 고정합니다. VIDEO에서는 Live Streams의 Stabilization에서 Auto, Off와 기기가 지원하는 OIS·EIS (Video)·EIS (Preview + Video)를 선택합니다.</p>
 <p>EIS (Preview + Video)는 Android 13 이상에서 지원 목록과 요청 키가 모두 있을 때 제공합니다.</p>
 <p>OIS와 EIS (Video)는 동시에 요청하지 않으며, EIS (Preview + Video)에서는 플랫폼이 OIS를 제어합니다.</p>
 <p>Auto는 새 요청 템플릿의 기본값을 유지합니다.</p>
 <p>설정은 프리뷰·사진·녹화·녹화 중 사진 요청에 적용합니다.</p>
-<p>촬영·녹화가 끝난 뒤 카메라를 닫고 재개하며 카메라와 엔진마다 값을 분리합니다.</p>
+<p>설정을 적용할 때 카메라를 닫고 재개하며 카메라와 엔진마다 값을 분리합니다.</p>
 <p>지원 모드가 있어도 모든 크기·FPS에서 적용된다는 뜻은 아닙니다.</p>
 <p>Live 상단에서 현재 프리뷰·녹화의 EIS 적용 상태를 확인하세요. 요청과 다른 결과가 1초 이상 이어지면 요청값과 결과값을 함께 표시합니다.</p>
 <p>결과 키가 없거나 1.5초 이상 오래됐으면 확인 불가로 표시하며, 사진 요청의 결과를 프리뷰 상태에 섞지 않습니다.</p>
@@ -589,18 +589,18 @@
 <p>명시한 크기·FPS·코덱으로 준비하고 실패하면 이유를 표시합니다.</p>
 <p>소리를 포함하면 AAC 128kbps, 44.1kHz를 사용합니다.</p>
 <ol>
-<li>녹화를 시작하면 프리뷰와 인코더, 그리고 녹화 중 사진용 JPEG 스트림으로 새 세션을 만듭니다. YUV 스트림은 이 세션에 없으므로 녹화 중 사진은 JPEG만 저장합니다. 카메라가 이 조합을 거절하면 JPEG 없이 프리뷰와 인코더만으로 다시 구성하고, 이 경우 녹화 중 사진을 지원하지 않는다는 이유를 화면에 알립니다.</li>
-<li>Android 13 이상에서는 <code>RecordingBufferRelay</code>가 인코더로 가는 PRIVATE 버퍼를 먼저 받아 도착 시각을 기록합니다. 그보다 낮은 버전에서는 인코더에 직접 연결하고, 녹화 출력을 관측할 수 없다고 표시합니다.</li>
+<li>VIDEO 모드 진입 시 프리뷰·인코더와 선택한 JPEG 또는 YUV 스냅샷 출력을 구성합니다. 녹화 버튼은 이미 구성한 세션에서 MediaRecorder를 시작하고 인코더를 repeating request의 대상으로 추가합니다. persistent input surface를 사용하므로 오디오 설정을 적용할 때도 카메라 세션을 다시 만들지 않습니다. 준비 단계에서는 인코더로 프레임을 보내지 않으며 RAW/DNG 출력은 제외합니다. 스냅샷 조합이 거부되면 스냅샷 없이 구성하고 이유를 표시합니다.</li>
+<li>Android 13 이상에서는 <code>RecordingBufferRelay</code>가 인코더로 가는 PRIVATE 버퍼를 먼저 받아 도착 시각을 기록합니다. 단, EIS를 명시적으로 켠 경우에는 실기기에서 확인된 인코더 거부를 피하도록 직접 연결합니다. EIS 직결 경로와 Android 12 이하에서는 녹화 버퍼 도착 시각을 관측할 수 없다고 표시합니다.</li>
 <li>녹화 요청은 <code>TEMPLATE_RECORD</code>이며, 연속 동영상 AF(<code>CONTINUOUS_VIDEO</code>)를 지원하면 사용합니다. 줌과 Live 제어는 녹화 중에도 같은 요청을 다시 만들어 적용합니다.</li>
 <li>정지하면 세션을 닫고 파일을 마무리합니다. <code>MediaLibrary.saveVideo</code>로 저장을 예약하고 활성 카메라의 프리뷰 세션을 다시 만듭니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.</li>
 </ol>
-<p><strong>PIP를 끈 일반 녹화에서는 <code>Camera2VideoSnapshot</code>이 녹화를 멈추지 않고 JPEG 한 장을 저장합니다.</strong> PIP 녹화는 이 스냅샷 경로를 사용하지 않습니다. 녹화 세션의 JPEG 크기는 요청한 크기(없으면 1080p 이하 중 가장 큰 크기)를 먼저 시도하고, 세션 조합 조회(<code>isSessionConfigurationSupported</code>)가 거절하면 녹화 크기 안에 들어가는 가장 큰 크기로 내려갑니다.</p>
+<p><strong>일반 녹화에서는 선택한 JPEG 소스로 스냅샷 한 장을 저장합니다.</strong> 명시한 크기는 자동으로 줄이지 않으며 지원되지 않는 조합에서는 스냅샷을 비활성화합니다. 기본 크기만 기기의 지원 조합을 조회하여 선택합니다. PIP에서는 별도 합성 경로가 PHOTO와 같은 크기의 JPEG를 저장합니다.</p>
 <p>실제 크기는 <code>recording_started</code>의 <code>snapshotSize</code>에 남아 요청값과 구분됩니다.</p>
-<p>사진 요청은 <code>TEMPLATE_VIDEO_SNAPSHOT</code>이며 프리뷰·인코더·JPEG 세 출력을 모두 대상으로 합니다.</p>
+<p>사진 요청은 <code>TEMPLATE_VIDEO_SNAPSHOT</code>이며 프리뷰·인코더·선택한 스냅샷 출력을 모두 대상으로 합니다.</p>
 <p>사진은 한 번에 한 장만 처리하고, 앞의 사진이 저장되는 중이거나 녹화가 멈추는 중이면 새 요청을 거절합니다.</p>
 <p>5초 안에 JPEG이 오지 않거나 저장에 실패하면 <code>video_snapshot_failed</code>를 기록하고 알림만 표시하며, 녹화 파일과 세션은 그대로 유지합니다.</p>
 <p>정지와 겹친 사진은 세션이 닫히기 전에 도착하면 저장하고, 그렇지 않으면 실패로 답합니다.</p>
-<p>Live 스트림 설정에서 JPEG을 끄면 녹화 중 사진도 지원하지 않습니다.</p>
+<p>JPEG를 Off로 설정하면 녹화 중 사진도 끕니다. YUV를 선택하면 해당 크기로 앱 변환 JPEG를 저장합니다.</p>
 <p><code>live_streams_changed</code>·<code>live_streams_requested</code>는 변경·요청값을, <code>live_stream_preflight</code>는 출력 조합 조회 결과를 기록합니다.</p>
 <p>성공한 출력 크기는 <code>configured</code>와 <code>negotiatedStreams</code>에 남습니다.</p>
 <p>녹화는 <code>live_recording_requested</code>·<code>live_recording_preflight</code>·<code>recording_started</code>로 구분하며, 요청한 인코더 설정과 결과 FPS를 혼동하지 않습니다.</p>
@@ -675,7 +675,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LivePipSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStabilization.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillPair.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RawFrame.kt</code>, <code>app/src/main/java/dev/halcamera/camera/DngOutput.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ManualControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>102ac1dd</code> · Codex spacing/source comparison; not independent human approval</li>
+<li>검토 상태: 관련 소스 변경됨: 재검토 필요</li>
 </ul>
 </details><!-- omm:end id=camera2 --></details><h2 id="camerax-엔진">CameraX 엔진</h2>
 <details id="camerax-internals" data-search-section>
@@ -684,7 +684,7 @@
 <p><strong>PIP 목록에는 CameraX가 광고한 동시 조합의 Service ID만 표시합니다.</strong> 두 장치를 CameraX로 열며 Camera2로 전환하지 않습니다. 같은 선택창·위치 기억·드래그와 셔터를 사용합니다.</p>
 <p><code>CameraXPipSession</code>은 각각 720p 이하의 Preview를 <code>ConcurrentCamera</code>로 bind하고 <code>DeviceCompositor</code>에서 합성 JPEG·H.264/AAC MP4를 저장합니다. 일반 촬영의 ImageCapture·Recorder와 별도 경로이며 PIP를 끄면 일반 출력 설정을 복원합니다. 단일·동시 모드 전환에는 재bind가 필요하고, 종료는 두 카메라의 CLOSED와 SurfaceRequest 반환을 기다립니다. PIP 터치 측광은 합성 화면의 fill-center crop에 맞춰 변환합니다. 지원 조합과 저장 범위는 <a href="live.html#여러-카메라를-함께-촬영하세요">Live PIP</a>에서 확인합니다.</p>
 <h3 id="camerax-손떨림-보정">CameraX 손떨림 보정</h3>
-<p><strong>CameraX와 하드웨어가 함께 지원하는 보정 모드만 표시합니다.</strong> 영상용 EIS는 녹화 중에 적용합니다.</p>
+<p><strong>PHOTO에서는 보정을 끄며, VIDEO에서는 CameraX와 하드웨어가 함께 지원하는 보정 모드만 표시합니다.</strong> 영상용 EIS는 녹화 중에 적용합니다.</p>
 <details id="detail-9947135f73" data-search-section>
 <summary>CameraX 손떨림 보정 구현</summary><p>CameraX의 Live Streams도 Auto·Off 및 지원되는 OIS·EIS 모드를 제공합니다.</p>
 <p>EIS 후보는 하드웨어 모드와 CameraX의 Preview·Video 보정 capability를 교차해 표시합니다.</p>
@@ -738,7 +738,7 @@
 <p>정지 요청과 파일 저장 완료는 다른 시점입니다. 카메라 종료로 받은 Finalize도 아래 조건에 따라 저장합니다.</p>
 <p><code>CameraXLiveRecorder</code>는 CameraX <code>Recorder</code>로 캐시 폴더의 임시 MP4에 기록하고, 끝나면 <code>MediaLibrary.saveVideo</code>로 앨범에 공개합니다.</p>
 <ol>
-<li>녹화를 시작하면 ImageAnalysis와 ImageCapture를 unbind한 뒤 VideoCapture와 ImageCapture를 함께 bind합니다. 녹화가 끝나면 반대로 되돌립니다. ImageAnalysis를 빼는 이유는 Camera2처럼 프리뷰·인코더·JPEG 세 스트림만 쓰기 위해서이며, 네 use case를 한꺼번에 bind하면 스트림 조합을 CameraX의 stream sharing이 정하게 됩니다. 카메라가 이 조합을 거절하면 VideoCapture만 bind하여 녹화를 이어가고, 녹화 중 사진을 지원하지 않는다는 이유를 화면에 알립니다.</li>
+<li>VIDEO 모드 진입 시 Preview와 VideoCapture, 그리고 선택한 JPEG 소스에 따라 ImageCapture 또는 ImageAnalysis를 bind합니다. 녹화 버튼에서는 이미 bind한 Recorder를 시작하고, 정지 후에도 VIDEO use case를 유지합니다. 출력 조합이 거부되면 스냅샷 없이 녹화하고 이유를 표시합니다. JPEG에서 YUV를 선택하면 지정한 YUV 크기의 프레임을 앱에서 회전·변환하여 JPEG로 저장합니다.</li>
 <li>설정을 지정하지 않으면 품질은 FHD를 우선 선택합니다. FHD가 없으면 더 낮은 품질을 먼저 찾고, 낮은 품질도 없으면 더 높은 품질을 선택할 수 있습니다. 30fps, 10Mbps를 요청합니다. 코덱과 오디오 형식은 기기의 encoder profile을 따르므로, 기본 H.264와 44.1kHz AAC를 사용하는 Camera2와 다를 수 있습니다.</li>
 <li>소리를 요청했는데 <code>RECORD_AUDIO</code> 권한이 없으면 소리 없이 녹화하지 않고 실패로 처리합니다.</li>
 <li>첫 <code>VideoRecordEvent.Status</code>가 오면 AF 잠금과 길게 누른 AE 지점을 한 번 더 보냅니다. CameraX는 동영상 surface가 실제로 켜질 때 repeating 요청을 다시 구성하는데, 그 전에 보낸 FocusMeteringAction은 사라지기 때문입니다.</li>
@@ -748,10 +748,10 @@
 <p>녹화 중 사진(<code>CameraXVideoSnapshot</code>)은 녹화와 함께 bind한 ImageCapture의 <code>takePicture</code>로 JPEG 한 장을 저장합니다.</p>
 <p>analysis 스트림이 없으므로 YUV 짝은 저장하지 않으며, Camera2와 같이 한 번에 한 장만 처리합니다.</p>
 <p>실패하거나 5초 안에 오지 않아도 녹화는 끝나지 않고 알림만 표시합니다.</p>
-<p>Live 스트림 설정에서 JPEG을 끄면 bind할 ImageCapture가 없으므로 녹화 중 사진을 지원하지 않는다고 알립니다.</p>
+<p>JPEG가 Off이면 스냅샷을 비활성화합니다. YUV를 선택하면 ImageAnalysis가 촬영 요청 뒤 받은 한 프레임을 JPEG로 변환하여 저장합니다.</p>
 <p>사진 크기는 사진 모드와 같은 ImageCapture를 쓰므로 설정한 JPEG 크기를 따르고, 설정이 없으면 CameraX가 고른 크기(Galaxy S25+에서 4080×3060)로 저장합니다.</p>
 <p>녹화 중 사진의 기기별 제약은 <a href="#녹화-중-사진의-알려진-제약">앞의 안내</a>를 확인하세요. 사진 크기를 1080p로 줄이거나 <code>CONTROL_CAPTURE_INTENT</code>를 <code>VIDEO_SNAPSHOT</code>으로 지정해도 해당 기기의 간격 증가는 같았습니다.</p>
-<p>녹화 시작과 정지는 use case를 다시 bind하므로, 엔진은 그때마다 줌과 Live 제어를 새 세션에 다시 보내고 Callback 그래프의 출력 목록도 바꿉니다.</p>
+<p>VIDEO 진입 시 출력 구성을 바꾸고 줌과 Live 제어를 다시 적용합니다. 녹화 버튼에서는 use case를 다시 bind하지 않습니다.</p>
 </details><h3 id="live-제어와-터치-측광">Live 제어와 터치 측광</h3>
 <p><strong>CameraX에서는 여러 초점·노출 제어를 하나의 action으로 합칩니다.</strong> 잠금 유지에 필요한 우회 처리는 아래에 있습니다.</p>
 <details id="detail-75143231b4" data-search-section>
@@ -814,7 +814,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/build.gradle.kts</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>102ac1dd</code> · Codex spacing/source comparison; not independent human approval</li>
+<li>검토 상태: 관련 소스 변경됨: 재검토 필요</li>
 </ul>
 </details><!-- omm:end id=camerax --></details><h2 id="문서-검토-상태">문서 검토 상태</h2>
 <details id="detail-f9c230aa61" data-search-section>
@@ -831,27 +831,27 @@
 </thead>
 <tbody><tr>
 <td>구조 원본 <code>overall-architecture</code></td>
-<td>최신</td>
+<td>관련 소스 변경됨: 재검토 필요</td>
 <td>검토 2026-10-10 @ <code>102ac1dd</code> · Codex spacing/source comparison; not independent human approval</td>
 </tr>
 <tr>
 <td>원고 <code>contract</code></td>
-<td>최신</td>
+<td>관련 소스 변경됨: 재검토 필요</td>
 <td>검토 2026-10-10 @ <code>102ac1dd</code> · Codex spacing/source comparison; not independent human approval</td>
 </tr>
 <tr>
 <td>원고 <code>camera2</code></td>
-<td>최신</td>
+<td>관련 소스 변경됨: 재검토 필요</td>
 <td>검토 2026-10-10 @ <code>102ac1dd</code> · Codex spacing/source comparison; not independent human approval</td>
 </tr>
 <tr>
 <td>원고 <code>camerax</code></td>
-<td>최신</td>
+<td>관련 소스 변경됨: 재검토 필요</td>
 <td>검토 2026-10-10 @ <code>102ac1dd</code> · Codex spacing/source comparison; not independent human approval</td>
 </tr>
 <tr>
 <td>원고 <code>comparison</code></td>
-<td>최신</td>
+<td>관련 소스 변경됨: 재검토 필요</td>
 <td>검토 2026-10-10 @ <code>102ac1dd</code> · Codex spacing/source comparison; not independent human approval</td>
 </tr>
 </tbody></table>

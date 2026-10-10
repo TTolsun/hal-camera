@@ -43,6 +43,8 @@ internal class CameraXPipSession(
     private val failed: (String) -> Unit,
     private val recordingChanged: (Boolean) -> Unit,
     private val notice: (String) -> Unit,
+    private val videoMode: Boolean = false,
+    private val stabilization: LiveStabilization = LiveStabilization.AUTO,
 ) {
     private val executor = java.util.concurrent.Executor { main.post(it) }
     private val requests = arrayOfNulls<SurfaceRequest>(2)
@@ -69,6 +71,14 @@ internal class CameraXPipSession(
                         sizes.filter { it.width.toLong() * it.height <= 1280L * 720 }
                     }.build())
                 if (index == 0) Camera2Interop.Extender(builder).setSessionCaptureCallback(captureCallback)
+                val mode = LiveModePolicy.forVideo(videoMode).stabilization(if (index == 0) stabilization else null)
+                val interop = Camera2Interop.Extender(builder)
+                val keys = context.getSystemService(android.hardware.camera2.CameraManager::class.java)
+                    .getCameraCharacteristics(if (index == 0) parentId else source.id).availableCaptureRequestKeys
+                mode.optical?.takeIf { android.hardware.camera2.CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE in keys }
+                    ?.let { interop.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, it) }
+                mode.video?.takeIf { android.hardware.camera2.CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE in keys }
+                    ?.let { interop.setCaptureRequestOption(android.hardware.camera2.CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, it) }
                 builder.build().also { preview -> preview.setSurfaceProvider(executor) { request ->
                     if (closing) request.willNotProvideSurface()
                     else if (requests[index] != null) {
@@ -108,7 +118,7 @@ internal class CameraXPipSession(
                 readyState = true; main.removeCallbacks(timeout); ready()
             } } },
             onError = { main.post { fail(it.message ?: "PIP unavailable") } },
-            serviceIds = listOf(source.id), initialRects = listOf(position), inputFrame = inputFrame)
+            serviceIds = listOf(source.id), initialRects = listOf(position), inputFrame = inputFrame, prepareRecording = videoMode)
         compositor = compose
         compose.start { surfaces -> main.post {
             if (closing) { finishClose(); return@post }
@@ -132,6 +142,8 @@ internal class CameraXPipSession(
     fun capture(requestId: String?, done: (Result<PhotoResult>) -> Unit) = media.capture(requestId, done)
     fun startVideo(audio: Boolean, started: () -> Unit, done: ((Result<Uri>) -> Unit)?) = media.start(audio, started, done)
     fun stopVideo() = media.stop()
+    val snapshotStatus get() = media.snapshotStatus
+    fun snapshot(done: (Result<PhotoResult>) -> Unit) = media.snapshot(done)
 
     fun close(done: () -> Unit) {
         if (finished) { done(); return }

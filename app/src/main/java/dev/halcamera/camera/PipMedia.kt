@@ -15,6 +15,8 @@ internal class PipMedia<P, V>(
     @Volatile private var closing = false
     val busy get() = closing || state != State.IDLE
     private var videoDone: ((Result<V>) -> Unit)? = null
+    @Volatile private var snapshotInFlight = false
+    val snapshotStatus get() = SnapshotStatus.of(state == State.RECORDING, closing || state == State.STOPPING, null, snapshotInFlight)
     private val closeCallbacks = mutableListOf<() -> Unit>()
 
     fun capture(requestId: String?, done: (Result<P>) -> Unit) = dispatch {
@@ -23,6 +25,19 @@ internal class PipMedia<P, V>(
             state = State.CAPTURING
             capturePhoto(requestId) { result -> dispatch {
                 state = State.IDLE
+                done(result)
+                drain()
+            } }
+        }
+    }
+
+    fun snapshot(done: (Result<P>) -> Unit) = dispatch {
+        if (closing || state != State.RECORDING || snapshotInFlight || !available()) {
+            done(Result.failure(IllegalStateException("Snapshot unavailable")))
+        } else {
+            snapshotInFlight = true
+            capturePhoto(null) { result -> dispatch {
+                snapshotInFlight = false
                 done(result)
                 drain()
             } }
@@ -71,7 +86,7 @@ internal class PipMedia<P, V>(
     }
 
     private fun drain() {
-        if (closing && state == State.IDLE) {
+        if (closing && state == State.IDLE && !snapshotInFlight) {
             closeCallbacks.toList().also { closeCallbacks.clear() }.forEach { it() }
         }
     }

@@ -53,6 +53,7 @@ class CameraXEngine(
     private val notice: (String) -> Unit = {},
     private val status: (String, Boolean) -> Unit,
     private val liveStreams: LiveStreamSettings? = null,
+    private val videoMode: Boolean = false,
     private val streamsConfigured: (Map<String, Any?>) -> Unit = {},
     private val streamsFailed: (String) -> Unit = {},
 ) : CameraEngine, MediaCapture, LiveTuning, TouchMetering, PipCamera {
@@ -122,6 +123,7 @@ class CameraXEngine(
     })
     private val video: CameraXLiveRecorder = CameraXLiveRecorder(context, main, telemetry, session, library, mediaIo, object : CameraXLiveRecorder.Host {
         override val active: Boolean get() = this@CameraXEngine.active
+        override val keepPrepared: Boolean get() = videoMode
         override val settings: LiveVideo? get() = liveStreams?.video
         override val stabilization: LiveStabilization get() = liveStreams?.stabilization ?: LiveStabilization.AUTO
         override val cameraInfo: CameraInfo? get() = camera?.cameraInfo
@@ -134,7 +136,7 @@ class CameraXEngine(
             // Preview + VideoCapture + ImageCapture is a combination every LIMITED camera guarantees, but CameraX decides
             // at bind time; a refusal falls back to the recording alone and the photo button says why.
             // The Live stream settings can turn the JPEG output off, and then there is no ImageCapture to bind.
-            val photo = capture
+            val photo: UseCase? = if (liveStreams?.jpegFromYuv == true) analysis else capture
             photoBound = photo != null && try { camera = provider.bindToLifecycle(owner, selector!!, video, photo); true }
             catch (e: Exception) {
                 telemetry.event(session, "video_snapshot_unavailable", mapOf("reason" to "bind_refused", "message" to e.toString()))
@@ -145,11 +147,11 @@ class CameraXEngine(
                 catch (e: Exception) { camera = provider.bindToLifecycle(owner, selector!!, *stills); throw e }
             }
             val outputs = StreamConfiguration<UseCase>(listOfNotNull(ConfiguredOutput(previewOutput, preview!!), ConfiguredOutput(recordingOutput, video),
-                if (photoBound) ConfiguredOutput(snapshotOutput, photo!!) else null))
+                if (photoBound) ConfiguredOutput(if (photo is ImageAnalysis) analysisOutput else snapshotOutput, photo!!) else null))
             recording = video
             rebuilt(outputs, mapOf("preview" to preview?.resolutionInfo?.resolution?.toString(),
                 "recording" to video.resolutionInfo?.resolution?.toString(), "recordingFormat" to "Auto",
-                "snapshot" to if (photoBound) photo!!.resolutionInfo?.resolution?.toString() else null))
+                "snapshot" to if (photoBound) (if (photo is ImageAnalysis) photo.resolutionInfo else capture?.resolutionInfo)?.resolution?.toString() else null))
         }
         override fun unbindRecording(video: VideoCapture<Recorder>) {
             snapshots.release("Recording ended")
@@ -181,7 +183,7 @@ class CameraXEngine(
                 } }.getOrDefault(emptyList()))
                 val info = provider!!.availableCameraInfos.first { Camera2CameraInfo.from(it).cameraId == cameraId }
                 val characteristics = context.getSystemService(CameraManager::class.java).getCameraCharacteristics(cameraId)
-                val mode = liveStreams?.stabilization ?: LiveStabilization.AUTO
+                val mode = LiveModePolicy.forVideo(videoMode).stabilization(liveStreams?.stabilization)
                 require(mode in cameraXStabilizationModes(info, hardwareStabilizationModes(characteristics))) {
                     "Unsupported stabilization mode. Select Auto or a supported mode."
                 }
@@ -228,9 +230,10 @@ class CameraXEngine(
                         if (state.type == CameraState.Type.OPEN && !video.busy) status("CameraX · LIVE", true)
                     }
                 }
-                val sizes = streamSizes()
+                if (videoMode) video.prepare()
+                val sizes = if (videoMode) (telemetry.sessions[session]?.get("negotiatedStreams") as? Map<String, Any?>).orEmpty() else streamSizes()
                 telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
-                telemetry.configureCallbackStreams(session, outputs.metadata(liveStreams?.jpegFromYuv == true))
+                if (!videoMode) telemetry.configureCallbackStreams(session, outputs.metadata(liveStreams?.jpegFromYuv == true))
                 telemetry.event(session, "bound", sizes)
                 streamsConfigured(sizes)
             } catch (e: Exception) {
@@ -310,8 +313,14 @@ class CameraXEngine(
     }
     override fun stopRecording() { pip?.stopVideo() ?: video.stop() }
     override val snapshot: SnapshotStatus get() =
-        SnapshotStatus.of(video.live, video.stopping, snapshotUnavailableReason(), snapshots.inFlight)
-    override fun captureSnapshot(done: (Result<PhotoResult>) -> Unit) = snapshots.capture(null, done)
+        pip?.snapshotStatus ?: SnapshotStatus.of(video.live, video.stopping, snapshotUnavailableReason(), snapshots.inFlight || stills.inFlight)
+    override fun captureSnapshot(done: (Result<PhotoResult>) -> Unit) {
+        val current = pip
+        if (current != null) current.snapshot(done)
+        else if (!snapshot.canCapture) done(Result.failure(IllegalStateException(snapshot.reason ?: "Snapshot unavailable")))
+        else if (liveStreams?.jpegFromYuv == true) stills.capture(null, done, duringRecording = true)
+        else snapshots.capture(null, done)
+    }
     override fun setControls(next: LiveControls, restore: Boolean) = controls.setControls(next, restore)
 
     /** Also works while recording: CameraControl changes the zoom of whatever session is bound. */
@@ -410,6 +419,7 @@ class CameraXEngine(
                 try {
                     camera = provider.bindToLifecycle(owner,selector!!,*liveOutputs().targets.toTypedArray())
                     rebuilt(liveOutputs(),streamSizes())
+                    if (videoMode) video.prepare()
                     report("CameraX · LIVE",true)
                 } catch (e: Exception) { report("CameraX: ${e.message}",false) }
             }
@@ -444,7 +454,8 @@ class CameraXEngine(
                 }, failed = { reason ->
                     if (pip === added) added.close { restore(Result.failure(IllegalStateException(reason))) }
                 }, recordingChanged = recordingState,
-                notice = { message -> if (active) notice(message) })
+                notice = { message -> if (active) notice(message) }, videoMode = videoMode,
+                stabilization = liveStreams?.stabilization ?: LiveStabilization.AUTO)
             pip = added
             added.start()
         }
@@ -465,6 +476,7 @@ class CameraXEngine(
                 released = true; info?.cameraState?.removeObserver(observer); start()
             }
             observer = Observer { if (it.type == CameraState.Type.CLOSED) proceed() }
+            video.releasePrepared(); recording = null; photoBound = false
             provider.unbindAll()
             if (info != null) info.cameraState.observeForever(observer)
             if (info == null || info.cameraState.value?.type == CameraState.Type.CLOSED) proceed()

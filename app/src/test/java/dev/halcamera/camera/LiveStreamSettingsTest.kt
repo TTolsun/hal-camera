@@ -4,6 +4,18 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class LiveStreamSettingsTest {
+    @Test fun `capture mode gates only RAW and stabilization while preserving selected JPEG source`() {
+        val selected = support.defaults().copy(jpeg = null, jpegFromYuv = true, raw = full, stabilization = LiveStabilization.VIDEO)
+        val video = selected.forMode(true)
+        assertNull(video.raw)
+        assertEquals(selected.stabilization, video.stabilization)
+        assertEquals(selected.yuv, video.yuv)
+        assertTrue(video.jpegFromYuv)
+        val photo = selected.forMode(false)
+        assertEquals(LiveStabilization.OFF, photo.stabilization)
+        assertEquals(full, photo.raw)
+        assertTrue(photo.jpegFromYuv)
+    }
     @Test fun `YUV stream alone does not save a photo until selected as JPEG source`() {
         val base = support.defaults().copy(jpeg = null)
         assertFalse(base.canCapture)

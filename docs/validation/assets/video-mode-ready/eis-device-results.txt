@@ -1,0 +1,25 @@
+Camera2 Photo PASS: requested EIS is gated to OIS/EIS OFF in capture results
+Camera2 jpeg PASS: stable session, pinch, snapshot 1920x1080, playable MP4, max preview callback gap 66ms
+Camera2 yuv PASS: stable session, pinch, snapshot 480x640, playable MP4, max preview callback gap 56ms
+Camera2 eis-yuv PASS: stable session, pinch, snapshot 480x640, playable MP4, max preview callback gap 68ms
+Camera2 service-pip PASS: stable session, pinch, snapshot 590x1280, playable MP4, max preview callback gap nullms
+Camera2 preview-eis-yuv PASS: stable session, pinch, snapshot 480x640, playable MP4, max preview callback gap 67ms
+Camera2 physical-pip PASS: stable session, pinch, snapshot 590x1280, playable MP4, max preview callback gap nullms
+CameraX Photo PASS: requested EIS is gated to OIS/EIS OFF in capture results
+CameraX jpeg PASS: stable session, pinch, snapshot 4080x3060, playable MP4, max preview callback gap nullms
+CameraX yuv PASS: stable session, pinch, snapshot 480x640, playable MP4, max preview callback gap nullms
+CameraX eis-yuv PASS: stable session, pinch, snapshot 480x640, playable MP4, max preview callback gap nullms
+CameraX service-pip PASS: stable session, pinch, snapshot 590x1280, playable MP4, max preview callback gap nullms
+Camera2 Photo PASS: requested EIS is gated to OIS/EIS OFF in capture results
+Camera2 jpeg PASS: stable session, pinch, snapshot 1920x1080, playable MP4, max preview callback gap 66ms
+Camera2 yuv PASS: stable session, pinch, snapshot 480x640, playable MP4, max preview callback gap 56ms
+Camera2 eis-yuv PASS: stable session, pinch, snapshot 480x640, playable MP4, max preview callback gap 68ms
+Camera2 service-pip PASS: stable session, pinch, snapshot 590x1280, playable MP4, max preview callback gap nullms
+Camera2 preview-eis-yuv PASS: stable session, pinch, snapshot 480x640, playable MP4, max preview callback gap 67ms
+Camera2 physical-pip PASS: stable session, pinch, snapshot 590x1280, playable MP4, max preview callback gap nullms
+CameraX Photo PASS: requested EIS is gated to OIS/EIS OFF in capture results
+CameraX jpeg PASS: stable session, pinch, snapshot 4080x3060, playable MP4, max preview callback gap nullms
+CameraX yuv PASS: stable session, pinch, snapshot 480x640, playable MP4, max preview callback gap nullms
+CameraX eis-yuv PASS: stable session, pinch, snapshot 480x640, playable MP4, max preview callback gap nullms
+CameraX service-pip PASS: stable session, pinch, snapshot 590x1280, playable MP4, max preview callback gap nullms
+

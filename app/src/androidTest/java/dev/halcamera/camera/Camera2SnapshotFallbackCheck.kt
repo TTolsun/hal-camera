@@ -36,7 +36,7 @@ object Camera2SnapshotFallbackCheck {
         val cameraCharacteristics = manager.getCameraCharacteristics("0")
         val opened = CountDownLatch(1)
         val previewReady = CountDownLatch(1)
-        val previewRestored = CountDownLatch(1)
+        var previewRestored = CountDownLatch(1)
         val started = CountDownLatch(1)
         val saved = CountDownLatch(1)
         val closed = CountDownLatch(1)
@@ -66,7 +66,8 @@ object Camera2SnapshotFallbackCheck {
                 }
             }, handler)
         }
-        val recorder = Camera2LiveRecorder(context, handler, main, telemetry, "fallback-test", library, io,
+        lateinit var recorder: Camera2LiveRecorder
+        recorder = Camera2LiveRecorder(context, handler, main, telemetry, "fallback-test", library, io,
             object : Camera2LiveRecorder.Host {
                 override val camera get() = cameraRef.get()
                 override val session get() = sessionRef.get()
@@ -88,7 +89,7 @@ object Camera2SnapshotFallbackCheck {
                 override fun startRepeating(camera: CameraDevice, session: CameraCaptureSession, c: CameraCharacteristics,
                     outputs: StreamConfiguration<Surface>) {
                     session.setRepeatingRequest(camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-                        outputs.repeating.forEach { addTarget(it.target) }
+                        outputs.repeating.filter { recorder.recording || it.descriptor.kind != OutputKind.RECORDING }.forEach { addTarget(it.target) }
                     }.build(), null, handler)
                 }
                 override fun rebuildPreview() { if (cameraActive) preview(previewRestored) }
@@ -121,7 +122,7 @@ object Camera2SnapshotFallbackCheck {
             handler.post { preview(previewReady) }
             check(previewReady.await(10, TimeUnit.SECONDS)) { "Preview timed out" }
             error.get()?.let { throw it }
-            recorder.start(false, { started.countDown() }, { result.set(it); saved.countDown() })
+            recorder.prepare { recorder.start(false, { started.countDown() }, { result.set(it); saved.countDown() }) }
             check(started.await(15, TimeUnit.SECONDS)) { "Fallback recording did not start: ${error.get()}" }
             val callbackFinished = CountDownLatch(1)
             handler.post { callbackFinished.countDown() }
@@ -146,7 +147,18 @@ object Camera2SnapshotFallbackCheck {
             } finally { retriever.release() }
             check(previewRestored.await(10, TimeUnit.SECONDS)) { "Preview not restored" }
             check(!recorder.busy)
-            return "camera2_injected_configure_failure: outputs=3->2, video_saved, preview_restored; ${notices.single()}"
+            previewRestored = CountDownLatch(1)
+            val idleReady = CountDownLatch(1)
+            recorder.prepare { idleReady.countDown() }
+            check(idleReady.await(15, TimeUnit.SECONDS)) { "Idle encoder not prepared" }
+            check(recorder.prepared && !recorder.busy && !recorder.recording)
+            val encoder = Camera2LiveRecorder::class.java.getDeclaredField("recorder").apply { isAccessible = true }
+            val idleEncoder = encoder.get(recorder) as android.media.MediaRecorder
+            recorder.encoderFailed(idleEncoder, IllegalStateException("Injected prepared encoder failure"))
+            check(previewRestored.await(10, TimeUnit.SECONDS)) { "Idle encoder failure did not restore preview" }
+            check(!recorder.prepared && !recorder.busy && !recorder.recording)
+            check(encoder.get(recorder) == null && recorder.surface == null)
+            return "camera2_injected_configure_failure: outputs=3->2, video_saved, preview_restored; prepared_encoder_failure: released, preview_restored"
         } finally {
             handler.post {
                 cameraActive = false

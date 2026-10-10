@@ -32,6 +32,7 @@ internal class LivePipSession(
     private val failed: (String) -> Unit,
     private val recordingChanged: (Boolean) -> Unit,
     private val notice: (String) -> Unit,
+    private val videoMode: Boolean = false,
 ) {
     private val manager = context.getSystemService(CameraManager::class.java)
     private val sourceSize = manager.getCameraCharacteristics(source.id)
@@ -43,7 +44,7 @@ internal class LivePipSession(
         onReady = { main.post { if (!closing) { readyState = true; ready() } } },
         onError = { main.post { if (!closing) failed(it.message ?: "PIP unavailable") } },
         serviceIds = if (source.physical) emptyList() else listOf(source.id), initialRects = listOf(position),
-        inputFrame = { index, timestamp -> if (!closing) inputFrame(index, timestamp) })
+        inputFrame = { index, timestamp -> if (!closing) inputFrame(index, timestamp) }, prepareRecording = videoMode)
     private var extra: CameraDevice? = null
     private var session: CameraCaptureSession? = null
     private var opening = false
@@ -86,8 +87,15 @@ internal class LivePipSession(
                             override fun onConfigured(value: CameraCaptureSession) {
                                 if (closing) { value.close(); return }
                                 session = value
-                                try { value.setRepeatingRequest(camera.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
-                                    .apply { addTarget(inputs[1]) }.build(),null,handler) }
+                                try { value.setRepeatingRequest(camera.createCaptureRequest(if (videoMode) CameraDevice.TEMPLATE_RECORD else CameraDevice.TEMPLATE_PREVIEW)
+                                    .apply {
+                                        addTarget(inputs[1])
+                                        if (!LiveModePolicy.forVideo(videoMode).allowsStabilization) {
+                                            val keys = manager.getCameraCharacteristics(source.id).availableCaptureRequestKeys
+                                            if (CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE in keys) set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE, CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_OFF)
+                                            if (CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE in keys) set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE, CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_OFF)
+                                        }
+                                    }.build(),null,handler) }
                                 catch (e: Exception) { fail(e.message ?: "PIP unavailable") }
                             }
                             override fun onConfigureFailed(value: CameraCaptureSession) { value.close(); fail("PIP combination unavailable") }
@@ -107,6 +115,8 @@ internal class LivePipSession(
     fun capture(requestId: String?, done: (Result<PhotoResult>) -> Unit) = media.capture(requestId, done)
     fun startVideo(audio: Boolean, started: () -> Unit, done: ((Result<Uri>) -> Unit)?) = media.start(audio, started, done)
     fun stopVideo() = media.stop()
+    val snapshotStatus get() = media.snapshotStatus
+    fun snapshot(done: (Result<PhotoResult>) -> Unit) = media.snapshot(done)
 
     /** The main camera no longer targets our surfaces before this is called. */
     fun close(done: () -> Unit) {

@@ -22,6 +22,7 @@ internal class DeviceCompositor(
     private val serviceIds: List<String> = emptyList(),
     initialRects: List<PipRect> = emptyList(),
     private val inputFrame: (Int, Long) -> Unit = { _, _ -> },
+    private val prepareRecording: Boolean = false,
 ) {
     private val app = context.applicationContext
     private val thread = HandlerThread("HAL.Compose.$cameraId").apply { start() }
@@ -31,6 +32,8 @@ internal class DeviceCompositor(
     private var window = EGL14.EGL_NO_SURFACE
     private var snapshot = EGL14.EGL_NO_SURFACE
     private var encoder = EGL14.EGL_NO_SURFACE
+    private var recordingStarted = false
+    private var recordingStopping = false
     private lateinit var config: EGLConfig
     private var viewSurface: Surface? = null
     private val textures = mutableListOf<SurfaceTexture>()
@@ -102,7 +105,10 @@ internal class DeviceCompositor(
             current(window); textures[index].updateTexImage(); textures[index].getTransformMatrix(transforms[index]); received[index] = true
             inputFrame(index, textures[index].timestamp)
             render()
-            if (!readySent && received.all { it }) { readySent = true; onReady() }
+            if (!readySent && received.all { it }) {
+                if (prepareRecording) prepareVideo(MediaLibrary(app).name())
+                readySent = true; onReady()
+            }
         } catch (e: Exception) { closed = true; onError(e) }
     }
 
@@ -110,7 +116,7 @@ internal class DeviceCompositor(
         if (closed || received.any { !it }) return
         draw(window)
         check(EGL14.eglSwapBuffers(display,window))
-        if (encoder != EGL14.EGL_NO_SURFACE) {
+        if (recordingStarted && encoder != EGL14.EGL_NO_SURFACE) {
             // MediaRecorder audio uses CLOCK_MONOTONIC, not the suspend-inclusive sensor/app clock.
             val ns = maxOf(System.nanoTime(), lastVideoNs + 1)
             if (ns - lastVideoNs >= 33_333_333L) {
@@ -166,14 +172,19 @@ internal class DeviceCompositor(
         } catch (e: Exception) { done(Result.failure(e)) }
     } }
 
+    private fun prepareVideo(name: String) {
+        val filename = "${name}_cam${cameraId.replace(Regex("[^A-Za-z0-9_-]"),"_")}${if (pipIds.isEmpty()) "" else "_PIP"}.mp4"
+        val recording = CompositorRecording(app,filename,output,false,onError)
+        recorder = recording
+        encoder = createWindow(recording.surface)
+    }
+
     fun startVideo(name: String, audio: Boolean = false, done: (Result<Unit>) -> Unit) { handler.post {
+        if (recordingStopping) { done(Result.failure(IllegalStateException("Video is still stopping"))); return@post }
         val result = runCatching {
-            check(!closed && recorder == null && received.all { it })
-            val filename = "${name}_cam${cameraId.replace(Regex("[^A-Za-z0-9_-]"),"_")}${if (pipIds.isEmpty()) "" else "_PIP"}.mp4"
-            val recording = CompositorRecording(app,filename,output,audio,onError)
-            recorder = recording
-            encoder = createWindow(recording.surface)
-            recording.start(); lastVideoNs = 0L
+            check(!closed && !recordingStarted && received.all { it })
+            if (recorder == null) prepareVideo(name)
+            checkNotNull(recorder).start(audio); recordingStarted = true; lastVideoNs = 0L
         }
         if (result.isFailure) discardVideo()
         done(result)
@@ -184,8 +195,18 @@ internal class DeviceCompositor(
         if (recording == null) { done(Result.failure(IllegalStateException("Not recording"))); return@post }
         try {
             detachEncoder()
+            recordingStarted = false
             recorder = null
-            media.video(recording,save,done)
+            recordingStopping = true
+            // finish() releases the encoder before returning, even when publication fails.
+            media.video(recording,save) { result ->
+                if (!handler.post {
+                    recordingStopping = false
+                    if (prepareRecording && !closed) runCatching { prepareVideo(MediaLibrary(app).name()) }
+                        .onFailure { error -> discardVideo(); onError(error) }
+                    done(result)
+                }) done(result) // GL thread may already have closed while saving.
+            }
         } catch (e: Exception) { discardVideo(); done(Result.failure(e)) }
     } }
 
@@ -195,6 +216,7 @@ internal class DeviceCompositor(
         }
     }
     private fun discardVideo() {
+        recordingStarted = false
         runCatching { detachEncoder() }
         recorder?.let(media::discard); recorder = null
     }

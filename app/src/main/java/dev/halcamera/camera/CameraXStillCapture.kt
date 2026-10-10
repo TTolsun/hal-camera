@@ -45,9 +45,9 @@ internal class CameraXStillCapture(
     @Volatile var inFlight = false
         private set
 
-    fun capture(requestId: String?, done: ((Result<PhotoResult>) -> Unit)?) {
+    fun capture(requestId: String?, done: ((Result<PhotoResult>) -> Unit)?, duringRecording: Boolean = false) {
         val useCase = host.imageCapture
-        if ((useCase == null && !host.analysisEnabled) || !host.active || inFlight || host.recordingBusy) {
+        if ((useCase == null && !host.analysisEnabled) || !host.active || inFlight || (host.recordingBusy && !duringRecording)) {
             main.post { done?.invoke(Result.failure(IllegalStateException("Camera not ready or busy"))) }
             return
         }

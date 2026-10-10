@@ -4,6 +4,26 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PipMediaTest {
+    @Test fun snapshotDuringRecordingKeepsRecordingAndCloseWaitsForSave() {
+        val d = Driver(); d.record(); d.start(Result.success(Unit))
+        assertTrue(d.media.snapshotStatus.canCapture)
+        d.media.snapshot { d.events += "snapshot" }
+        assertEquals(SnapshotStatus.Phase.BUSY, d.media.snapshotStatus.phase)
+        d.media.snapshot { assertTrue(it.isFailure) }
+        d.media.close { d.events += "closed" }
+        d.stop(Result.success("video"))
+        assertFalse(d.events.contains("closed"))
+        d.capture(Result.success("photo"))
+        assertEquals(listOf("snapshot", "closed"), d.events.takeLast(2))
+    }
+
+    @Test fun snapshotFailureAllowsAnotherSnapshotWithoutStoppingVideo() {
+        val d = Driver(); d.record(); d.start(Result.success(Unit))
+        d.media.snapshot { assertTrue(it.isFailure) }
+        d.capture(Result.failure(IllegalStateException("storage")))
+        assertTrue(d.media.snapshotStatus.canCapture)
+        assertFalse(d.events.contains("stop"))
+    }
     private class Driver {
         lateinit var capture: (Result<String>) -> Unit
         lateinit var start: (Result<Unit>) -> Unit

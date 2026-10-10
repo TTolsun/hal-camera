@@ -13,16 +13,38 @@ class CliStoreInstrumentation : Instrumentation() {
     private var probeLaunchDiagnostics = false
     private var snapshotFailures = false
     private var originalYuv = false
+    private var pinchZoom = false
+    private var videoMode = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
         exportReports = arguments?.getString("export_reports") == "true"
         probeLaunchDiagnostics = arguments?.getString("probe_launch_diagnostics") == "true"
         snapshotFailures = arguments?.getString("snapshot_failures") == "true"
         originalYuv = arguments?.getString("original_yuv") == "true"
+        pinchZoom = arguments?.getString("pinch_zoom") == "true"
+        videoMode = arguments?.getString("video_mode") == "true"
         start()
     }
 
     override fun onStart() {
+        if (videoMode) {
+            try {
+                val result = dev.halcamera.ui.VideoModeChecks.run(this)
+                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
+            } catch (error: Throwable) {
+                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "VIDEO_MODE_FAILED: ${error.stackTraceToString()}\n") })
+            }
+            return
+        }
+        if (pinchZoom) {
+            try {
+                val result = dev.halcamera.ui.PinchZoomChecks.run(this)
+                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
+            } catch (error: Throwable) {
+                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "PINCH_ZOOM_FAILED: ${error.stackTraceToString()}\n") })
+            }
+            return
+        }
         if (originalYuv) {
             try {
                 val result = dev.halcamera.camera.JpegSourceCheck.run(targetContext)

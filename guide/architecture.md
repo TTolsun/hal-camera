@@ -56,7 +56,7 @@ PC에서 같은 기능을 실행하려면 [CLI](cli.md)를 사용합니다. `Cli
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`, `app/src/main/java/dev/halcamera/WorkbenchActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -214,7 +214,7 @@ flowchart TB
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/cli/CliLibrary.kt`, `app/src/main/java/dev/halcamera/MainCliBridge.kt`, `app/src/main/java/dev/halcamera/DualCliBridge.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/ui/Look.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -367,7 +367,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `fed3bab1` · Codex documentation/source review; not independent human approval
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -542,6 +542,8 @@ sequenceDiagram
 
 펼침 애니메이션은 260ms, 접힘은 220ms입니다. 시스템 애니메이션이 꺼져 있으면 즉시 바뀝니다.
 
+Photo·Video 프리뷰와 녹화 중에 두 손가락을 벌리거나 모아 연속 배율을 조절합니다. 핀치 중에는 터치 측광을 취소하며 하단 줌 표시를 동기화합니다. PIP 영역의 한 손가락 이동과 두 손가락 줌은 분리합니다.
+
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
@@ -588,7 +590,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -638,16 +640,16 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
+| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
+| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
+| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
 | 구조 원본 `ui-camera-label` | 최신 | 검토 2026-10-10 @ `93385443` · Codex (mode reset, labels and numeric ID selection review) |
-| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
-| 구조 원본 `ui-zoom` | 최신 | 검토 2026-10-09 @ `fab768a7` · Codex |
-| 원고 `overview` | 최신 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
-| 원고 `module-roles` | 최신 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
-| 원고 `runtime-flow` | 최신 | 검토 2026-10-10 @ `fed3bab1` · Codex documentation/source review; not independent human approval |
-| 원고 `constraints` | 최신 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
+| 구조 원본 `ui-tool-handoff` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
+| 구조 원본 `ui-zoom` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-09 @ `fab768a7` · Codex |
+| 원고 `overview` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
+| 원고 `module-roles` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
+| 원고 `runtime-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `fed3bab1` · Codex documentation/source review; not independent human approval |
+| 원고 `constraints` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
 
 <!-- omm:end id=status -->
 
