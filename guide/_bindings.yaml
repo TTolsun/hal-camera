@@ -263,6 +263,8 @@ sources:
           - app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt
           - app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt
           - app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt
+      screens/concurrent-camera-screen/photo-storage:
+        evidence:
           - app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt
       screens/concurrent-camera-screen/pip-composition:
         evidence:

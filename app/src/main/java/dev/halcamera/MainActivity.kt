@@ -357,6 +357,7 @@ class MainActivity : ComponentActivity() {
         }
         if (cameraId.isEmpty()) { setStatus("No cameras available.", false); return }
         sessionId = UUID.randomUUID().toString()
+        if (pendingPip == null && engineCameraId == cameraId && engineName == "Camera2") pendingPip = pipUi.selected
         engineCameraId = cameraId
         val thisSession = sessionId
         val thisCamera = cameraId
@@ -551,8 +552,10 @@ class MainActivity : ComponentActivity() {
             override fun controlsChanged(controls: LiveControls) { if (!bursts.controlsLocked) (engine as? LiveTuning)?.setControls(controls) }
             override fun notice(text: String) = toast(text)
             override fun manualRequested() { showCallbacks(false); manualPanel.toggle() }
+            override fun manualClosed() { if (::manualPanel.isInitialized) manualPanel.close() }
         })
-        manualPanel = ManualControlPanel(this, { if (!bursts.controlsLocked) controlBar.setManual(it) }, ::toast)
+        manualPanel = ManualControlPanel(this, { if (!bursts.controlsLocked) controlBar.setManual(it) }, ::toast,
+            controlBar::setManualExpanded)
         controls.gravity=Gravity.TOP
         controls.addView(leadingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
         controls.addView(FrameLayout(this).apply {
@@ -561,6 +564,7 @@ class MainActivity : ComponentActivity() {
         controls.addView(trailingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
         topBar.addView(liveIndicator,LinearLayout.LayoutParams(-1,-2))
         topBar.addView(controlBar.view,lp(top=4))
+        topBar.addView(manualPanel.view,lp())
         resetControls()
         cameraNotice=label("Preparing camera… Gathering photons.",12,Look.onDark).apply {
             gravity=Gravity.CENTER
@@ -576,14 +580,6 @@ class MainActivity : ComponentActivity() {
             background=GradientDrawable(GradientDrawable.Orientation.BOTTOM_TOP,intArrayOf(Color.argb(180,0,0,0),Color.TRANSPARENT))
         }
         root.addView(captureChrome,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
-        root.addView(manualPanel.view, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply {
-            leftMargin = dp(12); rightMargin = dp(12)
-        })
-        captureChrome.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            val params = manualPanel.view.layoutParams as FrameLayout.LayoutParams
-            val margin = captureChrome.height + dp(8)
-            if (params.bottomMargin != margin) { params.bottomMargin = margin; manualPanel.view.layoutParams = params }
-        }
         captureChrome.addView(bottomBar,LinearLayout.LayoutParams(-1,-2))
         metrics=label("FPS — · ISO — · Exp —\nAE — · AF —",12,Look.onDark).apply {
             textSize=11f
@@ -789,7 +785,8 @@ class MainActivity : ComponentActivity() {
         // Zoom stays live while recording (#174): the engine changes the recording request in place.
         // The engine reports "REC" as not-ready, so a running recording counts as ready here, as for the shutter.
         zoomControl.isEnabled=(ready || recordingVideo) && !stoppingRecording && !bursts.controlsLocked
-        controlBar.bind(videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null && !bursts.controlsLocked)
+        controlBar.bind(videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null && !bursts.controlsLocked,
+            pipUi.selected != null || pipUi.busy)
         galleryButton.isEnabled=idle
         labButton.isEnabled=!recordingVideo && !stoppingRecording && !closing && !mediaBusy()
         liveIndicator.setSizesEnabled(labButton.isEnabled && cli.active == null && pendingPermissionAction == null && cameraId.isNotEmpty())

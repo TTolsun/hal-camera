@@ -23,6 +23,7 @@ class ManualControlPanel(
     private val context: Context,
     private val changed: (ManualControls) -> Unit,
     private val notice: (String) -> Unit,
+    private val expandedChanged: (Boolean) -> Unit = {},
 ) {
     val view = LinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL
@@ -103,6 +104,7 @@ class ManualControlPanel(
     private fun render() {
         if (!support.camera2) expanded = false
         view.visibility = if (expanded) View.VISIBLE else View.GONE
+        expandedChanged(expanded)
         updateHeight()
         title.text = if (expanded) "Manual" else current.summary()
         title.textSize = 12f
@@ -137,9 +139,14 @@ class ManualControlPanel(
 
     private fun updateHeight() {
         val params = view.layoutParams ?: return
-        // Keep the header and tabs at the same coordinates across parameters and Auto/Manual.
+        // Anchor the header and tabs while matching the panel height to the editor's content.
         // Only the editor body scrolls, including with a large system font.
-        val height = if (expanded) (view.rootView.height * 0.40f).toInt().coerceAtLeast(dp(320)) else -2
+        val automatic = when (selected) {
+            0,1 -> current.exposure == null
+            2 -> current.focusDiopters == null
+            else -> true
+        }
+        val height = if (expanded) dp(if (automatic) 232 else 280) else -2
         if (params.height != height) { params.height = height; view.layoutParams = params }
     }
 
@@ -304,7 +311,7 @@ class ManualControlPanel(
 
     private fun autoReading() {
         autoValue=Look.text(context,"—",12,Look.onDark).apply {
-            gravity=Gravity.CENTER; minimumHeight=dp(96)
+            gravity=Gravity.CENTER; minimumHeight=dp(48)
             contentDescription="Current ${tabs[selected]}"
         }
         body.addView(autoValue,LinearLayout.LayoutParams(-1,-2))

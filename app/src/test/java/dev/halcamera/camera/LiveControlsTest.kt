@@ -14,6 +14,14 @@ class LiveControlsTest {
         flash = false, autoFlash = false, alwaysFlash = false)
 
     @Test
+    fun `composited snapshots disable still flash and bracketing but retain preview controls`() {
+        val requested = LiveControls(evIndex = 2, aeLock = true, afLock = true, flash = FlashMode.ON, bracket = true)
+        assertEquals(requested.copy(flash = FlashMode.OFF, bracket = false), requested.coerce(rear, false, composited = true))
+        assertEquals(FlashMode.TORCH, requested.copy(flash = FlashMode.TORCH).coerce(rear, false, composited = true).flash)
+        assertEquals(requested, requested.coerce(rear, false))
+    }
+
+    @Test
     fun `video mode offers only off and torch because auto and on fire in a still`() {
         assertEquals(listOf(FlashMode.OFF, FlashMode.AUTO, FlashMode.ON, FlashMode.TORCH), rear.flashModes(video = false))
         assertEquals(listOf(FlashMode.OFF, FlashMode.TORCH), rear.flashModes(video = true))

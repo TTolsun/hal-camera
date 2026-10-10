@@ -113,6 +113,8 @@ CameraX에서는 사진 촬영 때 영상의 프레임 간격이 늘어날 수 �
 
 **Camera2에서만 사용할 수 있습니다.** 상단 화살표를 펼치고 `M`을 눌러 Manual 패널을 여세요. 닫은 뒤에도 설정은 실시간 정보에 표시됩니다. 별도 요약 패널은 남기지 않습니다.
 
+M·EV·Flash는 도구 행을 유지한 채 선택한 버튼 아래로 펼쳐집니다. 버튼의 선택 상태와 연결 표시로 열린 패널을 구분합니다. 같은 버튼을 다시 누르거나 상단 화살표를 접으면 닫힙니다.
+
 #### ISO와 노출 시간을 고정하세요
 
 1. `ISO` 또는 `Shutter`에서 `Manual`을 선택합니다. 현재 ISO와 노출 시간이 함께 고정됩니다.
@@ -184,14 +186,14 @@ P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니�
 Live의 `Multi · P`(사진) 또는 `Multi · V`(영상)에서 카메라 조합을 선택합니다. Android 11 이상이며 기기가 독립 장치의 동시 실행을 지원해야 합니다. CameraX에서는 Camera2로 진입합니다.
 
 1. 상단에서 Logical Camera ID 조합을 선택합니다. 장치별로 분할된 프리뷰가 열립니다. 조합 선택 창의 `Details`에서 구성 상태를 확인합니다.
-2. 각 화면의 `PIP`에서 Physical 또는 다른 Service 카메라 하나를 선택합니다. 전면 카메라도 선택할 수 있습니다. `Off`로 합성을 끕니다.
+2. 각 화면의 `PIP`에서 Physical 또는 다른 Service 카메라 하나를 선택합니다. 전면 카메라도 선택할 수 있습니다. `Turn off PIP`로 합성을 끕니다.
 3. 보조 영상을 드래그하거나 해당 화면의 `Move`로 위치를 바꿉니다. 보조 영상은 부모 Logical 화면 안에서만 이동합니다.
 4. `Multi · P`에서는 `Photo`로 촬영합니다. `Multi · V`에서는 `Record`로 녹화를 시작하고 `Stop`으로 저장합니다. Multi의 결과는 장치별 파일이며 PIP를 켠 장치에는 그 화면의 합성 구도가 저장됩니다. 조작 버튼과 카메라 라벨은 저장하지 않습니다.
 5. `Live` 또는 뒤로 가기로 돌아갑니다. 모든 장치와 합성 출력의 종료를 확인한 뒤 기존 Live 프리뷰를 복구합니다.
 
 Single에서는 API 선택 옆의 `PIP`에서 보조 카메라 하나를 선택합니다. Camera2에서는 현재 Live 화면과 CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열며, Physical ID는 현재 장치에 출력을 추가합니다. 기존 셔터와 Photo·Video 모드로 합성 사진·영상을 저장하고, 보조 화면을 드래그할 수 있습니다. CameraX에서는 Camera2 전환을 확인하므로 이 전환은 기존 CameraX 장치를 유지하지 않습니다.
 
-JPEG와 MP4는 `DCIM/HALCamera`, Multi 사진 묶음 JSON은 `Download/HALCamera`에 저장합니다. Single Live PIP의 영상은 기존 녹음 권한으로 오디오를 포함하며, Multi 영상은 무음입니다. PIP 사진은 화면용 합성 해상도이며, 결과 안내의 `Details`에서 카메라별 저장 결과를 확인할 수 있습니다. 센서 동기 촬영은 보장하지 않습니다.
+JPEG와 MP4는 `DCIM/HALCamera`, Multi 사진 묶음 JSON은 `Download/HALCamera`에 저장합니다. Single Live PIP의 영상은 기존 녹음 권한으로 오디오를 포함하며, Multi 영상은 무음입니다. PIP 사진은 화면용 합성 해상도이며 Flash Auto·On과 AEB는 사용할 수 없습니다. 조명은 Off·Torch를 선택합니다. 결과 안내의 `Details`에서 카메라별 저장 결과를 확인할 수 있습니다. 센서 동기 촬영은 보장하지 않습니다.
 ### 손떨림 보정을 선택하세요
 
 <details markdown="1" id="detail-aa6a89b2d7" data-search-section>

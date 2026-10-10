@@ -580,7 +580,7 @@ class Camera2Engine(
             val fps = if (video.surface != null) liveStreams?.video?.fps ?: 30 else liveStreams?.fps?.max ?: 30
             val requested = requestedControls
             val manual = requested.manual.normalized(manualSupport(c, fps))
-            val now = requested.copy(manual = manual).coerce(liveControlSupport(c), video.surface != null)
+            val now = requested.copy(manual = manual).coerce(liveControlSupport(c), video.surface != null, pip != null)
             controls = now
             // A restored lock meets a session that has just started metering: relock it like a rebuilt one.
             if (old.aeLock != now.aeLock) { if (restoreQueued.getAndSet(false) && now.aeLock) startRelock() else aeRelock.lockChanged(now.aeLock) }

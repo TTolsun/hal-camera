@@ -1,0 +1,6 @@
+kind: nested-class
+title: photo-storage
+children: []
+parentPath:
+  - screens
+  - concurrent-camera-screen

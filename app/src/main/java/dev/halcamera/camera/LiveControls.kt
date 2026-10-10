@@ -29,12 +29,12 @@ data class LiveControls(
      * Drops what the camera or the capture mode cannot do. Auto and always flash exist for stills only: a
      * recording has no precapture to fire them, so video mode keeps just off and torch.
      */
-    fun coerce(support: LiveControlSupport, video: Boolean): LiveControls = copy(
+    fun coerce(support: LiveControlSupport, video: Boolean, composited: Boolean = false): LiveControls = copy(
         evIndex = if (manual.exposure != null) 0 else support.evRange?.let { evIndex.coerceIn(it) } ?: 0,
         aeLock = aeLock && support.aeLock && manual.exposure == null,
         afLock = afLock && support.afLock && manual.focusDiopters == null,
-        flash = if (flash in support.flashModes(video || manual.exposure != null)) flash else FlashMode.OFF,
-        bracket = bracket && !video && support.evRange != null && manual.exposure == null,
+        flash = if (flash in support.flashModes(video || composited || manual.exposure != null)) flash else FlashMode.OFF,
+        bracket = bracket && !video && !composited && support.evRange != null && manual.exposure == null,
     )
 
     /**

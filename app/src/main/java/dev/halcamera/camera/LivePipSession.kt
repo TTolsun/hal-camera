@@ -117,7 +117,8 @@ internal class LivePipSession(
     fun startVideo(audio: Boolean,started: () -> Unit,done: ((Result<Uri>) -> Unit)?) {
         if (busy) { done?.invoke(Result.failure(IllegalStateException("Camera busy"))); return }
         pending = true; videoDone = done
-        compositor.startVideo(MediaLibrary(context).name(),audio) { result -> main.post {
+        compositor.startVideo(MediaLibrary(context).name(),audio) { result -> main.post finishStart@{
+            if (closing) { pending = false; return@finishStart }
             pending = false; recording = result.isSuccess
             recordingChanged(recording)
             if (result.isSuccess) started() else { videoDone?.invoke(Result.failure(result.exceptionOrNull()!!)); videoDone = null; notice("Video not saved") }
@@ -138,7 +139,7 @@ internal class LivePipSession(
         closeCallbacks += done
         if (closing) return
         closing = true
-        if (recording) { compositor.stopVideo(true) {}; recording = false }
+        if (recording || pending) { compositor.stopVideo(true) {}; recording = false }
         session?.close(); session = null; extra?.close(); finishClose()
     }
     private fun finishClose() {
