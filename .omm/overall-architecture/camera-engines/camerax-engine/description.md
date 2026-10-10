@@ -7,3 +7,5 @@ ProcessCameraProvider로 Preview, ImageAnalysis(KEEP_ONLY_LATEST), ImageCapture(
 닫는 경로가 가장 까다롭습니다. Activity가 멈춘 상태에서도 해제가 끝나도록 수명 주기에 묶인 observer 대신 observeForever로 cameraState를 관찰합니다. unbind가 돌아올 때 이미 CLOSED인 경우를 위해 finished 플래그로 finish()를 한 번만 실행합니다. 녹화 중에 닫히면 VideoCapture도 함께 unbind하고, 파일 저장이 mediaIo에 들어간 뒤에 그 실행기를 종료합니다. CameraX 1.6은 닫은 카메라를 1초 동안 열어 두므로, CLOSED 뒤에 ProcessCameraProvider.shutdownAsync()로 카메라를 바로 놓고 나서 done을 부릅니다(#230). 종료는 최대 1초만 기다리고 provider_shutdown 이벤트를 남깁니다. Live에서 다음 엔진도 CameraX이면 releaseOnClose를 꺼서 종료하지 않습니다.
 
 LiveStreamSettings의 정확한 크기는 ResolutionSelector 필터로 선택합니다. 꺼진 YUV·JPEG의 use case는 생성하지 않습니다. 프리뷰 단독 구성에서는 PreviewView STREAMING이 준비 완료를 알립니다. 구성 결과는 negotiatedStreams에 기록하고 실패는 화면과 CLI에 전달합니다.
+
+PIP는 CameraXPipSources가 availableConcurrentCameraInfos의 두 장치 조합을 필터링하며 CameraXPipSession이 두 Preview를 ConcurrentCamera로 엽니다. 화면·사진·영상은 기존 DeviceCompositor를 공유합니다. Live는 세로 방향이며 ViewPort crop을 추가하지 않고 SurfaceTexture의 카메라 변환을 적용합니다. PIP 터치 측광은 협상한 프리뷰의 fill-center crop과 DisplayOrientedMeteringPointFactory를 사용합니다. 종료·실패 후 일반 use case를 복원하고 줌·제어를 다시 적용합니다. 상세 저장·수명주기 계약은 pip-composition 요소를 따릅니다.

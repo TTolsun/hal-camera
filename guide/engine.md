@@ -31,7 +31,7 @@ nav_order: 5
 | Benchmark | 지원합니다. | 지원하지 않으며 Camera2로 엽니다. |
 | 기존 Dual (CLI) | 공통 줌, 메인 센서 제어, 한 요청의 두 센서 사진과 무음 MP4 두 개를 지원합니다. | 공통 줌과 무음 MP4 두 개를 지원합니다. 메인 개별 제어와 두 센서 사진은 지원하지 않습니다. |
 | Multi | 지원되는 독립 장치 조합에서 동시 프리뷰와 카메라별 JPEG·무음 MP4를 제공합니다. 센서 동기를 보장하지 않습니다. | 미지원 안내 후 Camera2 경로로 열 수 있습니다. |
-| PIP | Physical 또는 다른 Service ID 하나를 합성합니다. Live는 현재 CameraDevice와 화면을 유지하며 보조 Service 장치만 추가로 엽니다. Multi는 장치별 합성 결과를 저장합니다. | Camera2 전환을 확인합니다. 기존 CameraX 장치는 유지하지 않습니다. |
+| PIP | Physical 또는 다른 Service ID 하나를 합성합니다. Live는 현재 CameraDevice와 화면을 유지하며 보조 Service 장치만 추가로 엽니다. Multi는 장치별 합성 결과를 저장합니다. | CameraX가 광고한 동시 조합의 Service ID 하나를 합성합니다. 메인 ID를 유지하며 단일·동시 use case를 다시 bind합니다. 두 장치 모두 CameraX로 열고 합성 JPEG·오디오 포함 MP4를 저장합니다. |
 
 CLI 호환용 Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.
 
@@ -57,9 +57,9 @@ PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JP
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `2c8daebf` · Codex (PIP state and documentation source review; device unavailable)
+- 검토 2026-10-10 @ `296f22d8` · Codex (CameraX PIP source and lifecycle review; device observations in validation report)
 
 </details>
 
@@ -214,7 +214,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `2c8daebf` · Codex (PIP state and documentation source review; device unavailable)
+- 검토 2026-10-10 @ `296f22d8` · Codex (CameraX PIP source and lifecycle review; device observations in validation report)
 
 </details>
 
@@ -589,7 +589,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `2c8daebf` · Codex (PIP state and documentation source review; device unavailable)
+- 검토 2026-10-10 @ `296f22d8` · Codex (CameraX PIP source and lifecycle review; device observations in validation report)
 
 </details>
 
@@ -605,6 +605,12 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 <!-- omm:begin id=camerax -->
 
 **CameraXEngine은 CameraX use case로 Live 촬영과 제어를 제공하지만, 요청 키 일부는 CameraX가 정합니다.** Live 스트림 설정에서 Preview·YUV·JPEG 크기와 출력 활성화를 선택할 수 있습니다. 앱이 CameraX 1.6.2에 직접 넣는 Camera2 키에는 AE 잠금(`CONTROL_AE_LOCK`), AF 잠금 해제용 cancel trigger, 광학 보정(`LENS_OPTICAL_STABILIZATION_MODE`)이 있습니다. 엔진 자체는 use case bind, 줌, 수명 주기를 담당하고, 사진은 `CameraXStillCapture`, 녹화는 `CameraXLiveRecorder`, Live 제어와 터치 측광은 `CameraXControls`가 맡습니다.
+
+### CameraX PIP
+
+**PIP 목록에는 CameraX가 광고한 동시 조합의 Service ID만 표시합니다.** 두 장치를 CameraX로 열며 Camera2로 전환하지 않습니다. 같은 선택창·위치 기억·드래그와 셔터를 사용합니다.
+
+`CameraXPipSession`은 각각 720p 이하의 Preview를 `ConcurrentCamera`로 bind하고 `DeviceCompositor`에서 합성 JPEG·H.264/AAC MP4를 저장합니다. 일반 촬영의 ImageCapture·Recorder와 별도 경로이며 PIP를 끄면 일반 출력 설정을 복원합니다. 단일·동시 모드 전환에는 재bind가 필요하고, 종료는 두 카메라의 CLOSED와 SurfaceRequest 반환을 기다립니다. PIP 터치 측광은 합성 화면의 fill-center crop에 맞춰 변환합니다. 지원 조합과 저장 범위는 [Live PIP](live.md#여러-카메라를-함께-촬영하세요)에서 확인합니다.
 
 ### CameraX 손떨림 보정
 
@@ -830,9 +836,9 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `2c8daebf` · Codex (PIP state and documentation source review; device unavailable)
+- 검토 2026-10-10 @ `296f22d8` · Codex (CameraX PIP source and lifecycle review; device observations in validation report)
 
 </details>
 
@@ -852,11 +858,11 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `2c8daebf` · Codex (PIP state and documentation source review; device unavailable) |
-| 원고 `contract` | 최신 | 검토 2026-10-10 @ `2c8daebf` · Codex (PIP state and documentation source review; device unavailable) |
-| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `2c8daebf` · Codex (PIP state and documentation source review; device unavailable) |
-| 원고 `camerax` | 최신 | 검토 2026-10-10 @ `2c8daebf` · Codex (PIP state and documentation source review; device unavailable) |
-| 원고 `comparison` | 최신 | 검토 2026-10-10 @ `2c8daebf` · Codex (PIP state and documentation source review; device unavailable) |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `296f22d8` · Codex (CameraX PIP source and lifecycle review; device observations in validation report) |
+| 원고 `contract` | 최신 | 검토 2026-10-10 @ `296f22d8` · Codex (CameraX PIP source and lifecycle review; device observations in validation report) |
+| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `296f22d8` · Codex (CameraX PIP source and lifecycle review; device observations in validation report) |
+| 원고 `camerax` | 최신 | 검토 2026-10-10 @ `296f22d8` · Codex (CameraX PIP source and lifecycle review; device observations in validation report) |
+| 원고 `comparison` | 최신 | 검토 2026-10-10 @ `296f22d8` · Codex (CameraX PIP source and lifecycle review; device observations in validation report) |
 
 <!-- omm:end id=status -->
 

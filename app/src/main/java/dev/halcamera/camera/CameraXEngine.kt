@@ -34,8 +34,9 @@ import java.util.concurrent.Executors
  * ([CameraXStillCapture], [CameraXLiveRecorder]), EV, AE/AF lock and flash, and touch metering ([CameraXControls]).
  * Benchmark profiles stay Camera2-only (PLAN-BenchMarker-v0.3 8.2), so nothing here takes a StreamSpec.
  *
- * The session is Preview + ImageAnalysis + ImageCapture, which is Camera2Engine's preview + YUV + JPEG. While a
+ * The ordinary session is Preview + ImageAnalysis + ImageCapture, which is Camera2Engine's preview + YUV + JPEG. While a
  * recording runs it is Preview + VideoCapture, as Camera2's recording session is preview + encoder.
+ * PIP uses [CameraXPipSession]'s concurrent previews and the shared compositor for stills and video.
  */
 @androidx.annotation.OptIn(markerClass = [ExperimentalCamera2Interop::class])
 class CameraXEngine(
@@ -54,7 +55,7 @@ class CameraXEngine(
     private val liveStreams: LiveStreamSettings? = null,
     private val streamsConfigured: (Map<String, Any?>) -> Unit = {},
     private val streamsFailed: (String) -> Unit = {},
-) : CameraEngine, MediaCapture, LiveTuning, TouchMetering {
+) : CameraEngine, MediaCapture, LiveTuning, TouchMetering, PipCamera {
     @Volatile private var active = true
     /**
      * Whether close() shuts CameraX down so the camera service releases the camera at once (#230). CameraX 1.6
@@ -65,6 +66,11 @@ class CameraXEngine(
     @Volatile var releaseOnClose = true
     private var provider: ProcessCameraProvider? = null
     private var selector: CameraSelector? = null
+    private var pip: CameraXPipSession? = null
+    private var pipPreview: Preview? = null
+    private var pipChanging = false
+    var pipSources: List<PipSource> = emptyList()
+        private set
     @Volatile private var camera: Camera? = null
     private var capture: ImageCapture? = null
     private var preview: Preview? = null
@@ -85,11 +91,11 @@ class CameraXEngine(
     private val handler = Handler(Looper.getMainLooper())
     private val mediaIo = Executors.newSingleThreadExecutor()
     private val library = MediaLibrary(context)
-    override val mediaBusy: Boolean get() = stills.inFlight || video.busy
+    override val mediaBusy: Boolean get() = stills.inFlight || video.busy || pipChanging || pip?.busy == true
 
     private val controls: CameraXControls = CameraXControls(view, handler, telemetry, session, object : CameraXControls.Host {
         override val camera: Camera? get() = this@CameraXEngine.camera
-        override val imageCapture: ImageCapture? get() = capture
+        override val imageCapture: ImageCapture? get() = if (pip == null) capture else null
         override val active: Boolean get() = this@CameraXEngine.active
         override fun notice(text: String) = this@CameraXEngine.notice(text)
     })
@@ -171,6 +177,9 @@ class CameraXEngine(
                 require(liveStreams?.yuvSaveFormat != YuvSaveFormat.NV21) { "NV21 requires Camera2." }
                 require(liveStreams?.raw == null) { "RAW/DNG requires Camera2." }
                 provider = future.get()
+                pipSources = CameraXPipSources.forParent(cameraId, runCatching { provider!!.availableConcurrentCameraInfos.map { pair ->
+                    pair.map { Camera2CameraInfo.from(it).cameraId }
+                } }.getOrDefault(emptyList()))
                 val info = provider!!.availableCameraInfos.first { Camera2CameraInfo.from(it).cameraId == cameraId }
                 val characteristics = context.getSystemService(CameraManager::class.java).getCameraCharacteristics(cameraId)
                 val mode = liveStreams?.stabilization ?: LiveStabilization.AUTO
@@ -215,8 +224,10 @@ class CameraXEngine(
                 camera = provider!!.bindToLifecycle(owner, selector!!, *outputs.targets.toTypedArray())
                 camera!!.cameraInfo.cameraState.observe(owner) { state ->
                     if (!active) return@observe
-                    state.error?.let { status("CameraX error ${it.code}", false); telemetry.event(session, "camera_error", mapOf("code" to it.code)) }
-                    if (state.type == CameraState.Type.OPEN && !video.busy) status("CameraX · LIVE", true)
+                    if (pip == null && !pipChanging) {
+                        state.error?.let { status("CameraX error ${it.code}", false); telemetry.event(session, "camera_error", mapOf("code" to it.code)) }
+                        if (state.type == CameraState.Type.OPEN && !video.busy) status("CameraX · LIVE", true)
+                    }
                 }
                 val sizes = streamSizes()
                 telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
@@ -282,10 +293,20 @@ class CameraXEngine(
 
     private fun displayRotation(): Int = view.display?.rotation ?: Surface.ROTATION_0
 
-    override fun capture() = stills.capture(null, null)
-    override fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit) = stills.capture(requestId, done)
-    override fun startRecording(audio: Boolean, started: () -> Unit, done: ((Result<android.net.Uri>) -> Unit)?) = video.start(audio, started, done)
-    override fun stopRecording() = video.stop()
+    override fun capture() {
+        val current = pip
+        if (current != null) current.capture(null) { report(if (it.isSuccess) "Saved PIP photo" else "Photo failed",true) }
+        else stills.capture(null,null)
+    }
+    override fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit) {
+        val current = pip
+        if (current != null) current.capture(requestId,done) else stills.capture(requestId,done)
+    }
+    override fun startRecording(audio: Boolean, started: () -> Unit, done: ((Result<android.net.Uri>) -> Unit)?) {
+        val current = pip
+        if (current != null) current.startVideo(audio,started,done) else video.start(audio,started,done)
+    }
+    override fun stopRecording() { pip?.stopVideo() ?: video.stop() }
     override val snapshot: SnapshotStatus get() =
         SnapshotStatus.of(video.live, video.stopping, snapshotUnavailableReason(), snapshots.inFlight)
     override fun captureSnapshot(done: (Result<PhotoResult>) -> Unit) = snapshots.capture(null, done)
@@ -308,10 +329,30 @@ class CameraXEngine(
      * released; see [CameraXControls].
      */
     override fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean =
-        controls.meterAt(x, y, exposure, feedback)
+        controls.meterAt(x, y, exposure, feedback, pipMeteringPoint(x,y))
+
+    /** The hidden single-camera PreviewView no longer owns PIP's crop/rotation mapping. */
+    private fun pipMeteringPoint(x: Float, y: Float): MeteringPoint? {
+        if (pip == null || view.width == 0 || view.height == 0) return null
+        val info = camera?.cameraInfo ?: return null
+        val size = pipPreview?.resolutionInfo?.resolution ?: return null
+        val rotated = info.getSensorRotationDegrees(displayRotation()) % 180 != 0
+        val width = (if (rotated) size.height else size.width).toFloat()
+        val height = (if (rotated) size.width else size.height).toFloat()
+        val sourceAspect = width / height
+        val viewAspect = view.width.toFloat() / view.height
+        val px = (.5f + (x/view.width-.5f)*minOf(1f,viewAspect/sourceAspect))*width
+        val py = (.5f + (y/view.height-.5f)*minOf(1f,sourceAspect/viewAspect))*height
+        return DisplayOrientedMeteringPointFactory(view.display,info,width,height).createPoint(px,py)
+    }
 
     override fun close(done: () -> Unit) {
         active = false
+        val current = pip
+        if (current != null) current.close { pip = null; closeSingle(done) } else closeSingle(done)
+    }
+
+    private fun closeSingle(done: () -> Unit) {
         analysis?.clearAnalyzer()
         stills.close()
         snapshots.release("Camera closed")
@@ -350,6 +391,79 @@ class CameraXEngine(
     }
 
     private fun report(message: String, ok: Boolean) { handler.post { if (active) status(message, ok) } }
+
+    override fun setPip(source: PipSource?, texture: android.graphics.SurfaceTexture?, output: LiveSize?,
+        position: PipRect, done: (Result<Unit>) -> Unit) {
+        val provider = provider
+        if (!active || provider == null || pipChanging || stills.inFlight || video.busy || pip?.busy == true) {
+            done(Result.failure(IllegalStateException("Camera busy"))); return
+        }
+        if (source != null && pipSources.none { it.key == source.key }) {
+            done(Result.failure(IllegalArgumentException("PIP combination unavailable"))); return
+        }
+        pipChanging = true
+        fun restore(result: Result<Unit>) {
+            pip = null; pipPreview = null; pipChanging = false
+            if (active) {
+                try {
+                    camera = provider.bindToLifecycle(owner,selector!!,*liveOutputs().targets.toTypedArray())
+                    rebuilt(liveOutputs(),streamSizes())
+                    report("CameraX · LIVE",true)
+                } catch (e: Exception) { report("CameraX: ${e.message}",false) }
+            }
+            done(result)
+        }
+        fun startSession() {
+            if (!active) { pipChanging = false; done(Result.failure(IllegalStateException("Camera closed"))); return }
+            if (source == null) { restore(Result.success(Unit)); return }
+            val infos = provider.availableCameraInfos.associateBy { Camera2CameraInfo.from(it).cameraId }
+            lateinit var added: CameraXPipSession
+            added = CameraXPipSession(context,owner,provider,handler,cameraId,source,
+                listOf(infos.getValue(cameraId).cameraSelector,infos.getValue(source.id).cameraSelector),
+                checkNotNull(texture),checkNotNull(output),position,
+                resultCallback(telemetry.callback(session) { active }),
+                bound = { mainCamera, previews ->
+                    camera = mainCamera
+                    pipPreview = previews.first()
+                    rebuilt(StreamConfiguration(listOf(ConfiguredOutput(previewOutput,previews.first()))),
+                        mapOf("preview" to previews.first().resolutionInfo?.resolution?.toString(),
+                            "pip" to previews.last().resolutionInfo?.resolution?.toString(), "analysis" to null,"jpeg" to null))
+                    telemetry.event(session,"pip_configured",mapOf("sourceId" to source.id,"physical" to false,"api" to "CameraX.ConcurrentCamera"))
+                }, ready = {
+                    if (pip === added && active) {
+                        pipChanging = false; previewReady(); report("CameraX · LIVE",true); done(Result.success(Unit))
+                    }
+                }, failed = { reason ->
+                    if (pip === added) added.close { restore(Result.failure(IllegalStateException(reason))) }
+                }, recordingChanged = recordingState,
+                notice = { message -> if (active) notice(message) })
+            pip = added
+            added.start()
+        }
+        fun start() {
+            try { startSession() }
+            catch (e: Exception) { restore(Result.failure(e)) }
+        }
+        val previous = pip
+        if (previous != null) previous.close { if (pip === previous) pip = null; start() }
+        else {
+            val info = camera?.cameraInfo
+            // CameraX requires leaving single-camera mode before a concurrent bind. Keep the selected
+            // main ID/controls, and wait for its release instead of switching engines or opening Camera2.
+            var released = false
+            lateinit var observer: Observer<CameraState>
+            fun proceed() {
+                if (released) return
+                released = true; info?.cameraState?.removeObserver(observer); start()
+            }
+            observer = Observer { if (it.type == CameraState.Type.CLOSED) proceed() }
+            provider.unbindAll()
+            if (info != null) info.cameraState.observeForever(observer)
+            if (info == null || info.cameraState.value?.type == CameraState.Type.CLOSED) proceed()
+        }
+    }
+
+    override fun movePip(rect: PipRect) { pip?.move(rect) }
 
     companion object {
         /** shutdownAsync took about 175 ms on device; a slower one must not hold the next engine for long. */

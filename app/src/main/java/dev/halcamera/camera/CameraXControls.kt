@@ -100,9 +100,10 @@ internal class CameraXControls(
     fun resendMetering() { submitMetering() }
 
     /** Focuses at ([x], [y]) in the view's pixels, or meters exposure there; PreviewView maps the point itself. */
-    fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean {
+    fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit,
+        mappedPoint: MeteringPoint? = null): Boolean {
         val camera = host.camera ?: return false
-        val point = view.meteringPointFactory.createPoint(x, y)
+        val point = mappedPoint ?: view.meteringPointFactory.createPoint(x, y)
         val flag = if (exposure) FocusMeteringAction.FLAG_AE else FocusMeteringAction.FLAG_AF
         if (!host.active || !camera.cameraInfo.isFocusMeteringSupported(FocusMeteringAction.Builder(point, flag).build())) return false
         val target = Target(point, feedback)

@@ -23,7 +23,7 @@ title: Live
 
 **기본 설정에서는 사진 두 장이 저장됩니다.** YUV를 변환한 JPEG와 카메라가 만든 JPEG이며, `DCIM/HALCamera`에 있습니다. Camera2에서 출력을 하나만 켜면 해당 사진만 저장합니다. 두 엔진이 사진을 연결하는 차이는 [Engine Comparison](engine.md#사진-두-장은-어떻게-연결하나요)에 있습니다.
 
-동영상을 찍으려면 동영상 모드로 바꿉니다. Photo·Video를 전환하면 전체 스트림을 다시 구성하고 선택한 PIP도 복원합니다. 셔터를 한 번 눌러 시작하고 다시 눌러 끝냅니다. 종료 처리 중에는 셔터를 사용할 수 없습니다. 저장이 끝나면 안내 문구가 나타납니다. Camera2와 CameraX 모두 선택한 엔진에서 촬영합니다.
+동영상을 찍으려면 동영상 모드로 바꿉니다. Photo·Video를 전환하면 전체 스트림을 다시 구성하고 선택한 PIP도 복원합니다. 셔터를 한 번 눌러 시작하고 다시 눌러 끝냅니다. 종료 처리 중에는 셔터를 사용할 수 없습니다. 일반 사진·PIP 사진·동영상의 저장 완료 안내는 3초 뒤 사라집니다. 저장 실패 안내는 유지합니다. Camera2와 CameraX 모두 선택한 엔진에서 촬영합니다.
 
 <figure class="app-screenshot" id="screen-live">
 <a href="assets/screenshots/live.png" aria-label="Camera2 Live 사진 모드와 실시간 정보 원본 보기"><img src="assets/screenshots/live.png" alt="Camera2 Live 사진 모드와 실시간 정보" width="1440" height="3120" loading="lazy" decoding="async"></a>
@@ -159,7 +159,7 @@ M·EV·Flash는 도구 행을 유지한 채 선택한 버튼 아래로 펼쳐집
 | 바꿀 대상 | 설정 |
 | --- | --- |
 | 프리뷰 | Preview 크기와 프리뷰 FPS를 선택합니다. |
-| 사진 | Camera2는 YUV·JPEG·RAW, CameraX는 YUV·JPEG의 크기 또는 `Off`를 선택합니다. 모든 사진 출력을 끄면 사진 셔터를 사용할 수 없습니다. |
+| 사진 | Camera2는 YUV·JPEG·RAW, CameraX는 YUV·JPEG의 크기 또는 `Off`를 선택합니다. 일반 사진은 모든 출력을 끄면 셔터가 비활성화됩니다. PIP의 합성 JPEG 셔터는 유지합니다. |
 | 녹화 | Format → Resolution → Frame Rate 순서로 선택합니다. CameraX의 포맷은 Auto이며 코덱은 라이브러리가 정합니다. 고속 세션은 제공하지 않습니다. |
 
 **적용에 실패하면** 설정 화면의 이유를 확인하고 `이전 설정으로 복원`을 누르세요. 이 버튼은 실패했을 때만 나타납니다. 개별 크기를 지원해도 여러 출력의 조합은 거부될 수 있습니다.
@@ -193,7 +193,11 @@ Live의 `Multi · P`(사진) 또는 `Multi · V`(영상)에서 카메라 조합�
 
 Single에서는 API 선택 옆의 `PIP`에서 보조 카메라 하나를 선택합니다. Android 11 이상에서 선택 후보가 있으면 사용할 수 있으며, Logical capability는 Physical 후보에만 필요합니다. 목록에 있는 Service 카메라도 실제 동시 출력 구성이 지원되어야 열 수 있습니다.
 
-Camera2 Single에서는 현재 Live 화면과 CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열며, Physical ID는 현재 장치에 출력을 추가합니다. 기존 셔터와 Photo·Video 모드로 합성 사진·영상을 저장하고, 보조 화면을 드래그할 수 있습니다. CameraX에서는 Camera2 전환을 확인하므로 기존 CameraX 장치를 유지하지 않습니다. Multi에서 PIP를 바꾸면 전체 Multi 세션을 닫고 다시 구성합니다. 이미 연 Service ID는 중복해서 열지 않으며, 추가 Service 장치도 최대 장치 수에 포함합니다.
+Camera2 Single에서는 현재 Live 화면과 CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열며, Physical ID는 현재 장치에 출력을 추가합니다. 기존 셔터와 Photo·Video 모드로 합성 사진·영상을 저장하고, 보조 화면을 드래그할 수 있습니다.
+
+CameraX에서도 같은 PIP 버튼·셔터·드래그를 사용합니다. CameraX가 광고한 동시 조합의 Service ID만 표시하며 Physical ID는 제공하지 않습니다. Camera2와 후보 목록이 다를 수 있고, 후보가 없으면 PIP 버튼이 비활성화됩니다. 메인 ID는 유지하되 PIP를 켜고 끌 때 단일·동시 세션을 다시 bind합니다. 프리뷰 입력은 각각 720p 이하에서 협상하고, 일반 사진·녹화의 출력 설정 대신 화면용 합성 JPEG·H.264/AAC MP4를 저장합니다. PIP를 끄면 일반 스트림 설정으로 복귀합니다. 목록 스크롤은 엔진·메인 ID별로, 프리뷰 위치는 메인 ID별로 기억합니다.
+
+Multi에서 PIP를 바꾸면 전체 Multi 세션을 닫고 다시 구성합니다. 이미 연 Service ID는 중복해서 열지 않으며, 추가 Service 장치도 최대 장치 수에 포함합니다.
 
 JPEG와 MP4는 `DCIM/HALCamera`, Multi 사진 묶음 JSON은 `Download/HALCamera`에 저장합니다. Single PIP 사진은 합성 JPEG 한 장이며 일반 사진의 YUV·JPEG 쌍이나 RAW·메타데이터 JSON을 저장하지 않습니다. Single PIP 영상은 녹음 권한으로 오디오를 포함하며, Multi 영상은 무음입니다. PIP 사진은 화면용 합성 해상도입니다. Single PIP의 플래시는 Off·Torch만 제공하며 AEB는 사용할 수 없습니다. Multi 사진 결과 안내의 `Details`에서 카메라별 저장 결과를 확인할 수 있습니다. 센서 동기 촬영은 보장하지 않습니다.
 ### 손떨림 보정을 선택하세요

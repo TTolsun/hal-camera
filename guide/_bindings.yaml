@@ -162,6 +162,7 @@ sources:
       camera-engines/camerax-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+          - app/src/main/java/dev/halcamera/camera/CameraXPipSources.kt
       # CameraX parity with Camera2 on Live: the same three helpers as camera2-engine, each its own element.
       camera-engines/camerax-engine/still-capture:
         evidence:
@@ -272,6 +273,7 @@ sources:
           - app/src/main/java/dev/halcamera/camera/PipScene.kt
           - app/src/main/java/dev/halcamera/camera/PipSource.kt
           - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
+          - app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt
           - app/src/main/java/dev/halcamera/ui/LivePipController.kt
           - app/src/main/java/dev/halcamera/ui/PipPositionStore.kt
           - app/src/main/java/dev/halcamera/ui/PhysicalPipPicker.kt

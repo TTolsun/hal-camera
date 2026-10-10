@@ -14,6 +14,13 @@ interface CameraEngine {
     fun close(done: () -> Unit)
 }
 
+/** A composited Live preview with the same scene saved to photos and video. */
+interface PipCamera {
+    fun setPip(source: PipSource?, texture: android.graphics.SurfaceTexture?, output: LiveSize?,
+        position: PipRect = PipScene.liveDefault, done: (Result<Unit>) -> Unit)
+    fun movePip(rect: PipRect)
+}
+
 /**
  * The LIVE media surface an engine may offer beyond [CameraEngine]'s preview contract: gallery stills and
  * video recording. LIVE and the CLI check for this interface instead of a concrete engine class, so which
@@ -25,7 +32,8 @@ interface MediaCapture {
     val mediaBusy: Boolean
     /**
      * Selected LIVE outputs saved through MediaLibrary. [done] is called on the main thread. Camera2 takes
-     * enabled YUV/JPEG outputs from one capture (both by default); CameraX always saves a pair using the nearest analysis frame.
+     * enabled YUV/JPEG outputs from one capture (both by default); CameraX uses the nearest analysis frame.
+     * With PIP, either engine saves one composed JPEG instead of the ordinary still outputs.
      */
     fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit)
     fun startRecording(audio: Boolean = true, started: () -> Unit = {}, done: ((Result<android.net.Uri>) -> Unit)? = null)
