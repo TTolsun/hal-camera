@@ -8,7 +8,7 @@
 - MediaLibrary가 MediaTransaction을 사용하여 파일 쓰기·공개·실패 시 삭제를 공통 처리합니다. 일반 사진 묶음의 롤백과 Multi의 카메라별 부분 성공을 유지합니다.
 - ConcurrentCameraActivity의 사용하지 않는 Single PIP 진입 경로와 전체 화면·인셋 배치 분기를 제거했습니다. Multi의 카메라별 분할 화면은 유지합니다.
 - MainActivity는 PipCamera.pipSources로 후보를 조회합니다. CameraXEngine으로 형변환하여 후보를 가져오던 분기를 제거했습니다.
-- Live 정보는 FPS·EXP·AE·AF를 같은 폭의 네 칸에 왼쪽 정렬합니다. ISO와 EV는 표시하지 않습니다. 상태 문구가 바뀌어도 칸 위치와 글자 크기를 다시 계산하지 않습니다.
+- Live 정보는 FPS·EXP·AE·AF를 항목별 고정 폭과 8dp 간격으로 중앙에 모으고 12sp를 기준으로 표시합니다. ISO와 EV는 표시하지 않습니다. 상태 문구가 바뀌어도 칸 위치와 글자 크기를 다시 계산하지 않습니다.
 
 변경 파일과 호출부를 대조하여 저장 실패 시 소유 파일 삭제, GL Surface 분리 이후 녹화기 해제, 종료 콜백의 호출 스레드, 제거한 경로의 남은 참조를 검토했습니다. 문서의 코드 근거도 대조했습니다. 이 기록은 Codex의 자체 리뷰이며 독립된 사람의 승인을 뜻하지 않습니다.
 
@@ -31,8 +31,8 @@ Galaxy S25+ (SM-S936N), Android 16 / API 36에서 release APK를 업데이트 �
 | Multi · P, Service 0 + Service 1 | 두 카메라의 사진을 저장하고 완료 안내를 확인했습니다. |
 | Multi · V, Service 0 + Service 1 | 두 MP4를 각각 저장했습니다. 크기는 1,711,134바이트와 11,990,258바이트이며 모두 `is_pending=0`이었습니다. |
 | Multi 녹화 중 홈 화면 이동 | 두 파일의 저장 완료 후 앱에 복귀하여 프리뷰를 다시 열었습니다. |
-| Live 정보 정렬 | 네 칸의 중심 x 좌표가 216, 552, 888, 1224px로 동일 간격이었습니다. AF Focused/Unfocused와 AE OK/Locked에서도 각 열의 x 좌표가 유지됐습니다. 활성 설정 행의 표시 여부는 별도로 높이에 반영됩니다. |
+| Live 정보 정렬 | 최종 배치에서 네 칸의 중심 x 좌표는 227, 550, 881, 1185px였습니다. 문구 폭을 미리 예약하여 항목 사이 간격을 고정하고 전체 묶음을 중앙에 배치했습니다. AE Search/OK와 AF No focus 상태를 확인했으며 AF 잠금 전후에도 각 열의 x 좌표가 유지됐습니다. 활성 설정 행의 표시 여부는 별도로 높이에 반영됩니다. |
 
 Camera2·CameraX는 같은 Live 정보 뷰를 사용합니다. 이번 화면 검증은 해당 기기의 기본 글꼴 설정에서 진행했습니다. 다른 기기·대형 글꼴·장시간 녹화는 실기기 검증 범위에 포함하지 않았으며, 성능 개선율을 측정한 결과는 아닙니다.
 
-![같은 폭으로 정렬한 FPS, EXP, AE, AF](assets/solid-live-readout.png)
+![큰 글씨로 중앙에 모은 FPS, EXP, AE, AF](assets/solid-live-readout.png)

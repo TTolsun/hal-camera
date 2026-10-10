@@ -20,9 +20,9 @@ internal object LiveMeasurementText {
         listOf(if (dual) "FPS 999.9 / 999.9" else "FPS 999.9"), listOf("EXP 999.99ms"),
         (0..5).map(::aeState), (0..6).map(::afState))
     private fun aeState(value: Int?) = "AE " + when (value) {
-        null -> "—"; 0 -> "Idle"; 1 -> "Searching"; 2 -> "OK"; 3 -> "Locked"; 4 -> "Flash needed"; 5 -> "Metering"; else -> "#$value"
+        null -> "—"; 0 -> "Idle"; 1 -> "Search"; 2 -> "OK"; 3 -> "Locked"; 4 -> "Flash"; 5 -> "Meter"; else -> "#$value"
     }
     private fun afState(value: Int?) = "AF " + when (value) {
-        null -> "—"; 0 -> "Idle"; 1, 3 -> "Scanning"; 2, 4 -> "Focused"; 5 -> "No focus"; 6 -> "Unfocused"; else -> "#$value"
+        null -> "—"; 0 -> "Idle"; 1, 3 -> "Scan"; 2, 4 -> "Focus"; 5, 6 -> "No focus"; else -> "#$value"
     }
 }

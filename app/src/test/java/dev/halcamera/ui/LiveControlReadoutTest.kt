@@ -10,7 +10,7 @@ import org.junit.Test
 class LiveControlReadoutTest {
     @Test
     fun `a held AF lock reads as its outcome because the padlock already says it is held`() {
-        assertEquals("FPS — · EXP — · AE Locked · AF Focused",
+        assertEquals("FPS — · EXP — · AE Locked · AF Focus",
             LiveMeasurementText.format(mapOf("ae" to 3, "af" to 4)))
         assertEquals("FPS — · EXP — · AE — · AF No focus",
             LiveMeasurementText.format(mapOf("af" to 5)))

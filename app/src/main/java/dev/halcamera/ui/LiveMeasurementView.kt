@@ -8,6 +8,7 @@ import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
 import android.widget.LinearLayout
+import kotlin.math.ceil
 
 /** Fixed columns reserve every known AE/AF state; changing a result never changes geometry or type size. */
 class LiveMeasurementView(context: Context, private val dual: Boolean = false) : LinearLayout(context) {
@@ -40,13 +41,12 @@ class LiveMeasurementView(context: Context, private val dual: Boolean = false) :
         if (w <= 0 || w == oldw) return
         val base = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP,12f,resources.displayMetrics)
         val paint = Paint(cells.first().paint).apply { textSize = base }
-        val reservedWidth = LiveMeasurementText.reservedLabels(dual).flatten().maxOf(paint::measureText) + 2f
+        val widths = LiveMeasurementText.reservedLabels(dual).map { labels -> labels.maxOf(paint::measureText) + 2f }
         val gap = Look.dp(context,8)
-        val cellWidth = (w-paddingLeft-paddingRight-gap*3).coerceAtLeast(4) / 4
-        val scale = minOf(1f, cellWidth / reservedWidth)
+        val scale = minOf(1f, ((w-paddingLeft-paddingRight-gap*3-4).coerceAtLeast(1))/widths.sum())
         cells.forEachIndexed { index, cell ->
             cell.setTextSize(TypedValue.COMPLEX_UNIT_PX,base*scale)
-            cell.layoutParams = LayoutParams(0,-2,1f).apply {
+            cell.layoutParams = LayoutParams(ceil(widths[index]*scale).toInt(),-2).apply {
                 if (index > 0) marginStart = gap
             }
         }
