@@ -262,6 +262,11 @@ sources:
           - app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt
           - app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt
           - app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt
+      screens/concurrent-camera-screen/pip-composition:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt
+          - app/src/main/java/dev/halcamera/camera/PipScene.kt
+          - app/src/main/java/dev/halcamera/ui/PhysicalPipPicker.kt
       screens/dual-preview-screen/cli-adapter:
         evidence:
           - app/src/main/java/dev/halcamera/DualCliBridge.kt

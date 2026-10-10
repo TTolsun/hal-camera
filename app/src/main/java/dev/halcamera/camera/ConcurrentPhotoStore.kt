@@ -5,7 +5,8 @@ import android.net.Uri
 import org.json.JSONArray
 import org.json.JSONObject
 
-internal data class ConcurrentPhoto(val bytes: ByteArray, val imageTimestampNs: Long, val sensorTimestampNs: Long)
+internal data class ConcurrentPhoto(val bytes: ByteArray, val imageTimestampNs: Long, val sensorTimestampNs: Long?,
+    val composedSize: LiveSize? = null, val physicalIds: List<String> = emptyList(), val sourceTimestamps: Map<String, Long> = emptyMap())
 
 /** File boundary: keep successful photos even when the other camera fails, with an explicit group manifest. */
 internal class ConcurrentPhotoStore(context: Context) {
@@ -34,7 +35,12 @@ internal class ConcurrentPhotoStore(context: Context) {
                     }
                     published += uri
                     entry.put("file", file).put("uri", uri.toString())
-                        .put("imageTimestampNs", photo.imageTimestampNs).put("sensorTimestampNs", photo.sensorTimestampNs)
+                        .put("imageTimestampNs", photo.imageTimestampNs).put("sensorTimestampNs", photo.sensorTimestampNs ?: JSONObject.NULL)
+                        .put("composition", if (photo.composedSize != null) "PIP" else "camera JPEG")
+                    photo.composedSize?.let {
+                        entry.put("requestedJpeg", JSONObject.NULL).put("configuredJpeg", JSONObject.NULL).put("savedSize", it.toString())
+                            .put("physicalIds", JSONArray(photo.physicalIds)).put("sourceSurfaceTimestampsNs", JSONObject(photo.sourceTimestamps))
+                    }
                 }
                 entry.put("status", if (saved.isSuccess) "saved" else "failed")
                 saved.exceptionOrNull()?.let { entry.put("error", it.message ?: it.javaClass.simpleName) }

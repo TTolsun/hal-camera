@@ -28,6 +28,7 @@ verifications: []
 | Benchmark | 지원합니다. | 지원하지 않으며 Camera2로 엽니다. |
 | 기존 Dual (CLI) | 공통 줌, 메인 센서 제어, 한 요청의 두 센서 사진과 무음 MP4 두 개를 지원합니다. | 공통 줌과 무음 MP4 두 개를 지원합니다. 메인 개별 제어와 두 센서 사진은 지원하지 않습니다. |
 | Multi | 지원되는 독립 장치 조합에서 동시 프리뷰와 카메라별 JPEG를 제공합니다. 센서 동기를 보장하지 않습니다. | 미지원 안내 후 Camera2 경로로 열 수 있습니다. |
+| Physical PIP | Logical 장치의 메인·Physical 출력을 같은 장면으로 합성하여 JPEG와 무음 MP4로 저장합니다. Multi에서는 장치마다 합성 결과를 따로 저장합니다. | Camera2로 전환을 확인한 뒤 엽니다. |
 
 Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.
 

@@ -1,5 +1,6 @@
 kind: nested-class
 title: concurrent-camera-screen
-children: []
+children:
+  - pip-composition
 parentPath:
   - screens

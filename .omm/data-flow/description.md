@@ -10,4 +10,4 @@ CLI는 직접 인자 또는 base64url JSON을 받고 shell UID·허용 설정·�
 
 벤치마크 JSON은 기기 안에서만 생성하며, files/benchmarks와 baseline 목록으로 비교합니다. 외부 JSON 가져오기는 0.13.0에서 제거했습니다.
 
-Multi 모드의 ConcurrentSession은 카메라마다 사진 요청과 이미지·CaptureResult의 센서 시각을 연결합니다. ConcurrentPhotoStore는 성공한 JPEG를 DCIM/HALCamera에 저장하고, 공통 촬영 ID와 카메라별 타임스탬프·시각 기준·파일 URI·성공 또는 실패 사유를 Download/HALCamera의 JSON에 기록합니다. 부분 실패는 다른 카메라의 성공을 지우지 않으며, JSON 저장 자체가 실패하면 이번 묶음 전체를 롤백합니다. 이 경로는 Benchmark 계산과 분리됩니다.
+Multi 모드의 ConcurrentSession은 독립 장치마다 출력과 저장을 관리합니다. PIP를 끈 장치의 사진은 이미지·CaptureResult 센서 시각을 연결하고, PIP를 켠 장치는 DeviceCompositor의 화면과 같은 합성 JPEG를 저장합니다. 합성 사진은 실제 센서 촬영 시각을 주장하지 않고 입력 Surface 시각을 별도로 기록합니다. ConcurrentPhotoStore는 JPEG를 DCIM/HALCamera에, 공통 촬영 ID·합성 여부·장치 ID·Physical ID·성공 또는 실패를 Download/HALCamera의 JSON에 기록합니다. 영상은 장치별 compositor에서 별도 무음 MP4로 저장합니다. 이 경로는 Benchmark 계산과 분리됩니다.

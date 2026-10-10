@@ -144,6 +144,8 @@ class MainActivity : ComponentActivity() {
         if (grants.values.all { it }) action?.invoke() else toast("Allow the requested permissions to save media.")
     }
     private lateinit var engineButton: Button
+    private lateinit var physicalPipButton: Button
+    private val physicalPip by lazy { dev.halcamera.ui.PhysicalPipPicker(this,manager) }
     private val graphBack = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() = showCallbacks(false)
     }
@@ -507,11 +509,20 @@ class MainActivity : ComponentActivity() {
             pendingPermissionAction=null
             chooseEngine(if(engineName=="Camera2") "CameraX" else "Camera2")
         }
+        physicalPipButton=button("PIP") {
+            physicalPip.show(cameraId,engineName) { id,physicalIds ->
+                openAfterClose("pip_opened") {
+                    Intent(this,ConcurrentCameraActivity::class.java)
+                        .putExtra(ConcurrentCameraActivity.EXTRA_SINGLE_ID,id)
+                        .putStringArrayListExtra(ConcurrentCameraActivity.EXTRA_PHYSICAL_IDS,ArrayList(physicalIds))
+                }
+            }
+        }
         // Lab groups inspection, saved results and settings; Mark stays on the preview.
         labButton=button("Lab") { openLab() }.apply { contentDescription="Open Lab: inspection tools, saved results, and settings" }
         // Read-only overlay controls remain usable while the CLI owns a recording.
         graphButton=CameraWidgets(this).button("Callback") { showCallbacks(callbackGraph.visibility != View.VISIBLE) }.apply { contentDescription="Show callback timing" }
-        listOf(engineButton,labButton,graphButton).forEach {
+        listOf(engineButton,physicalPipButton,labButton,graphButton).forEach {
             it.background=cameraChrome(Color.TRANSPARENT)
             it.setTextColor(Color.WHITE)
             it.setPadding(dp(8),0,dp(8),0)
@@ -520,8 +531,9 @@ class MainActivity : ComponentActivity() {
         }
         liveIndicator=LiveIndicator(this).apply { onSizesClick = ::openLiveStreams }
         val leadingSlot=LinearLayout(this).apply {
-            orientation=LinearLayout.VERTICAL; gravity=Gravity.START
+            orientation=LinearLayout.HORIZONTAL; gravity=Gravity.START
             addView(engineButton,LinearLayout.LayoutParams(-2,dp(48)))
+            addView(physicalPipButton,LinearLayout.LayoutParams(-2,dp(48)))
         }
         val trailingSlot=row().apply {
             gravity=Gravity.END or Gravity.CENTER_VERTICAL
@@ -771,6 +783,9 @@ class MainActivity : ComponentActivity() {
             it.alpha = if (it.isEnabled) 1f else 0.4f
         }
         multiButton.contentDescription = "Multi cameras"
+        physicalPipButton.isEnabled = multiButton.isEnabled && physicalPip.supported(cameraId).isNotEmpty()
+        physicalPipButton.alpha = if (physicalPipButton.isEnabled) 1f else .4f
+        physicalPipButton.contentDescription = "PIP physical cameras"
         if (cli.active != null) {
             listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, labButton, reportButton).forEach { it.isEnabled = false }
         }

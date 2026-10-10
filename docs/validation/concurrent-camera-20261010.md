@@ -1,5 +1,23 @@
 # 전면·후면 동시 카메라 검증 — 2026-10-10
 
+## Single / Multi의 Physical PIP — 최종 로컬 구현
+
+Single의 Camera2·CameraX 선택 옆 PIP 버튼은 Logical capability와 Physical ID가 있는 장치에만 활성화합니다. Multi는 독립 장치를 기본 분할하고 장치별 PIP 버튼으로 Physical 출력을 선택합니다. Physical 사각형은 부모 Logical 좌표 안에만 존재하며 드래그와 Move 모두 같은 경계를 적용합니다.
+
+사진·영상은 Logical 장치별 파일입니다. PIP가 켜진 장치는 메인과 선택한 Physical 영상을 동일한 GPU draw 경로로 프리뷰·JPEG·무음 MP4에 합성합니다. PIP JPEG는 합성 프리뷰 크기이고 센서 최대 해상도가 아닙니다. CameraX에서 PIP를 선택하면 현재는 Camera2로 전환을 확인합니다. 화면 종료는 장치 onClosed와 합성 입력 해제·녹화 저장 완료를 기다립니다.
+
+이 변경 이후 실기기는 조작하지 않았습니다. 아래의 이전 프리뷰·사진 관측은 새 GPU 합성 및 MP4 녹화를 검증한 결과가 아닙니다. 로컬 JVM 테스트 721개, lint·release 빌드, 문서 회귀 33개와 6단계 문서 검사를 통과했습니다. 추가 JVM 테스트는 부모 경계, 다른 Logical 장치의 Physical ID 거부, 여러 보조 프리뷰 배치, hit test, producer 회전·미러 행렬에 따른 비율을 검증합니다.
+
+복귀 후 다음 하드웨어 검증이 필요합니다.
+
+1. Single의 Logical / 비논리 ID를 바꿔 PIP 버튼 활성 상태와 Physical 선택 목록을 확인합니다. CameraX의 명시적 Camera2 전환도 확인합니다.
+2. Multi가 분할로 시작하는지, Logical 장치별 PIP 선택이 독립적인지, 다른 장치 영역으로 보조 영상이 넘어가지 않는지 확인합니다.
+3. 고정된 피사체로 프리뷰·저장 JPEG·MP4의 방향, 미러, 크롭, 보조 영상 위치를 비교합니다. PIP off 장치와 on 장치가 섞여 있어도 파일 수가 CameraDevice 수와 같은지 확인합니다.
+4. 녹화 중 드래그·Move와 녹화 종료·홈 이동·뒤로 가기를 확인합니다. MP4 재생·길이·프레임율과 장시간 발열도 측정합니다.
+5. 실제 HAL이 Logical + 선택 Physical 출력 조합을 거부하거나 프레임이 오지 않는 경우 명시적 실패·타임아웃 및 자원 해제를 확인합니다. 3대 이상 장치와 여러 Physical 출력은 지원 기기에서 별도로 검증합니다.
+
+이하 항목은 기능 정의가 바뀌기 전의 이력입니다.
+
 ## 기능 정의 정정
 
 최종 기능명은 **Multi**입니다. 기존 Dual 모드를 대체하며 2개 이상의 카메라 장치를 각각 열어 사용합니다. 최대 장치 수 설정은 `Live Streams → Multi → Maximum camera devices`에 있습니다. 보조 프리뷰 배치 버튼은 `Inset`입니다.

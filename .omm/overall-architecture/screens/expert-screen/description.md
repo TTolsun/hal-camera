@@ -15,3 +15,5 @@ Dual · P는 Rear physical cameras와 Front + Rear 선택 메뉴를 엽니다. R
 LiveIndicator의 크기 표시를 누르면 Live Streams를 엽니다. 설정과 직전 정상 구성은 카메라·엔진별로 유지하며, 적용 또는 취소 후 Live로 돌아옵니다. Lab도 Activity Result로 설정 변경을 전달합니다. Benchmark profile은 Live 설정과 분리합니다. 종료 완료 전에 다른 카메라를 열지 않으며, CLI 명령 중에는 UI의 충돌하는 조작을 비활성화합니다.
 
 사진·동영상 저장 완료 안내는 자동으로 숨기지 않습니다. 활성 Live의 동영상 저장 실패도 notice 경로로 전달해 다음 상태 변화까지 표시하며, Save Events · ZIP으로 진단을 남기는 다음 행동을 안내합니다. 카메라가 이미 닫힌 경우에는 기존 토스트 경로를 유지합니다. 진단 ZIP 완료 창에는 앱 내부 저장 여부와 Lab → ZIP Archives에서 다시 찾는 경로를 표시합니다.
+
+Single의 API 선택 옆 PIP 버튼은 현재 Logical 카메라가 광고하는 Physical ID가 있을 때만 활성화합니다. PhysicalPipPicker에서 ID를 선택하고 Live close(done) 이후 Single PIP 화면을 엽니다. CameraX에서는 Camera2 전환을 확인합니다.

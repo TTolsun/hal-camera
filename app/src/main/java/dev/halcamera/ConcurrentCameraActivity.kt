@@ -3,22 +3,21 @@ package dev.halcamera
 import android.Manifest
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Matrix
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Size
 import android.view.Gravity
 import android.view.MotionEvent
-import android.view.Surface
 import android.view.TextureView
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.LinearLayout
-import android.widget.SeekBar
 import android.widget.TextView
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -27,41 +26,37 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
-import dev.halcamera.camera.concurrentFrames
-import dev.halcamera.camera.ConcurrentPlan
-import dev.halcamera.camera.ConcurrentSession
-import dev.halcamera.camera.fitPreview
-import dev.halcamera.camera.readConcurrentPlans
+import dev.halcamera.camera.*
 import dev.halcamera.ui.Look
 
-/** Multi mode opens independent camera devices and saves each camera separately. */
+/** Multi owns independent devices; each device may compose its own physical PIP inputs. */
 class ConcurrentCameraActivity : ComponentActivity() {
     private val manager by lazy { getSystemService(CameraManager::class.java) }
-    private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-        if (it) discover() else status.text = "Camera permission denied. Return to Live to grant access."
-    }
+    private val singleId by lazy { intent.getStringExtra(EXTRA_SINGLE_ID) }
+    private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { if (it) discover() }
     private lateinit var stage: FrameLayout
     private lateinit var status: TextView
     private lateinit var resultText: TextView
     private lateinit var captureButton: Button
+    private lateinit var recordButton: Button
     private lateinit var pairButton: Button
     private lateinit var retryButton: Button
-    private lateinit var sizeControl: SeekBar
-    private lateinit var sizing: LinearLayout
-    private lateinit var layoutButton: Button
-    private lateinit var moveButton: Button
-    private var photoReport = ""
-    private var afterClose: (() -> Unit)? = null
-    private var loadedLimit: Int? = null
     private lateinit var streamsButton: Button
+    private var headerPip: Button? = null
     private val previews = mutableListOf<TextureView>()
     private val panels = mutableListOf<FrameLayout>()
     private val labels = mutableListOf<TextView>()
+    private val pipButtons = mutableListOf<Button>()
+    private val moveButtons = mutableListOf<Button>()
     private val textures = mutableListOf<SurfaceTexture?>()
     private val retired = mutableListOf<SurfaceTexture>()
-    private val states = linkedMapOf<String, String>()
+    private val physical = mutableMapOf<String,List<String>>()
+    private val positions = mutableMapOf<String,MutableList<PipRect>>()
+    private val states = linkedMapOf<String,String>()
     private var plans = emptyList<ConcurrentPlan>()
+    private var outputSizes = emptyList<LiveSize>()
     private var selected = 0
+    private var loadedLimit: Int? = null
     private var session: ConcurrentSession? = null
     private var foreground = false
     private var closing = false
@@ -69,145 +64,95 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private var failed = false
     private var ready = false
     private var takingPhoto = false
-    private var split = false
-    private var primary = 0
-    private var pipScale = 0.36f
-    private var pipX = 1f
-    private var pipY = 0.08f
+    private var recording = false
+    private var videoPending = false
+    private var report = ""
+    private var afterClose: (() -> Unit)? = null
+    private val busy get() = takingPhoto || recording || videoPending || closing
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        split = savedInstanceState?.getBoolean("split") ?: false
-        primary = savedInstanceState?.getInt("primary") ?: 0
-        pipScale = savedInstanceState?.getFloat("scale") ?: 0.36f
-        pipX = savedInstanceState?.getFloat("x") ?: 1f
-        pipY = savedInstanceState?.getFloat("y") ?: 0.08f
-        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.cameraSurface) }
-        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+        WindowCompat.setDecorFitsSystemWindows(window,false)
+        singleId?.let { physical[it] = intent.getStringArrayListExtra(EXTRA_PHYSICAL_IDS).orEmpty() }
+        savedInstanceState?.getBundle("physical")?.let { saved -> saved.keySet().forEach { physical[it] = saved.getStringArrayList(it).orEmpty() } }
+        val root = row().apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.cameraSurface) }
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view,insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(bars.left + dp(12), bars.top, bars.right + dp(12), bars.bottom)
-            insets
+            view.setPadding(bars.left+dp(12),bars.top,bars.right+dp(12),bars.bottom); insets
         }
         val header = row()
-        header.addView(button("Live") { finish() }, LinearLayout.LayoutParams(dp(72), dp(48)))
-        header.addView(text("Multi", 18).apply { setPadding(dp(12), 0, 0, 0) }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        header.addView(button("Live") { finish() },LinearLayout.LayoutParams(dp(68),dp(48)))
+        header.addView(text(if (singleId == null) "Multi" else "Camera2",18).apply { setPadding(dp(12),0,0,0) },LinearLayout.LayoutParams(0,dp(48),1f))
+        if (singleId != null) {
+            headerPip = button("PIP") { choosePhysical(0) }
+            header.addView(headerPip,LinearLayout.LayoutParams(dp(56),dp(48)))
+        }
         streamsButton = button("Streams") {
             val id = plans.getOrNull(selected)?.streams?.firstOrNull()?.camera?.id ?: return@button
-            afterClose = {
-                startActivity(android.content.Intent(this, LiveStreamsActivity::class.java)
-                    .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, id)
-                    .putExtra(WorkbenchActivity.EXTRA_ENGINE, "Camera2")
-                    .putExtra(LiveStreamsActivity.EXTRA_MULTI, true)
-                    .putExtra(LiveStreamsActivity.EXTRA_FROM_LIVE, true))
-            }
+            afterClose = { startActivity(Intent(this,LiveStreamsActivity::class.java)
+                .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID,id).putExtra(WorkbenchActivity.EXTRA_ENGINE,"Camera2")
+                .putExtra(LiveStreamsActivity.EXTRA_MULTI,true).putExtra(LiveStreamsActivity.EXTRA_FROM_LIVE,true)) }
             closeSession()
         }
-        header.addView(streamsButton, LinearLayout.LayoutParams(dp(84), dp(48)))
-        root.addView(header)
-        pairButton = button("Cameras") { choosePair() }
-        root.addView(pairButton, LinearLayout.LayoutParams(-1, dp(48)))
-        status = text("Checking concurrent camera support…", 12)
-        root.addView(status, LinearLayout.LayoutParams(-1, -2))
-        stage = FrameLayout(this).apply { setBackgroundColor(Look.cameraCard) }
-        root.addView(stage, LinearLayout.LayoutParams(-1, 0, 1f))
-        stage.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> layoutPreviews() }
-        val layouts = row()
-        layoutButton = button("Split") { split = !split; layoutPreviews() }
-        layouts.addView(layoutButton, weight())
-        layouts.addView(button("Swap") { primary = (primary + 1) % panels.size.coerceAtLeast(1); layoutPreviews() }, weight())
-        moveButton = button("Move inset") {
-            when {
-                pipX >= .5f && pipY < .5f -> { pipX = 1f; pipY = 1f }
-                pipX >= .5f -> { pipX = 0f; pipY = 1f }
-                pipY >= .5f -> { pipX = 0f; pipY = 0f }
-                else -> { pipX = 1f; pipY = 0f }
-            }
-            layoutPreviews()
+        header.addView(streamsButton,LinearLayout.LayoutParams(dp(80),dp(48))); root.addView(header)
+        pairButton = button("Cameras") { chooseCameras() }
+        pairButton.visibility = if (singleId == null) View.VISIBLE else View.GONE
+        root.addView(pairButton,LinearLayout.LayoutParams(-1,dp(48)))
+        status = text("Opening cameras…",12); root.addView(status,LinearLayout.LayoutParams(-1,-2))
+        stage = FrameLayout(this).apply { setBackgroundColor(Look.cameraCard); clipChildren = true }
+        root.addView(stage,LinearLayout.LayoutParams(-1,0,1f))
+        stage.addOnLayoutChangeListener { _,_,_,_,_,_,_,_,_ -> layoutPreviews() }
+        resultText = text("",12).apply { minHeight = dp(48); maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            setOnClickListener { if (report.isNotEmpty()) AlertDialog.Builder(this@ConcurrentCameraActivity).setTitle("Capture details").setMessage(report).setPositiveButton("OK",null).show() }
         }
-        layouts.addView(moveButton, weight())
-        root.addView(layouts)
-        sizing = row()
-        sizing.addView(text("Inset size", 12), LinearLayout.LayoutParams(dp(76), dp(48)))
-        sizeControl = SeekBar(this).apply {
-            contentDescription = "Inset preview size"
-            max = 25; progress = ((pipScale - .25f) * 100).toInt()
-            setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-                override fun onProgressChanged(bar: SeekBar, value: Int, fromUser: Boolean) {
-                    pipScale = .25f + value / 100f; layoutPreviews()
-                }
-                override fun onStartTrackingTouch(bar: SeekBar) {}
-                override fun onStopTrackingTouch(bar: SeekBar) {}
-            })
-        }
-        sizing.addView(sizeControl, LinearLayout.LayoutParams(0, dp(48), 1f))
-        root.addView(sizing)
-        resultText = text("", 12)
-        resultText.maxLines = 1
-        resultText.ellipsize = android.text.TextUtils.TruncateAt.END
-        resultText.minHeight = dp(48)
-        resultText.accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
-        resultText.setOnClickListener {
-            if (photoReport.isNotEmpty()) AlertDialog.Builder(this).setTitle("Capture details").setMessage(photoReport).setPositiveButton("OK", null).show()
-        }
-        resultText.isClickable = false
-        root.addView(resultText, LinearLayout.LayoutParams(-1, -2))
+        root.addView(resultText,LinearLayout.LayoutParams(-1,-2))
         val actions = row()
-        retryButton = button("Retry") { failed = false; if (plans.isEmpty()) discover() else closeSession() }
-        captureButton = Look.galleryButton(this, "Take photos", primary = true) {
-            if (ready && !takingPhoto && !closing && Build.VERSION.SDK_INT >= 30) {
-                takingPhoto = true; updateButtons()
-                photoReport = ""; resultText.isClickable = false
-                resultText.text = "Capturing…"
-                resultText.contentDescription = null
-                @Suppress("DEPRECATION")
-                val degrees = when (windowManager.defaultDisplay.rotation) { Surface.ROTATION_90 -> 90; Surface.ROTATION_180 -> 180; Surface.ROTATION_270 -> 270; else -> 0 }
-                session?.capture(degrees)
-            }
+        retryButton = button("Retry") { failed = false; closeSession() }
+        recordButton = button("Record") {
+            if (Build.VERSION.SDK_INT < 30) return@button
+            videoPending = true; updateButtons()
+            if (recording) session?.stopVideo() else session?.startVideo()
         }
-        captureButton.contentDescription = "Take photos with selected cameras"
-        actions.addView(retryButton, weight()); actions.addView(captureButton, LinearLayout.LayoutParams(0, dp(56), 1f))
-        root.addView(actions)
-        setContentView(root)
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() = finish()
-        })
+        captureButton = Look.galleryButton(this,"Photo",primary = true) {
+            if (Build.VERSION.SDK_INT >= 30 && ready && !busy) { takingPhoto = true; resultText.text = "Capturing…"; updateButtons(); session?.capture(0) }
+        }
+        actions.addView(retryButton,weight()); actions.addView(recordButton,weight()); actions.addView(captureButton,weight())
+        root.addView(actions); setContentView(root)
+        onBackPressedDispatcher.addCallback(this,object : OnBackPressedCallback(true) { override fun handleOnBackPressed() = finish() })
         updateButtons()
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) discover()
+        if (ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) discover()
         else permission.launch(Manifest.permission.CAMERA)
     }
 
     private fun createPanels(count: Int) {
-        previews.forEach { it.surfaceTextureListener = null }
-        stage.removeAllViews()
-        previews.clear(); panels.clear(); labels.clear(); textures.clear()
-        repeat(count) { textures += null; }
-        primary = primary.coerceIn(0, count - 1)
+        previews.forEach { it.surfaceTextureListener = null }; stage.removeAllViews()
+        previews.clear(); panels.clear(); labels.clear(); textures.clear(); pipButtons.clear(); moveButtons.clear()
+        repeat(count) { textures += null }
         repeat(count) { index ->
-            val panel = FrameLayout(this)
+            val panel = FrameLayout(this).apply { clipChildren = true; clipToPadding = true }
             val preview = TextureView(this).apply { alpha = 0f }
             previews += preview; panels += panel
-            panel.addView(preview, FrameLayout.LayoutParams(-1, -1))
-            val label = text("", 13).apply { setBackgroundColor(Look.cameraGlass) }
-            labels += label
-            panel.addView(label, FrameLayout.LayoutParams(-1, dp(32), Gravity.BOTTOM))
-            stage.addView(panel)
+            panel.addView(preview,FrameLayout.LayoutParams(-1,-1).apply { bottomMargin = dp(48) })
+            val controls = row().apply { setBackgroundColor(Look.cameraGlass) }
+            val label = text("",13); labels += label
+            controls.addView(label,LinearLayout.LayoutParams(0,dp(48),1f))
+            val pip = button("PIP") { choosePhysical(index) }; pipButtons += pip
+            if (singleId == null) controls.addView(pip,LinearLayout.LayoutParams(dp(64),dp(48)))
+            val move = button("Move") { choosePosition(index) }; moveButtons += move
+            controls.addView(move,LinearLayout.LayoutParams(dp(64),dp(48)))
+            panel.addView(controls,FrameLayout.LayoutParams(-1,dp(48),Gravity.BOTTOM)); stage.addView(panel)
             preview.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
-                override fun onSurfaceTextureAvailable(texture: SurfaceTexture, width: Int, height: Int) {
-                    textures[index] = texture; startIfReady(); transform(index)
-                }
-                override fun onSurfaceTextureSizeChanged(texture: SurfaceTexture, width: Int, height: Int) = transform(index)
+                override fun onSurfaceTextureAvailable(texture: SurfaceTexture,width: Int,height: Int) { textures[index] = texture; startIfReady(); transform(index) }
+                override fun onSurfaceTextureSizeChanged(texture: SurfaceTexture,width: Int,height: Int) = transform(index)
                 override fun onSurfaceTextureUpdated(texture: SurfaceTexture) {}
                 override fun onSurfaceTextureDestroyed(texture: SurfaceTexture): Boolean {
-                    textures[index] = null
-                    retired += texture
-                    closeSession()
-                    return false
+                    textures[index] = null; retired += texture; closeSession(); return false
                 }
             }
-            installDrag(panel, index)
+            installDrag(preview,index)
         }
-        layoutPreviews()
+        layoutPreviews(); updateButtons()
     }
 
     private fun discover() {
@@ -216,162 +161,186 @@ class ConcurrentCameraActivity : ComponentActivity() {
             val limit = LiveStreamsActivity.savedMultiLimit(this)
             if (loadedLimit != limit) { selected = 0; failed = false }
             loadedLimit = limit
-            plans = readConcurrentPlans(manager, limit.takeIf { it > 0 } ?: Int.MAX_VALUE)
+            plans = singleId?.let { listOf(readSingleCompositionPlan(manager,it)) }
+                ?: readConcurrentPlans(manager,limit.takeIf { it > 0 } ?: Int.MAX_VALUE)
             if (plans.isEmpty()) status.text = "Multi is unavailable on this device."
             else { selected = selected.coerceIn(plans.indices); pairButton.text = plans[selected].label; startIfReady() }
-        } catch (e: Exception) { status.text = "Camera support query failed: ${e.message}"; failed = true }
+        } catch (e: Exception) { status.text = e.message; failed = true }
         updateButtons()
     }
 
-    private fun choosePair() {
-        if (takingPhoto || closing || plans.isEmpty()) return
-        AlertDialog.Builder(this).setTitle("Cameras")
-            .setSingleChoiceItems(plans.map { it.label }.toTypedArray(), selected) { dialog, index ->
-                selected = index; pairButton.text = plans[index].label; failed = false
-                photoReport = ""; resultText.text = ""; resultText.isClickable = false
-                closeSession(); dialog.dismiss()
-            }.setNeutralButton("Details") { _, _ ->
-                AlertDialog.Builder(this).setTitle("Camera2 streams")
-                    .setMessage(states.entries.joinToString("\n") { "Camera ${it.key}: ${it.value}" })
-                    .setPositiveButton("OK", null).show()
-            }.setNegativeButton("Cancel", null).show()
+    private fun chooseCameras() {
+        if (busy || plans.isEmpty()) return
+        AlertDialog.Builder(this).setTitle("Cameras").setSingleChoiceItems(plans.map { it.label }.toTypedArray(),selected) { dialog,index ->
+            selected = index; pairButton.text = plans[index].label; failed = false; resultText.text = ""; report = ""
+            closeSession(); dialog.dismiss()
+        }.setNeutralButton("Details") { _,_ -> AlertDialog.Builder(this).setTitle("Streams")
+            .setMessage(states.entries.joinToString("\n") { "Camera ${it.key}: ${it.value}" }).setPositiveButton("OK",null).show()
+        }.setNegativeButton("Cancel",null).show()
+    }
+
+    private fun choosePhysical(index: Int) {
+        val camera = plans.getOrNull(selected)?.streams?.getOrNull(index)?.camera ?: return
+        if (busy || camera.physicalIds.isEmpty()) return
+        val chosen = camera.physicalIds.map { it in physical[camera.id].orEmpty() }.toBooleanArray()
+        AlertDialog.Builder(this).setTitle("Camera ${camera.id} · PIP")
+            .setMultiChoiceItems(camera.physicalIds.map { "Physical $it" }.toTypedArray(),chosen) { _,i,value -> chosen[i] = value }
+            .setPositiveButton("Apply") { _,_ ->
+                physical[camera.id] = camera.physicalIds.filterIndexed { i,_ -> chosen[i] }
+                positions.remove(camera.id); failed = false; closeSession()
+            }.setNeutralButton("Off") { _,_ -> physical.remove(camera.id); positions.remove(camera.id); failed = false; closeSession() }
+            .setNegativeButton("Cancel",null).show()
+    }
+
+    private fun choosePosition(index: Int) {
+        if (Build.VERSION.SDK_INT < 30) return
+        val id = plans.getOrNull(selected)?.streams?.getOrNull(index)?.camera?.id ?: return
+        val ids = physical[id].orEmpty()
+        if (ids.isEmpty() || takingPhoto || videoPending || closing) return
+        AlertDialog.Builder(this).setTitle("Move physical preview").setItems(ids.map { "Physical $it" }.toTypedArray()) { _,i ->
+            val frames = positions.getOrPut(id) { PipScene.initial(ids.size).toMutableList() }
+            val old = frames[i]
+            frames[i] = when {
+                old.x >= .5f && old.y < .5f -> old.moved(1f,1f)
+                old.x >= .5f -> old.moved(0f,1f)
+                old.y >= .5f -> old.moved(0f,0f)
+                else -> old.moved(1f,0f)
+            }
+            session?.movePhysical(id,i,frames[i])
+        }.setNegativeButton("Cancel",null).show()
     }
 
     private fun startIfReady() {
         if (Build.VERSION.SDK_INT < 30 || !foreground || exiting || closing || failed || session != null || plans.isEmpty()) return
         val plan = plans[selected]
         if (textures.size != plan.streams.size) { createPanels(plan.streams.size); return }
-        if (textures.any { it == null }) return
-        states.clear(); ready = false
-        status.visibility = View.VISIBLE
-        status.text = "Opening cameras…"
-        plan.streams.forEachIndexed { index, stream ->
-            labels[index].text = stream.camera.label
+        if (textures.any { it == null } || previews.any { it.width == 0 || it.height == 0 }) return
+        outputSizes = previews.map {
+            val scale = minOf(1f,1280f/maxOf(it.width,it.height))
+            LiveSize(((it.width*scale).toInt()/2*2).coerceAtLeast(2),((it.height*scale).toInt()/2*2).coerceAtLeast(2))
         }
+        states.clear(); ready = false; status.visibility = View.VISIBLE; status.text = "Opening cameras…"
+        plan.streams.forEachIndexed { i,stream -> labels[i].text = stream.camera.label }
         lateinit var current: ConcurrentSession
-        current = ConcurrentSession(this, manager, plan, textures.map { checkNotNull(it) }, object : ConcurrentSession.Listener {
-            override fun onState(id: String, state: String) {
-                if (session !== current) return
-                states[id] = state
-            }
+        current = ConcurrentSession(this,manager,plan,textures.map { checkNotNull(it) },object : ConcurrentSession.Listener {
+            override fun onState(id: String,state: String) { if (session === current) states[id] = state }
             override fun onReady() {
                 if (session !== current || closing || !foreground || failed) return
-                ready = true
-                previews.forEach { it.alpha = 1f }
-                status.visibility = View.GONE
-                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                updateButtons()
+                ready = true; previews.forEach { it.alpha = 1f }; status.visibility = View.GONE
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); updateButtons()
+                positions.forEach { (id,frames) -> frames.forEachIndexed { i,rect -> current.movePhysical(id,i,rect) } }
             }
             override fun onFailed(reason: String) {
                 if (session !== current) return
-                failed = true; ready = false; status.text = reason; status.visibility = View.VISIBLE
-                previews.forEach { it.alpha = 0f }
-                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                updateButtons()
+                failed = true; ready = false; recording = false; videoPending = false
+                status.text = reason; status.visibility = View.VISIBLE; previews.forEach { it.alpha = 0f }
+                window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); updateButtons()
             }
             override fun onPhoto(message: String) {
                 if (session !== current) return
-                takingPhoto = false; photoReport = message
-                val summary = message.lineSequence().first()
-                resultText.text = if (summary.contains("failed", ignoreCase = true)) "Photo failed · Details" else if (summary.contains("saved")) "Photos saved · Details" else "Couldn’t save photos · Details"
-                resultText.contentDescription = resultText.text
-                resultText.isClickable = true
+                takingPhoto = false; report = message
+                resultText.text = if (message.contains("failed",true) || message.startsWith("Could not")) "Photo failed · Details" else "Photos saved · Details"
                 updateButtons()
             }
-        })
-        session = current
-        layoutPreviews()
-        current.start()
-        updateButtons()
+            override fun onRecording(active: Boolean,message: String) {
+                if (session !== current) return
+                recording = active; videoPending = false; report = message
+                resultText.text = if (active) "Recording" else if (message.contains("failed",true) || message.startsWith("Could not")) "Video failed · Details" else "Videos saved · Details"
+                updateButtons()
+            }
+        },physical.toMap(),outputSizes)
+        session = current; layoutPreviews(); current.start(); updateButtons()
     }
 
     @SuppressLint("NewApi")
     private fun closeSession() {
         if (closing) return
-        closing = true; ready = false
-        previews.forEach { it.alpha = 0f }
-        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        updateButtons()
-        val old = session
+        closing = true; ready = false; previews.forEach { it.alpha = 0f }
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); updateButtons()
         val done = {
-            session = null; closing = false; takingPhoto = false
+            session = null; closing = false; takingPhoto = false; recording = false; videoPending = false
             retired.forEach { it.release() }; retired.clear()
-            val destination = afterClose
-            afterClose = null
-            if (exiting) super.finish() else if (destination != null) destination()
-            else { updateButtons(); if (foreground) discover() }
+            val destination = afterClose; afterClose = null
+            if (exiting) super.finish() else if (destination != null) destination() else { updateButtons(); if (foreground) discover() }
         }
-        if (old == null) done() else old.close(done)
+        session?.close(done) ?: done()
     }
-
     override fun onStart() {
         super.onStart(); foreground = true
-        if (session == null && !closing && ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) discover()
-        else startIfReady()
+        if (session == null && !closing && ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) discover() else startIfReady()
     }
     override fun onStop() { foreground = false; closeSession(); super.onStop() }
     override fun finish() { exiting = true; closeSession() }
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBoolean("split", split); outState.putInt("primary", primary); outState.putFloat("scale", pipScale)
-        outState.putFloat("x", pipX); outState.putFloat("y", pipY)
+        outState.putBundle("physical",Bundle().apply { physical.forEach { (id,ids) -> putStringArrayList(id,ArrayList(ids)) } })
         super.onSaveInstanceState(outState)
     }
-
     private fun updateButtons() {
-        captureButton.isEnabled = ready && !takingPhoto && !closing
-        streamsButton.isEnabled = plans.isNotEmpty() && !takingPhoto && !closing
-        pairButton.isEnabled = plans.isNotEmpty() && !takingPhoto && !closing
-        retryButton.isEnabled = !takingPhoto && !closing && Build.VERSION.SDK_INT >= 30
-        retryButton.visibility = if (failed) View.VISIBLE else View.GONE
+        captureButton.isEnabled = ready && !busy
+        recordButton.isEnabled = ready && !takingPhoto && !videoPending && !closing
+        recordButton.text = if (recording) "Stop" else "Record"
+        pairButton.isEnabled = plans.isNotEmpty() && !busy; streamsButton.isEnabled = pairButton.isEnabled
+        retryButton.visibility = if (failed) View.VISIBLE else View.GONE; retryButton.isEnabled = !busy
+        val streams = plans.getOrNull(selected)?.streams.orEmpty()
+        pipButtons.forEachIndexed { i,button -> button.isEnabled = !busy && streams.getOrNull(i)?.camera?.physicalIds?.isNotEmpty() == true
+            button.alpha = if (button.isEnabled) 1f else .4f
+            val active = !physical[streams.getOrNull(i)?.camera?.id].isNullOrEmpty()
+            button.setTextColor(if (active) Look.primaryOnDark else Look.onDark)
+            button.contentDescription = if (active) "PIP on, select physical cameras" else "PIP, select physical cameras" }
+        headerPip?.isEnabled = !busy && streams.firstOrNull()?.camera?.physicalIds?.isNotEmpty() == true
+        headerPip?.alpha = if (headerPip?.isEnabled == true) 1f else .4f
+        headerPip?.setTextColor(if (!physical[streams.firstOrNull()?.camera?.id].isNullOrEmpty()) Look.primaryOnDark else Look.onDark)
+        headerPip?.contentDescription = pipButtons.firstOrNull()?.contentDescription
+        moveButtons.forEachIndexed { i,button -> button.visibility = if (physical[streams.getOrNull(i)?.camera?.id].isNullOrEmpty()) View.GONE else View.VISIBLE
+            button.isEnabled = ready && !takingPhoto && !videoPending && !closing }
     }
-
     private fun layoutPreviews() {
-        if (stage.width <= 0 || stage.height <= 0) return
-        val frames = concurrentFrames(panels.size, stage.width, stage.height, primary, split, pipScale, pipX, pipY)
-        panels.forEachIndexed { index, panel ->
-            val (left, top, width, height) = frames[index]
-            val previous = panel.layoutParams as? FrameLayout.LayoutParams
-            if (previous == null || previous.width != width || previous.height != height || previous.leftMargin != left || previous.topMargin != top) {
-                panel.layoutParams = FrameLayout.LayoutParams(width, height).apply { leftMargin = left; topMargin = top }
-            }
-            transform(index)
-        }
-        panels.forEachIndexed { index, panel -> if (index != primary) panel.bringToFront() }
-        if (::sizeControl.isInitialized) {
-            sizing.visibility = if (split) View.GONE else View.VISIBLE
-            moveButton.visibility = if (split) View.GONE else View.VISIBLE
-            layoutButton.text = if (split) "Inset" else "Split"
-            layoutButton.contentDescription = if (split) "Switch to inset view" else "Switch to split view"
+        if (stage.width <= 0 || stage.height <= 0 || panels.isEmpty()) return
+        val frames = concurrentFrames(panels.size,stage.width,stage.height,0,true,.32f,1f,0f)
+        panels.forEachIndexed { i,panel ->
+            val f = frames[i]; val old = panel.layoutParams as? FrameLayout.LayoutParams
+            if (old == null || old.width != f.width || old.height != f.height || old.topMargin != f.top)
+                panel.layoutParams = FrameLayout.LayoutParams(f.width,f.height).apply { topMargin = f.top }
+            transform(i)
         }
     }
-
+    /** Fit the full saved scene; never crop an inset out of the on-screen logical canvas. */
     private fun transform(index: Int) {
-        plans.getOrNull(selected)?.streams?.getOrNull(index)?.preview?.let { previews[index].fitPreview(Size(it.width, it.height)) }
+        val size = outputSizes.getOrNull(index) ?: return
+        val view = previews[index]; if (view.width <= 0 || view.height <= 0) return
+        val scale = minOf(view.width.toFloat()/size.width,view.height.toFloat()/size.height)
+        view.setTransform(Matrix().apply { setScale(size.width*scale/view.width,size.height*scale/view.height,view.width/2f,view.height/2f) })
     }
-
     @SuppressLint("ClickableViewAccessibility")
-    private fun installDrag(panel: View, index: Int) {
-        var x = 0f; var y = 0f; var startX = 0f; var startY = 0f
-        panel.setOnTouchListener { view, event ->
-            if (split || index == primary) return@setOnTouchListener false
+    private fun installDrag(view: TextureView,index: Int) {
+        var hit = -1; var originX = 0f; var originY = 0f; var original: PipRect? = null
+        view.setOnTouchListener { _,event ->
+            if (Build.VERSION.SDK_INT < 30) return@setOnTouchListener false
+            val id = plans.getOrNull(selected)?.streams?.getOrNull(index)?.camera?.id ?: return@setOnTouchListener false
+            val ids = physical[id].orEmpty(); val size = outputSizes.getOrNull(index) ?: return@setOnTouchListener false
+            if (ids.isEmpty() || !ready || takingPhoto || closing) return@setOnTouchListener false
+            val scale = minOf(view.width.toFloat()/size.width,view.height.toFloat()/size.height)
+            val x = (event.x-(view.width-size.width*scale)/2)/(size.width*scale)
+            val y = (event.y-(view.height-size.height*scale)/2)/(size.height*scale)
+            val frames = positions.getOrPut(id) { PipScene.initial(ids.size).toMutableList() }
             when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> { x = event.rawX; y = event.rawY; startX = pipX; startY = pipY; true }
+                MotionEvent.ACTION_DOWN -> { hit = frames.indexOfLast { it.contains(x,y) }; originX = x; originY = y; original = frames.getOrNull(hit); hit >= 0 }
                 MotionEvent.ACTION_MOVE -> {
-                    pipX = (startX + (event.rawX - x) / (stage.width - view.width).coerceAtLeast(1)).coerceIn(0f, 1f)
-                    pipY = (startY + (event.rawY - y) / (stage.height - view.height * (panels.size - 1)).coerceAtLeast(1)).coerceIn(0f, 1f)
-                    layoutPreviews(); true
+                    val old = original ?: return@setOnTouchListener false
+                    frames[hit] = old.moved(old.x+x-originX,old.y+y-originY); session?.movePhysical(id,hit,frames[hit]); true
                 }
-                MotionEvent.ACTION_UP -> { view.performClick(); true }
-                else -> true
+                MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL -> { original = null; if (hit >= 0) view.performClick(); hit >= 0 }
+                else -> hit >= 0
             }
         }
     }
-
-    private fun dp(value: Int) = Look.dp(this, value)
-    private fun text(value: String, size: Int) = Look.text(this, value, size, Look.onDark).apply { gravity = Gravity.CENTER_VERTICAL }
-    private fun button(value: String, action: () -> Unit) = Look.galleryButton(this, value, action = action).apply {
-        textSize = 13f; setPadding(dp(6), 0, dp(6), 0)
-    }
+    private fun dp(value: Int) = Look.dp(this,value)
+    private fun text(value: String,size: Int) = Look.text(this,value,size,Look.onDark).apply { gravity = Gravity.CENTER_VERTICAL }
+    private fun button(value: String,action: () -> Unit) = Look.galleryButton(this,value,action = action).apply { textSize = 13f; setPadding(dp(6),0,dp(6),0) }
     private fun row() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-    private fun weight() = LinearLayout.LayoutParams(0, dp(48), 1f).apply { setMargins(dp(2), dp(4), dp(2), dp(4)) }
+    private fun weight() = LinearLayout.LayoutParams(0,dp(56),1f).apply { setMargins(dp(2),dp(4),dp(2),dp(4)) }
+    companion object {
+        const val EXTRA_SINGLE_ID = "single_logical_id"
+        const val EXTRA_PHYSICAL_IDS = "pip_physical_ids"
+    }
 }

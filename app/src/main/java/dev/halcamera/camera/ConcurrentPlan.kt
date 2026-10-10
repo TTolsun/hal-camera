@@ -1,7 +1,7 @@
 package dev.halcamera.camera
 
 /** Independently addressable devices, never physical outputs of another logical camera. */
-data class ConcurrentCamera(val id: String, val facing: Int?, val previews: List<LiveSize>, val photos: List<LiveSize>) {
+data class ConcurrentCamera(val id: String, val facing: Int?, val previews: List<LiveSize>, val photos: List<LiveSize>, val physicalIds: List<String> = emptyList()) {
     val label get() = "${when (facing) { CameraLabel.FACING_FRONT -> "Front"; CameraLabel.FACING_BACK -> "Rear"; else -> "Camera" }} $id"
 }
 data class ConcurrentStream(val camera: ConcurrentCamera, val preview: LiveSize, val photo: LiveSize)
