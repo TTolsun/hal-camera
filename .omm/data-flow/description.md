@@ -1,8 +1,8 @@
 입력은 Telemetry의 콜백 이벤트와 BenchmarkRunner의 실행 시각입니다. RunAssembler가 두 입력을 결합하고 BenchmarkEvaluator·RunValidityEvaluator가 측정값과 validity를 계산합니다. BenchmarkReport가 schema 5 JSON을 저장합니다.
 
-Camera2 Live still은 활성 YUV·JPEG 출력을 capture 센서 시각으로 연결하며 꺼진 출력은 기다리지 않습니다. 기본은 두 출력입니다. YUV는 JPEG으로 변환하고 카메라 JPEG은 원본을 MediaStore에 저장합니다. MediaLibrary는 완성된 MediaRecorder 임시 파일을 앨범에 공개합니다.
+Camera2는 선택한 사진 출력과 같은 센서 시각의 최종 결과를 모아 저장합니다. CameraX는 ImageCapture JPEG 또는 촬영 뒤 받은 ImageAnalysis 프레임 하나를 저장합니다. 영상은 두 엔진 모두 완성된 녹화 파일을 MediaLibrary로 공개합니다.
 
-YUV Save Format은 `_YUV.jpg` 또는 `_YUV.nv21` 하나를 저장하고 사진에는 `_metadata.json`을 동반합니다. JPEG는 DCIM/HALCamera, NV21·JSON은 Download/HALCamera에 저장합니다. Camera2는 이미지와 최종 CaptureResult의 센서 시각을 맞춥니다. RAW (DNG)를 켜면 같은 시각의 RAW·CaptureResult로 `_RAW.dng`를 DCIM/HALCamera에 저장합니다. 벤치마크 JSON과 incident ZIP에는 이미지 픽셀을 넣지 않습니다.
+JPEG에서 YUV를 고르면 앱이 현재 YUV 크기의 프레임을 JPEG로 변환합니다. 해상도를 고르면 HAL JPEG를 저장합니다. JPEG는 DCIM/HALCamera, 촬영 JSON은 Download/HALCamera에 저장합니다. RAW를 켠 Camera2는 같은 센서 시각의 RAW와 CaptureResult로 DNG를 만듭니다. 벤치마크와 incident ZIP에는 이미지 픽셀을 넣지 않습니다.
 
 RecentMediaThumbnail은 MediaStore 변경·화면 복귀 시 저장 완료 항목을 조회합니다. 별도 스레드에서 디코딩하고 활성 화면의 최신 결과만 RecentMediaButton에 반영합니다.
 

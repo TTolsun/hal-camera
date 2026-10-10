@@ -24,8 +24,8 @@ verifications: []
 | 항목 | Camera2 | CameraX |
 | --- | --- | --- |
 | 수동 촬영 | ISO·노출 시간·초점과 WB를 프리뷰·사진·녹화에 적용합니다. 지원 여부와 실제 적용값을 표시합니다. | Manual 버튼을 미지원 상태로 비활성화합니다. |
-| 사진 쌍의 YUV | 같은 capture의 버퍼입니다. 센서 시각이 JPEG와 같습니다. | JPEG와 센서 시각이 가장 가까운 analysis 프레임입니다. 차이는 `yuvOffsetNs`에 기록됩니다. |
-| YUV 저장 포맷 | JPEG 또는 NV21 중 하나를 저장합니다. NV21은 프레임당 16 MiB 이하만 허용합니다. 두 포맷 모두 촬영 JSON을 저장합니다. | JPEG와 촬영 JSON을 저장하며 NV21은 지원하지 않습니다. |
+| YUV를 JPEG로 선택 | 요청한 YUV 이미지와 최종 CaptureResult의 센서 시각을 맞춥니다. | 촬영 뒤 받은 analysis 프레임 하나를 변환합니다. |
+| JPEG 출처 | YUV 앱 변환 또는 HAL JPEG 중 하나와 촬영 JSON을 저장합니다. | YUV 앱 변환 또는 ImageCapture JPEG 중 하나와 촬영 JSON을 저장합니다. |
 | RAW/DNG | RAW capability가 있는 카메라에서 DNG를 함께 저장합니다. | 지원하지 않으며 Camera2로 전환해야 합니다. |
 | 버퍼 도착 기록 (Android 13 이상) | 프리뷰와 녹화 버퍼의 도착 시각을 relay로 기록합니다. | 프리뷰와 녹화 버퍼는 직접 관측하지 못합니다. ImageAnalysis와 ImageCapture의 이미지 수신은 기록합니다. |
 | Benchmark | 지원합니다. | 지원하지 않으며 Camera2로 엽니다. |
@@ -35,7 +35,7 @@ verifications: []
 
 CLI 호환용 Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.
 
-PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JPEG 한 장을 저장하며 일반 사진의 YUV·JPEG 쌍과 RAW·메타데이터 JSON을 만들지 않습니다. PIP 녹화 중 사진은 지원하지 않습니다. Multi의 PIP 변경은 전체 동시 세션을 재구성합니다.
+PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JPEG를 저장합니다. Camera2에서 RAW가 켜져 있으면 별도의 메인 원본 DNG와 원본 JSON을 함께 저장하며, 원본과 합성 프리뷰의 시각은 같다고 보장하지 않습니다. PIP 녹화 중 사진은 지원하지 않습니다. Multi의 PIP 변경은 전체 동시 세션을 재구성합니다.
 
 <details markdown="1" id="detail-c0e05167f7" data-search-section>
 <summary>제어·녹화·CLI 차이</summary>

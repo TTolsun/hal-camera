@@ -24,8 +24,8 @@ nav_order: 5
 | 항목 | Camera2 | CameraX |
 | --- | --- | --- |
 | 수동 촬영 | ISO·노출 시간·초점과 WB를 프리뷰·사진·녹화에 적용합니다. 지원 여부와 실제 적용값을 표시합니다. | Manual 버튼을 미지원 상태로 비활성화합니다. |
-| 사진 쌍의 YUV | 같은 capture의 버퍼입니다. 센서 시각이 JPEG와 같습니다. | JPEG와 센서 시각이 가장 가까운 analysis 프레임입니다. 차이는 `yuvOffsetNs`에 기록됩니다. |
-| YUV 저장 포맷 | JPEG 또는 NV21 중 하나를 저장합니다. NV21은 프레임당 16 MiB 이하만 허용합니다. 두 포맷 모두 촬영 JSON을 저장합니다. | JPEG와 촬영 JSON을 저장하며 NV21은 지원하지 않습니다. |
+| YUV를 JPEG로 선택 | 요청한 YUV 이미지와 최종 CaptureResult의 센서 시각을 맞춥니다. | 촬영 뒤 받은 analysis 프레임 하나를 변환합니다. |
+| JPEG 출처 | YUV 앱 변환 또는 HAL JPEG 중 하나와 촬영 JSON을 저장합니다. | YUV 앱 변환 또는 ImageCapture JPEG 중 하나와 촬영 JSON을 저장합니다. |
 | RAW/DNG | RAW capability가 있는 카메라에서 DNG를 함께 저장합니다. | 지원하지 않으며 Camera2로 전환해야 합니다. |
 | 버퍼 도착 기록 (Android 13 이상) | 프리뷰와 녹화 버퍼의 도착 시각을 relay로 기록합니다. | 프리뷰와 녹화 버퍼는 직접 관측하지 못합니다. ImageAnalysis와 ImageCapture의 이미지 수신은 기록합니다. |
 | Benchmark | 지원합니다. | 지원하지 않으며 Camera2로 엽니다. |
@@ -35,7 +35,7 @@ nav_order: 5
 
 CLI 호환용 Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.
 
-PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JPEG 한 장을 저장하며 일반 사진의 YUV·JPEG 쌍과 RAW·메타데이터 JSON을 만들지 않습니다. PIP 녹화 중 사진은 지원하지 않습니다. Multi의 PIP 변경은 전체 동시 세션을 재구성합니다.
+PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JPEG를 저장합니다. Camera2에서 RAW가 켜져 있으면 별도의 메인 원본 DNG와 원본 JSON을 함께 저장하며, 원본과 합성 프리뷰의 시각은 같다고 보장하지 않습니다. PIP 녹화 중 사진은 지원하지 않습니다. Multi의 PIP 변경은 전체 동시 세션을 재구성합니다.
 
 <details markdown="1" id="detail-c0e05167f7" data-search-section>
 <summary>제어·녹화·CLI 차이</summary>
@@ -59,7 +59,7 @@ PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JP
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval
+- 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval
 
 </details>
 
@@ -214,7 +214,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval
+- 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval
 
 </details>
 
@@ -373,12 +373,12 @@ stateDiagram-v2
 
 ### 사진
 
-**요청한 사진 출력을 받은 뒤 파일로 저장합니다.** 두 이미지의 연결 기준은 엔진마다 다릅니다.
+**JPEG 출처와 RAW 선택에 따라 사진을 저장합니다.**
 
 <details markdown="1" id="detail-902b2a5546" data-search-section>
 <summary>사진 구현</summary>
 
-아래는 PIP를 끈 Live 사진의 흐름입니다. PIP 사진은 LivePipSession이 화면용 합성 JPEG 한 장을 저장하며 이 사진 쌍·RAW·JSON 경로를 사용하지 않습니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
+아래는 PIP를 끈 Live 사진의 흐름입니다. PIP는 합성 JPEG를 저장하며 RAW가 켜져 있으면 메인 카메라 DNG와 원본 JSON을 함께 저장합니다. 원본과 합성 프리뷰의 센서 시각은 같다고 보장하지 않습니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
 
 ```mermaid
 sequenceDiagram
@@ -401,9 +401,9 @@ sequenceDiagram
 | 단계 | 조건과 예외 |
 | --- | --- |
 | 플래시 측광 | Auto·On이고 AE 잠금이 꺼져 있을 때만 precapture를 실행합니다. PRECAPTURE를 벗어나거나, PRECAPTURE 없이 안정 결과가 3개 연속 오면 촬영합니다. 3초가 지나면 `precapture_timeout`을 남기고 촬영을 계속합니다. |
-| 출력 선택 | 켜진 YUV·JPEG·RAW만 대상으로 합니다. RAW 단독도 가능하며, 모두 꺼져 있으면 셔터와 촬영 요청을 거절합니다. JPEG 방향은 화면 방향, 품질은 95입니다. |
+| 출력 선택 | 선택한 YUV 또는 HAL JPEG와 RAW를 대상으로 합니다. RAW 단독도 가능하며, 모두 꺼져 있으면 셔터와 촬영 요청을 거절합니다. JPEG 방향은 화면 방향, 품질은 95입니다. |
 | 버퍼 연결 | `StillPair`는 단일 출력도 capture의 센서 시각과 맞춥니다. 대기 중에는 `acquireNextImage`로 순서대로 읽어 대상 프레임을 버리지 않습니다. |
-| 이미지 반납 | 콜백에서 stride·crop을 고려해 YUV를 NV21으로 복사하고 Image를 닫습니다. JPEG 포맷이면 저장 스레드에서 압축·회전하며 NV21이면 복사한 샘플을 그대로 씁니다. |
+| 이미지 반납 | 콜백에서 stride·crop을 고려해 YUV를 NV21으로 복사하고 Image를 닫습니다. 저장 스레드에서 JPEG로 압축·회전하며 NV21 파일은 만들지 않습니다. |
 | 저장과 제한 시간 | `MediaLibrary.saveCapture`로 이미지·JSON을 씁니다. 5초 안에 필요한 자료가 모이지 않으면 `capture_timeout`으로 끝납니다. 사진 모드의 이 요청은 녹화 중에 받지 않습니다. 녹화 중 사진은 별도 경로입니다. |
 
 #### 파일은 언제 공개하나요?
@@ -430,19 +430,15 @@ Android 10 이상에서는 `IS_PENDING`으로 쓰는 중인 항목의 공개를 
 
 #### YUV 저장 포맷
 
-**사진 파일을 열어 보려면 JPEG를, 변환 전 YUV 샘플을 분석하려면 NV21을 선택하세요.** YUV Save Format에서 둘 중 하나를 고릅니다. 두 포맷을 동시에 저장하지 않습니다.
+**JPEG 목록에서 사진을 만드는 방식을 고르세요.** 첫 항목인 YUV (현재 크기)는 앱이 YUV를 JPEG로 변환합니다. 해상도를 고르면 카메라가 생성한 JPEG를 저장합니다. YUV 스트림만 켜면 분석만 수행하고 사진은 저장하지 않습니다.
 
-| 선택 | 파일 | 폴더 | 지원 |
-| --- | --- | --- | --- |
-| JPEG | `_YUV.jpg` | `DCIM/HALCamera` | Camera2·CameraX |
-| NV21 | `_YUV.nv21` | `Download/HALCamera` | Camera2만 지원하며, 짝수 크기·프레임당 16 MiB 이하여야 합니다. |
-| 촬영 정보 (자동 저장) | `_metadata.json` | `Download/HALCamera` | 사진 모드에서 두 포맷 모두 함께 저장합니다. |
+| 선택 | 파일 | 폴더 |
+| --- | --- | --- |
+| YUV (현재 크기) | `_YUV.jpg` | `DCIM/HALCamera` |
+| JPEG 해상도 | `_JPEG.jpg` | `DCIM/HALCamera` |
+| 촬영 정보 | `_metadata.json` | `Download/HALCamera` |
 
-이 선택은 녹화 중 사진에는 적용하지 않습니다. CLI 촬영의 기본 YUV 저장 포맷은 JPEG이며, `--yuv-format NV21`로 NV21을 지정할 수 있습니다. RAW 크기는 `--raw-size`로 따로 지정합니다.
-
-`_YUV.nv21`은 YUV_420_888의 crop 영역에 있는 8비트 샘플을 손실 없이 재배열한 파일입니다. Y를 행 순서로 쓰고 V·U를 교대로 쓰며 패딩·회전·압축·색 변환을 적용하지 않습니다. JSON의 outputs에는 실제 파일명·MIME·크기를, NV21에는 출력 plane의 offset/rowStride/pixelStride와 원본 크기·crop·stride를 함께 기록합니다. 저장소의 `docs/design/ORIGINAL-YUV.md`에 복원 규칙이 있습니다.
-
-JPEG와 NV21 촬영 모두 이미지와 같은 SENSOR_TIMESTAMP의 최종 CaptureResult를 기다립니다. JSON의 capture에는 카메라 ID, 요청 ID·태그, 프레임 번호, 센서 시각과 시각 소스, 노출 시간·ISO·프레임 주기·AE 상태, JPEG 방향을 저장합니다. 결과가 없으면 5초 뒤 실패하며 프리뷰 결과로 대체하지 않습니다. 출력별 최대 두 프레임을 보관하고 시각 확정 뒤 다른 버퍼를 버립니다. 저장이 끝날 때까지 다음 촬영을 받지 않습니다.
+YUV Save Format과 NV21 파일 저장은 제거했습니다. CLI에서는 `--jpeg-size yuv` 또는 JPEG 해상도를 지정합니다. RAW는 별도 선택입니다. Camera2는 선택한 이미지와 같은 SENSOR_TIMESTAMP의 최종 CaptureResult를 기다리며, 결과가 없으면 5초 뒤 실패합니다. 프리뷰 결과를 대신 사용하지 않습니다.
 
 #### RAW/DNG
 
@@ -587,9 +583,9 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval
+- 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval
 
 </details>
 
@@ -678,49 +674,11 @@ Live에서 다음 엔진도 CameraX이면 종료하지 않습니다.
 
 ### 사진
 
-**요청한 사진 출력을 받은 뒤 파일로 저장합니다.** 두 이미지의 연결 기준은 엔진마다 다릅니다.
+**JPEG 목록에서 YUV 또는 카메라 JPEG 해상도를 선택합니다.** YUV는 촬영 뒤 받은 analysis 프레임 하나를 앱에서 JPEG로 변환합니다. 해상도 선택은 ImageCapture가 생성한 JPEG 한 장을 저장합니다. 두 파일을 동시에 저장하거나 시각이 가까운 프레임을 찾지 않습니다.
 
-<details markdown="1" id="detail-d627f61c0a" data-search-section>
-<summary>사진 구현</summary>
+앱 변환은 현재 YUV 크기를 사용하며 픽셀을 화면 방향으로 회전합니다. 카메라 JPEG는 EXIF를 유지합니다. 선택한 이미지와 같은 센서 시각의 CaptureResult만 촬영 JSON에 기록하고, 없으면 unavailable로 표시합니다. 5초 안에 이미지를 받지 못하면 실패합니다. RAW/DNG는 지원하지 않습니다.
 
-CameraX에는 analysis 스트림을 still 요청의 대상에 넣는 공개 API가 없습니다. 그래서 두 버퍼가 한 capture에서 나오는 Camera2와 달리, YUV는 JPEG와 센서 시각이 가장 가까운 analysis 프레임을 씁니다.
-
-YUV 저장은 기존 JPEG 방식이며 NV21과 RAW/DNG는 지원하지 않습니다. 사진마다 JSON을 함께 저장하고, JPEG와 선택한 analysis 프레임의 센서 시각·차이를 구분합니다. 기록된 CaptureResult 중 각 이미지와 센서 시각이 일치하는 결과만 사용하며 없으면 resultStatus를 unavailable로 표시합니다. 다른 프레임의 노출 값을 대신 넣지 않습니다.
-
-```mermaid
-sequenceDiagram
-    participant A as 촬영 요청
-    participant C as ImageCapture
-    participant Y as Analysis
-    participant P as 연결·저장
-    A->>C: JPEG 촬영
-    par JPEG 수신
-        C-->>P: JPEG와 센서 시각
-    and analysis 수신
-        Y-->>P: 최근 프레임 보관
-    end
-    P->>P: JPEG와 가장 가까운 프레임 선택
-    P->>P: 켜진 출력과 JSON 저장
-```
-
-위 그림은 JPEG와 YUV를 모두 켠 경우입니다. 두 이미지를 같은 capture로 보장하지 않습니다.
-
-| 조건 | 처리 |
-| --- | --- |
-| 촬영 직전 | 두 use case의 `targetRotation`을 현재 화면 회전으로 맞춥니다. |
-| 요청부터 짝을 고를 때까지 | analysis를 NV21로 복사해 최근 8개를 보관합니다. 평소에는 복사하지 않습니다. |
-| JPEG가 도착합니다. | 이후 센서 시각의 프레임을 최대 100ms 기다려 가까운 후보를 고릅니다. 프레임이 하나도 없으면 다음 프레임을 기다립니다. |
-| 프레임을 골랐습니다. | `encodeYuvStill`로 JPEG를 만들고 `rotationDegrees`만큼 회전합니다. 센서 시각 차이를 `media_saved.yuvOffsetNs`에 기록합니다. |
-| 5초 안에 끝나지 않습니다. | `capture_timeout`으로 실패를 반환합니다. |
-
-파일 쓰기와 공개는 두 엔진이 공유하는 [MediaLibrary 저장 흐름](#파일은-언제-공개하나요)을 따릅니다.
-
-
-JPEG만 켜면 analysis 프레임을 기다리지 않습니다. YUV만 켜면 촬영 요청 뒤 도착한 analysis 프레임을 저장하며 ImageCapture 요청은 보내지 않습니다. 두 출력이 모두 꺼져 있으면 사진 촬영을 거절합니다.
-
-카메라 JPEG는 CameraX가 넣은 방향 정보(EXIF)를 그대로 저장합니다. 플래시 Auto·On의 precapture는 ImageCapture가 자기 순서대로 실행하므로 이 클래스에는 측광 단계가 없습니다.
-
-</details>
+파일 쓰기와 공개는 [MediaLibrary 저장 흐름](#파일은-언제-공개하나요)을 따릅니다. PIP는 이 선택과 별도로 보이는 합성 프리뷰를 저장합니다.
 
 ### 녹화
 
@@ -838,7 +796,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval
+- 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval
 
 </details>
 
@@ -858,11 +816,11 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval |
-| 원고 `contract` | 최신 | 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval |
-| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval |
-| 원고 `camerax` | 최신 | 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval |
-| 원고 `comparison` | 최신 | 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval |
+| 원고 `contract` | 최신 | 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval |
+| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval |
+| 원고 `camerax` | 최신 | 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval |
+| 원고 `comparison` | 최신 | 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval |
 
 <!-- omm:end id=status -->
 

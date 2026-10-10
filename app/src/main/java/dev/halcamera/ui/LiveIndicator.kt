@@ -105,16 +105,18 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
     fun bindSizes(streams: Map<*, *>?) {
         val labels = listOf(Triple("preview", "P", "Preview"), Triple("analysis", "Y", "YUV"),
             Triple("jpeg", "J", "JPEG"), Triple("raw", "RAW", "RAW"), Triple("recording", "R", "Recording"))
+        fun size(key: String): String? = if (key == "jpeg" && streams?.get(key) == null && streams?.get("appJpeg") != null)
+            "YUV (${streams["appJpeg"]})" else streams?.get(key)?.toString()
         val active = labels.filter { streams?.containsKey(it.first) == true }
         val recordingFormat = streams?.get("recordingFormat")?.toString()?.takeIf { it.isNotBlank() } ?: "Auto"
         val value = active.joinToString("   ") { (key, label, _) ->
             val prefix = if (key == "recording") "$label $recordingFormat" else label
-            "$prefix ${streams?.get(key)?.toString()?.replace('x', '×') ?: "Off"}"
+            "$prefix ${size(key)?.replace('x', '×') ?: "Off"}"
         }
         if (sizes.text.toString() != value) sizes.text = value
         sizes.contentDescription = active.joinToString(", ") { (key, _, name) ->
             val prefix = if (key == "recording") "$name $recordingFormat" else name
-            "$prefix ${streams?.get(key) ?: "Off"}"
+            "$prefix ${size(key) ?: "Off"}"
         } + ", open Live Streams"
         sizes.visibility = if (value.isEmpty()) View.GONE else View.VISIBLE
     }

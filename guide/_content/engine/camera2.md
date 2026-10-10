@@ -20,7 +20,6 @@ sources:
   - app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt
   - app/src/main/java/dev/halcamera/camera/StillPair.kt
   - app/src/main/java/dev/halcamera/camera/YuvPacking.kt
-  - app/src/main/java/dev/halcamera/camera/OriginalYuv.kt
   - app/src/main/java/dev/halcamera/camera/RawFrame.kt
   - app/src/main/java/dev/halcamera/camera/DngOutput.kt
   - app/src/main/java/dev/halcamera/camera/StillEncoding.kt
@@ -179,12 +178,12 @@ stateDiagram-v2
 
 ### 사진
 
-**요청한 사진 출력을 받은 뒤 파일로 저장합니다.** 두 이미지의 연결 기준은 엔진마다 다릅니다.
+**JPEG 출처와 RAW 선택에 따라 사진을 저장합니다.**
 
 <details markdown="1" id="detail-902b2a5546" data-search-section>
 <summary>사진 구현</summary>
 
-아래는 PIP를 끈 Live 사진의 흐름입니다. PIP 사진은 LivePipSession이 화면용 합성 JPEG 한 장을 저장하며 이 사진 쌍·RAW·JSON 경로를 사용하지 않습니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
+아래는 PIP를 끈 Live 사진의 흐름입니다. PIP는 합성 JPEG를 저장하며 RAW가 켜져 있으면 메인 카메라 DNG와 원본 JSON을 함께 저장합니다. 원본과 합성 프리뷰의 센서 시각은 같다고 보장하지 않습니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
 
 ```mermaid
 sequenceDiagram
@@ -207,9 +206,9 @@ sequenceDiagram
 | 단계 | 조건과 예외 |
 | --- | --- |
 | 플래시 측광 | Auto·On이고 AE 잠금이 꺼져 있을 때만 precapture를 실행합니다. PRECAPTURE를 벗어나거나, PRECAPTURE 없이 안정 결과가 3개 연속 오면 촬영합니다. 3초가 지나면 `precapture_timeout`을 남기고 촬영을 계속합니다. |
-| 출력 선택 | 켜진 YUV·JPEG·RAW만 대상으로 합니다. RAW 단독도 가능하며, 모두 꺼져 있으면 셔터와 촬영 요청을 거절합니다. JPEG 방향은 화면 방향, 품질은 95입니다. |
+| 출력 선택 | 선택한 YUV 또는 HAL JPEG와 RAW를 대상으로 합니다. RAW 단독도 가능하며, 모두 꺼져 있으면 셔터와 촬영 요청을 거절합니다. JPEG 방향은 화면 방향, 품질은 95입니다. |
 | 버퍼 연결 | `StillPair`는 단일 출력도 capture의 센서 시각과 맞춥니다. 대기 중에는 `acquireNextImage`로 순서대로 읽어 대상 프레임을 버리지 않습니다. |
-| 이미지 반납 | 콜백에서 stride·crop을 고려해 YUV를 NV21으로 복사하고 Image를 닫습니다. JPEG 포맷이면 저장 스레드에서 압축·회전하며 NV21이면 복사한 샘플을 그대로 씁니다. |
+| 이미지 반납 | 콜백에서 stride·crop을 고려해 YUV를 NV21으로 복사하고 Image를 닫습니다. 저장 스레드에서 JPEG로 압축·회전하며 NV21 파일은 만들지 않습니다. |
 | 저장과 제한 시간 | `MediaLibrary.saveCapture`로 이미지·JSON을 씁니다. 5초 안에 필요한 자료가 모이지 않으면 `capture_timeout`으로 끝납니다. 사진 모드의 이 요청은 녹화 중에 받지 않습니다. 녹화 중 사진은 별도 경로입니다. |
 
 #### 파일은 언제 공개하나요?
@@ -236,19 +235,15 @@ Android 10 이상에서는 `IS_PENDING`으로 쓰는 중인 항목의 공개를 
 
 #### YUV 저장 포맷
 
-**사진 파일을 열어 보려면 JPEG를, 변환 전 YUV 샘플을 분석하려면 NV21을 선택하세요.** YUV Save Format에서 둘 중 하나를 고릅니다. 두 포맷을 동시에 저장하지 않습니다.
+**JPEG 목록에서 사진을 만드는 방식을 고르세요.** 첫 항목인 YUV (현재 크기)는 앱이 YUV를 JPEG로 변환합니다. 해상도를 고르면 카메라가 생성한 JPEG를 저장합니다. YUV 스트림만 켜면 분석만 수행하고 사진은 저장하지 않습니다.
 
-| 선택 | 파일 | 폴더 | 지원 |
-| --- | --- | --- | --- |
-| JPEG | `_YUV.jpg` | `DCIM/HALCamera` | Camera2·CameraX |
-| NV21 | `_YUV.nv21` | `Download/HALCamera` | Camera2만 지원하며, 짝수 크기·프레임당 16 MiB 이하여야 합니다. |
-| 촬영 정보 (자동 저장) | `_metadata.json` | `Download/HALCamera` | 사진 모드에서 두 포맷 모두 함께 저장합니다. |
+| 선택 | 파일 | 폴더 |
+| --- | --- | --- |
+| YUV (현재 크기) | `_YUV.jpg` | `DCIM/HALCamera` |
+| JPEG 해상도 | `_JPEG.jpg` | `DCIM/HALCamera` |
+| 촬영 정보 | `_metadata.json` | `Download/HALCamera` |
 
-이 선택은 녹화 중 사진에는 적용하지 않습니다. CLI 촬영의 기본 YUV 저장 포맷은 JPEG이며, `--yuv-format NV21`로 NV21을 지정할 수 있습니다. RAW 크기는 `--raw-size`로 따로 지정합니다.
-
-`_YUV.nv21`은 YUV_420_888의 crop 영역에 있는 8비트 샘플을 손실 없이 재배열한 파일입니다. Y를 행 순서로 쓰고 V·U를 교대로 쓰며 패딩·회전·압축·색 변환을 적용하지 않습니다. JSON의 outputs에는 실제 파일명·MIME·크기를, NV21에는 출력 plane의 offset/rowStride/pixelStride와 원본 크기·crop·stride를 함께 기록합니다. 저장소의 `docs/design/ORIGINAL-YUV.md`에 복원 규칙이 있습니다.
-
-JPEG와 NV21 촬영 모두 이미지와 같은 SENSOR_TIMESTAMP의 최종 CaptureResult를 기다립니다. JSON의 capture에는 카메라 ID, 요청 ID·태그, 프레임 번호, 센서 시각과 시각 소스, 노출 시간·ISO·프레임 주기·AE 상태, JPEG 방향을 저장합니다. 결과가 없으면 5초 뒤 실패하며 프리뷰 결과로 대체하지 않습니다. 출력별 최대 두 프레임을 보관하고 시각 확정 뒤 다른 버퍼를 버립니다. 저장이 끝날 때까지 다음 촬영을 받지 않습니다.
+YUV Save Format과 NV21 파일 저장은 제거했습니다. CLI에서는 `--jpeg-size yuv` 또는 JPEG 해상도를 지정합니다. RAW는 별도 선택입니다. Camera2는 선택한 이미지와 같은 SENSOR_TIMESTAMP의 최종 CaptureResult를 기다리며, 결과가 없으면 5초 뒤 실패합니다. 프리뷰 결과를 대신 사용하지 않습니다.
 
 #### RAW/DNG
 

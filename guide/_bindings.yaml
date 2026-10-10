@@ -149,7 +149,6 @@ sources:
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
           - app/src/main/java/dev/halcamera/camera/StillPair.kt
           - app/src/main/java/dev/halcamera/camera/YuvPacking.kt
-          - app/src/main/java/dev/halcamera/camera/OriginalYuv.kt
           - app/src/main/java/dev/halcamera/camera/CaptureMetadata.kt
           - app/src/main/java/dev/halcamera/camera/RawFrame.kt
           - app/src/main/java/dev/halcamera/camera/DngOutput.kt
@@ -276,13 +275,15 @@ sources:
           - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
           - app/src/main/java/dev/halcamera/camera/PipCallbacks.kt
           - app/src/main/java/dev/halcamera/camera/PipOutputs.kt
-          - app/src/main/java/dev/halcamera/camera/PipMedia.kt
-          - app/src/main/java/dev/halcamera/camera/PipMediaAdapter.kt
           - app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt
           - app/src/main/java/dev/halcamera/ui/LivePipController.kt
           - app/src/main/java/dev/halcamera/ui/PipPositionStore.kt
           - app/src/main/java/dev/halcamera/ui/PhysicalPipPicker.kt
           - app/src/main/java/dev/halcamera/ui/LiveChoiceSheet.kt
+      screens/concurrent-camera-screen/pip-composition/media-storage:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/PipMedia.kt
+          - app/src/main/java/dev/halcamera/camera/PipMediaAdapter.kt
       screens/dual-preview-screen/cli-adapter:
         evidence:
           - app/src/main/java/dev/halcamera/DualCliBridge.kt

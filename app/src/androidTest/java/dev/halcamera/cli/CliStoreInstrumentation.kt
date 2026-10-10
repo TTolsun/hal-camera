@@ -25,7 +25,7 @@ class CliStoreInstrumentation : Instrumentation() {
     override fun onStart() {
         if (originalYuv) {
             try {
-                val result = dev.halcamera.camera.OriginalYuvCheck.run(targetContext)
+                val result = dev.halcamera.camera.JpegSourceCheck.run(targetContext)
                 finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
             } catch (error: Throwable) {
                 finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "ORIGINAL_YUV_FAILED: ${error.stackTraceToString()}\n") })

@@ -4,6 +4,15 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PipOutputsTest {
+    @Test fun rawStaysAStillTargetWhilePipPreviewAndYuvRepeat() {
+        val plan = PipOutputs("6")
+        val raw = ConfiguredOutput(OutputDescriptor("raw", OutputKind.RAW, false, stillCapture = true), "raw")
+        val yuv = ConfiguredOutput(OutputDescriptor("analysis", OutputKind.YUV, true, stillCapture = true), "yuv")
+        val config = plan.configure(listOf("main", "physical"), listOf(yuv, raw))
+        assertEquals(listOf("main", "physical", "yuv"), config.repeating.map { it.target })
+        assertEquals(listOf("raw"), config.still.map { it.target })
+        assertEquals("RAW", config.metadata().last()["label"])
+    }
     @Test fun physicalTargetsAndGraphShareDescriptorsAndRetainYuv() {
         val plan = PipOutputs("6")
         val yuv = ConfiguredOutput(OutputDescriptor("analysis", OutputKind.YUV, true), "reader")

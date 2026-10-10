@@ -114,7 +114,7 @@ test('all configured elements fit the prompt budget and exclude descendant field
         assert.ok(input.files.length > 0); count++;
       }
     }
-    assert.equal(count, 102); // Includes Multi photo storage, PIP composition, and Camera2 preview output ownership.
+    assert.equal(count, 103); // Includes separate PIP media lifecycle/storage ownership.
   `));
 });
 

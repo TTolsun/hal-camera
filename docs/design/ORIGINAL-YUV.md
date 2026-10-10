@@ -1,3 +1,5 @@
+이 문서는 과거 NV21 파일 저장 설계 기록입니다. 2026-10-11부터 YUV Save Format은 제거되었으며 현재 사진 설정은 [JPEG 출처 선택](../../guide/engine.md#yuv-저장-포맷)을 따릅니다.
+
 # YUV 저장 포맷과 촬영 메타데이터
 
 Live Streams의 **YUV Save Format**에서 기존 JPEG 또는 NV21을 선택합니다. 기본값은 JPEG입니다. 사진 모드는 포맷과 관계없이 촬영 메타데이터 JSON을 함께 저장합니다.
