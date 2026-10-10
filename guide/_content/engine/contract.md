@@ -56,6 +56,8 @@ classDiagram
 
 종료 통지와 다음 엔진의 대기 순서는 [엔진 전환 그림](architecture.md#카메라-열기와-닫기)을 확인하세요.
 
+Photo·Video·Dual · P·Dual · V 사이에서 모드를 바꾸면 기존 세션을 닫고 스트림을 다시 구성합니다. 같은 모드를 다시 누르면 유지합니다. 단일 카메라는 새 프리뷰의 첫 화면 갱신 뒤, Dual은 두 프리뷰가 모두 갱신된 뒤에 촬영 버튼을 활성화합니다. 모드 선택 자체로 사진이나 녹화를 시작하지는 않습니다.
+
 ### Benchmark와 CLI가 쓰는 엔진
 
 Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 `StartCardPresenter`가 Camera2로 전환한다고 알립니다. Live와 다른 스트림 크기 및 저장 방식은 [Camera2 엔진](#camera2-엔진)에서 설명합니다.
