@@ -220,7 +220,7 @@ Live에서는 실제로 관측한 수치와 단위를 표시합니다. Mark는 �
 
 Live 배치는 `MainActivity.kt`, 셔터·줌·선택 목록은 `ui/ShutterButton.kt`·`ui/ExpandingZoomControl.kt`·`ui/SelectionPopup.kt`에서 관리합니다. 최근 촬영물은 `camera/RecentMediaThumbnail.kt`와 `ui/RecentMediaButton.kt`에서 조회·표시합니다. 공통 아이콘 동작은 `ui/IconButton.kt`, 갤러리는 `GalleryActivity.kt`와 `ui/GalleryImageView.kt`에서 관리합니다. Lab은 `WorkbenchActivity.kt`에서 관리하고 검사 도구는 `CameraProbeActivity.kt`, `cts/CtsEntryActivity.kt`, `benchmark/BenchmarkActivity.kt` 순서로 연결합니다. UI 변경을 검토할 때에는 프리뷰를 가리는 영역, 가독성, 터치 영역, 실제 상태와 아이콘의 일치, 접근성 설명을 확인합니다. 기기 관찰과 테스트 결과는 해당 변경의 검토 기록에 별도로 남깁니다.
 
-카메라와 측정 데이터의 실행 흐름은 [아키텍처 가이드](../guide/architecture.md)에서 확인합니다.
+카메라와 측정 데이터의 실행 흐름은 [아키텍처 가이드](../../guide/architecture.md)에서 확인합니다.
 
 
 `고정`은 자동 고정을 켜고 `해제`는 자동 고정을 끄면서 갱신을 재개합니다. 자동 고정의 기본값은 켜짐이므로 초기 버튼은 `해제`입니다. 자동 고정은 JPEG처럼 반복 요청하지 않는 출력이 도착한 프레임을 고정합니다. 자동 고정이 켜져 있으면 `Event Frame #번호`, 꺼져 있으면 `Real-time Frame #번호`로 표시하며 콜백의 frameNumber를 사용합니다. 수치 영역의 버튼은 `고정`/`해제`와 시간 버튼 두 개입니다. 시간 버튼은 `3s → 5s → 10s → 15s → 30s → 1s` 순환이며 다음 자동 고정부터 적용하고 재실행 후에도 유지합니다. 자동 고정을 끄면 시간 버튼을 숨기고 다시 켜면 이전 시간을 표시합니다. 별도 설정창은 없습니다. 카메라와 프리뷰는 계속 동작합니다. 고정 중 같은 프레임의 늦은 콜백은 채우지만 다른 프레임의 값은 섞지 않습니다. 새 단발 출력이 오면 해당 프레임으로 교체하고 고정 시간을 다시 셉니다. 그래프를 다시 열거나 카메라·출력 구성을 바꾸면 고정을 해제하며 과거 촬영을 재생하지 않습니다. 평상시 수치는 100ms 주기로 최신 결과가 모인 프레임을 표시합니다. 특정 출력이 250ms 이상 도착하지 않으면 새 프레임으로 진행하며 해당 행은 수신 대기로 표시합니다.
