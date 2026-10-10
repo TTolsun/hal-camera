@@ -92,7 +92,7 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.23.0 (versionCode 660)
+- 검증 기준 앱 버전: 0.24.0 (versionCode 670)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |

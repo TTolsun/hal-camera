@@ -26,8 +26,8 @@ nav_order: 5
 | 수동 촬영 | ISO·노출 시간·초점과 WB를 프리뷰·사진·녹화에 적용합니다. 지원 여부와 실제 적용값을 표시합니다. | Manual 버튼을 미지원 상태로 비활성화합니다. |
 | YUV를 JPEG로 선택 | 요청한 YUV 이미지와 최종 CaptureResult의 센서 시각을 맞춥니다. | 촬영 뒤 받은 analysis 프레임 하나를 변환합니다. |
 | JPEG 출처 | YUV 앱 변환 또는 HAL JPEG 중 하나와 촬영 JSON을 저장합니다. | YUV 앱 변환 또는 ImageCapture JPEG 중 하나와 촬영 JSON을 저장합니다. |
-| RAW/DNG | RAW capability가 있는 카메라에서 DNG를 함께 저장합니다. | 지원하지 않으며 Camera2로 전환해야 합니다. |
-| 버퍼 도착 기록 (Android 13 이상) | 프리뷰와 녹화 버퍼의 도착 시각을 relay로 기록합니다. | 프리뷰와 녹화 버퍼는 직접 관측하지 못합니다. ImageAnalysis와 ImageCapture의 이미지 수신은 기록합니다. |
+| RAW/DNG | PHOTO의 RAW capability가 있는 카메라에서 DNG를 함께 저장합니다. VIDEO에서는 비활성화합니다. | 지원하지 않으며 Camera2로 전환해야 합니다. |
+| 버퍼 도착 기록 (Android 13 이상) | 프리뷰와 녹화 버퍼의 도착 시각을 relay로 기록합니다. 명시적인 EIS 녹화는 인코더 직결이므로 녹화 버퍼를 관측하지 않습니다. | 프리뷰와 녹화 버퍼는 직접 관측하지 못합니다. ImageAnalysis와 ImageCapture의 이미지 수신은 기록합니다. |
 | Benchmark | 지원합니다. | 지원하지 않으며 Camera2로 엽니다. |
 | 기존 Dual (CLI) | 공통 줌, 메인 센서 제어, 한 요청의 두 센서 사진과 무음 MP4 두 개를 지원합니다. | 공통 줌과 무음 MP4 두 개를 지원합니다. 메인 개별 제어와 두 센서 사진은 지원하지 않습니다. |
 | Multi | 지원되는 독립 장치 조합에서 동시 프리뷰와 카메라별 JPEG·무음 MP4를 제공합니다. 센서 동기를 보장하지 않습니다. | 미지원 안내 후 Camera2 경로로 열 수 있습니다. |
@@ -46,7 +46,7 @@ PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JP
 | 스트림 선택 | Preview 크기와 YUV·JPEG 활성화·크기, FPS 범위를 선택합니다. | Preview·YUV·JPEG 크기와 출력 활성화를 선택합니다. 요청한 해상도만 필터에 남기며 조합은 bind 성공 여부로 확인합니다. |
 | 손떨림 보정 | Auto·Off 및 지원 OIS·EIS (Video)·EIS (Preview + Video)를 선택하고 결과 메타데이터를 대조합니다. | 같은 모드를 하드웨어와 CameraX capability에 따라 제공합니다. EIS (Video)는 녹화 중에 적용하고, EIS (Preview + Video)는 프리뷰부터 적용합니다. 출력 조합에 따른 지원 범위는 다를 수 있습니다. |
 | 녹화 코덱 | 기본 H.264이며 지원 조합에서 HEVC도 선택합니다. 오디오는 AAC 128kbps 44.1kHz입니다. | 기기의 encoder profile을 따릅니다. |
-| 녹화 중 사진 | 녹화 세션에 JPEG 스트림을 넣고 `TEMPLATE_VIDEO_SNAPSHOT`으로 요청합니다. 조합을 거절하면 JPEG 없이 녹화합니다. | 녹화와 ImageCapture를 함께 bind하고 `takePicture`를 호출합니다. 거절하면 VideoCapture만 bind합니다. 두 엔진 모두 JPEG만 저장합니다. 기기 관찰은 [녹화 중 사진의 제약](#녹화-중-사진의-알려진-제약)을 확인하세요. |
+| 녹화 중 사진 | 선택한 JPEG 또는 YUV 스트림에 `TEMPLATE_VIDEO_SNAPSHOT`을 요청하고 JPEG를 저장합니다. 조합을 거절하면 스냅샷 없이 녹화합니다. | JPEG 소스에 따라 ImageCapture 또는 ImageAnalysis를 함께 bind합니다. 조합을 거절하면 스냅샷 없이 녹화합니다. 두 엔진 모두 JPEG만 저장합니다. 기기 관찰은 [녹화 중 사진의 제약](#녹화-중-사진의-알려진-제약)을 확인하세요. |
 | AE 잠금 중 플래시 사진 | precapture를 건너뛰고 잠긴 노출로 촬영합니다(`Camera2StillCapture`). | ImageCapture가 자기 순서대로 precapture를 수행합니다. |
 | AF 잠금 중 길게 누르기 | 탭한 AF 지점이 없으면 AF trigger를 보내지 않습니다. 탭한 지점이 있으면 그 지점을 끝내면서 `AF_TRIGGER_CANCEL`을 보냅니다(`Camera2TouchFocus`). | AF 잠금도 FocusMeteringAction이므로, 합친 action을 다시 보내면서 AF가 한 번 더 스캔합니다. action에서 AF를 빼면 CameraX가 AF 잠금을 풀기 때문에 피할 수 없습니다(`CameraXControls`). |
 | Live 표시의 프리뷰 판정 | TextureView의 화면 갱신 시각을 씁니다. | PreviewView가 STREAMING 상태이고 최근 capture 결과가 있는지로 판정합니다. |
@@ -450,7 +450,7 @@ RAW reader는 버퍼 두 개로 열고 still 요청에만 포함합니다. 이�
 
 ### 녹화
 
-**녹화용 출력으로 전환한 뒤 MP4를 저장합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
+**VIDEO에서 출력을 미리 준비하고, 녹화 버튼으로 MP4 기록을 시작합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
 
 <details markdown="1" id="detail-11a053d988" data-search-section>
 <summary>녹화 구현</summary>
@@ -460,8 +460,10 @@ sequenceDiagram
     participant U as Live
     participant R as 녹화 처리
     participant S as 저장
+    U->>R: VIDEO 진입
+    R->>R: 프리뷰·인코더·스냅샷 세션 준비
     U->>R: 녹화 시작
-    R->>R: 녹화 세션 구성과 시작
+    R->>R: 인코더 시작과 요청 대상 추가
     R-->>U: 녹화 시작 통지
     U->>R: 정지 요청
     R->>R: 세션 종료와 파일 마무리
@@ -469,7 +471,7 @@ sequenceDiagram
         R->>S: 저장 가능한 MP4 저장 예약
         S-->>U: 저장 결과
     and 프리뷰 복구
-        R->>R: 활성 카메라의 프리뷰 세션 복구
+        R->>R: 활성 카메라의 VIDEO 스트림 재준비
     end
 ```
 
@@ -488,7 +490,9 @@ Live 스트림 설정에서는 카메라 크기·고정 AE FPS 범위·인코더
 1. VIDEO 모드 진입 시 프리뷰·인코더와 선택한 JPEG 또는 YUV 스냅샷 출력을 구성합니다. 녹화 버튼은 이미 구성한 세션에서 MediaRecorder를 시작하고 인코더를 repeating request의 대상으로 추가합니다. persistent input surface를 사용하므로 오디오 설정을 적용할 때도 카메라 세션을 다시 만들지 않습니다. 준비 단계에서는 인코더로 프레임을 보내지 않으며 RAW/DNG 출력은 제외합니다. 스냅샷 조합이 거부되면 스냅샷 없이 구성하고 이유를 표시합니다.
 2. Android 13 이상에서는 `RecordingBufferRelay`가 인코더로 가는 PRIVATE 버퍼를 먼저 받아 도착 시각을 기록합니다. 단, EIS를 명시적으로 켠 경우에는 실기기에서 확인된 인코더 거부를 피하도록 직접 연결합니다. EIS 직결 경로와 Android 12 이하에서는 녹화 버퍼 도착 시각을 관측할 수 없다고 표시합니다.
 3. 녹화 요청은 `TEMPLATE_RECORD`이며, 연속 동영상 AF(`CONTINUOUS_VIDEO`)를 지원하면 사용합니다. 줌과 Live 제어는 녹화 중에도 같은 요청을 다시 만들어 적용합니다.
-4. 정지하면 세션을 닫고 파일을 마무리합니다. `MediaLibrary.saveVideo`로 저장을 예약하고 활성 카메라의 프리뷰 세션을 다시 만듭니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
+4. 정지하면 세션을 닫고 파일을 마무리합니다. `MediaLibrary.saveVideo`로 저장을 예약하고 활성 카메라의 VIDEO 스트림을 다시 준비합니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
+
+`LiveRecorderState`에서 준비·대기·시작·녹화·종료 상태를 구분합니다. 준비 완료 대기 중에도 인코더 오류가 나면 세션과 자원을 해제하고 프리뷰를 복구합니다. PIP는 기존 인코더 해제 완료 뒤 다음 인코더를 준비합니다.
 
 **일반 녹화에서는 선택한 JPEG 소스로 스냅샷 한 장을 저장합니다.** 명시한 크기는 자동으로 줄이지 않으며 지원되지 않는 조합에서는 스냅샷을 비활성화합니다. 기본 크기만 기기의 지원 조합을 조회하여 선택합니다. PIP에서는 별도 합성 경로가 PHOTO와 같은 크기의 JPEG를 저장합니다.
 
@@ -684,7 +688,7 @@ Live에서 다음 엔진도 CameraX이면 종료하지 않습니다.
 
 ### 녹화
 
-**녹화용 출력으로 전환한 뒤 MP4를 저장합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
+**VIDEO에서 출력을 미리 준비하고, 녹화 버튼으로 MP4 기록을 시작합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
 
 <details markdown="1" id="detail-a5fe53f9af" data-search-section>
 <summary>녹화 구현</summary>
@@ -698,7 +702,7 @@ sequenceDiagram
     R-->>U: Start
     U->>R: 정지 요청
     R-->>U: Finalize
-    U->>U: 활성 화면이면 프리뷰 구성 복구
+    U->>U: 활성 화면이면 VIDEO use case 유지
     alt 저장 가능한 결과와 비어 있지 않은 파일
         U->>S: MP4 저장 예약
         S-->>U: 저장 결과
@@ -719,9 +723,9 @@ sequenceDiagram
 
 명시한 녹화 크기는 지원 Quality의 해상도와 정확히 일치해야 하며, bind 후 실제 해상도도 검사합니다. 설정 화면의 후보는 CameraX Quality 해상도와 하드웨어의 크기·FPS 조건을 교차해 만듭니다. FPS와 비트레이트는 요청값이고 실제 결과와 구분합니다. CameraX 1.6.2의 공개 Recorder API는 녹화 코덱을 직접 선택하지 않으므로 Format과 Live 표시는 Auto입니다.
 
-녹화 중 사진(`CameraXVideoSnapshot`)은 녹화와 함께 bind한 ImageCapture의 `takePicture`로 JPEG 한 장을 저장합니다.
+녹화 중 사진은 선택한 JPEG 소스를 따릅니다. 카메라 JPEG는 함께 bind한 ImageCapture의 `takePicture`로, YUV 앱 변환은 ImageAnalysis 프레임으로 JPEG 한 장을 저장합니다.
 
-analysis 스트림이 없으므로 YUV 짝은 저장하지 않으며, Camera2와 같이 한 번에 한 장만 처리합니다.
+두 소스 모두 원본 YUV 짝은 저장하지 않으며, Camera2와 같이 한 번에 한 장만 처리합니다.
 
 실패하거나 5초 안에 오지 않아도 녹화는 끝나지 않고 알림만 표시합니다.
 
@@ -814,7 +818,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.23.0 (versionCode 660)
+- 검증 기준 앱 버전: 0.24.0 (versionCode 670)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |

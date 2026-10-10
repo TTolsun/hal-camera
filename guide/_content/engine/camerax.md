@@ -102,7 +102,7 @@ Live에서 다음 엔진도 CameraX이면 종료하지 않습니다.
 
 ### 녹화
 
-**녹화용 출력으로 전환한 뒤 MP4를 저장합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
+**VIDEO에서 출력을 미리 준비하고, 녹화 버튼으로 MP4 기록을 시작합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
 
 <details markdown="1" id="detail-a5fe53f9af" data-search-section>
 <summary>녹화 구현</summary>
@@ -116,7 +116,7 @@ sequenceDiagram
     R-->>U: Start
     U->>R: 정지 요청
     R-->>U: Finalize
-    U->>U: 활성 화면이면 프리뷰 구성 복구
+    U->>U: 활성 화면이면 VIDEO use case 유지
     alt 저장 가능한 결과와 비어 있지 않은 파일
         U->>S: MP4 저장 예약
         S-->>U: 저장 결과
@@ -137,9 +137,9 @@ sequenceDiagram
 
 명시한 녹화 크기는 지원 Quality의 해상도와 정확히 일치해야 하며, bind 후 실제 해상도도 검사합니다. 설정 화면의 후보는 CameraX Quality 해상도와 하드웨어의 크기·FPS 조건을 교차해 만듭니다. FPS와 비트레이트는 요청값이고 실제 결과와 구분합니다. CameraX 1.6.2의 공개 Recorder API는 녹화 코덱을 직접 선택하지 않으므로 Format과 Live 표시는 Auto입니다.
 
-녹화 중 사진(`CameraXVideoSnapshot`)은 녹화와 함께 bind한 ImageCapture의 `takePicture`로 JPEG 한 장을 저장합니다.
+녹화 중 사진은 선택한 JPEG 소스를 따릅니다. 카메라 JPEG는 함께 bind한 ImageCapture의 `takePicture`로, YUV 앱 변환은 ImageAnalysis 프레임으로 JPEG 한 장을 저장합니다.
 
-analysis 스트림이 없으므로 YUV 짝은 저장하지 않으며, Camera2와 같이 한 번에 한 장만 처리합니다.
+두 소스 모두 원본 YUV 짝은 저장하지 않으며, Camera2와 같이 한 번에 한 장만 처리합니다.
 
 실패하거나 5초 안에 오지 않아도 녹화는 끝나지 않고 알림만 표시합니다.
 
