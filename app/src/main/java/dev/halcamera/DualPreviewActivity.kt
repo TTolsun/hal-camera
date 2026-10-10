@@ -343,6 +343,7 @@ class DualPreviewActivity : ComponentActivity() {
         modeRow = Look.row(this).apply { gravity = Gravity.CENTER }
         listOf("Photo", "Video", "Dual · P", "Dual · V").forEachIndexed { index, label ->
             val button = chromeButton(label) {
+                if (busy()) return@chromeButton
                 if (index < 2) leave(index == 1) else if (videoMode != (index == 3)) {
                     videoMode = index == 3; restart(); updateControls()
                 }
@@ -487,7 +488,15 @@ class DualPreviewActivity : ComponentActivity() {
                 return false
             }
             override fun onSurfaceTextureUpdated(texture: SurfaceTexture) {
-                if (views[index] === view && session != null) { cliFrames[index] = true; cliReady() }
+                if (views[index] === view && session != null) {
+                    val firstFrame = !cliFrames[index]
+                    cliFrames[index] = true
+                    cliReady()
+                    if (firstFrame) {
+                        setStatus(status)
+                        updateControls()
+                    }
+                }
                 if (views[index] === view && index == 0) lastPreviewMs = SystemClock.elapsedRealtime()
                 if (views[index] === view && session != null) stats?.let { (a, b) -> (if (index == 0) a else b).frame(SystemClock.elapsedRealtime()) }
                 if (views[index] === view && session != null) recorder.record(sessionId, "preview_available", sensorNs = texture.timestamp,
@@ -522,6 +531,7 @@ class DualPreviewActivity : ComponentActivity() {
                 retryButton?.visibility = View.GONE
                 setStatus("Opening…")
                 streamingSize = null
+                cliFrames.fill(false)
                 stats = PhysicalOutputStats(first) to PhysicalOutputStats(second)
                 lastSkewNs = null
                 sessionId = "dual_${java.util.UUID.randomUUID()}"
@@ -544,6 +554,7 @@ class DualPreviewActivity : ComponentActivity() {
         override fun onStatus(message: String) = setStatus(message)
         override fun onStreaming(size: LiveSize) {
             streamingSize = size
+            setStatus(status)
             main.post { cliReady() }
             liveIndicator.bindSizes(mapOf("preview" to size.toString()))
             views.forEach { it?.fitPreview(Size(size.width, size.height)) }
@@ -603,6 +614,7 @@ class DualPreviewActivity : ComponentActivity() {
     internal fun closeSession(then: () -> Unit) {
         val old = session ?: return then()
         session = null
+        cliFrames.fill(false)
         closing = true
         old.close {
             closing = false
@@ -645,8 +657,8 @@ class DualPreviewActivity : ComponentActivity() {
 
     private fun setStatus(text: String) {
         status = text
-        statusText?.text = if (failed || streamingSize == null) text else ""
-        statusText?.visibility = if (failed || streamingSize == null) View.VISIBLE else View.GONE
+        statusText?.text = if (failed || !previewReady()) text else ""
+        statusText?.visibility = if (failed || !previewReady()) View.VISIBLE else View.GONE
     }
 
     private fun refreshInfo() {
@@ -727,6 +739,7 @@ class DualPreviewActivity : ComponentActivity() {
     }
 
     private fun busy() = cli.active != null || closing || recording || recordPending || photoPending
+    private fun previewReady() = streamingSize != null && cliFrames.all { it }
 
     private fun updateControls() {
         cli.setUiBusy(cliHost, closing || recording || recordPending || photoPending)
@@ -741,7 +754,7 @@ class DualPreviewActivity : ComponentActivity() {
         pairButtons.forEach { it.isEnabled = !busy(); it.alpha = if (it.isEnabled) 1f else 0.45f }
         pipSelector?.isEnabled = !busy()
         pipSelector?.alpha = if (busy()) 0.45f else 1f
-        recordButton?.isEnabled = cli.active == null && (videoMode || mainControls != null) && !closing && !recordPending && !photoPending && !failed && streamingSize != null
+        recordButton?.isEnabled = cli.active == null && (videoMode || mainControls != null) && !closing && !recordPending && !photoPending && !failed && previewReady()
         recordButton?.setCaptureState(videoMode = videoMode, recording = recording)
         recordButton?.contentDescription = if (!videoMode) "Capture photos from both sensors" else if (recording) "Stop both recordings" else "Start silent recording on both cameras"
         modeRow?.visibility = if (recording || recordPending) View.INVISIBLE else View.VISIBLE
@@ -767,6 +780,7 @@ class DualPreviewActivity : ComponentActivity() {
         if (recording) {
             closeSession { streamingSize = null; render() }
         } else {
+            if (!previewReady() || failed) return
             if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(this,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 7)
@@ -782,7 +796,7 @@ class DualPreviewActivity : ComponentActivity() {
     private fun displayDegrees() = when (windowManager.defaultDisplay.rotation) { 1 -> 90; 2 -> 180; 3 -> 270; else -> 0 }
 
     private fun takePhoto() {
-        if (busy() || mainControls == null || streamingSize == null) return
+        if (busy() || mainControls == null || !previewReady()) return
         if (Build.VERSION.SDK_INT < 29 && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 7); return
         }
