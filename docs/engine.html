@@ -106,7 +106,7 @@
 <tr>
 <td>PIP</td>
 <td>Physical 또는 다른 Service ID 하나를 합성합니다. Live는 현재 CameraDevice와 화면을 유지하며 보조 Service 장치만 추가로 엽니다. Multi는 장치별 합성 결과를 저장합니다.</td>
-<td>Camera2 전환을 확인합니다. 기존 CameraX 장치는 유지하지 않습니다.</td>
+<td>CameraX가 광고한 동시 조합의 Service ID 하나를 합성합니다. 메인 ID를 유지하며 단일·동시 use case를 다시 bind합니다. 두 장치 모두 CameraX로 열고 합성 JPEG·오디오 포함 MP4를 저장합니다.</td>
 </tr>
 </tbody></table>
 <p>CLI 호환용 Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.</p>
@@ -168,9 +168,9 @@
 </tbody></table>
 </details><details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
-<li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LivePipSession.kt</code>, <code>app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt</code></li>
+<li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LivePipSession.kt</code>, <code>app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>2c8daebf</code> · Codex (PIP state and documentation source review; device unavailable)</li>
+<li>검토 2026-10-10 @ <code>fff6c981</code> · Codex (CameraX PIP source and lifecycle review; device observations in validation report)</li>
 </ul>
 </details><!-- omm:end id=comparison --><h3 id="기기에서-관찰한-차이">기기에서 관찰한 차이</h3>
 <p>Galaxy S25+에서 확인한 CameraX 관찰 결과와 검증 조건은 <a href="evidence.html#camerax-기기-관찰">Validation</a>에 있습니다.</p>
@@ -355,7 +355,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/ui/LiveControlBar.kt</code>, <code>app/src/main/java/dev/halcamera/ui/FocusRing.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>2c8daebf</code> · Codex (PIP state and documentation source review; device unavailable)</li>
+<li>검토 2026-10-10 @ <code>fff6c981</code> · Codex (CameraX PIP source and lifecycle review; device observations in validation report)</li>
 </ul>
 </details><!-- omm:end id=contract --></details><h2 id="camera2-엔진">Camera2 엔진</h2>
 <details id="camera2-internals" data-search-section>
@@ -679,11 +679,14 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/Camera2Engine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LivePipSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStabilization.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillPair.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/OriginalYuv.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RawFrame.kt</code>, <code>app/src/main/java/dev/halcamera/camera/DngOutput.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ManualControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>2c8daebf</code> · Codex (PIP state and documentation source review; device unavailable)</li>
+<li>검토 2026-10-10 @ <code>fff6c981</code> · Codex (CameraX PIP source and lifecycle review; device observations in validation report)</li>
 </ul>
 </details><!-- omm:end id=camera2 --></details><h2 id="camerax-엔진">CameraX 엔진</h2>
 <details id="camerax-internals" data-search-section>
 <summary>CameraX 엔진의 구현과 근거</summary><!-- omm:begin id=camerax --><p><strong>CameraXEngine은 CameraX use case로 Live 촬영과 제어를 제공하지만, 요청 키 일부는 CameraX가 정합니다.</strong> Live 스트림 설정에서 Preview·YUV·JPEG 크기와 출력 활성화를 선택할 수 있습니다. 앱이 CameraX 1.6.2에 직접 넣는 Camera2 키에는 AE 잠금(<code>CONTROL_AE_LOCK</code>), AF 잠금 해제용 cancel trigger, 광학 보정(<code>LENS_OPTICAL_STABILIZATION_MODE</code>)이 있습니다. 엔진 자체는 use case bind, 줌, 수명 주기를 담당하고, 사진은 <code>CameraXStillCapture</code>, 녹화는 <code>CameraXLiveRecorder</code>, Live 제어와 터치 측광은 <code>CameraXControls</code>가 맡습니다.</p>
+<h3 id="camerax-pip">CameraX PIP</h3>
+<p><strong>PIP 목록에는 CameraX가 광고한 동시 조합의 Service ID만 표시합니다.</strong> 두 장치를 CameraX로 열며 Camera2로 전환하지 않습니다. 같은 선택창·위치 기억·드래그와 셔터를 사용합니다.</p>
+<p><code>CameraXPipSession</code>은 각각 720p 이하의 Preview를 <code>ConcurrentCamera</code>로 bind하고 <code>DeviceCompositor</code>에서 합성 JPEG·H.264/AAC MP4를 저장합니다. 일반 촬영의 ImageCapture·Recorder와 별도 경로이며 PIP를 끄면 일반 출력 설정을 복원합니다. 단일·동시 모드 전환에는 재bind가 필요하고, 종료는 두 카메라의 CLOSED와 SurfaceRequest 반환을 기다립니다. PIP 터치 측광은 합성 화면의 fill-center crop에 맞춰 변환합니다. 지원 조합과 저장 범위는 <a href="live.html#여러-카메라를-함께-촬영하세요">Live PIP</a>에서 확인합니다.</p>
 <h3 id="camerax-손떨림-보정">CameraX 손떨림 보정</h3>
 <p><strong>CameraX와 하드웨어가 함께 지원하는 보정 모드만 표시합니다.</strong> 영상용 EIS는 녹화 중에 적용합니다.</p>
 <details id="detail-9947135f73" data-search-section>
@@ -860,9 +863,9 @@
 <p>같은 카메라를 다시 열면 새 엔진이 같은 CameraControl을 쓰기 때문입니다.</p>
 </details><details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
-<li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/build.gradle.kts</code></li>
+<li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraXEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StillEncoding.kt</code>, <code>app/src/main/java/dev/halcamera/camera/YuvPacking.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt</code>, <code>app/src/main/java/dev/halcamera/camera/LiveControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TouchMeter.kt</code>, <code>app/build.gradle.kts</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>2c8daebf</code> · Codex (PIP state and documentation source review; device unavailable)</li>
+<li>검토 2026-10-10 @ <code>fff6c981</code> · Codex (CameraX PIP source and lifecycle review; device observations in validation report)</li>
 </ul>
 </details><!-- omm:end id=camerax --></details><h2 id="문서-검토-상태">문서 검토 상태</h2>
 <details id="detail-f9c230aa61" data-search-section>
@@ -880,27 +883,27 @@
 <tbody><tr>
 <td>구조 원본 <code>overall-architecture</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>2c8daebf</code> · Codex (PIP state and documentation source review; device unavailable)</td>
+<td>검토 2026-10-10 @ <code>fff6c981</code> · Codex (CameraX PIP source and lifecycle review; device observations in validation report)</td>
 </tr>
 <tr>
 <td>원고 <code>contract</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>2c8daebf</code> · Codex (PIP state and documentation source review; device unavailable)</td>
+<td>검토 2026-10-10 @ <code>fff6c981</code> · Codex (CameraX PIP source and lifecycle review; device observations in validation report)</td>
 </tr>
 <tr>
 <td>원고 <code>camera2</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>2c8daebf</code> · Codex (PIP state and documentation source review; device unavailable)</td>
+<td>검토 2026-10-10 @ <code>fff6c981</code> · Codex (CameraX PIP source and lifecycle review; device observations in validation report)</td>
 </tr>
 <tr>
 <td>원고 <code>camerax</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>2c8daebf</code> · Codex (PIP state and documentation source review; device unavailable)</td>
+<td>검토 2026-10-10 @ <code>fff6c981</code> · Codex (CameraX PIP source and lifecycle review; device observations in validation report)</td>
 </tr>
 <tr>
 <td>원고 <code>comparison</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>2c8daebf</code> · Codex (PIP state and documentation source review; device unavailable)</td>
+<td>검토 2026-10-10 @ <code>fff6c981</code> · Codex (CameraX PIP source and lifecycle review; device observations in validation report)</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p>표의 <code>최신</code>은 기록된 근거와 원고가 검토 이후 바뀌지 않았다는 뜻입니다. 모든 기기에서 동작을 검증했다는 뜻은 아닙니다.</p>

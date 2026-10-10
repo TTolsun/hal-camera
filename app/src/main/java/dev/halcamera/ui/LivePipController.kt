@@ -13,7 +13,7 @@ import dev.halcamera.camera.*
 internal class LivePipController(
     private val context: Context,
     private val host: () -> FrameLayout,
-    private val engine: () -> Camera2Engine?,
+    private val engine: () -> PipCamera?,
     private val changed: () -> Unit,
     private val frame: () -> Unit,
     private val notice: (String) -> Unit,

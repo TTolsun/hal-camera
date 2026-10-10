@@ -147,7 +147,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var engineButton: Button
     private lateinit var physicalPipButton: Button
     private var pendingPip: PipSource? = null
-    private val pipUi by lazy { LivePipController(this,{ previewHost },{ engine as? Camera2Engine },::updateMediaControls,{ lastPreviewFrameNs = nowNs() },::showNotice,{ cameraId }) }
+    private val pipUi by lazy { LivePipController(this,{ previewHost },{ engine as? PipCamera },::updateMediaControls,{ lastPreviewFrameNs = nowNs() },::showNotice,{ cameraId }) }
     private val physicalPip by lazy { dev.halcamera.ui.PhysicalPipPicker(this,manager) }
     private val graphBack = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() = showCallbacks(false)
@@ -202,7 +202,7 @@ class MainActivity : ComponentActivity() {
             }
             val events = recorder.snapshot(10_000_000_000L)
             val frames = events.filter { it.session == sessionId && it.kind == "capture_result" }
-            val previewAt = if (engineName == "Camera2") lastPreviewFrameNs
+            val previewAt = if (engineName == "Camera2" || pipUi.selected != null) lastPreviewFrameNs
                 else if (cameraXStreaming) frames.lastOrNull()?.atNs ?: 0L else 0L
             val live = resumed && !paused && !closing && engine != null &&
                 previewAt > 0L && time - previewAt < 1_500_000_000L
@@ -358,7 +358,7 @@ class MainActivity : ComponentActivity() {
         }
         if (cameraId.isEmpty()) { setStatus("No cameras available.", false); return }
         sessionId = UUID.randomUUID().toString()
-        if (pendingPip == null && engineCameraId == cameraId && engineName == "Camera2") pendingPip = pipUi.selected
+        if (pendingPip == null && engineCameraId == cameraId) pendingPip = pipUi.selected
         previewStartup.reset()
         engineCameraId = cameraId
         val thisSession = sessionId
@@ -460,7 +460,7 @@ class MainActivity : ComponentActivity() {
     private fun showNotice(text: String) {
         main.removeCallbacks(clearNotice); savedNoticeShown = true
         cameraNotice.text = text; cameraNotice.visibility = View.VISIBLE
-        if (!text.startsWith("Video not saved") && !text.startsWith("Video save failed")) main.postDelayed(clearNotice, 2500)
+        if (!text.startsWith("Video not saved") && !text.startsWith("Video save failed")) main.postDelayed(clearNotice, 3000)
     }
     internal fun setStatus(text: String, ok: Boolean) {
         // Configuration/open callbacks can precede the first displayed frame.
@@ -473,14 +473,18 @@ class MainActivity : ComponentActivity() {
             savedNoticeShown = saved
             cameraNotice.text = text
             cameraNotice.visibility = if ((!ok && !recordingVideo) || (text.contains("실패") || text.contains("failed", ignoreCase = true)) || saved) View.VISIBLE else View.GONE
-            // A saved result stays visible until another operation changes the status.
+            if (saved && !text.contains("failed",ignoreCase=true) && !text.contains("not saved",ignoreCase=true))
+                main.postDelayed(clearNotice,3000)
         }
         ready=ok; reportButton.isEnabled=ok && recorder.remainingNs()==null
         if (ok || recordingVideo) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         updateMediaControls()
         // Re-apply the chosen zoom once the new session is live so engine and camera switches keep the same framing.
-        if (ok && pendingPip != null) { val source = pendingPip; pendingPip = null; main.post { pipUi.select(source) } }
+        if (ok && pendingPip != null) {
+            val source = pendingPip; pendingPip = null
+            if (pipSources().any { it.key == source?.key }) main.post { pipUi.select(source) }
+        }
         if (ok && !zoomApplied) {
             zoomApplied = true; if (zoomRatio != 1f) engine?.setZoom(zoomRatio)
             // A pause or a return from another screen reopens the same camera, so its chips still apply.
@@ -526,12 +530,7 @@ class MainActivity : ComponentActivity() {
             chooseEngine(if(engineName=="Camera2") "CameraX" else "Camera2")
         }
         physicalPipButton=button("PIP") {
-            physicalPip.show(cameraId,engineName,pipUi.selected) { _,source ->
-                if (engineName == "CameraX" && source != null) {
-                    pendingPip = source
-                    chooseEngine("Camera2")
-                } else pipUi.select(source)
-            }
+            physicalPip.show(cameraId,engineName,pipUi.selected,pipSources()) { _,source -> pipUi.select(source) }
         }
         // Lab groups inspection, saved results and settings; Mark stays on the preview.
         labButton=button("Lab") { openLab() }.apply { contentDescription="Open Lab: inspection tools, saved results, and settings" }
@@ -726,7 +725,7 @@ class MainActivity : ComponentActivity() {
             controlBar.setManual(normalized)
         }
         // Mode entry owns a fresh set of streams, including the selected PIP source.
-        // PIP selection itself stays on setPip(), which keeps the Live device open.
+        // PIP selection stays in this engine; CameraX rebinds single/concurrent use cases as required.
         pendingPip = pipUi.selected
         restartCamera()
         updateMediaControls()
@@ -809,7 +808,7 @@ class MainActivity : ComponentActivity() {
         }
         multiButton.contentDescription = "Multi photo mode"
         multiVideoButton.contentDescription = "Multi video mode"
-        physicalPipButton.isEnabled = multiButton.isEnabled && physicalPip.supported(cameraId).isNotEmpty()
+        physicalPipButton.isEnabled = multiButton.isEnabled && pipSources().isNotEmpty()
         physicalPipButton.alpha = if (physicalPipButton.isEnabled) 1f else .4f
         physicalPipButton.contentDescription = "Choose PIP camera"
         physicalPipButton.text = if (pipUi.selected == null) "PIP" else "PIP ✓"
@@ -894,6 +893,9 @@ class MainActivity : ComponentActivity() {
         }
         if (old == null) open() else old.close { open() }
     }
+    private fun pipSources(): List<PipSource> = if (engineName == "CameraX")
+        (engine as? CameraXEngine)?.pipSources.orEmpty() else physicalPip.supported(cameraId)
+
     internal fun mediaBusy() = pipUi.busy || (engine as? MediaCapture)?.mediaBusy == true || bursts.run != null
     /** One snapshot at a time; failures leave recording active and unsupported cameras explain why. */
     private fun takeSnapshot() {

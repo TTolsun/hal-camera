@@ -37,7 +37,7 @@ class Camera2Engine(
     /** A short notice that leaves the camera state alone, such as an AE relock that changed the exposure. */
     private val notice: (String) -> Unit = {},
     private val status: (String, Boolean) -> Unit
-) : CameraEngine, MediaCapture, LiveTuning, TouchMetering {
+) : CameraEngine, MediaCapture, LiveTuning, TouchMetering, PipCamera {
     init { require(spec == null || liveStreams == null) { "LIVE settings cannot override a benchmark profile" } }
     private val thread = HandlerThread("CD.Camera2").apply { start() }
     private val handler = Handler(thread.looper)
@@ -779,7 +779,7 @@ class Camera2Engine(
 
     /** Replace capture-session outputs, never the currently open Live CameraDevice. */
     @androidx.annotation.RequiresApi(30)
-    fun setPip(source: PipSource?, texture: SurfaceTexture?, output: LiveSize?, position: PipRect = PipScene.liveDefault, done: (Result<Unit>) -> Unit) {
+    override fun setPip(source: PipSource?, texture: SurfaceTexture?, output: LiveSize?, position: PipRect, done: (Result<Unit>) -> Unit) {
         handler.post {
             val camera = device
             if (!active || camera == null || spec != null) { main.post { done(Result.failure(IllegalStateException("Camera unavailable"))) }; return@post }
@@ -834,5 +834,5 @@ class Camera2Engine(
         }
     }
 
-    fun movePip(rect: PipRect) { if (Build.VERSION.SDK_INT >= 30) pip?.move(rect) }
+    override fun movePip(rect: PipRect) { if (Build.VERSION.SDK_INT >= 30) pip?.move(rect) }
 }

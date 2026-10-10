@@ -3,6 +3,7 @@ based_on: [overall-architecture]
 confidence: code
 sources:
   - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+  - app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt
   - app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt
   - app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt
   - app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt
@@ -20,6 +21,12 @@ verifications: []
 ---
 
 **CameraXEngine은 CameraX use case로 Live 촬영과 제어를 제공하지만, 요청 키 일부는 CameraX가 정합니다.** Live 스트림 설정에서 Preview·YUV·JPEG 크기와 출력 활성화를 선택할 수 있습니다. 앱이 CameraX 1.6.2에 직접 넣는 Camera2 키에는 AE 잠금(`CONTROL_AE_LOCK`), AF 잠금 해제용 cancel trigger, 광학 보정(`LENS_OPTICAL_STABILIZATION_MODE`)이 있습니다. 엔진 자체는 use case bind, 줌, 수명 주기를 담당하고, 사진은 `CameraXStillCapture`, 녹화는 `CameraXLiveRecorder`, Live 제어와 터치 측광은 `CameraXControls`가 맡습니다.
+
+### CameraX PIP
+
+**PIP 목록에는 CameraX가 광고한 동시 조합의 Service ID만 표시합니다.** 두 장치를 CameraX로 열며 Camera2로 전환하지 않습니다. 같은 선택창·위치 기억·드래그와 셔터를 사용합니다.
+
+`CameraXPipSession`은 각각 720p 이하의 Preview를 `ConcurrentCamera`로 bind하고 `DeviceCompositor`에서 합성 JPEG·H.264/AAC MP4를 저장합니다. 일반 촬영의 ImageCapture·Recorder와 별도 경로이며 PIP를 끄면 일반 출력 설정을 복원합니다. 단일·동시 모드 전환에는 재bind가 필요하고, 종료는 두 카메라의 CLOSED와 SurfaceRequest 반환을 기다립니다. PIP 터치 측광은 합성 화면의 fill-center crop에 맞춰 변환합니다. 지원 조합과 저장 범위는 [Live PIP](live.md#여러-카메라를-함께-촬영하세요)에서 확인합니다.
 
 ### CameraX 손떨림 보정
 
