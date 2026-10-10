@@ -117,7 +117,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var mediaButton: ShutterButton
     private lateinit var photoModeButton: Button
     private lateinit var videoModeButton: Button
-    private lateinit var pipButton: Button
+    private lateinit var multiButton: Button
     private lateinit var modeControls: LinearLayout
     private lateinit var recordingTime: TextView
     private lateinit var galleryButton: RecentMediaButton
@@ -621,8 +621,8 @@ class MainActivity : ComponentActivity() {
         modeControls=row().apply { gravity=Gravity.CENTER }
         photoModeButton=button("Photo") { selectMode(false) }
         videoModeButton=button("Video") { selectMode(true) }
-        pipButton=button("PIP") { openConcurrent() }
-        listOf(photoModeButton,videoModeButton,pipButton).forEach {
+        multiButton=button("Multi") { openConcurrent() }
+        listOf(photoModeButton,videoModeButton,multiButton).forEach {
             it.background=cameraChrome(Color.TRANSPARENT)
             it.textSize=12f
             it.setPadding(dp(4),0,dp(4),0)
@@ -765,12 +765,12 @@ class MainActivity : ComponentActivity() {
         galleryButton.isEnabled=idle
         labButton.isEnabled=!recordingVideo && !stoppingRecording && !closing && !mediaBusy()
         liveIndicator.setSizesEnabled(labButton.isEnabled && cli.active == null && pendingPermissionAction == null && cameraId.isNotEmpty())
-        listOf(pipButton).forEach {
+        listOf(multiButton).forEach {
             it.isEnabled = labButton.isEnabled && cli.active == null && pendingPermissionAction == null
             it.setTextColor(Look.onDarkMuted)
             it.alpha = if (it.isEnabled) 1f else 0.4f
         }
-        pipButton.contentDescription = "PIP cameras"
+        multiButton.contentDescription = "Multi cameras"
         if (cli.active != null) {
             listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, labButton, reportButton).forEach { it.isEnabled = false }
         }
@@ -807,7 +807,7 @@ class MainActivity : ComponentActivity() {
             pendingPermissionAction != null || mediaBusy()) return
         if (engineName == "CameraX") {
             AlertDialog.Builder(this).setTitle("Camera2 required")
-                .setMessage("Open PIP with Camera2?")
+                .setMessage("Open Multi with Camera2?")
                 .setPositiveButton("Open Camera2") { _, _ -> openConcurrentCamera2() }
                 .setNegativeButton("Cancel", null).show()
         } else openConcurrentCamera2()

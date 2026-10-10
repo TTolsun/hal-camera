@@ -10,4 +10,4 @@ RAW (DNG)는 RAW capability가 있는 Camera2 카메라에서만 RAW_SENSOR 크�
 
 Dual에서 진입하면 현재 엔진·물리 ID·프리뷰 크기와 녹화 구성을 읽기 전용으로 표시합니다. Dual이 적용하지 않는 단일 카메라 설정과 Apply는 표시하지 않습니다.
 
-PIP의 Maximum camera devices는 All available 또는 공개 camera ID 개수 이내의 2 이상 상한을 선택합니다. Apply에서 별도 환경설정에 저장하며 뒤로 가기는 초안을 버립니다. PIP 화면의 Streams에서 열면 이 설정만 표시하고, 장치를 모두 닫은 뒤 진입합니다. 복귀 시 저장된 상한으로 조합을 다시 조회합니다.
+Multi의 Maximum camera devices는 All available 또는 공개 camera ID 개수 이내의 2 이상 상한을 선택합니다. Apply에서 별도 환경설정에 저장하며 뒤로 가기는 초안을 버립니다. Multi 화면의 Streams에서 열면 이 설정만 표시하고, 장치를 모두 닫은 뒤 진입합니다. 복귀 시 저장된 상한으로 조합을 다시 조회합니다.

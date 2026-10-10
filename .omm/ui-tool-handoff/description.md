@@ -6,4 +6,4 @@ Lab의 시스템 뒤로 가기와 상단 Live 링크은 기존 Live로 복귀합
 
 Live Streams는 Lab 또는 Live의 크기 표시에서 열 수 있으며 카메라를 열지 않습니다. 진입 전에 Live 엔진의 close(done)를 기다립니다. 상단·시스템 뒤로 가기는 초안을 버리고 진입한 화면으로 돌아갑니다. 저장과 직전 정상 구성 복원도 같은 화면으로 돌아갑니다. Lab은 결과를 보관했다가 Live 복귀 시 전달하며, 직접 진입은 결과를 Live에 바로 전달합니다. 설정과 직전 정상 구성은 카메라·엔진별로 분리하고 Activity 재생성 시 복원합니다.
 
-PIP도 Live의 close(done) 뒤 ConcurrentCameraActivity를 엽니다. CameraX에서는 Camera2 전용 경로임을 먼저 안내합니다. 이 화면은 모든 카메라의 onClosed를 기다린 뒤 Live로 돌아가며, Live는 기존 엔진 선택으로 프리뷰를 다시 엽니다.
+Multi도 Live의 close(done) 뒤 ConcurrentCameraActivity를 엽니다. CameraX에서는 Camera2 전용 경로임을 먼저 안내합니다. 이 화면은 모든 카메라의 onClosed를 기다린 뒤 Live로 돌아가며, Live는 기존 엔진 선택으로 프리뷰를 다시 엽니다.

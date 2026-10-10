@@ -34,7 +34,7 @@ import dev.halcamera.camera.fitPreview
 import dev.halcamera.camera.readConcurrentPlans
 import dev.halcamera.ui.Look
 
-/** PIP camera mode using independent devices. PIP is an in-app layout. */
+/** Multi mode opens independent camera devices and saves each camera separately. */
 class ConcurrentCameraActivity : ComponentActivity() {
     private val manager by lazy { getSystemService(CameraManager::class.java) }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -91,14 +91,14 @@ class ConcurrentCameraActivity : ComponentActivity() {
         }
         val header = row()
         header.addView(button("Live") { finish() }, LinearLayout.LayoutParams(dp(72), dp(48)))
-        header.addView(text("PIP", 18).apply { setPadding(dp(12), 0, 0, 0) }, LinearLayout.LayoutParams(0, dp(48), 1f))
+        header.addView(text("Multi", 18).apply { setPadding(dp(12), 0, 0, 0) }, LinearLayout.LayoutParams(0, dp(48), 1f))
         streamsButton = button("Streams") {
             val id = plans.getOrNull(selected)?.streams?.firstOrNull()?.camera?.id ?: return@button
             afterClose = {
                 startActivity(android.content.Intent(this, LiveStreamsActivity::class.java)
                     .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, id)
                     .putExtra(WorkbenchActivity.EXTRA_ENGINE, "Camera2")
-                    .putExtra(LiveStreamsActivity.EXTRA_PIP, true)
+                    .putExtra(LiveStreamsActivity.EXTRA_MULTI, true)
                     .putExtra(LiveStreamsActivity.EXTRA_FROM_LIVE, true))
             }
             closeSession()
@@ -213,11 +213,11 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private fun discover() {
         if (Build.VERSION.SDK_INT < 30) { status.text = "Requires Android 11 or later."; return }
         try {
-            val limit = LiveStreamsActivity.savedPipLimit(this)
+            val limit = LiveStreamsActivity.savedMultiLimit(this)
             if (loadedLimit != limit) { selected = 0; failed = false }
             loadedLimit = limit
             plans = readConcurrentPlans(manager, limit.takeIf { it > 0 } ?: Int.MAX_VALUE)
-            if (plans.isEmpty()) status.text = "PIP is unavailable on this device."
+            if (plans.isEmpty()) status.text = "Multi is unavailable on this device."
             else { selected = selected.coerceIn(plans.indices); pairButton.text = plans[selected].label; startIfReady() }
         } catch (e: Exception) { status.text = "Camera support query failed: ${e.message}"; failed = true }
         updateButtons()
@@ -340,8 +340,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
         if (::sizeControl.isInitialized) {
             sizing.visibility = if (split) View.GONE else View.VISIBLE
             moveButton.visibility = if (split) View.GONE else View.VISIBLE
-            layoutButton.text = if (split) "PIP" else "Split"
-            layoutButton.contentDescription = if (split) "Switch to picture in picture" else "Switch to split view"
+            layoutButton.text = if (split) "Inset" else "Split"
+            layoutButton.contentDescription = if (split) "Switch to inset view" else "Switch to split view"
         }
     }
 

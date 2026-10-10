@@ -1,6 +1,6 @@
 MainActivity는 Live 런처입니다. CameraEngine을 선택하고 카메라 수명주기, 권한, 촬영 모드와 버튼 상태를 관리합니다. LiveReadings가 실시간 측정값을 갱신하고 IncidentActions가 이벤트 ZIP 저장과 공유를 담당합니다. Benchmark는 Lab에서 엽니다.
 
-검은 전체 화면 프리뷰의 상단에는 Camera2·CameraX 전환, 촬영 제어 펼침, Callback, Lab 버튼을 배치합니다. 하단에는 두 줄 측정값, 줌, 갤러리·64dp 셔터·카메라 선택, Photo·Video·PIP, Save Events · ZIP을 배치합니다. 아이콘의 터치 영역은 48dp 이상입니다. 색·서체는 Look을 사용하고 화면 규칙은 docs/design/APP-UI.md를 따릅니다.
+검은 전체 화면 프리뷰의 상단에는 Camera2·CameraX 전환, 촬영 제어 펼침, Callback, Lab 버튼을 배치합니다. 하단에는 두 줄 측정값, 줌, 갤러리·64dp 셔터·카메라 선택, Photo·Video·Multi, Save Events · ZIP을 배치합니다. 아이콘의 터치 영역은 48dp 이상입니다. 색·서체는 Look을 사용하고 화면 규칙은 docs/design/APP-UI.md를 따릅니다.
 
 Live 표시는 최근 프리뷰 또는 capture result 수신에 따라 동작 여부를 표시합니다. 1.5초 동안 새 프레임이 없으면 회색으로 바뀝니다. 시스템 애니메이션이 꺼져 있으면 깜빡이지 않습니다. FPS·ISO·노출 시간과 AE·AF를 기본 측정값으로 표시하며 요청과 다른 EV·줌, 물리 ID 등은 공간에 맞춰 추가합니다. Callback을 열면 실시간 측정값 대신 ResultCallbackGraph를 표시합니다. 자세한 측정과 그래프 규칙은 diagnostics-panel 요소가 담당합니다.
 

@@ -101,8 +101,8 @@
 <td>앱을 열면 나오는 화면입니다. 프리뷰를 보고 사진·동영상을 촬영합니다.</td>
 </tr>
 <tr>
-<td>PIP · <code>ConcurrentCameraActivity</code></td>
-<td>독립 카메라 장치 조합의 동시 프리뷰와 별도 사진을 제공합니다. Live의 PIP에서 엽니다.</td>
+<td>Multi · <code>ConcurrentCameraActivity</code></td>
+<td>독립 카메라 장치 조합의 동시 프리뷰와 별도 사진을 제공합니다. Live의 Multi에서 엽니다.</td>
 </tr>
 <tr>
 <td>Lab · <code>WorkbenchActivity</code></td>
@@ -131,7 +131,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt</code>, <code>app/src/main/java/dev/halcamera/WorkbenchActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>ff11245b</code> · Codex (final local PIP review; device validation deferred by user)</li>
+<li>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</li>
 </ul>
 </details><!-- omm:end id=overview --><h2 id="전체-구조도">전체 구조도</h2>
 <p>화살표는 코드를 사용하는 방향입니다. 이벤트와 파일이 이동하는 순서는 <a href="#이벤트와-결과가-전달되는-경로">데이터 흐름</a>에서 확인하세요.</p>
@@ -219,8 +219,8 @@
 <li>벤치마크 RECORD 단계의 recorder 상태 기계는 <code>BenchmarkRecorder</code>가 담당하고 <code>Camera2Engine</code>은 그 호출을 위임합니다.</li>
 <li>카메라를 화면에 적는 이름(<code>Camera · 0 (Wide · Rear)</code>)도 이 패키지의 <code>CameraLabel</code> 하나가 만들며, Live·Benchmark·Probe·CTS가 모두 그것을 부릅니다.</li>
 <li>렌즈 이름을 붙이지 못한 카메라에는 HAL이 보고한 35mm 환산 초점거리를 덧붙여 <code>Camera · 1 (Front · 26 mm)</code>처럼 적으므로, 전면 카메라가 둘인 기기에서도 목록이 두 항목을 구별합니다.</li>
-<li>기존 <code>DualPreviewSession</code>과 <code>DualCameraXSession</code>의 물리 출력 경로는 CLI 호환용으로 남아 있으며 Live의 PIP에서는 사용하지 않습니다.</li>
-<li>PIP는 <code>ConcurrentCameraActivity</code>와 Camera2 <code>ConcurrentSession</code>으로 선택한 카메라 ID의 장치를 각각 엽니다. 모든 장치를 연 뒤 세션을 구성하고, 카메라별 JPEG와 성공·실패 정보를 공통 촬영 묶음으로 저장합니다.</li>
+<li>기존 <code>DualPreviewSession</code>과 <code>DualCameraXSession</code>의 물리 출력 경로는 CLI 호환용으로 남아 있으며 Live의 Multi에서는 사용하지 않습니다.</li>
+<li>Multi는 <code>ConcurrentCameraActivity</code>와 Camera2 <code>ConcurrentSession</code>으로 선택한 카메라 ID의 장치를 각각 엽니다. 모든 장치를 연 뒤 세션을 구성하고, 카메라별 JPEG와 성공·실패 정보를 공통 촬영 묶음으로 저장합니다.</li>
 <li>두 엔진의 줌은 두 출력에 공통 적용합니다. Camera2는 메인 센서의 노출·초점 제어와 한 요청으로 촬영하는 두 센서 사진을 지원합니다. CameraX는 메인 개별 제어와 두 센서 사진을 지원하지 않습니다.</li>
 <li>CameraX는 <code>ConcurrentCamera</code>의 물리 ID 선택과 <code>DualPreviewRelay</code>를 사용해 각 Preview를 화면과 개별 MP4 인코더에 전달합니다.</li>
 </ul>
@@ -272,7 +272,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/BenchmarkController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CliLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/MainCliBridge.kt</code>, <code>app/src/main/java/dev/halcamera/DualCliBridge.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/ui/Look.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCatalog.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/Camera2Ops.kt</code>, <code>app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt</code>, <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbe.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>ff11245b</code> · Codex (final local PIP review; device validation deferred by user)</li>
+<li>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</li>
 </ul>
 </details><!-- omm:end id=module-roles --><h2 id="주요-실행-흐름">주요 실행 흐름</h2>
 <!-- omm:begin id=runtime-flow --><p><strong>실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.</strong> 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.</p>
@@ -384,7 +384,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>tools/halcam/halcam/download.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/GalleryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>ff11245b</code> · Codex (local review of configurable PIP devices; hardware validation pending)</li>
+<li>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</li>
 </ul>
 </details><!-- omm:end id=runtime-flow --><h3 id="이벤트와-결과가-전달되는-경로">이벤트와 결과가 전달되는 경로</h3>
 <!-- omm:begin id=runtime-diagram --><pre><code class="language-mermaid">graph TB
@@ -566,7 +566,7 @@
 <li>카메라 열거에는 공개 Camera2 API만 사용합니다. 논리 카메라의 물리 endpoint를 독립적으로 열 수 있다고 가정하지 않습니다.</li>
 <li>벤치마크 JSON과 incident ZIP에는 관측 이벤트·메타데이터를 저장하며 이미지 픽셀을 저장하지 않습니다.</li>
 </ol>
-<p>PIP 모드의 <code>ConcurrentSession</code>은 <code>CameraEngine</code>과 별도이며, Live 종료 후 선택한 독립 장치를 모두 연 다음 세션을 구성합니다. 모든 장치의 종료 통지를 확인해야 출력을 해제하고 다음 동시 세션을 열 수 있습니다. 한 명령의 여러 사진을 센서 동기 촬영으로 해석하지 않습니다.</p>
+<p>Multi 모드의 <code>ConcurrentSession</code>은 <code>CameraEngine</code>과 별도이며, Live 종료 후 선택한 독립 장치를 모두 연 다음 세션을 구성합니다. 모든 장치의 종료 통지를 확인해야 출력을 해제하고 다음 동시 세션을 열 수 있습니다. 한 명령의 여러 사진을 센서 동기 촬영으로 해석하지 않습니다.</p>
 <h3 id="계산과-저장의-제약">계산과 저장의 제약</h3>
 <ol>
 <li><code>BenchmarkRunner</code>는 <code>Driver</code>, <code>Scheduler</code>, <code>clock</code>을 통해 카메라와 시계에 접근합니다. 지표·통계·회귀 계산은 <code>benchmark/domain/</code>과 <code>metrics/</code>에 두어 JVM에서 테스트하며, Android 화면은 Activity와 <code>ui/</code>, 파일·기기 어댑터는 <code>benchmark/platform/</code>에 둡니다. 새 파일에 <code>android.*</code> import가 필요하면 역할에 맞는 경계에 두거나 인터페이스로 주입합니다.</li>
@@ -583,7 +583,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandStore.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>ff11245b</code> · Codex (final local PIP review; device validation deferred by user)</li>
+<li>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</li>
 </ul>
 </details><!-- omm:end id=constraints --><h2 id="변경-후-검증">변경 후 검증</h2>
 <p>Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 확인할 수 있습니다. 저장소 루트에서 실행하세요.</p>
@@ -622,17 +622,17 @@
 <tbody><tr>
 <td>구조 원본 <code>data-flow</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>ff11245b</code> · Codex (local review of configurable PIP devices; hardware validation pending)</td>
+<td>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>overall-architecture</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>ff11245b</code> · Codex (final local PIP review; device validation deferred by user)</td>
+<td>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>state-transitions</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>ff11245b</code> · Codex (local review of configurable PIP devices; hardware validation pending)</td>
+<td>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>ui-camera-label</code></td>
@@ -642,7 +642,7 @@
 <tr>
 <td>구조 원본 <code>ui-tool-handoff</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>ff11245b</code> · Codex (local review of configurable PIP devices; hardware validation pending)</td>
+<td>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</td>
 </tr>
 <tr>
 <td>구조 원본 <code>ui-zoom</code></td>
@@ -652,22 +652,22 @@
 <tr>
 <td>원고 <code>overview</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>ff11245b</code> · Codex (final local PIP review; device validation deferred by user)</td>
+<td>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</td>
 </tr>
 <tr>
 <td>원고 <code>module-roles</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>ff11245b</code> · Codex (final local PIP review; device validation deferred by user)</td>
+<td>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</td>
 </tr>
 <tr>
 <td>원고 <code>runtime-flow</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>ff11245b</code> · Codex (local review of configurable PIP devices; hardware validation pending)</td>
+<td>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</td>
 </tr>
 <tr>
 <td>원고 <code>constraints</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>ff11245b</code> · Codex (final local PIP review; device validation deferred by user)</td>
+<td>검토 2026-10-10 @ <code>6e48b4cd</code> · Codex (reviewed Multi and PIP naming distinction; hardware pending)</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p>표의 <code>최신</code>은 기록된 근거와 원고가 검토 이후 바뀌지 않았다는 뜻입니다. 모든 기기에서 동작을 검증했다는 뜻은 아닙니다.</p>

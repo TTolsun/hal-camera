@@ -33,7 +33,7 @@ verifications: []
 | 화면 | 할 수 있는 일 |
 | --- | --- |
 | Live · `MainActivity` | 앱을 열면 나오는 화면입니다. 프리뷰를 보고 사진·동영상을 촬영합니다. |
-| PIP · `ConcurrentCameraActivity` | 독립 카메라 장치 조합의 동시 프리뷰와 별도 사진을 제공합니다. Live의 PIP에서 엽니다. |
+| Multi · `ConcurrentCameraActivity` | 독립 카메라 장치 조합의 동시 프리뷰와 별도 사진을 제공합니다. Live의 Multi에서 엽니다. |
 | Lab · `WorkbenchActivity` | 기기 정보, 검사 도구, 저장된 결과와 설정을 엽니다. |
 | Benchmark · `BenchmarkActivity` | 정해진 조건(profile)으로 측정하고 결과를 저장합니다. |
 | 실행 기록 · `HistoryActivity` | 저장된 실행을 찾고 비교하거나 내보냅니다. |
