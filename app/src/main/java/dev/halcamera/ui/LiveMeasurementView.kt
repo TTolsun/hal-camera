@@ -31,6 +31,8 @@ class LiveMeasurementView(context: Context, private val dual: Boolean = false) :
 
     init {
         orientation = VERTICAL
+        // Match the visible gap below the zoom circle without moving the capture controls.
+        setPadding(0, 0, 0, Look.dp(context, 5))
         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
         cells.forEach { row.addView(it, LayoutParams(0, -2)) }
         addView(row, LayoutParams(-1, -2)); addView(settings, LayoutParams(-1, -2))
