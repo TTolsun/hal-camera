@@ -267,9 +267,9 @@ class CameraXEngine(
         "analysis" to analysis?.resolutionInfo?.resolution?.toString(), "jpeg" to capture?.resolutionInfo?.resolution?.toString())
 
     /** A recording start or stop rebound the use cases: the zoom and the controls go on the new session again. */
-    private fun rebuilt(outputs: StreamConfiguration<UseCase>, sizes: Map<String, Any?>) {
+    private fun rebuilt(outputs: StreamConfiguration<UseCase>, sizes: Map<String, Any?>, extraOutputs: List<OutputDescriptor> = emptyList()) {
         telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
-        telemetry.configureCallbackStreams(session, outputs.metadata())
+        telemetry.configureCallbackStreams(session, outputs.metadata() + extraOutputs.map { it.metadata() })
         telemetry.event(session, "bound", sizes)
         camera?.cameraControl?.setZoomRatio(zoomRatio)
         controls.sessionRebuilt()
@@ -418,7 +418,8 @@ class CameraXEngine(
             if (source == null) { restore(Result.success(Unit)); return }
             val infos = provider.availableCameraInfos.associateBy { Camera2CameraInfo.from(it).cameraId }
             lateinit var added: CameraXPipSession
-            val callbacks = PipCallbacks(telemetry,session,null) { active && pip === added }
+            val plan = PipOutputs(null)
+            val callbacks = PipCallbacks(telemetry,session,plan) { active && pip === added }
             added = CameraXPipSession(context,owner,provider,handler,cameraId,source,
                 listOf(infos.getValue(cameraId).cameraSelector,infos.getValue(source.id).cameraSelector),
                 checkNotNull(texture),checkNotNull(output),position,
@@ -428,11 +429,11 @@ class CameraXEngine(
                 bound = { mainCamera, previews ->
                     camera = mainCamera
                     pipPreview = previews.first()
-                    rebuilt(StreamConfiguration(listOf(ConfiguredOutput(previewOutput,previews.first()))),
+                    rebuilt(plan.configure<UseCase>(listOf(previews.first()),
+                        analysis?.let { listOf(ConfiguredOutput<UseCase>(analysisOutput,it)) }.orEmpty()),
                         mapOf("preview" to previews.first().resolutionInfo?.resolution?.toString(),
                             "pip" to previews.last().resolutionInfo?.resolution?.toString(),
-                            "analysis" to analysis?.resolutionInfo?.resolution?.toString(),"jpeg" to output.toString()))
-                    callbacks.configure(analysis?.let { StreamConfiguration(listOf(ConfiguredOutput(analysisOutput,it))).metadata() }.orEmpty())
+                            "analysis" to analysis?.resolutionInfo?.resolution?.toString(),"jpeg" to output.toString()), listOf(plan.photo))
                     telemetry.event(session,"pip_configured",mapOf("sourceId" to source.id,"physical" to false,"api" to "CameraX.ConcurrentCamera"))
                 }, ready = {
                     if (pip === added && active) {

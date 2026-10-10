@@ -795,16 +795,15 @@ class Camera2Engine(
                     setPip(null,null,null) { done(Result.failure(IllegalStateException(reason))) }
                 }
                 val analysis = StreamConfiguration(configuredOutputs.outputs.filter { it.descriptor.kind == OutputKind.YUV })
-                val callbacks = PipCallbacks(telemetry,sessionId,source.id.takeIf { source.physical }) { active && pip === added }
+                val plan = PipOutputs(source.id.takeIf { source.physical })
+                val callbacks = PipCallbacks(telemetry,sessionId,plan) { active && pip === added }
                 added = LivePipSession(context,handler,main,cameraId,source,checkNotNull(texture),checkNotNull(output),LiveSize(size.width,size.height),
                     position = position, mainOutputs = analysis.targets,
                     inputFrame = callbacks::input, photoFrame = callbacks::photo,
                     configureMain = { inputs ->
-                        val outputs = StreamConfiguration(inputs.mapIndexed { index, surface ->
-                            ConfiguredOutput(OutputDescriptor(if (index == 0) "preview" else "pip",OutputKind.PREVIEW,true),surface)
-                        } + analysis.outputs)
-                        val configs = outputs.outputs.mapIndexed { index, output -> OutputConfiguration(output.target).apply {
-                            if (source.physical && index == 1) setPhysicalCameraId(source.id)
+                        val outputs = plan.configure(inputs, analysis.outputs)
+                        val configs = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
+                            output.descriptor.physicalId?.let { setPhysicalCameraId(it) }
                         } }
                         try {
                             @Suppress("DEPRECATION")
@@ -812,7 +811,7 @@ class Camera2Engine(
                                 override fun onConfigured(value: CameraCaptureSession) {
                                     if (!active || pip !== added) { value.close(); return }
                                     captureSession = value; configuredOutputs = outputs
-                                    callbacks.configure(analysis.metadata())
+                                    callbacks.configure(outputs)
                                     val sizes = mapOf("preview" to size.toString(),"analysis" to yuv?.let { "${it.width}x${it.height}" },"jpeg" to output.toString())
                                     telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
                                     telemetry.event(sessionId,"pip_configured",mapOf("sourceId" to source.id,"physical" to source.physical,"mainDeviceReused" to true))

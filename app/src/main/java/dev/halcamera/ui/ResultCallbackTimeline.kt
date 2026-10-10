@@ -13,9 +13,7 @@ class ResultCallbackTimeline {
         holdSeconds = HOLD_SECONDS[(HOLD_SECONDS.indexOf(holdSeconds) + 1) % HOLD_SECONDS.size]
     }
 
-    var autoHold: Boolean
-        get() = holdSeconds > 0
-        set(value) { holdSeconds = if (value) holdSeconds.takeIf { it > 0 } ?: 3 else 0 }
+    val autoHold get() = holdSeconds > 0
     var holdSeconds = 0
         set(value) {
             field = value.coerceIn(0, 10)
@@ -42,19 +40,10 @@ class ResultCallbackTimeline {
         smallerAxisSinceNs = null
     }
 
-    fun toggleAutoHold(nowNs: Long) {
-        autoHold = !autoHold
-        resume(nowNs)
-    }
-
     fun resume(nowNs: Long) {
         autoHoldUntilNs = null
         heldTrigger = null
         observedUntilNs = nowNs // Explicit resume never replays a capture already in the ring.
-    }
-
-    fun remainingSeconds(nowNs: Long): Int? = autoHoldUntilNs?.let {
-        ((it - nowNs).coerceAtLeast(0) + 999_999_999L).div(1_000_000_000L).toInt()
     }
 
     fun update(series: ResultCallbackSeries, session: String, configuredAtNs: Long, nowNs: Long) {

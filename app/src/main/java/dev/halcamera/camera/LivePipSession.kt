@@ -48,14 +48,12 @@ internal class LivePipSession(
     private var opening = false
     @Volatile private var closing = false
     @Volatile private var readyState = false
-    @Volatile private var capturing = false
-    @Volatile private var recording = false
-    @Volatile private var pending = false
-    val busy get() = capturing || recording || pending || !readyState
+    private var mediaClosed = false
+    private val media = pipMedia(context, main, { compositor }, { !closing && readyState }, photoFrame, recordingChanged, notice)
+    val busy get() = closing || !readyState || media.busy
     private val closeCallbacks = mutableListOf<() -> Unit>()
     private var finished = false
     private var disposing = false
-    private var videoDone: ((Result<Uri>) -> Unit)? = null
 
     @SuppressLint("MissingPermission")
     fun start() {
@@ -105,50 +103,21 @@ internal class LivePipSession(
     private fun fail(message: String) { main.post { if (!closing) failed(message) } }
     fun move(rect: PipRect) = compositor.move(0,rect)
 
-    fun capture(requestId: String?,done: (Result<PhotoResult>) -> Unit) {
-        if (busy) { done(Result.failure(IllegalStateException("Camera busy"))); return }
-        capturing = true
-        compositor.capture { photo ->
-            val result = photo.mapCatching {
-                photoFrame(it.imageTimestampNs)
-                val library = MediaLibrary(context); val name = "${library.name()}_PIP.jpg"; val uri = library.create(name,false)
-                try { library.write(uri) { stream -> stream.write(it.bytes) }; library.publish(uri) }
-                catch (e: Exception) { library.resolver.delete(uri,null,null); throw e }
-                PhotoResult(requestId,name,0,listOf(uri),listOf(PhotoArtifact(name,"image/jpeg",uri,it.bytes.size.toLong())))
-            }
-            main.post { capturing = false; done(result) }
-        }
-    }
-    fun startVideo(audio: Boolean,started: () -> Unit,done: ((Result<Uri>) -> Unit)?) {
-        if (busy) { done?.invoke(Result.failure(IllegalStateException("Camera busy"))); return }
-        pending = true; videoDone = done
-        compositor.startVideo(MediaLibrary(context).name(),audio) { result -> main.post finishStart@{
-            if (closing) { pending = false; return@finishStart }
-            pending = false; recording = result.isSuccess
-            recordingChanged(recording)
-            if (result.isSuccess) started() else { videoDone?.invoke(Result.failure(result.exceptionOrNull()!!)); videoDone = null; notice("Video not saved") }
-        } }
-    }
-    fun stopVideo() {
-        if (!recording || pending) return
-        pending = true
-        compositor.stopVideo(true) { result -> main.post {
-            pending = false; recording = false; recordingChanged(false)
-            videoDone?.invoke(result.map(Uri::parse)); videoDone = null
-            notice(if (result.isSuccess) "Saved video" else "Video not saved")
-        } }
-    }
+    fun capture(requestId: String?, done: (Result<PhotoResult>) -> Unit) = media.capture(requestId, done)
+    fun startVideo(audio: Boolean, started: () -> Unit, done: ((Result<Uri>) -> Unit)?) = media.start(audio, started, done)
+    fun stopVideo() = media.stop()
+
     /** The main camera no longer targets our surfaces before this is called. */
     fun close(done: () -> Unit) {
         if (finished) { done(); return }
         closeCallbacks += done
         if (closing) return
         closing = true
-        if (recording || pending) { compositor.stopVideo(true) {}; recording = false }
+        media.close { handler.post { mediaClosed = true; finishClose() } }
         session?.close(); session = null; extra?.close(); finishClose()
     }
     private fun finishClose() {
-        if (!closing || opening || extra != null || disposing) return
+        if (!closing || !mediaClosed || opening || extra != null || disposing) return
         disposing = true
         compositor.close { handler.post {
             finished = true

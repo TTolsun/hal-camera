@@ -12,3 +12,5 @@ Single의 Service PIP는 장치를 열기 전에 메인·추가 프리뷰의 동
 Single PIP 사진은 합성 JPEG 한 장만 저장하며 일반 사진의 YUV·JPEG 쌍과 RAW·메타데이터 JSON은 만들지 않습니다. PIP 녹화 중 사진은 지원하지 않습니다. PIP 합성 사진은 프리뷰를 저장하므로 일반 사진용 Flash Auto·On과 AEB를 사용하지 않으며 Off·Torch를 제공합니다. 같은 모드의 Live로 복귀하면 선택한 PIP를 복원합니다. 모드·엔진 전환과 Multi 진입에서는 PIP와 스트림 설정을 초기화합니다.
 
 PipPositionStore는 Single과 Multi를 구분하여 부모 Camera ID별 정규화 좌표를 저장합니다. 같은 모드의 보조 카메라 선택, PIP Off·On과 화면 재생성 후에는 같은 부모의 위치를 복원합니다. Photo·Video·엔진 전환이나 Multi 신규 진입에서는 해당 범위의 위치를 지웁니다. 합성기는 첫 프레임부터 복원 좌표를 사용하고 프리뷰 영역 밖의 좌표는 경계로 제한합니다. 저장값이 유효하지 않으면 기본 좌표를 사용합니다.
+
+두 Live 엔진의 사진 저장과 녹화 수명 주기는 PipMedia와 PipMediaAdapter를 공유합니다. 순수 상태 제어기는 촬영·녹화 시작·녹화 종료가 완료될 때까지 close를 기다리며, Android 어댑터가 합성기와 MediaLibrary를 연결합니다. 장치와 Surface의 해제는 각 세션이 담당합니다. PipOutputs가 정한 출력 설명자를 실제 세션 구성과 Callback 메타데이터에서 함께 사용합니다. 합성 JPEG는 카메라 요청 대상과 분리하여 관측 출력으로만 추가합니다.

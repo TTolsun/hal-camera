@@ -672,11 +672,8 @@ class DualPreviewActivity : ComponentActivity() {
         val latest = events.lastOrNull { it.session == sessionId && it.kind == "capture_result" }
         val primary = events.lastOrNull { it.session == sessionId && it.kind == "dual_main_result" }
         val frame = (primary ?: latest)?.takeIf { SystemClock.elapsedRealtimeNanos()-it.atNs < 1_500_000_000L }
-        fun num(key: String) = (frame?.values?.get(key) as? Number)?.toDouble()
-        metricsText.text = listOf("FPS ${fps(current?.first)} / ${fps(current?.second)}",
-            "ISO ${num("iso")?.toInt() ?: "—"}",
-            "Exp ${num("exposureNs")?.let { String.format(Locale.US,"%.2fms",it/1e6) } ?: "—"}",
-            LiveControlBar.aeState(num("ae")?.toInt()),LiveControlBar.afState(num("af")?.toInt())).joinToString(" · ")
+        metricsText.text = dev.halcamera.ui.LiveMeasurementText.format(frame?.values.orEmpty(),
+            "${fps(current?.first)} / ${fps(current?.second)}")
         manualPanel.bind(controlBar.controls.manual, !busy(), mainControls?.manual ?: ManualSupport(camera2 = false), primary, SystemClock.elapsedRealtimeNanos())
         liveIndicator.bindStabilization(dev.halcamera.camera.LiveEisStatus(
             (latest?.values?.get("videoStabilization") as? Number)?.toInt()), recording)

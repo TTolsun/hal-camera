@@ -14,10 +14,10 @@ class LiveControlReadoutTest {
 
     @Test
     fun `a held AF lock reads as its outcome because the padlock already says it is held`() {
-        assertEquals("AE Locked", LiveControlBar.aeState(3))
-        assertEquals("AF Focused", LiveControlBar.afState(4))
-        assertEquals("AF No focus", LiveControlBar.afState(5))
-        assertEquals("AE —", LiveControlBar.aeState(null))
+        assertEquals("FPS — · ISO — · Exp — · AE Locked · AF Focused",
+            LiveMeasurementText.format(mapOf("ae" to 3, "af" to 4)))
+        assertEquals("FPS — · ISO — · Exp — · AE — · AF No focus",
+            LiveMeasurementText.format(mapOf("af" to 5)))
     }
 
     @Test

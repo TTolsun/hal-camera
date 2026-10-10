@@ -71,12 +71,7 @@ data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frame
             }
             for (stream in streams) {
                 val id = stream["id"] as? String ?: continue
-                val label = if (stream["physicalId"] != null) {
-                    val type = (stream["kind"] as? String)?.let { kind ->
-                        dev.halcamera.camera.OutputKind.values().find { it.name == kind }?.label
-                    } ?: (stream["label"] as? String ?: id).removeSuffix(" (Phy)")
-                    "$type (Phy)"
-                } else stream["label"] as? String ?: id
+                val label = stream["label"] as? String ?: id
                 val unavailable = if (stream["observable"] == false) "No callback" else null
                 val kind = stream["eventKind"] as? String ?: if (id == "preview") "preview_available" else "image_available"
                 tracks += ResultCallbackTrack(id, label, unavailable, if (unavailable == null) points(kind, id) else emptyList(), stream["repeating"] != false)

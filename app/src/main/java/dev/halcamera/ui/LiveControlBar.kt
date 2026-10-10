@@ -337,13 +337,6 @@ class LiveControlBar(private val context: Context, private val host: Host) {
          * names, which wrapped to a second line; the incident ZIP keeps the raw values.
          */
 
-        fun aeState(ae: Int?): String =
-            "AE " + when (ae) { null -> "—"; 0 -> "Idle"; 1 -> "Searching"; 2 -> "OK"; 3 -> "Locked"; 4 -> "Flash needed"; 5 -> "Metering"; else -> "#$ae" }
-
-        /** A held AF lock reads as its outcome; the button's padlock already says it is held. */
-        fun afState(af: Int?): String =
-            "AF " + when (af) { null -> "—"; 0 -> "Idle"; 1, 3 -> "Scanning"; 2, 4 -> "Focused"; 5 -> "No focus"; 6 -> "Unfocused"; else -> "#$af" }
-
         /** Only while a flash mode is on: it is the one applied value the flash button cannot show. */
         fun flashState(state: Int?, controls: LiveControls): String? = if (controls.flash == FlashMode.OFF) null else
             "Flash " + when (state) { null -> "—"; 0 -> "Off"; 1 -> "Charging"; 2 -> "Ready"; 3 -> "Fired"; 4 -> "Partial"; else -> "#$state" }
