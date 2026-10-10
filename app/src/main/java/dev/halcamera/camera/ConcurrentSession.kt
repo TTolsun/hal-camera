@@ -33,25 +33,18 @@ fun readConcurrentCamera(manager: CameraManager, id: String): ConcurrentCamera {
         if (logical) c.physicalCameraIds.sorted() else emptyList())
 }
 
-@RequiresApi(30)
 fun readPipSources(manager: CameraManager, parent: String): List<PipSource> {
-    val physical = readConcurrentCamera(manager,parent).physicalIds.map { PipSource(it,true,"Physical $it") }
-    val service = manager.cameraIdList.filter { it != parent }.mapNotNull { id ->
-        runCatching { readConcurrentCamera(manager,id) }.getOrNull()?.takeIf { it.previews.isNotEmpty() }
-            ?.let { PipSource(id,false,"${it.label} · Service") }
-    }
-    return physical + service
+    if (android.os.Build.VERSION.SDK_INT < 30 || parent.isEmpty()) return emptyList()
+    return runCatching {
+        val physical = readConcurrentCamera(manager,parent).physicalIds.map { PipSource(it,true,"Physical $it") }
+        val service = manager.cameraIdList.filter { it != parent }.mapNotNull { id ->
+            runCatching { readConcurrentCamera(manager,id) }.getOrNull()?.takeIf { it.previews.isNotEmpty() }
+                ?.let { PipSource(id,false,"${it.label} · Service") }
+        }
+        physical + service
+    }.getOrDefault(emptyList())
 }
 
-@RequiresApi(30)
-fun readSingleCompositionPlan(manager: CameraManager, id: String): ConcurrentPlan {
-    val camera = readConcurrentCamera(manager,id)
-    val preview = camera.previews.filter { it.width.toLong()*it.height <= 1280L*720 }.maxByOrNull { it.width.toLong()*it.height }
-        ?: error("No preview stream")
-    val photo = camera.photos.filter { it.width.toLong()*it.height <= 1920L*1440 }.maxByOrNull { it.width.toLong()*it.height }
-        ?: error("No JPEG stream")
-    return ConcurrentPlan(listOf(ConcurrentStream(camera,preview,photo)))
-}
 /** Owns independent devices; every callback and photo transaction is serialized on the worker. */
 @RequiresApi(30)
 class ConcurrentSession(

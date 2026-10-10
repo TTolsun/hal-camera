@@ -16,6 +16,7 @@ interface CameraEngine {
 
 /** A composited Live preview with the same scene saved to photos and video. */
 interface PipCamera {
+    val pipSources: List<PipSource>
     fun setPip(source: PipSource?, texture: android.graphics.SurfaceTexture?, output: LiveSize?,
         position: PipRect = PipScene.liveDefault, done: (Result<Unit>) -> Unit)
     fun movePip(rect: PipRect)

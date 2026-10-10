@@ -147,6 +147,7 @@ sources:
       camera-engines/camera2-engine/still-output:
         evidence:
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+          - app/src/main/java/dev/halcamera/camera/MediaTransaction.kt
           - app/src/main/java/dev/halcamera/camera/StillPair.kt
           - app/src/main/java/dev/halcamera/camera/YuvPacking.kt
           - app/src/main/java/dev/halcamera/camera/CaptureMetadata.kt
@@ -209,6 +210,7 @@ sources:
           - app/src/main/java/dev/halcamera/ui/CameraWidgets.kt
           - app/src/main/java/dev/halcamera/ui/LiveReadings.kt
           - app/src/main/java/dev/halcamera/ui/LiveMeasurementText.kt
+          - app/src/main/java/dev/halcamera/ui/LiveMeasurementView.kt
       # 상단 카메라 제어(플래시·AF/AE 잠금·EV)의 배치·다이얼과 요청값 모델. MainActivity·camera2-engine 입력 한도 때문에 따로 둡니다.
       screens/expert-screen/live-controls:
         evidence:
@@ -284,6 +286,8 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/PipMedia.kt
           - app/src/main/java/dev/halcamera/camera/PipMediaAdapter.kt
+          - app/src/main/java/dev/halcamera/camera/CompositorMedia.kt
+          - app/src/main/java/dev/halcamera/camera/CompositorRecording.kt
       screens/dual-preview-screen/cli-adapter:
         evidence:
           - app/src/main/java/dev/halcamera/DualCliBridge.kt
@@ -303,6 +307,7 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/DualVideoRecording.kt
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+          - app/src/main/java/dev/halcamera/camera/MediaTransaction.kt
       screens/probe-screen:
         evidence:
           - app/src/main/java/dev/halcamera/CameraProbeActivity.kt
@@ -350,6 +355,7 @@ sources:
           - app/src/main/java/dev/halcamera/GalleryActivity.kt
           - app/src/main/java/dev/halcamera/ui/GalleryImageView.kt
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+          - app/src/main/java/dev/halcamera/camera/MediaTransaction.kt
       ui-widgets:
         evidence:
           - app/src/main/java/dev/halcamera/ui/AboutSheet.kt
@@ -406,6 +412,7 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/platform/StoreRunCatalog.kt
           - app/src/main/java/dev/halcamera/benchmark/platform/SubjectPrefs.kt
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+          - app/src/main/java/dev/halcamera/camera/MediaTransaction.kt
       persistence/benchmark-store:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt
@@ -444,6 +451,7 @@ sources:
       - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
       - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
       - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+      - app/src/main/java/dev/halcamera/camera/MediaTransaction.kt
       - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
       - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
       - app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt
@@ -467,6 +475,7 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+          - app/src/main/java/dev/halcamera/camera/MediaTransaction.kt
           - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
       benchmark-metrics:
         evidence:
@@ -512,6 +521,7 @@ sources:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkModel.kt
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
+          - app/src/main/java/dev/halcamera/camera/MediaTransaction.kt
       runner-marks:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt

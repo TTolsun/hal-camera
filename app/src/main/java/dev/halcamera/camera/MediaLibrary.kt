@@ -54,19 +54,11 @@ class MediaLibrary(context: Context) {
     fun saveDualPhotos(images: List<Pair<String, ByteArray>>): List<Uri> {
         require(images.size == 2 && images.map { it.first }.distinct().size == 2)
         val base = name()
-        val entries = mutableListOf<Uri>()
-        try {
-            images.forEachIndexed { index, (physicalId, bytes) ->
+        return transaction {
+            images.mapIndexed { index, (physicalId, bytes) ->
                 val id = physicalId.replace(Regex("[^A-Za-z0-9_-]"), "_")
-                val uri = create("${base}_${if (index == 0) "A" else "B"}_cam${id}_YUV.jpg", false)
-                entries += uri
-                write(uri) { it.write(bytes) }
+                save("${base}_${if (index == 0) "A" else "B"}_cam${id}_YUV.jpg", "image/jpeg") { it.write(bytes) }.uri
             }
-            entries.forEach(::publish)
-            return entries
-        } catch (e: Exception) {
-            entries.forEach { runCatching { resolver.delete(it, null, null) } }
-            throw e
         }
     }
 
@@ -100,70 +92,67 @@ class MediaLibrary(context: Context) {
     private fun saveFiles(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?,
                           captureMetadata: Map<String, Any?>?, dng: DngOutput? = null): List<PhotoArtifact> {
         require(yuvJpeg != null || cameraJpeg != null || dng != null)
-        val entries = mutableListOf<PhotoArtifact>()
-        val outputs = mutableListOf<Map<String, Any?>>()
-        fun saveStream(filename: String, mime: String, metadata: Map<String, Any?>, writer: (OutputStream) -> Unit) {
-            val uri = if (mime.startsWith("image/")) create(filename, false, mime) else createData(filename, mime)
-            entries += PhotoArtifact(filename, mime, uri)
+        return transaction {
+            val outputs = mutableListOf<Map<String, Any?>>()
+            fun output(filename: String, mime: String, metadata: Map<String, Any?>, writer: (OutputStream) -> Unit): PhotoArtifact =
+                save(filename, mime, writer).also {
+                    outputs += metadata + mapOf("file" to filename, "mime" to mime, "byteLength" to it.bytes)
+                }
+            buildList {
+                if (yuvJpeg != null) add(output("${name}_YUV.jpg", "image/jpeg",
+                    mapOf("source" to "YUV_420_888", "format" to "JPEG")) { it.write(yuvJpeg) })
+                if (cameraJpeg != null) add(output("${name}_JPEG.jpg", "image/jpeg",
+                    mapOf("source" to "camera", "format" to "JPEG")) { it.write(cameraJpeg) })
+                if (dng != null) add(output("${name}_RAW.dng", DNG_MIME, dng.metadata(), dng::write))
+                if (captureMetadata != null) {
+                    val json = org.json.JSONObject(mapOf("schema" to 1, "capture" to captureMetadata, "outputs" to outputs))
+                    add(save("${name}_metadata.json", "application/json") { it.write(json.toString(2).toByteArray(Charsets.UTF_8)) })
+                }
+            }
+        }
+    }
+
+    internal inner class Transaction(private val pending: MediaTransaction<Uri>) {
+        fun save(name: String, mime: String, writer: (OutputStream) -> Unit): PhotoArtifact {
+            val uri = pending.own(if (mime.startsWith("image/") || mime.startsWith("video/"))
+                create(name, mime.startsWith("video/"), mime) else createData(name, mime))
             var written = 0L
             write(uri) { target -> writer(object : java.io.FilterOutputStream(target) {
                 override fun write(b: Int) { out.write(b); written++ }
                 override fun write(b: ByteArray, off: Int, len: Int) { out.write(b, off, len); written += len }
             }) }
-            entries[entries.lastIndex] = entries.last().copy(bytes = written)
-            outputs += metadata + mapOf("file" to filename, "mime" to mime, "byteLength" to written)
-        }
-        fun save(filename: String, mime: String, bytes: ByteArray, metadata: Map<String, Any?> = emptyMap()) =
-            saveStream(filename, mime, metadata) { it.write(bytes) }
-        try {
-            if (yuvJpeg != null) save("${name}_YUV.jpg", "image/jpeg", yuvJpeg,
-                mapOf("source" to "YUV_420_888", "format" to "JPEG"))
-            if (cameraJpeg != null) save("${name}_JPEG.jpg", "image/jpeg", cameraJpeg,
-                mapOf("source" to "camera", "format" to "JPEG"))
-            if (dng != null) saveStream("${name}_RAW.dng", DNG_MIME, dng.metadata(), dng::write)
-            if (captureMetadata != null) {
-                val json = org.json.JSONObject(mapOf("schema" to 1, "capture" to captureMetadata, "outputs" to outputs))
-                save("${name}_metadata.json", "application/json", json.toString(2).toByteArray(Charsets.UTF_8))
-            }
-            entries.forEach { publish(it.uri) }
-            return entries
-        } catch (e: Exception) {
-            entries.forEach { runCatching { resolver.delete(it.uri, null, null) } }
-            throw e
+            return PhotoArtifact(name, mime, uri, written)
         }
     }
+
+    internal fun <T> transaction(block: Transaction.() -> T): T =
+        MediaTransaction<Uri>(::publish, ::delete).run { Transaction(this).block() }
+
+    internal fun saveFile(name: String, mime: String, writer: (OutputStream) -> Unit): PhotoArtifact =
+        transaction { save(name, mime, writer) }
+
+    internal fun delete(uri: Uri) { resolver.delete(uri, null, null) }
+    internal fun deleteAll(uris: List<Uri>) { uris.forEach { runCatching { delete(it) } } }
+
     companion object {
         const val DNG_MIME = "image/x-adobe-dng"
     }
 
-    fun saveVideo(file: File): Uri {
-        val uri = create("${name()}.mp4", true)
-        try {
-            write(uri) { target -> file.inputStream().use { it.copyTo(target) } }
-            publish(uri)
-            return uri
-        } catch (e: Exception) {
-            runCatching { resolver.delete(uri, null, null) }
-            throw e
-        }
-    }
+    fun saveVideo(file: File): Uri = saveVideo(file, "${name()}.mp4")
+
+    internal fun saveVideo(file: File, filename: String): Uri =
+        saveFile(filename, "video/mp4") { target -> file.inputStream().use { it.copyTo(target) } }.uri
 
     /** Both videos share a capture name; rollback every entry if either copy or publish fails. */
     fun saveVideoPair(name: String, files: List<Pair<String, File>>): List<Uri> {
         require(files.size == 2)
-        val entries = mutableListOf<Uri>()
-        try {
-            files.forEachIndexed { index, (physicalId, file) ->
+        return transaction {
+            files.mapIndexed { index, (physicalId, file) ->
                 val id = physicalId.replace(Regex("[^A-Za-z0-9_-]"), "_")
-                val uri = create("${name}_${if (index == 0) "A" else "B"}_cam${id}.mp4", true)
-                entries += uri
-                write(uri) { target -> file.inputStream().use { it.copyTo(target) } }
+                save("${name}_${if (index == 0) "A" else "B"}_cam${id}.mp4", "video/mp4") { target ->
+                    file.inputStream().use { it.copyTo(target) }
+                }.uri
             }
-            entries.forEach(::publish)
-            return entries
-        } catch (e: Exception) {
-            entries.forEach { runCatching { resolver.delete(it, null, null) } }
-            throw e
         }
     }
 }

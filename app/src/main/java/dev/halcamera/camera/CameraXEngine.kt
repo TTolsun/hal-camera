@@ -69,7 +69,7 @@ class CameraXEngine(
     private var pip: CameraXPipSession? = null
     private var pipPreview: Preview? = null
     private var pipChanging = false
-    var pipSources: List<PipSource> = emptyList()
+    override var pipSources: List<PipSource> = emptyList()
         private set
     @Volatile private var camera: Camera? = null
     private var capture: ImageCapture? = null
