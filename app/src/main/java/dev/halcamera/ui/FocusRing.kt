@@ -8,6 +8,7 @@ import android.graphics.RectF
 import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import dev.halcamera.camera.AeRelock
 import dev.halcamera.camera.TouchMeter
@@ -35,6 +36,17 @@ class FocusRing(
     private val lockExposure: (Boolean) -> Boolean,
 ) : View(context) {
     var unavailableReason: (Boolean) -> String? = { null }
+    var onZoomScale: (Float) -> Unit = {}
+    private var multiTouch = false
+    private val scaleDetector = ScaleGestureDetector(context, object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+        override fun onScale(detector: ScaleGestureDetector): Boolean {
+            if (canInteract()) onZoomScale(detector.scaleFactor)
+            return true
+        }
+    }).apply {
+        isQuickScaleEnabled = false
+        isStylusScaleEnabled = false
+    }
     private class Mark { var token = 0; var phase: TouchPhase? = null; var x = 0f; var y = 0f; var scale = 1f; var dim = false }
 
     private val focus = Mark()
@@ -66,7 +78,20 @@ class FocusRing(
     }
 
     @Suppress("ClickableViewAccessibility")
-    override fun onTouchEvent(event: MotionEvent): Boolean = if (canInteract()) detector.onTouchEvent(event) else true
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) multiTouch = false
+        if (event.pointerCount > 1 && !multiTouch) {
+            multiTouch = true
+            // Cancel pending taps/long presses, including after one finger leaves the pinch.
+            val cancel = MotionEvent.obtain(event)
+            cancel.action = MotionEvent.ACTION_CANCEL
+            detector.onTouchEvent(cancel)
+            cancel.recycle()
+        }
+        scaleDetector.onTouchEvent(event)
+        if (!multiTouch) detector.onTouchEvent(event)
+        return true
+    }
 
     var canInteract: () -> Boolean = { true }
 
