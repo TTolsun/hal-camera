@@ -23,7 +23,7 @@ title: Live
 
 **기본 설정에서는 사진 두 장이 저장됩니다.** YUV를 변환한 JPEG와 카메라가 만든 JPEG이며, `DCIM/HALCamera`에 있습니다. Camera2에서 출력을 하나만 켜면 해당 사진만 저장합니다. 두 엔진이 사진을 연결하는 차이는 [Engine Comparison](engine.md#사진-두-장은-어떻게-연결하나요)에 있습니다.
 
-동영상을 찍으려면 동영상 모드로 바꿉니다. Photo·Video를 전환하면 전체 스트림을 다시 구성하고 선택한 PIP도 복원합니다. 셔터를 한 번 눌러 시작하고 다시 눌러 끝냅니다. 종료 처리 중에는 셔터를 사용할 수 없습니다. 일반 사진·PIP 사진·동영상의 저장 완료 안내는 3초 뒤 사라집니다. 저장 실패 안내는 유지합니다. Camera2와 CameraX 모두 선택한 엔진에서 촬영합니다.
+동영상을 찍으려면 동영상 모드로 바꿉니다. Photo·Video 또는 Camera2·CameraX를 바꾸면 PIP를 끄고 스트림·줌·촬영 제어를 기본값으로 초기화한 뒤 전체 스트림을 다시 구성합니다. 셔터를 한 번 눌러 시작하고 다시 눌러 끝냅니다. 종료 처리 중에는 셔터를 사용할 수 없습니다. 일반 사진·PIP 사진·동영상의 저장 완료 안내는 3초 뒤 사라집니다. 저장 실패 안내는 유지합니다. Camera2와 CameraX 모두 선택한 엔진에서 촬영합니다.
 
 <figure class="app-screenshot" id="screen-live">
 <a href="assets/screenshots/live.png" aria-label="Camera2 Live 사진 모드와 실시간 정보 원본 보기"><img src="assets/screenshots/live.png" alt="Camera2 Live 사진 모드와 실시간 정보" width="1440" height="3120" loading="lazy" decoding="async"></a>
@@ -130,7 +130,7 @@ M·EV·Flash는 도구 행을 유지한 채 선택한 버튼 아래로 펼쳐집
 | 설정을 유지하고 패널을 닫습니다. | 닫기 아이콘 또는 시스템 뒤로 가기를 누릅니다. |
 | 자동 촬영으로 돌아갑니다. | `Reset`을 누르면 노출·초점·WB가 모두 자동으로 돌아갑니다. |
 
-카메라·엔진·스트림 구성을 바꾸면 수동 설정이 초기화됩니다. 프리뷰·사진·녹화·녹화 중 사진에 같은 설정을 적용하지만, 동영상 모드에서 노출 범위가 줄면 값을 조정하고 안내합니다.
+카메라·엔진·촬영 모드·스트림 구성을 바꾸면 수동 설정이 초기화됩니다. 같은 모드의 프리뷰·촬영에는 같은 설정을 적용합니다.
 
 <details markdown="1" id="manual-limits" data-search-section>
 <summary>수동 설정의 제한과 고급 WB</summary>
@@ -187,13 +187,15 @@ Live의 `Multi · P`(사진) 또는 `Multi · V`(영상)에서 카메라 조합�
 
 1. 상단에서 공개 Service Camera ID 조합을 선택합니다. Logical capability가 없는 카메라도 조합에 포함될 수 있습니다. 장치별로 분할된 프리뷰가 열리며, 조합 선택창의 `Streams`에서 현재 구성 상태를 확인합니다.
 2. 각 화면의 `PIP`에서 Physical 또는 다른 Service 카메라 하나를 선택합니다. 목록은 위쪽에 종류·ID, 아래쪽에 방향·렌즈 정보를 표시하며 다시 열면 이전 스크롤 위치로 돌아갑니다. 전면 카메라도 선택할 수 있습니다. `Turn off PIP`로 합성을 끕니다.
-3. 보조 영상을 드래그하거나 해당 화면의 `Move`로 위치를 바꿉니다. 보조 영상은 해당 장치의 화면 안에서만 이동합니다. 이동한 위치는 메인 카메라별로 기억하며 모드·PIP 카메라 변경이나 PIP Off·On 후에도 유지합니다. Single과 Multi는 각각의 위치를 기억합니다.
+3. 보조 영상을 드래그하거나 해당 화면의 `Move`로 위치를 바꿉니다. 보조 영상은 해당 장치의 화면 안에서만 이동합니다. 같은 모드에서는 메인 카메라별 위치를 기억하여 PIP 카메라 변경이나 PIP Off·On 후에도 유지합니다. Photo·Video·Camera2·CameraX를 바꾸거나 Multi에 새로 진입하면 위치도 기본값으로 돌아갑니다.
 4. `Multi · P`에서는 `Photo`로 촬영합니다. `Multi · V`에서는 `Record`로 녹화를 시작하고 `Stop`으로 저장합니다. Multi의 결과는 장치별 파일이며 PIP를 켠 장치에는 그 화면의 합성 구도가 저장됩니다. 조작 버튼과 카메라 라벨은 저장하지 않습니다.
 5. `Live` 또는 뒤로 가기로 돌아갑니다. 모든 장치와 합성 출력의 종료를 확인한 뒤 기존 Live 프리뷰를 복구합니다.
 
 Single에서는 API 선택 옆의 `PIP`에서 보조 카메라 하나를 선택합니다. Android 11 이상에서 선택 후보가 있으면 사용할 수 있으며, Logical capability는 Physical 후보에만 필요합니다. 목록에 있는 Service 카메라도 실제 동시 출력 구성이 지원되어야 열 수 있습니다.
 
 Camera2 Single에서는 현재 Live 화면과 CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열며, Physical ID는 현재 장치에 출력을 추가합니다. 기존 셔터와 Photo·Video 모드로 합성 사진·영상을 저장하고, 보조 화면을 드래그할 수 있습니다.
+
+PIP 버튼은 합성이 켜져 있으면 강조되며, 다시 누르면 선택창을 엽니다. `Turn off PIP`로 끄면 강조도 해제됩니다. Callback 버튼은 표시 여부에 따라 강조됩니다. 오른쪽 아래 Camera 목록도 PIP처럼 첫 줄에 `Service · ID`, 다음 줄에 방향·렌즈 정보를 표시합니다. Camera와 PIP 목록의 Service ID는 숫자 오름차순으로 정렬합니다.
 
 CameraX에서도 같은 PIP 버튼·셔터·드래그를 사용합니다. CameraX가 광고한 동시 조합의 Service ID만 표시하며 Physical ID는 제공하지 않습니다. Camera2와 후보 목록이 다를 수 있고, 후보가 없으면 PIP 버튼이 비활성화됩니다. 메인 ID는 유지하되 PIP를 켜고 끌 때 단일·동시 세션을 다시 bind합니다. 프리뷰 입력은 각각 720p 이하에서 협상하고, 일반 사진·녹화의 출력 설정 대신 화면용 합성 JPEG·H.264/AAC MP4를 저장합니다. PIP를 끄면 일반 스트림 설정으로 복귀합니다. 목록 스크롤은 엔진·메인 ID별로, 프리뷰 위치는 메인 ID별로 기억합니다.
 

@@ -46,6 +46,7 @@ data class CameraEndpoint(
  * file imports Android.
  */
 object CameraLabel {
+    val idOrder: Comparator<String> = compareBy<String> { it.toLongOrNull() ?: Long.MAX_VALUE }.thenBy { it }
     // CameraCharacteristics.LENS_FACING values, repeated rather than imported to keep this file Android-free.
     const val FACING_FRONT = 0
     const val FACING_BACK = 1

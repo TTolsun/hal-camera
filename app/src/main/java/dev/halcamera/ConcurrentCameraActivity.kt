@@ -82,6 +82,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) positionStore.clear()
         WindowCompat.setDecorFitsSystemWindows(window,false)
         singleId?.let { physical[it] = intent.getStringArrayListExtra(EXTRA_PHYSICAL_IDS).orEmpty().take(1)
             intent.getStringExtra(EXTRA_PIP_SERVICE)?.let { source -> servicePip[it] = source } }
@@ -330,14 +331,11 @@ class ConcurrentCameraActivity : ComponentActivity() {
         pipButtons.forEachIndexed { i,button -> button.isEnabled = !busy && streams.getOrNull(i)?.camera?.id?.let { hasPipSources(it) } == true
             button.alpha = if (button.isEnabled) 1f else .4f
             val active = pipIds(streams.getOrNull(i)?.camera?.id).isNotEmpty()
-            button.isSelected = active
-            button.text = if (active) "PIP ✓" else "PIP"
-            button.setTextColor(if (active) Look.primaryOnDark else Look.onDark)
+            CameraWidgets(this).highlight(button,active)
             button.contentDescription = if (active) "PIP on, select camera" else "PIP, select camera" }
         headerPip?.isEnabled = !busy && streams.firstOrNull()?.camera?.id?.let { hasPipSources(it) } == true
         headerPip?.alpha = if (headerPip?.isEnabled == true) 1f else .4f
-        headerPip?.setTextColor(if (pipIds(streams.firstOrNull()?.camera?.id).isNotEmpty()) Look.primaryOnDark else Look.onDark)
-        headerPip?.isSelected = pipButtons.firstOrNull()?.isSelected == true
+        headerPip?.let { CameraWidgets(this).highlight(it,pipButtons.firstOrNull()?.isSelected == true) }
         headerPip?.text = pipButtons.firstOrNull()?.text ?: "PIP"
         headerPip?.contentDescription = pipButtons.firstOrNull()?.contentDescription
         moveButtons.forEachIndexed { i,button -> button.visibility = if (pipIds(streams.getOrNull(i)?.camera?.id).isEmpty()) View.INVISIBLE else View.VISIBLE

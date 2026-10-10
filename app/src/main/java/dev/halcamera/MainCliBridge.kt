@@ -28,10 +28,12 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
                     }
                     captureFeedback.clearResult()
                     showCallbacks(false)
+                    val modeChanged = engineName != (command.engine ?: "Camera2") || videoMode != (command.command == "record.start")
                     cameraId = requireNotNull(command.camera); engineName = command.engine ?: "Camera2"
+                    videoMode = command.command == "record.start"
+                    if (modeChanged) resetModeSettings()
                     paused = false; zoomRatio = 1f
                     if (settings == null) streamSettings.remove(streamKey()) else streamSettings[streamKey()] = settings
-                    videoMode = command.command == "record.start"
                     resetControls()
                     try {
                         command.options?.let { options ->

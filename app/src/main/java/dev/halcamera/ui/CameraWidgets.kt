@@ -50,6 +50,12 @@ class CameraWidgets(private val context: Context, private val enabled: () -> Boo
 
     fun row() = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
 
+    fun highlight(button: Button, selected: Boolean) {
+        button.isSelected = selected
+        button.setTextColor(if (selected) Look.primaryOnDark else Look.onDark)
+        button.setTypeface(null,if (selected) Typeface.BOLD else Typeface.NORMAL)
+    }
+
     fun rounded(color: Int) = GradientDrawable().apply {
         setColor(color)
         cornerRadius = dp(4).toFloat()

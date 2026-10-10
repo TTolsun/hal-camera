@@ -20,8 +20,9 @@ internal class PhysicalPipPicker(private val context: Context, private val manag
     fun show(id: String,engine: String,selected: PipSource? = null,
         sources: List<PipSource> = supported(id), open: (String,PipSource?) -> Unit) {
         if (sources.isEmpty()) return
+        val ordered = sources.sortedWith(compareBy<PipSource> { !it.physical }.thenBy(CameraLabel.idOrder) { it.id })
         val endpoints = CameraEndpointResolver(manager).resolve()
-        val choices = sources.map { source ->
+        val choices = ordered.map { source ->
             val endpoint = endpoints.firstOrNull {
                 if (source.physical) it.logicalCameraId == id && it.physicalCameraId == source.id
                 else it.logicalCameraId == source.id && it.physicalCameraId == null
@@ -31,12 +32,12 @@ internal class PhysicalPipPicker(private val context: Context, private val manag
                 ?.takeIf { it.isNotEmpty() } ?: "Camera"
             LiveChoiceSheet.Choice("${if (source.physical) "Physical" else "Service"} · ID ${source.id}",name)
         }
-        LiveChoiceSheet.show(context,"PIP",choices,sources.indexOfFirst { it.key == selected?.key },
+        LiveChoiceSheet.show(context,"PIP",choices,ordered.indexOfFirst { it.key == selected?.key },
             clear = if (selected != null) ({ open(id,null) }) else null, edge = LiveChoiceSheet.Edge.TOP,
             scrollPosition = if (positions.contains("$engine.$id")) positions.getInt("$engine.$id",0)
                 else if (engine == "Camera2" && positions.contains(id)) positions.getInt(id,0) else null,
             saveScrollPosition = { positions.edit().putInt("$engine.$id",it).apply() }) { index ->
-                open(id,sources[index])
+                open(id,ordered[index])
             }
     }
 }

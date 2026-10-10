@@ -10,7 +10,7 @@ ExpandingZoomControl은 현재 배율을 눌러 후보를 펼치고 선택 후 �
 
 연사·AEB 촬영 중에도 셔터를 정지 사각형으로 표시하며 셔터 위 한 줄에서 저장 장수와 HDR 합성 상태를 확인합니다. 촬영 중에는 카메라·엔진·모드뿐 아니라 EV·수동 제어·줌·터치 측광도 잠급니다. 촬영 순서와 중단 처리는 LiveBurst, 진행·결과 표시는 CaptureFeedback이 담당합니다.
 
-Multi · P와 Multi · V는 같은 장치 조합 목록을 열며 Live의 close(done) 이후 ConcurrentCameraActivity를 엽니다. CameraX에서는 Camera2 경로로 전환을 확인합니다. Photo·Video 전환도 전체 스트림을 다시 만들고 선택한 PIP를 복원합니다. Camera2에서 PIP 선택만 바꿀 때는 현재 Live CameraDevice를 유지합니다. Live의 비동기 재오픈과 권한 대기 중에는 중복 진입을 막습니다.
+Multi · P와 Multi · V는 같은 장치 조합 목록을 열며 Live의 close(done) 이후 ConcurrentCameraActivity를 엽니다. CameraX에서는 Camera2 경로로 전환을 확인합니다. Photo·Video·엔진 전환은 PIP·위치·스트림·제어를 초기화하고 재구성합니다. Camera2에서 PIP 선택만 바꿀 때는 현재 Live CameraDevice를 유지합니다. Live의 비동기 재오픈과 권한 대기 중에는 중복 진입을 막습니다.
 
 LiveIndicator의 크기 표시를 누르면 Live Streams를 엽니다. 설정과 직전 정상 구성은 카메라·엔진별로 유지하며, 적용 또는 취소 후 Live로 돌아옵니다. Lab도 Activity Result로 설정 변경을 전달합니다. Benchmark profile은 Live 설정과 분리합니다. 종료 완료 전에 다른 카메라를 열지 않으며, CLI 명령 중에는 UI의 충돌하는 조작을 비활성화합니다.
 
