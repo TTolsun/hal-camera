@@ -30,6 +30,8 @@ internal class LivePipController(
 
     fun reset() { generation++; selected = null; busy = false; view = null }
 
+    fun resetMode() { positions.clear(); reset() }
+
     @SuppressLint("ClickableViewAccessibility")
     fun select(source: PipSource?) {
         if (Build.VERSION.SDK_INT < 30 || busy) return

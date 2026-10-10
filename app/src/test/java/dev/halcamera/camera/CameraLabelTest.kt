@@ -9,6 +9,10 @@ import org.junit.Test
  */
 class CameraLabelTest {
 
+    @Test fun `camera IDs sort numerically before non numeric IDs`() {
+        assertEquals(listOf("0","1","2","10","usb"), listOf("0","2","usb","10","1").sortedWith(CameraLabel.idOrder))
+    }
+
     private fun endpoint(id: String, physical: String?, role: LensRole, facing: Int, focalMm: Double? = null) = CameraEndpoint(
         logicalCameraId = id, physicalCameraId = physical, role = role, facing = facing,
         independentlyOpenable = physical == null, selectableByZoom = false, exposedToCameraX = null,

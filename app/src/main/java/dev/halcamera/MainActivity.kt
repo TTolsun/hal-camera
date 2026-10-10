@@ -168,6 +168,7 @@ class MainActivity : ComponentActivity() {
             data.getStringExtra(DualPreviewActivity.EXTRA_ENGINE)?.takeIf { it == "Camera2" || it == "CameraX" }?.let {
                 if (engineName != it) { engineName = it; resetControls() }
             }
+            resetModeSettings()
         }
         if (result.resultCode == RESULT_OK && data?.hasExtra(LiveStreamsActivity.EXTRA_SETTINGS) == true &&
             data.getStringExtra(WorkbenchActivity.EXTRA_CAMERA_ID) == cameraId) {
@@ -695,15 +696,16 @@ class MainActivity : ComponentActivity() {
     }
     private fun selectCamera() {
         if (cli.active != null || recordingVideo || mediaBusy() || closing) return
-        val choices=cameraIds.map { id ->
+        val ids=cameraIds.sortedWith(CameraLabel.idOrder)
+        val choices=ids.map { id ->
             val endpoint=cameraEndpoints[id]
             val name=endpoint?.let { listOfNotNull(CameraLabel.facing(it.role,it.facing),CameraLabel.lens(it.role),
                 CameraLabel.angle(it.role,it.equivalentFocalMm)).joinToString(" · ") }?.takeIf { it.isNotEmpty() } ?: "Camera"
-            LiveChoiceSheet.Choice(name,"ID $id")
+            LiveChoiceSheet.Choice("Service · ID $id",name)
         }
-        LiveChoiceSheet.show(this,"Camera",choices,cameraIds.indexOf(cameraId)) { index ->
+        LiveChoiceSheet.show(this,"Camera",choices,ids.indexOf(cameraId)) { index ->
             if (recordingVideo || !resumed || cli.active != null || mediaBusy() || closing) return@show
-            val chosen=cameraIds[index]
+            val chosen=ids[index]
             if (cameraId!=chosen) {
                 pendingPermissionAction=null
                 recorder.finish("camera_changed")?.let(incidents::export)
@@ -718,15 +720,7 @@ class MainActivity : ComponentActivity() {
             mediaBusy() || !ready || videoMode==video) return
         pendingPermissionAction=null
         videoMode=video
-        refreshManualSupport()
-        val normalized = controlBar.controls.manual.normalized(manualCapabilities)
-        if (normalized != controlBar.controls.manual) {
-            toast("Manual settings adjusted to the capture FPS limit: ${normalized.summary()}")
-            controlBar.setManual(normalized)
-        }
-        // Mode entry owns a fresh set of streams, including the selected PIP source.
-        // PIP selection stays in this engine; CameraX rebinds single/concurrent use cases as required.
-        pendingPip = pipUi.selected
+        resetModeSettings()
         restartCamera()
         updateMediaControls()
     }
@@ -811,8 +805,8 @@ class MainActivity : ComponentActivity() {
         physicalPipButton.isEnabled = multiButton.isEnabled && pipSources().isNotEmpty()
         physicalPipButton.alpha = if (physicalPipButton.isEnabled) 1f else .4f
         physicalPipButton.contentDescription = "Choose PIP camera"
-        physicalPipButton.text = if (pipUi.selected == null) "PIP" else "PIP ✓"
-        physicalPipButton.isSelected = pipUi.selected != null
+        widgets.highlight(physicalPipButton,pipUi.selected != null)
+        ViewCompat.setStateDescription(physicalPipButton,if (pipUi.selected != null) "On" else "Off")
         if (pipUi.busy) { mediaButton.isEnabled=false; physicalPipButton.isEnabled=false; engineButton.isEnabled=false; cameraShortcut.isEnabled=false }
         if (cli.active != null) {
             listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, labButton, reportButton).forEach { it.isEnabled = false }
@@ -824,7 +818,14 @@ class MainActivity : ComponentActivity() {
     private fun chooseEngine(name:String) {
         if(engineName==name) return
         recorder.finish("engine_changed")?.let(incidents::export)
-        engineName=name; resetControls(); updateCameraChoices(); restartCamera()
+        engineName=name; resetModeSettings(); updateCameraChoices(); restartCamera()
+    }
+    internal fun resetModeSettings() {
+        pendingPip = null
+        pipUi.resetMode()
+        streamSettings.clear(); goodStreams.clear(); streamState.clear()
+        zoomRatio = 1f
+        resetControls()
     }
     /** Locks, EV and flash start over for every camera and engine; the new session opens with the defaults. */
     internal fun resetControls() {
@@ -857,6 +858,7 @@ class MainActivity : ComponentActivity() {
     private fun openConcurrentCamera2(video: Boolean) {
         if (cli.active != null || recordingVideo || stoppingRecording || closing ||
             pendingPermissionAction != null || mediaBusy()) return
+        resetModeSettings()
         openAfterClose("concurrent_opened") { Intent(this, ConcurrentCameraActivity::class.java).putExtra(ConcurrentCameraActivity.EXTRA_VIDEO,video) }
     }
     private fun openLiveStreams() {
@@ -922,7 +924,7 @@ class MainActivity : ComponentActivity() {
         metrics.visibility = if (show) View.GONE else View.VISIBLE
         graphBack.isEnabled = show
         graphButton.contentDescription = if (show) "Hide callback timing" else "Show callback timing"
-        graphButton.isSelected = show
+        widgets.highlight(graphButton,show)
         ViewCompat.setStateDescription(graphButton, if (show) "Shown" else "Hidden")
         if (show) callbackGraph.update(recorder.snapshot(10_000_000_000L),sessionId,nowNs(),telemetry.sessions[sessionId].orEmpty())
     }
