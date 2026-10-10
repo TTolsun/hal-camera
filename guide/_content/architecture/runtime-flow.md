@@ -131,7 +131,7 @@ sequenceDiagram
 
 ### Live에서 촬영과 저장
 
-Live 셔터는 현재 엔진의 `MediaCapture`로 사진이나 동영상을 저장하며, 촬영을 위해 엔진을 바꾸지 않습니다. 기본 사진은 YUV·JPEG 쌍이며 두 엔진 모두 Live 스트림에서 켠 출력만 저장할 수도 있습니다. 저장은 별도 작업 스레드에서 처리하고, 완료된 파일만 앨범에 공개합니다. 엔진별 요청 구성과 저장 순서는 [Engine Comparison](engine.md)에 있습니다.
+Live 셔터는 현재 엔진의 `MediaCapture`로 사진이나 동영상을 저장합니다. 기본 사진은 카메라 JPEG이며, YUV 앱 변환·RAW·PIP 선택에 따른 파일과 엔진별 요청 순서는 [Engine Comparison](engine.md)에 있습니다. 저장은 별도 작업 스레드에서 처리하고, 완료된 파일만 앨범에 공개합니다.
 
 Lab은 `WorkbenchActivity`가 담당하며 카메라를 직접 열지 않습니다. Live의 `close(done)`이 끝나면 Lab을 엽니다. 선택한 카메라 ID는 Probe와 Benchmark에, 엔진은 Benchmark에 전달합니다.
 

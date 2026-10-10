@@ -557,10 +557,10 @@
       },
       "accepted": {
         "codeHash": "f0d5a13ad48ae649",
-        "modelHash": "7d42a2cb18998a97",
+        "modelHash": "31b8152387b1a655",
         "at": "2026-10-10",
-        "commit": "9a6220c4",
-        "reviewer": "Codex source comparison; not independent human approval",
+        "commit": "fed3bab1",
+        "reviewer": "Codex documentation/source review; not independent human approval",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "9bbac4b06f3d9727f9cd6aed8067eaae51cc04f7",
@@ -660,10 +660,10 @@
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "1c3e69976bdb33a7",
-        "modelHash": "78c22ce8b76d0d55",
+        "modelHash": "f02dda55069172a2",
         "at": "2026-10-10",
-        "commit": "c5e9a7fc",
-        "reviewer": "Codex source comparison; not independent human approval",
+        "commit": "fed3bab1",
+        "reviewer": "Codex documentation/source review; not independent human approval",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -1170,10 +1170,10 @@
       },
       "accepted": {
         "codeHash": "1c3e69976bdb33a7",
-        "modelHash": "744f5f7892bf602f",
+        "modelHash": "d141209aa85cb890",
         "at": "2026-10-10",
-        "commit": "c5e9a7fc",
-        "reviewer": "Codex source comparison; not independent human approval",
+        "commit": "fed3bab1",
+        "reviewer": "Codex documentation/source review; not independent human approval",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -1400,10 +1400,10 @@
       },
       "accepted": {
         "codeHash": "1c3e69976bdb33a7",
-        "modelHash": "450d47ce958886b4",
+        "modelHash": "3f2a266efb52e442",
         "at": "2026-10-10",
-        "commit": "c5e9a7fc",
-        "reviewer": "Codex source comparison; not independent human approval",
+        "commit": "fed3bab1",
+        "reviewer": "Codex documentation/source review; not independent human approval",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",

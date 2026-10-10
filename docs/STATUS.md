@@ -1,5 +1,7 @@
 # 작업 상태
 
+2026-10-11 · 현재 Live는 JPEG 출처를 카메라 JPEG 또는 YUV 앱 변환 중 하나로 선택합니다. Camera2 PIP는 선택한 메인 RAW/DNG를 별도로 저장할 수 있습니다. 사용법은 [Live](../guide/live.md), Frame·Hold 조작과 관측 기준은 [Callback](../guide/callback.md)에 모았습니다. [최근 기기 검증](validation/solid-live-readout.md)은 저장과 종료 처리, 중앙 정렬한 FPS·EXP·AE·AF를 다룹니다.
+
 2026-10-10 · main은 Live의 Dual 진입을 `Multi · P`·`Multi · V`로 대체했습니다. Multi는 독립 CameraDevice별로 저장하고, PIP는 각 프리뷰에 보조 카메라 하나를 합성합니다. 기존 Dual은 CLI 호환 경로로 남습니다. 현재 사용법은 [Live 가이드](../guide/live.md), 실기기 관측과 최종 통합본의 재검증 제한은 [검증 기록](validation/concurrent-camera-20261010.md)을 확인하세요. 아래 버전별 기록은 당시 배포 상태입니다.
 
 2026-10-09 · HAL CAM 0.22.0(versionCode 650)은 Camera2·CameraX Dual 프리뷰와 카메라별 MP4 저장, Camera2 RAW/DNG와 UI 일관성 수정을 포함합니다. 설치 방법과 검증 범위는 [릴리스 노트](releases/0.22.0.md)에서 확인하세요.

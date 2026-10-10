@@ -265,14 +265,14 @@
 <summary>저장·목록·썸네일 구현</summary><p><code>BenchmarkActivity</code>는 실행 완료 후 별도 입출력 스레드에서 조립·저장·비교를 처리하고 <code>ResultPresenter</code>와 <code>ComparePresenter</code>의 결과를 표시합니다. 시작 카드와 진행률에는 <code>StartCardPresenter</code>와 <code>ProgressPresenter</code>를 사용합니다.</p>
 <p><code>HistoryActivity</code>는 같은 저장소를 읽습니다. <code>RunIndex</code>는 이벤트와 표본 배열을 제거한 목록 데이터를 유지하고, 결과를 열 때 원본 JSON을 다시 읽습니다. 파일 읽기·삭제·CSV 생성은 별도 스레드에서 처리합니다. <code>BenchmarkCsv</code>는 지표당 한 행을 작성하고 FileProvider로 공유합니다.</p>
 <p><code>BenchmarkReport</code>는 schema 5를 쓰고 schema 3·4·5를 읽습니다. <code>BenchmarkStore</code>는 실행 파일과 baseline 인덱스를 관리합니다. 인덱스는 측정 계약·endpoint마다 baseline 실행 목록을 저장합니다. 삭제한 실행은 목록에서 빼며, 기존 실행 JSON은 비교 상태가 바뀌어도 다시 쓰지 않습니다.</p>
-<p><code>camera/MediaLibrary</code>는 두 엔진이 만든 사진 쌍과 동영상을 MediaStore에 저장합니다. 사진 쌍을 만드는 순서는 엔진마다 다르며 <a href="engine.html">Engine Comparison</a>에 있습니다. <code>GalleryActivity</code>는 HALCamera 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다.</p>
+<p><code>camera/MediaLibrary</code>는 선택한 사진 출력과 동영상을 MediaStore에 저장합니다. <code>MediaTransaction</code>이 쓰기·공개·실패 시 삭제를 공통 처리하며, <code>GalleryActivity</code>는 저장한 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다. 파일별 형식과 위치는 <a href="engine.html#yuv-저장-포맷">저장 파일</a>에 있습니다.</p>
 <p>저장 포맷과 폴더는 <a href="engine.html#yuv-저장-포맷">Engine의 저장 파일 표</a>를 확인하세요. <code>YuvPacking</code>이 앱 JPEG 변환용 샘플을 준비하고 <code>MediaLibrary</code>가 파일과 JSON을 저장합니다. Camera2의 RAW (DNG)는 <code>RawFrame</code>이 RAW 샘플을 복사하고 <code>DngOutput</code>이 <code>DngCreator</code>로 <code>_RAW.dng</code>를 씁니다.</p>
 <p><code>camera/RecentMediaThumbnail</code>은 저장 완료된 앨범 항목의 썸네일을 별도 작업 스레드에서 읽고 <code>ui/RecentMediaButton</code>에 전달합니다. 화면을 나가면 관찰을 중단하고 뒤늦은 조회 결과는 반영하지 않습니다. <code>ui/RecentMediaButton</code>은 받은 썸네일을 원형으로 그리며, 항목이 동영상이면 가운데에 재생 표시를 겹쳐 접근성 설명뿐 아니라 화면으로도 종류를 알 수 있게 합니다.</p>
 </details><details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/BenchmarkController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CliLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/MainCliBridge.kt</code>, <code>app/src/main/java/dev/halcamera/DualCliBridge.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/ui/Look.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCatalog.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/Camera2Ops.kt</code>, <code>app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt</code>, <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbe.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>c5e9a7fc</code> · Codex source comparison; not independent human approval</li>
+<li>검토 2026-10-10 @ <code>fed3bab1</code> · Codex documentation/source review; not independent human approval</li>
 </ul>
 </details><!-- omm:end id=module-roles --><h2 id="주요-실행-흐름">주요 실행 흐름</h2>
 <!-- omm:begin id=runtime-flow --><p><strong>실행 실패는 러너 결과에서, 측정값의 차이는 이벤트와 계산 규칙에서 확인하세요.</strong> 벤치마크의 입력은 카메라 콜백 이벤트와 러너가 기록한 실행 시각입니다.</p>
@@ -363,7 +363,7 @@
 </code></pre>
 <p>기준 선택과 판정의 의미는 <a href="benchmark.html">Benchmark</a>에서 확인하세요.</p>
 <h3 id="live에서-촬영과-저장">Live에서 촬영과 저장</h3>
-<p>Live 셔터는 현재 엔진의 <code>MediaCapture</code>로 사진이나 동영상을 저장하며, 촬영을 위해 엔진을 바꾸지 않습니다. 기본 사진은 YUV·JPEG 쌍이며 두 엔진 모두 Live 스트림에서 켠 출력만 저장할 수도 있습니다. 저장은 별도 작업 스레드에서 처리하고, 완료된 파일만 앨범에 공개합니다. 엔진별 요청 구성과 저장 순서는 <a href="engine.html">Engine Comparison</a>에 있습니다.</p>
+<p>Live 셔터는 현재 엔진의 <code>MediaCapture</code>로 사진이나 동영상을 저장합니다. 기본 사진은 카메라 JPEG이며, YUV 앱 변환·RAW·PIP 선택에 따른 파일과 엔진별 요청 순서는 <a href="engine.html">Engine Comparison</a>에 있습니다. 저장은 별도 작업 스레드에서 처리하고, 완료된 파일만 앨범에 공개합니다.</p>
 <p>Lab은 <code>WorkbenchActivity</code>가 담당하며 카메라를 직접 열지 않습니다. Live의 <code>close(done)</code>이 끝나면 Lab을 엽니다. 선택한 카메라 ID는 Probe와 Benchmark에, 엔진은 Benchmark에 전달합니다.</p>
 <p>녹화·저장·세션 종료·CLI 작업 중에는 Lab 버튼을 비활성화합니다. Live Streams도 카메라를 닫은 뒤 열며, 저장하거나 뒤로 가면 진입한 화면으로 돌아갑니다. 화면 조작은 <a href="live.html#추가-설정">Live</a>를 확인하세요.</p>
 <h3 id="갤러리-항목의-조회-경로">갤러리 항목의 조회 경로</h3>
@@ -384,7 +384,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>tools/halcam/halcam/download.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/GalleryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-10 @ <code>9a6220c4</code> · Codex source comparison; not independent human approval</li>
+<li>검토 2026-10-10 @ <code>fed3bab1</code> · Codex documentation/source review; not independent human approval</li>
 </ul>
 </details><!-- omm:end id=runtime-flow --><h3 id="이벤트와-결과가-전달되는-경로">이벤트와 결과가 전달되는 경로</h3>
 <!-- omm:begin id=runtime-diagram --><pre><code class="language-mermaid">graph TB
@@ -657,12 +657,12 @@
 <tr>
 <td>원고 <code>module-roles</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>c5e9a7fc</code> · Codex source comparison; not independent human approval</td>
+<td>검토 2026-10-10 @ <code>fed3bab1</code> · Codex documentation/source review; not independent human approval</td>
 </tr>
 <tr>
 <td>원고 <code>runtime-flow</code></td>
 <td>최신</td>
-<td>검토 2026-10-10 @ <code>9a6220c4</code> · Codex source comparison; not independent human approval</td>
+<td>검토 2026-10-10 @ <code>fed3bab1</code> · Codex documentation/source review; not independent human approval</td>
 </tr>
 <tr>
 <td>원고 <code>constraints</code></td>
