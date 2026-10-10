@@ -97,14 +97,15 @@ stateDiagram-v2
 저장소 오류는 `MediaLibrary`의 생성·쓰기·공개 단계와 미완성 항목 정리를 검사합니다. 실제 기기 공간을 채우는 시험은 하지 않았습니다. 결정론적 오류 주입과 Galaxy S25+의 실제 조작 결과는 [실패·정지 경합 검증 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-failures-20261006.md)에 구분해 적었습니다.
 
 
-### 사진 두 장은 어떻게 연결하나요?
+<a id="사진-두-장은-어떻게-연결하나요"></a>
+### JPEG는 누가 만드나요?
 
 <figure class="doc-visual">
 <div class="doc-pair-grid">
-<div><strong>Camera2 · 같은 촬영</strong><p>촬영 요청 하나 → YUV + JPEG</p><p>두 이미지의 센서 시각이 같습니다.</p></div>
-<div><strong>CameraX · 가까운 시각</strong><p>JPEG 촬영 + 계속 받는 YUV</p><p>JPEG와 시각이 가장 가까운 YUV를 고릅니다.</p></div>
+<div><strong>JPEG 해상도 선택</strong><p>카메라 → JPEG → 저장</p><p>카메라가 생성한 JPEG를 받습니다.</p></div>
+<div><strong>YUV 선택</strong><p>카메라 → YUV → 앱 변환 → JPEG</p><p>현재 YUV 크기로 사진을 만듭니다.</p></div>
 </div>
-<figcaption>CameraX의 두 이미지를 같은 프레임으로 단정하지 마세요. 시각 차이는 <code>yuvOffsetNs</code>에 기록합니다.</figcaption>
+<figcaption>두 엔진 모두 출처 하나를 선택합니다. YUV와 카메라 JPEG를 짝지어 두 장 저장하지 않습니다. RAW는 별도 선택이고 PIP는 보이는 구도를 합성합니다.</figcaption>
 </figure>
 
 ### 녹화 중 사진의 알려진 제약
@@ -158,7 +159,7 @@ classDiagram
 | 인터페이스 | 담당하는 동작 | 구현 |
 | --- | --- | --- |
 | `CameraEngine` | 카메라 열기(`start`), 촬영(`capture`), 줌(`setZoom`), 닫기(`close(done)`) | 두 엔진 |
-| `MediaCapture` | 선택한 사진 출력 저장(`capturePhoto`, 기본은 YUV·JPEG 쌍), 녹화 시작·정지, 녹화 중 사진(`snapshot`, `captureSnapshot`), 촬영이나 녹화가 진행 중인지(`mediaBusy`) | 두 엔진. 벤치마크용 Camera2Engine은 사진 쌍을 만들지 않고 녹화 요청을 거절합니다 |
+| `MediaCapture` | 선택한 JPEG 출처·RAW 저장(`capturePhoto`), 녹화 시작·정지, 녹화 중 사진(`snapshot`, `captureSnapshot`), 촬영·녹화 진행 상태(`mediaBusy`) | 두 엔진. 벤치마크용 Camera2Engine은 이 사진 저장과 Live 녹화를 제공하지 않습니다 |
 | `LiveTuning` | EV, AE·AF 잠금, 플래시와 수동 촬영(`setControls`) | 기본 제어는 두 엔진, 수동 노출·초점·WB는 Camera2 |
 | `TouchMetering` | 짧게 터치한 지점의 초점, 길게 누른 지점의 노출(`meterAt`) | 두 엔진 |
 
@@ -179,7 +180,7 @@ Photo·Video·Multi · P·Multi · V 사이에서 모드를 바꾸면 기존 세
 
 Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 `StartCardPresenter`가 Camera2로 전환한다고 알립니다. Live와 다른 스트림 크기 및 저장 방식은 [Camera2 엔진](#camera2-엔진)에서 설명합니다.
 
-CLI의 `preview`·`capture`·`record.start`는 `LiveController`를 통해 Camera2 또는 CameraX를 엽니다. 기본 엔진은 Camera2이며 `--engine CameraX`로 바꿉니다. 크기 옵션을 생략하면 기본 사진 쌍 구성을 유지하고, 명시한 옵션은 지원 검사 후 적용합니다. 이전 UI 설정은 이어받지 않습니다. `streams`는 화면 없이 지원 크기와 녹화 후보를 조회합니다. 인자와 예제는 [CLI](cli.md)에 있습니다.
+CLI의 `preview`·`capture`·`record.start`는 `LiveController`를 통해 Camera2 또는 CameraX를 엽니다. 기본 엔진은 Camera2이며 `--engine CameraX`로 바꿉니다. 크기 옵션을 생략하면 기본 스트림을 사용하고 카메라 JPEG를 저장합니다. 명시한 옵션은 지원 검사 후 적용하며 이전 UI 설정은 이어받지 않습니다. `streams`는 화면 없이 지원 크기와 녹화 후보를 조회합니다. 인자와 예제는 [CLI](cli.md)에 있습니다.
 
 ### 두 엔진이 함께 남기는 기록
 
@@ -193,7 +194,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 | `live_streams_requested` | Camera2 Live의 출력·FPS·녹화 설정과 요청한 `stabilization` 모드 |
 | `ae_relock_wait`, `ae_relock`, `ae_relocked` | AE 잠금을 켠 채 세션을 새로 만들었을 때 잠금을 풀고 기다린 시점, 다시 잠근 이유(수렴 또는 2초 timeout), 잠금 전후의 노출 시간·ISO와 EV 차이 |
 | `touch_meter`, `touch_meter_result` | 터치 종류(AF·AE), 정규화 좌표, 결과(FOCUSED·FAILED·METERED) |
-| `media_saved`, `video_saved` | 저장한 사진 쌍의 센서 시각과 URI, 저장한 동영상의 URI |
+| `media_saved`, `video_saved` | 저장한 사진의 센서 시각·파일 URI와 동영상 URI |
 
 `request_observed`의 `afRegions`·`aeRegions`와 `capture_result`의 `afRegions`·`aeRegions`를 비교하면, 요청한 영역과 HAL이 적용한 영역을 대조할 수 있습니다.
 
@@ -214,7 +215,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `c5e9a7fc` · Codex source comparison; not independent human approval
+- 검토 2026-10-10 @ `fed3bab1` · Codex documentation/source review; not independent human approval
 
 </details>
 
@@ -299,8 +300,8 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 | 스트림 | Live에서 고르는 크기 | 용도 |
 | --- | --- | --- |
 | 프리뷰 | 1280×720 이하에서 가장 큰 크기 | TextureView 표시 |
-| YUV (`analysis_acquire_latest`) | 640×480 이하에서 가장 큰 크기 | 프레임 도착 기록, 사진 쌍의 YUV |
-| JPEG (`still`) | 1920×1080 이하에서 가장 큰 크기 | 사진 쌍의 JPEG, 벤치마크 still |
+| YUV (`analysis_acquire_latest`) | 640×480 이하에서 가장 큰 크기 | 프레임 도착 기록, 앱 변환을 선택한 사진 입력 |
+| JPEG (`still`) | 1920×1080 이하에서 가장 큰 크기 | 카메라 JPEG 사진, 벤치마크 still |
 
 벤치마크 세션은 profile의 `StreamSpec` 크기를 그대로 사용합니다. 지원하지 않는 크기이면 작은 크기로 대체하지 않고 구성 단계에서 실패합니다. 같은 profile ID로 다른 크기를 측정하면 비교가 무의미해지기 때문입니다.
 
@@ -428,7 +429,8 @@ Android 10 이상에서는 `IS_PENDING`으로 쓰는 중인 항목의 공개를 
 
 </details>
 
-#### YUV 저장 포맷
+<a id="yuv-저장-포맷"></a>
+#### JPEG 출처와 저장 파일
 
 **JPEG 목록에서 사진을 만드는 방식을 고르세요.** 첫 항목인 YUV (현재 크기)는 앱이 YUV를 JPEG로 변환합니다. 해상도를 고르면 카메라가 생성한 JPEG를 저장합니다. YUV 스트림만 켜면 분석만 수행하고 사진은 저장하지 않습니다.
 
@@ -585,7 +587,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `c5e9a7fc` · Codex source comparison; not independent human approval
+- 검토 2026-10-10 @ `fed3bab1` · Codex documentation/source review; not independent human approval
 
 </details>
 
@@ -817,8 +819,8 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
 | 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `c5e9a7fc` · Codex source comparison; not independent human approval |
-| 원고 `contract` | 최신 | 검토 2026-10-10 @ `c5e9a7fc` · Codex source comparison; not independent human approval |
-| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `c5e9a7fc` · Codex source comparison; not independent human approval |
+| 원고 `contract` | 최신 | 검토 2026-10-10 @ `fed3bab1` · Codex documentation/source review; not independent human approval |
+| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `fed3bab1` · Codex documentation/source review; not independent human approval |
 | 원고 `camerax` | 최신 | 검토 2026-10-10 @ `c5e9a7fc` · Codex source comparison; not independent human approval |
 | 원고 `comparison` | 최신 | 검토 2026-10-10 @ `c5e9a7fc` · Codex source comparison; not independent human approval |
 

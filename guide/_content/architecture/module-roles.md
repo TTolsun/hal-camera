@@ -157,7 +157,7 @@ verifications: []
 
 `BenchmarkReport`는 schema 5를 쓰고 schema 3·4·5를 읽습니다. `BenchmarkStore`는 실행 파일과 baseline 인덱스를 관리합니다. 인덱스는 측정 계약·endpoint마다 baseline 실행 목록을 저장합니다. 삭제한 실행은 목록에서 빼며, 기존 실행 JSON은 비교 상태가 바뀌어도 다시 쓰지 않습니다.
 
-`camera/MediaLibrary`는 두 엔진이 만든 사진 쌍과 동영상을 MediaStore에 저장합니다. 사진 쌍을 만드는 순서는 엔진마다 다르며 [Engine Comparison](engine.md)에 있습니다. `GalleryActivity`는 HALCamera 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다.
+`camera/MediaLibrary`는 선택한 사진 출력과 동영상을 MediaStore에 저장합니다. `MediaTransaction`이 쓰기·공개·실패 시 삭제를 공통 처리하며, `GalleryActivity`는 저장한 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다. 파일별 형식과 위치는 [저장 파일](engine.md#yuv-저장-포맷)에 있습니다.
 
 저장 포맷과 폴더는 [Engine의 저장 파일 표](engine.md#yuv-저장-포맷)를 확인하세요. `YuvPacking`이 앱 JPEG 변환용 샘플을 준비하고 `MediaLibrary`가 파일과 JSON을 저장합니다. Camera2의 RAW (DNG)는 `RawFrame`이 RAW 샘플을 복사하고 `DngOutput`이 `DngCreator`로 `_RAW.dng`를 씁니다.
 

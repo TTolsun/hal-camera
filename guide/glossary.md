@@ -32,11 +32,15 @@ Preview·YUV·JPEG·Recording 같은 출력입니다. 각 출력은 크기와 �
 
 출력 크기, 반복 횟수와 관측·촬영·녹화 조건을 묶은 설정입니다. Live의 스트림 설정과 별개입니다. 서로 다른 profile의 결과를 같은 조건의 측정으로 비교하지 마세요. [비교 조건](benchmark.md#비교-기준을-고르세요)
 
+<h3 id="pip-multi">PIP / Multi · 합성 화면과 여러 장치</h3>
+
+PIP는 메인 화면에 보조 영상을 넣어 보이는 구도를 저장합니다. Multi는 둘 이상의 카메라 장치를 열고 장치별 파일로 저장합니다. Multi의 각 화면 안에서도 PIP를 사용할 수 있습니다. [촬영 방법](live.md#pip로-보이는-구도를-저장하세요)
+
 <h2 id="capture-exposure" >사진과 노출</h2>
 
 <h3 id="yuv">YUV · 밝기와 색 정보로 구성한 이미지</h3>
 
-HALCamera는 YUV 이미지를 JPEG로 변환해 저장할 수 있습니다. Camera2는 NV21 형식 저장도 지원합니다. 따라서 파일 이름에 YUV가 있어도 JPEG 파일일 수 있습니다. [저장 포맷](engine.md#yuv-저장-포맷)
+JPEG 목록에서 YUV를 선택하면 앱이 YUV 이미지를 JPEG로 변환해 저장합니다. YUV 스트림만 켠 상태는 분석용이며 사진 저장을 뜻하지 않습니다. `_YUV.jpg`도 JPEG 파일입니다. [JPEG 출처 선택](live.md#live-스트림을-설정하세요)
 
 <h3 id="raw">RAW / DNG · 센서 원본 계열 출력과 저장 형식</h3>
 
@@ -88,7 +92,7 @@ p50은 중앙값이며, p95는 큰 값 쪽의 95백분위수입니다. 평균과
 
 <h3 id="timestamp">Timestamp · 어떤 시계로 기록한 시각</h3>
 
-앱 시각과 센서 시각을 구분해야 합니다. 센서의 timestamp source가 REALTIME일 때만 앱의 `elapsedRealtimeNanos` 시각과 직접 비교합니다. Callback 그래프의 0 ms는 이전 Shutter 콜백 수신 시각입니다. [그래프 시간 기준](callback.md#시간-기준을-확인하세요)
+앱 시각과 센서 시각을 구분해야 합니다. 센서의 timestamp source가 REALTIME일 때만 앱의 `elapsedRealtimeNanos` 시각과 직접 비교합니다. Callback은 앱 수신 시각을 사용합니다. [0ms의 기준과 계산 예시](callback.md#시간-기준을-확인하세요)를 확인하세요.
 
 <h3 id="metadata">Metadata · 이미지와 함께 기록되는 정보</h3>
 

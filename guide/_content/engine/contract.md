@@ -41,7 +41,7 @@ classDiagram
 | 인터페이스 | 담당하는 동작 | 구현 |
 | --- | --- | --- |
 | `CameraEngine` | 카메라 열기(`start`), 촬영(`capture`), 줌(`setZoom`), 닫기(`close(done)`) | 두 엔진 |
-| `MediaCapture` | 선택한 사진 출력 저장(`capturePhoto`, 기본은 YUV·JPEG 쌍), 녹화 시작·정지, 녹화 중 사진(`snapshot`, `captureSnapshot`), 촬영이나 녹화가 진행 중인지(`mediaBusy`) | 두 엔진. 벤치마크용 Camera2Engine은 사진 쌍을 만들지 않고 녹화 요청을 거절합니다 |
+| `MediaCapture` | 선택한 JPEG 출처·RAW 저장(`capturePhoto`), 녹화 시작·정지, 녹화 중 사진(`snapshot`, `captureSnapshot`), 촬영·녹화 진행 상태(`mediaBusy`) | 두 엔진. 벤치마크용 Camera2Engine은 이 사진 저장과 Live 녹화를 제공하지 않습니다 |
 | `LiveTuning` | EV, AE·AF 잠금, 플래시와 수동 촬영(`setControls`) | 기본 제어는 두 엔진, 수동 노출·초점·WB는 Camera2 |
 | `TouchMetering` | 짧게 터치한 지점의 초점, 길게 누른 지점의 노출(`meterAt`) | 두 엔진 |
 
@@ -62,7 +62,7 @@ Photo·Video·Multi · P·Multi · V 사이에서 모드를 바꾸면 기존 세
 
 Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 `StartCardPresenter`가 Camera2로 전환한다고 알립니다. Live와 다른 스트림 크기 및 저장 방식은 [Camera2 엔진](#camera2-엔진)에서 설명합니다.
 
-CLI의 `preview`·`capture`·`record.start`는 `LiveController`를 통해 Camera2 또는 CameraX를 엽니다. 기본 엔진은 Camera2이며 `--engine CameraX`로 바꿉니다. 크기 옵션을 생략하면 기본 사진 쌍 구성을 유지하고, 명시한 옵션은 지원 검사 후 적용합니다. 이전 UI 설정은 이어받지 않습니다. `streams`는 화면 없이 지원 크기와 녹화 후보를 조회합니다. 인자와 예제는 [CLI](cli.md)에 있습니다.
+CLI의 `preview`·`capture`·`record.start`는 `LiveController`를 통해 Camera2 또는 CameraX를 엽니다. 기본 엔진은 Camera2이며 `--engine CameraX`로 바꿉니다. 크기 옵션을 생략하면 기본 스트림을 사용하고 카메라 JPEG를 저장합니다. 명시한 옵션은 지원 검사 후 적용하며 이전 UI 설정은 이어받지 않습니다. `streams`는 화면 없이 지원 크기와 녹화 후보를 조회합니다. 인자와 예제는 [CLI](cli.md)에 있습니다.
 
 ### 두 엔진이 함께 남기는 기록
 
@@ -76,7 +76,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 | `live_streams_requested` | Camera2 Live의 출력·FPS·녹화 설정과 요청한 `stabilization` 모드 |
 | `ae_relock_wait`, `ae_relock`, `ae_relocked` | AE 잠금을 켠 채 세션을 새로 만들었을 때 잠금을 풀고 기다린 시점, 다시 잠근 이유(수렴 또는 2초 timeout), 잠금 전후의 노출 시간·ISO와 EV 차이 |
 | `touch_meter`, `touch_meter_result` | 터치 종류(AF·AE), 정규화 좌표, 결과(FOCUSED·FAILED·METERED) |
-| `media_saved`, `video_saved` | 저장한 사진 쌍의 센서 시각과 URI, 저장한 동영상의 URI |
+| `media_saved`, `video_saved` | 저장한 사진의 센서 시각·파일 URI와 동영상 URI |
 
 `request_observed`의 `afRegions`·`aeRegions`와 `capture_result`의 `afRegions`·`aeRegions`를 비교하면, 요청한 영역과 HAL이 적용한 영역을 대조할 수 있습니다.
 

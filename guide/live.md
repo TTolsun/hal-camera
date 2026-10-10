@@ -10,10 +10,10 @@ title: Live
 | 사진·연사·AEB·동영상을 촬영합니다. | [촬영](#live에서-촬영하세요) |
 | ISO·노출 시간·초점을 고정합니다. | [수동 설정](#수동-촬영-조건을-고정하세요) |
 | 출력 크기·FPS·포맷을 바꿉니다. | [스트림 설정](#live-스트림을-설정하세요) |
-| 여러 카메라를 함께 촬영합니다. | [Multi](#여러-카메라를-함께-촬영하세요) |
+| 보조 화면을 합성하거나 여러 카메라로 촬영합니다. | [PIP](#pip로-보이는-구도를-저장하세요) · [Multi](#여러-카메라를-함께-촬영하세요) |
 | 보정·AF·AE를 조절합니다. | [손떨림 보정](#손떨림-보정을-선택하세요) · [초점과 노출](#초점과-노출을-조절하세요) |
 
-<p class="doc-evidence">화면 예시는 0.16.0 개발 빌드의 촬영본으로, 현재 앱과 버튼·기능이 다를 수 있습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건</a>을 확인하세요.</p>
+<p class="doc-evidence">첫 화면은 2026-10-11의 Live 정보 정렬 검증본입니다. 아래 수동 제어 화면은 이전 빌드이므로 현재 버튼과 다를 수 있습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건</a>을 확인하세요.</p>
 
 ## Live에서 촬영하세요
 
@@ -21,9 +21,17 @@ title: Live
 2. 사진 모드에서 셔터를 누릅니다.
 3. 저장 완료 안내가 나오면 셔터 왼쪽 갤러리 썸네일을 눌러 결과를 확인합니다.
 
-**기본 설정에서는 사진 두 장이 저장됩니다.** YUV를 변환한 JPEG와 카메라가 만든 JPEG이며, `DCIM/HALCamera`에 있습니다. Camera2에서 출력을 하나만 켜면 해당 사진만 저장합니다. 두 엔진이 사진을 연결하는 차이는 [Engine Comparison](engine.md#사진-두-장은-어떻게-연결하나요)에 있습니다.
+**기본 사진은 카메라가 만든 JPEG 한 장입니다.** `DCIM/HALCamera`에 저장하며, 촬영 메타데이터 JSON도 남깁니다. [JPEG 목록](#live-스트림을-설정하세요)에서 YUV를 고르면 앱이 변환한 JPEG를 저장합니다. Camera2에서 RAW를 켜면 DNG도 저장합니다.
 
-동영상을 찍으려면 동영상 모드로 바꿉니다. Photo·Video 또는 Camera2·CameraX를 바꾸면 PIP를 끄고 스트림·줌·촬영 제어를 기본값으로 초기화한 뒤 전체 스트림을 다시 구성합니다. 셔터를 한 번 눌러 시작하고 다시 눌러 끝냅니다. 종료 처리 중에는 셔터를 사용할 수 없습니다. 일반 사진·PIP 사진·동영상의 저장 완료 안내는 3초 뒤 사라집니다. 저장 실패 안내는 유지합니다. Camera2와 CameraX 모두 선택한 엔진에서 촬영합니다.
+동영상은 `Video`에서 셔터로 시작하고 같은 버튼으로 끝냅니다. 종료 처리 중에는 셔터를 사용할 수 없습니다. 일반 사진·PIP 사진·동영상의 저장 완료 안내는 3초 뒤 사라지며, 실패 안내는 유지합니다.
+
+**모드나 엔진을 바꾸면 새 촬영으로 시작합니다.** PIP·스트림·줌·촬영 제어는 초기화됩니다. Callback의 고정 시간은 사용자 설정으로 유지합니다.
+
+### 화면에서 바로 읽는 정보
+
+`FPS · EXP · AE · AF`는 현재 프레임 속도, 노출 시간, 자동 노출·초점 상태입니다. 중앙의 고정된 자리에 표시하므로 상태가 바뀌어도 가로 위치가 움직이지 않습니다. `EXP 10.00ms`는 노출 시간이 10ms라는 뜻입니다.
+
+상단 화살표를 펼치면 Live·스트림 크기 대신 제어 버튼이 나옵니다. `M`·`EV`·`Flash`는 누른 버튼 아래로 열리며, 같은 버튼이나 화살표로 닫습니다. 활성 설정은 실시간 정보 아래에서 확인합니다. Callback 그래프를 켜면 정보 줄은 잠시 숨깁니다.
 
 <figure class="app-screenshot" id="screen-live">
 <a href="assets/screenshots/live.png" aria-label="Camera2 Live 사진 모드와 실시간 정보 원본 보기"><img src="assets/screenshots/live.png" alt="Camera2 Live 사진 모드와 실시간 정보" width="1440" height="3120" loading="lazy" decoding="async"></a>
@@ -61,7 +69,7 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 
 촬영 중에는 EV·수동 제어·줌·터치 측광을 잠급니다. 합성 중에는 `HDR…`를 표시하며, 다음 AEB는 합성이 끝난 뒤 시작합니다.
 
-합성은 원본 3장이 모두 저장되고 각 장에 사용할 JPEG 파일이 있을 때 진행합니다. 카메라 JPEG를 먼저 사용하고, 없으면 YUV에서 변환한 JPEG를 사용합니다. NV21이나 RAW만 저장했다면 합성할 JPEG가 없습니다.
+합성에는 원본 3장의 JPEG가 필요합니다. JPEG 출처는 카메라 또는 YUV 앱 변환 중 어느 쪽이든 사용할 수 있습니다. RAW만 저장했다면 합성할 JPEG가 없습니다.
 
 | 결과 안내 | 의미 |
 | --- | --- |
@@ -96,9 +104,9 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 2. 큰 셔터 **오른쪽의 사진 버튼**을 누릅니다. 큰 셔터는 녹화를 끝내는 버튼입니다.
 3. 저장 완료를 기다립니다. 저장하는 동안에는 다음 사진을 찍을 수 없습니다.
 
-**저장 결과:** JPEG 사진 한 장을 저장합니다. 일반 사진 모드의 YUV·JPEG 두 장 저장과 다릅니다. 사진 촬영이 실패해도 녹화는 계속됩니다.
+**저장 결과:** 카메라 JPEG 한 장을 저장합니다. 사진 촬영이 실패해도 녹화는 계속됩니다.
 
-사진 버튼이 흐리면 미지원 상태인지 눌러 안내를 확인하세요. JPEG 출력을 껐거나 기기가 녹화와 JPEG 조합을 지원하지 않으면 사용할 수 없습니다. PIP 녹화 중 사진은 지원하지 않습니다. 사진 저장 중에도 버튼이 흐려집니다.
+사진 버튼이 흐리면 눌러 이유를 확인하세요. JPEG를 Off 또는 YUV로 설정했거나 기기가 녹화와 JPEG 조합을 지원하지 않으면 사용할 수 없습니다. PIP 녹화 중 사진도 지원하지 않습니다. 사진 저장 중에는 다음 사진을 기다려야 합니다.
 
 CameraX에서는 사진 촬영 때 영상의 프레임 간격이 늘어날 수 있습니다. 녹화 연속성이 중요하면 [엔진별 제약과 검증 조건](engine.md#녹화-중-사진의-알려진-제약)을 먼저 확인하세요.
 
@@ -112,8 +120,6 @@ CameraX에서는 사진 촬영 때 영상의 프레임 간격이 늘어날 수 �
 <summary>수동 촬영 설정</summary>
 
 **Camera2에서만 사용할 수 있습니다.** 상단 화살표를 펼치고 `M`을 눌러 Manual 패널을 여세요. 닫은 뒤에도 설정은 실시간 정보에 표시됩니다. 별도 요약 패널은 남기지 않습니다.
-
-M·EV·Flash는 도구 행을 유지한 채 선택한 버튼 아래로 펼쳐집니다. 버튼의 선택 상태와 연결 표시로 열린 패널을 구분합니다. 같은 버튼을 다시 누르거나 상단 화살표를 접으면 닫힙니다.
 
 #### ISO와 노출 시간을 고정하세요
 
@@ -159,12 +165,15 @@ M·EV·Flash는 도구 행을 유지한 채 선택한 버튼 아래로 펼쳐집
 | 바꿀 대상 | 설정 |
 | --- | --- |
 | 프리뷰 | Preview 크기와 프리뷰 FPS를 선택합니다. |
-| 사진 | Camera2는 YUV·JPEG·RAW, CameraX는 YUV·JPEG의 크기 또는 `Off`를 선택합니다. 일반 사진은 모든 출력을 끄면 셔터가 비활성화됩니다. PIP의 합성 JPEG 셔터는 유지합니다. |
+| JPEG 출처 | JPEG 목록의 `YUV (현재 크기)`는 앱에서 변환하고, 해상도 선택은 카메라 JPEG를 저장합니다. `Off`는 JPEG 저장을 끕니다. |
+| YUV·RAW | YUV는 분석 스트림 크기입니다. YUV만 켜면 사진을 저장하지 않습니다. RAW는 지원되는 Camera2에서 DNG로 저장합니다. |
 | 녹화 | Format → Resolution → Frame Rate 순서로 선택합니다. CameraX의 포맷은 Auto이며 코덱은 라이브러리가 정합니다. 고속 세션은 제공하지 않습니다. |
 
 **적용에 실패하면** 설정 화면의 이유를 확인하고 `이전 설정으로 복원`을 누르세요. 이 버튼은 실패했을 때만 나타납니다. 개별 크기를 지원해도 여러 출력의 조합은 거부될 수 있습니다.
 
-설정은 카메라·엔진마다 저장하며 Benchmark의 profile은 바꾸지 않습니다. 적용 후에는 설정을 연 화면으로 돌아갑니다.
+**같은 장면으로 비교해 보세요.** JPEG에서 해상도를 골라 한 장, `YUV (현재 크기)`를 골라 한 장을 찍으면 카메라 JPEG와 앱 변환 결과를 비교할 수 있습니다. 두 촬영은 서로 다른 시점이며, 해상도도 같다고 보장하지 않습니다.
+
+일반 사진에서 JPEG와 RAW를 모두 끄면 셔터가 비활성화됩니다. PIP 합성 JPEG는 별도입니다. 설정은 현재 카메라·엔진에 적용되며 모드·엔진 전환 때 초기화됩니다. Benchmark의 profile은 바꾸지 않습니다.
 
 <details markdown="1" id="stream-readout" data-search-section>
 <summary>P·Y·J·RAW·R 표시 읽기</summary>
@@ -176,34 +185,64 @@ P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니�
 
 </details>
 
+### PIP로 보이는 구도를 저장하세요
+
+**PIP는 한 화면으로 합성하고, Multi는 장치별로 저장합니다.** 예를 들어 후면 장면에 전면 영상을 작게 넣어 한 장으로 남기려면 PIP를 사용합니다.
+
+1. API 버튼 옆의 `PIP`를 누릅니다.
+2. 보조 카메라 하나를 고릅니다. 선택창이 닫히고 현재 Live 안에 보조 영상이 나타납니다.
+3. 보조 영상을 원하는 자리로 드래그한 뒤 기존 셔터로 촬영합니다.
+
+**확인할 결과:** 보조 영상이 포함된 합성 JPEG 또는 동영상이 저장됩니다. 조작 버튼과 라벨은 파일에 들어가지 않습니다. 끄려면 `PIP → Turn off PIP`를 선택합니다.
+
+| 선택할 때 알아둘 점 | 동작 |
+| --- | --- |
+| 후보 | Camera2는 Physical 또는 다른 Service ID, CameraX는 지원되는 동시 조합의 Service ID를 제공합니다. 후보가 없으면 버튼이 비활성화됩니다. |
+| 위치 | 같은 모드에서는 PIP 카메라 변경·Off/On 뒤에도 위치를 기억합니다. 모드·엔진을 바꾸면 초기화됩니다. |
+| 목록 | 위에는 종류·ID, 아래에는 방향·렌즈를 표시합니다. Service ID는 숫자순이며 다시 열면 이전 스크롤 위치로 돌아갑니다. |
+| DNG | Camera2에서 RAW가 켜져 있으면 메인 원본 DNG와 JSON도 저장합니다. DNG에는 보조 영상을 합성하지 않습니다. |
+
+PIP와 Multi는 Android 11 이상에서 제공하며 실제 지원 조합은 기기마다 다릅니다. Single PIP의 플래시는 Off·Torch만 제공하고 AEB·녹화 중 사진은 지원하지 않습니다.
+
+<details markdown="1" id="pip-session-details" data-search-section>
+<summary>엔진별 재구성과 저장 해상도</summary>
+
+Camera2 Single은 현재 Live CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열고 Physical ID는 현재 장치의 출력을 추가합니다. CameraX는 메인 ID를 유지하면서 단일·동시 use case를 다시 bind합니다. 두 엔진의 후보 목록은 같지 않을 수 있습니다.
+
+합성 사진은 화면용 해상도이며 일반 JPEG 크기 선택과 별개입니다. CameraX PIP의 각 프리뷰 입력은 720p 이하에서 협상하고, 합성 JPEG와 H.264/AAC MP4를 저장합니다. PIP를 끄면 일반 스트림 설정으로 복귀합니다. 원본 DNG와 합성 JPEG의 촬영 시각은 같다고 보장하지 않습니다.
+
+</details>
+
 <a id="두-물리-카메라를-함께-확인하세요"></a>
 <a id="detail-e8f4afe277"></a>
 <a id="전면과-후면을-함께-촬영하세요"></a>
 ### 여러 카메라를 함께 촬영하세요
 
-`Live Streams → Multi → Maximum camera devices`에서 최대 동시 장치 수를 설정하고 `Apply`를 누릅니다. 기본값은 `All available`입니다. Multi 화면의 `Streams`에서도 같은 설정을 엽니다.
+**후면과 전면을 각각 파일로 남기려면 `Multi · P` 또는 `Multi · V`를 여세요.** 독립 장치의 동시 실행을 지원해야 하며 CameraX에서 진입하면 Camera2 경로를 사용합니다.
 
-Live의 `Multi · P`(사진) 또는 `Multi · V`(영상)에서 카메라 조합을 선택합니다. Android 11 이상이며 기기가 독립 장치의 동시 실행을 지원해야 합니다. CameraX에서는 Camera2로 진입합니다.
+1. `Live Streams → Multi → Maximum camera devices`에서 장치 수 상한을 정합니다. 기본값은 `All available`입니다.
+2. Live의 `Multi · P`(사진) 또는 `Multi · V`(영상)를 엽니다.
+3. 상단에서 Service ID 조합을 선택합니다. 장치별 프리뷰가 분할됩니다.
+4. `Photo`로 촬영하거나 `Record → Stop`으로 녹화합니다.
+5. `Live` 또는 뒤로 가기로 돌아갑니다.
 
-1. 상단에서 공개 Service Camera ID 조합을 선택합니다. Logical capability가 없는 카메라도 조합에 포함될 수 있습니다. 장치별로 분할된 프리뷰가 열리며, 조합 선택창의 `Streams`에서 현재 구성 상태를 확인합니다.
-2. 각 화면의 `PIP`에서 Physical 또는 다른 Service 카메라 하나를 선택합니다. 목록은 위쪽에 종류·ID, 아래쪽에 방향·렌즈 정보를 표시하며 다시 열면 이전 스크롤 위치로 돌아갑니다. 전면 카메라도 선택할 수 있습니다. `Turn off PIP`로 합성을 끕니다.
-3. 보조 영상을 드래그하거나 해당 화면의 `Move`로 위치를 바꿉니다. 보조 영상은 해당 장치의 화면 안에서만 이동합니다. 같은 모드에서는 메인 카메라별 위치를 기억하여 PIP 카메라 변경이나 PIP Off·On 후에도 유지합니다. Photo·Video·Camera2·CameraX를 바꾸거나 Multi에 새로 진입하면 위치도 기본값으로 돌아갑니다.
-4. `Multi · P`에서는 `Photo`로 촬영합니다. `Multi · V`에서는 `Record`로 녹화를 시작하고 `Stop`으로 저장합니다. Multi의 결과는 장치별 파일이며 PIP를 켠 장치에는 그 화면의 합성 구도가 저장됩니다. 조작 버튼과 카메라 라벨은 저장하지 않습니다.
-5. `Live` 또는 뒤로 가기로 돌아갑니다. 모든 장치와 합성 출력의 종료를 확인한 뒤 기존 Live 프리뷰를 복구합니다.
+각 분할 화면에서도 PIP를 켤 수 있습니다. 보조 영상은 해당 장치 화면 안에서만 이동하며 드래그 또는 `Move`로 옮깁니다. 이때 해당 장치의 파일에는 합성 구도가 저장됩니다.
 
-Single에서는 API 선택 옆의 `PIP`에서 보조 카메라 하나를 선택합니다. Android 11 이상에서 선택 후보가 있으면 사용할 수 있으며, Logical capability는 Physical 후보에만 필요합니다. 목록에 있는 Service 카메라도 실제 동시 출력 구성이 지원되어야 열 수 있습니다.
+| 저장물 | 위치·특징 |
+| --- | --- |
+| JPEG·MP4 | `DCIM/HALCamera`에 저장합니다. Multi는 장치별 파일이며 센서 동기 촬영은 보장하지 않습니다. |
+| Multi 사진 묶음 JSON | `Download/HALCamera`에 저장합니다. 결과 안내의 `Details`에서 카메라별 성공·실패를 확인합니다. |
+| 오디오 | Single PIP 영상은 마이크 권한을 받아 녹음합니다. Multi 영상은 무음입니다. |
 
-Camera2 Single에서는 현재 Live 화면과 CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열며, Physical ID는 현재 장치에 출력을 추가합니다. 기존 셔터와 Photo·Video 모드로 합성 사진·영상을 저장하고, 보조 화면을 드래그할 수 있습니다.
+<details markdown="1" id="multi-session-details" data-search-section>
+<summary>장치 수·재구성·위치 초기화</summary>
 
-화살표로 제어 기능을 펼치면 Live·스트림 크기 표시가 사라지고 같은 자리에 제어 버튼이 나타납니다. 접으면 원래 표시로 돌아옵니다. 실시간 FPS·ISO·노출·AE·AF는 작은 글씨 한 줄로 표시하며 Phys는 표시하지 않습니다.
+추가 Service PIP도 최대 장치 수에 포함합니다. 이미 연 Service ID를 중복해서 열지는 않습니다. 조합 선택창의 `Streams`에서 현재 구성을 확인할 수 있습니다.
 
-PIP 버튼은 합성이 켜져 있으면 노란색 계열 글자색으로 강조되며, 다시 누르면 선택창을 엽니다. `Turn off PIP`로 끄면 강조도 해제됩니다. Callback 버튼은 표시 여부에 따라 강조됩니다. 오른쪽 아래 Camera 목록도 PIP처럼 첫 줄에 `Service · ID`, 다음 줄에 방향·렌즈 정보를 표시합니다. Camera와 PIP 목록의 Service ID는 숫자 오름차순으로 정렬합니다.
+Multi에서 PIP를 바꾸면 전체 세션을 닫고 다시 구성합니다. 보조 영상은 같은 모드 안에서 위치를 기억하지만, Multi에 새로 진입하면 초기화됩니다. Live로 돌아갈 때에는 모든 장치와 합성 출력의 종료를 기다립니다.
 
-CameraX에서도 같은 PIP 버튼·셔터·드래그를 사용합니다. CameraX가 광고한 동시 조합의 Service ID만 표시하며 Physical ID는 제공하지 않습니다. Camera2와 후보 목록이 다를 수 있고, 후보가 없으면 PIP 버튼이 비활성화됩니다. 메인 ID는 유지하되 PIP를 켜고 끌 때 단일·동시 세션을 다시 bind합니다. 프리뷰 입력은 각각 720p 이하에서 협상하고, 일반 사진·녹화의 출력 설정 대신 화면용 합성 JPEG·H.264/AAC MP4를 저장합니다. PIP를 끄면 일반 스트림 설정으로 복귀합니다. 목록 스크롤은 엔진·메인 ID별로, 프리뷰 위치는 메인 ID별로 기억합니다.
+</details>
 
-Multi에서 PIP를 바꾸면 전체 Multi 세션을 닫고 다시 구성합니다. 이미 연 Service ID는 중복해서 열지 않으며, 추가 Service 장치도 최대 장치 수에 포함합니다.
-
-JPEG와 MP4는 `DCIM/HALCamera`, Multi 사진 묶음 JSON은 `Download/HALCamera`에 저장합니다. Single PIP 사진은 합성 JPEG 한 장이며 일반 사진의 YUV·JPEG 쌍이나 RAW·메타데이터 JSON을 저장하지 않습니다. Single PIP 영상은 녹음 권한으로 오디오를 포함하며, Multi 영상은 무음입니다. PIP 사진은 화면용 합성 해상도입니다. Single PIP의 플래시는 Off·Torch만 제공하며 AEB는 사용할 수 없습니다. Multi 사진 결과 안내의 `Details`에서 카메라별 저장 결과를 확인할 수 있습니다. 센서 동기 촬영은 보장하지 않습니다.
 ### 손떨림 보정을 선택하세요
 
 <details markdown="1" id="detail-aa6a89b2d7" data-search-section>
@@ -244,11 +283,9 @@ JPEG와 MP4는 `DCIM/HALCamera`, Multi 사진 묶음 JSON은 `Download/HALCamera
 <figcaption>상단 화살표로 제어 줄을 펼쳤습니다. Flash·AF·AE·EV를 조작할 수 있습니다. <a href="assets/screenshots/live-controls.png">원본 보기</a></figcaption>
 </figure>
 
-프리뷰 정보의 `AE Locked`는 노출 잠금, `AF No focus`는 AF 잠금 상태에서 초점을 맞추지 못했음을 뜻합니다. [Callback](callback.md) 그래프를 켜면 이 정보 줄을 숨기고 프레임별 콜백을 표시합니다. 촬영 지연이나 노출 변화가 예상과 다르면 [Troubleshooting](troubleshooting.md#앱과-프레임워크hal을-구분하세요)을 확인하세요.
+`AE Locked`는 노출 잠금, `AF No focus`는 초점이 맞지 않은 상태입니다. AF 잠금 여부는 별도의 `AF Lock` 표시로 확인하세요. 촬영 지연이나 노출 변화가 예상과 다르면 [Troubleshooting](troubleshooting.md#앱과-프레임워크hal을-구분하세요)을 확인하세요.
 
 </details>
 
 
 **다음 단계:** [Callback](callback.md)에서 촬영 프레임의 콜백과 시각을 확인하세요.
-
-Callback의 `Hold` 시간은 `0s → 1s → 3s → 5s → 10s`로 바뀝니다. 기본 0초는 실시간 갱신이고, 나머지는 촬영한 프레임의 결과를 해당 시간 동안 유지합니다. 모드와 엔진을 바꿔도 이 시간은 유지합니다. Logical 카메라의 PIP에서는 메인 Service ID에 포함된 Physical 결과와 각 프리뷰 입력을 함께 표시합니다.

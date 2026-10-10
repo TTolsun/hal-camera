@@ -21,6 +21,8 @@ title: Validation
 
 ### 앱 화면 촬영
 
+2026-10-11에 Live 첫 화면을 [저장·실시간 정보 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/solid-live-readout.md)의 최종 촬영본으로 교체했습니다. Galaxy S25+·Android 16에서 FPS·EXP·AE·AF의 중앙 배치와 큰 글씨를 확인한 화면입니다. 나머지 사진은 아래 날짜의 기록이며 최신 사용법은 각 페이지 본문을 따릅니다.
+
 2026년 9월 27일 Galaxy S25+(SM-S936N)·Android 16(API 36)에서 배포된 0.15.0(versionCode 543)을 실행해 16개 화면을 촬영했습니다. 원본은 1440×3120 PNG이며, 각 기능의 담당 문서에 한 번씩 배치했습니다.
 
 Live·CameraX 전환·사진 자동 고정·Recording 콜백·Probe 조회·CTS 실행·Benchmark 완료와 기록 저장을 확인했습니다. CTS 원문 목록, CLI 허용 설정, ZIP 기록은 화면 조회만 확인했습니다. 자세한 절차와 한계는 [촬영 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/2026-09-27-app-screenshots.md)에 있습니다. 화면에 보이는 수치는 해당 순간의 관찰이며 기기의 대표 성능값이 아닙니다.
