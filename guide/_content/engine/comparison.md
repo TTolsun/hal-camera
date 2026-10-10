@@ -11,6 +11,7 @@ sources:
   - app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt
   - app/src/main/java/dev/halcamera/camera/CameraXControls.kt
   - app/src/main/java/dev/halcamera/MainActivity.kt
+  - app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt
 decisions: []
 verifications: []
 ---
@@ -25,7 +26,8 @@ verifications: []
 | RAW/DNG | RAW capability가 있는 카메라에서 DNG를 함께 저장합니다. | 지원하지 않으며 Camera2로 전환해야 합니다. |
 | 버퍼 도착 기록 (Android 13 이상) | 프리뷰와 녹화 버퍼의 도착 시각을 relay로 기록합니다. | 프리뷰와 녹화 버퍼는 직접 관측하지 못합니다. ImageAnalysis와 ImageCapture의 이미지 수신은 기록합니다. |
 | Benchmark | 지원합니다. | 지원하지 않으며 Camera2로 엽니다. |
-| Dual | 공통 줌, 메인 센서 제어, 한 요청의 두 센서 사진과 무음 MP4 두 개를 지원합니다. | 공통 줌과 무음 MP4 두 개를 지원합니다. 메인 개별 제어와 두 센서 사진은 지원하지 않습니다. |
+| 기존 Dual (CLI) | 공통 줌, 메인 센서 제어, 한 요청의 두 센서 사진과 무음 MP4 두 개를 지원합니다. | 공통 줌과 무음 MP4 두 개를 지원합니다. 메인 개별 제어와 두 센서 사진은 지원하지 않습니다. |
+| PIP | 지원되는 독립 장치 조합에서 동시 프리뷰와 카메라별 JPEG를 제공합니다. 센서 동기를 보장하지 않습니다. | 미지원 안내 후 Camera2 경로로 열 수 있습니다. |
 
 Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.
 

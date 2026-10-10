@@ -20,6 +20,7 @@
         <activity android:name=".benchmark.HistoryActivity" android:exported="false" android:theme="@style/LabTheme" />
         <activity android:name=".GalleryActivity" android:exported="false" />
         <activity android:name=".DualPreviewActivity" android:exported="false" android:screenOrientation="portrait" />
+        <activity android:name=".ConcurrentCameraActivity" android:exported="false" android:screenOrientation="portrait" />
         <activity android:name=".CameraProbeActivity" android:exported="false" android:theme="@style/LabTheme" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".cli.CliLaunchActivity" android:exported="true"
             android:taskAffinity=""

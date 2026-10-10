@@ -48,8 +48,8 @@
 <td><a href="#live-스트림을-설정하세요">스트림 설정</a></td>
 </tr>
 <tr>
-<td>두 물리 카메라를 함께 확인합니다.</td>
-<td><a href="#두-물리-카메라를-함께-확인하세요">Dual</a></td>
+<td>여러 카메라를 함께 촬영합니다.</td>
+<td><a href="#여러-카메라를-함께-촬영하세요">PIP</a></td>
 </tr>
 <tr>
 <td>보정·AF·AE를 조절합니다.</td>
@@ -209,17 +209,21 @@
 <p>설정은 카메라·엔진마다 저장하며 Benchmark의 profile은 바꾸지 않습니다. 적용 후에는 설정을 연 화면으로 돌아갑니다.</p>
 <details id="stream-readout" data-search-section>
 <summary>P·Y·J·RAW·R 표시 읽기</summary><p>P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니다. 녹화 중에는 P·R과 H264·HEVC·Auto를 표시하며, R은 녹화 출력입니다. 녹화 중 사진을 지원하는 구성에는 JPEG 출력도 추가됩니다. 구성 검사와 저장 방식은 <a href="engine.html#camera2-엔진">Engine Comparison</a>에서 확인하세요.</p>
-</details></details><h3 id="두-물리-카메라를-함께-확인하세요">두 물리 카메라를 함께 확인하세요</h3>
-<details id="detail-e8f4afe277" data-search-section>
-<summary>두 카메라 설정</summary><ol>
-<li>Live 상단에서 Camera2 또는 CameraX를 선택하고 하단에서 <code>Dual · P</code>를 선택합니다. Camera 1은 메인 화면, Camera 2는 작은 서브 프리뷰에 표시됩니다.</li>
-<li>카메라 선택 버튼에서 Camera 1·2의 렌즈를 고르거나 메인과 서브를 교환합니다. 하단 줌은 두 센서에 공통 적용합니다.</li>
-<li>서브 프리뷰를 드래그하여 위치를 옮깁니다. 위치는 다음 진입에서도 유지됩니다. Camera2의 상단 펼침 버튼에서는 메인 센서의 노출·초점을 조절합니다.</li>
-<li>Camera2의 <code>Dual · P</code>에서 셔터를 누르면 두 센서 사진을 함께 저장합니다. <code>Dual · V</code>에서는 녹화를 정지하면 카메라 ID가 포함된 무음 MP4 두 개를 저장합니다. CameraX는 두 센서 사진을 지원하지 않습니다.</li>
-<li>기존 위치의 크기 표시나 측정값을 눌러 physical ID, 실제 크기, 화면 FPS, 메타데이터 누락과 timestamp를 확인합니다. <code>Photo</code> 또는 <code>Video</code>를 누르면 해당 Live 모드로 돌아갑니다.</li>
+</details></details><p><a id="두-물리-카메라를-함께-확인하세요"></a>
+<a id="detail-e8f4afe277"></a>
+<a id="전면과-후면을-함께-촬영하세요"></a></p>
+<h3 id="여러-카메라를-함께-촬영하세요">여러 카메라를 함께 촬영하세요</h3>
+<p><code>Live Streams → PIP → Maximum camera devices</code>에서 최대 동시 장치 수를 설정하고 <code>Apply</code>를 누릅니다. 기본값은 <code>All available</code>입니다. PIP 화면의 <code>Streams</code>에서도 같은 설정을 엽니다.</p>
+<p>Live의 <code>PIP</code>에서 카메라 조합을 선택합니다. Android 11 이상이며 기기가 독립 장치의 동시 실행을 지원해야 합니다. CameraX에서는 Camera2로 진입합니다.</p>
+<ol>
+<li>상단에서 Logical Camera ID 조합을 선택합니다. 선택한 모든 카메라가 준비되면 촬영 버튼이 활성화됩니다. 조합 선택 창의 <code>Details</code>에서 구성 상태와 크기를 확인할 수 있습니다. 구성 거부 시 사유를 표시하며 자동으로 크기를 바꾸지 않습니다.</li>
+<li><code>Split</code> 또는 <code>PIP</code>로 상하 분할 또는 작은 보조 영상을 선택합니다. <code>Swap</code>은 주 카메라를 순환합니다. PIP에서 작은 영상은 드래그하거나 <code>Move inset</code>으로 위치를 바꾸고, <code>Inset size</code>로 크기를 조절합니다.</li>
+<li><code>Take photos</code>를 누릅니다. 카메라별 JPEG는 <code>DCIM/HALCamera</code>, 공통 촬영 ID가 포함된 JSON은 <code>Download/HALCamera</code>에 저장합니다. 결과의 <code>Details</code>를 누르면 전체 저장 결과를 확인할 수 있습니다.</li>
+<li>한쪽 촬영이 실패하면 JSON에서 카메라별 성공·실패와 사유를 확인합니다. 카메라가 끊기거나 시작에 실패하면 모든 카메라를 닫으며 <code>Retry</code>로 다시 연결할 수 있습니다.</li>
+<li><code>Live</code> 또는 뒤로 가기로 돌아갑니다. 모든 장치의 종료를 확인한 뒤 기존 Live 프리뷰를 복구합니다.</li>
 </ol>
-<p>논리 멀티 카메라와 선택한 출력 조합을 지원하는 기기에서 사용할 수 있습니다. 두 파일의 시작 시각이나 길이가 같다고 보장하지 않습니다.</p>
-</details><h3 id="손떨림-보정을-선택하세요">손떨림 보정을 선택하세요</h3>
+<p>이는 한 앱에서 카메라마다 독립 촬영 명령을 발행하는 기능이며, 센서 동기 촬영을 보장하지 않습니다. JSON은 각 카메라 ID, 파일 URI, 이미지·센서 타임스탬프와 시각 기준을 기록합니다. Android 시스템의 작은 창 모드나 합성 동영상 녹화는 제공하지 않습니다.</p>
+<h3 id="손떨림-보정을-선택하세요">손떨림 보정을 선택하세요</h3>
 <details id="detail-aa6a89b2d7" data-search-section>
 <summary>손떨림 보정 설정</summary><ol>
 <li>촬영·녹화를 끝내고 Live Streams를 엽니다.</li>

@@ -21,12 +21,14 @@ class LiveStreamsActivity : ComponentActivity() {
     private val io = Executors.newSingleThreadExecutor()
     private var draft: LiveStreamSettings? = null
     private var scroll: ScrollView? = null
+    private var pipLimit = 0
     private val backDescription get() = if (intent.getBooleanExtra(EXTRA_FROM_LIVE, false)) "Back to Live preview" else "Back to Lab"
 
     @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.LabTheme)
         super.onCreate(savedInstanceState)
+        pipLimit = savedInstanceState?.getInt("pip_limit") ?: savedPipLimit(this)
         Look.configureLabWindow(this)
         if (intent.getBooleanExtra(EXTRA_DUAL, false)) {
             showDualStreams()
@@ -51,7 +53,9 @@ class LiveStreamsActivity : ComponentActivity() {
                         intent.getStringExtra(EXTRA_STATUS).orEmpty(), restore, ::finish, { draft = it }, ::save,
                         backDescription,
                         (intent.getSerializableExtra(EXTRA_SETTINGS) as? LiveStreamSettings) ?: support.defaults(),
-                        intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE) ?: "Camera2")
+                        intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE) ?: "Camera2",
+                        pipLimit, getSystemService(CameraManager::class.java).cameraIdList.size,
+                        savedPipLimit(this), { pipLimit = it }, intent.getBooleanExtra(EXTRA_PIP, false))
                     showPage(page.root, page.scroll)
                     savedInstanceState?.getInt("scroll_y")?.let { y -> page.scroll.post { page.scroll.scrollTo(0, y) } }
                 }, { showMessage("Could not load capabilities. ${it.message.orEmpty()}") })
@@ -80,6 +84,7 @@ class LiveStreamsActivity : ComponentActivity() {
     }
 
     private fun save(settings: LiveStreamSettings?) {
+        getSharedPreferences("pip", MODE_PRIVATE).edit().putInt("max_devices", pipLimit).apply()
         setResult(RESULT_OK, Intent().putExtra(EXTRA_SETTINGS, settings)
             .putExtra(WorkbenchActivity.EXTRA_ENGINE, intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE))
             .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, intent.getStringExtra(WorkbenchActivity.EXTRA_CAMERA_ID)))
@@ -113,6 +118,7 @@ class LiveStreamsActivity : ComponentActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putSerializable(EXTRA_SETTINGS, draft)
+        outState.putInt("pip_limit", pipLimit)
         outState.putInt("scroll_y", scroll?.scrollY ?: 0)
         super.onSaveInstanceState(outState)
     }
@@ -123,6 +129,9 @@ class LiveStreamsActivity : ComponentActivity() {
     }
 
     companion object {
+        const val EXTRA_PIP = "live_stream_pip"
+        fun savedPipLimit(context: android.content.Context): Int =
+            context.getSharedPreferences("pip", android.content.Context.MODE_PRIVATE).getInt("max_devices", 0)
         const val EXTRA_DUAL = "live_stream_dual"
         const val EXTRA_DUAL_SIZE = "live_stream_dual_size"
         const val EXTRA_DUAL_PAIR = "live_stream_dual_pair"

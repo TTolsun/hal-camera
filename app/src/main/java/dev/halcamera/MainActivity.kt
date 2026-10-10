@@ -117,8 +117,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var mediaButton: ShutterButton
     private lateinit var photoModeButton: Button
     private lateinit var videoModeButton: Button
-    private lateinit var dualPreviewButton: Button
-    private lateinit var dualVideoButton: Button
+    private lateinit var pipButton: Button
     private lateinit var modeControls: LinearLayout
     private lateinit var recordingTime: TextView
     private lateinit var galleryButton: RecentMediaButton
@@ -622,9 +621,8 @@ class MainActivity : ComponentActivity() {
         modeControls=row().apply { gravity=Gravity.CENTER }
         photoModeButton=button("Photo") { selectMode(false) }
         videoModeButton=button("Video") { selectMode(true) }
-        dualPreviewButton=button("Dual · P") { openDual(false) }
-        dualVideoButton=button("Dual · V") { openDual(true) }
-        listOf(photoModeButton,videoModeButton,dualPreviewButton,dualVideoButton).forEach {
+        pipButton=button("PIP") { openConcurrent() }
+        listOf(photoModeButton,videoModeButton,pipButton).forEach {
             it.background=cameraChrome(Color.TRANSPARENT)
             it.textSize=12f
             it.setPadding(dp(4),0,dp(4),0)
@@ -767,13 +765,12 @@ class MainActivity : ComponentActivity() {
         galleryButton.isEnabled=idle
         labButton.isEnabled=!recordingVideo && !stoppingRecording && !closing && !mediaBusy()
         liveIndicator.setSizesEnabled(labButton.isEnabled && cli.active == null && pendingPermissionAction == null && cameraId.isNotEmpty())
-        listOf(dualPreviewButton,dualVideoButton).forEach {
+        listOf(pipButton).forEach {
             it.isEnabled = labButton.isEnabled && cli.active == null && pendingPermissionAction == null
             it.setTextColor(Look.onDarkMuted)
             it.alpha = if (it.isEnabled) 1f else 0.4f
         }
-        dualPreviewButton.contentDescription = "Dual preview: two physical cameras"
-        dualVideoButton.contentDescription = "Dual video: record two physical cameras"
+        pipButton.contentDescription = "PIP cameras"
         if (cli.active != null) {
             listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, labButton, reportButton).forEach { it.isEnabled = false }
         }
@@ -805,13 +802,20 @@ class MainActivity : ComponentActivity() {
             streamSettingsIntent(WorkbenchActivity::class.java)
         }
     }
-    private fun openDual(video: Boolean) {
+    private fun openConcurrent() {
         if (cli.active != null || recordingVideo || stoppingRecording || closing ||
             pendingPermissionAction != null || mediaBusy()) return
-        openAfterClose("dual_opened") {
-            Intent(this, DualPreviewActivity::class.java).putExtra(DualPreviewActivity.EXTRA_VIDEO, video)
-                .putExtra(DualPreviewActivity.EXTRA_ENGINE, engineName)
-        }
+        if (engineName == "CameraX") {
+            AlertDialog.Builder(this).setTitle("Camera2 required")
+                .setMessage("Open PIP with Camera2?")
+                .setPositiveButton("Open Camera2") { _, _ -> openConcurrentCamera2() }
+                .setNegativeButton("Cancel", null).show()
+        } else openConcurrentCamera2()
+    }
+    private fun openConcurrentCamera2() {
+        if (cli.active != null || recordingVideo || stoppingRecording || closing ||
+            pendingPermissionAction != null || mediaBusy()) return
+        openAfterClose("concurrent_opened") { Intent(this, ConcurrentCameraActivity::class.java) }
     }
     private fun openLiveStreams() {
         if (cli.active != null || recordingVideo || stoppingRecording || closing ||

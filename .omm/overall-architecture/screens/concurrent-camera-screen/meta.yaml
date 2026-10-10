@@ -1,0 +1,5 @@
+kind: nested-class
+title: concurrent-camera-screen
+children: []
+parentPath:
+  - screens

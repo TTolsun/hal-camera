@@ -6,6 +6,7 @@ sources:
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
   - app/src/main/java/dev/halcamera/cli/CommandStore.kt
   - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
+  - app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt
   - app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt
   - app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt
   - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
@@ -28,6 +29,8 @@ verifications: []
 2. 앱의 시각은 `elapsedRealtimeNanos`를 사용합니다. 센서 시각은 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 앱 시각과 직접 비교합니다.
 3. 카메라 열거에는 공개 Camera2 API만 사용합니다. 논리 카메라의 물리 endpoint를 독립적으로 열 수 있다고 가정하지 않습니다.
 4. 벤치마크 JSON과 incident ZIP에는 관측 이벤트·메타데이터를 저장하며 이미지 픽셀을 저장하지 않습니다.
+
+PIP 모드의 `ConcurrentSession`은 `CameraEngine`과 별도이며, Live 종료 후 선택한 독립 장치를 모두 연 다음 세션을 구성합니다. 모든 장치의 종료 통지를 확인해야 출력을 해제하고 다음 동시 세션을 열 수 있습니다. 한 명령의 여러 사진을 센서 동기 촬영으로 해석하지 않습니다.
 
 ### 계산과 저장의 제약
 
