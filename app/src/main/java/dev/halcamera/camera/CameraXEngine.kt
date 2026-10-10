@@ -101,7 +101,7 @@ class CameraXEngine(
     })
     private val stills: CameraXStillCapture = CameraXStillCapture(context, handler, main, telemetry, session, library, mediaIo, object : CameraXStillCapture.Host {
         override val imageCapture: ImageCapture? get() = capture
-        override val analysisEnabled: Boolean get() = analysis != null
+        override val analysisEnabled: Boolean get() = analysis != null && liveStreams?.jpegFromYuv == true
         override val active: Boolean get() = this@CameraXEngine.active
         override val recordingBusy: Boolean get() = video.busy
         override val flashName: String get() = controls.controls.flash.name
@@ -174,7 +174,6 @@ class CameraXEngine(
         future.addListener({
             if (!active) return@addListener
             try {
-                require(liveStreams?.yuvSaveFormat != YuvSaveFormat.NV21) { "NV21 requires Camera2." }
                 require(liveStreams?.raw == null) { "RAW/DNG requires Camera2." }
                 provider = future.get()
                 pipSources = CameraXPipSources.forParent(cameraId, runCatching { provider!!.availableConcurrentCameraInfos.map { pair ->
@@ -231,7 +230,7 @@ class CameraXEngine(
                 }
                 val sizes = streamSizes()
                 telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
-                telemetry.configureCallbackStreams(session, outputs.metadata())
+                telemetry.configureCallbackStreams(session, outputs.metadata(liveStreams?.jpegFromYuv == true))
                 telemetry.event(session, "bound", sizes)
                 streamsConfigured(sizes)
             } catch (e: Exception) {
@@ -264,12 +263,15 @@ class CameraXEngine(
         .setResolutionFilter { sizes, _ -> sizes.filter { it == size.androidSize() } }.build()
 
     private fun streamSizes() = mapOf("preview" to preview?.resolutionInfo?.resolution?.toString(),
-        "analysis" to analysis?.resolutionInfo?.resolution?.toString(), "jpeg" to capture?.resolutionInfo?.resolution?.toString())
+        "analysis" to analysis?.resolutionInfo?.resolution?.toString(), "jpeg" to capture?.resolutionInfo?.resolution?.toString(),
+        "appJpeg" to analysis?.resolutionInfo?.resolution?.toString()?.takeIf { liveStreams?.jpegFromYuv == true })
 
     /** A recording start or stop rebound the use cases: the zoom and the controls go on the new session again. */
     private fun rebuilt(outputs: StreamConfiguration<UseCase>, sizes: Map<String, Any?>, extraOutputs: List<OutputDescriptor> = emptyList()) {
         telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
-        telemetry.configureCallbackStreams(session, outputs.metadata() + extraOutputs.map { it.metadata() })
+        val appJpeg = liveStreams?.jpegFromYuv == true && extraOutputs.isEmpty() &&
+            outputs.outputs.any { it.descriptor.kind == OutputKind.YUV }
+        telemetry.configureCallbackStreams(session, outputs.metadata(appJpeg) + extraOutputs.map { it.metadata() })
         telemetry.event(session, "bound", sizes)
         camera?.cameraControl?.setZoomRatio(zoomRatio)
         controls.sessionRebuilt()

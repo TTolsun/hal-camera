@@ -18,7 +18,7 @@ import java.util.concurrent.Executor
 
 /**
  * The still capture of Camera2Engine, kept out of the engine: the flash precapture (#176), the still request, and
- * on LIVE the YUV + JPEG pair that is matched by sensor timestamp and saved to the gallery. A benchmark still has
+ * on LIVE the selected image and optional RAW matched by sensor timestamp and saved to the gallery. A benchmark still has
  * no pair; its JPEG arrival is the measurement and nothing is saved.
  *
  * Camera thread only, except [inFlight], which the main thread reads for the CLI's BUSY answer.
@@ -43,7 +43,6 @@ internal class Camera2StillCapture(
         val recordingBusy: Boolean
         val captureYuv: Boolean
         val captureJpeg: Boolean
-        val yuvSaveFormat: YuvSaveFormat
         /** LIVE RAW_SENSOR output is configured: the still also waits for its frame and saves a DNG (#177). */
         val captureRaw: Boolean
         /** Flash auto or on with AE not locked on the request the still will carry. */
@@ -53,7 +52,7 @@ internal class Camera2StillCapture(
         /** The telemetry callback, which every capture of this class also reports to. */
         val captureCallback: CameraCaptureSession.CaptureCallback
         fun orientation(c: CameraCharacteristics): Int
-        /** The still request; with [rotation] it also feeds the YUV stream for the pair and sets the JPEG orientation. */
+        /** The still request targets the selected JPEG source and RAW, with the requested orientation. */
         fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?): CaptureRequest
         /** One preview capture with AE precapture trigger START; false when no session could take it. */
         fun precaptureTrigger(callback: CameraCaptureSession.CaptureCallback): Boolean
@@ -61,8 +60,7 @@ internal class Camera2StillCapture(
         fun fail(e: Exception)
     }
 
-    private class Photo(val name: String, val rotation: Int, val requestId: String?, val done: ((Result<PhotoResult>) -> Unit)?,
-                        val yuvSaveFormat: YuvSaveFormat) {
+    private class Photo(val name: String, val rotation: Int, val requestId: String?, val done: ((Result<PhotoResult>) -> Unit)?) {
         val pair = StillPair<YuvFrame, ByteArray>(2)
         /** The still's one RAW frame, kept with its sensor timestamp until [pair] settles which capture it is. */
         var raw: Pair<Long, RawFrame>? = null
@@ -86,8 +84,8 @@ internal class Camera2StillCapture(
     fun capture(requestId: String?, done: ((Result<PhotoResult>) -> Unit)?) {
         handler.post {
             if (!benchmark && !host.captureYuv && !host.captureJpeg && !host.captureRaw) {
-                main.post { done?.invoke(Result.failure(IllegalStateException("Photo output is off. Enable YUV, JPEG or RAW in Live stream settings."))) }
-                host.report("Photo output is off. Enable YUV, JPEG or RAW in Live stream settings.", true)
+                main.post { done?.invoke(Result.failure(IllegalStateException("Photo output is off. Enable JPEG or RAW in Live stream settings."))) }
+                host.report("Photo output is off. Enable JPEG or RAW in Live stream settings.", true)
                 return@post
             }
             if (host.camera == null || host.session == null || !host.active || inFlight || host.recordingBusy || (done != null && benchmark)) {
@@ -115,15 +113,13 @@ internal class Camera2StillCapture(
                 }
             } else if (format == ImageFormat.JPEG) {
                 pending.pair.jpeg(image.timestamp, ByteArray(image.planes[0].buffer.remaining()).also { image.planes[0].buffer.get(it) })
-            } else if (pending.pair.accepts(image.timestamp)) {
+            } else if (host.captureYuv && pending.pair.accepts(image.timestamp)) {
                 val crop = image.cropRect
                 val planes = image.planes.map {
                     YuvPacking.Plane(it.buffer, it.rowStride, it.pixelStride)
                 }
-                val original = if (pending.yuvSaveFormat == YuvSaveFormat.NV21) OriginalYuv.copy(planes, image.width, image.height,
-                    crop.left, crop.top, crop.width(), crop.height()) else null
-                pending.pair.yuv(image.timestamp, YuvFrame(original?.bytes ?: YuvPacking.nv21(planes,
-                    crop.left, crop.top, crop.width(), crop.height()), crop.width(), crop.height(), original))
+                pending.pair.yuv(image.timestamp, YuvFrame(YuvPacking.nv21(planes,
+                    crop.left, crop.top, crop.width(), crop.height()), crop.width(), crop.height()))
             }
             savePhotoIfComplete(pending)
         } else if (stream == "still" && benchmark) {
@@ -200,7 +196,7 @@ internal class Camera2StillCapture(
         try {
             val tag = "still-${android.os.SystemClock.elapsedRealtimeNanos()}"
             val c = host.characteristics
-            val pending = if (!benchmark) Photo(BracketFiles.named(library.name(), requestId), host.orientation(c), requestId, done, host.yuvSaveFormat) else null
+            val pending = if (!benchmark) Photo(BracketFiles.named(library.name(), requestId), host.orientation(c), requestId, done) else null
             val request = host.stillRequest(camera, c, tag, pending?.rotation)
             inFlight = true
             photo = pending
@@ -270,9 +266,12 @@ internal class Camera2StillCapture(
         photo = null // Keep inFlight until the pair has been written.
         host.report("Saving…", false)
         mediaIo.execute {
-            val result = runCatching { library.saveCapture(pending.name,
-                yuvFrame?.takeIf { pending.yuvSaveFormat == YuvSaveFormat.JPEG }?.let { encodeYuvStill(it, pending.rotation) },
-                jpegBytes, yuvFrame?.original, requireNotNull(pending.captureMetadata), dng) }
+            val result = runCatching {
+                val encoded = yuvFrame?.let { encodeYuvStill(it, pending.rotation) }
+                if (encoded != null) telemetry.recorder.record(sessionId, appJpegOutput.eventKind,
+                    sensorNs = timestamp, values = mapOf("stream" to appJpegOutput.id))
+                library.saveCapture(pending.name, encoded, jpegBytes, requireNotNull(pending.captureMetadata), dng)
+            }
             result.onSuccess { files ->
                 telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "uris" to files.map { it.uri.toString() }))
             }
@@ -290,7 +289,6 @@ internal class Camera2StillCapture(
                 result.fold({
                     val formats = it.map { file -> when {
                         file.name.endsWith("_YUV.jpg") -> "YUV JPEG"
-                        file.name.endsWith(".nv21") -> "NV21"
                         file.mime == MediaLibrary.DNG_MIME -> "DNG"
                         file.mime == "application/json" -> "JSON"
                         else -> "JPEG"

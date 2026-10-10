@@ -1,7 +1,3 @@
-CameraXStillCapture는 CameraXEngine의 Live 사진 촬영을 맡습니다. ImageCapture가 만든 카메라 JPEG와 ImageAnalysis 스트림의 YUV 프레임을 한 쌍으로 묶어, Camera2StillCapture와 같은 MediaLibrary 경로로 앨범에 두 장을 저장합니다.
+CameraXStillCapture는 JPEG 선택에 따라 ImageCapture가 생성한 JPEG 또는 촬영 요청 뒤 도착한 ImageAnalysis 프레임 하나를 저장합니다. 두 이미지를 동시에 저장하거나 가까운 프레임을 짝짓지 않습니다. YUV를 선택하면 ImageCapture를 생성하지 않으며, encodeYuvStill로 현재 YUV 크기의 프레임을 JPEG로 변환합니다. 분석 프레임은 촬영 대기 중에만 복사합니다.
 
-CameraX는 앱이 analysis 스트림을 still 요청의 대상에 넣을 방법을 제공하지 않습니다. 그래서 Camera2처럼 두 버퍼가 한 capture에서 나오지 않습니다. 대신 JPEG의 센서 타임스탬프와 가장 가까운 analysis 프레임을 YUV 쪽으로 고르고, 두 타임스탬프의 차이를 media_saved 이벤트의 yuvOffsetNs에 기록합니다. 평소에는 프레임을 복사하지 않고, 촬영 요청부터 짝이 정해질 때까지만 최근 8개 프레임을 NV21로 복사해 둡니다. JPEG가 도착한 뒤에는 그보다 늦은 프레임이 하나 올 때까지 최대 100ms 기다립니다. 늦은 프레임이 가장 가까운 후보의 위쪽 경계가 되기 때문입니다. 아직 프레임이 하나도 없으면(still 동안 repeating 스트림을 멈추는 HAL) 다음 프레임을 기다리고, 5초 안에 끝나지 않으면 capture_timeout으로 실패를 돌려줍니다.
-
-촬영 직전에 ImageCapture와 ImageAnalysis의 targetRotation을 현재 화면 회전으로 맞춥니다. 카메라 JPEG는 요청의 방향 정보를 그대로 담고, YUV 쪽은 프레임의 rotationDegrees만큼 픽셀을 돌려 JPEG으로 만듭니다. 이 변환은 두 엔진이 함께 쓰는 encodeYuvStill(StillEncoding.kt)입니다. 플래시 Auto·On의 precapture는 ImageCapture가 직접 수행하므로 이 클래스에는 측광 단계가 없습니다. 녹화 중에는 촬영을 거절합니다.
-
-JPEG 단독 출력은 analysis를 기다리지 않습니다. YUV 단독 출력은 촬영 요청 뒤의 analysis 프레임을 저장하며 ImageCapture 요청은 하지 않습니다. 둘 다 꺼진 구성은 촬영을 거부합니다. MediaLibrary.saveCapture는 켜진 출력과 촬영 JSON을 저장하고 파일명·MIME·URI를 반환합니다. CaptureMetadata는 센서 시각이 일치하는 결과만 사용하며 없으면 unavailable로 표시합니다. JPEG와 선택한 analysis 프레임의 시각·결과를 구분합니다.
+촬영 직전 targetRotation을 맞추며 카메라 JPEG는 EXIF를 유지하고 앱 변환은 픽셀을 회전합니다. 선택한 이미지의 센서 시각과 일치하는 CaptureResult만 JSON에 기록하고 없으면 unavailable로 표시합니다. 변환 완료는 app_jpeg_available로 기록합니다. 5초 안에 이미지가 도착하지 않으면 실패합니다. 저장 중에는 BUSY를 유지하고 이미 시작된 파일 쓰기는 카메라 종료 후에도 완료합니다. RAW/DNG는 지원하지 않습니다.

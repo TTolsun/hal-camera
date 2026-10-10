@@ -752,7 +752,7 @@ class MainActivity : ComponentActivity() {
             button.isEnabled=ready && idle && !mediaBusy() && pendingPermissionAction == null
             button.setTextColor(if(selected) Look.onDark else Look.onDarkMuted)
             button.setTypeface(null,if(selected) Typeface.BOLD else Typeface.NORMAL)
-            button.contentDescription=if(index==0) "Photo mode: save selected YUV, JPEG and RAW outputs" else "Video mode with audio"
+            button.contentDescription=if(index==0) "Photo mode: save selected JPEG and RAW outputs" else "Video mode with audio"
             ViewCompat.setStateDescription(button,if(selected) "Selected" else null)
         }
         pausedOverlay.visibility=if(paused) View.VISIBLE else View.GONE
@@ -773,7 +773,7 @@ class MainActivity : ComponentActivity() {
         if (bursts.fusing && controlBar.controls.bracket) mediaButton.isEnabled=false
         if (!videoMode && pipUi.selected == null && streamSettings[streamKey()]?.canCapture == false) {
             mediaButton.isEnabled = false
-            mediaButton.contentDescription = "Photo output is off: enable YUV, JPEG or RAW in Live streams"
+            mediaButton.contentDescription = "Photo output is off: enable JPEG or RAW in Live streams"
         }
         engineButton.isEnabled=idle
         cameraShortcut.isEnabled=idle && cameraId.isNotEmpty()

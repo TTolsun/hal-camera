@@ -17,12 +17,12 @@ import java.util.concurrent.atomic.AtomicReference
 import org.json.JSONObject
 
 /** Opt-in hardware check. Keeps generated files for inspection; never deletes existing media. */
-object OriginalYuvCheck {
+object JpegSourceCheck {
     @Suppress("MissingPermission", "DEPRECATION")
     fun run(context: Context): String {
         val manager = context.getSystemService(CameraManager::class.java)
         val c = manager.getCameraCharacteristics("0")
-        val thread = HandlerThread("original-yuv-check").apply { start() }
+        val thread = HandlerThread("jpeg-source-check").apply { start() }
         val handler = Handler(thread.looper)
         val io = Executors.newSingleThreadExecutor()
         val device = AtomicReference<CameraDevice?>()
@@ -32,7 +32,6 @@ object OriginalYuvCheck {
         val closed = CountDownLatch(1)
         val yuv = ImageReader.newInstance(640, 480, ImageFormat.YUV_420_888, 3)
         val jpeg = ImageReader.newInstance(640, 480, ImageFormat.JPEG, 3)
-        var format = YuvSaveFormat.JPEG
         var useYuv = true
         var useJpeg = true
         var cameraActive = true
@@ -40,7 +39,7 @@ object OriginalYuvCheck {
         val observed = java.util.concurrent.ConcurrentHashMap<Long, Long>()
         val idle = AtomicReference(CountDownLatch(0))
         val still = Camera2StillCapture(context, handler, Handler(Looper.getMainLooper()), telemetry,
-            "original-yuv-test", MediaLibrary(context), io, false, object : Camera2StillCapture.Host {
+            "jpeg-source-test", MediaLibrary(context), io, false, object : Camera2StillCapture.Host {
                 override val camera get() = device.get()
                 override val session get() = sessionRef.get()
                 override val characteristics get() = c
@@ -49,7 +48,6 @@ object OriginalYuvCheck {
                 override val captureYuv get() = useYuv
                 override val captureJpeg get() = useJpeg
                 override val captureRaw = false
-                override val yuvSaveFormat get() = format
                 override val needsPrecapture = false
                 override val flashName = "OFF"
                 override val zoomRequested = 1f
@@ -97,19 +95,13 @@ object OriginalYuvCheck {
             }, handler)
             check(configured.await(10, TimeUnit.SECONDS)) { "Camera configuration timed out" }
             failure.get()?.let { throw it }
-            val cases = listOf(
-                Triple(YuvSaveFormat.NV21, true, true),
-                Triple(YuvSaveFormat.NV21, true, true),
-                Triple(YuvSaveFormat.JPEG, true, true),
-                Triple(YuvSaveFormat.NV21, true, false),
-                Triple(YuvSaveFormat.JPEG, true, false),
-                Triple(YuvSaveFormat.JPEG, false, true))
-            cases.forEachIndexed { index, (selected, yuvEnabled, jpegEnabled) ->
+            val cases = listOf(true to false, false to true)
+            cases.forEachIndexed { index, (yuvEnabled, jpegEnabled) ->
                 val done = CountDownLatch(1)
                 val result = AtomicReference<Result<PhotoResult>?>()
                 idle.set(CountDownLatch(1))
                 handler.post {
-                    format = selected; useYuv = yuvEnabled; useJpeg = jpegEnabled
+                    useYuv = yuvEnabled; useJpeg = jpegEnabled
                     still.capture("format-test-$index") { result.set(it); done.countDown() }
                 }
                 check(done.await(15, TimeUnit.SECONDS)) { "Capture timed out" }
@@ -118,9 +110,7 @@ object OriginalYuvCheck {
                 check(photo.artifacts.size == expectedImages + 1)
                 check(photo.artifacts.none { it.mime == "application/zip" })
                 check(photo.artifacts.count { it.name.endsWith("_YUV.jpg") } ==
-                    if (yuvEnabled && selected == YuvSaveFormat.JPEG) 1 else 0)
-                check(photo.artifacts.count { it.name.endsWith("_YUV.nv21") } ==
-                    if (yuvEnabled && selected == YuvSaveFormat.NV21) 1 else 0)
+                    if (yuvEnabled) 1 else 0)
                 check(photo.artifacts.count { it.name.endsWith("_JPEG.jpg") } == if (jpegEnabled) 1 else 0)
                 val sidecar = photo.artifacts.single { it.mime == "application/json" }
                 val metadata = context.contentResolver.openInputStream(sidecar.uri)!!.use {
@@ -131,19 +121,10 @@ object OriginalYuvCheck {
                 check(capture.getLong("exposureTimeNs") == observed[photo.sensorTimestamp])
                 val outputs = metadata.getJSONArray("outputs")
                 check(outputs.length() == expectedImages)
-                photo.artifacts.firstOrNull { it.name.endsWith(".nv21") }?.let { raw ->
-                    val bytes = context.contentResolver.openInputStream(raw.uri)!!.use { it.readBytes() }
-                    check(bytes.size == 640 * 480 * 3 / 2)
-                    val layout = (0 until outputs.length()).map { outputs.getJSONObject(it) }
-                        .single { it.getString("file") == raw.name }
-                    check(layout.getString("format") == "NV21")
-                    check(layout.getInt("width") == 640 && layout.getInt("height") == 480)
-                    check(layout.getInt("byteLength") == bytes.size)
-                }
                 artifacts += photo.artifacts.joinToString { it.name }
                 check(idle.get().await(2, TimeUnit.SECONDS)) { "Save never released BUSY" }
             }
-            return "YUV_FORMATS_OK: 6 captures; exclusive JPEG/NV21, JSON timestamp/exposure and layouts verified.\n${artifacts.joinToString("\n")}"
+            return "JPEG_SOURCES_OK: app YUV JPEG and camera JPEG, JSON timestamp/exposure verified.\n${artifacts.joinToString("\n")}"
         } finally {
             handler.post { cameraActive = false; still.close(); sessionRef.get()?.close(); device.get()?.close() }
             closed.await(5, TimeUnit.SECONDS)

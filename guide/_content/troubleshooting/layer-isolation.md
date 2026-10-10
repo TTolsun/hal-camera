@@ -50,14 +50,14 @@ verifications: []
 
 ### 사진 저장이나 노출이 예상과 다를 때
 
-**앨범에 YUV 사진이 없다면 저장 포맷부터 확인하세요.** NV21 파일은 파일 앱에서 찾아야 합니다. 파일명·폴더·지원 조건은 [저장 파일 표](engine.md#yuv-저장-포맷)를 확인하세요. Camera2 사진이 5초 뒤 실패한다면 같은 센서 시각의 최종 CaptureResult가 누락됐는지도 확인합니다.
+**앱에서 변환한 YUV 사진이 필요하면 JPEG 목록의 YUV를 선택하세요.** YUV 크기만 켜는 것은 분석 스트림 설정입니다. Camera2 촬영이 5초 뒤 실패하면 같은 센서 시각의 최종 CaptureResult 누락 여부를 확인합니다.
 
 <details markdown="1" id="photo-pair-diagnostics" data-search-section>
 <summary>촬영 실패: 엔진별 이미지 연결 기준 확인</summary>
 
 Camera2의 기본 사진 저장에는 센서 타임스탬프가 일치하는 YUV·JPEG 버퍼가 모두 필요합니다. Live 스트림에서 출력을 하나만 켰다면 해당 출력만 기다리며, 그 이미지도 요청의 센서 시각과 일치해야 합니다.
 
-CameraX는 두 출력을 켰을 때 JPEG와 시각이 가장 가까운 analysis 프레임을 연결하므로, `media_saved.yuvOffsetNs`로 차이를 확인합니다. JPEG 단독 촬영은 analysis를 기다리지 않으며, YUV 단독 촬영은 요청 뒤의 analysis 프레임을 저장합니다. 엔진별 연결 기준을 구분한 뒤 Callback과 저장 오류를 대조하세요.
+CameraX는 JPEG 선택에 따라 HAL JPEG 또는 촬영 뒤 받은 analysis 프레임 하나를 저장합니다. 앱 변환은 Jpeg 행에 완료 시각을 기록합니다. 선택한 이미지와 센서 시각이 일치하는 결과가 없으면 메타데이터를 unavailable로 표시합니다.
 
 </details>
 

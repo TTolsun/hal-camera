@@ -4,6 +4,10 @@ enum class OutputKind(val label: String, val eventKind: String = "image_availabl
     PREVIEW("Preview", "preview_available"), YUV("YUV"), JPEG("JPEG"), RECORDING("Recording"), RAW("RAW")
 }
 
+/** App conversion is observed after encoding; it never creates a HAL JPEG target. */
+internal val appJpegOutput = OutputDescriptor("yuv_jpeg", OutputKind.JPEG, false,
+    eventKind = "app_jpeg_available", displayName = "Jpeg")
+
 /** Identity belongs to the output, never to its translated/numbered display name. */
 data class OutputDescriptor(
     val id: String,
@@ -35,5 +39,6 @@ class StreamConfiguration<T>(outputs: List<ConfiguredOutput<T>>) {
     val repeating get() = outputs.filter { it.descriptor.repeating }
     val still get() = outputs.filter { it.descriptor.stillCapture }
 
-    fun metadata(): List<Map<String, Any?>> = outputs.map { it.descriptor.metadata() }
+    fun metadata(appJpeg: Boolean = false): List<Map<String, Any?>> =
+        outputs.map { it.descriptor.metadata() } + if (appJpeg) listOf(appJpegOutput.metadata()) else emptyList()
 }

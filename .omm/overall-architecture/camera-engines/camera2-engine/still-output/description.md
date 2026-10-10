@@ -1,5 +1,5 @@
-YUV Save Format에서 JPEG 또는 NV21을 선택합니다. JPEG는 기존 `_YUV.jpg`를, NV21은 `_YUV.nv21`을 저장하며 두 파일을 함께 만들지 않습니다. 사진 모드는 선택한 포맷과 관계없이 `_metadata.json`을 함께 저장합니다. JPEG는 DCIM/HALCamera에, NV21과 JSON은 Download/HALCamera에 있습니다.
+JPEG 선택은 앱 YUV 변환과 HAL JPEG 중 하나입니다. 각각 _YUV.jpg와 _JPEG.jpg를 DCIM/HALCamera에 저장하며 사진 모드에서는 촬영 JSON을 Download/HALCamera에 함께 저장합니다. NV21 파일 저장은 제거했습니다.
 
-OriginalYuv는 짝수 crop을 packed NV21으로 복사하며 프레임당 16 MiB 한도를 검사합니다. 원본 이미지의 크기·crop·stride와 출력 plane의 offset·stride를 구분하며 회전·색 변환·패딩 복사를 하지 않습니다. MediaLibrary.saveCapture는 선택한 이미지와 JSON 쓰기가 모두 성공하면 pending을 순서대로 해제합니다. 실패하면 이번 요청의 항목만 삭제를 시도합니다. PhotoResult.artifacts는 실제 파일명과 MIME을 전달합니다. CameraX의 CaptureMetadata는 기록된 결과 중 센서 시각이 일치하는 결과만 사용하며 없으면 unavailable로 표시합니다. 녹화 중 JPEG snapshot은 기존 savePhotos 경로를 유지합니다.
+YuvPacking은 변환할 프레임의 crop과 stride를 반영해 인코더용 NV21 버퍼를 만듭니다. MediaLibrary는 선택한 이미지와 JSON 쓰기가 모두 성공한 뒤 공개하며 실패하면 이번 요청의 파일 삭제를 시도합니다. PhotoResult.artifacts는 실제 파일명과 MIME을 전달합니다. RAW는 RawFrame과 DngOutput을 사용합니다.
 
 RAW/DNG를 켜면 RawFrame이 RAW_SENSOR 샘플을 행 패딩 없이 직접 버퍼로 복사하고, DngOutput이 저장 스레드에서 DngCreator로 `_RAW.dng`를 DCIM/HALCamera에 씁니다. DNG는 같은 센서 시각의 최종 CaptureResult를 사용하며 방향은 태그로만 기록합니다.

@@ -78,7 +78,7 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`
 - 기기 검증: `V-002`
 - 근거 수준: 기기 검증
-- 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval
+- 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval
 
 </details>
 
@@ -94,8 +94,8 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval |
-| 원고 `device-notes` | 최신 | 검토 2026-10-10 @ `2edc77bb` · Codex source comparison; not independent human approval |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval |
+| 원고 `device-notes` | 최신 | 검토 2026-10-10 @ `dda1a4aa` · Codex source comparison; not independent human approval |
 
 <!-- omm:end id=status -->
 

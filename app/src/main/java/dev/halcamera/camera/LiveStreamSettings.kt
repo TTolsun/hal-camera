@@ -27,7 +27,6 @@ fun defaultLiveVideo(sizes: List<LiveSize>): LiveVideo? {
     return size?.let { LiveVideo(it, 30, "H264") }
 }
 
-enum class YuvSaveFormat { JPEG, NV21 }
 
 data class LiveStreamSettings(
     val preview: LiveSize,
@@ -36,15 +35,15 @@ data class LiveStreamSettings(
     val fps: LiveFps?,
     val video: LiveVideo? = null,
     val stabilization: LiveStabilization = LiveStabilization.AUTO,
-    val yuvSaveFormat: YuvSaveFormat = YuvSaveFormat.JPEG,
+    val jpegFromYuv: Boolean = false,
     /** RAW_SENSOR still saved as DNG (#177). Camera2 only; off by default. */
     val raw: LiveSize? = null,
 ) : java.io.Serializable {
-    val canCapture get() = yuv != null || jpeg != null || raw != null
+    val canCapture get() = (jpegFromYuv && yuv != null) || jpeg != null || raw != null
     fun metadata(): Map<String, Any?> = mapOf("preview" to preview.toString(), "analysis" to yuv?.toString(),
         "jpeg" to jpeg?.toString(), "fpsRange" to fps?.toString(), "video" to video?.toString(),
-        "stabilization" to stabilization.name, "yuvSaveFormat" to yuvSaveFormat.name, "raw" to raw?.toString())
-    fun summary() = "Preview $preview · YUV ${yuv ?: "Off"} · JPEG ${jpeg ?: "Off"}" +
+        "stabilization" to stabilization.name, "jpegSource" to if (jpegFromYuv) "YUV" else "CAMERA", "raw" to raw?.toString())
+    fun summary() = "Preview $preview · YUV ${yuv ?: "Off"} · JPEG ${if (jpegFromYuv) "YUV ($yuv)" else jpeg ?: "Off"}" +
         (raw?.let { " · RAW $it" } ?: "") + " · ${fps ?: "Auto FPS"}"
 }
 
@@ -53,15 +52,13 @@ data class LiveStreamSupport(
     val fps: List<LiveFps>, val videos: List<LiveVideo>, val defaultVideo: LiveVideo? = null,
     val stabilization: List<LiveStabilization> = listOf(LiveStabilization.AUTO),
     val stabilizationNotice: String = "Stabilization may be unavailable at some resolutions or frame rates.",
-    val yuvSaveFormats: List<YuvSaveFormat> = listOf(YuvSaveFormat.JPEG),
     /** RAW_SENSOR sizes; empty without Camera2 or the RAW capability. */
     val raw: List<LiveSize> = emptyList(),
     val rawUnavailableReason: String = "No supported RAW_SENSOR sizes",
 ) {
     fun rejection(value: LiveStreamSettings): String? = when {
-        value.yuvSaveFormat !in yuvSaveFormats -> "NV21 requires Camera2."
-        value.yuvSaveFormat == YuvSaveFormat.NV21 && value.yuv != null && !OriginalYuv.supports(value.yuv.width, value.yuv.height) ->
-            "NV21: even dimensions, max 16 MiB/frame."
+        value.jpegFromYuv && value.yuv == null -> "Enable YUV to create JPEG in the app."
+        value.jpegFromYuv && value.jpeg != null -> "Select YUV or a JPEG size."
         value.stabilization !in stabilization -> "Unsupported stabilization mode. Select Auto or a supported mode."
         value.preview !in preview -> "Unsupported preview size."
         value.yuv != null && value.yuv !in yuv -> "Unsupported YUV size."

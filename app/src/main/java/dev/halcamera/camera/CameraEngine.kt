@@ -28,12 +28,12 @@ interface PipCamera {
  * benchmark Camera2Engine refuses the calls, since a measurement saves nothing.
  */
 interface MediaCapture {
-    /** True while a still pair or a recording is in flight; LIVE and the CLI report BUSY from it. */
+    /** True while a photo or a recording is in flight; LIVE and the CLI report BUSY from it. */
     val mediaBusy: Boolean
     /**
      * Selected LIVE outputs saved through MediaLibrary. [done] is called on the main thread. Camera2 takes
-     * enabled YUV/JPEG outputs from one capture (both by default); CameraX uses the nearest analysis frame.
-     * With PIP, either engine saves one composed JPEG instead of the ordinary still outputs.
+     * a HAL JPEG or converts YUV to JPEG, with optional RAW; CameraX saves JPEG from the selected source.
+     * PIP saves a composed JPEG, plus the main camera's original DNG and metadata when Camera2 RAW is enabled.
      */
     fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit)
     fun startRecording(audio: Boolean = true, started: () -> Unit = {}, done: ((Result<android.net.Uri>) -> Unit)? = null)

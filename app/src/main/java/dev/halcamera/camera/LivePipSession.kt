@@ -27,6 +27,7 @@ internal class LivePipSession(
     private val mainOutputs: List<Surface>,
     private val inputFrame: (Int, Long) -> Unit,
     private val photoFrame: (Long) -> Unit,
+    private val rawPhoto: ((String?, (Result<PhotoResult>) -> Unit) -> Unit)? = null,
     private val ready: () -> Unit,
     private val failed: (String) -> Unit,
     private val recordingChanged: (Boolean) -> Unit,
@@ -49,7 +50,7 @@ internal class LivePipSession(
     @Volatile private var closing = false
     @Volatile private var readyState = false
     private var mediaClosed = false
-    private val media = pipMedia(context, main, { compositor }, { !closing && readyState }, photoFrame, recordingChanged, notice)
+    private val media = pipMedia(context, main, { compositor }, { !closing && readyState }, photoFrame, recordingChanged, notice, rawPhoto)
     val busy get() = closing || !readyState || media.busy
     private val closeCallbacks = mutableListOf<() -> Unit>()
     private var finished = false

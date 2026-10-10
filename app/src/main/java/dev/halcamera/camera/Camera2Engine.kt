@@ -157,9 +157,8 @@ class Camera2Engine(
         override val characteristics: CameraCharacteristics get() = chars ?: manager.getCameraCharacteristics(cameraId)
         override val active: Boolean get() = this@Camera2Engine.active
         override val recordingBusy: Boolean get() = video.busy
-        override val captureYuv: Boolean get() = liveStreams == null || liveStreams.yuv != null
-        override val captureJpeg: Boolean get() = liveStreams == null || liveStreams.jpeg != null
-        override val yuvSaveFormat get() = liveStreams?.yuvSaveFormat ?: YuvSaveFormat.JPEG
+        override val captureYuv: Boolean get() = pip == null && liveStreams?.jpegFromYuv == true
+        override val captureJpeg: Boolean get() = pip == null && (liveStreams == null || liveStreams.jpeg != null)
         override val captureRaw: Boolean get() = spec == null && liveStreams?.raw != null
         override val needsPrecapture: Boolean get() = requestControls().needsPrecapture
         override val flashName: String get() = controls.flash.name
@@ -359,7 +358,7 @@ class Camera2Engine(
             previewSize = size
             main.post { if (active) view.fitPreview(size) }
             val previewOutput = OutputDescriptor("preview", OutputKind.PREVIEW, repeating = true, observable = previewRelay != null)
-            val yuvOutput = OutputDescriptor("analysis_acquire_latest", OutputKind.YUV, repeating = true, stillCapture = spec == null)
+            val yuvOutput = OutputDescriptor("analysis_acquire_latest", OutputKind.YUV, repeating = true, stillCapture = spec == null && liveStreams?.jpegFromYuv == true)
             val jpegOutput = OutputDescriptor("still", OutputKind.JPEG, repeating = false, stillCapture = true)
             yuv = yuvSize?.let { reader(it, ImageFormat.YUV_420_888, yuvOutput) }
             jpeg = jpegSize?.let { reader(it, ImageFormat.JPEG, jpegOutput) }
@@ -372,7 +371,7 @@ class Camera2Engine(
             // The effective values go into the event so conditions.effective in the run JSON reports what the
             // camera actually ran with, not what the profile asked for (3.1, fixed-focus cameras run AF OFF).
             val sizes = mapOf(
-                "preview" to size.toString(), "analysis" to yuvSize?.toString(), "jpeg" to jpegSize?.toString(),
+                "preview" to size.toString(), "analysis" to yuvSize?.toString(), "jpeg" to jpegSize?.toString(), "appJpeg" to yuvSize?.toString()?.takeIf { liveStreams?.jpegFromYuv == true },
                 "afMode" to afMode(chars), "fpsRange" to (spec?.fpsRange?.toString() ?: liveStreams?.fps?.toString())
             ) + (rawSize?.let { mapOf("raw" to it.toString()) } ?: emptyMap())
             if (spec != null) telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
@@ -389,7 +388,7 @@ class Camera2Engine(
                     if (!active || !current(camera)) { session.close(); return }
                     captureSession = session
                     configuredOutputs = outputs
-                    telemetry.configureCallbackStreams(sessionId, outputs.metadata())
+                    telemetry.configureCallbackStreams(sessionId, outputs.metadata(liveStreams?.jpegFromYuv == true))
                     try {
                         startRelock()
                         telemetry.event(sessionId, "repeating_submit", mapOf("zoomRequested" to zoomRatio))
@@ -653,7 +652,7 @@ class Camera2Engine(
         if (Build.VERSION.SDK_INT >= 30 && current != null) current.capture(requestId,done) else stills.capture(requestId,done)
     }
 
-    /** The still request: JPEG only for a benchmark still, YUV + JPEG with the output [rotation] for a LIVE pair. */
+    /** Targets the selected photo source and RAW; benchmark requests remain JPEG-only. */
     private fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?): CaptureRequest =
         camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
             liveStreams?.fps?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, android.util.Range(it.min, it.max)) }
@@ -794,12 +793,13 @@ class Camera2Engine(
                     if (pip !== added) return
                     setPip(null,null,null) { done(Result.failure(IllegalStateException(reason))) }
                 }
-                val analysis = StreamConfiguration(configuredOutputs.outputs.filter { it.descriptor.kind == OutputKind.YUV })
+                val analysis = StreamConfiguration(configuredOutputs.outputs.filter { it.descriptor.kind in setOf(OutputKind.YUV, OutputKind.RAW) })
                 val plan = PipOutputs(source.id.takeIf { source.physical })
                 val callbacks = PipCallbacks(telemetry,sessionId,plan) { active && pip === added }
                 added = LivePipSession(context,handler,main,cameraId,source,checkNotNull(texture),checkNotNull(output),LiveSize(size.width,size.height),
                     position = position, mainOutputs = analysis.targets,
                     inputFrame = callbacks::input, photoFrame = callbacks::photo,
+                    rawPhoto = if (liveStreams?.raw != null) stills::capture else null,
                     configureMain = { inputs ->
                         val outputs = plan.configure(inputs, analysis.outputs)
                         val configs = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
@@ -812,7 +812,7 @@ class Camera2Engine(
                                     if (!active || pip !== added) { value.close(); return }
                                     captureSession = value; configuredOutputs = outputs
                                     callbacks.configure(outputs)
-                                    val sizes = mapOf("preview" to size.toString(),"analysis" to yuv?.let { "${it.width}x${it.height}" },"jpeg" to output.toString())
+                                    val sizes = mapOf("preview" to size.toString(),"analysis" to yuv?.let { "${it.width}x${it.height}" },"jpeg" to output.toString(), "raw" to liveStreams?.raw?.toString())
                                     telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
                                     telemetry.event(sessionId,"pip_configured",mapOf("sourceId" to source.id,"physical" to source.physical,"mainDeviceReused" to true))
                                     main.post { if (active) streamsConfigured(sizes) }

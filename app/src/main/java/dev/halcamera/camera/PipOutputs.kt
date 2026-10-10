@@ -9,8 +9,11 @@ internal class PipOutputs(physicalId: String?) {
     val photo = OutputDescriptor("pip_photo", OutputKind.JPEG, false,
         eventKind = "pip_photo_available", displayName = "Jpeg")
 
-    fun <T> configure(targets: List<T>, analysis: List<ConfiguredOutput<T>>): StreamConfiguration<T> {
+    fun <T> configure(targets: List<T>, retained: List<ConfiguredOutput<T>>): StreamConfiguration<T> {
         require(targets.size == inputs.size)
-        return StreamConfiguration(inputs.zip(targets) { descriptor, target -> ConfiguredOutput(descriptor, target) } + analysis)
+        val outputs = retained.map {
+            if (it.descriptor.kind == OutputKind.YUV) it.copy(descriptor = it.descriptor.copy(stillCapture = false)) else it
+        }
+        return StreamConfiguration(inputs.zip(targets) { descriptor, target -> ConfiguredOutput(descriptor, target) } + outputs)
     }
 }

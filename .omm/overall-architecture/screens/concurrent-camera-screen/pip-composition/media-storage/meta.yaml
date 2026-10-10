@@ -1,7 +1,7 @@
 kind: nested-class
-title: pip-composition
-children:
-  - media-storage
+title: media-storage
+children: []
 parentPath:
   - screens
   - concurrent-camera-screen
+  - pip-composition

@@ -10,7 +10,7 @@ help_all() {
 HAL CAM — adb only
   doctor                                Check setup without starting a camera
   preview [start|stop] [--camera ID]
-  capture [--camera ID]                  Save YUV + JPEG photos
+  capture [--camera ID]                  Save selected JPEG and RAW outputs
   record start [--camera ID] [--no-audio] Start recording and return when ready
   record stop                           Stop, wait for MP4, show download command
   streams [--camera ID] [--engine Camera2|CameraX]  List supported sizes
@@ -44,9 +44,9 @@ More tasks (start with the list command to find an ID):
   gallery delete --media ID --confirm true
 Stream options for preview/capture/burst/bracket/record start:
   --engine Camera2|CameraX (default Camera2)
-  --preview-size WxH --yuv-size WxH|off --jpeg-size WxH|off
+  --preview-size WxH --yuv-size WxH|off --jpeg-size WxH|yuv|off
   --video-size WxH --video-fps FPS --codec H264|HEVC|Auto
-  --raw-size WxH|off --yuv-format JPEG|NV21 --fps FPS|MIN-MAX|auto
+  --raw-size WxH|off --fps FPS|MIN-MAX|auto
   --stabilization AUTO|OFF|OIS|VIDEO|PREVIEW
 For zoom, flash and manual controls: help controls
 Omitted stream fields use defaults. CameraX recording codec is Auto.
@@ -278,7 +278,7 @@ branch=
 note=
 while [ $# -gt 0 ]; do
     case "$1" in
-        --engine|--preview-size|--yuv-size|--jpeg-size|--video-size|--video-fps|--codec|--raw-size|--fps|--stabilization|--yuv-format|--zoom|--ev|--flash|--ae-lock|--af-lock|--iso|--exposure-ns|--focus|--wb|--gains|--matrix|--count|--interval-ms|--x|--y|--meter|--run|--reference|--media|--confirm|--first|--second|--incident|--limit)
+        --engine|--preview-size|--yuv-size|--jpeg-size|--video-size|--video-fps|--codec|--raw-size|--fps|--stabilization|--zoom|--ev|--flash|--ae-lock|--af-lock|--iso|--exposure-ns|--focus|--wb|--gains|--matrix|--count|--interval-ms|--x|--y|--meter|--run|--reference|--media|--confirm|--first|--second|--incident|--limit)
             [ $# -ge 2 ] || die "$1 needs a value"
             case "$2" in ''|*[!a-zA-Z0-9x.,_-]*) die 'Invalid stream option value' ;; esac
             key=$(echo "${1#--}" | tr '-' '_')

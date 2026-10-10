@@ -55,7 +55,7 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
             ?.associate { it.key.toString() to it.value }.orEmpty()
     override fun photoLabels(): List<String> {
         val settings = streamSettings[streamKey()]
-        return listOfNotNull("YUV".takeIf { settings == null || settings.yuv != null },
+        return listOfNotNull("YUV".takeIf { settings?.jpegFromYuv == true },
             "JPEG".takeIf { settings == null || settings.jpeg != null })
     }
     override fun capture(id: String, done: (Result<PhotoResult>) -> Unit) {

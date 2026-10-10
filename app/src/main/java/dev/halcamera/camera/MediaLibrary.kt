@@ -72,11 +72,11 @@ class MediaLibrary(context: Context) {
 
     /** Legacy snapshot adapter. Photo-mode captures use saveCapture with their capture metadata. */
     fun savePhotos(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?): List<Uri> =
-        saveFiles(name, yuvJpeg, cameraJpeg, null, null).map { it.uri }
+        saveFiles(name, yuvJpeg, cameraJpeg, null).map { it.uri }
 
     internal fun saveCapture(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?,
-                    original: OriginalYuv?, captureMetadata: Map<String, Any?>, dng: DngOutput? = null): List<PhotoArtifact> =
-        saveFiles(name, yuvJpeg, cameraJpeg, original, captureMetadata, dng)
+                    captureMetadata: Map<String, Any?>, dng: DngOutput? = null): List<PhotoArtifact> =
+        saveFiles(name, yuvJpeg, cameraJpeg, captureMetadata, dng)
 
     @Suppress("DEPRECATION")
     internal fun createData(name: String, mime: String): Uri {
@@ -98,9 +98,8 @@ class MediaLibrary(context: Context) {
     }
 
     private fun saveFiles(name: String, yuvJpeg: ByteArray?, cameraJpeg: ByteArray?,
-                          original: OriginalYuv?, captureMetadata: Map<String, Any?>?, dng: DngOutput? = null): List<PhotoArtifact> {
-        require(yuvJpeg != null || cameraJpeg != null || original != null || dng != null)
-        require(yuvJpeg == null || original == null) { "Select one YUV save format" }
+                          captureMetadata: Map<String, Any?>?, dng: DngOutput? = null): List<PhotoArtifact> {
+        require(yuvJpeg != null || cameraJpeg != null || dng != null)
         val entries = mutableListOf<PhotoArtifact>()
         val outputs = mutableListOf<Map<String, Any?>>()
         fun saveStream(filename: String, mime: String, metadata: Map<String, Any?>, writer: (OutputStream) -> Unit) {
@@ -117,7 +116,6 @@ class MediaLibrary(context: Context) {
         fun save(filename: String, mime: String, bytes: ByteArray, metadata: Map<String, Any?> = emptyMap()) =
             saveStream(filename, mime, metadata) { it.write(bytes) }
         try {
-            if (original != null) save("${name}_YUV.nv21", "application/octet-stream", original.bytes, original.metadata)
             if (yuvJpeg != null) save("${name}_YUV.jpg", "image/jpeg", yuvJpeg,
                 mapOf("source" to "YUV_420_888", "format" to "JPEG"))
             if (cameraJpeg != null) save("${name}_JPEG.jpg", "image/jpeg", cameraJpeg,

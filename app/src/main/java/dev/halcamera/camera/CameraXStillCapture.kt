@@ -9,20 +9,8 @@ import androidx.camera.core.ImageProxy
 import dev.halcamera.telemetry.Telemetry
 import java.util.concurrent.Executor
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.math.abs
 
-/**
- * The LIVE still of CameraXEngine: the camera JPEG from ImageCapture and a YUV frame from the analysis stream,
- * saved as one pair through MediaLibrary, like Camera2StillCapture's.
- *
- * CameraX gives an app no way to put the analysis stream on the still request, so the two buffers never come from
- * one capture as they do on Camera2. The YUV half is the analysis frame whose sensor timestamp is nearest the
- * JPEG's, and `media_saved` records the gap as `yuvOffsetNs`. Frames are copied only while a still is pending, and
- * the JPEG waits up to [FRAME_WAIT_MS] for a frame at or after its own timestamp. ImageCapture runs the flash
- * precapture itself, so there is no metering step here.
- *
- * Main thread, except [onFrame], which the analyzer calls on its executor.
- */
+/** Saves either the CameraX JPEG or the next analysis frame converted by the app. */
 internal class CameraXStillCapture(
     private val context: Context,
     private val main: Handler,
@@ -42,16 +30,13 @@ internal class CameraXStillCapture(
         val zoomRequested: Float
         /** The still output's id, which telemetry records the JPEG arrival under. */
         val stillStream: String
-        /** Points ImageCapture and ImageAnalysis at the display rotation, so both halves come out upright. */
+        /** Points ImageCapture and ImageAnalysis at the display rotation, so the selected output comes out upright. */
         fun updateRotation()
         fun report(message: String, ok: Boolean)
     }
 
     private class Frame(val yuv: YuvFrame, val rotation: Int)
     private class Photo(val name: String, val requestId: String?, val done: ((Result<PhotoResult>) -> Unit)?) {
-        val frames = linkedMapOf<Long, Frame>()
-        var jpeg: ByteArray? = null
-        var timestamp: Long? = null
         val delivered = AtomicBoolean(false)
     }
 
@@ -79,7 +64,7 @@ internal class CameraXStillCapture(
                     val timestamp = image.imageInfo.timestamp
                     if (host.active) telemetry.image(sessionId, timestamp, image.width, image.height, image.format, host.stillStream)
                     val buffer = image.planes[0].buffer
-                    jpegArrived(pending, ByteArray(buffer.remaining()).also { buffer.get(it) }, timestamp)
+                    save(pending, timestamp, null, ByteArray(buffer.remaining()).also { buffer.get(it) })
                 } catch (e: Exception) { fail(pending, e, "Capture failed: ${e.message} · retry") }
                 finally { image.close() }
             }
@@ -96,26 +81,15 @@ internal class CameraXStillCapture(
         }, 5000)
     }
 
-    /** Every analysis frame. Copies it only while a still waits for its YUV half; the caller closes the image. */
+    /** Every analysis frame. Copies it only while an app JPEG waits for its source; the caller closes the image. */
     fun onFrame(image: ImageProxy) {
+        if (!host.analysisEnabled) return
         val pending = synchronized(lock) { photo } ?: return
         val timestamp = image.imageInfo.timestamp
-        synchronized(lock) {
-            val target = pending.timestamp
-            // Past the JPEG a single frame is enough: it bounds the nearest one from above.
-            if (target != null && pending.frames.keys.any { it >= target }) return
-        }
         val crop = image.cropRect
         val frame = Frame(YuvFrame(YuvPacking.nv21(image.planes.map { YuvPacking.Plane(it.buffer, it.rowStride, it.pixelStride) },
             crop.left, crop.top, crop.width(), crop.height()), crop.width(), crop.height()), image.imageInfo.rotationDegrees)
-        val ready = synchronized(lock) {
-            if (photo !== pending) return
-            pending.frames[timestamp] = frame
-            if (host.imageCapture == null) pending.timestamp = timestamp
-            while (pending.frames.size > 8) pending.frames.remove(pending.frames.keys.first())
-            pending.timestamp?.let { timestamp >= it } == true
-        }
-        if (ready) main.post { save(pending) }
+        save(pending, timestamp, frame, null)
     }
 
     /** The camera is closing: answer a pending still. */
@@ -123,15 +97,6 @@ internal class CameraXStillCapture(
         val pending = synchronized(lock) { photo.also { photo = null } } ?: return
         deliver(pending, Result.failure(IllegalStateException("Camera closed before capture completed")))
         inFlight = false
-    }
-
-    private fun jpegArrived(pending: Photo, jpeg: ByteArray, timestamp: Long) {
-        val ready = synchronized(lock) {
-            if (photo !== pending) return
-            pending.jpeg = jpeg; pending.timestamp = timestamp
-            !host.analysisEnabled || pending.frames.keys.any { it >= timestamp }
-        }
-        if (ready) save(pending) else main.postDelayed({ save(pending) }, FRAME_WAIT_MS)
     }
 
     private fun fail(pending: Photo, e: Exception, message: String) {
@@ -145,30 +110,22 @@ internal class CameraXStillCapture(
         if (pending.delivered.compareAndSet(false, true)) main.post { pending.done?.invoke(result) }
     }
 
-    /**
-     * Main thread. Runs once per still, from whichever of the JPEG, a late frame or the wait comes first. With no
-     * frame at all yet (a HAL that pauses the repeating streams for the still) it keeps waiting: the next frame
-     * saves the pair, and the 5 s timeout answers a stream that never comes back.
-     */
-    private fun save(pending: Photo) {
-        val (timestamp, jpeg, picked) = synchronized(lock) {
+    private fun save(pending: Photo, timestamp: Long, frame: Frame?, jpeg: ByteArray?) {
+        synchronized(lock) {
             if (photo !== pending) return
-            val t = pending.timestamp ?: return
-            val j = pending.jpeg
-            val p = pending.frames.entries.minByOrNull { abs(it.key - t) }
-            if ((host.imageCapture != null && j == null) || (host.analysisEnabled && p == null)) return
-            photo = null // Keep inFlight until the pair has been written.
-            Triple(t, j, p)
+            photo = null // The IO job now owns the selected frame; keep BUSY until saved.
         }
         mediaIo.execute {
-            val metadata = captureMetadata(telemetry, sessionId, timestamp, pending.requestId) + mapOf(
-                "yuvSensorTimestampNs" to picked?.key, "yuvOffsetNs" to picked?.key?.minus(timestamp),
-                "yuvCapture" to picked?.let { captureMetadata(telemetry, sessionId, it.key, pending.requestId) },
-                "yuvRotationDegrees" to picked?.value?.rotation)
-            val result = runCatching { library.saveCapture(pending.name,
-                picked?.value?.let { encodeYuvStill(it.yuv, it.rotation) }, jpeg, null, metadata) }
+            val metadata = captureMetadata(telemetry, sessionId, timestamp, pending.requestId) +
+                mapOf("jpegSource" to if (frame != null) "YUV" else "CAMERA", "yuvRotationDegrees" to frame?.rotation)
+            val result = runCatching {
+                val encoded = frame?.let { encodeYuvStill(it.yuv, it.rotation) }
+                if (encoded != null) telemetry.recorder.record(sessionId, appJpegOutput.eventKind,
+                    sensorNs = timestamp, values = mapOf("stream" to appJpegOutput.id))
+                library.saveCapture(pending.name, encoded, jpeg, metadata)
+            }
             result.onSuccess { uris ->
-                telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp, "yuvOffsetNs" to picked?.key?.minus(timestamp),
+                telemetry.event(sessionId, "media_saved", mapOf("sensorTimestamp" to timestamp,
                     "uris" to uris.map { it.uri.toString() }))
             }
             deliver(pending, result.map { PhotoResult(pending.requestId, pending.name, timestamp, it.map { file -> file.uri }, it) })
@@ -181,8 +138,4 @@ internal class CameraXStillCapture(
         }
     }
 
-    companion object {
-        /** About three analysis frames at 30 fps: long enough for the frame after the still, short for the user. */
-        const val FRAME_WAIT_MS = 100L
-    }
 }

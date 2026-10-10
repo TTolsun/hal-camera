@@ -48,7 +48,7 @@ adb shell sh /data/local/tmp/halcam record start --camera 0 --video-size 1280x72
 adb shell sh /data/local/tmp/halcam record stop
 ```
 
-`--preview-size`, `--yuv-size`, `--jpeg-size`, `--video-size`는 `너비x높이` 형식을 사용합니다. YUV·JPEG·RAW는 `off`로 끌 수 있지만, `capture`에는 적어도 하나의 출력이 필요합니다. `--video-fps`는 녹화 프레임 레이트이고 `--codec`은 Camera2에서 H264·HEVC, CameraX에서 Auto를 사용합니다. CameraX의 실제 녹화 코덱은 라이브러리가 선택합니다.
+`--jpeg-size yuv`는 앱 변환 JPEG를 선택합니다. 해상도를 지정하면 HAL JPEG를 저장합니다. `--preview-size`, `--yuv-size`, `--jpeg-size`, `--video-size`는 `너비x높이` 형식을 사용합니다. YUV·JPEG·RAW는 `off`로 끌 수 있지만, `capture`에는 JPEG 또는 RAW 출력이 필요합니다. `--video-fps`는 녹화 프레임 레이트이고 `--codec`은 Camera2에서 H264·HEVC, CameraX에서 Auto를 사용합니다. CameraX의 실제 녹화 코덱은 라이브러리가 선택합니다.
 
 생략한 값은 기본 설정을 사용하며 이전 UI·CLI 설정을 이어받지 않습니다. 적용한 설정은 명령 완료 후 Live에 남지만 다음 CLI 카메라 명령은 다시 기본값과 명시한 옵션으로 구성합니다. 지원하지 않는 값은 `PREFLIGHT_FAILED`로 거부하며 다른 크기로 자동 변경하지 않습니다. 지원 목록은 개별 크기와 인코더 조건을 나타내며 출력 조합의 성공까지 보장하지 않습니다. 실제 세션 구성에서 실패할 수도 있습니다.
 
@@ -58,7 +58,7 @@ adb shell sh /data/local/tmp/halcam record stop
 
 ```sh
 adb shell sh /data/local/tmp/halcam cameras                    # 논리 카메라와 물리 endpoint 목록
-adb shell sh /data/local/tmp/halcam capture --camera 0         # YUV 변환 JPEG + 카메라 JPEG + 촬영 JSON
+adb shell sh /data/local/tmp/halcam capture --camera 0         # 카메라 JPEG + 촬영 JSON
 adb shell sh /data/local/tmp/halcam preview --camera 0         # 첫 프레임까지 대기, 이후 프리뷰 유지
 adb shell sh /data/local/tmp/halcam preview stop
 adb shell sh /data/local/tmp/halcam record start --camera 0 --no-audio
@@ -173,7 +173,7 @@ Windows `adb.exe`로 파일을 받을 때에는 `adb pull /sdcard/Download/HALCa
 | 세 번 연속 촬영합니다. | `halcam burst --camera 0 --count 3 --interval-ms 500` | 저장한 장수와 목표 장수를 확인합니다. `cancel`은 다음 촬영을 멈추며 이미 제출한 저장은 완료합니다. |
 | 노출을 달리하여 촬영합니다. | `halcam bracket --camera 0` | 세 원본과 HDR 결과를 확인합니다. JPEG 원본이 부족하면 HDR 생략 이유를 확인합니다. |
 | RAW만 저장합니다. | `halcam capture --camera 0 --yuv-size off --jpeg-size off --raw-size WIDTHxHEIGHT` | `streams`에 표시된 RAW 크기를 사용합니다. Camera2와 RAW 지원 기기가 필요합니다. |
-| 원본 YUV를 저장합니다. | `halcam capture --yuv-format NV21` | NV21과 메타데이터를 회수합니다. Camera2에서 지원합니다. |
+| 원본 YUV를 저장합니다. | `halcam capture --jpeg-size yuv` | 현재 YUV 크기로 앱에서 만든 JPEG와 촬영 JSON을 회수합니다. |
 
 `--fps 15-30`, `--stabilization OIS`, `--zoom 2`, `--ev -2`, `--flash OFF`처럼 원하는 항목만 지정합니다. EV 값은 EV 단위가 아니라 카메라의 보정 단계입니다. `streams`의 `ev_step`을 곱하면 EV가 됩니다. 예를 들어 단계가 1/3 EV이면 `--ev -3`은 −1 EV입니다.
 
@@ -229,7 +229,7 @@ Dual의 출력 크기는 기존 앱의 공통 크기 선택 규칙을 따릅니�
 선택 도구인 Python 클라이언트에도 전체 작업을 제출하는 공통 경로가 있습니다. `halcam run OPERATION --option KEY=VALUE --stream KEY=VALUE`를 사용합니다. 앱이 `doctor`에서 제공한 명령만 받으며, 결과 파일이 필요하면 `--output DIRECTORY`를 붙입니다. JPEG·MP4·DNG·NV21·JSON·TXT·CSV·ZIP 파일을 크기와 SHA-256으로 검증하며 파일당 최대 64 GiB를 받습니다. 갤러리에서 내보낸 파일은 안전한 `media_ID.확장자` 이름으로 받고 원래 이름은 `original_name`에 남깁니다.
 
 ```sh
-halcam run burst --camera 0 --option count=3 --stream yuv_format=NV21 --output ./photos
+halcam run burst --camera 0 --option count=3 --stream jpeg_size=yuv --output ./photos
 halcam run results.export --option run=RUN_ID --output ./results
 halcam run benchmark.run --option "build=Candidate: A" --timeout 600 --output ./run
 halcam control live.set --option zoom=2

@@ -9,7 +9,7 @@ PIP 선택창은 Single과 Multi가 공유하는 LiveChoiceSheet이며 화면 �
 
 Single의 Service PIP는 장치를 열기 전에 메인·추가 프리뷰의 동시 세션 지원 여부를 검사합니다. Multi의 Service PIP도 현재 기본 장치와 추가 Service ID의 중복을 제거한 개수를 최대 장치 수 설정과 비교합니다.
 
-Single PIP 사진은 합성 JPEG 한 장만 저장하며 일반 사진의 YUV·JPEG 쌍과 RAW·메타데이터 JSON은 만들지 않습니다. PIP 녹화 중 사진은 지원하지 않습니다. PIP 합성 사진은 프리뷰를 저장하므로 일반 사진용 Flash Auto·On과 AEB를 사용하지 않으며 Off·Torch를 제공합니다. 같은 모드의 Live로 복귀하면 선택한 PIP를 복원합니다. 모드·엔진 전환과 Multi 진입에서는 PIP와 스트림 설정을 초기화합니다.
+Single PIP는 합성 JPEG를 저장합니다. Camera2에서 RAW가 켜져 있으면 메인 카메라의 DNG와 해당 원본의 JSON을 먼저 저장한 뒤 합성 JPEG를 추가합니다. 합성 실패 시 이번 원본 파일의 삭제를 시도합니다. 원본과 합성 프리뷰는 같은 순간을 보장하지 않으며 DNG 자체에는 PIP를 합성하지 않습니다. RAW 출력도 동시 세션 지원 검사에 포함하며 거부되면 조합 실패를 표시합니다. PIP 녹화 중 사진은 지원하지 않습니다. PIP 합성 사진은 프리뷰를 저장하므로 일반 사진용 Flash Auto·On과 AEB를 사용하지 않으며 Off·Torch를 제공합니다. 같은 모드의 Live로 복귀하면 선택한 PIP를 복원합니다. 모드·엔진 전환과 Multi 진입에서는 PIP와 스트림 설정을 초기화합니다.
 
 PipPositionStore는 Single과 Multi를 구분하여 부모 Camera ID별 정규화 좌표를 저장합니다. 같은 모드의 보조 카메라 선택, PIP Off·On과 화면 재생성 후에는 같은 부모의 위치를 복원합니다. Photo·Video·엔진 전환이나 Multi 신규 진입에서는 해당 범위의 위치를 지웁니다. 합성기는 첫 프레임부터 복원 좌표를 사용하고 프리뷰 영역 밖의 좌표는 경계로 제한합니다. 저장값이 유효하지 않으면 기본 좌표를 사용합니다.
 

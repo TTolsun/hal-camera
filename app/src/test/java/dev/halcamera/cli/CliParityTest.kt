@@ -5,6 +5,12 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CliParityTest {
+    @Test fun `removed YUV format option is rejected and JPEG YUV needs an enabled stream`() {
+        rejects { CliStreams(mapOf("yuv_format" to "NV21")) }
+        val size = LiveSize(640, 480)
+        val support = LiveStreamSupport(listOf(size), listOf(size), listOf(size), emptyList(), emptyList())
+        rejects("PREFLIGHT_FAILED") { CliStreams(mapOf("jpeg_size" to "yuv", "yuv_size" to "off")).resolve(support) }
+    }
     private fun rejects(code: String = "INVALID_ARGUMENT", action: () -> Unit) {
         try { action(); fail("Expected $code") } catch (e: CliFailure) { assertEquals(code, e.code) }
     }
@@ -35,10 +41,11 @@ class CliParityTest {
     @Test fun `fps format and stabilization validate exact support`() {
         val size = LiveSize(640, 480)
         val support = LiveStreamSupport(listOf(size), listOf(size), listOf(size), listOf(LiveFps(15, 30)), emptyList(), null,
-            stabilization = listOf(LiveStabilization.OIS), yuvSaveFormats = listOf(YuvSaveFormat.NV21))
-        val settings = CliStreams(mapOf("fps" to "15-30", "stabilization" to "OIS", "yuv_format" to "NV21")).resolve(support)
+            stabilization = listOf(LiveStabilization.OIS))
+        val settings = CliStreams(mapOf("fps" to "15-30", "stabilization" to "OIS", "jpeg_size" to "yuv")).resolve(support)
         assertEquals(LiveFps(15, 30), settings.fps)
-        assertEquals(YuvSaveFormat.NV21, settings.yuvSaveFormat)
+        assertTrue(settings.jpegFromYuv)
+        assertNull(settings.jpeg)
         rejects { CliStreams(mapOf("fps" to "30-15")) }
         rejects("PREFLIGHT_FAILED") { CliStreams(mapOf("fps" to "60")).resolve(support) }
     }

@@ -191,7 +191,7 @@ class CommandCoordinator private constructor(private val context: Context) {
                     .put("streams", CliJson.of(mapOf("preview" to support.preview.map { it.toString() },
                         "yuv" to support.yuv.map { it.toString() }, "jpeg" to support.jpeg.map { it.toString() },
                         "raw" to support.raw.map { it.toString() }, "fps" to support.fps.map { "${it.min}-${it.max}" },
-                        "stabilization" to support.stabilization.map { it.name }, "yuv_format" to support.yuvSaveFormats.map { it.name },
+                        "stabilization" to support.stabilization.map { it.name }, "jpeg_source" to listOf("CAMERA", "YUV"),
                         "video" to support.videos.map { mapOf("size" to it.size.toString(), "fps" to it.fps, "codec" to it.codec) }))))
             } catch (e: Exception) { fail(command.id, (e as? CliFailure)?.code ?: "PREFLIGHT_FAILED", e.message ?: "Cannot read stream capabilities") }
         }

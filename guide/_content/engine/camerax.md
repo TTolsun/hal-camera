@@ -94,49 +94,11 @@ Live에서 다음 엔진도 CameraX이면 종료하지 않습니다.
 
 ### 사진
 
-**요청한 사진 출력을 받은 뒤 파일로 저장합니다.** 두 이미지의 연결 기준은 엔진마다 다릅니다.
+**JPEG 목록에서 YUV 또는 카메라 JPEG 해상도를 선택합니다.** YUV는 촬영 뒤 받은 analysis 프레임 하나를 앱에서 JPEG로 변환합니다. 해상도 선택은 ImageCapture가 생성한 JPEG 한 장을 저장합니다. 두 파일을 동시에 저장하거나 시각이 가까운 프레임을 찾지 않습니다.
 
-<details markdown="1" id="detail-d627f61c0a" data-search-section>
-<summary>사진 구현</summary>
+앱 변환은 현재 YUV 크기를 사용하며 픽셀을 화면 방향으로 회전합니다. 카메라 JPEG는 EXIF를 유지합니다. 선택한 이미지와 같은 센서 시각의 CaptureResult만 촬영 JSON에 기록하고, 없으면 unavailable로 표시합니다. 5초 안에 이미지를 받지 못하면 실패합니다. RAW/DNG는 지원하지 않습니다.
 
-CameraX에는 analysis 스트림을 still 요청의 대상에 넣는 공개 API가 없습니다. 그래서 두 버퍼가 한 capture에서 나오는 Camera2와 달리, YUV는 JPEG와 센서 시각이 가장 가까운 analysis 프레임을 씁니다.
-
-YUV 저장은 기존 JPEG 방식이며 NV21과 RAW/DNG는 지원하지 않습니다. 사진마다 JSON을 함께 저장하고, JPEG와 선택한 analysis 프레임의 센서 시각·차이를 구분합니다. 기록된 CaptureResult 중 각 이미지와 센서 시각이 일치하는 결과만 사용하며 없으면 resultStatus를 unavailable로 표시합니다. 다른 프레임의 노출 값을 대신 넣지 않습니다.
-
-```mermaid
-sequenceDiagram
-    participant A as 촬영 요청
-    participant C as ImageCapture
-    participant Y as Analysis
-    participant P as 연결·저장
-    A->>C: JPEG 촬영
-    par JPEG 수신
-        C-->>P: JPEG와 센서 시각
-    and analysis 수신
-        Y-->>P: 최근 프레임 보관
-    end
-    P->>P: JPEG와 가장 가까운 프레임 선택
-    P->>P: 켜진 출력과 JSON 저장
-```
-
-위 그림은 JPEG와 YUV를 모두 켠 경우입니다. 두 이미지를 같은 capture로 보장하지 않습니다.
-
-| 조건 | 처리 |
-| --- | --- |
-| 촬영 직전 | 두 use case의 `targetRotation`을 현재 화면 회전으로 맞춥니다. |
-| 요청부터 짝을 고를 때까지 | analysis를 NV21로 복사해 최근 8개를 보관합니다. 평소에는 복사하지 않습니다. |
-| JPEG가 도착합니다. | 이후 센서 시각의 프레임을 최대 100ms 기다려 가까운 후보를 고릅니다. 프레임이 하나도 없으면 다음 프레임을 기다립니다. |
-| 프레임을 골랐습니다. | `encodeYuvStill`로 JPEG를 만들고 `rotationDegrees`만큼 회전합니다. 센서 시각 차이를 `media_saved.yuvOffsetNs`에 기록합니다. |
-| 5초 안에 끝나지 않습니다. | `capture_timeout`으로 실패를 반환합니다. |
-
-파일 쓰기와 공개는 두 엔진이 공유하는 [MediaLibrary 저장 흐름](#파일은-언제-공개하나요)을 따릅니다.
-
-
-JPEG만 켜면 analysis 프레임을 기다리지 않습니다. YUV만 켜면 촬영 요청 뒤 도착한 analysis 프레임을 저장하며 ImageCapture 요청은 보내지 않습니다. 두 출력이 모두 꺼져 있으면 사진 촬영을 거절합니다.
-
-카메라 JPEG는 CameraX가 넣은 방향 정보(EXIF)를 그대로 저장합니다. 플래시 Auto·On의 precapture는 ImageCapture가 자기 순서대로 실행하므로 이 클래스에는 측광 단계가 없습니다.
-
-</details>
+파일 쓰기와 공개는 [MediaLibrary 저장 흐름](#파일은-언제-공개하나요)을 따릅니다. PIP는 이 선택과 별도로 보이는 합성 프리뷰를 저장합니다.
 
 ### 녹화
 

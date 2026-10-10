@@ -4,6 +4,26 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class LiveStreamSettingsTest {
+    @Test fun `YUV stream alone does not save a photo until selected as JPEG source`() {
+        val base = support.defaults().copy(jpeg = null)
+        assertFalse(base.canCapture)
+        val converted = base.copy(jpegFromYuv = true)
+        assertTrue(converted.canCapture)
+        assertNull(support.rejection(converted))
+        assertEquals("YUV", converted.metadata()["jpegSource"])
+        assertNotNull(support.rejection(converted.copy(yuv = null)))
+        assertNotNull(support.rejection(converted.copy(jpeg = full)))
+    }
+    @Test fun `app JPEG follows current YUV size and remains separate from camera output`() {
+        val value = support.defaults().copy(jpeg = null, jpegFromYuv = true)
+        assertTrue(value.copy(yuv = hd).summary().contains("JPEG YUV (1280x720)"))
+        val output = ConfiguredOutput(OutputDescriptor("analysis", OutputKind.YUV, true), "reader")
+        val config = StreamConfiguration(listOf(output))
+        assertEquals(listOf("reader"), config.targets)
+        assertEquals(listOf("YUV", "Jpeg"), config.metadata(true).map { it["label"] })
+        assertEquals(false, config.metadata(true).last()["repeating"])
+        assertEquals("app_jpeg_available", config.metadata(true).last()["eventKind"])
+    }
     @Test fun `CameraX automatic codec choices do not overwrite Camera2 settings`() {
         val camera2 = LiveStreamSettings(LiveSize(1280, 720), LiveSize(640, 480), LiveSize(1920, 1080), null,
             LiveVideo(LiveSize(1920, 1080), 30, "HEVC"))
@@ -86,7 +106,7 @@ class LiveStreamSettingsTest {
         for (yuv in listOf(null, small)) for (jpeg in listOf(null, full)) {
             val setting = LiveStreamSettings(hd, yuv, jpeg, fps, video)
             assertNull(support.rejection(setting))
-            assertEquals(yuv != null || jpeg != null, setting.canCapture)
+            assertEquals(jpeg != null, setting.canCapture)
         }
     }
     @Test fun `unsupported size fps and encoder settings are rejected instead of coerced`() {
