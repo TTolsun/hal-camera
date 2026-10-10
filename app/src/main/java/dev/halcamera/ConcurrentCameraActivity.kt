@@ -57,6 +57,11 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private val servicePip = mutableMapOf<String,String>()
     private fun pipIds(id: String?) = physical[id].orEmpty() + listOfNotNull(servicePip[id])
     private val positions = mutableMapOf<String,MutableList<PipRect>>()
+    private val positionStore by lazy { dev.halcamera.ui.PipPositionStore(this,"multi") }
+
+    private fun pipPositions(id: String, count: Int) = positions.getOrPut(id) {
+        PipScene.initial(count).map { positionStore.read(id,it) }.toMutableList()
+    }
     private val states = linkedMapOf<String,String>()
     private var plans = emptyList<ConcurrentPlan>()
     private var outputSizes = emptyList<LiveSize>()
@@ -223,7 +228,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
             if (source != null) {
                 if (source.physical) physical[camera.id] = listOf(source.id) else servicePip[camera.id] = source.id
             }
-            positions.remove(camera.id); failed = false; closeSession()
+            failed = false; closeSession()
         }
     }
     private fun choosePosition(index: Int) {
@@ -232,7 +237,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         val ids = pipIds(id)
         if (ids.isEmpty() || takingPhoto || videoPending || closing) return
         LiveChoiceSheet.show(this,"Move PIP",ids.map { LiveChoiceSheet.Choice("Camera $it") },edge=LiveChoiceSheet.Edge.TOP) { i ->
-            val frames = positions.getOrPut(id) { PipScene.initial(ids.size).toMutableList() }
+            val frames = pipPositions(id,ids.size)
             val old = frames[i]
             frames[i] = when {
                 old.x >= .5f && old.y < .5f -> old.moved(1f,1f)
@@ -241,6 +246,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
                 else -> old.moved(1f,0f)
             }
             session?.movePhysical(id,i,frames[i])
+            positionStore.save(id,frames[i])
         }
     }
 
@@ -263,7 +269,6 @@ class ConcurrentCameraActivity : ComponentActivity() {
                 if (session !== current || closing || !foreground || failed) return
                 ready = true; previews.forEach { it.alpha = 1f }; status.visibility = View.GONE
                 window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); updateButtons()
-                positions.forEach { (id,frames) -> frames.forEachIndexed { i,rect -> current.movePhysical(id,i,rect) } }
             }
             override fun onFailed(reason: String) {
                 if (session !== current) return
@@ -284,7 +289,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
                 updateButtons()
             }
         },physical.filterKeys { id -> plan.streams.any { it.camera.id == id } },outputSizes,
-            servicePip.filterKeys { id -> plan.streams.any { it.camera.id == id } })
+            servicePip.filterKeys { id -> plan.streams.any { it.camera.id == id } },
+            plan.streams.associate { it.camera.id to pipPositions(it.camera.id,1).toList() })
         session = current; layoutPreviews(); current.start(); updateButtons()
     }
 
@@ -365,14 +371,18 @@ class ConcurrentCameraActivity : ComponentActivity() {
             val scale = minOf(view.width.toFloat()/size.width,view.height.toFloat()/size.height)
             val x = (event.x-(view.width-size.width*scale)/2)/(size.width*scale)
             val y = (event.y-(view.height-size.height*scale)/2)/(size.height*scale)
-            val frames = positions.getOrPut(id) { PipScene.initial(ids.size).toMutableList() }
+            val frames = pipPositions(id,ids.size)
             when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> { hit = frames.indexOfLast { it.contains(x,y) }; originX = x; originY = y; original = frames.getOrNull(hit); hit >= 0 }
                 MotionEvent.ACTION_MOVE -> {
                     val old = original ?: return@setOnTouchListener false
                     frames[hit] = old.moved(old.x+x-originX,old.y+y-originY); session?.movePhysical(id,hit,frames[hit]); true
                 }
-                MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL -> { original = null; if (hit >= 0) view.performClick(); hit >= 0 }
+                MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL -> {
+                    original = null
+                    if (hit >= 0) { positionStore.save(id,frames[hit]); view.performClick() }
+                    hit >= 0
+                }
                 else -> hit >= 0
             }
         }

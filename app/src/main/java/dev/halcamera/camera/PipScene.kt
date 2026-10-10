@@ -7,6 +7,12 @@ data class PipRect(val x: Float, val y: Float, val width: Float, val height: Flo
 }
 
 object PipScene {
+    val liveDefault = PipRect(.64f, .20f, .32f, .24f)
+
+    /** Restore normalized coordinates while retaining the current preview's size and bounds. */
+    fun restore(fallback: PipRect, x: Float, y: Float): PipRect =
+        fallback.moved(if (x.isFinite()) x else fallback.x, if (y.isFinite()) y else fallback.y)
+
     /** The producer matrix already includes camera buffer rotation/mirroring; do not rotate it twice. */
     fun sourceAspect(width: Int, height: Int, xx: Float, xy: Float, yx: Float, yy: Float): Float {
         val horizontal = kotlin.math.hypot(xx * width, xy * height)

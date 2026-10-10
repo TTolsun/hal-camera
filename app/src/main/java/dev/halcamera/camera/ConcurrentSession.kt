@@ -63,6 +63,7 @@ class ConcurrentSession(
     private val physical: Map<String, List<String>> = emptyMap(),
     private val outputSizes: List<LiveSize> = plan.streams.map { LiveSize(it.preview.height, it.preview.width) },
     private val servicePip: Map<String,String> = emptyMap(),
+    private val positions: Map<String,List<PipRect>> = emptyMap(),
 ) {
     interface Listener {
         fun onState(id: String, state: String)
@@ -134,7 +135,8 @@ class ConcurrentSession(
                                 main.post { listener.onReady() }
                             }
                         }
-                    } }, onError = { error -> worker.post { fail("Camera $id: ${error.message}") } }, serviceIds = listOfNotNull(servicePip[id]))
+                    } }, onError = { error -> worker.post { fail("Camera $id: ${error.message}") } }, serviceIds = listOfNotNull(servicePip[id]),
+                    initialRects = positions[id].orEmpty())
                 compositors[id] = compositor
                 compositor.start { inputs -> worker.post {
                     if (!lifecycle.stopping) {

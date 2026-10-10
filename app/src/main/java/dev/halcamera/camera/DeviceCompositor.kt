@@ -24,6 +24,7 @@ internal class DeviceCompositor(
     private val onReady: () -> Unit,
     private val onError: (Throwable) -> Unit,
     private val serviceIds: List<String> = emptyList(),
+    initialRects: List<PipRect> = emptyList(),
 ) {
     private val app = context.applicationContext
     private val thread = HandlerThread("HAL.Compose.$cameraId").apply { start() }
@@ -44,7 +45,9 @@ internal class DeviceCompositor(
     private var closed = false
     private var readySent = false
     private val pipIds = physicalIds + serviceIds
-    private var rects = PipScene.initial(pipIds.size)
+    private var rects = PipScene.initial(pipIds.size).mapIndexed { index, fallback ->
+        initialRects.getOrNull(index)?.let { PipScene.restore(it,it.x,it.y) } ?: fallback
+    }
     private var recorder: MediaRecorder? = null
     private var videoFile: File? = null
     private var videoName = ""

@@ -779,7 +779,7 @@ class Camera2Engine(
 
     /** Replace capture-session outputs, never the currently open Live CameraDevice. */
     @androidx.annotation.RequiresApi(30)
-    fun setPip(source: PipSource?, texture: SurfaceTexture?, output: LiveSize?, done: (Result<Unit>) -> Unit) {
+    fun setPip(source: PipSource?, texture: SurfaceTexture?, output: LiveSize?, position: PipRect = PipScene.liveDefault, done: (Result<Unit>) -> Unit) {
         handler.post {
             val camera = device
             if (!active || camera == null || spec != null) { main.post { done(Result.failure(IllegalStateException("Camera unavailable"))) }; return@post }
@@ -788,7 +788,7 @@ class Camera2Engine(
                 pip = null
                 retiringPips += previous
                 pipRestoreDone = { previous.close { retiringPips.remove(previous); main.post {
-                    if (source == null) done(Result.success(Unit)) else setPip(source,texture,output,done)
+                    if (source == null) done(Result.success(Unit)) else setPip(source,texture,output,position,done)
                 } } }
                 configure(camera)
                 return@post
@@ -802,6 +802,7 @@ class Camera2Engine(
                     setPip(null,null,null) { done(Result.failure(IllegalStateException(reason))) }
                 }
                 added = LivePipSession(context,handler,main,cameraId,source,checkNotNull(texture),checkNotNull(output),LiveSize(size.width,size.height),
+                    position = position,
                     configureMain = { inputs ->
                         val outputs = StreamConfiguration(inputs.mapIndexed { index, surface ->
                             ConfiguredOutput(OutputDescriptor(if (index == 0) "preview" else "pip",OutputKind.PREVIEW,true),surface)

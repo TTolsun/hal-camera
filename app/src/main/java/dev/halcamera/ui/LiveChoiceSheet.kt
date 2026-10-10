@@ -18,6 +18,7 @@ import android.widget.ScrollView
 import androidx.core.view.ViewCompat
 import androidx.core.view.children
 import androidx.core.view.descendants
+import androidx.core.view.doOnLayout
 import dev.halcamera.R
 
 /** One-tap choices over Live, with the current selection visible and no confirmation step. */
@@ -28,6 +29,7 @@ internal object LiveChoiceSheet {
     fun show(context: Context, title: String, choices: List<Choice> = emptyList(), selected: Int = -1,
              clear: (() -> Unit)? = null, edge: Edge = Edge.BOTTOM,
              content: View? = null, actionLabel: String? = null, confirm: (() -> Boolean)? = null,
+             scrollPosition: Int? = null, saveScrollPosition: ((Int) -> Unit)? = null,
              choose: (Int) -> Unit = {}): AlertDialog {
         fun dp(value: Int) = Look.dp(context,value)
         val dialog = AlertDialog.Builder(context).create()
@@ -48,7 +50,6 @@ internal object LiveChoiceSheet {
         }
         fun restoreChrome() { hidden.forEach { (view,alpha) -> view.alpha=alpha }; hidden.clear() }
         fun dismiss() { restoreChrome(); dialog.dismiss() }
-        dialog.setOnDismissListener { restoreChrome() }
         val root = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(16),dp(8),dp(16),dp(16))
@@ -94,6 +95,7 @@ internal object LiveChoiceSheet {
                 super.onMeasure(widthMeasureSpec,MeasureSpec.makeMeasureSpec(limit,MeasureSpec.AT_MOST))
             }
         }.apply { addView(list); isFillViewport=false; clipToPadding=false }
+        dialog.setOnDismissListener { saveScrollPosition?.invoke(scroll.scrollY); restoreChrome() }
         root.addView(scroll,LinearLayout.LayoutParams(-1,-2))
         if (clear!=null) root.addView(Look.galleryButton(context,"Turn off PIP") { dismiss(); clear() }.apply { textSize=13f },
             LinearLayout.LayoutParams(-1,-2).apply { topMargin=dp(12) })
@@ -115,6 +117,10 @@ internal object LiveChoiceSheet {
             setDimAmount(.25f)
             attributes=attributes.apply { y=dp(16) }
             setLayout(minOf(dp(480),context.resources.displayMetrics.widthPixels-dp(24)),-2)
+        }
+        if (saveScrollPosition != null) scroll.doOnLayout {
+            val selectedRow = list.getChildAt(selected + if (content == null) 0 else 1)
+            scroll.scrollTo(0,scrollPosition ?: selectedRow?.top ?: 0)
         }
         return dialog
     }

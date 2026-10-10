@@ -11,6 +11,7 @@ import dev.halcamera.camera.CameraLabel
 /** The caller applies a source in the current Live preview. */
 internal class PhysicalPipPicker(private val context: Context, private val manager: CameraManager) {
     private val cache = mutableMapOf<String,List<PipSource>>()
+    private val positions = context.getSharedPreferences("pip_picker_scroll", Context.MODE_PRIVATE)
     fun supported(id: String): List<PipSource> {
         if (Build.VERSION.SDK_INT < 30 || id.isEmpty()) return emptyList()
         return cache.getOrPut(id) { runCatching { readPipSources(manager,id) }.getOrDefault(emptyList()) }
@@ -28,10 +29,12 @@ internal class PhysicalPipPicker(private val context: Context, private val manag
             val name = endpoint?.let { listOfNotNull(CameraLabel.facing(it.role,it.facing),
                 CameraLabel.lens(it.role),CameraLabel.angle(it.role,it.equivalentFocalMm)).joinToString(" · ") }
                 ?.takeIf { it.isNotEmpty() } ?: "Camera"
-            LiveChoiceSheet.Choice(name,"${if (source.physical) "Physical" else "Service"} · ID ${source.id}")
+            LiveChoiceSheet.Choice("${if (source.physical) "Physical" else "Service"} · ID ${source.id}",name)
         }
         LiveChoiceSheet.show(context,"PIP",choices,sources.indexOfFirst { it.key == selected?.key },
-            clear = if (selected != null) ({ open(id,null) }) else null, edge = LiveChoiceSheet.Edge.TOP) { index ->
+            clear = if (selected != null) ({ open(id,null) }) else null, edge = LiveChoiceSheet.Edge.TOP,
+            scrollPosition = if (positions.contains(id)) positions.getInt(id,0) else null,
+            saveScrollPosition = { positions.edit().putInt(id,it).apply() }) { index ->
                 val selected = sources[index]
                 if (engine == "CameraX") LiveChoiceSheet.show(context,"PIP",
                     listOf(LiveChoiceSheet.Choice("Camera2","Open PIP")),-1,edge=LiveChoiceSheet.Edge.TOP) { open(id,selected) }
