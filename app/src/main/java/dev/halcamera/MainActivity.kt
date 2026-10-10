@@ -79,6 +79,7 @@ class MainActivity : ComponentActivity() {
     private val streamState = mutableMapOf<String, String>()
     private val eisTracker = LiveEisTracker()
     internal var ready = false
+    private val previewStartup = PreviewStartup()
     internal var zoomRatio = 1f
     private var zoomApplied = false
     private var saveFile: File? = null
@@ -358,6 +359,7 @@ class MainActivity : ComponentActivity() {
         if (cameraId.isEmpty()) { setStatus("No cameras available.", false); return }
         sessionId = UUID.randomUUID().toString()
         if (pendingPip == null && engineCameraId == cameraId && engineName == "Camera2") pendingPip = pipUi.selected
+        previewStartup.reset()
         engineCameraId = cameraId
         val thisSession = sessionId
         val thisCamera = cameraId
@@ -396,7 +398,7 @@ class MainActivity : ComponentActivity() {
                 if (thisSession == sessionId && resumed && !closing) {
                     cameraXStreaming = state == PreviewView.StreamState.STREAMING
                     if (!cameraXStreaming) liveIndicator.bind(false)
-                    else previewReady()
+                    else { initialPreviewArrived(); previewReady() }
                 }
             }
             CameraXEngine(this, this, view, cameraId, sessionId, telemetry, cameraWorker, previewReady, recordingState, notice, status,
@@ -433,7 +435,10 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 }, previewReady = previewReady, previewFrame = {
-                if (thisSession == sessionId && resumed && !closing && !paused) lastPreviewFrameNs = nowNs()
+                if (thisSession == sessionId && resumed && !closing && !paused) {
+                    lastPreviewFrameNs = nowNs()
+                    initialPreviewArrived()
+                }
             }, recordingState = recordingState, notice = notice, status = status)
         }
         previewHost.addView(FocusRing(this, { engine as? TouchMetering }) { controlBar.setAeLock(it) }.apply {
@@ -447,6 +452,10 @@ class MainActivity : ComponentActivity() {
         try { engine?.start() } catch (e: Exception) { setStatus("Start failed: ${e.message}",false) }
         updateCameraChoices()
     }
+    private fun initialPreviewArrived() {
+        previewStartup.frameArrived()?.let { setStatus(it, true) }
+    }
+
     /** Save failures remain visible; routine tuning notices expire without changing [ready]. */
     private fun showNotice(text: String) {
         main.removeCallbacks(clearNotice); savedNoticeShown = true
@@ -454,6 +463,8 @@ class MainActivity : ComponentActivity() {
         if (!text.startsWith("Video not saved") && !text.startsWith("Video save failed")) main.postDelayed(clearNotice, 2500)
     }
     internal fun setStatus(text: String, ok: Boolean) {
+        // Configuration/open callbacks can precede the first displayed frame.
+        if (previewStartup.defer(text, ok)) return
         // Keep a save notice across routine LIVE reports, but let errors replace it.
         val saved = ok && text.contains("saved", ignoreCase = true)
         if (captureFeedback.coversStatus(text)) cameraNotice.visibility = View.GONE
@@ -704,7 +715,8 @@ class MainActivity : ComponentActivity() {
     }
     private fun selectMode(video: Boolean) {
         if (cli.active != null) return
-        if (mediaBusy() || !ready || videoMode==video) return
+        if (recordingVideo || stoppingRecording || closing || pendingPermissionAction != null ||
+            mediaBusy() || !ready || videoMode==video) return
         pendingPermissionAction=null
         videoMode=video
         refreshManualSupport()
@@ -745,7 +757,7 @@ class MainActivity : ComponentActivity() {
         listOf(photoModeButton,videoModeButton).forEachIndexed { index, button ->
             val selected=(index==1)==videoMode
             button.isSelected=selected
-            button.isEnabled=ready && idle
+            button.isEnabled=ready && idle && !mediaBusy() && pendingPermissionAction == null
             button.setTextColor(if(selected) Look.onDark else Look.onDarkMuted)
             button.setTypeface(null,if(selected) Typeface.BOLD else Typeface.NORMAL)
             button.contentDescription=if(index==0) "Photo mode: save selected YUV, JPEG and RAW outputs" else "Video mode with audio"
