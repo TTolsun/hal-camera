@@ -531,6 +531,10 @@ sequenceDiagram
 
 **현재 배율을 누르면 지원 배율이 펼쳐집니다.** 처음에는 현재 배율 하나만 보입니다.
 
+Live 프리뷰에서 두 손가락을 벌리거나 모으면 지원 범위 안에서 연속으로 줌을 바꿉니다. 가장 가까운 프리셋의 원에 현재 배율을 소수 첫째 자리까지 표시하며, 펼친 상태에서 그 원을 누르면 해당 프리셋 배율로 돌아갑니다. 화면의 카메라 선택 정보를 갱신해도 중간 배율은 유지합니다.
+
+핀치와 버튼 선택은 같은 MainActivity.applyZoom 경로로 엔진과 표시를 갱신합니다. 프리뷰 준비 전, 일시정지·종료 처리·CLI 작업·연사 중에는 변경하지 않으며 녹화 중에는 허용합니다. 두 손가락 입력이 시작되면 대기 중인 터치 초점과 길게 누르기 인식을 취소하고, 마지막 손가락을 뗄 때까지 초점 터치로 처리하지 않습니다.
+
 | 조건 | 동작 |
 | --- | --- |
 | 지원 배율이 2개 이상이고 현재 배율을 누릅니다. | 모든 지원 배율이 펼쳐집니다. |
@@ -640,16 +644,16 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
-| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
-| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
+| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
+| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
+| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
 | 구조 원본 `ui-camera-label` | 최신 | 검토 2026-10-10 @ `93385443` · Codex (mode reset, labels and numeric ID selection review) |
-| 구조 원본 `ui-tool-handoff` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
-| 구조 원본 `ui-zoom` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-09 @ `fab768a7` · Codex |
-| 원고 `overview` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
-| 원고 `module-roles` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
-| 원고 `runtime-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `fed3bab1` · Codex documentation/source review; not independent human approval |
-| 원고 `constraints` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
+| 구조 원본 `ui-tool-handoff` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
+| 구조 원본 `ui-zoom` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
+| 원고 `overview` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
+| 원고 `module-roles` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
+| 원고 `runtime-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
+| 원고 `constraints` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
 
 <!-- omm:end id=status -->
 

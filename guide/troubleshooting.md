@@ -172,9 +172,9 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
-| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
-| 원고 `layer-isolation` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `9a6220c4` · Codex source comparison; not independent human approval |
+| 구조 원본 `data-flow` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
+| 구조 원본 `state-transitions` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
+| 원고 `layer-isolation` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
 
 <!-- omm:end id=status -->
 

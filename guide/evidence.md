@@ -96,8 +96,8 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
-| 원고 `device-notes` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `102ac1dd` · Codex spacing/source comparison; not independent human approval |
+| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
+| 원고 `device-notes` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
 
 <!-- omm:end id=status -->
 
