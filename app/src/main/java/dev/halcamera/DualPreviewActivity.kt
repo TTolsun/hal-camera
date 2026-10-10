@@ -149,6 +149,7 @@ class DualPreviewActivity : ComponentActivity() {
     private lateinit var topBar: LinearLayout
     private lateinit var bottomBar: LinearLayout
     private lateinit var metricsText: TextView
+    private lateinit var callbackButton: Button
     private lateinit var liveIndicator: LiveIndicator
     private lateinit var callbackGraph: ResultCallbackGraph
     private lateinit var galleryButton: RecentMediaButton
@@ -285,16 +286,16 @@ class DualPreviewActivity : ComponentActivity() {
         manualPanel = ManualControlPanel(this, { controlBar.setManual(it) }, { Toast.makeText(this, it, Toast.LENGTH_LONG).show() })
         controls.addView(controlBar.handle, LinearLayout.LayoutParams(dp(48), dp(48)))
         val trailing = Look.row(this).apply { gravity = Gravity.END or Gravity.CENTER_VERTICAL }
-        trailing.addView(chromeButton("Callback") {
+        callbackButton = chromeButton("Callback") {
             showCallbacks(callbackGraph.visibility != View.VISIBLE)
-        }, LinearLayout.LayoutParams(-2, dp(48)))
+        }
+        trailing.addView(callbackButton, LinearLayout.LayoutParams(-2, dp(48)))
         labButton = chromeButton("Lab") { openTool(WorkbenchActivity::class.java) }
         trailing.addView(labButton, LinearLayout.LayoutParams(-2, dp(48)).apply { marginStart = dp(4) })
         controls.addView(trailing, LinearLayout.LayoutParams(0, dp(48), 1f))
         topBar.addView(controls)
         liveIndicator = LiveIndicator(this).apply { onSizesClick = { openTool(LiveStreamsActivity::class.java) } }
-        topBar.addView(liveIndicator)
-        topBar.addView(controlBar.view, lp(4))
+        topBar.addView(controlBar.withStatus(liveIndicator),lp(0))
         statusText = Look.text(this, "", 12, Look.onDark).apply {
             gravity = Gravity.CENTER
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
@@ -314,7 +315,9 @@ class DualPreviewActivity : ComponentActivity() {
         bottomBar = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
         callbackGraph = ResultCallbackGraph(this).apply { visibility = View.GONE }
         bottomBar.addView(callbackGraph, lp(0))
-        metricsText = Look.text(this, "FPS — / —\nPhys — / —", 11, Look.onDark, mono = true).apply {
+        metricsText = Look.text(this, "FPS — / —", 10, Look.onDark).apply {
+            setSingleLine(true)
+            setAutoSizeTextTypeUniformWithConfiguration(7,10,1,android.util.TypedValue.COMPLEX_UNIT_SP)
             gravity = Gravity.CENTER
             setShadowLayer(dp(2).toFloat(), 0f, 0f, Color.BLACK)
             setOnClickListener { showInfo() }
@@ -664,13 +667,16 @@ class DualPreviewActivity : ComponentActivity() {
     private fun refreshInfo() {
         val current = stats
         fun fps(value: PhysicalOutputStats?) = value?.fps()?.let { String.format(Locale.US, "%.1f", it) } ?: "—"
-        metricsText.text = "FPS ${fps(current?.first)} / ${fps(current?.second)}\n" +
-            if (photoPending) "Capturing…"
-            else "Phys ${pair?.first ?: "—"} / ${pair?.second ?: "—"}" + if (videoMode) " · Silent" else ""
         liveIndicator.bind(started && !closing && !failed && streamingSize != null && SystemClock.elapsedRealtime() - lastPreviewMs < 1500)
         val events = recorder.snapshot()
         val latest = events.lastOrNull { it.session == sessionId && it.kind == "capture_result" }
         val primary = events.lastOrNull { it.session == sessionId && it.kind == "dual_main_result" }
+        val frame = (primary ?: latest)?.takeIf { SystemClock.elapsedRealtimeNanos()-it.atNs < 1_500_000_000L }
+        fun num(key: String) = (frame?.values?.get(key) as? Number)?.toDouble()
+        metricsText.text = listOf("FPS ${fps(current?.first)} / ${fps(current?.second)}",
+            "ISO ${num("iso")?.toInt() ?: "—"}",
+            "Exp ${num("exposureNs")?.let { String.format(Locale.US,"%.2fms",it/1e6) } ?: "—"}",
+            LiveControlBar.aeState(num("ae")?.toInt()),LiveControlBar.afState(num("af")?.toInt())).joinToString(" · ")
         manualPanel.bind(controlBar.controls.manual, !busy(), mainControls?.manual ?: ManualSupport(camera2 = false), primary, SystemClock.elapsedRealtimeNanos())
         liveIndicator.bindStabilization(dev.halcamera.camera.LiveEisStatus(
             (latest?.values?.get("videoStabilization") as? Number)?.toInt()), recording)
@@ -809,6 +815,7 @@ class DualPreviewActivity : ComponentActivity() {
         if (show) manualPanel.close()
         callbackGraph.visibility = if (show) View.VISIBLE else View.GONE
         metricsText.visibility = if (show) View.GONE else View.VISIBLE
+        dev.halcamera.ui.CameraWidgets(this).highlight(callbackButton,show)
     }
 
     private fun leave(video: Boolean) {

@@ -34,10 +34,11 @@ class ResultCallbackTimelineTest {
         assertEquals(listOf(293.0), t.displayed!!.rows[2].latenciesMs)
     }
 
-    @Test fun durationCyclesThroughRequestedOrderAndWrapsToThreeSeconds() {
-        val t = ResultCallbackTimeline()
-        val values = (0..6).map { t.holdSeconds.also { t.cycleHoldSeconds() } }
-        assertEquals(listOf(3, 5, 10, 15, 30, 1, 3), values)
+    @Test fun durationDefaultsToZeroAndCyclesThroughTenSeconds() {
+        val t = ResultCallbackTimeline().apply { holdSeconds = 3 }
+        t.holdSeconds = ResultCallbackTimeline().holdSeconds
+        val values = (0..5).map { t.holdSeconds.also { t.cycleHoldSeconds() } }
+        assertEquals(listOf(0, 1, 3, 5, 10, 0), values)
     }
     @Test fun automaticAxisExpandsImmediatelyAndShrinksOnlyAfterThreeStableSeconds() {
         val t = ResultCallbackTimeline().apply { autoHold = false }
@@ -76,7 +77,7 @@ class ResultCallbackTimelineTest {
             ConfiguredOutput(OutputDescriptor("large", OutputKind.YUV, false, stillCapture = true), 2),
             ConfiguredOutput(OutputDescriptor("compressed", OutputKind.JPEG, false, stillCapture = true), 3)))
         val meta = mapOf("callbackStreams" to outputs.metadata(), "partialResultCount" to 2)
-        val t = ResultCallbackTimeline()
+        val t = ResultCallbackTimeline().apply { holdSeconds = 3 }
         t.update(ResultCallbackSeries.read(emptyList(), "s", 0, meta), "s", 0, 0)
         val events = listOf(e(10, "capture_partial", 7), e(100, "capture_started", 7, values = mapOf("firstStart" to true)),
             e(160, "capture_result", 7),
@@ -86,14 +87,14 @@ class ResultCallbackTimelineTest {
         t.update(ResultCallbackSeries.read(events, "s", 220_000_000, meta), "s", 0, 220_000_000)
         assertEquals(7L, t.displayed!!.number)
         assertEquals(6, t.displayed!!.rows.size)
-        assertEquals(listOf("Shutter", "Metadata", "Preview", "YUV 1", "YUV 2", "JPEG"), t.displayed!!.rows.map { it.label })
+        assertEquals(listOf("Shutter", "Metadata", "Preview", "YUV", "YUV", "JPEG"), t.displayed!!.rows.map { it.label })
         assertEquals(listOf(80.0), t.displayed!!.rows[3].latenciesMs)
         assertEquals(listOf(110.0), t.displayed!!.rows[4].latenciesMs)
         assertEquals(listOf(120.0), t.displayed!!.rows[2].latenciesMs)
         assertNotNull(t.autoHoldUntilNs)
     }
     @Test fun partialReceivedBeforeStartedIsExcludedAndStartUsesPreviousCallback() {
-        val t = ResultCallbackTimeline()
+        val t = ResultCallbackTimeline().apply { holdSeconds = 3 }
         val events = listOf(e(20, "capture_partial", 7), e(100, "capture_started", 7, values = mapOf("previousStartAtNs" to 67_000_000L)),
             e(160, "capture_result", 7), e(200, "preview_available", sensor = 7, values = mapOf("stream" to "preview")))
         update(t, events, 200)
@@ -120,7 +121,7 @@ class ResultCallbackTimelineTest {
     }
 
     @Test fun allRowsBelongToOneFrameAndPartialArrivalsAreIgnored() {
-        val t = ResultCallbackTimeline()
+        val t = ResultCallbackTimeline().apply { holdSeconds = 3 }
         update(t, frame(1, 0) + frame(2, 80), 150)
         assertEquals(1L, t.displayed!!.number)
         assertEquals(listOf(0.0), t.displayed!!.rows[0].latenciesMs)
@@ -171,7 +172,7 @@ class ResultCallbackTimelineTest {
     }
 
     @Test fun buttonDisablesAutoHoldAndReenablingWaitsForTheNextPhotograph() {
-        val t = ResultCallbackTimeline()
+        val t = ResultCallbackTimeline().apply { holdSeconds = 3 }
         update(t, frame(1, 0), 100)
         t.toggleAutoHold(100_000_000)
         val events = frame(1, 0) + frame(2, 1000, true)
@@ -215,19 +216,32 @@ class ResultCallbackTimelineTest {
         assertEquals(7_100_000_000L, t.autoHoldUntilNs)
     }
 
-    @Test fun reconfigurationClearsHeldFrameAndThirtySecondHoldOutlivesRecorderWindow() {
-        val t = ResultCallbackTimeline().apply { holdSeconds = 30 }
+    @Test fun reconfigurationClearsHeldFrameAndKeepsDuration() {
+        val t = ResultCallbackTimeline().apply { holdSeconds = 10 }
         update(t, frame(1, 0), 100)
         update(t, frame(2, 1000, true), 1100)
-        update(t, emptyList(), 15000)
+        update(t, emptyList(), 9000)
         assertEquals(2L, t.displayed!!.number)
-        update(t, emptyList(), 16000, configuredAt = 15_000_000_000L)
+        update(t, emptyList(), 10000, configuredAt = 9_000_000_000L)
         assertNull(t.displayed!!.number)
         assertNull(t.autoHoldUntilNs)
     }
 
-    @Test fun unmatchedPhotoDoesNotBorrowLatencyFromAnotherFrame() {
+    @Test fun zeroSecondsNeverHoldsAndResetPreservesUserDuration() {
         val t = ResultCallbackTimeline()
+        update(t, frame(1, 0), 100)
+        update(t, frame(2, 1000, true) + frame(3, 1200), 1400)
+        assertNull(t.autoHoldUntilNs)
+        assertEquals(3L, t.displayed!!.number)
+        t.holdSeconds = 5
+        t.reset()
+        assertEquals(5, t.holdSeconds)
+        update(t, frame(4, 2000), 2100, session = "new")
+        assertEquals(5, t.holdSeconds)
+    }
+
+    @Test fun unmatchedPhotoDoesNotBorrowLatencyFromAnotherFrame() {
+        val t = ResultCallbackTimeline().apply { holdSeconds = 3 }
         update(t, frame(1, 0), 100)
         update(t, frame(1, 0) + e(200, "image_available", sensor = 999, values = mapOf("stream" to "still")), 200)
         assertNull(t.displayed!!.number)

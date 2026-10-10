@@ -15,8 +15,7 @@ import java.util.Locale
 class ResultCallbackGraph(context: Context) : LinearLayout(context) {
     private val prefs = context.getSharedPreferences("callback_timeline", Context.MODE_PRIVATE)
     private val timeline = ResultCallbackTimeline().apply {
-        autoHold = prefs.getBoolean("auto_hold", true)
-        holdSeconds = prefs.getInt("hold_seconds", 3).takeIf { it in ResultCallbackTimeline.HOLD_SECONDS } ?: 3
+        holdSeconds = prefs.getInt("shot_seconds", 0).takeIf { it in ResultCallbackTimeline.HOLD_SECONDS } ?: 0
     }
     private val widgets = CameraWidgets(context)
     private val status = widgets.label("Waiting for frames… Any moment now.", 11, Look.onDark).apply {
@@ -26,14 +25,11 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
     }
     private var nowNs = 0L
     private var renderedFrame: CallbackTimelineFrame? = null
-    private val hold = widgets.button("Hold") {
-        timeline.toggleAutoHold(nowNs)
-        prefs.edit().putBoolean("auto_hold", timeline.autoHold).apply()
-        render()
-    }
+    private val hold = widgets.label("Hold", 12, Look.onDark).apply { gravity = Gravity.CENTER }
     private val duration = widgets.button("${timeline.holdSeconds}s") {
         timeline.cycleHoldSeconds()
-        prefs.edit().putInt("hold_seconds", timeline.holdSeconds).apply()
+        timeline.resume(nowNs)
+        prefs.edit().putInt("shot_seconds", timeline.holdSeconds).apply()
         render()
     }
     private val plot = Plot(context)
@@ -66,7 +62,11 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
         render()
     }
 
-    fun reset() { timeline.reset() }
+    fun reset() {
+        timeline.holdSeconds = prefs.getInt("shot_seconds", 0).takeIf { it in ResultCallbackTimeline.HOLD_SECONDS } ?: 0
+        timeline.reset()
+        render()
+    }
 
     fun update(events: List<Event>, session: String, nowNs: Long, metadata: Map<String, Any?>) {
         this.nowNs = nowNs
@@ -77,18 +77,13 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
     }
 
     private fun render() {
-        val mode = if (timeline.autoHold) "Event Frame" else "Real-time Frame"
         fun TextView.textIfChanged(value: String) { if (text.toString() != value) text = value }
-        status.textIfChanged("$mode #${timeline.displayed?.number ?: "—"}")
+        status.textIfChanged("Frame #${timeline.displayed?.number ?: "—"}")
         val held = timeline.autoHoldUntilNs != null
         heldIndicator.bind(held)
         status.contentDescription = if (held) "Held, ${status.text}" else status.text
-        hold.textIfChanged(if (timeline.autoHold) "Live" else "Hold")
         duration.textIfChanged("${timeline.holdSeconds}s")
-        val durationVisibility = if (timeline.autoHold) View.VISIBLE else View.INVISIBLE
-        if (duration.visibility != durationVisibility) duration.visibility = durationVisibility
-        duration.contentDescription = "Auto-hold duration: ${timeline.holdSeconds} seconds; tap for the next duration"
-        hold.contentDescription = if (timeline.autoHold) "Turn off auto-hold" else "Turn on auto-hold"
+        duration.contentDescription = "Hold: ${timeline.holdSeconds} seconds; tap for the next duration"
         if (renderedFrame != timeline.displayed) {
             renderedFrame = timeline.displayed
             plot.contentDescription = "Frame ${timeline.displayed?.number ?: "none"}. Relative to the previous frame shutter callback. " + timeline.displayed?.rows.orEmpty().joinToString(". ") {

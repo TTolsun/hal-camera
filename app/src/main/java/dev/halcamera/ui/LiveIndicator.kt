@@ -139,7 +139,7 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
         heartbeat.setTextColor(color)
         dot.setColor(color)
         heartbeat.contentDescription = if (running) "Live, preview running" else "Live, preview stopped"
-        if (running && isAttachedToWindow && windowVisibility == View.VISIBLE && ValueAnimator.areAnimatorsEnabled()) {
+        if (running && isAttachedToWindow && isShown && ValueAnimator.areAnimatorsEnabled()) {
             pulse = ObjectAnimator.ofFloat(heartbeat, View.ALPHA, 1f, 0.3f).apply {
                 duration = 600
                 repeatMode = ValueAnimator.REVERSE
@@ -153,6 +153,10 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
     override fun onDetachedFromWindow() { pulse?.cancel(); pulse = null; heartbeat.alpha = 1f; super.onDetachedFromWindow() }
     override fun onWindowVisibilityChanged(visibility: Int) {
         super.onWindowVisibilityChanged(visibility)
+        if (isAttachedToWindow) render()
+    }
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView,visibility)
         if (isAttachedToWindow) render()
     }
 }

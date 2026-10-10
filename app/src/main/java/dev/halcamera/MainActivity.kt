@@ -573,8 +573,7 @@ class MainActivity : ComponentActivity() {
             addView(controlBar.handle,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.TOP or Gravity.CENTER_HORIZONTAL))
         },LinearLayout.LayoutParams(dp(48),dp(48)))
         controls.addView(trailingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
-        topBar.addView(liveIndicator,LinearLayout.LayoutParams(-1,-2))
-        topBar.addView(controlBar.view,lp(top=4))
+        topBar.addView(controlBar.withStatus(liveIndicator),lp())
         topBar.addView(manualPanel.view,lp())
         resetControls()
         cameraNotice=label("Preparing camera… Gathering photons.",12,Look.onDark).apply {
@@ -592,10 +591,10 @@ class MainActivity : ComponentActivity() {
         }
         root.addView(captureChrome,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
         captureChrome.addView(bottomBar,LinearLayout.LayoutParams(-1,-2))
-        metrics=label("FPS — · ISO — · Exp —\nAE — · AF —",12,Look.onDark).apply {
-            textSize=11f
+        metrics=label("FPS — · ISO — · Exp — · AE — · AF —",12,Look.onDark).apply {
+            textSize=10f
             gravity=Gravity.CENTER
-            typeface=Look.mono
+            typeface=Typeface.DEFAULT
             setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
         }
         callbackGraph=ResultCallbackGraph(this).apply { visibility=View.GONE }
@@ -821,6 +820,7 @@ class MainActivity : ComponentActivity() {
         engineName=name; resetModeSettings(); updateCameraChoices(); restartCamera()
     }
     internal fun resetModeSettings() {
+        if (::callbackGraph.isInitialized) showCallbacks(false)
         pendingPip = null
         pipUi.resetMode()
         streamSettings.clear(); goodStreams.clear(); streamState.clear()

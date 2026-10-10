@@ -6,16 +6,22 @@ data class CallbackTimelineFrame(val number: Long?, val startAtNs: Long?, val ro
 
 class ResultCallbackTimeline {
     companion object {
-        val HOLD_SECONDS = listOf(3, 5, 10, 15, 30, 1)
+        val HOLD_SECONDS = listOf(0, 1, 3, 5, 10)
     }
 
     fun cycleHoldSeconds() {
         holdSeconds = HOLD_SECONDS[(HOLD_SECONDS.indexOf(holdSeconds) + 1) % HOLD_SECONDS.size]
     }
 
-    var autoHold = true
-    var holdSeconds = 3
-        set(value) { field = value.coerceIn(1, 30) }
+    var autoHold: Boolean
+        get() = holdSeconds > 0
+        set(value) { holdSeconds = if (value) holdSeconds.takeIf { it > 0 } ?: 3 else 0 }
+    var holdSeconds = 0
+        set(value) {
+            field = value.coerceIn(0, 10)
+            autoHoldUntilNs = null
+            heldTrigger = null
+        }
     var axisMs = 200
         private set
     private var smallerAxisSinceNs: Long? = null
@@ -84,7 +90,7 @@ class ResultCallbackTimeline {
         // An older complete frame must not pin the graph indefinitely when a stream stalls.
         val frame = series.frames.lastOrNull { candidate ->
             nowNs - candidate.startAtNs >= 250_000_000L || required.all { (id, arrivals) ->
-                (candidate.targets != null && id !in candidate.targets && id != "all" && id != "start") ||
+                (candidate.targets != null && id !in candidate.targets && id != "all" && id != "start" && !id.startsWith("metadata:")) ||
                     candidate.startAtNs in arrivals
             }
         }
@@ -117,7 +123,7 @@ class ResultCallbackTimeline {
                 track.unavailable != null -> track.unavailable
                 points.isNotEmpty() -> "No start time"
                 frame == null -> "Awaiting data"
-                track.id == "all" || track.id == "start" -> "Awaiting data"
+                track.id == "all" || track.id == "start" || track.id.startsWith("metadata:") -> "Awaiting data"
                 frame.targets != null && track.id !in frame.targets -> "Not requested"
                 !track.repeating && frame.targets == null -> "Awaiting capture"
                 else -> "Awaiting data"
