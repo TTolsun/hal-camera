@@ -12,6 +12,8 @@ sources:
   - app/src/main/java/dev/halcamera/camera/CameraXControls.kt
   - app/src/main/java/dev/halcamera/MainActivity.kt
   - app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt
+  - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
+  - app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt
 decisions: []
 verifications: []
 ---
@@ -30,7 +32,9 @@ verifications: []
 | Multi | 지원되는 독립 장치 조합에서 동시 프리뷰와 카메라별 JPEG·무음 MP4를 제공합니다. 센서 동기를 보장하지 않습니다. | 미지원 안내 후 Camera2 경로로 열 수 있습니다. |
 | PIP | Physical 또는 다른 Service ID 하나를 합성합니다. Live는 현재 CameraDevice와 화면을 유지하며 보조 Service 장치만 추가로 엽니다. Multi는 장치별 합성 결과를 저장합니다. | Camera2 전환을 확인합니다. 기존 CameraX 장치는 유지하지 않습니다. |
 
-Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.
+CLI 호환용 Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.
+
+PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JPEG 한 장을 저장하며 일반 사진의 YUV·JPEG 쌍과 RAW·메타데이터 JSON을 만들지 않습니다. PIP 녹화 중 사진은 지원하지 않습니다. Multi의 PIP 변경은 전체 동시 세션을 재구성합니다.
 
 <details markdown="1" id="detail-c0e05167f7" data-search-section>
 <summary>제어·녹화·CLI 차이</summary>

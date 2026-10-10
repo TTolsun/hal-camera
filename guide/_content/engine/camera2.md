@@ -3,6 +3,7 @@ based_on: [overall-architecture]
 confidence: code
 sources:
   - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+  - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
   - app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt
   - app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt
   - app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt
@@ -183,7 +184,7 @@ stateDiagram-v2
 <details markdown="1" id="detail-902b2a5546" data-search-section>
 <summary>사진 구현</summary>
 
-아래는 Live 사진의 흐름입니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
+아래는 PIP를 끈 Live 사진의 흐름입니다. PIP 사진은 LivePipSession이 화면용 합성 JPEG 한 장을 저장하며 이 사진 쌍·RAW·JSON 경로를 사용하지 않습니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
 
 ```mermaid
 sequenceDiagram
@@ -297,7 +298,7 @@ Live 스트림 설정에서는 카메라 크기·고정 AE FPS 범위·인코더
 3. 녹화 요청은 `TEMPLATE_RECORD`이며, 연속 동영상 AF(`CONTINUOUS_VIDEO`)를 지원하면 사용합니다. 줌과 Live 제어는 녹화 중에도 같은 요청을 다시 만들어 적용합니다.
 4. 정지하면 세션을 닫고 파일을 마무리합니다. `MediaLibrary.saveVideo`로 저장을 예약하고 활성 카메라의 프리뷰 세션을 다시 만듭니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
 
-**녹화 중 사진(`Camera2VideoSnapshot`)은 녹화를 멈추지 않고 JPEG 한 장을 저장합니다.** 녹화 세션의 JPEG 크기는 요청한 크기(없으면 1080p 이하 중 가장 큰 크기)를 먼저 시도하고, 세션 조합 조회(`isSessionConfigurationSupported`)가 거절하면 녹화 크기 안에 들어가는 가장 큰 크기로 내려갑니다.
+**PIP를 끈 일반 녹화에서는 `Camera2VideoSnapshot`이 녹화를 멈추지 않고 JPEG 한 장을 저장합니다.** PIP 녹화는 이 스냅샷 경로를 사용하지 않습니다. 녹화 세션의 JPEG 크기는 요청한 크기(없으면 1080p 이하 중 가장 큰 크기)를 먼저 시도하고, 세션 조합 조회(`isSessionConfigurationSupported`)가 거절하면 녹화 크기 안에 들어가는 가장 큰 크기로 내려갑니다.
 
 실제 크기는 `recording_started`의 `snapshotSize`에 남아 요청값과 구분됩니다.
 

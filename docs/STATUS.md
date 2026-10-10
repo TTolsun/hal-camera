@@ -1,5 +1,7 @@
 # 작업 상태
 
+2026-10-10 · main은 Live의 Dual 진입을 `Multi · P`·`Multi · V`로 대체했습니다. Multi는 독립 CameraDevice별로 저장하고, PIP는 각 프리뷰에 보조 카메라 하나를 합성합니다. 기존 Dual은 CLI 호환 경로로 남습니다. 현재 사용법은 [Live 가이드](../guide/live.md), 실기기 관측과 최종 통합본의 재검증 제한은 [검증 기록](validation/concurrent-camera-20261010.md)을 확인하세요. 아래 버전별 기록은 당시 배포 상태입니다.
+
 2026-10-09 · HAL CAM 0.22.0(versionCode 650)은 Camera2·CameraX Dual 프리뷰와 카메라별 MP4 저장, Camera2 RAW/DNG와 UI 일관성 수정을 포함합니다. 설치 방법과 검증 범위는 [릴리스 노트](releases/0.22.0.md)에서 확인하세요.
 
 2026-10-08 · 내부 점수 초안(`score-v1-draft`)을 앱에서 제거했습니다([이슈 #162](https://github.com/TTolsun/hal-camera/issues/162)). 표준 profile이 v2가 된 뒤 v1 calibration으로는 새 run에 점수가 나오지 않았고, v2 재검증에서는 발열·점유 경쟁 run이 정상보다 높은 점수를 받았습니다. 성능 저하 판정은 baseline 비교(`RegressionDetector`)가 이미 맡고 있으므로 점수 계산·결과 화면의 점수 줄·관련 테스트를 지웠습니다. run JSON의 `scoring_rule_version`·`endpoint_score`·`metrics[].score` 필드와 `scoring_eligible` validity 단계는 호환을 위해 남기며, 새 run에서는 점수 필드가 `null`입니다. 이전 설계는 [보관 문서](archive/SCORING-v1-draft.md)에 있습니다.

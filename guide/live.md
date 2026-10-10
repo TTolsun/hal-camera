@@ -17,7 +17,7 @@ title: Live
 
 ## Live에서 촬영하세요
 
-1. 상단에서 엔진과 카메라를 선택합니다.
+1. 상단에서 엔진을 고르고 오른쪽 아래 카메라 버튼에서 카메라를 선택합니다.
 2. 사진 모드에서 셔터를 누릅니다.
 3. 저장 완료 안내가 나오면 셔터 왼쪽 갤러리 썸네일을 눌러 결과를 확인합니다.
 
@@ -57,7 +57,7 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 
 **저장 결과:** 현재 EV, 2 EV 어둡게, 2 EV 밝게 원본 3장을 촬영합니다. 합성 조건을 충족하면 `_AEB_HDR.jpg`도 저장합니다. 촬영이 끝나면 원래 EV로 돌아갑니다.
 
-수동 노출·동영상 모드·EV 미지원 카메라에서는 AEB를 사용할 수 없습니다. 움직이는 물체는 합성 이미지에 겹쳐 보일 수 있습니다.
+수동 노출·동영상 모드·PIP 합성·EV 미지원 카메라에서는 AEB를 사용할 수 없습니다. 움직이는 물체는 합성 이미지에 겹쳐 보일 수 있습니다.
 
 촬영 중에는 EV·수동 제어·줌·터치 측광을 잠급니다. 합성 중에는 `HDR…`를 표시하며, 다음 AEB는 합성이 끝난 뒤 시작합니다.
 
@@ -98,7 +98,7 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 
 **저장 결과:** JPEG 사진 한 장을 저장합니다. 일반 사진 모드의 YUV·JPEG 두 장 저장과 다릅니다. 사진 촬영이 실패해도 녹화는 계속됩니다.
 
-사진 버튼이 흐리면 미지원 상태인지 눌러 안내를 확인하세요. JPEG 출력을 껐거나 기기가 녹화와 JPEG 조합을 지원하지 않으면 사용할 수 없습니다. 사진 저장 중에도 버튼이 흐려집니다.
+사진 버튼이 흐리면 미지원 상태인지 눌러 안내를 확인하세요. JPEG 출력을 껐거나 기기가 녹화와 JPEG 조합을 지원하지 않으면 사용할 수 없습니다. PIP 녹화 중 사진은 지원하지 않습니다. 사진 저장 중에도 버튼이 흐려집니다.
 
 CameraX에서는 사진 촬영 때 영상의 프레임 간격이 늘어날 수 있습니다. 녹화 연속성이 중요하면 [엔진별 제약과 검증 조건](engine.md#녹화-중-사진의-알려진-제약)을 먼저 확인하세요.
 
@@ -185,15 +185,17 @@ P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니�
 
 Live의 `Multi · P`(사진) 또는 `Multi · V`(영상)에서 카메라 조합을 선택합니다. Android 11 이상이며 기기가 독립 장치의 동시 실행을 지원해야 합니다. CameraX에서는 Camera2로 진입합니다.
 
-1. 상단에서 Logical Camera ID 조합을 선택합니다. 장치별로 분할된 프리뷰가 열립니다. 조합 선택 창의 `Details`에서 구성 상태를 확인합니다.
+1. 상단에서 공개 Service Camera ID 조합을 선택합니다. Logical capability가 없는 카메라도 조합에 포함될 수 있습니다. 장치별로 분할된 프리뷰가 열리며, 조합 선택창의 `Streams`에서 현재 구성 상태를 확인합니다.
 2. 각 화면의 `PIP`에서 Physical 또는 다른 Service 카메라 하나를 선택합니다. 전면 카메라도 선택할 수 있습니다. `Turn off PIP`로 합성을 끕니다.
-3. 보조 영상을 드래그하거나 해당 화면의 `Move`로 위치를 바꿉니다. 보조 영상은 부모 Logical 화면 안에서만 이동합니다.
+3. 보조 영상을 드래그하거나 해당 화면의 `Move`로 위치를 바꿉니다. 보조 영상은 해당 장치의 화면 안에서만 이동합니다.
 4. `Multi · P`에서는 `Photo`로 촬영합니다. `Multi · V`에서는 `Record`로 녹화를 시작하고 `Stop`으로 저장합니다. Multi의 결과는 장치별 파일이며 PIP를 켠 장치에는 그 화면의 합성 구도가 저장됩니다. 조작 버튼과 카메라 라벨은 저장하지 않습니다.
 5. `Live` 또는 뒤로 가기로 돌아갑니다. 모든 장치와 합성 출력의 종료를 확인한 뒤 기존 Live 프리뷰를 복구합니다.
 
-Single에서는 API 선택 옆의 `PIP`에서 보조 카메라 하나를 선택합니다. Camera2에서는 현재 Live 화면과 CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열며, Physical ID는 현재 장치에 출력을 추가합니다. 기존 셔터와 Photo·Video 모드로 합성 사진·영상을 저장하고, 보조 화면을 드래그할 수 있습니다. CameraX에서는 Camera2 전환을 확인하므로 이 전환은 기존 CameraX 장치를 유지하지 않습니다.
+Single에서는 API 선택 옆의 `PIP`에서 보조 카메라 하나를 선택합니다. Android 11 이상에서 선택 후보가 있으면 사용할 수 있으며, Logical capability는 Physical 후보에만 필요합니다. 목록에 있는 Service 카메라도 실제 동시 출력 구성이 지원되어야 열 수 있습니다.
 
-JPEG와 MP4는 `DCIM/HALCamera`, Multi 사진 묶음 JSON은 `Download/HALCamera`에 저장합니다. Single Live PIP의 영상은 기존 녹음 권한으로 오디오를 포함하며, Multi 영상은 무음입니다. PIP 사진은 화면용 합성 해상도이며 Flash Auto·On과 AEB는 사용할 수 없습니다. 조명은 Off·Torch를 선택합니다. 결과 안내의 `Details`에서 카메라별 저장 결과를 확인할 수 있습니다. 센서 동기 촬영은 보장하지 않습니다.
+Camera2 Single에서는 현재 Live 화면과 CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열며, Physical ID는 현재 장치에 출력을 추가합니다. 기존 셔터와 Photo·Video 모드로 합성 사진·영상을 저장하고, 보조 화면을 드래그할 수 있습니다. CameraX에서는 Camera2 전환을 확인하므로 기존 CameraX 장치를 유지하지 않습니다. Multi에서 PIP를 바꾸면 전체 Multi 세션을 닫고 다시 구성합니다. 이미 연 Service ID는 중복해서 열지 않으며, 추가 Service 장치도 최대 장치 수에 포함합니다.
+
+JPEG와 MP4는 `DCIM/HALCamera`, Multi 사진 묶음 JSON은 `Download/HALCamera`에 저장합니다. Single PIP 사진은 합성 JPEG 한 장이며 일반 사진의 YUV·JPEG 쌍이나 RAW·메타데이터 JSON을 저장하지 않습니다. Single PIP 영상은 녹음 권한으로 오디오를 포함하며, Multi 영상은 무음입니다. PIP 사진은 화면용 합성 해상도입니다. Single PIP의 플래시는 Off·Torch만 제공하며 AEB는 사용할 수 없습니다. Multi 사진 결과 안내의 `Details`에서 카메라별 저장 결과를 확인할 수 있습니다. 센서 동기 촬영은 보장하지 않습니다.
 ### 손떨림 보정을 선택하세요
 
 <details markdown="1" id="detail-aa6a89b2d7" data-search-section>

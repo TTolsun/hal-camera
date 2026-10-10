@@ -7,10 +7,10 @@
       },
       "accepted": {
         "codeHash": "423843effc580683",
-        "modelHash": "5057252c9ac654d0",
+        "modelHash": "2e2ba6de78368b6c",
         "at": "2026-10-10",
-        "commit": "adee7282",
-        "reviewer": "Codex (source and documentation consistency review; hardware observations recorded separately)",
+        "commit": "e850ed5e",
+        "reviewer": "Codex (documentation audit against source; not new device verification)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -313,10 +313,10 @@
       },
       "accepted": {
         "codeHash": "00fdfb346205d1c8",
-        "modelHash": "8ee55ae140be3219",
+        "modelHash": "6f4da20c0d7d9f52",
         "at": "2026-10-10",
-        "commit": "adee7282",
-        "reviewer": "Codex (source and documentation consistency review; hardware observations recorded separately)",
+        "commit": "e850ed5e",
+        "reviewer": "Codex (documentation audit against source; not new device verification)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -635,10 +635,10 @@
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "423843effc580683",
-        "modelHash": "5229fc0a6befe495",
+        "modelHash": "f382cd2b9a1bfeb8",
         "at": "2026-10-10",
-        "commit": "adee7282",
-        "reviewer": "Codex (source and documentation consistency review; hardware observations recorded separately)",
+        "commit": "e850ed5e",
+        "reviewer": "Codex (documentation audit against source; not new device verification)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -854,10 +854,10 @@
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "423843effc580683",
-        "modelHash": "836ad5ed4632c7b4",
+        "modelHash": "f98da3aac7adbe16",
         "at": "2026-10-10",
-        "commit": "adee7282",
-        "reviewer": "Codex (source and documentation consistency review; hardware observations recorded separately)",
+        "commit": "e850ed5e",
+        "reviewer": "Codex (documentation audit against source; not new device verification)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -1123,10 +1123,10 @@
       },
       "accepted": {
         "codeHash": "423843effc580683",
-        "modelHash": "3e11b3c1cfaf8db9",
+        "modelHash": "7b0b547f35049eed",
         "at": "2026-10-10",
-        "commit": "adee7282",
-        "reviewer": "Codex (source and documentation consistency review; hardware observations recorded separately)",
+        "commit": "e850ed5e",
+        "reviewer": "Codex (documentation audit against source; not new device verification)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -1342,10 +1342,10 @@
       },
       "accepted": {
         "codeHash": "423843effc580683",
-        "modelHash": "28d7382bc376ddd1",
+        "modelHash": "894bd7cf8362e943",
         "at": "2026-10-10",
-        "commit": "adee7282",
-        "reviewer": "Codex (source and documentation consistency review; hardware observations recorded separately)",
+        "commit": "e850ed5e",
+        "reviewer": "Codex (documentation audit against source; not new device verification)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -1561,10 +1561,10 @@
       },
       "accepted": {
         "codeHash": "423843effc580683",
-        "modelHash": "433b6bfe09d0d13e",
+        "modelHash": "3b6dc72b9ade000e",
         "at": "2026-10-10",
-        "commit": "adee7282",
-        "reviewer": "Codex (source and documentation consistency review; hardware observations recorded separately)",
+        "commit": "e850ed5e",
+        "reviewer": "Codex (documentation audit against source; not new device verification)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -1780,10 +1780,10 @@
       },
       "accepted": {
         "codeHash": "423843effc580683",
-        "modelHash": "89c93806f62d44bb",
+        "modelHash": "1a54b43b7f3846d6",
         "at": "2026-10-10",
-        "commit": "adee7282",
-        "reviewer": "Codex (source and documentation consistency review; hardware observations recorded separately)",
+        "commit": "e850ed5e",
+        "reviewer": "Codex (documentation audit against source; not new device verification)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -1999,10 +1999,10 @@
       },
       "accepted": {
         "codeHash": "423843effc580683",
-        "modelHash": "54a29a1c26fc4d17",
+        "modelHash": "5ebf322c9a64344c",
         "at": "2026-10-10",
-        "commit": "adee7282",
-        "reviewer": "Codex (source and documentation consistency review; hardware observations recorded separately)",
+        "commit": "e850ed5e",
+        "reviewer": "Codex (documentation audit against source; not new device verification)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
