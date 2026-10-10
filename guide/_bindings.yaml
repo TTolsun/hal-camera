@@ -633,10 +633,13 @@ sources:
     diagram_type: state
     evidence:
       - app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt
+      - app/src/main/java/dev/halcamera/ui/FocusRing.kt
+      - app/src/main/java/dev/halcamera/MainActivity.kt
     elements:
       .:
         evidence:
           - app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt
+          - app/src/main/java/dev/halcamera/ui/FocusRing.kt
 
   telemetry-facts:
     kind: fact

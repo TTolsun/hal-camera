@@ -222,7 +222,7 @@ class MainActivity : ComponentActivity() {
             if (!closing && engine != null) {
                 liveIndicator.bindSizes(telemetry.sessions[sessionId]?.get("negotiatedStreams") as? Map<*, *>)
             }
-            readings.update(events, frames, time, sessionId, controlBar.controls, zoomRatio)
+            readings.update(events, frames, time, sessionId, controlBar.controls)
             manualPanel.bind(controlBar.controls.manual, (ready || recordingVideo) && !stoppingRecording && cli.active == null && !bursts.controlsLocked,
                 manualCapabilities, frames.lastOrNull(), time)
             manualBack.isEnabled = manualPanel.isExpanded
@@ -444,6 +444,9 @@ class MainActivity : ComponentActivity() {
         }
         previewHost.addView(FocusRing(this, { engine as? TouchMetering }) { controlBar.setAeLock(it) }.apply {
             canInteract = { !bursts.controlsLocked && cli.active == null }
+            onZoomScale = { factor ->
+                if (factor.isFinite() && factor > 0f) applyZoom(zoomRatio * factor)
+            }
             unavailableReason = { exposure ->
                 if (exposure && controlBar.controls.manual.exposure != null) "Manual exposure · Adjust ISO and Shutter"
                 else if (!exposure && controlBar.controls.manual.focusDiopters != null) "Manual focus · Select Auto in Focus"
@@ -597,8 +600,7 @@ class MainActivity : ComponentActivity() {
         readings=LiveReadings(this,metrics,recorder,io)
         bottomBar.addView(metrics,lp())
         zoomControl=ExpandingZoomControl(this) { ratio ->
-            if (cli.active != null || bursts.controlsLocked) return@ExpandingZoomControl
-            zoomRatio=ratio; engine?.setZoom(ratio)
+            applyZoom(ratio)
         }
         val zoomViewport=zoomControl.viewport()
         bottomBar.addView(zoomViewport,LinearLayout.LayoutParams(-2,dp(48)))
@@ -726,10 +728,19 @@ class MainActivity : ComponentActivity() {
         if(id.isEmpty()) return "No camera"
         return cameraEndpoints[id]?.let(CameraLabel::full) ?: CameraLabel.short(id)
     }
+    private fun applyZoom(ratio: Float) {
+        if (!resumed || paused || closing || cli.active != null || bursts.controlsLocked ||
+            !(ready || recordingVideo) || stoppingRecording || cameraId.isEmpty() || !ratio.isFinite()) return
+        val range = zoomRange(manager, cameraId)
+        zoomRatio = ratio.coerceIn(range.first, range.second)
+        engine?.setZoom(zoomRatio)
+        zoomControl.setRatio(zoomRatio)
+    }
+
     internal fun updateCameraChoices() {
         if(cameraId.isNotEmpty()) {
-            val presets=zoomPresets(zoomRange(manager,cameraId))
-            if(zoomRatio !in presets) zoomRatio=presets.minByOrNull { kotlin.math.abs(it-zoomRatio) } ?: 1f
+            val range=zoomRange(manager,cameraId)
+            zoomRatio=zoomRatio.coerceIn(range.first,range.second)
         }
         engineButton.text=engineName
         engineButton.contentDescription="Current: $engineName; tap to switch to ${if(engineName=="Camera2") "CameraX" else "Camera2"}"

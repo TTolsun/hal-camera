@@ -85,6 +85,15 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
         renderButtons()
     }
 
+    /** Keep the preset targets while showing the continuous ratio in the nearest circle. */
+    fun setRatio(value: Float) {
+        if (selected == value) return
+        selected = value
+        renderButtons()
+    }
+
+    private fun activeIndex(): Int = ratios.indices.minByOrNull { kotlin.math.abs(ratios[it] - selected) } ?: -1
+
     fun collapse(animate: Boolean = true) {
         removeCallbacks(fold)
         expanded = false
@@ -151,9 +160,10 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
     private fun renderButtons() {
         ratios.forEachIndexed { index, ratio ->
             val button = getChildAt(index) as Button
-            val active = ratio == selected
-            val number = if (ratio == ratio.toInt().toFloat()) "${ratio.toInt()}"
-                else "%.1f".format(Locale.US, ratio).removePrefix("0")
+            val active = index == activeIndex()
+            val displayed = if (active) selected else ratio
+            val number = if (displayed == displayed.toInt().toFloat()) "${displayed.toInt()}"
+                else "%.1f".format(Locale.US, displayed).removePrefix("0")
             button.text = if (active) "${number}×" else number
             button.isSelected = active
             button.setTextColor(if (active) Look.cameraOnSelection else Look.onDark)
@@ -166,16 +176,18 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
             // Match the compact label with a 28dp circle inside the 48dp touch target.
             button.background = InsetDrawable(RippleDrawable(ColorStateList.valueOf(0x40FFFFFF), circle, mask), dp(10))
             button.setPadding(0, 0, 0, 0)
-            button.contentDescription = "${ratio}x zoom" + if (!expanded && active && ratios.size > 1) ", expand zoom choices" else ""
+            button.contentDescription = if (active) "${displayed}x zoom" +
+                if (!expanded && ratios.size > 1) ", expand zoom choices" else ", select ${ratio}x zoom"
+                else "${ratio}x zoom"
             ViewCompat.setStateDescription(button, if (active) "Selected" else null)
         }
         renderVisibility()
     }
 
     private fun renderVisibility() {
-        ratios.forEachIndexed { index, ratio ->
+        ratios.forEachIndexed { index, _ ->
             val button = getChildAt(index)
-            val active = ratio == selected
+            val active = index == activeIndex()
             val available = active || (expanded && progress == 1f)
             button.visibility = if (active || progress > 0f) VISIBLE else INVISIBLE
             // Let the rail open first, then softly reveal the remaining ratios.
@@ -185,13 +197,13 @@ class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Un
             button.scaleY = scale
             button.isEnabled = isEnabled && available
             button.importantForAccessibility = if (available) IMPORTANT_FOR_ACCESSIBILITY_YES else IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-            if (!available && button.hasFocus()) (getChildAt(ratios.indexOf(selected)))?.requestFocus()
+            if (!available && button.hasFocus()) getChildAt(activeIndex())?.requestFocus()
         }
     }
 
     override fun getChildDrawingOrder(childCount: Int, drawingPosition: Int): Int {
         // Keep the selected circle above the converging labels while folding.
-        val active = ratios.indexOf(selected)
+        val active = activeIndex()
         if (active < 0) return drawingPosition
         return when {
             drawingPosition == childCount - 1 -> active
