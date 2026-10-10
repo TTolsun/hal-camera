@@ -181,12 +181,12 @@ P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니�
 
 `Live Streams → Multi → Maximum camera devices`에서 최대 동시 장치 수를 설정하고 `Apply`를 누릅니다. 기본값은 `All available`입니다. Multi 화면의 `Streams`에서도 같은 설정을 엽니다.
 
-Live의 `Multi`에서 카메라 조합을 선택합니다. Android 11 이상이며 기기가 독립 장치의 동시 실행을 지원해야 합니다. CameraX에서는 Camera2로 진입합니다.
+Live의 `Multi · P`(사진) 또는 `Multi · V`(영상)에서 카메라 조합을 선택합니다. Android 11 이상이며 기기가 독립 장치의 동시 실행을 지원해야 합니다. CameraX에서는 Camera2로 진입합니다.
 
 1. 상단에서 Logical Camera ID 조합을 선택합니다. 장치별로 분할된 프리뷰가 열립니다. 조합 선택 창의 `Details`에서 구성 상태를 확인합니다.
 2. 각 Logical 화면의 `PIP`에서 Physical 카메라를 선택하고 `Apply`를 누릅니다. 비논리 카메라의 버튼은 비활성화됩니다. `Off`로 합성을 끕니다.
 3. Physical 영상을 드래그하거나 해당 Logical 화면의 `Move`로 위치를 바꿉니다. 보조 영상은 부모 Logical 화면 안에서만 이동합니다.
-4. `Photo`를 누르거나 `Record`로 녹화를 시작한 뒤 `Stop`으로 저장합니다. Multi의 결과는 장치별 파일이며 PIP를 켠 장치에는 그 화면의 합성 구도가 저장됩니다. 조작 버튼과 카메라 라벨은 저장하지 않습니다.
+4. `Multi · P`에서는 `Photo`로 촬영합니다. `Multi · V`에서는 `Record`로 녹화를 시작하고 `Stop`으로 저장합니다. Multi의 결과는 장치별 파일이며 PIP를 켠 장치에는 그 화면의 합성 구도가 저장됩니다. 조작 버튼과 카메라 라벨은 저장하지 않습니다.
 5. `Live` 또는 뒤로 가기로 돌아갑니다. 모든 장치와 합성 출력의 종료를 확인한 뒤 기존 Live 프리뷰를 복구합니다.
 
 Single에서는 Camera2·CameraX 선택 옆의 `PIP`에서 지원하는 Physical 카메라를 선택합니다. Logical 장치에만 활성화되며 CameraX에서는 Camera2 전환을 확인합니다.

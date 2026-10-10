@@ -34,6 +34,7 @@ import dev.halcamera.ui.CameraWidgets
 class ConcurrentCameraActivity : ComponentActivity() {
     private val manager by lazy { getSystemService(CameraManager::class.java) }
     private val singleId by lazy { intent.getStringExtra(EXTRA_SINGLE_ID) }
+    private val videoMode by lazy { intent.getBooleanExtra(EXTRA_VIDEO,false) }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { if (it) discover() }
     private lateinit var stage: FrameLayout
     private lateinit var status: TextView
@@ -83,7 +84,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         }
         val header = row()
         header.addView(button("Live") { finish() },LinearLayout.LayoutParams(dp(68),dp(48)))
-        header.addView(text(if (singleId == null) "Multi" else "Camera2",18).apply { setPadding(dp(12),0,0,0) },LinearLayout.LayoutParams(0,dp(48),1f))
+        header.addView(text(if (singleId == null) (if (videoMode) "Multi · V" else "Multi · P") else "Camera2",18).apply { setPadding(dp(12),0,0,0) },LinearLayout.LayoutParams(0,dp(48),1f))
         if (singleId != null) {
             headerPip = button("PIP") { choosePhysical(0) }
             header.addView(headerPip,LinearLayout.LayoutParams(dp(56),dp(48)))
@@ -123,6 +124,10 @@ class ConcurrentCameraActivity : ComponentActivity() {
             if (Build.VERSION.SDK_INT >= 30 && ready && !busy) { takingPhoto = true; resultText.text = "Capturing…"; updateButtons(); session?.capture(0) }
         }
         actions.addView(recordButton,weight()); actions.addView(captureButton,weight())
+        if (singleId == null) {
+            recordButton.visibility = if (videoMode) View.VISIBLE else View.GONE
+            captureButton.visibility = if (videoMode) View.GONE else View.VISIBLE
+        }
         root.addView(actions); setContentView(root)
         onBackPressedDispatcher.addCallback(this,object : OnBackPressedCallback(true) { override fun handleOnBackPressed() = finish() })
         updateButtons()
@@ -357,6 +362,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private fun row() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
     private fun weight() = LinearLayout.LayoutParams(0,dp(56),1f).apply { setMargins(dp(2),dp(4),dp(2),dp(4)) }
     companion object {
+        const val EXTRA_VIDEO = "multi_video"
         const val EXTRA_SINGLE_ID = "single_logical_id"
         const val EXTRA_PHYSICAL_IDS = "pip_physical_ids"
     }
