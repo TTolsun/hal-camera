@@ -16,13 +16,12 @@ internal fun pipMedia(context: Context, main: Handler, compositor: () -> DeviceC
             val result = photo.mapCatching {
                 photoFrame(it.imageTimestampNs)
                 val name = "${raw?.name ?: library.name()}_PIP.jpg"
-                val uri = library.create(name, false)
-                try { library.write(uri) { stream -> stream.write(it.bytes) }; library.publish(uri) }
-                catch (e: Exception) { runCatching { library.resolver.delete(uri, null, null) }; throw e }
+                val artifact = library.saveFile(name, "image/jpeg") { stream -> stream.write(it.bytes) }
+                val uri = artifact.uri
                 PhotoResult(requestId, name, raw?.sensorTimestamp ?: 0, listOf(uri) + raw?.uris.orEmpty(),
-                    listOf(PhotoArtifact(name, "image/jpeg", uri, it.bytes.size.toLong())) + raw?.artifacts.orEmpty())
+                    listOf(artifact) + raw?.artifacts.orEmpty())
             }
-            if (result.isFailure) raw?.uris?.forEach { runCatching { library.resolver.delete(it, null, null) } }
+            if (result.isFailure) library.deleteAll(raw?.uris.orEmpty())
             done(result)
         } }
         if (rawPhoto == null) compose(null)

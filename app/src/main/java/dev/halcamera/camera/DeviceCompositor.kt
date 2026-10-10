@@ -1,15 +1,11 @@
 package dev.halcamera.camera
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.SurfaceTexture
-import android.media.MediaRecorder
 import android.opengl.*
 import android.os.Handler
 import android.os.HandlerThread
 import android.view.Surface
-import java.io.ByteArrayOutputStream
-import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -49,9 +45,8 @@ internal class DeviceCompositor(
     private var rects = PipScene.initial(pipIds.size).mapIndexed { index, fallback ->
         initialRects.getOrNull(index)?.let { PipScene.restore(it,it.x,it.y) } ?: fallback
     }
-    private var recorder: MediaRecorder? = null
-    private var videoFile: File? = null
-    private var videoName = ""
+    private var recorder: CompositorRecording? = null
+    private val media = CompositorMedia(app)
     private var lastVideoNs = 0L
     private val vertices = ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().apply {
         put(floatArrayOf(-1f,-1f,0f,0f, 1f,-1f,1f,0f, -1f,1f,0f,1f, 1f,1f,1f,1f)); position(0)
@@ -159,68 +154,49 @@ internal class DeviceCompositor(
     }
 
     fun capture(done: (Result<ConcurrentPhoto>) -> Unit) { handler.post {
-        done(runCatching {
+        try {
             check(!closed && received.all { it }) { "PIP frames not ready" }
             draw(snapshot)
             val bytes = ByteBuffer.allocateDirect(output.width * output.height * 4)
             GLES20.glReadPixels(0,0,output.width,output.height,GLES20.GL_RGBA,GLES20.GL_UNSIGNED_BYTE,bytes)
             check(GLES20.glGetError() == GLES20.GL_NO_ERROR) { "Composition readback failed" }
-            val pixels = IntArray(output.width * output.height)
-            for (y in 0 until output.height) for (x in 0 until output.width) {
-                val at = ((output.height - 1 - y) * output.width + x) * 4
-                pixels[y * output.width + x] = (255 shl 24) or ((bytes.get(at).toInt() and 255) shl 16) or
-                    ((bytes.get(at+1).toInt() and 255) shl 8) or (bytes.get(at+2).toInt() and 255)
-            }
-            val bitmap = Bitmap.createBitmap(pixels,output.width,output.height,Bitmap.Config.ARGB_8888)
-            val jpeg = try { ByteArrayOutputStream().use { check(bitmap.compress(Bitmap.CompressFormat.JPEG,95,it)); it.toByteArray() } } finally { bitmap.recycle() }
-            ConcurrentPhoto(jpeg,textures[0].timestamp,null,output,physicalIds,
-                textures.mapIndexed { index, texture -> (if (index == 0) cameraId else pipIds[index-1]) to texture.timestamp }.toMap(), serviceIds)
-        })
+            media.photo(bytes, output, textures[0].timestamp, physicalIds,
+                textures.mapIndexed { index, texture -> (if (index == 0) cameraId else pipIds[index-1]) to texture.timestamp }.toMap(),
+                serviceIds, done)
+        } catch (e: Exception) { done(Result.failure(e)) }
     } }
 
     fun startVideo(name: String, audio: Boolean = false, done: (Result<Unit>) -> Unit) { handler.post {
         val result = runCatching {
             check(!closed && recorder == null && received.all { it })
-            videoName = "${name}_cam${cameraId.replace(Regex("[^A-Za-z0-9_-]"),"_")}${if (pipIds.isEmpty()) "" else "_PIP"}.mp4"
-            videoFile = File(app.cacheDir,videoName)
-            @Suppress("DEPRECATION") val recording = MediaRecorder()
+            val filename = "${name}_cam${cameraId.replace(Regex("[^A-Za-z0-9_-]"),"_")}${if (pipIds.isEmpty()) "" else "_PIP"}.mp4"
+            val recording = CompositorRecording(app,filename,output,audio,onError)
             recorder = recording
-            if (audio) recording.setAudioSource(MediaRecorder.AudioSource.MIC)
-            recording.setVideoSource(MediaRecorder.VideoSource.SURFACE)
-            recording.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            recording.setVideoEncoder(MediaRecorder.VideoEncoder.H264)
-            if (audio) { recording.setAudioEncoder(MediaRecorder.AudioEncoder.AAC); recording.setAudioEncodingBitRate(128_000); recording.setAudioSamplingRate(48_000) }
-            recording.setVideoSize(output.width,output.height); recording.setVideoFrameRate(30)
-            recording.setVideoEncodingBitRate((output.width * output.height * 6).coerceAtLeast(2_000_000))
-            recording.setOutputFile(checkNotNull(videoFile).absolutePath)
-            recording.setOnErrorListener { _, _, _ -> onError(IllegalStateException("Video encoder failed")) }
-            recording.prepare(); encoder = createWindow(recording.surface); recording.start(); lastVideoNs = 0L
+            encoder = createWindow(recording.surface)
+            recording.start(); lastVideoNs = 0L
         }
         if (result.isFailure) discardVideo()
         done(result)
     } }
 
-    fun stopVideo(save: Boolean, done: (Result<String>) -> Unit) { handler.post { done(finishVideo(save)) } }
+    fun stopVideo(save: Boolean, done: (Result<String>) -> Unit) { handler.post {
+        val recording = recorder
+        if (recording == null) { done(Result.failure(IllegalStateException("Not recording"))); return@post }
+        try {
+            detachEncoder()
+            recorder = null
+            media.video(recording,save,done)
+        } catch (e: Exception) { discardVideo(); done(Result.failure(e)) }
+    } }
 
-    private fun finishVideo(save: Boolean): Result<String> = runCatching {
-        val recording = checkNotNull(recorder) { "Not recording" }
-        if (encoder != EGL14.EGL_NO_SURFACE) { current(window); EGL14.eglDestroySurface(display,encoder); encoder = EGL14.EGL_NO_SURFACE }
-        recording.stop(); recording.release(); recorder = null
-        check(save) { "Recording cancelled" }
-        val library = MediaLibrary(app)
-        val uri = library.create(videoName,true)
-        try { library.write(uri) { output -> checkNotNull(videoFile).inputStream().use { it.copyTo(output) } }; library.publish(uri) }
-        catch (e: Exception) { runCatching { library.resolver.delete(uri,null,null) }; throw e }
-        uri.toString()
-    }.also { discardVideo() }
-
-    private fun discardVideo() {
+    private fun detachEncoder() {
         if (encoder != EGL14.EGL_NO_SURFACE) {
-            runCatching { current(window); EGL14.eglDestroySurface(display,encoder) }
-            encoder = EGL14.EGL_NO_SURFACE
+            current(window); EGL14.eglDestroySurface(display,encoder); encoder = EGL14.EGL_NO_SURFACE
         }
-        recorder?.let { runCatching { it.reset() }; runCatching { it.release() } }; recorder = null
-        videoFile?.delete(); videoFile = null
+    }
+    private fun discardVideo() {
+        runCatching { detachEncoder() }
+        recorder?.let(media::discard); recorder = null
     }
     private fun current(target: EGLSurface) { check(EGL14.eglMakeCurrent(display,target,target,eglContext)) }
     private fun createWindow(surface: Surface) = EGL14.eglCreateWindowSurface(display,config,surface,intArrayOf(EGL14.EGL_NONE),0).also { check(it != EGL14.EGL_NO_SURFACE) }
@@ -246,7 +222,7 @@ internal class DeviceCompositor(
             }
         } finally {
             EGL14.eglReleaseThread(); EGL14.eglTerminate(display); viewSurface?.release()
-            thread.quitSafely(); done()
+            thread.quitSafely(); media.close(done)
         }
     } }
 }

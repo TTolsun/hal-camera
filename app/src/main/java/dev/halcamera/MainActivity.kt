@@ -102,7 +102,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var liveIndicator: LiveIndicator
     private var lastPreviewFrameNs = 0L
     private var cameraXStreaming = false
-    private lateinit var metrics: TextView
+    private lateinit var metrics: LiveMeasurementView
     private lateinit var readings: LiveReadings
     private val incidents by lazy {
         IncidentActions(this, io, main, object : IncidentActions.Host {
@@ -222,7 +222,7 @@ class MainActivity : ComponentActivity() {
             if (!closing && engine != null) {
                 liveIndicator.bindSizes(telemetry.sessions[sessionId]?.get("negotiatedStreams") as? Map<*, *>)
             }
-            readings.update(events, frames, time, sessionId, controlBar.controls, controlBar.support, zoomRatio)
+            readings.update(events, frames, time, sessionId, controlBar.controls, zoomRatio)
             manualPanel.bind(controlBar.controls.manual, (ready || recordingVideo) && !stoppingRecording && cli.active == null && !bursts.controlsLocked,
                 manualCapabilities, frames.lastOrNull(), time)
             manualBack.isEnabled = manualPanel.isExpanded
@@ -591,12 +591,7 @@ class MainActivity : ComponentActivity() {
         }
         root.addView(captureChrome,FrameLayout.LayoutParams(-1,-2,Gravity.BOTTOM))
         captureChrome.addView(bottomBar,LinearLayout.LayoutParams(-1,-2))
-        metrics=label("FPS — · ISO — · Exp — · AE — · AF —",12,Look.onDark).apply {
-            textSize=10f
-            gravity=Gravity.CENTER
-            typeface=Typeface.DEFAULT
-            setShadowLayer(dp(2).toFloat(),0f,0f,Color.BLACK)
-        }
+        metrics=LiveMeasurementView(this)
         callbackGraph=ResultCallbackGraph(this).apply { visibility=View.GONE }
         bottomBar.addView(callbackGraph,lp())
         readings=LiveReadings(this,metrics,recorder,io)
@@ -895,8 +890,7 @@ class MainActivity : ComponentActivity() {
         }
         if (old == null) open() else old.close { open() }
     }
-    private fun pipSources(): List<PipSource> = if (engineName == "CameraX")
-        (engine as? CameraXEngine)?.pipSources.orEmpty() else physicalPip.supported(cameraId)
+    private fun pipSources(): List<PipSource> = (engine as? PipCamera)?.pipSources.orEmpty()
 
     internal fun mediaBusy() = pipUi.busy || (engine as? MediaCapture)?.mediaBusy == true || bursts.run != null
     /** One snapshot at a time; failures leave recording active and unsupported cameras explain why. */

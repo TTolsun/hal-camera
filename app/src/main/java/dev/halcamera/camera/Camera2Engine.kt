@@ -769,6 +769,8 @@ class Camera2Engine(
     }
     private fun report(message: String, ok: Boolean) { main.post { if (active) status(message, ok) } }
 
+    override val pipSources: List<PipSource> by lazy { readPipSources(manager,cameraId) }
+
     /** Replace capture-session outputs, never the currently open Live CameraDevice. */
     @androidx.annotation.RequiresApi(30)
     override fun setPip(source: PipSource?, texture: SurfaceTexture?, output: LiveSize?, position: PipRect, done: (Result<Unit>) -> Unit) {

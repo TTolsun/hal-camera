@@ -27,14 +27,7 @@ internal class ConcurrentPhotoStore(context: Context) {
                     .put("timestampSource", timestampSources[id] ?: JSONObject.NULL)
                 val saved = result.mapCatching { photo ->
                     val file = "${capture.groupId}_${index}_cam${id.replace(Regex("[^A-Za-z0-9_-]"), "_")}_JPEG.jpg"
-                    val uri = library.create(file, false)
-                    try {
-                        library.write(uri) { it.write(photo.bytes) }
-                        library.publish(uri)
-                    } catch (e: Exception) {
-                        runCatching { library.resolver.delete(uri, null, null) }
-                        throw e
-                    }
+                    val uri = library.saveFile(file, "image/jpeg") { it.write(photo.bytes) }.uri
                     published += uri
                     entry.put("file", file).put("uri", uri.toString())
                         .put("imageTimestampNs", photo.imageTimestampNs).put("sensorTimestampNs", photo.sensorTimestampNs ?: JSONObject.NULL)
@@ -53,10 +46,10 @@ internal class ConcurrentPhotoStore(context: Context) {
                 .put("requestedAtElapsedRealtimeNs", capture.requestedAtNs).put("sensorSynchronized", false)
                 .put("note", "One app command; independent camera requests and sensor timestamps.")
                 .put("cameras", records)
-            val metadata = library.createData("${capture.groupId}_concurrent.json", "application/json")
+            val metadata = library.saveFile("${capture.groupId}_concurrent.json", "application/json") {
+                it.write(manifest.toString(2).toByteArray(Charsets.UTF_8))
+            }.uri
             published += metadata
-            library.write(metadata) { it.write(manifest.toString(2).toByteArray(Charsets.UTF_8)) }
-            library.publish(metadata)
             val photos = (0 until records.length()).map { records.getJSONObject(it) }.filter { it.has("uri") }
             if (photos.isNotEmpty()) saved(PhotoResult(null,capture.groupId,0,
                 photos.map { Uri.parse(it.getString("uri")) },photos.map {
@@ -68,7 +61,7 @@ internal class ConcurrentPhotoStore(context: Context) {
                     if (entry.has("error")) " (${entry.getString("error")})" else ""
             } + "\nGroup ${capture.groupId}\nPhotos: DCIM/HALCamera · Report: Download/HALCamera"
         } catch (e: Exception) {
-            published.forEach { runCatching { library.resolver.delete(it, null, null) } }
+            library.deleteAll(published)
             throw e
         }
     }

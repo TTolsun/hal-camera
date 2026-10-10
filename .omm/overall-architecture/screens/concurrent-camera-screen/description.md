@@ -7,3 +7,4 @@ ConcurrentLifecycle은 장치별 open·streaming·closing·closed 상태를 관�
 사진은 장치마다 저장합니다. PIP를 끈 장치는 Image.timestamp와 CaptureResult.SENSOR_TIMESTAMP가 같은 JPEG를 저장합니다. PIP를 켠 장치는 DeviceCompositor가 화면과 같은 장면을 JPEG로 읽어 저장합니다. 이 파일의 센서 촬영 시각은 null이며 sourceSurfaceTimestampsNs에 입력 시각을 구분합니다. ConcurrentPhotoStore는 공통 group ID, 장치 ID, Physical ID, 합성 여부·크기, 시각 기준과 성공·실패를 JSON에 기록합니다. 사진 제한 시간은 10초이며 만료 시 미완료 장치를 실패로 기록하고 모두 닫습니다.
 
 Record와 Stop은 장치마다 독립 MP4를 생성합니다. PIP가 켜져 있으면 해당 장치 안의 합성 장면이 저장되고 Multi 화면 전체를 하나로 합치지 않습니다. 화면 종료 시 정상 녹화는 저장을 마친 뒤 해제하며, 장치·인코더 오류 시 진행 중 녹화를 취소합니다. 사진의 부분 실패는 성공한 파일을 지우지 않으며 JSON 저장 실패는 해당 사진 묶음을 롤백합니다. 사진·영상의 센서 동기는 보장하지 않습니다.
+ConcurrentCameraActivity는 Multi 진입만 담당합니다. 사용하지 않는 별도 Single PIP 진입용 Intent와 단일 장치 계획 생성 경로를 제거했습니다. concurrentFrames는 장치 순서대로 높이를 나누며 사용하지 않는 전체 화면·인셋 배치 분기는 제공하지 않습니다.

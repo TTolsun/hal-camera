@@ -104,25 +104,11 @@ internal class ConcurrentLease {
 
 internal data class ConcurrentFrame(val left: Int, val top: Int, val width: Int, val height: Int)
 
-/** Stable device-index order; the primary fills the stage and the others share an inset column. */
-internal fun concurrentFrames(count: Int, width: Int, height: Int, primary: Int,
-    split: Boolean, scale: Float, x: Float, y: Float): List<ConcurrentFrame> {
+/** Split the available height without gaps, in device order. */
+internal fun concurrentFrames(count: Int, width: Int, height: Int): List<ConcurrentFrame> {
     if (count < 1 || width < 1 || height < 1) return emptyList()
-    val main = primary.coerceIn(0, count - 1)
-    val insetCount = (count - 1).coerceAtLeast(1)
-    val insetWidth = (width * scale.coerceIn(.25f, .5f)).toInt().coerceAtLeast(1)
-    val insetHeight = minOf(insetWidth * 4 / 3, height / insetCount)
     return List(count) { index ->
-        val rank = (index - main + count) % count
-        when {
-            split -> {
-                val top = rank * height / count
-                ConcurrentFrame(0, top, width, (rank + 1) * height / count - top)
-            }
-            index == main -> ConcurrentFrame(0, 0, width, height)
-            else -> ConcurrentFrame(((width - insetWidth) * x.coerceIn(0f, 1f)).toInt(),
-                ((height - insetHeight * insetCount) * y.coerceIn(0f, 1f)).toInt() + (rank - 1) * insetHeight,
-                insetWidth, insetHeight)
-        }
+        val top = index * height / count
+        ConcurrentFrame(0, top, width, (index + 1) * height / count - top)
     }
 }

@@ -341,9 +341,6 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         fun flashState(state: Int?, controls: LiveControls): String? = if (controls.flash == FlashMode.OFF) null else
             "Flash " + when (state) { null -> "—"; 0 -> "Off"; 1 -> "Charging"; 2 -> "Ready"; 3 -> "Fired"; 4 -> "Partial"; else -> "#$state" }
 
-        /** The applied EV only when it differs from the EV button. */
-        fun evApplied(applied: Int?, controls: LiveControls, support: LiveControlSupport): String? =
-            applied?.takeIf { it != controls.evIndex }?.let { "${support.evLabel(it)} applied" }
     }
 }
 

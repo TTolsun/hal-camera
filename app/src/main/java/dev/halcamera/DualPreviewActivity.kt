@@ -148,7 +148,7 @@ class DualPreviewActivity : ComponentActivity() {
     private lateinit var root: FrameLayout
     private lateinit var topBar: LinearLayout
     private lateinit var bottomBar: LinearLayout
-    private lateinit var metricsText: TextView
+    private lateinit var metricsText: dev.halcamera.ui.LiveMeasurementView
     private lateinit var callbackButton: Button
     private lateinit var liveIndicator: LiveIndicator
     private lateinit var callbackGraph: ResultCallbackGraph
@@ -315,11 +315,7 @@ class DualPreviewActivity : ComponentActivity() {
         bottomBar = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
         callbackGraph = ResultCallbackGraph(this).apply { visibility = View.GONE }
         bottomBar.addView(callbackGraph, lp(0))
-        metricsText = Look.text(this, "FPS — / —", 10, Look.onDark).apply {
-            setSingleLine(true)
-            setAutoSizeTextTypeUniformWithConfiguration(7,10,1,android.util.TypedValue.COMPLEX_UNIT_SP)
-            gravity = Gravity.CENTER
-            setShadowLayer(dp(2).toFloat(), 0f, 0f, Color.BLACK)
+        metricsText = dev.halcamera.ui.LiveMeasurementView(this, dual = true).apply {
             setOnClickListener { showInfo() }
         }
         bottomBar.addView(metricsText, lp(0))
@@ -672,7 +668,7 @@ class DualPreviewActivity : ComponentActivity() {
         val latest = events.lastOrNull { it.session == sessionId && it.kind == "capture_result" }
         val primary = events.lastOrNull { it.session == sessionId && it.kind == "dual_main_result" }
         val frame = (primary ?: latest)?.takeIf { SystemClock.elapsedRealtimeNanos()-it.atNs < 1_500_000_000L }
-        metricsText.text = dev.halcamera.ui.LiveMeasurementText.format(frame?.values.orEmpty(),
+        metricsText.bind(frame?.values.orEmpty(),
             "${fps(current?.first)} / ${fps(current?.second)}")
         manualPanel.bind(controlBar.controls.manual, !busy(), mainControls?.manual ?: ManualSupport(camera2 = false), primary, SystemClock.elapsedRealtimeNanos())
         liveIndicator.bindStabilization(dev.halcamera.camera.LiveEisStatus(

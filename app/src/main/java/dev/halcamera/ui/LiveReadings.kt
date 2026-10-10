@@ -7,11 +7,10 @@ import android.os.PowerManager
 import android.os.Process
 import android.os.SystemClock
 import android.view.View
-import android.widget.TextView
-import dev.halcamera.camera.LiveControlSupport
+
 import dev.halcamera.camera.LiveControls
 import dev.halcamera.camera.FlashMode
-import dev.halcamera.camera.ManualControls
+
 import dev.halcamera.camera.WhiteBalance
 import dev.halcamera.telemetry.Event
 import dev.halcamera.telemetry.FlightRecorder
@@ -22,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 /** UI updates run on the main thread; system telemetry sampling runs on the supplied worker. */
 class LiveReadings(
     private val context: Context,
-    private val metrics: TextView,
+    private val metrics: LiveMeasurementView,
     private val recorder: FlightRecorder,
     private val systemWorker: Executor,
 ) {
@@ -35,9 +34,9 @@ class LiveReadings(
     private var lastSystemNs = 0L
     private val samplingSystem = AtomicBoolean(false)
 
-    fun update(events: List<Event>, frames: List<Event>, time: Long, sessionId: String, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float) {
+    fun update(events: List<Event>, frames: List<Event>, time: Long, sessionId: String, controls: LiveControls, zoomRatio: Float) {
         last = readout.read(events, sessionId, time)
-        if (metrics.visibility == View.VISIBLE) updateReadings(frames, time, controls, support, zoomRatio)
+        if (metrics.visibility == View.VISIBLE) updateReadings(frames, time, controls, zoomRatio)
         if (time - lastSystemNs >= 1_000_000_000L && samplingSystem.compareAndSet(false, true)) {
             lastSystemNs = time
             // PSS collection can block for tens of milliseconds. Never run it on the preview's UI thread.
@@ -45,36 +44,27 @@ class LiveReadings(
         }
     }
 
-    private fun updateReadings(frames: List<Event>, time: Long, controls: LiveControls, support: LiveControlSupport, zoomRatio: Float) {
+    private fun updateReadings(frames: List<Event>, time: Long, controls: LiveControls, zoomRatio: Float) {
         val frame = frames.lastOrNull()?.takeIf { time - it.atNs < 1_500_000_000L }
         fun num(key: String) = (frame?.values?.get(key) as? Number)?.toDouble()
         // Measurements and camera state come first; active settings remain visible after the controls close.
-        // Optional observed extras join the state line only while they fit. An applied EV or
-        // zoom that differs from the request appears only once the last ten results all differ, not for the few frames
-        // the pipeline lags behind every change. Lens position and everything else stay in the incident ZIP.
+        // Only a sustained applied zoom mismatch is added below the measured state.
         val recent = frames.takeLast(10)
         fun differs(key: String, want: Double, tolerance: Double) = recent.size == 10 &&
             recent.all { e -> (e.values[key] as? Number)?.toDouble()?.let { kotlin.math.abs(it - want) > tolerance } == true }
         val extras = listOfNotNull(
             LiveControlBar.flashState(num("flashState")?.toInt(), controls),
-            LiveControlBar.evApplied(num("evApplied")?.toInt()?.takeIf { differs("evApplied", controls.evIndex.toDouble(), 0.5) }, controls, support),
             num("zoomRatio")?.takeIf { differs("zoomRatio", zoomRatio.toDouble(), 0.01 * zoomRatio) }?.let { "Zoom ${"%.2f".format(Locale.US, it)}x applied" })
-        val room = (metrics.width - metrics.paddingLeft - metrics.paddingRight).toFloat()
-        val measurement = LiveMeasurementText.format(frame?.values.orEmpty())
-        val width = metrics.paint.measureText(measurement)
-        if (room > 0 && width > room) metrics.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX,metrics.textSize*(room-1)/width)
         val settings = listOfNotNull(
             controls.flash.takeIf { it != FlashMode.OFF }?.label,
-            support.evLabel(controls.evIndex).takeIf { controls.evIndex != 0 },
             "AE Lock".takeIf { controls.aeLock },
             "AF Lock".takeIf { controls.afLock },
             "AEB".takeIf { controls.bracket },
-            controls.manual.exposure?.let { "M ISO ${it.iso} · ${ManualControls.shutter(it.timeNs)}" },
+            "M".takeIf { controls.manual.exposure != null },
             controls.manual.focusDiopters?.let { "MF ${"%.2f".format(Locale.US,it)} D" },
             controls.manual.wb.takeIf { it != WhiteBalance.AUTO }?.let { "WB ${it.label}" },
         ).plus(extras).joinToString(" · ")
-        val text = listOf(measurement,settings).filter { it.isNotEmpty() }.joinToString("\n")
-        if (metrics.text.toString() != text) metrics.text = text
+        metrics.bind(frame?.values.orEmpty(), details = settings)
     }
 
     private fun sampleSystem() {

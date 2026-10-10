@@ -47,18 +47,15 @@ class ConcurrentPlanTest {
         assertEquals(all.size, all.map { it.streams.map { stream -> stream.camera.id }.toSet() }.distinct().size)
     }
 
-    @Test fun `multiple insets remain inside the stage and split fills its height`() {
-        for (count in 2..6) for (primary in 0 until count) {
-            val pip = concurrentFrames(count, 1080, 1703, primary, false, .5f, 1f, 1f)
-            assertEquals(ConcurrentFrame(0, 0, 1080, 1703), pip[primary])
-            val insets = pip.filterIndexed { index, _ -> index != primary }.sortedBy { it.top }
-            insets.forEach { assertTrue(it.left >= 0 && it.top >= 0 && it.left + it.width <= 1080 && it.top + it.height <= 1703) }
-            insets.zipWithNext().forEach { (a, b) -> assertTrue(a.top + a.height <= b.top) }
-            val split = concurrentFrames(count, 1080, 1703, primary, true, .5f, 1f, 1f).sortedBy { it.top }
+    @Test fun `split fills the stage without gaps in device order`() {
+        for (count in 1..6) {
+            val split = concurrentFrames(count, 1080, 1703)
             assertEquals(1703, split.sumOf { it.height })
             assertEquals(0, split.first().top)
+            split.forEach { assertEquals(1080, it.width); assertEquals(0, it.left) }
             split.zipWithNext().forEach { (a, b) -> assertEquals(a.top + a.height, b.top) }
         }
+        assertTrue(concurrentFrames(0,1080,1703).isEmpty())
     }
 
     @Test fun `preview and jpeg must both have advertised bounded sizes`() {

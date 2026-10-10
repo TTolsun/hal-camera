@@ -34,7 +34,6 @@ import dev.halcamera.ui.LiveChoiceSheet
 /** Multi owns independent devices; each device may compose its own physical PIP inputs. */
 class ConcurrentCameraActivity : ComponentActivity() {
     private val manager by lazy { getSystemService(CameraManager::class.java) }
-    private val singleId by lazy { intent.getStringExtra(EXTRA_SINGLE_ID) }
     private val videoMode by lazy { intent.getBooleanExtra(EXTRA_VIDEO,false) }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { if (it) discover() }
     private lateinit var stage: FrameLayout
@@ -45,7 +44,6 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private lateinit var pairButton: Button
     private lateinit var retryButton: Button
     private lateinit var streamsButton: Button
-    private var headerPip: Button? = null
     private val previews = mutableListOf<TextureView>()
     private val panels = mutableListOf<FrameLayout>()
     private val labels = mutableListOf<TextView>()
@@ -84,8 +82,6 @@ class ConcurrentCameraActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         if (savedInstanceState == null) positionStore.clear()
         WindowCompat.setDecorFitsSystemWindows(window,false)
-        singleId?.let { physical[it] = intent.getStringArrayListExtra(EXTRA_PHYSICAL_IDS).orEmpty().take(1)
-            intent.getStringExtra(EXTRA_PIP_SERVICE)?.let { source -> servicePip[it] = source } }
         savedInstanceState?.getBundle("physical")?.let { saved -> saved.keySet().forEach { physical[it] = saved.getStringArrayList(it).orEmpty().take(1) } }
         savedInstanceState?.getBundle("servicePip")?.let { saved -> saved.keySet().forEach { id -> saved.getString(id)?.let { servicePip[id] = it } } }
         val root = row().apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.cameraSurface) }
@@ -95,11 +91,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         }
         val header = row()
         header.addView(button("Live") { finish() },LinearLayout.LayoutParams(dp(68),dp(48)))
-        header.addView(text(if (singleId == null) (if (videoMode) "Multi · V" else "Multi · P") else "Camera2",18).apply { setPadding(dp(12),0,0,0) },LinearLayout.LayoutParams(0,dp(48),1f))
-        if (singleId != null) {
-            headerPip = button("PIP") { choosePhysical(0) }
-            header.addView(headerPip,LinearLayout.LayoutParams(dp(56),dp(48)))
-        }
+        header.addView(text(if (videoMode) "Multi · V" else "Multi · P",18).apply { setPadding(dp(12),0,0,0) },LinearLayout.LayoutParams(0,dp(48),1f))
         streamsButton = button("Streams") {
             val id = plans.getOrNull(selected)?.streams?.firstOrNull()?.camera?.id ?: return@button
             afterClose = { startActivity(Intent(this,LiveStreamsActivity::class.java)
@@ -109,7 +101,6 @@ class ConcurrentCameraActivity : ComponentActivity() {
         }
         header.addView(streamsButton,LinearLayout.LayoutParams(dp(80),dp(48))); root.addView(header)
         pairButton = button("Cameras") { chooseCameras() }
-        pairButton.visibility = if (singleId == null) View.VISIBLE else View.GONE
         root.addView(pairButton,LinearLayout.LayoutParams(-1,dp(48)))
         status = text("Opening cameras…",12)
         stage = FrameLayout(this).apply { setBackgroundColor(Look.cameraCard); clipChildren = true }
@@ -160,7 +151,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
             val label = text("",13); labels += label
             controls.addView(label,LinearLayout.LayoutParams(0,dp(48),1f))
             val pip = button("PIP") { choosePhysical(index) }; pipButtons += pip
-            if (singleId == null) controls.addView(pip,LinearLayout.LayoutParams(dp(64),dp(48)))
+            controls.addView(pip,LinearLayout.LayoutParams(dp(64),dp(48)))
             val move = button("Move") { choosePosition(index) }; moveButtons += move
             controls.addView(move,LinearLayout.LayoutParams(dp(64),dp(48)))
             panel.addView(controls,FrameLayout.LayoutParams(-1,dp(48),Gravity.BOTTOM)); stage.addView(panel)
@@ -185,8 +176,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
             val limit = LiveStreamsActivity.savedMultiLimit(this)
             if (loadedLimit != limit) { selected = 0; failed = false }
             loadedLimit = limit
-            plans = singleId?.let { listOf(readSingleCompositionPlan(manager,it)) }
-                ?: readConcurrentPlans(manager,limit.takeIf { it > 0 } ?: Int.MAX_VALUE)
+            plans = readConcurrentPlans(manager,limit.takeIf { it > 0 } ?: Int.MAX_VALUE)
             if (plans.isEmpty()) status.text = "Multi is unavailable on this device."
             else { selected = selected.coerceIn(plans.indices); pairButton.text = plans[selected].label; startIfReady() }
         } catch (e: Exception) { status.text = e.message; failed = true }
@@ -333,17 +323,12 @@ class ConcurrentCameraActivity : ComponentActivity() {
             val active = pipIds(streams.getOrNull(i)?.camera?.id).isNotEmpty()
             CameraWidgets(this).highlight(button,active)
             button.contentDescription = if (active) "PIP on, select camera" else "PIP, select camera" }
-        headerPip?.isEnabled = !busy && streams.firstOrNull()?.camera?.id?.let { hasPipSources(it) } == true
-        headerPip?.alpha = if (headerPip?.isEnabled == true) 1f else .4f
-        headerPip?.let { CameraWidgets(this).highlight(it,pipButtons.firstOrNull()?.isSelected == true) }
-        headerPip?.text = pipButtons.firstOrNull()?.text ?: "PIP"
-        headerPip?.contentDescription = pipButtons.firstOrNull()?.contentDescription
         moveButtons.forEachIndexed { i,button -> button.visibility = if (pipIds(streams.getOrNull(i)?.camera?.id).isEmpty()) View.INVISIBLE else View.VISIBLE
             button.isEnabled = ready && !takingPhoto && !videoPending && !closing }
     }
     private fun layoutPreviews() {
         if (stage.width <= 0 || stage.height <= 0 || panels.isEmpty()) return
-        val frames = concurrentFrames(panels.size,stage.width,stage.height,0,true,.32f,1f,0f)
+        val frames = concurrentFrames(panels.size,stage.width,stage.height)
         panels.forEachIndexed { i,panel ->
             val f = frames[i]; val old = panel.layoutParams as? FrameLayout.LayoutParams
             if (old == null || old.width != f.width || old.height != f.height || old.topMargin != f.top)
@@ -396,8 +381,5 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private fun weight() = LinearLayout.LayoutParams(0,dp(56),1f).apply { setMargins(dp(2),dp(4),dp(2),dp(4)) }
     companion object {
         const val EXTRA_VIDEO = "multi_video"
-        const val EXTRA_PIP_SERVICE = "pip_service_id"
-        const val EXTRA_SINGLE_ID = "single_logical_id"
-        const val EXTRA_PHYSICAL_IDS = "pip_physical_ids"
     }
 }
