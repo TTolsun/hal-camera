@@ -4,6 +4,21 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PipSceneTest {
+    @Test fun `restored placement retains coordinates across preview shapes within parent bounds`() {
+        val dragged = PipScene.liveDefault.moved(.1f,.75f)
+        assertEquals(dragged,PipScene.restore(PipScene.liveDefault,dragged.x,dragged.y))
+        val multi = PipScene.restore(PipScene.initial(1).single(),dragged.x,dragged.y)
+        assertEquals(.1f,multi.x,.0001f)
+        assertEquals(1f,multi.y+multi.height,.0001f)
+        assertTrue(multi.contains(multi.x+.01f,multi.y+.01f))
+    }
+
+    @Test fun `invalid saved coordinates fall back or clamp without leaving parent`() {
+        val fallback = PipScene.liveDefault
+        assertEquals(fallback,PipScene.restore(fallback,Float.NaN,Float.POSITIVE_INFINITY))
+        assertEquals(fallback.moved(0f,1f),PipScene.restore(fallback,-10f,10f))
+    }
+
     @Test fun `producer rotation and mirror preserve aspect without a second camera rotation`() {
         assertEquals(16f/9f,PipScene.sourceAspect(1280,720,1f,0f,0f,-1f),.0001f)
         assertEquals(9f/16f,PipScene.sourceAspect(1280,720,0f,1f,-1f,0f),.0001f)

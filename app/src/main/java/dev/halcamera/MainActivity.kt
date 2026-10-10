@@ -147,7 +147,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var engineButton: Button
     private lateinit var physicalPipButton: Button
     private var pendingPip: PipSource? = null
-    private val pipUi by lazy { LivePipController(this,{ previewHost },{ engine as? Camera2Engine },::updateMediaControls,{ lastPreviewFrameNs = nowNs() },::showNotice) }
+    private val pipUi by lazy { LivePipController(this,{ previewHost },{ engine as? Camera2Engine },::updateMediaControls,{ lastPreviewFrameNs = nowNs() },::showNotice,{ cameraId }) }
     private val physicalPip by lazy { dev.halcamera.ui.PhysicalPipPicker(this,manager) }
     private val graphBack = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() = showCallbacks(false)

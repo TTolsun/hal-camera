@@ -22,6 +22,7 @@ internal class LivePipSession(
     texture: SurfaceTexture,
     output: LiveSize,
     preview: LiveSize,
+    position: PipRect,
     private val configureMain: (List<Surface>) -> Unit,
     private val ready: () -> Unit,
     private val failed: (String) -> Unit,
@@ -37,7 +38,7 @@ internal class LivePipSession(
         if (source.physical) listOf(source.id) else emptyList(),
         onReady = { main.post { if (!closing) { readyState = true; ready() } } },
         onError = { main.post { if (!closing) failed(it.message ?: "PIP unavailable") } },
-        serviceIds = if (source.physical) emptyList() else listOf(source.id))
+        serviceIds = if (source.physical) emptyList() else listOf(source.id), initialRects = listOf(position))
     private var extra: CameraDevice? = null
     private var session: CameraCaptureSession? = null
     private var opening = false
@@ -54,7 +55,6 @@ internal class LivePipSession(
 
     @SuppressLint("MissingPermission")
     fun start() {
-        compositor.move(0,PipRect(.64f,.20f,.32f,.24f))
         compositor.start { inputs -> handler.post {
             if (closing) return@post
             if (source.physical) configureMain(inputs)

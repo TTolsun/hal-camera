@@ -273,6 +273,7 @@ sources:
           - app/src/main/java/dev/halcamera/camera/PipSource.kt
           - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
           - app/src/main/java/dev/halcamera/ui/LivePipController.kt
+          - app/src/main/java/dev/halcamera/ui/PipPositionStore.kt
           - app/src/main/java/dev/halcamera/ui/PhysicalPipPicker.kt
           - app/src/main/java/dev/halcamera/ui/LiveChoiceSheet.kt
       screens/dual-preview-screen/cli-adapter:

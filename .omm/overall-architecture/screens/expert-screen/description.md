@@ -16,4 +16,4 @@ LiveIndicator의 크기 표시를 누르면 Live Streams를 엽니다. 설정과
 
 사진·동영상 저장 완료 안내는 자동으로 숨기지 않습니다. 활성 Live의 동영상 저장 실패도 notice 경로로 전달해 다음 상태 변화까지 표시하며, Save Events · ZIP으로 진단을 남기는 다음 행동을 안내합니다. 카메라가 이미 닫힌 경우에는 기존 토스트 경로를 유지합니다. 진단 ZIP 완료 창에는 앱 내부 저장 여부와 Lab → ZIP Archives에서 다시 찾는 경로를 표시합니다.
 
-Single의 API 선택 옆 PIP 버튼은 Physical ID와 다른 Service ID를 단일 선택 목록으로 표시합니다. LivePipController는 MainActivity의 기존 프리뷰에 합성 TextureView를 추가하며 화면을 전환하지 않습니다. Camera2Engine은 같은 CameraDevice에서 세션 출력만 바꾸고 LivePipSession이 추가 Service 장치만 소유합니다. 기존 셔터·Photo/Video·줌·실시간 결과를 유지하고, PIP Off 시 원래 출력을 복원합니다. CameraX에서는 명시적 Camera2 전환이 필요하므로 CameraX 장치 유지 경로는 아닙니다. 줌과 측정 정보 아래의 빈 결과 행을 제거하고 결과는 컨트롤 위에 겹쳐 표시합니다.
+Single의 API 선택 옆 PIP 버튼은 Physical·Service ID 하나를 고릅니다. LivePipController는 현재 프리뷰에 합성 TextureView를 더하며 셔터·모드·줌·실시간 정보를 유지합니다. Camera2 장치는 유지하고 CameraX에서는 명시적 Camera2 전환을 요구합니다. 합성·위치 복원·저장 계약은 concurrent-camera-screen/pip-composition 요소가 담당합니다. 결과 안내는 컨트롤 위에 겹쳐 표시합니다.
