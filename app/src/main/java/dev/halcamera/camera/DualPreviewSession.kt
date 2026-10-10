@@ -408,7 +408,8 @@ class DualPreviewSession(
                         "crop" to r[CaptureResult.SCALER_CROP_REGION]?.toShortString(),
                         "ev" to r[CaptureResult.CONTROL_AE_EXPOSURE_COMPENSATION], "aeLock" to r[CaptureResult.CONTROL_AE_LOCK],
                         "af" to r[CaptureResult.CONTROL_AF_STATE], "afRegions" to r[CaptureResult.CONTROL_AF_REGIONS]?.joinToString { it.rect.toShortString() },
-                        "ae" to r[CaptureResult.CONTROL_AE_STATE], "iso" to r[CaptureResult.SENSOR_SENSITIVITY],
+                        "ae" to r[CaptureResult.CONTROL_AE_STATE], "awb" to r[CaptureResult.CONTROL_AWB_STATE],
+                        "iso" to r[CaptureResult.SENSOR_SENSITIVITY],
                         "exposureNs" to r[CaptureResult.SENSOR_EXPOSURE_TIME], "focusDiopters" to r[CaptureResult.LENS_FOCUS_DISTANCE]))
             }
             focusWatch.onResult(primary?.get(CaptureResult.CONTROL_AF_STATE))?.let { phase ->
