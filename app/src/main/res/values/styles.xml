@@ -1,4 +1,12 @@
 <resources>
+    <style name="LiveSheetFromTop">
+        <item name="android:windowEnterAnimation">@anim/live_sheet_top_enter</item>
+        <item name="android:windowExitAnimation">@anim/live_sheet_top_exit</item>
+    </style>
+    <style name="LiveSheetFromBottom">
+        <item name="android:windowEnterAnimation">@anim/live_sheet_bottom_enter</item>
+        <item name="android:windowExitAnimation">@anim/live_sheet_bottom_exit</item>
+    </style>
     <style name="AppTheme" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans</item>
         <item name="android:windowLightStatusBar">false</item>

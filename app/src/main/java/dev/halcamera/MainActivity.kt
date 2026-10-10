@@ -1,7 +1,6 @@
 package dev.halcamera
 
 import android.Manifest
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -631,7 +630,7 @@ class MainActivity : ComponentActivity() {
                 { withMediaPermissions(false,it) }, { bursts.hold(sessionId) }, bursts::release)
         }
         captureRow.addView(mediaButton,LinearLayout.LayoutParams(captureSize,captureSize).apply { marginStart=dp(12); marginEnd=dp(12) })
-        cameraShortcut=IconButton(this,R.drawable.ic_camera_select,"Choose camera",filled=true) { selectCamera(cameraShortcut) }
+        cameraShortcut=IconButton(this,R.drawable.ic_camera_select,"Choose camera",filled=true) { selectCamera() }
         snapshotButton=IconButton(this,R.drawable.ic_snapshot,"Take a photo while recording",filled=true) { takeSnapshot() }.apply { visibility=View.GONE }
         val cameraSlot=FrameLayout(this).apply {
             addView(cameraShortcut,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER))
@@ -688,15 +687,16 @@ class MainActivity : ComponentActivity() {
         updateCameraChoices()
         updateMediaControls()
     }
-    private fun selectChoice(anchor:View,items:List<String>,selected:Int,onSelect:(Int)->Unit) {
-        showSelectionPopup(anchor,items,selected) { index ->
-            if(!recordingVideo && resumed && cli.active == null) onSelect(index)
+    private fun selectCamera() {
+        if (cli.active != null || recordingVideo || mediaBusy() || closing) return
+        val choices=cameraIds.map { id ->
+            val endpoint=cameraEndpoints[id]
+            val name=endpoint?.let { listOfNotNull(CameraLabel.facing(it.role,it.facing),CameraLabel.lens(it.role),
+                CameraLabel.angle(it.role,it.equivalentFocalMm)).joinToString(" · ") }?.takeIf { it.isNotEmpty() } ?: "Camera"
+            LiveChoiceSheet.Choice(name,"ID $id")
         }
-    }
-    private fun selectCamera(anchor: View) {
-        if (cli.active != null) return
-        if (recordingVideo) return
-        selectChoice(anchor,cameraIds.map(::cameraLabel),cameraIds.indexOf(cameraId)) { index ->
+        LiveChoiceSheet.show(this,"Camera",choices,cameraIds.indexOf(cameraId)) { index ->
+            if (recordingVideo || !resumed || cli.active != null || mediaBusy() || closing) return@show
             val chosen=cameraIds[index]
             if (cameraId!=chosen) {
                 pendingPermissionAction=null
@@ -764,7 +764,7 @@ class MainActivity : ComponentActivity() {
             val progress = record?.optJSONObject("progress")
             if (progress != null) "CLI · ${progress.optInt("saved")}/${progress.optInt("total")} saved · ${progress.optString("phase")}" else "CLI · ${record?.optString("state") ?: "preparing"}"
         }
-        captureFeedback.bind(cliProgress ?: bursts.label,controlBar.controls.bracket && !videoMode)
+        captureFeedback.bind(cliProgress ?: bursts.label,false)
         if(stoppingRecording) {
             mediaButton.contentDescription="Saving video"
             ViewCompat.setStateDescription(mediaButton,"Saving")
@@ -841,10 +841,9 @@ class MainActivity : ComponentActivity() {
         if (cli.active != null || recordingVideo || stoppingRecording || closing ||
             pendingPermissionAction != null || mediaBusy()) return
         if (engineName == "CameraX") {
-            AlertDialog.Builder(this).setTitle("Camera2 required")
-                .setMessage("Open Multi with Camera2?")
-                .setPositiveButton("Open Camera2") { _, _ -> openConcurrentCamera2(video) }
-                .setNegativeButton("Cancel", null).show()
+            LiveChoiceSheet.show(this,"Multi",listOf(LiveChoiceSheet.Choice("Camera2","Open Multi"))) {
+                openConcurrentCamera2(video)
+            }
         } else openConcurrentCamera2(video)
     }
     private fun openConcurrentCamera2(video: Boolean) {

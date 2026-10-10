@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.SurfaceTexture
 import android.hardware.camera2.*
+import android.hardware.camera2.params.OutputConfiguration
+import android.hardware.camera2.params.SessionConfiguration
 import android.net.Uri
 import android.os.Handler
 import android.view.Surface
@@ -57,6 +59,19 @@ internal class LivePipSession(
             if (closing) return@post
             if (source.physical) configureMain(inputs)
             else {
+                try {
+                    val callback=object : CameraCaptureSession.StateCallback() {
+                        override fun onConfigured(session: CameraCaptureSession) = Unit
+                        override fun onConfigureFailed(session: CameraCaptureSession) = Unit
+                    }
+                    val configs=listOf(parentId,source.id).mapIndexed { index,id ->
+                        id to SessionConfiguration(SessionConfiguration.SESSION_REGULAR,
+                            listOf(OutputConfiguration(inputs[index])),{ handler.post(it) },callback)
+                    }.toMap()
+                    if (!manager.isConcurrentSessionConfigurationSupported(configs)) {
+                        fail("PIP combination unavailable"); return@post
+                    }
+                } catch (e: Exception) { fail(e.message ?: "PIP combination unavailable"); return@post }
                 opening = true
                 try { manager.openCamera(source.id,object : CameraDevice.StateCallback() {
                     override fun onOpened(camera: CameraDevice) {

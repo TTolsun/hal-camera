@@ -2,7 +2,6 @@ package dev.halcamera
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Matrix
@@ -30,6 +29,7 @@ import dev.halcamera.camera.*
 import dev.halcamera.ui.Look
 import dev.halcamera.ui.CameraWidgets
 import dev.halcamera.ui.PhysicalPipPicker
+import dev.halcamera.ui.LiveChoiceSheet
 
 /** Multi owns independent devices; each device may compose its own physical PIP inputs. */
 class ConcurrentCameraActivity : ComponentActivity() {
@@ -112,7 +112,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
         stage.addOnLayoutChangeListener { _,_,_,_,_,_,_,_,_ -> layoutPreviews() }
         resultText = text("",12).apply { minHeight = dp(48); maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
-            setOnClickListener { if (report.isNotEmpty()) AlertDialog.Builder(this@ConcurrentCameraActivity).setTitle("Capture details").setMessage(report).setPositiveButton("OK",null).show() }
+            setOnClickListener { if (report.isNotEmpty()) LiveChoiceSheet.show(this@ConcurrentCameraActivity,"Capture details",
+                content=Look.text(this@ConcurrentCameraActivity,report,12,Look.onDark)) }
         }
         val feedback = row()
         feedback.addView(resultText,LinearLayout.LayoutParams(0,dp(48),1f))
@@ -188,12 +189,17 @@ class ConcurrentCameraActivity : ComponentActivity() {
 
     private fun chooseCameras() {
         if (busy || plans.isEmpty()) return
-        AlertDialog.Builder(this).setTitle("Cameras").setSingleChoiceItems(plans.map { it.label }.toTypedArray(),selected) { dialog,index ->
+        LiveChoiceSheet.show(this,"Cameras",plans.map { LiveChoiceSheet.Choice(it.label) },selected,
+            edge=LiveChoiceSheet.Edge.TOP,actionLabel="Streams",confirm={
+                pairButton.post {
+                    LiveChoiceSheet.show(this,"Streams",content=Look.text(this,
+                        states.entries.joinToString("\n") { "Camera ${it.key}: ${it.value}" },12,Look.onDark),edge=LiveChoiceSheet.Edge.TOP)
+                }
+                true
+            }) { index ->
             selected = index; pairButton.text = plans[index].label; failed = false; resultText.text = ""; report = ""
-            closeSession(); dialog.dismiss()
-        }.setNeutralButton("Details") { _,_ -> AlertDialog.Builder(this).setTitle("Streams")
-            .setMessage(states.entries.joinToString("\n") { "Camera ${it.key}: ${it.value}" }).setPositiveButton("OK",null).show()
-        }.setNegativeButton("Cancel",null).show()
+            closeSession()
+        }
     }
 
     private fun choosePhysical(index: Int) {
@@ -204,6 +210,15 @@ class ConcurrentCameraActivity : ComponentActivity() {
             if (it.physical) it.id in physical[camera.id].orEmpty() else it.id == servicePip[camera.id]
         }
         PhysicalPipPicker(this,manager).show(camera.id,"Camera2",sources.getOrNull(selected)) { _,source ->
+            val primaryIds=plans[this.selected].streams.map { it.camera.id }
+            val nextServices=servicePip.filterKeys { it != camera.id && it in primaryIds }.values +
+                listOfNotNull(source?.takeUnless { it.physical }?.id)
+            val devices=(primaryIds + nextServices).distinct()
+            val limit=LiveStreamsActivity.savedMultiLimit(this)
+            if (limit>0 && devices.size>limit) {
+                android.widget.Toast.makeText(this,"Maximum camera devices: $limit",android.widget.Toast.LENGTH_SHORT).show()
+                return@show
+            }
             physical.remove(camera.id); servicePip.remove(camera.id)
             if (source != null) {
                 if (source.physical) physical[camera.id] = listOf(source.id) else servicePip[camera.id] = source.id
@@ -216,7 +231,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         val id = plans.getOrNull(selected)?.streams?.getOrNull(index)?.camera?.id ?: return
         val ids = pipIds(id)
         if (ids.isEmpty() || takingPhoto || videoPending || closing) return
-        AlertDialog.Builder(this).setTitle("Move PIP").setItems(ids.map { "Camera $it" }.toTypedArray()) { _,i ->
+        LiveChoiceSheet.show(this,"Move PIP",ids.map { LiveChoiceSheet.Choice("Camera $it") },edge=LiveChoiceSheet.Edge.TOP) { i ->
             val frames = positions.getOrPut(id) { PipScene.initial(ids.size).toMutableList() }
             val old = frames[i]
             frames[i] = when {
@@ -226,7 +241,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
                 else -> old.moved(1f,0f)
             }
             session?.movePhysical(id,i,frames[i])
-        }.setNegativeButton("Cancel",null).show()
+        }
     }
 
     private fun startIfReady() {

@@ -60,7 +60,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
 
     private val mainRow = LinearLayout(context).apply { gravity = Gravity.CENTER }
-    private val flashRow = LinearLayout(context).apply { gravity = Gravity.CENTER; visibility = View.GONE }
+    private val flashRow = LinearLayout(context).apply { gravity = Gravity.TOP; weightSum = 6f; visibility = View.GONE }
     private val flash = QuickButton(context) { tap { openFlash() } }
     private val afLock = QuickButton(context) { tap { toggleAf() } }
     private val aeLock = QuickButton(context) { tap { toggleAe() } }
@@ -94,7 +94,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         listOf("−" to -1, "+" to 1, "0" to 0).forEach { (label, delta) ->
             if (delta == 1) evPanel.addView(ruler, LinearLayout.LayoutParams(0, dp(64), 1f))
             evPanel.addView(Button(context).apply {
-                text = label; textSize = 14f; isAllCaps = false
+                text = label; textSize = 12f; isAllCaps = false
                 setTextColor(Look.onDark)
                 minWidth = 0; minimumWidth = 0
                 setPadding(0, 0, 0, 0)
@@ -170,10 +170,10 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             val button = QuickButton(context) { tap { flashRow.visibility = View.GONE; mainRow.visibility = View.VISIBLE; update(controls.copy(flash = mode)) } }
             button.show(icon = flashIcon(mode), text = null, active = mode == controls.flash, locked = false, available = true,
                 description = "${mode.label}${if (mode == controls.flash) ", Selected" else ""}")
-            option.addView(button, LinearLayout.LayoutParams(dp(48), dp(48)))
+            option.addView(button, LinearLayout.LayoutParams(-1, dp(48)))
             option.addView(TextView(context).apply {
                 text = mode.label.removePrefix("Flash ").replaceFirstChar { it.uppercase() }
-                textSize = 11f; gravity = Gravity.CENTER
+                textSize = 10f; gravity = Gravity.CENTER
                 setTextColor(if (mode == controls.flash) Look.onDark else Look.onDarkMuted)
                 setShadowLayer(dp(2).toFloat(), 0f, 0f, Color.BLACK)
                 setOnClickListener { button.performClick() }
