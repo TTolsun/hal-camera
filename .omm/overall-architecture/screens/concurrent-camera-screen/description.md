@@ -1,4 +1,4 @@
-ConcurrentCameraActivity는 기존 Dual을 대체하는 Multi와 Single PIP의 공통 화면입니다. Multi는 2개 이상의 CameraDevice를 각각 열고 기본 세로 분할로 표시합니다. Live의 Multi · P는 사진 촬영, Multi · V는 영상 녹화로 진입하며 선택한 모드의 촬영 버튼만 표시합니다. 모드는 Intent extra로 전달되어 Activity 재생성에도 유지됩니다. Single PIP는 지정한 Logical 장치 하나만 엽니다. 각 Logical 장치의 PIP 버튼에서 선택한 Physical 출력은 해당 장치의 메인 프리뷰 위에 합성되며 그 화면 밖으로 이동할 수 없습니다. 비논리 장치의 PIP 버튼은 비활성화합니다.
+ConcurrentCameraActivity는 기존 Dual을 대체하는 Multi 화면입니다. Single PIP는 현재 MainActivity에서 동작하며 이 화면으로 이동하지 않습니다. Multi는 2개 이상의 CameraDevice를 각각 열고 기본 세로 분할로 표시합니다. Live의 Multi · P는 사진 촬영, Multi · V는 영상 녹화로 진입하며 선택한 모드의 촬영 버튼만 표시합니다. 모드는 Intent extra로 전달되어 Activity 재생성에도 유지됩니다. 기존 Single 진입 extra는 호환용으로 남아 있습니다. 각 장치의 PIP 버튼은 Physical 또는 다른 Service 카메라 하나를 선택합니다. 보조 출력은 해당 장치의 메인 프리뷰 위에 합성되며 그 화면 밖으로 이동할 수 없습니다. 이미 Multi에서 연 Service ID는 중복 open하지 않고 같은 장치에 추가 Surface를 구성합니다.
 
 Live Streams의 최대 장치 수는 기본 All available이며 Apply에서 저장합니다. 광고된 동시 조합의 부분집합 중 상한 이내의 모든 조합을 만들고 큰 조합부터 제시합니다. 독립 ID 쌍은 미광고 조합도 사전 검사 결과를 확인할 수 있습니다. 모든 장치를 연 뒤에 세션을 구성하며, 선택한 각 Physical 입력까지 실제 프레임이 도착해야 촬영·녹화를 활성화합니다. 출력 구성이 거부되면 실패를 표시하며 Physical 선택을 자동 대체하지 않습니다.
 

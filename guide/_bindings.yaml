@@ -119,6 +119,8 @@ sources:
       camera-engines/camera2-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+      camera-engines/camera2-engine/preview-output:
+        evidence:
           - app/src/main/java/dev/halcamera/camera/PreviewTransform.kt
           - app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt
       camera-engines/camera2-engine/stream-settings:
@@ -266,7 +268,11 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt
           - app/src/main/java/dev/halcamera/camera/PipScene.kt
+          - app/src/main/java/dev/halcamera/camera/PipSource.kt
+          - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
+          - app/src/main/java/dev/halcamera/ui/LivePipController.kt
           - app/src/main/java/dev/halcamera/ui/PhysicalPipPicker.kt
+          - app/src/main/java/dev/halcamera/ui/LiveChoiceSheet.kt
       screens/dual-preview-screen/cli-adapter:
         evidence:
           - app/src/main/java/dev/halcamera/DualCliBridge.kt

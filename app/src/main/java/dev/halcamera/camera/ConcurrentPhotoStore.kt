@@ -6,13 +6,15 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 internal data class ConcurrentPhoto(val bytes: ByteArray, val imageTimestampNs: Long, val sensorTimestampNs: Long?,
-    val composedSize: LiveSize? = null, val physicalIds: List<String> = emptyList(), val sourceTimestamps: Map<String, Long> = emptyMap())
+    val composedSize: LiveSize? = null, val physicalIds: List<String> = emptyList(), val sourceTimestamps: Map<String, Long> = emptyMap(),
+    val serviceIds: List<String> = emptyList())
 
 /** File boundary: keep successful photos even when the other camera fails, with an explicit group manifest. */
 internal class ConcurrentPhotoStore(context: Context) {
     private val library = MediaLibrary(context)
 
-    fun save(capture: ConcurrentCapture<ConcurrentPhoto>, plan: ConcurrentPlan, timestampSources: Map<String, Int?>): String {
+    fun save(capture: ConcurrentCapture<ConcurrentPhoto>, plan: ConcurrentPlan, timestampSources: Map<String, Int?>,
+        saved: (PhotoResult) -> Unit = {}): String {
         val published = mutableListOf<Uri>()
         try {
             val records = JSONArray()
@@ -39,7 +41,8 @@ internal class ConcurrentPhotoStore(context: Context) {
                         .put("composition", if (photo.composedSize != null) "PIP" else "camera JPEG")
                     photo.composedSize?.let {
                         entry.put("requestedJpeg", JSONObject.NULL).put("configuredJpeg", JSONObject.NULL).put("savedSize", it.toString())
-                            .put("physicalIds", JSONArray(photo.physicalIds)).put("sourceSurfaceTimestampsNs", JSONObject(photo.sourceTimestamps))
+                            .put("physicalIds", JSONArray(photo.physicalIds)).put("serviceIds", JSONArray(photo.serviceIds))
+                            .put("sourceSurfaceTimestampsNs", JSONObject(photo.sourceTimestamps))
                     }
                 }
                 entry.put("status", if (saved.isSuccess) "saved" else "failed")
@@ -54,6 +57,11 @@ internal class ConcurrentPhotoStore(context: Context) {
             published += metadata
             library.write(metadata) { it.write(manifest.toString(2).toByteArray(Charsets.UTF_8)) }
             library.publish(metadata)
+            val photos = (0 until records.length()).map { records.getJSONObject(it) }.filter { it.has("uri") }
+            if (photos.isNotEmpty()) saved(PhotoResult(null,capture.groupId,0,
+                photos.map { Uri.parse(it.getString("uri")) },photos.map {
+                    PhotoArtifact(it.getString("file"),"image/jpeg",Uri.parse(it.getString("uri")))
+                }))
             return (0 until records.length()).joinToString(" · ") {
                 val entry = records.getJSONObject(it)
                 "Camera ${entry.getString("cameraId")}: ${entry.getString("status")}" +

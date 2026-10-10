@@ -146,6 +146,8 @@ class MainActivity : ComponentActivity() {
     }
     private lateinit var engineButton: Button
     private lateinit var physicalPipButton: Button
+    private var pendingPip: PipSource? = null
+    private val pipUi by lazy { LivePipController(this,{ previewHost },{ engine as? Camera2Engine },::updateMediaControls,{ lastPreviewFrameNs = nowNs() },::showNotice) }
     private val physicalPip by lazy { dev.halcamera.ui.PhysicalPipPicker(this,manager) }
     private val graphBack = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() = showCallbacks(false)
@@ -366,6 +368,7 @@ class MainActivity : ComponentActivity() {
         updateCameraChoices()
         setStatus("$engineName · ${CameraLabel.short(cameraId)} · Connecting…", false)
         (previewHost.getChildAt(0) as? PreviewView)?.previewStreamState?.removeObservers(this)
+        pipUi.reset()
         previewHost.removeAllViews()
         val previewReady = { if (thisSession == sessionId && resumed && !closing) {
             try { liveCli.previewReady() } catch (e: Exception) { cli.active?.let { cli.fail(it.id, (e as? dev.halcamera.cli.CliFailure)?.code ?: "EXECUTION_FAILED", e.message ?: "CLI operation failed") } }
@@ -466,6 +469,7 @@ class MainActivity : ComponentActivity() {
         else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         updateMediaControls()
         // Re-apply the chosen zoom once the new session is live so engine and camera switches keep the same framing.
+        if (ok && pendingPip != null) { val source = pendingPip; pendingPip = null; main.post { pipUi.select(source) } }
         if (ok && !zoomApplied) {
             zoomApplied = true; if (zoomRatio != 1f) engine?.setZoom(zoomRatio)
             // A pause or a return from another screen reopens the same camera, so its chips still apply.
@@ -511,12 +515,11 @@ class MainActivity : ComponentActivity() {
             chooseEngine(if(engineName=="Camera2") "CameraX" else "Camera2")
         }
         physicalPipButton=button("PIP") {
-            physicalPip.show(cameraId,engineName) { id,physicalIds ->
-                openAfterClose("pip_opened") {
-                    Intent(this,ConcurrentCameraActivity::class.java)
-                        .putExtra(ConcurrentCameraActivity.EXTRA_SINGLE_ID,id)
-                        .putStringArrayListExtra(ConcurrentCameraActivity.EXTRA_PHYSICAL_IDS,ArrayList(physicalIds))
-                }
+            physicalPip.show(cameraId,engineName,pipUi.selected) { _,source ->
+                if (engineName == "CameraX" && source != null) {
+                    pendingPip = source
+                    chooseEngine("Camera2")
+                } else pipUi.select(source)
             }
         }
         // Lab groups inspection, saved results and settings; Mark stays on the preview.
@@ -528,11 +531,13 @@ class MainActivity : ComponentActivity() {
             it.setTextColor(Color.WHITE)
             it.setPadding(dp(8),0,dp(8),0)
             it.setSingleLine(true)
+            it.gravity=Gravity.CENTER
+            it.includeFontPadding=false
             it.minWidth=dp(48); it.minimumWidth=dp(48)
         }
         liveIndicator=LiveIndicator(this).apply { onSizesClick = ::openLiveStreams }
         val leadingSlot=LinearLayout(this).apply {
-            orientation=LinearLayout.HORIZONTAL; gravity=Gravity.START
+            orientation=LinearLayout.HORIZONTAL; gravity=Gravity.START or Gravity.CENTER_VERTICAL; isBaselineAligned=false
             addView(engineButton,LinearLayout.LayoutParams(-2,dp(48)))
             addView(physicalPipButton,LinearLayout.LayoutParams(-2,dp(48)))
         }
@@ -550,7 +555,7 @@ class MainActivity : ComponentActivity() {
         })
         manualPanel = ManualControlPanel(this, { if (!bursts.controlsLocked) controlBar.setManual(it) }, ::toast)
         controls.gravity=Gravity.TOP
-        controls.addView(leadingSlot,LinearLayout.LayoutParams(0,-2,1f))
+        controls.addView(leadingSlot,LinearLayout.LayoutParams(0,dp(48),1f))
         controls.addView(FrameLayout(this).apply {
             addView(controlBar.handle,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.TOP or Gravity.CENTER_HORIZONTAL))
         },LinearLayout.LayoutParams(dp(48),dp(48)))
@@ -597,8 +602,13 @@ class MainActivity : ComponentActivity() {
         }
         val zoomViewport=zoomControl.viewport()
         bottomBar.addView(zoomViewport,LinearLayout.LayoutParams(-2,dp(48)))
-        bottomBar.addView(captureFeedback,lp())
-        val captureRow=row().apply { gravity=Gravity.CENTER_VERTICAL }
+        root.addView(captureFeedback,FrameLayout.LayoutParams(-1,dp(24),Gravity.BOTTOM))
+        captureChrome.addOnLayoutChangeListener { _,_,_,_,_,_,_,_,_ ->
+            val params = captureFeedback.layoutParams as FrameLayout.LayoutParams
+            val margin = captureChrome.height + dp(4)
+            if (params.bottomMargin != margin) { params.bottomMargin = margin; captureFeedback.layoutParams = params }
+        }
+        val captureRow=row().apply { gravity=Gravity.CENTER_VERTICAL; isBaselineAligned=false }
         bottomBar.addView(captureRow,lp(top=4))
         galleryButton=RecentMediaButton(this) {
             if (cli.active != null) return@RecentMediaButton
@@ -631,14 +641,14 @@ class MainActivity : ComponentActivity() {
 
         val modeRow=FrameLayout(this)
         bottomBar.addView(modeRow,lp(height=48))
-        modeControls=row().apply { gravity=Gravity.CENTER }
+        modeControls=row().apply { gravity=Gravity.CENTER; isBaselineAligned=false }
         photoModeButton=button("Photo") { selectMode(false) }
         videoModeButton=button("Video") { selectMode(true) }
         multiButton=button("Multi · P") { openConcurrent(false) }
         multiVideoButton=button("Multi · V") { openConcurrent(true) }
         listOf(photoModeButton,videoModeButton,multiButton,multiVideoButton).forEach {
             it.background=cameraChrome(Color.TRANSPARENT)
-            it.textSize=12f
+            it.textSize=12f; it.gravity=Gravity.CENTER; it.includeFontPadding=false; it.setSingleLine(true)
             it.setPadding(dp(4),0,dp(4),0)
             modeControls.addView(it,LinearLayout.LayoutParams(0,dp(48),1f))
         }
@@ -698,7 +708,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun selectMode(video: Boolean) {
         if (cli.active != null) return
-        if (recordingVideo || !ready || videoMode==video) return
+        if (mediaBusy() || !ready || videoMode==video) return
         pendingPermissionAction=null
         videoMode=video
         refreshManualSupport()
@@ -707,6 +717,10 @@ class MainActivity : ComponentActivity() {
             toast("Manual settings adjusted to the capture FPS limit: ${normalized.summary()}")
             controlBar.setManual(normalized)
         }
+        // Mode entry owns a fresh set of streams, including the selected PIP source.
+        // PIP selection itself stays on setPip(), which keeps the Live device open.
+        pendingPip = pipUi.selected
+        restartCamera()
         updateMediaControls()
     }
     /**
@@ -788,7 +802,10 @@ class MainActivity : ComponentActivity() {
         multiVideoButton.contentDescription = "Multi video mode"
         physicalPipButton.isEnabled = multiButton.isEnabled && physicalPip.supported(cameraId).isNotEmpty()
         physicalPipButton.alpha = if (physicalPipButton.isEnabled) 1f else .4f
-        physicalPipButton.contentDescription = "PIP physical cameras"
+        physicalPipButton.contentDescription = "Choose PIP camera"
+        physicalPipButton.text = if (pipUi.selected == null) "PIP" else "PIP ✓"
+        physicalPipButton.isSelected = pipUi.selected != null
+        if (pipUi.busy) { mediaButton.isEnabled=false; physicalPipButton.isEnabled=false; engineButton.isEnabled=false; cameraShortcut.isEnabled=false }
         if (cli.active != null) {
             listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, labButton, reportButton).forEach { it.isEnabled = false }
         }
@@ -869,7 +886,7 @@ class MainActivity : ComponentActivity() {
         }
         if (old == null) open() else old.close { open() }
     }
-    internal fun mediaBusy() = (engine as? MediaCapture)?.mediaBusy == true || bursts.run != null
+    internal fun mediaBusy() = pipUi.busy || (engine as? MediaCapture)?.mediaBusy == true || bursts.run != null
     /** One snapshot at a time; failures leave recording active and unsupported cameras explain why. */
     private fun takeSnapshot() {
         if (cli.active != null) return

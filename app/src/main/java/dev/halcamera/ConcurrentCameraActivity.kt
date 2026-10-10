@@ -29,6 +29,7 @@ import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.camera.*
 import dev.halcamera.ui.Look
 import dev.halcamera.ui.CameraWidgets
+import dev.halcamera.ui.PhysicalPipPicker
 
 /** Multi owns independent devices; each device may compose its own physical PIP inputs. */
 class ConcurrentCameraActivity : ComponentActivity() {
@@ -53,6 +54,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private val textures = mutableListOf<SurfaceTexture?>()
     private val retired = mutableListOf<SurfaceTexture>()
     private val physical = mutableMapOf<String,List<String>>()
+    private val servicePip = mutableMapOf<String,String>()
+    private fun pipIds(id: String?) = physical[id].orEmpty() + listOfNotNull(servicePip[id])
     private val positions = mutableMapOf<String,MutableList<PipRect>>()
     private val states = linkedMapOf<String,String>()
     private var plans = emptyList<ConcurrentPlan>()
@@ -75,8 +78,10 @@ class ConcurrentCameraActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window,false)
-        singleId?.let { physical[it] = intent.getStringArrayListExtra(EXTRA_PHYSICAL_IDS).orEmpty() }
-        savedInstanceState?.getBundle("physical")?.let { saved -> saved.keySet().forEach { physical[it] = saved.getStringArrayList(it).orEmpty() } }
+        singleId?.let { physical[it] = intent.getStringArrayListExtra(EXTRA_PHYSICAL_IDS).orEmpty().take(1)
+            intent.getStringExtra(EXTRA_PIP_SERVICE)?.let { source -> servicePip[it] = source } }
+        savedInstanceState?.getBundle("physical")?.let { saved -> saved.keySet().forEach { physical[it] = saved.getStringArrayList(it).orEmpty().take(1) } }
+        savedInstanceState?.getBundle("servicePip")?.let { saved -> saved.keySet().forEach { id -> saved.getString(id)?.let { servicePip[id] = it } } }
         val root = row().apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(Look.cameraSurface) }
         ViewCompat.setOnApplyWindowInsetsListener(root) { view,insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
@@ -124,7 +129,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
             if (Build.VERSION.SDK_INT >= 30 && ready && !busy) { takingPhoto = true; resultText.text = "Capturing…"; updateButtons(); session?.capture(0) }
         }
         actions.addView(recordButton,weight()); actions.addView(captureButton,weight())
-        if (singleId == null) {
+        run {
             recordButton.visibility = if (videoMode) View.VISIBLE else View.GONE
             captureButton.visibility = if (videoMode) View.GONE else View.VISIBLE
         }
@@ -192,24 +197,26 @@ class ConcurrentCameraActivity : ComponentActivity() {
     }
 
     private fun choosePhysical(index: Int) {
+        if (Build.VERSION.SDK_INT < 30 || busy) return
         val camera = plans.getOrNull(selected)?.streams?.getOrNull(index)?.camera ?: return
-        if (busy || camera.physicalIds.isEmpty()) return
-        val chosen = camera.physicalIds.map { it in physical[camera.id].orEmpty() }.toBooleanArray()
-        AlertDialog.Builder(this).setTitle("Camera ${camera.id} · PIP")
-            .setMultiChoiceItems(camera.physicalIds.map { "Physical $it" }.toTypedArray(),chosen) { _,i,value -> chosen[i] = value }
-            .setPositiveButton("Apply") { _,_ ->
-                physical[camera.id] = camera.physicalIds.filterIndexed { i,_ -> chosen[i] }
-                positions.remove(camera.id); failed = false; closeSession()
-            }.setNeutralButton("Off") { _,_ -> physical.remove(camera.id); positions.remove(camera.id); failed = false; closeSession() }
-            .setNegativeButton("Cancel",null).show()
+        val sources = readPipSources(manager,camera.id)
+        val selected = sources.indexOfFirst {
+            if (it.physical) it.id in physical[camera.id].orEmpty() else it.id == servicePip[camera.id]
+        }
+        PhysicalPipPicker(this,manager).show(camera.id,"Camera2",sources.getOrNull(selected)) { _,source ->
+            physical.remove(camera.id); servicePip.remove(camera.id)
+            if (source != null) {
+                if (source.physical) physical[camera.id] = listOf(source.id) else servicePip[camera.id] = source.id
+            }
+            positions.remove(camera.id); failed = false; closeSession()
+        }
     }
-
     private fun choosePosition(index: Int) {
         if (Build.VERSION.SDK_INT < 30) return
         val id = plans.getOrNull(selected)?.streams?.getOrNull(index)?.camera?.id ?: return
-        val ids = physical[id].orEmpty()
+        val ids = pipIds(id)
         if (ids.isEmpty() || takingPhoto || videoPending || closing) return
-        AlertDialog.Builder(this).setTitle("Move physical preview").setItems(ids.map { "Physical $it" }.toTypedArray()) { _,i ->
+        AlertDialog.Builder(this).setTitle("Move PIP").setItems(ids.map { "Camera $it" }.toTypedArray()) { _,i ->
             val frames = positions.getOrPut(id) { PipScene.initial(ids.size).toMutableList() }
             val old = frames[i]
             frames[i] = when {
@@ -261,7 +268,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
                 resultText.text = if (active) "Recording" else if (message.contains("failed",true) || message.startsWith("Could not")) "Video failed · Details" else "Videos saved · Details"
                 updateButtons()
             }
-        },physical.toMap(),outputSizes)
+        },physical.filterKeys { id -> plan.streams.any { it.camera.id == id } },outputSizes,
+            servicePip.filterKeys { id -> plan.streams.any { it.camera.id == id } })
         session = current; layoutPreviews(); current.start(); updateButtons()
     }
 
@@ -286,6 +294,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     override fun finish() { exiting = true; closeSession() }
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putBundle("physical",Bundle().apply { physical.forEach { (id,ids) -> putStringArrayList(id,ArrayList(ids)) } })
+        outState.putBundle("servicePip",Bundle().apply { servicePip.forEach { (id,source) -> putString(id,source) } })
         super.onSaveInstanceState(outState)
     }
     private fun updateButtons() {
@@ -297,20 +306,20 @@ class ConcurrentCameraActivity : ComponentActivity() {
         resultText.isClickable = report.isNotEmpty() && !recording
         resultText.isFocusable = resultText.isClickable
         val streams = plans.getOrNull(selected)?.streams.orEmpty()
-        pipButtons.forEachIndexed { i,button -> button.isEnabled = !busy && streams.getOrNull(i)?.camera?.physicalIds?.isNotEmpty() == true
+        pipButtons.forEachIndexed { i,button -> button.isEnabled = !busy && streams.getOrNull(i)?.camera?.id?.let { hasPipSources(it) } == true
             button.alpha = if (button.isEnabled) 1f else .4f
-            val active = !physical[streams.getOrNull(i)?.camera?.id].isNullOrEmpty()
+            val active = pipIds(streams.getOrNull(i)?.camera?.id).isNotEmpty()
             button.isSelected = active
             button.text = if (active) "PIP ✓" else "PIP"
             button.setTextColor(if (active) Look.primaryOnDark else Look.onDark)
-            button.contentDescription = if (active) "PIP on, select physical cameras" else "PIP, select physical cameras" }
-        headerPip?.isEnabled = !busy && streams.firstOrNull()?.camera?.physicalIds?.isNotEmpty() == true
+            button.contentDescription = if (active) "PIP on, select camera" else "PIP, select camera" }
+        headerPip?.isEnabled = !busy && streams.firstOrNull()?.camera?.id?.let { hasPipSources(it) } == true
         headerPip?.alpha = if (headerPip?.isEnabled == true) 1f else .4f
-        headerPip?.setTextColor(if (!physical[streams.firstOrNull()?.camera?.id].isNullOrEmpty()) Look.primaryOnDark else Look.onDark)
+        headerPip?.setTextColor(if (pipIds(streams.firstOrNull()?.camera?.id).isNotEmpty()) Look.primaryOnDark else Look.onDark)
         headerPip?.isSelected = pipButtons.firstOrNull()?.isSelected == true
         headerPip?.text = pipButtons.firstOrNull()?.text ?: "PIP"
         headerPip?.contentDescription = pipButtons.firstOrNull()?.contentDescription
-        moveButtons.forEachIndexed { i,button -> button.visibility = if (physical[streams.getOrNull(i)?.camera?.id].isNullOrEmpty()) View.INVISIBLE else View.VISIBLE
+        moveButtons.forEachIndexed { i,button -> button.visibility = if (pipIds(streams.getOrNull(i)?.camera?.id).isEmpty()) View.INVISIBLE else View.VISIBLE
             button.isEnabled = ready && !takingPhoto && !videoPending && !closing }
     }
     private fun layoutPreviews() {
@@ -336,7 +345,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         view.setOnTouchListener { _,event ->
             if (Build.VERSION.SDK_INT < 30) return@setOnTouchListener false
             val id = plans.getOrNull(selected)?.streams?.getOrNull(index)?.camera?.id ?: return@setOnTouchListener false
-            val ids = physical[id].orEmpty(); val size = outputSizes.getOrNull(index) ?: return@setOnTouchListener false
+            val ids = pipIds(id); val size = outputSizes.getOrNull(index) ?: return@setOnTouchListener false
             if (ids.isEmpty() || !ready || takingPhoto || closing) return@setOnTouchListener false
             val scale = minOf(view.width.toFloat()/size.width,view.height.toFloat()/size.height)
             val x = (event.x-(view.width-size.width*scale)/2)/(size.width*scale)
@@ -353,6 +362,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
             }
         }
     }
+    private fun hasPipSources(id: String) = Build.VERSION.SDK_INT >= 30 && runCatching { readPipSources(manager,id).isNotEmpty() }.getOrDefault(false)
     private fun dp(value: Int) = Look.dp(this,value)
     private fun text(value: String,size: Int) = Look.text(this,value,size,Look.onDark).apply { gravity = Gravity.CENTER_VERTICAL }
     private fun button(value: String,action: () -> Unit) = CameraWidgets(this).button(value,action).apply {
@@ -363,6 +373,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private fun weight() = LinearLayout.LayoutParams(0,dp(56),1f).apply { setMargins(dp(2),dp(4),dp(2),dp(4)) }
     companion object {
         const val EXTRA_VIDEO = "multi_video"
+        const val EXTRA_PIP_SERVICE = "pip_service_id"
         const val EXTRA_SINGLE_ID = "single_logical_id"
         const val EXTRA_PHYSICAL_IDS = "pip_physical_ids"
     }

@@ -34,7 +34,7 @@ nav_order: 4
 | 화면 | 할 수 있는 일 |
 | --- | --- |
 | Live · `MainActivity` | 앱을 열면 나오는 화면입니다. 프리뷰를 보고 사진·동영상을 촬영합니다. |
-| Multi · `ConcurrentCameraActivity` | 독립 카메라 장치 조합의 동시 프리뷰와 별도 사진을 제공합니다. Live의 Multi에서 엽니다. |
+| Multi · `ConcurrentCameraActivity` | 독립 카메라 장치별 사진·영상을 제공합니다. Live의 Multi · P와 Multi · V에서 엽니다. |
 | Lab · `WorkbenchActivity` | 기기 정보, 검사 도구, 저장된 결과와 설정을 엽니다. |
 | Benchmark · `BenchmarkActivity` | 정해진 조건(profile)으로 측정하고 결과를 저장합니다. |
 | 실행 기록 · `HistoryActivity` | 저장된 실행을 찾고 비교하거나 내보냅니다. |
@@ -56,7 +56,7 @@ PC에서 같은 기능을 실행하려면 [CLI](cli.md)를 사용합니다. `Cli
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`, `app/src/main/java/dev/halcamera/WorkbenchActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending)
+- 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified)
 
 </details>
 
@@ -214,7 +214,7 @@ flowchart TB
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/cli/CliLibrary.kt`, `app/src/main/java/dev/halcamera/MainCliBridge.kt`, `app/src/main/java/dev/halcamera/DualCliBridge.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/ui/Look.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending)
+- 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified)
 
 </details>
 
@@ -367,7 +367,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending)
+- 검토 2026-10-10 @ `9caac30c` · Codex (Live PIP lifecycle and panel UI source review; SM-S936N Android 16 checks recorded separately)
 
 </details>
 
@@ -588,7 +588,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending)
+- 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified)
 
 </details>
 
@@ -638,16 +638,16 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live PIP lifecycle and panel UI source review; SM-S936N Android 16 checks recorded separately) |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified) |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live PIP lifecycle and panel UI source review; SM-S936N Android 16 checks recorded separately) |
 | 구조 원본 `ui-camera-label` | 최신 | 검토 2026-10-09 @ `fab768a7` · Codex |
-| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
+| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live PIP lifecycle and panel UI source review; SM-S936N Android 16 checks recorded separately) |
 | 구조 원본 `ui-zoom` | 최신 | 검토 2026-10-09 @ `fab768a7` · Codex |
-| 원고 `overview` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
-| 원고 `module-roles` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
-| 원고 `runtime-flow` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
-| 원고 `constraints` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
+| 원고 `overview` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified) |
+| 원고 `module-roles` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified) |
+| 원고 `runtime-flow` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live PIP lifecycle and panel UI source review; SM-S936N Android 16 checks recorded separately) |
+| 원고 `constraints` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified) |
 
 <!-- omm:end id=status -->
 

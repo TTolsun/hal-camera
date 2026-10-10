@@ -74,7 +74,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
     private val evPanel = Look.row(context).apply {
         visibility = View.GONE
-        background = Look.cardBackground(context, Look.cameraGlass, Look.cameraOutline)
+        background = Look.cardBackground(context, Look.cameraControlGlass, Color.TRANSPARENT).apply { cornerRadius=dp(20).toFloat() }
     }
     private val accessibility = context.getSystemService(AccessibilityManager::class.java)
     private val fold = Runnable { closePanels() }

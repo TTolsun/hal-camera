@@ -1,7 +1,8 @@
-PIP는 하나의 Logical CameraDevice에서 메인 논리 출력과 선택한 Physical 출력을 함께 구성합니다. PhysicalPipPicker는 LOGICAL_MULTI_CAMERA capability와 그 장치의 physicalCameraIds를 조회합니다. Single의 API 선택 옆 PIP와 Multi의 각 장치 PIP는 해당 장치에 속한 ID만 선택합니다. CameraX에서 진입하면 Camera2 전환을 명시적으로 확인합니다.
+PIP는 메인 화면 위에 선택한 보조 카메라 하나를 합성합니다. PhysicalPipPicker는 부모 장치의 Physical ID와 현재 ID를 제외한 CameraManager의 Service ID를 구분하여 보여 줍니다. 전면 카메라도 포함하며 선택은 하나만 허용합니다. Camera2 Live는 LivePipController로 현재 화면에 합성 TextureView를 표시하며 다른 Activity로 이동하지 않습니다.
 
-DeviceCompositor는 장치마다 EGL 문맥과 OES 입력 텍스처를 갖습니다. 동일한 draw 경로로 화면 Surface, JPEG readback, MediaRecorder 인코더에 Logical 메인과 Physical 보조 영상을 그립니다. producer의 SurfaceTexture 변환 행렬을 적용하고 별도 센서 회전을 중복 적용하지 않습니다. 프리뷰에는 저장 장면 전체가 들어가도록 fit-center 변환을 씁니다. PIP JPEG는 합성 프리뷰 해상도이며 센서 최대 해상도 사진이 아닙니다.
+Camera2Engine.setPip는 현재 CameraDevice를 그대로 유지하며 캡처 세션의 출력만 변경합니다. LivePipSession은 별도 Service 장치만 추가 open하고 Physical은 부모 장치의 OutputConfiguration에 연결합니다. Off와 보조 카메라 교체는 메인 출력을 복원한 후 보조 장치·합성 Surface를 해제합니다. CameraX에서는 명시적으로 Camera2로 전환하므로 기존 CameraX 장치 유지는 지원하지 않습니다.
 
-PipScene의 좌표는 부모 Logical 장면을 기준으로 정규화합니다. 드래그와 Move 버튼은 보조 영상의 전체 사각형을 0~1 경계 안으로 제한합니다. 다른 Logical 화면으로 옮길 수 없습니다. 녹화 중 위치 변경도 같은 렌더러에 전달됩니다. 화면의 버튼·카메라 ID 등 조작부는 저장 영상에 넣지 않습니다.
+DeviceCompositor는 동일한 GPU draw로 프리뷰, 별도 pbuffer의 JPEG, MediaRecorder 영상을 구성합니다. TextureView가 native buffer 크기를 변경할 수 있어 EGL 대상 크기로 viewport를 설정합니다. producer 변환 행렬을 적용하고 센서 회전을 중복하지 않습니다. PIP JPEG는 화면용 합성 해상도이며 센서 최대 해상도가 아닙니다. Live는 오디오를 포함할 수 있고 Multi는 무음이며, 인코더 PTS는 MediaRecorder 오디오와 맞는 System.nanoTime 시계를 사용합니다. 센서 timestamp나 측정용 elapsedRealtimeNanos와 비교하지 않습니다.
 
-각 Logical 장치에 별도 JPEG·MP4를 저장합니다. PIP를 켠 장치의 파일에는 그 장치 안의 합성 장면만 포함합니다. 녹화는 무음 H.264 MP4이고 앱 단조 시계로 인코더 타임스탬프를 생성하며 출력 제출을 최대 30fps로 제한합니다. 실제 프레임율·센서 동기는 보장하지 않습니다. CameraDevice가 종료된 뒤 compositor 입력 Surface를 해제하고 세션 lease를 넘깁니다.
+PipRouting은 Physical 입력을 부모 장치로, Service 입력을 독립 장치로 연결하며 동일 Service ID는 한 번만 엽니다. Multi는 패널별 합성 파일을 저장하고 전체 분할 화면을 하나로 저장하지 않습니다. PipScene 좌표와 드래그는 부모 영역을 벗어나지 않도록 제한합니다. Live에서도 기존 셔터·모드·줌·측정 정보를 유지하고 조작부는 저장 영상에 포함하지 않습니다.
+PIP 선택창은 Single과 Multi가 공유하는 하단 LiveChoiceSheet입니다. 카메라 방향과 렌즈 이름을 주 표시로, Physical·Service 종류와 ID를 보조 줄로 표시합니다. 선택된 항목은 테두리와 체크를 사용합니다. 같은 항목을 다시 누르면 장치를 재구성하지 않으며 닫기와 바깥 터치는 기존 선택을 유지합니다.

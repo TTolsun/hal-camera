@@ -31,6 +31,7 @@ object Look {
     val cameraCard = expertTile2
     val cameraOutline = expertTile3
     val cameraGlass = Color.argb(220, 24, 25, 27)
+    val cameraControlGlass = Color.argb(150, 24, 25, 27)
     val cameraSelection = Color.WHITE
     val cameraOnSelection = ink
     val primaryOnDark = Color.parseColor("#2997ff")

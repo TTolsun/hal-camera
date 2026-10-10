@@ -30,8 +30,8 @@ nav_order: 5
 | 버퍼 도착 기록 (Android 13 이상) | 프리뷰와 녹화 버퍼의 도착 시각을 relay로 기록합니다. | 프리뷰와 녹화 버퍼는 직접 관측하지 못합니다. ImageAnalysis와 ImageCapture의 이미지 수신은 기록합니다. |
 | Benchmark | 지원합니다. | 지원하지 않으며 Camera2로 엽니다. |
 | 기존 Dual (CLI) | 공통 줌, 메인 센서 제어, 한 요청의 두 센서 사진과 무음 MP4 두 개를 지원합니다. | 공통 줌과 무음 MP4 두 개를 지원합니다. 메인 개별 제어와 두 센서 사진은 지원하지 않습니다. |
-| Multi | 지원되는 독립 장치 조합에서 동시 프리뷰와 카메라별 JPEG를 제공합니다. 센서 동기를 보장하지 않습니다. | 미지원 안내 후 Camera2 경로로 열 수 있습니다. |
-| Physical PIP | Logical 장치의 메인·Physical 출력을 같은 장면으로 합성하여 JPEG와 무음 MP4로 저장합니다. Multi에서는 장치마다 합성 결과를 따로 저장합니다. | Camera2로 전환을 확인한 뒤 엽니다. |
+| Multi | 지원되는 독립 장치 조합에서 동시 프리뷰와 카메라별 JPEG·무음 MP4를 제공합니다. 센서 동기를 보장하지 않습니다. | 미지원 안내 후 Camera2 경로로 열 수 있습니다. |
+| PIP | Physical 또는 다른 Service ID 하나를 합성합니다. Live는 현재 CameraDevice와 화면을 유지하며 보조 Service 장치만 추가로 엽니다. Multi는 장치별 합성 결과를 저장합니다. | Camera2 전환을 확인합니다. 기존 CameraX 장치는 유지하지 않습니다. |
 
 Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.
 
@@ -57,7 +57,7 @@ Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending)
+- 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified)
 
 </details>
 
@@ -210,7 +210,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending)
+- 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified)
 
 </details>
 
@@ -585,7 +585,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending)
+- 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified)
 
 </details>
 
@@ -828,7 +828,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending)
+- 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified)
 
 </details>
 
@@ -848,11 +848,11 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
-| 원고 `contract` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
-| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
-| 원고 `camerax` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
-| 원고 `comparison` | 최신 | 검토 2026-10-10 @ `63da404a` · Codex (Multi photo/video intent and UI source review; device check pending) |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified) |
+| 원고 `contract` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified) |
+| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified) |
+| 원고 `camerax` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified) |
+| 원고 `comparison` | 최신 | 검토 2026-10-10 @ `9caac30c` · Codex (Live settings readout and compact translucent Manual source review; SM-S936N Android 16 UI verified) |
 
 <!-- omm:end id=status -->
 

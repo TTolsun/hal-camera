@@ -23,6 +23,7 @@ internal class DeviceCompositor(
     private val physicalIds: List<String>,
     private val onReady: () -> Unit,
     private val onError: (Throwable) -> Unit,
+    private val serviceIds: List<String> = emptyList(),
 ) {
     private val app = context.applicationContext
     private val thread = HandlerThread("HAL.Compose.$cameraId").apply { start() }
@@ -42,7 +43,8 @@ internal class DeviceCompositor(
     private var program = 0
     private var closed = false
     private var readySent = false
-    private var rects = PipScene.initial(physicalIds.size)
+    private val pipIds = physicalIds + serviceIds
+    private var rects = PipScene.initial(pipIds.size)
     private var recorder: MediaRecorder? = null
     private var videoFile: File? = null
     private var videoName = ""
@@ -109,8 +111,8 @@ internal class DeviceCompositor(
         draw(window)
         check(EGL14.eglSwapBuffers(display,window))
         if (encoder != EGL14.EGL_NO_SURFACE) {
-            // Sensor clocks can differ. Encoder time is a strictly increasing app monotonic clock.
-            val ns = maxOf(android.os.SystemClock.elapsedRealtimeNanos(), lastVideoNs + 1)
+            // MediaRecorder audio uses CLOCK_MONOTONIC, not the suspend-inclusive sensor/app clock.
+            val ns = maxOf(System.nanoTime(), lastVideoNs + 1)
             if (ns - lastVideoNs >= 33_333_333L) {
                 draw(encoder); EGLExt.eglPresentationTimeANDROID(display,encoder,ns)
                 check(EGL14.eglSwapBuffers(display,encoder)); lastVideoNs = ns
@@ -167,20 +169,22 @@ internal class DeviceCompositor(
             val bitmap = Bitmap.createBitmap(pixels,output.width,output.height,Bitmap.Config.ARGB_8888)
             val jpeg = try { ByteArrayOutputStream().use { check(bitmap.compress(Bitmap.CompressFormat.JPEG,95,it)); it.toByteArray() } } finally { bitmap.recycle() }
             ConcurrentPhoto(jpeg,textures[0].timestamp,null,output,physicalIds,
-                textures.mapIndexed { index, texture -> (if (index == 0) cameraId else physicalIds[index-1]) to texture.timestamp }.toMap())
+                textures.mapIndexed { index, texture -> (if (index == 0) cameraId else pipIds[index-1]) to texture.timestamp }.toMap(), serviceIds)
         })
     } }
 
-    fun startVideo(name: String, done: (Result<Unit>) -> Unit) { handler.post {
+    fun startVideo(name: String, audio: Boolean = false, done: (Result<Unit>) -> Unit) { handler.post {
         val result = runCatching {
             check(!closed && recorder == null && received.all { it })
-            videoName = "${name}_cam${cameraId.replace(Regex("[^A-Za-z0-9_-]"),"_")}${if (physicalIds.isEmpty()) "" else "_PIP"}.mp4"
+            videoName = "${name}_cam${cameraId.replace(Regex("[^A-Za-z0-9_-]"),"_")}${if (pipIds.isEmpty()) "" else "_PIP"}.mp4"
             videoFile = File(app.cacheDir,videoName)
             @Suppress("DEPRECATION") val recording = MediaRecorder()
             recorder = recording
+            if (audio) recording.setAudioSource(MediaRecorder.AudioSource.MIC)
             recording.setVideoSource(MediaRecorder.VideoSource.SURFACE)
             recording.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
             recording.setVideoEncoder(MediaRecorder.VideoEncoder.H264)
+            if (audio) { recording.setAudioEncoder(MediaRecorder.AudioEncoder.AAC); recording.setAudioEncodingBitRate(128_000); recording.setAudioSamplingRate(48_000) }
             recording.setVideoSize(output.width,output.height); recording.setVideoFrameRate(30)
             recording.setVideoEncodingBitRate((output.width * output.height * 6).coerceAtLeast(2_000_000))
             recording.setOutputFile(checkNotNull(videoFile).absolutePath)

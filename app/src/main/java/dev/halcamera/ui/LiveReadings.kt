@@ -10,6 +10,9 @@ import android.view.View
 import android.widget.TextView
 import dev.halcamera.camera.LiveControlSupport
 import dev.halcamera.camera.LiveControls
+import dev.halcamera.camera.FlashMode
+import dev.halcamera.camera.ManualControls
+import dev.halcamera.camera.WhiteBalance
 import dev.halcamera.telemetry.Event
 import dev.halcamera.telemetry.FlightRecorder
 import java.util.Locale
@@ -46,9 +49,8 @@ class LiveReadings(
         val frame = frames.lastOrNull()?.takeIf { time - it.atNs < 1_500_000_000L }
         fun num(key: String) = (frame?.values?.get(key) as? Number)?.toDouble()
         fun fmt(value: Double?, pattern: String) = value?.let { pattern.format(Locale.US, it) } ?: "—"
-        // Two lines at most over the preview: the measurement, then the camera's state. Values the screen already shows
-        // are left out (the zoom rail's ratio, the buttons' EV), and the extras join line 2 in priority order only while
-        // they fit its width. With a flash mode on, the flash state leads, since no button can show it. An applied EV or
+        // Measurements and camera state come first; active settings remain visible after the controls close.
+        // Optional observed extras join the state line only while they fit. An applied EV or
         // zoom that differs from the request appears only once the last ten results all differ, not for the few frames
         // the pipeline lags behind every change. Lens position and everything else stay in the incident ZIP.
         val recent = frames.takeLast(10)
@@ -67,7 +69,17 @@ class LiveReadings(
             "ISO ${num("iso")?.toInt() ?: "—"}".takeUnless { panelObservedKey == "iso" },
             "Exp ${fmt(num("exposureNs")?.div(1e6), "%.2fms")}".takeUnless { panelObservedKey == "exposureNs" },
         ).joinToString(" · ")
-        val text = "$measurement\n$state"
+        val settings = listOfNotNull(
+            controls.flash.takeIf { it != FlashMode.OFF }?.label,
+            support.evLabel(controls.evIndex).takeIf { controls.evIndex != 0 },
+            "AE Lock".takeIf { controls.aeLock },
+            "AF Lock".takeIf { controls.afLock },
+            "AEB".takeIf { controls.bracket },
+            controls.manual.exposure?.let { "M ISO ${it.iso} · ${ManualControls.shutter(it.timeNs)}" },
+            controls.manual.focusDiopters?.let { "MF ${"%.2f".format(Locale.US,it)} D" },
+            controls.manual.wb.takeIf { it != WhiteBalance.AUTO }?.let { "WB ${it.label}" },
+        ).joinToString(" · ")
+        val text = listOf(measurement,state,settings).filter { it.isNotEmpty() }.joinToString("\n")
         if (metrics.text.toString() != text) metrics.text = text
     }
 
