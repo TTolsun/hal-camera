@@ -55,7 +55,7 @@ Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `071bcd21` · Codex (reviewed release version-only changes against source)
+- 검토 2026-10-10 @ `5fd84e2d` · Codex (reviewed mode transitions and preview readiness against source)
 
 </details>
 
@@ -169,6 +169,8 @@ classDiagram
 
 종료 통지와 다음 엔진의 대기 순서는 [엔진 전환 그림](architecture.md#카메라-열기와-닫기)을 확인하세요.
 
+Photo·Video·Dual · P·Dual · V 사이에서 모드를 바꾸면 기존 세션을 닫고 스트림을 다시 구성합니다. 같은 모드를 다시 누르면 유지합니다. 단일 카메라는 새 프리뷰의 첫 화면 갱신 뒤, Dual은 두 프리뷰가 모두 갱신된 뒤에 촬영 버튼을 활성화합니다. 모드 선택 자체로 사진이나 녹화를 시작하지는 않습니다.
+
 ### Benchmark와 CLI가 쓰는 엔진
 
 Benchmark는 Camera2 전용입니다. CameraX가 선택된 상태에서 Benchmark로 들어가면 `StartCardPresenter`가 Camera2로 전환한다고 알립니다. Live와 다른 스트림 크기 및 저장 방식은 [Camera2 엔진](#camera2-엔진)에서 설명합니다.
@@ -208,7 +210,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `071bcd21` · Codex (reviewed release version-only changes against source)
+- 검토 2026-10-10 @ `5fd84e2d` · Codex (reviewed mode transitions and preview readiness against source)
 
 </details>
 
@@ -583,7 +585,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `071bcd21` · Codex (reviewed release version-only changes against source)
+- 검토 2026-10-10 @ `5fd84e2d` · Codex (reviewed mode transitions and preview readiness against source)
 
 </details>
 
@@ -826,7 +828,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-09 @ `071bcd21` · Codex (reviewed release version-only changes against source)
+- 검토 2026-10-10 @ `5fd84e2d` · Codex (reviewed mode transitions and preview readiness against source)
 
 </details>
 
@@ -846,11 +848,11 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-09 @ `071bcd21` · Codex (reviewed release version-only changes against source) |
-| 원고 `contract` | 최신 | 검토 2026-10-09 @ `071bcd21` · Codex (reviewed release version-only changes against source) |
-| 원고 `camera2` | 최신 | 검토 2026-10-09 @ `071bcd21` · Codex (reviewed release version-only changes against source) |
-| 원고 `camerax` | 최신 | 검토 2026-10-09 @ `071bcd21` · Codex (reviewed release version-only changes against source) |
-| 원고 `comparison` | 최신 | 검토 2026-10-09 @ `071bcd21` · Codex (reviewed release version-only changes against source) |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `5fd84e2d` · Codex (reviewed mode transitions and preview readiness against source) |
+| 원고 `contract` | 최신 | 검토 2026-10-10 @ `5fd84e2d` · Codex (reviewed mode transitions and preview readiness against source) |
+| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `5fd84e2d` · Codex (reviewed mode transitions and preview readiness against source) |
+| 원고 `camerax` | 최신 | 검토 2026-10-10 @ `5fd84e2d` · Codex (reviewed mode transitions and preview readiness against source) |
+| 원고 `comparison` | 최신 | 검토 2026-10-10 @ `5fd84e2d` · Codex (reviewed mode transitions and preview readiness against source) |
 
 <!-- omm:end id=status -->
 
