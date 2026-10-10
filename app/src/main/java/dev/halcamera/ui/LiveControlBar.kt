@@ -26,20 +26,7 @@ import dev.halcamera.camera.LiveControlSupport
 import dev.halcamera.camera.LiveControlText
 import dev.halcamera.camera.LiveControls
 
-/**
- * LIVE's quick controls for flash, AF lock, AE lock, EV and exposure bracketing (issues #169, #176 and #178), laid out like the top row of a
- * stock camera app: round glyph buttons under the status line, white when on, the same selection look as the
- * zoom rail. Related panels open below their selected button:
- *
- * - Flash keeps the toolbar and opens its choices (off, auto, on, torch) below it until a pick or a second tap.
- * - Manual keeps the toolbar and anchors its compact editor below M.
- * - EV opens a dial under the row; it folds away four seconds after the last touch. Nothing sits where the dial
- *   was, so a late tap there reaches the preview, not another control.
- *
- * The buttons show what was requested. What the camera applied is the readout line built by [stateLine].
- * A control the camera lacks stays visible and dimmed, and a tap says why: a missing flash on the front camera is
- * itself something a developer checks. Both engines carry every control, so a tap never switches engines.
- */
+/** Quick controls replace the status row; Flash, Manual and EV panels stay anchored beneath their buttons. */
 class LiveControlBar(private val context: Context, private val host: Host) {
     interface Host {
         fun controlsChanged(controls: LiveControls)
@@ -95,6 +82,13 @@ class LiveControlBar(private val context: Context, private val host: Host) {
 
     /** The buttons stay folded behind [handle] until asked for, so the preview is not covered by controls not in use. */
     private var expanded = false
+    private var status: View? = null
+    fun withStatus(indicator: View) = FrameLayout(context).apply {
+        minimumHeight = dp(48)
+        status = indicator
+        addView(indicator,FrameLayout.LayoutParams(-1,-2))
+        addView(view,FrameLayout.LayoutParams(-1,-2))
+    }
     private val rows = FrameLayout(context).apply { visibility = View.GONE }
     private val connector = object : View(context) {
         private val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=Look.cameraControlGlass }
@@ -149,10 +143,23 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
 
     private fun setExpanded(open: Boolean) {
+        val changed = expanded != open
         expanded = open
         if (!open) closePanels()
-        rows.visibility = if (open) View.VISIBLE else View.GONE
-        if (open && android.animation.ValueAnimator.areAnimatorsEnabled()) { rows.alpha = 0f; rows.translationY = -dp(8).toFloat(); rows.animate().alpha(1f).translationY(0f).setDuration(160).start() }
+        if (changed) {
+            val animate = view.isLaidOut && android.animation.ValueAnimator.areAnimatorsEnabled()
+            fun fade(target: View, visible: Boolean) {
+                target.animate().cancel()
+                target.importantForAccessibility = if (visible) View.IMPORTANT_FOR_ACCESSIBILITY_AUTO else View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+                if (!animate) { target.alpha = if (visible) 1f else 0f; target.visibility = if (visible) View.VISIBLE else View.GONE; return }
+                if (visible) { if (target.visibility != View.VISIBLE) target.alpha = 0f; target.visibility = View.VISIBLE }
+                target.animate().alpha(if (visible) 1f else 0f).setDuration(160).withEndAction {
+                    if (!visible && expanded == open) target.visibility = View.GONE
+                }.start()
+            }
+            status?.let { fade(it,!open) }
+            fade(rows,open)
+        }
         render()
     }
 

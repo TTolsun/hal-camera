@@ -24,6 +24,9 @@ internal class LivePipSession(
     preview: LiveSize,
     position: PipRect,
     private val configureMain: (List<Surface>) -> Unit,
+    private val mainOutputs: List<Surface>,
+    private val inputFrame: (Int, Long) -> Unit,
+    private val photoFrame: (Long) -> Unit,
     private val ready: () -> Unit,
     private val failed: (String) -> Unit,
     private val recordingChanged: (Boolean) -> Unit,
@@ -38,7 +41,8 @@ internal class LivePipSession(
         if (source.physical) listOf(source.id) else emptyList(),
         onReady = { main.post { if (!closing) { readyState = true; ready() } } },
         onError = { main.post { if (!closing) failed(it.message ?: "PIP unavailable") } },
-        serviceIds = if (source.physical) emptyList() else listOf(source.id), initialRects = listOf(position))
+        serviceIds = if (source.physical) emptyList() else listOf(source.id), initialRects = listOf(position),
+        inputFrame = { index, timestamp -> if (!closing) inputFrame(index, timestamp) })
     private var extra: CameraDevice? = null
     private var session: CameraCaptureSession? = null
     private var opening = false
@@ -66,7 +70,7 @@ internal class LivePipSession(
                     }
                     val configs=listOf(parentId,source.id).mapIndexed { index,id ->
                         id to SessionConfiguration(SessionConfiguration.SESSION_REGULAR,
-                            listOf(OutputConfiguration(inputs[index])),{ handler.post(it) },callback)
+                            (listOf(inputs[index]) + if (index == 0) mainOutputs else emptyList()).map(::OutputConfiguration),{ handler.post(it) },callback)
                     }.toMap()
                     if (!manager.isConcurrentSessionConfigurationSupported(configs)) {
                         fail("PIP combination unavailable"); return@post
@@ -106,6 +110,7 @@ internal class LivePipSession(
         capturing = true
         compositor.capture { photo ->
             val result = photo.mapCatching {
+                photoFrame(it.imageTimestampNs)
                 val library = MediaLibrary(context); val name = "${library.name()}_PIP.jpg"; val uri = library.create(name,false)
                 try { library.write(uri) { stream -> stream.write(it.bytes) }; library.publish(uri) }
                 catch (e: Exception) { library.resolver.delete(uri,null,null); throw e }

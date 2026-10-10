@@ -195,7 +195,9 @@ Single에서는 API 선택 옆의 `PIP`에서 보조 카메라 하나를 선택�
 
 Camera2 Single에서는 현재 Live 화면과 CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열며, Physical ID는 현재 장치에 출력을 추가합니다. 기존 셔터와 Photo·Video 모드로 합성 사진·영상을 저장하고, 보조 화면을 드래그할 수 있습니다.
 
-PIP 버튼은 합성이 켜져 있으면 강조되며, 다시 누르면 선택창을 엽니다. `Turn off PIP`로 끄면 강조도 해제됩니다. Callback 버튼은 표시 여부에 따라 강조됩니다. 오른쪽 아래 Camera 목록도 PIP처럼 첫 줄에 `Service · ID`, 다음 줄에 방향·렌즈 정보를 표시합니다. Camera와 PIP 목록의 Service ID는 숫자 오름차순으로 정렬합니다.
+화살표로 제어 기능을 펼치면 Live·스트림 크기 표시가 사라지고 같은 자리에 제어 버튼이 나타납니다. 접으면 원래 표시로 돌아옵니다. 실시간 FPS·ISO·노출·AE·AF는 작은 글씨 한 줄로 표시하며 Phys는 표시하지 않습니다.
+
+PIP 버튼은 합성이 켜져 있으면 노란색 계열 글자색으로 강조되며, 다시 누르면 선택창을 엽니다. `Turn off PIP`로 끄면 강조도 해제됩니다. Callback 버튼은 표시 여부에 따라 강조됩니다. 오른쪽 아래 Camera 목록도 PIP처럼 첫 줄에 `Service · ID`, 다음 줄에 방향·렌즈 정보를 표시합니다. Camera와 PIP 목록의 Service ID는 숫자 오름차순으로 정렬합니다.
 
 CameraX에서도 같은 PIP 버튼·셔터·드래그를 사용합니다. CameraX가 광고한 동시 조합의 Service ID만 표시하며 Physical ID는 제공하지 않습니다. Camera2와 후보 목록이 다를 수 있고, 후보가 없으면 PIP 버튼이 비활성화됩니다. 메인 ID는 유지하되 PIP를 켜고 끌 때 단일·동시 세션을 다시 bind합니다. 프리뷰 입력은 각각 720p 이하에서 협상하고, 일반 사진·녹화의 출력 설정 대신 화면용 합성 JPEG·H.264/AAC MP4를 저장합니다. PIP를 끄면 일반 스트림 설정으로 복귀합니다. 목록 스크롤은 엔진·메인 ID별로, 프리뷰 위치는 메인 ID별로 기억합니다.
 
@@ -248,3 +250,5 @@ JPEG와 MP4는 `DCIM/HALCamera`, Multi 사진 묶음 JSON은 `Download/HALCamera
 
 
 **다음 단계:** [Callback](callback.md)에서 촬영 프레임의 콜백과 시각을 확인하세요.
+
+Callback의 `Hold` 시간은 `0s → 1s → 3s → 5s → 10s`로 바뀝니다. 기본 0초는 실시간 갱신이고, 나머지는 촬영한 프레임의 결과를 해당 시간 동안 유지합니다. 모드와 엔진을 바꿔도 이 시간은 유지합니다. Logical 카메라의 PIP에서는 메인 Service ID에 포함된 Physical 결과와 각 프리뷰 입력을 함께 표시합니다.

@@ -35,7 +35,10 @@ internal class CameraXPipSession(
     private val output: LiveSize,
     private val position: PipRect,
     private val captureCallback: CameraCaptureSession.CaptureCallback,
+    private val analysis: androidx.camera.core.ImageAnalysis?,
     private val bound: (Camera, List<Preview>) -> Unit,
+    private val inputFrame: (Int, Long) -> Unit,
+    private val photoFrame: (Long) -> Unit,
     private val ready: () -> Unit,
     private val failed: (String) -> Unit,
     private val recordingChanged: (Boolean) -> Unit,
@@ -81,7 +84,9 @@ internal class CameraXPipSession(
             }
             cameras = provider.bindToLifecycle(selectors.mapIndexed { index, selector ->
                 ConcurrentCamera.SingleCameraConfig(selector,
-                    UseCaseGroup.Builder().addUseCase(previews[index]).build(), owner)
+                    UseCaseGroup.Builder().addUseCase(previews[index]).apply {
+                        if (index == 0) analysis?.let { addUseCase(it) }
+                    }.build(), owner)
             }).cameras
             cameras.forEach { camera ->
                 val observer = Observer<CameraState> { state ->
@@ -105,7 +110,7 @@ internal class CameraXPipSession(
                 readyState = true; main.removeCallbacks(timeout); ready()
             } } },
             onError = { main.post { fail(it.message ?: "PIP unavailable") } },
-            serviceIds = listOf(source.id), initialRects = listOf(position))
+            serviceIds = listOf(source.id), initialRects = listOf(position), inputFrame = inputFrame)
         compositor = compose
         compose.start { surfaces -> main.post {
             if (closing) { finishClose(); return@post }
@@ -131,6 +136,7 @@ internal class CameraXPipSession(
         capturing = true
         checkNotNull(compositor).capture { photo ->
             val result = photo.mapCatching {
+                photoFrame(it.imageTimestampNs)
                 val library = MediaLibrary(context)
                 val name = "${library.name()}_PIP.jpg"
                 val uri = library.create(name,false)

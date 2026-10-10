@@ -34,6 +34,7 @@ object Look {
     val cameraControlGlass = Color.argb(120, 24, 25, 27)
     val cameraSelection = Color.WHITE
     val cameraOnSelection = ink
+    val cameraActive = Color.parseColor("#FFD966")
     val primaryOnDark = Color.parseColor("#2997ff")
     // Runway-inspired surfaces are scoped to Gallery and About.
     val gallerySurface = Color.parseColor("#111111")

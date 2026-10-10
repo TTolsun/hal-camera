@@ -1,8 +1,8 @@
 MainActivity는 Live 런처입니다. CameraEngine을 선택하고 카메라 수명주기, 권한, 촬영 모드와 버튼 상태를 관리합니다. LiveReadings가 실시간 측정값을 갱신하고 IncidentActions가 이벤트 ZIP 저장과 공유를 담당합니다. Benchmark는 Lab에서 엽니다.
 
-검은 전체 화면 프리뷰의 상단에는 Camera2·CameraX 전환, 촬영 제어 펼침, Callback, Lab 버튼을 배치합니다. 하단에는 두 줄 측정값, 줌, 갤러리·64dp 셔터·카메라 선택, Photo·Video·Multi · P·Multi · V, Save Events · ZIP을 배치합니다. 아이콘의 터치 영역은 48dp 이상입니다. 색·서체는 Look을 사용하고 화면 규칙은 docs/design/APP-UI.md를 따릅니다.
+검은 전체 화면 프리뷰의 상단에는 Camera2·CameraX 전환, 촬영 제어 펼침, Callback, Lab 버튼을 배치합니다. 하단에는 한 줄 측정값, 줌, 갤러리·64dp 셔터·카메라 선택, Photo·Video·Multi · P·Multi · V, Save Events · ZIP을 배치합니다. 아이콘의 터치 영역은 48dp 이상입니다. 색·서체는 Look을 사용하고 화면 규칙은 docs/design/APP-UI.md를 따릅니다.
 
-Live 표시는 프리뷰·capture result가 1.5초 동안 없으면 회색으로 바뀌며 시스템 애니메이션이 꺼지면 깜빡이지 않습니다. FPS·ISO·노출·AE·AF와 추가 측정값을 표시하고 Callback을 열면 ResultCallbackGraph로 대체합니다. 측정값·그래프 규칙은 diagnostics-panel 요소를 따릅니다.
+Live 표시는 프리뷰·capture result가 1.5초 동안 없으면 회색으로 바뀌며 시스템 애니메이션이 꺼지면 깜빡이지 않습니다. FPS·ISO·노출·AE·AF와 추가 측정값을 표시하고 Callback을 열면 ResultCallbackGraph로 대체합니다. 펼침 컨트롤은 Live·크기 표시와 같은 자리에서 교차 페이드합니다. 측정값·그래프 규칙은 diagnostics-panel 요소를 따릅니다.
 
 ExpandingZoomControl은 현재 배율을 눌러 후보를 펼치고 선택 후 접습니다. 카메라 선택은 ID 목록을 열며 취소하면 기존 선택을 유지합니다. 상단 촬영 제어에서 플래시, AE·AF 잠금, EV를 조절합니다. 프리뷰 터치 측광은 현재 엔진에 전달합니다.
 

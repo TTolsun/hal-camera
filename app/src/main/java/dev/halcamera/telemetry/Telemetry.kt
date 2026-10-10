@@ -39,6 +39,8 @@ class Telemetry(val recorder: FlightRecorder) {
                     val stats = tracker.add(result.frameNumber, sensor)
                     recorder.record(sessionId, "capture_result", result.frameNumber, sensor, mapOf(
                         "partialResultsCount" to result.partialResults.size,
+                        "physicalTimestamps" to if (android.os.Build.VERSION.SDK_INT >= 28)
+                            result.physicalCameraResults.mapValues { it.value[CaptureResult.SENSOR_TIMESTAMP] } else emptyMap<String, Long?>(),
                         "captureIntent" to request[CaptureRequest.CONTROL_CAPTURE_INTENT],
                         "ae" to result[CaptureResult.CONTROL_AE_STATE],
                         "af" to result[CaptureResult.CONTROL_AF_STATE],

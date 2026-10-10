@@ -25,6 +25,7 @@ internal class DeviceCompositor(
     private val onError: (Throwable) -> Unit,
     private val serviceIds: List<String> = emptyList(),
     initialRects: List<PipRect> = emptyList(),
+    private val inputFrame: (Int, Long) -> Unit = { _, _ -> },
 ) {
     private val app = context.applicationContext
     private val thread = HandlerThread("HAL.Compose.$cameraId").apply { start() }
@@ -104,6 +105,7 @@ internal class DeviceCompositor(
         if (closed) return
         try {
             current(window); textures[index].updateTexImage(); textures[index].getTransformMatrix(transforms[index]); received[index] = true
+            inputFrame(index, textures[index].timestamp)
             render()
             if (!readySent && received.all { it }) { readySent = true; onReady() }
         } catch (e: Exception) { closed = true; onError(e) }

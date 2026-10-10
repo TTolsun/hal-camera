@@ -34,7 +34,7 @@ class Camera2Engine(
     private val previewReady: () -> Unit = {},
     private val previewFrame: () -> Unit = {},
     private val recordingState: (Boolean) -> Unit = {},
-    /** A short notice that leaves the camera state alone, such as an AE relock that changed the exposure. */
+    /** Transient feedback, separate from camera state. */
     private val notice: (String) -> Unit = {},
     private val status: (String, Boolean) -> Unit
 ) : CameraEngine, MediaCapture, LiveTuning, TouchMetering, PipCamera {
@@ -75,7 +75,7 @@ class Camera2Engine(
     private val mediaIo = Executors.newSingleThreadExecutor()
     private val library = MediaLibrary(context)
     @Volatile private var zoomRatio = 1f
-    /** One queued zoom submission at a time: a fast drag merges into the ratio that is current when it runs. */
+    /** Coalesce zoom drags into one queued submission. */
     private val zoomQueued = java.util.concurrent.atomic.AtomicBoolean(false)
     @Volatile private var controls = LiveControls()
     @Volatile private var requestedControls = LiveControls()
@@ -268,11 +268,7 @@ class Camera2Engine(
             if (delay != null) handler.postDelayed({ open() }, delay) else { fail(e); if (!active) finishClose() }
         }
     }
-    /**
-     * Waits for the previous engine's camera to be released before the first LIVE open (#230); see
-     * [CameraReleaseWait]. A camera this manager does not list is never reported, so it is not waited for.
-     * Registering the callback reports every camera's current availability, so a camera already free opens at once.
-     */
+    /** Wait for a listed previous camera; availability registration also reports cameras already free (#230). */
     private fun waitForRelease(id: String): Boolean {
         if (runCatching { id !in manager.cameraIdList }.getOrDefault(true)) return false
         val wait = CameraReleaseWait(id)
@@ -299,10 +295,7 @@ class Camera2Engine(
         releaseCallback = null
         releaseWait = null
     }
-    /**
-     * A LIVE open that fails before the first frame is tried again (#224); the device is reopened from onClosed.
-     * The partial session goes with it, so configure() starts clean on the next device.
-     */
+    /** Retry pre-frame LIVE failures from onClosed with a fresh session (#224). */
     private fun retryDelay(cause: CameraOpenRetry.Cause, detail: String): Long? {
         if (!active || spec != null || previewSeen) return null
         val delay = openRetry.next(cause) ?: return null
@@ -801,12 +794,15 @@ class Camera2Engine(
                     if (pip !== added) return
                     setPip(null,null,null) { done(Result.failure(IllegalStateException(reason))) }
                 }
+                val analysis = StreamConfiguration(configuredOutputs.outputs.filter { it.descriptor.kind == OutputKind.YUV })
+                val callbacks = PipCallbacks(telemetry,sessionId,source.id.takeIf { source.physical }) { active && pip === added }
                 added = LivePipSession(context,handler,main,cameraId,source,checkNotNull(texture),checkNotNull(output),LiveSize(size.width,size.height),
-                    position = position,
+                    position = position, mainOutputs = analysis.targets,
+                    inputFrame = callbacks::input, photoFrame = callbacks::photo,
                     configureMain = { inputs ->
                         val outputs = StreamConfiguration(inputs.mapIndexed { index, surface ->
                             ConfiguredOutput(OutputDescriptor(if (index == 0) "preview" else "pip",OutputKind.PREVIEW,true),surface)
-                        })
+                        } + analysis.outputs)
                         val configs = outputs.outputs.mapIndexed { index, output -> OutputConfiguration(output.target).apply {
                             if (source.physical && index == 1) setPhysicalCameraId(source.id)
                         } }
@@ -816,8 +812,8 @@ class Camera2Engine(
                                 override fun onConfigured(value: CameraCaptureSession) {
                                     if (!active || pip !== added) { value.close(); return }
                                     captureSession = value; configuredOutputs = outputs
-                                    telemetry.configureCallbackStreams(sessionId,outputs.metadata())
-                                    val sizes = mapOf("preview" to size.toString(),"analysis" to null,"jpeg" to output.toString())
+                                    callbacks.configure(analysis.metadata())
+                                    val sizes = mapOf("preview" to size.toString(),"analysis" to yuv?.let { "${it.width}x${it.height}" },"jpeg" to output.toString())
                                     telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
                                     telemetry.event(sessionId,"pip_configured",mapOf("sourceId" to source.id,"physical" to source.physical,"mainDeviceReused" to true))
                                     main.post { if (active) streamsConfigured(sizes) }

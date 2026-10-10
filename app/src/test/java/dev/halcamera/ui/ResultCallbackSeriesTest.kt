@@ -5,6 +5,35 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ResultCallbackSeriesTest {
+    @Test fun physicalPipCanUseLogicalSurfaceTimestampWithoutBorrowingAnotherSensorTimestamp() {
+        val events = listOf(
+            Event(100_000_000, "s", "capture_started", 8, 900, mapOf("firstStart" to true)),
+            Event(150_000_000, "s", "capture_result", 8, 900, mapOf("physicalTimestamps" to mapOf("6" to 850L))),
+            Event(160_000_000, "s", "pip_preview_available", sensorNs = 900, values = mapOf("stream" to "pip")))
+        val config = metadata(stream("pip") + mapOf("eventKind" to "pip_preview_available", "physicalId" to "6"))
+        val point = ResultCallbackSeries.read(events, "s", 200_000_000, config).tracks.last().points.single()
+        assertEquals(100_000_000L, point.startAtNs)
+        assertEquals(60.0, point.latencyMs!!, 0.001)
+    }
+
+    @Test fun pipIncludesEveryPhysicalResultAndMatchesItsOwnSensorTimestamp() {
+        val events = listOf(
+            Event(100_000_000, "s", "capture_started", 8, 900, mapOf("firstStart" to true)),
+            Event(150_000_000, "s", "capture_result", 8, 900,
+                mapOf("physicalTimestamps" to mapOf("2" to 905L, "5" to 901L))),
+            Event(160_000_000, "s", "pip_preview_available", sensorNs = 900, values = mapOf("stream" to "preview")),
+            Event(170_000_000, "s", "pip_preview_available", sensorNs = 905, values = mapOf("stream" to "pip")),
+            Event(180_000_000, "other-service", "capture_result", 8, 900,
+                mapOf("physicalTimestamps" to mapOf("9" to 905L))))
+        val config = metadata(stream("preview") + ("eventKind" to "pip_preview_available"),
+            stream("pip") + mapOf("eventKind" to "pip_preview_available", "physicalId" to "2", "kind" to "YUV"))
+        val tracks = ResultCallbackSeries.read(events, "s", 200_000_000, config).tracks
+        assertEquals(listOf("start", "all", "metadata:2", "metadata:5", "preview", "pip"), tracks.map { it.id })
+        assertEquals(listOf("Meta (Phy)", "Meta (Phy)", "preview", "YUV (Phy)"), tracks.drop(2).map { it.label })
+        assertEquals(listOf(50.0, 50.0, 60.0, 70.0), tracks.drop(2).map { it.points.single().latencyMs })
+        assertTrue(tracks.all { it.points.single().startAtNs == 100_000_000L })
+    }
+
     @Test fun physicalBuffersMatchTheirLogicalRequestWithoutSharingSensorTimestamps() {
         val events = listOf(
             Event(100_000_000, "s", "capture_started", 8, 900, mapOf("firstStart" to true)),

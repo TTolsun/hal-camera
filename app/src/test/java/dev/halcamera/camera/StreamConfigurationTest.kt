@@ -17,7 +17,7 @@ class StreamConfigurationTest {
         assertEquals(listOf(preview, yuv1), config.repeating)
         assertEquals(listOf(yuv1, yuv2, jpeg), config.still)
         assertEquals(listOf("p", "yuv-small", "yuv-large", "jpeg-main"), config.metadata().map { it["id"] })
-        assertEquals(listOf("Preview", "YUV 1", "YUV 2", "JPEG"), config.metadata().map { it["label"] })
+        assertEquals(listOf("Preview", "YUV", "YUV", "JPEG"), config.metadata().map { it["label"] })
         assertEquals(listOf(true, true, false, false), config.metadata().map { it["repeating"] })
     }
 
@@ -26,8 +26,8 @@ class StreamConfigurationTest {
         val b = output("yuv-large", OutputKind.YUV)
         val metadata = StreamConfiguration(listOf(b, a)).metadata()
         assertEquals("yuv-large", metadata[0]["id"])
-        assertEquals("YUV 1", metadata[0]["label"])
-        assertEquals("YUV 1", StreamConfiguration(listOf(a)).metadata().single()["label"])
+        assertEquals("YUV", metadata[0]["label"])
+        assertEquals("YUV", StreamConfiguration(listOf(a)).metadata().single()["label"])
     }
 
     @Test fun recordingRemainsAnActualSessionTargetEvenWithoutAnObservableBufferCallback() {

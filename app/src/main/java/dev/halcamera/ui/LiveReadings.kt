@@ -57,18 +57,19 @@ class LiveReadings(
         fun differs(key: String, want: Double, tolerance: Double) = recent.size == 10 &&
             recent.all { e -> (e.values[key] as? Number)?.toDouble()?.let { kotlin.math.abs(it - want) > tolerance } == true }
         val extras = listOfNotNull(
-            LiveControlBar.afState(num("af")?.toInt()),
+            LiveControlBar.flashState(num("flashState")?.toInt(), controls),
             LiveControlBar.evApplied(num("evApplied")?.toInt()?.takeIf { differs("evApplied", controls.evIndex.toDouble(), 0.5) }, controls, support),
-            num("zoomRatio")?.takeIf { differs("zoomRatio", zoomRatio.toDouble(), 0.01 * zoomRatio) }?.let { "Zoom ${"%.2f".format(Locale.US, it)}x applied" },
-            frame?.values?.get("physicalId")?.let { "Phys $it" })
+            num("zoomRatio")?.takeIf { differs("zoomRatio", zoomRatio.toDouble(), 0.01 * zoomRatio) }?.let { "Zoom ${"%.2f".format(Locale.US, it)}x applied" })
         val room = (metrics.width - metrics.paddingLeft - metrics.paddingRight).toFloat()
-        var state = listOfNotNull(LiveControlBar.aeState(num("ae")?.toInt()), LiveControlBar.flashState(num("flashState")?.toInt(), controls)).joinToString(" · ")
-        for (extra in extras) { val next = "$state · $extra"; if (room > 0f && metrics.paint.measureText(next) <= room) state = next else break }
         val measurement = listOfNotNull(
             "FPS ${fmt(num("resultFps"), "%.1f")}",
-            "ISO ${num("iso")?.toInt() ?: "—"}".takeUnless { panelObservedKey == "iso" },
-            "Exp ${fmt(num("exposureNs")?.div(1e6), "%.2fms")}".takeUnless { panelObservedKey == "exposureNs" },
+            "ISO ${num("iso")?.toInt() ?: "—"}",
+            "Exp ${fmt(num("exposureNs")?.div(1e6), "%.2fms")}",
+            LiveControlBar.aeState(num("ae")?.toInt()),
+            LiveControlBar.afState(num("af")?.toInt()),
         ).joinToString(" · ")
+        val width = metrics.paint.measureText(measurement)
+        if (room > 0 && width > room) metrics.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX,metrics.textSize*(room-1)/width)
         val settings = listOfNotNull(
             controls.flash.takeIf { it != FlashMode.OFF }?.label,
             support.evLabel(controls.evIndex).takeIf { controls.evIndex != 0 },
@@ -78,8 +79,8 @@ class LiveReadings(
             controls.manual.exposure?.let { "M ISO ${it.iso} · ${ManualControls.shutter(it.timeNs)}" },
             controls.manual.focusDiopters?.let { "MF ${"%.2f".format(Locale.US,it)} D" },
             controls.manual.wb.takeIf { it != WhiteBalance.AUTO }?.let { "WB ${it.label}" },
-        ).joinToString(" · ")
-        val text = listOf(measurement,state,settings).filter { it.isNotEmpty() }.joinToString("\n")
+        ).plus(extras).joinToString(" · ")
+        val text = listOf(measurement,settings).filter { it.isNotEmpty() }.joinToString("\n")
         if (metrics.text.toString() != text) metrics.text = text
     }
 

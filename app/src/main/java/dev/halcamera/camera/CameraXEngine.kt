@@ -418,16 +418,21 @@ class CameraXEngine(
             if (source == null) { restore(Result.success(Unit)); return }
             val infos = provider.availableCameraInfos.associateBy { Camera2CameraInfo.from(it).cameraId }
             lateinit var added: CameraXPipSession
+            val callbacks = PipCallbacks(telemetry,session,null) { active && pip === added }
             added = CameraXPipSession(context,owner,provider,handler,cameraId,source,
                 listOf(infos.getValue(cameraId).cameraSelector,infos.getValue(source.id).cameraSelector),
                 checkNotNull(texture),checkNotNull(output),position,
                 resultCallback(telemetry.callback(session) { active }),
+                analysis = analysis,
+                inputFrame = callbacks::input, photoFrame = callbacks::photo,
                 bound = { mainCamera, previews ->
                     camera = mainCamera
                     pipPreview = previews.first()
                     rebuilt(StreamConfiguration(listOf(ConfiguredOutput(previewOutput,previews.first()))),
                         mapOf("preview" to previews.first().resolutionInfo?.resolution?.toString(),
-                            "pip" to previews.last().resolutionInfo?.resolution?.toString(), "analysis" to null,"jpeg" to null))
+                            "pip" to previews.last().resolutionInfo?.resolution?.toString(),
+                            "analysis" to analysis?.resolutionInfo?.resolution?.toString(),"jpeg" to output.toString()))
+                    callbacks.configure(analysis?.let { StreamConfiguration(listOf(ConfiguredOutput(analysisOutput,it))).metadata() }.orEmpty())
                     telemetry.event(session,"pip_configured",mapOf("sourceId" to source.id,"physical" to false,"api" to "CameraX.ConcurrentCamera"))
                 }, ready = {
                     if (pip === added && active) {

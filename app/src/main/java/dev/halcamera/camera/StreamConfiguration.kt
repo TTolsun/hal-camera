@@ -28,11 +28,10 @@ class StreamConfiguration<T>(outputs: List<ConfiguredOutput<T>>) {
     val still get() = outputs.filter { it.descriptor.stillCapture }
 
     fun metadata(): List<Map<String, Any?>> {
-        var yuvIndex = 0
         return outputs.map { output ->
             val stream = output.descriptor
             mapOf("id" to stream.id, "kind" to stream.kind.name, "eventKind" to stream.kind.eventKind,
-                "label" to if (stream.kind == OutputKind.YUV) "YUV ${++yuvIndex}" else stream.kind.label,
+                "label" to stream.kind.label,
                 "repeating" to stream.repeating, "observable" to stream.observable)
         }
     }

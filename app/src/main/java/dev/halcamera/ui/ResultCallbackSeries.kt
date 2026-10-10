@@ -27,9 +27,10 @@ data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frame
             }.toMap()
             val sensorStarts = current.filter { it.kind == "capture_started" && it.sensorNs != null }.associateBy { it.sensorNs }
             val physicalIds = (metadata["physicalIds"] as? List<*>)?.filterIsInstance<String>().orEmpty()
-            val physicalStarts = current.filter { it.kind == "dual_physical_result" }.flatMap { event ->
+            val streams = (metadata["callbackStreams"] as? List<*>)?.filterIsInstance<Map<*, *>>().orEmpty()
+            val physicalStarts = current.filter { it.kind == "dual_physical_result" || it.kind == "capture_result" }.flatMap { event ->
                 val start = starts[event.frame] ?: return@flatMap emptyList()
-                (event.values["timestamps"] as? Map<*, *>)?.entries.orEmpty().mapNotNull { (id, value) ->
+                ((event.values["physicalTimestamps"] ?: event.values["timestamps"]) as? Map<*, *>)?.entries.orEmpty().mapNotNull { (id, value) ->
                     (value as? Number)?.toLong()?.let { (id to it) to start }
                 }
             }.toMap()
@@ -37,14 +38,18 @@ data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frame
             fun points(kind: String, stream: String? = null) = window.filter {
                 it.kind == kind && (stream == null || it.values["stream"] == stream)
             }.sortedBy { it.atNs }.map { event ->
-                val physicalId = when (stream) {
+                val physicalId = streams.find { it["id"] == stream }?.get("physicalId") as? String ?: when (stream) {
                     "preview_main", "photo_main" -> physicalIds.getOrNull(0)
                     "preview_sub", "photo_sub" -> physicalIds.getOrNull(1)
                     else -> null
                 }
                 val start = if (stream == null) event.frame?.let { starts[it] }
                     else event.sensorNs?.let { timestamp ->
-                        physicalStarts[physicalId to timestamp] ?: sensorStarts[timestamp]
+                        if (physicalId == null) sensorStarts[timestamp]
+                        else physicalStarts[physicalId to timestamp] ?: sensorStarts[timestamp].takeIf {
+                            // Some HALs stamp physical SurfaceTexture buffers with the logical request timestamp.
+                            kind == "pip_preview_available"
+                        }
                     }
                 val latency = start?.let { origins[it.atNs] }?.let { event.atNs - it }?.div(1e6)
                 ResultCallbackPoint(event.atNs, latency, start?.atNs)
@@ -53,10 +58,25 @@ data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frame
                 ResultCallbackTrack("start", "Shutter", null, points("capture_started")),
                 ResultCallbackTrack("all", "Metadata", null, points("capture_result"))
             )
-            val streams = (metadata["callbackStreams"] as? List<*>)?.filterIsInstance<Map<*, *>>().orEmpty()
+            val physical = window.filter { it.kind == "capture_result" }.flatMap { event ->
+                (event.values["physicalTimestamps"] as? Map<*, *>)?.keys.orEmpty().filterIsInstance<String>()
+            }.distinct().sortedWith(compareBy<String> { it.toIntOrNull() ?: Int.MAX_VALUE }.thenBy { it })
+            for (id in physical) {
+                val results = window.filter { it.kind == "capture_result" &&
+                    (it.values["physicalTimestamps"] as? Map<*, *>)?.containsKey(id) == true }
+                tracks += ResultCallbackTrack("metadata:$id", "Meta (Phy)", null, results.map { event ->
+                    val start = starts[event.frame]
+                    ResultCallbackPoint(event.atNs, start?.let { origins[it.atNs] }?.let { (event.atNs - it) / 1e6 }, start?.atNs)
+                })
+            }
             for (stream in streams) {
                 val id = stream["id"] as? String ?: continue
-                val label = stream["label"] as? String ?: id
+                val label = if (stream["physicalId"] != null) {
+                    val type = (stream["kind"] as? String)?.let { kind ->
+                        dev.halcamera.camera.OutputKind.values().find { it.name == kind }?.label
+                    } ?: (stream["label"] as? String ?: id).removeSuffix(" (Phy)")
+                    "$type (Phy)"
+                } else stream["label"] as? String ?: id
                 val unavailable = if (stream["observable"] == false) "No callback" else null
                 val kind = stream["eventKind"] as? String ?: if (id == "preview") "preview_available" else "image_available"
                 tracks += ResultCallbackTrack(id, label, unavailable, if (unavailable == null) points(kind, id) else emptyList(), stream["repeating"] != false)
