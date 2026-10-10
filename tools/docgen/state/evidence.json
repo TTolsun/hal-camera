@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "248c8a8fcada8824",
+        "codeHash": "ff6436f4ec6e8fe6",
         "modelHash": "6dfffc5943da9bd4",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
@@ -20,7 +20,7 @@
           "app/src/main/java/dev/halcamera/DualPreviewActivity.kt": "fec86abd28d98ebe5eb26ecead8182ffacd168ee",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "73c18e743cb6e92be365453a439186b79b4eefd6",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "49f76669cd213d94981804cf8e7c8dacca13eca1",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "a52f7c6d53e06932ee344abf26334925c54d606c",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
@@ -228,14 +228,14 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "e97cce6dfb2b9654",
+        "codeHash": "3752f8baeb1ba5cf",
         "modelHash": "6e509b28c6701699",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
           "app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt": "1a423c9983fc6d2e4d97aa0e036f45dbbc0718ce",
           "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt": "3ce60c16472f2ed3e100034c62feee32f13236d3",
@@ -276,13 +276,13 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "a83bd0d57973dc7e",
+        "codeHash": "364d7556e5e7edef",
         "modelHash": "9c6ebe1505c8ff5b",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
           "app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt": "1a423c9983fc6d2e4d97aa0e036f45dbbc0718ce",
           "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt": "3ce60c16472f2ed3e100034c62feee32f13236d3",
@@ -315,10 +315,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "0d14e5d682a32aa8",
+        "codeHash": "6655981093441e07",
         "modelHash": "f7a7f8816b31955e",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
@@ -329,7 +329,7 @@
           "app/src/main/java/dev/halcamera/DualPreviewActivity.kt": "fec86abd28d98ebe5eb26ecead8182ffacd168ee",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "73c18e743cb6e92be365453a439186b79b4eefd6",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "49f76669cd213d94981804cf8e7c8dacca13eca1",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "a52f7c6d53e06932ee344abf26334925c54d606c",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
@@ -539,14 +539,14 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "d30ad296fe437716",
+        "codeHash": "f870a312e55481f2",
         "modelHash": "0c39b86897e517dc",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
           "app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt": "1a423c9983fc6d2e4d97aa0e036f45dbbc0718ce",
           "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt": "3ce60c16472f2ed3e100034c62feee32f13236d3",
@@ -588,14 +588,14 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "3a8b0746f7b37044",
+        "codeHash": "71126f37bb4864c5",
         "modelHash": "35fe2029f489562a",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
           "app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt": "1a423c9983fc6d2e4d97aa0e036f45dbbc0718ce",
           "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt": "3ce60c16472f2ed3e100034c62feee32f13236d3",
@@ -640,10 +640,10 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "248c8a8fcada8824",
+        "codeHash": "ff6436f4ec6e8fe6",
         "modelHash": "68ae331167fdb8fc",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
@@ -654,7 +654,7 @@
           "app/src/main/java/dev/halcamera/DualPreviewActivity.kt": "fec86abd28d98ebe5eb26ecead8182ffacd168ee",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "73c18e743cb6e92be365453a439186b79b4eefd6",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "49f76669cd213d94981804cf8e7c8dacca13eca1",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "a52f7c6d53e06932ee344abf26334925c54d606c",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
@@ -862,10 +862,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "248c8a8fcada8824",
+        "codeHash": "ff6436f4ec6e8fe6",
         "modelHash": "8fa27a77d083cb9a",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
@@ -876,7 +876,7 @@
           "app/src/main/java/dev/halcamera/DualPreviewActivity.kt": "fec86abd28d98ebe5eb26ecead8182ffacd168ee",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "73c18e743cb6e92be365453a439186b79b4eefd6",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "49f76669cd213d94981804cf8e7c8dacca13eca1",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "a52f7c6d53e06932ee344abf26334925c54d606c",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
@@ -1103,13 +1103,13 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "7b7ee1b15009bc1e",
+        "codeHash": "d5e1e2881fdf13b7",
         "modelHash": "0ce54f618bafde80",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "49f76669cd213d94981804cf8e7c8dacca13eca1"
         }
       }
@@ -1134,10 +1134,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "248c8a8fcada8824",
+        "codeHash": "ff6436f4ec6e8fe6",
         "modelHash": "fdd1aa6bfde93c2d",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
@@ -1148,7 +1148,7 @@
           "app/src/main/java/dev/halcamera/DualPreviewActivity.kt": "fec86abd28d98ebe5eb26ecead8182ffacd168ee",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "73c18e743cb6e92be365453a439186b79b4eefd6",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "49f76669cd213d94981804cf8e7c8dacca13eca1",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "a52f7c6d53e06932ee344abf26334925c54d606c",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
@@ -1356,10 +1356,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "248c8a8fcada8824",
+        "codeHash": "ff6436f4ec6e8fe6",
         "modelHash": "8ca99af103be1d88",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
@@ -1370,7 +1370,7 @@
           "app/src/main/java/dev/halcamera/DualPreviewActivity.kt": "fec86abd28d98ebe5eb26ecead8182ffacd168ee",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "73c18e743cb6e92be365453a439186b79b4eefd6",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "49f76669cd213d94981804cf8e7c8dacca13eca1",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "a52f7c6d53e06932ee344abf26334925c54d606c",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
@@ -1578,10 +1578,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "248c8a8fcada8824",
+        "codeHash": "ff6436f4ec6e8fe6",
         "modelHash": "3b324b60c2006790",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
@@ -1592,7 +1592,7 @@
           "app/src/main/java/dev/halcamera/DualPreviewActivity.kt": "fec86abd28d98ebe5eb26ecead8182ffacd168ee",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "73c18e743cb6e92be365453a439186b79b4eefd6",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "49f76669cd213d94981804cf8e7c8dacca13eca1",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "a52f7c6d53e06932ee344abf26334925c54d606c",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
@@ -1800,10 +1800,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "248c8a8fcada8824",
+        "codeHash": "ff6436f4ec6e8fe6",
         "modelHash": "a50145c02c7dbbb7",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
@@ -1814,7 +1814,7 @@
           "app/src/main/java/dev/halcamera/DualPreviewActivity.kt": "fec86abd28d98ebe5eb26ecead8182ffacd168ee",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "73c18e743cb6e92be365453a439186b79b4eefd6",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "49f76669cd213d94981804cf8e7c8dacca13eca1",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "a52f7c6d53e06932ee344abf26334925c54d606c",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
@@ -2022,10 +2022,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "248c8a8fcada8824",
+        "codeHash": "ff6436f4ec6e8fe6",
         "modelHash": "5f0fc139c40c7591",
         "at": "2026-10-10",
-        "commit": "fff6c981",
+        "commit": "296f22d8",
         "reviewer": "Codex (CameraX PIP source and lifecycle review; device observations in validation report)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
@@ -2036,7 +2036,7 @@
           "app/src/main/java/dev/halcamera/DualPreviewActivity.kt": "fec86abd28d98ebe5eb26ecead8182ffacd168ee",
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "542b210fe0777b0bac63f281ed4349ddef014608",
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "73c18e743cb6e92be365453a439186b79b4eefd6",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "8a98285c2e3d5389c6e781c5b8b68262a1785461",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "bc1a714332ba192c006a30c2ba61978ec3cf3f9b",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "49f76669cd213d94981804cf8e7c8dacca13eca1",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "a52f7c6d53e06932ee344abf26334925c54d606c",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",

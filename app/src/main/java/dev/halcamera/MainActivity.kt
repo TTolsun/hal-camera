@@ -778,7 +778,7 @@ class MainActivity : ComponentActivity() {
         }
         mediaButton.isEnabled=(ready || recordingVideo || bursts.run != null) && !stoppingRecording
         if (bursts.fusing && controlBar.controls.bracket) mediaButton.isEnabled=false
-        if (!videoMode && streamSettings[streamKey()]?.canCapture == false) {
+        if (!videoMode && pipUi.selected == null && streamSettings[streamKey()]?.canCapture == false) {
             mediaButton.isEnabled = false
             mediaButton.contentDescription = "Photo output is off: enable YUV, JPEG or RAW in Live streams"
         }
