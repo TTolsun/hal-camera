@@ -46,6 +46,6 @@ object VideoSnapshotPlan {
 
     const val OFF_REASON = "Snapshots unavailable: JPEG is off in Live stream settings."
     const val NO_SIZE_REASON = "Snapshots unavailable: this camera has no JPEG output sizes."
-    const val REFUSED_REASON = "Recording without snapshots: this camera cannot combine video and JPEG."
+    const val REFUSED_REASON = "Recording without snapshots: this camera cannot combine video and the selected photo output."
     const val CAMERAX_REASON = "Recording without snapshots: CameraX cannot combine video and photos."
 }

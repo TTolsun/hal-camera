@@ -56,8 +56,8 @@ title: Quickstart
 | --- | --- |
 | `applicationId` | `dev.halcamera` |
 | `namespace` | `dev.halcamera` |
-| `versionName` | `0.23.0` |
-| `versionCode` | `660` |
+| `versionName` | `0.24.0` |
+| `versionCode` | `670` |
 | `minSdk` | `26` |
 | `targetSdk` | `36` |
 | `compileSdk` | `36` |

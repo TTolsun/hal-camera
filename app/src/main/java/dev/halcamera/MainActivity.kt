@@ -153,7 +153,7 @@ class MainActivity : ComponentActivity() {
         override fun handleOnBackPressed() = showCallbacks(false)
     }
     private val manualBack = object : OnBackPressedCallback(false) {
-        override fun handleOnBackPressed() { manualPanel.close(); isEnabled = false }
+        override fun handleOnBackPressed() { manualPanel.close(); isEnabled = manualPanel.isExpanded }
     }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (granted) restartCamera() else setStatus("Camera permission required · Reconnect Camera in Lab.", false)
@@ -216,7 +216,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
             liveIndicator.bindStabilization(eisTracker.update(sessionId, recordingVideo,
-                (streamSettings[streamKey()]?.stabilization ?: LiveStabilization.AUTO).eisComparisonMode(engineName, recordingVideo),
+                LiveModePolicy.forVideo(videoMode).stabilization(streamSettings[streamKey()]?.stabilization)
+                    .eisComparisonMode(engineName, recordingVideo),
                 eisFrame?.atNs, (eisFrame?.values?.get("videoStabilization") as? Number)?.toInt(), time,
                 live && !stoppingRecording), recordingVideo)
             if (!closing && engine != null) {
@@ -365,7 +366,7 @@ class MainActivity : ComponentActivity() {
         val thisSession = sessionId
         val thisCamera = cameraId
         val thisKey = streamKey()
-        val requestedStreams = streamSettings[thisKey]
+        val requestedStreams = streamSettings[thisKey]?.forMode(videoMode)
         if (engineName == "Camera2") streamState[thisKey] = "Configuring… Getting the pixels in line."
         zoomApplied = false
         updateCameraChoices()
@@ -403,7 +404,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             CameraXEngine(this, this, view, cameraId, sessionId, telemetry, cameraWorker, previewReady, recordingState, notice, status,
-                liveStreams = requestedStreams, streamsConfigured = { values ->
+                liveStreams = requestedStreams, videoMode = videoMode, streamsConfigured = { values ->
                     if (thisSession == sessionId && resumed && !closing) {
                         goodStreams[thisKey] = requestedStreams
                         streamState[thisKey] = "Configured"
@@ -416,7 +417,7 @@ class MainActivity : ComponentActivity() {
         } else {
             val view = TextureView(this)
             previewHost.addView(view, FrameLayout.LayoutParams(-1,-1))
-            Camera2Engine(this, view, cameraId, sessionId, telemetry, liveStreams = requestedStreams, releasedCameraId = released,
+            Camera2Engine(this, view, cameraId, sessionId, telemetry, liveStreams = requestedStreams, videoMode = videoMode, releasedCameraId = released,
                 streamsConfigured = { values ->
                     if (thisSession == sessionId && resumed && !closing) {
                         goodStreams[thisKey] = requestedStreams
@@ -720,10 +721,7 @@ class MainActivity : ComponentActivity() {
         restartCamera()
         updateMediaControls()
     }
-    /**
-     * "Camera · 0 (Wide · Rear)". The roles come from the shared enumeration so LIVE names a lens exactly as
-     * BENCHMARK, PROBE and the run history do; an id the resolver did not reach still gets the short label.
-     */
+    /** Share lens labels with Benchmark, Probe and History; unknown IDs retain the short label. */
     private fun cameraLabel(id:String):String {
         if(id.isEmpty()) return "No camera"
         return cameraEndpoints[id]?.let(CameraLabel::full) ?: CameraLabel.short(id)
@@ -879,6 +877,7 @@ class MainActivity : ComponentActivity() {
             Intent(this, destination)
                 .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, cameraId)
                 .putExtra(WorkbenchActivity.EXTRA_ENGINE, engineName)
+                .putExtra(LiveStreamsActivity.EXTRA_VIDEO_MODE, videoMode)
                 .putExtra(LiveStreamsActivity.EXTRA_SETTINGS, streamSettings[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_GOOD_SETTINGS, goodStreams[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_HAS_GOOD, goodStreams.containsKey(streamKey()))

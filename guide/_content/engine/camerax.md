@@ -30,7 +30,7 @@ verifications: []
 
 ### CameraX 손떨림 보정
 
-**CameraX와 하드웨어가 함께 지원하는 보정 모드만 표시합니다.** 영상용 EIS는 녹화 중에 적용합니다.
+**PHOTO에서는 보정을 끄며, VIDEO에서는 CameraX와 하드웨어가 함께 지원하는 보정 모드만 표시합니다.** 영상용 EIS는 녹화 중에 적용합니다.
 
 <details markdown="1" id="detail-9947135f73" data-search-section>
 <summary>CameraX 손떨림 보정 구현</summary>
@@ -102,7 +102,7 @@ Live에서 다음 엔진도 CameraX이면 종료하지 않습니다.
 
 ### 녹화
 
-**녹화용 출력으로 전환한 뒤 MP4를 저장합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
+**VIDEO에서 출력을 미리 준비하고, 녹화 버튼으로 MP4 기록을 시작합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
 
 <details markdown="1" id="detail-a5fe53f9af" data-search-section>
 <summary>녹화 구현</summary>
@@ -116,7 +116,7 @@ sequenceDiagram
     R-->>U: Start
     U->>R: 정지 요청
     R-->>U: Finalize
-    U->>U: 활성 화면이면 프리뷰 구성 복구
+    U->>U: 활성 화면이면 VIDEO use case 유지
     alt 저장 가능한 결과와 비어 있지 않은 파일
         U->>S: MP4 저장 예약
         S-->>U: 저장 결과
@@ -129,7 +129,7 @@ sequenceDiagram
 
 `CameraXLiveRecorder`는 CameraX `Recorder`로 캐시 폴더의 임시 MP4에 기록하고, 끝나면 `MediaLibrary.saveVideo`로 앨범에 공개합니다.
 
-1. 녹화를 시작하면 ImageAnalysis와 ImageCapture를 unbind한 뒤 VideoCapture와 ImageCapture를 함께 bind합니다. 녹화가 끝나면 반대로 되돌립니다. ImageAnalysis를 빼는 이유는 Camera2처럼 프리뷰·인코더·JPEG 세 스트림만 쓰기 위해서이며, 네 use case를 한꺼번에 bind하면 스트림 조합을 CameraX의 stream sharing이 정하게 됩니다. 카메라가 이 조합을 거절하면 VideoCapture만 bind하여 녹화를 이어가고, 녹화 중 사진을 지원하지 않는다는 이유를 화면에 알립니다.
+1. VIDEO 모드 진입 시 Preview와 VideoCapture, 그리고 선택한 JPEG 소스에 따라 ImageCapture 또는 ImageAnalysis를 bind합니다. 녹화 버튼에서는 이미 bind한 Recorder를 시작하고, 정지 후에도 VIDEO use case를 유지합니다. 출력 조합이 거부되면 스냅샷 없이 녹화하고 이유를 표시합니다. JPEG에서 YUV를 선택하면 지정한 YUV 크기의 프레임을 앱에서 회전·변환하여 JPEG로 저장합니다.
 2. 설정을 지정하지 않으면 품질은 FHD를 우선 선택합니다. FHD가 없으면 더 낮은 품질을 먼저 찾고, 낮은 품질도 없으면 더 높은 품질을 선택할 수 있습니다. 30fps, 10Mbps를 요청합니다. 코덱과 오디오 형식은 기기의 encoder profile을 따르므로, 기본 H.264와 44.1kHz AAC를 사용하는 Camera2와 다를 수 있습니다.
 3. 소리를 요청했는데 `RECORD_AUDIO` 권한이 없으면 소리 없이 녹화하지 않고 실패로 처리합니다.
 4. 첫 `VideoRecordEvent.Status`가 오면 AF 잠금과 길게 누른 AE 지점을 한 번 더 보냅니다. CameraX는 동영상 surface가 실제로 켜질 때 repeating 요청을 다시 구성하는데, 그 전에 보낸 FocusMeteringAction은 사라지기 때문입니다.
@@ -137,19 +137,19 @@ sequenceDiagram
 
 명시한 녹화 크기는 지원 Quality의 해상도와 정확히 일치해야 하며, bind 후 실제 해상도도 검사합니다. 설정 화면의 후보는 CameraX Quality 해상도와 하드웨어의 크기·FPS 조건을 교차해 만듭니다. FPS와 비트레이트는 요청값이고 실제 결과와 구분합니다. CameraX 1.6.2의 공개 Recorder API는 녹화 코덱을 직접 선택하지 않으므로 Format과 Live 표시는 Auto입니다.
 
-녹화 중 사진(`CameraXVideoSnapshot`)은 녹화와 함께 bind한 ImageCapture의 `takePicture`로 JPEG 한 장을 저장합니다.
+녹화 중 사진은 선택한 JPEG 소스를 따릅니다. 카메라 JPEG는 함께 bind한 ImageCapture의 `takePicture`로, YUV 앱 변환은 ImageAnalysis 프레임으로 JPEG 한 장을 저장합니다.
 
-analysis 스트림이 없으므로 YUV 짝은 저장하지 않으며, Camera2와 같이 한 번에 한 장만 처리합니다.
+두 소스 모두 원본 YUV 짝은 저장하지 않으며, Camera2와 같이 한 번에 한 장만 처리합니다.
 
 실패하거나 5초 안에 오지 않아도 녹화는 끝나지 않고 알림만 표시합니다.
 
-Live 스트림 설정에서 JPEG을 끄면 bind할 ImageCapture가 없으므로 녹화 중 사진을 지원하지 않는다고 알립니다.
+JPEG가 Off이면 스냅샷을 비활성화합니다. YUV를 선택하면 ImageAnalysis가 촬영 요청 뒤 받은 한 프레임을 JPEG로 변환하여 저장합니다.
 
 사진 크기는 사진 모드와 같은 ImageCapture를 쓰므로 설정한 JPEG 크기를 따르고, 설정이 없으면 CameraX가 고른 크기(Galaxy S25+에서 4080×3060)로 저장합니다.
 
 녹화 중 사진의 기기별 제약은 [앞의 안내](#녹화-중-사진의-알려진-제약)를 확인하세요. 사진 크기를 1080p로 줄이거나 `CONTROL_CAPTURE_INTENT`를 `VIDEO_SNAPSHOT`으로 지정해도 해당 기기의 간격 증가는 같았습니다.
 
-녹화 시작과 정지는 use case를 다시 bind하므로, 엔진은 그때마다 줌과 Live 제어를 새 세션에 다시 보내고 Callback 그래프의 출력 목록도 바꿉니다.
+VIDEO 진입 시 출력 구성을 바꾸고 줌과 Live 제어를 다시 적용합니다. 녹화 버튼에서는 use case를 다시 bind하지 않습니다.
 
 </details>
 

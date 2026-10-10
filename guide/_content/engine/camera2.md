@@ -66,7 +66,7 @@ Camera2 Live의 프리뷰·사진·녹화·녹화 중 사진 요청은 기존 �
 <details markdown="1" id="detail-c8f808cdf0" data-search-section>
 <summary>손떨림 보정 구현</summary>
 
-Live Streams의 Stabilization에서 Auto, Off와 기기가 지원하는 OIS·EIS (Video)·EIS (Preview + Video)를 선택합니다.
+PHOTO에서는 손떨림 보정을 Off로 고정합니다. VIDEO에서는 Live Streams의 Stabilization에서 Auto, Off와 기기가 지원하는 OIS·EIS (Video)·EIS (Preview + Video)를 선택합니다.
 
 EIS (Preview + Video)는 Android 13 이상에서 지원 목록과 요청 키가 모두 있을 때 제공합니다.
 
@@ -76,7 +76,7 @@ Auto는 새 요청 템플릿의 기본값을 유지합니다.
 
 설정은 프리뷰·사진·녹화·녹화 중 사진 요청에 적용합니다.
 
-촬영·녹화가 끝난 뒤 카메라를 닫고 재개하며 카메라와 엔진마다 값을 분리합니다.
+설정을 적용할 때 카메라를 닫고 재개하며 카메라와 엔진마다 값을 분리합니다.
 
 지원 모드가 있어도 모든 크기·FPS에서 적용된다는 뜻은 아닙니다.
 
@@ -254,7 +254,7 @@ RAW reader는 버퍼 두 개로 열고 still 요청에만 포함합니다. 이�
 
 ### 녹화
 
-**녹화용 출력으로 전환한 뒤 MP4를 저장합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
+**VIDEO에서 출력을 미리 준비하고, 녹화 버튼으로 MP4 기록을 시작합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
 
 <details markdown="1" id="detail-11a053d988" data-search-section>
 <summary>녹화 구현</summary>
@@ -264,8 +264,10 @@ sequenceDiagram
     participant U as Live
     participant R as 녹화 처리
     participant S as 저장
+    U->>R: VIDEO 진입
+    R->>R: 프리뷰·인코더·스냅샷 세션 준비
     U->>R: 녹화 시작
-    R->>R: 녹화 세션 구성과 시작
+    R->>R: 인코더 시작과 요청 대상 추가
     R-->>U: 녹화 시작 통지
     U->>R: 정지 요청
     R->>R: 세션 종료와 파일 마무리
@@ -273,7 +275,7 @@ sequenceDiagram
         R->>S: 저장 가능한 MP4 저장 예약
         S-->>U: 저장 결과
     and 프리뷰 복구
-        R->>R: 활성 카메라의 프리뷰 세션 복구
+        R->>R: 활성 카메라의 VIDEO 스트림 재준비
     end
 ```
 
@@ -289,16 +291,18 @@ Live 스트림 설정에서는 카메라 크기·고정 AE FPS 범위·인코더
 
 소리를 포함하면 AAC 128kbps, 44.1kHz를 사용합니다.
 
-1. 녹화를 시작하면 프리뷰와 인코더, 그리고 녹화 중 사진용 JPEG 스트림으로 새 세션을 만듭니다. YUV 스트림은 이 세션에 없으므로 녹화 중 사진은 JPEG만 저장합니다. 카메라가 이 조합을 거절하면 JPEG 없이 프리뷰와 인코더만으로 다시 구성하고, 이 경우 녹화 중 사진을 지원하지 않는다는 이유를 화면에 알립니다.
-2. Android 13 이상에서는 `RecordingBufferRelay`가 인코더로 가는 PRIVATE 버퍼를 먼저 받아 도착 시각을 기록합니다. 그보다 낮은 버전에서는 인코더에 직접 연결하고, 녹화 출력을 관측할 수 없다고 표시합니다.
+1. VIDEO 모드 진입 시 프리뷰·인코더와 선택한 JPEG 또는 YUV 스냅샷 출력을 구성합니다. 녹화 버튼은 이미 구성한 세션에서 MediaRecorder를 시작하고 인코더를 repeating request의 대상으로 추가합니다. persistent input surface를 사용하므로 오디오 설정을 적용할 때도 카메라 세션을 다시 만들지 않습니다. 준비 단계에서는 인코더로 프레임을 보내지 않으며 RAW/DNG 출력은 제외합니다. 스냅샷 조합이 거부되면 스냅샷 없이 구성하고 이유를 표시합니다.
+2. Android 13 이상에서는 `RecordingBufferRelay`가 인코더로 가는 PRIVATE 버퍼를 먼저 받아 도착 시각을 기록합니다. 단, EIS를 명시적으로 켠 경우에는 실기기에서 확인된 인코더 거부를 피하도록 직접 연결합니다. EIS 직결 경로와 Android 12 이하에서는 녹화 버퍼 도착 시각을 관측할 수 없다고 표시합니다.
 3. 녹화 요청은 `TEMPLATE_RECORD`이며, 연속 동영상 AF(`CONTINUOUS_VIDEO`)를 지원하면 사용합니다. 줌과 Live 제어는 녹화 중에도 같은 요청을 다시 만들어 적용합니다.
-4. 정지하면 세션을 닫고 파일을 마무리합니다. `MediaLibrary.saveVideo`로 저장을 예약하고 활성 카메라의 프리뷰 세션을 다시 만듭니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
+4. 정지하면 세션을 닫고 파일을 마무리합니다. `MediaLibrary.saveVideo`로 저장을 예약하고 활성 카메라의 VIDEO 스트림을 다시 준비합니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
 
-**PIP를 끈 일반 녹화에서는 `Camera2VideoSnapshot`이 녹화를 멈추지 않고 JPEG 한 장을 저장합니다.** PIP 녹화는 이 스냅샷 경로를 사용하지 않습니다. 녹화 세션의 JPEG 크기는 요청한 크기(없으면 1080p 이하 중 가장 큰 크기)를 먼저 시도하고, 세션 조합 조회(`isSessionConfigurationSupported`)가 거절하면 녹화 크기 안에 들어가는 가장 큰 크기로 내려갑니다.
+`LiveRecorderState`에서 준비·대기·시작·녹화·종료 상태를 구분합니다. 준비 완료 대기 중에도 인코더 오류가 나면 세션과 자원을 해제하고 프리뷰를 복구합니다. PIP는 기존 인코더 해제 완료 뒤 다음 인코더를 준비합니다.
+
+**일반 녹화에서는 선택한 JPEG 소스로 스냅샷 한 장을 저장합니다.** 명시한 크기는 자동으로 줄이지 않으며 지원되지 않는 조합에서는 스냅샷을 비활성화합니다. 기본 크기만 기기의 지원 조합을 조회하여 선택합니다. PIP에서는 별도 합성 경로가 PHOTO와 같은 크기의 JPEG를 저장합니다.
 
 실제 크기는 `recording_started`의 `snapshotSize`에 남아 요청값과 구분됩니다.
 
-사진 요청은 `TEMPLATE_VIDEO_SNAPSHOT`이며 프리뷰·인코더·JPEG 세 출력을 모두 대상으로 합니다.
+사진 요청은 `TEMPLATE_VIDEO_SNAPSHOT`이며 프리뷰·인코더·선택한 스냅샷 출력을 모두 대상으로 합니다.
 
 사진은 한 번에 한 장만 처리하고, 앞의 사진이 저장되는 중이거나 녹화가 멈추는 중이면 새 요청을 거절합니다.
 
@@ -306,7 +310,7 @@ Live 스트림 설정에서는 카메라 크기·고정 AE FPS 범위·인코더
 
 정지와 겹친 사진은 세션이 닫히기 전에 도착하면 저장하고, 그렇지 않으면 실패로 답합니다.
 
-Live 스트림 설정에서 JPEG을 끄면 녹화 중 사진도 지원하지 않습니다.
+JPEG를 Off로 설정하면 녹화 중 사진도 끕니다. YUV를 선택하면 해당 크기로 앱 변환 JPEG를 저장합니다.
 
 `live_streams_changed`·`live_streams_requested`는 변경·요청값을, `live_stream_preflight`는 출력 조합 조회 결과를 기록합니다.
 

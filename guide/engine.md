@@ -26,8 +26,8 @@ nav_order: 5
 | 수동 촬영 | ISO·노출 시간·초점과 WB를 프리뷰·사진·녹화에 적용합니다. 지원 여부와 실제 적용값을 표시합니다. | Manual 버튼을 미지원 상태로 비활성화합니다. |
 | YUV를 JPEG로 선택 | 요청한 YUV 이미지와 최종 CaptureResult의 센서 시각을 맞춥니다. | 촬영 뒤 받은 analysis 프레임 하나를 변환합니다. |
 | JPEG 출처 | YUV 앱 변환 또는 HAL JPEG 중 하나와 촬영 JSON을 저장합니다. | YUV 앱 변환 또는 ImageCapture JPEG 중 하나와 촬영 JSON을 저장합니다. |
-| RAW/DNG | RAW capability가 있는 카메라에서 DNG를 함께 저장합니다. | 지원하지 않으며 Camera2로 전환해야 합니다. |
-| 버퍼 도착 기록 (Android 13 이상) | 프리뷰와 녹화 버퍼의 도착 시각을 relay로 기록합니다. | 프리뷰와 녹화 버퍼는 직접 관측하지 못합니다. ImageAnalysis와 ImageCapture의 이미지 수신은 기록합니다. |
+| RAW/DNG | PHOTO의 RAW capability가 있는 카메라에서 DNG를 함께 저장합니다. VIDEO에서는 비활성화합니다. | 지원하지 않으며 Camera2로 전환해야 합니다. |
+| 버퍼 도착 기록 (Android 13 이상) | 프리뷰와 녹화 버퍼의 도착 시각을 relay로 기록합니다. 명시적인 EIS 녹화는 인코더 직결이므로 녹화 버퍼를 관측하지 않습니다. | 프리뷰와 녹화 버퍼는 직접 관측하지 못합니다. ImageAnalysis와 ImageCapture의 이미지 수신은 기록합니다. |
 | Benchmark | 지원합니다. | 지원하지 않으며 Camera2로 엽니다. |
 | 기존 Dual (CLI) | 공통 줌, 메인 센서 제어, 한 요청의 두 센서 사진과 무음 MP4 두 개를 지원합니다. | 공통 줌과 무음 MP4 두 개를 지원합니다. 메인 개별 제어와 두 센서 사진은 지원하지 않습니다. |
 | Multi | 지원되는 독립 장치 조합에서 동시 프리뷰와 카메라별 JPEG·무음 MP4를 제공합니다. 센서 동기를 보장하지 않습니다. | 미지원 안내 후 Camera2 경로로 열 수 있습니다. |
@@ -35,7 +35,7 @@ nav_order: 5
 
 CLI 호환용 Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 표시합니다. Camera2 사진에는 Main/Sub photo도 표시합니다. Display는 화면 갱신 시각이며 위 표의 버퍼 도착 시각과 구분합니다.
 
-PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JPEG를 저장합니다. Camera2에서 RAW가 켜져 있으면 별도의 메인 원본 DNG와 원본 JSON을 함께 저장하며, 원본과 합성 프리뷰의 시각은 같다고 보장하지 않습니다. PIP 녹화 중 사진은 지원하지 않습니다. Multi의 PIP 변경은 전체 동시 세션을 재구성합니다.
+PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JPEG를 저장합니다. Camera2에서 RAW가 켜져 있으면 별도의 메인 원본 DNG와 원본 JSON을 함께 저장하며, 원본과 합성 프리뷰의 시각은 같다고 보장하지 않습니다. PIP 녹화 중 사진은 현재 합성 화면을 JPEG로 저장합니다. 크기는 PHOTO와 같은 합성 해상도이며 일반 스냅샷의 YUV·JPEG 크기 선택과는 별개입니다. VIDEO 진입 시 합성기의 인코더를 준비하고, 녹화 시작 때 카메라 세션은 유지합니다. Multi의 PIP 변경은 전체 동시 세션을 재구성합니다.
 
 <details markdown="1" id="detail-c0e05167f7" data-search-section>
 <summary>제어·녹화·CLI 차이</summary>
@@ -46,7 +46,7 @@ PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JP
 | 스트림 선택 | Preview 크기와 YUV·JPEG 활성화·크기, FPS 범위를 선택합니다. | Preview·YUV·JPEG 크기와 출력 활성화를 선택합니다. 요청한 해상도만 필터에 남기며 조합은 bind 성공 여부로 확인합니다. |
 | 손떨림 보정 | Auto·Off 및 지원 OIS·EIS (Video)·EIS (Preview + Video)를 선택하고 결과 메타데이터를 대조합니다. | 같은 모드를 하드웨어와 CameraX capability에 따라 제공합니다. EIS (Video)는 녹화 중에 적용하고, EIS (Preview + Video)는 프리뷰부터 적용합니다. 출력 조합에 따른 지원 범위는 다를 수 있습니다. |
 | 녹화 코덱 | 기본 H.264이며 지원 조합에서 HEVC도 선택합니다. 오디오는 AAC 128kbps 44.1kHz입니다. | 기기의 encoder profile을 따릅니다. |
-| 녹화 중 사진 | 녹화 세션에 JPEG 스트림을 넣고 `TEMPLATE_VIDEO_SNAPSHOT`으로 요청합니다. 조합을 거절하면 JPEG 없이 녹화합니다. | 녹화와 ImageCapture를 함께 bind하고 `takePicture`를 호출합니다. 거절하면 VideoCapture만 bind합니다. 두 엔진 모두 JPEG만 저장합니다. 기기 관찰은 [녹화 중 사진의 제약](#녹화-중-사진의-알려진-제약)을 확인하세요. |
+| 녹화 중 사진 | 선택한 JPEG 또는 YUV 스트림에 `TEMPLATE_VIDEO_SNAPSHOT`을 요청하고 JPEG를 저장합니다. 조합을 거절하면 스냅샷 없이 녹화합니다. | JPEG 소스에 따라 ImageCapture 또는 ImageAnalysis를 함께 bind합니다. 조합을 거절하면 스냅샷 없이 녹화합니다. 두 엔진 모두 JPEG만 저장합니다. 기기 관찰은 [녹화 중 사진의 제약](#녹화-중-사진의-알려진-제약)을 확인하세요. |
 | AE 잠금 중 플래시 사진 | precapture를 건너뛰고 잠긴 노출로 촬영합니다(`Camera2StillCapture`). | ImageCapture가 자기 순서대로 precapture를 수행합니다. |
 | AF 잠금 중 길게 누르기 | 탭한 AF 지점이 없으면 AF trigger를 보내지 않습니다. 탭한 지점이 있으면 그 지점을 끝내면서 `AF_TRIGGER_CANCEL`을 보냅니다(`Camera2TouchFocus`). | AF 잠금도 FocusMeteringAction이므로, 합친 action을 다시 보내면서 AF가 한 번 더 스캔합니다. action에서 AF를 빼면 CameraX가 AF 잠금을 풀기 때문에 피할 수 없습니다(`CameraXControls`). |
 | Live 표시의 프리뷰 판정 | TextureView의 화면 갱신 시각을 씁니다. | PreviewView가 STREAMING 상태이고 최근 capture 결과가 있는지로 판정합니다. |
@@ -59,7 +59,7 @@ PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JP
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval
+- 검토 2026-10-10 @ `bc41d75a` · User approved in Codex on 2026-10-11 (PR 275)
 
 </details>
 
@@ -215,7 +215,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval
+- 검토 2026-10-10 @ `bc41d75a` · User approved in Codex on 2026-10-11 (PR 275)
 
 </details>
 
@@ -262,7 +262,7 @@ Camera2 Live의 프리뷰·사진·녹화·녹화 중 사진 요청은 기존 �
 <details markdown="1" id="detail-c8f808cdf0" data-search-section>
 <summary>손떨림 보정 구현</summary>
 
-Live Streams의 Stabilization에서 Auto, Off와 기기가 지원하는 OIS·EIS (Video)·EIS (Preview + Video)를 선택합니다.
+PHOTO에서는 손떨림 보정을 Off로 고정합니다. VIDEO에서는 Live Streams의 Stabilization에서 Auto, Off와 기기가 지원하는 OIS·EIS (Video)·EIS (Preview + Video)를 선택합니다.
 
 EIS (Preview + Video)는 Android 13 이상에서 지원 목록과 요청 키가 모두 있을 때 제공합니다.
 
@@ -272,7 +272,7 @@ Auto는 새 요청 템플릿의 기본값을 유지합니다.
 
 설정은 프리뷰·사진·녹화·녹화 중 사진 요청에 적용합니다.
 
-촬영·녹화가 끝난 뒤 카메라를 닫고 재개하며 카메라와 엔진마다 값을 분리합니다.
+설정을 적용할 때 카메라를 닫고 재개하며 카메라와 엔진마다 값을 분리합니다.
 
 지원 모드가 있어도 모든 크기·FPS에서 적용된다는 뜻은 아닙니다.
 
@@ -450,7 +450,7 @@ RAW reader는 버퍼 두 개로 열고 still 요청에만 포함합니다. 이�
 
 ### 녹화
 
-**녹화용 출력으로 전환한 뒤 MP4를 저장합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
+**VIDEO에서 출력을 미리 준비하고, 녹화 버튼으로 MP4 기록을 시작합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
 
 <details markdown="1" id="detail-11a053d988" data-search-section>
 <summary>녹화 구현</summary>
@@ -460,8 +460,10 @@ sequenceDiagram
     participant U as Live
     participant R as 녹화 처리
     participant S as 저장
+    U->>R: VIDEO 진입
+    R->>R: 프리뷰·인코더·스냅샷 세션 준비
     U->>R: 녹화 시작
-    R->>R: 녹화 세션 구성과 시작
+    R->>R: 인코더 시작과 요청 대상 추가
     R-->>U: 녹화 시작 통지
     U->>R: 정지 요청
     R->>R: 세션 종료와 파일 마무리
@@ -469,7 +471,7 @@ sequenceDiagram
         R->>S: 저장 가능한 MP4 저장 예약
         S-->>U: 저장 결과
     and 프리뷰 복구
-        R->>R: 활성 카메라의 프리뷰 세션 복구
+        R->>R: 활성 카메라의 VIDEO 스트림 재준비
     end
 ```
 
@@ -485,16 +487,18 @@ Live 스트림 설정에서는 카메라 크기·고정 AE FPS 범위·인코더
 
 소리를 포함하면 AAC 128kbps, 44.1kHz를 사용합니다.
 
-1. 녹화를 시작하면 프리뷰와 인코더, 그리고 녹화 중 사진용 JPEG 스트림으로 새 세션을 만듭니다. YUV 스트림은 이 세션에 없으므로 녹화 중 사진은 JPEG만 저장합니다. 카메라가 이 조합을 거절하면 JPEG 없이 프리뷰와 인코더만으로 다시 구성하고, 이 경우 녹화 중 사진을 지원하지 않는다는 이유를 화면에 알립니다.
-2. Android 13 이상에서는 `RecordingBufferRelay`가 인코더로 가는 PRIVATE 버퍼를 먼저 받아 도착 시각을 기록합니다. 그보다 낮은 버전에서는 인코더에 직접 연결하고, 녹화 출력을 관측할 수 없다고 표시합니다.
+1. VIDEO 모드 진입 시 프리뷰·인코더와 선택한 JPEG 또는 YUV 스냅샷 출력을 구성합니다. 녹화 버튼은 이미 구성한 세션에서 MediaRecorder를 시작하고 인코더를 repeating request의 대상으로 추가합니다. persistent input surface를 사용하므로 오디오 설정을 적용할 때도 카메라 세션을 다시 만들지 않습니다. 준비 단계에서는 인코더로 프레임을 보내지 않으며 RAW/DNG 출력은 제외합니다. 스냅샷 조합이 거부되면 스냅샷 없이 구성하고 이유를 표시합니다.
+2. Android 13 이상에서는 `RecordingBufferRelay`가 인코더로 가는 PRIVATE 버퍼를 먼저 받아 도착 시각을 기록합니다. 단, EIS를 명시적으로 켠 경우에는 실기기에서 확인된 인코더 거부를 피하도록 직접 연결합니다. EIS 직결 경로와 Android 12 이하에서는 녹화 버퍼 도착 시각을 관측할 수 없다고 표시합니다.
 3. 녹화 요청은 `TEMPLATE_RECORD`이며, 연속 동영상 AF(`CONTINUOUS_VIDEO`)를 지원하면 사용합니다. 줌과 Live 제어는 녹화 중에도 같은 요청을 다시 만들어 적용합니다.
-4. 정지하면 세션을 닫고 파일을 마무리합니다. `MediaLibrary.saveVideo`로 저장을 예약하고 활성 카메라의 프리뷰 세션을 다시 만듭니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
+4. 정지하면 세션을 닫고 파일을 마무리합니다. `MediaLibrary.saveVideo`로 저장을 예약하고 활성 카메라의 VIDEO 스트림을 다시 준비합니다. 파일이 재생할 수 없을 만큼 짧으면 저장하지 않고 알립니다.
 
-**PIP를 끈 일반 녹화에서는 `Camera2VideoSnapshot`이 녹화를 멈추지 않고 JPEG 한 장을 저장합니다.** PIP 녹화는 이 스냅샷 경로를 사용하지 않습니다. 녹화 세션의 JPEG 크기는 요청한 크기(없으면 1080p 이하 중 가장 큰 크기)를 먼저 시도하고, 세션 조합 조회(`isSessionConfigurationSupported`)가 거절하면 녹화 크기 안에 들어가는 가장 큰 크기로 내려갑니다.
+`LiveRecorderState`에서 준비·대기·시작·녹화·종료 상태를 구분합니다. 준비 완료 대기 중에도 인코더 오류가 나면 세션과 자원을 해제하고 프리뷰를 복구합니다. PIP는 기존 인코더 해제 완료 뒤 다음 인코더를 준비합니다.
+
+**일반 녹화에서는 선택한 JPEG 소스로 스냅샷 한 장을 저장합니다.** 명시한 크기는 자동으로 줄이지 않으며 지원되지 않는 조합에서는 스냅샷을 비활성화합니다. 기본 크기만 기기의 지원 조합을 조회하여 선택합니다. PIP에서는 별도 합성 경로가 PHOTO와 같은 크기의 JPEG를 저장합니다.
 
 실제 크기는 `recording_started`의 `snapshotSize`에 남아 요청값과 구분됩니다.
 
-사진 요청은 `TEMPLATE_VIDEO_SNAPSHOT`이며 프리뷰·인코더·JPEG 세 출력을 모두 대상으로 합니다.
+사진 요청은 `TEMPLATE_VIDEO_SNAPSHOT`이며 프리뷰·인코더·선택한 스냅샷 출력을 모두 대상으로 합니다.
 
 사진은 한 번에 한 장만 처리하고, 앞의 사진이 저장되는 중이거나 녹화가 멈추는 중이면 새 요청을 거절합니다.
 
@@ -502,7 +506,7 @@ Live 스트림 설정에서는 카메라 크기·고정 AE FPS 범위·인코더
 
 정지와 겹친 사진은 세션이 닫히기 전에 도착하면 저장하고, 그렇지 않으면 실패로 답합니다.
 
-Live 스트림 설정에서 JPEG을 끄면 녹화 중 사진도 지원하지 않습니다.
+JPEG를 Off로 설정하면 녹화 중 사진도 끕니다. YUV를 선택하면 해당 크기로 앱 변환 JPEG를 저장합니다.
 
 `live_streams_changed`·`live_streams_requested`는 변경·요청값을, `live_stream_preflight`는 출력 조합 조회 결과를 기록합니다.
 
@@ -587,7 +591,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval
+- 검토 2026-10-10 @ `bc41d75a` · User approved in Codex on 2026-10-11 (PR 275)
 
 </details>
 
@@ -612,7 +616,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 ### CameraX 손떨림 보정
 
-**CameraX와 하드웨어가 함께 지원하는 보정 모드만 표시합니다.** 영상용 EIS는 녹화 중에 적용합니다.
+**PHOTO에서는 보정을 끄며, VIDEO에서는 CameraX와 하드웨어가 함께 지원하는 보정 모드만 표시합니다.** 영상용 EIS는 녹화 중에 적용합니다.
 
 <details markdown="1" id="detail-9947135f73" data-search-section>
 <summary>CameraX 손떨림 보정 구현</summary>
@@ -684,7 +688,7 @@ Live에서 다음 엔진도 CameraX이면 종료하지 않습니다.
 
 ### 녹화
 
-**녹화용 출력으로 전환한 뒤 MP4를 저장합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
+**VIDEO에서 출력을 미리 준비하고, 녹화 버튼으로 MP4 기록을 시작합니다.** 크기·FPS·코덱의 지원 조건을 확인하세요.
 
 <details markdown="1" id="detail-a5fe53f9af" data-search-section>
 <summary>녹화 구현</summary>
@@ -698,7 +702,7 @@ sequenceDiagram
     R-->>U: Start
     U->>R: 정지 요청
     R-->>U: Finalize
-    U->>U: 활성 화면이면 프리뷰 구성 복구
+    U->>U: 활성 화면이면 VIDEO use case 유지
     alt 저장 가능한 결과와 비어 있지 않은 파일
         U->>S: MP4 저장 예약
         S-->>U: 저장 결과
@@ -711,7 +715,7 @@ sequenceDiagram
 
 `CameraXLiveRecorder`는 CameraX `Recorder`로 캐시 폴더의 임시 MP4에 기록하고, 끝나면 `MediaLibrary.saveVideo`로 앨범에 공개합니다.
 
-1. 녹화를 시작하면 ImageAnalysis와 ImageCapture를 unbind한 뒤 VideoCapture와 ImageCapture를 함께 bind합니다. 녹화가 끝나면 반대로 되돌립니다. ImageAnalysis를 빼는 이유는 Camera2처럼 프리뷰·인코더·JPEG 세 스트림만 쓰기 위해서이며, 네 use case를 한꺼번에 bind하면 스트림 조합을 CameraX의 stream sharing이 정하게 됩니다. 카메라가 이 조합을 거절하면 VideoCapture만 bind하여 녹화를 이어가고, 녹화 중 사진을 지원하지 않는다는 이유를 화면에 알립니다.
+1. VIDEO 모드 진입 시 Preview와 VideoCapture, 그리고 선택한 JPEG 소스에 따라 ImageCapture 또는 ImageAnalysis를 bind합니다. 녹화 버튼에서는 이미 bind한 Recorder를 시작하고, 정지 후에도 VIDEO use case를 유지합니다. 출력 조합이 거부되면 스냅샷 없이 녹화하고 이유를 표시합니다. JPEG에서 YUV를 선택하면 지정한 YUV 크기의 프레임을 앱에서 회전·변환하여 JPEG로 저장합니다.
 2. 설정을 지정하지 않으면 품질은 FHD를 우선 선택합니다. FHD가 없으면 더 낮은 품질을 먼저 찾고, 낮은 품질도 없으면 더 높은 품질을 선택할 수 있습니다. 30fps, 10Mbps를 요청합니다. 코덱과 오디오 형식은 기기의 encoder profile을 따르므로, 기본 H.264와 44.1kHz AAC를 사용하는 Camera2와 다를 수 있습니다.
 3. 소리를 요청했는데 `RECORD_AUDIO` 권한이 없으면 소리 없이 녹화하지 않고 실패로 처리합니다.
 4. 첫 `VideoRecordEvent.Status`가 오면 AF 잠금과 길게 누른 AE 지점을 한 번 더 보냅니다. CameraX는 동영상 surface가 실제로 켜질 때 repeating 요청을 다시 구성하는데, 그 전에 보낸 FocusMeteringAction은 사라지기 때문입니다.
@@ -719,19 +723,19 @@ sequenceDiagram
 
 명시한 녹화 크기는 지원 Quality의 해상도와 정확히 일치해야 하며, bind 후 실제 해상도도 검사합니다. 설정 화면의 후보는 CameraX Quality 해상도와 하드웨어의 크기·FPS 조건을 교차해 만듭니다. FPS와 비트레이트는 요청값이고 실제 결과와 구분합니다. CameraX 1.6.2의 공개 Recorder API는 녹화 코덱을 직접 선택하지 않으므로 Format과 Live 표시는 Auto입니다.
 
-녹화 중 사진(`CameraXVideoSnapshot`)은 녹화와 함께 bind한 ImageCapture의 `takePicture`로 JPEG 한 장을 저장합니다.
+녹화 중 사진은 선택한 JPEG 소스를 따릅니다. 카메라 JPEG는 함께 bind한 ImageCapture의 `takePicture`로, YUV 앱 변환은 ImageAnalysis 프레임으로 JPEG 한 장을 저장합니다.
 
-analysis 스트림이 없으므로 YUV 짝은 저장하지 않으며, Camera2와 같이 한 번에 한 장만 처리합니다.
+두 소스 모두 원본 YUV 짝은 저장하지 않으며, Camera2와 같이 한 번에 한 장만 처리합니다.
 
 실패하거나 5초 안에 오지 않아도 녹화는 끝나지 않고 알림만 표시합니다.
 
-Live 스트림 설정에서 JPEG을 끄면 bind할 ImageCapture가 없으므로 녹화 중 사진을 지원하지 않는다고 알립니다.
+JPEG가 Off이면 스냅샷을 비활성화합니다. YUV를 선택하면 ImageAnalysis가 촬영 요청 뒤 받은 한 프레임을 JPEG로 변환하여 저장합니다.
 
 사진 크기는 사진 모드와 같은 ImageCapture를 쓰므로 설정한 JPEG 크기를 따르고, 설정이 없으면 CameraX가 고른 크기(Galaxy S25+에서 4080×3060)로 저장합니다.
 
 녹화 중 사진의 기기별 제약은 [앞의 안내](#녹화-중-사진의-알려진-제약)를 확인하세요. 사진 크기를 1080p로 줄이거나 `CONTROL_CAPTURE_INTENT`를 `VIDEO_SNAPSHOT`으로 지정해도 해당 기기의 간격 증가는 같았습니다.
 
-녹화 시작과 정지는 use case를 다시 bind하므로, 엔진은 그때마다 줌과 Live 제어를 새 세션에 다시 보내고 Callback 그래프의 출력 목록도 바꿉니다.
+VIDEO 진입 시 출력 구성을 바꾸고 줌과 Live 제어를 다시 적용합니다. 녹화 버튼에서는 use case를 다시 bind하지 않습니다.
 
 </details>
 
@@ -798,7 +802,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval
+- 검토 2026-10-10 @ `bc41d75a` · User approved in Codex on 2026-10-11 (PR 275)
 
 </details>
 
@@ -814,15 +818,15 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.23.0 (versionCode 660)
+- 검증 기준 앱 버전: 0.24.0 (versionCode 670)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
-| 원고 `contract` | 최신 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
-| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
-| 원고 `camerax` | 최신 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
-| 원고 `comparison` | 최신 | 검토 2026-10-10 @ `1c488e21` · Codex source comparison; not independent human approval |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `bc41d75a` · User approved in Codex on 2026-10-11 (PR 275) |
+| 원고 `contract` | 최신 | 검토 2026-10-10 @ `bc41d75a` · User approved in Codex on 2026-10-11 (PR 275) |
+| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `bc41d75a` · User approved in Codex on 2026-10-11 (PR 275) |
+| 원고 `camerax` | 최신 | 검토 2026-10-10 @ `bc41d75a` · User approved in Codex on 2026-10-11 (PR 275) |
+| 원고 `comparison` | 최신 | 검토 2026-10-10 @ `bc41d75a` · User approved in Codex on 2026-10-11 (PR 275) |
 
 <!-- omm:end id=status -->
 

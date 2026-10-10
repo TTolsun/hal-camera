@@ -23,9 +23,8 @@ import java.util.concurrent.Executor
  * The LIVE video recording of CameraXEngine, the counterpart of Camera2LiveRecorder: a temp MP4, then the same
  * MediaLibrary save to DCIM/HALCamera.
  *
- * Like Camera2 it records from a session of preview and encoder only. Starting swaps the analysis and still use
- * cases for a VideoCapture, which rebuilds the session; the finished recording swaps them back. Binding all four
- * at once would leave the stream combination to CameraX's stream sharing, which Camera2 never uses.
+ * Video mode binds Preview, VideoCapture and the selected snapshot source in advance. Start and Finalize keep
+ * those use cases bound, so a recording button does not replace the camera session.
  *
  * The request matches Camera2's where Recorder lets it: at most FHD (the largest size up to 1920×1080), 30 fps and
  * 10 Mbps. Codec and audio format come from the device's encoder profiles; Camera2 fixes H.264 and 44.1 kHz AAC.
@@ -43,6 +42,7 @@ internal class CameraXLiveRecorder(
 ) {
     interface Host {
         val active: Boolean
+        val keepPrepared: Boolean get() = false
         val settings: LiveVideo?
         val stabilization: LiveStabilization
         val cameraInfo: androidx.camera.core.CameraInfo?
@@ -81,14 +81,8 @@ internal class CameraXLiveRecorder(
     var stopping = false
         private set
 
-    fun start(audio: Boolean, started: () -> Unit, done: ((Result<Uri>) -> Unit)?) {
-        if (!host.active || host.stillInFlight || busy) {
-            done?.invoke(Result.failure(IllegalStateException("Camera is not ready to record"))); return
-        }
-        busy = true
-        this.done = done
-        host.report("Starting video… Rolling out the red carpet.", false)
-        var file: File? = null
+    fun prepare() {
+        if (video != null) return
         try {
             val settings = host.settings
             val quality = settings?.let { requested ->
@@ -111,6 +105,29 @@ internal class CameraXLiveRecorder(
             if (settings != null) require(useCase.resolutionInfo?.resolution == settings.size.androidSize()) {
                 "CameraX could not configure recording size ${settings.size}"
             }
+            telemetry.event(sessionId, "video_prepared", mapOf("size" to useCase.resolutionInfo?.resolution?.toString()))
+        } catch (e: Exception) {
+            video?.let { host.unbindRecording(it) }
+            video = null
+            throw e
+        }
+    }
+
+    fun releasePrepared() { video = null }
+
+    fun start(audio: Boolean, started: () -> Unit, done: ((Result<Uri>) -> Unit)?) {
+        if (!host.active || host.stillInFlight || busy) {
+            done?.invoke(Result.failure(IllegalStateException("Camera is not ready to record"))); return
+        }
+        busy = true
+        this.done = done
+        host.report("Starting video… Rolling out the red carpet.", false)
+        var file: File? = null
+        try {
+            if (video == null) prepare()
+            val useCase = checkNotNull(video)
+            useCase.targetRotation = host.displayRotation
+            val recorder = useCase.output
             val output = File.createTempFile("hal_recording_", ".mp4", context.cacheDir).also { file = it }
             val pending = recorder.prepareRecording(context, FileOutputOptions.Builder(output).build())
             val withAudio = if (!audio) pending else {
@@ -178,9 +195,10 @@ internal class CameraXLiveRecorder(
     /** Back to the preview session. Runs on every way out of a recording, so [busy] never outlives it. */
     private fun end() {
         val useCase = video
-        video = null; recording = null; busy = false; streaming = false; live = false; stopping = false
+        if (!host.keepPrepared) video = null
+        recording = null; busy = false; streaming = false; live = false; stopping = false
         host.recordingState(false)
-        if (useCase != null && host.active) {
+        if (useCase != null && host.active && !host.keepPrepared) {
             try { host.unbindRecording(useCase) } catch (e: Exception) { telemetry.event(sessionId, "camera_error", mapOf("message" to e.toString())) }
         }
     }

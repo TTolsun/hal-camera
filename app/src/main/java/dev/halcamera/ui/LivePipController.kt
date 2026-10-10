@@ -60,9 +60,27 @@ internal class LivePipController(
         val target = TextureView(context).apply { alpha = 0f; contentDescription = "PIP preview" }
         view = target
         var dragging = false; var x = 0f; var y = 0f; var original = rect
+        var down: MotionEvent? = null
+        var scaling = false
         target.setOnTouchListener { _, event ->
+            val focus = (0 until host().childCount).map { host().getChildAt(it) }.filterIsInstance<FocusRing>().firstOrNull()
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                down?.recycle(); down = MotionEvent.obtain(event); scaling = false
+            }
+            if (event.pointerCount > 1 && !scaling) {
+                scaling = true
+                if (dragging) down?.let { focus?.onTouchEvent(it) }
+                dragging = false
+            }
+            if (scaling) {
+                focus?.onTouchEvent(event)
+                if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                    down?.recycle(); down = null
+                }
+                return@setOnTouchListener true
+            }
             val nx = event.x/target.width; val ny = event.y/target.height
-            when (event.actionMasked) {
+            val handled = when (event.actionMasked) {
                 MotionEvent.ACTION_DOWN -> { dragging = !busy && rect.contains(nx,ny); x=nx; y=ny; original=rect; dragging }
                 MotionEvent.ACTION_MOVE -> { if (dragging) { rect=original.moved(original.x+nx-x,original.y+ny-y); current.movePip(rect) }; dragging }
                 MotionEvent.ACTION_UP,MotionEvent.ACTION_CANCEL -> dragging.also {
@@ -71,6 +89,11 @@ internal class LivePipController(
                 }
                 else -> dragging
             }
+            if (!handled) focus?.onTouchEvent(event)
+            if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+                down?.recycle(); down = null
+            }
+            true
         }
         target.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
             override fun onSurfaceTextureAvailable(surface: SurfaceTexture,width: Int,height: Int) = start(target)

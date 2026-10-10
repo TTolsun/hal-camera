@@ -4,7 +4,7 @@
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "_inputs/decisions.html": "74410055a21243cc476b2c96fd2e4ee1283f908cbccb91a71cdeec3367a37f96",
     "_inputs/device-verification.yaml": "1852f48d52f75733b4db973418fc7fad1f0f9d340a8b4b555cf9d49aa7016215",
-    "architecture.html": "e41b4c5c6d8eaf96842b02c9b5c18f760f297f4522dc3dea4edd19db51e2cc49",
+    "architecture.html": "24a374474f44524a51ada3b52d5ef5d7ee73d66f7c580e7476a1760e1ecbe974",
     "assets/docflow-design.css": "29de950fbe15ca1dc54b0c006703bc7bc0ba339df63f3c690cdc5524539e1099",
     "assets/screenshots/about.png": "954960e376ba576cef4e9043d91061b2e9af93f16663716c3b7549c1aa743123",
     "assets/screenshots/benchmark-history.png": "ad2a3605235e7bace1c7e2d08c32ae29d65fe066c45085d8cc7368aadc4025af",
@@ -31,6 +31,7 @@
     "assets/screenshots/live-flash-options.png": "3a22801098d03ba137ddbaa184b03df7af16802eca11a1ef0a866f4a59f20622",
     "assets/screenshots/live.png": "41b1452b866b0d9e2855127ebb8b32911b6fecf640ce175291f936f5e6fb3d83",
     "assets/screenshots/probe.png": "ee2dfe5b6063ea7afb5adf14ba81e18fce56990543ecc531958396ef3a7c5448",
+    "assets/screenshots/wb-inline.png": "0d2f79b023d5c1e5347a8d9cb8f4bd9a08d4c1da5d9075cc495e386d29aed19f",
     "assets/search-core.js": "5443ca428616d954226b5a5a8344bc1f66363505245d9d683d8360be4d124d3a",
     "assets/search.js": "bb285783e92751209ce06980d36e3243b22ecdc1c8f219f2274acfb143317934",
     "assets/section-links.js": "ee71f205ec6171da7c8a2bd183d0899b6efbafebcb406ad4096247f573ceb30f",
@@ -43,13 +44,13 @@
     "contributing.html": "5ae830a401a8f9c55367c1246f0792bd19382078276f136ce9da7aae55df7aa1",
     "cts.html": "b7896ab2d2828154eff8bde96aa4a4b3bcdbe53c70c96fc6eaa46fccd1a27014",
     "decisions.html": "818fc401c78f6ad2cbd73600eba7bdbe620866c535bf25f8a26200ab6ad3e5da",
-    "engine.html": "9cd4ed70d254a0d7243797a3a8264044f4bd05a65d0a29ed469203a2f11f6e1a",
-    "evidence.html": "2f0bdc6e0da5b13045c1984d7ca4a67553b35a7ea888012d9d76cb5b37e21f23",
-    "getting-started.html": "8d9b9ece71d62e0640ae30d1ff86c109116f7ed026930b113fd849bf758361ba",
+    "engine.html": "98fb45fe3cc6ef2254ca87f59a180d8318f1118737bee0bc7ec281e0bdff3584",
+    "evidence.html": "63227188c8ed0deeef67aaff649df952dbf62574dbdce50dfc8e7a2d322f8fb1",
+    "getting-started.html": "d3261000d030b0e8d3b03433547ee8fb8ef83aa1e3a1ea26e866a840bccd8e63",
     "glossary.html": "94c9aebc483fb81d912c970f1f49f6b421250271bf35d25cd184145d8b97cf62",
-    "index.html": "0a80543762bbc721d50bbdbc97d307b91c881320d4eca5d0596ad3ee79f3b183",
-    "live.html": "abe76c3260ceeffd6806cdf824ac1cc8358d046875034abfb0a12288623508e1",
+    "index.html": "39e1d043fa9794bd0b1e1baa1ba8b15de4e628baf3a93056f62bda02c39ed800",
+    "live.html": "af6982f86afac5ffd0a2b9e0200055be612c7ebef6e885e2c4c939d4dd74a8c3",
     "probe.html": "bbb7b52f040773aa05b602792cc133d07b52dd01d1e1bbabbc4bd3471dfff3f8",
-    "troubleshooting.html": "fa53bea4b77fddd2abf6b1976f0cb166d21f2aead0d9c905d27ee4c2fc1d7414"
+    "troubleshooting.html": "fda70dddc0c6c584d4c9f3f8d1d860f55f1a53de61a069c2c0a0a593fa5e0558"
   }
 }

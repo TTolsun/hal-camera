@@ -16,7 +16,9 @@ object LiveStreamSettingsView {
              actual: String, restore: (() -> Unit)?, back: () -> Unit, changed: (LiveStreamSettings) -> Unit, apply: (LiveStreamSettings) -> Unit,
              backDescription: String = "Back to Lab", baseline: LiveStreamSettings = current,
              engine: String = "Camera2", multiMaxDevices: Int = 0, multiDeviceCount: Int = 0,
-             multiBaseline: Int = multiMaxDevices, multiChanged: (Int) -> Unit = {}, multiOnly: Boolean = false): Page {
+             multiBaseline: Int = multiMaxDevices, multiChanged: (Int) -> Unit = {}, multiOnly: Boolean = false,
+             videoMode: Boolean = false): Page {
+        val policy = LiveModePolicy.forVideo(videoMode)
         val themed = context
         fun dp(value: Int) = Look.dp(themed, value)
         val content = LinearLayout(themed).apply {
@@ -95,9 +97,9 @@ object LiveStreamSettingsView {
         var yuv = current.yuv
         var jpeg = current.jpeg
         var fps = current.fps
-        var stabilization = current.stabilization
+        var stabilization = policy.stabilization(current.stabilization)
         var jpegFromYuv = current.jpegFromYuv
-        var raw = current.raw
+        var raw = policy.raw(current.raw)
         var multiLimit = multiMaxDevices
         if (multiDeviceCount >= 2) {
             choice(section("Multi"), "Maximum camera devices", { listOf(0) + (2..multiDeviceCount).toList() },
@@ -115,7 +117,7 @@ object LiveStreamSettingsView {
             hint = { if (jpegFromYuv) "App converts YUV to JPEG." else null }) {
             if (it.fromYuv) "YUV ($yuv)" else it.size?.toString() ?: "Off"
         }
-        choice(outputs, "RAW (DNG)", { if (support.raw.isEmpty()) emptyList() else sizes(support.raw) + listOf(null) },
+        choice(outputs, "RAW (DNG)", { if (!policy.allowsRaw || support.raw.isEmpty()) emptyList() else sizes(support.raw) + listOf(null) },
             { raw }, { raw = it }) { it?.toString() ?: "Off" }
         val exportHint = Look.text(themed, "", 13, Look.inkMuted).apply {
             setPadding(dp(18), dp(14), dp(18), dp(14))
@@ -123,6 +125,7 @@ object LiveStreamSettingsView {
         outputs.addView(exportHint)
         refreshers += {
             exportHint.text = when {
+                !policy.allowsRaw -> "RAW/DNG is disabled in Video mode."
                 engine == "CameraX" -> "RAW: unavailable in CameraX"
                 support.raw.isEmpty() -> support.rawUnavailableReason
                 else -> raw?.let { "DNG ≈ ${it.width.toLong() * it.height * 2 / 1_000_000} MB/shot" }.orEmpty()
@@ -143,8 +146,8 @@ object LiveStreamSettingsView {
             it?.let { rate -> "$rate fps" } ?: "Capabilities unavailable"
         }
         val stabilizationGroup = section("Stabilization")
-        choice(stabilizationGroup, "Mode", { support.stabilization }, { stabilization }, { stabilization = it }) { it.label }
-        stabilizationGroup.addView(Look.text(themed, support.stabilizationNotice, 13, Look.inkMuted).apply {
+        choice(stabilizationGroup, "Mode", { if (policy.allowsStabilization) support.stabilization else emptyList() }, { stabilization }, { stabilization = it }) { it.label }
+        stabilizationGroup.addView(Look.text(themed, if (policy.allowsStabilization) support.stabilizationNotice else "Stabilization is disabled in Photo mode.", 13, Look.inkMuted).apply {
             setPadding(dp(18), dp(14), dp(18), dp(14))
         })
         refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, jpegFromYuv, raw)) }

@@ -127,6 +127,7 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/LiveStabilization.kt
           - app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt
+          - app/src/main/java/dev/halcamera/camera/LiveModePolicy.kt
           - app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt
           - app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt
       camera-engines/camera2-engine/manual-controls:
@@ -157,6 +158,7 @@ sources:
       camera-engines/camera2-engine/live-recorder:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt
+          - app/src/main/java/dev/halcamera/camera/LiveRecorderState.kt
           - app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt
           - app/src/main/java/dev/halcamera/camera/RecordingTimebase.kt
       camera-engines/camerax-engine:
@@ -253,6 +255,7 @@ sources:
           - app/src/main/java/dev/halcamera/LiveStreamsActivity.kt
           - app/src/main/java/dev/halcamera/ui/LiveStreamSettingsView.kt
           - app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt
+          - app/src/main/java/dev/halcamera/camera/LiveModePolicy.kt
       screens/workbench-screen:
         evidence:
           - app/src/main/java/dev/halcamera/WorkbenchActivity.kt
