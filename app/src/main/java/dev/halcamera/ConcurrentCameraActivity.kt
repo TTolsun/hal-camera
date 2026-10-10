@@ -28,6 +28,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.camera.*
 import dev.halcamera.ui.Look
+import dev.halcamera.ui.CameraWidgets
 
 /** Multi owns independent devices; each device may compose its own physical PIP inputs. */
 class ConcurrentCameraActivity : ComponentActivity() {
@@ -98,17 +99,21 @@ class ConcurrentCameraActivity : ComponentActivity() {
         pairButton = button("Cameras") { chooseCameras() }
         pairButton.visibility = if (singleId == null) View.VISIBLE else View.GONE
         root.addView(pairButton,LinearLayout.LayoutParams(-1,dp(48)))
-        status = text("Opening cameras…",12); root.addView(status,LinearLayout.LayoutParams(-1,-2))
+        status = text("Opening cameras…",12)
         stage = FrameLayout(this).apply { setBackgroundColor(Look.cameraCard); clipChildren = true }
+        stage.addView(status,FrameLayout.LayoutParams(-1,-2,Gravity.TOP).apply { topMargin = dp(8) })
         root.addView(stage,LinearLayout.LayoutParams(-1,0,1f))
         stage.addOnLayoutChangeListener { _,_,_,_,_,_,_,_,_ -> layoutPreviews() }
         resultText = text("",12).apply { minHeight = dp(48); maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
             accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
             setOnClickListener { if (report.isNotEmpty()) AlertDialog.Builder(this@ConcurrentCameraActivity).setTitle("Capture details").setMessage(report).setPositiveButton("OK",null).show() }
         }
-        root.addView(resultText,LinearLayout.LayoutParams(-1,-2))
-        val actions = row()
+        val feedback = row()
+        feedback.addView(resultText,LinearLayout.LayoutParams(0,dp(48),1f))
         retryButton = button("Retry") { failed = false; closeSession() }
+        feedback.addView(retryButton,LinearLayout.LayoutParams(dp(64),dp(48)))
+        root.addView(feedback)
+        val actions = row()
         recordButton = button("Record") {
             if (Build.VERSION.SDK_INT < 30) return@button
             videoPending = true; updateButtons()
@@ -117,7 +122,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         captureButton = Look.galleryButton(this,"Photo",primary = true) {
             if (Build.VERSION.SDK_INT >= 30 && ready && !busy) { takingPhoto = true; resultText.text = "Capturing…"; updateButtons(); session?.capture(0) }
         }
-        actions.addView(retryButton,weight()); actions.addView(recordButton,weight()); actions.addView(captureButton,weight())
+        actions.addView(recordButton,weight()); actions.addView(captureButton,weight())
         root.addView(actions); setContentView(root)
         onBackPressedDispatcher.addCallback(this,object : OnBackPressedCallback(true) { override fun handleOnBackPressed() = finish() })
         updateButtons()
@@ -152,6 +157,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
             }
             installDrag(preview,index)
         }
+        stage.addView(status,FrameLayout.LayoutParams(-1,-2,Gravity.TOP).apply { topMargin = dp(8) })
+        status.setBackgroundColor(Look.cameraGlass)
         layoutPreviews(); updateButtons()
     }
 
@@ -219,7 +226,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
             val scale = minOf(1f,1280f/maxOf(it.width,it.height))
             LiveSize(((it.width*scale).toInt()/2*2).coerceAtLeast(2),((it.height*scale).toInt()/2*2).coerceAtLeast(2))
         }
-        states.clear(); ready = false; status.visibility = View.VISIBLE; status.text = "Opening cameras…"
+        states.clear(); ready = false; report = ""; resultText.text = ""
+        status.visibility = View.VISIBLE; status.text = "Opening cameras…"
         plan.streams.forEachIndexed { i,stream -> labels[i].text = stream.camera.label }
         lateinit var current: ConcurrentSession
         current = ConcurrentSession(this,manager,plan,textures.map { checkNotNull(it) },object : ConcurrentSession.Listener {
@@ -280,18 +288,24 @@ class ConcurrentCameraActivity : ComponentActivity() {
         recordButton.isEnabled = ready && !takingPhoto && !videoPending && !closing
         recordButton.text = if (recording) "Stop" else "Record"
         pairButton.isEnabled = plans.isNotEmpty() && !busy; streamsButton.isEnabled = pairButton.isEnabled
-        retryButton.visibility = if (failed) View.VISIBLE else View.GONE; retryButton.isEnabled = !busy
+        retryButton.visibility = if (failed) View.VISIBLE else View.INVISIBLE; retryButton.isEnabled = !busy
+        resultText.isClickable = report.isNotEmpty() && !recording
+        resultText.isFocusable = resultText.isClickable
         val streams = plans.getOrNull(selected)?.streams.orEmpty()
         pipButtons.forEachIndexed { i,button -> button.isEnabled = !busy && streams.getOrNull(i)?.camera?.physicalIds?.isNotEmpty() == true
             button.alpha = if (button.isEnabled) 1f else .4f
             val active = !physical[streams.getOrNull(i)?.camera?.id].isNullOrEmpty()
+            button.isSelected = active
+            button.text = if (active) "PIP ✓" else "PIP"
             button.setTextColor(if (active) Look.primaryOnDark else Look.onDark)
             button.contentDescription = if (active) "PIP on, select physical cameras" else "PIP, select physical cameras" }
         headerPip?.isEnabled = !busy && streams.firstOrNull()?.camera?.physicalIds?.isNotEmpty() == true
         headerPip?.alpha = if (headerPip?.isEnabled == true) 1f else .4f
         headerPip?.setTextColor(if (!physical[streams.firstOrNull()?.camera?.id].isNullOrEmpty()) Look.primaryOnDark else Look.onDark)
+        headerPip?.isSelected = pipButtons.firstOrNull()?.isSelected == true
+        headerPip?.text = pipButtons.firstOrNull()?.text ?: "PIP"
         headerPip?.contentDescription = pipButtons.firstOrNull()?.contentDescription
-        moveButtons.forEachIndexed { i,button -> button.visibility = if (physical[streams.getOrNull(i)?.camera?.id].isNullOrEmpty()) View.GONE else View.VISIBLE
+        moveButtons.forEachIndexed { i,button -> button.visibility = if (physical[streams.getOrNull(i)?.camera?.id].isNullOrEmpty()) View.INVISIBLE else View.VISIBLE
             button.isEnabled = ready && !takingPhoto && !videoPending && !closing }
     }
     private fun layoutPreviews() {
@@ -336,7 +350,10 @@ class ConcurrentCameraActivity : ComponentActivity() {
     }
     private fun dp(value: Int) = Look.dp(this,value)
     private fun text(value: String,size: Int) = Look.text(this,value,size,Look.onDark).apply { gravity = Gravity.CENTER_VERTICAL }
-    private fun button(value: String,action: () -> Unit) = Look.galleryButton(this,value,action = action).apply { textSize = 13f; setPadding(dp(6),0,dp(6),0) }
+    private fun button(value: String,action: () -> Unit) = CameraWidgets(this).button(value,action).apply {
+        background = CameraWidgets(this@ConcurrentCameraActivity).chrome(android.graphics.Color.TRANSPARENT)
+        textSize = 13f; setPadding(dp(6),0,dp(6),0); setSingleLine(true)
+    }
     private fun row() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
     private fun weight() = LinearLayout.LayoutParams(0,dp(56),1f).apply { setMargins(dp(2),dp(4),dp(2),dp(4)) }
     companion object {
