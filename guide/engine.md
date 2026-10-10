@@ -57,7 +57,7 @@ Dual의 Callback은 두 엔진 모두 Shutter·Metadata와 Main/Sub display를 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `3258afc8` · Codex (final physical PIP UI and compositor source review; device tests pending)
+- 검토 2026-10-10 @ `ab5c0a21` · Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)
 
 </details>
 
@@ -210,7 +210,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `3258afc8` · Codex (final physical PIP UI and compositor source review; device tests pending)
+- 검토 2026-10-10 @ `ab5c0a21` · Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)
 
 </details>
 
@@ -585,7 +585,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/OriginalYuv.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `3258afc8` · Codex (final physical PIP UI and compositor source review; device tests pending)
+- 검토 2026-10-10 @ `ab5c0a21` · Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)
 
 </details>
 
@@ -828,7 +828,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-10 @ `3258afc8` · Codex (final physical PIP UI and compositor source review; device tests pending)
+- 검토 2026-10-10 @ `ab5c0a21` · Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)
 
 </details>
 
@@ -848,11 +848,11 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `3258afc8` · Codex (final physical PIP UI and compositor source review; device tests pending) |
-| 원고 `contract` | 최신 | 검토 2026-10-10 @ `3258afc8` · Codex (final physical PIP UI and compositor source review; device tests pending) |
-| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `3258afc8` · Codex (final physical PIP UI and compositor source review; device tests pending) |
-| 원고 `camerax` | 최신 | 검토 2026-10-10 @ `3258afc8` · Codex (final physical PIP UI and compositor source review; device tests pending) |
-| 원고 `comparison` | 최신 | 검토 2026-10-10 @ `3258afc8` · Codex (final physical PIP UI and compositor source review; device tests pending) |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-10 @ `ab5c0a21` · Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately) |
+| 원고 `contract` | 최신 | 검토 2026-10-10 @ `ab5c0a21` · Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately) |
+| 원고 `camera2` | 최신 | 검토 2026-10-10 @ `ab5c0a21` · Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately) |
+| 원고 `camerax` | 최신 | 검토 2026-10-10 @ `ab5c0a21` · Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately) |
+| 원고 `comparison` | 최신 | 검토 2026-10-10 @ `ab5c0a21` · Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately) |
 
 <!-- omm:end id=status -->
 

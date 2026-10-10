@@ -6,11 +6,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "50043b8fc645a188",
+        "codeHash": "c31b62b77984696b",
         "modelHash": "ea7446b38a7aef98",
         "at": "2026-10-10",
-        "commit": "3258afc8",
-        "reviewer": "Codex (final physical PIP UI and compositor source review; device tests pending)",
+        "commit": "ab5c0a21",
+        "reviewer": "Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -84,7 +84,7 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt": "b4a2ea86b65756631d9e5675ed2bd2b691a47fff",
           "app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt": "ee99a615038c121818d23f441dc16ee6dc61f1f9",
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "241c0441f0fce32856274bd2f1e02d476b6f85f9",
-          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "261f4ba42f86e8e5c19bc96345eea54997856672",
+          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "a451e60bf2a15a56885c394bc4006dead243ccf2",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
           "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "6e4c8ef7b2d212dcccb29ae6ccfdc2c5db6221d9",
           "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "309bbc520ec2210c5825cdc8f908f107d1cb8991",
@@ -307,11 +307,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "edf7b82b4b90dd2a",
+        "codeHash": "880350812316ff7a",
         "modelHash": "b9b20a3b09d523b3",
         "at": "2026-10-10",
-        "commit": "3258afc8",
-        "reviewer": "Codex (final physical PIP UI and compositor source review; device tests pending)",
+        "commit": "ab5c0a21",
+        "reviewer": "Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -385,7 +385,7 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt": "b4a2ea86b65756631d9e5675ed2bd2b691a47fff",
           "app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt": "ee99a615038c121818d23f441dc16ee6dc61f1f9",
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "241c0441f0fce32856274bd2f1e02d476b6f85f9",
-          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "261f4ba42f86e8e5c19bc96345eea54997856672",
+          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "a451e60bf2a15a56885c394bc4006dead243ccf2",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
           "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "6e4c8ef7b2d212dcccb29ae6ccfdc2c5db6221d9",
           "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "309bbc520ec2210c5825cdc8f908f107d1cb8991",
@@ -624,11 +624,11 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "50043b8fc645a188",
+        "codeHash": "c31b62b77984696b",
         "modelHash": "a53ab332e58c591f",
         "at": "2026-10-10",
-        "commit": "3258afc8",
-        "reviewer": "Codex (final physical PIP UI and compositor source review; device tests pending)",
+        "commit": "ab5c0a21",
+        "reviewer": "Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -702,7 +702,7 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt": "b4a2ea86b65756631d9e5675ed2bd2b691a47fff",
           "app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt": "ee99a615038c121818d23f441dc16ee6dc61f1f9",
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "241c0441f0fce32856274bd2f1e02d476b6f85f9",
-          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "261f4ba42f86e8e5c19bc96345eea54997856672",
+          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "a451e60bf2a15a56885c394bc4006dead243ccf2",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
           "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "6e4c8ef7b2d212dcccb29ae6ccfdc2c5db6221d9",
           "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "309bbc520ec2210c5825cdc8f908f107d1cb8991",
@@ -838,11 +838,11 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "50043b8fc645a188",
+        "codeHash": "c31b62b77984696b",
         "modelHash": "b225f14f5ab5e335",
         "at": "2026-10-10",
-        "commit": "3258afc8",
-        "reviewer": "Codex (final physical PIP UI and compositor source review; device tests pending)",
+        "commit": "ab5c0a21",
+        "reviewer": "Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -916,7 +916,7 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt": "b4a2ea86b65756631d9e5675ed2bd2b691a47fff",
           "app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt": "ee99a615038c121818d23f441dc16ee6dc61f1f9",
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "241c0441f0fce32856274bd2f1e02d476b6f85f9",
-          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "261f4ba42f86e8e5c19bc96345eea54997856672",
+          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "a451e60bf2a15a56885c394bc4006dead243ccf2",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
           "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "6e4c8ef7b2d212dcccb29ae6ccfdc2c5db6221d9",
           "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "309bbc520ec2210c5825cdc8f908f107d1cb8991",
@@ -1102,11 +1102,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "50043b8fc645a188",
+        "codeHash": "c31b62b77984696b",
         "modelHash": "b9c068ecdd7bdad6",
         "at": "2026-10-10",
-        "commit": "3258afc8",
-        "reviewer": "Codex (final physical PIP UI and compositor source review; device tests pending)",
+        "commit": "ab5c0a21",
+        "reviewer": "Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -1180,7 +1180,7 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt": "b4a2ea86b65756631d9e5675ed2bd2b691a47fff",
           "app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt": "ee99a615038c121818d23f441dc16ee6dc61f1f9",
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "241c0441f0fce32856274bd2f1e02d476b6f85f9",
-          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "261f4ba42f86e8e5c19bc96345eea54997856672",
+          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "a451e60bf2a15a56885c394bc4006dead243ccf2",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
           "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "6e4c8ef7b2d212dcccb29ae6ccfdc2c5db6221d9",
           "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "309bbc520ec2210c5825cdc8f908f107d1cb8991",
@@ -1316,11 +1316,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "50043b8fc645a188",
+        "codeHash": "c31b62b77984696b",
         "modelHash": "c31331237d22b8f3",
         "at": "2026-10-10",
-        "commit": "3258afc8",
-        "reviewer": "Codex (final physical PIP UI and compositor source review; device tests pending)",
+        "commit": "ab5c0a21",
+        "reviewer": "Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -1394,7 +1394,7 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt": "b4a2ea86b65756631d9e5675ed2bd2b691a47fff",
           "app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt": "ee99a615038c121818d23f441dc16ee6dc61f1f9",
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "241c0441f0fce32856274bd2f1e02d476b6f85f9",
-          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "261f4ba42f86e8e5c19bc96345eea54997856672",
+          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "a451e60bf2a15a56885c394bc4006dead243ccf2",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
           "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "6e4c8ef7b2d212dcccb29ae6ccfdc2c5db6221d9",
           "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "309bbc520ec2210c5825cdc8f908f107d1cb8991",
@@ -1530,11 +1530,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "50043b8fc645a188",
+        "codeHash": "c31b62b77984696b",
         "modelHash": "6b763ede8ee371bf",
         "at": "2026-10-10",
-        "commit": "3258afc8",
-        "reviewer": "Codex (final physical PIP UI and compositor source review; device tests pending)",
+        "commit": "ab5c0a21",
+        "reviewer": "Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -1608,7 +1608,7 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt": "b4a2ea86b65756631d9e5675ed2bd2b691a47fff",
           "app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt": "ee99a615038c121818d23f441dc16ee6dc61f1f9",
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "241c0441f0fce32856274bd2f1e02d476b6f85f9",
-          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "261f4ba42f86e8e5c19bc96345eea54997856672",
+          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "a451e60bf2a15a56885c394bc4006dead243ccf2",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
           "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "6e4c8ef7b2d212dcccb29ae6ccfdc2c5db6221d9",
           "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "309bbc520ec2210c5825cdc8f908f107d1cb8991",
@@ -1744,11 +1744,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "50043b8fc645a188",
+        "codeHash": "c31b62b77984696b",
         "modelHash": "c4d425d6920c2612",
         "at": "2026-10-10",
-        "commit": "3258afc8",
-        "reviewer": "Codex (final physical PIP UI and compositor source review; device tests pending)",
+        "commit": "ab5c0a21",
+        "reviewer": "Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -1822,7 +1822,7 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt": "b4a2ea86b65756631d9e5675ed2bd2b691a47fff",
           "app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt": "ee99a615038c121818d23f441dc16ee6dc61f1f9",
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "241c0441f0fce32856274bd2f1e02d476b6f85f9",
-          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "261f4ba42f86e8e5c19bc96345eea54997856672",
+          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "a451e60bf2a15a56885c394bc4006dead243ccf2",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
           "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "6e4c8ef7b2d212dcccb29ae6ccfdc2c5db6221d9",
           "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "309bbc520ec2210c5825cdc8f908f107d1cb8991",
@@ -1958,11 +1958,11 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "50043b8fc645a188",
+        "codeHash": "c31b62b77984696b",
         "modelHash": "f975a5f7c6f65e53",
         "at": "2026-10-10",
-        "commit": "3258afc8",
-        "reviewer": "Codex (final physical PIP UI and compositor source review; device tests pending)",
+        "commit": "ab5c0a21",
+        "reviewer": "Codex (EGL viewport and JPEG pbuffer source review; SM-S936N smoke checks recorded separately)",
         "files": {
           "app/build.gradle.kts": "70ed4da47b8295217c6d32cda1820f699cd2cbec",
           "app/src/main/AndroidManifest.xml": "8030a3625b0070914a6a4fa668e81379a7110f89",
@@ -2036,7 +2036,7 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt": "b4a2ea86b65756631d9e5675ed2bd2b691a47fff",
           "app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt": "ee99a615038c121818d23f441dc16ee6dc61f1f9",
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "241c0441f0fce32856274bd2f1e02d476b6f85f9",
-          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "261f4ba42f86e8e5c19bc96345eea54997856672",
+          "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "a451e60bf2a15a56885c394bc4006dead243ccf2",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
           "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "6e4c8ef7b2d212dcccb29ae6ccfdc2c5db6221d9",
           "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "309bbc520ec2210c5825cdc8f908f107d1cb8991",

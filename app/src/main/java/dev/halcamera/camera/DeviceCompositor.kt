@@ -30,6 +30,7 @@ internal class DeviceCompositor(
     private val display = EGL14.eglGetDisplay(EGL14.EGL_DEFAULT_DISPLAY)
     private var eglContext = EGL14.EGL_NO_CONTEXT
     private var window = EGL14.EGL_NO_SURFACE
+    private var snapshot = EGL14.EGL_NO_SURFACE
     private var encoder = EGL14.EGL_NO_SURFACE
     private lateinit var config: EGLConfig
     private var viewSurface: Surface? = null
@@ -55,6 +56,7 @@ internal class DeviceCompositor(
             check(EGL14.eglInitialize(display, IntArray(2), 0, IntArray(2), 0))
             val configs = arrayOfNulls<EGLConfig>(1)
             check(EGL14.eglChooseConfig(display, intArrayOf(EGL14.EGL_RENDERABLE_TYPE, EGL14.EGL_OPENGL_ES2_BIT,
+                EGL14.EGL_SURFACE_TYPE, EGL14.EGL_WINDOW_BIT or EGL14.EGL_PBUFFER_BIT,
                 EGL14.EGL_RED_SIZE,8,EGL14.EGL_GREEN_SIZE,8,EGL14.EGL_BLUE_SIZE,8,0x3142,1,EGL14.EGL_NONE),
                 0, configs, 0, 1, IntArray(1), 0))
             config = checkNotNull(configs[0])
@@ -62,6 +64,9 @@ internal class DeviceCompositor(
             view.setDefaultBufferSize(output.width, output.height)
             viewSurface = Surface(view)
             window = createWindow(checkNotNull(viewSurface))
+            snapshot = EGL14.eglCreatePbufferSurface(display, config,
+                intArrayOf(EGL14.EGL_WIDTH, output.width, EGL14.EGL_HEIGHT, output.height, EGL14.EGL_NONE), 0)
+            check(snapshot != EGL14.EGL_NO_SURFACE)
             current(window)
             val vertex = shader(GLES20.GL_VERTEX_SHADER, "attribute vec2 p; attribute vec2 uv; uniform mat4 transform; uniform mat4 rotation; varying vec2 v; void main(){gl_Position=vec4(p,0.,1.);v=(transform*rotation*vec4(uv,0.,1.)).xy;}")
             val fragment = shader(GLES20.GL_FRAGMENT_SHADER, "#extension GL_OES_EGL_image_external : require\nprecision mediump float; uniform samplerExternalOES image; varying vec2 v; void main(){gl_FragColor=texture2D(image,v);}")
@@ -115,14 +120,18 @@ internal class DeviceCompositor(
 
     private fun draw(target: EGLSurface) {
         current(target)
+        // TextureView may resize its native buffer after setDefaultBufferSize.
+        val width = IntArray(1); val height = IntArray(1)
+        check(EGL14.eglQuerySurface(display, target, EGL14.EGL_WIDTH, width, 0))
+        check(EGL14.eglQuerySurface(display, target, EGL14.EGL_HEIGHT, height, 0))
         GLES20.glDisable(GLES20.GL_SCISSOR_TEST)
         GLES20.glClearColor(0f,0f,0f,1f); GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
         GLES20.glUseProgram(program)
         textures.indices.forEach { index ->
             val r = if (index == 0) PipRect(0f,0f,1f,1f) else rects[index - 1]
-            val w = (r.width * output.width).toInt().coerceAtLeast(1)
-            val h = (r.height * output.height).toInt().coerceAtLeast(1)
-            GLES20.glViewport((r.x * output.width).toInt(), ((1f-r.y-r.height) * output.height).toInt(), w, h)
+            val w = (r.width * width[0]).toInt().coerceAtLeast(1)
+            val h = (r.height * height[0]).toInt().coerceAtLeast(1)
+            GLES20.glViewport((r.x * width[0]).toInt(), ((1f-r.y-r.height) * height[0]).toInt(), w, h)
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0); GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,names[index])
             GLES20.glUniform1i(GLES20.glGetUniformLocation(program,"image"),0)
             GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(program,"transform"),1,false,transforms[index],0)
@@ -145,7 +154,7 @@ internal class DeviceCompositor(
     fun capture(done: (Result<ConcurrentPhoto>) -> Unit) { handler.post {
         done(runCatching {
             check(!closed && received.all { it }) { "PIP frames not ready" }
-            draw(window)
+            draw(snapshot)
             val bytes = ByteBuffer.allocateDirect(output.width * output.height * 4)
             GLES20.glReadPixels(0,0,output.width,output.height,GLES20.GL_RGBA,GLES20.GL_UNSIGNED_BYTE,bytes)
             check(GLES20.glGetError() == GLES20.GL_NO_ERROR) { "Composition readback failed" }
@@ -157,7 +166,6 @@ internal class DeviceCompositor(
             }
             val bitmap = Bitmap.createBitmap(pixels,output.width,output.height,Bitmap.Config.ARGB_8888)
             val jpeg = try { ByteArrayOutputStream().use { check(bitmap.compress(Bitmap.CompressFormat.JPEG,95,it)); it.toByteArray() } } finally { bitmap.recycle() }
-            check(EGL14.eglSwapBuffers(display,window))
             ConcurrentPhoto(jpeg,textures[0].timestamp,null,output,physicalIds,
                 textures.mapIndexed { index, texture -> (if (index == 0) cameraId else physicalIds[index-1]) to texture.timestamp }.toMap())
         })
@@ -224,6 +232,7 @@ internal class DeviceCompositor(
                 }
                 EGL14.eglMakeCurrent(display,EGL14.EGL_NO_SURFACE,EGL14.EGL_NO_SURFACE,EGL14.EGL_NO_CONTEXT)
                 if (window != EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display,window)
+                if (snapshot != EGL14.EGL_NO_SURFACE) EGL14.eglDestroySurface(display,snapshot)
                 EGL14.eglDestroyContext(display,eglContext)
             }
         } finally {
