@@ -1,0 +1,6 @@
+kind: component
+title: preview-output
+children: []
+parentPath:
+  - camera-engines
+  - camera2-engine

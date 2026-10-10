@@ -119,6 +119,8 @@ sources:
       camera-engines/camera2-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+      camera-engines/camera2-engine/preview-output:
+        evidence:
           - app/src/main/java/dev/halcamera/camera/PreviewTransform.kt
           - app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt
       camera-engines/camera2-engine/stream-settings:
@@ -256,6 +258,23 @@ sources:
       screens/dual-preview-screen:
         evidence:
           - app/src/main/java/dev/halcamera/DualPreviewActivity.kt
+      screens/concurrent-camera-screen:
+        evidence:
+          - app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt
+          - app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt
+          - app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt
+      screens/concurrent-camera-screen/photo-storage:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt
+      screens/concurrent-camera-screen/pip-composition:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt
+          - app/src/main/java/dev/halcamera/camera/PipScene.kt
+          - app/src/main/java/dev/halcamera/camera/PipSource.kt
+          - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
+          - app/src/main/java/dev/halcamera/ui/LivePipController.kt
+          - app/src/main/java/dev/halcamera/ui/PhysicalPipPicker.kt
+          - app/src/main/java/dev/halcamera/ui/LiveChoiceSheet.kt
       screens/dual-preview-screen/cli-adapter:
         evidence:
           - app/src/main/java/dev/halcamera/DualCliBridge.kt

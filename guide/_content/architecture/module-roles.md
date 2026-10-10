@@ -19,6 +19,8 @@ sources:
   - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt
   - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
   - app/src/main/java/dev/halcamera/MainActivity.kt
+  - app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt
+  - app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt
   - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
   - app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt
   - app/src/main/java/dev/halcamera/ui/Look.kt
@@ -84,7 +86,8 @@ verifications: []
 - 벤치마크 RECORD 단계의 recorder 상태 기계는 `BenchmarkRecorder`가 담당하고 `Camera2Engine`은 그 호출을 위임합니다.
 - 카메라를 화면에 적는 이름(`Camera · 0 (Wide · Rear)`)도 이 패키지의 `CameraLabel` 하나가 만들며, Live·Benchmark·Probe·CTS가 모두 그것을 부릅니다.
 - 렌즈 이름을 붙이지 못한 카메라에는 HAL이 보고한 35mm 환산 초점거리를 덧붙여 `Camera · 1 (Front · 26 mm)`처럼 적으므로, 전면 카메라가 둘인 기기에서도 목록이 두 항목을 구별합니다.
-- Live의 Dual · P·Dual · V는 Camera2의 `DualPreviewSession` 또는 CameraX의 `DualCameraXSession`으로 후면 물리 카메라 두 개를 동시에 받습니다.
+- 기존 `DualPreviewSession`과 `DualCameraXSession`의 물리 출력 경로는 CLI 호환용으로 남아 있으며 Live의 Multi에서는 사용하지 않습니다.
+- Multi는 `ConcurrentCameraActivity`와 Camera2 `ConcurrentSession`으로 선택한 카메라 ID의 장치를 각각 엽니다. 모든 장치를 연 뒤 세션을 구성하고, 카메라별 JPEG와 성공·실패 정보를 공통 촬영 묶음으로 저장합니다.
 - 두 엔진의 줌은 두 출력에 공통 적용합니다. Camera2는 메인 센서의 노출·초점 제어와 한 요청으로 촬영하는 두 센서 사진을 지원합니다. CameraX는 메인 개별 제어와 두 센서 사진을 지원하지 않습니다.
 - CameraX는 `ConcurrentCamera`의 물리 ID 선택과 `DualPreviewRelay`를 사용해 각 Preview를 화면과 개별 MP4 인코더에 전달합니다.
 

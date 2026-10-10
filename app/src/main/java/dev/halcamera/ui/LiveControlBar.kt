@@ -5,6 +5,7 @@ import android.content.res.ColorStateList
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.RippleDrawable
@@ -28,10 +29,10 @@ import dev.halcamera.camera.LiveControls
 /**
  * LIVE's quick controls for flash, AF lock, AE lock, EV and exposure bracketing (issues #169, #176 and #178), laid out like the top row of a
  * stock camera app: round glyph buttons under the status line, white when on, the same selection look as the
- * zoom rail. Two of them open in place instead of cycling blind:
+ * zoom rail. Related panels open below their selected button:
  *
- * - Flash turns the row into its choices (off, auto, on, torch) with captions. It stays open until a pick or a
- *   tap on the pill: folding on a timer put the AE button under a finger that was reaching for a choice.
+ * - Flash keeps the toolbar and opens its choices (off, auto, on, torch) below it until a pick or a second tap.
+ * - Manual keeps the toolbar and anchors its compact editor below M.
  * - EV opens a dial under the row; it folds away four seconds after the last touch. Nothing sits where the dial
  *   was, so a late tap there reaches the preview, not another control.
  *
@@ -44,14 +45,23 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         fun controlsChanged(controls: LiveControls)
         fun notice(text: String)
         fun manualRequested() {}
+        fun manualClosed() {}
     }
 
     val view = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
     var support = LiveControlSupport.NONE; private set
     var controls = LiveControls(); private set
     private var video = false
+    private var composited = false
     private var enabled = true
     private var manualAvailable = true
+    private var manualExpanded = false
+
+    fun setManualExpanded(open: Boolean) {
+        if (manualExpanded == open) return
+        manualExpanded = open
+        render()
+    }
 
     fun setManualAvailable(available: Boolean) {
         if (manualAvailable == available) return
@@ -60,13 +70,17 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
 
     private val mainRow = LinearLayout(context).apply { gravity = Gravity.CENTER }
-    private val flashRow = LinearLayout(context).apply { gravity = Gravity.CENTER; visibility = View.GONE }
+    private val flashRow = LinearLayout(context).apply { gravity = Gravity.TOP or Gravity.START; visibility = View.GONE }
     private val flash = QuickButton(context) { tap { openFlash() } }
     private val afLock = QuickButton(context) { tap { toggleAf() } }
     private val aeLock = QuickButton(context) { tap { toggleAe() } }
     private val ev = QuickButton(context) { tap { toggleRuler() } }
     private val bracket = QuickButton(context) { tap { toggleBracket() } }
-    private val manual = QuickButton(context) { tap { setExpanded(false); host.manualRequested() } }
+    private val manual = QuickButton(context) { tap {
+        val wasOpen = manualExpanded
+        closePanels()
+        if (!wasOpen) host.manualRequested()
+    } }
     private val ruler = EvRuler(context) { index ->
         if (enabled) { controls = controls.copy(evIndex = index); host.controlsChanged(controls); render(); scheduleFold() }
     }.apply {
@@ -74,7 +88,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
     private val evPanel = Look.row(context).apply {
         visibility = View.GONE
-        background = Look.cardBackground(context, Look.cameraGlass, Look.cameraOutline)
+        background = Look.cardBackground(context, Look.cameraControlGlass, Color.TRANSPARENT).apply { cornerRadius=dp(20).toFloat() }
     }
     private val accessibility = context.getSystemService(AccessibilityManager::class.java)
     private val fold = Runnable { closePanels() }
@@ -82,19 +96,34 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     /** The buttons stay folded behind [handle] until asked for, so the preview is not covered by controls not in use. */
     private var expanded = false
     private val rows = FrameLayout(context).apply { visibility = View.GONE }
+    private val connector = object : View(context) {
+        private val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=Look.cameraControlGlass }
+        override fun onDraw(canvas: Canvas) {
+            val source=when {
+                manualExpanded -> manual
+                flashRow.visibility == View.VISIBLE -> flash
+                else -> ev
+            }
+            val x=(source.x+source.width/2f).coerceIn(dp(24).toFloat(),(width-dp(24)).coerceAtLeast(dp(24)).toFloat())
+            canvas.drawPath(Path().apply { moveTo(x,0f); lineTo(x-dp(8),height.toFloat()); lineTo(x+dp(8),height.toFloat()); close() },paint)
+        }
+    }.apply { visibility=View.GONE; importantForAccessibility=View.IMPORTANT_FOR_ACCESSIBILITY_NO }
     /** Hosted in the centre of the preview header; the panel below contains only expanded controls. */
     val handle = IconButton(context, R.drawable.ic_chevron_down, "Expand camera controls") { setExpanded(!expanded) }
 
     init {
         view.gravity = Gravity.CENTER_HORIZONTAL
         rows.addView(mainRow, FrameLayout.LayoutParams(-1, -2))
-        rows.addView(flashRow, FrameLayout.LayoutParams(-1, -2))
         view.addView(rows, LinearLayout.LayoutParams(-1, -2))
+        view.addView(connector,LinearLayout.LayoutParams(-1,dp(6)))
+        flashRow.background=Look.cardBackground(context,Look.cameraControlGlass,Color.TRANSPARENT).apply { cornerRadius=dp(20).toFloat() }
+        flashRow.setPadding(dp(4),dp(4),dp(4),dp(8))
+        view.addView(flashRow,LinearLayout.LayoutParams(-2,-2).apply { gravity=Gravity.START })
         ruler.onInteraction = { touching -> if (touching) view.removeCallbacks(fold) else scheduleFold() }
         listOf("−" to -1, "+" to 1, "0" to 0).forEach { (label, delta) ->
             if (delta == 1) evPanel.addView(ruler, LinearLayout.LayoutParams(0, dp(64), 1f))
             evPanel.addView(Button(context).apply {
-                text = label; textSize = 14f; isAllCaps = false
+                text = label; textSize = 12f; isAllCaps = false
                 setTextColor(Look.onDark)
                 minWidth = 0; minimumWidth = 0
                 setPadding(0, 0, 0, 0)
@@ -108,7 +137,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
                 tooltipText = contentDescription
             }, LinearLayout.LayoutParams(dp(48), dp(48)))
         }
-        view.addView(evPanel, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(2) })
+        view.addView(evPanel, LinearLayout.LayoutParams(-1, -2))
         listOf(flash, afLock, aeLock, ev, bracket, manual).forEach { button ->
             mainRow.addView(button, LinearLayout.LayoutParams(0, dp(48), 1f))
         }
@@ -138,10 +167,10 @@ class LiveControlBar(private val context: Context, private val host: Host) {
      * Called on every LIVE refresh. Switching to video mode drops flash auto and on, which only a still can fire;
      * the engine is told so the repeating request matches the buttons.
      */
-    fun bind(video: Boolean, enabled: Boolean) {
-        val changed = video != this.video || enabled != this.enabled
-        this.video = video; this.enabled = enabled
-        val coerced = controls.coerce(support, video)
+    fun bind(video: Boolean, enabled: Boolean, composited: Boolean = false) {
+        val changed = video != this.video || enabled != this.enabled || composited != this.composited
+        this.video = video; this.enabled = enabled; this.composited = composited
+        val coerced = controls.coerce(support, video, composited)
         if (coerced != controls) { controls = coerced; host.controlsChanged(coerced); render() }
         if (changed) {
             if (!enabled) closePanels()
@@ -156,33 +185,34 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     fun applyRequested(next: LiveControls) { update(next) }
 
     private fun update(next: LiveControls) {
-        controls = next.coerce(support, video)
+        controls = next.coerce(support, video, composited)
         host.controlsChanged(controls)
         render()
     }
 
     private fun openFlash() {
         if (!support.flash) { host.notice("This camera has no flash."); return }
+        if (flashRow.visibility == View.VISIBLE) { closePanels(); return }
         closePanels()
         flashRow.removeAllViews()
-        support.flashModes(video || controls.manual.exposure != null).forEach { mode ->
+        support.flashModes(video || composited || controls.manual.exposure != null).forEach { mode ->
             val option = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
-            val button = QuickButton(context) { tap { flashRow.visibility = View.GONE; mainRow.visibility = View.VISIBLE; update(controls.copy(flash = mode)) } }
+            val button = QuickButton(context) { tap { closePanels(); update(controls.copy(flash = mode)) } }
             button.show(icon = flashIcon(mode), text = null, active = mode == controls.flash, locked = false, available = true,
                 description = "${mode.label}${if (mode == controls.flash) ", Selected" else ""}")
-            option.addView(button, LinearLayout.LayoutParams(dp(48), dp(48)))
+            option.addView(button, LinearLayout.LayoutParams(-1, dp(48)))
             option.addView(TextView(context).apply {
                 text = mode.label.removePrefix("Flash ").replaceFirstChar { it.uppercase() }
-                textSize = 11f; gravity = Gravity.CENTER
+                textSize = 10f; gravity = Gravity.CENTER
                 setTextColor(if (mode == controls.flash) Look.onDark else Look.onDarkMuted)
                 setShadowLayer(dp(2).toFloat(), 0f, 0f, Color.BLACK)
                 setOnClickListener { button.performClick() }
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }, LinearLayout.LayoutParams(-2, -2))
-            flashRow.addView(option, LinearLayout.LayoutParams(0, -2, 1f))
+            flashRow.addView(option, LinearLayout.LayoutParams(dp(56), -2))
         }
-        mainRow.visibility = View.INVISIBLE
         flashRow.visibility = View.VISIBLE
+        render()
     }
 
     private fun toggleAf() {
@@ -221,6 +251,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
 
     /** Exposure bracketing (#178): with it on, the shutter takes three stills at EV steps around the EV button's value. */
     private fun toggleBracket() {
+        if (composited) { host.notice("Bracketing is unavailable with PIP."); return }
         if (video) { host.notice("Bracketing is available in Photo mode only."); return }
         if (controls.manual.exposure != null) { host.notice("Bracketing is unavailable in manual exposure."); return }
         if (support.evRange == null) { host.notice("Bracketing requires exposure compensation (EV), which this camera does not support."); return }
@@ -236,15 +267,19 @@ class LiveControlBar(private val context: Context, private val host: Host) {
 
     private fun closePanels() {
         view.removeCallbacks(fold)
+        if (manualExpanded) { manualExpanded=false; host.manualClosed() }
         flashRow.visibility = View.GONE
         mainRow.visibility = View.VISIBLE
         evPanel.visibility = View.GONE
-        if (ruler.visibility != View.GONE) { ruler.visibility = View.GONE; render() }
+        ruler.visibility = View.GONE
+        render()
     }
 
     private fun render() {
+        connector.visibility=if (manualExpanded || flashRow.visibility==View.VISIBLE || ruler.visibility==View.VISIBLE) View.VISIBLE else View.GONE
+        connector.invalidate()
         evPanel.visibility = ruler.visibility
-        flash.show(flashIcon(controls.flash), null, controls.flash != FlashMode.OFF, false, support.flash,
+        flash.show(flashIcon(controls.flash), null, controls.flash != FlashMode.OFF || flashRow.visibility == View.VISIBLE, false, support.flash,
             "Flash, current: ${controls.flash.label}")
         afLock.show(null, "AF", controls.afLock, controls.afLock, support.afLock && controls.manual.focusDiopters == null,
             if (controls.afLock) "AF lock on, tap to unlock" else "AF lock, tap to focus and lock")
@@ -254,11 +289,11 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         ev.show(if (evText == null) R.drawable.ic_exposure else null, evText,
             controls.evIndex != 0 || ruler.visibility == View.VISIBLE, false, support.evRange != null && controls.manual.exposure == null,
             "Exposure compensation, current: ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "collapse adjustment" else "expand adjustment"}")
-        bracket.show(null, "AEB", controls.bracket, false, support.evRange != null && controls.manual.exposure == null && !video,
+        bracket.show(null, "AEB", controls.bracket, false, support.evRange != null && controls.manual.exposure == null && !video && !composited,
             if (controls.bracket) "Bracketing on, three exposures per shutter press, tap to turn off" else "Bracketing, tap for three exposures per shutter press")
         // Dim while the bar is off (camera not ready, recording being saved, a CLI command running), as MainActivity
         // dims every other Live control, so a tap that does nothing never looks like one that should.
-        manual.show(null, "M", controls.manual.active, false, manualAvailable,
+        manual.show(null, "M", controls.manual.active || manualExpanded, false, manualAvailable,
             if (manualAvailable) "Manual capture controls" else "Manual · Unavailable in CameraX")
         listOf(flash, afLock, aeLock, ev, bracket, manual).forEach { it.isEnabled = enabled; if (!enabled) it.alpha = 0.4f }
         manual.isEnabled = enabled && manualAvailable
@@ -276,7 +311,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
 
     fun setManual(value: dev.halcamera.camera.ManualControls) {
-        closePanels()
+        if (!manualExpanded) closePanels()
         update(controls.copy(manual = value))
     }
 

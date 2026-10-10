@@ -11,4 +11,4 @@ Live 첫 열기의 해제 대기(#230)와 첫 프레임 전 실패 재시도(#22
 close는 active를 해제하고 세션과 기기를 닫습니다. finishClose에서 사진 대기와 녹화 정리, reader와 Surface 해제, closed 이벤트, 완료 콜백, 실행기 종료를 처리합니다. API 30 이상은 CONTROL_ZOOM_RATIO를, 이전 버전은 crop 영역을 사용합니다.
 콜백 시간축용으로 capture_partial과 preview_presented를 관측하며, callback_streams 이벤트와 세션의 callbackStreams에 현재 출력 구성 및 관측 가능 여부를 기록합니다. 기존 capture_result·image_available의 의미는 유지합니다.
 
-LIVE의 Android 13 이상에서 PreviewBufferRelay는 GPU_SAMPLED_IMAGE 용도의 PRIVATE ImageReader로 프리뷰 버퍼를 받은 뒤 preview_available을 기록하고 ImageWriter로 TextureView에 넘깁니다. 그래프는 화면 갱신의 preview_presented를 사용하지 않습니다. 센서 시각은 프레임 연결 키로 유지하며 OutputConfiguration은 SENSOR 타임스탬프와 노출 시작 기준을 지정합니다. 사진·녹화 세션 전환에서는 같은 프리뷰 relay를 재사용합니다. 카메라 종료 뒤 relay 자원을 해제하며 디스플레이 대기로 카메라 종료를 막지 않습니다. 벤치마크와 Android 12 이하에서는 원래의 프리뷰 직결 경로를 유지하고 Preview를 관측 불가로 표시합니다.
+프리뷰 버퍼 관측과 표시 경로는 preview-output 요소에 있습니다.

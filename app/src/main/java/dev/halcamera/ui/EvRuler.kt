@@ -40,10 +40,10 @@ class EvRuler(context: Context, private val onChange: (Int) -> Unit) : View(cont
     private val tick = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.onDarkMuted; strokeWidth = Look.dp(context, 1).toFloat(); strokeCap = Paint.Cap.ROUND }
     private val major = Paint(tick).apply { color = Look.onDark; strokeWidth = Look.dp(context, 2).toFloat() }
     private val numbers = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Look.onDarkMuted; textAlign = Paint.Align.CENTER; textSize = Look.dp(context, 11).toFloat(); typeface = Look.mono
+        color = Look.onDarkMuted; textAlign = Paint.Align.CENTER; textSize = Look.dp(context, 9).toFloat(); typeface = Look.mono
     }
     private val value = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Look.onDark; textAlign = Paint.Align.CENTER; textSize = Look.dp(context, 13).toFloat()
+        color = Look.onDark; textAlign = Paint.Align.CENTER; textSize = Look.dp(context, 11).toFloat()
         typeface = Typeface.create(Look.mono, Typeface.BOLD)
     }
     private val marker = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.cameraSelection; style = Paint.Style.FILL }

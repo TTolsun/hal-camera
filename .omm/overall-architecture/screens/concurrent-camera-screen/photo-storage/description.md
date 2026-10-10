@@ -1,0 +1,1 @@
+ConcurrentPhotoStore는 장치별 JPEG와 공통 group ID의 JSON을 저장합니다. JSON은 장치 ID, Physical·Service 소스, 합성 여부·크기, 시각 기준과 성공·실패를 기록합니다. 합성 JPEG의 센서 촬영 시각은 null이며 입력별 Surface 시각을 구분합니다. 사진의 부분 실패는 성공한 파일을 지우지 않으며 JSON 저장 실패는 해당 사진 묶음을 롤백합니다. 센서 동기 촬영을 보장하지 않습니다.

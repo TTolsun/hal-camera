@@ -2,12 +2,15 @@ package dev.halcamera.ui
 
 import android.app.AlertDialog
 import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.graphics.Typeface
 import android.os.SystemClock
 import android.text.InputType
 import android.view.Gravity
 import android.view.View
 import android.widget.*
+import dev.halcamera.R
 import dev.halcamera.camera.*
 import dev.halcamera.telemetry.Event
 import java.util.Locale
@@ -20,21 +23,27 @@ class ManualControlPanel(
     private val context: Context,
     private val changed: (ManualControls) -> Unit,
     private val notice: (String) -> Unit,
+    private val expandedChanged: (Boolean) -> Unit = {},
 ) {
     val view = LinearLayout(context).apply {
         orientation = LinearLayout.VERTICAL
-        setPadding(dp(12), dp(4), dp(12), dp(4))
-        background = Look.cardBackground(context, Look.cameraGlass, Look.cameraOutline)
+        setPadding(dp(16), dp(8), dp(16), dp(12))
+        background = Look.cardBackground(context, Look.cameraControlGlass, Color.TRANSPARENT).apply { cornerRadius=dp(24).toFloat() }
         visibility = View.GONE
     }
     private val header = LinearLayout(context).apply { gravity = Gravity.CENTER_VERTICAL }
     private val title = button("Manual") { toggle() }.apply { gravity = Gravity.START or Gravity.CENTER_VERTICAL }
     private val reset = button("Reset") { commit(ManualControls()) }.apply { contentDescription = "Reset exposure, focus and white balance to Auto" }
-    private val fold = button("Hide") { expanded = false; render() }.apply { contentDescription = "Collapse panel and keep settings" }
+    private val fold = IconButton(context,R.drawable.ic_action_close,"Close manual controls",dark=true) { expanded = false; render() }
     private val body = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
-    private val tabRow = LinearLayout(context)
+    private val tabRow = LinearLayout(context).apply {
+        setPadding(dp(4),dp(4),dp(4),dp(4))
+        background=Look.pill(context,Look.cameraControlGlass)
+        isBaselineAligned=false
+    }
     private val scroll = ScrollView(context).apply { addView(body); isFillViewport = false }
-    private val actual = text(12).apply { minLines = 2; maxLines = 2 }
+    private val actual = text(10).apply { maxLines = 2; gravity=Gravity.CENTER; setPadding(0,dp(8),0,0) }
+    private var autoValue: TextView? = null
     private var expanded = false
     val isExpanded get() = expanded
     val observedKey get() = if (expanded && support.camera2) when (selected) {
@@ -54,9 +63,9 @@ class ManualControlPanel(
 
     init {
         header.addView(title, LinearLayout.LayoutParams(0, -2, 1f))
-        header.addView(reset); header.addView(fold)
+        header.addView(reset); header.addView(fold,LinearLayout.LayoutParams(dp(48),dp(48)))
         view.addView(header)
-        view.addView(tabRow)
+        view.addView(tabRow,LinearLayout.LayoutParams(-1,-2).apply { bottomMargin=dp(12) })
         view.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         view.addView(actual)
         view.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateHeight() }
@@ -94,10 +103,11 @@ class ManualControlPanel(
 
     private fun render() {
         if (!support.camera2) expanded = false
-        view.visibility = if (expanded || current.active) View.VISIBLE else View.GONE
+        view.visibility = if (expanded) View.VISIBLE else View.GONE
+        expandedChanged(expanded)
         updateHeight()
         title.text = if (expanded) "Manual" else current.summary()
-        title.textSize = if (expanded) 16f else 12f
+        title.textSize = 12f
         title.isClickable = !expanded
         title.contentDescription = if (expanded) "Manual capture" else "${current.summary()}, expand manual controls"
         reset.visibility = if (expanded && support.camera2 && current.active) View.VISIBLE else View.GONE
@@ -107,15 +117,17 @@ class ManualControlPanel(
         tabRow.visibility = if (expanded) View.VISIBLE else View.GONE
         actual.visibility = if (expanded && support.camera2) View.VISIBLE else View.GONE
         body.removeAllViews()
+        autoValue=null
         tabRow.removeAllViews()
         if (!expanded) return
         tabs.forEachIndexed { index, label ->
             tabRow.addView(button(label) { selected = index; scroll.scrollTo(0, 0); render() }.apply {
-                setTextColor(if (index == selected) Look.primaryOnDark else Look.onDark)
+                setTextColor(if (index == selected) Look.cameraOnSelection else Look.onDarkMuted)
+                background=Look.pill(context,if (index==selected) Look.cameraSelection else Color.TRANSPARENT)
                 typeface = if (index == selected) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
                 isSelected = index == selected
                 contentDescription = "$label adjust${if (index == selected) ", Selected" else ""}"
-            }, LinearLayout.LayoutParams(0, -2, listOf(0.8f, 1.3f, 1.1f, 0.8f)[index]))
+            }, LinearLayout.LayoutParams(0, -2, 1f))
         }
         when (selected) {
             0, 1 -> exposureEditor()
@@ -127,9 +139,14 @@ class ManualControlPanel(
 
     private fun updateHeight() {
         val params = view.layoutParams ?: return
-        // Keep the header and tabs at the same coordinates across parameters and Auto/Manual.
+        // Anchor the header and tabs while matching the panel height to the editor's content.
         // Only the editor body scrolls, including with a large system font.
-        val height = if (expanded) (view.rootView.height * 0.40f).toInt().coerceAtLeast(dp(240)) else -2
+        val automatic = when (selected) {
+            0,1 -> current.exposure == null
+            2 -> current.focusDiopters == null
+            else -> true
+        }
+        val height = if (expanded) dp(if (automatic) 232 else 280) else -2
         if (params.height != height) { params.height = height; view.layoutParams = params }
     }
 
@@ -142,7 +159,7 @@ class ManualControlPanel(
                 notice("Current readings adjusted to supported manual ranges: ISO ${e.iso} · ${fmt(e.timeNs / 1e6)} ms")
             commit(current.copy(exposure = e, wb = if (!manual && current.wb == WhiteBalance.CUSTOM) WhiteBalance.AUTO else current.wb))
         }
-        val e = current.exposure ?: run { explanation("Select Manual to start with the current ISO and exposure time."); return }
+        val e = current.exposure ?: run { autoReading(); return }
         if (selected == 0) {
             numeric("ISO ${e.iso}", e.iso.toDouble(), support.iso!!.first.toDouble(), support.iso!!.last.toDouble(), true,
                 "ISO", e.iso.toString()) { raw -> raw.toIntOrNull()?.let { commit(current.copy(exposure = e.copy(iso = it))) } ?: invalid() }
@@ -159,7 +176,7 @@ class ManualControlPanel(
         if (support.maxFocus <= 0f) { explanation("This camera has fixed focus or does not support manual focus."); return }
         modes(current.focusDiopters != null, "Focus") { manual -> commit(current.copy(focusDiopters =
             if (manual) (number("focusDiopters")?.toFloat() ?: 0f).coerceIn(0f, support.maxFocus) else null)) }
-        val focus = current.focusDiopters ?: return
+        val focus = current.focusDiopters ?: run { autoReading(); return }
         numeric("${fmt(focus.toDouble())} D", focus.toDouble(), 0.0, support.maxFocus.toDouble(), false,
             "Focus (diopters)", focus.toString()) { raw -> raw.toFloatOrNull()?.let { commit(current.copy(focusDiopters = it)) } ?: invalid() }
     }
@@ -168,10 +185,8 @@ class ManualControlPanel(
         val choices = support.whiteBalances
         body.addView(button("WB · ${current.wb.label} ▾") {
             if (!enabled) return@button
-            inputDialog = AlertDialog.Builder(context).setTitle("White Balance")
-                .setSingleChoiceItems(choices.map { it.label }.toTypedArray(), choices.indexOf(current.wb)) { dialog, index ->
-                    dialog.dismiss(); commit(current.copy(wb = choices[index]))
-                }.setNegativeButton("Close", null).show()
+            inputDialog = LiveChoiceSheet.show(context,"White balance",choices.map { LiveChoiceSheet.Choice(it.label) },
+                choices.indexOf(current.wb)) { index -> commit(current.copy(wb=choices[index])) }
         }.apply { isEnabled = enabled })
         if (current.wb == WhiteBalance.CUSTOM) {
             body.addView(button("Gains / Matrix") { editColor() }.apply { isEnabled = enabled })
@@ -179,20 +194,25 @@ class ManualControlPanel(
     }
 
     private fun modes(manual: Boolean, label: String, set: (Boolean) -> Unit) {
-        val row = LinearLayout(context)
-        row.addView(text(14).apply { text = label }, LinearLayout.LayoutParams(0, -2, 1f))
+        val row = LinearLayout(context).apply {
+            gravity=Gravity.CENTER_VERTICAL; isBaselineAligned=false
+            setPadding(dp(4),dp(4),dp(4),dp(4))
+            background=Look.pill(context,Look.cameraControlGlass)
+        }
         listOf(false to "Auto", true to "Manual").forEach { (m, name) -> row.addView(button(name) { if (enabled) set(m) }.apply {
-            isEnabled = enabled; setTextColor(if (m == manual) Look.primaryOnDark else Look.onDarkMuted)
+            isEnabled = enabled; isSelected=m==manual
+            setTextColor(if (m == manual) Look.cameraOnSelection else Look.onDarkMuted)
+            background=Look.pill(context,if (m==manual) Look.cameraSelection else Color.TRANSPARENT)
             contentDescription = "$label $name${if (m == manual) ", Selected" else ""}"
-        }) }
-        body.addView(row)
+        },LinearLayout.LayoutParams(0,-2,1f)) }
+        body.addView(row,LinearLayout.LayoutParams(-1,-2).apply { bottomMargin=dp(8) })
     }
 
     private fun numeric(label: String, value: Double, min: Double, max: Double, logarithmic: Boolean, hint: String,
                         raw: String, set: (String) -> Unit) {
         val valueButton = button(label) { if (enabled) edit(hint, raw, set) }.apply {
-            isEnabled = enabled; typeface = Look.mono; contentDescription = "$hint enter a value, $label"
-            setTextColor(Look.primaryOnDark)
+            isEnabled = enabled; typeface = Typeface.DEFAULT; textSize=12f; contentDescription = "$hint enter a value, $label"
+            setTextColor(Look.onDark)
         }
         val row = LinearLayout(context).apply { gravity = Gravity.CENTER_VERTICAL }
         fun at(p: Int): Double = if (logarithmic && min > 0) exp(ln(min) + (ln(max) - ln(min)) * p / 1000) else min + (max - min) * p / 1000
@@ -202,6 +222,9 @@ class ManualControlPanel(
         body.addView(row)
         body.addView(SeekBar(context).apply {
             this.max = 1000; progress = position; isEnabled = enabled; contentDescription = "$hint adjust"
+            progressTintList=ColorStateList.valueOf(Look.onDark)
+            progressBackgroundTintList=ColorStateList.valueOf(Look.onDarkMuted)
+            thumbTintList=ColorStateList.valueOf(Look.onDark)
             setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
                 override fun onProgressChanged(bar: SeekBar?, progress: Int, fromUser: Boolean) {
                     if (!fromUser || !enabled) return
@@ -222,14 +245,13 @@ class ManualControlPanel(
 
     private fun edit(hint: String, value: String, set: (String) -> Unit) {
         val input = EditText(context).apply {
+            textSize=12f; setTextColor(Look.onDark); setHintTextColor(Look.onDarkMuted)
             this.hint = hint
             inputType = if (selected == 1) InputType.TYPE_CLASS_TEXT else InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
             setText(value); setSelectAllOnFocus(true); setPadding(dp(20), dp(8), dp(20), dp(8))
         }
-        inputDialog = AlertDialog.Builder(context).setTitle(tabs[selected]).setView(input).setNegativeButton("Cancel", null)
-            .setPositiveButton("Apply", null).show()
-        inputDialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.setOnClickListener {
-            if (!enabled) return@setOnClickListener
+        inputDialog = LiveChoiceSheet.show(context,tabs[selected],content=input,actionLabel="Apply",confirm=confirm@{
+            if (!enabled) return@confirm false
             val raw = input.text.toString().trim()
             val candidate = when (selected) {
                 0 -> raw.toIntOrNull()?.let { n -> current.exposure?.let { current.copy(exposure = it.copy(iso = n)) } }
@@ -238,8 +260,9 @@ class ManualControlPanel(
                 else -> null
             }
             val error = candidate?.let(support::rejection) ?: if (candidate == null) "Enter a valid number." else null
-            if (error != null) input.error = error else { set(raw); inputDialog?.dismiss() }
-        }
+            if (error != null) input.error = error else set(raw)
+            error == null
+        })
         input.requestFocus(); input.selectAll()
         inputDialog?.window?.setSoftInputMode(android.view.WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
     }
@@ -247,9 +270,9 @@ class ManualControlPanel(
     private fun editColor() {
         if (!enabled) return
         val fields = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), 0, dp(16), 0) }
-        fields.addView(text(12).apply { text = "Apply gains and a color matrix in manual exposure." })
         val gains = EditText(context).apply { setText(current.color.gains.joinToString(" ")); hint = "R G(even) G(odd) B" }
         val matrix = EditText(context).apply { setText(current.color.transform.chunked(3).joinToString("\n") { it.joinToString(" ") }); hint = "3×3 matrix (row order)"; minLines = 3 }
+        listOf(gains,matrix).forEach { it.textSize=12f; it.setTextColor(Look.onDark); it.setHintTextColor(Look.onDarkMuted) }
         fields.addView(text(12).apply { text = "Gains · R / G(even) / G(odd) / B · 1–100 each" })
         fields.addView(gains)
         fields.addView(text(12).apply { text = "3×3 color matrix · row order · −100–100 each" })
@@ -257,16 +280,14 @@ class ManualControlPanel(
         fields.addView(text(12).apply {
             text = "Applied gains\n${observedColor("colorGains")}\nApplied matrix\n${observedColor("colorTransform", 3)}"
         })
-        inputDialog = AlertDialog.Builder(context).setTitle("WB Gains / Matrix")
-            .setView(ScrollView(context).apply { addView(fields) }).setNegativeButton("Cancel", null)
-            .setPositiveButton("Apply", null).show()
-        inputDialog?.getButton(AlertDialog.BUTTON_POSITIVE)?.setOnClickListener {
-            if (!enabled) return@setOnClickListener
+        inputDialog = LiveChoiceSheet.show(context,"White balance",content=fields,actionLabel="Apply",confirm=confirm@{
+            if (!enabled) return@confirm false
             fun parse(s: String) = s.trim().split(Regex("[\\s,]+")).map { it.toFloatOrNull() ?: Float.NaN }
             val next = current.copy(color = ManualColor(parse(gains.text.toString()), parse(matrix.text.toString())))
             val error = support.rejection(next)
-            if (error != null) matrix.error = error else { commit(next); inputDialog?.dismiss() }
-        }
+            if (error != null) matrix.error = error else commit(next)
+            error == null
+        })
     }
 
     private fun renderActual(now: Long) {
@@ -277,14 +298,23 @@ class ManualControlPanel(
             2 -> number("focusDiopters")?.let { "${fmt(it)} D" }
             else -> number("awbMode")?.toInt()?.let { key -> WhiteBalance.entries.find { it.key == key }?.label }
         }
-        var label = when {
+        val label = when {
             pending && now - changedNs < 2_000_000_000L -> "Applying · Actual ${observed ?: "checking"}"
             observed == null -> "Applied values unavailable"
             else -> "Actual $observed"
         }
-        if (selected in 0..1 && current.exposure != null) label += "\nISO and shutter locked together · max ${fmt(support.maxExposureNs!! / 1e6)} ms"
-        if (selected == 2 && current.focusDiopters != null) label += "\n0 D infinity · ${fmt(support.maxFocus.toDouble())} D near"
+        autoValue?.text=observed ?: "—"
+        autoValue?.contentDescription="Current ${tabs[selected]}, ${observed ?: "unavailable"}"
+        if (expanded && support.camera2) actual.visibility=if (autoValue==null) View.VISIBLE else View.GONE
         if (actual.text.toString() != label) actual.text = label
+    }
+
+    private fun autoReading() {
+        autoValue=Look.text(context,"—",12,Look.onDark).apply {
+            gravity=Gravity.CENTER; minimumHeight=dp(48)
+            contentDescription="Current ${tabs[selected]}"
+        }
+        body.addView(autoValue,LinearLayout.LayoutParams(-1,-2))
     }
 
     private fun number(key: String) = (latest?.values?.get(key) as? Number)?.toDouble()
@@ -295,9 +325,10 @@ class ManualControlPanel(
     private fun explanation(value: String) { body.addView(text(12).apply { text = value }) }
     private fun text(size: Int) = TextView(context).apply { textSize = size.toFloat(); setTextColor(Look.onDarkMuted); gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(4), 0, dp(4)) }
     private fun button(label: String, action: () -> Unit) = Button(context).apply {
-        text = label; isAllCaps = false; textSize = 14f; setTextColor(Look.onDark)
+        text = label; isAllCaps = false; textSize = 12f; setTextColor(Look.onDark)
         minWidth = dp(48); minimumWidth = dp(48); minHeight = dp(48); minimumHeight = dp(48)
         setPadding(dp(8), 0, dp(8), 0); background = Look.touchBackground(context, android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT)
+        backgroundTintList=null; stateListAnimator=null; includeFontPadding=false; gravity=Gravity.CENTER
         setOnClickListener { action() }
     }
     private fun dp(n: Int) = Look.dp(context, n)

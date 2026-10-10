@@ -15,4 +15,5 @@ children:
   - look-tokens
   - probe-screen
   - dual-preview-screen
+  - concurrent-camera-screen
 parentPath: []

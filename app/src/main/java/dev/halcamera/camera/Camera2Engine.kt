@@ -50,13 +50,18 @@ class Camera2Engine(
     private var previewSurface: Surface? = null
     private var displaySurface: Surface? = null
     private var previewRelay: PreviewBufferRelay? = null
+    @Volatile private var pip: LivePipSession? = null
+    private var pipRestoreDone: (() -> Unit)? = null
+    private var pipDisposing = false
+    private val retiringPips = mutableSetOf<LivePipSession>()
     private var yuv: ImageReader? = null
     private var jpeg: ImageReader? = null
     /** LIVE RAW_SENSOR for DNG (#177); never part of a benchmark session. */
     private var raw: ImageReader? = null
     private var finished = false
     private var closeDone: (() -> Unit)? = null
-    override val mediaBusy: Boolean get() = stills.inFlight || video.busy || bench.recording
+    override val mediaBusy: Boolean get() = stills.inFlight || video.busy || bench.recording ||
+        (Build.VERSION.SDK_INT >= 30 && pip?.busy == true)
     private var previewSeen = false
     /** LIVE only: a benchmark measures its one open as it happened. Camera thread only. */
     private val openRetry = CameraOpenRetry()
@@ -401,6 +406,7 @@ class Camera2Engine(
                         if (spec == null) telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
                         if (spec == null) main.post { if (active) streamsConfigured(sizes) }
                         report("Camera2 · LIVE", true)
+                        pipRestoreDone?.also { pipRestoreDone = null; it() }
                     } catch (e: Exception) { fail(e, configuration = true) }
                 }
                 override fun onConfigureFailed(session: CameraCaptureSession) {
@@ -574,7 +580,7 @@ class Camera2Engine(
             val fps = if (video.surface != null) liveStreams?.video?.fps ?: 30 else liveStreams?.fps?.max ?: 30
             val requested = requestedControls
             val manual = requested.manual.normalized(manualSupport(c, fps))
-            val now = requested.copy(manual = manual).coerce(liveControlSupport(c), video.surface != null)
+            val now = requested.copy(manual = manual).coerce(liveControlSupport(c), video.surface != null, pip != null)
             controls = now
             // A restored lock meets a session that has just started metering: relock it like a rebuilt one.
             if (old.aeLock != now.aeLock) { if (restoreQueued.getAndSet(false) && now.aeLock) startRelock() else aeRelock.lockChanged(now.aeLock) }
@@ -643,8 +649,16 @@ class Camera2Engine(
                 } catch (e: Exception) { stills.onImageFailed(e) }
             }, handler)
         }
-    override fun capture() = stills.capture(null, null)
-    override fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit) = stills.capture(requestId, done)
+    override fun capture() {
+        val current = pip
+        if (Build.VERSION.SDK_INT >= 30 && current != null) current.capture(null) {
+            report(if (it.isSuccess) "Saved PIP photo" else "Photo failed",true)
+        } else stills.capture(null,null)
+    }
+    override fun capturePhoto(requestId: String, done: (Result<PhotoResult>) -> Unit) {
+        val current = pip
+        if (Build.VERSION.SDK_INT >= 30 && current != null) current.capture(requestId,done) else stills.capture(requestId,done)
+    }
 
     /** The still request: JPEG only for a benchmark still, YUV + JPEG with the output [rotation] for a LIVE pair. */
     private fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?): CaptureRequest =
@@ -668,7 +682,10 @@ class Camera2Engine(
         return (sensor + if (c[CameraCharacteristics.LENS_FACING] == CameraCharacteristics.LENS_FACING_FRONT) degrees else -degrees + 360) % 360
     }
 
-    override fun startRecording(audio: Boolean, started: () -> Unit, done: ((Result<android.net.Uri>) -> Unit)?) = video.start(audio, started, done)
+    override fun startRecording(audio: Boolean, started: () -> Unit, done: ((Result<android.net.Uri>) -> Unit)?) {
+        val current = pip
+        if (Build.VERSION.SDK_INT >= 30 && current != null) current.startVideo(audio,started,done) else video.start(audio,started,done)
+    }
 
     // ---- Benchmark RECORD stage (docs/PLAN-Recording-v0.1.md 6) ----
     //
@@ -699,7 +716,10 @@ class Camera2Engine(
             setTag(if (recording) RecordSpec.tag(iteration) else RecordSpec.prepareTag(iteration))
         }.build()
 
-    override fun stopRecording() = video.stop()
+    override fun stopRecording() {
+        val current = pip
+        if (Build.VERSION.SDK_INT >= 30 && current != null) current.stopVideo() else video.stop()
+    }
 
     override val snapshot: SnapshotStatus get() = video.snapshotStatus
     override fun captureSnapshot(done: (Result<PhotoResult>) -> Unit) = video.captureSnapshot(done)
@@ -718,6 +738,21 @@ class Camera2Engine(
     }
     private fun finishClose() {
         if (finished) return
+        if (Build.VERSION.SDK_INT >= 30 && retiringPips.isNotEmpty()) {
+            if (!pipDisposing) {
+                pipDisposing = true
+                val retired = retiringPips.toList()
+                retired.forEach { old -> old.close {
+                    retiringPips.remove(old)
+                    if (retiringPips.isEmpty()) { pipDisposing = false; finishClose() }
+                } }
+            }
+            return
+        }
+        if (Build.VERSION.SDK_INT >= 30 && pip != null) {
+            if (!pipDisposing) { pipDisposing = true; pip?.close { pip = null; finishClose() } }
+            return
+        }
         finished = true
         if (releaseWait?.cancel() == true) stopReleaseWait()
         stills.close()
@@ -741,4 +776,62 @@ class Camera2Engine(
         if (spec == null && (configuration || captureSession == null)) main.post { if (active) streamsFailed(e.message ?: e.toString()) }
     }
     private fun report(message: String, ok: Boolean) { main.post { if (active) status(message, ok) } }
+
+    /** Replace capture-session outputs, never the currently open Live CameraDevice. */
+    @androidx.annotation.RequiresApi(30)
+    fun setPip(source: PipSource?, texture: SurfaceTexture?, output: LiveSize?, done: (Result<Unit>) -> Unit) {
+        handler.post {
+            val camera = device
+            if (!active || camera == null || spec != null) { main.post { done(Result.failure(IllegalStateException("Camera unavailable"))) }; return@post }
+            val previous = pip
+            if (previous != null) {
+                pip = null
+                retiringPips += previous
+                pipRestoreDone = { previous.close { retiringPips.remove(previous); main.post {
+                    if (source == null) done(Result.success(Unit)) else setPip(source,texture,output,done)
+                } } }
+                configure(camera)
+                return@post
+            }
+            if (source == null) { main.post { done(Result.success(Unit)) }; return@post }
+            try {
+                val size = checkNotNull(previewSize)
+                lateinit var added: LivePipSession
+                fun rejected(reason: String) {
+                    if (pip !== added) return
+                    setPip(null,null,null) { done(Result.failure(IllegalStateException(reason))) }
+                }
+                added = LivePipSession(context,handler,main,cameraId,source,checkNotNull(texture),checkNotNull(output),LiveSize(size.width,size.height),
+                    configureMain = { inputs ->
+                        val outputs = StreamConfiguration(inputs.mapIndexed { index, surface ->
+                            ConfiguredOutput(OutputDescriptor(if (index == 0) "preview" else "pip",OutputKind.PREVIEW,true),surface)
+                        })
+                        val configs = outputs.outputs.mapIndexed { index, output -> OutputConfiguration(output.target).apply {
+                            if (source.physical && index == 1) setPhysicalCameraId(source.id)
+                        } }
+                        try {
+                            @Suppress("DEPRECATION")
+                            camera.createCaptureSessionByOutputConfigurations(configs,object : CameraCaptureSession.StateCallback() {
+                                override fun onConfigured(value: CameraCaptureSession) {
+                                    if (!active || pip !== added) { value.close(); return }
+                                    captureSession = value; configuredOutputs = outputs
+                                    telemetry.configureCallbackStreams(sessionId,outputs.metadata())
+                                    val sizes = mapOf("preview" to size.toString(),"analysis" to null,"jpeg" to output.toString())
+                                    telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
+                                    telemetry.event(sessionId,"pip_configured",mapOf("sourceId" to source.id,"physical" to source.physical,"mainDeviceReused" to true))
+                                    main.post { if (active) streamsConfigured(sizes) }
+                                    try { value.setRepeatingRequest(previewRequest(camera,checkNotNull(chars)),liveCallback,handler) }
+                                    catch (e: Exception) { main.post { rejected(e.message ?: "PIP unavailable") } }
+                                }
+                                override fun onConfigureFailed(value: CameraCaptureSession) { value.close(); main.post { rejected("PIP combination unavailable") } }
+                            },handler)
+                        } catch (e: Exception) { main.post { rejected(e.message ?: "PIP unavailable") } }
+                    }, ready = { if (pip === added) { report("Camera2 · LIVE",true); done(Result.success(Unit)) } },
+                    failed = ::rejected, recordingChanged = recordingState, notice = notice)
+                pip = added; added.start()
+            } catch (e: Exception) { main.post { done(Result.failure(e)) } }
+        }
+    }
+
+    fun movePip(rect: PipRect) { if (Build.VERSION.SDK_INT >= 30) pip?.move(rect) }
 }

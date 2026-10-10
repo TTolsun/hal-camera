@@ -10,7 +10,7 @@ title: Live
 | 사진·연사·AEB·동영상을 촬영합니다. | [촬영](#live에서-촬영하세요) |
 | ISO·노출 시간·초점을 고정합니다. | [수동 설정](#수동-촬영-조건을-고정하세요) |
 | 출력 크기·FPS·포맷을 바꿉니다. | [스트림 설정](#live-스트림을-설정하세요) |
-| 두 물리 카메라를 함께 확인합니다. | [Dual](#두-물리-카메라를-함께-확인하세요) |
+| 여러 카메라를 함께 촬영합니다. | [Multi](#여러-카메라를-함께-촬영하세요) |
 | 보정·AF·AE를 조절합니다. | [손떨림 보정](#손떨림-보정을-선택하세요) · [초점과 노출](#초점과-노출을-조절하세요) |
 
 <p class="doc-evidence">화면 예시는 0.16.0 개발 빌드의 촬영본으로, 현재 앱과 버튼·기능이 다를 수 있습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건</a>을 확인하세요.</p>
@@ -23,7 +23,7 @@ title: Live
 
 **기본 설정에서는 사진 두 장이 저장됩니다.** YUV를 변환한 JPEG와 카메라가 만든 JPEG이며, `DCIM/HALCamera`에 있습니다. Camera2에서 출력을 하나만 켜면 해당 사진만 저장합니다. 두 엔진이 사진을 연결하는 차이는 [Engine Comparison](engine.md#사진-두-장은-어떻게-연결하나요)에 있습니다.
 
-동영상을 찍으려면 동영상 모드로 바꿉니다. 셔터를 한 번 눌러 시작하고 다시 눌러 끝냅니다. 종료 처리 중에는 셔터를 사용할 수 없습니다. 저장이 끝나면 안내 문구가 나타납니다. Camera2와 CameraX 모두 선택한 엔진에서 촬영합니다.
+동영상을 찍으려면 동영상 모드로 바꿉니다. Photo·Video를 전환하면 전체 스트림을 다시 구성하고 선택한 PIP도 복원합니다. 셔터를 한 번 눌러 시작하고 다시 눌러 끝냅니다. 종료 처리 중에는 셔터를 사용할 수 없습니다. 저장이 끝나면 안내 문구가 나타납니다. Camera2와 CameraX 모두 선택한 엔진에서 촬영합니다.
 
 <figure class="app-screenshot" id="screen-live">
 <a href="assets/screenshots/live.png" aria-label="Camera2 Live 사진 모드와 실시간 정보 원본 보기"><img src="assets/screenshots/live.png" alt="Camera2 Live 사진 모드와 실시간 정보" width="1440" height="3120" loading="lazy" decoding="async"></a>
@@ -111,7 +111,9 @@ CameraX에서는 사진 촬영 때 영상의 프레임 간격이 늘어날 수 �
 <details markdown="1" id="detail-e76a9da117" data-search-section>
 <summary>수동 촬영 설정</summary>
 
-**Camera2에서만 사용할 수 있습니다.** 상단 화살표를 펼치고 `M`을 눌러 Manual 패널을 여세요.
+**Camera2에서만 사용할 수 있습니다.** 상단 화살표를 펼치고 `M`을 눌러 Manual 패널을 여세요. 닫은 뒤에도 설정은 실시간 정보에 표시됩니다. 별도 요약 패널은 남기지 않습니다.
+
+M·EV·Flash는 도구 행을 유지한 채 선택한 버튼 아래로 펼쳐집니다. 버튼의 선택 상태와 연결 표시로 열린 패널을 구분합니다. 같은 버튼을 다시 누르거나 상단 화살표를 접으면 닫힙니다.
 
 #### ISO와 노출 시간을 고정하세요
 
@@ -125,7 +127,7 @@ CameraX에서는 사진 촬영 때 영상의 프레임 간격이 늘어날 수 �
 | --- | --- |
 | 초점을 고정합니다. | `Focus → Manual`에서 초점 거리를 diopter 단위로 조절합니다. |
 | 화이트밸런스를 고릅니다. | `WB`에서 지원되는 프리셋을 선택합니다. |
-| 설정을 유지하고 패널을 닫습니다. | `Hide` 또는 시스템 뒤로 가기를 누릅니다. |
+| 설정을 유지하고 패널을 닫습니다. | 닫기 아이콘 또는 시스템 뒤로 가기를 누릅니다. |
 | 자동 촬영으로 돌아갑니다. | `Reset`을 누르면 노출·초점·WB가 모두 자동으로 돌아갑니다. |
 
 카메라·엔진·스트림 구성을 바꾸면 수동 설정이 초기화됩니다. 프리뷰·사진·녹화·녹화 중 사진에 같은 설정을 적용하지만, 동영상 모드에서 노출 범위가 줄면 값을 조정하고 안내합니다.
@@ -174,21 +176,24 @@ P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니�
 
 </details>
 
-### 두 물리 카메라를 함께 확인하세요
+<a id="두-물리-카메라를-함께-확인하세요"></a>
+<a id="detail-e8f4afe277"></a>
+<a id="전면과-후면을-함께-촬영하세요"></a>
+### 여러 카메라를 함께 촬영하세요
 
-<details markdown="1" id="detail-e8f4afe277" data-search-section>
-<summary>두 카메라 설정</summary>
+`Live Streams → Multi → Maximum camera devices`에서 최대 동시 장치 수를 설정하고 `Apply`를 누릅니다. 기본값은 `All available`입니다. Multi 화면의 `Streams`에서도 같은 설정을 엽니다.
 
-1. Live 상단에서 Camera2 또는 CameraX를 선택하고 하단에서 `Dual · P`를 선택합니다. Camera 1은 메인 화면, Camera 2는 작은 서브 프리뷰에 표시됩니다.
-2. 카메라 선택 버튼에서 Camera 1·2의 렌즈를 고르거나 메인과 서브를 교환합니다. 하단 줌은 두 센서에 공통 적용합니다.
-3. 서브 프리뷰를 드래그하여 위치를 옮깁니다. 위치는 다음 진입에서도 유지됩니다. Camera2의 상단 펼침 버튼에서는 메인 센서의 노출·초점을 조절합니다.
-4. Camera2의 `Dual · P`에서 셔터를 누르면 두 센서 사진을 함께 저장합니다. `Dual · V`에서는 녹화를 정지하면 카메라 ID가 포함된 무음 MP4 두 개를 저장합니다. CameraX는 두 센서 사진을 지원하지 않습니다.
-5. 기존 위치의 크기 표시나 측정값을 눌러 physical ID, 실제 크기, 화면 FPS, 메타데이터 누락과 timestamp를 확인합니다. `Photo` 또는 `Video`를 누르면 해당 Live 모드로 돌아갑니다.
+Live의 `Multi · P`(사진) 또는 `Multi · V`(영상)에서 카메라 조합을 선택합니다. Android 11 이상이며 기기가 독립 장치의 동시 실행을 지원해야 합니다. CameraX에서는 Camera2로 진입합니다.
 
-논리 멀티 카메라와 선택한 출력 조합을 지원하는 기기에서 사용할 수 있습니다. 두 파일의 시작 시각이나 길이가 같다고 보장하지 않습니다.
+1. 상단에서 Logical Camera ID 조합을 선택합니다. 장치별로 분할된 프리뷰가 열립니다. 조합 선택 창의 `Details`에서 구성 상태를 확인합니다.
+2. 각 화면의 `PIP`에서 Physical 또는 다른 Service 카메라 하나를 선택합니다. 전면 카메라도 선택할 수 있습니다. `Turn off PIP`로 합성을 끕니다.
+3. 보조 영상을 드래그하거나 해당 화면의 `Move`로 위치를 바꿉니다. 보조 영상은 부모 Logical 화면 안에서만 이동합니다.
+4. `Multi · P`에서는 `Photo`로 촬영합니다. `Multi · V`에서는 `Record`로 녹화를 시작하고 `Stop`으로 저장합니다. Multi의 결과는 장치별 파일이며 PIP를 켠 장치에는 그 화면의 합성 구도가 저장됩니다. 조작 버튼과 카메라 라벨은 저장하지 않습니다.
+5. `Live` 또는 뒤로 가기로 돌아갑니다. 모든 장치와 합성 출력의 종료를 확인한 뒤 기존 Live 프리뷰를 복구합니다.
 
-</details>
+Single에서는 API 선택 옆의 `PIP`에서 보조 카메라 하나를 선택합니다. Camera2에서는 현재 Live 화면과 CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열며, Physical ID는 현재 장치에 출력을 추가합니다. 기존 셔터와 Photo·Video 모드로 합성 사진·영상을 저장하고, 보조 화면을 드래그할 수 있습니다. CameraX에서는 Camera2 전환을 확인하므로 이 전환은 기존 CameraX 장치를 유지하지 않습니다.
 
+JPEG와 MP4는 `DCIM/HALCamera`, Multi 사진 묶음 JSON은 `Download/HALCamera`에 저장합니다. Single Live PIP의 영상은 기존 녹음 권한으로 오디오를 포함하며, Multi 영상은 무음입니다. PIP 사진은 화면용 합성 해상도이며 Flash Auto·On과 AEB는 사용할 수 없습니다. 조명은 Off·Torch를 선택합니다. 결과 안내의 `Details`에서 카메라별 저장 결과를 확인할 수 있습니다. 센서 동기 촬영은 보장하지 않습니다.
 ### 손떨림 보정을 선택하세요
 
 <details markdown="1" id="detail-aa6a89b2d7" data-search-section>
