@@ -118,7 +118,7 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 
 명시한 Live 설정도 작은 크기로 대체하지 않습니다.
 
-`LiveStreamSupport`는 개별 크기·일반 FPS 범위·녹화 인코더 지원을 검사합니다. PHOTO는 Preview FPS의 하한과 최소 프레임 시간을 대조하고 VIDEO는 Recording FPS를 사용합니다. PHOTO의 녹화 선택과 VIDEO의 Preview FPS 선택은 비활성화합니다. PIP 녹화 인코더는 H.264·30fps·합성 크기로 고정하며 카메라 FPS는 템플릿 Auto를 유지합니다. 인코더의 30fps를 미광고 카메라 AE 범위로 강제하지 않습니다.
+`LiveStreamSupport`는 개별 크기·일반 FPS 범위·녹화 인코더 지원을 검사합니다. 화면의 FPS 한 항목을 PHOTO에서는 프리뷰 범위에, VIDEO에서는 녹화 프레임률에 연결합니다. PHOTO는 FPS 하한과 최소 프레임 시간을 대조하며 녹화 포맷·해상도 선택은 비활성화합니다. PIP 녹화 인코더는 H.264·30fps·합성 크기로 고정하며 카메라 FPS는 템플릿 Auto를 유지합니다. 인코더의 30fps를 미광고 카메라 AE 범위로 강제하지 않습니다.
 
 Android 10 이상에서는 `isSessionConfigurationSupported`로 출력 조합을 조회합니다.
 

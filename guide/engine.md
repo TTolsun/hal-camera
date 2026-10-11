@@ -59,7 +59,7 @@ PIP와 Multi는 Android 11 이상에서 제공합니다. Single PIP는 합성 JP
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-11 @ `f8f591ae` · TTolsun (approval delegated to Codex)
+- 검토 2026-10-11 @ `d7d13937` · TTolsun (approval delegated to Codex)
 
 </details>
 
@@ -215,7 +215,7 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-11 @ `f8f591ae` · TTolsun (approval delegated to Codex)
+- 검토 2026-10-11 @ `d7d13937` · TTolsun (approval delegated to Codex)
 
 </details>
 
@@ -313,7 +313,7 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 
 명시한 Live 설정도 작은 크기로 대체하지 않습니다.
 
-`LiveStreamSupport`는 개별 크기·일반 FPS 범위·녹화 인코더 지원을 검사합니다. PHOTO는 Preview FPS의 하한과 최소 프레임 시간을 대조하고 VIDEO는 Recording FPS를 사용합니다. PHOTO의 녹화 선택과 VIDEO의 Preview FPS 선택은 비활성화합니다. PIP 녹화 인코더는 H.264·30fps·합성 크기로 고정하며 카메라 FPS는 템플릿 Auto를 유지합니다. 인코더의 30fps를 미광고 카메라 AE 범위로 강제하지 않습니다.
+`LiveStreamSupport`는 개별 크기·일반 FPS 범위·녹화 인코더 지원을 검사합니다. 화면의 FPS 한 항목을 PHOTO에서는 프리뷰 범위에, VIDEO에서는 녹화 프레임률에 연결합니다. PHOTO는 FPS 하한과 최소 프레임 시간을 대조하며 녹화 포맷·해상도 선택은 비활성화합니다. PIP 녹화 인코더는 H.264·30fps·합성 크기로 고정하며 카메라 FPS는 템플릿 Auto를 유지합니다. 인코더의 30fps를 미광고 카메라 AE 범위로 강제하지 않습니다.
 
 Android 10 이상에서는 `isSessionConfigurationSupported`로 출력 조합을 조회합니다.
 
@@ -597,7 +597,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-11 @ `f8f591ae` · TTolsun (approval delegated to Codex)
+- 검토 2026-10-11 @ `d7d13937` · TTolsun (approval delegated to Codex)
 
 </details>
 
@@ -733,7 +733,7 @@ sequenceDiagram
 
 명시한 녹화 크기는 지원 Quality의 해상도와 정확히 일치해야 하며, bind 후 실제 해상도도 검사합니다. 설정 화면의 후보는 CameraX Quality 해상도와 하드웨어의 크기·FPS 조건을 교차해 만듭니다. FPS와 비트레이트는 요청값이고 실제 결과와 구분합니다. CameraX 1.6.2의 공개 Recorder API는 녹화 코덱을 직접 선택하지 않으므로 Format과 Live 표시는 Auto입니다.
 
-PHOTO는 Preview FPS를 Preview에 요청하고 VIDEO는 VideoCapture의 Recording FPS를 사용합니다. PHOTO의 녹화 항목과 VIDEO의 별도 Preview FPS는 선택할 수 없습니다. CameraX PIP의 Preview FPS는 Auto이며 합성 녹화는 H.264·30fps·합성 크기로 고정합니다.
+화면의 FPS 한 항목을 PHOTO에서는 Preview의 요청 범위에, VIDEO에서는 VideoCapture의 목표 프레임률에 연결합니다. PHOTO의 녹화 포맷·해상도는 선택할 수 없습니다. CameraX PIP의 카메라 FPS는 Auto이며 합성 녹화는 H.264·30fps·합성 크기로 고정합니다.
 
 녹화 중 사진은 선택한 JPEG 소스를 따릅니다. 카메라 JPEG는 함께 bind한 ImageCapture의 `takePicture`로, YUV 앱 변환은 ImageAnalysis 프레임으로 JPEG 한 장을 저장합니다.
 
@@ -814,7 +814,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-11 @ `f8f591ae` · TTolsun (approval delegated to Codex)
+- 검토 2026-10-11 @ `d7d13937` · TTolsun (approval delegated to Codex)
 
 </details>
 
@@ -834,11 +834,11 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-11 @ `f8f591ae` · TTolsun (approval delegated to Codex) |
-| 원고 `contract` | 최신 | 검토 2026-10-11 @ `f8f591ae` · TTolsun (approval delegated to Codex) |
-| 원고 `camera2` | 최신 | 검토 2026-10-11 @ `f8f591ae` · TTolsun (approval delegated to Codex) |
-| 원고 `camerax` | 최신 | 검토 2026-10-11 @ `f8f591ae` · TTolsun (approval delegated to Codex) |
-| 원고 `comparison` | 최신 | 검토 2026-10-11 @ `f8f591ae` · TTolsun (approval delegated to Codex) |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-11 @ `d7d13937` · TTolsun (approval delegated to Codex) |
+| 원고 `contract` | 최신 | 검토 2026-10-11 @ `d7d13937` · TTolsun (approval delegated to Codex) |
+| 원고 `camera2` | 최신 | 검토 2026-10-11 @ `d7d13937` · TTolsun (approval delegated to Codex) |
+| 원고 `camerax` | 최신 | 검토 2026-10-11 @ `d7d13937` · TTolsun (approval delegated to Codex) |
+| 원고 `comparison` | 최신 | 검토 2026-10-11 @ `d7d13937` · TTolsun (approval delegated to Codex) |
 
 <!-- omm:end id=status -->
 

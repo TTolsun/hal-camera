@@ -11,6 +11,7 @@ import dev.halcamera.camera.*
 /** A draft is committed only by Apply; dismissing a selector or this panel never changes the camera. */
 object LiveStreamSettingsView {
     private data class JpegChoice(val size: LiveSize?, val fromYuv: Boolean = false)
+    private data class FpsChoice(val range: LiveFps? = null, val rate: Int? = null)
     data class Page(val root: LinearLayout, val scroll: ScrollView)
     fun create(context: Context, support: LiveStreamSupport, current: LiveStreamSettings,
              actual: String, restore: (() -> Unit)?, back: () -> Unit, changed: (LiveStreamSettings) -> Unit, apply: (LiveStreamSettings) -> Unit,
@@ -139,25 +140,30 @@ object LiveStreamSettingsView {
         }
         val timing = section("Frame Rate")
         val autoPipFps = pipActive && (engine == "CameraX" || videoMode)
-        choice(timing, "Preview FPS", { listOf(null) + support.fps }, { fps }, { fps = it },
-            hint = { if (autoPipFps) "Auto in PIP" else if (videoMode) "Uses Recording FPS" else null },
-            enabled = { !videoMode && !autoPipFps }) {
-            if (autoPipFps) "Auto" else if (videoMode) "Recording FPS" else it?.toString() ?: "Auto"
+        val canEditRecording = videoMode && !pipActive
+        choice(timing, "FPS", {
+            if (videoMode) video.rates().map { FpsChoice(rate = it) }
+            else listOf(FpsChoice()) + support.fps.map { FpsChoice(range = it) }
+        }, {
+            if (videoMode) FpsChoice(rate = if (pipActive) 30 else video.value?.fps)
+            else FpsChoice(range = fps.takeUnless { autoPipFps })
+        }, {
+            if (videoMode) it.rate?.let(video::selectRate) else fps = it.range
+        }, hint = {
+            if (videoMode && pipActive) "Fixed in PIP · Camera Auto" else if (autoPipFps) "Auto in PIP" else null
+        }, enabled = { if (videoMode) canEditRecording else !autoPipFps }) {
+            if (videoMode) it.rate?.let { rate -> "$rate fps" } ?: "Capabilities unavailable"
+            else it.range?.toString() ?: "Auto"
         }
         val recording = section("Recording")
-        val canEditRecording = videoMode && !pipActive
         fun recordingHint() = if (!videoMode) "Video mode only" else if (pipActive) "Fixed in PIP" else null
         choice(recording, "Format", { video.formats }, { video.value?.codec.orEmpty() }, video::selectFormat,
             enabled = { canEditRecording }) {
             if (pipActive) "H264" else it.ifEmpty { "Capabilities unavailable" }
         }
         choice(recording, "Resolution", { video.sizes() }, { video.value?.size }, { it?.let(video::selectSize) },
-            enabled = { canEditRecording }) {
-            if (pipActive) "Composite size" else it?.toString() ?: "Capabilities unavailable"
-        }
-        choice(recording, "Recording FPS", { video.rates() }, { video.value?.fps }, { it?.let(video::selectRate) },
             hint = { recordingHint() }, enabled = { canEditRecording }) {
-            if (pipActive) "30 fps" else it?.let { rate -> "$rate fps" } ?: "Capabilities unavailable"
+            if (pipActive) "Composite size" else it?.toString() ?: "Capabilities unavailable"
         }
         val stabilizationGroup = section("Stabilization")
         choice(stabilizationGroup, "Mode", { if (policy.allowsStabilization) support.stabilization else emptyList() }, { stabilization }, { stabilization = it }) { it.label }
