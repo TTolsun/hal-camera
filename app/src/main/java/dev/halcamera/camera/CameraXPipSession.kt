@@ -45,6 +45,7 @@ internal class CameraXPipSession(
     private val notice: (String) -> Unit,
     private val videoMode: Boolean = false,
     private val stabilization: LiveStabilization = LiveStabilization.AUTO,
+    private val previewSizes: List<LiveSize>? = null,
 ) {
     private val executor = java.util.concurrent.Executor { main.post(it) }
     private val requests = arrayOfNulls<SurfaceRequest>(2)
@@ -66,7 +67,7 @@ internal class CameraXPipSession(
     fun start() {
         try {
             val previews = selectors.mapIndexed { index, _ ->
-                val builder = cameraXPipPreviewBuilder()
+                val builder = cameraXPipPreviewBuilder(previewSizes?.get(index))
                 if (index == 0) Camera2Interop.Extender(builder).setSessionCaptureCallback(captureCallback)
                 val mode = LiveModePolicy.forVideo(videoMode).stabilization(if (index == 0) stabilization else null)
                 val interop = Camera2Interop.Extender(builder)
@@ -169,7 +170,8 @@ internal class CameraXPipSession(
 }
 
 /** Use the same resolution filter for the native support query and the actual PIP use cases. */
-internal fun cameraXPipPreviewBuilder() = Preview.Builder().setTargetRotation(Surface.ROTATION_0)
+internal fun cameraXPipPreviewBuilder(size: LiveSize? = null) = Preview.Builder().setTargetRotation(Surface.ROTATION_0)
     .setResolutionSelector(ResolutionSelector.Builder().setResolutionFilter { sizes, _ ->
-        sizes.filter { it.width.toLong() * it.height <= 1280L * 720 }
+        sizes.filter { if (size != null) it.width == size.width && it.height == size.height
+            else it.width.toLong() * it.height <= 1280L * 720 }
     }.build())

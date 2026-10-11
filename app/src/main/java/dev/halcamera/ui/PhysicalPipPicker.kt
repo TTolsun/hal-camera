@@ -32,7 +32,7 @@ internal class PhysicalPipPicker(private val context: Context, private val manag
                 CameraLabel.lens(it.role),CameraLabel.angle(it.role,it.equivalentFocalMm)).joinToString(" · ") }
                 ?.takeIf { it.isNotEmpty() } ?: "Camera"
             LiveChoiceSheet.Choice("${if (source.physical) "Physical" else "Service"} · ID ${source.id}",
-                listOfNotNull(name,source.unavailableReason ?: "Checking stream support…".takeIf { checking }).joinToString("\n"),
+                listOfNotNull(name,source.unavailableReason ?: "Checking…".takeIf { checking } ?: source.supportNote).joinToString("\n"),
                 source.selectable && !checking)
         }
         LiveChoiceSheet.show(context,"PIP",choices(check != null),ordered.indexOfFirst { it.key == selected?.key },

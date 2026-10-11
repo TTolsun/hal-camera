@@ -20,6 +20,13 @@ internal fun readPipPreviewSize(manager: CameraManager, id: String): LiveSize? =
 internal fun queryPipSession(manager: CameraManager, camera: CameraDevice, source: PipSource,
                              preview: LiveSize, retained: List<ConfiguredOutput<Surface>>, handler: Handler): PipStreamSupport {
     val secondary = readPipPreviewSize(manager,source.id) ?: return PipStreamSupport.UNSUPPORTED
+    return queryPipOutputs(manager,camera.id,source,preview,secondary,retained,handler,camera)
+}
+
+@RequiresApi(30)
+internal fun queryPipOutputs(manager: CameraManager, parent: String, source: PipSource,
+                            preview: LiveSize, secondary: LiveSize, retained: List<ConfiguredOutput<Surface>>,
+                            handler: Handler, camera: CameraDevice? = null): PipStreamSupport {
     val textures = mutableListOf<SurfaceTexture>()
     val surfaces = mutableListOf<Surface>()
     try {
@@ -38,8 +45,8 @@ internal fun queryPipSession(manager: CameraManager, camera: CameraDevice, sourc
                 override fun onConfigureFailed(session: CameraCaptureSession) = Unit
             })
         val mainConfig = config(mainOutputs.outputs)
-        val supported = if (source.physical) camera.isSessionConfigurationSupported(mainConfig)
-        else manager.isConcurrentSessionConfigurationSupported(mapOf(camera.id to mainConfig,
+        val supported = if (source.physical) checkNotNull(camera).isSessionConfigurationSupported(mainConfig)
+        else manager.isConcurrentSessionConfigurationSupported(mapOf(parent to mainConfig,
             source.id to config(listOf(ConfiguredOutput(OutputDescriptor("pip",OutputKind.PREVIEW,true),surfaces[1])))))
         return if (supported) PipStreamSupport.SUPPORTED else PipStreamSupport.UNSUPPORTED
     } catch (_: IllegalArgumentException) {
@@ -50,4 +57,24 @@ internal fun queryPipSession(manager: CameraManager, camera: CameraDevice, sourc
         surfaces.forEach { it.release() }
         textures.forEach { it.release() }
     }
+}
+
+/** Query both devices in concurrent mode, and return the sizes the actual CameraX previews must use. */
+@RequiresApi(30)
+internal fun queryCameraXPip(manager: CameraManager, parent: String, source: PipSource,
+                            analysis: LiveSize?, handler: Handler): Pair<PipStreamSupport,List<LiveSize>?> {
+    fun sizes(id: String) = manager.getCameraCharacteristics(id)[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
+        ?.getOutputSizes(SurfaceTexture::class.java)?.map { LiveSize(it.width,it.height) }.orEmpty()
+        .filter { it.width.toLong()*it.height <= 1280L*720 }.sortedByDescending { it.width.toLong()*it.height }
+    val mainSizes = sizes(parent)
+    val pipSizes = sizes(source.id)
+    if (mainSizes.isEmpty() || pipSizes.isEmpty()) return PipStreamSupport.UNSUPPORTED to null
+    val reader = analysis?.let { android.media.ImageReader.newInstance(it.width,it.height,android.graphics.ImageFormat.YUV_420_888,2) }
+    try {
+        val retained = reader?.let { listOf(ConfiguredOutput(OutputDescriptor("analysis",OutputKind.YUV,true),it.surface)) }.orEmpty()
+        return choosePipPreviewSizes(mainSizes,pipSizes) { mainSize,pipSize ->
+            try { queryPipOutputs(manager,parent,source,mainSize,pipSize,retained,handler) }
+            catch (_: Exception) { PipStreamSupport.UNKNOWN }
+        }
+    } finally { reader?.close() }
 }

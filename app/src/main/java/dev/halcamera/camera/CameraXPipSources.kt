@@ -10,8 +10,8 @@ internal object CameraXPipSources {
     fun forParent(parent: String, combinations: List<List<String>>, candidates: List<PipSource>): List<PipSource> {
         val supported = forParent(parent,combinations).map { it.key }.toSet()
         return candidates.map { source -> source.copy(unavailableReason = when {
-            source.physical -> "Physical PIP requires Camera2"
-            source.key !in supported -> "Concurrent use with the main camera is not supported by CameraX"
+            source.physical -> "Camera2 only"
+            source.key !in supported -> "Cannot run together"
             else -> source.unavailableReason
         }) }
     }

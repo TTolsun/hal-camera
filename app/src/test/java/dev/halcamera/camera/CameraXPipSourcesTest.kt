@@ -23,7 +23,7 @@ class CameraXPipSourcesTest {
         assertEquals(candidates.map { it.key },sources.map { it.key })
         assertTrue(sources[0].selectable)
         assertFalse(sources[1].selectable)
-        assertEquals("Physical PIP requires Camera2",sources[2].unavailableReason)
+        assertEquals("Camera2 only",sources[2].unavailableReason)
         assertTrue(CameraXPipSources.forParent("0",emptyList(),candidates).none { it.selectable })
     }
 

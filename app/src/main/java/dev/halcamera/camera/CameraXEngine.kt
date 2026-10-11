@@ -403,39 +403,51 @@ class CameraXEngine(
 
     private fun report(message: String, ok: Boolean) { handler.post { if (active) status(message, ok) } }
 
-    private fun checkedPipSource(source: PipSource): PipSource = source.withStreamSupport {
-        val provider = provider
-        if (!active || provider == null) return@withStreamSupport PipStreamSupport.UNKNOWN
-        val infos = provider.availableCameraInfos.associateBy { Camera2CameraInfo.from(it).cameraId }
-        val supported = listOf(cameraId,source.id).mapIndexed { index,id ->
-            val info = infos[id] ?: return@withStreamSupport PipStreamSupport.UNKNOWN
-            if (readPipPreviewSize(context.getSystemService(CameraManager::class.java),id) == null)
-                return@withStreamSupport PipStreamSupport.UNSUPPORTED
-            val useCases = listOf<UseCase>(cameraXPipPreviewBuilder().build()) +
-                if (index == 0) listOfNotNull(analysis) else emptyList()
-            info.isSessionConfigSupported(SessionConfig.Builder(useCases).build())
-        }.all { it }
-        if (supported) PipStreamSupport.SUPPORTED else PipStreamSupport.UNSUPPORTED
+    private val pipPreviewSizes = java.util.concurrent.ConcurrentHashMap<String,List<LiveSize>>()
+    private var pipChecking = false
+    private fun checkedPipSource(source: PipSource, analysisSize: LiveSize?): PipSource = source.withStreamSupport {
+        pipPreviewSizes.remove(source.key)
+        if (!active || provider == null || android.os.Build.VERSION.SDK_INT < 30) return@withStreamSupport PipStreamSupport.UNKNOWN
+        val (support,sizes) = queryCameraXPip(context.getSystemService(CameraManager::class.java),cameraId,source,analysisSize,handler)
+        sizes?.let { pipPreviewSizes[source.key] = it }
+        support
     }
 
+    private fun pipAnalysisSize(): LiveSize? = if (analysis == null) null else liveStreams?.yuv ?:
+        analysis?.resolutionInfo?.resolution?.let { LiveSize(it.width,it.height) }
+
     override fun checkPipSources(done: (List<PipSource>) -> Unit) {
-        handler.post { done(pipSources.map(::checkedPipSource)) }
+        val size = pipAnalysisSize()
+        executor.execute {
+            val checked = pipSources.map { checkedPipSource(it,size) }
+            handler.post { done(checked) }
+        }
     }
 
     override fun setPip(source: PipSource?, texture: android.graphics.SurfaceTexture?, output: LiveSize?,
         position: PipRect, done: (Result<Unit>) -> Unit) {
+        if (pipChecking) { done(Result.failure(IllegalStateException("Camera busy"))); return }
+        if (source == null) { applyPip(source,texture,output,position,done); return }
+        pipChecking = true
+        val size = pipAnalysisSize()
+        executor.execute {
+            val checked = checkedPipSource(source,size)
+            handler.post {
+                pipChecking = false
+                if (!checked.selectable) done(Result.failure(IllegalArgumentException(checked.unavailableReason)))
+                else applyPip(source,texture,output,position,done)
+            }
+        }
+    }
+
+    private fun applyPip(source: PipSource?, texture: android.graphics.SurfaceTexture?, output: LiveSize?,
+                         position: PipRect, done: (Result<Unit>) -> Unit) {
         val provider = provider
         if (!active || provider == null || pipChanging || stills.inFlight || video.busy || pip?.busy == true) {
             done(Result.failure(IllegalStateException("Camera busy"))); return
         }
         if (source != null && pipSources.none { it.key == source.key && it.selectable }) {
             done(Result.failure(IllegalArgumentException("PIP combination unavailable"))); return
-        }
-        if (source != null) {
-            val checked = checkedPipSource(source)
-            if (!checked.selectable) {
-                done(Result.failure(IllegalArgumentException(checked.unavailableReason))); return
-            }
         }
         pipChanging = true
         fun restore(result: Result<Unit>) {
@@ -479,7 +491,7 @@ class CameraXEngine(
                 }, failed = { reason ->
                     if (pip === added) added.close { restore(Result.failure(IllegalStateException(reason))) }
                 }, recordingChanged = recordingState,
-                notice = { message -> if (active) notice(message) }, videoMode = videoMode,
+                notice = { message -> if (active) notice(message) }, previewSizes = pipPreviewSizes[source.key], videoMode = videoMode,
                 stabilization = liveStreams?.stabilization ?: LiveStabilization.AUTO)
             pip = added
             added.start()

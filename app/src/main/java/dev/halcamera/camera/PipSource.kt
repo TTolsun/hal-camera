@@ -1,7 +1,8 @@
 package dev.halcamera.camera
 
 /** A physical output belongs to the parent device; a service source owns a separate device. */
-data class PipSource(val id: String, val physical: Boolean, val label: String, val unavailableReason: String? = null) {
+data class PipSource(val id: String, val physical: Boolean, val label: String,
+                     val unavailableReason: String? = null, val supportNote: String? = null) {
     val key get() = "${if (physical) "physical" else "service"}:$id"
     val selectable get() = unavailableReason == null
 }
@@ -10,10 +11,10 @@ data class PipSource(val id: String, val physical: Boolean, val label: String, v
 internal object PipAvailability {
     fun serviceReason(devices: Set<String>, combinations: Set<Set<String>>): String? =
         if (combinations.any { it.containsAll(devices) }) null
-        else "Concurrent use with the main camera is not supported"
+        else "Cannot run together"
 }
 
-/** Unknown support is kept visible but cannot be selected until it can be verified. */
+/** Unsupported is blocked; an unavailable query must not hide usable combinations on another device. */
 internal enum class PipStreamSupport { SUPPORTED, UNSUPPORTED, UNKNOWN }
 
 internal fun PipSource.withStreamSupport(query: () -> PipStreamSupport): PipSource {
@@ -21,15 +22,27 @@ internal fun PipSource.withStreamSupport(query: () -> PipStreamSupport): PipSour
     val support = try { query() } catch (_: Exception) { PipStreamSupport.UNKNOWN }
     return copy(unavailableReason = when (support) {
         PipStreamSupport.SUPPORTED -> null
-        PipStreamSupport.UNSUPPORTED -> "The current PIP resolution / stream combination is not supported"
-        PipStreamSupport.UNKNOWN -> "Stream support cannot be verified on this device"
-    })
+        PipStreamSupport.UNSUPPORTED -> "Unsupported streams"
+        PipStreamSupport.UNKNOWN -> null
+    }, supportNote = "Not verified".takeIf { support == PipStreamSupport.UNKNOWN })
 }
 
 /** Shared by the support query and actual compositor input allocation. */
 internal fun pipPreviewSize(sizes: List<LiveSize>): LiveSize? = sizes
     .filter { it.width.toLong() * it.height <= 1280L * 720 }
     .maxByOrNull { it.width.toLong() * it.height }
+
+/** Keep smaller supported options available instead of rejecting a source after its largest size fails. */
+internal fun choosePipPreviewSizes(main: List<LiveSize>, secondary: List<LiveSize>,
+                                  query: (LiveSize,LiveSize) -> PipStreamSupport): Pair<PipStreamSupport,List<LiveSize>?> {
+    var unknown = false
+    for (mainSize in main) for (pipSize in secondary) {
+        val support = query(mainSize,pipSize)
+        if (support == PipStreamSupport.SUPPORTED) return support to listOf(mainSize,pipSize)
+        if (support == PipStreamSupport.UNKNOWN) unknown = true
+    }
+    return (if (unknown) PipStreamSupport.UNKNOWN else PipStreamSupport.UNSUPPORTED) to null
+}
 
 internal data class PipInputRoute(val deviceId: String, val physicalId: String? = null)
 

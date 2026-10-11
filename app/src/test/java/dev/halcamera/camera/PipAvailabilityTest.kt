@@ -32,11 +32,13 @@ class PipAvailabilityTest {
         }
     }
 
-    @Test fun `unavailable queries do not falsely advertise stream support`() {
+    @Test fun `unavailable queries preserve potentially usable combinations without claiming verified support`() {
         val source = PipSource("physical-wide",true,"Wide")
-        assertFalse(source.withStreamSupport { PipStreamSupport.UNKNOWN }.selectable)
-        assertFalse(source.withStreamSupport { throw UnsupportedOperationException() }.selectable)
-        assertFalse(source.withStreamSupport { throw IllegalStateException("Camera closed") }.selectable)
+        val results = listOf(source.withStreamSupport { PipStreamSupport.UNKNOWN },
+            source.withStreamSupport { throw UnsupportedOperationException() },
+            source.withStreamSupport { throw IllegalStateException("Camera closed") })
+        assertTrue(results.all { it.selectable && it.supportNote == "Not verified" })
+        assertNull(source.withStreamSupport { PipStreamSupport.SUPPORTED }.supportNote)
     }
 
     @Test fun `metadata rejection never invokes a session query`() {
@@ -59,5 +61,25 @@ class PipAvailabilityTest {
         assertNull(pipPreviewSize(listOf(LiveSize(1920,1080))))
         assertNull(pipPreviewSize(emptyList()))
         assertEquals(LiveSize(1280,720),pipPreviewSize(listOf(LiveSize(640,480),LiveSize(1920,1080),LiveSize(1280,720))))
+    }
+
+    @Test fun `CameraX keeps a source available when a smaller concurrent preview pair works`() {
+        val large = LiveSize(1280,720)
+        val small = LiveSize(640,480)
+        val result = choosePipPreviewSizes(listOf(large,small),listOf(large,small)) { main,pip ->
+            if (main == small && pip == small) PipStreamSupport.SUPPORTED else PipStreamSupport.UNSUPPORTED
+        }
+        assertEquals(PipStreamSupport.SUPPORTED,result.first)
+        assertEquals(listOf(small,small),result.second)
+    }
+
+    @Test fun `all concurrent pairs rejected blocks source while an unavailable query remains unknown`() {
+        val size = LiveSize(1280,720)
+        assertEquals(PipStreamSupport.UNSUPPORTED,choosePipPreviewSizes(listOf(size),listOf(size)) { _,_ ->
+            PipStreamSupport.UNSUPPORTED
+        }.first)
+        assertEquals(PipStreamSupport.UNKNOWN,choosePipPreviewSizes(listOf(size),listOf(size)) { _,_ ->
+            PipStreamSupport.UNKNOWN
+        }.first)
     }
 }

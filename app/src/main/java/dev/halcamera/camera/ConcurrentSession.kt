@@ -41,8 +41,8 @@ fun readPipSources(manager: CameraManager, parent: String): List<PipSource> {
         val service = manager.cameraIdList.filter { it != parent }.map { id ->
             val camera = runCatching { readConcurrentCamera(manager,id) }.getOrNull()
             val reason = when {
-                camera == null -> "Camera capabilities unavailable"
-                camera.previews.isEmpty() -> "No preview stream available"
+                camera == null -> "Unavailable"
+                camera.previews.isEmpty() -> "No preview"
                 else -> PipAvailability.serviceReason(setOf(parent,id),combinations)
             }
             PipSource(id,false,"${camera?.label ?: "Camera $id"} · Service",reason)
