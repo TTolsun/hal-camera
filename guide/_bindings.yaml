@@ -584,6 +584,7 @@ sources:
       - app/src/main/java/dev/halcamera/cli/CliCommandSpec.kt
       - app/src/main/java/dev/halcamera/cli/CliExecution.kt
       - app/src/main/java/dev/halcamera/cli/CliQueries.kt
+      - app/src/main/java/dev/halcamera/cli/CliEvents.kt
       - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
       - app/src/main/java/dev/halcamera/cli/CommandStore.kt
       - app/src/main/java/dev/halcamera/cli/CtsController.kt
@@ -607,6 +608,7 @@ sources:
           - app/src/main/java/dev/halcamera/cli/CliCommandSpec.kt
           - app/src/main/java/dev/halcamera/cli/CliExecution.kt
           - app/src/main/java/dev/halcamera/cli/CliQueries.kt
+          - app/src/main/java/dev/halcamera/cli/CliEvents.kt
       cli-request/operations:
         evidence:
           - app/src/main/java/dev/halcamera/cli/CliOptions.kt

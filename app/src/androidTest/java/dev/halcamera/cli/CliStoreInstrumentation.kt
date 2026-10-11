@@ -187,6 +187,22 @@ class CliStoreInstrumentation : Instrumentation() {
                 org.json.JSONArray().put(JSONObject().put("source_uri", "file:///private").put("artifact_id", "file-0")))
             val public = CliJson.publicRecord(privateRecord)
             check(!public.has("request") && !public.getJSONArray("artifacts").getJSONObject(0).has("source_uri")); passed++
+
+            val clockBeyondDouble = 9_007_199_254_740_993L
+            val callbackValues = mapOf("streams" to listOf("preview"))
+            val callbackRows = CliJson.of(listOf(
+                CliEvents.toMap(dev.halcamera.telemetry.Event(clockBeyondDouble, "main", "capture_started", 7, clockBeyondDouble, callbackValues)),
+                CliEvents.toMap(dev.halcamera.telemetry.Event(clockBeyondDouble + 1, "main:pip:secondary", "capture_started", 7, Long.MAX_VALUE, callbackValues))
+            )) as org.json.JSONArray
+            val wireRows = org.json.JSONArray(callbackRows.toString())
+            check(wireRows.getJSONObject(0).getString("session_id") == "main" &&
+                wireRows.getJSONObject(1).getString("session_id") == "main:pip:secondary" &&
+                wireRows.getJSONObject(0).getLong("frame_number") == 7L &&
+                wireRows.getJSONObject(0).getString("sensor_timestamp_ns") == clockBeyondDouble.toString() &&
+                wireRows.getJSONObject(1).getString("sensor_timestamp_ns") == Long.MAX_VALUE.toString()); passed++
+            val unavailable = CliJson.of(CliEvents.toMap(dev.halcamera.telemetry.Event(10, "main", "closed"))) as JSONObject
+            check(unavailable.has("frame_number") && unavailable.isNull("frame_number") &&
+                unavailable.has("sensor_timestamp_ns") && unavailable.isNull("sensor_timestamp_ns")); passed++
             passed += CliFlowChecks.run()
             finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "CLI_STORE_TESTS_PASSED=$passed\n") })
         } catch (error: Throwable) {

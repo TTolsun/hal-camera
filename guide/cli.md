@@ -154,6 +154,8 @@ adb shell sh /data/local/tmp/halcam preview --camera 0 --mode Video --video-size
 
 `live info`, `meter`, `events`, `preview stop`, `live set/reset`은 현재 열린 Live 또는 Dual 화면에 적용됩니다. 엔진이 지원하지 않는 제어는 거부됩니다.
 
+`live info`의 이벤트는 `session_id`로 메인·Service PIP를 구분하고 `frame_number`·`sensor_timestamp_ns`로 같은 세션의 콜백을 연결합니다. 없는 값은 `null`이며, 앱 관측 시각인 `at_ns`와 센서 시각은 각각 문자열로 보존합니다. 센서 시각을 앱 시각과 비교하려면 해당 카메라의 timestamp source가 REALTIME인지 확인해야 합니다.
+
 </details>
 
 ## 벤치마크를 실행하세요

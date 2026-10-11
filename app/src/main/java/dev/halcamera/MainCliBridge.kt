@@ -104,7 +104,7 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
             }
             "live.info" -> cli.complete(command.id, dev.halcamera.cli.CliJson.of(mapOf("camera_id" to cameraId, "engine" to engineName,
                 "ready" to ready, "zoom" to zoomRatio, "streams" to streamInfo(), "controls" to controlBar.controls.toString(),
-                "events" to recorder.snapshot(1_000_000_000L).takeLast(100).map { mapOf("kind" to it.kind, "at_ns" to it.atNs.toString(), "values" to it.values) })) as org.json.JSONObject)
+                "events" to dev.halcamera.cli.CliEvents.recent(recorder))) as org.json.JSONObject)
             "events" -> {
                 if (!recorder.trigger(command.id)) throw dev.halcamera.cli.CliFailure("BUSY", "Events are already being saved")
                 cli.state(command.id, "running")
