@@ -130,7 +130,7 @@ internal class LivePipSession(
             else {
                 val secondaryOutputs = StreamConfiguration(listOf(ConfiguredOutput(
                     OutputDescriptor("preview",OutputKind.PREVIEW,true,eventKind = "pip_preview_available"),inputs[1])) + listOfNotNull(photo?.output))
-                serviceTelemetry?.configure(secondaryOutputs, composedRecording = videoMode)
+                serviceTelemetry?.configure(secondaryOutputs)
                 try {
                     val callback=object : CameraCaptureSession.StateCallback() {
                         override fun onConfigured(session: CameraCaptureSession) = Unit

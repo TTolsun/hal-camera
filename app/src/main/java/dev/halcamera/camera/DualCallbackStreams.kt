@@ -1,8 +1,8 @@
 package dev.halcamera.camera
 
-/** Camera buffers and app encoders remain distinct; unobservable recording outputs still have rows. */
+/** Only Camera2's direct camera recording targets belong in the Callback stream list. */
 fun dualCallbackStreams(recordingConfigured: Boolean = false, photos: Boolean = true,
-    appRecording: Boolean = false, physicalIds: List<String> = emptyList()): List<Map<String, Any?>> = buildList {
+    physicalIds: List<String> = emptyList()): List<Map<String, Any?>> = buildList {
     addAll(listOf(
         mapOf("id" to "preview_main", "label" to "Main display", "observable" to true, "eventKind" to "preview_available"),
         mapOf("id" to "preview_sub", "label" to "Sub display", "observable" to true, "eventKind" to "preview_available"),
@@ -13,8 +13,8 @@ fun dualCallbackStreams(recordingConfigured: Boolean = false, photos: Boolean = 
     ))
     if (recordingConfigured) listOf("main", "sub").forEachIndexed { index, id ->
         add(OutputDescriptor("recording_$id", OutputKind.RECORDING, true, observable = false,
-            physicalId = physicalIds.getOrNull(index).takeUnless { appRecording },
-            displayName = "${if (index == 0) "Main" else "Sub"} Recording${if (appRecording) " (App)" else ""}").metadata())
+            physicalId = physicalIds.getOrNull(index),
+            displayName = "${if (index == 0) "Main" else "Sub"} Recording").metadata())
     }
 }
 

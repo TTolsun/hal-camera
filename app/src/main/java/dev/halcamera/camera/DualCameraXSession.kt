@@ -186,8 +186,6 @@ class DualCameraXSession(
             relays.forEachIndexed { index, relay -> relay.encode(output.surfaces[index]) { main.execute {
                 attached++
                 if (active && attached == 2) {
-                    telemetry.configureCallbackStreams(sessionId, dualCallbackStreams(recordingConfigured = true,
-                        photos = false, appRecording = true))
                     listener.onRecording()
                 }
             } } }

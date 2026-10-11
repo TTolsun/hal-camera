@@ -37,19 +37,6 @@ class StreamConfigurationTest {
         assertEquals(false, config.metadata().single()["observable"])
     }
 
-    @Test fun composedVideoHasARecordingRowWithoutInventingAHalTarget() {
-        val preview = output("preview", OutputKind.PREVIEW)
-        val config = StreamConfiguration(listOf(preview))
-        val rows = config.metadata(composedRecording = true)
-        val recording = rows.single { it["kind"] == "RECORDING" }
-        assertEquals("Recording (App)", recording["label"])
-        assertEquals(false, recording["observable"])
-        assertEquals(true, recording["repeating"])
-        assertEquals(listOf(preview), config.repeating)
-        assertEquals(listOf(preview.target), config.targets)
-        assertFalse(config.metadata().any { it["kind"] == "RECORDING" })
-    }
-
     @Test(expected = IllegalArgumentException::class) fun duplicateIdsAreRejectedInsteadOfMergingRows() {
         StreamConfiguration(listOf(output("same", OutputKind.YUV), output("same", OutputKind.YUV)))
     }

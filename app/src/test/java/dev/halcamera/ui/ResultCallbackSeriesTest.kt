@@ -9,22 +9,18 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ResultCallbackSeriesTest {
-    @Test fun composedRecordingNeverBorrowsCameraMetadataOrInventsAnEncoderArrival() {
-        val config = StreamConfiguration(listOf(ConfiguredOutput(OutputDescriptor("preview", OutputKind.PREVIEW, true), "camera-surface")))
+    @Test fun appConversionAndComposedRecordingEventsNeverBecomeCameraCallbackRows() {
+        val config = StreamConfiguration(listOf(ConfiguredOutput(OutputDescriptor("yuv", OutputKind.YUV, true), "camera-surface")))
         val events = listOf(Event(0, "s", "capture_started", 1, 900L, mapOf("firstStart" to true)),
             Event(20_000_000, "s", "capture_result", 1, 900L),
-            Event(30_000_000, "s", "image_available", sensorNs = 900L, values = mapOf("stream" to "composite_recording")))
+            Event(30_000_000, "s", "image_available", sensorNs = 900L, values = mapOf("stream" to "yuv")),
+            Event(40_000_000, "s", "app_jpeg_available", sensorNs = 900L, values = mapOf("stream" to "yuv_jpeg")),
+            Event(50_000_000, "s", "pip_photo_available", sensorNs = 900L, values = mapOf("stream" to "pip_photo")),
+            Event(60_000_000, "s", "image_available", sensorNs = 900L, values = mapOf("stream" to "composite_recording")))
         val series = ResultCallbackSeries.read(events, "s", 300_000_000,
-            metadata(*config.metadata(composedRecording = true).toTypedArray()))
-        val track = series.tracks.single { it.id == "composite_recording" }
-        assertEquals("Recording (App)", track.label)
-        assertEquals("No callback", track.unavailable)
-        assertTrue(track.points.isEmpty())
-        val timeline = ResultCallbackTimeline()
-        timeline.update(series, "s", 0, 300_000_000)
-        val row = timeline.displayed!!.rows.single { it.id == track.id }
-        assertEquals("No callback", row.state)
-        assertTrue(row.latenciesMs.isEmpty())
+            metadata(*config.metadata().toTypedArray()))
+        assertEquals(listOf("start", "all", "yuv"), series.tracks.map { it.id })
+        assertEquals(30.0, series.tracks.single { it.id == "yuv" }.points.single().latencyMs!!, 0.001)
     }
     @Test fun physicalPipCanUseLogicalSurfaceTimestampWithoutBorrowingAnotherSensorTimestamp() {
         val events = listOf(

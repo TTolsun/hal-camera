@@ -13,11 +13,10 @@ class DualCallbackStreamsTest {
         assertFalse(recordings.any { it["label"].toString().contains("App") })
     }
 
-    @Test fun cameraXVideoHasTwoAppEncoderRowsWithoutUnsupportedPhotoRows() {
-        val rows = dualCallbackStreams(recordingConfigured = true, photos = false, appRecording = true)
-        assertEquals(listOf("preview_main", "preview_sub", "recording_main", "recording_sub"), rows.map { it["id"] })
-        assertEquals(listOf("Main Recording (App)", "Sub Recording (App)"), rows.takeLast(2).map { it["label"] })
-        assertTrue(rows.takeLast(2).all { it["observable"] == false && it["physicalId"] == null })
+    @Test fun cameraXPreviewRelayDoesNotAdvertiseAppEncodersOrUnsupportedPhotoRows() {
+        val rows = dualCallbackStreams(photos = false)
+        assertEquals(listOf("preview_main", "preview_sub"), rows.map { it["id"] })
+        assertFalse(rows.any { it["kind"] == "RECORDING" })
     }
 
     @Test fun photoModeDoesNotAdvertiseEncoderOutputs() {

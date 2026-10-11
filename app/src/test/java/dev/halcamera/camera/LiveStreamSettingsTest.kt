@@ -32,9 +32,8 @@ class LiveStreamSettingsTest {
         val output = ConfiguredOutput(OutputDescriptor("analysis", OutputKind.YUV, true), "reader")
         val config = StreamConfiguration(listOf(output))
         assertEquals(listOf("reader"), config.targets)
-        assertEquals(listOf("YUV", "Jpeg"), config.metadata(true).map { it["label"] })
-        assertEquals(false, config.metadata(true).last()["repeating"])
-        assertEquals("app_jpeg_available", config.metadata(true).last()["eventKind"])
+        assertEquals(listOf("YUV"), config.metadata().map { it["label"] })
+        assertFalse(config.metadata().any { it["eventKind"] == "app_jpeg_available" })
     }
     @Test fun `CameraX automatic codec choices do not overwrite Camera2 settings`() {
         val camera2 = LiveStreamSettings(LiveSize(1280, 720), LiveSize(640, 480), LiveSize(1920, 1080), null,

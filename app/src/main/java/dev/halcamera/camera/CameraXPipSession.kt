@@ -125,7 +125,7 @@ internal class CameraXPipSession(
                     }.build(), owner)
             }).cameras
             serviceTelemetry.describe(listOf(OutputDescriptor("preview",OutputKind.PREVIEW,true,eventKind = "pip_preview_available").metadata()) +
-                listOfNotNull(secondaryPhoto?.descriptor?.metadata()), composedRecording = videoMode)
+                listOfNotNull(secondaryPhoto?.descriptor?.metadata()))
             cameras.forEach { camera ->
                 val observer = Observer<CameraState> { state ->
                     if (closing) finishClose()

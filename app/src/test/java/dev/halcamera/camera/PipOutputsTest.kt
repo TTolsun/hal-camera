@@ -4,13 +4,13 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PipOutputsTest {
-    @Test fun serviceAndPhysicalVideoDescribeOneAppEncoderWithoutAddingACameraTarget() {
+    @Test fun serviceAndPhysicalPreviewCompositionNeverAdvertiseAnAppRecordingStream() {
         for (physicalId in listOf(null, "arbitrary-sensor")) {
             val plan = PipOutputs(physicalId)
             val targets = if (physicalId == null) listOf("main") else listOf("main", "secondary")
             val config = plan.configure(targets, emptyList())
-            val rows = config.metadata(composedRecording = true)
-            assertEquals(1, rows.count { it["kind"] == "RECORDING" })
+            val rows = config.metadata()
+            assertFalse(rows.any { it["kind"] == "RECORDING" })
             assertEquals(targets, config.targets)
             assertTrue(config.outputs.all { it.descriptor.kind == OutputKind.PREVIEW })
             assertFalse(config.metadata().any { it["kind"] == "RECORDING" })
