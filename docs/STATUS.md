@@ -1,16 +1,16 @@
 # 작업 상태
 
-**0.25.0의 변경 내용과 검증 범위입니다.** 설치할 정식 APK는 [최신 릴리스](https://github.com/TTolsun/hal-camera/releases/latest), 변경 내용은 [0.25.0 릴리스 노트](releases/0.25.0.md), 사용법은 [Live 가이드](../guide/live.md)를 확인하세요.
+**0.26.0은 Split으로 보고 카메라별 원본을 저장합니다.** 설치는 [최신 릴리스](https://github.com/TTolsun/hal-camera/releases/latest), 변경 내용은 [릴리스 노트](releases/0.26.0.md), 촬영 방법은 [Live 가이드](../guide/live.md)를 확인하세요.
 
 ## 이번 버전에서 확인할 것
 
-- JPEG On의 PIP 사진은 합성과 두 카메라 원본을 저장합니다. 보조 크기는 Live Streams에서 선택합니다.
-- Callback은 카메라 출력만 표시합니다. 앱 합성 녹화에는 별도 HAL Recording 행이 없습니다.
-- 코드 중복과 문서의 반복 설명을 정리합니다. 자세한 변경은 릴리스 노트에 모읍니다.
+- Multi P·V에서 Split 배치와 카메라 조합을 바꿔 봅니다.
+- 갤러리에서 장치별 사진·영상과 녹화 중 사진을 확인합니다.
+- Callback의 ID로 두 카메라의 실제 HAL 출력을 비교합니다.
 
 ## 검증 범위
 
-Galaxy S25+ · Android 16에서 확인한 조합과 자동 검사 결과는 [0.25.0 검증 기록](validation/release-0.25.0.md)에 있습니다. 다른 제조사 기기, 전체 CTS, 장시간 녹화는 이번 검증에 포함하지 않았습니다.
+Galaxy S25+ · Android 16의 버튼 조작·저장 결과와 코드·문서 검토는 [0.26.0 검증 기록](validation/release-0.26.0.md)에 모았습니다. 다른 제조사, 세 카메라 이상, 전체 CTS와 장시간 녹화는 이번 기기 검증에 포함하지 않았습니다.
 
 Baseline 기반 회귀 비교는 유지합니다. 내부 점수 초안은 2026-10-08에 제거했으며 새 run의 점수 필드는 호환을 위해 null로 남습니다. [점수 초안 보관 문서](archive/SCORING-v1-draft.md)를 참고하세요.
 

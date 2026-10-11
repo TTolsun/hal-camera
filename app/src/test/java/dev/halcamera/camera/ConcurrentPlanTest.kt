@@ -68,6 +68,38 @@ class ConcurrentPlanTest {
         assertEquals(jpeg, plan.streams[1].photo)
     }
 
+    @Test fun `every split layout covers odd stage dimensions without overlap`() {
+        for (layout in SplitLayout.entries) for (count in 2..6) {
+            val frames = concurrentFrames(count,101,173,layout)
+            assertEquals(count,frames.size)
+            assertEquals(101*173,frames.sumOf { it.width*it.height })
+            frames.forEach { f ->
+                assertTrue(f.left >= 0 && f.top >= 0 && f.left+f.width <= 101 && f.top+f.height <= 173)
+            }
+            frames.forEachIndexed { i,a -> frames.drop(i+1).forEach { b ->
+                assertTrue(a.left+a.width <= b.left || b.left+b.width <= a.left || a.top+a.height <= b.top || b.top+b.height <= a.top)
+            } }
+        }
+    }
+
+    @Test fun `encoder retains full camera aspect for every split layout`() {
+        val output = concurrentOutputSize(preview,90)
+        assertEquals(LiveSize(720,1280),output)
+        assertEquals(preview,concurrentOutputSize(preview,0))
+        assertEquals(output,concurrentOutputSize(preview,270))
+        for (layout in SplitLayout.entries) {
+            val frames = concurrentFrames(2,1080,1731,layout)
+            frames.forEach { panel ->
+                val fit = fitConcurrentFrame(panel.width,panel.height,output.width.toFloat()/output.height)
+                assertTrue(fit.width <= panel.width && fit.height <= panel.height)
+                assertEquals(output.width.toFloat()/output.height,fit.width.toFloat()/fit.height,.003f)
+            }
+            assertEquals(LiveSize(720,1280),output)
+        }
+        assertEquals(ConcurrentFrame(0,250,1000,500),fitConcurrentFrame(1000,1000,2f))
+        assertEquals(ConcurrentFrame(250,0,500,1000),fitConcurrentFrame(1000,1000,.5f))
+    }
+
     @Test fun `configuration waits for both opens and readiness waits for both streams`() {
         val life = ConcurrentLifecycle(listOf("0", "1"))
         life.opening("0"); life.opening("1"); life.opened("1")

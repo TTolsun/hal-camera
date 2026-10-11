@@ -15,6 +15,7 @@ class CliStoreInstrumentation : Instrumentation() {
     private var originalYuv = false
     private var pinchZoom = false
     private var videoMode = false
+    private var multiSplit = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
         exportReports = arguments?.getString("export_reports") == "true"
@@ -23,10 +24,20 @@ class CliStoreInstrumentation : Instrumentation() {
         originalYuv = arguments?.getString("original_yuv") == "true"
         pinchZoom = arguments?.getString("pinch_zoom") == "true"
         videoMode = arguments?.getString("video_mode") == "true"
+        multiSplit = arguments?.getString("multi_split") == "true"
         start()
     }
 
     override fun onStart() {
+        if (multiSplit) {
+            try {
+                val result = dev.halcamera.ui.MultiSplitChecks.run(this)
+                finish(Activity.RESULT_OK,Bundle().apply { putString("stream","$result\n") })
+            } catch (error: Throwable) {
+                finish(Activity.RESULT_CANCELED,Bundle().apply { putString("stream","MULTI_SPLIT_FAILED: ${error.stackTraceToString()}\n") })
+            }
+            return
+        }
         if (videoMode) {
             try {
                 val result = dev.halcamera.ui.VideoModeChecks.run(this)

@@ -273,7 +273,12 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt
           - app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt
+          - app/src/main/java/dev/halcamera/camera/SplitSelection.kt
+          - app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt
+      screens/concurrent-camera-screen/session:
+        evidence:
           - app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt
+          - app/src/main/java/dev/halcamera/camera/ConcurrentDiscovery.kt
       screens/concurrent-camera-screen/photo-storage:
         evidence:
           - app/src/main/java/dev/halcamera/camera/ConcurrentPhotoStore.kt
@@ -288,6 +293,7 @@ sources:
       screens/concurrent-camera-screen/pip-composition/availability:
         evidence:
           - app/src/main/java/dev/halcamera/camera/PipSource.kt
+          - app/src/main/java/dev/halcamera/camera/ConcurrentDiscovery.kt
           - app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt
           - app/src/main/java/dev/halcamera/camera/CameraXPipSources.kt
           - app/src/main/java/dev/halcamera/ui/PhysicalPipPicker.kt

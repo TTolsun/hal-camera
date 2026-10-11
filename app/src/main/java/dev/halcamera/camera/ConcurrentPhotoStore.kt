@@ -14,7 +14,7 @@ internal class ConcurrentPhotoStore(context: Context) {
     private val library = MediaLibrary(context)
 
     fun save(capture: ConcurrentCapture<ConcurrentPhoto>, plan: ConcurrentPlan, timestampSources: Map<String, Int?>,
-        saved: (PhotoResult) -> Unit = {}): String {
+        saved: (PhotoResult) -> Unit = {}): ConcurrentMediaResult {
         val published = mutableListOf<Uri>()
         try {
             val records = JSONArray()
@@ -55,11 +55,14 @@ internal class ConcurrentPhotoStore(context: Context) {
                 photos.map { Uri.parse(it.getString("uri")) },photos.map {
                     PhotoArtifact(it.getString("file"),"image/jpeg",Uri.parse(it.getString("uri")))
                 }))
-            return (0 until records.length()).joinToString(" · ") {
+            val message = (0 until records.length()).joinToString(" · ") {
                 val entry = records.getJSONObject(it)
                 "Camera ${entry.getString("cameraId")}: ${entry.getString("status")}" +
                     if (entry.has("error")) " (${entry.getString("error")})" else ""
             } + "\nGroup ${capture.groupId}\nPhotos: DCIM/HALCamera · Report: Download/HALCamera"
+            return ConcurrentMediaResult(message, (0 until records.length()).any {
+                records.getJSONObject(it).getString("status") == "failed"
+            })
         } catch (e: Exception) {
             library.deleteAll(published)
             throw e

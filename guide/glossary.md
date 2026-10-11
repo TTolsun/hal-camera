@@ -34,7 +34,7 @@ Preview·YUV·JPEG·Recording 같은 출력입니다. 각 출력은 크기와 �
 
 <h3 id="pip-multi">PIP / Multi · 합성 화면과 여러 장치</h3>
 
-PIP는 메인 화면에 보조 영상을 넣어 보이는 구도를 저장합니다. Multi는 둘 이상의 카메라 장치를 열고 장치별 파일로 저장합니다. Multi의 각 화면 안에서도 PIP를 사용할 수 있습니다. [촬영 방법](live.md#pip로-보이는-구도를-저장하세요)
+PIP는 메인 화면에 보조 영상을 넣어 보이는 구도를 저장합니다. Multi는 둘 이상의 카메라 장치를 열고 장치별 파일로 저장합니다. Split은 Multi의 화면 배치만 바꿉니다. [PIP 촬영](live.md#pip로-보이는-구도를-저장하세요) · [Multi 촬영](live.md#여러-카메라를-함께-촬영하세요)
 
 <h2 id="capture-exposure" >사진과 노출</h2>
 

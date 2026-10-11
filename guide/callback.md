@@ -76,7 +76,7 @@ Physical PIP는 메인 그래프에 `(Phy)` 메타데이터와 프리뷰를 추�
 
 CameraX의 YUV는 ImageAnalysis, 카메라 JPEG는 ImageCapture의 수신 시각입니다. 앱의 변환·합성 완료 시각은 표시하지 않습니다. 저장 방식은 [JPEG 출처](live.md#live-스트림을-설정하세요)를 확인하세요.
 
-CLI 호환용 Dual의 Main/Sub Preview는 버퍼 수신을 직접 관측하지 못하므로 `No callback`입니다. 화면 갱신 시각을 대신 표시하지 않습니다. Camera2의 Main/Sub photo는 두 센서 이미지 수신입니다. Camera2 VIDEO의 두 HAL Recording 출력은 `No callback`으로 표시합니다. CameraX Dual은 프리뷰를 GPU로 인코더에 전달하므로 별도 Recording 행이 없습니다. 이 차이를 센서 동기화 성능으로 해석하지 마세요. Multi에는 Callback 조작부가 없습니다.
+CLI 호환용 Dual의 Main/Sub Preview는 버퍼 수신을 직접 관측하지 못하므로 `No callback`입니다. 화면 갱신 시각을 대신 표시하지 않습니다. Camera2의 Main/Sub photo는 두 센서 이미지 수신입니다. Camera2 VIDEO의 두 HAL Recording 출력은 `No callback`으로 표시합니다. CameraX Dual은 프리뷰를 GPU로 인코더에 전달하므로 별도 Recording 행이 없습니다. 이 차이를 센서 동기화 성능으로 해석하지 마세요. Multi는 `ID`로 선택한 장치의 Preview·Photo를 표시합니다. 영상은 프리뷰를 앱 인코더에 전달하므로 별도 HAL Recording 행을 만들지 않습니다.
 
 이미지와 프레임은 센서 타임스탬프를 대조하여 연결합니다. 그래프 값은 앱 수신 시각이며 HAL 내부 처리 완료 시각을 직접 측정한 값은 아닙니다.
 

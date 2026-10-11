@@ -43,6 +43,16 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     private var enabled = true
     private var manualAvailable = true
     private var manualExpanded = false
+    private var manualVisible = true
+    private var bracketAvailable = true
+
+    fun setMultiMode() {
+        manualVisible = false
+        manualAvailable = false
+        bracketAvailable = false
+        controls = controls.copy(manual = dev.halcamera.camera.ManualControls(), bracket = false)
+        render()
+    }
 
     fun setManualExpanded(open: Boolean) {
         if (manualExpanded == open) return
@@ -192,7 +202,8 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     fun applyRequested(next: LiveControls) { update(next) }
 
     private fun update(next: LiveControls) {
-        controls = next.coerce(support, video, composited)
+        controls = (if (manualVisible) next else next.copy(manual = dev.halcamera.camera.ManualControls(),bracket = false))
+            .coerce(support, video, composited)
         host.controlsChanged(controls)
         render()
     }
@@ -258,6 +269,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
 
     /** Exposure bracketing (#178): with it on, the shutter takes three stills at EV steps around the EV button's value. */
     private fun toggleBracket() {
+        if (!bracketAvailable) { host.notice("Bracketing is unavailable in Multi mode."); return }
         if (composited) { host.notice("Bracketing is unavailable with PIP."); return }
         if (video) { host.notice("Bracketing is available in Photo mode only."); return }
         if (controls.manual.exposure != null) { host.notice("Bracketing is unavailable in manual exposure."); return }
@@ -296,7 +308,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         ev.show(if (evText == null) R.drawable.ic_exposure else null, evText,
             controls.evIndex != 0 || ruler.visibility == View.VISIBLE, false, support.evRange != null && controls.manual.exposure == null,
             "Exposure compensation, current: ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "collapse adjustment" else "expand adjustment"}")
-        bracket.show(null, "AEB", controls.bracket, false, support.evRange != null && controls.manual.exposure == null && !video && !composited,
+        bracket.show(null, "AEB", controls.bracket, false, bracketAvailable && support.evRange != null && controls.manual.exposure == null && !video && !composited,
             if (controls.bracket) "Bracketing on, three exposures per shutter press, tap to turn off" else "Bracketing, tap for three exposures per shutter press")
         // Dim while the bar is off (camera not ready, recording being saved, a CLI command running), as MainActivity
         // dims every other Live control, so a tap that does nothing never looks like one that should.
@@ -304,6 +316,8 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             if (manualAvailable) "Manual capture controls" else "Manual · Unavailable in CameraX")
         listOf(flash, afLock, aeLock, ev, bracket, manual).forEach { it.isEnabled = enabled; if (!enabled) it.alpha = 0.4f }
         manual.isEnabled = enabled && manualAvailable
+        bracket.isEnabled = enabled && bracketAvailable
+        manual.visibility = if (manualVisible) View.VISIBLE else View.GONE
         // Keep the visible handle to one glyph; requested values remain in its accessible name.
         val on = listOfNotNull(
             controls.flash.takeIf { it != FlashMode.OFF }?.label,

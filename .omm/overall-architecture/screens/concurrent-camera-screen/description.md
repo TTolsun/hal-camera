@@ -1,10 +1,13 @@
-ConcurrentCameraActivity는 기존 Dual을 대체하는 Multi 화면입니다. Single PIP는 현재 MainActivity에서 동작하며 이 화면으로 이동하지 않습니다. Multi는 2개 이상의 CameraDevice를 각각 열고 기본 세로 분할로 표시합니다. Live의 Multi · P는 사진 촬영, Multi · V는 영상 녹화로 진입하며 선택한 모드의 촬영 버튼만 표시합니다. 모드는 Intent extra로 전달되어 Activity 재생성에도 유지됩니다. 기존 Single 진입 extra는 호환용으로 남아 있습니다. 각 장치의 PIP 버튼은 Physical 또는 다른 Service 카메라 하나를 선택합니다. 보조 출력은 해당 장치의 메인 프리뷰 위에 합성되며 그 화면 밖으로 이동할 수 없습니다. 이미 Multi에서 연 Service ID는 중복 open하지 않고 같은 장치에 추가 Surface를 구성합니다.
+ConcurrentCameraActivity는 Live의 Multi · P와 Multi · V에서 여는 독립 장치 촬영 화면입니다. Photo·Video와 같은 상단 제어, 크기 표시, 측정값·줌, 갤러리·64dp 셔터·카메라 선택, 네 모드와 Save Events · ZIP을 사용합니다. Photo·Video의 PIP 위치에는 Split 버튼을 배치하며 Manual 버튼과 입력창은 제공하지 않습니다. Multi는 기존 Camera2 경로를 사용합니다.
 
-사용자 장치 수 상한과 이전 저장값을 사용하지 않습니다. 광고된 동시 조합의 부분집합을 큰 조합부터 제시하며 독립 ID 쌍은 미광고 조합도 사전 검사 결과를 확인할 수 있습니다. Streams는 현재 구성을 읽기 전용으로 표시합니다. 모든 장치를 연 뒤 세션을 구성하며 선택한 Physical 입력까지 프레임이 도착해야 촬영·녹화를 활성화합니다. 출력 구성이 거부되면 실패를 표시하며 Physical 선택을 자동 대체하지 않습니다.
+Split 설정창은 LiveChoiceSheet.Edge.TOP으로 위에서 내려옵니다. 한 창에서 위아래·좌우 배치와 3개 이상에서 격자 배치, 촬영할 카메라 수, 독립 CameraDevice 조합과 순서를 정합니다. Apply 전까지는 초안이며 닫기와 뒤로 가기는 변경을 버립니다. 카메라 수는 기기가 광고한 동시 조합의 크기에서 선택하며, 가능한 수가 하나면 읽기 전용으로 표시합니다. 광고되지 않은 조합은 비활성화합니다. 실제 세션 지원 검사도 적용 전에 수행합니다. 배치만 바꾸면 세션을 유지하며 장치·순서·촬영 모드를 바꾸면 close(done) 뒤 재구성합니다.
 
-ConcurrentLifecycle은 장치별 open·streaming·closing·closed 상태를 관리합니다. 종료 중 늦게 도착하는 open 콜백과 모든 onClosed를 기다린 뒤 compositor를 해제하고 ConcurrentLease를 넘깁니다. Live는 자신의 close(done) 이후 이 화면을 열고, 돌아오면 원래 엔진의 프리뷰를 복구합니다. Benchmark 경로와 프로파일은 바꾸지 않습니다.
+장치 이름을 누르면 해당 장치의 줌·AF·AE·EV 제어와 측정값을 표시합니다. 프리뷰 터치는 해당 장치의 초점·노출 측광과 핀치 줌을 처리합니다. Callback은 ID 버튼으로 각 장치의 실제 HAL 출력을 전환하며 GPU 인코더를 HAL 녹화 스트림으로 표시하지 않습니다. 같은 세션 안에서 장치를 전환해도 각 장치의 요청값을 보존합니다. Multi는 Manual과 AEB를 제공하지 않으며 플래시는 Off·Torch를 사용합니다. ConcurrentSession은 ManualControls와 bracket을 제거한 요청을 적용합니다. Telemetry는 장치별 세션 키에 카메라 결과와 프리뷰·JPEG 이벤트를 기록하며 이벤트 ZIP에는 이미지 픽셀을 넣지 않습니다.
 
-사진은 장치마다 저장합니다. PIP를 끈 장치는 Image.timestamp와 CaptureResult.SENSOR_TIMESTAMP가 같은 JPEG를 저장합니다. PIP를 켠 장치는 DeviceCompositor가 화면과 같은 장면을 JPEG로 읽어 저장합니다. 이 파일의 센서 촬영 시각은 null이며 sourceSurfaceTimestampsNs에 입력 시각을 구분합니다. ConcurrentPhotoStore는 공통 group ID, 장치 ID, Physical ID, 합성 여부·크기, 시각 기준과 성공·실패를 JSON에 기록합니다. 사진 제한 시간은 10초이며 만료 시 미완료 장치를 실패로 기록하고 모두 닫습니다.
+ConcurrentLifecycle은 장치별 open·streaming·closing·closed 상태를 관리합니다. 모든 장치를 연 뒤 세션을 구성하고 모든 출력의 실제 프레임 도착 이후 셔터를 활성화합니다. Gallery·Lab 복귀 시 TextureView 크기가 확정된 뒤 시작을 다시 시도합니다. 출력 구성이 거부되면 실패와 Retry를 표시합니다. 종료 중 늦게 도착하는 open 콜백과 모든 onClosed를 기다린 뒤 compositor를 해제하고 ConcurrentLease를 넘깁니다. Live는 자신의 close(done) 이후 이 화면을 열고 돌아오면 원래 엔진의 프리뷰를 복구합니다. Benchmark 경로와 프로파일은 바꾸지 않습니다.
 
-Record와 Stop은 장치마다 독립 MP4를 생성합니다. PIP가 켜져 있으면 해당 장치 안의 합성 장면이 저장되고 Multi 화면 전체를 하나로 합치지 않습니다. 화면 종료 시 정상 녹화는 저장을 마친 뒤 해제하며, 장치·인코더 오류 시 진행 중 녹화를 취소합니다. 사진의 부분 실패는 성공한 파일을 지우지 않으며 JSON 저장 실패는 해당 사진 묶음을 롤백합니다. 사진·영상의 센서 동기는 보장하지 않습니다.
-ConcurrentCameraActivity는 Multi 진입만 담당합니다. 사용하지 않는 별도 Single PIP 진입용 Intent와 단일 장치 계획 생성 경로를 제거했습니다. concurrentFrames는 장치 순서대로 높이를 나누며 사용하지 않는 전체 화면·인셋 배치 분기는 제공하지 않습니다.
+사진은 각 장치의 Image.timestamp와 CaptureResult.SENSOR_TIMESTAMP를 연결한 온전한 JPEG를 저장합니다. Multi는 Physical·Service PIP를 합성하지 않습니다. ConcurrentPhotoStore는 공통 group ID, 장치 ID, 크기, 시각 기준과 성공·실패를 JSON에 기록합니다. 녹화 중에는 카메라 선택 아이콘 대신 사진 아이콘을 표시해 장치별 원본 JPEG를 저장하며 두 영상은 계속 녹화합니다. 사진 제한 시간은 10초이며 만료 시 미완료 장치를 실패로 기록하고 모두 닫습니다. 부분 실패는 성공한 파일을 유지하며 JSON 저장 실패는 해당 사진 묶음을 롤백합니다.
+
+영상은 장치별 독립 무음 MP4를 저장합니다. 인코더 크기는 해당 장치의 프리뷰 스트림과 센서 회전에서 정하며 Split 패널 크기와 무관합니다. preserveFullFrame은 EGL 대상 크기에 전체 입력을 맞추어 표시하며 화면 배치를 영상 크롭으로 사용하지 않습니다. 화면 전체·다른 장치·UI를 저장 영상에 합성하지 않습니다. 정상 종료 시 녹화를 저장한 뒤 해제하며 장치·인코더 오류 시 진행 중 녹화를 취소합니다. 사진·영상의 센서 동기는 보장하지 않습니다.
+
+SplitChoiceSheet는 설정창을 그리며 SplitSelection은 지원 조합·장치 수·화면별 교환·격자 선택 규칙을 순수 Kotlin으로 관리합니다. 초안은 적용 전까지 현재 세션 설정을 바꾸지 않습니다. 화면과 설정창의 버튼 모양은 CameraWidgets.chromeButton을 재사용합니다.
