@@ -23,6 +23,12 @@
 
 Android CLI로 설정창의 후보·사유·선택 상태를 확인했습니다. `Cannot run together`, `Unsupported streams`, `Camera2 only`를 확인했으며, 차단 항목을 탭한 뒤에도 선택창이 유지됐습니다.
 
+사용자가 게시를 승인한 기기 스크린샷입니다.
+
+![Camera2 VIDEO PIP 선택 차단](assets/pip-availability-camera2.png)
+
+![CameraX PIP 스트림 조합 차단](assets/pip-availability-camerax.png)
+
 ## 코드 검증
 
 앱 JVM 테스트 767개, Android lint, 서명 release APK 빌드가 통과했습니다. 독립 코드 리뷰에서 발견한 CameraX 단일·동시 모드 판정 문제를 수정했습니다. 전체 변경과 후속 공통 분석 크기 제한 커밋의 재리뷰에서는 추가 코드 문제가 발견되지 않았습니다.

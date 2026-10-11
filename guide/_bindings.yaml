@@ -276,14 +276,17 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt
           - app/src/main/java/dev/halcamera/camera/PipScene.kt
-          - app/src/main/java/dev/halcamera/camera/PipSource.kt
-          - app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt
           - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
           - app/src/main/java/dev/halcamera/camera/PipCallbacks.kt
           - app/src/main/java/dev/halcamera/camera/PipOutputs.kt
           - app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt
           - app/src/main/java/dev/halcamera/ui/LivePipController.kt
           - app/src/main/java/dev/halcamera/ui/PipPositionStore.kt
+      screens/concurrent-camera-screen/pip-composition/availability:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/PipSource.kt
+          - app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt
+          - app/src/main/java/dev/halcamera/camera/CameraXPipSources.kt
           - app/src/main/java/dev/halcamera/ui/PhysicalPipPicker.kt
           - app/src/main/java/dev/halcamera/ui/LiveChoiceSheet.kt
       screens/concurrent-camera-screen/pip-composition/media-storage:

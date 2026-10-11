@@ -1,0 +1,7 @@
+kind: nested-class
+title: availability
+children: []
+parentPath:
+  - screens
+  - concurrent-camera-screen
+  - pip-composition

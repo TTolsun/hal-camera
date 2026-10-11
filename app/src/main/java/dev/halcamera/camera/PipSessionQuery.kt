@@ -11,6 +11,35 @@ import android.os.Handler
 import android.view.Surface
 import androidx.annotation.RequiresApi
 
+/** Camera-thread adapter shared by picker preflight and selection; sizes belong to the checked outputs. */
+internal class Camera2PipSupport(private val manager: CameraManager, private val handler: Handler) {
+    private val sizes = mutableMapOf<String,LiveSize>()
+    fun size(source: PipSource) = sizes[source.key]
+    fun checkAll(candidates: List<PipSource>, check: (PipSource) -> PipSource, main: Handler,
+                 done: (List<PipSource>) -> Unit) {
+        handler.post { val checked = candidates.map(check); main.post { done(checked) } }
+    }
+    fun check(source: PipSource, candidates: List<PipSource>, camera: CameraDevice?, preview: LiveSize?,
+              retained: List<ConfiguredOutput<Surface>>): PipSource {
+        val candidate = candidates.firstOrNull { it.key == source.key }
+            ?: return source.copy(unavailableReason = "Cannot run together")
+        return candidate.withStreamSupport {
+            sizes.remove(source.key)
+            if (android.os.Build.VERSION.SDK_INT < 30 || camera == null || preview == null) PipStreamSupport.UNKNOWN
+            else {
+                val (support,inputs) = queryCamera2Pip(manager,camera,candidate,preview,retained,handler)
+                inputs?.get(1)?.let { sizes[source.key] = it }
+                support
+            }
+        }
+    }
+}
+
+@RequiresApi(28)
+internal fun pipOutputConfigurations(outputs: List<ConfiguredOutput<Surface>>) = outputs.map { value ->
+    OutputConfiguration(value.target).apply { value.descriptor.physicalId?.let { setPhysicalCameraId(it) } }
+}
+
 internal fun readPipPreviewSizes(manager: CameraManager, id: String): List<LiveSize> =
     manager.getCameraCharacteristics(id)[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
         ?.getOutputSizes(SurfaceTexture::class.java)?.map { LiveSize(it.width,it.height) }.orEmpty()
@@ -42,9 +71,7 @@ internal fun queryPipOutputs(manager: CameraManager, parent: String, source: Pip
         val plan = PipOutputs(source.id.takeIf { source.physical })
         val mainOutputs = plan.configure(if (source.physical) surfaces else listOf(surfaces[0]),retained)
         fun config(outputs: List<ConfiguredOutput<Surface>>) = SessionConfiguration(
-            SessionConfiguration.SESSION_REGULAR,outputs.map { value -> OutputConfiguration(value.target).apply {
-                value.descriptor.physicalId?.let { setPhysicalCameraId(it) }
-            } }, { handler.post(it) }, object : CameraCaptureSession.StateCallback() {
+            SessionConfiguration.SESSION_REGULAR,pipOutputConfigurations(outputs), { handler.post(it) }, object : CameraCaptureSession.StateCallback() {
                 override fun onConfigured(session: CameraCaptureSession) = Unit
                 override fun onConfigureFailed(session: CameraCaptureSession) = Unit
             })

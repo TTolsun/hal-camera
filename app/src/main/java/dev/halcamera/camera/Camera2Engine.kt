@@ -763,28 +763,12 @@ class Camera2Engine(
     private fun report(message: String, ok: Boolean) { main.post { if (active) status(message, ok) } }
 
     override val pipSources: List<PipSource> by lazy { readPipSources(manager,cameraId) }
-    private val pipPreviewSizes = mutableMapOf<String,LiveSize>()
+    private val pipSupport = Camera2PipSupport(manager,handler)
+    private fun checkedPipSource(source: PipSource) = pipSupport.check(source,pipSources,
+        device.takeIf { active && spec == null },previewSize?.let { LiveSize(it.width,it.height) },
+        PipOutputs.retained(configuredOutputs.outputs))
 
-    private fun checkedPipSource(source: PipSource): PipSource = source.withStreamSupport {
-        pipPreviewSizes.remove(source.key)
-        val camera = device
-        val preview = previewSize
-        if (Build.VERSION.SDK_INT < 30 || !active || camera == null || preview == null || spec != null)
-            PipStreamSupport.UNKNOWN
-        else {
-            val (support,sizes) = queryCamera2Pip(manager,camera,source,LiveSize(preview.width,preview.height),
-                PipOutputs.retained(configuredOutputs.outputs),handler)
-            sizes?.get(1)?.let { pipPreviewSizes[source.key] = it }
-            support
-        }
-    }
-
-    override fun checkPipSources(done: (List<PipSource>) -> Unit) {
-        handler.post {
-            val checked = pipSources.map(::checkedPipSource)
-            main.post { done(checked) }
-        }
-    }
+    override fun checkPipSources(done: (List<PipSource>) -> Unit) = pipSupport.checkAll(pipSources,::checkedPipSource,main,done)
 
     /** Replace capture-session outputs, never the currently open Live CameraDevice. */
     @androidx.annotation.RequiresApi(30)
@@ -792,14 +776,9 @@ class Camera2Engine(
         handler.post {
             val camera = device
             if (!active || camera == null || spec != null) { main.post { done(Result.failure(IllegalStateException("Camera unavailable"))) }; return@post }
-            if (source != null && pipSources.none { it.key == source.key && it.selectable }) {
-                main.post { done(Result.failure(PipSelectionRejected("Cannot run together"))) }; return@post
-            }
-            if (source != null) {
-                val checked = checkedPipSource(source)
-                if (!checked.selectable) {
-                    main.post { done(Result.failure(PipSelectionRejected(checked.unavailableReason))) }; return@post
-                }
+            val rejection = source?.let(::checkedPipSource)?.unavailableReason
+            if (rejection != null) {
+                main.post { done(Result.failure(PipSelectionRejected(rejection))) }; return@post
             }
             val previous = pip
             if (previous != null) {
@@ -832,9 +811,7 @@ class Camera2Engine(
                     rawPhoto = if (liveStreams?.raw != null) stills::capture else null,
                     configureMain = { inputs ->
                         val outputs = plan.configure(inputs, analysis.outputs)
-                        val configs = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
-                            output.descriptor.physicalId?.let { setPhysicalCameraId(it) }
-                        } }
+                        val configs = pipOutputConfigurations(outputs.outputs)
                         try {
                             @Suppress("DEPRECATION")
                             camera.createCaptureSessionByOutputConfigurations(configs,object : CameraCaptureSession.StateCallback() {
@@ -859,7 +836,7 @@ class Camera2Engine(
                             submitRepeating("pip_recording_request", mapOf("recording" to recording))
                             main.post { if (active) recordingState(recording) }
                         }
-                    }, notice = notice, videoMode = videoMode, sourcePreview = pipPreviewSizes[source.key])
+                    }, notice = notice, videoMode = videoMode, sourcePreview = pipSupport.size(source))
                 pip = added; added.start()
             } catch (e: Exception) { main.post { done(Result.failure(e)) } }
         }
