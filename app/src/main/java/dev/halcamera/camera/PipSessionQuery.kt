@@ -1,0 +1,53 @@
+package dev.halcamera.camera
+
+import android.graphics.SurfaceTexture
+import android.hardware.camera2.CameraCaptureSession
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraDevice
+import android.hardware.camera2.CameraManager
+import android.hardware.camera2.params.OutputConfiguration
+import android.hardware.camera2.params.SessionConfiguration
+import android.os.Handler
+import android.view.Surface
+import androidx.annotation.RequiresApi
+
+internal fun readPipPreviewSize(manager: CameraManager, id: String): LiveSize? = pipPreviewSize(
+    manager.getCameraCharacteristics(id)[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
+        ?.getOutputSizes(SurfaceTexture::class.java)?.map { LiveSize(it.width,it.height) }.orEmpty())
+
+/** Temporary, detached preview surfaces query the exact output sizes without changing any live session. */
+@RequiresApi(30)
+internal fun queryPipSession(manager: CameraManager, camera: CameraDevice, source: PipSource,
+                             preview: LiveSize, retained: List<ConfiguredOutput<Surface>>, handler: Handler): PipStreamSupport {
+    val secondary = readPipPreviewSize(manager,source.id) ?: return PipStreamSupport.UNSUPPORTED
+    val textures = mutableListOf<SurfaceTexture>()
+    val surfaces = mutableListOf<Surface>()
+    try {
+        listOf(preview,secondary).forEach { size ->
+            val texture = SurfaceTexture(false).also { textures += it }
+            texture.setDefaultBufferSize(size.width,size.height)
+            surfaces += Surface(texture)
+        }
+        val plan = PipOutputs(source.id.takeIf { source.physical })
+        val mainOutputs = plan.configure(if (source.physical) surfaces else listOf(surfaces[0]),retained)
+        fun config(outputs: List<ConfiguredOutput<Surface>>) = SessionConfiguration(
+            SessionConfiguration.SESSION_REGULAR,outputs.map { value -> OutputConfiguration(value.target).apply {
+                value.descriptor.physicalId?.let { setPhysicalCameraId(it) }
+            } }, { handler.post(it) }, object : CameraCaptureSession.StateCallback() {
+                override fun onConfigured(session: CameraCaptureSession) = Unit
+                override fun onConfigureFailed(session: CameraCaptureSession) = Unit
+            })
+        val mainConfig = config(mainOutputs.outputs)
+        val supported = if (source.physical) camera.isSessionConfigurationSupported(mainConfig)
+        else manager.isConcurrentSessionConfigurationSupported(mapOf(camera.id to mainConfig,
+            source.id to config(listOf(ConfiguredOutput(OutputDescriptor("pip",OutputKind.PREVIEW,true),surfaces[1])))))
+        return if (supported) PipStreamSupport.SUPPORTED else PipStreamSupport.UNSUPPORTED
+    } catch (_: IllegalArgumentException) {
+        return PipStreamSupport.UNSUPPORTED
+    } catch (_: SecurityException) {
+        return PipStreamSupport.UNKNOWN
+    } finally {
+        surfaces.forEach { it.release() }
+        textures.forEach { it.release() }
+    }
+}

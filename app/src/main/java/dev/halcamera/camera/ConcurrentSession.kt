@@ -36,10 +36,16 @@ fun readConcurrentCamera(manager: CameraManager, id: String): ConcurrentCamera {
 fun readPipSources(manager: CameraManager, parent: String): List<PipSource> {
     if (android.os.Build.VERSION.SDK_INT < 30 || parent.isEmpty()) return emptyList()
     return runCatching {
+        val combinations = runCatching { manager.concurrentCameraIds }.getOrDefault(emptySet())
         val physical = readConcurrentCamera(manager,parent).physicalIds.map { PipSource(it,true,"Physical $it") }
-        val service = manager.cameraIdList.filter { it != parent }.mapNotNull { id ->
-            runCatching { readConcurrentCamera(manager,id) }.getOrNull()?.takeIf { it.previews.isNotEmpty() }
-                ?.let { PipSource(id,false,"${it.label} · Service") }
+        val service = manager.cameraIdList.filter { it != parent }.map { id ->
+            val camera = runCatching { readConcurrentCamera(manager,id) }.getOrNull()
+            val reason = when {
+                camera == null -> "Camera capabilities unavailable"
+                camera.previews.isEmpty() -> "No preview stream available"
+                else -> PipAvailability.serviceReason(setOf(parent,id),combinations)
+            }
+            PipSource(id,false,"${camera?.label ?: "Camera $id"} · Service",reason)
         }
         physical + service
     }.getOrDefault(emptyList())

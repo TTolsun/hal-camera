@@ -18,11 +18,12 @@ internal class PhysicalPipPicker(private val context: Context, private val manag
     }
 
     fun show(id: String,engine: String,selected: PipSource? = null,
-        sources: List<PipSource> = supported(id), open: (String,PipSource?) -> Unit) {
+        sources: List<PipSource> = supported(id),
+        check: (((List<PipSource>) -> Unit) -> Unit)? = null, open: (String,PipSource?) -> Unit) {
         if (sources.isEmpty()) return
-        val ordered = sources.sortedWith(compareBy<PipSource> { !it.physical }.thenBy(CameraLabel.idOrder) { it.id })
+        var ordered = sources.sortedWith(compareBy<PipSource> { !it.physical }.thenBy(CameraLabel.idOrder) { it.id })
         val endpoints = CameraEndpointResolver(manager).resolve()
-        val choices = ordered.map { source ->
+        fun choices(checking: Boolean = false) = ordered.map { source ->
             val endpoint = endpoints.firstOrNull {
                 if (source.physical) it.logicalCameraId == id && it.physicalCameraId == source.id
                 else it.logicalCameraId == source.id && it.physicalCameraId == null
@@ -30,14 +31,21 @@ internal class PhysicalPipPicker(private val context: Context, private val manag
             val name = endpoint?.let { listOfNotNull(CameraLabel.facing(it.role,it.facing),
                 CameraLabel.lens(it.role),CameraLabel.angle(it.role,it.equivalentFocalMm)).joinToString(" · ") }
                 ?.takeIf { it.isNotEmpty() } ?: "Camera"
-            LiveChoiceSheet.Choice("${if (source.physical) "Physical" else "Service"} · ID ${source.id}",name)
+            LiveChoiceSheet.Choice("${if (source.physical) "Physical" else "Service"} · ID ${source.id}",
+                listOfNotNull(name,source.unavailableReason ?: "Checking stream support…".takeIf { checking }).joinToString("\n"),
+                source.selectable && !checking)
         }
-        LiveChoiceSheet.show(context,"PIP",choices,ordered.indexOfFirst { it.key == selected?.key },
+        LiveChoiceSheet.show(context,"PIP",choices(check != null),ordered.indexOfFirst { it.key == selected?.key },
             clear = if (selected != null) ({ open(id,null) }) else null, edge = LiveChoiceSheet.Edge.TOP,
             scrollPosition = if (positions.contains("$engine.$id")) positions.getInt("$engine.$id",0)
                 else if (engine == "Camera2" && positions.contains(id)) positions.getInt(id,0) else null,
-            saveScrollPosition = { positions.edit().putInt("$engine.$id",it).apply() }) { index ->
-                open(id,ordered[index])
+            saveScrollPosition = { positions.edit().putInt("$engine.$id",it).apply() },
+            loadChoices = check?.let { query -> { update -> query { checked ->
+                val byKey = checked.associateBy { it.key }
+                ordered = ordered.map { byKey[it.key] ?: it.copy(unavailableReason = "Camera unavailable") }
+                update(choices())
+            } } }) { index ->
+                if (ordered[index].selectable) open(id,ordered[index])
             }
     }
 }

@@ -4,6 +4,19 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PipOutputsTest {
+    @Test fun supportQueryRetainsExactlyTheHalStreamsUsedByPip() {
+        val original = OutputKind.entries.map { kind ->
+            ConfiguredOutput(OutputDescriptor(kind.name,kind,false),kind.name)
+        }
+        val retained = PipOutputs.retained(original)
+        assertEquals(listOf(OutputKind.YUV,OutputKind.RAW),retained.map { it.descriptor.kind })
+        val physical = PipOutputs("arbitrary-physical-id").configure(listOf("main-preview","pip-preview"),retained)
+        assertEquals(listOf("main-preview","pip-preview","YUV","RAW"),physical.targets)
+        assertEquals("arbitrary-physical-id",physical.outputs[1].descriptor.physicalId)
+        val serviceMain = PipOutputs(null).configure(listOf("main-preview"),retained)
+        assertEquals(listOf("main-preview","YUV","RAW"),serviceMain.targets)
+        assertTrue(serviceMain.outputs.none { it.descriptor.kind == OutputKind.JPEG || it.descriptor.kind == OutputKind.RECORDING })
+    }
     @Test fun rawStaysAStillTargetWhilePipPreviewAndYuvRepeat() {
         val plan = PipOutputs("6")
         val raw = ConfiguredOutput(OutputDescriptor("raw", OutputKind.RAW, false, stillCapture = true), "raw")

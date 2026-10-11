@@ -35,10 +35,7 @@ internal class LivePipSession(
     private val videoMode: Boolean = false,
 ) {
     private val manager = context.getSystemService(CameraManager::class.java)
-    private val sourceSize = manager.getCameraCharacteristics(source.id)
-        .get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(SurfaceTexture::class.java)
-        .filter { it.width.toLong()*it.height <= 1280L*720 }.maxByOrNull { it.width.toLong()*it.height }
-        ?.let { LiveSize(it.width,it.height) } ?: error("No PIP preview stream")
+    private val sourceSize = readPipPreviewSize(manager,source.id) ?: error("No PIP preview stream")
     private val compositor = DeviceCompositor(context,texture,output,listOf(preview,sourceSize),parentId,
         if (source.physical) listOf(source.id) else emptyList(),
         onReady = { main.post { if (!closing) { readyState = true; ready() } } },

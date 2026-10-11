@@ -16,4 +16,19 @@ class CameraXPipSourcesTest {
         assertTrue(CameraXPipSources.forParent("0",listOf(listOf("0"),listOf("0","0"),listOf("0","1","2"),listOf("2","3"))).isEmpty())
         assertTrue(CameraXPipSources.forParent("0",emptyList()).isEmpty())
     }
+
+    @Test fun `picker retains unavailable service and physical cameras with reasons`() {
+        val candidates = listOf(PipSource("1",false,"Front"),PipSource("2",false,"Rear"),PipSource("2",true,"Physical rear"))
+        val sources = CameraXPipSources.forParent("0",listOf(listOf("0","1")),candidates)
+        assertEquals(candidates.map { it.key },sources.map { it.key })
+        assertTrue(sources[0].selectable)
+        assertFalse(sources[1].selectable)
+        assertEquals("Physical PIP requires Camera2",sources[2].unavailableReason)
+        assertTrue(CameraXPipSources.forParent("0",emptyList(),candidates).none { it.selectable })
+    }
+
+    @Test fun `advertised CameraX pair still requires a usable preview`() {
+        val source = PipSource("1",false,"Front","No preview stream available")
+        assertFalse(CameraXPipSources.forParent("0",listOf(listOf("0","1")),listOf(source)).single().selectable)
+    }
 }

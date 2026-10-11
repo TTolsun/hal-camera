@@ -180,7 +180,7 @@ class CameraXEngine(
                 provider = future.get()
                 pipSources = CameraXPipSources.forParent(cameraId, runCatching { provider!!.availableConcurrentCameraInfos.map { pair ->
                     pair.map { Camera2CameraInfo.from(it).cameraId }
-                } }.getOrDefault(emptyList()))
+                } }.getOrDefault(emptyList()),readPipSources(context.getSystemService(CameraManager::class.java),cameraId))
                 val info = provider!!.availableCameraInfos.first { Camera2CameraInfo.from(it).cameraId == cameraId }
                 val characteristics = context.getSystemService(CameraManager::class.java).getCameraCharacteristics(cameraId)
                 val mode = LiveModePolicy.forVideo(videoMode).stabilization(liveStreams?.stabilization)
@@ -403,14 +403,39 @@ class CameraXEngine(
 
     private fun report(message: String, ok: Boolean) { handler.post { if (active) status(message, ok) } }
 
+    private fun checkedPipSource(source: PipSource): PipSource = source.withStreamSupport {
+        val provider = provider
+        if (!active || provider == null) return@withStreamSupport PipStreamSupport.UNKNOWN
+        val infos = provider.availableCameraInfos.associateBy { Camera2CameraInfo.from(it).cameraId }
+        val supported = listOf(cameraId,source.id).mapIndexed { index,id ->
+            val info = infos[id] ?: return@withStreamSupport PipStreamSupport.UNKNOWN
+            if (readPipPreviewSize(context.getSystemService(CameraManager::class.java),id) == null)
+                return@withStreamSupport PipStreamSupport.UNSUPPORTED
+            val useCases = listOf<UseCase>(cameraXPipPreviewBuilder().build()) +
+                if (index == 0) listOfNotNull(analysis) else emptyList()
+            info.isSessionConfigSupported(SessionConfig.Builder(useCases).build())
+        }.all { it }
+        if (supported) PipStreamSupport.SUPPORTED else PipStreamSupport.UNSUPPORTED
+    }
+
+    override fun checkPipSources(done: (List<PipSource>) -> Unit) {
+        handler.post { done(pipSources.map(::checkedPipSource)) }
+    }
+
     override fun setPip(source: PipSource?, texture: android.graphics.SurfaceTexture?, output: LiveSize?,
         position: PipRect, done: (Result<Unit>) -> Unit) {
         val provider = provider
         if (!active || provider == null || pipChanging || stills.inFlight || video.busy || pip?.busy == true) {
             done(Result.failure(IllegalStateException("Camera busy"))); return
         }
-        if (source != null && pipSources.none { it.key == source.key }) {
+        if (source != null && pipSources.none { it.key == source.key && it.selectable }) {
             done(Result.failure(IllegalArgumentException("PIP combination unavailable"))); return
+        }
+        if (source != null) {
+            val checked = checkedPipSource(source)
+            if (!checked.selectable) {
+                done(Result.failure(IllegalArgumentException(checked.unavailableReason))); return
+            }
         }
         pipChanging = true
         fun restore(result: Result<Unit>) {

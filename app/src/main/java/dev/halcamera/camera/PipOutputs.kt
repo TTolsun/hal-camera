@@ -2,6 +2,11 @@ package dev.halcamera.camera
 
 /** One definition for the main device's PIP inputs and its virtual composed photo output. */
 internal class PipOutputs(physicalId: String?) {
+    companion object {
+        fun <T> retained(outputs: List<ConfiguredOutput<T>>) = outputs.filter {
+            it.descriptor.kind in setOf(OutputKind.YUV, OutputKind.RAW) && it.descriptor.id != "video_snapshot"
+        }
+    }
     val inputs = listOfNotNull(
         OutputDescriptor("preview", OutputKind.PREVIEW, true, eventKind = "pip_preview_available"),
         physicalId?.let { OutputDescriptor("pip", OutputKind.PREVIEW, true,

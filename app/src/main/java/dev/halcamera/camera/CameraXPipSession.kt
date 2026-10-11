@@ -66,10 +66,7 @@ internal class CameraXPipSession(
     fun start() {
         try {
             val previews = selectors.mapIndexed { index, _ ->
-                val builder = Preview.Builder().setTargetRotation(Surface.ROTATION_0)
-                    .setResolutionSelector(ResolutionSelector.Builder().setResolutionFilter { sizes, _ ->
-                        sizes.filter { it.width.toLong() * it.height <= 1280L * 720 }
-                    }.build())
+                val builder = cameraXPipPreviewBuilder()
                 if (index == 0) Camera2Interop.Extender(builder).setSessionCaptureCallback(captureCallback)
                 val mode = LiveModePolicy.forVideo(videoMode).stabilization(if (index == 0) stabilization else null)
                 val interop = Camera2Interop.Extender(builder)
@@ -170,3 +167,9 @@ internal class CameraXPipSession(
         compositor?.close { main.post(finish) } ?: finish()
     }
 }
+
+/** Use the same resolution filter for the native support query and the actual PIP use cases. */
+internal fun cameraXPipPreviewBuilder() = Preview.Builder().setTargetRotation(Surface.ROTATION_0)
+    .setResolutionSelector(ResolutionSelector.Builder().setResolutionFilter { sizes, _ ->
+        sizes.filter { it.width.toLong() * it.height <= 1280L * 720 }
+    }.build())

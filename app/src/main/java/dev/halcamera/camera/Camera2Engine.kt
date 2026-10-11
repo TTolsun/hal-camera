@@ -764,12 +764,39 @@ class Camera2Engine(
 
     override val pipSources: List<PipSource> by lazy { readPipSources(manager,cameraId) }
 
+    override fun checkPipSources(done: (List<PipSource>) -> Unit) {
+        handler.post {
+            val checked = pipSources.map { source -> source.withStreamSupport {
+                val camera = device
+                val preview = previewSize
+                if (Build.VERSION.SDK_INT < 30 || !active || camera == null || preview == null || spec != null)
+                    PipStreamSupport.UNKNOWN
+                else queryPipSession(manager,camera,source,LiveSize(preview.width,preview.height),
+                    PipOutputs.retained(configuredOutputs.outputs),handler)
+            } }
+            main.post { done(checked) }
+        }
+    }
+
     /** Replace capture-session outputs, never the currently open Live CameraDevice. */
     @androidx.annotation.RequiresApi(30)
     override fun setPip(source: PipSource?, texture: SurfaceTexture?, output: LiveSize?, position: PipRect, done: (Result<Unit>) -> Unit) {
         handler.post {
             val camera = device
             if (!active || camera == null || spec != null) { main.post { done(Result.failure(IllegalStateException("Camera unavailable"))) }; return@post }
+            if (source != null && pipSources.none { it.key == source.key && it.selectable }) {
+                main.post { done(Result.failure(IllegalArgumentException("PIP combination unavailable"))) }; return@post
+            }
+            if (source != null) {
+                val checked = source.withStreamSupport {
+                    val size = previewSize ?: return@withStreamSupport PipStreamSupport.UNKNOWN
+                    queryPipSession(manager,camera,source,LiveSize(size.width,size.height),
+                        PipOutputs.retained(configuredOutputs.outputs),handler)
+                }
+                if (!checked.selectable) {
+                    main.post { done(Result.failure(IllegalArgumentException(checked.unavailableReason))) }; return@post
+                }
+            }
             val previous = pip
             if (previous != null) {
                 pip = null
@@ -792,7 +819,7 @@ class Camera2Engine(
                     if (pip !== added) return
                     setPip(null,null,null) { done(Result.failure(IllegalStateException(reason))) }
                 }
-                val analysis = StreamConfiguration(configuredOutputs.outputs.filter { it.descriptor.kind in setOf(OutputKind.YUV, OutputKind.RAW) && it.descriptor.id != "video_snapshot" })
+                val analysis = StreamConfiguration(PipOutputs.retained(configuredOutputs.outputs))
                 val plan = PipOutputs(source.id.takeIf { source.physical })
                 val callbacks = PipCallbacks(telemetry,sessionId,plan) { active && pip === added }
                 added = LivePipSession(context,handler,main,cameraId,source,checkNotNull(texture),checkNotNull(output),LiveSize(size.width,size.height),

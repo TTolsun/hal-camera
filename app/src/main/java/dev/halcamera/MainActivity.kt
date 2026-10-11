@@ -488,7 +488,7 @@ class MainActivity : ComponentActivity() {
         // Re-apply the chosen zoom once the new session is live so engine and camera switches keep the same framing.
         if (ok && pendingPip != null) {
             val source = pendingPip; pendingPip = null
-            if (pipSources().any { it.key == source?.key }) main.post { pipUi.select(source) }
+            if (pipSources().any { it.key == source?.key && it.selectable }) main.post { pipUi.select(source) }
         }
         if (ok && !zoomApplied) {
             zoomApplied = true; if (zoomRatio != 1f) engine?.setZoom(zoomRatio)
@@ -535,7 +535,12 @@ class MainActivity : ComponentActivity() {
             chooseEngine(if(engineName=="Camera2") "CameraX" else "Camera2")
         }
         physicalPipButton=button("PIP") {
-            physicalPip.show(cameraId,engineName,pipUi.selected,pipSources()) { _,source -> pipUi.select(source) }
+            val current = engine as? PipCamera ?: return@button
+            physicalPip.show(cameraId,engineName,pipUi.selected,pipSources(),check = { done ->
+                current.checkPipSources { sources ->
+                    done(if (engine === current) sources else sources.map { it.copy(unavailableReason = "Camera changed") })
+                }
+            }) { _,source -> pipUi.select(source) }
         }
         // Lab groups inspection, saved results and settings; Mark stays on the preview.
         labButton=button("Lab") { openLab() }.apply { contentDescription="Open Lab: inspection tools, saved results, and settings" }
