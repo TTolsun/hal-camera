@@ -23,6 +23,7 @@ internal class DeviceCompositor(
     initialRects: List<PipRect> = emptyList(),
     private val inputFrame: (Int, Long) -> Unit = { _, _ -> },
     private val prepareRecording: Boolean = false,
+    private val preserveFullFrame: Boolean = false,
 ) {
     private val app = context.applicationContext
     private val thread = HandlerThread("HAL.Compose.$cameraId").apply { start() }
@@ -139,7 +140,6 @@ internal class DeviceCompositor(
             val r = if (index == 0) PipRect(0f,0f,1f,1f) else rects[index - 1]
             val w = (r.width * width[0]).toInt().coerceAtLeast(1)
             val h = (r.height * height[0]).toInt().coerceAtLeast(1)
-            GLES20.glViewport((r.x * width[0]).toInt(), ((1f-r.y-r.height) * height[0]).toInt(), w, h)
             GLES20.glActiveTexture(GLES20.GL_TEXTURE0); GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES,names[index])
             GLES20.glUniform1i(GLES20.glGetUniformLocation(program,"image"),0)
             GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(program,"transform"),1,false,transforms[index],0)
@@ -149,7 +149,13 @@ internal class DeviceCompositor(
             val m = transforms[index]
             val aspect = PipScene.sourceAspect(input.width,input.height,m[0],m[1],m[4],m[5])
             val targetAspect = w.toFloat()/h
-            Matrix.scaleM(rotation,0,minOf(1f,targetAspect/aspect),minOf(1f,aspect/targetAspect),1f)
+            if (preserveFullFrame && index == 0) {
+                val fitted = fitConcurrentFrame(w,h,aspect)
+                GLES20.glViewport(fitted.left,fitted.top,fitted.width,fitted.height)
+            } else {
+                GLES20.glViewport((r.x * width[0]).toInt(), ((1f-r.y-r.height) * height[0]).toInt(), w, h)
+                Matrix.scaleM(rotation,0,minOf(1f,targetAspect/aspect),minOf(1f,aspect/targetAspect),1f)
+            }
             Matrix.translateM(rotation,0,-.5f,-.5f,0f)
             GLES20.glUniformMatrix4fv(GLES20.glGetUniformLocation(program,"rotation"),1,false,rotation,0)
             val p = GLES20.glGetAttribLocation(program,"p"); val uv = GLES20.glGetAttribLocation(program,"uv")

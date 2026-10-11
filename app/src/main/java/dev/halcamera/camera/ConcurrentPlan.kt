@@ -104,11 +104,37 @@ internal class ConcurrentLease {
 
 internal data class ConcurrentFrame(val left: Int, val top: Int, val width: Int, val height: Int)
 
-/** Split the available height without gaps, in device order. */
-internal fun concurrentFrames(count: Int, width: Int, height: Int): List<ConcurrentFrame> {
+internal enum class SplitLayout(val label: String) {
+    STACKED("Top / bottom"), SIDE_BY_SIDE("Side by side"), GRID("Grid")
+}
+
+/** Preview geometry only. Captures and encoders retain each camera's own dimensions. */
+internal fun concurrentFrames(count: Int, width: Int, height: Int, layout: SplitLayout = SplitLayout.STACKED): List<ConcurrentFrame> {
     if (count < 1 || width < 1 || height < 1) return emptyList()
-    return List(count) { index ->
-        val top = index * height / count
-        ConcurrentFrame(0, top, width, (index + 1) * height / count - top)
+    val columns = when (layout) {
+        SplitLayout.STACKED -> 1
+        SplitLayout.SIDE_BY_SIDE -> count
+        SplitLayout.GRID -> kotlin.math.ceil(kotlin.math.sqrt(count.toDouble())).toInt()
     }
+    val rows = (count + columns - 1) / columns
+    return List(count) { index ->
+        val row = index / columns
+        val inRow = minOf(columns, count - row * columns)
+        val col = index % columns
+        val left = col * width / inRow
+        val top = row * height / rows
+        ConcurrentFrame(left, top, (col + 1) * width / inRow - left, (row + 1) * height / rows - top)
+    }
+}
+
+/** Sensor output size is independent of how small or wide its Split panel is. */
+internal fun concurrentOutputSize(preview: LiveSize, rotation: Int): LiveSize =
+    if ((rotation % 180 + 180) % 180 == 90) LiveSize(preview.height, preview.width) else preview
+
+/** Letterbox instead of sampling a centre crop when a preview surface resizes. */
+internal fun fitConcurrentFrame(width: Int, height: Int, aspect: Float): ConcurrentFrame {
+    require(width > 0 && height > 0 && aspect.isFinite() && aspect > 0)
+    val w = minOf(width, (height * aspect).toInt().coerceAtLeast(1))
+    val h = minOf(height, (width / aspect).toInt().coerceAtLeast(1))
+    return ConcurrentFrame((width-w)/2,(height-h)/2,w,h)
 }

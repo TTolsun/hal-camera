@@ -1,0 +1,6 @@
+kind: nested-class
+title: session
+children: []
+parentPath:
+  - screens
+  - concurrent-camera-screen
