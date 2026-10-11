@@ -233,7 +233,7 @@ class CameraXEngine(
                 if (videoMode) video.prepare()
                 val sizes = if (videoMode) (telemetry.sessions[session]?.get("negotiatedStreams") as? Map<String, Any?>).orEmpty() else streamSizes()
                 telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
-                if (!videoMode) telemetry.configureCallbackStreams(session, outputs.metadata(liveStreams?.jpegFromYuv == true))
+                if (!videoMode) telemetry.configureCallbackStreams(session, outputs.metadata())
                 telemetry.event(session, "bound", sizes)
                 streamsConfigured(sizes)
             } catch (e: Exception) {
@@ -270,11 +270,9 @@ class CameraXEngine(
         "appJpeg" to analysis?.resolutionInfo?.resolution?.toString()?.takeIf { liveStreams?.jpegFromYuv == true })
 
     /** A recording start or stop rebound the use cases: the zoom and the controls go on the new session again. */
-    private fun rebuilt(outputs: StreamConfiguration<UseCase>, sizes: Map<String, Any?>, composed: Boolean = false) {
+    private fun rebuilt(outputs: StreamConfiguration<UseCase>, sizes: Map<String, Any?>) {
         telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
-        val appJpeg = !composed && liveStreams?.jpegFromYuv == true &&
-            outputs.outputs.any { it.descriptor.kind == OutputKind.YUV }
-        telemetry.configureCallbackStreams(session, outputs.metadata(appJpeg))
+        telemetry.configureCallbackStreams(session, outputs.metadata())
         telemetry.event(session, "bound", sizes)
         camera?.cameraControl?.setZoomRatio(zoomRatio)
         controls.sessionRebuilt()
@@ -477,8 +475,7 @@ class CameraXEngine(
                             added.mainImageCapture?.let { ConfiguredOutput<UseCase>(captureOutput,it) })),
                         plan.sizes(previews.first().resolutionInfo?.resolution.toString(),
                             mainAnalysis?.resolutionInfo?.resolution?.toString(),output.toString(),photo = photo,secondaryPhoto = added.photoSize) +
-                            mapOf("pip" to previews.last().resolutionInfo?.resolution?.toString()),
-                        composed = true)
+                            mapOf("pip" to previews.last().resolutionInfo?.resolution?.toString()))
                     telemetry.event(session,"pip_configured",mapOf("sourceId" to source.id,"physical" to false,"api" to "CameraX.ConcurrentCamera"))
                 }, ready = {
                     if (pip === added && active) {

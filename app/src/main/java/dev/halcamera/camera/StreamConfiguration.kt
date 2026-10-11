@@ -39,6 +39,6 @@ class StreamConfiguration<T>(outputs: List<ConfiguredOutput<T>>) {
     val repeating get() = outputs.filter { it.descriptor.repeating }
     val still get() = outputs.filter { it.descriptor.stillCapture }
 
-    fun metadata(appJpeg: Boolean = false): List<Map<String, Any?>> =
-        outputs.map { it.descriptor.metadata() } + if (appJpeg) listOf(appJpegOutput.metadata()) else emptyList()
+    /** Callback rows describe camera outputs; app conversion and encoder outputs are separate. */
+    fun metadata(): List<Map<String, Any?>> = outputs.map { it.descriptor.metadata() }
 }

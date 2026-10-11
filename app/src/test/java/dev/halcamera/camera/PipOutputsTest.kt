@@ -4,6 +4,18 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PipOutputsTest {
+    @Test fun serviceAndPhysicalPreviewCompositionNeverAdvertiseAnAppRecordingStream() {
+        for (physicalId in listOf(null, "arbitrary-sensor")) {
+            val plan = PipOutputs(physicalId)
+            val targets = if (physicalId == null) listOf("main") else listOf("main", "secondary")
+            val config = plan.configure(targets, emptyList())
+            val rows = config.metadata()
+            assertFalse(rows.any { it["kind"] == "RECORDING" })
+            assertEquals(targets, config.targets)
+            assertTrue(config.outputs.all { it.descriptor.kind == OutputKind.PREVIEW })
+            assertFalse(config.metadata().any { it["kind"] == "RECORDING" })
+        }
+    }
     @Test fun supportQueryRetainsExactlyTheHalStreamsUsedByPip() {
         val original = OutputKind.entries.map { kind ->
             ConfiguredOutput(OutputDescriptor(kind.name,kind,false),kind.name)

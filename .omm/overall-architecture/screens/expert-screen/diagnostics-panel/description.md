@@ -21,7 +21,7 @@ LiveReadings는 프리뷰의 수치와 활성 설정과 앱의 CPU·PSS·Thermal
 
 LiveMeasurementView는 FPS·EXP·AE·AF·AWB를 각 항목의 최대 문구 폭을 예약한 다섯 칸에 왼쪽 정렬합니다. 칸 사이 간격은 8dp이며 전체 묶음은 화면 중앙에 배치합니다. 정보 뷰 아래에는 5dp 여백을 두어 줌 버튼과의 시각적 간격을 확보하고 줌·촬영 버튼의 위치는 유지합니다. 기본 글자 크기는 12sp이며 화면 폭과 가장 긴 상태 문구를 기준으로 한 번 맞춥니다. AE·AF·AWB 문구는 Search, Scan, Focus처럼 간결하게 표시합니다. AE·AF·AWB 상태가 바뀌어도 각 칸의 시작 위치·폭·글자 크기는 바뀌지 않습니다. 칸을 넘는 예외적인 값은 말줄임으로 처리하여 겹치지 않습니다. EXP는 관측 노출 시간이며 1초 미만은 ms, 그 이상은 s로 표시합니다. ISO와 EV는 측정 행에서 제외합니다. 줌 배율과 적용 배율 차이는 실시간 정보에 표시하지 않으며, 현재 배율은 줌 버튼에서 확인합니다. 아래에는 Flash, AE/AF Lock, AEB, 수동 모드·초점·WB 중 활성 설정만 표시하며 Manual 선택창과 원본 텔레메트리는 유지합니다.
 
-PIP에서는 합성기에 입력된 각 SurfaceTexture의 프레임 수신을 관측합니다. 메인 Service ID의 TotalCaptureResult에 포함된 Physical 결과는 센서별 `Meta (Phy)` 행으로 표시하며 별도 HAL 콜백인 것처럼 취급하지 않습니다. Physical 프리뷰는 해당 센서 타임스탬프와 요청 프레임을 연결합니다. 별도 Service ID의 결과는 ID 버튼으로 따로 표시하며 메인 Service ID 그래프에 섞지 않습니다. 합성 JPEG 저장은 Callback에서 제외합니다.
+PIP에서는 합성기에 입력된 각 SurfaceTexture의 프레임 수신을 관측합니다. 메인 Service ID의 TotalCaptureResult에 포함된 Physical 결과는 센서별 `Meta (Phy)` 행으로 표시하며 별도 HAL 콜백인 것처럼 취급하지 않습니다. Physical 프리뷰는 해당 센서 타임스탬프와 요청 프레임을 연결합니다. 별도 Service ID의 결과는 ID 버튼으로 따로 표시하며 메인 Service ID 그래프에 섞지 않습니다. 앱의 합성 JPEG·YUV JPEG 변환 완료·GPU 인코더 출력은 Callback에서 제외합니다. 일반 Camera2·CameraX VIDEO와 Camera2 Dual의 실제 카메라 Recording 출력은 행을 유지하되 버퍼 시각을 관측하지 못하면 No callback으로 표시합니다.
 
 Physical 출력은 종류에 따라 `Preview (Phy)`, `YUV (Phy)`로 표시하며 일반 YUV 행은 번호 없이 `YUV`로 표시합니다. 같은 이름의 출력도 내부 ID로 구분합니다.
 

@@ -1,6 +1,6 @@
-Camera2Engine은 카메라 스레드에서 요청·세션을 관리하고 UI는 메인 스레드로 전달합니다. 기본 크기는 픽셀 예산으로 고르며 명시 크기는 대체하지 않습니다. LiveStreamSupport가 개별 지원, LiveSessionCheck가 출력 조합을 검사하며 조회 불가는 unknown입니다. PHOTO는 Preview FPS와 최소 프레임 시간을 검사하고 VIDEO는 Recording FPS를 사용합니다. PIP 녹화의 카메라 FPS는 템플릿의 Auto이며 합성 인코더만 30fps입니다. 비활성 녹화 값은 PHOTO를 거부하지 않습니다. 실제 FPS는 capture_result에 남으며 Benchmark StreamSpec과 Live 설정은 함께 전달할 수 없습니다.
+Camera2Engine은 카메라 스레드에서 요청·세션을 관리하고 UI를 메인 스레드로 전달합니다. 기본 크기는 픽셀 예산으로 고르며 명시 크기는 대체하지 않습니다. LiveStreamSupport는 개별 지원, LiveSessionCheck는 조합을 검사하며 조회 불가는 unknown입니다. PHOTO는 카메라 FPS와 최소 프레임 시간을, VIDEO는 녹화 FPS를 검사합니다. PIP는 카메라 Auto·합성 인코더 30fps입니다. PHOTO는 비활성 녹화 값으로 거부하지 않습니다. 실제 FPS는 capture_result에 기록하며 Benchmark StreamSpec과 Live 설정은 함께 받지 않습니다.
 
-사진 촬영과 플래시 precapture는 Camera2StillCapture(하위 요소 still-capture)가, Live 녹화는 Camera2LiveRecorder(하위 요소 live-recorder)가 맡습니다. 엔진은 두 클래스에 Host로 카메라·세션과 request 생성을 넘겨주고, 세션 구성·request 조립·Live 제어·줌·close를 직접 처리합니다. 프리뷰 버퍼를 늘어나지 않게 화면에 채우는 변환 행렬은 PreviewTransform.kt의 fitPreview가 만듭니다.
+사진·플래시 precapture는 Camera2StillCapture, Live 녹화는 Camera2LiveRecorder가 맡습니다. 엔진은 Host로 카메라·세션·요청을 제공하고 구성·제어·줌·종료를 관리합니다. PreviewTransform.fitPreview는 프리뷰를 화면에 맞춥니다. 상세는 still-capture·live-recorder·preview-output 요소에 있습니다.
 
 녹화 중 줌은 같은 target의 repeating request를 교체합니다. 연속 입력은 카메라 스레드에서 마지막 배율로 합칩니다. 세션 구성·종료 중에는 요청을 보류하고 다음 세션에 현재 배율을 적용합니다. 닫힌 세션의 요청은 request_skipped로 기록합니다.
 

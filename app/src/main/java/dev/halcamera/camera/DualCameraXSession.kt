@@ -83,7 +83,7 @@ class DualCameraXSession(
 
     private fun bind() {
         telemetry.sessions[sessionId] = mapOf("engine" to "CameraX", "cameraId" to plan.logicalId, "physicalIds" to ids)
-        telemetry.configureCallbackStreams(sessionId, dualCallbackStreams().take(2))
+        telemetry.configureCallbackStreams(sessionId, dualCallbackStreams(photos = false, physicalIds = ids))
         val configs = ids.mapIndexed { index, physicalId ->
             val selector = CameraSelector.Builder()
                 .addCameraFilter { infos -> infos.filter { Camera2CameraInfo.from(it).cameraId == plan.logicalId } }
@@ -185,7 +185,9 @@ class DualCameraXSession(
             var attached = 0
             relays.forEachIndexed { index, relay -> relay.encode(output.surfaces[index]) { main.execute {
                 attached++
-                if (active && attached == 2) listener.onRecording()
+                if (active && attached == 2) {
+                    listener.onRecording()
+                }
             } } }
         } catch (e: Exception) { fail("CameraX recording start failed", e) }
     }

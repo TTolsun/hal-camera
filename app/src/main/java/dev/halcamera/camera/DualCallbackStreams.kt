@@ -1,9 +1,25 @@
 package dev.halcamera.camera
 
-/** Display delivery is observable on both engines; timestamps are matched to each physical result. */
-fun dualCallbackStreams() = listOf(
-    mapOf("id" to "preview_main", "label" to "Main display", "observable" to true, "eventKind" to "preview_available"),
-    mapOf("id" to "preview_sub", "label" to "Sub display", "observable" to true, "eventKind" to "preview_available"),
-    mapOf("id" to "photo_main", "label" to "Main photo", "observable" to true, "eventKind" to "image_available", "repeating" to false),
-    mapOf("id" to "photo_sub", "label" to "Sub photo", "observable" to true, "eventKind" to "image_available", "repeating" to false),
-)
+/** Only Camera2's direct camera recording targets belong in the Callback stream list. */
+fun dualCallbackStreams(recordingConfigured: Boolean = false, photos: Boolean = true,
+    physicalIds: List<String> = emptyList()): List<Map<String, Any?>> = buildList {
+    listOf("main", "sub").forEachIndexed { index, id ->
+        add(OutputDescriptor("preview_$id", OutputKind.PREVIEW, true, observable = false,
+            physicalId = physicalIds.getOrNull(index),
+            displayName = "${if (index == 0) "Main" else "Sub"} Preview").metadata())
+    }
+    if (photos) addAll(listOf(
+        mapOf("id" to "photo_main", "label" to "Main photo", "observable" to true, "eventKind" to "image_available", "repeating" to false),
+        mapOf("id" to "photo_sub", "label" to "Sub photo", "observable" to true, "eventKind" to "image_available", "repeating" to false),
+    ))
+    if (recordingConfigured) listOf("main", "sub").forEachIndexed { index, id ->
+        add(OutputDescriptor("recording_$id", OutputKind.RECORDING, true, observable = false,
+            physicalId = physicalIds.getOrNull(index),
+            displayName = "${if (index == 0) "Main" else "Sub"} Recording").metadata())
+    }
+}
+
+/** Direct Camera2 encoder targets exist in repeating requests only after the recorders start. */
+internal fun dualRequestStreams(photo: Boolean, recording: Boolean): List<String> =
+    if (photo) listOf("photo_main", "photo_sub") else listOf("preview_main", "preview_sub") +
+        if (recording) listOf("recording_main", "recording_sub") else emptyList()

@@ -394,7 +394,7 @@ class Camera2Engine(
                     captureSession = session
                     configuredOutputs = outputs
                     livePhotoOutputs = outputs
-                    telemetry.configureCallbackStreams(sessionId, outputs.metadata(liveStreams?.jpegFromYuv == true))
+                    telemetry.configureCallbackStreams(sessionId, outputs.metadata())
                     try {
                         startRelock()
                         telemetry.event(sessionId, "repeating_submit", mapOf("zoomRequested" to zoomRatio))
