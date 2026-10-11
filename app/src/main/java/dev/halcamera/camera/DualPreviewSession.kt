@@ -117,8 +117,9 @@ class DualPreviewSession(
     private val exposureWatch = TouchExposureWatch()
     private var focusFeedback: ((TouchPhase) -> Unit)? = null
     private var exposureFeedback: ((TouchPhase) -> Unit)? = null
+    private val requestStreams = java.util.WeakHashMap<CaptureRequest, List<String>>()
     private val timelineCallback = telemetry?.callback(sessionId, streams = {
-        dualRequestStreams(it.tag == "dual_photo", recording)
+        requestStreams[it] ?: dualRequestStreams(it.tag == "dual_photo", false)
     }, alive = { active })
 
     @android.annotation.SuppressLint("NewApi")
@@ -129,7 +130,7 @@ class DualPreviewSession(
             if (recording) video?.surfaces?.forEach(::addTarget)
             mainControls?.apply(camera, this, video != null, trigger)
             setTag("dual_preview")
-        }.build()
+        }.build().also { requestStreams[it] = dualRequestStreams(false, recording) }
     }
 
     private fun repeat() {
@@ -349,8 +350,11 @@ class DualPreviewSession(
                     telemetry?.sessions?.putIfAbsent(sessionId, mapOf("engine" to "Camera2", "cameraId" to plan.logicalId,
                         "physicalIds" to listOf(plan.first.id, plan.second.id),
                         "timestampSource" to characteristics[CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE]))
-                    telemetry?.configureCallbackStreams(sessionId, dualCallbackStreams(recordingConfigured = videoContext != null,
-                        physicalIds = listOf(plan.first.id, plan.second.id)))
+                    val callbackStreams = dualCallbackStreams(recordingConfigured = videoContext != null,
+                        physicalIds = listOf(plan.first.id, plan.second.id))
+                    // Restoring the same photo preview must retain captured events and the Hold epoch.
+                    if (telemetry?.sessions?.get(sessionId)?.get("callbackStreams") != callbackStreams)
+                        telemetry?.configureCallbackStreams(sessionId, callbackStreams)
                     s.setRepeatingRequest(request(), captureCallback, handler)
                     main.post { if (active) listener.onStreaming(size) }
                     status("${plan.first.id} + ${plan.second.id} · $size")

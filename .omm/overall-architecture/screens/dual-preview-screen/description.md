@@ -6,7 +6,7 @@ DualPreviewPlanner는 후면 논리 멀티 카메라의 서로 다른 물리 카
 
 DualPreviewSession은 공개 논리 ID를 열고 OutputConfiguration.setPhysicalCameraId로 각 출력을 연결합니다. API 29 이상에서는 isSessionConfigurationSupported를 확인하고, 거부되면 다음 크기를 시도합니다. 물리 ID를 직접 열 수 있다고 가정하지 않습니다. opening 중 종료 요청도 CameraDevice의 콜백과 onClosed를 기다립니다. 장치가 닫힌 뒤 SurfaceTexture를 해제하고 다음 세션을 시작합니다.
 
-Camera2의 Dual · V는 각 physical camera의 프리뷰와 MediaRecorder surface를 같은 OutputConfiguration에서 공유합니다. 두 카메라의 MediaRecorder 출력 크기도 확인하며, 인코더 또는 HAL이 거부한 크기는 다음 후보로 넘어갑니다. 녹화 버튼을 누르면 H.264·30 fps 인코더 두 개를 시작하고 두 encoder surface를 repeating request에 추가합니다. Callback에 두 물리 Recording 출력을 등록하고 버퍼 관측 불가는 No callback으로 표시합니다. 출력 재구성 때 목록을 갱신하여 이전 구성을 남기지 않습니다. 오디오는 저장하지 않으며 프리뷰 위치는 저장 영상에 영향을 주지 않습니다. 30 fps는 인코더 설정이고 실제 프레임 전달률을 보장하지 않습니다.
+Camera2의 Dual · V는 각 physical camera의 프리뷰와 MediaRecorder surface를 같은 OutputConfiguration에서 공유합니다. 두 카메라의 MediaRecorder 출력 크기도 확인하며, 인코더 또는 HAL이 거부한 크기는 다음 후보로 넘어갑니다. 녹화 버튼을 누르면 H.264·30 fps 인코더 두 개를 시작하고 두 encoder surface를 repeating request에 추가합니다. Callback에 두 물리 Recording 출력을 등록하고 버퍼 관측 불가는 No callback으로 표시합니다. 출력 목록이 바뀔 때만 Callback 기준 시각을 갱신하여 사진 촬영 뒤 같은 프리뷰를 복원해도 촬영 기록과 Hold를 유지합니다. 요청 생성 때 대상 ID를 고정하므로 녹화 시작 전에 제출한 프리뷰 요청에 녹화 대상을 붙이지 않습니다. 오디오는 저장하지 않으며 프리뷰 위치는 저장 영상에 영향을 주지 않습니다. 30 fps는 인코더 설정이고 실제 프레임 전달률을 보장하지 않습니다.
 
 정지·화면 이탈 때 장치를 닫은 뒤 인코더를 종료하여 카메라별 MP4 두 개를 MediaLibrary로 저장합니다. 파일명은 공통 촬영 식별자와 A/B, physical camera ID를 포함합니다. 두 파일의 쓰기·공개 중 하나라도 실패하면 이번 저장의 MediaStore 항목을 모두 지웁니다. encoder 오류 또는 stop 실패도 두 파일을 공개하지 않습니다. 카메라·인코더를 순차 시작하므로 두 MP4의 시작 시각과 길이가 정확히 같다고 보장하지 않습니다.
 
