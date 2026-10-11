@@ -2,7 +2,7 @@ Camera2Engine은 전용 HandlerThread에서 Camera2 요청과 세션을 관리�
 
 사진 촬영과 플래시 precapture는 Camera2StillCapture(하위 요소 still-capture)가, Live 녹화는 Camera2LiveRecorder(하위 요소 live-recorder)가 맡습니다. 엔진은 두 클래스에 Host로 카메라·세션과 request 생성을 넘겨주고, 세션 구성·request 조립·Live 제어·줌·close를 직접 처리합니다. 프리뷰 버퍼를 늘어나지 않게 화면에 채우는 변환 행렬은 PreviewTransform.kt의 fitPreview가 만듭니다.
 
-녹화 중에도 줌은 받습니다. 줌을 바꾸면 녹화 request를 같은 preview·인코더 target으로 다시 만들어 repeating request만 교체합니다. 줌 입력은 카메라 스레드에 한 번만 예약하므로, 빠르게 연속으로 조작하면 실행 시점의 마지막 배율 하나로 합쳐집니다. 녹화 세션이 구성 중이거나 종료 중이면 요청을 보내지 않고, 다음 세션이 구성될 때 현재 배율을 읽어 적용합니다. 정지와 겹쳐 닫힌 세션에 보낸 요청은 카메라 오류가 아니라 request_skipped 이벤트로 기록합니다.
+녹화 중 줌은 같은 target의 repeating request를 교체합니다. 연속 입력은 카메라 스레드에서 마지막 배율로 합칩니다. 세션 구성·종료 중에는 요청을 보류하고 다음 세션에 현재 배율을 적용합니다. 닫힌 세션의 요청은 request_skipped로 기록합니다.
 
 Live 제어는 Camera2TouchFocus와 AeRelock이 담당합니다. 엔진은 모든 요청에 현재 제어를 적용하며 녹화 시작 시 같은 세션을 유지합니다. 터치 측광·수렴 대기·수동 제어의 순서는 live-controls/touch-focus 요소에서 설명합니다.
 

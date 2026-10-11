@@ -165,8 +165,7 @@ class Camera2Engine(
         override val needsPrecapture: Boolean get() = requestControls().needsPrecapture
         override val flashName: String get() = controls.flash.name
         override val zoomRequested: Float get() = zoomRatio
-        override val captureCallback: CameraCaptureSession.CaptureCallback get() =
-            if (Build.VERSION.SDK_INT >= 30) pip?.stillCallback(callback) { "pip_still" in requestOutputs[it].orEmpty() } ?: callback else callback
+        override val captureCallback: CameraCaptureSession.CaptureCallback get() = callback
         override fun orientation(c: CameraCharacteristics): Int = outputRotation(c)
         override fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?) = this@Camera2Engine.stillRequest(camera, c, tag, rotation)
         override fun precaptureTrigger(callback: CameraCaptureSession.CaptureCallback) = withLiveSession("precapture_trigger") { camera, session, c ->
@@ -650,7 +649,8 @@ class Camera2Engine(
     }
 
     /** Targets the selected photo source and RAW; benchmark requests remain JPEG-only. */
-    private fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?): CaptureRequest =
+    private fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?,
+        outputs: List<ConfiguredOutput<Surface>> = configuredOutputs.still.filter { it.descriptor.id != "pip_still" }): CaptureRequest =
         camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
             liveStreams?.fps?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, android.util.Range(it.min, it.max)) }
             if (rotation != null) {
@@ -663,7 +663,7 @@ class Camera2Engine(
             // Same AE mode, EV, lock and torch as the preview, so the still is exposed as the preview showed it.
             if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus); applyManual(c) }
             setTag(tag)
-        }.let { buildRequest(it, configuredOutputs.still) }
+        }.let { buildRequest(it, outputs) }
 
     private fun outputRotation(c: CameraCharacteristics): Int {
         val degrees = when (view.display?.rotation) { Surface.ROTATION_90 -> 90; Surface.ROTATION_180 -> 180; Surface.ROTATION_270 -> 270; else -> 0 }
@@ -814,6 +814,10 @@ class Camera2Engine(
                     position = position, mainOutputs = analysis.targets,
                     inputFrame = callbacks::input, photoFrame = callbacks::photo,
                     rawPhoto = if (photo != null || liveStreams?.raw != null) stills::capture else null,
+                    physicalCapture = { target, rotation, cb ->
+                        checkNotNull(captureSession).capture(stillRequest(camera,checkNotNull(chars),"pip-still",rotation,listOf(target)),cb,handler)
+                    },
+                    physicalCallback = callback,
                     configureMain = { inputs ->
                         val outputs = plan.configure(inputs, analysis.outputs + added.physicalPhotoOutputs)
                         configurePipSession(camera,outputs,handler,{ active && pip === added },configured = { value ->

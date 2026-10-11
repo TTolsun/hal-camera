@@ -40,9 +40,11 @@ internal class LivePipSession(
     sourcePhoto: LiveSize? = null,
     streams: PipStreamSettings? = null,
     private val telemetry: Telemetry? = null,
-    parentSession: String? = null,
+    private val parentSession: String? = null,
     private val mediaIo: Executor? = null,
     private val displayRotation: () -> Int = { Surface.ROTATION_0 },
+    private val physicalCapture: ((ConfiguredOutput<Surface>, Int, CameraCaptureSession.CaptureCallback) -> Unit)? = null,
+    private val physicalCallback: CameraCaptureSession.CaptureCallback? = null,
 ) {
     private val manager = context.getSystemService(CameraManager::class.java)
     val sourceSize = sourcePreview ?: readPipPreviewSizes(manager,source.id,streams?.preview).firstOrNull() ?: error("No PIP preview stream")
@@ -85,16 +87,17 @@ internal class LivePipSession(
             c[CameraCharacteristics.LENS_FACING] == CameraCharacteristics.LENS_FACING_FRONT,degrees)
     }
 
-    fun stillCallback(base: CameraCaptureSession.CaptureCallback, accepts: (CaptureRequest) -> Boolean) =
-        if (source.physical) photo?.callback(base,accepts) ?: base else base
-
     private fun originalPhotos(requestId: String?, done: (Result<PhotoResult>) -> Unit) { handler.post {
         val secondary = photo
         if (secondary == null) checkNotNull(rawPhoto)(requestId,done)
         else capturePipPhotoGroup(requestId,listOf(
             { complete ->
                 secondary.begin(requestId,complete)
-                if (!source.physical) try { captureSecondary(secondary) } catch (e: Exception) { secondary.abort(e) }
+                try {
+                    if (source.physical) checkNotNull(physicalCapture)(secondary.output,secondary.captureRotation,
+                        secondary.callback(checkNotNull(physicalCallback)))
+                    else captureSecondary(secondary)
+                } catch (e: Exception) { secondary.abort(e) }
             },
             { complete -> checkNotNull(rawPhoto)(requestId,complete) }
         ),MediaLibrary(context),checkNotNull(mediaIo),main,done,mainIndex = 1)
