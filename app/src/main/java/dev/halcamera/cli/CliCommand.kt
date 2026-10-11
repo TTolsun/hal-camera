@@ -19,22 +19,18 @@ data class CliCommand(
     val audio: Boolean? = null,
     val engine: String? = null,
     val streams: CliStreams? = null,
-    val options: CliOptions? = null
+    val options: CliOptions? = null,
+    val mode: String? = null
 ) {
+    val videoMode get() = command in setOf("record.start", "dual.record") || mode == "Video"
     init {
         validateId(id)
+        val spec = CliCommands.get(command)
+        if (mode != null && (command !in setOf("preview", "streams") || mode !in setOf("Photo", "Video")))
+            throw CliFailure("INVALID_ARGUMENT", "--mode Photo|Video is only for preview or streams")
         if (options?.values?.keys?.any { it !in CliOptions.allowed(command) } == true)
             throw CliFailure("INVALID_ARGUMENT", "Unexpected option for $command")
-        val required = when (command) {
-            "settings.limit" -> setOf("limit")
-            "incidents.export", "incidents.delete" -> setOf("incident")
-            "results.show", "results.export", "results.delete", "baseline.add", "baseline.remove" -> setOf("run")
-            "results.compare" -> setOf("run", "reference")
-            "gallery.export", "gallery.delete" -> setOf("media")
-            "meter" -> setOf("x", "y")
-            "dual.preview", "dual.capture", "dual.record" -> setOf("first", "second")
-            else -> emptySet()
-        }
+        val required = spec.requiredOptions
         if (!options?.values.orEmpty().keys.containsAll(required)) throw CliFailure("INVALID_ARGUMENT", "$command requires ${required.joinToString()}")
         if (command.endsWith(".delete") && options?.values?.get("confirm") != "true")
             throw CliFailure("CONFIRM_REQUIRED", "Inspect the listed ID, then add --confirm true to delete that item")
@@ -63,10 +59,10 @@ data class CliCommand(
     }
 
     companion object {
-        val COMMANDS = listOf("settings.show", "settings.limit", "incidents.list", "incidents.export", "incidents.delete", "burst", "bracket", "meter", "events", "live.info", "dual.cameras", "dual.preview", "dual.capture", "dual.record", "results.list", "results.show", "results.export", "results.compare", "results.delete", "baseline.add", "baseline.remove", "gallery.list", "gallery.export", "gallery.delete", "streams", "cameras", "preview", "preview.stop", "capture", "record.start", "probe", "cts.cases", "cts.run", "benchmark.run")
-        val STREAM_COMMANDS = setOf("preview", "capture", "record.start", "burst", "bracket")
-        val LIVE_CAMERA_COMMANDS = STREAM_COMMANDS + setOf("streams", "dual.preview", "dual.capture", "dual.record")
-        val CAMERA_COMMANDS = LIVE_CAMERA_COMMANDS + "benchmark.run"
+        val COMMANDS get() = CliCommands.specs.keys.toList()
+        val STREAM_COMMANDS get() = CliCommands.specs.values.filter { it.streams }.map { it.name }.toSet()
+        val LIVE_CAMERA_COMMANDS get() = CliCommands.specs.values.filter { it.engine }.map { it.name }.toSet()
+        val CAMERA_COMMANDS get() = CliCommands.specs.values.filter { it.camera }.map { it.name }.toSet()
         const val BENCHMARK_PROFILE = "camera2-standard-v2"
         const val MAX_CASES = 64
         /** The suite key prefixes of [dev.halcamera.cts.suite.SuiteItem], repeated so this file stays free of cts types. */

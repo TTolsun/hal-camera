@@ -8,7 +8,7 @@ import java.io.File
  * CLI request into `begin`, the finished suite into a completed request with its report files, and a cancel
  * into `stop`. Scalar arguments keep this package free of cts types.
  */
-class CtsController(private val commands: CommandCoordinator, private val driver: Driver) : CliHost {
+class CtsController(private val commands: CliCompletion, private val driver: Driver) : CliHost {
     interface Driver {
         /** Starts the queue the screen was opened with; returns a failure code, or null when the run began. */
         fun begin(): String?

@@ -5,7 +5,7 @@ import org.json.JSONObject
 import java.io.File
 
 /** Bridges the existing UI run path to durable command completion after report persistence. */
-class BenchmarkController(private val commands: CommandCoordinator, private val driver: Driver) : CliHost {
+class BenchmarkController(private val commands: CliCompletion, private val driver: Driver) : CliHost {
     interface Driver {
         fun begin(camera: String, profile: String): Boolean
         fun abort()

@@ -26,6 +26,9 @@ data class CliOptions(val values: Map<String, String>) {
                 "count" -> if (value.toIntOrNull() !in 1..BurstRun.MAX_COUNT) invalid("count must be 1–${BurstRun.MAX_COUNT}")
                 "interval_ms" -> if (value.toLongOrNull() !in 0L..60_000L) invalid("interval_ms must be 0–60000")
                 "x", "y" -> number(value, 0.0, 1.0)
+                "pip_type" -> if (value !in setOf("off", "physical", "service")) invalid("pip_type must be off, physical or service")
+                "pip_x", "pip_y" -> number(value, 0.0, 1.0)
+                "pip_width", "pip_height" -> number(value, 0.01, 1.0)
                 "meter" -> if (value !in setOf("focus", "exposure")) invalid("meter must be focus or exposure")
                 else -> if (!value.matches(Regex("[A-Za-z0-9_-]{1,128}"))) invalid("$key must be a listed ID")
             }
@@ -33,9 +36,17 @@ data class CliOptions(val values: Map<String, String>) {
         if (values.containsKey("iso") != values.containsKey("exposure_ns")) invalid("Use --iso and --exposure-ns together")
         if (values.keys.any { it in setOf("gains", "matrix") } && values["wb"] != "CUSTOM") invalid("gains and matrix require --wb CUSTOM")
         if (values.containsKey("x") != values.containsKey("y")) invalid("Use --x and --y together")
+        val pip = values["pip_type"]
+        if ((pip in setOf("physical", "service")) != values.containsKey("pip_camera")) invalid("Use --pip-type physical|service and --pip-camera together")
+        val positionKeys = setOf("pip_x", "pip_y", "pip_width", "pip_height")
+        if (values.keys.any { it in positionKeys }) {
+            if (pip !in setOf("physical", "service") || !values.keys.containsAll(positionKeys)) invalid("PIP position requires a selected PIP and all four coordinates")
+            if (values.getValue("pip_x").toDouble() + values.getValue("pip_width").toDouble() > 1.0 ||
+                values.getValue("pip_y").toDouble() + values.getValue("pip_height").toDouble() > 1.0) invalid("PIP rectangle must fit within 0–1")
+        }
     }
 
-    fun controls(support: LiveControlSupport, manual: ManualSupport, video: Boolean, base: LiveControls = LiveControls()): LiveControls {
+    fun controls(support: LiveControlSupport, manual: ManualSupport, video: Boolean, base: LiveControls = LiveControls(), composited: Boolean = false): LiveControls {
         val result = LiveControls(values["ev"]?.toInt() ?: base.evIndex, values["ae_lock"]?.toBoolean() ?: base.aeLock, values["af_lock"]?.toBoolean() ?: base.afLock,
             values["flash"]?.let(FlashMode::valueOf) ?: base.flash,
             ManualControls(values["iso"]?.let { ManualExposure(it.toInt(), values.getValue("exposure_ns").toLong()) } ?: base.manual.exposure,
@@ -43,33 +54,23 @@ data class CliOptions(val values: Map<String, String>) {
                 ManualColor(values["gains"]?.split(',')?.map(String::toFloat) ?: base.manual.color.gains,
                     values["matrix"]?.split(',')?.map(String::toFloat) ?: base.manual.color.transform)))
         manual.rejection(result.manual)?.let { throw CliFailure("PREFLIGHT_FAILED", it) }
-        if (result.coerce(support, video) != result) throw CliFailure("PREFLIGHT_FAILED", "Unsupported control combination. Run streams for supported controls.")
+        if (result.coerce(support, video, composited || values["pip_type"] in setOf("physical", "service")) != result) throw CliFailure("PREFLIGHT_FAILED", "Unsupported control combination. Run streams for supported controls.")
         return result
     }
 
     companion object {
-        val CONTROL_KEYS = setOf("zoom", "ev", "ae_lock", "af_lock", "flash", "iso", "exposure_ns", "focus", "wb", "gains", "matrix")
-        val KEYS = CONTROL_KEYS + setOf("count", "interval_ms", "x", "y", "meter", "run", "reference", "media", "confirm", "first", "second", "incident", "limit", "build", "commit", "branch", "note")
-        fun allowed(command: String): Set<String> = when (command) {
-            "live.set", "preview", "capture", "record.start", "bracket" -> CONTROL_KEYS
-            "burst" -> CONTROL_KEYS + setOf("count", "interval_ms")
-            "meter" -> setOf("x", "y", "meter")
-            "benchmark.run" -> setOf("build", "commit", "branch", "note")
-            "settings.limit" -> setOf("limit", "confirm")
-            "incidents.export" -> setOf("incident")
-            "incidents.delete" -> setOf("incident", "confirm")
-            "results.show", "results.export", "baseline.add", "baseline.remove" -> setOf("run")
-            "results.compare" -> setOf("run", "reference")
-            "results.delete" -> setOf("run", "confirm")
-            "gallery.export" -> setOf("media")
-            "gallery.delete" -> setOf("media", "confirm")
-            "dual.preview", "dual.capture", "dual.record" -> setOf("first", "second") + CONTROL_KEYS
-            else -> emptySet()
-        }
+        // PIP selection is a per-request scene option; it is not an in-flight camera control.
+        val CONTROL_KEYS get() = CliCommands.controlKeys
+        val KEYS get() = CliCommands.specs.values.flatMap { it.options }.toSet()
+        fun allowed(command: String): Set<String> = if (command == "live.set") CONTROL_KEYS else CliCommands.specs[command]?.options.orEmpty()
         private fun number(value: String, min: Double, max: Double) {
             val n = value.toDoubleOrNull()
             if (n == null || !n.isFinite() || n !in min..max) invalid("Expected a number from $min to $max")
         }
         private fun invalid(message: String): Nothing = throw CliFailure("INVALID_ARGUMENT", message)
     }
+
+    fun pipSource(): PipSource? = values["pip_camera"]?.let { PipSource(it, values["pip_type"] == "physical", "CLI PIP $it") }
+    fun pipPosition(): PipRect = if (values.containsKey("pip_x")) PipRect(values.getValue("pip_x").toFloat(), values.getValue("pip_y").toFloat(),
+        values.getValue("pip_width").toFloat(), values.getValue("pip_height").toFloat()) else PipScene.liveDefault
 }

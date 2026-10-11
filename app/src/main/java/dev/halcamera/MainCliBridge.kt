@@ -16,7 +16,12 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
                 if (command.streams == null) null else {
                     var support = liveStreamSupport(getSystemService(CameraManager::class.java).getCameraCharacteristics(id))
                     if (command.engine == "CameraX") support = cameraXStreamSupport(this@createLiveCli, id, support)
-                    command.streams.resolve(support)
+                    val pip = command.options?.pipSource()
+                    command.streams.resolve(support, LiveModePolicy.forVideo(command.videoMode), pip).also { settings ->
+                        pip?.let { readPipStreamCapabilities(manager, it).rejection(settings)?.let { reason ->
+                            throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", reason)
+                        } }
+                    }
                 }
             }
             main.post {
@@ -28,10 +33,11 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
                     }
                     captureFeedback.clearResult()
                     showCallbacks(false)
-                    val modeChanged = engineName != (command.engine ?: "Camera2") || videoMode != (command.command == "record.start")
+                    val modeChanged = engineName != (command.engine ?: "Camera2") || videoMode != command.videoMode
                     cameraId = requireNotNull(command.camera); engineName = command.engine ?: "Camera2"
-                    videoMode = command.command == "record.start"
+                    videoMode = command.videoMode
                     if (modeChanged) resetModeSettings()
+                    resetCliPip()
                     paused = false; zoomRatio = 1f
                     if (settings == null) streamSettings.remove(streamKey()) else streamSettings[streamKey()] = settings
                     resetControls()
@@ -50,6 +56,7 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
             }
         }
     }
+    override fun prepareScene(command: dev.halcamera.cli.CliCommand, ready: () -> Unit) = prepareCliPip(command, ready)
     override fun streamInfo(): Map<String, Any?> =
         (telemetry.sessions[sessionId]?.get("negotiatedStreams") as? Map<*, *>)?.entries
             ?.associate { it.key.toString() to it.value }.orEmpty()
@@ -65,7 +72,7 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
     }
     override fun tune(options: dev.halcamera.cli.CliOptions?, reset: Boolean): org.json.JSONObject {
         if ((!ready && !recordingVideo) || closing || stoppingRecording) throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Start preview or recording first")
-        val requested = if (reset) LiveControls() else options!!.controls(controlBar.support, manualCapabilities, videoMode, controlBar.controls)
+        val requested = if (reset) LiveControls() else options!!.controls(controlBar.support, manualCapabilities, videoMode, controlBar.controls, pipUi.selected != null)
         val zoom = if (reset) 1f else options!!.values["zoom"]?.toFloat() ?: zoomRatio
         val range = zoomRange(manager, cameraId)
         if (zoom !in range.first..range.second) throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Unsupported zoom")
@@ -84,6 +91,17 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
     override fun cancelEvents() { recorder.finish("cancelled")?.let(::exportCliIncident) }
     override fun inspect(command: dev.halcamera.cli.CliCommand) {
         when (command.command) {
+            "pip.sources" -> {
+                val camera = engine as? PipCamera ?: throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Start preview first")
+                cli.state(command.id, "running")
+                camera.checkPipSources { sources ->
+                    if (cli.active?.id == command.id) cli.complete(command.id, dev.halcamera.cli.CliJson.of(mapOf("camera_id" to cameraId,
+                        "engine" to engineName, "mode" to if (videoMode) "Video" else "Photo", "pip_sources" to sources.map {
+                            mapOf("camera_id" to it.id, "type" to if (it.physical) "physical" else "service",
+                                "selectable" to it.selectable, "reason" to it.unavailableReason, "note" to it.supportNote)
+                        })) as org.json.JSONObject)
+                }
+            }
             "live.info" -> cli.complete(command.id, dev.halcamera.cli.CliJson.of(mapOf("camera_id" to cameraId, "engine" to engineName,
                 "ready" to ready, "zoom" to zoomRatio, "streams" to streamInfo(), "controls" to controlBar.controls.toString(),
                 "events" to recorder.snapshot(1_000_000_000L).takeLast(100).map { mapOf("kind" to it.kind, "at_ns" to it.atNs.toString(), "values" to it.values) })) as org.json.JSONObject)
@@ -154,3 +172,21 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
     }
     override fun stopPreparing() { paused = true; restartCamera() }
 })
+
+/** Query the configured engine, then wait for the same PIP selection path the UI uses. */
+internal fun MainActivity.prepareCliPip(command: dev.halcamera.cli.CliCommand, done: () -> Unit) {
+    val source = command.options?.pipSource() ?: return done()
+    val camera = engine as? PipCamera ?: throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "PIP is unavailable")
+    camera.checkPipSources { sources ->
+        if (cli.active?.id != command.id || !resumed || engine !== camera) return@checkPipSources
+        val selected = sources.firstOrNull { it.key == source.key }
+        if (selected == null || !selected.selectable) {
+            cli.fail(command.id, "PREFLIGHT_FAILED", selected?.unavailableReason ?: "PIP source is unavailable; run pip sources")
+            return@checkPipSources
+        }
+        pipUi.select(selected, command.options!!.pipPosition()) { result ->
+            if (cli.active?.id != command.id) return@select
+            result.fold({ done() }, { cli.fail(command.id, "PREFLIGHT_FAILED", it.message ?: "Cannot configure PIP") })
+        }
+    }
+}

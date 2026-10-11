@@ -136,9 +136,26 @@ class CliStoreInstrumentation : Instrumentation() {
 
             val active = command(); recovered.create(active)
             clock += CommandStore.RETENTION_MS + 1
+            // Cached and cold reads must expire without another submitted command or cleanup.
+            check(recovered.read(first.id) == null && recovered.read(interrupted.id) == null); passed++
+            check(recovered.read(active.id)?.getString("state") == "accepted"); passed++
             recovered.cleanup()
             check(recovered.read(first.id) == null && recovered.read(interrupted.id) == null); passed++
             check(recovered.read(active.id)?.getString("state") == "accepted"); passed++
+
+            val expiryDirectory = File(directory, "expiry")
+            val expiredIds = mutableListOf<String>()
+            val expiryStore = CommandStore(expiryDirectory, now = { clock }, onExpire = expiredIds::add)
+            val expiring = command(); expiryStore.create(expiring); finish(expiring.id, expiryStore)
+            val deadline = clock + CommandStore.RETENTION_MS
+            clock = deadline - 1
+            check(expiryStore.read(expiring.id) != null); passed++
+            clock = deadline
+            val coldStore = CommandStore(expiryDirectory, now = { clock }, onExpire = expiredIds::add)
+            check(coldStore.read(expiring.id) == null && expiryStore.read(expiring.id) == null); passed++
+            check(!File(expiryDirectory, "${expiring.id}.json").exists()); passed++
+            val videoPreview = AdbArguments.command("preview", mapOf("mode" to "Video"))
+            check(CliJson.decode(CliJson.encode(videoPreview)) == videoPreview); passed++
 
             repeat(CommandStore.MAX_RECORDS + 3) {
                 clock++

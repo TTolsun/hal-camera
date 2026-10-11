@@ -3,7 +3,7 @@ package dev.halcamera
 import dev.halcamera.camera.*
 
 /** Activity-side adapter for Dual controls, diagnostics and request lifecycle. */
-internal fun DualPreviewActivity.createDualCliHost(): dev.halcamera.cli.CliHost = object : dev.halcamera.cli.CliHost {
+internal fun DualPreviewActivity.createDualCliHost(): dev.halcamera.cli.CliHost = object : dev.halcamera.cli.CliHost, dev.halcamera.cli.CliControlsHost, dev.halcamera.cli.CliRecordingHost {
 override val screen = "dual"
 override fun isBusy() = closing || recording || recordPending || photoPending
 override fun tune(options: dev.halcamera.cli.CliOptions?, reset: Boolean): org.json.JSONObject {
