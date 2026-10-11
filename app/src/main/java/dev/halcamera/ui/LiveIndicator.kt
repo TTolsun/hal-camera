@@ -109,7 +109,7 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
         fun size(key: String): String? = if (key == "jpeg" && streams?.get(key) == null && streams?.get("appJpeg") != null)
             "${streams["appJpegSource"] ?: "YUV"} (${streams["appJpeg"]})" else streams?.get(key)?.toString()
         val active = labels.filter { streams?.containsKey(it.first) == true &&
-            (it.first !in listOf("pipYuv", "pipJpeg") || streams[it.first] != null) }
+            (it.first !in listOf("raw", "pipYuv", "pipJpeg") || streams[it.first] != null) }
         val recordingFormat = streams?.get("recordingFormat")?.toString()?.takeIf { it.isNotBlank() } ?: "Auto"
         val value = active.groupBy { it.first.startsWith("pip") }.entries.joinToString("\n") { (pip, row) ->
             (if (pip) "PIP " else "") + row.joinToString("   ") { (key, label, _) ->
