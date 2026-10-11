@@ -28,7 +28,7 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
                 if (cli.active?.id != command.id || !resumed) return@post
                 selected.fold({ settings ->
                     if (command.command in setOf("capture", "burst", "bracket") && settings?.canCapture == false) {
-                        cli.fail(command.id, "PREFLIGHT_FAILED", "Capture requires YUV or JPEG output")
+                        cli.fail(command.id, "PREFLIGHT_FAILED", "Capture requires JPEG (HAL or YUV) or RAW output")
                         return@fold
                     }
                     captureFeedback.clearResult()
@@ -190,3 +190,6 @@ internal fun MainActivity.prepareCliPip(command: dev.halcamera.cli.CliCommand, d
         }
     }
 }
+
+/** CLI requests never inherit an earlier UI PIP selection. The old engine closes before reopening. */
+internal fun MainActivity.resetCliPip() { pendingPip = null; pipUi.reset() }

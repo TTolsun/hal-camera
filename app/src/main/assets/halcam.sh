@@ -275,6 +275,11 @@ esac
 rid=$(cat /proc/sys/kernel/random/uuid)
 validate_id "$rid"
 no_wait=false
+seen_options=
+unique_option() {
+    case " $seen_options " in *" $1 "*) die "Repeated option: --$1" ;; esac
+    seen_options="$seen_options $1"
+}
 wait_seconds=45
 timeout=
 camera=
@@ -292,17 +297,20 @@ while [ $# -gt 0 ]; do
             [ $# -ge 2 ] || die "$1 needs a value"
             case "$2" in ''|*[!a-zA-Z0-9x.,_-]*) die 'Invalid stream option value' ;; esac
             key=$(echo "${1#--}" | tr '-' '_')
+            unique_option "$key"
             stream_options="$stream_options $key:s:$2"
             shift 2 ;;
         --build|--commit|--branch|--note)
             [ $# -ge 2 ] || die "$1 needs a value"
             [ "$method" = benchmark.run ] || die 'Build labels are only for benchmark run'
+            unique_option "${1#--}"
             case "$2" in *:*) die 'Use the Python JSON client for labels containing colons' ;; esac
             case "$1" in --build) build=$2 ;; --commit) commit=$2 ;; --branch) branch=$2 ;; --note) note=$2 ;; esac
             shift 2 ;;
         --camera|--timeout|--cases|--profile)
             [ $# -ge 2 ] || die "$1 needs a value"
             [ -n "$2" ] || die "$1 needs a nonempty value"
+            unique_option "${1#--}"
             case "$1" in --camera) camera=$2 ;; --timeout) timeout=$2 ;; --cases) cases=$2 ;; --profile) profile=$2 ;; esac
             shift 2 ;;
         --no-audio) audio=false; shift ;;

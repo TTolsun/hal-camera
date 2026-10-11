@@ -15,11 +15,12 @@ data class CliCommandSpec(
     val currentScreen: Boolean = false
 ) {
     enum class Target { QUERY, LIBRARY, LIVE }
+    val acceptsMode get() = name in setOf("preview", "streams")
     val cameraPermission get() = target != Target.LIBRARY && name != "cts.cases"
     fun toMap(): Map<String, Any?> = mapOf("camera" to camera, "engine" to engine, "streams" to streams,
         "audio" to audio, "default_timeout_ms" to timeoutMs, "foreground" to (target == Target.LIVE),
         "options" to options.toList(), "required_options" to requiredOptions.toList(), "current_screen" to currentScreen,
-        "mode" to (name in setOf("preview", "streams")))
+        "mode" to acceptsMode)
 }
 
 object CliCommands {

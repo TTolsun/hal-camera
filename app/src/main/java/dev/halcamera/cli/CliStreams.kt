@@ -23,6 +23,8 @@ data class CliStreams(val values: Map<String, String>) {
             throw CliFailure("INVALID_ARGUMENT", "PIP sizes require --pip-type physical|service and --pip-camera")
         if (mode == LiveModePolicy.VIDEO && values["raw_size"].let { it != null && it != "off" })
             throw CliFailure("PREFLIGHT_FAILED", "RAW/DNG is available in Photo mode only")
+        if (mode == LiveModePolicy.VIDEO && values["fps"].let { it != null && it != "auto" })
+            throw CliFailure("PREFLIGHT_FAILED", "Use --video-fps in Video mode; --fps is for Photo preview")
         if (mode == LiveModePolicy.PHOTO && values["stabilization"].let { it != null && it !in setOf("AUTO", "OFF") })
             throw CliFailure("PREFLIGHT_FAILED", "Stabilization is available in Video mode only")
         if (mode == LiveModePolicy.PHOTO && values.keys.any { it in VIDEO_KEYS })

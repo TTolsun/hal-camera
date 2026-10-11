@@ -44,7 +44,8 @@ def make_request(args, operation, hello):
     if getattr(args, "engine", None):
         params["engine"] = args.engine
     if getattr(args, "mode", None):
-        if operation not in ("preview", "streams"):
+        accepts_mode = spec["mode"] if spec else operation in ("preview", "streams")
+        if not accepts_mode:
             raise CliError("INVALID_ARGUMENT", "--mode is only for preview or streams")
         params["mode"] = args.mode
     streams = {key: getattr(args, key) for key in STREAM_KEYS if getattr(args, key, None) is not None}

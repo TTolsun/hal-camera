@@ -18,6 +18,7 @@ class CliModeTest {
     @Test fun `mode incompatible overrides are rejected instead of silently dropped`() {
         val cases = listOf(
             LiveModePolicy.VIDEO to mapOf("raw_size" to "$size"),
+            LiveModePolicy.VIDEO to mapOf("fps" to "15-30"),
             LiveModePolicy.PHOTO to mapOf("stabilization" to "VIDEO"),
             LiveModePolicy.PHOTO to mapOf("video_size" to "$size"))
         for ((mode, values) in cases) {

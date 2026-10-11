@@ -28,6 +28,13 @@ class AdbShellTests(unittest.TestCase):
         for option in ("mode:s:Video", "pip_type:s:service", "pip_camera:s:1", "pip_preview_size:s:640x480"):
             self.assertIn(option, calls)
 
+    def test_duplicate_value_options_are_rejected_before_submission(self):
+        for argv in (["capture", "--zoom", "2", "--zoom", "3"], ["preview", "--camera", "0", "--camera", "1"]):
+            proc, calls = self.run_client(argv)
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("Repeated option", proc.stderr)
+            self.assertNotIn("--method", calls)
+
     def test_terminal_status_explains_partial_file_recovery_without_downloading(self):
         for state in ("cancelled", "failed", "interrupted"):
             for artifacts in ([], [{"artifact_id": "file-0", "name": "photo.jpg"}]):

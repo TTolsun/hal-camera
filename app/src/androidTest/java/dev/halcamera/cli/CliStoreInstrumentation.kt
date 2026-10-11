@@ -154,6 +154,7 @@ class CliStoreInstrumentation : Instrumentation() {
             val coldStore = CommandStore(expiryDirectory, now = { clock }, onExpire = expiredIds::add)
             check(coldStore.read(expiring.id) == null && expiryStore.read(expiring.id) == null); passed++
             check(!File(expiryDirectory, "${expiring.id}.json").exists()); passed++
+            check(expiredIds.contains(expiring.id)); passed++
             val videoPreview = AdbArguments.command("preview", mapOf("mode" to "Video"))
             check(CliJson.decode(CliJson.encode(videoPreview)) == videoPreview); passed++
 
@@ -186,6 +187,7 @@ class CliStoreInstrumentation : Instrumentation() {
                 org.json.JSONArray().put(JSONObject().put("source_uri", "file:///private").put("artifact_id", "file-0")))
             val public = CliJson.publicRecord(privateRecord)
             check(!public.has("request") && !public.getJSONArray("artifacts").getJSONObject(0).has("source_uri")); passed++
+            passed += CliFlowChecks.run()
             finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "CLI_STORE_TESTS_PASSED=$passed\n") })
         } catch (error: Throwable) {
             finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "CLI_STORE_TESTS_FAILED after $passed: ${error.stackTraceToString()}\n") })

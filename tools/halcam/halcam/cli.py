@@ -272,7 +272,8 @@ def execute(args, context):
         status = raise_app_error(adb.read("/v1/status"))
         if status.get("busy"):
             raise CliError("BUSY", "An app operation is already running")
-        target_screen = "dual" if status.get("screen") == "dual" and app_command(args) in ("live.info", "events", "meter", "preview.stop") else "live"
+        current_screen = spec["current_screen"] if spec else app_command(args) in ("live.info", "events", "meter", "preview.stop")
+        target_screen = "dual" if status.get("screen") == "dual" and current_screen else "live"
         if not status.get("foreground") or status.get("screen") != target_screen:
             adb.launch()
             deadline = time.monotonic() + 10

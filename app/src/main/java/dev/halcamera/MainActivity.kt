@@ -146,7 +146,7 @@ class MainActivity : ComponentActivity() {
     }
     private lateinit var engineButton: Button
     private lateinit var physicalPipButton: Button
-    private var pendingPip: PipSource? = null
+    internal var pendingPip: PipSource? = null
     internal val pipUi by lazy { LivePipController(this,{ previewHost },{ engine as? PipCamera },::updateMediaControls,{ lastPreviewFrameNs = nowNs() },::showNotice,{ cameraId }) }
     private val physicalPip by lazy { dev.halcamera.ui.PhysicalPipPicker(this,manager) }
     private val graphBack = object : OnBackPressedCallback(false) {
@@ -831,8 +831,6 @@ class MainActivity : ComponentActivity() {
         zoomRatio = 1f
         resetControls()
     }
-    /** CLI requests never inherit an earlier UI PIP selection. The old engine closes before reopening. */
-    internal fun resetCliPip() { pendingPip = null; pipUi.reset() }
     /** Locks, EV and flash start over for every camera and engine; the new session opens with the defaults. */
     internal fun resetControls() {
         controlBar.reset(if(cameraId.isEmpty()) LiveControlSupport.NONE else liveControlSupport(manager,cameraId))

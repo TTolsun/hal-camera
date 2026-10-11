@@ -57,9 +57,9 @@ class CliQueries(private val context: Context, private val commands: CliArtifact
                         "focus_max_diopters" to manual.maxFocus, "white_balance" to manual.whiteBalances.map { it.name })))
                     .put("streams", CliJson.of(mapOf("preview" to support.preview.map { it.toString() },
                         "yuv" to support.yuv.map { it.toString() }, "jpeg" to support.jpeg.map { it.toString() },
-                        "raw" to support.raw.takeUnless { command.videoMode }.orEmpty().map { it.toString() }, "fps" to support.fps.map { "${it.min}-${it.max}" },
+                        "raw" to support.raw.takeUnless { command.videoMode }.orEmpty().map { it.toString() }, "fps" to support.fps.takeUnless { command.videoMode }.orEmpty().map { "${it.min}-${it.max}" },
                         "stabilization" to (if (command.videoMode) support.stabilization else listOf(dev.halcamera.camera.LiveStabilization.OFF)).map { it.name }, "jpeg_source" to listOf("CAMERA", "YUV"),
-                        "video" to support.videos.map { mapOf("size" to it.size.toString(), "fps" to it.fps, "codec" to it.codec) }))))
+                        "video" to support.videos.takeIf { command.videoMode }.orEmpty().map { mapOf("size" to it.size.toString(), "fps" to it.fps, "codec" to it.codec) }))))
             } catch (e: Exception) { commands.fail(command.id, (e as? CliFailure)?.code ?: "PREFLIGHT_FAILED", e.message ?: "Cannot read stream capabilities") }
         }
     }

@@ -27,6 +27,7 @@ data class CliOptions(val values: Map<String, String>) {
                 "interval_ms" -> if (value.toLongOrNull() !in 0L..60_000L) invalid("interval_ms must be 0–60000")
                 "x", "y" -> number(value, 0.0, 1.0)
                 "pip_type" -> if (value !in setOf("off", "physical", "service")) invalid("pip_type must be off, physical or service")
+                "pip_camera" -> if (value.isBlank() || value.length > 128) invalid("pip_camera must be a listed camera ID")
                 "pip_x", "pip_y" -> number(value, 0.0, 1.0)
                 "pip_width", "pip_height" -> number(value, 0.01, 1.0)
                 "meter" -> if (value !in setOf("focus", "exposure")) invalid("meter must be focus or exposure")

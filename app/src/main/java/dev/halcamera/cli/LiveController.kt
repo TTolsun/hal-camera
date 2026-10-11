@@ -69,7 +69,11 @@ class LiveController(private val commands: CliExecution, private val driver: Dri
         if (!prepared || submitted || commands.active?.id != command.id) return
         submitted = true
         driver.prepareScene(command) {
-            if (commands.active?.id == command.id && !cancelled) { scenePrepared = true; runReady(command) }
+            if (commands.active?.id == command.id && !cancelled && !scenePrepared) {
+                scenePrepared = true
+                try { runReady(command) }
+                catch (e: Exception) { pending = null; commands.fail(command.id, (e as? CliFailure)?.code ?: "EXECUTION_FAILED", e.message ?: "Cannot execute prepared scene") }
+            }
         }
     }
 
@@ -145,7 +149,7 @@ class LiveController(private val commands: CliExecution, private val driver: Dri
         if (snapshotPending) { stopAfterSnapshot = true; return }
         if (pending?.id != command.id || command.command != "record.start")
             throw CliFailure("NOT_RECORDING", "No matching recording is active")
-        if (!submitted) {
+        if (!submitted || !scenePrepared) {
             pending = null
             driver.stopPreparing()
             commands.fail(command.id, "NOT_RECORDING", "Recording stopped before preview was ready")
