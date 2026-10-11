@@ -19,6 +19,15 @@ title: Validation
 
 검증 날짜, 앱 빌드, 기기와 실행 조건을 함께 확인하세요. 앱 화면 촬영 기록과 이전 기기 검증 기록은 수행 시점과 확인 범위가 다릅니다.
 
+| 지금 확인할 내용 | 기록 |
+| --- | --- |
+| PIP 원본 저장·크기 선택·지원 검사 | [PIP 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/pip-availability-2026-10-11.md) |
+| HAL Recording과 앱 인코더의 구분 | [Callback 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/recording-callback-20261011.md) |
+| 정식 배포의 버전·검증 범위 | [최신 릴리스](https://github.com/TTolsun/hal-camera/releases/latest) |
+
+<details markdown="1" id="previous-device-observations" data-search-section>
+<summary>이전 화면·기기 관찰 기록</summary>
+
 ### 앱 화면 촬영
 
 2026-10-11에 Live 첫 화면을 [AWB 실시간 정보 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/live-awb.md)의 최종 촬영본으로 교체했습니다. Galaxy S25+·Android 16에서 FPS·EXP·AE·AF·AWB의 고정 배치와 가독성를 확인한 화면입니다. 나머지 사진은 아래 날짜의 기록이며 최신 사용법은 각 페이지 본문을 따릅니다.
@@ -43,7 +52,7 @@ Live·CameraX 전환·사진 자동 고정·Recording 콜백·Probe 조회·CTS 
 
 ### CTS 원문 케이스
 
-Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수행한 기록입니다. versionCode 108의 SKIP 판정을 적용한 결과는 40개 메서드 중 **PASS 33 · FAIL 1 · SKIP 6**입니다. 여러 실행과 재실행을 합친 기록입니다. 원본 요청 ID와 로그 해석은 [STATUS.md](https://github.com/TTolsun/hal-camera/blob/main/docs/STATUS.md)에 있습니다.
+Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수행한 기록입니다. versionCode 108의 SKIP 판정을 적용한 결과는 40개 메서드 중 **PASS 33 · FAIL 1 · SKIP 6**입니다. 여러 실행과 재실행을 합친 기록입니다. 원본 요청 ID와 로그 해석은 [당시 작업 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/archive/STATUS-before-0.24.0.md)에 있습니다.
 
 | 클래스 | 결과 | 확인한 내용 |
 | --- | --- | --- |
@@ -80,11 +89,13 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`
 - 기기 검증: `V-002`
 - 근거 수준: 기기 검증
-- 검토 2026-10-11 @ `51338416` · TTolsun (approval delegated to Codex)
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
 <!-- omm:end id=device-notes -->
+
+</details>
 
 ## 문서 검토 상태
 
@@ -92,12 +103,12 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.24.0 (versionCode 670)
+- 검증 기준 앱 버전: 0.25.0 (versionCode 671)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-11 @ `51338416` · TTolsun (approval delegated to Codex) |
-| 원고 `device-notes` | 최신 | 검토 2026-10-11 @ `51338416` · TTolsun (approval delegated to Codex) |
+| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-11 @ `51338416` · TTolsun (approval delegated to Codex) |
+| 원고 `device-notes` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-11 @ `51338416` · TTolsun (approval delegated to Codex) |
 
 <!-- omm:end id=status -->
 

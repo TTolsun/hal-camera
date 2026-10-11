@@ -202,7 +202,15 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 <details markdown="1" id="stream-readout" data-search-section>
 <summary>P·Y·J·RAW·R 표시 읽기</summary>
 
-P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니다. 모든 항목은 활성 크기가 있을 때만 표시하며 꺼진 스트림의 Off 문구는 생략합니다. PIP가 켜지면 두 번째 줄에 PIP를 한 번 쓰고 보조 P·Y·J의 실제 크기를 나열합니다. 합성 출력 크기는 Live에서 표시하지 않습니다. J의 YUV 표시는 앱 변환 사진을 뜻합니다. 녹화 출력이 구성되면 R과 H264·HEVC·Auto를 표시합니다. 구성 검사와 저장 방식은 [Engine Comparison](engine.md#camera2-엔진)에서 확인하세요.
+| 글자 | 표시하는 크기 |
+| --- | --- |
+| P | 프리뷰입니다. |
+| Y | YUV 분석 출력입니다. |
+| J | JPEG 저장 원본입니다. `J YUV`는 앱 변환 사진입니다. |
+| RAW | 센서 원본 출력입니다. |
+| R | 녹화 출력입니다. H264·HEVC·Auto 포맷도 함께 표시합니다. |
+
+꺼진 스트림은 표시하지 않습니다. PIP 보조 출력은 두 번째 줄에 `PIP`를 한 번 쓰고 P·Y·J 크기를 나열합니다. 합성 파일 크기는 생략합니다. 구성 검사는 [Engine Comparison](engine.md#camera2-엔진)을 확인하세요.
 
 </details>
 
@@ -217,7 +225,15 @@ P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니�
 2. 보조 카메라 하나를 고릅니다. 선택창이 닫히고 현재 Live 안에 보조 영상이 나타납니다.
 3. 보조 영상을 원하는 자리로 드래그한 뒤 기존 셔터로 촬영합니다.
 
-**확인할 결과:** JPEG On에서는 합성 사진과 두 카메라 원본까지 JPEG 세 장을 저장합니다. JPEG Off에서도 합성 사진은 저장합니다. 합성 저장은 카메라 Callback 그래프에 표시하지 않으며 Service 원본 콜백은 ID 버튼으로 전환합니다. 동영상에는 합성 영상만 저장하며 조작 버튼과 라벨은 파일에 들어가지 않습니다. 끄려면 `PIP → Turn off PIP`를 선택합니다.
+**셔터는 한 번인데 사진은 세 장?** JPEG를 켜고 촬영한 뒤 갤러리를 열어 보세요. 같은 촬영의 합성 사진·메인 원본·보조 원본을 비교할 수 있습니다.
+
+| 촬영 설정 | 저장 결과 |
+| --- | --- |
+| Photo · JPEG On | 합성 JPEG 한 장과 두 카메라 원본 JPEG를 저장합니다. |
+| Photo · JPEG Off | 합성 JPEG 한 장을 저장합니다. |
+| Video | 합성 MP4 한 개를 저장합니다. 녹화 중 사진도 선택한 JPEG 출처를 따릅니다. |
+
+화면의 버튼과 라벨은 파일에 들어가지 않습니다. 원본과 합성의 촬영 시각은 같다고 보장하지 않습니다. 끄려면 `PIP → Turn off PIP`를 선택합니다. 그래프에서 원본을 찾으려면 [PIP Callback](callback.md#pip를-켜면-무엇이-추가되나요)을 확인하세요.
 
 | 선택할 때 알아둘 점 | 동작 |
 | --- | --- |
@@ -228,7 +244,7 @@ P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니�
 
 PIP와 Multi는 Android 11 이상에서 제공하며 실제 지원 조합은 기기마다 다릅니다. Single PIP의 플래시는 Off·Torch만 제공하고 AEB는 지원하지 않으며 녹화 중에는 합성 스냅샷을 저장할 수 있습니다.
 
-Single PIP는 현재 해상도와 유지되는 추가 스트림을 선택창을 열 때와 적용 직전에 검사합니다. 기기가 공개한 지원 정보로 판정하므로 다른 기기에서도 같은 코드로 동작합니다. 조회 결과가 지원됨이어도 기기 자원이나 HAL 문제로 실제 구성이 실패할 수 있습니다.
+**회색 후보는 현재 조합에서 지원 불가가 확인된 카메라입니다.** 크기나 출력 설정을 바꾼 뒤 다시 열면 재검사합니다. `Not verified`는 조회가 불가능했다는 뜻이며 선택할 수 있습니다. 지원 조회가 통과해도 자원 상태나 HAL 문제로 실제 구성이 실패할 수 있습니다. 조회 방식은 [PIP 지원 검사](engine.md#pip-지원을-미리-확인하세요)에 있습니다.
 
 <details markdown="1" id="pip-session-details" data-search-section>
 <summary>엔진별 재구성과 저장 해상도</summary>
