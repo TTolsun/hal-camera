@@ -316,94 +316,17 @@ class ConcurrentCameraActivity : ComponentActivity() {
         updateButtons()
     }
 
-    /** All choices remain a draft in one top sheet until Apply. */
     private fun showSplit() {
-        if (busy || plans.isEmpty()) return
-        var draftLayout = splitLayout
-        var draftCount = selectedIds.size
-        var draftPlans = plans.filter { it.streams.size == draftCount }
-        var draftIds = selectedIds
-        val content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        fun section(title: String) { content.addView(text(title,12).apply { ViewCompat.setAccessibilityHeading(this,true) },lp(12)) }
-        fun spinner(title: String,values: List<String>,selection: Int,onChange: (Int) -> Unit): Spinner {
-            section(title)
-            val control = Spinner(this).apply {
-                adapter = ArrayAdapter(this@ConcurrentCameraActivity,android.R.layout.simple_spinner_dropdown_item,values)
-                setSelection(selection.coerceAtLeast(0)); contentDescription = title
-                isEnabled = values.size > 1
-                onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                    override fun onNothingSelected(parent: AdapterView<*>?) {}
-                    override fun onItemSelected(parent: AdapterView<*>?,view: View?,position: Int,id: Long) = onChange(position)
-                }
-            }
-            content.addView(control,LinearLayout.LayoutParams(-1,dp(48))); return control
-        }
-        var layouts = SplitLayout.entries.filter { it != SplitLayout.GRID || draftCount > 2 }
-        if (draftLayout !in layouts) draftLayout = SplitLayout.SIDE_BY_SIDE
-        val layoutPicker = spinner("Layout",layouts.map { it.label },layouts.indexOf(draftLayout)) { draftLayout = layouts[it] }
-        val counts = plans.filter { it.advertised }.map { it.streams.size }.distinct().sorted().ifEmpty { listOf(selectedIds.size) }
-        val cameras = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        fun renderDevices() {
-            cameras.removeAllViews()
-            if (draftPlans.none { it.streams.map { s -> s.camera.id }.toSet() == draftIds.toSet() })
-                draftIds = draftPlans.firstOrNull()?.streams?.map { it.camera.id }.orEmpty()
-            draftPlans.forEach { plan ->
-                val ids = plan.streams.map { it.camera.id }; val chosen = ids.toSet() == draftIds.toSet()
-                cameras.addView(button((if (chosen) "✓ " else "")+plan.label) {
-                    draftIds = ids; renderDevices()
-                }.apply {
-                    isEnabled = plan.advertised
-                    alpha = if (isEnabled) 1f else .4f
-                    isSelected = chosen; ViewCompat.setStateDescription(this,if (chosen) "Selected" else "Not selected")
-                    contentDescription = "$text. ${if (plan.advertised) "Advertised combination" else "Requires device preflight"}"
-                },LinearLayout.LayoutParams(-1,dp(48)))
-            }
-            val orderChoices = draftIds.sorted()
-            draftIds.forEachIndexed { slot, id ->
-                cameras.addView(row().apply {
-                    addView(text("Screen ${slot+1}",12),LinearLayout.LayoutParams(0,dp(48),1f))
-                    addView(Spinner(this@ConcurrentCameraActivity).apply {
-                        adapter = ArrayAdapter(this@ConcurrentCameraActivity,android.R.layout.simple_spinner_dropdown_item,
-                            orderChoices.map { choice -> "Camera $choice" })
-                        setSelection(orderChoices.indexOf(id))
-                        contentDescription = "Camera for Split screen ${slot+1}"
-                        onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                            override fun onNothingSelected(parent: AdapterView<*>?) {}
-                            override fun onItemSelected(parent: AdapterView<*>?,view: View?,position: Int,selectedId: Long) {
-                                if (parent?.isAttachedToWindow != true) return
-                                val choice = orderChoices[position]
-                                if (draftIds.getOrNull(slot) != choice && choice in draftIds) {
-                                    val oldSlot = draftIds.indexOf(choice)
-                                    draftIds = draftIds.toMutableList().also { next ->
-                                        val old = next[slot]; next[slot] = choice; next[oldSlot] = old
-                                    }
-                                    renderDevices()
-                                }
-                            }
-                        }
-                    },LinearLayout.LayoutParams(0,dp(48),1f))
-                },lp(4))
-            }
-        }
-        spinner("Cameras",counts.map { it.toString() },counts.indexOf(draftCount)) {
-            draftCount = counts[it]
-            layouts = SplitLayout.entries.filter { layout -> layout != SplitLayout.GRID || draftCount > 2 }
-            if (draftLayout !in layouts) draftLayout = SplitLayout.SIDE_BY_SIDE
-            layoutPicker.adapter = ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item,layouts.map { layout -> layout.label })
-            layoutPicker.setSelection(layouts.indexOf(draftLayout))
-            draftPlans = plans.filter { plan -> plan.streams.size == draftCount }; renderDevices()
-        }
-        section("Camera devices"); content.addView(cameras,lp()); renderDevices()
-        LiveChoiceSheet.show(this,"Split",content = content,edge = LiveChoiceSheet.Edge.TOP,actionLabel = "Apply",confirm = {
-            if (busy || draftIds.size < 2) false else {
-                val changed = selectedIds != draftIds
-                splitLayout = draftLayout; selectedIds = draftIds
+        if (busy || plans.none { it.advertised }) return
+        SplitChoiceSheet(this).show(plans,selectedIds,splitLayout) { layout, ids ->
+            if (busy) false else {
+                val changed = selectedIds != ids
+                splitLayout = layout; selectedIds = ids
                 if (changed) { failed = false; activeIndex = 0; closeSession() } else layoutPreviews()
                 true
             }
-        })
+        }
     }
-
     private fun selectActive(index: Int) {
         if (Build.VERSION.SDK_INT < 30) return
         if (takingPhoto || videoPending || closing || index !in panels.indices) return
@@ -447,17 +370,17 @@ class ConcurrentCameraActivity : ComponentActivity() {
                 status.text = reason; status.visibility = View.VISIBLE; previews.forEach { it.alpha = 0f }
                 window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); updateButtons()
             }
-            override fun onPhoto(message: String) {
+            override fun onPhoto(result: ConcurrentMediaResult) {
                 if (session !== current) return
-                takingPhoto = false; report = message
-                resultText.text = if (message.contains("failed",true) || message.startsWith("Could not")) "Photo failed · Details" else "Photos saved · Details"
+                takingPhoto = false; report = result.message
+                resultText.text = if (result.failed) "Photo failed · Details" else "Photos saved · Details"
                 updateButtons()
             }
-            override fun onRecording(active: Boolean,message: String) {
+            override fun onRecording(active: Boolean,result: ConcurrentMediaResult) {
                 if (session !== current) return
-                recording = active; videoPending = false; report = message
+                recording = active; videoPending = false; report = result.message
                 if (active) recordingSince = SystemClock.elapsedRealtime()
-                resultText.text = if (active) "" else if (message.contains("failed",true) || message.startsWith("Could not")) "Video failed · Details" else "Videos saved · Details"
+                resultText.text = if (active) "" else if (result.failed) "Video failed · Details" else "Videos saved · Details"
                 updateButtons()
             }
         },outputSizes = outputSizes,telemetry = telemetry,sessionId = sessionId,videoMode = videoMode)
@@ -591,11 +514,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private fun displayDegrees() = when (windowManager.defaultDisplay.rotation) { 1 -> 90; 2 -> 180; 3 -> 270; else -> 0 }
     private fun dp(value: Int) = Look.dp(this,value)
     private fun text(value: String,size: Int) = Look.text(this,value,size,Look.onDark).apply { gravity = Gravity.CENTER_VERTICAL }
-    private fun button(value: String,action: () -> Unit) = CameraWidgets(this).button(value,action).apply {
-        background = CameraWidgets(this@ConcurrentCameraActivity).chrome(Color.TRANSPARENT)
-        setPadding(dp(8),0,dp(8),0); setSingleLine(true); includeFontPadding = false; gravity = Gravity.CENTER
-        minWidth = dp(48); minimumWidth = dp(48)
-    }
+    private fun button(value: String,action: () -> Unit) = CameraWidgets(this).chromeButton(value,action)
     private fun row() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
     private fun lp(top: Int = 0) = LinearLayout.LayoutParams(-1,-2).apply { topMargin = dp(top) }
     companion object { const val EXTRA_VIDEO = "multi_video" }

@@ -48,6 +48,15 @@ class CameraWidgets(private val context: Context, private val enabled: () -> Boo
         rounded(Color.WHITE),
     )
 
+    fun chromeButton(text: String, action: () -> Unit) = button(text, action).apply {
+        background = chrome(Color.TRANSPARENT)
+        setPadding(dp(8), 0, dp(8), 0)
+        setSingleLine(true)
+        includeFontPadding = false
+        gravity = android.view.Gravity.CENTER
+        minWidth = dp(48); minimumWidth = dp(48)
+    }
+
     fun row() = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
 
     fun highlight(button: Button, selected: Boolean) {

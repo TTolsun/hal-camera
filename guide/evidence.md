@@ -21,6 +21,7 @@ title: Validation
 
 | 지금 확인할 내용 | 기록 |
 | --- | --- |
+| Split·카메라별 사진·영상·버튼 조작 | [Multi 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/multi-split-20261012.md) |
 | PIP 원본 저장·크기 선택·지원 검사 | [PIP 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/pip-availability-2026-10-11.md) |
 | HAL Recording과 앱 인코더의 구분 | [Callback 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/recording-callback-20261011.md) |
 | 정식 배포의 버전·검증 범위 | [최신 릴리스](https://github.com/TTolsun/hal-camera/releases/latest) |
@@ -30,7 +31,7 @@ title: Validation
 
 ### 앱 화면 촬영
 
-2026-10-11에 Live 첫 화면을 [AWB 실시간 정보 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/live-awb.md)의 최종 촬영본으로 교체했습니다. Galaxy S25+·Android 16에서 FPS·EXP·AE·AF·AWB의 고정 배치와 가독성를 확인한 화면입니다. 나머지 사진은 아래 날짜의 기록이며 최신 사용법은 각 페이지 본문을 따릅니다.
+2026-10-11에 Live 첫 화면을 [AWB 실시간 정보 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/live-awb.md)의 최종 촬영본으로 교체했습니다. Galaxy S25+·Android 16에서 FPS·EXP·AE·AF·AWB의 고정 배치와 가독성을 확인한 화면입니다. 나머지 사진은 아래 날짜의 기록이며 최신 사용법은 각 페이지 본문을 따릅니다.
 
 2026년 9월 27일 Galaxy S25+(SM-S936N)·Android 16(API 36)에서 배포된 0.15.0(versionCode 543)을 실행해 16개 화면을 촬영했습니다. 원본은 1440×3120 PNG이며, 각 기능의 담당 문서에 한 번씩 배치했습니다.
 
@@ -89,7 +90,7 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`
 - 기기 검증: `V-002`
 - 근거 수준: 기기 검증
-- 검토 2026-10-11 @ `19cd027d` · codex-code-review
+- 검토 2026-10-11 @ `495815cc` · codex-code-review
 
 </details>
 
@@ -103,12 +104,12 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 
 <!-- omm:begin id=status -->
 
-- 검증 기준 앱 버전: 0.25.0 (versionCode 671)
+- 검증 기준 앱 버전: 0.26.0 (versionCode 672)
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-11 @ `19cd027d` · codex-code-review |
-| 원고 `device-notes` | 최신 | 검토 2026-10-11 @ `19cd027d` · codex-code-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-11 @ `495815cc` · codex-code-review |
+| 원고 `device-notes` | 최신 | 검토 2026-10-11 @ `495815cc` · codex-code-review |
 
 <!-- omm:end id=status -->
 

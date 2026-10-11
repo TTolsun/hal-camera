@@ -9,3 +9,5 @@ ConcurrentLifecycle은 장치별 open·streaming·closing·closed 상태를 관�
 사진은 각 장치의 Image.timestamp와 CaptureResult.SENSOR_TIMESTAMP를 연결한 온전한 JPEG를 저장합니다. Multi는 Physical·Service PIP를 합성하지 않습니다. ConcurrentPhotoStore는 공통 group ID, 장치 ID, 크기, 시각 기준과 성공·실패를 JSON에 기록합니다. 녹화 중에는 카메라 선택 아이콘 대신 사진 아이콘을 표시해 장치별 원본 JPEG를 저장하며 두 영상은 계속 녹화합니다. 사진 제한 시간은 10초이며 만료 시 미완료 장치를 실패로 기록하고 모두 닫습니다. 부분 실패는 성공한 파일을 유지하며 JSON 저장 실패는 해당 사진 묶음을 롤백합니다.
 
 영상은 장치별 독립 무음 MP4를 저장합니다. 인코더 크기는 해당 장치의 프리뷰 스트림과 센서 회전에서 정하며 Split 패널 크기와 무관합니다. preserveFullFrame은 EGL 대상 크기에 전체 입력을 맞추어 표시하며 화면 배치를 영상 크롭으로 사용하지 않습니다. 화면 전체·다른 장치·UI를 저장 영상에 합성하지 않습니다. 정상 종료 시 녹화를 저장한 뒤 해제하며 장치·인코더 오류 시 진행 중 녹화를 취소합니다. 사진·영상의 센서 동기는 보장하지 않습니다.
+
+SplitChoiceSheet는 설정창을 그리며 SplitSelection은 지원 조합·장치 수·화면별 교환·격자 선택 규칙을 순수 Kotlin으로 관리합니다. 초안은 적용 전까지 현재 세션 설정을 바꾸지 않습니다. 화면과 설정창의 버튼 모양은 CameraWidgets.chromeButton을 재사용합니다.

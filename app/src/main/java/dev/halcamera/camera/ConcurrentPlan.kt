@@ -9,6 +9,9 @@ data class ConcurrentPlan(val streams: List<ConcurrentStream>, val advertised: B
     val label get() = streams.joinToString(" + ") { it.camera.label }
 }
 
+/** Status is data, never inferred from translated messages or filenames. */
+data class ConcurrentMediaResult(val message: String, val failed: Boolean = false)
+
 object ConcurrentPlanner {
     fun plans(sdk: Int, combinations: Set<Set<String>>, cameras: List<ConcurrentCamera>, maxDevices: Int = 2): List<ConcurrentPlan> {
         if (sdk < 30) return emptyList()

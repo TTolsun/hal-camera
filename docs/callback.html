@@ -113,7 +113,7 @@
 <details id="callback-engine-limits" data-search-section>
 <summary>Camera2·CameraX·기존 Dual의 관측 차이</summary><p>일반 Camera2의 Android 12 이하와 일반 CameraX는 Preview·Recording 버퍼를 직접 관측하지 못해 <code>No callback</code>을 표시합니다. Camera2의 EIS 녹화도 인코더 직결이므로 Recording은 <code>No callback</code>입니다. PIP의 프리뷰 입력 수신은 별도로 기록합니다.</p>
 <p>CameraX의 YUV는 ImageAnalysis, 카메라 JPEG는 ImageCapture의 수신 시각입니다. 앱의 변환·합성 완료 시각은 표시하지 않습니다. 저장 방식은 <a href="live.html#live-스트림을-설정하세요">JPEG 출처</a>를 확인하세요.</p>
-<p>CLI 호환용 Dual의 Main/Sub Preview는 버퍼 수신을 직접 관측하지 못하므로 <code>No callback</code>입니다. 화면 갱신 시각을 대신 표시하지 않습니다. Camera2의 Main/Sub photo는 두 센서 이미지 수신입니다. Camera2 VIDEO의 두 HAL Recording 출력은 <code>No callback</code>으로 표시합니다. CameraX Dual은 프리뷰를 GPU로 인코더에 전달하므로 별도 Recording 행이 없습니다. 이 차이를 센서 동기화 성능으로 해석하지 마세요. Multi에는 Callback 조작부가 없습니다.</p>
+<p>CLI 호환용 Dual의 Main/Sub Preview는 버퍼 수신을 직접 관측하지 못하므로 <code>No callback</code>입니다. 화면 갱신 시각을 대신 표시하지 않습니다. Camera2의 Main/Sub photo는 두 센서 이미지 수신입니다. Camera2 VIDEO의 두 HAL Recording 출력은 <code>No callback</code>으로 표시합니다. CameraX Dual은 프리뷰를 GPU로 인코더에 전달하므로 별도 Recording 행이 없습니다. 이 차이를 센서 동기화 성능으로 해석하지 마세요. Multi는 <code>ID</code>로 선택한 장치의 Preview·Photo를 표시합니다. 영상은 프리뷰를 앱 인코더에 전달하므로 별도 HAL Recording 행을 만들지 않습니다.</p>
 <p>이미지와 프레임은 센서 타임스탬프를 대조하여 연결합니다. 그래프 값은 앱 수신 시각이며 HAL 내부 처리 완료 시각을 직접 측정한 값은 아닙니다.</p>
 </details><h2 id="값이-없는-이유를-확인하세요">값이 없는 이유를 확인하세요</h2>
 <table>

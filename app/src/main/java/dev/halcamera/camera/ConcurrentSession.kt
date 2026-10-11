@@ -18,40 +18,6 @@ import androidx.annotation.RequiresApi
 import java.util.UUID
 import java.util.concurrent.Executor
 
-@RequiresApi(30)
-fun readConcurrentPlans(manager: CameraManager, maxDevices: Int = Int.MAX_VALUE): List<ConcurrentPlan> =
-    ConcurrentPlanner.plans(30, manager.concurrentCameraIds, manager.cameraIdList.map { readConcurrentCamera(manager, it) }, maxDevices)
-
-@RequiresApi(30)
-fun readConcurrentCamera(manager: CameraManager, id: String): ConcurrentCamera {
-    val c = manager.getCameraCharacteristics(id)
-    val map = c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
-    val logical = CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES_LOGICAL_MULTI_CAMERA in
-        (c[CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES] ?: intArrayOf())
-    return ConcurrentCamera(id, c[CameraCharacteristics.LENS_FACING],
-        map?.getOutputSizes(SurfaceTexture::class.java)?.map { LiveSize(it.width,it.height) }.orEmpty(),
-        map?.getOutputSizes(ImageFormat.JPEG)?.map { LiveSize(it.width,it.height) }.orEmpty(),
-        if (logical) c.physicalCameraIds.sorted() else emptyList())
-}
-
-fun readPipSources(manager: CameraManager, parent: String): List<PipSource> {
-    if (android.os.Build.VERSION.SDK_INT < 30 || parent.isEmpty()) return emptyList()
-    return runCatching {
-        val combinations = runCatching { manager.concurrentCameraIds }.getOrDefault(emptySet())
-        val physical = readConcurrentCamera(manager,parent).physicalIds.map { PipSource(it,true,"Physical $it") }
-        val service = manager.cameraIdList.filter { it != parent }.map { id ->
-            val camera = runCatching { readConcurrentCamera(manager,id) }.getOrNull()
-            val reason = when {
-                camera == null -> "Unavailable"
-                camera.previews.isEmpty() -> "No preview"
-                else -> PipAvailability.serviceReason(setOf(parent,id),combinations)
-            }
-            PipSource(id,false,"${camera?.label ?: "Camera $id"} · Service",reason)
-        }
-        physical + service
-    }.getOrDefault(emptyList())
-}
-
 /** Owns independent devices; every callback and photo transaction is serialized on the worker. */
 @RequiresApi(30)
 class ConcurrentSession(
@@ -60,10 +26,7 @@ class ConcurrentSession(
     private val plan: ConcurrentPlan,
     private val textures: List<SurfaceTexture>,
     private val listener: Listener,
-    private val physical: Map<String, List<String>> = emptyMap(),
     private val outputSizes: List<LiveSize> = plan.streams.map { LiveSize(it.preview.height, it.preview.width) },
-    private val servicePip: Map<String,String> = emptyMap(),
-    private val positions: Map<String,List<PipRect>> = emptyMap(),
     private val telemetry: dev.halcamera.telemetry.Telemetry? = null,
     private val sessionId: String = "concurrent",
     private val videoMode: Boolean = false,
@@ -72,8 +35,8 @@ class ConcurrentSession(
         fun onState(id: String, state: String)
         fun onReady()
         fun onFailed(reason: String)
-        fun onPhoto(message: String)
-        fun onRecording(active: Boolean, message: String) {}
+        fun onPhoto(result: ConcurrentMediaResult)
+        fun onRecording(active: Boolean, result: ConcurrentMediaResult)
         fun onPhotoResult(result: Result<PhotoResult>) {}
         fun onVideoResult(result: Result<List<android.net.Uri>>) {}
     }
@@ -81,7 +44,7 @@ class ConcurrentSession(
     private val worker = Handler(thread.looper)
     private val main = Handler(Looper.getMainLooper())
     private val executor = Executor { worker.post(it) }
-    private val ownedIds = (plan.streams.map { it.camera.id } + servicePip.values).distinct()
+    private val ownedIds = plan.streams.map { it.camera.id }
     private val lifecycle = ConcurrentLifecycle(ownedIds)
     private val preparedInputs = mutableMapOf<String,List<Surface>>()
     private val readyScenes = mutableSetOf<String>()
@@ -180,20 +143,8 @@ class ConcurrentSession(
         try {
             plan.streams.forEachIndexed { index, stream ->
                 val id = stream.camera.id
-                val ids = PipScene.selected(stream.camera.physicalIds.toSet(), physical[id].orEmpty())
-                val routes = PipRouting.inputs(id,ids,servicePip[id])
-                val allIds = routes.map { it.physicalId ?: it.deviceId }
-                val sizes = allIds.mapIndexed { inputIndex, inputId ->
-                    if (inputIndex == 0) stream.preview else {
-                        val c = manager.getCameraCharacteristics(inputId)
-                        c[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]?.getOutputSizes(SurfaceTexture::class.java)
-                            ?.filter { it.width.toLong()*it.height <= 1280L*720 }
-                            ?.maxByOrNull { it.width.toLong()*it.height }?.let { LiveSize(it.width,it.height) }
-                            ?: error("Physical camera $inputId has no preview stream")
-                    }
-                }
                 timestamps[id] = manager.getCameraCharacteristics(id)[CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE]
-                val compositor = DeviceCompositor(app,textures[index],outputSizes[index],sizes,id,ids,
+                val compositor = DeviceCompositor(app,textures[index],outputSizes[index],listOf(stream.preview),id,emptyList(),
                     onReady = { worker.post {
                         if (!lifecycle.stopping) {
                             readyScenes += id
@@ -203,10 +154,9 @@ class ConcurrentSession(
                                 main.post { listener.onReady() }
                             }
                         }
-                    } }, onError = { error -> worker.post { fail("Camera $id: ${error.message}") } }, serviceIds = listOfNotNull(servicePip[id]),
-                    initialRects = positions[id].orEmpty(),
+                    } }, onError = { error -> worker.post { fail("Camera $id: ${error.message}") } },
                     prepareRecording = videoMode,
-                    preserveFullFrame = ids.isEmpty() && servicePip[id] == null,
+                    preserveFullFrame = true,
                     inputFrame = { index, timestamp ->
                         telemetry?.recorder?.record("${sessionId}_$id","preview_available",sensorNs = timestamp,
                             values = mapOf("stream" to "preview", "input" to index))
@@ -229,7 +179,7 @@ class ConcurrentSession(
     private fun openPrepared() {
         try {
             if (configs.size > 1 && !manager.isConcurrentSessionConfigurationSupported(configs)) {
-                fail("This camera / PIP combination is unavailable."); return
+                fail("This camera combination is unavailable."); return
             }
             ownedIds.forEach(::open)
         } catch (e: SecurityException) { fail("Camera permission unavailable: ${e.message}") }
@@ -237,24 +187,12 @@ class ConcurrentSession(
     }
 
     private fun prepareAll() {
-        val outputs = ownedIds.associateWith { mutableListOf<OutputConfiguration>() }
-        val targets = ownedIds.associateWith { mutableListOf<Surface>() }
         plan.streams.forEach { stream ->
-            val id = stream.camera.id
-            PipRouting.inputs(id,physical[id].orEmpty(),servicePip[id]).forEachIndexed { index, route ->
-                val surface = checkNotNull(preparedInputs[id])[index]
-                checkNotNull(targets[route.deviceId]).add(surface)
-                checkNotNull(outputs[route.deviceId]).add(OutputConfiguration(surface).apply {
-                    route.physicalId?.let(::setPhysicalCameraId)
-                })
-            }
-        }
-        ownedIds.forEach { id ->
-            prepare(id,plan.streams.firstOrNull { it.camera.id == id },checkNotNull(targets[id]),checkNotNull(outputs[id]))
+            val inputs = checkNotNull(preparedInputs[stream.camera.id])
+            prepare(stream.camera.id,stream,inputs,inputs.map { OutputConfiguration(it) }.toMutableList())
         }
     }
-
-    private fun prepare(id: String, stream: ConcurrentStream?, inputs: List<Surface>, outputs: MutableList<OutputConfiguration>) {
+    private fun prepare(id: String, stream: ConcurrentStream, inputs: List<Surface>, outputs: MutableList<OutputConfiguration>) {
         try {
             surfaces[id] = inputs
             val key = "${sessionId}_$id"
@@ -289,7 +227,7 @@ class ConcurrentSession(
                     return runCatching { checkNotNull(sessions[id]).capture(previewRequest(id,afTrigger),callback,worker); true }.getOrDefault(false)
                 }
             })
-            if (stream != null && physical[id].isNullOrEmpty() && servicePip[id] == null) {
+            run {
                 val reader = ImageReader.newInstance(stream.photo.width,stream.photo.height,ImageFormat.JPEG,3)
                 readers[id] = reader
                 outputs += OutputConfiguration(reader.surface)
@@ -322,8 +260,6 @@ class ConcurrentSession(
         } catch (e: Exception) { fail("Camera configuration failed: ${e.message}") }
     }
 
-    fun movePhysical(id: String, index: Int, rect: PipRect) { worker.post { if (!lifecycle.stopping) compositors[id]?.move(index,rect) } }
-
     fun startVideo() { worker.post {
         if (!lifecycle.ready || capture != null || recording || videoPending) return@post
         videoPending = true
@@ -336,8 +272,8 @@ class ConcurrentSession(
                     videoPending = false
                     if (results.values.any { it.isFailure }) {
                         compositors.values.forEach { it.stopVideo(false) {} }
-                        main.post { listener.onRecording(false,"Could not start recording") }
-                    } else { recording = true; main.post { listener.onRecording(true,"Recording") } }
+                        main.post { listener.onRecording(false,ConcurrentMediaResult("Could not start recording",failed = true)) }
+                    } else { recording = true; main.post { listener.onRecording(true,ConcurrentMediaResult("Recording")) } }
                 }
             }
         } } }
@@ -353,7 +289,7 @@ class ConcurrentSession(
                 videoPending = false
                 val message = results.entries.joinToString("\n") { "Camera ${it.key}: ${it.value.getOrElse { e -> "failed: ${e.message}" }}" }
                 main.post {
-                    listener.onRecording(false,message)
+                    listener.onRecording(false,ConcurrentMediaResult(message,results.values.any { it.isFailure }))
                     listener.onVideoResult(runCatching { results.values.map { android.net.Uri.parse(it.getOrThrow()) } })
                 }
             }
@@ -376,7 +312,7 @@ class ConcurrentSession(
                             devices.forEach { (cameraId, device) ->
                                 state(cameraId, "Configuring")
                                 val configuration = checkNotNull(configs[cameraId])
-                                if (devices.size == 1 && !device.isSessionConfigurationSupported(configuration)) { fail("This PIP combination is unavailable."); return }
+                                if (devices.size == 1 && !device.isSessionConfigurationSupported(configuration)) { fail("This camera combination is unavailable."); return }
                                 device.createCaptureSession(configuration)
                             }
                         } catch (e: Exception) { fail("Concurrent configure failed: ${e.message}") }
@@ -415,10 +351,6 @@ class ConcurrentSession(
         images.clear(); expected.clear()
         plan.streams.forEach { stream ->
             val id = stream.camera.id
-            if (physical[id].orEmpty().isNotEmpty() || servicePip[id] != null) {
-                compositors[id]?.capture { result -> worker.post { if (capture === group) settle(id,result) } }
-                return@forEach
-            }
             try {
                 val c = manager.getCameraCharacteristics(id)
                 val rotation = ((c[CameraCharacteristics.SENSOR_ORIENTATION] ?: 0) +
@@ -473,12 +405,12 @@ class ConcurrentSession(
         capture = null
         expected.clear(); images.clear()
         var photo: PhotoResult? = null
-        val message = runCatching { store.save(group, plan, timestamps) { photo = it } }
-            .getOrElse { "Could not save capture group; files rolled back: ${it.message}" }
+        val result = runCatching { store.save(group, plan, timestamps) { photo = it } }
+            .getOrElse { ConcurrentMediaResult("Could not save capture group; files rolled back: ${it.message}",failed = true) }
         main.post {
-            listener.onPhoto(message)
+            listener.onPhoto(result)
             listener.onPhotoResult(photo?.let { Result.success(it) }
-                ?: Result.failure(IllegalStateException(message)))
+                ?: Result.failure(IllegalStateException(result.message)))
         }
     }
 
