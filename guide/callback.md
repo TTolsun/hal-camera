@@ -8,7 +8,7 @@ title: Callback
 ## 촬영 프레임을 고정하세요
 
 1. Live에서 `Callback`을 켭니다.
-2. `Hold` 옆 시간 버튼을 눌러 `3s`를 고릅니다.
+2. `Hold 0s ↻` 버튼을 눌러 `3s`를 고릅니다.
 3. 사진을 한 장 찍습니다.
 4. 프레임 번호 앞에 일시정지 표시가 나타나면 이미지와 Metadata의 위치를 비교합니다.
 
@@ -20,6 +20,7 @@ title: Callback
 | `Hold 0s` | 기본값입니다. 프레임을 계속 갱신합니다. |
 | 시간 버튼 | `0s → 1s → 3s → 5s → 10s`로 순환합니다. 0초가 아니면 촬영 출력이 도착한 프레임을 그 시간 동안 유지합니다. |
 | 시간 변경 | 현재 고정을 풀고 다음 촬영부터 새 시간을 적용합니다. 모드·엔진 변경과 앱 재실행 후에도 설정은 유지합니다. |
+| `ID 0 ↻` | 다른 Service ID가 열려 있으면 표시됩니다. 누를 때마다 해당 카메라의 콜백으로 전환합니다. |
 
 고정 중 같은 프레임의 늦은 결과도 채워집니다. `Callback`을 다시 누르면 그래프가 닫히고 FPS·EXP·AE·AF·AWB 정보가 돌아옵니다. 촬영 버튼은 계속 사용할 수 있습니다.
 
@@ -51,7 +52,7 @@ title: Callback
 
 ## 스트림별 도착 시각을 읽으세요
 
-**이미지 도착과 파일 저장 완료는 다릅니다.** 그래프는 현재 메인 Service ID의 결과와 구성된 출력을 보여 줍니다.
+**이미지 도착과 파일 저장 완료는 다릅니다.** 그래프는 선택한 Service ID의 결과와 구성된 출력을 보여 줍니다.
 
 | 행 | 관측하는 시점 |
 | --- | --- |
@@ -59,11 +60,11 @@ title: Callback
 | Preview · Recording | 일반 Camera2 경로의 Android 13 이상에서 PRIVATE 버퍼를 화면·인코더에 전달하기 전의 시점입니다. 실제 화면 표시 시각은 아닙니다. |
 | YUV · JPEG · RAW | 해당 이미지가 도착한 시점입니다. YUV가 여러 개여도 내부 스트림 ID로 구분합니다. |
 | Meta (Phy) · Preview (Phy) · YUV (Phy) | 메인 Logical Camera에 속한 Physical 결과·출력입니다. 구성한 종류에 맞는 행을 표시합니다. |
-| Jpeg | YUV 앱 변환 또는 PIP 합성 JPEG가 준비된 시점입니다. HAL JPEG의 도착 행과 구분합니다. |
+| Jpeg | YUV 앱 변환 JPEG가 준비된 시점입니다. HAL JPEG의 도착 행과 구분합니다. PIP 합성 저장은 표시하지 않습니다. |
 
 ### PIP를 켜면 무엇이 추가되나요?
 
-메인 Logical Camera의 Physical PIP는 Physical 메타데이터와 각 프리뷰 입력을 함께 표시합니다. 메인 YUV 스트림을 켜 두었다면 YUV도 유지합니다. 다른 Service ID를 PIP로 열었을 때에는 그 장치의 결과를 메인 프레임의 결과처럼 섞지 않습니다.
+메인 Logical Camera의 Physical PIP는 Physical 메타데이터와 각 프리뷰 입력을 함께 표시합니다. 다른 Service ID를 PIP로 열면 `ID ↻` 버튼으로 각 장치의 결과를 따로 봅니다. 전환 시 선택한 장치의 최신 프레임을 바로 표시하고 짧은 밝기·높이 전환을 적용합니다. 카메라의 콜백 값과 시각은 보간하지 않습니다. YUV 구성과 엔진별 제약은 [Live Streams](live.md#detail-f29a963033)에서 확인하세요.
 
 <details markdown="1" id="callback-engine-limits" data-search-section>
 <summary>Camera2·CameraX·기존 Dual의 관측 차이</summary>
