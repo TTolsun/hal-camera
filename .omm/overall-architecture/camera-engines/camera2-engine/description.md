@@ -1,4 +1,4 @@
-Camera2Engine은 전용 HandlerThread에서 Camera2 요청과 세션을 관리하고 UI 상태는 메인 스레드로 전달합니다. Live 기본값은 preview·YUV·JPEG 크기를 픽셀 예산에 맞춰 선택합니다. LiveStreamSettings를 전달하면 정확한 preview 크기, 선택한 YUV·JPEG 출력과 FPS 범위를 사용하며 자동 크기 대체는 하지 않습니다. LiveStreamSupport가 개별 지원을 검사하고 LiveSessionCheck는 Android 10 이상에서 출력 조합을 조회합니다. 조회 미지원은 unknown으로 기록하고 실제 세션 구성으로 확인합니다. 최소 프레임 시간이 FPS 하한을 초과하면 거부하며 결과 FPS 범위는 capture_result에 남습니다. BenchmarkActivity의 StreamSpec과 Live 설정은 동시에 전달할 수 없습니다.
+Camera2Engine은 카메라 스레드에서 요청·세션을 관리하고 UI는 메인 스레드로 전달합니다. 기본 크기는 픽셀 예산으로 고르며 명시 크기는 대체하지 않습니다. LiveStreamSupport가 개별 지원, LiveSessionCheck가 출력 조합을 검사하며 조회 불가는 unknown입니다. PHOTO는 Preview FPS와 최소 프레임 시간을 검사하고 VIDEO는 Recording FPS를 사용합니다. PIP 녹화의 카메라 FPS는 템플릿의 Auto이며 합성 인코더만 30fps입니다. 비활성 녹화 값은 PHOTO를 거부하지 않습니다. 실제 FPS는 capture_result에 남으며 Benchmark StreamSpec과 Live 설정은 함께 전달할 수 없습니다.
 
 사진 촬영과 플래시 precapture는 Camera2StillCapture(하위 요소 still-capture)가, Live 녹화는 Camera2LiveRecorder(하위 요소 live-recorder)가 맡습니다. 엔진은 두 클래스에 Host로 카메라·세션과 request 생성을 넘겨주고, 세션 구성·request 조립·Live 제어·줌·close를 직접 처리합니다. 프리뷰 버퍼를 늘어나지 않게 화면에 채우는 변환 행렬은 PreviewTransform.kt의 fitPreview가 만듭니다.
 

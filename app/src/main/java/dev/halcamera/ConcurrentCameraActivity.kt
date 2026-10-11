@@ -64,7 +64,6 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private var plans = emptyList<ConcurrentPlan>()
     private var outputSizes = emptyList<LiveSize>()
     private var selected = 0
-    private var loadedLimit: Int? = null
     private var session: ConcurrentSession? = null
     private var foreground = false
     private var closing = false
@@ -93,11 +92,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
         header.addView(button("Live") { finish() },LinearLayout.LayoutParams(dp(68),dp(48)))
         header.addView(text(if (videoMode) "Multi · V" else "Multi · P",18).apply { setPadding(dp(12),0,0,0) },LinearLayout.LayoutParams(0,dp(48),1f))
         streamsButton = button("Streams") {
-            val id = plans.getOrNull(selected)?.streams?.firstOrNull()?.camera?.id ?: return@button
-            afterClose = { startActivity(Intent(this,LiveStreamsActivity::class.java)
-                .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID,id).putExtra(WorkbenchActivity.EXTRA_ENGINE,"Camera2")
-                .putExtra(LiveStreamsActivity.EXTRA_MULTI,true).putExtra(LiveStreamsActivity.EXTRA_FROM_LIVE,true)) }
-            closeSession()
+            LiveChoiceSheet.show(this,"Streams",content=Look.text(this,
+                states.entries.joinToString("\n") { "Camera ${it.key}: ${it.value}" },12,Look.onDark))
         }
         header.addView(streamsButton,LinearLayout.LayoutParams(dp(80),dp(48))); root.addView(header)
         pairButton = button("Cameras") { chooseCameras() }
@@ -173,10 +169,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private fun discover() {
         if (Build.VERSION.SDK_INT < 30) { status.text = "Requires Android 11 or later."; return }
         try {
-            val limit = LiveStreamsActivity.savedMultiLimit(this)
-            if (loadedLimit != limit) { selected = 0; failed = false }
-            loadedLimit = limit
-            plans = readConcurrentPlans(manager,limit.takeIf { it > 0 } ?: Int.MAX_VALUE)
+            plans = readConcurrentPlans(manager,Int.MAX_VALUE)
             if (plans.isEmpty()) status.text = "Multi is unavailable on this device."
             else { selected = selected.coerceIn(plans.indices); pairButton.text = plans[selected].label; startIfReady() }
         } catch (e: Exception) { status.text = e.message; failed = true }
@@ -206,15 +199,6 @@ class ConcurrentCameraActivity : ComponentActivity() {
             if (it.physical) it.id in physical[camera.id].orEmpty() else it.id == servicePip[camera.id]
         }
         PhysicalPipPicker(this,manager).show(camera.id,"Camera2",sources.getOrNull(selected)) { _,source ->
-            val primaryIds=plans[this.selected].streams.map { it.camera.id }
-            val nextServices=servicePip.filterKeys { it != camera.id && it in primaryIds }.values +
-                listOfNotNull(source?.takeUnless { it.physical }?.id)
-            val devices=(primaryIds + nextServices).distinct()
-            val limit=LiveStreamsActivity.savedMultiLimit(this)
-            if (limit>0 && devices.size>limit) {
-                android.widget.Toast.makeText(this,"Maximum camera devices: $limit",android.widget.Toast.LENGTH_SHORT).show()
-                return@show
-            }
             physical.remove(camera.id); servicePip.remove(camera.id)
             if (source != null) {
                 if (source.physical) physical[camera.id] = listOf(source.id) else servicePip[camera.id] = source.id

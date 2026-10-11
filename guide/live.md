@@ -186,13 +186,13 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 
 | 바꿀 대상 | 설정 |
 | --- | --- |
-| 프리뷰 | Preview 크기와 프리뷰 FPS를 선택합니다. |
+| 프리뷰 | Preview 크기를 선택합니다. Preview FPS는 PHOTO의 카메라 요청 범위이며 일반 VIDEO는 Recording FPS를 사용합니다. PIP VIDEO와 CameraX PIP의 Preview FPS는 Auto입니다. |
 | JPEG 출처 | JPEG 목록의 `YUV (현재 크기)`는 앱에서 변환하고, 해상도 선택은 카메라 JPEG를 저장합니다. `Off`는 JPEG 저장을 끕니다. |
 | YUV·RAW | YUV는 분석 스트림 크기입니다. YUV만 켜면 사진을 저장하지 않습니다. RAW는 Photo 모드의 지원되는 Camera2에서 DNG로 저장합니다. |
 | PIP | 보조 카메라 선택 후 `PIP Preview`와 `PIP Photo` 크기를 고릅니다. `Auto`는 지원 조합을 조회합니다. 사진 입력 형식은 메인 JPEG 출처를 따릅니다. |
-| 녹화 | Format → Resolution → Frame Rate 순서로 선택합니다. CameraX의 포맷은 Auto이며 코덱은 라이브러리가 정합니다. 고속 세션은 제공하지 않습니다. |
+| 녹화 | VIDEO에서 Format → Resolution → Recording FPS 순서로 선택합니다. PHOTO에서는 비활성화됩니다. PIP는 H.264·30fps·합성 크기로 고정됩니다. CameraX 일반 녹화의 포맷은 Auto입니다. 고속 세션은 제공하지 않습니다. |
 
-**적용에 실패하면** 설정 화면의 이유를 확인하고 `이전 설정으로 복원`을 누르세요. 이 버튼은 실패했을 때만 나타납니다. 개별 크기를 지원해도 여러 출력의 조합은 거부될 수 있습니다.
+지원하지 않는 개별 설정은 이유를 표시하고 Apply를 비활성화합니다. **실제 구성에 실패하면** `이전 설정으로 복원`을 누르세요. 이 버튼은 실패했을 때만 나타납니다. 개별 크기를 지원해도 여러 출력의 조합은 거부될 수 있습니다.
 
 **같은 장면으로 비교해 보세요.** JPEG에서 해상도를 골라 한 장, `YUV (현재 크기)`를 골라 한 장을 찍으면 카메라 JPEG와 앱 변환 결과를 비교할 수 있습니다. 두 촬영은 서로 다른 시점이며, 해상도도 같다고 보장하지 않습니다.
 
@@ -245,11 +245,10 @@ Camera2 Single은 현재 Live CameraDevice를 유지합니다. 다른 Service ID
 
 **후면과 전면을 각각 파일로 남기려면 `Multi · P` 또는 `Multi · V`를 여세요.** 독립 장치의 동시 실행을 지원해야 하며 CameraX에서 진입하면 Camera2 경로를 사용합니다.
 
-1. `Live Streams → Multi → Maximum camera devices`에서 장치 수 상한을 정합니다. 기본값은 `All available`입니다.
-2. Live의 `Multi · P`(사진) 또는 `Multi · V`(영상)를 엽니다.
-3. 상단에서 Service ID 조합을 선택합니다. 장치별 프리뷰가 분할됩니다.
-4. `Photo`로 촬영하거나 `Record → Stop`으로 녹화합니다.
-5. `Live` 또는 뒤로 가기로 돌아갑니다.
+1. Live의 `Multi · P`(사진) 또는 `Multi · V`(영상)를 엽니다.
+2. 상단에서 Service ID 조합을 선택합니다. 장치별 프리뷰가 분할됩니다.
+3. `Photo`로 촬영하거나 `Record → Stop`으로 녹화합니다.
+4. `Live` 또는 뒤로 가기로 돌아갑니다.
 
 각 분할 화면에서도 PIP를 켤 수 있습니다. 보조 영상은 해당 장치 화면 안에서만 이동하며 드래그 또는 `Move`로 옮깁니다. 이때 해당 장치의 파일에는 합성 구도가 저장됩니다.
 
@@ -262,7 +261,7 @@ Camera2 Single은 현재 Live CameraDevice를 유지합니다. 다른 Service ID
 <details markdown="1" id="multi-session-details" data-search-section>
 <summary>장치 수·재구성·위치 초기화</summary>
 
-추가 Service PIP도 최대 장치 수에 포함합니다. 이미 연 Service ID를 중복해서 열지는 않습니다. 조합 선택창의 `Streams`에서 현재 구성을 확인할 수 있습니다.
+사용자가 정하는 장치 수 상한은 없습니다. 기기의 동시 실행 조합을 기준으로 후보를 만들며 이미 연 Service ID는 중복해서 열지 않습니다. Multi 상단과 조합 선택창의 `Streams`는 현재 구성을 읽기 전용으로 표시합니다.
 
 Multi에서 PIP를 바꾸면 전체 세션을 닫고 다시 구성합니다. 보조 영상은 같은 모드 안에서 위치를 기억하지만, Multi에 새로 진입하면 초기화됩니다. Live로 돌아갈 때에는 모든 장치와 합성 출력의 종료를 기다립니다.
 

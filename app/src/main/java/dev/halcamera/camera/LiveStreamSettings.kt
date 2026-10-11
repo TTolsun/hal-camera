@@ -59,7 +59,7 @@ data class LiveStreamSupport(
     val raw: List<LiveSize> = emptyList(),
     val rawUnavailableReason: String = "No supported RAW_SENSOR sizes",
 ) {
-    fun rejection(value: LiveStreamSettings): String? = when {
+    fun rejection(value: LiveStreamSettings, includeRecording: Boolean = true): String? = when {
         value.jpegFromYuv && value.yuv == null -> "Enable YUV to create JPEG in the app."
         value.jpegFromYuv && value.jpeg != null -> "Select YUV or a JPEG size."
         value.stabilization !in stabilization -> "Unsupported stabilization mode. Select Auto or a supported mode."
@@ -69,7 +69,7 @@ data class LiveStreamSupport(
         value.raw != null && value.raw !in raw -> "Unsupported RAW size."
         value.jpeg != null && value.jpeg !in jpeg -> "Unsupported JPEG size."
         value.fps != null && value.fps !in fps -> "Unsupported FPS range for a regular session."
-        value.video != null && value.video !in videos -> "The camera and encoder do not support these recording settings."
+        includeRecording && value.video != null && value.video !in videos -> "The camera and encoder do not support these recording settings."
         else -> null
     }
     fun defaults(): LiveStreamSettings {

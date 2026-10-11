@@ -196,7 +196,7 @@ class CameraXEngine(
                 }
                 liveStreams?.let { settings ->
                     builder.setResolutionSelector(exactResolution(settings.preview))
-                    settings.fps?.let { builder.setTargetFrameRate(Range(it.min, it.max)) }
+                    settings.fps?.takeUnless { videoMode }?.let { builder.setTargetFrameRate(Range(it.min, it.max)) }
                 }
                 Camera2Interop.Extender(builder).setSessionCaptureCallback(resultCallback(telemetry.callback(session) { active }))
                 preview = builder.build().also { it.setSurfaceProvider(view.surfaceProvider) }

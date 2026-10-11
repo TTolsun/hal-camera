@@ -879,6 +879,7 @@ class MainActivity : ComponentActivity() {
                 .putExtra(WorkbenchActivity.EXTRA_ENGINE, engineName)
                 .putExtra(LiveStreamsActivity.EXTRA_VIDEO_MODE, videoMode)
                 .putExtra(LiveStreamsActivity.EXTRA_PIP_SOURCE, pipUi.selected ?: pipUi.settingsSource)
+                .putExtra(LiveStreamsActivity.EXTRA_PIP_ACTIVE, pipUi.selected != null)
                 .putExtra(LiveStreamsActivity.EXTRA_SETTINGS, streamSettings[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_GOOD_SETTINGS, goodStreams[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_HAS_GOOD, goodStreams.containsKey(streamKey()))

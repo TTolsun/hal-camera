@@ -6,6 +6,6 @@ BenchmarkRunner는 OPEN → CONFIGURE → FIRST_FRAME → CYCLE_CLOSE를 반복�
 
 API 전환은 기존 close 완료 후 새 엔진을 엽니다. 목록 열기와 모드 선택은 촬영하지 않습니다. 녹화 중에는 API·카메라·모드 변경을 막고 줌은 허용합니다. 카메라·API 변경은 EV·잠금·플래시와 제어 표시를 초기화합니다. 썸네일 조회는 onStart에서 시작하고 onStop에서 관찰·지연 갱신을 중단하며 이전 결과를 무효화합니다.
 
-CLI는 accepted → preparing → running → saving → succeeded로 진행하며 실패·취소·프로세스 중단을 별도 terminal state로 기록합니다. 같은 요청 ID와 내용은 기존 상태를 반환하며 내용이 다르면 충돌로 거부합니다. 프로세스가 다시 시작되면 미완료 기록을 interrupted로 바꾸고 촬영이나 측정을 재실행하지 않습니다. 제출된 사진 저장의 취소는 실제 저장 결과와 경합할 수 있습니다.
+CLI는 accepted → preparing → running → saving → succeeded로 진행합니다. 실패·취소·중단, ID 중복과 충돌 처리는 하위 cli-request에서 설명합니다. 프로세스 재시작은 미완료 요청을 재실행하지 않습니다. 사진 저장 취소는 실제 저장과 경합할 수 있습니다.
 
 Live 스트림 적용은 사진·녹화·저장·권한 요청·CLI 작업 중에 거절합니다. 기존 close(done)가 끝난 뒤 새 엔진에 설정을 전달하고 구성 성공값을 카메라·엔진별로 보관합니다. 실패하면 크기를 자동 대체하지 않으며 사용자가 직전 정상 구성으로 복구할 수 있습니다. Activity 재생성에서도 요청값과 정상 구성을 복원합니다.

@@ -329,9 +329,9 @@ class Camera2Engine(
             val chars = manager.getCameraCharacteristics(cameraId).also { this.chars = it }
             val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP] ?: error("No stream configuration")
             liveStreams?.let { settings ->
-                liveStreamSupport(chars).rejection(settings)?.let { error(it) }
+                liveStreamSupport(chars).rejection(settings,includeRecording = videoMode)?.let { error(it) }
                 telemetry.event(sessionId, "live_streams_requested", settings.metadata())
-                settings.fps?.let { fps ->
+                settings.fps?.takeUnless { videoMode }?.let { fps ->
                     val durations = listOfNotNull(map.getOutputMinFrameDuration(SurfaceTexture::class.java, settings.preview.androidSize()),
                         settings.yuv?.let { map.getOutputMinFrameDuration(ImageFormat.YUV_420_888, it.androidSize()) },
                         settings.jpeg?.let { map.getOutputMinFrameDuration(ImageFormat.JPEG, it.androidSize()) })
@@ -437,7 +437,7 @@ class Camera2Engine(
     /** The LIVE recording request. Zoom and the controls change it in place: the targets stay preview + encoder. */
     private fun liveRecordRequest(camera: CameraDevice, c: CameraCharacteristics, afTrigger: Int? = null): CaptureRequest =
         camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-            liveStreams?.video?.fps?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, android.util.Range(it, it)) }
+            liveStreams?.video?.fps?.takeUnless { pip != null }?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, android.util.Range(it, it)) }
             set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
             val modes = c[CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES] ?: intArrayOf()
             set(CaptureRequest.CONTROL_AF_MODE, if (CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO in modes)

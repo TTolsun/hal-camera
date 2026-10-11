@@ -166,7 +166,8 @@ class WorkbenchActivity : ComponentActivity() {
             entry(results, "ZIP Archives", "공유 · 저장 · 삭제") { incidents.showList() }
         }
         section("Settings") { settings ->
-            entry(settings, "Live Streams", if (intent.getBooleanExtra(LiveStreamsActivity.EXTRA_DUAL, false)) "현재 Dual 출력" else "해상도·출력·FPS와 녹화 설정") {
+            entry(settings, "Live Streams", if (intent.getBooleanExtra(LiveStreamsActivity.EXTRA_DUAL, false)) "현재 Dual 출력"
+                else if (intent.getBooleanExtra(LiveStreamsActivity.EXTRA_VIDEO_MODE, false)) "해상도·출력·FPS와 녹화 설정" else "해상도·출력·FPS") {
                 streamSettings.launch(Intent(this, LiveStreamsActivity::class.java).putExtras(intent)
                     .putExtra(LiveStreamsActivity.EXTRA_FROM_LIVE, false))
             }
