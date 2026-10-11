@@ -186,11 +186,12 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 
 | 바꿀 대상 | 설정 |
 | --- | --- |
-| 프리뷰 | Preview 크기를 선택합니다. Preview FPS는 PHOTO의 카메라 요청 범위이며 일반 VIDEO는 Recording FPS를 사용합니다. PIP VIDEO와 CameraX PIP의 Preview FPS는 Auto입니다. |
+| 프리뷰 | Preview 크기를 선택합니다. |
+| FPS | PHOTO는 프리뷰의 Auto·지원 범위, 일반 VIDEO는 녹화 포맷·해상도에 맞는 프레임률을 선택합니다. PIP VIDEO는 30fps 고정이며 카메라는 Auto입니다. CameraX PIP PHOTO는 Auto입니다. |
 | JPEG 출처 | JPEG 목록의 `YUV (현재 크기)`는 앱에서 변환하고, 해상도 선택은 카메라 JPEG를 저장합니다. `Off`는 JPEG 저장을 끕니다. |
 | YUV·RAW | YUV는 분석 스트림 크기입니다. YUV만 켜면 사진을 저장하지 않습니다. RAW는 Photo 모드의 지원되는 Camera2에서 DNG로 저장합니다. |
 | PIP | 보조 카메라 선택 후 `PIP Preview`와 `PIP Photo` 크기를 고릅니다. `Auto`는 지원 조합을 조회합니다. 사진 입력 형식은 메인 JPEG 출처를 따릅니다. |
-| 녹화 | VIDEO에서 Format → Resolution → Recording FPS 순서로 선택합니다. PHOTO에서는 비활성화됩니다. PIP는 H.264·30fps·합성 크기로 고정됩니다. CameraX 일반 녹화의 포맷은 Auto입니다. 고속 세션은 제공하지 않습니다. |
+| 녹화 | VIDEO에서 Format·Resolution을 고르면 FPS 후보도 갱신됩니다. PHOTO에서는 녹화 항목이 비활성화됩니다. PIP는 H.264·30fps·합성 크기로 고정됩니다. CameraX 일반 녹화의 포맷은 Auto입니다. 고속 세션은 제공하지 않습니다. |
 
 지원하지 않는 개별 설정은 이유를 표시하고 Apply를 비활성화합니다. **실제 구성에 실패하면** `이전 설정으로 복원`을 누르세요. 이 버튼은 실패했을 때만 나타납니다. 개별 크기를 지원해도 여러 출력의 조합은 거부될 수 있습니다.
 

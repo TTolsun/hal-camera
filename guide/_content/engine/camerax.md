@@ -142,7 +142,7 @@ sequenceDiagram
 
 명시한 녹화 크기는 지원 Quality의 해상도와 정확히 일치해야 하며, bind 후 실제 해상도도 검사합니다. 설정 화면의 후보는 CameraX Quality 해상도와 하드웨어의 크기·FPS 조건을 교차해 만듭니다. FPS와 비트레이트는 요청값이고 실제 결과와 구분합니다. CameraX 1.6.2의 공개 Recorder API는 녹화 코덱을 직접 선택하지 않으므로 Format과 Live 표시는 Auto입니다.
 
-PHOTO는 Preview FPS를 Preview에 요청하고 VIDEO는 VideoCapture의 Recording FPS를 사용합니다. PHOTO의 녹화 항목과 VIDEO의 별도 Preview FPS는 선택할 수 없습니다. CameraX PIP의 Preview FPS는 Auto이며 합성 녹화는 H.264·30fps·합성 크기로 고정합니다.
+화면의 FPS 한 항목을 PHOTO에서는 Preview의 요청 범위에, VIDEO에서는 VideoCapture의 목표 프레임률에 연결합니다. PHOTO의 녹화 포맷·해상도는 선택할 수 없습니다. CameraX PIP의 카메라 FPS는 Auto이며 합성 녹화는 H.264·30fps·합성 크기로 고정합니다.
 
 녹화 중 사진은 선택한 JPEG 소스를 따릅니다. 카메라 JPEG는 함께 bind한 ImageCapture의 `takePicture`로, YUV 앱 변환은 ImageAnalysis 프레임으로 JPEG 한 장을 저장합니다.
 
