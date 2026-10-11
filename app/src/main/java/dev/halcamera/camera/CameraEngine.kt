@@ -17,6 +17,7 @@ interface CameraEngine {
 /** A composited Live preview with the same scene saved to photos and video. */
 interface PipCamera {
     val pipSources: List<PipSource>
+    val pipCallbackSession: String? get() = null
     /** Fresh query for the current outputs; completion is delivered on the UI thread. */
     fun checkPipSources(done: (List<PipSource>) -> Unit) = done(pipSources)
     fun setPip(source: PipSource?, texture: android.graphics.SurfaceTexture?, output: LiveSize?,

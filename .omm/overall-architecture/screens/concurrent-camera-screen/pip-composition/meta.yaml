@@ -3,6 +3,7 @@ title: pip-composition
 children:
   - media-storage
   - availability
+  - session-lifecycle
 parentPath:
   - screens
   - concurrent-camera-screen

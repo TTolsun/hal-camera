@@ -27,11 +27,11 @@ verifications: []
 
 **PIP 목록에는 모든 후보를 표시하고 지원 불가가 확인된 항목만 비활성화합니다.** Physical 후보는 `Camera2 only`로 표시합니다. Service 후보는 CameraX가 제공하는 동시 조합에 포함되어야 합니다. 제조사·칩셋·카메라 ID에 따른 예외는 두지 않습니다.
 
-선택창을 열 때와 적용 직전에 두 카메라의 출력 구성을 `CameraManager.isConcurrentSessionConfigurationSupported`로 함께 조회합니다. 현재 분석 스트림을 포함하며, 720p 이하 프리뷰 조합 중 지원되는 크기를 실제 PIP Preview에도 사용합니다. 가장 큰 크기가 거부되어도 작은 지원 크기가 있으면 선택할 수 있습니다. 조회를 지원하지 않는 기기에서는 `Not verified`로 표시하고 실제 구성을 허용합니다. 개별 카메라의 단일 세션 지원 여부만으로 동시 구성을 판정하지 않습니다.
+선택창을 열 때와 적용 직전에 두 카메라의 Preview·분석·사진 출력 구성을 `CameraManager.isConcurrentSessionConfigurationSupported`로 함께 조회합니다. Live Streams에서 PIP Preview와 사진 크기를 설정하고 Live에서 실제 크기를 확인합니다. Auto는 작은 지원 조합도 조회하지만 명시한 크기는 대체하지 않습니다. 조회가 불가능하면 `Not verified`로 표시하여 실제 구성을 허용합니다.
 
-`CameraXPipSession`은 각각 720p 이하의 Preview를 `ConcurrentCamera`로 bind하고 `DeviceCompositor`에서 합성 JPEG·H.264/AAC MP4를 저장합니다. 일반 촬영의 ImageCapture·Recorder와 별도 경로이며 PIP를 끄면 일반 출력 설정을 복원합니다. 단일·동시 모드 전환에는 재bind가 필요하고, 종료는 두 카메라의 CLOSED와 SurfaceRequest 반환을 기다립니다. PIP 터치 측광은 합성 화면의 fill-center crop에 맞춰 변환합니다. 지원 조합과 저장 범위는 [Live PIP](live.md#여러-카메라를-함께-촬영하세요)에서 확인합니다.
+`CameraXPipSession`은 두 Preview와 필요한 사진 use case를 `ConcurrentCamera`로 bind합니다. JPEG가 켜져 있으면 합성 JPEG와 각 카메라의 원본 두 장을 저장하며 카메라 JPEG·YUV 변환 선택은 일반 촬영과 같습니다. JPEG Off에서도 합성 사진을 저장합니다. 녹화는 `DeviceCompositor`에서 H.264/AAC MP4를 저장합니다. 단일·동시 모드 전환에는 재bind가 필요하고 종료는 두 카메라의 CLOSED와 SurfaceRequest 반환, 저장 완료를 기다립니다. PIP 터치 측광은 합성 화면의 fill-center crop에 맞춰 변환합니다.
 
-CameraX 1.6.2의 동시 Preview·YUV 조합은 분석 스트림을 최대 1920×1440까지 허용합니다. 이 라이브러리 공통 제한을 넘는 현재 설정은 PIP 선택 전에 거부합니다. 특정 기기용 제한은 두지 않으며, HAL 지원 조회도 함께 수행합니다.
+CameraX 1.6.2의 공통 동시 출력 표도 검사합니다. Preview+카메라 JPEG는 Preview가 720p 이하, JPEG가 1920×1440 이하이며 Preview+YUV는 둘 중 큰 출력이 1920×1440 이하입니다. Preview+YUV+카메라 JPEG 세 형식은 지원하지 않습니다. 설정을 지정하지 않은 기본 PIP에서는 카메라 JPEG를 위해 자동 분석 출력을 생략하며 명시한 YUV는 유지합니다. 기기별 예외 없이 라이브러리의 제약과 HAL 지원 조회를 함께 적용합니다.
 
 ### CameraX 손떨림 보정
 

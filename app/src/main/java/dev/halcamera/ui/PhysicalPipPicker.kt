@@ -12,6 +12,14 @@ import dev.halcamera.camera.CameraLabel
 internal class PhysicalPipPicker(private val context: Context, private val manager: CameraManager) {
     private val cache = mutableMapOf<String,List<PipSource>>()
     private val positions = context.getSharedPreferences("pip_picker_scroll", Context.MODE_PRIVATE)
+    fun showLive(id: String, name: String, selected: PipSource?, engine: () -> dev.halcamera.camera.PipCamera?,
+                 open: (PipSource?) -> Unit) {
+        val current = engine() ?: return
+        show(id,name,selected,current.pipSources,check = { done ->
+            current.checkPipSources { sources -> done(if (engine() === current) sources
+                else sources.map { it.copy(unavailableReason = "Camera changed") }) }
+        }) { _,source -> open(source) }
+    }
     fun supported(id: String): List<PipSource> {
         if (Build.VERSION.SDK_INT < 30 || id.isEmpty()) return emptyList()
         return cache.getOrPut(id) { runCatching { readPipSources(manager,id) }.getOrDefault(emptyList()) }

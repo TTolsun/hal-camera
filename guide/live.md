@@ -189,6 +189,7 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 | 프리뷰 | Preview 크기와 프리뷰 FPS를 선택합니다. |
 | JPEG 출처 | JPEG 목록의 `YUV (현재 크기)`는 앱에서 변환하고, 해상도 선택은 카메라 JPEG를 저장합니다. `Off`는 JPEG 저장을 끕니다. |
 | YUV·RAW | YUV는 분석 스트림 크기입니다. YUV만 켜면 사진을 저장하지 않습니다. RAW는 Photo 모드의 지원되는 Camera2에서 DNG로 저장합니다. |
+| PIP | 보조 카메라 선택 후 `PIP Preview`와 `PIP Photo` 크기를 고릅니다. `Auto`는 지원 조합을 조회합니다. 사진 입력 형식은 메인 JPEG 출처를 따릅니다. |
 | 녹화 | Format → Resolution → Frame Rate 순서로 선택합니다. CameraX의 포맷은 Auto이며 코덱은 라이브러리가 정합니다. 고속 세션은 제공하지 않습니다. |
 
 **적용에 실패하면** 설정 화면의 이유를 확인하고 `이전 설정으로 복원`을 누르세요. 이 버튼은 실패했을 때만 나타납니다. 개별 크기를 지원해도 여러 출력의 조합은 거부될 수 있습니다.
@@ -200,7 +201,7 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 <details markdown="1" id="stream-readout" data-search-section>
 <summary>P·Y·J·RAW·R 표시 읽기</summary>
 
-P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니다. 녹화 중에는 P·R과 H264·HEVC·Auto를 표시하며, R은 녹화 출력입니다. 녹화 중 사진을 지원하는 구성에는 JPEG 출력도 추가됩니다. 구성 검사와 저장 방식은 [Engine Comparison](engine.md#camera2-엔진)에서 확인하세요.
+P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니다. PIP가 켜지면 두 번째 줄에 보조 입력과 합성 출력 C의 실제 크기를 표시합니다. J의 YUV 표시는 앱 변환 사진을 뜻합니다. 녹화 중에는 R과 H264·HEVC·Auto를 표시하며 R은 녹화 출력입니다. 구성 검사와 저장 방식은 [Engine Comparison](engine.md#camera2-엔진)에서 확인하세요.
 
 </details>
 
@@ -215,7 +216,7 @@ P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니�
 2. 보조 카메라 하나를 고릅니다. 선택창이 닫히고 현재 Live 안에 보조 영상이 나타납니다.
 3. 보조 영상을 원하는 자리로 드래그한 뒤 기존 셔터로 촬영합니다.
 
-**확인할 결과:** 보조 영상이 포함된 합성 JPEG 또는 동영상이 저장됩니다. 조작 버튼과 라벨은 파일에 들어가지 않습니다. 끄려면 `PIP → Turn off PIP`를 선택합니다.
+**확인할 결과:** JPEG On에서는 합성 사진과 두 카메라 원본까지 JPEG 세 장을 저장합니다. JPEG Off에서도 합성 사진은 저장합니다. 합성 저장은 카메라 Callback 그래프에 표시하지 않으며 Service 원본 콜백은 ID 버튼으로 전환합니다. 동영상에는 합성 영상만 저장하며 조작 버튼과 라벨은 파일에 들어가지 않습니다. 끄려면 `PIP → Turn off PIP`를 선택합니다.
 
 | 선택할 때 알아둘 점 | 동작 |
 | --- | --- |
@@ -233,7 +234,7 @@ Single PIP는 현재 해상도와 유지되는 추가 스트림을 선택창을 
 
 Camera2 Single은 현재 Live CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열고 Physical ID는 현재 장치의 출력을 추가합니다. CameraX는 메인 ID를 유지하면서 단일·동시 use case를 다시 bind합니다. 두 엔진의 후보 목록은 같지 않을 수 있습니다.
 
-합성 사진은 화면용 해상도이며 일반 JPEG 크기 선택과 별개입니다. CameraX PIP의 각 프리뷰 입력은 720p 이하에서 협상하고, 합성 JPEG와 H.264/AAC MP4를 저장합니다. PIP를 끄면 일반 스트림 설정으로 복귀합니다. 원본 DNG와 합성 JPEG의 촬영 시각은 같다고 보장하지 않습니다.
+합성 사진은 화면용 해상도이며 원본 JPEG 크기 선택과 별개입니다. Live Streams의 PIP Preview는 합성 입력, PIP Photo는 보조 원본 크기입니다. 명시한 크기는 자동 대체하지 않습니다. CameraX는 라이브러리 공통 동시 출력 제한과 HAL 조회를 함께 적용합니다. PIP를 끄면 일반 스트림 설정으로 복귀합니다. 원본과 합성 사진의 촬영 시각은 같다고 보장하지 않습니다.
 
 </details>
 

@@ -12,6 +12,8 @@ import androidx.core.view.WindowInsetsCompat
 import dev.halcamera.camera.LiveStreamSettings
 import dev.halcamera.camera.liveStreamSupport
 import dev.halcamera.camera.cameraXStreamSupport
+import dev.halcamera.camera.PipSource
+import dev.halcamera.camera.readPipStreamCapabilities
 import dev.halcamera.ui.LiveStreamSettingsView
 import dev.halcamera.ui.Look
 import java.util.concurrent.Executors
@@ -41,22 +43,29 @@ class LiveStreamsActivity : ComponentActivity() {
         io.execute {
             val result = runCatching {
                 val support = liveStreamSupport(getSystemService(CameraManager::class.java).getCameraCharacteristics(id))
-                if (intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE) == "CameraX") cameraXStreamSupport(this, id, support) else support
+                val effective = if (intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE) == "CameraX") cameraXStreamSupport(this, id, support) else support
+                val pip = (intent.getSerializableExtra(EXTRA_PIP_SOURCE) as? PipSource)?.let { source ->
+                    readPipStreamCapabilities(getSystemService(CameraManager::class.java), source)
+                }
+                effective to pip
             }
             runOnUiThread {
                 if (isDestroyed || isFinishing) return@runOnUiThread
-                result.fold({ support ->
+                result.fold({ (support, pip) ->
+                    val initial = draft ?: support.defaults().let { defaults ->
+                        if (pip != null && intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE) == "CameraX") defaults.copy(yuv = null) else defaults
+                    }
                     val restore: (() -> Unit)? = if (intent.getBooleanExtra(EXTRA_HAS_GOOD, false)) ({
                         save(intent.getSerializableExtra(EXTRA_GOOD_SETTINGS) as? LiveStreamSettings)
                     }) else null
-                    val page = LiveStreamSettingsView.create(this, support, draft ?: support.defaults(),
+                    val page = LiveStreamSettingsView.create(this, support, initial,
                         intent.getStringExtra(EXTRA_STATUS).orEmpty(), restore, ::finish, { draft = it }, ::save,
                         backDescription,
-                        (intent.getSerializableExtra(EXTRA_SETTINGS) as? LiveStreamSettings) ?: support.defaults(),
+                        (intent.getSerializableExtra(EXTRA_SETTINGS) as? LiveStreamSettings) ?: initial,
                         intent.getStringExtra(WorkbenchActivity.EXTRA_ENGINE) ?: "Camera2",
                         multiLimit, getSystemService(CameraManager::class.java).cameraIdList.size,
                         savedMultiLimit(this), { multiLimit = it }, intent.getBooleanExtra(EXTRA_MULTI, false),
-                        videoMode = intent.getBooleanExtra(EXTRA_VIDEO_MODE, false))
+                        videoMode = intent.getBooleanExtra(EXTRA_VIDEO_MODE, false), pipSupport = pip)
                     showPage(page.root, page.scroll)
                     savedInstanceState?.getInt("scroll_y")?.let { y -> page.scroll.post { page.scroll.scrollTo(0, y) } }
                 }, { showMessage("Could not load capabilities. ${it.message.orEmpty()}") })
@@ -142,5 +151,6 @@ class LiveStreamsActivity : ComponentActivity() {
         const val EXTRA_STATUS = "live_stream_status"
         const val EXTRA_FROM_LIVE = "live_stream_from_live"
         const val EXTRA_VIDEO_MODE = "live_video_mode"
+        const val EXTRA_PIP_SOURCE = "live_pip_source"
     }
 }

@@ -38,12 +38,14 @@ data class LiveStreamSettings(
     val jpegFromYuv: Boolean = false,
     /** RAW_SENSOR still saved as DNG (#177). Camera2 only; off by default. */
     val raw: LiveSize? = null,
+    val pip: Map<String, PipStreamSettings> = emptyMap(),
 ) : java.io.Serializable {
     val canCapture get() = (jpegFromYuv && yuv != null) || jpeg != null || raw != null
     fun forMode(videoMode: Boolean) = LiveModePolicy.forVideo(videoMode).apply(this)
     fun metadata(): Map<String, Any?> = mapOf("preview" to preview.toString(), "analysis" to yuv?.toString(),
         "jpeg" to jpeg?.toString(), "fpsRange" to fps?.toString(), "video" to video?.toString(),
-        "stabilization" to stabilization.name, "jpegSource" to if (jpegFromYuv) "YUV" else "CAMERA", "raw" to raw?.toString())
+        "stabilization" to stabilization.name, "jpegSource" to if (jpegFromYuv) "YUV" else "CAMERA", "raw" to raw?.toString(),
+        "pip" to pip.mapValues { (_, value) -> mapOf("preview" to value.preview?.toString(), "photo" to value.photo?.toString()) })
     fun summary() = "Preview $preview · YUV ${yuv ?: "Off"} · JPEG ${if (jpegFromYuv) "YUV ($yuv)" else jpeg ?: "Off"}" +
         (raw?.let { " · RAW $it" } ?: "") + " · ${fps ?: "Auto FPS"}"
 }

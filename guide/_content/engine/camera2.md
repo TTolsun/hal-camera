@@ -39,9 +39,9 @@ verifications: []
 
 ### PIP 지원을 미리 확인하세요
 
-**현재 해상도와 유지되는 YUV·RAW 출력으로 Physical·Service PIP 지원 여부를 조회합니다.** 선택창을 열 때와 적용 직전에 다시 검사하며 제조사·칩셋·ID별 예외는 두지 않습니다. Physical은 열린 카메라의 `isSessionConfigurationSupported`, Service는 `CameraManager.isConcurrentSessionConfigurationSupported`를 사용합니다. VIDEO의 `video_snapshot` 출력과 HAL JPEG·인코더 출력은 합성 PIP 세션에 유지하지 않으므로 검사에서도 제외합니다.
+**현재 해상도와 유지되는 YUV·JPEG·RAW 출력, 보조 카메라의 Preview·사진 출력으로 PIP 지원 여부를 조회합니다.** 선택창을 열 때와 적용 직전에 검사하며 제조사·칩셋·ID별 예외는 두지 않습니다. Physical은 열린 카메라의 `isSessionConfigurationSupported`, Service는 `CameraManager.isConcurrentSessionConfigurationSupported`를 사용합니다. 합성 녹화의 인코더는 GL 출력을 받으므로 카메라 세션 조회에 넣지 않습니다.
 
-검사는 임시 프리뷰 Surface로 수행하며 현재 카메라 세션을 바꾸지 않습니다. 보조 카메라의 가장 큰 프리뷰가 거부되면 작은 지원 크기를 조회하고 확인된 크기로 실제 합성 입력을 구성합니다. 지원 불가가 확인된 후보만 비활성화합니다. 조회를 지원하지 않는 기기에서는 `Not verified`로 표시하고 실제 구성을 허용합니다.
+검사는 임시 Surface와 ImageReader로 수행하며 현재 세션을 바꾸지 않습니다. Live Streams에서 보조 Preview와 사진 크기를 설정하며 실제 크기는 Live에 표시합니다. Auto는 작은 지원 조합도 조회하지만 명시한 크기는 대체하지 않습니다. 지원 불가가 확인된 후보만 비활성화하고, 조회가 불가능하면 `Not verified`로 표시하여 실제 구성을 허용합니다.
 
 ### 수동 촬영
 
@@ -190,7 +190,7 @@ stateDiagram-v2
 <details markdown="1" id="detail-902b2a5546" data-search-section>
 <summary>사진 구현</summary>
 
-아래는 PIP를 끈 Live 사진의 흐름입니다. PIP는 합성 JPEG를 저장하며 RAW가 켜져 있으면 메인 카메라 DNG와 원본 JSON을 함께 저장합니다. 원본과 합성 프리뷰의 센서 시각은 같다고 보장하지 않습니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
+아래는 PIP를 끈 Live 사진의 흐름입니다. PIP는 합성 JPEG를 저장하며 JPEG가 켜져 있으면 두 카메라의 원본 JPEG도 저장합니다. 원본의 카메라 JPEG·YUV 변환 선택은 일반 촬영과 같습니다. RAW가 켜져 있으면 메인 DNG도 저장합니다. JPEG Off에서도 합성 사진은 저장하며, 합성 저장을 카메라 JPEG 콜백으로 표시하지 않습니다. 세 결과의 센서 시각이 같다고 보장하지 않습니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
 
 ```mermaid
 sequenceDiagram

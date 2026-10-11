@@ -27,16 +27,20 @@ internal class LivePipController(
     private val positions = PipPositionStore(context, "live")
     private var rect = PipScene.liveDefault
     private var generation = 0
+    private var settingsParent: String? = null
+    private var requestedSource: PipSource? = null
+    val settingsSource get() = requestedSource?.takeIf { settingsParent == cameraId() }
 
     fun reset() { generation++; selected = null; busy = false; view = null }
 
-    fun resetMode() { positions.clear(); reset() }
+    fun resetMode() { positions.clear(); requestedSource = null; settingsParent = null; reset() }
 
     @SuppressLint("ClickableViewAccessibility")
     fun select(source: PipSource?) {
         if (Build.VERSION.SDK_INT < 30 || busy) return
         val current = engine() ?: return
         val parent = cameraId()
+        if (source != null) { requestedSource = source; settingsParent = parent }
         rect = positions.read(parent, PipScene.liveDefault)
         val token = ++generation
         val previous = selected

@@ -25,6 +25,15 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
     }
     private var nowNs = 0L
     private var renderedFrame: CallbackTimelineFrame? = null
+    private var sessions = emptyMap<String,Map<String,Any?>>()
+    private var selectedSession: String? = null
+    private val camera = widgets.button("ID") {
+        val ids = sessions.keys.toList()
+        if (ids.isNotEmpty()) {
+            selectedSession = ids[(ids.indexOf(selectedSession) + 1) % ids.size]
+            timeline.reset(); render()
+        }
+    }.apply { typeface = Look.mono; minWidth = widgets.dp(64); minimumWidth = widgets.dp(64) }
     private val hold = widgets.label("Hold", 12, Look.onDark).apply { gravity = Gravity.CENTER }
     private val duration = widgets.button("${timeline.holdSeconds}s") {
         timeline.cycleHoldSeconds()
@@ -41,6 +50,7 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
             gravity = Gravity.CENTER_VERTICAL
             addView(heldIndicator, LayoutParams(widgets.dp(16), widgets.dp(24)))
             addView(status, LayoutParams(0, -2, 1f))
+            addView(camera, LayoutParams(widgets.dp(64), widgets.dp(48)))
             addView(hold, LayoutParams(widgets.dp(64), widgets.dp(48)))
             addView(duration.apply {
                 setTextColor(Look.onDark)
@@ -63,16 +73,29 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
     }
 
     fun reset() {
+        selectedSession = null
         timeline.holdSeconds = prefs.getInt("shot_seconds", 0).takeIf { it in ResultCallbackTimeline.HOLD_SECONDS } ?: 0
         timeline.reset()
         render()
     }
 
-    fun update(events: List<Event>, session: String, nowNs: Long, metadata: Map<String, Any?>) {
+    fun updateLive(events: List<Event>, session: String, nowNs: Long, allMetadata: Map<String,Map<String,Any?>>, secondary: String?) =
+        update(events,session,nowNs,allMetadata[session].orEmpty(),
+            secondary?.let { mapOf(it to allMetadata[it].orEmpty()) }.orEmpty())
+
+    fun update(events: List<Event>, session: String, nowNs: Long, metadata: Map<String, Any?>,
+        others: Map<String,Map<String,Any?>> = emptyMap()) {
         this.nowNs = nowNs
+        sessions = mapOf(session to metadata) + others
+        selectedSession = selectedSession?.takeIf { it in sessions } ?: session
+        camera.visibility = if (others.isEmpty()) View.GONE else View.VISIBLE
+        val current = checkNotNull(selectedSession)
+        val currentMetadata = sessions[current].orEmpty()
+        camera.text = "ID ${currentMetadata["cameraId"] ?: currentMetadata["id"] ?: "?"}"
+        camera.contentDescription = "Callback camera ${camera.text}; tap to switch device"
         // MainActivity already schedules this at 100 ms. A second throttle adds visible lag.
-        timeline.update(ResultCallbackSeries.read(events, session, nowNs, metadata), session,
-            (metadata["callbackStreamsAtNs"] as? Number)?.toLong() ?: Long.MIN_VALUE, nowNs)
+        timeline.update(ResultCallbackSeries.read(events, current, nowNs, currentMetadata), current,
+            (currentMetadata["callbackStreamsAtNs"] as? Number)?.toLong() ?: Long.MIN_VALUE, nowNs)
         render()
     }
 

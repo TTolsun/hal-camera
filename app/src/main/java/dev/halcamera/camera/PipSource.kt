@@ -2,7 +2,7 @@ package dev.halcamera.camera
 
 /** A physical output belongs to the parent device; a service source owns a separate device. */
 data class PipSource(val id: String, val physical: Boolean, val label: String,
-                     val unavailableReason: String? = null, val supportNote: String? = null) {
+                     val unavailableReason: String? = null, val supportNote: String? = null) : java.io.Serializable {
     val key get() = "${if (physical) "physical" else "service"}:$id"
     val selectable get() = unavailableReason == null
 }

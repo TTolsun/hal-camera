@@ -2,7 +2,7 @@ MainActivity는 Live 런처입니다. CameraEngine을 선택하고 카메라 수
 
 프리뷰의 제어·측정값·촬영 버튼 배치는 docs/design/APP-UI.md를 따릅니다. 아이콘 터치 영역은 48dp 이상이며 색·서체는 Look을 사용합니다.
 
-Live 표시는 프리뷰·capture result가 1.5초 동안 없으면 회색으로 바뀌며 시스템 애니메이션이 꺼지면 깜빡이지 않습니다. FPS·ISO·노출·AE·AF와 추가 측정값을 표시하고 Callback을 열면 ResultCallbackGraph로 대체합니다. 펼침 컨트롤은 Live·크기 표시와 같은 자리에서 교차 페이드합니다. 측정값·그래프 규칙은 diagnostics-panel 요소를 따릅니다.
+LiveReadings와 ResultCallbackGraph가 측정값·콜백을 표시합니다. 프리뷰와 결과가 끊긴 상태, 시간축 및 펼침 제어의 표시 규칙은 diagnostics-panel 요소를 따릅니다.
 
 ExpandingZoomControl은 현재 배율을 눌러 후보를 펼치고 선택 후 접습니다. 핀치는 엔진과 줌 숫자를 함께 갱신하며 터치 측광과 구분합니다. 카메라 선택은 ID 목록을 열며 취소하면 기존 선택을 유지합니다. 상단 촬영 제어에서 플래시, AE·AF 잠금, EV를 조절합니다. 프리뷰 터치 측광은 현재 엔진에 전달합니다.
 

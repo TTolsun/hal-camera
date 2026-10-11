@@ -101,14 +101,14 @@ class CameraXEngine(
         override fun notice(text: String) = this@CameraXEngine.notice(text)
     })
     private val stills: CameraXStillCapture = CameraXStillCapture(context, handler, main, telemetry, session, library, mediaIo, object : CameraXStillCapture.Host {
-        override val imageCapture: ImageCapture? get() = capture
+        override val imageCapture: ImageCapture? get() = if (pip == null) capture else pip?.mainImageCapture
         override val analysisEnabled: Boolean get() = analysis != null && liveStreams?.jpegFromYuv == true
         override val active: Boolean get() = this@CameraXEngine.active
         override val recordingBusy: Boolean get() = video.busy
         override val flashName: String get() = controls.controls.flash.name
         override val zoomRequested: Float get() = zoomRatio
         override val stillStream: String get() = captureOutput.id
-        override fun updateRotation() { val r = displayRotation(); capture?.targetRotation = r; analysis?.targetRotation = r }
+        override fun updateRotation() { val r = displayRotation(); capture?.targetRotation = r; pip?.mainImageCapture?.targetRotation = r; analysis?.targetRotation = r }
         override fun report(message: String, ok: Boolean) = this@CameraXEngine.report(message, ok)
     })
     /** The photo during a recording (#175); the ImageCapture it uses is bound only while recording. */
@@ -270,11 +270,11 @@ class CameraXEngine(
         "appJpeg" to analysis?.resolutionInfo?.resolution?.toString()?.takeIf { liveStreams?.jpegFromYuv == true })
 
     /** A recording start or stop rebound the use cases: the zoom and the controls go on the new session again. */
-    private fun rebuilt(outputs: StreamConfiguration<UseCase>, sizes: Map<String, Any?>, extraOutputs: List<OutputDescriptor> = emptyList()) {
+    private fun rebuilt(outputs: StreamConfiguration<UseCase>, sizes: Map<String, Any?>, composed: Boolean = false) {
         telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
-        val appJpeg = liveStreams?.jpegFromYuv == true && extraOutputs.isEmpty() &&
+        val appJpeg = !composed && liveStreams?.jpegFromYuv == true &&
             outputs.outputs.any { it.descriptor.kind == OutputKind.YUV }
-        telemetry.configureCallbackStreams(session, outputs.metadata(appJpeg) + extraOutputs.map { it.metadata() })
+        telemetry.configureCallbackStreams(session, outputs.metadata(appJpeg))
         telemetry.event(session, "bound", sizes)
         camera?.cameraControl?.setZoomRatio(zoomRatio)
         controls.sessionRebuilt()
@@ -403,26 +403,17 @@ class CameraXEngine(
 
     private fun report(message: String, ok: Boolean) { handler.post { if (active) status(message, ok) } }
 
-    private val pipPreviewSizes = java.util.concurrent.ConcurrentHashMap<String,List<LiveSize>>()
+    private val pipSupport = CameraXPipSupport(context.getSystemService(CameraManager::class.java),cameraId,handler,executor)
+    override val pipCallbackSession: String? get() = pip?.callbackSession
     private var pipChecking = false
-    private fun checkedPipSource(source: PipSource, analysisSize: LiveSize?): PipSource = source.withStreamSupport {
-        pipPreviewSizes.remove(source.key)
-        if (!cameraXConcurrentAnalysisSupported(analysisSize)) return@withStreamSupport PipStreamSupport.UNSUPPORTED
-        if (!active || provider == null || android.os.Build.VERSION.SDK_INT < 30) return@withStreamSupport PipStreamSupport.UNKNOWN
-        val (support,sizes) = queryCameraXPip(context.getSystemService(CameraManager::class.java),cameraId,source,analysisSize,handler)
-        sizes?.let { pipPreviewSizes[source.key] = it }
-        support
-    }
+    private fun checkedPipSource(source: PipSource, size: LiveSize?) = pipSupport.check(source,size,active && provider != null,liveStreams)
 
-    private fun pipAnalysisSize(): LiveSize? = if (analysis == null) null else liveStreams?.yuv ?:
+    private fun pipAnalysis() = analysis.takeUnless { liveStreams == null }
+    private fun pipAnalysisSize(): LiveSize? = if (pipAnalysis() == null) null else liveStreams?.yuv ?:
         analysis?.resolutionInfo?.resolution?.let { LiveSize(it.width,it.height) }
 
     override fun checkPipSources(done: (List<PipSource>) -> Unit) {
-        val size = pipAnalysisSize()
-        executor.execute {
-            val checked = pipSources.map { checkedPipSource(it,size) }
-            handler.post { done(checked) }
-        }
+        pipSupport.checkAll(pipSources,pipAnalysisSize(),{ active && provider != null },done,liveStreams)
     }
 
     override fun setPip(source: PipSource?, texture: android.graphics.SurfaceTexture?, output: LiveSize?,
@@ -469,21 +460,25 @@ class CameraXEngine(
             val infos = provider.availableCameraInfos.associateBy { Camera2CameraInfo.from(it).cameraId }
             lateinit var added: CameraXPipSession
             val plan = PipOutputs(null)
+            val photo = cameraXPipPhotoPlan(context.getSystemService(CameraManager::class.java),cameraId,liveStreams,pipAnalysisSize(),null)
+            val mainAnalysis = pipAnalysis()
             val callbacks = PipCallbacks(telemetry,session,plan) { active && pip === added }
             added = CameraXPipSession(context,owner,provider,handler,cameraId,source,
                 listOf(infos.getValue(cameraId).cameraSelector,infos.getValue(source.id).cameraSelector),
                 checkNotNull(texture),checkNotNull(output),position,
                 resultCallback(telemetry.callback(session) { active }),
-                analysis = analysis,
+                analysis = mainAnalysis,
                 inputFrame = callbacks::input, photoFrame = callbacks::photo,
                 bound = { mainCamera, previews ->
                     camera = mainCamera
                     pipPreview = previews.first()
                     rebuilt(plan.configure<UseCase>(listOf(previews.first()),
-                        analysis?.let { listOf(ConfiguredOutput<UseCase>(analysisOutput,it)) }.orEmpty()),
-                        mapOf("preview" to previews.first().resolutionInfo?.resolution?.toString(),
-                            "pip" to previews.last().resolutionInfo?.resolution?.toString(),
-                            "analysis" to analysis?.resolutionInfo?.resolution?.toString(),"jpeg" to output.toString()), listOf(plan.photo))
+                        listOfNotNull(mainAnalysis?.let { ConfiguredOutput<UseCase>(analysisOutput,it) },
+                            added.mainImageCapture?.let { ConfiguredOutput<UseCase>(captureOutput,it) })),
+                        plan.sizes(previews.first().resolutionInfo?.resolution.toString(),
+                            mainAnalysis?.resolutionInfo?.resolution?.toString(),output.toString(),photo = photo,secondaryPhoto = added.photoSize) +
+                            mapOf("pip" to previews.last().resolutionInfo?.resolution?.toString()),
+                        composed = true)
                     telemetry.event(session,"pip_configured",mapOf("sourceId" to source.id,"physical" to false,"api" to "CameraX.ConcurrentCamera"))
                 }, ready = {
                     if (pip === added && active) {
@@ -492,8 +487,10 @@ class CameraXEngine(
                 }, failed = { reason ->
                     if (pip === added) added.close { restore(Result.failure(IllegalStateException(reason))) }
                 }, recordingChanged = recordingState,
-                notice = { message -> if (active) notice(message) }, previewSizes = pipPreviewSizes[source.key], videoMode = videoMode,
-                stabilization = liveStreams?.stabilization ?: LiveStabilization.AUTO)
+                notice = { message -> if (active) notice(message) }, previewSizes = pipSupport.sizes(source), videoMode = videoMode,
+                stabilization = liveStreams?.stabilization ?: LiveStabilization.AUTO, photoPlan = photo, sourcePhotoSize = pipSupport.photoSize(source),
+                streams = liveStreams?.pip?.get(source.key), telemetry = telemetry, parentSession = session,
+                mainOriginal = if (photo == null) null else { id, complete -> stills.capture(id,complete) }, displayRotation = ::displayRotation)
             pip = added
             added.start()
         }

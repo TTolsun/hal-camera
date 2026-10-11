@@ -7,4 +7,5 @@ title: framework-callbacks
 children:
   - metadata-callbacks
   - camerax-callbacks
+  - camera2-callbacks
 parentPath: []

@@ -1,6 +1,7 @@
 kind: nested-class
 title: media-storage
-children: []
+children:
+  - original-photos
 parentPath:
   - screens
   - concurrent-camera-screen
