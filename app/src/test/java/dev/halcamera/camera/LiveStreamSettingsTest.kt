@@ -133,4 +133,11 @@ class LiveStreamSettingsTest {
         assertNull(value.metadata()["jpeg"])
         assertFalse(value.canCapture)
     }
+    @Test fun `inactive recording settings do not reject photo outputs but remain checked for video`() {
+        val value = support.defaults().copy(video = video.copy(codec = "HEVC"))
+        assertNull(support.rejection(value, includeRecording = false))
+        assertNotNull(support.rejection(value))
+        assertNotNull(support.rejection(value.copy(preview = LiveSize(1, 1)), includeRecording = false))
+        assertEquals(value.video, value.forMode(false).video)
+    }
 }

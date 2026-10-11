@@ -4,6 +4,7 @@ confidence: code
 sources:
   - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
   - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
+  - app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt
   - app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt
   - app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt
   - app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt
@@ -35,6 +36,12 @@ verifications: []
 ---
 
 **Camera2Engine은 앱에서 CaptureRequest를 직접 구성합니다.** `request_observed`에 기록한 키를 HAL 로그와 대조할 수 있습니다. 엔진 자체는 세션, 요청 구성, 줌, Live 제어를 담당하고, 사진은 `Camera2StillCapture`, Live 녹화는 `Camera2LiveRecorder`, 터치 측광은 `Camera2TouchFocus`, 벤치마크 녹화는 `BenchmarkRecorder`가 맡습니다. 카메라 요청과 capture 콜백은 엔진이 만든 카메라 스레드 하나에서 처리하고, 버퍼 relay와 파일 저장은 각자의 스레드에서 처리합니다.
+
+### PIP 지원을 미리 확인하세요
+
+**현재 해상도와 유지되는 YUV·JPEG·RAW 출력, 보조 카메라의 Preview·사진 출력으로 PIP 지원 여부를 조회합니다.** 선택창을 열 때와 적용 직전에 검사하며 제조사·칩셋·ID별 예외는 두지 않습니다. Physical은 열린 카메라의 `isSessionConfigurationSupported`, Service는 `CameraManager.isConcurrentSessionConfigurationSupported`를 사용합니다. 합성 녹화의 인코더는 GL 출력을 받으므로 카메라 세션 조회에 넣지 않습니다.
+
+검사는 임시 Surface와 ImageReader로 수행하며 현재 세션을 바꾸지 않습니다. Live Streams에서 보조 Preview와 사진 크기를 설정하며 실제 크기는 Live에 표시합니다. Auto는 작은 지원 조합도 조회하지만 명시한 크기는 대체하지 않습니다. 지원 불가가 확인된 후보만 비활성화하고, 조회가 불가능하면 `Not verified`로 표시하여 실제 구성을 허용합니다.
 
 ### 수동 촬영
 
@@ -111,7 +118,7 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 
 명시한 Live 설정도 작은 크기로 대체하지 않습니다.
 
-`LiveStreamSupport`는 개별 크기·일반 FPS 범위·녹화 인코더 지원을 검사하고, 엔진은 출력의 최소 프레임 시간과 FPS 하한을 대조합니다.
+`LiveStreamSupport`는 개별 크기·일반 FPS 범위·녹화 인코더 지원을 검사합니다. PHOTO는 Preview FPS의 하한과 최소 프레임 시간을 대조하고 VIDEO는 Recording FPS를 사용합니다. PHOTO의 녹화 선택과 VIDEO의 Preview FPS 선택은 비활성화합니다. PIP 녹화 인코더는 H.264·30fps·합성 크기로 고정하며 카메라 FPS는 템플릿 Auto를 유지합니다. 인코더의 30fps를 미광고 카메라 AE 범위로 강제하지 않습니다.
 
 Android 10 이상에서는 `isSessionConfigurationSupported`로 출력 조합을 조회합니다.
 
@@ -183,7 +190,7 @@ stateDiagram-v2
 <details markdown="1" id="detail-902b2a5546" data-search-section>
 <summary>사진 구현</summary>
 
-아래는 PIP를 끈 Live 사진의 흐름입니다. PIP는 합성 JPEG를 저장하며 RAW가 켜져 있으면 메인 카메라 DNG와 원본 JSON을 함께 저장합니다. 원본과 합성 프리뷰의 센서 시각은 같다고 보장하지 않습니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
+아래는 PIP를 끈 Live 사진의 흐름입니다. PIP는 합성 JPEG를 저장하며 JPEG가 켜져 있으면 두 카메라의 원본 JPEG도 저장합니다. 원본의 카메라 JPEG·YUV 변환 선택은 일반 촬영과 같습니다. RAW가 켜져 있으면 메인 DNG도 저장합니다. JPEG Off에서도 합성 사진은 저장하며, 합성 저장을 카메라 JPEG 콜백으로 표시하지 않습니다. 세 결과의 센서 시각이 같다고 보장하지 않습니다. 벤치마크 still은 JPEG 도착만 측정하며 파일을 저장하지 않습니다.
 
 ```mermaid
 sequenceDiagram

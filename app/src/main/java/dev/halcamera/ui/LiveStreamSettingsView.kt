@@ -15,9 +15,8 @@ object LiveStreamSettingsView {
     fun create(context: Context, support: LiveStreamSupport, current: LiveStreamSettings,
              actual: String, restore: (() -> Unit)?, back: () -> Unit, changed: (LiveStreamSettings) -> Unit, apply: (LiveStreamSettings) -> Unit,
              backDescription: String = "Back to Lab", baseline: LiveStreamSettings = current,
-             engine: String = "Camera2", multiMaxDevices: Int = 0, multiDeviceCount: Int = 0,
-             multiBaseline: Int = multiMaxDevices, multiChanged: (Int) -> Unit = {}, multiOnly: Boolean = false,
-             videoMode: Boolean = false): Page {
+             engine: String = "Camera2", videoMode: Boolean = false,
+             pipSupport: PipStreamCapabilities? = null, pipActive: Boolean = false): Page {
         val policy = LiveModePolicy.forVideo(videoMode)
         val themed = context
         fun dp(value: Int) = Look.dp(themed, value)
@@ -26,14 +25,13 @@ object LiveStreamSettingsView {
 
         }
         content.addView(Look.titleBar(themed, "Live Streams", 24, backDescription, back))
+        content.addView(Look.text(themed, "$engine · ${if (videoMode) "Video" else "Photo"}${if (pipActive) " · PIP" else ""}", 13, Look.inkMuted))
         fun section(title: String): LinearLayout {
             content.addView(Look.text(themed, title, 13, Look.inkMuted, bold = true).apply {
-                visibility = if (multiOnly && title != "Multi") View.GONE else View.VISIBLE
             },
                 LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(20); bottomMargin = dp(8) })
             return LinearLayout(themed).apply {
                 orientation = LinearLayout.VERTICAL
-                visibility = if (multiOnly && title != "Multi") View.GONE else View.VISIBLE
                 background = Look.cardBackground(themed, Look.labSurface)
                 clipToOutline = true
                 content.addView(this, LinearLayout.LayoutParams(-1, -2))
@@ -41,7 +39,7 @@ object LiveStreamSettingsView {
         }
         val refreshers = mutableListOf<() -> Unit>()
         fun <T> choice(group: LinearLayout, label: String, values: () -> List<T>, selected: () -> T, change: (T) -> Unit,
-                       hint: () -> String? = { null }, display: (T) -> String) {
+                       hint: () -> String? = { null }, enabled: () -> Boolean = { true }, display: (T) -> String) {
             val value = selected()
             if (group.childCount > 0) group.addView(View(themed).apply { setBackgroundColor(Look.hairline) },
                 LinearLayout.LayoutParams(-1, dp(1)).apply { marginStart = dp(18); marginEnd = dp(18) })
@@ -77,11 +75,12 @@ object LiveStreamSettingsView {
                 hintText.text = hint().orEmpty()
                 hintText.visibility = if (hintText.text.isEmpty()) View.GONE else View.VISIBLE
                 row.contentDescription = listOfNotNull(label, display(selected()), hint()).joinToString(", ")
-                row.isEnabled = values().isNotEmpty()
+                row.isEnabled = enabled() && values().isNotEmpty()
                 row.alpha = if (row.isEnabled) 1f else 0.5f
             }
             row.setOnClickListener {
                 val options = values()
+                if (!row.isEnabled || options.isEmpty()) return@setOnClickListener
                 AlertDialog.Builder(themed, R.style.LabDialogTheme).setTitle(label)
                     .setSingleChoiceItems(options.map(display).toTypedArray(), options.indexOf(selected())) { dialog, index ->
                         change(options[index])
@@ -100,10 +99,16 @@ object LiveStreamSettingsView {
         var stabilization = policy.stabilization(current.stabilization)
         var jpegFromYuv = current.jpegFromYuv
         var raw = policy.raw(current.raw)
-        var multiLimit = multiMaxDevices
-        if (multiDeviceCount >= 2) {
-            choice(section("Multi"), "Maximum camera devices", { listOf(0) + (2..multiDeviceCount).toList() },
-                { multiLimit }, { multiLimit = it; multiChanged(it) }) { if (it == 0) "All available" else it.toString() }
+        val video = LiveVideoDraft(support, current.video)
+        var pipPreview = pipSupport?.let { current.pip[it.source.key]?.preview }
+        var pipPhoto = pipSupport?.let { current.pip[it.source.key]?.photo }
+        fun settings(): LiveStreamSettings {
+            val pip = current.pip.toMutableMap()
+            pipSupport?.source?.key?.let { key ->
+                if (pipPreview == null && pipPhoto == null) pip.remove(key)
+                else pip[key] = PipStreamSettings(pipPreview, pipPhoto)
+            }
+            return LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, jpegFromYuv, raw, pip)
         }
         val outputs = section("Outputs")
         choice(outputs, "Preview", { sizes(support.preview) }, { preview }, { preview = it }) { it.toString() }
@@ -133,24 +138,44 @@ object LiveStreamSettingsView {
             exportHint.visibility = if (exportHint.text.isEmpty()) View.GONE else View.VISIBLE
         }
         val timing = section("Frame Rate")
-        choice(timing, "Preview FPS", { listOf(null) + support.fps }, { fps }, { fps = it }) { it?.toString() ?: "Auto" }
+        val autoPipFps = pipActive && (engine == "CameraX" || videoMode)
+        choice(timing, "Preview FPS", { listOf(null) + support.fps }, { fps }, { fps = it },
+            hint = { if (autoPipFps) "Auto in PIP" else if (videoMode) "Uses Recording FPS" else null },
+            enabled = { !videoMode && !autoPipFps }) {
+            if (autoPipFps) "Auto" else if (videoMode) "Recording FPS" else it?.toString() ?: "Auto"
+        }
         val recording = section("Recording")
-        val video = LiveVideoDraft(support, current.video)
-        choice(recording, "Format", { video.formats }, { video.value?.codec.orEmpty() }, video::selectFormat) {
-            it.ifEmpty { "Capabilities unavailable" }
+        val canEditRecording = videoMode && !pipActive
+        fun recordingHint() = if (!videoMode) "Video mode only" else if (pipActive) "Fixed in PIP" else null
+        choice(recording, "Format", { video.formats }, { video.value?.codec.orEmpty() }, video::selectFormat,
+            enabled = { canEditRecording }) {
+            if (pipActive) "H264" else it.ifEmpty { "Capabilities unavailable" }
         }
-        choice(recording, "Resolution", { video.sizes() }, { video.value?.size }, { it?.let(video::selectSize) }) {
-            it?.toString() ?: "Capabilities unavailable"
+        choice(recording, "Resolution", { video.sizes() }, { video.value?.size }, { it?.let(video::selectSize) },
+            enabled = { canEditRecording }) {
+            if (pipActive) "Composite size" else it?.toString() ?: "Capabilities unavailable"
         }
-        choice(recording, "Frame Rate", { video.rates() }, { video.value?.fps }, { it?.let(video::selectRate) }) {
-            it?.let { rate -> "$rate fps" } ?: "Capabilities unavailable"
+        choice(recording, "Recording FPS", { video.rates() }, { video.value?.fps }, { it?.let(video::selectRate) },
+            hint = { recordingHint() }, enabled = { canEditRecording }) {
+            if (pipActive) "30 fps" else it?.let { rate -> "$rate fps" } ?: "Capabilities unavailable"
         }
         val stabilizationGroup = section("Stabilization")
         choice(stabilizationGroup, "Mode", { if (policy.allowsStabilization) support.stabilization else emptyList() }, { stabilization }, { stabilization = it }) { it.label }
         stabilizationGroup.addView(Look.text(themed, if (policy.allowsStabilization) support.stabilizationNotice else "Stabilization is disabled in Photo mode.", 13, Look.inkMuted).apply {
             setPadding(dp(18), dp(14), dp(18), dp(14))
         })
-        refreshers += { changed(LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, jpegFromYuv, raw)) }
+        pipSupport?.let { caps ->
+            val group = section("PIP · ${if (caps.source.physical) "Physical" else "Service"} ${caps.source.id}")
+            choice(group, "PIP Preview", { listOf(null) + sizes(caps.preview) }, { pipPreview }, { pipPreview = it }) {
+                it?.toString() ?: "Auto"
+            }
+            choice(group, "PIP Photo", {
+                if (jpegFromYuv || jpeg != null) listOf(null) + sizes(if (jpegFromYuv) caps.yuv else caps.jpeg) else emptyList()
+            }, { pipPhoto }, { pipPhoto = it }, hint = {
+                if (jpegFromYuv) "YUV source" else if (jpeg != null) "JPEG source" else "Original JPEG off"
+            }) { it?.toString() ?: "Auto" }
+        }
+        refreshers += { changed(settings()) }
         if (actual.startsWith("Failed:") || actual.startsWith("실패:")) {
             section("Status").addView(Look.text(themed, actual, 13, Look.inkMuted).apply {
                 setPadding(dp(18), dp(14), dp(18), dp(14))
@@ -159,22 +184,28 @@ object LiveStreamSettingsView {
                 LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
         val scroll = ScrollView(themed).apply { isFillViewport = true; addView(content) }
+        fun rejection(value: LiveStreamSettings) = support.rejection(
+            if (videoMode || autoPipFps) value.copy(fps = null) else value,
+            includeRecording = canEditRecording) ?: pipSupport?.rejection(value)
+        val validation = Look.text(themed, "", 13, Look.inkMuted)
         val applyButton = Look.primaryButton(themed, "Apply") {
-            val settings = LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, jpegFromYuv, raw)
-            val rejection = if (multiOnly) null else support.rejection(settings)
-            if (rejection == null) apply(settings)
-            else AlertDialog.Builder(themed, R.style.LabDialogTheme).setMessage(rejection).setPositiveButton("OK", null).show()
+            val value = settings()
+            if (rejection(value) == null) apply(value)
         }
         refreshers += {
-            val pending = LiveStreamSettings(preview, yuv, jpeg, fps, video.requested, stabilization, jpegFromYuv, raw)
-            applyButton.isEnabled = pending != baseline || multiLimit != multiBaseline || actual.startsWith("Failed:") || actual.startsWith("실패:")
+            val pending = settings()
+            val reason = rejection(pending)
+            validation.text = reason.orEmpty()
+            validation.visibility = if (reason == null) View.GONE else View.VISIBLE
+            applyButton.isEnabled = reason == null && (pending != baseline || actual.startsWith("Failed:") || actual.startsWith("실패:"))
             applyButton.alpha = if (applyButton.isEnabled) 1f else 0.5f
-            applyButton.contentDescription = if (applyButton.isEnabled) "Apply stream settings" else "No changes"
+            applyButton.contentDescription = reason ?: if (applyButton.isEnabled) "Apply stream settings" else "No changes"
         }
         refreshers.forEach { it() }
         val root = LinearLayout(themed).apply {
             orientation = LinearLayout.VERTICAL
             addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+            addView(validation, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
             addView(applyButton, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         }
         return Page(root, scroll)

@@ -1,0 +1,7 @@
+kind: nested-class
+title: session-lifecycle
+children: []
+parentPath:
+  - screens
+  - concurrent-camera-screen
+  - pip-composition

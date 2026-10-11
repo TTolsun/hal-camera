@@ -276,21 +276,39 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt
           - app/src/main/java/dev/halcamera/camera/PipScene.kt
-          - app/src/main/java/dev/halcamera/camera/PipSource.kt
-          - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
           - app/src/main/java/dev/halcamera/camera/PipCallbacks.kt
           - app/src/main/java/dev/halcamera/camera/PipOutputs.kt
-          - app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt
           - app/src/main/java/dev/halcamera/ui/LivePipController.kt
           - app/src/main/java/dev/halcamera/ui/PipPositionStore.kt
+      screens/concurrent-camera-screen/pip-composition/availability:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/PipSource.kt
+          - app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt
+          - app/src/main/java/dev/halcamera/camera/CameraXPipSources.kt
           - app/src/main/java/dev/halcamera/ui/PhysicalPipPicker.kt
           - app/src/main/java/dev/halcamera/ui/LiveChoiceSheet.kt
+          - app/src/main/java/dev/halcamera/camera/PipPhotoPlan.kt
+          - app/src/main/java/dev/halcamera/camera/PipStreamSettings.kt
+          - app/src/main/java/dev/halcamera/camera/PipStreamCapabilities.kt
+      screens/concurrent-camera-screen/pip-composition/session-lifecycle:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
+          - app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt
+          - app/src/main/java/dev/halcamera/camera/PipSessionConfiguration.kt
       screens/concurrent-camera-screen/pip-composition/media-storage:
         evidence:
           - app/src/main/java/dev/halcamera/camera/PipMedia.kt
           - app/src/main/java/dev/halcamera/camera/PipMediaAdapter.kt
           - app/src/main/java/dev/halcamera/camera/CompositorMedia.kt
           - app/src/main/java/dev/halcamera/camera/CompositorRecording.kt
+      screens/concurrent-camera-screen/pip-composition/media-storage/original-photos:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/PipCaptureBatch.kt
+          - app/src/main/java/dev/halcamera/camera/PipPhotoGroup.kt
+          - app/src/main/java/dev/halcamera/camera/PipPhotoReader.kt
+          - app/src/main/java/dev/halcamera/camera/PipPhotoOrientation.kt
+          - app/src/main/java/dev/halcamera/camera/PipCameraXPhoto.kt
+          - app/src/main/java/dev/halcamera/camera/PipServiceTelemetry.kt
       screens/dual-preview-screen/cli-adapter:
         evidence:
           - app/src/main/java/dev/halcamera/DualCliBridge.kt
@@ -495,6 +513,10 @@ sources:
           - app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt
           - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
       framework-callbacks:
+        evidence:
+          - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
+          - app/src/main/java/dev/halcamera/telemetry/Event.kt
+      framework-callbacks/camera2-callbacks:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
       framework-callbacks/metadata-callbacks:

@@ -1,10 +1,10 @@
-Camera2Engine은 전용 HandlerThread에서 Camera2 요청과 세션을 관리하고 UI 상태는 메인 스레드로 전달합니다. Live 기본값은 preview·YUV·JPEG 크기를 픽셀 예산에 맞춰 선택합니다. LiveStreamSettings를 전달하면 정확한 preview 크기, 선택한 YUV·JPEG 출력과 FPS 범위를 사용하며 자동 크기 대체는 하지 않습니다. LiveStreamSupport가 개별 지원을 검사하고 LiveSessionCheck는 Android 10 이상에서 출력 조합을 조회합니다. 조회 미지원은 unknown으로 기록하고 실제 세션 구성으로 확인합니다. 최소 프레임 시간이 FPS 하한을 초과하면 거부하며 결과 FPS 범위는 capture_result에 남습니다. BenchmarkActivity의 StreamSpec과 Live 설정은 동시에 전달할 수 없습니다.
+Camera2Engine은 카메라 스레드에서 요청·세션을 관리하고 UI는 메인 스레드로 전달합니다. 기본 크기는 픽셀 예산으로 고르며 명시 크기는 대체하지 않습니다. LiveStreamSupport가 개별 지원, LiveSessionCheck가 출력 조합을 검사하며 조회 불가는 unknown입니다. PHOTO는 Preview FPS와 최소 프레임 시간을 검사하고 VIDEO는 Recording FPS를 사용합니다. PIP 녹화의 카메라 FPS는 템플릿의 Auto이며 합성 인코더만 30fps입니다. 비활성 녹화 값은 PHOTO를 거부하지 않습니다. 실제 FPS는 capture_result에 남으며 Benchmark StreamSpec과 Live 설정은 함께 전달할 수 없습니다.
 
 사진 촬영과 플래시 precapture는 Camera2StillCapture(하위 요소 still-capture)가, Live 녹화는 Camera2LiveRecorder(하위 요소 live-recorder)가 맡습니다. 엔진은 두 클래스에 Host로 카메라·세션과 request 생성을 넘겨주고, 세션 구성·request 조립·Live 제어·줌·close를 직접 처리합니다. 프리뷰 버퍼를 늘어나지 않게 화면에 채우는 변환 행렬은 PreviewTransform.kt의 fitPreview가 만듭니다.
 
-녹화 중에도 줌은 받습니다. 줌을 바꾸면 녹화 request를 같은 preview·인코더 target으로 다시 만들어 repeating request만 교체합니다. 줌 입력은 카메라 스레드에 한 번만 예약하므로, 빠르게 연속으로 조작하면 실행 시점의 마지막 배율 하나로 합쳐집니다. 녹화 세션이 구성 중이거나 종료 중이면 요청을 보내지 않고, 다음 세션이 구성될 때 현재 배율을 읽어 적용합니다. 정지와 겹쳐 닫힌 세션에 보낸 요청은 카메라 오류가 아니라 request_skipped 이벤트로 기록합니다.
+녹화 중 줌은 같은 target의 repeating request를 교체합니다. 연속 입력은 카메라 스레드에서 마지막 배율로 합칩니다. 세션 구성·종료 중에는 요청을 보류하고 다음 세션에 현재 배율을 적용합니다. 닫힌 세션의 요청은 request_skipped로 기록합니다.
 
-프리뷰 터치는 Camera2TouchFocus가 순서를 관리하고 엔진이 모든 LIVE 요청에 영역을 적용합니다. AF 잠금은 단발 START/CANCEL trigger를 사용합니다. 줌·제어 변경은 카메라 스레드에서 최신 입력으로 합칩니다. 새 세션의 AE 잠금은 AeRelock이 CONVERGED·FLASH_REQUIRED 결과 2개 또는 2초 제한을 기다린 뒤 적용합니다. 결과 키가 없는 기기는 대기를 생략하고, 요청 실패 시 수렴 대기를 이어갑니다. 재잠금 노출 차이가 1/3 EV를 넘으면 알립니다. 수동 노출에서는 AE 잠금·EV를 해제합니다. VIDEO 녹화 시작은 같은 세션을 유지하므로 AE·AF를 다시 잠그지 않습니다. 모드 전환·정지 후 세션 재구성에서는 현재 제어를 복원합니다. 터치 측광의 세부 순서는 live-controls/touch-focus 요소에 있습니다.
+Live 제어는 Camera2TouchFocus와 AeRelock이 담당합니다. 엔진은 모든 요청에 현재 제어를 적용하며 녹화 시작 시 같은 세션을 유지합니다. 터치 측광·수렴 대기·수동 제어의 순서는 live-controls/touch-focus 요소에서 설명합니다.
 
 Live 첫 열기의 해제 대기(#230)와 첫 프레임 전 실패 재시도(#224)는 open-recovery 요소에 있습니다.
 

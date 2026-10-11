@@ -13,5 +13,5 @@ internal class PipCallbacks(private val telemetry: Telemetry, private val sessio
         telemetry.recorder.record(session, kind, sensorNs = timestamp, values = mapOf("stream" to stream))
     }
     fun <T> configure(configured: StreamConfiguration<T>) =
-        telemetry.configureCallbackStreams(session, configured.metadata() + outputs.photo.metadata())
+        telemetry.configureCallbackStreams(session, configured.metadata())
 }

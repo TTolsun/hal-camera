@@ -4,6 +4,7 @@ confidence: code
 sources:
   - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
   - app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt
+  - app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt
   - app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt
   - app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt
   - app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt
@@ -24,9 +25,13 @@ verifications: []
 
 ### CameraX PIP
 
-**PIP 목록에는 CameraX가 광고한 동시 조합의 Service ID만 표시합니다.** 두 장치를 CameraX로 열며 Camera2로 전환하지 않습니다. 같은 선택창·위치 기억·드래그와 셔터를 사용합니다.
+**PIP 목록에는 모든 후보를 표시하고 지원 불가가 확인된 항목만 비활성화합니다.** Physical 후보는 `Camera2 only`로 표시합니다. Service 후보는 CameraX가 제공하는 동시 조합에 포함되어야 합니다. 제조사·칩셋·카메라 ID에 따른 예외는 두지 않습니다.
 
-`CameraXPipSession`은 각각 720p 이하의 Preview를 `ConcurrentCamera`로 bind하고 `DeviceCompositor`에서 합성 JPEG·H.264/AAC MP4를 저장합니다. 일반 촬영의 ImageCapture·Recorder와 별도 경로이며 PIP를 끄면 일반 출력 설정을 복원합니다. 단일·동시 모드 전환에는 재bind가 필요하고, 종료는 두 카메라의 CLOSED와 SurfaceRequest 반환을 기다립니다. PIP 터치 측광은 합성 화면의 fill-center crop에 맞춰 변환합니다. 지원 조합과 저장 범위는 [Live PIP](live.md#여러-카메라를-함께-촬영하세요)에서 확인합니다.
+선택창을 열 때와 적용 직전에 두 카메라의 Preview·분석·사진 출력 구성을 `CameraManager.isConcurrentSessionConfigurationSupported`로 함께 조회합니다. Live Streams에서 PIP Preview와 사진 크기를 설정하고 Live에서 실제 크기를 확인합니다. Auto는 작은 지원 조합도 조회하지만 명시한 크기는 대체하지 않습니다. 조회가 불가능하면 `Not verified`로 표시하여 실제 구성을 허용합니다.
+
+`CameraXPipSession`은 두 Preview와 필요한 사진 use case를 `ConcurrentCamera`로 bind합니다. JPEG가 켜져 있으면 합성 JPEG와 각 카메라의 원본 두 장을 저장하며 카메라 JPEG·YUV 변환 선택은 일반 촬영과 같습니다. JPEG Off에서도 합성 사진을 저장합니다. 녹화는 `DeviceCompositor`에서 H.264/AAC MP4를 저장합니다. 단일·동시 모드 전환에는 재bind가 필요하고 종료는 두 카메라의 CLOSED와 SurfaceRequest 반환, 저장 완료를 기다립니다. PIP 터치 측광은 합성 화면의 fill-center crop에 맞춰 변환합니다.
+
+CameraX 1.6.2의 공통 동시 출력 표도 검사합니다. Preview+카메라 JPEG는 Preview가 720p 이하, JPEG가 1920×1440 이하이며 Preview+YUV는 둘 중 큰 출력이 1920×1440 이하입니다. Preview+YUV+카메라 JPEG 세 형식은 지원하지 않습니다. 설정을 지정하지 않은 기본 PIP에서는 카메라 JPEG를 위해 자동 분석 출력을 생략하며 명시한 YUV는 유지합니다. 기기별 예외 없이 라이브러리의 제약과 HAL 지원 조회를 함께 적용합니다.
 
 ### CameraX 손떨림 보정
 
@@ -136,6 +141,8 @@ sequenceDiagram
 5. `Finalize`의 오류가 `ERROR_NONE`이거나, 카메라가 닫혀서 멈춘 `ERROR_SOURCE_INACTIVE`이면 파일을 저장합니다. 그 밖의 오류나 빈 파일은 저장하지 않고 알립니다.
 
 명시한 녹화 크기는 지원 Quality의 해상도와 정확히 일치해야 하며, bind 후 실제 해상도도 검사합니다. 설정 화면의 후보는 CameraX Quality 해상도와 하드웨어의 크기·FPS 조건을 교차해 만듭니다. FPS와 비트레이트는 요청값이고 실제 결과와 구분합니다. CameraX 1.6.2의 공개 Recorder API는 녹화 코덱을 직접 선택하지 않으므로 Format과 Live 표시는 Auto입니다.
+
+PHOTO는 Preview FPS를 Preview에 요청하고 VIDEO는 VideoCapture의 Recording FPS를 사용합니다. PHOTO의 녹화 항목과 VIDEO의 별도 Preview FPS는 선택할 수 없습니다. CameraX PIP의 Preview FPS는 Auto이며 합성 녹화는 H.264·30fps·합성 크기로 고정합니다.
 
 녹화 중 사진은 선택한 JPEG 소스를 따릅니다. 카메라 JPEG는 함께 bind한 ImageCapture의 `takePicture`로, YUV 앱 변환은 ImageAnalysis 프레임으로 JPEG 한 장을 저장합니다.
 

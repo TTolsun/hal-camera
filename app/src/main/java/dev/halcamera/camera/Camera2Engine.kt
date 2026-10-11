@@ -89,6 +89,7 @@ class Camera2Engine(
     private var previewSize: Size? = null
     @Volatile private var chars: CameraCharacteristics? = null
     @Volatile private var configuredOutputs = StreamConfiguration<Surface>(emptyList())
+    private var livePhotoOutputs = StreamConfiguration<Surface>(emptyList())
     // Camera thread only. Requests still retained by Camera2 remain keys; retired requests do not leak.
     private val requestOutputs = java.util.WeakHashMap<CaptureRequest, List<String>>()
     private val callback = telemetry.callback(sessionId, streams = { requestOutputs[it] }) { active }
@@ -158,8 +159,8 @@ class Camera2Engine(
         override val characteristics: CameraCharacteristics get() = chars ?: manager.getCameraCharacteristics(cameraId)
         override val active: Boolean get() = this@Camera2Engine.active
         override val recordingBusy: Boolean get() = video.busy
-        override val captureYuv: Boolean get() = pip == null && liveStreams?.jpegFromYuv == true
-        override val captureJpeg: Boolean get() = pip == null && (liveStreams == null || liveStreams.jpeg != null)
+        override val captureYuv: Boolean get() = liveStreams?.jpegFromYuv == true
+        override val captureJpeg: Boolean get() = liveStreams == null || liveStreams.jpeg != null
         override val captureRaw: Boolean get() = spec == null && liveStreams?.raw != null
         override val needsPrecapture: Boolean get() = requestControls().needsPrecapture
         override val flashName: String get() = controls.flash.name
@@ -328,9 +329,9 @@ class Camera2Engine(
             val chars = manager.getCameraCharacteristics(cameraId).also { this.chars = it }
             val map = chars[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP] ?: error("No stream configuration")
             liveStreams?.let { settings ->
-                liveStreamSupport(chars).rejection(settings)?.let { error(it) }
+                liveStreamSupport(chars).rejection(settings,includeRecording = videoMode)?.let { error(it) }
                 telemetry.event(sessionId, "live_streams_requested", settings.metadata())
-                settings.fps?.let { fps ->
+                settings.fps?.takeUnless { videoMode }?.let { fps ->
                     val durations = listOfNotNull(map.getOutputMinFrameDuration(SurfaceTexture::class.java, settings.preview.androidSize()),
                         settings.yuv?.let { map.getOutputMinFrameDuration(ImageFormat.YUV_420_888, it.androidSize()) },
                         settings.jpeg?.let { map.getOutputMinFrameDuration(ImageFormat.JPEG, it.androidSize()) })
@@ -392,6 +393,7 @@ class Camera2Engine(
                     if (!active || !current(camera)) { session.close(); return }
                     captureSession = session
                     configuredOutputs = outputs
+                    livePhotoOutputs = outputs
                     telemetry.configureCallbackStreams(sessionId, outputs.metadata(liveStreams?.jpegFromYuv == true))
                     try {
                         startRelock()
@@ -435,7 +437,7 @@ class Camera2Engine(
     /** The LIVE recording request. Zoom and the controls change it in place: the targets stay preview + encoder. */
     private fun liveRecordRequest(camera: CameraDevice, c: CameraCharacteristics, afTrigger: Int? = null): CaptureRequest =
         camera.createCaptureRequest(CameraDevice.TEMPLATE_RECORD).apply {
-            liveStreams?.video?.fps?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, android.util.Range(it, it)) }
+            liveStreams?.video?.fps?.takeUnless { pip != null }?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, android.util.Range(it, it)) }
             set(CaptureRequest.CONTROL_MODE, CaptureRequest.CONTROL_MODE_AUTO)
             val modes = c[CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES] ?: intArrayOf()
             set(CaptureRequest.CONTROL_AF_MODE, if (CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO in modes)
@@ -647,7 +649,8 @@ class Camera2Engine(
     }
 
     /** Targets the selected photo source and RAW; benchmark requests remain JPEG-only. */
-    private fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?): CaptureRequest =
+    private fun stillRequest(camera: CameraDevice, c: CameraCharacteristics, tag: String, rotation: Int?,
+        outputs: List<ConfiguredOutput<Surface>> = configuredOutputs.still.filter { it.descriptor.id != "pip_still" }): CaptureRequest =
         camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE).apply {
             liveStreams?.fps?.let { set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE, android.util.Range(it.min, it.max)) }
             if (rotation != null) {
@@ -660,7 +663,7 @@ class Camera2Engine(
             // Same AE mode, EV, lock and torch as the preview, so the still is exposed as the preview showed it.
             if (spec == null) { applyLiveControls(requestControls()); applyTouch(touchFocus); applyManual(c) }
             setTag(tag)
-        }.let { buildRequest(it, configuredOutputs.still) }
+        }.let { buildRequest(it, outputs) }
 
     private fun outputRotation(c: CameraCharacteristics): Int {
         val degrees = when (view.display?.rotation) { Surface.ROTATION_90 -> 90; Surface.ROTATION_180 -> 180; Surface.ROTATION_270 -> 270; else -> 0 }
@@ -723,6 +726,7 @@ class Camera2Engine(
     }
     private fun finishClose() {
         if (finished) return
+        stills.close()
         if (Build.VERSION.SDK_INT >= 30 && retiringPips.isNotEmpty()) {
             if (!pipDisposing) {
                 pipDisposing = true
@@ -740,7 +744,6 @@ class Camera2Engine(
         }
         finished = true
         if (releaseWait?.cancel() == true) stopReleaseWait()
-        stills.close()
         video.finish()
         bench.release()
         captureSession?.close(); captureSession = null
@@ -763,6 +766,13 @@ class Camera2Engine(
     private fun report(message: String, ok: Boolean) { main.post { if (active) status(message, ok) } }
 
     override val pipSources: List<PipSource> by lazy { readPipSources(manager,cameraId) }
+    override val pipCallbackSession: String? get() = if (Build.VERSION.SDK_INT >= 30) pip?.callbackSession else null
+    private val pipSupport = Camera2PipSupport(manager,handler)
+    private fun checkedPipSource(source: PipSource) = pipSupport.check(source,pipSources,
+        device.takeIf { active && spec == null },previewSize?.let { LiveSize(it.width,it.height) },
+        PipOutputs.retained(livePhotoOutputs.outputs),camera2PipPhotoPlan(liveStreams,jpeg,yuv),liveStreams?.pip?.get(source.key))
+
+    override fun checkPipSources(done: (List<PipSource>) -> Unit) = pipSupport.checkAll(pipSources,::checkedPipSource,main,done)
 
     /** Replace capture-session outputs, never the currently open Live CameraDevice. */
     @androidx.annotation.RequiresApi(30)
@@ -770,6 +780,10 @@ class Camera2Engine(
         handler.post {
             val camera = device
             if (!active || camera == null || spec != null) { main.post { done(Result.failure(IllegalStateException("Camera unavailable"))) }; return@post }
+            val rejection = source?.let(::checkedPipSource)?.unavailableReason
+            if (rejection != null) {
+                main.post { done(Result.failure(PipSelectionRejected(rejection))) }; return@post
+            }
             val previous = pip
             if (previous != null) {
                 pip = null
@@ -792,35 +806,31 @@ class Camera2Engine(
                     if (pip !== added) return
                     setPip(null,null,null) { done(Result.failure(IllegalStateException(reason))) }
                 }
-                val analysis = StreamConfiguration(configuredOutputs.outputs.filter { it.descriptor.kind in setOf(OutputKind.YUV, OutputKind.RAW) && it.descriptor.id != "video_snapshot" })
+                val analysis = StreamConfiguration(PipOutputs.retained(livePhotoOutputs.outputs))
+                val photo = camera2PipPhotoPlan(liveStreams,jpeg,yuv)
                 val plan = PipOutputs(source.id.takeIf { source.physical })
                 val callbacks = PipCallbacks(telemetry,sessionId,plan) { active && pip === added }
                 added = LivePipSession(context,handler,main,cameraId,source,checkNotNull(texture),checkNotNull(output),LiveSize(size.width,size.height),
                     position = position, mainOutputs = analysis.targets,
                     inputFrame = callbacks::input, photoFrame = callbacks::photo,
-                    rawPhoto = if (liveStreams?.raw != null) stills::capture else null,
+                    rawPhoto = if (photo != null || liveStreams?.raw != null) stills::capture else null,
+                    physicalCapture = { target, rotation, cb ->
+                        checkNotNull(captureSession).capture(stillRequest(camera,checkNotNull(chars),"pip-still",rotation,listOf(target)),cb,handler)
+                    },
+                    physicalCallback = callback,
                     configureMain = { inputs ->
-                        val outputs = plan.configure(inputs, analysis.outputs)
-                        val configs = outputs.outputs.map { output -> OutputConfiguration(output.target).apply {
-                            output.descriptor.physicalId?.let { setPhysicalCameraId(it) }
-                        } }
-                        try {
-                            @Suppress("DEPRECATION")
-                            camera.createCaptureSessionByOutputConfigurations(configs,object : CameraCaptureSession.StateCallback() {
-                                override fun onConfigured(value: CameraCaptureSession) {
-                                    if (!active || pip !== added) { value.close(); return }
+                        val outputs = plan.configure(inputs, analysis.outputs + added.physicalPhotoOutputs)
+                        configurePipSession(camera,outputs,handler,{ active && pip === added },configured = { value ->
                                     captureSession = value; configuredOutputs = outputs
                                     callbacks.configure(outputs)
-                                    val sizes = mapOf("preview" to size.toString(),"analysis" to yuv?.let { "${it.width}x${it.height}" },"jpeg" to output.toString(), "raw" to liveStreams?.raw?.toString())
+                                    val sizes = plan.sizes(size.toString(),yuv?.let { "${it.width}x${it.height}" },output.toString(),liveStreams?.raw?.toString(),
+                                        photo,added.sourceSize,added.sourcePhotoSize)
                                     telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
                                     telemetry.event(sessionId,"pip_configured",mapOf("sourceId" to source.id,"physical" to source.physical,"mainDeviceReused" to true))
                                     main.post { if (active) streamsConfigured(sizes) }
                                     try { value.setRepeatingRequest(repeatingRequest(camera,checkNotNull(chars)),liveCallback,handler) }
                                     catch (e: Exception) { main.post { rejected(e.message ?: "PIP unavailable") } }
-                                }
-                                override fun onConfigureFailed(value: CameraCaptureSession) { value.close(); main.post { rejected("PIP combination unavailable") } }
-                            },handler)
-                        } catch (e: Exception) { main.post { rejected(e.message ?: "PIP unavailable") } }
+                        },failed = { reason -> main.post { rejected(reason) } })
                     }, ready = { if (pip === added) { report("Camera2 · LIVE",true); done(Result.success(Unit)) } },
                     failed = ::rejected, recordingChanged = { recording ->
                         handler.post {
@@ -828,7 +838,10 @@ class Camera2Engine(
                             submitRepeating("pip_recording_request", mapOf("recording" to recording))
                             main.post { if (active) recordingState(recording) }
                         }
-                    }, notice = notice, videoMode = videoMode)
+                    }, notice = notice, videoMode = videoMode, sourcePreview = pipSupport.size(source), photoPlan = photo,
+                    sourcePhoto = pipSupport.photoSize(source), streams = liveStreams?.pip?.get(source.key),
+                    telemetry = telemetry, parentSession = sessionId, mediaIo = mediaIo,
+                    displayRotation = { view.display?.rotation ?: Surface.ROTATION_0 })
                 pip = added; added.start()
             } catch (e: Exception) { main.post { done(Result.failure(e)) } }
         }

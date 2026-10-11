@@ -20,6 +20,7 @@ import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
+import dev.halcamera.telemetry.Telemetry
 
 /** CameraX owns both devices; the existing Live compositor owns their shared preview and saved pixels. */
 @androidx.annotation.OptIn(markerClass = [ExperimentalCamera2Interop::class])
@@ -45,6 +46,14 @@ internal class CameraXPipSession(
     private val notice: (String) -> Unit,
     private val videoMode: Boolean = false,
     private val stabilization: LiveStabilization = LiveStabilization.AUTO,
+    private val previewSizes: List<LiveSize>? = null,
+    val photoPlan: PipPhotoPlan? = null,
+    private val sourcePhotoSize: LiveSize? = null,
+    streams: PipStreamSettings? = null,
+    private val telemetry: Telemetry? = null,
+    parentSession: String? = null,
+    private val mainOriginal: ((String?, (Result<PhotoResult>) -> Unit) -> Unit)? = null,
+    private val displayRotation: () -> Int = { Surface.ROTATION_0 },
 ) {
     private val executor = java.util.concurrent.Executor { main.post(it) }
     private val requests = arrayOfNulls<SurfaceRequest>(2)
@@ -60,17 +69,34 @@ internal class CameraXPipSession(
     private val observers = mutableListOf<Pair<Camera, Observer<CameraState>>>()
     private val timeout = Runnable { if (!readyState) fail("PIP camera timed out") }
     private var mediaClosed = false
-    private val media = pipMedia(context, main, { compositor }, { !closing && readyState }, photoFrame, recordingChanged, notice)
+    private val mediaIo = java.util.concurrent.Executors.newSingleThreadExecutor()
+    private val serviceTelemetry = PipServiceTelemetry(checkNotNull(telemetry),checkNotNull(parentSession),
+        context.getSystemService(android.hardware.camera2.CameraManager::class.java),source.id,"CameraX PIP") { !closing }
+    val callbackSession get() = serviceTelemetry.sessionId
+    val mainImageCapture = photoPlan?.takeIf { it.kind == OutputKind.JPEG }?.let { pipImageCapture(it.mainSize) }
+    private val secondaryPhoto = photoPlan?.let { plan ->
+        val size = sourcePhotoSize ?: readPipPhotoSizes(context.getSystemService(android.hardware.camera2.CameraManager::class.java),source,plan,streams?.photo)
+            .firstOrNull() ?: error("No PIP photo stream")
+        PipCameraXPhoto(context,main,checkNotNull(telemetry),serviceTelemetry.sessionId,plan,size,mediaIo,displayRotation)
+    }
+    val photoSize get() = secondaryPhoto?.actualSize ?: sourcePhotoSize
+    private val media = pipMedia(context, main, { compositor }, { !closing && readyState }, photoFrame, recordingChanged, notice,
+        if (mainOriginal == null) null else ::originalPhotos)
     val busy get() = closing || !readyState || media.busy
+
+    private fun originalPhotos(requestId: String?, done: (Result<PhotoResult>) -> Unit) {
+        val secondary = checkNotNull(secondaryPhoto)
+        capturePipPhotoGroup(requestId,listOf(
+            { complete -> secondary.capture(requestId,complete) },
+            { complete -> checkNotNull(mainOriginal)(requestId,complete) }
+        ),MediaLibrary(context),mediaIo,main,done,mainIndex = 1)
+    }
 
     fun start() {
         try {
             val previews = selectors.mapIndexed { index, _ ->
-                val builder = Preview.Builder().setTargetRotation(Surface.ROTATION_0)
-                    .setResolutionSelector(ResolutionSelector.Builder().setResolutionFilter { sizes, _ ->
-                        sizes.filter { it.width.toLong() * it.height <= 1280L * 720 }
-                    }.build())
-                if (index == 0) Camera2Interop.Extender(builder).setSessionCaptureCallback(captureCallback)
+                val builder = cameraXPipPreviewBuilder(previewSizes?.get(index))
+                Camera2Interop.Extender(builder).setSessionCaptureCallback(if (index == 0) captureCallback else serviceTelemetry.callback)
                 val mode = LiveModePolicy.forVideo(videoMode).stabilization(if (index == 0) stabilization else null)
                 val interop = Camera2Interop.Extender(builder)
                 val keys = context.getSystemService(android.hardware.camera2.CameraManager::class.java)
@@ -94,8 +120,12 @@ internal class CameraXPipSession(
                 ConcurrentCamera.SingleCameraConfig(selector,
                     UseCaseGroup.Builder().addUseCase(previews[index]).apply {
                         if (index == 0) analysis?.let { addUseCase(it) }
+                        if (index == 0) mainImageCapture?.let { addUseCase(it) }
+                        if (index == 1) secondaryPhoto?.let { addUseCase(it.useCase) }
                     }.build(), owner)
             }).cameras
+            serviceTelemetry.describe(listOf(OutputDescriptor("preview",OutputKind.PREVIEW,true,eventKind = "pip_preview_available").metadata()) +
+                listOfNotNull(secondaryPhoto?.descriptor?.metadata()))
             cameras.forEach { camera ->
                 val observer = Observer<CameraState> { state ->
                     if (closing) finishClose()
@@ -118,7 +148,9 @@ internal class CameraXPipSession(
                 readyState = true; main.removeCallbacks(timeout); ready()
             } } },
             onError = { main.post { fail(it.message ?: "PIP unavailable") } },
-            serviceIds = listOf(source.id), initialRects = listOf(position), inputFrame = inputFrame, prepareRecording = videoMode)
+            serviceIds = listOf(source.id), initialRects = listOf(position), inputFrame = { index, timestamp ->
+                if (index == 0) inputFrame(index,timestamp) else serviceTelemetry.preview(timestamp)
+            }, prepareRecording = videoMode)
         compositor = compose
         compose.start { surfaces -> main.post {
             if (closing) { finishClose(); return@post }
@@ -150,6 +182,7 @@ internal class CameraXPipSession(
         closeCallbacks += done
         if (closing) return
         closing = true; main.removeCallbacks(timeout)
+        secondaryPhoto?.close(); serviceTelemetry.close()
         requests.filterNotNull().forEach { it.willNotProvideSurface() }
         media.close { mediaClosed = true; finishClose() }
         provider.unbindAll()
@@ -161,6 +194,7 @@ internal class CameraXPipSession(
         if (!closing || disposed || provided != 0 || !mediaClosed ||
             cameras.any { it.cameraInfo.cameraState.value?.type != CameraState.Type.CLOSED }) return
         disposed = true
+        mediaIo.shutdown()
         observers.forEach { (camera, observer) -> camera.cameraInfo.cameraState.removeObserver(observer) }
         observers.clear()
         val finish = {
@@ -170,3 +204,10 @@ internal class CameraXPipSession(
         compositor?.close { main.post(finish) } ?: finish()
     }
 }
+
+/** Use the same resolution filter for the native support query and the actual PIP use cases. */
+internal fun cameraXPipPreviewBuilder(size: LiveSize? = null) = Preview.Builder().setTargetRotation(Surface.ROTATION_0)
+    .setResolutionSelector(ResolutionSelector.Builder().setResolutionFilter { sizes, _ ->
+        sizes.filter { if (size != null) it.width == size.width && it.height == size.height
+            else it.width.toLong() * it.height <= 1280L * 720 }
+    }.build())

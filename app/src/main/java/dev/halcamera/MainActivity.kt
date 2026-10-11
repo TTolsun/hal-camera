@@ -227,7 +227,7 @@ class MainActivity : ComponentActivity() {
             manualPanel.bind(controlBar.controls.manual, (ready || recordingVideo) && !stoppingRecording && cli.active == null && !bursts.controlsLocked,
                 manualCapabilities, frames.lastOrNull(), time)
             manualBack.isEnabled = manualPanel.isExpanded
-            if (callbackGraph.visibility == View.VISIBLE) callbackGraph.update(events, sessionId, time, telemetry.sessions[sessionId].orEmpty())
+            if (callbackGraph.visibility == View.VISIBLE) callbackGraph.updateLive(events,sessionId,time,telemetry.sessions,(engine as? PipCamera)?.pipCallbackSession)
             recorder.finish()?.let(::exportCliIncident)
             val remaining = recorder.remainingNs()
             reportButton.isEnabled = remaining == null && ready && !paused && cli.active == null
@@ -488,7 +488,7 @@ class MainActivity : ComponentActivity() {
         // Re-apply the chosen zoom once the new session is live so engine and camera switches keep the same framing.
         if (ok && pendingPip != null) {
             val source = pendingPip; pendingPip = null
-            if (pipSources().any { it.key == source?.key }) main.post { pipUi.select(source) }
+            if (pipSources().any { it.key == source?.key && it.selectable }) main.post { pipUi.select(source) }
         }
         if (ok && !zoomApplied) {
             zoomApplied = true; if (zoomRatio != 1f) engine?.setZoom(zoomRatio)
@@ -535,7 +535,7 @@ class MainActivity : ComponentActivity() {
             chooseEngine(if(engineName=="Camera2") "CameraX" else "Camera2")
         }
         physicalPipButton=button("PIP") {
-            physicalPip.show(cameraId,engineName,pipUi.selected,pipSources()) { _,source -> pipUi.select(source) }
+            physicalPip.showLive(cameraId,engineName,pipUi.selected,{ engine as? PipCamera },pipUi::select)
         }
         // Lab groups inspection, saved results and settings; Mark stays on the preview.
         labButton=button("Lab") { openLab() }.apply { contentDescription="Open Lab: inspection tools, saved results, and settings" }
@@ -878,6 +878,8 @@ class MainActivity : ComponentActivity() {
                 .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID, cameraId)
                 .putExtra(WorkbenchActivity.EXTRA_ENGINE, engineName)
                 .putExtra(LiveStreamsActivity.EXTRA_VIDEO_MODE, videoMode)
+                .putExtra(LiveStreamsActivity.EXTRA_PIP_SOURCE, pipUi.selected ?: pipUi.settingsSource)
+                .putExtra(LiveStreamsActivity.EXTRA_PIP_ACTIVE, pipUi.selected != null)
                 .putExtra(LiveStreamsActivity.EXTRA_SETTINGS, streamSettings[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_GOOD_SETTINGS, goodStreams[streamKey()])
                 .putExtra(LiveStreamsActivity.EXTRA_HAS_GOOD, goodStreams.containsKey(streamKey()))
@@ -930,7 +932,7 @@ class MainActivity : ComponentActivity() {
         graphButton.contentDescription = if (show) "Hide callback timing" else "Show callback timing"
         widgets.highlight(graphButton,show)
         ViewCompat.setStateDescription(graphButton, if (show) "Shown" else "Hidden")
-        if (show) callbackGraph.update(recorder.snapshot(10_000_000_000L),sessionId,nowNs(),telemetry.sessions[sessionId].orEmpty())
+        if (show) callbackGraph.updateLive(recorder.snapshot(10_000_000_000L),sessionId,nowNs(),telemetry.sessions,(engine as? PipCamera)?.pipCallbackSession)
     }
     private fun label(text:String,size:Int,color:Int,bold:Boolean=false)=widgets.label(text,size,color,bold)
     private fun button(text:String,action:()->Unit)=widgets.button(text,action)

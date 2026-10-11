@@ -1,0 +1,8 @@
+kind: nested-class
+title: original-photos
+children: []
+parentPath:
+  - screens
+  - concurrent-camera-screen
+  - pip-composition
+  - media-storage

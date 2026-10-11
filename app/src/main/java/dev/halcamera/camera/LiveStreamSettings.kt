@@ -38,12 +38,14 @@ data class LiveStreamSettings(
     val jpegFromYuv: Boolean = false,
     /** RAW_SENSOR still saved as DNG (#177). Camera2 only; off by default. */
     val raw: LiveSize? = null,
+    val pip: Map<String, PipStreamSettings> = emptyMap(),
 ) : java.io.Serializable {
     val canCapture get() = (jpegFromYuv && yuv != null) || jpeg != null || raw != null
     fun forMode(videoMode: Boolean) = LiveModePolicy.forVideo(videoMode).apply(this)
     fun metadata(): Map<String, Any?> = mapOf("preview" to preview.toString(), "analysis" to yuv?.toString(),
         "jpeg" to jpeg?.toString(), "fpsRange" to fps?.toString(), "video" to video?.toString(),
-        "stabilization" to stabilization.name, "jpegSource" to if (jpegFromYuv) "YUV" else "CAMERA", "raw" to raw?.toString())
+        "stabilization" to stabilization.name, "jpegSource" to if (jpegFromYuv) "YUV" else "CAMERA", "raw" to raw?.toString(),
+        "pip" to pip.mapValues { (_, value) -> mapOf("preview" to value.preview?.toString(), "photo" to value.photo?.toString()) })
     fun summary() = "Preview $preview · YUV ${yuv ?: "Off"} · JPEG ${if (jpegFromYuv) "YUV ($yuv)" else jpeg ?: "Off"}" +
         (raw?.let { " · RAW $it" } ?: "") + " · ${fps ?: "Auto FPS"}"
 }
@@ -57,7 +59,7 @@ data class LiveStreamSupport(
     val raw: List<LiveSize> = emptyList(),
     val rawUnavailableReason: String = "No supported RAW_SENSOR sizes",
 ) {
-    fun rejection(value: LiveStreamSettings): String? = when {
+    fun rejection(value: LiveStreamSettings, includeRecording: Boolean = true): String? = when {
         value.jpegFromYuv && value.yuv == null -> "Enable YUV to create JPEG in the app."
         value.jpegFromYuv && value.jpeg != null -> "Select YUV or a JPEG size."
         value.stabilization !in stabilization -> "Unsupported stabilization mode. Select Auto or a supported mode."
@@ -67,7 +69,7 @@ data class LiveStreamSupport(
         value.raw != null && value.raw !in raw -> "Unsupported RAW size."
         value.jpeg != null && value.jpeg !in jpeg -> "Unsupported JPEG size."
         value.fps != null && value.fps !in fps -> "Unsupported FPS range for a regular session."
-        value.video != null && value.video !in videos -> "The camera and encoder do not support these recording settings."
+        includeRecording && value.video != null && value.video !in videos -> "The camera and encoder do not support these recording settings."
         else -> null
     }
     fun defaults(): LiveStreamSettings {

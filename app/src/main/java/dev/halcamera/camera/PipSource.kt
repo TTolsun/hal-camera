@@ -1,8 +1,57 @@
 package dev.halcamera.camera
 
 /** A physical output belongs to the parent device; a service source owns a separate device. */
-data class PipSource(val id: String, val physical: Boolean, val label: String) {
+data class PipSource(val id: String, val physical: Boolean, val label: String,
+                     val unavailableReason: String? = null, val supportNote: String? = null) : java.io.Serializable {
     val key get() = "${if (physical) "physical" else "service"}:$id"
+    val selectable get() = unavailableReason == null
+}
+
+/** Service devices must belong to a combination advertised by the device, regardless of lens labels. */
+internal object PipAvailability {
+    fun serviceReason(devices: Set<String>, combinations: Set<Set<String>>): String? =
+        if (combinations.any { it.containsAll(devices) }) null
+        else "Cannot run together"
+}
+
+/** Unsupported is blocked; an unavailable query must not hide usable combinations on another device. */
+internal enum class PipStreamSupport { SUPPORTED, UNSUPPORTED, UNKNOWN }
+
+/** CameraX 1.6.2 concurrent Preview + YUV accepts a 720p preview and at most a 1920x1440 YUV. */
+internal fun cameraXConcurrentAnalysisSupported(size: LiveSize?): Boolean =
+    size == null || size.width.toLong()*size.height <= 1920L*1440
+
+/** Rejection before session mutation leaves an already running PIP intact. */
+internal class PipSelectionRejected(message: String?) : IllegalArgumentException(message)
+
+internal fun pipSelectionAfter(previous: PipSource?, requested: PipSource?, result: Result<Unit>): PipSource? =
+    if (result.exceptionOrNull() is PipSelectionRejected) previous else requested.takeIf { result.isSuccess }
+
+internal fun PipSource.withStreamSupport(query: () -> PipStreamSupport): PipSource {
+    if (!selectable) return this
+    val support = try { query() } catch (_: Exception) { PipStreamSupport.UNKNOWN }
+    return copy(unavailableReason = when (support) {
+        PipStreamSupport.SUPPORTED -> null
+        PipStreamSupport.UNSUPPORTED -> "Unsupported streams"
+        PipStreamSupport.UNKNOWN -> null
+    }, supportNote = "Not verified".takeIf { support == PipStreamSupport.UNKNOWN })
+}
+
+/** Shared by the support query and actual compositor input allocation. */
+internal fun pipPreviewSize(sizes: List<LiveSize>): LiveSize? = sizes
+    .filter { it.width.toLong() * it.height <= 1280L * 720 }
+    .maxByOrNull { it.width.toLong() * it.height }
+
+/** Keep smaller supported options available instead of rejecting a source after its largest size fails. */
+internal fun choosePipPreviewSizes(main: List<LiveSize>, secondary: List<LiveSize>,
+                                  query: (LiveSize,LiveSize) -> PipStreamSupport): Pair<PipStreamSupport,List<LiveSize>?> {
+    var unknown = false
+    for (mainSize in main) for (pipSize in secondary) {
+        val support = query(mainSize,pipSize)
+        if (support == PipStreamSupport.SUPPORTED) return support to listOf(mainSize,pipSize)
+        if (support == PipStreamSupport.UNKNOWN) unknown = true
+    }
+    return (if (unknown) PipStreamSupport.UNKNOWN else PipStreamSupport.UNSUPPORTED) to null
 }
 
 internal data class PipInputRoute(val deviceId: String, val physicalId: String? = null)
