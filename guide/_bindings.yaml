@@ -234,6 +234,7 @@ sources:
       screens/expert-screen/live-controls/capture-sequence:
         evidence:
           - app/src/main/java/dev/halcamera/camera/LiveBurst.kt
+          - app/src/main/java/dev/halcamera/camera/BracketCapture.kt
           - app/src/main/java/dev/halcamera/camera/BurstRun.kt
           - app/src/main/java/dev/halcamera/camera/BracketFusion.kt
           - app/src/main/java/dev/halcamera/camera/ExposureFusion.kt
@@ -489,6 +490,7 @@ sources:
       - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
       - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
       - tools/halcam/halcam/cli.py
+      - tools/halcam/halcam/submission.py
       - tools/halcam/halcam/download.py
     elements:
       .:
@@ -579,6 +581,9 @@ sources:
       - app/src/main/java/dev/halcamera/cli/CliSequence.kt
       - app/src/main/java/dev/halcamera/cli/CliLibrary.kt
       - app/src/main/java/dev/halcamera/cli/CliCommand.kt
+      - app/src/main/java/dev/halcamera/cli/CliCommandSpec.kt
+      - app/src/main/java/dev/halcamera/cli/CliExecution.kt
+      - app/src/main/java/dev/halcamera/cli/CliQueries.kt
       - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
       - app/src/main/java/dev/halcamera/cli/CommandStore.kt
       - app/src/main/java/dev/halcamera/cli/CtsController.kt
@@ -587,6 +592,7 @@ sources:
       - app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt
       - app/src/main/java/dev/halcamera/telemetry/Telemetry.kt
       - tools/halcam/halcam/cli.py
+      - tools/halcam/halcam/submission.py
     elements:
       .:
         evidence:
@@ -598,6 +604,9 @@ sources:
           - app/src/main/java/dev/halcamera/cli/CommandStore.kt
           - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
           - app/src/main/java/dev/halcamera/cli/CliCommand.kt
+          - app/src/main/java/dev/halcamera/cli/CliCommandSpec.kt
+          - app/src/main/java/dev/halcamera/cli/CliExecution.kt
+          - app/src/main/java/dev/halcamera/cli/CliQueries.kt
       cli-request/operations:
         evidence:
           - app/src/main/java/dev/halcamera/cli/CliOptions.kt

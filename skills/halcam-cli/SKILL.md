@@ -1,6 +1,6 @@
 ---
 name: halcam-cli
-description: HAL CAM 앱을 adb로 조작하는 절차. 기기에서 스트림·수동 촬영·연사·AEB·Dual·결과·갤러리·진단 ZIP·CTS·벤치마크를 실행하거나, 결과 파일을 PC로 가져오거나, CLI 요청 상태·취소·BUSY·CLI_DISABLED 같은 오류를 다룰 때 사용한다. Windows·WSL에서 연결된 Android 기기를 조작하고 결과를 로컬 PC로 회수할 때 사용한다.
+description: HAL CAM 앱을 adb로 조작하는 절차. 기기에서 Photo·Video·PIP·스트림·수동 촬영·연사·AEB·Dual·결과·갤러리·진단 ZIP·CTS·벤치마크를 실행하거나, 결과 파일을 PC로 가져오거나, CLI 요청 상태·취소·BUSY·CLI_DISABLED 같은 오류를 다룰 때 사용한다. Windows·WSL에서 연결된 Android 기기를 조작하고 결과를 로컬 PC로 회수할 때 사용한다.
 ---
 
 # HAL CAM CLI로 기기 작업 수행하기
@@ -33,7 +33,33 @@ adb shell sh /data/local/tmp/halcam help
 adb shell sh /data/local/tmp/halcam doctor
 ```
 
-`hello` 응답의 `commands` 배열은 이 빌드가 접수하는 작업 명령이고, 상태 조회와 취소처럼 작업을 만들지 않는 조작은 `controls` 배열(`record.stop`, `status`, `request`, `request.cancel`)에 따로 있습니다. 기기가 여러 대이면 모든 명령에 `adb -s SERIAL`을 붙입니다.
+`hello` 응답의 `commands` 배열은 이 빌드가 접수하는 작업 명령이고, 상태 조회와 취소처럼 작업을 만들지 않는 조작은 `controls` 배열(`live.set`, `live.reset`, `record.snapshot`, `record.stop`, `status`, `request`, `request.cancel`)에 따로 있습니다. 기기가 여러 대이면 모든 명령에 `adb -s SERIAL`을 붙입니다.
+
+### Photo·Video 모드를 고르세요
+
+`capture`, `burst`, `bracket`은 Photo이고 `record start`는 Video입니다. 녹화 전에 프리뷰만 준비하려면 `preview --mode Video`를 사용합니다. `preview`와 `streams`의 기본 모드는 Photo이며 조회와 실행에 같은 모드를 지정합니다.
+
+```sh
+adb shell sh /data/local/tmp/halcam streams --camera 0 --mode Video
+adb shell sh /data/local/tmp/halcam preview --camera 0 --mode Video --video-size 1280x720 --video-fps 30
+```
+
+RAW/DNG와 프리뷰 FPS(`--fps`)는 Photo에서, 손떨림 보정과 녹화 FPS(`--video-fps`)·코덱·크기는 Video에서 사용합니다. 모드에 맞지 않는 명시적 설정은 `PREFLIGHT_FAILED`로 거부합니다. Photo의 기본 보정은 Off이며 `AUTO`도 Photo 정책에 따라 Off입니다. 새 카메라 명령은 이전 UI·CLI의 PIP 선택과 위치를 이어받지 않습니다.
+
+### PIP를 명시적으로 선택하세요
+
+1. 원하는 카메라·엔진·모드로 `preview`를 실행합니다.
+2. `pip sources`에서 `selectable: true`인 카메라 ID와 `type`을 확인합니다. `note: "Not verified"`이면 실제 구성에서 실패할 수 있습니다.
+3. 같은 카메라·엔진으로 `capture` 또는 `record start`에 `--pip-type physical|service --pip-camera ID`를 붙입니다. 다른 카메라로 자동 대체하지 않으며 PIP 구성 완료 뒤 촬영·녹화를 시작합니다.
+
+```sh
+adb shell sh /data/local/tmp/halcam preview --camera 0
+adb shell sh /data/local/tmp/halcam pip sources
+# ID는 위 조회에서 selectable: true인 값으로 바꿉니다.
+adb shell sh /data/local/tmp/halcam capture --camera 0 --pip-type service --pip-camera ID
+```
+
+PIP 프리뷰·원본 사진 크기는 `--pip-preview-size WIDTHxHEIGHT`, `--pip-photo-size WIDTHxHEIGHT`로 지정합니다. 위치와 크기는 `--pip-x`, `--pip-y`, `--pip-width`, `--pip-height` 네 값을 함께 지정하며, 왼쪽 위를 0으로 하는 0–1 좌표 안에 들어야 합니다. 생략하면 기본 위치를 사용합니다. Photo PIP는 합성 JPEG와 카메라별 원본을, Video PIP는 합성 MP4를 기존 엔진의 저장 경로로 받습니다. CameraX의 Physical PIP와 PIP의 Flash Auto/On은 지원하지 않습니다. PIP는 `preview`, `capture`, `record start`에서 선택하며 연사·AEB에는 적용하지 않습니다.
 
 ## 스트림 크기를 지정하세요
 
@@ -67,7 +93,7 @@ adb shell sh /data/local/tmp/halcam probe                      # 카메라를 �
 adb shell sh /data/local/tmp/halcam benchmark run --camera 0    # Camera2 표준 v2 측정과 JSON 회수
 adb shell sh /data/local/tmp/halcam cts cases
 adb shell sh /data/local/tmp/halcam cts run --cases custom:fast_on_off
-adb shell sh /data/local/tmp/halcam status                     # 마지막 제출 요청, ID를 주면 그 요청
+adb shell sh /data/local/tmp/halcam status                     # 현재 앱 상태, ID를 주면 그 요청
 adb shell sh /data/local/tmp/halcam status --app               # 이전 요청과 관계없이 현재 앱 상태 조회
 adb shell sh /data/local/tmp/halcam cancel
 adb shell sh /data/local/tmp/halcam fetch [REQUEST_ID]         # 촬영을 반복하지 않고 파일만 다시 준비. ID를 생략하면 마지막 요청
@@ -127,7 +153,7 @@ CTS 항목만 `--arg`로 전달하고 `--extra cases:s:...`를 쓰지 않습니�
 | `APP_NOT_FOREGROUND` | Live 화면이 앞에 없습니다. 프리뷰·사진·녹화·CTS·벤치마크는 Live를 요구하므로 `CliLaunchActivity`로 앱을 열고 다시 제출합니다. 준비 단계(accepted·preparing)에서 앱이 뒤로 물러나도 같은 코드로 실패합니다. |
 | `DEVICE_LOCKED` | 화면이 잠겨 있습니다. 사람이 잠금을 풀어야 하며 adb로 풀지 않습니다. |
 | `UNSUPPORTED_CAMERA` | `--camera`에 단독으로 열 수 없는 ID를 주었습니다. `cameras`에서 `selectable: true`인 논리 ID를 고릅니다. |
-| `NOT_RECORDING` | 멈출 CLI 녹화가 없습니다. `record start`가 먼저 성공했는지 `status`로 확인합니다. 화면에서 시작한 녹화는 CLI가 멈추지 않습니다. |
+| `NOT_RECORDING` | 멈출 CLI 녹화가 없습니다. `record start`가 먼저 성공했는지 `status REQUEST_ID`로 확인합니다. 화면에서 시작한 녹화는 CLI가 멈추지 않습니다. |
 | `RECORDING_INTERRUPTED` | `record stop` 없이 화면을 벗어나 녹화가 끝났습니다. 저장된 MP4가 있으면 `fetch`로 회수하고, 정상 종료와 구분해서 보고합니다. |
 | `EXECUTION_TIMEOUT` | 앱 실행 제한을 넘겨 요청이 failed로 끝났습니다. 기존 요청과 남은 파일을 확인하고 실패로 보고합니다. 재실행이 필요한 경우에만 사용자 요청 범위에서 제한 시간이나 작업을 조정합니다. |
 | `interrupted` | 앱 프로세스가 재시작되어 요청이 끊겼습니다. 자동으로 다시 실행되지 않으므로, 저장된 파일이 있으면 `fetch`로 회수하고 필요하면 새 요청을 제출합니다. |
@@ -135,7 +161,7 @@ CTS 항목만 `--arg`로 전달하고 `--extra cases:s:...`를 쓰지 않습니�
 | `UNKNOWN_CASE` | CTS 키가 목록에 없습니다. `cts cases` 결과의 `key` 값을 그대로 씁니다. |
 | 응답이 비어 있거나 `Cannot reach HAL CAM` | APK가 설치되어 있지 않거나 provider에 닿지 못한 상태입니다. `adb devices`와 `/v1/hello`를 먼저 확인합니다. |
 
-완료 기록은 24시간, 최대 200개까지만 남습니다. 그 뒤에는 `status`와 `fetch`가 실패하므로 필요한 파일은 실행 직후에 내려받습니다.
+완료 기록은 24시간, 최대 200개까지만 남습니다. 새 작업이 없어도 만료 시각부터 요청·파일 조회가 실패하며 원본 사진·영상은 삭제하지 않습니다. 그 뒤에는 해당 ID의 `status`와 `fetch`가 실패하므로 필요한 파일은 실행 직후에 내려받습니다.
 
 ## 6. 실행 환경별 주의
 
@@ -175,7 +201,7 @@ Windows `adb.exe`로 파일을 받을 때에는 `adb pull /sdcard/Download/HALCa
 | RAW만 저장합니다. | `halcam capture --camera 0 --yuv-size off --jpeg-size off --raw-size WIDTHxHEIGHT` | `streams`에 표시된 RAW 크기를 사용합니다. Camera2와 RAW 지원 기기가 필요합니다. |
 | 원본 YUV를 저장합니다. | `halcam capture --jpeg-size yuv` | 현재 YUV 크기로 앱에서 만든 JPEG와 촬영 JSON을 회수합니다. |
 
-`--fps 15-30`, `--stabilization OIS`, `--zoom 2`, `--ev -2`, `--flash OFF`처럼 원하는 항목만 지정합니다. EV 값은 EV 단위가 아니라 카메라의 보정 단계입니다. `streams`의 `ev_step`을 곱하면 EV가 됩니다. 예를 들어 단계가 1/3 EV이면 `--ev -3`은 −1 EV입니다.
+`--fps 15-30`, `--zoom 2`, `--ev -2`, `--flash OFF`처럼 원하는 항목만 지정합니다. EV 값은 EV 단위가 아니라 카메라의 보정 단계입니다. `streams`의 `ev_step`을 곱하면 EV가 됩니다. 예를 들어 단계가 1/3 EV이면 `--ev -3`은 −1 EV입니다.
 
 수동 노출은 ISO와 시간을 함께 지정합니다. `--iso 100 --exposure-ns 10000000`은 ISO 100과 10 ms입니다. `--focus`는 디옵터이며 0은 무한대입니다. `--wb`는 `AUTO`, `DAYLIGHT`, `CLOUDY`, `SHADE` 등의 모드를 받습니다. `CUSTOM`은 수동 노출과 함께 사용하며 `--gains`는 네 값, `--matrix`는 아홉 값을 쉼표로 구분합니다. 지원하지 않는 값이나 조합은 자동으로 바꾸지 않고 거부합니다.
 
@@ -186,7 +212,7 @@ Windows `adb.exe`로 파일을 받을 때에는 `adb pull /sdcard/Download/HALCa
 3. `halcam meter --x 0.5 --y 0.5 --meter focus`로 프리뷰 가운데에 초점을 요청합니다. 좌표는 화면의 왼쪽 위 0에서 오른쪽 아래 1까지입니다. 노출 측광에는 `--meter exposure`를 씁니다.
 4. `halcam live info`로 최근 콜백과 적용 요청을 확인합니다. 명령 접수는 센서가 그 값을 적용했다는 뜻이 아니므로 실제 값은 콜백·사진 메타데이터와 대조합니다.
 
-`record snapshot`은 진행 중인 CLI 녹화에 사진 저장을 요청합니다. `status`의 `snapshot_pending`, `snapshot_count`, `snapshot_error`를 확인합니다. 사진 저장 중에 `record stop`을 실행하면 저장 완료 후 녹화를 끝냅니다. MP4와 사진은 녹화 요청의 `fetch`로 함께 받습니다. CameraX 등 엔진의 기존 snapshot 제한은 그대로 적용합니다.
+`record snapshot`은 진행 중인 CLI 녹화에 사진 저장을 요청합니다. `status REQUEST_ID`의 `snapshot_pending`, `snapshot_count`, `snapshot_error`를 확인합니다. 사진 저장 중에 `record stop`을 실행하면 저장 완료 후 녹화를 끝냅니다. MP4와 사진은 녹화 요청의 `fetch`로 함께 받습니다. CameraX 등 엔진의 기존 snapshot 제한은 그대로 적용합니다.
 
 ### 두 카메라를 함께 사용하기
 
@@ -226,17 +252,18 @@ Dual의 출력 크기는 기존 앱의 공통 크기 선택 규칙을 따릅니�
 
 인자 없는 실행은 짧은 시작 안내만 보여 줍니다. 전체 문법은 `halcam --help`, 공통 실행의 예시는 `halcam run --help`에서 확인합니다. Python `doctor`는 연결뿐 아니라 카메라 권한·잠금·실행 중 작업을 확인하며, 준비가 되지 않았으면 원인과 조치를 표시하고 실패 코드로 종료합니다. 보관 한도 미리보기는 아직 변경하지 않았음을 표시하고, 적용하려면 입력할 확인 명령을 따로 제공합니다.
 
-선택 도구인 Python 클라이언트에도 전체 작업을 제출하는 공통 경로가 있습니다. `halcam run OPERATION --option KEY=VALUE --stream KEY=VALUE`를 사용합니다. 앱이 `doctor`에서 제공한 명령만 받으며, 결과 파일이 필요하면 `--output DIRECTORY`를 붙입니다. JPEG·MP4·DNG·NV21·JSON·TXT·CSV·ZIP 파일을 크기와 SHA-256으로 검증하며 파일당 최대 64 GiB를 받습니다. 갤러리에서 내보낸 파일은 안전한 `media_ID.확장자` 이름으로 받고 원래 이름은 `original_name`에 남깁니다.
+선택 도구인 Python 클라이언트에도 전체 작업을 제출하는 공통 경로가 있습니다. `halcam run OPERATION --option KEY=VALUE --stream KEY=VALUE`를 사용합니다. 일반 촬영 옵션도 `--raw-size`, `--zoom`처럼 그대로 받을 수 있습니다. CTS는 `--cases KEY[,KEY...]`로 선택하며 기존 `--case KEY`를 반복하는 문법도 유지합니다. 새 APK의 `doctor --json`에 있는 `command_specs`는 명령별 허용·필수 옵션과 기본 제한을 보여 줍니다. 이 정보가 없는 이전 APK에서는 새 모드·PIP 옵션을 사용하기 전에 업데이트합니다. 앱이 `doctor`에서 제공한 명령만 받으며, 결과 파일이 필요하면 `--output DIRECTORY`를 붙입니다. JPEG·MP4·DNG·NV21·JSON·TXT·CSV·ZIP 파일을 크기와 SHA-256으로 검증하며 파일당 최대 64 GiB를 받습니다. 갤러리에서 내보낸 파일은 안전한 `media_ID.확장자` 이름으로 받고 원래 이름은 `original_name`에 남깁니다.
 
 ```sh
 halcam run burst --camera 0 --option count=3 --stream jpeg_size=yuv --output ./photos
 halcam run results.export --option run=RUN_ID --output ./results
 halcam run benchmark.run --option "build=Candidate: A" --timeout 600 --output ./run
 halcam control live.set --option zoom=2
-halcam run record.start --no-audio
-halcam control record.stop
+halcam record start --no-audio
+halcam record stop --output ./videos
+halcam run cts.run --cases custom:fast_on_off --output ./cts
 ```
 
 `live info`, `meter`, `events`, `preview stop`은 현재 열린 Live 또는 Dual 화면에 적용됩니다. `live set`과 `live reset`은 Dual 프리뷰·CLI 녹화에도 적용되며 엔진이 지원하지 않는 제어는 거부합니다.
 
-`control`은 새 작업을 만들지 않고 기존 프리뷰·녹화를 제어합니다. `record.stop`은 접수 상태를 반환하므로 저장이 끝났는지는 `status --request UUID`로 확인합니다. 자동으로 완료까지 기다리는 기본 경로는 APK에 포함된 셸 스크립트입니다.
+`halcam record stop --output ./videos`는 저장 완료까지 기다린 뒤 MP4와 녹화 중 사진을 받습니다. 기존 `halcam control record.stop`은 접수 상태만 반환하므로 `halcam status UUID`로 완료를 확인합니다. 셸도 `record stop`으로 저장 완료까지 기다립니다.
