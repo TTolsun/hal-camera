@@ -9,6 +9,6 @@ Live 제어는 Camera2TouchFocus와 AeRelock이 담당합니다. 엔진은 모�
 Live 첫 열기의 해제 대기(#230)와 첫 프레임 전 실패 재시도(#224)는 open-recovery 요소에 있습니다.
 
 close는 active를 해제하고 세션과 기기를 닫습니다. finishClose에서 사진 대기와 녹화 정리, reader와 Surface 해제, closed 이벤트, 완료 콜백, 실행기 종료를 처리합니다. API 30 이상은 CONTROL_ZOOM_RATIO를, 이전 버전은 crop 영역을 사용합니다.
-콜백 시간축용으로 capture_partial과 preview_presented를 관측하며, callback_streams 이벤트와 세션의 callbackStreams에 현재 출력 구성 및 관측 가능 여부를 기록합니다. 기존 capture_result·image_available의 의미는 유지합니다.
+콜백 시간축용으로 capture_partial과 preview_presented를 관측하며, callback_streams 이벤트와 세션의 callbackStreams에 현재 출력 구성 및 관측 가능 여부를 기록합니다. PIP VIDEO는 공유 앱 인코더를 Recording (App)·관측 불가로 등록하고 HAL 요청 target에는 넣지 않습니다. 기존 capture_result·image_available의 의미는 유지합니다.
 
 프리뷰 버퍼 관측과 표시 경로는 preview-output 요소에 있습니다.

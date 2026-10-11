@@ -3,10 +3,29 @@ package dev.halcamera.ui
 import dev.halcamera.telemetry.Event
 import dev.halcamera.camera.OutputDescriptor
 import dev.halcamera.camera.OutputKind
+import dev.halcamera.camera.ConfiguredOutput
+import dev.halcamera.camera.StreamConfiguration
 import org.junit.Assert.*
 import org.junit.Test
 
 class ResultCallbackSeriesTest {
+    @Test fun composedRecordingNeverBorrowsCameraMetadataOrInventsAnEncoderArrival() {
+        val config = StreamConfiguration(listOf(ConfiguredOutput(OutputDescriptor("preview", OutputKind.PREVIEW, true), "camera-surface")))
+        val events = listOf(Event(0, "s", "capture_started", 1, 900L, mapOf("firstStart" to true)),
+            Event(20_000_000, "s", "capture_result", 1, 900L),
+            Event(30_000_000, "s", "image_available", sensorNs = 900L, values = mapOf("stream" to "composite_recording")))
+        val series = ResultCallbackSeries.read(events, "s", 300_000_000,
+            metadata(*config.metadata(composedRecording = true).toTypedArray()))
+        val track = series.tracks.single { it.id == "composite_recording" }
+        assertEquals("Recording (App)", track.label)
+        assertEquals("No callback", track.unavailable)
+        assertTrue(track.points.isEmpty())
+        val timeline = ResultCallbackTimeline()
+        timeline.update(series, "s", 0, 300_000_000)
+        val row = timeline.displayed!!.rows.single { it.id == track.id }
+        assertEquals("No callback", row.state)
+        assertTrue(row.latenciesMs.isEmpty())
+    }
     @Test fun physicalPipCanUseLogicalSurfaceTimestampWithoutBorrowingAnotherSensorTimestamp() {
         val events = listOf(
             Event(100_000_000, "s", "capture_started", 8, 900, mapOf("firstStart" to true)),

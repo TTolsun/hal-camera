@@ -8,6 +8,10 @@ enum class OutputKind(val label: String, val eventKind: String = "image_availabl
 internal val appJpegOutput = OutputDescriptor("yuv_jpeg", OutputKind.JPEG, false,
     eventKind = "app_jpeg_available", displayName = "Jpeg")
 
+/** The compositor's encoder is not a camera HAL target and exposes no HAL buffer callback. */
+internal val composedRecordingOutput = OutputDescriptor("composite_recording", OutputKind.RECORDING, true,
+    observable = false, displayName = "Recording (App)")
+
 /** Identity belongs to the output, never to its translated/numbered display name. */
 data class OutputDescriptor(
     val id: String,
@@ -39,6 +43,8 @@ class StreamConfiguration<T>(outputs: List<ConfiguredOutput<T>>) {
     val repeating get() = outputs.filter { it.descriptor.repeating }
     val still get() = outputs.filter { it.descriptor.stillCapture }
 
-    fun metadata(appJpeg: Boolean = false): List<Map<String, Any?>> =
-        outputs.map { it.descriptor.metadata() } + if (appJpeg) listOf(appJpegOutput.metadata()) else emptyList()
+    fun metadata(appJpeg: Boolean = false, composedRecording: Boolean = false): List<Map<String, Any?>> =
+        outputs.map { it.descriptor.metadata() } +
+            (if (appJpeg) listOf(appJpegOutput.metadata()) else emptyList()) +
+            (if (composedRecording) listOf(composedRecordingOutput.metadata()) else emptyList())
 }

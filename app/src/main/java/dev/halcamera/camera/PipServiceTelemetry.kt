@@ -14,10 +14,12 @@ internal class PipServiceTelemetry(private val telemetry: Telemetry, parentSessi
         requests[request]
     }, alive = alive)
     init { telemetry.registerSession(sessionId, engine, manager, cameraId) }
-    fun configure(outputs: StreamConfiguration<Surface>) {
-        describe(outputs.metadata())
+    fun configure(outputs: StreamConfiguration<Surface>, composedRecording: Boolean = false) {
+        describe(outputs.metadata(), composedRecording)
     }
-    fun describe(outputs: List<Map<String, Any?>>) = telemetry.configureCallbackStreams(sessionId, outputs)
+    fun describe(outputs: List<Map<String, Any?>>, composedRecording: Boolean = false) =
+        telemetry.configureCallbackStreams(sessionId, outputs +
+            if (composedRecording) listOf(composedRecordingOutput.metadata()) else emptyList())
     fun track(request: CaptureRequest, streams: List<String>): CaptureRequest {
         requests[request] = streams
         return request

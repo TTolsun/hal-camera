@@ -274,7 +274,7 @@ class CameraXEngine(
         telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
         val appJpeg = !composed && liveStreams?.jpegFromYuv == true &&
             outputs.outputs.any { it.descriptor.kind == OutputKind.YUV }
-        telemetry.configureCallbackStreams(session, outputs.metadata(appJpeg))
+        telemetry.configureCallbackStreams(session, outputs.metadata(appJpeg, composedRecording = composed && videoMode))
         telemetry.event(session, "bound", sizes)
         camera?.cameraControl?.setZoomRatio(zoomRatio)
         controls.sessionRebuilt()

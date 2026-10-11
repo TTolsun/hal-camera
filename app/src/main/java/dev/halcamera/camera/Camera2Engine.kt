@@ -822,7 +822,7 @@ class Camera2Engine(
                         val outputs = plan.configure(inputs, analysis.outputs + added.physicalPhotoOutputs)
                         configurePipSession(camera,outputs,handler,{ active && pip === added },configured = { value ->
                                     captureSession = value; configuredOutputs = outputs
-                                    callbacks.configure(outputs)
+                                    callbacks.configure(outputs, videoMode)
                                     val sizes = plan.sizes(size.toString(),yuv?.let { "${it.width}x${it.height}" },output.toString(),liveStreams?.raw?.toString(),
                                         photo,added.sourceSize,added.sourcePhotoSize)
                                     telemetry.sessions.computeIfPresent(sessionId) { _, old -> old + mapOf("negotiatedStreams" to sizes) }

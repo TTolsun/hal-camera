@@ -61,6 +61,7 @@ ID·Hold는 배경과 테두리 없는 글자 버튼입니다. 밝은 현재 값
 | YUV · JPEG · RAW | 해당 이미지가 도착한 시점입니다. YUV가 여러 개여도 내부 스트림 ID로 구분합니다. |
 | Meta (Phy) · Preview (Phy) · YUV (Phy) | 메인 Logical Camera에 속한 Physical 결과·출력입니다. 구성한 종류에 맞는 행을 표시합니다. |
 | Jpeg | YUV 앱 변환 JPEG가 준비된 시점입니다. HAL JPEG의 도착 행과 구분합니다. PIP 합성 저장은 표시하지 않습니다. |
+| Recording (App) | PIP 합성 인코더입니다. 카메라의 HAL 녹화 출력이 아니므로 `No callback`으로 표시하고 시간값을 만들지 않습니다. |
 
 ### PIP를 켜면 무엇이 추가되나요?
 
@@ -69,11 +70,11 @@ ID·Hold는 배경과 테두리 없는 글자 버튼입니다. 밝은 현재 값
 <details markdown="1" id="callback-engine-limits" data-search-section>
 <summary>Camera2·CameraX·기존 Dual의 관측 차이</summary>
 
-일반 Camera2 경로의 Android 12 이하와 일반 CameraX 경로는 Preview·Recording 버퍼를 직접 관측하지 못하므로 `No callback`을 표시합니다. PIP에서는 합성기에 들어오는 프리뷰 입력을 별도로 기록합니다.
+일반 Camera2 경로의 Android 12 이하와 일반 CameraX 경로는 Preview·Recording 버퍼를 직접 관측하지 못하므로 `No callback`을 표시합니다. Camera2의 EIS 경로도 인코더에 직접 전달하므로 Recording은 `No callback`입니다. PIP에서는 합성기에 들어오는 프리뷰 입력을 별도로 기록합니다. VIDEO의 `Recording (App)`은 두 Service ID에서 같은 합성 인코더를 표시하며 센서별 녹화 스트림 두 개를 뜻하지 않습니다. PHOTO에는 이 행이 없습니다.
 
 CameraX의 YUV는 ImageAnalysis 수신, 카메라 JPEG는 ImageCapture 수신입니다. JPEG 출처로 YUV를 선택하면 촬영 뒤 받은 analysis 프레임을 앱에서 변환합니다. YUV와 카메라 JPEG 두 장을 짝지어 저장하지 않습니다.
 
-CLI 호환용 Dual의 Main/Sub display는 화면 갱신 시점이며 Preview 버퍼 수신과 다릅니다. Camera2의 Main/Sub photo는 두 센서 이미지 수신입니다. 이 차이를 센서 동기화 성능으로 해석하지 마세요.
+CLI 호환용 Dual의 Main/Sub display는 화면 갱신 시점이며 Preview 버퍼 수신과 다릅니다. Camera2의 Main/Sub photo는 두 센서 이미지 수신입니다. VIDEO는 두 Recording 출력을 `No callback`으로 표시하며 CameraX의 GPU 전달은 `(App)`으로 구분합니다. 이 차이를 센서 동기화 성능으로 해석하지 마세요. Multi에는 Callback 조작부가 없습니다.
 
 이미지와 프레임은 센서 타임스탬프를 대조하여 연결합니다. 그래프 값은 앱 수신 시각이며 HAL 내부 처리 완료 시각을 직접 측정한 값은 아닙니다.
 

@@ -118,7 +118,7 @@ class DualPreviewSession(
     private var focusFeedback: ((TouchPhase) -> Unit)? = null
     private var exposureFeedback: ((TouchPhase) -> Unit)? = null
     private val timelineCallback = telemetry?.callback(sessionId, streams = {
-        if (it.tag == "dual_photo") listOf("photo_main", "photo_sub") else listOf("preview_main", "preview_sub")
+        dualRequestStreams(it.tag == "dual_photo", recording)
     }, alive = { active })
 
     @android.annotation.SuppressLint("NewApi")
@@ -349,8 +349,8 @@ class DualPreviewSession(
                     telemetry?.sessions?.putIfAbsent(sessionId, mapOf("engine" to "Camera2", "cameraId" to plan.logicalId,
                         "physicalIds" to listOf(plan.first.id, plan.second.id),
                         "timestampSource" to characteristics[CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE]))
-                    if (telemetry?.sessions?.get(sessionId)?.containsKey("callbackStreams") != true)
-                        telemetry?.configureCallbackStreams(sessionId, dualCallbackStreams())
+                    telemetry?.configureCallbackStreams(sessionId, dualCallbackStreams(recordingConfigured = videoContext != null,
+                        physicalIds = listOf(plan.first.id, plan.second.id)))
                     s.setRepeatingRequest(request(), captureCallback, handler)
                     main.post { if (active) listener.onStreaming(size) }
                     status("${plan.first.id} + ${plan.second.id} · $size")

@@ -15,7 +15,7 @@ Single PIP는 프리뷰 합성 JPEG를 저장합니다. JPEG가 켜져 있으면
 
 PipPositionStore는 Single과 Multi를 구분하여 부모 Camera ID별 정규화 좌표를 저장합니다. 같은 모드의 보조 카메라 선택, PIP Off·On과 화면 재생성 후에는 같은 부모의 위치를 복원합니다. Photo·Video·엔진 전환이나 Multi 신규 진입에서는 해당 범위의 위치를 지웁니다. 합성기는 첫 프레임부터 복원 좌표를 사용하고 프리뷰 영역 밖의 좌표는 경계로 제한합니다. 저장값이 유효하지 않으면 기본 좌표를 사용합니다.
 
-두 Live 엔진의 사진 저장과 녹화 수명 주기는 PipMedia와 PipMediaAdapter를 공유합니다. 순수 상태 제어기는 촬영·녹화 시작·녹화 종료가 완료될 때까지 close를 기다리며, Android 어댑터가 합성기와 MediaLibrary를 연결합니다. 장치와 Surface의 해제는 각 세션이 담당합니다. PipOutputs가 정한 출력 설명자를 실제 세션 구성과 Callback 메타데이터에서 함께 사용합니다. 합성 JPEG는 카메라 요청 대상과 Callback 그래프에 넣지 않으며 앱 이벤트로만 기록합니다.
+두 Live 엔진의 사진 저장과 녹화 수명 주기는 PipMedia와 PipMediaAdapter를 공유합니다. 순수 상태 제어기는 촬영·녹화 시작·녹화 종료가 완료될 때까지 close를 기다리며, Android 어댑터가 합성기와 MediaLibrary를 연결합니다. 장치와 Surface의 해제는 각 세션이 담당합니다. PipOutputs가 정한 출력 설명자를 실제 세션 구성과 Callback 메타데이터에서 함께 사용합니다. 합성 JPEG는 카메라 요청 대상과 Callback 그래프에 넣지 않으며 앱 이벤트로만 기록합니다. VIDEO에서는 합성 인코더 하나를 Recording (App)·No callback으로 표시합니다. Service PIP의 양쪽 그래프에서 같은 앱 출력의 존재를 확인할 수 있지만 센서별 HAL 녹화 target이나 도착 시각을 만들지 않습니다. PHOTO에는 녹화 행을 추가하지 않습니다.
 
 Live 화면은 PipCamera.pipSources로 현재 엔진의 지원 후보를 조회합니다. Camera2와 CameraX의 후보 탐색은 각 엔진에 남기며 화면에서 구체 엔진으로 캐스팅하지 않습니다.
 
