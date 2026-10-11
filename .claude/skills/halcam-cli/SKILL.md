@@ -1,6 +1,6 @@
 ---
 name: halcam-cli
-description: HAL CAM 앱을 adb로 조작하는 절차. 기기에서 Photo·Video·PIP·스트림·수동 촬영·연사·AEB·Dual·결과·갤러리·진단 ZIP·CTS·벤치마크를 실행하거나, 결과 파일을 PC로 가져오거나, CLI 요청 상태·취소·BUSY·CLI_DISABLED 같은 오류를 다룰 때 사용한다. Windows·WSL에서 연결된 Android 기기를 조작하고 결과를 로컬 PC로 회수할 때 사용한다.
+description: ADB로 HAL CAM의 촬영·녹화·CTS·벤치마크를 실행하고 결과 파일을 PC로 회수합니다. 연결된 Android 기기의 CLI 작업, 상태 조회와 오류 복구에 사용합니다.
 ---
 
 # HAL CAM CLI 스킬 (본문 위치 안내)

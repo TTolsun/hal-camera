@@ -27,361 +27,277 @@
   </header>
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
-    <h1 lang="en">Control the camera with adb.</h1><p><strong>기기를 연결하고 아래 준비 명령으로 사진을 한 번 촬영하세요.</strong> Windows(PowerShell·CMD) 또는 WSL과 <code>adb</code>가 필요합니다. 앱 소스나 빌드 도구는 필요하지 않습니다.</p>
-<p>ADB CLI는 기본으로 허용됩니다. 직접 꺼 둔 경우에는 앱의 <code>Lab → ADB CLI</code>에서 켜세요. 꺼 둔 설정은 업데이트 후에도 유지됩니다.</p>
+    <h1 lang="en">Take a photo. Change one thing.</h1><p><strong>사진 한 장을 PC에 받아 열어 보세요.</strong> 필요한 것은 <code>adb</code>와 HAL CAM APK입니다. 첫 사진을 받았다면 <a href="#영상-10초를-저장하세요">영상</a>, <a href="#사진의-차이를-비교하세요">사진 실험</a>, <a href="#pip로-한-장과-원본을-비교하세요">PIP</a> 중 하나를 고르세요.</p>
 <h2 id="처음-실행하세요">처음 실행하세요</h2>
 <ol>
-<li>사용할 터미널에서 <code>adb devices -l</code>로 연결된 기기를 확인합니다. <code>unauthorized</code>이면 기기에서 디버깅을 허용하고, <code>offline</code>이면 연결을 복구합니다. 환경별 연결 방법은 아래를 참고하세요.</li>
-<li>HAL CAM APK를 <code>adb install -r HALCamera.apk</code>로 설치하고 앱에서 카메라 권한을 허용합니다. 서명이 맞지 않으면 기존 앱을 삭제하지 말고 같은 서명의 APK를 준비합니다. 화면 잠금을 해제합니다. 소리가 있는 녹화에는 마이크 권한도 필요합니다.</li>
-<li>앱에 포함된 스크립트를 기기에 준비한 뒤 촬영합니다. <code>cameras</code> 결과에서 <code>selectable: true</code>인 ID로 마지막 명령의 <code>0</code>을 바꾸세요. APK를 업데이트하면 첫 번째 명령으로 스크립트도 갱신합니다.</li>
-</ol>
+<li><p><code>adb devices -l</code>로 기기를 찾습니다. <code>unauthorized</code>이면 기기에서 디버깅을 허용하고, <code>offline</code>이면 연결을 복구합니다. 여러 연결이 보이면 이후 모든 명령과 파일 회수에 같은 <code>adb -s SERIAL</code>을 사용합니다.</p>
+</li>
+<li><p>APK가 없으면 <code>adb install -r HALCamera.apk</code>로 설치합니다. 서명이 맞지 않으면 같은 서명의 APK를 준비하고 기존 앱을 삭제하지 않습니다. 앱에서 카메라 권한을 허용하고 화면 잠금을 해제합니다.</p>
+</li>
+<li><p>앱에 들어 있는 실행 스크립트를 준비하고 카메라 ID를 조회합니다. APK 업데이트 후에도 첫 명령으로 스크립트를 갱신합니다.</p>
 <pre><code class="language-sh">adb shell &quot;content read --uri content://dev.halcamera.cli/v1/shell &gt; /data/local/tmp/halcam&quot;
 adb shell sh /data/local/tmp/halcam doctor
 adb shell sh /data/local/tmp/halcam cameras
-adb shell sh /data/local/tmp/halcam capture --camera 0
 </code></pre>
-<p>앱 열기, 요청 ID 생성, 완료 대기는 자동으로 처리합니다. 결과에 출력되는 <code>adb pull</code> 명령으로 파일을 PC에 받습니다. Windows에서도 바이너리 파일을 그대로 복사합니다.</p>
+<p><code>doctor</code>가 준비 부족을 알리면 표시된 조치부터 해결하세요. ADB CLI는 기본 허용이며, 직접 꺼 두었다면 앱의 <strong>Lab → ADB CLI</strong>에서 켭니다. 업데이트해도 꺼 둔 설정은 유지됩니다.</p>
+</li>
+<li><p>조회 결과에서 <code>selectable: true</code>인 논리 ID로 아래의 <code>0</code>을 바꿔 촬영합니다. 완료 후 출력된 <code>adb pull</code> 명령으로 PC에 받습니다.</p>
+<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam capture --camera 0
+</code></pre>
+</li>
+</ol>
+<p><strong>성공 확인:</strong> 받은 JPEG를 열어 보세요. 촬영 JSON도 함께 저장됩니다. 앱 열기·요청 ID 생성·완료 대기는 스크립트가 처리합니다.</p>
 <details>
-<summary>Windows·WSL에서 ADB를 연결하는 방법</summary><p><code>adb version</code>으로 실행 파일을 확인합니다. 명령을 찾지 못하면 platform-tools의 <code>adb</code>를 전체 경로로 실행하거나 PATH에 추가합니다.</p>
-<p><strong>Windows:</strong> Android SDK Platform-Tools 폴더를 PATH에 추가하고 PowerShell 또는 CMD에서 위 명령을 실행합니다. USB 연결은 기기에서 이 PC의 디버깅을 허용합니다.</p>
-<p><strong>WSL:</strong> Linux용 <code>adb</code>를 설치하고 무선 디버깅으로 연결하면 WSL 경로로 파일을 받을 수 있습니다. USB 기기를 Windows의 ADB에 연결한 경우에는 WSL에서 해당 <code>adb.exe</code>를 호출할 수도 있습니다.</p>
-<pre><code class="language-sh"># Windows 사용자명과 SDK 경로를 실제 설치 위치로 바꿉니다.
-adb() { &quot;/mnt/c/Users/USERNAME/AppData/Local/Android/Sdk/platform-tools/adb.exe&quot; &quot;$@&quot;; }
-adb devices
+<summary>ADB를 찾지 못하거나 Windows·WSL에서 연결이 다를 때</summary><p><code>adb version</code>이 실패하면 Android SDK Platform-Tools의 실행 파일을 전체 경로로 호출하거나 PATH에 추가합니다.</p>
+<ul>
+<li>Windows는 PowerShell·CMD에서 실행합니다. Git Bash는 먼저 <code>export MSYS2_ARG_CONV_EXCL=&#39;*&#39; MSYS_NO_PATHCONV=1</code>을 설정해야 기기 경로가 Windows 경로로 바뀌지 않습니다.</li>
+<li>WSL은 Linux <code>adb</code>로 무선·USB 연결을 사용하거나 Windows <code>adb.exe</code>를 호출합니다. Windows 실행 파일로 <code>pull</code>하면 <code>C:/Users/USERNAME/Downloads</code> 같은 Windows 대상 경로를 씁니다. 실행·조회·회수에 같은 ADB 실행 파일을 유지합니다.</li>
+<li>무선 연결은 <code>adb pair IP:PAIR_PORT</code> 후 <code>adb connect IP:PORT</code>입니다. 주소·코드는 기기의 무선 디버깅 화면에서 확인하며 두 포트는 다를 수 있습니다. 같은 기기의 USB·무선 연결도 별도로 선택합니다.</li>
+</ul>
+<p>WSL에서 Windows ADB를 호출하려면 사용자명과 SDK 경로를 바꿉니다.</p>
+<pre><code class="language-sh">adb() { &quot;/mnt/c/Users/USERNAME/AppData/Local/Android/Sdk/platform-tools/adb.exe&quot; &quot;$@&quot;; }
+adb devices -l
 </code></pre>
-<p>이 함수로 위의 공통 명령을 실행할 수 있습니다. 다만 Windows <code>adb.exe</code>로 파일을 받을 때에는 <code>adb pull /sdcard/Download/HALCamera-cli/요청ID C:/Users/USERNAME/Downloads</code>처럼 <strong>Windows 대상 경로</strong>를 사용합니다. Linux <code>adb</code>와 Windows <code>adb.exe</code>는 연결 목록이 다를 수 있으므로 준비·실행·회수에 같은 실행 파일을 사용합니다.</p>
-<p><strong>무선 연결:</strong> 최초 연결은 <code>adb pair IP:PAIR_PORT</code>, 이후 연결은 <code>adb connect IP:PORT</code>를 실행합니다. 주소와 코드는 기기의 무선 디버깅 화면에서 확인하며 페어링 포트와 연결 포트는 다를 수 있습니다. 여러 기기가 연결되어 있으면 모든 명령에 <code>adb -s SERIAL</code>을 사용합니다. 출력된 <code>adb pull</code> 명령에도 같은 <code>-s SERIAL</code>을 붙입니다. 동일한 기기가 USB·무선으로 두 번 표시되어도 연결 선택이 필요합니다.</p>
-<p>Git Bash에서는 기기 경로가 Windows 경로로 바뀌지 않도록 먼저 <code>export MSYS2_ARG_CONV_EXCL=&#39;*&#39; MSYS_NO_PATHCONV=1</code>을 실행합니다. PowerShell·CMD·WSL에서는 이 설정이 필요하지 않습니다.</p>
 </details><h2 id="필요한-작업-하나를-고르세요">필요한 작업 하나를 고르세요</h2>
-<p><code>help</code>는 처음 사용할 작업 다섯 개만 보여줍니다. <code>help all</code>은 전체 명령을, <code>help controls</code>는 수동 촬영 옵션을 보여줍니다.</p>
-<p><strong>아래 표의 명령은 축약형입니다.</strong> <code>halcam</code>으로 시작하면 앞에 <code>adb shell sh /data/local/tmp/</code>를 붙입니다. <code>results list</code>처럼 작업 이름만 있으면 <code>adb shell sh /data/local/tmp/halcam results list</code>로 실행합니다. 파일은 완료 후 출력된 <code>adb pull</code> 명령으로 받습니다.</p>
-<h3 id="사진과-촬영-설정">사진과 촬영 설정</h3>
 <table>
 <thead>
 <tr>
-<th>할 일</th>
-<th>명령</th>
-<th>확인할 결과</th>
+<th>하고 싶은 일</th>
+<th>읽을 곳</th>
 </tr>
 </thead>
 <tbody><tr>
-<td>지원 옵션을 확인합니다.</td>
-<td><code>halcam streams --camera 0</code></td>
-<td>Photo 크기·RAW·FPS와 줌·EV·수동 제어 범위를 확인합니다. 수동 노출 시간은 30 FPS 기준이며 실제 선택 FPS에 따라 다시 검사합니다.</td>
+<td>영상을 저장하거나 녹화 중 사진을 찍습니다.</td>
+<td><a href="#영상-10초를-저장하세요">영상 10초</a></td>
 </tr>
 <tr>
-<td>세 번 연속 촬영합니다.</td>
-<td><code>halcam burst --camera 0 --count 3 --interval-ms 500</code></td>
-<td>저장한 장수와 목표 장수를 확인합니다. <code>cancel</code>은 다음 촬영을 멈추며 이미 제출한 저장은 완료합니다.</td>
+<td>JPEG·RAW·연사·HDR을 비교합니다.</td>
+<td><a href="#사진의-차이를-비교하세요">사진 실험</a></td>
 </tr>
 <tr>
-<td>노출을 달리하여 촬영합니다.</td>
-<td><code>halcam bracket --camera 0</code></td>
-<td>세 원본과 HDR 결과를 확인합니다. JPEG 원본이 부족하면 HDR 생략 이유를 확인합니다.</td>
+<td>두 카메라로 찍습니다.</td>
+<td><a href="#pip로-한-장과-원본을-비교하세요">PIP와 Dual</a></td>
 </tr>
 <tr>
-<td>RAW만 저장합니다.</td>
-<td><code>halcam capture --camera 0 --yuv-size off --jpeg-size off --raw-size WIDTHxHEIGHT</code></td>
-<td><code>streams</code>에 표시된 RAW 크기를 사용합니다. Camera2와 RAW 지원 기기가 필요합니다.</td>
+<td>성능을 측정하거나 CTS를 실행합니다.</td>
+<td><a href="#벤치마크를-실행하세요">벤치마크</a>와 <a href="#cts와-다른-작업을-찾으세요">CTS</a></td>
 </tr>
 <tr>
-<td>원본 YUV를 저장합니다.</td>
-<td><code>halcam capture --jpeg-size yuv</code></td>
-<td>현재 YUV 크기로 앱에서 만든 JPEG와 촬영 JSON을 회수합니다.</td>
+<td>연결이 끊겼거나 파일이 없습니다.</td>
+<td><a href="#요청이-끝나지-않거나-파일이-없을-때">기존 요청 복구</a></td>
 </tr>
 </tbody></table>
-<p><code>--fps 15-30</code>, <code>--zoom 2</code>, <code>--ev -2</code>, <code>--flash OFF</code>처럼 원하는 항목만 지정합니다. EV 값은 EV 단위가 아니라 카메라의 보정 단계입니다. <code>streams</code>의 <code>ev_step</code>을 곱하면 EV가 됩니다. 예를 들어 단계가 1/3 EV이면 <code>--ev -3</code>은 −1 EV입니다.</p>
-<p>수동 노출은 ISO와 시간을 함께 지정합니다. <code>--iso 100 --exposure-ns 10000000</code>은 ISO 100과 10 ms입니다. <code>--focus</code>는 디옵터이며 0은 무한대입니다. <code>--wb</code>는 <code>AUTO</code>, <code>DAYLIGHT</code>, <code>CLOUDY</code>, <code>SHADE</code> 등의 모드를 받습니다. <code>CUSTOM</code>은 수동 노출과 함께 사용하며 <code>--gains</code>는 네 값, <code>--matrix</code>는 아홉 값을 쉼표로 구분합니다. 지원하지 않는 값이나 조합은 자동으로 바꾸지 않고 거부합니다.</p>
-<h3 id="현재-프리뷰와-녹화">현재 프리뷰와 녹화</h3>
+<p><strong>아래의 짧은 명령은 <code>adb shell sh /data/local/tmp/halcam</code> 뒤에 붙입니다.</strong> 전체 문법은 이 접두어에 <code>help all</code>을 붙여 확인합니다. PC에 설치하는 Python 도구는 <a href="#python-client">자동화 영역</a>에 따로 있습니다.</p>
+<h3 id="영상-10초를-저장하세요">영상 10초를 저장하세요</h3>
 <ol>
-<li><code>halcam preview --camera 0</code>으로 프리뷰를 시작합니다.</li>
-<li><code>halcam live set --zoom 2</code>로 프리뷰나 CLI 녹화를 유지하면서 설정을 바꿉니다. 생략한 제어는 유지합니다. <code>halcam live reset</code>은 줌과 수동 제어를 기본값으로 되돌립니다.</li>
-<li><code>halcam meter --x 0.5 --y 0.5 --meter focus</code>로 프리뷰 가운데에 초점을 요청합니다. 좌표는 화면의 왼쪽 위 0에서 오른쪽 아래 1까지입니다. 노출 측광에는 <code>--meter exposure</code>를 씁니다.</li>
-<li><code>halcam live info</code>로 최근 콜백과 적용 요청을 확인합니다. 명령 접수는 센서가 그 값을 적용했다는 뜻이 아니므로 실제 값은 콜백·사진 메타데이터와 대조합니다.</li>
+<li><p>무음 녹화를 시작합니다. 소리가 필요하면 <code>--no-audio</code>를 빼고 앱에서 마이크 권한을 허용하세요.</p>
+<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam record start --camera 0 --no-audio
+</code></pre>
+</li>
+<li><p><code>Recording started</code>가 표시된 뒤 10초를 촬영하고 종료합니다. <code>record stop</code>은 MP4 저장 완료까지 기다립니다.</p>
+<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam record stop
+</code></pre>
+</li>
 </ol>
-<p><code>record snapshot</code>은 진행 중인 CLI 녹화에 사진 저장을 요청합니다. <code>status REQUEST_ID</code>의 <code>snapshot_pending</code>, <code>snapshot_count</code>, <code>snapshot_error</code>를 확인합니다. 사진 저장 중에 <code>record stop</code>을 실행하면 저장 완료 후 녹화를 끝냅니다. MP4와 사진은 녹화 요청의 <code>fetch</code>로 함께 받습니다. CameraX 등 엔진의 기존 snapshot 제한은 그대로 적용합니다.</p>
-<h3 id="두-카메라를-함께-사용하기">두 카메라를 함께 사용하기</h3>
+<p><strong>성공 확인:</strong> 출력된 <code>adb pull</code> 명령으로 받은 MP4를 재생하세요. <code>record start</code>의 성공은 녹화 시작이고 파일 저장 완료는 아닙니다.</p>
+<p>녹화 중 사진도 필요하면 종료 전에 <code>record snapshot</code>을 실행합니다. 저장 중 종료를 요청해도 사진 저장을 기다리며 MP4와 사진을 함께 받습니다. 스냅샷 지원은 엔진·출력 구성에 따라 다릅니다. 화면에서 시작한 녹화는 CLI로 멈추지 않습니다.</p>
+<h3 id="사진의-차이를-비교하세요">사진의 차이를 비교하세요</h3>
+<p>한 번에 실험 하나만 고르세요. 기본 JPEG와 나란히 열면 출력 방식의 차이를 확인할 수 있습니다.</p>
+<table>
+<thead>
+<tr>
+<th>실험</th>
+<th>명령</th>
+<th>열어 볼 결과</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>카메라 JPEG와 앱 변환 JPEG를 비교합니다.</td>
+<td><code>capture --camera 0 --jpeg-size yuv</code></td>
+<td>YUV에서 만든 JPEG와 촬영 JSON을 확인합니다. 원본 YUV 파일을 지정하는 옵션은 아닙니다.</td>
+</tr>
+<tr>
+<td>움직이는 피사체를 세 번 찍습니다.</td>
+<td><code>burst --camera 0 --count 3 --interval-ms 500</code></td>
+<td>저장한 장수와 목표 장수를 비교합니다.</td>
+</tr>
+<tr>
+<td>서로 다른 노출로 찍습니다.</td>
+<td><code>bracket --camera 0</code></td>
+<td>AEB 원본과 가능한 HDR을 확인합니다. HDR을 만들지 못하면 생략 이유를 읽습니다.</td>
+</tr>
+<tr>
+<td>RAW를 저장합니다.</td>
+<td><code>capture --camera 0 --yuv-size off --jpeg-size off --raw-size WIDTHxHEIGHT</code></td>
+<td><code>streams</code>에서 고른 크기의 DNG를 확인합니다. Camera2와 RAW 지원이 필요합니다.</td>
+</tr>
+</tbody></table>
+<p>출력 크기나 수동 설정을 바꾸려면 <a href="#스트림-크기를-지정하세요">지원 조건</a>을 먼저 확인하세요.</p>
+<h3 id="pip로-한-장과-원본을-비교하세요">PIP로 한 장과 원본을 비교하세요</h3>
+<p>PIP 사진은 합성 사진과 두 카메라의 원본을 비교할 수 있습니다. 영상은 합성 MP4를 저장합니다.</p>
 <ol>
-<li><code>halcam dual cameras</code>로 논리 ID와 물리 ID를 확인합니다.</li>
-<li><code>halcam dual preview --camera 0 --first 2 --second 3</code>에서 ID를 조회 결과로 바꿉니다. 임의의 다른 센서로 대체하지 않습니다.</li>
-<li>같은 ID 옵션으로 <code>dual capture</code> 또는 <code>dual record</code>를 실행합니다. Dual 사진과 수동 제어는 Camera2에서 지원합니다. Dual 영상은 두 개의 무음 MP4로 저장하며 <code>record stop</code>으로 종료합니다.</li>
+<li><p>원하는 카메라·엔진·모드로 프리뷰를 열고 후보를 조회합니다. 영상이라면 첫 명령에 <code>--mode Video</code>를 붙입니다.</p>
+<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam preview --camera 0
+adb shell sh /data/local/tmp/halcam pip sources
+</code></pre>
+</li>
+<li><p><code>selectable: true</code>인 후보의 <code>type</code>과 ID를 사용합니다. 아래는 Service 후보를 선택한 예시이며 <code>ID</code>는 조회 값으로 바꿉니다.</p>
+<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam capture --camera 0 --pip-type service --pip-camera ID
+</code></pre>
+</li>
 </ol>
-<p>Dual의 출력 크기는 기존 앱의 공통 크기 선택 규칙을 따릅니다. 물리 ID가 존재하더라도 해당 조합이 기기에서 동작한다는 보장은 없으며, 세션 실패는 CLI 실패로 보고합니다. CameraX Dual에서 지원하지 않는 수동 제어를 Camera2로 자동 전환하지 않습니다.</p>
-<h3 id="측정-결과와-기준-실행">측정 결과와 기준 실행</h3>
-<table>
-<thead>
-<tr>
-<th>할 일</th>
-<th>명령</th>
-<th>결과</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>실행 목록과 상세를 읽습니다.</td>
-<td><code>results list</code>, <code>results show --run ID</code></td>
-<td>목록에서 ID를 고른 뒤 원본과 현재 baseline 집합에 대한 판정을 읽습니다. baseline이 없으면 이전 실행 대비 변화량만 표시합니다.</td>
-</tr>
-<tr>
-<td>두 실행을 비교합니다.</td>
-<td><code>results compare --run ID --reference ID</code></td>
-<td>화면의 두 실행 비교와 같이 명시한 참조를 이번 비교의 기준으로 사용합니다. 저장된 baseline은 바꾸지 않습니다.</td>
-</tr>
-<tr>
-<td>정상 실행을 기준에 추가하거나 뺍니다.</td>
-<td><code>baseline add --run ID</code>, <code>baseline remove --run ID</code></td>
-<td>비교 가능한 실행만 추가합니다. 제거해도 실행 파일은 남습니다.</td>
-</tr>
-<tr>
-<td>JSON과 CSV를 받습니다.</td>
-<td><code>results export --run ID</code></td>
-<td>두 파일을 한 번에 회수합니다.</td>
-</tr>
-<tr>
-<td>실행 하나를 삭제합니다.</td>
-<td><code>results delete --run ID --confirm true</code></td>
-<td>해당 실행과 그 baseline 등록을 함께 제거합니다.</td>
-</tr>
-</tbody></table>
-<p><code>benchmark run --build &quot;Candidate A&quot; --note &quot;Same room&quot;</code>으로 이번 측정의 라벨을 명시할 수 있습니다. <code>--commit</code>, <code>--branch</code>도 받습니다. CLI 측정은 라벨을 생략하면 빈 라벨을 사용하므로 이전 화면 입력을 이번 측정의 조건으로 오인하지 않습니다. 콜론이 포함된 라벨은 아래 Python JSON 경로를 사용합니다.</p>
-<h3 id="파일과-저장-공간">파일과 저장 공간</h3>
-<table>
-<thead>
-<tr>
-<th>할 일</th>
-<th>명령</th>
-<th>결과</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>촬영 파일을 찾고 받습니다.</td>
-<td><code>gallery list</code>, <code>gallery export --media ID</code></td>
-<td>HALCamera 폴더의 사진·영상·RAW·NV21·메타데이터를 조회하고 파일 하나를 회수합니다.</td>
-</tr>
-<tr>
-<td>촬영 파일 하나를 삭제합니다.</td>
-<td><code>gallery delete --media ID --confirm true</code></td>
-<td>Android가 소유자 승인을 요구하면 Gallery에서 삭제하도록 안내합니다.</td>
-</tr>
-<tr>
-<td>현재 이벤트를 저장합니다.</td>
-<td><code>events</code></td>
-<td>기존 10초 이전·5초 이후 수집 규칙으로 이미지 픽셀 없는 ZIP을 저장합니다.</td>
-</tr>
-<tr>
-<td>저장된 ZIP을 찾고 받습니다.</td>
-<td><code>incidents list</code>, <code>incidents export --incident ID</code></td>
-<td>과거 ZIP을 다시 회수합니다. 삭제는 <code>incidents delete --incident ID --confirm true</code>로 요청합니다.</td>
-</tr>
-<tr>
-<td>보관 한도를 확인하고 변경합니다.</td>
-<td><code>settings show</code>, <code>settings limit --limit 20</code></td>
-<td>먼저 삭제 예정 실행을 보여줍니다. 같은 명령에 <code>--confirm true</code>를 붙이면 적용합니다. 0은 무제한이며 baseline은 보관 한도로 삭제하지 않습니다.</td>
-</tr>
-</tbody></table>
-<p>갤러리의 확대·축소·동영상 재생·공유 대상 선택은 파일 회수 후 PC의 뷰어나 공유 도구에서 수행합니다. 권한 허용, 잠금 해제, ADB CLI 허용 스위치를 다시 켜는 동작은 Android 화면에서 수행합니다. CLI는 이 보호 동작을 우회하지 않습니다.</p>
-<p><code>live info</code>, <code>meter</code>, <code>events</code>, <code>preview stop</code>은 현재 열린 Live 또는 Dual 화면에 적용됩니다. <code>live set</code>과 <code>live reset</code>은 Dual 프리뷰·CLI 녹화에도 적용되며 엔진이 지원하지 않는 제어는 거부합니다.</p>
-<h2 id="기존-기본-명령">기존 기본 명령</h2>
-<table>
-<thead>
-<tr>
-<th>명령</th>
-<th>동작과 결과</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>doctor</code></td>
-<td>카메라를 열지 않고 기본 준비 상태와 조치 안내를 출력합니다.</td>
-</tr>
-<tr>
-<td><code>preview</code> 또는 <code>preview start</code></td>
-<td>선택한 엔진의 첫 프리뷰 프레임까지 기다립니다. 이후에도 프리뷰를 유지합니다.</td>
-</tr>
-<tr>
-<td><code>preview stop</code></td>
-<td>카메라를 닫고 프리뷰를 멈춥니다.</td>
-</tr>
-<tr>
-<td><code>capture</code></td>
-<td>선택한 카메라로 프리뷰를 준비하고 켜진 출력의 사진을 저장합니다. 기본값은 HAL JPEG 한 장입니다.</td>
-</tr>
-<tr>
-<td><code>record start</code></td>
-<td>프리뷰를 준비하고 영상 녹화를 시작합니다. 실제 시작을 확인하면 반환합니다.</td>
-</tr>
-<tr>
-<td><code>record stop</code></td>
-<td>현재 CLI 녹화를 끝내고 저장 완료까지 기다립니다. 화면에서 시작한 녹화는 멈추지 않습니다.</td>
-</tr>
-<tr>
-<td><code>streams</code></td>
-<td>선택한 카메라와 엔진의 스트림 크기·녹화 옵션을 조회합니다.</td>
-</tr>
-<tr>
-<td><code>cameras</code></td>
-<td>논리 카메라와 물리 endpoint를 조회합니다. <code>selectable: true</code>인 논리 ID를 선택합니다.</td>
-</tr>
-<tr>
-<td><code>probe</code></td>
-<td>카메라 사양 JSON과 TXT를 만듭니다. 카메라를 열지 않습니다.</td>
-</tr>
-<tr>
-<td><code>cts cases</code></td>
-<td>실행할 수 있는 CTS 항목의 키와 마이크 필요 여부를 조회합니다.</td>
-</tr>
-<tr>
-<td><code>cts run --cases KEY[,KEY...]</code></td>
-<td>선택 항목을 체크리스트 순서로 실행하고 보고서를 저장합니다.</td>
-</tr>
-<tr>
-<td><code>benchmark run [--camera ID] [--profile camera2-standard-v2]</code></td>
-<td>앱 화면과 같은 Camera2 벤치마크를 한 번 실행하고 원본 JSON을 회수합니다.</td>
-</tr>
-<tr>
-<td><code>status [UUID]</code></td>
-<td>ID를 생략하면 현재 앱 상태를, ID를 주면 그 요청을 조회합니다. 셸의 <code>status --last</code>는 마지막 제출 요청을 조회합니다.</td>
-</tr>
-<tr>
-<td><code>status --app</code></td>
-<td><code>status</code>와 같이 앱의 현재 작업과 화면 상태를 조회합니다.</td>
-</tr>
-<tr>
-<td><code>cancel [UUID]</code></td>
-<td>지정한 요청이나 마지막 제출 요청을 취소합니다.</td>
-</tr>
-<tr>
-<td><code>fetch [UUID]</code></td>
-<td>완료된 요청의 파일을 다시 준비하고 <code>adb pull</code> 명령을 안내합니다. 촬영을 반복하지 않습니다.</td>
-</tr>
-</tbody></table>
+<p><strong>성공 확인:</strong> 회수한 합성 JPEG와 카메라별 원본을 나란히 열어 보세요. 조회와 촬영의 카메라·엔진을 맞춰야 합니다. <code>Not verified</code> 후보는 실제 구성에서 실패할 수 있습니다.</p>
 <details>
-<summary>기본값·실행 제한·기록 보관</summary><p><code>doctor</code>는 CLI 허용·카메라 권한·잠금·작업 중 여부를 확인하며, 준비가 부족하면 종료 코드 1과 조치 안내를 출력합니다. 카메라를 열거나 설정을 바꾸지 않으며 마이크·저장소 권한과 실제 카메라 구성 성공까지 보장하지는 않습니다. CLI가 꺼져 있으면 <code>hello</code>는 <code>CLI_DISABLED</code> 오류를 반환합니다.</p>
-<p>카메라 ID의 기본값은 <code>0</code>입니다. 기본 사진은 카메라 JPEG 한 장이며, 영상은 MP4입니다. <code>--no-audio</code>로 무음 녹화를 선택합니다. 녹화 실행 제한은 기본 1시간이며 <code>--timeout 초</code>로 줄일 수 있습니다. 제한에 도달하면 녹화를 종료하고 요청에 시간 제한 오류를 기록합니다.</p>
-<p>CTS 키는 <code>custom:fast_on_off</code>나 <code>vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording</code>과 같이 목록에 나온 값을 그대로 사용합니다. CTS 실행 제한은 기본 1,800초이며 최대 3,600초입니다. 사진·프리뷰·probe는 기본 30초입니다. Android 8–9에서 사진이나 영상을 저장할 때에는 저장소 권한도 필요합니다.</p>
-<p>녹화 준비에는 최대 30초를 기다립니다. 멈출 CLI 녹화가 없을 때 <code>record stop</code>을 호출하면 <code>NOT_RECORDING</code>으로 거부합니다. 화면을 벗어나 녹화가 종료되면 <code>RECORDING_INTERRUPTED</code>로 기록하여 정상적인 <code>record stop</code> 완료와 구분합니다. 완료 기록은 최대 24시간·200개를 보관합니다. 만료 시각부터 요청·파일 조회가 실패하며 원본 사진·영상은 삭제하지 않습니다. CLI는 Android 사용자 0을 대상으로 합니다.</p>
-</details><h2 id="벤치마크를-실행하세요">벤치마크를 실행하세요</h2>
-<p>화면을 켜고 잠금을 해제한 상태에서 다음 명령을 한 번 실행하세요. JSON 저장과 회수 준비까지 기다립니다.</p>
-<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam benchmark run --camera 0
-</code></pre>
-<p>기다리지 않고 요청 ID만 받으려면 <strong>위 명령 대신</strong> 아래 명령을 사용하세요. 상태 조회·취소·파일 회수는 <a href="#요청이-끝나지-않거나-파일이-없을-때">기존 요청 복구 절차</a>를 따릅니다.</p>
-<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam benchmark run --camera 0 --profile camera2-standard-v2 --no-wait
-</code></pre>
-<p>앱 화면과 같은 조건 검사·측정·판정·저장 절차를 사용합니다.</p>
-<p>프로파일은 <code>camera2-standard-v2</code> 하나를 지원하며 생략하면 이 값을 사용합니다. Camera2의 warm reopen·관측·사진·녹화 시퀀스를 실행합니다. <code>--engine</code>, Live 스트림 크기, <code>--no-audio</code>는 받지 않습니다. 크기 자동 대체나 baseline 자동 지정도 하지 않습니다. 기본 실행 제한은 준비 시간을 포함한 600초이며 <code>--timeout 초</code>로 1–3,600초를 지정합니다.</p>
-<p>Provider에 JSON으로 직접 제출할 때에는 <code>command: &quot;benchmark.run&quot;</code>, <code>params.camera_id</code>, <code>params.profile_id: &quot;camera2-standard-v2&quot;</code>, <code>execution_timeout_ms</code>를 명시합니다. 셸의 <code>--profile</code>과 직접 호출의 <code>--extra profile:s:...</code>가 JSON의 <code>profile_id</code>에 대응합니다.</p>
-<p>완료 결과에는 <code>run_id</code>, <code>camera_id</code>, <code>profile_id</code>, <code>report_schema_version</code>, <code>artifact_count</code>가 들어 있습니다. 요청 성공은 보고서 저장 완료를 뜻합니다. 측정·비교 가능 여부와 성능 저하 판정은 원본 JSON에서 따로 확인하세요. 보고서에는 이미지 픽셀이 포함되지 않으며 녹화 MP4를 CLI 산출물로 내보내지 않습니다.</p>
-<p>열 상태·절전 상태·지원 조건이 맞지 않으면 <code>PREFLIGHT_FAILED</code>, 실행 중 실패는 <code>BENCHMARK_FAILED</code>, 중단은 <code>CANCELLED</code>, 실행 제한 초과는 <code>EXECUTION_TIMEOUT</code>으로 기록됩니다. 실패·취소 후에도 저장된 JSON이 있으면 <code>fetch REQUEST_ID</code>로 회수할 수 있습니다. 앱 프로세스가 종료되면 <code>interrupted</code>로 남으며 자동으로 재실행하지 않습니다.</p>
-<h3 id="photovideo-모드를-고르세요">Photo·Video 모드를 고르세요</h3>
-<p><code>capture</code>, <code>burst</code>, <code>bracket</code>은 Photo이고 <code>record start</code>는 Video입니다. 녹화 전에 프리뷰만 준비하려면 <code>preview --mode Video</code>를 사용합니다. <code>preview</code>와 <code>streams</code>의 기본 모드는 Photo이며 조회와 실행에 같은 모드를 지정합니다.</p>
+<summary>PIP 위치·크기와 Dual의 두 원본 영상</summary><p>PIP는 <code>preview</code>, <code>capture</code>, <code>record start</code>에서 선택합니다. CameraX Physical PIP, PIP Flash Auto/On, 연사·AEB PIP는 지원하지 않습니다.</p>
+<p>PIP 크기는 <code>--pip-preview-size WIDTHxHEIGHT</code>, <code>--pip-photo-size WIDTHxHEIGHT</code>로 지정합니다. 위치는 <code>--pip-x</code>, <code>--pip-y</code>, <code>--pip-width</code>, <code>--pip-height</code> 네 값을 함께 지정하며 왼쪽 위를 0으로 하는 0–1 영역 안에 들어야 합니다. 생략하면 기본 위치를 사용합니다.</p>
+<p>Dual은 <code>dual cameras</code>에서 ID를 고른 뒤 <code>dual preview|capture|record --camera ID --first ID --second ID</code>로 실행합니다. 사진·수동 제어는 Camera2에서 지원하며, 영상은 두 개의 무음 MP4로 저장하고 <code>record stop</code>으로 종료합니다. 물리 ID가 있어도 조합의 구성 성공까지 보장하지 않습니다.</p>
+</details><h2 id="스트림-크기를-지정하세요">스트림 크기를 지정하세요</h2>
+<p><strong>조회와 실행에 같은 카메라·엔진·모드를 사용하세요.</strong> 기본 엔진은 Camera2이며 CameraX는 양쪽 명령에 <code>--engine CameraX</code>를 붙입니다.</p>
 <pre><code class="language-sh">adb shell sh /data/local/tmp/halcam streams --camera 0 --mode Video
 adb shell sh /data/local/tmp/halcam preview --camera 0 --mode Video --video-size 1280x720 --video-fps 30
 </code></pre>
-<p>RAW/DNG와 프리뷰 FPS(<code>--fps</code>)는 Photo에서, 손떨림 보정과 녹화 FPS(<code>--video-fps</code>)·코덱·크기는 Video에서 사용합니다. 모드에 맞지 않는 명시적 설정은 <code>PREFLIGHT_FAILED</code>로 거부합니다. Photo의 기본 보정은 Off이며 <code>AUTO</code>도 Photo 정책에 따라 Off입니다. 새 카메라 명령은 이전 UI·CLI의 PIP 선택과 위치를 이어받지 않습니다.</p>
-<h3 id="pip를-명시적으로-선택하세요">PIP를 명시적으로 선택하세요</h3>
-<ol>
-<li>원하는 카메라·엔진·모드로 <code>preview</code>를 실행합니다.</li>
-<li><code>pip sources</code>에서 <code>selectable: true</code>인 카메라 ID와 <code>type</code>을 확인합니다. <code>note: &quot;Not verified&quot;</code>이면 실제 구성에서 실패할 수 있습니다.</li>
-<li>같은 카메라·엔진으로 <code>capture</code> 또는 <code>record start</code>에 <code>--pip-type physical|service --pip-camera ID</code>를 붙입니다. 다른 카메라로 자동 대체하지 않으며 PIP 구성 완료 뒤 촬영·녹화를 시작합니다.</li>
-</ol>
-<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam preview --camera 0
-adb shell sh /data/local/tmp/halcam pip sources
-# ID는 위 조회에서 selectable: true인 값으로 바꿉니다.
-adb shell sh /data/local/tmp/halcam capture --camera 0 --pip-type service --pip-camera ID
-</code></pre>
-<p>PIP 프리뷰·원본 사진 크기는 <code>--pip-preview-size WIDTHxHEIGHT</code>, <code>--pip-photo-size WIDTHxHEIGHT</code>로 지정합니다. 위치와 크기는 <code>--pip-x</code>, <code>--pip-y</code>, <code>--pip-width</code>, <code>--pip-height</code> 네 값을 함께 지정하며, 왼쪽 위를 0으로 하는 0–1 좌표 안에 들어야 합니다. 생략하면 기본 위치를 사용합니다. Photo PIP는 합성 JPEG와 카메라별 원본을, Video PIP는 합성 MP4를 기존 엔진의 저장 경로로 받습니다. CameraX의 Physical PIP와 PIP의 Flash Auto/On은 지원하지 않습니다. PIP는 <code>preview</code>, <code>capture</code>, <code>record start</code>에서 선택하며 연사·AEB에는 적용하지 않습니다.</p>
-<h2 id="스트림-크기를-지정하세요">스트림 크기를 지정하세요</h2>
-<p>지원 목록을 먼저 조회한 뒤 프리뷰·촬영·녹화 명령에 크기 옵션을 붙입니다. 엔진의 기본값은 Camera2이며, CameraX를 사용할 때에는 조회와 실행 모두에 <code>--engine CameraX</code>를 지정합니다.</p>
-<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam streams --camera 0
-adb shell sh /data/local/tmp/halcam streams --camera 0 --engine CameraX
-adb shell sh /data/local/tmp/halcam preview --camera 0 --preview-size 1280x720 --yuv-size 640x480 --jpeg-size 1920x1080
-adb shell sh /data/local/tmp/halcam capture --camera 0 --engine CameraX --yuv-size off --jpeg-size 1920x1080
-adb shell sh /data/local/tmp/halcam record start --camera 0 --video-size 1280x720 --video-fps 30 --codec HEVC --no-audio
-adb shell sh /data/local/tmp/halcam record stop
-</code></pre>
-<p><code>--jpeg-size yuv</code>는 앱 변환 JPEG를 선택합니다. 해상도를 지정하면 HAL JPEG를 저장합니다. <code>--preview-size</code>, <code>--yuv-size</code>, <code>--jpeg-size</code>, <code>--video-size</code>는 <code>너비x높이</code> 형식을 사용합니다. YUV·JPEG·RAW는 <code>off</code>로 끌 수 있지만, <code>capture</code>에는 JPEG 또는 RAW 출력이 필요합니다. <code>--video-fps</code>는 녹화 프레임 레이트이고 <code>--codec</code>은 Camera2에서 H264·HEVC, CameraX에서 Auto를 사용합니다. CameraX의 실제 녹화 코덱은 라이브러리가 선택합니다.</p>
-<p>생략한 값은 기본 설정을 사용하며 이전 UI·CLI 설정을 이어받지 않습니다. 적용한 설정은 명령 완료 후 Live에 남지만 다음 CLI 카메라 명령은 다시 기본값과 명시한 옵션으로 구성합니다. 지원하지 않는 값은 <code>PREFLIGHT_FAILED</code>로 거부하며 다른 크기로 자동 변경하지 않습니다. 지원 목록은 개별 크기와 인코더 조건을 나타내며 출력 조합의 성공까지 보장하지 않습니다. 실제 세션 구성에서 실패할 수도 있습니다.</p>
-<p><code>preview</code> 완료 결과와 녹화 시작 상태의 <code>result.streams</code>에서 적용된 크기를 확인할 수 있습니다.</p>
+<p>첫 명령에서 지원 여부를 확인한 크기로 두 번째 명령을 실행합니다. 영상 프리뷰 준비는 녹화를 시작하지 않습니다.</p>
+<table>
+<thead>
+<tr>
+<th>설정</th>
+<th>Photo</th>
+<th>Video</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>모드 선택</td>
+<td><code>capture</code>·<code>burst</code>·<code>bracket</code>은 Photo입니다.</td>
+<td><code>record start</code>는 Video입니다.</td>
+</tr>
+<tr>
+<td>프리뷰·지원 조회</td>
+<td><code>preview</code>·<code>streams</code>의 기본 모드입니다.</td>
+<td><code>preview</code>·<code>streams</code>에 <code>--mode Video</code>를 붙입니다.</td>
+</tr>
+<tr>
+<td>출력·FPS</td>
+<td><code>--jpeg-size</code>, <code>--raw-size</code>, <code>--fps</code>를 사용합니다.</td>
+<td><code>--video-size</code>, <code>--video-fps</code>, <code>--codec</code>을 사용합니다.</td>
+</tr>
+<tr>
+<td>손떨림 보정</td>
+<td>Off이며 <code>AUTO</code>도 Off로 적용됩니다.</td>
+<td><code>--stabilization</code>의 지원 값은 <code>streams</code>에서 확인합니다.</td>
+</tr>
+</tbody></table>
+<p>새 카메라 명령은 기본값과 명시한 옵션으로 구성합니다. 이전 UI·CLI 설정과 PIP를 이어받지 않습니다. 모드에 맞지 않거나 지원하지 않는 옵션은 <code>PREFLIGHT_FAILED</code>로 거부하며 다른 크기로 자동 변경하지 않습니다.</p>
+<p>지원 목록은 개별 크기·인코더 조건입니다. 출력 조합의 성공까지 보장하지 않으므로 실제 세션 구성에서 실패할 수 있습니다. 적용된 값은 프리뷰·녹화 결과의 <code>result.streams</code>에서 확인합니다.</p>
 <details>
-<summary>Provider를 직접 호출하는 방법</summary><p>Provider 직접 호출에서는 <code>--extra preview_size:s:1280x720</code>, <code>--extra engine:s:CameraX</code>처럼 문자열로 전달합니다. JSON 제출은 <code>params.engine</code>과 <code>params.streams</code> 객체를 사용하며, 크기·FPS·코덱 값은 모두 문자열입니다. 예를 들어 <code>&quot;streams&quot;:{&quot;preview_size&quot;:&quot;1280x720&quot;,&quot;yuv_size&quot;:&quot;off&quot;}</code>로 전달합니다.</p>
-<p>스크립트 없이도 <code>content call</code>로 직접 호출할 수 있습니다. 응답의 <code>json</code> 값은 사람이 읽을 수 있는 JSON이며 Base64 변환은 필요하지 않습니다. 사진·프리뷰·녹화·CTS 실행 전에 Live 화면을 엽니다.</p>
-<pre><code class="language-sh">adb shell am start -W -n dev.halcamera/.cli.CliLaunchActivity
-adb shell content call --uri content://dev.halcamera.cli --method capture --extra camera:s:0
-adb shell content call --uri content://dev.halcamera.cli --method record.start --extra camera:s:0 --extra audio:b:false
-adb shell content call --uri content://dev.halcamera.cli --method record.stop
-adb shell content call --uri content://dev.halcamera.cli --method cts.run --arg custom:fast_on_off
-adb shell content call --uri content://dev.halcamera.cli --method benchmark.run --extra camera:s:0 --extra profile:s:camera2-standard-v2
-adb exec-out content read --uri content://dev.halcamera.cli/v1/status
+<summary>출력 형식과 수동 제어의 단위</summary><p>크기는 <code>너비x높이</code> 형식입니다. YUV·JPEG·RAW는 <code>off</code>로 끌 수 있지만 촬영에는 JPEG 또는 RAW가 필요합니다. Camera2 영상 코덱은 H264·HEVC, CameraX는 Auto이며 실제 코덱은 라이브러리가 선택합니다.</p>
+<p>수동 옵션은 <code>help controls</code>로 조회합니다.</p>
+<ul>
+<li><code>--ev</code>는 EV 자체가 아닌 보정 단계입니다. <code>ev_step</code>이 1/3 EV일 때 <code>--ev -3</code>은 −1 EV입니다.</li>
+<li>수동 노출은 <code>--iso</code>와 <code>--exposure-ns</code>를 함께 지정합니다. <code>--iso 100 --exposure-ns 10000000</code>은 ISO 100·10 ms입니다. 목록의 노출 범위는 30 FPS 기준이며 선택 FPS로 다시 검사합니다.</li>
+<li><code>--focus</code>는 디옵터이며 0은 무한대입니다. CUSTOM WB는 수동 노출과 함께 사용하고 <code>--gains</code> 네 값·<code>--matrix</code> 아홉 값을 쉼표로 구분합니다.</li>
+<li>현재 프리뷰·CLI 녹화를 유지하며 조절하려면 <code>live set --zoom 2</code>, 제어 초기화는 <code>live reset</code>을 사용합니다. 생략한 제어는 유지합니다.</li>
+<li><code>meter --x 0.5 --y 0.5 --meter focus</code>는 가운데 초점, <code>--meter exposure</code>는 노출 측광입니다. 명령 접수와 센서 적용은 다르므로 <code>live info</code>·사진 메타데이터로 실제 값을 확인합니다.</li>
+</ul>
+<p><code>live info</code>, <code>meter</code>, <code>events</code>, <code>preview stop</code>, <code>live set/reset</code>은 현재 열린 Live 또는 Dual 화면에 적용됩니다. 엔진이 지원하지 않는 제어는 거부됩니다.</p>
+</details><h2 id="벤치마크를-실행하세요">벤치마크를 실행하세요</h2>
+<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam benchmark run --camera 0
 </code></pre>
-<p>CTS 항목만 <code>--extra</code>가 아니라 <code>--arg</code>로 전달합니다. <code>--extra</code>는 값을 <code>키:타입:값</code>으로 자르는데 suite 키에는 <code>custom:</code>이나 <code>vendored:</code> 접두어의 콜론이 들어 있어서, <code>content</code>가 앱에 닿기 전에 거부하기 때문입니다. 여러 항목은 쉼표로 이어 붙입니다.</p>
-<p>직접 제출한 명령은 접수 결과를 반환합니다. 응답의 <code>request_id</code>로 <code>/v1/requests/UUID</code>를 읽어 완료를 확인합니다. <code>--extra request_id:s:UUID</code>로 같은 ID를 재사용하면 중복 촬영을 막을 수 있고, 다른 인자로 같은 ID를 쓰면 <code>REQUEST_CONFLICT</code>가 됩니다. <code>timeout_ms:l:30000</code>으로 실행 제한을 지정합니다. 알 수 없는 인자와 잘못된 타입은 거부합니다.</p>
-<p>기존 Python 도구의 <code>submit</code>·<code>cancel</code> Base64 전송은 유지합니다. 지원 명령은 <code>/v1/hello</code>의 <code>commands</code>, 상태 조회·취소 등의 조작은 <code>controls</code>에서 확인합니다.</p>
-</details><details id="python-client" data-search-section>
-<summary>선택 도구: Python 클라이언트</summary><p><span id="python-advanced"></span></p>
-<p>이 영역의 <code>halcam</code>은 PC에 설치한 Python 명령입니다. ADB 접두어를 붙이지 않습니다.</p>
-<p><strong>처음에는 <code>halcam</code>을 실행해 시작 작업을 고르세요.</strong> 기본 출력은 결과 상태·저장 위치와 다음 명령을 보여 줍니다. 대기 중에는 상태나 저장 장수가 바뀔 때만 알립니다. 자동화나 전체 메타데이터가 필요하면 <code>--json</code>을 붙입니다. 취소·대기 시간 초과 후에는 출력된 요청 ID로 상태를 확인하거나 파일을 회수하며, 촬영 명령을 다시 실행하지 않습니다.</p>
-<p>인자 없는 실행은 짧은 시작 안내만 보여 줍니다. 전체 문법은 <code>halcam --help</code>, 공통 실행의 예시는 <code>halcam run --help</code>에서 확인합니다. Python <code>doctor</code>는 연결뿐 아니라 카메라 권한·잠금·실행 중 작업을 확인하며, 준비가 되지 않았으면 원인과 조치를 표시하고 실패 코드로 종료합니다. 보관 한도 미리보기는 아직 변경하지 않았음을 표시하고, 적용하려면 입력할 확인 명령을 따로 제공합니다.</p>
-<p>저장소를 받은 PC에서 Python 3.11 이상으로 설치합니다. 단순 실행에는 앞의 ADB 스크립트를 사용하고, Python 자동화가 필요한 경우에만 아래 도구를 설치하세요. 녹화·프리뷰 제어도 지원합니다. Python 0.4.0부터 Photo·Video의 일반 옵션과 <code>record start/stop/snapshot</code>, <code>preview stop</code>, <code>status UUID</code> 문법을 셸과 같이 사용합니다. 이전 <code>status --request UUID</code>와 <code>control record.stop</code>도 유지합니다.</p>
-<pre><code class="language-sh">python -m pip install ./tools/halcam
-halcam --serial DEVICE doctor --json
-halcam --serial DEVICE streams --camera 0 --engine CameraX --json
-halcam --serial DEVICE preview --camera 0 --engine CameraX --preview-size 1280x720 --yuv-size off --json
-halcam --serial DEVICE capture --camera 0 --output ./photos --json
-halcam --serial DEVICE probe --output ./probe --json
-halcam --serial DEVICE benchmark run --camera 0 --output ./runs --json
+<p>앱과 같은 <code>camera2-standard-v2</code> 프로파일로 측정하고 원본 JSON을 받습니다. <strong>보고서 저장 성공과 측정·비교 가능 여부는 별개입니다.</strong> validity와 성능 저하 판정은 JSON에서 확인하세요.</p>
+<p>프로파일은 고정이며 <code>--engine</code>, Live 스트림, <code>--no-audio</code>를 받지 않습니다. 크기를 자동 대체하거나 baseline을 자동 지정하지 않습니다. 보고서에는 이미지 픽셀·녹화 MP4가 포함되지 않습니다.</p>
+<details>
+<summary>측정 라벨·결과 비교·보관</summary><p><code>--build &quot;Candidate A&quot; --commit SHA --branch NAME --note &quot;Same room&quot;</code>으로 라벨을 지정합니다. 생략한 라벨은 빈 값이며 이전 화면 입력을 이어받지 않습니다. 콜론을 포함한 라벨은 아래 Python 도구로 전달합니다.</p>
+<table>
+<thead>
+<tr>
+<th>작업</th>
+<th>명령</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>목록·상세</td>
+<td><code>results list</code>, <code>results show --run ID</code></td>
+</tr>
+<tr>
+<td>명시한 두 실행 비교</td>
+<td><code>results compare --run ID --reference ID</code></td>
+</tr>
+<tr>
+<td>정상 기준 지정·해제</td>
+<td><code>baseline add --run ID</code>, <code>baseline remove --run ID</code></td>
+</tr>
+<tr>
+<td>JSON·CSV 회수</td>
+<td><code>results export --run ID</code></td>
+</tr>
+<tr>
+<td>실행과 baseline 등록 삭제</td>
+<td><code>results delete --run ID --confirm true</code></td>
+</tr>
+</tbody></table>
+<p>baseline이 없으면 변화량만 표시하며 REGRESSED 판정을 붙이지 않습니다. <code>results compare</code>의 참조는 이번 비교에만 사용하고 저장된 baseline을 바꾸지 않습니다.</p>
+</details><h3 id="cts와-다른-작업을-찾으세요">CTS와 다른 작업을 찾으세요</h3>
+<p>CTS는 아래 목록에서 나온 키를 그대로 사용합니다.</p>
+<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam cts cases
+adb shell sh /data/local/tmp/halcam cts run --cases custom:fast_on_off
 </code></pre>
-<p>Python 도구의 <code>--json</code>은 stdout에 JSON 하나를 출력하며, <code>--wait-timeout</code>은 PC에서 기다리는 시간만 제한합니다. ADB 스크립트는 진행 메시지와 요청별 결과를 출력하고 성공 시 0, 오류 시 1을 반환합니다. 기계적으로 JSON만 처리하려면 직접 <code>content read</code>를 사용합니다.</p>
-<h3 id="전체-작업을-제출하세요">전체 작업을 제출하세요</h3>
-<p>선택 도구인 Python 클라이언트에도 전체 작업을 제출하는 공통 경로가 있습니다. <code>halcam run OPERATION --option KEY=VALUE --stream KEY=VALUE</code>를 사용합니다. 일반 촬영 옵션도 <code>--raw-size</code>, <code>--zoom</code>처럼 그대로 받을 수 있습니다. CTS는 <code>--cases KEY[,KEY...]</code>로 선택하며 기존 <code>--case KEY</code>를 반복하는 문법도 유지합니다. 새 APK의 <code>doctor --json</code>에 있는 <code>command_specs</code>는 명령별 허용·필수 옵션과 기본 제한을 보여 줍니다. 이 정보가 없는 이전 APK에서는 새 모드·PIP 옵션을 사용하기 전에 업데이트합니다. 앱이 <code>doctor</code>에서 제공한 명령만 받으며, 결과 파일이 필요하면 <code>--output DIRECTORY</code>를 붙입니다. JPEG·MP4·DNG·NV21·JSON·TXT·CSV·ZIP 파일을 크기와 SHA-256으로 검증하며 파일당 최대 64 GiB를 받습니다. 갤러리에서 내보낸 파일은 안전한 <code>media_ID.확장자</code> 이름으로 받고 원래 이름은 <code>original_name</code>에 남깁니다.</p>
-<pre><code class="language-sh">halcam run burst --camera 0 --option count=3 --stream jpeg_size=yuv --output ./photos
-halcam run results.export --option run=RUN_ID --output ./results
-halcam run benchmark.run --option &quot;build=Candidate: A&quot; --timeout 600 --output ./run
-halcam control live.set --option zoom=2
-halcam record start --no-audio
-halcam record stop --output ./videos
-halcam run cts.run --cases custom:fast_on_off --output ./cts
-</code></pre>
-<p><code>halcam record stop --output ./videos</code>는 저장 완료까지 기다린 뒤 MP4와 녹화 중 사진을 받습니다. 기존 <code>halcam control record.stop</code>은 접수 상태만 반환하므로 <code>halcam status UUID</code>로 완료를 확인합니다. 셸도 <code>record stop</code>으로 저장 완료까지 기다립니다.</p>
-<p><code>--no-audio</code>는 <code>record start</code>, <code>run record.start</code>, <code>run dual.record</code>에서 받습니다. 프리뷰 종료는 <code>halcam preview stop</code> 또는 <code>halcam run preview.stop</code>으로 요청합니다.</p>
+<p>여러 키는 쉼표로 구분합니다. 결과 보고서의 passed·failed와 CLI 실행 상태를 구분해 확인하세요. 사양만 필요하면 <code>probe</code>로 카메라를 열지 않고 JSON·TXT를 받습니다.</p>
+<details>
+<summary>갤러리·진단 ZIP·저장 공간</summary><table>
+<thead>
+<tr>
+<th>작업</th>
+<th>조회와 다음 명령</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>촬영 파일</td>
+<td><code>gallery list</code>에서 ID를 고르고 <code>gallery export --media ID</code>로 받습니다. 삭제는 <code>gallery delete --media ID --confirm true</code>입니다.</td>
+</tr>
+<tr>
+<td>진단 ZIP</td>
+<td><code>events</code>는 10초 이전·5초 이후 이벤트를 이미지 픽셀 없이 저장합니다. 기존 ZIP은 <code>incidents list</code>, <code>incidents export --incident ID</code>로 받습니다.</td>
+</tr>
+<tr>
+<td>ZIP 삭제</td>
+<td><code>incidents delete --incident ID --confirm true</code>를 사용합니다.</td>
+</tr>
+<tr>
+<td>보관 한도</td>
+<td><code>settings show</code>로 조회하고 <code>settings limit --limit 20</code>으로 삭제 예정 실행을 확인합니다. <code>--confirm true</code>로 적용하며 0은 무제한입니다. baseline은 보관 한도로 삭제하지 않습니다.</td>
+</tr>
+</tbody></table>
+<p>Android가 갤러리 파일의 소유자 승인을 요구하면 앱의 Gallery에서 삭제합니다. 파일 재생·공유는 PC에 회수한 뒤 뷰어·공유 도구를 사용합니다.</p>
 </details><h2 id="요청과-완료를-구분하세요">요청과 완료를 구분하세요</h2>
-<p><strong>접수 응답을 받아도 촬영이나 저장이 끝난 것은 아닙니다.</strong> 파일을 만드는 명령은 결과 파일이 등록된 뒤 회수합니다.</p>
-<pre><code class="language-mermaid">sequenceDiagram
-    participant P as PC
-    participant C as 요청 처리
-    participant A as 앱 작업
-    P-&gt;&gt;C: 요청 ID와 명령
-    C-&gt;&gt;C: 요청 기록
-    par 접수 응답
-        C--&gt;&gt;P: 접수된 요청 정보
-    and 예약한 작업 실행
-        C-&gt;&gt;A: 작업 실행
-        A--&gt;&gt;C: 저장 결과와 파일
-        C-&gt;&gt;C: 파일 등록과 완료 기록
-    end
-    P-&gt;&gt;C: 요청 ID로 상태 확인
-    C--&gt;&gt;P: 결과와 파일 정보
-    P-&gt;&gt;P: 파일 받기와 크기·SHA-256 확인
+<p><strong>접수 응답은 촬영이나 저장 완료가 아닙니다.</strong> 파일을 만드는 작업은 저장·등록 뒤에 회수합니다. 스크립트는 완료를 기다리며 <code>--no-wait</code>를 붙이면 접수 직후 요청 ID만 받고 반환합니다.</p>
+<pre><code class="language-mermaid">flowchart LR
+    A[요청 접수 · ID 보관] --&gt; B[앱 작업]
+    B --&gt; C[저장 완료 · 파일 등록]
+    C --&gt; D[PC 회수 · 검증]
 </code></pre>
-<p>같은 요청 ID와 같은 명령을 다시 보내면 기존 상태나 결과를 돌려줍니다. 같은 ID에 다른 인자를 보내면 충돌로 처리합니다. 조회 명령처럼 파일을 만들지 않는 작업에는 파일 회수 단계가 없습니다.</p>
+<p>같은 요청 ID·같은 명령을 제출하면 기존 상태·결과를 돌려줍니다. 같은 ID에 다른 인자를 주면 <code>REQUEST_CONFLICT</code>가 됩니다. 파일을 만들지 않는 조회·프리뷰에는 파일 회수 단계가 없습니다.</p>
 <h2 id="요청이-끝나지-않거나-파일이-없을-때">요청이 끝나지 않거나 파일이 없을 때</h2>
-<p><strong>같은 촬영을 새로 요청하기 전에 기존 요청의 상태를 확인하세요.</strong> PC의 대기 종료나 연결 끊김만으로 앱 작업이 실패한 것은 아닙니다.</p>
+<p><strong>기존 요청 ID로 상태부터 확인하세요.</strong> PC의 대기 종료·연결 끊김만으로 앱 작업이 실패한 것은 아닙니다.</p>
 <ol>
-<li><p>아래 명령에서 <code>REQUEST_ID</code>를 기존 요청 ID로 바꿔 상태를 조회합니다.</p>
+<li><p><code>REQUEST_ID</code>를 처음 출력된 ID로 바꿔 조회합니다.</p>
 <pre><code class="language-sh">adb shell sh /data/local/tmp/halcam status REQUEST_ID
 </code></pre>
 </li>
-<li><p>아직 실행 중이면 기다린 뒤 다시 조회합니다. 중단해야 한다면 아래 명령으로 취소합니다. 이미 제출한 사진은 저장될 수 있습니다.</p>
-<pre><code class="language-sh">adb shell sh /data/local/tmp/halcam cancel REQUEST_ID
-</code></pre>
+<li><p>실행 중이면 기다립니다. 중단할 때에만 <code>cancel REQUEST_ID</code>를 사용합니다. 이미 제출한 사진은 저장될 수 있습니다.</p>
 </li>
-<li><p>파일이 생성됐으면 아래 명령으로 회수를 다시 준비합니다. 실패·취소한 요청에도 파일이 남을 수 있습니다.</p>
+<li><p>파일이 있으면 회수만 다시 준비합니다. 실패·취소 요청에도 파일이 남을 수 있습니다.</p>
 <pre><code class="language-sh">adb shell sh /data/local/tmp/halcam fetch REQUEST_ID
 </code></pre>
 </li>
-<li><p>출력된 <code>adb pull</code> 명령으로 파일을 PC에 받습니다. 복사 실패와 촬영 실패를 구분하세요.</p>
+<li><p>출력된 <code>adb pull</code> 명령으로 받습니다. 복사 실패와 촬영 실패를 구분하세요.</p>
 </li>
 </ol>
 <details id="cli-request-recovery" data-search-section>
-<summary>요청 ID 생략과 기기의 회수용 파일</summary><p><code>--no-wait</code>은 접수 직후 반환합니다. <code>status</code>는 현재 앱 상태를 읽습니다. <code>fetch</code>·<code>cancel</code>에서 ID를 생략하면 마지막 제출 요청을 사용하며, <code>status --last</code>도 이 ID를 조회합니다. 다른 작업과 혼동하지 않도록 복구할 때에는 기존 ID를 지정하세요.</p>
-<p>회수용 파일은 기기의 <code>Download/HALCamera-cli/요청ID</code>에 크기와 SHA-256을 검증한 복사본으로 준비합니다. 이 복사본은 자동으로 삭제하지 않습니다.</p>
+<summary>요청 ID·파일 검증·만료</summary><p><code>status</code>는 앱 상태를, <code>status REQUEST_ID</code>는 그 요청을 읽습니다. 셸의 <code>status --last</code>와 ID 없는 <code>fetch</code>·<code>cancel</code>은 마지막 제출 요청을 사용합니다. 다른 작업과 혼동하지 않도록 복구에는 ID를 명시합니다.</p>
+<p>기기의 <code>Download/HALCamera-cli/요청ID</code>에는 크기·SHA-256을 검증한 복사본이 준비됩니다. 바이너리는 PC 셸의 <code>&gt;</code> 대신 <code>adb pull</code>로 받으며, PC 파일도 아래 manifest의 크기·해시와 대조합니다.</p>
+<pre><code class="language-sh">adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/REQUEST_ID/files
+</code></pre>
+<p>manifest는 파일 ID·이름·바이트 수·SHA-256을 탭으로 구분합니다. PowerShell은 <code>(Get-Item -LiteralPath &#39;FILE&#39;).Length</code>와 <code>Get-FileHash -LiteralPath &#39;FILE&#39; -Algorithm SHA256</code>, Linux·WSL은 <code>wc -c</code>와 <code>sha256sum</code>을 사용할 수 있습니다.</p>
+<p>완료 기록은 최대 24시간·200개입니다. 만료 시각부터 요청·파일 조회는 실패하지만 원본 사진·영상과 회수용 복사본은 삭제하지 않습니다. 필요한 파일은 실행 직후 받으세요.</p>
 </details><table>
 <thead>
 <tr>
@@ -390,36 +306,57 @@ halcam run cts.run --cases custom:fast_on_off --output ./cts
 </tr>
 </thead>
 <tbody><tr>
-<td><code>CLI_DISABLED</code></td>
-<td>앱의 <strong>Lab → ADB CLI</strong>에서 <strong>ADB CLI 허용</strong>을 다시 켭니다. adb로는 이 설정을 바꿀 수 없습니다.</td>
-</tr>
-<tr>
-<td><code>PERMISSION_REQUIRED</code></td>
-<td>앱에서 필요한 카메라·마이크·저장소 권한을 허용합니다.</td>
+<td><code>CLI_DISABLED</code>, <code>PERMISSION_REQUIRED</code>, <code>DEVICE_LOCKED</code></td>
+<td>앱에서 CLI·권한을 허용하거나 화면 잠금을 해제합니다. Android 8–9 저장에는 저장소 권한도 필요합니다.</td>
 </tr>
 <tr>
 <td><code>BUSY</code></td>
-<td>UI 또는 CLI의 현재 작업이 끝날 때까지 기다립니다. 기존 작업을 제어하는 <code>record stop</code>과 <code>cancel</code>은 실행 중에도 사용할 수 있습니다.</td>
+<td><code>status</code>로 현재 작업을 확인하고 기다립니다. 실행 중인 CLI 녹화 종료·요청 취소는 가능합니다.</td>
 </tr>
 <tr>
-<td><code>interrupted</code></td>
-<td>앱 프로세스가 종료된 미완료 기록입니다. 남은 파일을 확인한 뒤 재실행 여부를 정합니다. 자동으로 재실행하지 않습니다.</td>
+<td><code>PREFLIGHT_FAILED</code>, <code>UNSUPPORTED_CAMERA</code>, <code>UNKNOWN_CASE</code></td>
+<td>오류 사유와 <code>streams</code>·<code>cameras</code>·<code>cts cases</code>를 대조합니다. Benchmark라면 발열·절전 조건도 확인합니다.</td>
 </tr>
 <tr>
-<td><code>PREFLIGHT_FAILED</code></td>
-<td>오류 사유부터 읽습니다. Benchmark의 발열·절전 문제는 기기를 식히거나 절전 상태를 해제한 뒤 다시 확인합니다. Live 출력 문제는 <code>streams</code>로 지원 조건을 확인하고 조합을 줄입니다.</td>
+<td><code>interrupted</code>, <code>EXECUTION_TIMEOUT</code>, <code>RECORDING_INTERRUPTED</code></td>
+<td>정상 완료와 구분하고 남은 파일부터 확인합니다. 자동으로 재실행하지 않습니다.</td>
 </tr>
 <tr>
-<td><code>UNKNOWN_CASE</code></td>
-<td><code>cts cases</code>를 다시 조회하고 반환된 키를 그대로 사용합니다.</td>
-</tr>
-<tr>
-<td><code>REQUEST_CONFLICT</code></td>
-<td>같은 요청 ID에 다른 인자를 사용했습니다. 기존 요청을 조회하고, 별도 작업을 의도했다면 새 ID로 제출합니다.</td>
+<td><code>REQUEST_NOT_FOUND</code>, <code>ARTIFACT_EXPIRED</code></td>
+<td>PC에 받은 파일과 기기 복사본을 확인합니다. 남은 파일이 없으면 해당 요청의 결과를 회수할 수 없습니다.</td>
 </tr>
 </tbody></table>
-<p>CLI 작업 중에는 화면 조작이 제한됩니다.</p>
-<p><strong>다음 단계:</strong> 에이전트에게 작업을 맡기는 방법은 <a href="coding-agents.html">Agents</a>를 확인하세요.</p>
+<details>
+<summary>실행 제한과 녹화 준비 오류</summary><p>기본 실행 제한은 사진·프리뷰·probe 30초, benchmark 600초, CTS 1,800초, 녹화 3,600초입니다. <code>--timeout 초</code>는 앱 작업의 제한이며 1–3,600초로 지정합니다. 녹화가 제한에 도달하면 종료하고 시간 제한 오류를 기록합니다.</p>
+<p>녹화 준비에는 최대 30초를 기다립니다. <code>NOT_RECORDING</code>이면 CLI 녹화가 시작됐는지 요청 상태를 확인합니다. <code>APP_NOT_FOREGROUND</code>이면 Live 화면을 열어야 하며 스크립트는 이를 자동 처리합니다. 준비·측정 중에는 기기 화면을 조작하지 마세요. CLI는 Android 사용자 0을 대상으로 합니다.</p>
+</details><details id="python-client" data-search-section>
+<summary>자동화: Python 0.4.0 클라이언트</summary><p><span id="python-advanced"></span></p>
+<p>이 영역의 <code>halcam</code>은 PC 명령이며 ADB 접두어를 붙이지 않습니다. 저장소와 Python 3.11 이상이 있는 환경에서 설치합니다. APK만 받았다면 앞의 ADB 스크립트로 실행할 수 있습니다.</p>
+<pre><code class="language-sh">python -m pip install ./tools/halcam
+halcam --serial SERIAL doctor --json
+halcam --serial SERIAL capture --camera 0 --output ./photos --json
+halcam --serial SERIAL record start --no-audio
+halcam --serial SERIAL record stop --output ./videos
+</code></pre>
+<p>인자 없는 <code>halcam</code>은 시작 안내, <code>halcam --help</code>는 전체 문법을 보여 줍니다. <code>--json</code>은 stdout에 JSON 하나를 출력하며 <code>--output</code>은 PC에서 파일의 크기·SHA-256을 검증해 저장합니다. <code>--wait-timeout</code>은 PC 대기만 제한합니다.</p>
+<p>일반 촬영 옵션은 전용 명령과 공통 <code>run</code>에서 동일하게 사용합니다. 공통 경로의 작업 이름은 APK가 제공하는 <code>hello.commands</code>를 따릅니다.</p>
+<pre><code class="language-sh">halcam run burst --camera 0 --count 3 --jpeg-size yuv --output ./photos
+halcam run results.export --option run=RUN_ID --output ./results
+halcam run benchmark.run --option &quot;build=Candidate: A&quot; --output ./runs
+halcam run cts.run --cases custom:fast_on_off --output ./cts
+</code></pre>
+<p><code>run OPERATION --option KEY=VALUE --stream KEY=VALUE</code>로도 지정할 수 있습니다. CTS의 이전 <code>--case KEY</code> 반복 문법과 <code>status --request UUID</code>는 유지합니다. 이전 <code>control record.stop</code>은 접수만 반환하므로 저장 완료·회수에는 <code>record stop --output DIRECTORY</code>를 사용합니다.</p>
+<p>모드·PIP 예시는 <code>command_specs</code>를 제공하는 APK를 기준으로 합니다. <code>doctor --json</code>에서 명령별 허용·필수 옵션과 기본 제한을 확인하세요. 이전 APK라면 새 옵션 사용 전에 업데이트합니다.</p>
+<p>파일당 최대 64 GiB를 받으며 갤러리 파일은 <code>media_ID.확장자</code>로 저장하고 원래 이름은 <code>original_name</code>에 남깁니다.</p>
+</details><details>
+<summary>직접 Provider 호출: 접수·상태 조회</summary><p>스크립트 없이 호출하면 접수 결과만 반환합니다. Live 작업 전에 화면을 열고 <code>request_id</code>로 완료를 조회합니다.</p>
+<pre><code class="language-sh">adb shell am start -W -n dev.halcamera/.cli.CliLaunchActivity
+adb shell content call --uri content://dev.halcamera.cli --method capture --extra camera:s:0
+adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/REQUEST_ID
+</code></pre>
+<p>응답은 평문 JSON을 감싼 <code>Result: Bundle[{json=...}]</code>입니다. 지원 작업은 <code>/v1/hello</code>의 <code>commands</code>, 상태 변경 등의 조작은 <code>controls</code>로 확인합니다. 상태 변경은 <code>content call</code>로만 보냅니다.</p>
+<p>CTS 키는 콜론 때문에 <code>--extra</code> 대신 <code>--method cts.run --arg KEY[,KEY...]</code>로 전달합니다. 실행 제한은 <code>--extra timeout_ms:l:30000</code>, 요청 ID 지정은 <code>--extra request_id:s:UUID</code>입니다. JSON 제출에서 엔진은 <code>params.engine</code>, 스트림은 <code>params.streams</code>이며 크기·FPS·코덱은 문자열입니다. Benchmark 프로파일은 <code>params.profile_id</code>이고 직접 호출에서는 <code>--extra profile:s:camera2-standard-v2</code>로 지정합니다. 기존 Python의 Base64 전송은 유지합니다.</p>
+</details><p><strong>다음 단계:</strong> 사진 한 번·영상 10초 같은 작업을 맡기려면 <a href="coding-agents.html">Agents</a>의 요청 예시를 사용하세요.</p>
 
   </main>
   <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
