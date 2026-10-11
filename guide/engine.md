@@ -232,6 +232,12 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 **Camera2Engine은 앱에서 CaptureRequest를 직접 구성합니다.** `request_observed`에 기록한 키를 HAL 로그와 대조할 수 있습니다. 엔진 자체는 세션, 요청 구성, 줌, Live 제어를 담당하고, 사진은 `Camera2StillCapture`, Live 녹화는 `Camera2LiveRecorder`, 터치 측광은 `Camera2TouchFocus`, 벤치마크 녹화는 `BenchmarkRecorder`가 맡습니다. 카메라 요청과 capture 콜백은 엔진이 만든 카메라 스레드 하나에서 처리하고, 버퍼 relay와 파일 저장은 각자의 스레드에서 처리합니다.
 
+### PIP 지원을 미리 확인하세요
+
+**현재 해상도와 유지되는 YUV·RAW 출력으로 Physical·Service PIP 지원 여부를 조회합니다.** 선택창을 열 때와 적용 직전에 다시 검사하며 제조사·칩셋·ID별 예외는 두지 않습니다. Physical은 열린 카메라의 `isSessionConfigurationSupported`, Service는 `CameraManager.isConcurrentSessionConfigurationSupported`를 사용합니다. VIDEO의 `video_snapshot` 출력과 HAL JPEG·인코더 출력은 합성 PIP 세션에 유지하지 않으므로 검사에서도 제외합니다.
+
+검사는 임시 프리뷰 Surface로 수행하며 현재 카메라 세션을 바꾸지 않습니다. 보조 카메라의 가장 큰 프리뷰가 거부되면 작은 지원 크기를 조회하고 확인된 크기로 실제 합성 입력을 구성합니다. 지원 불가가 확인된 후보만 비활성화합니다. 조회를 지원하지 않는 기기에서는 `Not verified`로 표시하고 실제 구성을 허용합니다.
+
 ### 수동 촬영
 
 **Camera2에서 노출·초점·WB를 고정할 수 있습니다.** 요청한 값과 실제 적용값을 함께 확인하세요.
@@ -589,7 +595,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
 - 검토 2026-10-10 @ `bc41d75a` · User approved in Codex on 2026-10-11 (PR 275)
 
@@ -610,7 +616,9 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 ### CameraX PIP
 
-**PIP 목록에는 CameraX가 광고한 동시 조합의 Service ID만 표시합니다.** 두 장치를 CameraX로 열며 Camera2로 전환하지 않습니다. 같은 선택창·위치 기억·드래그와 셔터를 사용합니다.
+**PIP 목록에는 모든 후보를 표시하고 지원 불가가 확인된 항목만 비활성화합니다.** Physical 후보는 `Camera2 only`로 표시합니다. Service 후보는 CameraX가 제공하는 동시 조합에 포함되어야 합니다. 제조사·칩셋·카메라 ID에 따른 예외는 두지 않습니다.
+
+선택창을 열 때와 적용 직전에 두 카메라의 출력 구성을 `CameraManager.isConcurrentSessionConfigurationSupported`로 함께 조회합니다. 현재 분석 스트림을 포함하며, 720p 이하 프리뷰 조합 중 지원되는 크기를 실제 PIP Preview에도 사용합니다. 가장 큰 크기가 거부되어도 작은 지원 크기가 있으면 선택할 수 있습니다. 조회를 지원하지 않는 기기에서는 `Not verified`로 표시하고 실제 구성을 허용합니다. 개별 카메라의 단일 세션 지원 여부만으로 동시 구성을 판정하지 않습니다.
 
 `CameraXPipSession`은 각각 720p 이하의 Preview를 `ConcurrentCamera`로 bind하고 `DeviceCompositor`에서 합성 JPEG·H.264/AAC MP4를 저장합니다. 일반 촬영의 ImageCapture·Recorder와 별도 경로이며 PIP를 끄면 일반 출력 설정을 복원합니다. 단일·동시 모드 전환에는 재bind가 필요하고, 종료는 두 카메라의 CLOSED와 SurfaceRequest 반환을 기다립니다. PIP 터치 측광은 합성 화면의 fill-center crop에 맞춰 변환합니다. 지원 조합과 저장 범위는 [Live PIP](live.md#여러-카메라를-함께-촬영하세요)에서 확인합니다.
 
@@ -800,7 +808,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
 - 검토 2026-10-10 @ `bc41d75a` · User approved in Codex on 2026-10-11 (PR 275)
 

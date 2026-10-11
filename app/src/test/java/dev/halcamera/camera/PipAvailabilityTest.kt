@@ -82,4 +82,14 @@ class PipAvailabilityTest {
             PipStreamSupport.UNKNOWN
         }.first)
     }
+
+    @Test fun `late preflight rejection preserves a running PIP while actual configuration failure clears it`() {
+        val previous = PipSource("front",false,"Front")
+        val requested = PipSource("tele",true,"Tele")
+        val rejection = Result.failure<Unit>(PipSelectionRejected("Unsupported streams"))
+        assertEquals(previous,pipSelectionAfter(previous,requested,rejection))
+        assertNull(pipSelectionAfter(null,requested,rejection))
+        assertNull(pipSelectionAfter(previous,requested,Result.failure(IllegalStateException("Configure failed"))))
+        assertEquals(requested,pipSelectionAfter(previous,requested,Result.success(Unit)))
+    }
 }

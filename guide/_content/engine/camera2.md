@@ -4,6 +4,7 @@ confidence: code
 sources:
   - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
   - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
+  - app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt
   - app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt
   - app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt
   - app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt
@@ -35,6 +36,12 @@ verifications: []
 ---
 
 **Camera2Engine은 앱에서 CaptureRequest를 직접 구성합니다.** `request_observed`에 기록한 키를 HAL 로그와 대조할 수 있습니다. 엔진 자체는 세션, 요청 구성, 줌, Live 제어를 담당하고, 사진은 `Camera2StillCapture`, Live 녹화는 `Camera2LiveRecorder`, 터치 측광은 `Camera2TouchFocus`, 벤치마크 녹화는 `BenchmarkRecorder`가 맡습니다. 카메라 요청과 capture 콜백은 엔진이 만든 카메라 스레드 하나에서 처리하고, 버퍼 relay와 파일 저장은 각자의 스레드에서 처리합니다.
+
+### PIP 지원을 미리 확인하세요
+
+**현재 해상도와 유지되는 YUV·RAW 출력으로 Physical·Service PIP 지원 여부를 조회합니다.** 선택창을 열 때와 적용 직전에 다시 검사하며 제조사·칩셋·ID별 예외는 두지 않습니다. Physical은 열린 카메라의 `isSessionConfigurationSupported`, Service는 `CameraManager.isConcurrentSessionConfigurationSupported`를 사용합니다. VIDEO의 `video_snapshot` 출력과 HAL JPEG·인코더 출력은 합성 PIP 세션에 유지하지 않으므로 검사에서도 제외합니다.
+
+검사는 임시 프리뷰 Surface로 수행하며 현재 카메라 세션을 바꾸지 않습니다. 보조 카메라의 가장 큰 프리뷰가 거부되면 작은 지원 크기를 조회하고 확인된 크기로 실제 합성 입력을 구성합니다. 지원 불가가 확인된 후보만 비활성화합니다. 조회를 지원하지 않는 기기에서는 `Not verified`로 표시하고 실제 구성을 허용합니다.
 
 ### 수동 촬영
 

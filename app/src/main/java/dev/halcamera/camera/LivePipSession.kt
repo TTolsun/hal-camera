@@ -33,9 +33,10 @@ internal class LivePipSession(
     private val recordingChanged: (Boolean) -> Unit,
     private val notice: (String) -> Unit,
     private val videoMode: Boolean = false,
+    sourcePreview: LiveSize? = null,
 ) {
     private val manager = context.getSystemService(CameraManager::class.java)
-    private val sourceSize = readPipPreviewSize(manager,source.id) ?: error("No PIP preview stream")
+    private val sourceSize = sourcePreview ?: readPipPreviewSize(manager,source.id) ?: error("No PIP preview stream")
     private val compositor = DeviceCompositor(context,texture,output,listOf(preview,sourceSize),parentId,
         if (source.physical) listOf(source.id) else emptyList(),
         onReady = { main.post { if (!closing) { readyState = true; ready() } } },

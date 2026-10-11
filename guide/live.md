@@ -219,12 +219,14 @@ P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니�
 
 | 선택할 때 알아둘 점 | 동작 |
 | --- | --- |
-| 후보 | Camera2는 Physical 또는 다른 Service ID, CameraX는 지원되는 동시 조합의 Service ID를 제공합니다. 후보가 없으면 버튼이 비활성화됩니다. |
+| 후보 | 모든 후보를 표시하며 지원 불가가 확인된 항목은 선택할 수 없습니다. CameraX의 Physical 후보는 `Camera2 only`로 표시합니다. |
 | 위치 | 같은 모드에서는 PIP 카메라 변경·Off/On 뒤에도 위치를 기억합니다. 모드·엔진을 바꾸면 초기화됩니다. |
-| 목록 | 위에는 종류·ID, 아래에는 방향·렌즈를 표시합니다. Service ID는 숫자순이며 다시 열면 이전 스크롤 위치로 돌아갑니다. |
+| 목록 | 종류·ID, 방향·렌즈와 짧은 비활성화 사유를 표시합니다. 조회가 불가능하면 `Not verified`로 표시하고 선택은 허용합니다. 다시 열면 이전 스크롤 위치로 돌아갑니다. |
 | DNG | Photo 모드의 Camera2에서 RAW가 켜져 있으면 메인 원본 DNG와 JSON도 저장합니다. DNG에는 보조 영상을 합성하지 않습니다. |
 
 PIP와 Multi는 Android 11 이상에서 제공하며 실제 지원 조합은 기기마다 다릅니다. Single PIP의 플래시는 Off·Torch만 제공하고 AEB는 지원하지 않으며 녹화 중에는 합성 스냅샷을 저장할 수 있습니다.
+
+Single PIP는 현재 해상도와 유지되는 추가 스트림을 선택창을 열 때와 적용 직전에 검사합니다. 기기가 공개한 지원 정보로 판정하므로 다른 기기에서도 같은 코드로 동작합니다. 조회 결과가 지원됨이어도 기기 자원이나 HAL 문제로 실제 구성이 실패할 수 있습니다.
 
 <details markdown="1" id="pip-session-details" data-search-section>
 <summary>엔진별 재구성과 저장 해상도</summary>

@@ -763,17 +763,25 @@ class Camera2Engine(
     private fun report(message: String, ok: Boolean) { main.post { if (active) status(message, ok) } }
 
     override val pipSources: List<PipSource> by lazy { readPipSources(manager,cameraId) }
+    private val pipPreviewSizes = mutableMapOf<String,LiveSize>()
+
+    private fun checkedPipSource(source: PipSource): PipSource = source.withStreamSupport {
+        pipPreviewSizes.remove(source.key)
+        val camera = device
+        val preview = previewSize
+        if (Build.VERSION.SDK_INT < 30 || !active || camera == null || preview == null || spec != null)
+            PipStreamSupport.UNKNOWN
+        else {
+            val (support,sizes) = queryCamera2Pip(manager,camera,source,LiveSize(preview.width,preview.height),
+                PipOutputs.retained(configuredOutputs.outputs),handler)
+            sizes?.get(1)?.let { pipPreviewSizes[source.key] = it }
+            support
+        }
+    }
 
     override fun checkPipSources(done: (List<PipSource>) -> Unit) {
         handler.post {
-            val checked = pipSources.map { source -> source.withStreamSupport {
-                val camera = device
-                val preview = previewSize
-                if (Build.VERSION.SDK_INT < 30 || !active || camera == null || preview == null || spec != null)
-                    PipStreamSupport.UNKNOWN
-                else queryPipSession(manager,camera,source,LiveSize(preview.width,preview.height),
-                    PipOutputs.retained(configuredOutputs.outputs),handler)
-            } }
+            val checked = pipSources.map(::checkedPipSource)
             main.post { done(checked) }
         }
     }
@@ -785,16 +793,12 @@ class Camera2Engine(
             val camera = device
             if (!active || camera == null || spec != null) { main.post { done(Result.failure(IllegalStateException("Camera unavailable"))) }; return@post }
             if (source != null && pipSources.none { it.key == source.key && it.selectable }) {
-                main.post { done(Result.failure(IllegalArgumentException("PIP combination unavailable"))) }; return@post
+                main.post { done(Result.failure(PipSelectionRejected("Cannot run together"))) }; return@post
             }
             if (source != null) {
-                val checked = source.withStreamSupport {
-                    val size = previewSize ?: return@withStreamSupport PipStreamSupport.UNKNOWN
-                    queryPipSession(manager,camera,source,LiveSize(size.width,size.height),
-                        PipOutputs.retained(configuredOutputs.outputs),handler)
-                }
+                val checked = checkedPipSource(source)
                 if (!checked.selectable) {
-                    main.post { done(Result.failure(IllegalArgumentException(checked.unavailableReason))) }; return@post
+                    main.post { done(Result.failure(PipSelectionRejected(checked.unavailableReason))) }; return@post
                 }
             }
             val previous = pip
@@ -855,7 +859,7 @@ class Camera2Engine(
                             submitRepeating("pip_recording_request", mapOf("recording" to recording))
                             main.post { if (active) recordingState(recording) }
                         }
-                    }, notice = notice, videoMode = videoMode)
+                    }, notice = notice, videoMode = videoMode, sourcePreview = pipPreviewSizes[source.key])
                 pip = added; added.start()
             } catch (e: Exception) { main.post { done(Result.failure(e)) } }
         }

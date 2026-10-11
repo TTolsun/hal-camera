@@ -11,17 +11,21 @@ import android.os.Handler
 import android.view.Surface
 import androidx.annotation.RequiresApi
 
-internal fun readPipPreviewSize(manager: CameraManager, id: String): LiveSize? = pipPreviewSize(
+internal fun readPipPreviewSizes(manager: CameraManager, id: String): List<LiveSize> =
     manager.getCameraCharacteristics(id)[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
-        ?.getOutputSizes(SurfaceTexture::class.java)?.map { LiveSize(it.width,it.height) }.orEmpty())
+        ?.getOutputSizes(SurfaceTexture::class.java)?.map { LiveSize(it.width,it.height) }.orEmpty()
+        .filter { it.width.toLong()*it.height <= 1280L*720 }.sortedByDescending { it.width.toLong()*it.height }
+
+internal fun readPipPreviewSize(manager: CameraManager, id: String): LiveSize? = readPipPreviewSizes(manager,id).firstOrNull()
 
 /** Temporary, detached preview surfaces query the exact output sizes without changing any live session. */
 @RequiresApi(30)
-internal fun queryPipSession(manager: CameraManager, camera: CameraDevice, source: PipSource,
-                             preview: LiveSize, retained: List<ConfiguredOutput<Surface>>, handler: Handler): PipStreamSupport {
-    val secondary = readPipPreviewSize(manager,source.id) ?: return PipStreamSupport.UNSUPPORTED
-    return queryPipOutputs(manager,camera.id,source,preview,secondary,retained,handler,camera)
-}
+internal fun queryCamera2Pip(manager: CameraManager, camera: CameraDevice, source: PipSource,
+                            preview: LiveSize, retained: List<ConfiguredOutput<Surface>>, handler: Handler) =
+    choosePipPreviewSizes(listOf(preview),readPipPreviewSizes(manager,source.id)) { mainSize,pipSize ->
+        try { queryPipOutputs(manager,camera.id,source,mainSize,pipSize,retained,handler,camera) }
+        catch (_: Exception) { PipStreamSupport.UNKNOWN }
+    }
 
 @RequiresApi(30)
 internal fun queryPipOutputs(manager: CameraManager, parent: String, source: PipSource,
@@ -63,11 +67,8 @@ internal fun queryPipOutputs(manager: CameraManager, parent: String, source: Pip
 @RequiresApi(30)
 internal fun queryCameraXPip(manager: CameraManager, parent: String, source: PipSource,
                             analysis: LiveSize?, handler: Handler): Pair<PipStreamSupport,List<LiveSize>?> {
-    fun sizes(id: String) = manager.getCameraCharacteristics(id)[CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP]
-        ?.getOutputSizes(SurfaceTexture::class.java)?.map { LiveSize(it.width,it.height) }.orEmpty()
-        .filter { it.width.toLong()*it.height <= 1280L*720 }.sortedByDescending { it.width.toLong()*it.height }
-    val mainSizes = sizes(parent)
-    val pipSizes = sizes(source.id)
+    val mainSizes = readPipPreviewSizes(manager,parent)
+    val pipSizes = readPipPreviewSizes(manager,source.id)
     if (mainSizes.isEmpty() || pipSizes.isEmpty()) return PipStreamSupport.UNSUPPORTED to null
     val reader = analysis?.let { android.media.ImageReader.newInstance(it.width,it.height,android.graphics.ImageFormat.YUV_420_888,2) }
     try {

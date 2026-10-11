@@ -434,7 +434,7 @@ class CameraXEngine(
             val checked = checkedPipSource(source,size)
             handler.post {
                 pipChecking = false
-                if (!checked.selectable) done(Result.failure(IllegalArgumentException(checked.unavailableReason)))
+                if (!checked.selectable) done(Result.failure(PipSelectionRejected(checked.unavailableReason)))
                 else applyPip(source,texture,output,position,done)
             }
         }
@@ -447,7 +447,7 @@ class CameraXEngine(
             done(Result.failure(IllegalStateException("Camera busy"))); return
         }
         if (source != null && pipSources.none { it.key == source.key && it.selectable }) {
-            done(Result.failure(IllegalArgumentException("PIP combination unavailable"))); return
+            done(Result.failure(PipSelectionRejected("Cannot run together"))); return
         }
         pipChanging = true
         fun restore(result: Result<Unit>) {

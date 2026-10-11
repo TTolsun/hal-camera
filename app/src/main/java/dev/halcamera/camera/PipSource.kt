@@ -17,6 +17,12 @@ internal object PipAvailability {
 /** Unsupported is blocked; an unavailable query must not hide usable combinations on another device. */
 internal enum class PipStreamSupport { SUPPORTED, UNSUPPORTED, UNKNOWN }
 
+/** Rejection before session mutation leaves an already running PIP intact. */
+internal class PipSelectionRejected(message: String?) : IllegalArgumentException(message)
+
+internal fun pipSelectionAfter(previous: PipSource?, requested: PipSource?, result: Result<Unit>): PipSource? =
+    if (result.exceptionOrNull() is PipSelectionRejected) previous else requested.takeIf { result.isSuccess }
+
 internal fun PipSource.withStreamSupport(query: () -> PipStreamSupport): PipSource {
     if (!selectable) return this
     val support = try { query() } catch (_: Exception) { PipStreamSupport.UNKNOWN }

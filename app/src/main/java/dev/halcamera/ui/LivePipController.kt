@@ -39,11 +39,12 @@ internal class LivePipController(
         val parent = cameraId()
         rect = positions.read(parent, PipScene.liveDefault)
         val token = ++generation
+        val previous = selected
         busy = true; changed()
         fun complete(result: Result<Unit>) {
             if (token != generation || engine() !== current) return
             busy = false
-            selected = source.takeIf { result.isSuccess }
+            selected = pipSelectionAfter(previous,source,result)
             if (selected == null) { view?.let { host().removeView(it) }; view = null }
             else view?.alpha = 1f
             result.exceptionOrNull()?.let { notice(it.message ?: "PIP unavailable") }

@@ -277,6 +277,7 @@ sources:
           - app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt
           - app/src/main/java/dev/halcamera/camera/PipScene.kt
           - app/src/main/java/dev/halcamera/camera/PipSource.kt
+          - app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt
           - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
           - app/src/main/java/dev/halcamera/camera/PipCallbacks.kt
           - app/src/main/java/dev/halcamera/camera/PipOutputs.kt
