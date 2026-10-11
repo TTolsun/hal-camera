@@ -117,7 +117,7 @@ class DualPreviewSession(
     private val exposureWatch = TouchExposureWatch()
     private var focusFeedback: ((TouchPhase) -> Unit)? = null
     private var exposureFeedback: ((TouchPhase) -> Unit)? = null
-    private val requestStreams = java.util.WeakHashMap<CaptureRequest, List<String>>()
+    private val requestStreams = RequestStreamRegistry<CaptureRequest>()
     private val timelineCallback = telemetry?.callback(sessionId, streams = {
         requestStreams[it] ?: dualRequestStreams(it.tag == "dual_photo", false)
     }, alive = { active })
@@ -130,7 +130,7 @@ class DualPreviewSession(
             if (recording) video?.surfaces?.forEach(::addTarget)
             mainControls?.apply(camera, this, video != null, trigger)
             setTag("dual_preview")
-        }.build().also { requestStreams[it] = dualRequestStreams(false, recording) }
+        }.build().let { requestStreams.track(it, dualRequestStreams(false, recording)) }
     }
 
     private fun repeat() {

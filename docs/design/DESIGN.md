@@ -26,8 +26,8 @@ Android 앱과 문서 사이트는 이 문서를 단일 디자인 기준으로 �
 ## 문서 사이트 첫 화면의 순서
 
 1. HAL CAMERA 브랜드와 문서 탐색을 표시합니다.
-2. `Engineering the invisible.`을 큰 제목으로 표시하고 목적과 빠른 시작 링크를 제공합니다.
-3. Quickstart, Live, Probe, CTS, Benchmark, Callback, Automation, Troubleshooting를 작업별 행으로 배치합니다. 읽는 순서를 강제하는 번호는 붙이지 않습니다.
+2. `Capture. Measure. Verify.`를 큰 제목으로 표시하고 목적과 빠른 시작 링크를 제공합니다.
+3. Quickstart, Live, Callback, Troubleshooting를 먼저 배치하고 Probe, CTS, Benchmark, Automation은 펼쳐서 선택합니다. 읽는 순서를 강제하는 번호는 붙이지 않습니다.
 4. 앱에서 관찰할 수 있는 범위를 짧게 설명하고 엔진 차이를 연결합니다.
 5. 짧은 편집 문장과 근거 확인 링크로 마무리합니다.
 

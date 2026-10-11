@@ -261,7 +261,35 @@
 <p><strong>같은 장면으로 비교해 보세요.</strong> JPEG에서 해상도를 골라 한 장, <code>YUV (현재 크기)</code>를 골라 한 장을 찍으면 카메라 JPEG와 앱 변환 결과를 비교할 수 있습니다. 두 촬영은 서로 다른 시점이며, 해상도도 같다고 보장하지 않습니다.</p>
 <p>일반 사진에서 JPEG와 RAW를 모두 끄면 셔터가 비활성화됩니다. PIP 합성 JPEG는 별도입니다. 설정은 현재 카메라·엔진에 적용되며 모드·엔진 전환 때 초기화됩니다. Benchmark의 profile은 바꾸지 않습니다.</p>
 <details id="stream-readout" data-search-section>
-<summary>P·Y·J·RAW·R 표시 읽기</summary><p>P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니다. 모든 항목은 활성 크기가 있을 때만 표시하며 꺼진 스트림의 Off 문구는 생략합니다. PIP가 켜지면 두 번째 줄에 PIP를 한 번 쓰고 보조 P·Y·J의 실제 크기를 나열합니다. 합성 출력 크기는 Live에서 표시하지 않습니다. J의 YUV 표시는 앱 변환 사진을 뜻합니다. 녹화 출력이 구성되면 R과 H264·HEVC·Auto를 표시합니다. 구성 검사와 저장 방식은 <a href="engine.html#camera2-엔진">Engine Comparison</a>에서 확인하세요.</p>
+<summary>P·Y·J·RAW·R 표시 읽기</summary><table>
+<thead>
+<tr>
+<th>글자</th>
+<th>표시하는 크기</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>P</td>
+<td>프리뷰입니다.</td>
+</tr>
+<tr>
+<td>Y</td>
+<td>YUV 분석 출력입니다.</td>
+</tr>
+<tr>
+<td>J</td>
+<td>JPEG 저장 원본입니다. <code>J YUV</code>는 앱 변환 사진입니다.</td>
+</tr>
+<tr>
+<td>RAW</td>
+<td>센서 원본 출력입니다.</td>
+</tr>
+<tr>
+<td>R</td>
+<td>녹화 출력입니다. H264·HEVC·Auto 포맷도 함께 표시합니다.</td>
+</tr>
+</tbody></table>
+<p>꺼진 스트림은 표시하지 않습니다. PIP 보조 출력은 두 번째 줄에 <code>PIP</code>를 한 번 쓰고 P·Y·J 크기를 나열합니다. 합성 파일 크기는 생략합니다. 구성 검사는 <a href="engine.html#camera2-엔진">Engine Comparison</a>을 확인하세요.</p>
 </details></details><h3 id="pip로-보이는-구도를-저장하세요">PIP로 보이는 구도를 저장하세요</h3>
 <p><strong>PIP는 한 화면으로 합성하고, Multi는 장치별로 저장합니다.</strong> 예를 들어 후면 장면에 전면 영상을 작게 넣어 한 장으로 남기려면 PIP를 사용합니다.</p>
 <ol>
@@ -269,7 +297,28 @@
 <li>보조 카메라 하나를 고릅니다. 선택창이 닫히고 현재 Live 안에 보조 영상이 나타납니다.</li>
 <li>보조 영상을 원하는 자리로 드래그한 뒤 기존 셔터로 촬영합니다.</li>
 </ol>
-<p><strong>확인할 결과:</strong> JPEG On에서는 합성 사진과 두 카메라 원본까지 JPEG 세 장을 저장합니다. JPEG Off에서도 합성 사진은 저장합니다. 합성 저장은 카메라 Callback 그래프에 표시하지 않으며 Service 원본 콜백은 ID 버튼으로 전환합니다. 동영상에는 합성 영상만 저장하며 조작 버튼과 라벨은 파일에 들어가지 않습니다. 끄려면 <code>PIP → Turn off PIP</code>를 선택합니다.</p>
+<p><strong>셔터는 한 번인데 사진은 세 장?</strong> JPEG를 켜고 촬영한 뒤 갤러리를 열어 보세요. 같은 촬영의 합성 사진·메인 원본·보조 원본을 비교할 수 있습니다.</p>
+<table>
+<thead>
+<tr>
+<th>촬영 설정</th>
+<th>저장 결과</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Photo · JPEG On</td>
+<td>합성 JPEG 한 장과 두 카메라 원본 JPEG를 저장합니다.</td>
+</tr>
+<tr>
+<td>Photo · JPEG Off</td>
+<td>합성 JPEG 한 장을 저장합니다.</td>
+</tr>
+<tr>
+<td>Video</td>
+<td>합성 MP4 한 개를 저장합니다. 녹화 중 사진도 선택한 JPEG 출처를 따릅니다.</td>
+</tr>
+</tbody></table>
+<p>화면의 버튼과 라벨은 파일에 들어가지 않습니다. 원본과 합성의 촬영 시각은 같다고 보장하지 않습니다. 끄려면 <code>PIP → Turn off PIP</code>를 선택합니다. 그래프에서 원본을 찾으려면 <a href="callback.html#pip를-켜면-무엇이-추가되나요">PIP Callback</a>을 확인하세요.</p>
 <table>
 <thead>
 <tr>
@@ -295,7 +344,7 @@
 </tr>
 </tbody></table>
 <p>PIP와 Multi는 Android 11 이상에서 제공하며 실제 지원 조합은 기기마다 다릅니다. Single PIP의 플래시는 Off·Torch만 제공하고 AEB는 지원하지 않으며 녹화 중에는 합성 스냅샷을 저장할 수 있습니다.</p>
-<p>Single PIP는 현재 해상도와 유지되는 추가 스트림을 선택창을 열 때와 적용 직전에 검사합니다. 기기가 공개한 지원 정보로 판정하므로 다른 기기에서도 같은 코드로 동작합니다. 조회 결과가 지원됨이어도 기기 자원이나 HAL 문제로 실제 구성이 실패할 수 있습니다.</p>
+<p><strong>회색 후보는 현재 조합에서 지원 불가가 확인된 카메라입니다.</strong> 크기나 출력 설정을 바꾼 뒤 다시 열면 재검사합니다. <code>Not verified</code>는 조회가 불가능했다는 뜻이며 선택할 수 있습니다. 지원 조회가 통과해도 자원 상태나 HAL 문제로 실제 구성이 실패할 수 있습니다. 조회 방식은 <a href="engine.html#pip-지원을-미리-확인하세요">PIP 지원 검사</a>에 있습니다.</p>
 <details id="pip-session-details" data-search-section>
 <summary>엔진별 재구성과 저장 해상도</summary><p>Camera2 Single은 현재 Live CameraDevice를 유지합니다. 다른 Service ID는 그 장치만 추가로 열고 Physical ID는 현재 장치의 출력을 추가합니다. CameraX는 메인 ID를 유지하면서 단일·동시 use case를 다시 bind합니다. 두 엔진의 후보 목록은 같지 않을 수 있습니다.</p>
 <p>합성 사진은 화면용 해상도이며 원본 JPEG 크기 선택과 별개입니다. Live Streams의 PIP Preview는 합성 입력, PIP Photo는 보조 원본 크기입니다. 명시한 크기는 자동 대체하지 않습니다. CameraX는 라이브러리 공통 동시 출력 제한과 HAL 조회를 함께 적용합니다. PIP를 끄면 일반 스트림 설정으로 복귀합니다. 원본과 합성 사진의 촬영 시각은 같다고 보장하지 않습니다.</p>

@@ -116,6 +116,7 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
           - app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt
+          - app/src/main/java/dev/halcamera/camera/RequestStreamRegistry.kt
       camera-engines/camera2-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
@@ -217,10 +218,13 @@ sources:
       screens/expert-screen/live-controls:
         evidence:
           - app/src/main/java/dev/halcamera/ui/LiveControlBar.kt
-          - app/src/main/java/dev/halcamera/ui/LiveIndicator.kt
           - app/src/main/java/dev/halcamera/ui/EvRuler.kt
           - app/src/main/java/dev/halcamera/camera/LiveControls.kt
           - app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt
+      screens/expert-screen/live-controls/stream-readout:
+        evidence:
+          - app/src/main/java/dev/halcamera/ui/LiveIndicator.kt
+          - app/src/main/java/dev/halcamera/ui/LiveStreamReadout.kt
       # Tap-to-focus has its own element: the three files would push live-controls past 60,000 characters (#168).
       screens/expert-screen/live-controls/touch-focus:
         evidence:

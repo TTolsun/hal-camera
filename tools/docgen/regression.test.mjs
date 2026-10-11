@@ -114,7 +114,7 @@ test('all configured elements fit the prompt budget and exclude descendant field
         assert.ok(input.files.length > 0); count++;
       }
     }
-    assert.equal(count, 107); // Includes PIP session lifecycle, originals, availability and Camera2 callback wiring.
+    assert.equal(count, 108); // Includes the pure Live stream readout and its view adapter.
   `));
 });
 
