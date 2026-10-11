@@ -11,12 +11,16 @@ class DualCallbackStreamsTest {
         assertEquals(listOf("rear-wide", "rear-tele"), recordings.map { it["physicalId"] })
         assertTrue(recordings.all { it["observable"] == false && it["repeating"] == true })
         assertFalse(recordings.any { it["label"].toString().contains("App") })
+        val previews = rows.filter { it["kind"] == "PREVIEW" }
+        assertEquals(listOf("rear-wide", "rear-tele"), previews.map { it["physicalId"] })
+        assertTrue(previews.all { it["observable"] == false })
     }
 
     @Test fun cameraXPreviewRelayDoesNotAdvertiseAppEncodersOrUnsupportedPhotoRows() {
         val rows = dualCallbackStreams(photos = false)
         assertEquals(listOf("preview_main", "preview_sub"), rows.map { it["id"] })
         assertFalse(rows.any { it["kind"] == "RECORDING" })
+        assertTrue(rows.all { it["observable"] == false && it["kind"] == "PREVIEW" })
     }
 
     @Test fun photoModeDoesNotAdvertiseEncoderOutputs() {

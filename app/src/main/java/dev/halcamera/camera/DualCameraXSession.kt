@@ -83,7 +83,7 @@ class DualCameraXSession(
 
     private fun bind() {
         telemetry.sessions[sessionId] = mapOf("engine" to "CameraX", "cameraId" to plan.logicalId, "physicalIds" to ids)
-        telemetry.configureCallbackStreams(sessionId, dualCallbackStreams(photos = false))
+        telemetry.configureCallbackStreams(sessionId, dualCallbackStreams(photos = false, physicalIds = ids))
         val configs = ids.mapIndexed { index, physicalId ->
             val selector = CameraSelector.Builder()
                 .addCameraFilter { infos -> infos.filter { Camera2CameraInfo.from(it).cameraId == plan.logicalId } }

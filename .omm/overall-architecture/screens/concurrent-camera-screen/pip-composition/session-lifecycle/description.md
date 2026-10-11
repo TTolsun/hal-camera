@@ -6,4 +6,3 @@ CameraXPipSession은 두 Service 카메라를 ConcurrentCamera로 bind합니다.
 
 PipMedia는 사진과 녹화 작업을 직렬화하며 종료 전에 완료를 기다립니다. Camera2는 보조 장치 종료와 미디어 완료를 기다리고, CameraX는 두 CameraState.CLOSED와 SurfaceRequest 반환 및 미디어 완료를 기다린 뒤 합성 입력을 해제합니다. 카메라 재열기는 이 완료 콜백 이후에 수행합니다.
 PIP Service 메타데이터는 각 카메라의 실제 출력만 등록하며 합성 인코더는 제외합니다. 센서별 프레임 번호와 프리뷰 이벤트는 각 세션에 유지합니다.
-

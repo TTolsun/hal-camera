@@ -3,10 +3,11 @@ package dev.halcamera.camera
 /** Only Camera2's direct camera recording targets belong in the Callback stream list. */
 fun dualCallbackStreams(recordingConfigured: Boolean = false, photos: Boolean = true,
     physicalIds: List<String> = emptyList()): List<Map<String, Any?>> = buildList {
-    addAll(listOf(
-        mapOf("id" to "preview_main", "label" to "Main display", "observable" to true, "eventKind" to "preview_available"),
-        mapOf("id" to "preview_sub", "label" to "Sub display", "observable" to true, "eventKind" to "preview_available"),
-    ))
+    listOf("main", "sub").forEachIndexed { index, id ->
+        add(OutputDescriptor("preview_$id", OutputKind.PREVIEW, true, observable = false,
+            physicalId = physicalIds.getOrNull(index),
+            displayName = "${if (index == 0) "Main" else "Sub"} Preview").metadata())
+    }
     if (photos) addAll(listOf(
         mapOf("id" to "photo_main", "label" to "Main photo", "observable" to true, "eventKind" to "image_available", "repeating" to false),
         mapOf("id" to "photo_sub", "label" to "Sub photo", "observable" to true, "eventKind" to "image_available", "repeating" to false),
