@@ -409,7 +409,7 @@ class ConcurrentSession(
     }
 
     fun capture(displayDegrees: Int) { worker.post {
-        if (!lifecycle.ready || capture != null || recording || videoPending) return@post
+        if (!lifecycle.ready || capture != null || videoPending) return@post
         val group = ConcurrentCapture<ConcurrentPhoto>("HAL_concurrent_${UUID.randomUUID()}", SystemClock.elapsedRealtimeNanos(), plan.streams.map { it.camera.id })
         capture = group
         images.clear(); expected.clear()

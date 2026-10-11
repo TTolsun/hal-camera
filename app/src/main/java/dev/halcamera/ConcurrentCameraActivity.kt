@@ -45,6 +45,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private lateinit var shutter: ShutterButton
     private lateinit var splitButton: Button
     private lateinit var cameraButton: IconButton
+    private lateinit var snapshotButton: IconButton
     private lateinit var galleryButton: RecentMediaButton
     private lateinit var labButton: Button
     private lateinit var retryButton: Button
@@ -198,8 +199,10 @@ class ConcurrentCameraActivity : ComponentActivity() {
         shutter = ShutterButton(this).apply { setOnClickListener { capture() } }
         captureRow.addView(shutter,LinearLayout.LayoutParams(dp(64),dp(64)).apply { marginStart = dp(12); marginEnd = dp(12) })
         cameraButton = IconButton(this,R.drawable.ic_camera_select,"Choose Split cameras",filled = true) { showSplit() }
+        snapshotButton = IconButton(this,R.drawable.ic_snapshot,"Take a photo while recording",filled = true) { takePhoto() }
         captureRow.addView(FrameLayout(this).apply {
             addView(cameraButton,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER))
+            addView(snapshotButton,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER))
         },LinearLayout.LayoutParams(0,dp(64),1f))
         bottomBar.addView(captureRow,lp(4))
         val modeFrame = FrameLayout(this)
@@ -281,7 +284,9 @@ class ConcurrentCameraActivity : ComponentActivity() {
                     if (previews.getOrNull(index) !== preview) return
                     textures[index] = texture; startIfReady(); transform(index)
                 }
-                override fun onSurfaceTextureSizeChanged(texture: SurfaceTexture,width: Int,height: Int) = transform(index)
+                override fun onSurfaceTextureSizeChanged(texture: SurfaceTexture,width: Int,height: Int) {
+                    transform(index); startIfReady()
+                }
                 override fun onSurfaceTextureUpdated(texture: SurfaceTexture) {}
                 override fun onSurfaceTextureDestroyed(texture: SurfaceTexture): Boolean {
                     if (previews.getOrNull(index) !== preview) return true
@@ -320,18 +325,22 @@ class ConcurrentCameraActivity : ComponentActivity() {
         var draftIds = selectedIds
         val content = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         fun section(title: String) { content.addView(text(title,12).apply { ViewCompat.setAccessibilityHeading(this,true) },lp(12)) }
-        fun spinner(title: String,values: List<String>,selection: Int,onChange: (Int) -> Unit) {
+        fun spinner(title: String,values: List<String>,selection: Int,onChange: (Int) -> Unit): Spinner {
             section(title)
-            content.addView(Spinner(this).apply {
+            val control = Spinner(this).apply {
                 adapter = ArrayAdapter(this@ConcurrentCameraActivity,android.R.layout.simple_spinner_dropdown_item,values)
                 setSelection(selection.coerceAtLeast(0)); contentDescription = title
+                isEnabled = values.size > 1
                 onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                     override fun onNothingSelected(parent: AdapterView<*>?) {}
                     override fun onItemSelected(parent: AdapterView<*>?,view: View?,position: Int,id: Long) = onChange(position)
                 }
-            },LinearLayout.LayoutParams(-1,dp(48)))
+            }
+            content.addView(control,LinearLayout.LayoutParams(-1,dp(48))); return control
         }
-        spinner("Layout",SplitLayout.entries.map { it.label },splitLayout.ordinal) { draftLayout = SplitLayout.entries[it] }
+        var layouts = SplitLayout.entries.filter { it != SplitLayout.GRID || draftCount > 2 }
+        if (draftLayout !in layouts) draftLayout = SplitLayout.SIDE_BY_SIDE
+        val layoutPicker = spinner("Layout",layouts.map { it.label },layouts.indexOf(draftLayout)) { draftLayout = layouts[it] }
         val counts = plans.filter { it.advertised }.map { it.streams.size }.distinct().sorted().ifEmpty { listOf(selectedIds.size) }
         val cameras = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         fun renderDevices() {
@@ -375,10 +384,13 @@ class ConcurrentCameraActivity : ComponentActivity() {
                     },LinearLayout.LayoutParams(0,dp(48),1f))
                 },lp(4))
             }
-            cameras.addView(text("Order: ${draftIds.joinToString(" → ")}",12),lp(4))
         }
         spinner("Cameras",counts.map { it.toString() },counts.indexOf(draftCount)) {
             draftCount = counts[it]
+            layouts = SplitLayout.entries.filter { layout -> layout != SplitLayout.GRID || draftCount > 2 }
+            if (draftLayout !in layouts) draftLayout = SplitLayout.SIDE_BY_SIDE
+            layoutPicker.adapter = ArrayAdapter(this,android.R.layout.simple_spinner_dropdown_item,layouts.map { layout -> layout.label })
+            layoutPicker.setSelection(layouts.indexOf(draftLayout))
             draftPlans = plans.filter { plan -> plan.streams.size == draftCount }; renderDevices()
         }
         section("Camera devices"); content.addView(cameras,lp()); renderDevices()
@@ -468,8 +480,12 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private fun capture() {
         if (Build.VERSION.SDK_INT < 30 || !ready || takingPhoto || videoPending || closing) return
         if (videoMode) { videoPending = true; if (recording) session?.stopVideo() else session?.startVideo() }
-        else if (!recording) { takingPhoto = true; resultText.text = "Capturing…"; session?.capture(displayDegrees()) }
+        else if (!recording) takePhoto()
         updateButtons()
+    }
+    private fun takePhoto() {
+        if (Build.VERSION.SDK_INT < 30 || !ready || takingPhoto || videoPending || closing) return
+        takingPhoto = true; resultText.text = "Capturing…"; session?.capture(displayDegrees()); updateButtons()
     }
     private fun leave(video: Boolean) { setResult(RESULT_OK,Intent().putExtra(DualPreviewActivity.EXTRA_RETURN_VIDEO,video)); finish() }
     private fun openTool(destination: Class<*>) {
@@ -502,8 +518,12 @@ class ConcurrentCameraActivity : ComponentActivity() {
         shutter.setCaptureState(videoMode = videoMode,recording = recording)
         shutter.contentDescription = if (videoMode) { if (recording) "Stop all recordings" else "Record each camera separately" } else "Capture a separate photo from each camera"
         splitButton.isEnabled = plans.isNotEmpty() && !busy; cameraButton.isEnabled = splitButton.isEnabled
+        cameraButton.visibility = if (recording) View.GONE else View.VISIBLE
+        snapshotButton.visibility = if (recording) View.VISIBLE else View.GONE
+        snapshotButton.isEnabled = ready && recording && !takingPhoto && !videoPending && !closing
         labButton.isEnabled = !busy && activeCamera != null; galleryButton.isEnabled = !busy
         retryButton.visibility = if (failed) View.VISIBLE else View.GONE; retryButton.isEnabled = !busy
+        reportButton.isEnabled = ready && recorder.remainingNs() == null && !closing
         resultText.isClickable = report.isNotEmpty() && !recording; resultText.isFocusable = resultText.isClickable
         controlBar.bind(videoMode,ready && !takingPhoto && !videoPending && !closing)
         zoomControl.isEnabled = ready && !takingPhoto && !videoPending && !closing; liveIndicator.setSizesEnabled(!busy)
@@ -516,7 +536,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
             button.setTypeface(null,if (button.isSelected) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
             ViewCompat.setStateDescription(button,if (button.isSelected) "Selected" else "Not selected")
         }
-        listOf<View>(shutter,splitButton,cameraButton,labButton,galleryButton,zoomControl).forEach { it.alpha = if (it.isEnabled) 1f else .4f }
+        listOf<View>(shutter,splitButton,cameraButton,snapshotButton,labButton,galleryButton,zoomControl).forEach { it.alpha = if (it.isEnabled) 1f else .4f }
     }
     private fun layoutPreviews() {
         if (stage.width <= 0 || stage.height <= 0 || panels.isEmpty()) return
@@ -536,6 +556,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
                 }
             }
         }
+        // Returning from another screen can expose textures before their views have dimensions.
+        stage.post { startIfReady() }
     }
     private fun transform(index: Int) {
         if (outputSizes.getOrNull(index) == null) return

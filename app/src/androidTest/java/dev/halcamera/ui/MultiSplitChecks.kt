@@ -56,7 +56,7 @@ object MultiSplitChecks {
         fun accessible(label: String): AccessibilityNodeInfo? {
             val root = test.uiAutomation.rootInActiveWindow ?: return null
             check(root.packageName?.toString() == "dev.halcamera") { "Another app owns the foreground" }
-            return descendants(root).firstOrNull { it.isVisibleToUser &&
+            return descendants(root).firstOrNull { it.isVisibleToUser && it.isClickable &&
                 (it.contentDescription?.toString() == label || it.text?.toString() == label) }
         }
         fun click(label: String) {
@@ -80,8 +80,17 @@ object MultiSplitChecks {
         val monitor = test.addMonitor(ConcurrentCameraActivity::class.java.name,null,false)
         ui { field<View>(mainActivity,"multiButton").performClick() }
         var activity = checkNotNull(test.waitForMonitorWithTimeout(monitor,30_000)) as ConcurrentCameraActivity
-        fun ready() = waitFor("Multi ready") { field<Boolean>(activity,"ready") && !field<Boolean>(activity,"closing") }
-        fun press(name: String) { ui { check(field<View>(activity,name).isEnabled); field<View>(activity,name).performClick() }; SystemClock.sleep(200) }
+        fun ready() {
+            try { waitFor("Multi ready") { field<Boolean>(activity,"ready") && !field<Boolean>(activity,"closing") } }
+            catch (error: Exception) {
+                val state = ui { "destroyed=${activity.isDestroyed}, finishing=${activity.isFinishing}, exiting=${field<Boolean>(activity,"exiting")}, foreground=${field<Boolean>(activity,"foreground")}, closing=${field<Boolean>(activity,"closing")}, failed=${field<Boolean>(activity,"failed")}, textures=${field<List<Any?>>(activity,"textures").count { it != null }}, views=${field<List<View>>(activity,"previews").map { "${it.width}x${it.height}" }}, session=${field<Any?>(activity,"session") != null}, status=${field<android.widget.TextView>(activity,"status").text}" }
+                throw IllegalStateException(state,error)
+            }
+        }
+        fun press(name: String) {
+            waitFor("$name enabled") { field<View>(activity,name).isEnabled }
+            ui { field<View>(activity,name).performClick() }; SystemClock.sleep(200)
+        }
         fun mode(index: Int) { ui { field<List<Button>>(activity,"modeButtons")[index].performClick() }; SystemClock.sleep(300) }
         fun ids() = ui { field<List<String>>(activity,"selectedIds").toList() }
         fun latest(key: String): Any? = ui {
@@ -104,8 +113,11 @@ object MultiSplitChecks {
         check(ids() == originalIds.reversed())
         press("splitButton"); click("Camera for Split screen 1"); click("Camera ${originalIds.first()}"); click("Apply"); ready()
         check(ids() == originalIds)
-        press("splitButton"); click("Layout"); click("Grid"); click("Apply"); screenshot("photo-grid")
-        pass("Split PASS: camera icon, screen assignment, reordered devices, Grid")
+        press("splitButton"); click("Rear 0 + Front 3"); click("Apply"); ready()
+        check(ids().toSet() == setOf("0","3"))
+        press("splitButton"); click("Rear 0 + Front 1"); click("Apply"); ready()
+        press("splitButton"); click("Layout"); click("Top / bottom"); click("Apply"); screenshot("photo-stacked-applied")
+        pass("Split PASS: camera icon, screen assignment, reordered devices, stacked")
         val bar = ui { field<LiveControlBar>(activity,"controlBar") }
         ui { bar.handle.performClick() }
         check(ui { field<View>(bar,"manual").visibility == View.GONE })
@@ -127,10 +139,33 @@ object MultiSplitChecks {
         ui { (0 until zoom.childCount).map(zoom::getChildAt).first { it.contentDescription?.startsWith("1.0x zoom") == true }.performClick() }
         waitFor("zoom reset") { (latest("zoomRatio") as? Number)?.toFloat() == 1f }
         pass("Controls PASS: Manual absent, AEB disabled, AE/AF, EV reset, Torch/Off, zoom HAL result")
+        val rings = ui { field<List<FocusRing>>(activity,"focusRings") }
+        val point = ui { val xy = IntArray(2); rings[0].getLocationOnScreen(xy); floatArrayOf(xy[0]+rings[0].width*.5f,xy[1]+rings[0].height*.5f,rings[0].width*.15f) }
+        val touchStart = SystemClock.elapsedRealtimeNanos()
+        fun pointer(action: Int,count: Int,spread: Float,down: Long) {
+            val properties = Array(count) { i -> android.view.MotionEvent.PointerProperties().apply { id = i; toolType = android.view.MotionEvent.TOOL_TYPE_FINGER } }
+            val coordinates = Array(count) { i -> android.view.MotionEvent.PointerCoords().apply { x = point[0]+(if (i == 0) -1 else 1)*spread; y = point[1]; pressure = 1f; size = 1f } }
+            val event = android.view.MotionEvent.obtain(down,SystemClock.uptimeMillis(),action,count,properties,coordinates,0,0,1f,1f,0,0,android.view.InputDevice.SOURCE_TOUCHSCREEN,0)
+            test.sendPointerSync(event); event.recycle(); SystemClock.sleep(30)
+        }
+        val tapDown = SystemClock.uptimeMillis()
+        pointer(android.view.MotionEvent.ACTION_DOWN,1,0f,tapDown); pointer(android.view.MotionEvent.ACTION_UP,1,0f,tapDown)
+        waitFor("touch focus request") { field<FlightRecorder>(activity,"recorder").snapshot().any { it.atNs > touchStart && it.kind == "touch_meter" && it.values["kind"] == "AF" } }
+        val pinchDown = SystemClock.uptimeMillis()
+        pointer(android.view.MotionEvent.ACTION_DOWN,1,point[2],pinchDown)
+        pointer(android.view.MotionEvent.ACTION_POINTER_DOWN or (1 shl android.view.MotionEvent.ACTION_POINTER_INDEX_SHIFT),2,point[2],pinchDown)
+        repeat(10) { pointer(android.view.MotionEvent.ACTION_MOVE,2,point[2]*(1+it/12f),pinchDown) }
+        pointer(android.view.MotionEvent.ACTION_POINTER_UP or (1 shl android.view.MotionEvent.ACTION_POINTER_INDEX_SHIFT),2,point[2]*1.75f,pinchDown)
+        pointer(android.view.MotionEvent.ACTION_UP,1,point[2]*1.75f,pinchDown)
+        waitFor("pinch zoom applied") { (latest("zoomRatio") as? Number)?.toFloat()?.let { it > 1.1f } == true }
+        pass("Gestures PASS: tap focus and pinch zoom reach the selected camera")
         press("callbackButton")
         val graph = ui { field<ResultCallbackGraph>(activity,"callbackGraph") }
         waitFor("Callback camera selector") { field<View>(graph,"camera").visibility == View.VISIBLE }
-        ui { field<View>(graph,"camera").performClick(); field<View>(graph,"duration").performClick() }
+        val previousId = ui { field<Button>(graph,"camera").text.toString() }
+        ui { field<View>(graph,"camera").performClick() }
+        waitFor("Callback camera changed") { field<Button>(graph,"camera").text.toString() != previousId }
+        ui { field<View>(graph,"duration").performClick() }
         screenshot("callback-secondary"); press("callbackButton")
         pass("Callback PASS: show/hide, camera ID selection, Hold")
         press("shutter"); waitFor("photos saved") { !field<Boolean>(activity,"takingPhoto") }
@@ -160,7 +195,11 @@ object MultiSplitChecks {
         val before = videos().map { it.first }.toSet()
         press("shutter"); waitFor("recording") { field<Boolean>(activity,"recording") }
         check(ui { !field<View>(activity,"splitButton").isEnabled && !field<View>(activity,"galleryButton").isEnabled && !field<View>(activity,"labButton").isEnabled })
-        screenshot("video-recording"); SystemClock.sleep(3500); press("shutter")
+        screenshot("video-recording")
+        press("snapshotButton"); waitFor("recording photos saved") { !field<Boolean>(activity,"takingPhoto") }
+        check(ui { field<Boolean>(activity,"recording") && !field<String>(activity,"report").contains("failed") })
+        pass("Snapshot PASS: each camera saves a photo while both independent videos continue")
+        SystemClock.sleep(3500); press("shutter")
         waitFor("videos saved") { !field<Boolean>(activity,"recording") && !field<Boolean>(activity,"videoPending") }
         val saved = videos().filter { it.first !in before }; check(saved.size == ids().size) { "Expected separate videos, got $saved" }
         val sizes = ui { field<List<LiveSize>>(activity,"outputSizes") }
@@ -179,13 +218,31 @@ object MultiSplitChecks {
                 pass("Video PASS: camera ${ids()[index]} $width x $height, silent, independently playable")
             } finally { retriever.release() }
         }
-        press("galleryButton"); SystemClock.sleep(600); test.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK); ready()
-        press("labButton"); SystemClock.sleep(600); test.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK); ready()
-        press("reportButton"); SystemClock.sleep(6000); click("Close Events ZIP saved")
-        pass("Navigation PASS: Gallery and Lab return; Save Events ZIP completes")
+        fun visit(button: String,destination: Class<*>) {
+            val navigation = test.addMonitor(destination.name,null,false)
+            press(button)
+            val opened = checkNotNull(test.waitForMonitorWithTimeout(navigation,30_000)) { "Did not open ${destination.simpleName}" }
+            waitFor("${destination.simpleName} foreground") { opened.hasWindowFocus() }
+            test.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK); ready(); test.removeMonitor(navigation)
+        }
+        visit("galleryButton",dev.halcamera.GalleryActivity::class.java)
+        visit("labButton",dev.halcamera.WorkbenchActivity::class.java)
+        press("reportButton"); SystemClock.sleep(6000); click("Share")
+        val chooserEnd = SystemClock.uptimeMillis()+5000
+        while (test.uiAutomation.rootInActiveWindow?.packageName?.toString() == "dev.halcamera" && SystemClock.uptimeMillis() < chooserEnd) SystemClock.sleep(100)
+        test.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_BACK); ready()
+        pass("Navigation PASS: Gallery and Lab return; Save Events ZIP and Share chooser complete without sending")
+        ui {
+            val current = field<Any>(activity,"session")
+            field<dev.halcamera.camera.ConcurrentSession.Listener>(current,"listener").onFailed("Injected retry check")
+        }
+        press("retryButton"); ready()
+        pass("Retry PASS: injected failure closes the previous cameras and restarts both previews")
         mode(0); waitFor("Photo Live restored") { field<Boolean>(mainActivity,"ready") && !mainActivity.closing && !mainActivity.videoMode }
+        waitFor("Multi V button ready") { mainActivity.hasWindowFocus() && field<View>(mainActivity,"multiVideoButton").isEnabled && !mainActivity.closing }
+        val videoMonitor = test.addMonitor(ConcurrentCameraActivity::class.java.name,null,false)
         ui { field<View>(mainActivity,"multiVideoButton").performClick() }
-        activity = checkNotNull(test.waitForMonitorWithTimeout(monitor,30_000)) as ConcurrentCameraActivity
+        activity = checkNotNull(test.waitForMonitorWithTimeout(videoMonitor,30_000)) as ConcurrentCameraActivity
         ready(); mode(1); waitFor("Video Live restored") { field<Boolean>(mainActivity,"ready") && !mainActivity.closing && mainActivity.videoMode }
         test.removeMonitor(monitor)
         pass("Modes PASS: Photo, Video, Multi P, Multi V; cameras release before Live restoration")
