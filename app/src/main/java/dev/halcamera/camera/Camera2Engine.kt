@@ -91,7 +91,7 @@ class Camera2Engine(
     @Volatile private var configuredOutputs = StreamConfiguration<Surface>(emptyList())
     private var livePhotoOutputs = StreamConfiguration<Surface>(emptyList())
     // Camera thread only. Requests still retained by Camera2 remain keys; retired requests do not leak.
-    private val requestOutputs = java.util.WeakHashMap<CaptureRequest, List<String>>()
+    private val requestOutputs = RequestStreamRegistry<CaptureRequest>()
     private val callback = telemetry.callback(sessionId, streams = { requestOutputs[it] }) { active }
 
     private fun buildRequest(builder: CaptureRequest.Builder, outputs: List<ConfiguredOutput<Surface>>): CaptureRequest {
@@ -107,7 +107,7 @@ class Camera2Engine(
             }
         }
         outputs.forEach { builder.addTarget(it.target) }
-        return builder.build().also { requestOutputs[it] = outputs.map { output -> output.descriptor.id } }
+        return requestOutputs.track(builder.build(), outputs.map { it.descriptor.id })
     }
     private val liveCallback = object : CameraCaptureSession.CaptureCallback() {
         override fun onCaptureStarted(session: CameraCaptureSession, request: CaptureRequest, timestamp: Long, frameNumber: Long) =

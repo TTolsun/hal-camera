@@ -1,4 +1,4 @@
-`app/src/main/java/dev/halcamera/camera/CameraEngine.kt` (58 lines). The interface plus four top-level helpers that both engines and the endpoint resolver share.
+`app/src/main/java/dev/halcamera/camera/CameraEngine.kt`. The interface plus four top-level helpers that both engines and the endpoint resolver share.
 
 `CameraEngine` declares `start()`, `capture()`, `setZoom(ratio)` and `close(done)`. Two comments in it carry contracts that matter elsewhere: the zoom argument is only a *requested* ratio, since the effective ratio is knowable only from capture results, and the `close` callback means the camera has been relinquished.
 
@@ -7,3 +7,5 @@
 `describeCamera(manager, id)` snapshots the characteristics that make a session interpretable later: hardware level, timestamp source and whether it is comparable to elapsed realtime, lens facing, orientation, capabilities, physical ids, zoom range, output sizes per format and target FPS ranges. It attaches an explicit note that per-format support does not imply the stream combination is supported. `Telemetry.registerSession` is the extension that stores that map and emits the first `open_requested` event.
 
 StreamConfiguration은 세션의 실제 출력 대상과 그래프 메타데이터를 하나의 출력 목록에서 만듭니다. OutputDescriptor는 고유 ID, 출력 종류, 반복 요청·사진 요청 포함 여부와 버퍼 콜백 관측 가능 여부를 보관합니다. 중복 ID나 중복 출력 대상은 거부합니다. 출력 이름은 OutputDescriptor가 만들며 식별자는 이름과 독립적입니다. 앱 변환 JPEG와 GPU 인코더 출력은 Callback 목록에서 제외합니다. Camera2는 같은 목록으로 Surface 세션과 요청 대상을 구성하고 완성된 요청별로 실제 대상 ID를 보관합니다. CameraX는 같은 목록의 UseCase를 bindToLifecycle에 전달합니다. CameraX가 내부에서 구성하는 비공개 HAL 출력은 앱 목록에 포함하지 않습니다.
+
+RequestStreamRegistry는 일반 Camera2·PIP Service·Dual 요청 대상 ID를 제출 시점에 복사해 보관합니다. 이후 설정이나 호출자의 목록이 바뀌어도 이전 콜백의 대상을 바꾸지 않으며, 약한 참조로 끝난 요청을 붙잡지 않습니다.

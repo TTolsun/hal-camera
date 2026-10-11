@@ -51,7 +51,7 @@ internal class DualStillCapture(
                         try {
                             reader.acquireNextImage()?.use { image ->
                                 telemetry?.image(sessionId, image.timestamp, image.width, image.height, image.format,
-                                    if (index == 0) "photo_main" else "photo_sub")
+                                    DualOutputs.photos[index].id)
                                 val crop = image.cropRect
                                 val bytes = YuvPacking.nv21(image.planes.map { YuvPacking.Plane(it.buffer, it.rowStride, it.pixelStride) },
                                     crop.left, crop.top, crop.width(), crop.height())

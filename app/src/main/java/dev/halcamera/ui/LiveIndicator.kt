@@ -95,33 +95,14 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
             2 -> "EIS active, Preview and Video mode"
             else -> "EIS status unknown"
         }) + ", open Live Streams"
-        eis.setTextColor(when {
-            status.warning != null -> Look.statusWarn
-            status.video == null -> Look.onDarkMuted
-            else -> Look.onDarkMuted
-        })
+        eis.setTextColor(if (status.warning != null) Look.statusWarn else Look.onDarkMuted)
     }
 
     fun bindSizes(streams: Map<*, *>?) {
-        val labels = listOf(Triple("preview", "P", "Preview"), Triple("analysis", "Y", "YUV"),
-            Triple("jpeg", "J", "JPEG"), Triple("raw", "RAW", "RAW"), Triple("recording", "R", "Recording"),
-            Triple("pip", "P", "PIP Preview"), Triple("pipYuv", "Y", "PIP YUV"), Triple("pipJpeg", "J", "PIP JPEG"))
-        fun size(key: String): String? = if (key == "jpeg" && streams?.get(key) == null && streams?.get("appJpeg") != null)
-            "${streams["appJpegSource"] ?: "YUV"} (${streams["appJpeg"]})" else streams?.get(key)?.toString()
-        val active = labels.filter { size(it.first) != null }
-        val recordingFormat = streams?.get("recordingFormat")?.toString()?.takeIf { it.isNotBlank() } ?: "Auto"
-        val value = active.groupBy { it.first.startsWith("pip") }.entries.joinToString("\n") { (pip, row) ->
-            (if (pip) "PIP " else "") + row.joinToString("   ") { (key, label, _) ->
-                val prefix = if (key == "recording") "$label $recordingFormat" else label
-                "$prefix ${checkNotNull(size(key)).replace('x', '×')}"
-            }
-        }
-        if (sizes.text.toString() != value) sizes.text = value
-        sizes.contentDescription = active.joinToString(", ") { (key, _, name) ->
-            val prefix = if (key == "recording") "$name $recordingFormat" else name
-            "$prefix ${checkNotNull(size(key))}"
-        } + ", open Live Streams"
-        sizes.visibility = if (value.isEmpty()) View.GONE else View.VISIBLE
+        val value = LiveStreamReadout.from(streams)
+        if (sizes.text.toString() != value.text) sizes.text = value.text
+        sizes.contentDescription = value.description + ", open Live Streams"
+        sizes.visibility = if (value.text.isEmpty()) View.GONE else View.VISIBLE
     }
 
     fun setSizesEnabled(enabled: Boolean) {
