@@ -199,6 +199,7 @@ adb shell sh /data/local/tmp/halcam preview --camera 0 --mode Video --video-size
 <li><code>meter --x 0.5 --y 0.5 --meter focus</code>는 가운데 초점, <code>--meter exposure</code>는 노출 측광입니다. 명령 접수와 센서 적용은 다르므로 <code>live info</code>·사진 메타데이터로 실제 값을 확인합니다.</li>
 </ul>
 <p><code>live info</code>, <code>meter</code>, <code>events</code>, <code>preview stop</code>, <code>live set/reset</code>은 현재 열린 Live 또는 Dual 화면에 적용됩니다. 엔진이 지원하지 않는 제어는 거부됩니다.</p>
+<p><code>live info</code>의 이벤트는 <code>session_id</code>로 메인·Service PIP를 구분하고 <code>frame_number</code>·<code>sensor_timestamp_ns</code>로 같은 세션의 콜백을 연결합니다. 없는 값은 <code>null</code>이며, 앱 관측 시각인 <code>at_ns</code>와 센서 시각은 각각 문자열로 보존합니다. 센서 시각을 앱 시각과 비교하려면 해당 카메라의 timestamp source가 REALTIME인지 확인해야 합니다.</p>
 </details><h2 id="벤치마크를-실행하세요">벤치마크를 실행하세요</h2>
 <pre><code class="language-sh">adb shell sh /data/local/tmp/halcam benchmark run --camera 0
 </code></pre>
