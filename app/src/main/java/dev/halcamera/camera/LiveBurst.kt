@@ -44,8 +44,8 @@ class LiveBurst(
             clock, schedule,
             { ready() && camera()?.mediaBusy == false },
             { id, done -> camera()?.capturePhoto(id, done) ?: done(Result.failure(IllegalStateException("Camera closed"))) },
-            { if (!disposed) changed() },
-            { summary ->
+            progress = { if (!disposed) changed() },
+            finished = { summary ->
                 run = null
                 event(session, "burst_done", fields(summary))
                 if (!disposed) { report(describe(summary)); changed() }
@@ -70,43 +70,39 @@ class LiveBurst(
         bracketing = true
         val evs = BracketPlan.evIndices(base.evIndex, range, support.evStep)
         val id = SimpleDateFormat("HHmmss_SSS", Locale.US).format(Date())
-        val burst = BurstRun<PhotoResult>(id, evs.size, 0L, clock, schedule,
+        val burst = BracketCapture.create<PhotoResult>(id, base, support, clock, schedule,
             { ready() && camera()?.mediaBusy == false },
             { requestId, done -> camera()?.capturePhoto(requestId, done) ?: done(Result.failure(IllegalStateException("Camera closed"))) },
-            { if (!disposed) changed() },
-            { summary ->
+            progress = { if (!disposed) changed() },
+            finished = { summary ->
                 run = null
                 bracketing = false
-                if (camera() === tuning) tuning.setControls(base)
                 val labels = evs.map { support.evLabel(it) }
                 event(session, "bracket_done", fields(summary) + ("evRequested" to labels))
-                if (disposed) return@BurstRun
-                val sources = summary.shots.mapNotNull { it.result.getOrNull()?.let(BracketFusion::pick) }
-                val skipped = when {
-                    fusion == null -> ""
-                    summary.saved < evs.size -> " · HDR skipped"
-                    sources.size < evs.size -> " · HDR skipped: no JPEG output"
-                    else -> null
-                }
-                if (skipped != null || fusion == null) {
-                    report(describeBracket(summary) + (skipped ?: ""))
+                if (disposed) return@create
+                if (fusion == null) {
+                    report(describeBracket(summary))
                     changed()
                 } else {
                     fusing = true
                     changed()
-                    fusion.fuse(id, sources) { fused ->
+                    fusion.fuseSaved(summary) { outcome ->
                         fusing = false
-                        event(session, "bracket_fused", mapOf("burstId" to id, "file" to fused.getOrNull()?.name,
-                            "error" to fused.exceptionOrNull()?.message))
+                        event(session, "bracket_fused", mapOf("burstId" to id, "file" to outcome.artifact?.name,
+                            "error" to outcome.error, "status" to outcome.status, "reason" to outcome.reason))
                         if (!disposed) {
-                            report(describeBracket(summary) + (fused.exceptionOrNull()?.let { " · HDR failed: ${it.message}" } ?: " · HDR saved"))
+                            val suffix = when (outcome.status) {
+                                "saved" -> " · HDR saved"
+                                "failed" -> " · HDR failed: ${outcome.error}"
+                                else -> " · HDR skipped: ${outcome.reason}"
+                            }
+                            report(describeBracket(summary) + suffix)
                             changed()
                         }
                     }
                 }
             },
-            name = { "bracket-$id-${it + 1}-${BracketPlan.tag(evs[it], support.evStep)}" },
-            prepare = { index, go -> tuning.setControls(base.copy(evIndex = evs[index])); schedule(SETTLE_MS, go) })
+            setControls = tuning::setControls, canRestore = { camera() === tuning })
         run = burst
         event(session, "bracket_start", mapOf("burstId" to id, "evRequested" to evs.map { support.evLabel(it) }, "settleMs" to SETTLE_MS))
         changed()
@@ -139,7 +135,7 @@ class LiveBurst(
     companion object {
         const val RELEASED = "Released"
         /** How long a bracket shot waits after its EV is sent; about 15 preview frames at 30 fps. */
-        const val SETTLE_MS = 500L
+        const val SETTLE_MS = BracketCapture.SETTLE_MS
 
         /** Requested EVs stay in capture metadata; the shutter line reports the outcome. */
         fun describeBracket(summary: BurstSummary<*>): String = buildString {

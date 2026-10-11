@@ -2,6 +2,7 @@ import argparse
 import io
 import unittest
 from unittest.mock import patch
+from halcam.cli import execute, parser
 
 from halcam.cli import main, wait
 from halcam.presentation import render
@@ -15,6 +16,28 @@ def record(state="succeeded", **extra):
 
 
 class PresentationTests(unittest.TestCase):
+    def test_named_record_stop_waits_for_saved_artifacts_without_resubmission(self):
+        with patch("halcam.cli.Adb") as factory, patch("halcam.cli.collect", return_value=["video.mp4"]) as collect:
+            adb = factory.return_value
+            adb.hello.return_value = {}
+            adb.call.return_value = record("running", result={"recording": True})
+            adb.read.return_value = record() | {"artifacts": [{"artifact_id": "file-0"}]}
+            result = execute(parser().parse_args(["record", "stop", "--output", "out"]), {})
+            self.assertTrue(result["completed"])
+            self.assertEqual(result["downloaded_files"], ["video.mp4"])
+            adb.call.assert_called_once_with("control", {"operation": "record.stop"})
+            collect.assert_called_once()
+
+    def test_status_default_and_positional_id_match_the_shell_client(self):
+        with patch("halcam.cli.Adb") as factory:
+            adb = factory.return_value
+            adb.hello.return_value = {}
+            adb.read.return_value = record()
+            for argv, path in ((["status"], "/v1/status"), (["status", "--app"], "/v1/status"),
+                               (["status", RID], f"/v1/requests/{RID}"), (["status", "--request", RID], f"/v1/requests/{RID}")):
+                execute(parser().parse_args(argv), {})
+                adb.read.assert_called_with(path)
+
     def test_doctor_distinguishes_connection_from_camera_readiness(self):
         from halcam.cli import execute, parser
         for permission, locked, busy, expected in ((False, False, False, "PERMISSION_REQUIRED"),

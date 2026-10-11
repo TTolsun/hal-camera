@@ -5,9 +5,10 @@ import android.net.Uri
 import org.json.JSONObject
 
 /** Owns the asynchronous CLI LIVE flow; the Activity supplies its actual preview and engine. */
-class LiveController(private val commands: CommandCoordinator, private val driver: Driver) : CliHost {
+class LiveController(private val commands: CliExecution, private val driver: Driver) : CliHost, CliControlsHost, CliRecordingHost, CliSnapshotHost {
     interface Driver {
         fun prepare(command: CliCommand, ready: () -> Unit)
+        fun prepareScene(command: CliCommand, ready: () -> Unit)
         fun tune(options: CliOptions?, reset: Boolean): JSONObject
         fun sequence(command: CliCommand, done: (JSONObject, List<CliArtifact>, CliFailure?) -> Unit)
         fun cancelSequence()
@@ -33,6 +34,7 @@ class LiveController(private val commands: CommandCoordinator, private val drive
     private var pending: CliCommand? = null
     private var prepared = false
     private var submitted = false
+    private var scenePrepared = false
     private var cancelled = false
     private var recordingStopped = false
     private val snapshots = mutableListOf<CliArtifact>()
@@ -42,7 +44,8 @@ class LiveController(private val commands: CommandCoordinator, private val drive
     override fun execute(command: CliCommand) {
         snapshots.clear(); snapshotPending = false; stopAfterSnapshot = false
         pending = command; prepared = false; submitted = false; cancelled = false; recordingStopped = false
-        if (command.command in setOf("live.info", "events", "meter")) {
+        scenePrepared = false
+        if (command.command in setOf("live.info", "events", "meter", "pip.sources")) {
             submitted = true
             driver.inspect(command)
         } else if (command.command.startsWith("dual.")) {
@@ -65,6 +68,16 @@ class LiveController(private val commands: CommandCoordinator, private val drive
         val command = pending ?: return
         if (!prepared || submitted || commands.active?.id != command.id) return
         submitted = true
+        driver.prepareScene(command) {
+            if (commands.active?.id == command.id && !cancelled && !scenePrepared) {
+                scenePrepared = true
+                try { runReady(command) }
+                catch (e: Exception) { pending = null; commands.fail(command.id, (e as? CliFailure)?.code ?: "EXECUTION_FAILED", e.message ?: "Cannot execute prepared scene") }
+            }
+        }
+    }
+
+    private fun runReady(command: CliCommand) {
         if (!commands.state(command.id, "running")) { pending = null; driver.stopPreparing(); return }
         if (command.command in setOf("burst", "bracket")) {
             driver.sequence(command) { result, artifacts, failure ->
@@ -74,7 +87,7 @@ class LiveController(private val commands: CommandCoordinator, private val drive
         } else if (command.command == "preview") {
             pending = null
             commands.complete(command.id, JSONObject().put("camera_id", command.camera).put("camera_ready", true)
-                .put("engine", command.engine ?: "Camera2").put("streams", CliJson.of(driver.streamInfo())))
+                .put("engine", command.engine ?: "Camera2").put("mode", if (command.videoMode) "Video" else "Photo").put("streams", CliJson.of(driver.streamInfo())))
         } else if (command.command == "record.start") {
             var recordingStreams = emptyMap<String, Any?>()
             driver.record(command.audio != false, started = {
@@ -105,7 +118,7 @@ class LiveController(private val commands: CommandCoordinator, private val drive
 
     override fun cancel(command: CliCommand) {
         cancelled = true
-        if (!submitted) { pending = null; driver.stopPreparing() }
+        if (!submitted || (command.command in CliCommand.STREAM_COMMANDS && !scenePrepared)) { pending = null; driver.stopPreparing() }
         else if (command.command == "events") driver.cancelEvents()
         else if (command.command == "record.start") stopRecording(command)
         else if (command.command in setOf("burst", "bracket")) driver.cancelSequence()
@@ -114,16 +127,16 @@ class LiveController(private val commands: CommandCoordinator, private val drive
     }
 
     override fun snapshot(command: CliCommand) {
-        if (snapshotPending || recordingStopped || cancelled || commands.store.read(command.id)?.optJSONObject("result")?.optBoolean("recording") != true)
+        if (snapshotPending || recordingStopped || cancelled || commands.readRecord(command.id)?.optJSONObject("result")?.optBoolean("recording") != true)
             throw CliFailure("BUSY", "Wait until recording or the previous snapshot is ready")
         snapshotPending = true
-        commands.store.transition(command.id, "running") { it.put("snapshot_pending", true) }
+        commands.updateRecord(command.id) { it.put("snapshot_pending", true) }
         val finish: (Result<PhotoResult>) -> Unit = { result ->
             snapshotPending = false
             result.getOrNull()?.let { photo -> snapshots += photo.artifacts.ifEmpty { photo.uris.mapIndexed { i, uri ->
                 dev.halcamera.camera.PhotoArtifact("${photo.name}_snapshot_$i.jpg", "image/jpeg", uri)
             } }.map { CliArtifact(it.name, it.mime, it.uri) } }
-            if (commands.active?.id == command.id) runCatching { commands.store.update(command.id) {
+            if (commands.active?.id == command.id) runCatching { commands.updateRecord(command.id) {
                 it.put("snapshot_count", snapshots.size).put("snapshot_pending", false).put("snapshot_error", result.exceptionOrNull()?.message)
             } }
             if (stopAfterSnapshot && commands.active?.id == command.id) stopRecording(command)
@@ -136,7 +149,7 @@ class LiveController(private val commands: CommandCoordinator, private val drive
         if (snapshotPending) { stopAfterSnapshot = true; return }
         if (pending?.id != command.id || command.command != "record.start")
             throw CliFailure("NOT_RECORDING", "No matching recording is active")
-        if (!submitted) {
+        if (!submitted || !scenePrepared) {
             pending = null
             driver.stopPreparing()
             commands.fail(command.id, "NOT_RECORDING", "Recording stopped before preview was ready")

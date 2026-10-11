@@ -16,6 +16,25 @@ RID = "b616d5cc-7706-4983-b49e-4e4d5c0ef816"
 
 @unittest.skipUnless(BASH, "A POSIX shell is needed for client tests")
 class AdbShellTests(unittest.TestCase):
+    def test_status_without_id_reads_app_even_when_a_last_request_exists(self):
+        proc, calls = self.run_client(["status"], remember=True)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("/v1/status", calls)
+        self.assertNotIn("/v1/requests/", calls)
+
+    def test_video_mode_and_pip_options_reach_the_provider(self):
+        proc, calls = self.run_client(["preview", "--mode", "Video", "--pip-type", "service", "--pip-camera", "1", "--pip-preview-size", "640x480"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        for option in ("mode:s:Video", "pip_type:s:service", "pip_camera:s:1", "pip_preview_size:s:640x480"):
+            self.assertIn(option, calls)
+
+    def test_duplicate_value_options_are_rejected_before_submission(self):
+        for argv in (["capture", "--zoom", "2", "--zoom", "3"], ["preview", "--camera", "0", "--camera", "1"]):
+            proc, calls = self.run_client(argv)
+            self.assertNotEqual(proc.returncode, 0)
+            self.assertIn("Repeated option", proc.stderr)
+            self.assertNotIn("--method", calls)
+
     def test_terminal_status_explains_partial_file_recovery_without_downloading(self):
         for state in ("cancelled", "failed", "interrupted"):
             for artifacts in ([], [{"artifact_id": "file-0", "name": "photo.jpg"}]):
@@ -200,7 +219,7 @@ sha256sum() {
         self.assertNotIn("v1/requests", calls)
 
     def test_status_recovers_last_request_without_resubmitting(self):
-        proc, calls = self.run_client(["status"], remember=True)
+        proc, calls = self.run_client(["status", "--last"], remember=True)
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn("v1/requests/" + RID, calls)
         self.assertNotIn("call", calls)

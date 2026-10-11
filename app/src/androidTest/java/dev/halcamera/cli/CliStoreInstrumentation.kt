@@ -136,9 +136,27 @@ class CliStoreInstrumentation : Instrumentation() {
 
             val active = command(); recovered.create(active)
             clock += CommandStore.RETENTION_MS + 1
+            // Cached and cold reads must expire without another submitted command or cleanup.
+            check(recovered.read(first.id) == null && recovered.read(interrupted.id) == null); passed++
+            check(recovered.read(active.id)?.getString("state") == "accepted"); passed++
             recovered.cleanup()
             check(recovered.read(first.id) == null && recovered.read(interrupted.id) == null); passed++
             check(recovered.read(active.id)?.getString("state") == "accepted"); passed++
+
+            val expiryDirectory = File(directory, "expiry")
+            val expiredIds = mutableListOf<String>()
+            val expiryStore = CommandStore(expiryDirectory, now = { clock }, onExpire = expiredIds::add)
+            val expiring = command(); expiryStore.create(expiring); finish(expiring.id, expiryStore)
+            val deadline = clock + CommandStore.RETENTION_MS
+            clock = deadline - 1
+            check(expiryStore.read(expiring.id) != null); passed++
+            clock = deadline
+            val coldStore = CommandStore(expiryDirectory, now = { clock }, onExpire = expiredIds::add)
+            check(coldStore.read(expiring.id) == null && expiryStore.read(expiring.id) == null); passed++
+            check(!File(expiryDirectory, "${expiring.id}.json").exists()); passed++
+            check(expiredIds.contains(expiring.id)); passed++
+            val videoPreview = AdbArguments.command("preview", mapOf("mode" to "Video"))
+            check(CliJson.decode(CliJson.encode(videoPreview)) == videoPreview); passed++
 
             repeat(CommandStore.MAX_RECORDS + 3) {
                 clock++
@@ -169,6 +187,23 @@ class CliStoreInstrumentation : Instrumentation() {
                 org.json.JSONArray().put(JSONObject().put("source_uri", "file:///private").put("artifact_id", "file-0")))
             val public = CliJson.publicRecord(privateRecord)
             check(!public.has("request") && !public.getJSONArray("artifacts").getJSONObject(0).has("source_uri")); passed++
+
+            val clockBeyondDouble = 9_007_199_254_740_993L
+            val callbackValues = mapOf("streams" to listOf("preview"))
+            val callbackRows = CliJson.of(listOf(
+                CliEvents.toMap(dev.halcamera.telemetry.Event(clockBeyondDouble, "main", "capture_started", 7, clockBeyondDouble, callbackValues)),
+                CliEvents.toMap(dev.halcamera.telemetry.Event(clockBeyondDouble + 1, "main:pip:secondary", "capture_started", 7, Long.MAX_VALUE, callbackValues))
+            )) as org.json.JSONArray
+            val wireRows = org.json.JSONArray(callbackRows.toString())
+            check(wireRows.getJSONObject(0).getString("session_id") == "main" &&
+                wireRows.getJSONObject(1).getString("session_id") == "main:pip:secondary" &&
+                wireRows.getJSONObject(0).getLong("frame_number") == 7L &&
+                wireRows.getJSONObject(0).getString("sensor_timestamp_ns") == clockBeyondDouble.toString() &&
+                wireRows.getJSONObject(1).getString("sensor_timestamp_ns") == Long.MAX_VALUE.toString()); passed++
+            val unavailable = CliJson.of(CliEvents.toMap(dev.halcamera.telemetry.Event(10, "main", "closed"))) as JSONObject
+            check(unavailable.has("frame_number") && unavailable.isNull("frame_number") &&
+                unavailable.has("sensor_timestamp_ns") && unavailable.isNull("sensor_timestamp_ns")); passed++
+            passed += CliFlowChecks.run()
             finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "CLI_STORE_TESTS_PASSED=$passed\n") })
         } catch (error: Throwable) {
             finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "CLI_STORE_TESTS_FAILED after $passed: ${error.stackTraceToString()}\n") })

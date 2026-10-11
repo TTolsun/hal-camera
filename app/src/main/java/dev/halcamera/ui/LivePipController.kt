@@ -36,23 +36,24 @@ internal class LivePipController(
     fun resetMode() { positions.clear(); requestedSource = null; settingsParent = null; reset() }
 
     @SuppressLint("ClickableViewAccessibility")
-    fun select(source: PipSource?) {
-        if (Build.VERSION.SDK_INT < 30 || busy) return
-        val current = engine() ?: return
+    fun select(source: PipSource?, position: PipRect? = null, done: ((Result<Unit>) -> Unit)? = null) {
+        if (Build.VERSION.SDK_INT < 30 || busy) { done?.invoke(Result.failure(IllegalStateException("PIP unavailable or busy"))); return }
+        val current = engine() ?: run { done?.invoke(Result.failure(IllegalStateException("Camera unavailable"))); return }
         val parent = cameraId()
         if (source != null) { requestedSource = source; settingsParent = parent }
-        rect = positions.read(parent, PipScene.liveDefault)
+        rect = position ?: positions.read(parent, PipScene.liveDefault)
         val token = ++generation
         val previous = selected
         busy = true; changed()
         fun complete(result: Result<Unit>) {
-            if (token != generation || engine() !== current) return
+            if (token != generation || engine() !== current) { done?.invoke(Result.failure(IllegalStateException("PIP session replaced"))); return }
             busy = false
             selected = pipSelectionAfter(previous,source,result)
             if (selected == null) { view?.let { host().removeView(it) }; view = null }
             else view?.alpha = 1f
             result.exceptionOrNull()?.let { notice(it.message ?: "PIP unavailable") }
             changed()
+            done?.invoke(result)
         }
         if (source == null) { current.setPip(null,null,null,done=::complete); return }
         fun start(target: TextureView) {

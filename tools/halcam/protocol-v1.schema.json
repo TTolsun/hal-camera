@@ -31,6 +31,7 @@
         "meter",
         "events",
         "live.info",
+        "pip.sources",
         "dual.cameras",
         "dual.preview",
         "dual.capture",
@@ -431,6 +432,25 @@
         "properties": {
           "command": {
             "const": "live.info"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "pip.sources"
           }
         }
       },
@@ -1053,6 +1073,12 @@
               },
               "engine": {
                 "$ref": "#/$defs/engine"
+              },
+              "mode": {
+                "enum": [
+                  "Photo",
+                  "Video"
+                ]
               }
             },
             "required": [
@@ -1141,8 +1167,32 @@
                   },
                   "matrix": {
                     "type": "string"
+                  },
+                  "pip_type": {
+                    "type": "string"
+                  },
+                  "pip_camera": {
+                    "type": "string"
+                  },
+                  "pip_x": {
+                    "type": "string"
+                  },
+                  "pip_y": {
+                    "type": "string"
+                  },
+                  "pip_width": {
+                    "type": "string"
+                  },
+                  "pip_height": {
+                    "type": "string"
                   }
                 }
+              },
+              "mode": {
+                "enum": [
+                  "Photo",
+                  "Video"
+                ]
               }
             },
             "required": [
@@ -1231,6 +1281,24 @@
                   },
                   "matrix": {
                     "type": "string"
+                  },
+                  "pip_type": {
+                    "type": "string"
+                  },
+                  "pip_camera": {
+                    "type": "string"
+                  },
+                  "pip_x": {
+                    "type": "string"
+                  },
+                  "pip_y": {
+                    "type": "string"
+                  },
+                  "pip_width": {
+                    "type": "string"
+                  },
+                  "pip_height": {
+                    "type": "string"
                   }
                 }
               }
@@ -1304,6 +1372,24 @@
                     "type": "string"
                   },
                   "matrix": {
+                    "type": "string"
+                  },
+                  "pip_type": {
+                    "type": "string"
+                  },
+                  "pip_camera": {
+                    "type": "string"
+                  },
+                  "pip_x": {
+                    "type": "string"
+                  },
+                  "pip_y": {
+                    "type": "string"
+                  },
+                  "pip_width": {
+                    "type": "string"
+                  },
+                  "pip_height": {
                     "type": "string"
                   }
                 }
@@ -1503,6 +1589,14 @@
             "VIDEO",
             "PREVIEW"
           ]
+        },
+        "pip_preview_size": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
+        },
+        "pip_photo_size": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}$"
         }
       }
     },

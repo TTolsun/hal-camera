@@ -225,7 +225,7 @@ class DualPreviewActivity : ComponentActivity() {
         cliRequest?.takeIf { cli.active?.id == it.id }?.let { command ->
             cliInterrupted = true; cliStopping = true
             closeSession {
-                if (cli.active?.id == command.id && cli.store.read(command.id)?.optString("state") !in dev.halcamera.cli.CliStates.terminal + "saving")
+                if (cli.active?.id == command.id && cli.readRecord(command.id)?.optString("state") !in dev.halcamera.cli.CliStates.terminal + "saving")
                     cli.complete(command.id, org.json.JSONObject().put("artifact_count", cliArtifacts.size), cliArtifacts.toList(), dev.halcamera.cli.CliFailure("RECORDING_INTERRUPTED", "Dual screen left foreground"))
             }
         }
@@ -863,7 +863,7 @@ class DualPreviewActivity : ComponentActivity() {
             val result = runCatching { IncidentExporter(applicationContext).export(incident, sessions) }
             if (cli.active?.let { it.id == incident.id && it.command == "events" } == true) {
                 result.fold({ file -> cli.complete(incident.id, org.json.JSONObject().put("artifact_count", 1)
-                    .put("cancelled", cli.store.read(incident.id)?.optString("state") == "cancelling"),
+                    .put("cancelled", cli.readRecord(incident.id)?.optString("state") == "cancelling"),
                     listOf(dev.halcamera.cli.CliArtifact(file.name, "application/zip", android.net.Uri.fromFile(file)))) },
                     { cli.fail(incident.id, "SAVE_FAILED", it.message ?: "Events export failed") })
                 return@execute

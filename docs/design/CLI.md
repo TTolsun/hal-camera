@@ -5,6 +5,9 @@
 > 2026-10-09 확장: 현재 CLI는 수동 제어·RAW/NV21·연사·AEB/HDR·녹화 스냅샷·Dual·결과/baseline·갤러리·진단 ZIP·보관 한도를 포함합니다. 현재 계약과 예시는 [CLI 가이드](../../guide/cli.md), 코드별 대응과 실제 검증 수준은 [전체 CLI 검증 기록](../validation/cli-parity-20261009.md)을 따릅니다. 아래 v0.1의 후속 범위·갤러리 제외 설명은 과거 설계 기록입니다.
 
 
+> 2026-10-11 정리: 명령 검증·기본값·실행 대상은 `CliCommands`의 계약을 사용하고 `hello.command_specs`로 제공합니다. 화면별 선택 기능은 작은 host 인터페이스로 분리하고, 조회는 `CliQueries`, UI·CLI AEB는 `BracketCapture`를 재사용합니다. CTS 공통 실행, 요청 조회 시 만료, Photo·Video 옵션과 명시적 PIP는 [CLI 가이드](../../guide/cli.md)를 따릅니다. 이번 검토는 0.25.0 머지 커밋 `623786ed`를 포함합니다.
+
+
 작성일: 2026-09-12 · 상태: 0.6.0 릴리스 검증 · 관련 이슈: [#56](https://github.com/TTolsun/hal-camera/issues/56)
 
 이 문서는 PC에서 ADB로 Android 앱을 제어하는 설계와 검증 기준이다. 기본 명령은 앱 0.6.0과 Python CLI 0.1.0에 구현했다. 실제 통과 범위는 [기능 검증 기록](../validation/cli-device.md)에 기록한다. 실제 파일 구조와 확정된 정책을 아래에 기록한다. 구현 순서와 검증 기준은 [구현 계획](../PLAN-CLI-v0.1.md)에 정의한다.

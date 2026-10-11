@@ -32,7 +32,7 @@ import java.util.concurrent.Executors
 /** Live launcher: preview, capture and observation. Benchmark owns baseline comparisons and verdicts. */
 class MainActivity : ComponentActivity() {
     internal val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
-    internal val cliSequence by lazy { dev.halcamera.cli.CliSequence(this) }
+    internal val cliSequence by lazy { dev.halcamera.cli.CliSequence(this, cli::updateRecord) }
     private val liveCli by lazy { createLiveCli() }
     internal fun exportCliIncident(incident: Incident) {
         if (cli.active?.let { it.id == incident.id && it.command == "events" } == true) {
@@ -41,7 +41,7 @@ class MainActivity : ComponentActivity() {
                 try {
                     val file = IncidentExporter(this).export(incident, sessions)
                     cli.complete(incident.id, org.json.JSONObject().put("artifact_count", 1)
-                        .put("cancelled", cli.store.read(incident.id)?.optString("state") == "cancelling"),
+                        .put("cancelled", cli.readRecord(incident.id)?.optString("state") == "cancelling"),
                         listOf(dev.halcamera.cli.CliArtifact(file.name, "application/zip", android.net.Uri.fromFile(file))))
                 } catch (e: Exception) { cli.fail(incident.id, "SAVE_FAILED", e.message ?: "Events export failed") }
             }
@@ -146,8 +146,8 @@ class MainActivity : ComponentActivity() {
     }
     private lateinit var engineButton: Button
     private lateinit var physicalPipButton: Button
-    private var pendingPip: PipSource? = null
-    private val pipUi by lazy { LivePipController(this,{ previewHost },{ engine as? PipCamera },::updateMediaControls,{ lastPreviewFrameNs = nowNs() },::showNotice,{ cameraId }) }
+    internal var pendingPip: PipSource? = null
+    internal val pipUi by lazy { LivePipController(this,{ previewHost },{ engine as? PipCamera },::updateMediaControls,{ lastPreviewFrameNs = nowNs() },::showNotice,{ cameraId }) }
     private val physicalPip by lazy { dev.halcamera.ui.PhysicalPipPicker(this,manager) }
     private val graphBack = object : OnBackPressedCallback(false) {
         override fun handleOnBackPressed() = showCallbacks(false)
@@ -764,7 +764,7 @@ class MainActivity : ComponentActivity() {
         recordingTime.visibility=if(recordingVideo) View.VISIBLE else View.GONE
         mediaButton.setCaptureState(videoMode,recordingVideo,bursts.run != null,controlBar.controls.bracket,bursts.label)
         val cliProgress = cli.active?.takeIf { it.command in setOf("burst", "bracket", "capture", "events") }?.let { command ->
-            val record = cli.store.read(command.id)
+            val record = cli.readRecord(command.id)
             val progress = record?.optJSONObject("progress")
             if (progress != null) "CLI · ${progress.optInt("saved")}/${progress.optInt("total")} saved · ${progress.optString("phase")}" else "CLI · ${record?.optString("state") ?: "preparing"}"
         }

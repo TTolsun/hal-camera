@@ -18,7 +18,7 @@ HAL CAM — adb only
   cts run --cases KEY[,KEY...]
   benchmark run [--camera ID] [--profile camera2-standard-v2]
                                         Run the fixed Camera2 benchmark; export JSON
-  status [REQUEST_ID|--app] | cancel [REQUEST_ID]
+  status [REQUEST_ID|--app|--last] | cancel [REQUEST_ID]
   fetch [REQUEST_ID]                     Prepare files and show one adb pull command
 More tasks (start with the list command to find an ID):
   burst --count 3 [--interval-ms 500]     Save a fixed number of photos
@@ -27,6 +27,9 @@ More tasks (start with the list command to find an ID):
   meter --x 0.5 --y 0.5 [--meter focus|exposure]
   live set --zoom 2 | live reset         Adjust current preview/CLI recording or reset controls
   live info | events                    Read callbacks / save Events ZIP
+  pip sources                           Check candidates for the current Photo/Video preview
+  capture --pip-type service --pip-camera ID
+                                        Save PIP composition and source photos
   dual cameras                          List logical and physical camera IDs
   dual preview|capture|record --camera ID --first ID --second ID
                                         Dual video is silent; stop with record stop
@@ -44,10 +47,14 @@ More tasks (start with the list command to find an ID):
   gallery delete --media ID --confirm true
 Stream options for preview/capture/burst/bracket/record start:
   --engine Camera2|CameraX (default Camera2)
+  --mode Photo|Video (preview and streams; default Photo)
   --preview-size WxH --yuv-size WxH|off --jpeg-size WxH|yuv|off
   --video-size WxH --video-fps FPS --codec H264|HEVC|Auto
   --raw-size WxH|off --fps FPS|MIN-MAX|auto
   --stabilization AUTO|OFF|OIS|VIDEO|PREVIEW
+  --pip-type off|physical|service --pip-camera ID
+  --pip-preview-size WxH --pip-photo-size WxH
+  --pip-x X --pip-y Y --pip-width W --pip-height H (all four; 0–1)
 For zoom, flash and manual controls: help controls
 Omitted stream fields use defaults. CameraX recording codec is Auto.
 Options: --timeout SECONDS (operation deadline), --no-wait (return request ID)
@@ -180,12 +187,12 @@ EOF
         exit 0 ;;
     preview)
         case "${1:-}" in start) shift ;; stop) method=preview.stop; shift ;; esac ;;
-    record|cts|benchmark|results|baseline|gallery|dual|live|settings|incidents)
+    record|cts|benchmark|results|baseline|gallery|dual|live|pip|settings|incidents)
         [ $# -gt 0 ] || die "$method needs a subcommand; use help"
         method=$method.$1; shift ;;
 esac
 case "$method" in
-    settings.show|settings.limit|incidents.list|incidents.export|incidents.delete|live.set|live.reset|doctor|streams|cameras|preview|preview.stop|capture|burst|bracket|meter|events|live.info|dual.cameras|dual.preview|dual.capture|dual.record|results.list|results.show|results.export|results.compare|results.delete|baseline.add|baseline.remove|gallery.list|gallery.export|gallery.delete|record.start|record.stop|record.snapshot|probe|cts.cases|cts.run|benchmark.run|status|cancel|fetch) ;;
+    settings.show|settings.limit|incidents.list|incidents.export|incidents.delete|live.set|live.reset|doctor|streams|cameras|preview|preview.stop|capture|burst|bracket|meter|events|live.info|pip.sources|dual.cameras|dual.preview|dual.capture|dual.record|results.list|results.show|results.export|results.compare|results.delete|baseline.add|baseline.remove|gallery.list|gallery.export|gallery.delete|record.start|record.stop|record.snapshot|probe|cts.cases|cts.run|benchmark.run|status|cancel|fetch) ;;
     *) die "Unknown command: $method. Use help." ;;
 esac
 
@@ -215,13 +222,16 @@ case "$method" in
         exit 0 ;;
     status|cancel|fetch)
         [ $# -le 1 ] || die 'Expected at most one request ID'
-        if [ "$method" = status ] && { [ "${1:-}" = --app ] || { [ $# -eq 0 ] && [ ! -f "$LAST" ]; }; }; then
+        if [ "$method" = status ] && { [ "${1:-}" = --app ] || [ $# -eq 0 ]; }; then
             result=$(content read --uri "$URI/v1/status")
             check_response "$result"
             echo "$result"
             exit 0
         fi
-        rid=${1:-$(last_id)}
+        if [ "${1:-}" = --last ]; then
+            [ "$method" = status ] || die '--last is only for status'
+            rid=$(last_id)
+        else rid=${1:-$(last_id)}; fi
         validate_id "$rid"
         if [ "$method" = cancel ]; then result=$(call --method request.cancel --arg "$rid")
         else result=$(read_request "$rid"); fi
@@ -265,6 +275,11 @@ esac
 rid=$(cat /proc/sys/kernel/random/uuid)
 validate_id "$rid"
 no_wait=false
+seen_options=
+unique_option() {
+    case " $seen_options " in *" $1 "*) die "Repeated option: --$1" ;; esac
+    seen_options="$seen_options $1"
+}
 wait_seconds=45
 timeout=
 camera=
@@ -278,21 +293,24 @@ branch=
 note=
 while [ $# -gt 0 ]; do
     case "$1" in
-        --engine|--preview-size|--yuv-size|--jpeg-size|--video-size|--video-fps|--codec|--raw-size|--fps|--stabilization|--zoom|--ev|--flash|--ae-lock|--af-lock|--iso|--exposure-ns|--focus|--wb|--gains|--matrix|--count|--interval-ms|--x|--y|--meter|--run|--reference|--media|--confirm|--first|--second|--incident|--limit)
+        --engine|--mode|--preview-size|--yuv-size|--jpeg-size|--video-size|--video-fps|--codec|--raw-size|--fps|--stabilization|--pip-type|--pip-camera|--pip-x|--pip-y|--pip-width|--pip-height|--pip-preview-size|--pip-photo-size|--zoom|--ev|--flash|--ae-lock|--af-lock|--iso|--exposure-ns|--focus|--wb|--gains|--matrix|--count|--interval-ms|--x|--y|--meter|--run|--reference|--media|--confirm|--first|--second|--incident|--limit)
             [ $# -ge 2 ] || die "$1 needs a value"
             case "$2" in ''|*[!a-zA-Z0-9x.,_-]*) die 'Invalid stream option value' ;; esac
             key=$(echo "${1#--}" | tr '-' '_')
+            unique_option "$key"
             stream_options="$stream_options $key:s:$2"
             shift 2 ;;
         --build|--commit|--branch|--note)
             [ $# -ge 2 ] || die "$1 needs a value"
             [ "$method" = benchmark.run ] || die 'Build labels are only for benchmark run'
+            unique_option "${1#--}"
             case "$2" in *:*) die 'Use the Python JSON client for labels containing colons' ;; esac
             case "$1" in --build) build=$2 ;; --commit) commit=$2 ;; --branch) branch=$2 ;; --note) note=$2 ;; esac
             shift 2 ;;
         --camera|--timeout|--cases|--profile)
             [ $# -ge 2 ] || die "$1 needs a value"
             [ -n "$2" ] || die "$1 needs a nonempty value"
+            unique_option "${1#--}"
             case "$1" in --camera) camera=$2 ;; --timeout) timeout=$2 ;; --cases) cases=$2 ;; --profile) profile=$2 ;; esac
             shift 2 ;;
         --no-audio) audio=false; shift ;;
@@ -336,7 +354,7 @@ fi
 hello=$(content read --uri "$URI/v1/hello")
 check_response "$hello"
 case "$method" in
-    preview|preview.stop|capture|burst|bracket|meter|events|live.info|dual.preview|dual.capture|dual.record|record.start|cts.run|benchmark.run)
+    preview|preview.stop|capture|burst|bracket|meter|events|live.info|pip.sources|dual.preview|dual.capture|dual.record|record.start|cts.run|benchmark.run)
         status=$(content read --uri "$URI/v1/status")
         check_response "$status"
         case "$status" in *'"busy":true'*) die 'Another operation is running. Use status or record stop.' ;; esac

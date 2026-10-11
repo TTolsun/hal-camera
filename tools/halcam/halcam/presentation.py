@@ -56,7 +56,7 @@ def render(data, args):
     elif artifacts:
         lines.append(f"{len(artifacts)} file(s) available, including any saved before cancellation.")
     # Lists and summaries are the requested result, so keep every entry visible.
-    for key in ("summary", "comparison", "runs", "media", "incidents", "cameras", "cases", "streams", "devices", "delete_runs"):
+    for key in ("summary", "comparison", "runs", "media", "incidents", "cameras", "cases", "streams", "pip_sources", "devices", "delete_runs"):
         value = result.get(key, data.get(key))
         if value is not None:
             lines.append(f"{key}:")
@@ -78,7 +78,7 @@ def render(data, args):
     elif (stopping or snapshot) and rid:
         next_step = command(args, "status", "--request", rid)
     elif result.get("recording"):
-        next_step = command(args, "control", "record.stop")
+        next_step = command(args, "record", "stop", "--output", "./videos")
     elif artifacts and not files and rid:
         next_step = command(args, "fetch", rid, "--output", "./captures")
     elif error and error["code"] == "BUSY":

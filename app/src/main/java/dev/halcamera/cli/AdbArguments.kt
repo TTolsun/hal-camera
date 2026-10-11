@@ -11,12 +11,14 @@ object AdbArguments {
      */
     fun command(method: String, values: Map<String, Any?>, arg: String? = null): CliCommand {
         val command = if (method == "preview.start") "preview" else method
+        val spec = CliCommands.get(command)
         val allowed = mutableSetOf("request_id", "timeout_ms")
-        if (command in CliCommand.CAMERA_COMMANDS) allowed += "camera"
-        if (command in CliCommand.LIVE_CAMERA_COMMANDS) allowed += "engine"
+        if (spec.camera) allowed += "camera"
+        if (spec.engine) allowed += "engine"
+        if (spec.acceptsMode) allowed += "mode"
         if (command == "benchmark.run") allowed += "profile"
-        if (command in CliCommand.STREAM_COMMANDS) allowed += CliStreams.KEYS
-        if (command in setOf("record.start", "dual.record")) allowed += "audio"
+        if (spec.streams) allowed += CliStreams.KEYS
+        if (spec.audio) allowed += "audio"
         allowed += CliOptions.allowed(command)
         if (command == "cts.run") allowed += "cases"
         if (values.keys.any { it !in allowed }) throw CliFailure("INVALID_ARGUMENT", "Unexpected argument for $method")
@@ -32,18 +34,14 @@ object AdbArguments {
         val audio = values["audio"]
         if (values.containsKey("audio") && audio !is Boolean) throw CliFailure("INVALID_ARGUMENT", "audio must be a boolean")
         return CliCommand(string("request_id") ?: UUID.randomUUID().toString(), command,
-            if (command in CliCommand.CAMERA_COMMANDS) string("camera") ?: "0" else null,
+            if (spec.camera) string("camera") ?: "0" else null,
             if (command == "benchmark.run") string("profile") ?: CliCommand.BENCHMARK_PROFILE else null,
-            (timeout as? Number)?.toLong() ?: when (command) {
-                "benchmark.run" -> 600_000L
-                "record.start", "dual.record" -> 3_600_000L
-                "cts.run" -> 1_800_000L
-                else -> 30_000L
-            }, (arg ?: string("cases"))?.split(","), audio as? Boolean, string("engine"),
+            (timeout as? Number)?.toLong() ?: spec.timeoutMs,
+            (arg ?: string("cases"))?.split(","), audio as? Boolean, string("engine"),
             values.keys.intersect(CliStreams.KEYS).takeIf { it.isNotEmpty() }?.let { keys ->
                 CliStreams(keys.associateWith { string(it)!! })
             }, values.keys.intersect(CliOptions.allowed(command)).takeIf { it.isNotEmpty() }?.let { keys ->
                 CliOptions(keys.associateWith { string(it)!! })
-            })
+            }, string("mode"))
     }
 }

@@ -3,7 +3,7 @@ package dev.halcamera
 import dev.halcamera.camera.*
 
 /** Activity-side adapter for Dual controls, diagnostics and request lifecycle. */
-internal fun DualPreviewActivity.createDualCliHost(): dev.halcamera.cli.CliHost = object : dev.halcamera.cli.CliHost {
+internal fun DualPreviewActivity.createDualCliHost(): dev.halcamera.cli.CliHost = object : dev.halcamera.cli.CliHost, dev.halcamera.cli.CliControlsHost, dev.halcamera.cli.CliRecordingHost {
 override val screen = "dual"
 override fun isBusy() = closing || recording || recordPending || photoPending
 override fun tune(options: dev.halcamera.cli.CliOptions?, reset: Boolean): org.json.JSONObject {
@@ -26,8 +26,7 @@ override fun execute(command: dev.halcamera.cli.CliCommand) {
                 .put("size", streamingSize?.toString()).put("zoom", zoomRatio)
                 .put("zoom_range", dev.halcamera.cli.CliJson.of(listOf(cliZoomRange.first, cliZoomRange.second)))
                 .put("controls", controlBar.controls.toString())
-                .put("report", dualReport()).put("events", dev.halcamera.cli.CliJson.of(recorder.snapshot(1_000_000_000L).takeLast(100)
-                    .map { mapOf("kind" to it.kind, "at_ns" to it.atNs.toString(), "values" to it.values) })))
+                .put("report", dualReport()).put("events", dev.halcamera.cli.CliJson.of(dev.halcamera.cli.CliEvents.recent(recorder))))
             return
         }
         "events" -> {

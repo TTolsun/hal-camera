@@ -33,14 +33,27 @@ class CommandStore(
 
     @Synchronized fun read(id: String): JSONObject? {
         CliCommand.validateId(id)
-        snapshots[id]?.let { return JSONObject(it) }
+        snapshots[id]?.let { return unexpired(JSONObject(it)) }
         val file = File(directory, "$id.json")
         if (!file.exists() && !File(directory, "$id.json.bak").exists()) return null
         return try {
             val text = AtomicFile(file).openRead().bufferedReader().use { it.readText() }
-            JSONObject(text).also { snapshots[id] = text }
+            unexpired(JSONObject(text).also { snapshots[id] = text })
         }
         catch (e: Exception) { throw CliFailure("STORE_FAILED", "Unreadable request record; do not replay $id") }
+    }
+
+    /** Expiration also applies to cached reads, even when no new commands trigger cleanup. */
+    private fun unexpired(record: JSONObject): JSONObject? {
+        if (!record.optBoolean("completed") || record.optLong("expires_at_ms", Long.MAX_VALUE) > now()) return record
+        remove(record.getString("request_id"))
+        return null
+    }
+
+    private fun remove(id: String) {
+        AtomicFile(File(directory, "$id.json")).delete()
+        snapshots.remove(id)
+        runCatching { onExpire(id) }
     }
 
     @Synchronized fun write(record: JSONObject) {
@@ -90,9 +103,7 @@ class CommandStore(
         }.sortedByDescending { it.optLong("created_at_ms") }
         records.forEachIndexed { index, record ->
             if (index >= MAX_RECORDS || record.optLong("expires_at_ms", Long.MAX_VALUE) <= now()) {
-                AtomicFile(File(directory, "${record.getString("request_id")}.json")).delete()
-                snapshots.remove(record.getString("request_id"))
-                runCatching { onExpire(record.getString("request_id")) }
+                remove(record.getString("request_id"))
             }
         }
     }

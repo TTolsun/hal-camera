@@ -39,6 +39,23 @@ class BracketFusion(context: Context) : AutoCloseable {
         }
     }
 
+    data class Outcome(val status: String, val artifact: PhotoArtifact? = null, val error: String? = null, val reason: String? = null)
+
+    /** Shared eligibility and source selection keep UI and CLI HDR completion consistent. */
+    fun fuseSaved(summary: BurstSummary<PhotoResult>, started: () -> Unit = {}, done: (Outcome) -> Unit) {
+        val sources = summary.shots.mapNotNull { it.result.getOrNull()?.let(::pick) }
+        val reason = when {
+            summary.stopReason != null || summary.saved != summary.requested -> "All bracket photos must be saved without interruption"
+            sources.size != summary.requested -> "Saved JPEG sources are required"
+            else -> null
+        }
+        if (reason != null) { done(Outcome("skipped", reason = reason)); return }
+        started()
+        fuse(summary.id, sources) { result ->
+            done(Outcome(if (result.isSuccess) "saved" else "failed", result.getOrNull(), result.exceptionOrNull()?.message))
+        }
+    }
+
     /** Let accepted saves finish, then release the worker instead of retaining one per Activity. */
     override fun close() { io.shutdown() }
 

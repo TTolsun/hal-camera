@@ -11,7 +11,7 @@ import org.json.JSONObject
 import java.io.File
 
 /** Uses the same reports and baseline rules as Results; media IDs are resolved only inside HALCamera. */
-class CliLibrary(private val context: Context, private val commands: CommandCoordinator) {
+class CliLibrary(private val context: Context, private val commands: CliArtifacts, private val capabilities: () -> JSONObject) {
     fun execute(command: CliCommand) {
         val options = command.options?.values.orEmpty()
         if (command.command.startsWith("incidents.")) { incidents(command); return }
@@ -91,7 +91,7 @@ class CliLibrary(private val context: Context, private val commands: CommandCoor
     private fun settings(command: CliCommand) {
         val prefs = BenchmarkPrefs(context)
         if (command.command == "settings.show") {
-            commands.complete(command.id, commands.hello().put("run_limit", prefs.runLimit)); return
+            commands.complete(command.id, capabilities().put("run_limit", prefs.runLimit)); return
         }
         val store = BenchmarkStore(context)
         store.index()
