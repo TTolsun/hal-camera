@@ -202,7 +202,7 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 <details markdown="1" id="stream-readout" data-search-section>
 <summary>P·Y·J·RAW·R 표시 읽기</summary>
 
-P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니다. PIP가 켜지면 두 번째 줄에 PIP를 한 번 쓰고 보조 P·Y·J의 실제 크기를 나열합니다. 합성 출력 크기는 Live에서 표시하지 않습니다. J의 YUV 표시는 앱 변환 사진을 뜻합니다. 녹화 중에는 R과 H264·HEVC·Auto를 표시하며 R은 녹화 출력입니다. 구성 검사와 저장 방식은 [Engine Comparison](engine.md#camera2-엔진)에서 확인하세요.
+P는 Preview, Y는 YUV, J는 JPEG, RAW는 센서 원본 출력의 크기입니다. RAW는 켜진 경우에만 크기와 함께 표시합니다. PIP가 켜지면 두 번째 줄에 PIP를 한 번 쓰고 보조 P·Y·J의 실제 크기를 나열합니다. 합성 출력 크기는 Live에서 표시하지 않습니다. J의 YUV 표시는 앱 변환 사진을 뜻합니다. 녹화 중에는 R과 H264·HEVC·Auto를 표시하며 R은 녹화 출력입니다. 구성 검사와 저장 방식은 [Engine Comparison](engine.md#camera2-엔진)에서 확인하세요.
 
 </details>
 

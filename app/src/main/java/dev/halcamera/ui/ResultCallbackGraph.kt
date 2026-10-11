@@ -8,6 +8,11 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.text.Layout
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import android.text.style.TypefaceSpan
 import android.view.Gravity
 import android.view.View
 import android.widget.*
@@ -54,10 +59,13 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
             addView(heldIndicator, LayoutParams(widgets.dp(16), widgets.dp(24)))
             addView(status, LayoutParams(0, -2, 1f))
             for (button in listOf(camera, duration)) {
-                button.typeface = Look.mono
-                button.background = widgets.chrome(Look.cameraControlGlass, outlined = true)
+                button.typeface = Typeface.DEFAULT
+                button.background = widgets.chrome(Color.TRANSPARENT)
                 button.setPadding(widgets.dp(8), 0, widgets.dp(8), 0)
-                button.minWidth = widgets.dp(if (button === camera) 80 else 96)
+                button.setShadowLayer(widgets.dp(2).toFloat(), 0f, widgets.dp(1).toFloat(), Color.BLACK)
+                button.setSingleLine()
+                button.minWidth = if (button === camera) widgets.dp(64) else
+                    kotlin.math.ceil(Layout.getDesiredWidth(controlLabel("Hold", "10s"), button.paint).toDouble()).toInt() + widgets.dp(16)
                 button.minimumWidth = button.minWidth
                 addView(button, LayoutParams(-2, widgets.dp(48)).apply { marginStart = widgets.dp(8) })
             }
@@ -96,7 +104,7 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
         val currentMetadata = sessions[current].orEmpty()
         val id = currentMetadata["cameraId"] ?: currentMetadata["id"] ?: "?"
         val label = "ID $id ↻"
-        if (camera.text.toString() != label) camera.text = label
+        if (camera.text.toString() != label) camera.text = controlLabel("ID", id.toString())
         camera.contentDescription = "Callback camera ID $id; tap to switch device"
         // MainActivity already schedules this at 100 ms. A second throttle adds visible lag.
         timeline.update(ResultCallbackSeries.read(latestEvents, current, nowNs, currentMetadata), current,
@@ -130,7 +138,8 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
         val held = timeline.autoHoldUntilNs != null
         heldIndicator.bind(held)
         status.contentDescription = if (held) "Held, ${status.text}" else status.text
-        duration.textIfChanged("Hold ${timeline.holdSeconds}s ↻")
+        val durationLabel = "Hold ${timeline.holdSeconds}s ↻"
+        if (duration.text.toString() != durationLabel) duration.text = controlLabel("Hold", "${timeline.holdSeconds}s")
         duration.contentDescription = "Hold: ${timeline.holdSeconds} seconds; tap for the next duration"
         if (renderedFrame != timeline.displayed) {
             renderedFrame = timeline.displayed
@@ -142,6 +151,13 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
     }
 
     private fun format(value: Double) = String.format(Locale.US, "%.1f ms", value)
+
+    private fun controlLabel(label: String, value: String) = SpannableString("$label $value ↻").apply {
+        setSpan(ForegroundColorSpan(Look.onDarkMuted), 0, label.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        val start = label.length + 1
+        setSpan(TypefaceSpan("monospace"), start, start + value.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        setSpan(ForegroundColorSpan(Look.onDarkMuted), length - 1, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
 
     /** The slot remains in place while live; only an actual held frame shows the pause mark. */
     private inner class HeldIndicator(context: Context) : View(context) {
