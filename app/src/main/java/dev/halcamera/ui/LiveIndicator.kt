@@ -105,15 +105,14 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
     fun bindSizes(streams: Map<*, *>?) {
         val labels = listOf(Triple("preview", "P", "Preview"), Triple("analysis", "Y", "YUV"),
             Triple("jpeg", "J", "JPEG"), Triple("raw", "RAW", "RAW"), Triple("recording", "R", "Recording"),
-            Triple("pip", "PIP P", "PIP Preview"), Triple("pipYuv", "PIP Y", "PIP YUV"), Triple("pipJpeg", "PIP J", "PIP JPEG"),
-            Triple("composite", "C", "Composite"))
+            Triple("pip", "P", "PIP Preview"), Triple("pipYuv", "Y", "PIP YUV"), Triple("pipJpeg", "J", "PIP JPEG"))
         fun size(key: String): String? = if (key == "jpeg" && streams?.get(key) == null && streams?.get("appJpeg") != null)
             "${streams["appJpegSource"] ?: "YUV"} (${streams["appJpeg"]})" else streams?.get(key)?.toString()
         val active = labels.filter { streams?.containsKey(it.first) == true &&
             (it.first !in listOf("pipYuv", "pipJpeg") || streams[it.first] != null) }
         val recordingFormat = streams?.get("recordingFormat")?.toString()?.takeIf { it.isNotBlank() } ?: "Auto"
-        val value = active.groupBy { it.first.startsWith("pip") || it.first == "composite" }.values.joinToString("\n") { row ->
-            row.joinToString("   ") { (key, label, _) ->
+        val value = active.groupBy { it.first.startsWith("pip") }.entries.joinToString("\n") { (pip, row) ->
+            (if (pip) "PIP " else "") + row.joinToString("   ") { (key, label, _) ->
                 val prefix = if (key == "recording") "$label $recordingFormat" else label
                 "$prefix ${size(key)?.replace('x', '×') ?: "Off"}"
             }
