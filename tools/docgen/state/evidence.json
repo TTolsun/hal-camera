@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8b3f2de45fbd0523",
-        "modelHash": "e5ba9c28f5c55359",
+        "codeHash": "26bda5af496a467a",
+        "modelHash": "7be7843abb971f6d",
         "at": "2026-10-11",
-        "commit": "e1e20e56",
+        "commit": "51338416",
         "reviewer": "TTolsun (approval delegated to Codex)",
         "files": {
           "app/build.gradle.kts": "5540885d10692eb7eb605086b993c58d28aabafb",
@@ -90,8 +90,8 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "a93488f96cdf64d9eccec33adc72440f32fed1c6",
           "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "1d79812619627d33db3ea196f8fd59bff944b4fa",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
-          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "8682e9fcc729c798d1a22e2b5c4449e65d7edcdf",
-          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "bad1fc0279f312ca75a204817e3d7b76fa10e50c",
+          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "77faef175c012ccc3421ca037bf20f917196bbd7",
+          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "f7b63d02ee20eaab90ff3fa368238bfbdd6924ae",
           "app/src/main/java/dev/halcamera/camera/DualMainControls.kt": "104b96f0ae7c2240ba0e57747d6c0e9de575812f",
           "app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt": "3d4a94a1401b93551b0366839715dab321b55f4d",
           "app/src/main/java/dev/halcamera/camera/DualPreviewRelay.kt": "abb71a5d09e86bb837ae0ec63503ea81fae0d6c5",
@@ -337,10 +337,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "ba75b67a843a1c2d",
-        "modelHash": "8e844f0324920245",
+        "codeHash": "69d08a07fa598f88",
+        "modelHash": "73d6bc1e674fde6a",
         "at": "2026-10-11",
-        "commit": "e1e20e56",
+        "commit": "51338416",
         "reviewer": "TTolsun (approval delegated to Codex)",
         "files": {
           "app/build.gradle.kts": "5540885d10692eb7eb605086b993c58d28aabafb",
@@ -421,8 +421,8 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "a93488f96cdf64d9eccec33adc72440f32fed1c6",
           "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "1d79812619627d33db3ea196f8fd59bff944b4fa",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
-          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "8682e9fcc729c798d1a22e2b5c4449e65d7edcdf",
-          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "bad1fc0279f312ca75a204817e3d7b76fa10e50c",
+          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "77faef175c012ccc3421ca037bf20f917196bbd7",
+          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "f7b63d02ee20eaab90ff3fa368238bfbdd6924ae",
           "app/src/main/java/dev/halcamera/camera/DualMainControls.kt": "104b96f0ae7c2240ba0e57747d6c0e9de575812f",
           "app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt": "3d4a94a1401b93551b0366839715dab321b55f4d",
           "app/src/main/java/dev/halcamera/camera/DualPreviewRelay.kt": "abb71a5d09e86bb837ae0ec63503ea81fae0d6c5",
@@ -685,10 +685,10 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "8b3f2de45fbd0523",
-        "modelHash": "bda12d211d57f0ab",
+        "codeHash": "26bda5af496a467a",
+        "modelHash": "09b3b54606f89254",
         "at": "2026-10-11",
-        "commit": "e1e20e56",
+        "commit": "51338416",
         "reviewer": "TTolsun (approval delegated to Codex)",
         "files": {
           "app/build.gradle.kts": "5540885d10692eb7eb605086b993c58d28aabafb",
@@ -769,8 +769,8 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "a93488f96cdf64d9eccec33adc72440f32fed1c6",
           "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "1d79812619627d33db3ea196f8fd59bff944b4fa",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
-          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "8682e9fcc729c798d1a22e2b5c4449e65d7edcdf",
-          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "bad1fc0279f312ca75a204817e3d7b76fa10e50c",
+          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "77faef175c012ccc3421ca037bf20f917196bbd7",
+          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "f7b63d02ee20eaab90ff3fa368238bfbdd6924ae",
           "app/src/main/java/dev/halcamera/camera/DualMainControls.kt": "104b96f0ae7c2240ba0e57747d6c0e9de575812f",
           "app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt": "3d4a94a1401b93551b0366839715dab321b55f4d",
           "app/src/main/java/dev/halcamera/camera/DualPreviewRelay.kt": "abb71a5d09e86bb837ae0ec63503ea81fae0d6c5",
@@ -928,10 +928,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "8b3f2de45fbd0523",
-        "modelHash": "d2049917dc8d65d1",
+        "codeHash": "26bda5af496a467a",
+        "modelHash": "468d1be9af5d50ed",
         "at": "2026-10-11",
-        "commit": "e1e20e56",
+        "commit": "51338416",
         "reviewer": "TTolsun (approval delegated to Codex)",
         "files": {
           "app/build.gradle.kts": "5540885d10692eb7eb605086b993c58d28aabafb",
@@ -1012,8 +1012,8 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "a93488f96cdf64d9eccec33adc72440f32fed1c6",
           "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "1d79812619627d33db3ea196f8fd59bff944b4fa",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
-          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "8682e9fcc729c798d1a22e2b5c4449e65d7edcdf",
-          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "bad1fc0279f312ca75a204817e3d7b76fa10e50c",
+          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "77faef175c012ccc3421ca037bf20f917196bbd7",
+          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "f7b63d02ee20eaab90ff3fa368238bfbdd6924ae",
           "app/src/main/java/dev/halcamera/camera/DualMainControls.kt": "104b96f0ae7c2240ba0e57747d6c0e9de575812f",
           "app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt": "3d4a94a1401b93551b0366839715dab321b55f4d",
           "app/src/main/java/dev/halcamera/camera/DualPreviewRelay.kt": "abb71a5d09e86bb837ae0ec63503ea81fae0d6c5",
@@ -1223,10 +1223,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8b3f2de45fbd0523",
-        "modelHash": "b8d923da6da60896",
+        "codeHash": "26bda5af496a467a",
+        "modelHash": "b79fc88c4f79542d",
         "at": "2026-10-11",
-        "commit": "e1e20e56",
+        "commit": "51338416",
         "reviewer": "TTolsun (approval delegated to Codex)",
         "files": {
           "app/build.gradle.kts": "5540885d10692eb7eb605086b993c58d28aabafb",
@@ -1307,8 +1307,8 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "a93488f96cdf64d9eccec33adc72440f32fed1c6",
           "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "1d79812619627d33db3ea196f8fd59bff944b4fa",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
-          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "8682e9fcc729c798d1a22e2b5c4449e65d7edcdf",
-          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "bad1fc0279f312ca75a204817e3d7b76fa10e50c",
+          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "77faef175c012ccc3421ca037bf20f917196bbd7",
+          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "f7b63d02ee20eaab90ff3fa368238bfbdd6924ae",
           "app/src/main/java/dev/halcamera/camera/DualMainControls.kt": "104b96f0ae7c2240ba0e57747d6c0e9de575812f",
           "app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt": "3d4a94a1401b93551b0366839715dab321b55f4d",
           "app/src/main/java/dev/halcamera/camera/DualPreviewRelay.kt": "abb71a5d09e86bb837ae0ec63503ea81fae0d6c5",
@@ -1466,10 +1466,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8b3f2de45fbd0523",
-        "modelHash": "c8f488cbde4205fc",
+        "codeHash": "26bda5af496a467a",
+        "modelHash": "3513edf7ab51ebde",
         "at": "2026-10-11",
-        "commit": "e1e20e56",
+        "commit": "51338416",
         "reviewer": "TTolsun (approval delegated to Codex)",
         "files": {
           "app/build.gradle.kts": "5540885d10692eb7eb605086b993c58d28aabafb",
@@ -1550,8 +1550,8 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "a93488f96cdf64d9eccec33adc72440f32fed1c6",
           "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "1d79812619627d33db3ea196f8fd59bff944b4fa",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
-          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "8682e9fcc729c798d1a22e2b5c4449e65d7edcdf",
-          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "bad1fc0279f312ca75a204817e3d7b76fa10e50c",
+          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "77faef175c012ccc3421ca037bf20f917196bbd7",
+          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "f7b63d02ee20eaab90ff3fa368238bfbdd6924ae",
           "app/src/main/java/dev/halcamera/camera/DualMainControls.kt": "104b96f0ae7c2240ba0e57747d6c0e9de575812f",
           "app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt": "3d4a94a1401b93551b0366839715dab321b55f4d",
           "app/src/main/java/dev/halcamera/camera/DualPreviewRelay.kt": "abb71a5d09e86bb837ae0ec63503ea81fae0d6c5",
@@ -1709,10 +1709,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8b3f2de45fbd0523",
-        "modelHash": "ffdc5522c0f53fb0",
+        "codeHash": "26bda5af496a467a",
+        "modelHash": "251013464b864177",
         "at": "2026-10-11",
-        "commit": "e1e20e56",
+        "commit": "51338416",
         "reviewer": "TTolsun (approval delegated to Codex)",
         "files": {
           "app/build.gradle.kts": "5540885d10692eb7eb605086b993c58d28aabafb",
@@ -1793,8 +1793,8 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "a93488f96cdf64d9eccec33adc72440f32fed1c6",
           "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "1d79812619627d33db3ea196f8fd59bff944b4fa",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
-          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "8682e9fcc729c798d1a22e2b5c4449e65d7edcdf",
-          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "bad1fc0279f312ca75a204817e3d7b76fa10e50c",
+          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "77faef175c012ccc3421ca037bf20f917196bbd7",
+          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "f7b63d02ee20eaab90ff3fa368238bfbdd6924ae",
           "app/src/main/java/dev/halcamera/camera/DualMainControls.kt": "104b96f0ae7c2240ba0e57747d6c0e9de575812f",
           "app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt": "3d4a94a1401b93551b0366839715dab321b55f4d",
           "app/src/main/java/dev/halcamera/camera/DualPreviewRelay.kt": "abb71a5d09e86bb837ae0ec63503ea81fae0d6c5",
@@ -1952,10 +1952,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8b3f2de45fbd0523",
-        "modelHash": "dd0b5aed285485c0",
+        "codeHash": "26bda5af496a467a",
+        "modelHash": "05d92409be11acd1",
         "at": "2026-10-11",
-        "commit": "e1e20e56",
+        "commit": "51338416",
         "reviewer": "TTolsun (approval delegated to Codex)",
         "files": {
           "app/build.gradle.kts": "5540885d10692eb7eb605086b993c58d28aabafb",
@@ -2036,8 +2036,8 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "a93488f96cdf64d9eccec33adc72440f32fed1c6",
           "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "1d79812619627d33db3ea196f8fd59bff944b4fa",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
-          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "8682e9fcc729c798d1a22e2b5c4449e65d7edcdf",
-          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "bad1fc0279f312ca75a204817e3d7b76fa10e50c",
+          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "77faef175c012ccc3421ca037bf20f917196bbd7",
+          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "f7b63d02ee20eaab90ff3fa368238bfbdd6924ae",
           "app/src/main/java/dev/halcamera/camera/DualMainControls.kt": "104b96f0ae7c2240ba0e57747d6c0e9de575812f",
           "app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt": "3d4a94a1401b93551b0366839715dab321b55f4d",
           "app/src/main/java/dev/halcamera/camera/DualPreviewRelay.kt": "abb71a5d09e86bb837ae0ec63503ea81fae0d6c5",
@@ -2195,10 +2195,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "8b3f2de45fbd0523",
-        "modelHash": "ccf669e702ace945",
+        "codeHash": "26bda5af496a467a",
+        "modelHash": "7c8d88f97955601a",
         "at": "2026-10-11",
-        "commit": "e1e20e56",
+        "commit": "51338416",
         "reviewer": "TTolsun (approval delegated to Codex)",
         "files": {
           "app/build.gradle.kts": "5540885d10692eb7eb605086b993c58d28aabafb",
@@ -2279,8 +2279,8 @@
           "app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt": "a93488f96cdf64d9eccec33adc72440f32fed1c6",
           "app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt": "1d79812619627d33db3ea196f8fd59bff944b4fa",
           "app/src/main/java/dev/halcamera/camera/DngOutput.kt": "1655bcb36e27f14b375cc87a47893b63160809a6",
-          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "8682e9fcc729c798d1a22e2b5c4449e65d7edcdf",
-          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "bad1fc0279f312ca75a204817e3d7b76fa10e50c",
+          "app/src/main/java/dev/halcamera/camera/DualCallbackStreams.kt": "77faef175c012ccc3421ca037bf20f917196bbd7",
+          "app/src/main/java/dev/halcamera/camera/DualCameraXSession.kt": "f7b63d02ee20eaab90ff3fa368238bfbdd6924ae",
           "app/src/main/java/dev/halcamera/camera/DualMainControls.kt": "104b96f0ae7c2240ba0e57747d6c0e9de575812f",
           "app/src/main/java/dev/halcamera/camera/DualPreviewPlan.kt": "3d4a94a1401b93551b0366839715dab321b55f4d",
           "app/src/main/java/dev/halcamera/camera/DualPreviewRelay.kt": "abb71a5d09e86bb837ae0ec63503ea81fae0d6c5",
