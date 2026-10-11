@@ -92,4 +92,11 @@ class PipAvailabilityTest {
         assertNull(pipSelectionAfter(previous,requested,Result.failure(IllegalStateException("Configure failed"))))
         assertEquals(requested,pipSelectionAfter(previous,requested,Result.success(Unit)))
     }
+
+    @Test fun `CameraX concurrent mode rejects 4K analysis even if the HAL supports it alone`() {
+        assertTrue(cameraXConcurrentAnalysisSupported(null))
+        assertTrue(cameraXConcurrentAnalysisSupported(LiveSize(640,480)))
+        assertTrue(cameraXConcurrentAnalysisSupported(LiveSize(1920,1440)))
+        assertFalse(cameraXConcurrentAnalysisSupported(LiveSize(3840,2160)))
+    }
 }

@@ -622,6 +622,8 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 `CameraXPipSession`은 각각 720p 이하의 Preview를 `ConcurrentCamera`로 bind하고 `DeviceCompositor`에서 합성 JPEG·H.264/AAC MP4를 저장합니다. 일반 촬영의 ImageCapture·Recorder와 별도 경로이며 PIP를 끄면 일반 출력 설정을 복원합니다. 단일·동시 모드 전환에는 재bind가 필요하고, 종료는 두 카메라의 CLOSED와 SurfaceRequest 반환을 기다립니다. PIP 터치 측광은 합성 화면의 fill-center crop에 맞춰 변환합니다. 지원 조합과 저장 범위는 [Live PIP](live.md#여러-카메라를-함께-촬영하세요)에서 확인합니다.
 
+CameraX 1.6.2의 동시 Preview·YUV 조합은 분석 스트림을 최대 1920×1440까지 허용합니다. 이 라이브러리 공통 제한을 넘는 현재 설정은 PIP 선택 전에 거부합니다. 특정 기기용 제한은 두지 않으며, HAL 지원 조회도 함께 수행합니다.
+
 ### CameraX 손떨림 보정
 
 **PHOTO에서는 보정을 끄며, VIDEO에서는 CameraX와 하드웨어가 함께 지원하는 보정 모드만 표시합니다.** 영상용 EIS는 녹화 중에 적용합니다.

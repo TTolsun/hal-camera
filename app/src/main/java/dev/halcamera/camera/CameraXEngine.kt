@@ -407,6 +407,7 @@ class CameraXEngine(
     private var pipChecking = false
     private fun checkedPipSource(source: PipSource, analysisSize: LiveSize?): PipSource = source.withStreamSupport {
         pipPreviewSizes.remove(source.key)
+        if (!cameraXConcurrentAnalysisSupported(analysisSize)) return@withStreamSupport PipStreamSupport.UNSUPPORTED
         if (!active || provider == null || android.os.Build.VERSION.SDK_INT < 30) return@withStreamSupport PipStreamSupport.UNKNOWN
         val (support,sizes) = queryCameraXPip(context.getSystemService(CameraManager::class.java),cameraId,source,analysisSize,handler)
         sizes?.let { pipPreviewSizes[source.key] = it }

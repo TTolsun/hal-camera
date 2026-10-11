@@ -17,6 +17,10 @@ internal object PipAvailability {
 /** Unsupported is blocked; an unavailable query must not hide usable combinations on another device. */
 internal enum class PipStreamSupport { SUPPORTED, UNSUPPORTED, UNKNOWN }
 
+/** CameraX 1.6.2 concurrent Preview + YUV accepts a 720p preview and at most a 1920x1440 YUV. */
+internal fun cameraXConcurrentAnalysisSupported(size: LiveSize?): Boolean =
+    size == null || size.width.toLong()*size.height <= 1920L*1440
+
 /** Rejection before session mutation leaves an already running PIP intact. */
 internal class PipSelectionRejected(message: String?) : IllegalArgumentException(message)
 
