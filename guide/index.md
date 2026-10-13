@@ -13,8 +13,8 @@ home: true
   <figcaption>
     <h2 id="brand-film-title">Camera HAL.</h2>
     <p>카메라를 이해하는 또 하나의 시선.</p>
-    <p id="brand-film-description">기타의 현이 하나의 화음을 만들듯, Camera HAL은 Camera Driver와 Android, 다양한 솔루션을 조화롭게 연결합니다.</p>
-    <p id="brand-film-ripple">작은 떨림이 큰 물결로 번지듯, 작은 변화가 카메라 경험 전체로 이어집니다.</p>
+    <p id="brand-film-description">기타의 현은 저마다 다른 소리를 냅니다. 하나의 화음은 그 차이가 어우러질 때 만들어집니다. Camera HAL도 Camera Driver와 Android, 다양한 솔루션 사이에서 조화를 찾습니다.</p>
+    <p id="brand-film-ripple">작은 움직임 하나가 수면 전체를 바꿉니다. 카메라도 그렇습니다. 작은 조정 하나가 우리가 보는 장면을 바꿉니다.</p>
   </figcaption>
 </figure>
   <p class="intro">사진 한 장에서 시작해 카메라가 일하는 순서를 확인하세요.<br>처음이라면 Quickstart, 이미 실행했다면 아래에서 궁금한 작업을 고르세요.</p>
