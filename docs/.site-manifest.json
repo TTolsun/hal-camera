@@ -5,7 +5,7 @@
     "_inputs/decisions.html": "74410055a21243cc476b2c96fd2e4ee1283f908cbccb91a71cdeec3367a37f96",
     "_inputs/device-verification.yaml": "1852f48d52f75733b4db973418fc7fad1f0f9d340a8b4b555cf9d49aa7016215",
     "architecture.html": "55d8ffd90a51bad35143de0d4af7af3f13841979839050b6eec89e1b66d07d25",
-    "assets/docflow-design.css": "cdeb3dca79edb9c048a3a7875ad71308eed66824ef51ebf13139391de06b292d",
+    "assets/docflow-design.css": "b1591ec434785fa5219ab7cbb92881c64f9a40e20147bd0013a044f8c5981ca9",
     "assets/media/camera-hal-tactile.jpg": "a6217b61dae3dbb079fa91fb873f727a8354014020bfd10813dc0f61628a9d22",
     "assets/media/camera-hal-tactile.mp4": "6c434116d4535e223cd4cc7a9e772d4e2235d5e1595366bdc00d7a1cd35c4e41",
     "assets/screenshots/about.png": "954960e376ba576cef4e9043d91061b2e9af93f16663716c3b7549c1aa743123",
@@ -50,7 +50,7 @@
     "evidence.html": "84e1a504c0363159a8e214c63e28cec38b2283215ec0dd9b9b7a03a6a37fbfc7",
     "getting-started.html": "9e3635ae26f36150b1ba541be815ad956803e865bd3fcbc67f2c39d0b8e03208",
     "glossary.html": "b9ae6c9daa7dbfca40d62a17ee948f953b843c9f1a4f5ec36a8d7d3493ed6bbf",
-    "index.html": "1c6ce1b9520ad330bb859249873616fdbc07b601a5bc24447430d5b28e574ac8",
+    "index.html": "5f5c949586b0322933b9789be5ffa32153029447ac27ce9f070fa5de100ba66f",
     "live.html": "f2d6cc1645cc4cb9fca63f78b3595c85056991a46b90ed2e1a318e246f91a35b",
     "probe.html": "bbb7b52f040773aa05b602792cc133d07b52dd01d1e1bbabbc4bd3471dfff3f8",
     "troubleshooting.html": "d6f0d97cf393ab874dbc0456fec6ffd6e4ccb4f3cddf0ee2d2b5aafe3affc5dd"

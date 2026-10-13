@@ -5,6 +5,18 @@ home: true
 <section class="hero" aria-labelledby="hero-title">
   <p class="eyebrow">HAL CAMERA / User Guide</p>
   <h1 id="hero-title" lang="en">Capture. Measure. Verify.</h1>
+<figure class="brand-film" aria-labelledby="brand-film-title">
+  <video controls autoplay muted playsinline preload="metadata" width="1920" height="1080" poster="assets/media/camera-hal-tactile.jpg" aria-labelledby="brand-film-title" aria-describedby="brand-film-description brand-film-ripple">
+    <source src="assets/media/camera-hal-tactile.mp4" type="video/mp4">
+    <a href="assets/media/camera-hal-tactile.mp4">Camera HAL 소개 영상 보기</a>
+  </video>
+  <figcaption>
+    <h2 id="brand-film-title">Camera HAL.</h2>
+    <p>카메라를 이해하는 또 하나의 시선.</p>
+    <p id="brand-film-description">기타의 현이 하나의 화음을 만들듯, Camera HAL은 Camera Driver와 Android, 다양한 솔루션을 조화롭게 연결합니다.</p>
+    <p id="brand-film-ripple">작은 떨림이 큰 물결로 번지듯, 작은 변화가 카메라 경험 전체로 이어집니다.</p>
+  </figcaption>
+</figure>
   <p class="intro">사진 한 장에서 시작해 카메라가 일하는 순서를 확인하세요.<br>처음이라면 Quickstart, 이미 실행했다면 아래에서 궁금한 작업을 고르세요.</p>
   <div class="hero-bottom">
     <a href="getting-started.html">처음이라면, 앱 실행부터 <span aria-hidden="true">↗</span></a>
@@ -28,19 +40,6 @@ home: true
   <a href="automation.html"><span class="name">Automation</span><span class="description">PC 명령이나 에이전트로 반복 실행합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
 </nav>
 </details>
-
-<figure class="brand-film" aria-labelledby="brand-film-title">
-  <video controls autoplay muted playsinline preload="metadata" width="1920" height="1080" poster="assets/media/camera-hal-tactile.jpg" aria-labelledby="brand-film-title" aria-describedby="brand-film-description">
-    <source src="assets/media/camera-hal-tactile.mp4" type="video/mp4">
-    <a href="assets/media/camera-hal-tactile.mp4">Camera HAL 소개 영상 보기</a>
-  </video>
-  <figcaption>
-    <h2 id="brand-film-title">Camera HAL.</h2>
-    <p>카메라를 이해하는 또 하나의 시선.</p>
-    <p id="brand-film-description">메트로놈의 움직임에서 물결과 바다로 이어지는 15초 소개 영상입니다. 마지막에는 “Camera HAL. Evolving with AI.”라는 문구가 나타납니다.</p>
-    <p class="brand-film-hint">음소거로 한 번 재생된 뒤 마지막 장면에 멈춥니다. 영상에서 소리를 켜거나 다시 재생할 수 있습니다.</p>
-  </figcaption>
-</figure>
 
 <section class="feature" aria-labelledby="try-title">
   <div class="feature-heading"><h2 id="try-title">직접 확인하면 더 잘 보입니다.</h2></div>
