@@ -18,22 +18,12 @@ internal class MultiSizeSheet(private val context: Context) {
             },lp(if (index == 0) 0 else 16))
             val outputs = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
             fun picker(title: String, choices: List<LiveSize>, current: LiveSize, set: (LiveSize) -> Unit) {
-                var selected = choices.indexOf(current).coerceAtLeast(0)
-                fun caption() = "$title\n${choices[selected].toString().replace('x','×')}  ›"
-                lateinit var value: Button
-                value = CameraWidgets(context).chromeButton(caption()) {
-                    LiveChoiceSheet.show(context,"${camera.label} · $title",
-                        choices.map { LiveChoiceSheet.Choice(it.toString().replace('x','×')) },selected,
-                        edge = LiveChoiceSheet.Edge.TOP) { next ->
-                        selected = next; set(choices[next]); value.text = caption()
-                        value.contentDescription = "${camera.label}, $title ${choices[next]}, change size"
-                    }
-                }.apply {
+                val value = CameraWidgets(context).choiceButton("${camera.label} · $title",
+                    choices.map { it.toString().replace('x','×') },choices.indexOf(current),LiveChoiceSheet.Edge.TOP,
+                    caption = { "$title\n$it  ›" },onChange = { set(choices[it]) }).apply {
                     setSingleLine(false); maxLines = 2; gravity = Gravity.START or Gravity.CENTER_VERTICAL
                     background = CameraWidgets(context).chrome(Look.cameraControlGlass,outlined = true)
                     setPadding(dp(12),dp(8),dp(12),dp(8))
-                    isEnabled = choices.size > 1
-                    contentDescription = "${camera.label}, $title $current, change size"
                 }
                 outputs.addView(value,LinearLayout.LayoutParams(0,dp(64),1f).apply {
                     if (outputs.childCount > 0) marginStart = dp(8)

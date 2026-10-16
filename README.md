@@ -28,23 +28,13 @@ Live는 관측한 숫자만 보여 주며 정상 / 이상을 판정하지 않습
 
 ### 사진과 동영상
 
-- Camera2와 CameraX는 선택한 엔진에서 사진·동영상을 저장합니다. 기본 사진은 YUV에서 변환한 JPEG와 카메라 JPEG이며, Live Streams에서 엔진별 출력·크기·FPS를 설정합니다. 두 엔진의 사진 연결 방식은 [엔진 비교](guide/engine.md)에 있습니다.
-- 녹화 중 줌을 바꿀 수 있으며 지원되는 구성에서는 JPEG 사진도 저장합니다. 엔진·카메라·모드 변경은 녹화를 끝낸 뒤에 합니다. PIP 녹화 중 사진은 지원하지 않습니다.
-- `Multi · P`와 `Multi · V`는 독립 CameraDevice를 함께 열고 장치별로 저장합니다. 최대 장치 수는 Live Streams에서 설정합니다. Multi 영상은 무음입니다.
-- PIP는 현재 프리뷰 위에 Physical 또는 다른 Service 카메라 하나를 합성합니다. Single PIP 사진은 합성 JPEG 한 장이며, Multi는 PIP를 켠 장치의 합성 구도를 해당 장치 파일에 저장합니다. CameraX의 PIP·Multi 진입에는 Camera2 전환 확인이 필요합니다.
-- JPEG·DNG·MP4는 `DCIM/HALCamera`, NV21·촬영 JSON은 `Download/HALCamera`에 저장합니다. 지원 조건과 조작 순서는 [Live 가이드](guide/live.md)를 따릅니다. Benchmark와 incident ZIP에는 이미지 픽셀을 저장하지 않습니다.
+Camera2·CameraX의 Photo/Video는 선택한 엔진에서 촬영합니다. PIP는 메인과 보조 영상을 합성하고, Multi P/V는 독립 카메라별 원본 파일을 저장합니다. Multi의 카메라 조합은 Split에서 고르고, 화면 배치는 카메라 ID를 길게 눌러 끌어서 바꿉니다.
+
+출력·크기 선택, 녹화 중 사진, 엔진별 제한과 저장 위치는 [Live 가이드](guide/live.md)를 기준으로 합니다. Benchmark와 incident ZIP에는 이미지 픽셀을 저장하지 않습니다.
 
 ## profile
 
-현재 profile은 `camera2-standard-v1` 하나입니다.
-
-```
-Camera2 · 1080p30 · warm reopen
-open 10회 반복 → 3초 warm-up → 10초 관측 → 정지 영상 10장 → close
-첫 반복은 통계에서 제외
-```
-
-실행 전에 preflight로 이 카메라가 profile을 지원하는지 확인합니다. API 35 이상에서는 `CameraDeviceSetup`으로 정확히 질의하고, 그 이하에서는 출력 크기 목록으로 판단합니다.
+현재 기본 프로파일과 단계별 반복 횟수·관측 시간·지원 조건은 [Benchmark 가이드](guide/benchmark.md)에 모았습니다. 정확한 출력 크기는 프로파일 그대로 사용하며 지원하지 않는 조합을 작은 크기로 대체하지 않습니다.
 
 ## 비교 규칙
 

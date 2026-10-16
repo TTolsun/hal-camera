@@ -103,7 +103,7 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
     internal fun bindSizes(value: LiveStreamReadout, action: String = "open Live Streams", selectedLine: Int? = null) {
         sizes.maxLines = maxOf(2,value.text.count { it == '\n' }+1)
         if (selectedLine == null) {
-            if (sizes.text.toString() != value.text) sizes.text = value.text
+            if (sizes.text.toString() != value.text || sizes.text is android.text.Spanned) sizes.text = value.text
         } else {
             val lines = value.text.split('\n')
             val highlighted = android.text.SpannableString(value.text)
