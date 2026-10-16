@@ -4,7 +4,7 @@
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "_inputs/decisions.html": "74410055a21243cc476b2c96fd2e4ee1283f908cbccb91a71cdeec3367a37f96",
     "_inputs/device-verification.yaml": "1852f48d52f75733b4db973418fc7fad1f0f9d340a8b4b555cf9d49aa7016215",
-    "architecture.html": "21894640f54c23dffdbb44dff7de2ac73e988c98dd09688f0a0cb5ba3392a526",
+    "architecture.html": "bb89d6b12dacd5ed8a069486db9903548a71ae98460986dd837e429a1a13ad48",
     "assets/brand-film.js": "c8b3ff272b84005ec1eeb1aafcf3fa6eeea4d778bc57ce76b4abd9f32503b726",
     "assets/docflow-design.css": "b1591ec434785fa5219ab7cbb92881c64f9a40e20147bd0013a044f8c5981ca9",
     "assets/media/camera-hal-reviewed-v8.jpg": "507c78d32402e3c61f1d22b34902d4a9d68672cbf86fa3b1d004fe8b10b370c4",
@@ -41,19 +41,19 @@
     "automation.html": "e22f1a4e3d715da7e60d54ca4da8dc4944e9a6f9ab25843755bae4f092a714a8",
     "benchmark.html": "abe0243724dfaaf1894c09ac4ade08ba264d5720fcabf484688ac41c72f9e6a5",
     "building.html": "f585b85d92d5b58abe2b4546ec86ab10307c865d48f0e4e920a6b35225905f26",
-    "callback.html": "72626cf5bb9b51fed25caf947563520224648727fc628b4dbc6c4a44d52ae7ac",
+    "callback.html": "771c8820e42bee38f9a32653644aa8eeecb823b945254c7bcf82e1d4b1d2ce49",
     "cli.html": "15c7649cd666f58296d0cd08197ee89968032f3b2f46c74882b5183c6cd26d51",
     "coding-agents.html": "bb88fca5d1288859ba3c8e14dfbade120e3b31e03c43a2bce87fb4e4b54f381e",
     "contributing.html": "5ae830a401a8f9c55367c1246f0792bd19382078276f136ce9da7aae55df7aa1",
     "cts.html": "b7896ab2d2828154eff8bde96aa4a4b3bcdbe53c70c96fc6eaa46fccd1a27014",
     "decisions.html": "818fc401c78f6ad2cbd73600eba7bdbe620866c535bf25f8a26200ab6ad3e5da",
-    "engine.html": "5cebecf0ba2a1fb8cb8e0c0e6e245a7f5d17f6785effdcf36e15d1b435c2168f",
-    "evidence.html": "8ece9e2e043d6c5649012af624dcfc09864cc4c8df41cd9ba4b37c72b07c8444",
-    "getting-started.html": "9e3635ae26f36150b1ba541be815ad956803e865bd3fcbc67f2c39d0b8e03208",
+    "engine.html": "f56fffb9cb042ddde1a3648b793c4ce654af9b0938f3ec29a8edb6318745f764",
+    "evidence.html": "9fc74abb28984839716c8c92611247f8239827740281e5f174d600fede2a6961",
+    "getting-started.html": "aeb7c90f3d6ca9f3bf1e944430f1e70cac54ead943cf3dde4ffb2b36899516a8",
     "glossary.html": "b9ae6c9daa7dbfca40d62a17ee948f953b843c9f1a4f5ec36a8d7d3493ed6bbf",
     "index.html": "8b732447349e16d21b3daaf2d1ca368a346f41599d86c1ca82d7e59fa2bb2645",
     "live.html": "ce46df92c1e307f116a275d245470c06de7510d6da14b302dd1d6f5c948be77b",
     "probe.html": "bbb7b52f040773aa05b602792cc133d07b52dd01d1e1bbabbc4bd3471dfff3f8",
-    "troubleshooting.html": "d6f0d97cf393ab874dbc0456fec6ffd6e4ccb4f3cddf0ee2d2b5aafe3affc5dd"
+    "troubleshooting.html": "75358d0262bcb7757d9da9f767397189bdb01d69b845b0301dde063058196aea"
   }
 }

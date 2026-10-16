@@ -59,6 +59,31 @@ class CameraWidgets(private val context: Context, private val enabled: () -> Boo
 
     fun row() = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
 
+    /** Owns choice presentation only; callers keep their draft and apply policy. */
+    internal fun choiceButton(
+        title: String,
+        values: List<String>,
+        selection: Int,
+        edge: LiveChoiceSheet.Edge,
+        caption: (String) -> String = { "$it  ›" },
+        onChange: (Int) -> Unit,
+    ): Button {
+        require(values.isNotEmpty())
+        var selected = selection.coerceIn(values.indices)
+        lateinit var control: Button
+        fun bind() {
+            control.text = caption(values[selected])
+            control.contentDescription = "$title, ${values[selected]}"
+        }
+        control = chromeButton("") {
+            LiveChoiceSheet.show(context,title,values.map { LiveChoiceSheet.Choice(it) },selected,edge = edge) { next ->
+                selected = next; bind(); onChange(next)
+            }
+        }.apply { isEnabled = values.size > 1 }
+        bind()
+        return control
+    }
+
     fun highlight(button: Button, selected: Boolean) {
         button.isSelected = selected
         button.setTextColor(if (selected) Look.cameraActive else Look.onDark)

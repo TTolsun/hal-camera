@@ -14,22 +14,13 @@ internal class SplitChoiceSheet(private val context: Context) {
         var showUnavailable = false
         val content = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         fun section(title: String) { content.addView(text(title,12).apply { ViewCompat.setAccessibilityHeading(this,true) },lp(12)) }
-        fun picker(title: String,values: List<String>,selection: Int,onChange: (Int) -> Unit): Button {
-            var selected = selection.coerceAtLeast(0)
-            lateinit var control: Button
-            control = button("${values[selected]}  ›") {
-                LiveChoiceSheet.show(context,title,values.map { LiveChoiceSheet.Choice(it) },selected,edge = edge) { next ->
-                    selected = next; control.text = "${values[next]}  ›"; onChange(next)
-                }
-            }.apply {
-                contentDescription = title; isEnabled = values.size > 1
-                if (values.size == 1) text = values[selected]
-            }
+        fun picker(title: String,values: List<String>,selection: Int,onChange: (Int) -> Unit) {
+            val control = CameraWidgets(context).choiceButton(title,values,selection,edge,
+                caption = { if (values.size == 1) it else "$it  ›" },onChange = onChange)
             content.addView(row().apply {
                 addView(text(title,12),LinearLayout.LayoutParams(0,dp(48),1f))
                 addView(control,LinearLayout.LayoutParams(-2,dp(48)))
             },lp())
-            return control
         }
         val counts = draft.counts
         val cameras = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
@@ -65,17 +56,13 @@ internal class SplitChoiceSheet(private val context: Context) {
                 setTextColor(Look.onDarkMuted); ViewCompat.setAccessibilityHeading(this,true)
             },lp(12))
             val orderChoices = draft.ids.sorted()
+            val cameraNames = plans.flatMap { it.streams }.associate { it.camera.id to it.camera.label }
             draft.ids.forEachIndexed { slot, id ->
                 cameras.addView(row().apply {
                     addView(text("Screen ${slot+1}",12),LinearLayout.LayoutParams(0,dp(48),1f))
-                    val camera = plans.flatMap { it.streams }.first { it.camera.id == id }.camera
-                    addView(button("${camera.label}  ›") {
-                        LiveChoiceSheet.show(context,"Screen ${slot+1}",
-                            orderChoices.map { LiveChoiceSheet.Choice("Camera $it") },orderChoices.indexOf(id),edge = edge) { next ->
-                            if (draft.assign(slot,orderChoices[next])) renderDevices()
-                        }
-                    }.apply {
-                        contentDescription = "Camera for Split screen ${slot+1}"
+                    addView(CameraWidgets(context).choiceButton("Camera for Split screen ${slot+1}",
+                        orderChoices.map { cameraNames.getValue(it) },orderChoices.indexOf(id),edge) { next ->
+                        if (draft.assign(slot,orderChoices[next])) renderDevices()
                     },LinearLayout.LayoutParams(0,dp(48),1f))
                 },lp(4))
             }
