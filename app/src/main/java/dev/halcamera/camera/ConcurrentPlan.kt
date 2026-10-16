@@ -107,17 +107,18 @@ internal class ConcurrentLease {
 
 internal data class ConcurrentFrame(val left: Int, val top: Int, val width: Int, val height: Int)
 
-internal enum class SplitLayout(val label: String) {
-    STACKED("Top / bottom"), SIDE_BY_SIDE("Side by side"), GRID("Grid")
-}
+/** Chosen by dragging a panel (see [SplitArrangement.snap]), not from a menu. */
+internal enum class SplitLayout { STACKED, SIDE_BY_SIDE, GRID }
+
+internal fun splitGridColumns(count: Int) = kotlin.math.ceil(kotlin.math.sqrt(count.toDouble())).toInt()
 
 /** Preview geometry only. Captures and encoders retain each camera's own dimensions. */
-internal fun concurrentFrames(count: Int, width: Int, height: Int, layout: SplitLayout = SplitLayout.STACKED): List<ConcurrentFrame> {
+internal fun concurrentFrames(count: Int, width: Int, height: Int, layout: SplitLayout = SplitLayout.SIDE_BY_SIDE): List<ConcurrentFrame> {
     if (count < 1 || width < 1 || height < 1) return emptyList()
     val columns = when (layout) {
         SplitLayout.STACKED -> 1
         SplitLayout.SIDE_BY_SIDE -> count
-        SplitLayout.GRID -> kotlin.math.ceil(kotlin.math.sqrt(count.toDouble())).toInt()
+        SplitLayout.GRID -> splitGridColumns(count)
     }
     val rows = (count + columns - 1) / columns
     return List(count) { index ->

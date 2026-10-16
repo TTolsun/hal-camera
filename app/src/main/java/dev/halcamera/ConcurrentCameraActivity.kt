@@ -32,7 +32,8 @@ import java.util.concurrent.Executors
 class ConcurrentCameraActivity : ComponentActivity() {
     private val manager by lazy { getSystemService(CameraManager::class.java) }
     private var videoMode = false
-    private var splitLayout = SplitLayout.STACKED
+    private var arrangement = SplitArrangement.identity(0)
+    private lateinit var panelDrag: SplitPanelDrag
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
         if (it) discover() else status.text = "Camera permission required."
     }
@@ -122,7 +123,9 @@ class ConcurrentCameraActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.AppTheme); super.onCreate(savedInstanceState)
         videoMode = savedInstanceState?.getBoolean(EXTRA_VIDEO) ?: intent.getBooleanExtra(EXTRA_VIDEO,false)
-        splitLayout = SplitLayout.entries.firstOrNull { it.name == savedInstanceState?.getString("layout") } ?: SplitLayout.STACKED
+        val layout = SplitLayout.entries.firstOrNull { it.name == savedInstanceState?.getString("layout") } ?: SplitLayout.SIDE_BY_SIDE
+        arrangement = runCatching { SplitArrangement(layout,savedInstanceState?.getIntArray("order")?.toList().orEmpty()) }
+            .getOrElse { SplitArrangement.identity(0,layout) }
         selectedIds = savedInstanceState?.getStringArrayList("devices").orEmpty()
         WindowCompat.setDecorFitsSystemWindows(window,false)
         WindowInsetsControllerCompat(window,window.decorView).apply {
@@ -144,6 +147,9 @@ class ConcurrentCameraActivity : ComponentActivity() {
         stage = FrameLayout(this).apply { clipChildren = true }
         root.addView(stage,FrameLayout.LayoutParams(-1,-1))
         stage.addOnLayoutChangeListener { _,_,_,_,_,_,_,_,_ -> layoutPreviews() }
+        panelDrag = SplitPanelDrag(stage,{ previewArea() },{ arrangement },{ ready && !busy }) { next ->
+            arrangement = next; layoutPreviews(); bindLabels()
+        }
         topBar = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,intArrayOf(Color.argb(140,0,0,0),Color.TRANSPARENT))
@@ -151,7 +157,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         val controls = row().apply { gravity = Gravity.TOP }
         val leading = row()
         leading.addView(button("Camera2") {}.apply { isEnabled = false },LinearLayout.LayoutParams(-2,dp(48)))
-        splitButton = button("Split") { showSplit() }.apply { contentDescription = "Configure Split layout and camera devices" }
+        splitButton = button("Split") { showSplit() }.apply { contentDescription = "Choose Split camera devices" }
         leading.addView(splitButton,LinearLayout.LayoutParams(-2,dp(48)))
         controls.addView(leading,LinearLayout.LayoutParams(0,dp(48),1f))
         controlBar = LiveControlBar(this,object : LiveControlBar.Host {
@@ -249,6 +255,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         // Old surfaces are removed after close(done); their listeners release each texture.
         stage.removeAllViews(); previews.clear(); panels.clear(); labels.clear(); focusRings.clear(); textures.clear()
         repeat(count) { textures += null }
+        if (arrangement.count != count) arrangement = SplitArrangement.identity(count,arrangement.layout)
         repeat(count) { index ->
             val panel = FrameLayout(this).apply { clipChildren = true; setBackgroundColor(Look.cameraSurface) }
             val preview = TextureView(this).apply { alpha = 0f }; previews += preview; panels += panel
@@ -279,6 +286,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
                 ellipsize = android.text.TextUtils.TruncateAt.END; setOnClickListener { selectActive(index) }
             }
             labels += label; panel.addView(label,FrameLayout.LayoutParams(-1,dp(48),Gravity.TOP)); stage.addView(panel)
+            panelDrag.attach(label,panel,index)
             preview.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
                 override fun onSurfaceTextureAvailable(texture: SurfaceTexture,width: Int,height: Int) {
                     if (previews.getOrNull(index) !== preview) return
@@ -318,14 +326,32 @@ class ConcurrentCameraActivity : ComponentActivity() {
 
     private fun showSplit() {
         if (busy || plans.none { it.advertised }) return
-        SplitChoiceSheet(this).show(plans,selectedIds,splitLayout) { layout, ids ->
+        // The sheet lists cameras in on-screen order. Reordering the same cameras only moves panels.
+        val onScreen = if (arrangement.count == selectedIds.size) arrangement.order.map { selectedIds[it] } else selectedIds
+        SplitChoiceSheet(this).show(plans,onScreen) { ids ->
             if (busy) false else {
-                val changed = selectedIds != ids
-                splitLayout = layout; selectedIds = ids
-                if (changed) { failed = false; activeIndex = 0; closeSession() } else layoutPreviews()
+                if (ids.toSet() == selectedIds.toSet()) {
+                    arrangement = arrangement.copy(order = ids.map(selectedIds::indexOf)); layoutPreviews(); bindLabels()
+                } else {
+                    selectedIds = ids; arrangement = SplitArrangement.identity(ids.size,arrangement.layout)
+                    failed = false; activeIndex = 0; closeSession()
+                }
                 true
             }
         }
+    }
+    private fun bindLabels() {
+        val plan = plans.getOrNull(selected) ?: return
+        labels.forEachIndexed { i,label ->
+            val camera = plan.streams.getOrNull(i)?.camera ?: return@forEachIndexed
+            label.text = "${if (i == activeIndex) "● " else ""}${arrangement.order.indexOf(i)+1} · ${camera.label}"
+            label.contentDescription = "${label.text}. Tap to control this camera. Hold and drag to move it"
+            ViewCompat.setStateDescription(label,if (i == activeIndex) "Selected" else "Not selected")
+        }
+    }
+    private fun previewArea(): android.graphics.Rect? {
+        val top = topBar.bottom; val bottom = captureChrome.top
+        return if (stage.width <= 0 || bottom <= top) null else android.graphics.Rect(0,top,stage.width,bottom)
     }
     private fun selectActive(index: Int) {
         if (Build.VERSION.SDK_INT < 30) return
@@ -338,12 +364,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         session?.setZoom(id,ratio); zoomControl.setChoices(zoomPresets(zoomRange(manager,id)),ratio)
         val stream = plans[selected].streams[index]
         liveIndicator.bindSizes(mapOf("preview" to stream.preview.toString(),"jpeg" to stream.photo.toString()))
-        labels.forEachIndexed { i,label ->
-            label.text = "${if (i == index) "● " else ""}${i+1} · ${plans[selected].streams[i].camera.label}"
-            label.contentDescription = "${label.text}. Tap to control this camera"
-            ViewCompat.setStateDescription(label,if (i == index) "Selected" else "Not selected")
-        }
-        updateButtons()
+        bindLabels(); updateButtons()
     }
 
     private fun startIfReady() {
@@ -433,7 +454,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
     override fun onDestroy() { recentMedia.close(); io.shutdown(); super.onDestroy() }
     override fun finish() { exiting = true; closeSession() }
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBoolean(EXTRA_VIDEO,videoMode); outState.putString("layout",splitLayout.name)
+        outState.putBoolean(EXTRA_VIDEO,videoMode); outState.putString("layout",arrangement.layout.name)
+        outState.putIntArray("order",arrangement.order.toIntArray())
         outState.putStringArrayList("devices",ArrayList(selectedIds)); super.onSaveInstanceState(outState)
     }
     private fun updateButtons() {
@@ -462,9 +484,9 @@ class ConcurrentCameraActivity : ComponentActivity() {
         listOf<View>(shutter,splitButton,cameraButton,snapshotButton,labButton,galleryButton,zoomControl).forEach { it.alpha = if (it.isEnabled) 1f else .4f }
     }
     private fun layoutPreviews() {
-        if (stage.width <= 0 || stage.height <= 0 || panels.isEmpty()) return
+        if (stage.width <= 0 || stage.height <= 0 || panels.isEmpty() || arrangement.count != panels.size) return
         val top = topBar.bottom
-        val frames = concurrentFrames(panels.size,stage.width,(captureChrome.top-top).coerceAtLeast(1),splitLayout)
+        val frames = arrangement.frames(stage.width,(captureChrome.top-top).coerceAtLeast(1))
         panels.forEachIndexed { i,panel ->
             val f = frames[i]; val old = panel.layoutParams as? FrameLayout.LayoutParams
             if (old == null || old.width != f.width || old.height != f.height || old.topMargin != top+f.top || old.leftMargin != f.left)

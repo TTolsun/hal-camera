@@ -8,11 +8,10 @@ import android.widget.*
 import androidx.core.view.ViewCompat
 import dev.halcamera.camera.*
 
-/** Renders Split choices; the draft owns combination, count and ordering rules. */
+/** Renders Split choices; the draft owns combination, count and ordering rules. Layout comes from dragging panels. */
 internal class SplitChoiceSheet(private val context: Context) {
-    fun show(plans: List<ConcurrentPlan>, ids: List<String>, layout: SplitLayout,
-             apply: (SplitLayout, List<String>) -> Boolean) {
-        val draft = SplitSelection(plans,ids,layout)
+    fun show(plans: List<ConcurrentPlan>, ids: List<String>, apply: (List<String>) -> Boolean) {
+        val draft = SplitSelection(plans,ids)
         val content = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         fun section(title: String) { content.addView(text(title,12).apply { ViewCompat.setAccessibilityHeading(this,true) },lp(12)) }
         fun spinner(title: String,values: List<String>,selection: Int,onChange: (Int) -> Unit): Spinner {
@@ -28,8 +27,6 @@ internal class SplitChoiceSheet(private val context: Context) {
             }
             content.addView(control,LinearLayout.LayoutParams(-1,dp(48))); return control
         }
-        var layouts = draft.layouts
-        val layoutPicker = spinner("Layout",layouts.map { it.label },layouts.indexOf(draft.layout)) { draft.selectLayout(layouts[it]) }
         val counts = draft.counts
         val cameras = LinearLayout(context).apply { orientation = LinearLayout.VERTICAL }
         fun renderDevices() {
@@ -68,14 +65,14 @@ internal class SplitChoiceSheet(private val context: Context) {
         }
         spinner("Cameras",counts.map { it.toString() },counts.indexOf(draft.count)) {
             draft.selectCount(counts[it])
-            layouts = draft.layouts
-            layoutPicker.adapter = ArrayAdapter(context,android.R.layout.simple_spinner_dropdown_item,layouts.map { layout -> layout.label })
-            layoutPicker.setSelection(layouts.indexOf(draft.layout))
             renderDevices()
         }
         section("Camera devices"); content.addView(cameras,lp()); renderDevices()
+        content.addView(text("Hold a camera name and drag it to an edge or corner to arrange the screens.",12).apply {
+            setTextColor(Look.onDarkMuted)
+        },lp(12))
         LiveChoiceSheet.show(context,"Split",content = content,edge = LiveChoiceSheet.Edge.TOP,
-            actionLabel = "Apply",confirm = { draft.valid && apply(draft.layout,draft.ids) })
+            actionLabel = "Apply",confirm = { draft.valid && apply(draft.ids) })
     }
     private fun dp(value: Int) = Look.dp(context,value)
     private fun text(value: String,size: Int) = Look.text(context,value,size,Look.onDark).apply { gravity = Gravity.CENTER_VERTICAL }

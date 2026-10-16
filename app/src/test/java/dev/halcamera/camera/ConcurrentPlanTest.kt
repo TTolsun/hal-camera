@@ -47,9 +47,9 @@ class ConcurrentPlanTest {
         assertEquals(all.size, all.map { it.streams.map { stream -> stream.camera.id }.toSet() }.distinct().size)
     }
 
-    @Test fun `split fills the stage without gaps in device order`() {
+    @Test fun `stacked split fills the stage without gaps in device order`() {
         for (count in 1..6) {
-            val split = concurrentFrames(count, 1080, 1703)
+            val split = concurrentFrames(count, 1080, 1703, SplitLayout.STACKED)
             assertEquals(1703, split.sumOf { it.height })
             assertEquals(0, split.first().top)
             split.forEach { assertEquals(1080, it.width); assertEquals(0, it.left) }
