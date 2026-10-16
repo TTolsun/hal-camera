@@ -304,8 +304,6 @@ object JsonMaps {
     fun reqLong(m: Map<String, Any?>, key: String, where: String): Long =
         (m[key] as? Number)?.toLong() ?: throw IllegalArgumentException("$where.$key missing or not a number: ${m[key]}")
 
-    fun endpointToMap(e: CameraEndpoint): Map<String, Any?> = e.toJsonMap()
-
     fun endpointFromMap(m: Map<String, Any?>): CameraEndpoint = CameraEndpoint(
         logicalCameraId = m["logicalCameraId"] as? String ?: "?",
         physicalCameraId = s(m["physicalCameraId"]),

@@ -356,6 +356,7 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt
           - app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt
+          - app/src/main/java/dev/halcamera/cts/CtsPreviewFrame.kt
           - app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt
           - app/src/main/java/dev/halcamera/cts/CtsCatalog.kt
           - app/src/main/java/dev/halcamera/cts/CtsRunner.kt

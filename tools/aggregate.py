@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export schema 3/4 benchmark JSON files to the same metric-row CSV as the app."""
+"""Export schema 3/4/5 benchmark JSON files to the same metric-row CSV as the app."""
 
 import argparse
 import csv
@@ -22,16 +22,17 @@ METRIC_COLUMNS = ["id", "category", "unit", "value", "p50", "p95", "min", "max",
 HEADERS = RUN_COLUMNS + [f"metric.{key}" for key in METRIC_COLUMNS]
 
 # Keep in sync with RunValidity.kt. Unknown flags fail closed for comparison/scoring.
+VALIDITY_RULE_VERSION = "validity-v3"
 MEASUREMENT_BLOCKERS = {"ABORTED", "HARD_FAILURE", "PROFILE_UNSUPPORTED", "INSUFFICIENT_SAMPLES"}
 COMPARISON_BLOCKERS = MEASUREMENT_BLOCKERS | {"CADENCE_NOT_FIXED", "THERMAL_HIGH", "POWER_SAVE_MODE"}
-SCORING_BLOCKERS = COMPARISON_BLOCKERS | {"CHARGING", "BATTERY_LOW", "PROFILE_DRAFT", "DEBUGGABLE_BUILD"}
+SCORING_BLOCKERS = COMPARISON_BLOCKERS | {"CHARGING", "BATTERY_LOW", "PROFILE_DRAFT", "DEBUGGABLE_BUILD", "RECORD_NOT_MEASURED"}
 KNOWN_FLAGS = SCORING_BLOCKERS | {"PREFLIGHT_MISMATCH", "THERMAL_CHANGED", "LABEL_MISSING"}
 
 
 def normalize(run):
     """Validate the report envelope and derive eligibility from flags, as the app does."""
-    if not isinstance(run, dict) or run.get("schema_version") not in (3, 4) or run.get("kind") != "benchmark":
-        raise ValueError("expected benchmark schema 3 or 4")
+    if not isinstance(run, dict) or run.get("schema_version") not in (3, 4, 5) or run.get("kind") != "benchmark":
+        raise ValueError("expected benchmark schema 3, 4 or 5")
     if not isinstance(run.get("run_id"), str) or not run["run_id"].strip():
         raise ValueError("missing run_id")
     components = [run.get("profile", {}).get("id"), run.get("metric_definition_version"),
@@ -51,7 +52,8 @@ def normalize(run):
                     comparison_eligible=not bool(flags & COMPARISON_BLOCKERS or unknown),
                     scoring_eligible=not bool(flags & SCORING_BLOCKERS or unknown))
     validity["flags"] = list(dict.fromkeys(validity["flags"]))
-    validity.setdefault("validity_rule_version", "validity-v2")
+    if not isinstance(validity.get("validity_rule_version"), str):
+        validity["validity_rule_version"] = VALIDITY_RULE_VERSION
     metrics = run.get("metrics")
     if not isinstance(metrics, list) or any(not isinstance(m, dict) or not m.get("id") for m in metrics):
         raise ValueError("invalid metrics")

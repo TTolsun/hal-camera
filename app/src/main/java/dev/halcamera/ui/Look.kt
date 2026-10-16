@@ -50,14 +50,15 @@ object Look {
     val warningInk = Color.parseColor("#9a5700")
     val failureInk = Color.parseColor("#c62828")
 
-    fun statusColor(level: String): Int = when (level.lowercase()) {
-        "normal", "pass", "ok" -> statusPass
-        "warning", "warn", "watch" -> statusWarn
-        "issue", "fail" -> statusFail
-        else -> statusUnknown
-    }
-
     fun dp(context: Context, v: Int) = (v * context.resources.displayMetrics.density).toInt()
+
+    /** A fading edge makes clipped measurements visibly incomplete until horizontally scrolled. */
+    fun scrollableText(view: TextView) = android.widget.HorizontalScrollView(view.context).apply {
+        isHorizontalScrollBarEnabled = true
+        isHorizontalFadingEdgeEnabled = true
+        setFadingEdgeLength(dp(context, 24))
+        addView(view, LinearLayout.LayoutParams(-2, -2))
+    }
 
     fun cardBackground(context: Context, fill: Int = card, stroke: Int = hairline) = GradientDrawable().apply {
         setColor(fill)

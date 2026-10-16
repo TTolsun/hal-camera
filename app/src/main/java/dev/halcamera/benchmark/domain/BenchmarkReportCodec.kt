@@ -4,7 +4,7 @@ import dev.halcamera.telemetry.Event
 import java.io.File
 
 /**
- * Run JSON schema 3 (docs/PLAN-BenchMarker-v0.3.md chapter 6) as a pure map codec. Both directions are
+ * Run JSON schemas 3–5 as a pure map codec. Both directions are
  * JVM-testable; [dev.halcamera.benchmark.platform.BenchmarkReport] adds the org.json file boundary.
  *
  * Decoding is strict about the comparison contract (PR #11 follow-up review): kind, every contract component and
