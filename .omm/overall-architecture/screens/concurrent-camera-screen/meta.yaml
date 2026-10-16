@@ -4,5 +4,6 @@ children:
   - session
   - pip-composition
   - photo-storage
+  - split-layout
 parentPath:
   - screens

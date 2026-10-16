@@ -7,7 +7,9 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.SurfaceTexture
+import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.InsetDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.os.*
@@ -32,7 +34,11 @@ import java.util.concurrent.Executors
 class ConcurrentCameraActivity : ComponentActivity() {
     private val manager by lazy { getSystemService(CameraManager::class.java) }
     private var videoMode = false
-    private var splitLayout = SplitLayout.STACKED
+    private var arrangement = SplitArrangement.identity(0)
+    private lateinit var panelDrag: SplitPanelDrag
+    private val labelBar by lazy { dp(28) }
+    private val labelTouch by lazy { dp(48) }
+    private val readoutRow by lazy { dp(24) }
     private val permission = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
         if (it) discover() else status.text = "Camera permission required."
     }
@@ -56,23 +62,26 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private lateinit var controlBar: LiveControlBar
     private lateinit var zoomControl: ExpandingZoomControl
     private lateinit var liveIndicator: LiveIndicator
-    private lateinit var measurements: LiveMeasurementView
     private lateinit var callbackGraph: ResultCallbackGraph
     private lateinit var recentMedia: RecentMediaThumbnail
     private val modeButtons = mutableListOf<Button>()
     private val previews = mutableListOf<TextureView>()
     private val panels = mutableListOf<FrameLayout>()
     private val labels = mutableListOf<TextView>()
+    private val infos = mutableListOf<TextView>()
+    private val footInfos = mutableListOf<TextView>()
+    private val handles = mutableListOf<LinearLayout>()
     private val focusRings = mutableListOf<FocusRing>()
     private val textures = mutableListOf<SurfaceTexture?>()
     private val retired = mutableListOf<SurfaceTexture>()
-    private val states = linkedMapOf<String,String>()
     private val cameraControls = mutableMapOf<String,LiveControls>()
     private val cameraZooms = mutableMapOf<String,Float>()
     private var plans = emptyList<ConcurrentPlan>()
     private var outputSizes = emptyList<LiveSize>()
     private var selected = 0
     private var selectedIds = emptyList<String>()
+    /** Camera ID to (preview, JPEG) chosen in the Sizes sheet; kept across device changes for cameras that return. */
+    private var chosenSizes = emptyMap<String,Pair<LiveSize,LiveSize>>()
     private var activeIndex = 0
     private var session: ConcurrentSession? = null
     private var foreground = false
@@ -100,13 +109,12 @@ class ConcurrentCameraActivity : ComponentActivity() {
             val events = recorder.snapshot()
             val latest = events.lastOrNull { it.session == activeSessionId && it.kind == "capture_result" }
                 ?.takeIf { now-it.atNs < 1_500_000_000L }
-            val fps = (latest?.values?.get("resultFps") as? Number)?.toDouble()
-            measurements.bind(latest?.values.orEmpty(),fps?.let { String.format(Locale.US,"%.1f",it) })
+            bindInfos(events,now)
             liveIndicator.bind(ready && latest != null && foreground && !closing)
             liveIndicator.bindStabilization(LiveEisStatus((latest?.values?.get("videoStabilization") as? Number)?.toInt()),recording)
             if (callbackGraph.visibility == View.VISIBLE)
-                callbackGraph.update(events,activeSessionId,now,telemetry.sessions[activeSessionId].orEmpty(),
-                    telemetry.sessions.filterKeys { it.startsWith("${sessionId}_") && it != activeSessionId })
+                // The camera chosen by its name bar drives the graph; the graph has no ID switch of its own here.
+                callbackGraph.update(events,activeSessionId,now,telemetry.sessions[activeSessionId].orEmpty())
             if (recording) {
                 val seconds = (SystemClock.elapsedRealtime()-recordingSince)/1000
                 recordingTime.text = "● REC  ${seconds/60}:${(seconds%60).toString().padStart(2,'0')}"
@@ -122,8 +130,12 @@ class ConcurrentCameraActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.AppTheme); super.onCreate(savedInstanceState)
         videoMode = savedInstanceState?.getBoolean(EXTRA_VIDEO) ?: intent.getBooleanExtra(EXTRA_VIDEO,false)
-        splitLayout = SplitLayout.entries.firstOrNull { it.name == savedInstanceState?.getString("layout") } ?: SplitLayout.STACKED
+        val layout = SplitLayout.entries.firstOrNull { it.name == savedInstanceState?.getString("layout") } ?: SplitLayout.SIDE_BY_SIDE
+        arrangement = runCatching { SplitArrangement(layout,savedInstanceState?.getIntArray("order")?.toList().orEmpty()) }
+            .getOrElse { SplitArrangement.identity(0,layout) }
         selectedIds = savedInstanceState?.getStringArrayList("devices").orEmpty()
+        @Suppress("DEPRECATION","UNCHECKED_CAST")
+        chosenSizes = (savedInstanceState?.getSerializable("sizes") as? HashMap<String,Pair<LiveSize,LiveSize>>).orEmpty()
         WindowCompat.setDecorFitsSystemWindows(window,false)
         WindowInsetsControllerCompat(window,window.decorView).apply {
             isAppearanceLightStatusBars = false; isAppearanceLightNavigationBars = false
@@ -144,6 +156,9 @@ class ConcurrentCameraActivity : ComponentActivity() {
         stage = FrameLayout(this).apply { clipChildren = true }
         root.addView(stage,FrameLayout.LayoutParams(-1,-1))
         stage.addOnLayoutChangeListener { _,_,_,_,_,_,_,_,_ -> layoutPreviews() }
+        panelDrag = SplitPanelDrag(stage,{ previewArea() },{ arrangement },{ ready && !busy }) { next ->
+            arrangement = next; layoutPreviews(); bindLabels()
+        }
         topBar = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,intArrayOf(Color.argb(140,0,0,0),Color.TRANSPARENT))
@@ -151,7 +166,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         val controls = row().apply { gravity = Gravity.TOP }
         val leading = row()
         leading.addView(button("Camera2") {}.apply { isEnabled = false },LinearLayout.LayoutParams(-2,dp(48)))
-        splitButton = button("Split") { showSplit() }.apply { contentDescription = "Configure Split layout and camera devices" }
+        splitButton = button("Split") { showSplit() }.apply { contentDescription = "Choose Split camera devices" }
         leading.addView(splitButton,LinearLayout.LayoutParams(-2,dp(48)))
         controls.addView(leading,LinearLayout.LayoutParams(0,dp(48),1f))
         controlBar = LiveControlBar(this,object : LiveControlBar.Host {
@@ -170,7 +185,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         labButton = button("Lab") { openTool(WorkbenchActivity::class.java) }
         trailing.addView(labButton,LinearLayout.LayoutParams(-2,dp(48)).apply { marginStart = dp(4) })
         controls.addView(trailing,LinearLayout.LayoutParams(0,dp(48),1f)); topBar.addView(controls)
-        liveIndicator = LiveIndicator(this).apply { onSizesClick = { openTool(LiveStreamsActivity::class.java) } }
+        liveIndicator = LiveIndicator(this).apply { onSizesClick = { showSizes() } }
         topBar.addView(controlBar.withStatus(liveIndicator),lp())
         status = text("Opening cameras…",12).apply {
             gravity = Gravity.CENTER; accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
@@ -184,7 +199,6 @@ class ConcurrentCameraActivity : ComponentActivity() {
         }
         val bottomBar = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
         callbackGraph = ResultCallbackGraph(this).apply { visibility = View.GONE }; bottomBar.addView(callbackGraph,lp())
-        measurements = LiveMeasurementView(this); bottomBar.addView(measurements,lp())
         zoomControl = ExpandingZoomControl(this) { ratio ->
             if (Build.VERSION.SDK_INT >= 30 && ready && !takingPhoto && !videoPending && !closing) activeCamera?.let {
                 cameraZooms[it.id] = ratio; session?.setZoom(it.id,ratio)
@@ -247,8 +261,9 @@ class ConcurrentCameraActivity : ComponentActivity() {
 
     private fun createPanels(count: Int) {
         // Old surfaces are removed after close(done); their listeners release each texture.
-        stage.removeAllViews(); previews.clear(); panels.clear(); labels.clear(); focusRings.clear(); textures.clear()
+        stage.removeAllViews(); previews.clear(); panels.clear(); labels.clear(); infos.clear(); footInfos.clear(); handles.clear(); focusRings.clear(); textures.clear()
         repeat(count) { textures += null }
+        if (arrangement.count != count) arrangement = SplitArrangement.identity(count,arrangement.layout)
         repeat(count) { index ->
             val panel = FrameLayout(this).apply { clipChildren = true; setBackgroundColor(Look.cameraSurface) }
             val preview = TextureView(this).apply { alpha = 0f }; previews += preview; panels += panel
@@ -275,10 +290,31 @@ class ConcurrentCameraActivity : ComponentActivity() {
             }
             focusRings += ring; panel.addView(ring,FrameLayout.LayoutParams(-1,-1))
             val label = text("",11).apply {
-                setPadding(dp(12),0,dp(12),0); setBackgroundColor(Look.cameraGlass); isSingleLine = true
-                ellipsize = android.text.TextUtils.TruncateAt.END; setOnClickListener { selectActive(index) }
+                isSingleLine = true; ellipsize = android.text.TextUtils.TruncateAt.END
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }
-            labels += label; panel.addView(label,FrameLayout.LayoutParams(-1,dp(48),Gravity.TOP)); stage.addView(panel)
+            // Each camera's own FPS and exposure ride on its name bar, so they follow the panel through every layout.
+            val info = text("",10).apply {
+                isSingleLine = true; setTextColor(Look.onDarkMuted); fontFeatureSettings = "tnum"
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }
+            val handle = row().apply {
+                // The 28dp bar keeps a 48dp touch area by reaching up into the space above it, never over the preview.
+                // Background first: an InsetDrawable replaces the view padding with its insets.
+                background = InsetDrawable(ColorDrawable(Look.cameraGlass),0,labelTouch-labelBar,0,0)
+                setPadding(dp(12),labelTouch-labelBar,dp(12),0)
+                setOnClickListener { selectActive(index) }
+                addView(label,LinearLayout.LayoutParams(0,-1,1f))
+                addView(info,LinearLayout.LayoutParams(-2,-1).apply { marginStart = dp(8) })
+            }
+            val footInfo = text("",10).apply {
+                isSingleLine = true; setTextColor(Look.onDarkMuted); fontFeatureSettings = "tnum"
+                setPadding(dp(12),0,dp(12),0); importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }
+            labels += label; infos += info; footInfos += footInfo; handles += handle
+            panel.addView(footInfo,FrameLayout.LayoutParams(-1,readoutRow))
+            panel.addView(handle,FrameLayout.LayoutParams(-1,labelTouch)); stage.addView(panel)
+            panelDrag.attach(handle,panel,index)
             preview.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
                 override fun onSurfaceTextureAvailable(texture: SurfaceTexture,width: Int,height: Int) {
                     if (previews.getOrNull(index) !== preview) return
@@ -310,6 +346,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
                 if (selectedIds.toSet() == plan.streams.map { it.camera.id }.toSet())
                     plans = plans.toMutableList().also { it[selected] = plan.copy(streams = selectedIds.map { id -> plan.streams.first { it.camera.id == id } }) }
                 else selectedIds = plan.streams.map { it.camera.id }
+                plans = plans.toMutableList().also { it[selected] = ConcurrentPlanner.withSizes(it[selected],chosenSizes) }
                 activeIndex = activeIndex.coerceIn(plan.streams.indices); startIfReady()
             }
         } catch (e: Exception) { status.text = e.message; status.visibility = View.VISIBLE; failed = true }
@@ -318,14 +355,48 @@ class ConcurrentCameraActivity : ComponentActivity() {
 
     private fun showSplit() {
         if (busy || plans.none { it.advertised }) return
-        SplitChoiceSheet(this).show(plans,selectedIds,splitLayout) { layout, ids ->
+        // The sheet lists cameras in on-screen order. Reordering the same cameras only moves panels.
+        val onScreen = if (arrangement.count == selectedIds.size) arrangement.order.map { selectedIds[it] } else selectedIds
+        SplitChoiceSheet(this).show(plans,onScreen) { ids ->
             if (busy) false else {
-                val changed = selectedIds != ids
-                splitLayout = layout; selectedIds = ids
-                if (changed) { failed = false; activeIndex = 0; closeSession() } else layoutPreviews()
+                if (ids.toSet() == selectedIds.toSet()) {
+                    arrangement = arrangement.copy(order = ids.map(selectedIds::indexOf)); layoutPreviews(); bindLabels()
+                } else {
+                    selectedIds = ids; arrangement = SplitArrangement.identity(ids.size,arrangement.layout)
+                    failed = false; activeIndex = 0; closeSession()
+                }
                 true
             }
         }
+    }
+    private fun bindLabels() {
+        val plan = plans.getOrNull(selected) ?: return
+        labels.forEachIndexed { i,label ->
+            val camera = plan.streams.getOrNull(i)?.camera ?: return@forEachIndexed
+            label.text = "${if (i == activeIndex) "● " else ""}${arrangement.order.indexOf(i)+1} · ${camera.label}"
+            describe(i)
+            handles.getOrNull(i)?.let { ViewCompat.setStateDescription(it,if (i == activeIndex) "Selected" else "Not selected") }
+        }
+        bindSizes()
+    }
+    private fun describe(i: Int) {
+        handles.getOrNull(i)?.contentDescription =
+            "${labels[i].text}. ${infos[i].text}. Tap to control this camera. Hold and drag to move it"
+    }
+    /** FPS and exposure of each camera from its own fresh result; a stale camera shows dashes. */
+    private fun bindInfos(events: List<dev.halcamera.telemetry.Event>,now: Long) {
+        val plan = plans.getOrNull(selected) ?: return
+        infos.forEachIndexed { i,info ->
+            val key = "${sessionId}_${plan.streams.getOrNull(i)?.camera?.id}"
+            val values = events.lastOrNull { it.session == key && it.kind == "capture_result" }
+                ?.takeIf { now-it.atNs < 1_500_000_000L }?.values.orEmpty()
+            val text = LiveMeasurementText.fields(values).take(2).joinToString("  ")
+            if (info.text.toString() != text) { info.text = text; footInfos.getOrNull(i)?.text = text; describe(i) }
+        }
+    }
+    private fun previewArea(): android.graphics.Rect? {
+        val top = topBar.bottom; val bottom = captureChrome.top
+        return if (stage.width <= 0 || bottom <= top) null else android.graphics.Rect(0,top,stage.width,bottom)
     }
     private fun selectActive(index: Int) {
         if (Build.VERSION.SDK_INT < 30) return
@@ -336,14 +407,28 @@ class ConcurrentCameraActivity : ComponentActivity() {
         controlBar.applyRequested(cameraControls[id] ?: LiveControls())
         val ratio = cameraZooms[id] ?: 1f
         session?.setZoom(id,ratio); zoomControl.setChoices(zoomPresets(zoomRange(manager,id)),ratio)
-        val stream = plans[selected].streams[index]
-        liveIndicator.bindSizes(mapOf("preview" to stream.preview.toString(),"jpeg" to stream.photo.toString()))
-        labels.forEachIndexed { i,label ->
-            label.text = "${if (i == index) "● " else ""}${i+1} · ${plans[selected].streams[i].camera.label}"
-            label.contentDescription = "${label.text}. Tap to control this camera"
-            ViewCompat.setStateDescription(label,if (i == index) "Selected" else "Not selected")
+        bindLabels(); updateButtons()
+    }
+    /** Every camera's sizes, numbered like the name bars. */
+    private fun bindSizes() {
+        val streams = plans.getOrNull(selected)?.streams ?: return
+        if (arrangement.count != streams.size) return
+        liveIndicator.bindSizes(LiveStreamReadout.multi(arrangement.order.map { i ->
+            streams[i].camera.label to mapOf("preview" to streams[i].preview.toString(),"jpeg" to streams[i].photo.toString())
+        }),"choose sizes")
+    }
+    private fun showSizes() {
+        if (busy) return
+        val streams = plans.getOrNull(selected)?.streams ?: return
+        if (arrangement.count != streams.size) return
+        MultiSizeSheet(this).show(arrangement.order.map { streams[it] }) { sizes ->
+            if (busy) false else {
+                val changed = sizes.any { (id,size) -> streams.first { it.camera.id == id }.let { it.preview to it.photo } != size }
+                chosenSizes = chosenSizes + sizes
+                if (changed) { failed = false; closeSession() }
+                true
+            }
         }
-        updateButtons()
     }
 
     private fun startIfReady() {
@@ -354,11 +439,11 @@ class ConcurrentCameraActivity : ComponentActivity() {
         outputSizes = plan.streams.map { stream ->
             concurrentOutputSize(stream.preview,manager.getCameraCharacteristics(stream.camera.id)[CameraCharacteristics.SENSOR_ORIENTATION] ?: 0)
         }
-        states.clear(); cameraControls.clear(); cameraZooms.clear(); ready = false; report = ""; resultText.text = ""
+        cameraControls.clear(); cameraZooms.clear(); ready = false; report = ""; resultText.text = ""
         status.visibility = View.VISIBLE; status.text = "Opening cameras…"; sessionId = "multi_${UUID.randomUUID()}"
         lateinit var current: ConcurrentSession
         current = ConcurrentSession(this,manager,plan,textures.map { checkNotNull(it) },object : ConcurrentSession.Listener {
-            override fun onState(id: String,state: String) { if (session === current) states[id] = state }
+            override fun onState(id: String,state: String) {}
             override fun onReady() {
                 if (session !== current || closing || !foreground || failed) return
                 ready = true; previews.forEach { it.alpha = 1f }; status.visibility = View.GONE
@@ -414,10 +499,6 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private fun openTool(destination: Class<*>) {
         if (busy) return
         val id = activeCamera?.id ?: return
-        if (destination == LiveStreamsActivity::class.java) {
-            LiveChoiceSheet.show(this,"Streams",content = text(states.entries.joinToString("\n") { "Camera ${it.key}: ${it.value}" },12))
-            return
-        }
         afterClose = { startActivity(Intent(this,destination)
             .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID,id).putExtra(WorkbenchActivity.EXTRA_ENGINE,"Camera2")) }
         closeSession()
@@ -433,7 +514,9 @@ class ConcurrentCameraActivity : ComponentActivity() {
     override fun onDestroy() { recentMedia.close(); io.shutdown(); super.onDestroy() }
     override fun finish() { exiting = true; closeSession() }
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putBoolean(EXTRA_VIDEO,videoMode); outState.putString("layout",splitLayout.name)
+        outState.putBoolean(EXTRA_VIDEO,videoMode); outState.putString("layout",arrangement.layout.name)
+        outState.putIntArray("order",arrangement.order.toIntArray())
+        outState.putSerializable("sizes",HashMap(chosenSizes))
         outState.putStringArrayList("devices",ArrayList(selectedIds)); super.onSaveInstanceState(outState)
     }
     private fun updateButtons() {
@@ -462,25 +545,35 @@ class ConcurrentCameraActivity : ComponentActivity() {
         listOf<View>(shutter,splitButton,cameraButton,snapshotButton,labButton,galleryButton,zoomControl).forEach { it.alpha = if (it.isEnabled) 1f else .4f }
     }
     private fun layoutPreviews() {
-        if (stage.width <= 0 || stage.height <= 0 || panels.isEmpty()) return
+        if (stage.width <= 0 || stage.height <= 0 || panels.isEmpty() || arrangement.count != panels.size) return
         val top = topBar.bottom
-        val frames = concurrentFrames(panels.size,stage.width,(captureChrome.top-top).coerceAtLeast(1),splitLayout)
+        val frames = arrangement.frames(stage.width,(captureChrome.top-top).coerceAtLeast(1))
         panels.forEachIndexed { i,panel ->
             val f = frames[i]; val old = panel.layoutParams as? FrameLayout.LayoutParams
             if (old == null || old.width != f.width || old.height != f.height || old.topMargin != top+f.top || old.leftMargin != f.left)
                 panel.layoutParams = FrameLayout.LayoutParams(f.width,f.height).apply { topMargin = top+f.top; leftMargin = f.left }
-            transform(i)
-            outputSizes.getOrNull(i)?.let { size ->
-                val fit = fitConcurrentFrame(f.width,f.height,size.width.toFloat()/size.height)
-                focusRings.getOrNull(i)?.let { ring ->
-                    val params = ring.layoutParams as FrameLayout.LayoutParams
-                    if (params.width != fit.width || params.height != fit.height || params.leftMargin != fit.left || params.topMargin != fit.top)
-                        ring.layoutParams = FrameLayout.LayoutParams(fit.width,fit.height).apply { leftMargin = fit.left; topMargin = fit.top }
-                }
+            // The Callback graph replaces the live readouts while it is open.
+            val readout = callbackGraph.visibility != View.VISIBLE
+            val below = readout && splitReadoutBelow(arrangement.layout)
+            val fit = splitPreviewFrame(f.width,f.height,labelTouch,if (below) readoutRow else 0,
+                outputSizes.getOrNull(i)?.let { it.width.toFloat()/it.height })
+            infos.getOrNull(i)?.visibility = if (readout && !below) View.VISIBLE else View.GONE
+            footInfos.getOrNull(i)?.let {
+                it.visibility = if (below) View.VISIBLE else View.GONE
+                // Starts under the preview but may run past it, so a narrow preview never clips the readout.
+                place(it,ConcurrentFrame(fit.left,fit.top+fit.height,f.width-fit.left,readoutRow))
             }
+            place(previews[i],fit); focusRings.getOrNull(i)?.let { place(it,fit) }
+            handles.getOrNull(i)?.let { place(it,ConcurrentFrame(0,fit.top-labelTouch,f.width,labelTouch)) }
+            transform(i)
         }
         // Returning from another screen can expose textures before their views have dimensions.
         stage.post { startIfReady() }
+    }
+    private fun place(view: View,f: ConcurrentFrame) {
+        val old = view.layoutParams as? FrameLayout.LayoutParams
+        if (old == null || old.width != f.width || old.height != f.height || old.leftMargin != f.left || old.topMargin != f.top)
+            view.layoutParams = FrameLayout.LayoutParams(f.width,f.height).apply { leftMargin = f.left; topMargin = f.top }
     }
     private fun transform(index: Int) {
         if (outputSizes.getOrNull(index) == null) return
@@ -490,7 +583,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         view.setTransform(Matrix())
     }
     private fun showCallbacks(show: Boolean) {
-        callbackGraph.visibility = if (show) View.VISIBLE else View.GONE; measurements.visibility = if (show) View.GONE else View.VISIBLE
+        callbackGraph.visibility = if (show) View.VISIBLE else View.GONE; layoutPreviews()
         CameraWidgets(this).highlight(callbackButton,show)
     }
     private fun exportIncident(incident: dev.halcamera.telemetry.Incident) {

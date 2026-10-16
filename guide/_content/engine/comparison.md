@@ -35,7 +35,7 @@ verifications: []
 
 버퍼 관측 여부와 PIP·기존 Dual의 Recording 표시는 [Callback](callback.md#스트림별-도착-시각을-읽으세요)을 확인하세요. 화면 갱신이나 앱 인코더 전송 시각을 카메라 버퍼 도착 시각으로 대신하지 않습니다.
 
-PIP와 Multi는 Android 11 이상에서 제공합니다. 저장물과 설정 방법은 [PIP](live.md#pip로-보이는-구도를-저장하세요)와 [Multi](live.md#여러-카메라를-함께-촬영하세요)에서 확인하세요. 두 엔진은 VIDEO 진입 시 합성 인코더를 준비하며 녹화 시작 때 카메라 세션을 유지합니다. Multi의 Split 장치·순서 변경은 세션을 재구성하며 배치 변경은 기존 세션을 유지합니다.
+PIP와 Multi는 Android 11 이상에서 제공합니다. 저장물과 설정 방법은 [PIP](live.md#pip로-보이는-구도를-저장하세요)와 [Multi](live.md#여러-카메라를-함께-촬영하세요)에서 확인하세요. 두 엔진은 VIDEO 진입 시 합성 인코더를 준비하며 녹화 시작 때 카메라 세션을 유지합니다. Multi의 Split 장치 변경은 세션을 재구성하며 화면 끌기로 바꾸는 배치·순서 변경은 기존 세션을 유지합니다.
 
 <details markdown="1" id="detail-c0e05167f7" data-search-section>
 <summary>제어·녹화·CLI 차이</summary>

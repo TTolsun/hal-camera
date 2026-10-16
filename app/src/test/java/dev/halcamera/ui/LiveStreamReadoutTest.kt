@@ -26,4 +26,13 @@ class LiveStreamReadoutTest {
         assertEquals("Preview 1280x720, Recording HEVC 1920x1080, PIP Preview 640x480, PIP JPEG 1280x720", value.description)
         assertEquals("R Auto 1920×1080", LiveStreamReadout.from(mapOf("recording" to "1920x1080")).text)
     }
+
+    @Test fun multiNumbersEachCameraInScreenOrder() {
+        val two = LiveStreamReadout.multi(listOf("Front 1" to mapOf("preview" to "1280x720", "jpeg" to "1920x1440"),
+            "Rear 0" to mapOf("preview" to "640x480", "jpeg" to "1440x1080")))
+        assertEquals("1 · P 1280×720   J 1920×1440\n2 · P 640×480   J 1440×1080", two.text)
+        assertTrue(two.description.startsWith("Screen 1, Front 1: Preview 1280x720"))
+        val three = LiveStreamReadout.multi(List(3) { "Camera $it" to mapOf("preview" to "640x480") })
+        assertEquals("1 · P 640×480   2 · P 640×480   3 · P 640×480", three.text)
+    }
 }

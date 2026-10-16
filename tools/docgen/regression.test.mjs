@@ -114,7 +114,7 @@ test('all configured elements fit the prompt budget and exclude descendant field
         assert.ok(input.files.length > 0); count++;
       }
     }
-    assert.equal(count, 109); // Includes separate Multi screen/session evidence.
+    assert.equal(count, 110); // Includes separate Multi screen/session/split-layout evidence.
   `));
 });
 

@@ -31,17 +31,28 @@ object ConcurrentPlanner {
         combinations.forEach { ids -> subsets(available.filter { it.id in ids }, 0, emptyList()) }
         return groups.mapNotNull { group ->
             val streams = group.map { camera ->
-                val preview = size(camera.previews, 1280L * 720) ?: return@mapNotNull null
-                val photo = size(camera.photos, 1920L * 1440) ?: return@mapNotNull null
+                val preview = previewChoices(camera).firstOrNull() ?: return@mapNotNull null
+                val photo = photoChoices(camera).firstOrNull() ?: return@mapNotNull null
                 ConcurrentStream(camera, preview, photo)
             }
             ConcurrentPlan(streams, combinations.any { ids -> group.all { it.id in ids } })
         }.sortedWith(compareBy<ConcurrentPlan> { !it.advertised }.thenByDescending { it.streams.size })
     }
 
-    private fun size(sizes: List<LiveSize>, maxArea: Long) = sizes
+    /** Concurrent sessions guarantee s720p preview and s1440p JPEG, so only sizes within them are offered. Largest first. */
+    fun previewChoices(camera: ConcurrentCamera) = choices(camera.previews, 1280L * 720)
+    fun photoChoices(camera: ConcurrentCamera) = choices(camera.photos, 1920L * 1440)
+
+    /** Applies per-camera (preview, JPEG) choices; a size outside the offered list is ignored, never substituted. */
+    fun withSizes(plan: ConcurrentPlan, sizes: Map<String, Pair<LiveSize, LiveSize>>) = plan.copy(streams = plan.streams.map { stream ->
+        val (preview, photo) = sizes[stream.camera.id] ?: return@map stream
+        stream.copy(preview = preview.takeIf { it in previewChoices(stream.camera) } ?: stream.preview,
+            photo = photo.takeIf { it in photoChoices(stream.camera) } ?: stream.photo)
+    })
+
+    private fun choices(sizes: List<LiveSize>, maxArea: Long) = sizes.distinct()
         .filter { it.width.toLong() * it.height <= maxArea }
-        .maxWithOrNull(compareBy<LiveSize> { it.width.toLong() * it.height }.thenBy { it.width })
+        .sortedWith(compareByDescending<LiveSize> { it.width.toLong() * it.height }.thenByDescending { it.width })
 }
 
 /** Both opens must finish before any configure; shutdown must include late open callbacks. Handler-confined. */
@@ -107,17 +118,18 @@ internal class ConcurrentLease {
 
 internal data class ConcurrentFrame(val left: Int, val top: Int, val width: Int, val height: Int)
 
-internal enum class SplitLayout(val label: String) {
-    STACKED("Top / bottom"), SIDE_BY_SIDE("Side by side"), GRID("Grid")
-}
+/** Chosen by dragging a panel (see [SplitArrangement.snap]), not from a menu. */
+internal enum class SplitLayout { STACKED, SIDE_BY_SIDE, GRID }
+
+internal fun splitGridColumns(count: Int) = kotlin.math.ceil(kotlin.math.sqrt(count.toDouble())).toInt()
 
 /** Preview geometry only. Captures and encoders retain each camera's own dimensions. */
-internal fun concurrentFrames(count: Int, width: Int, height: Int, layout: SplitLayout = SplitLayout.STACKED): List<ConcurrentFrame> {
+internal fun concurrentFrames(count: Int, width: Int, height: Int, layout: SplitLayout = SplitLayout.SIDE_BY_SIDE): List<ConcurrentFrame> {
     if (count < 1 || width < 1 || height < 1) return emptyList()
     val columns = when (layout) {
         SplitLayout.STACKED -> 1
         SplitLayout.SIDE_BY_SIDE -> count
-        SplitLayout.GRID -> kotlin.math.ceil(kotlin.math.sqrt(count.toDouble())).toInt()
+        SplitLayout.GRID -> splitGridColumns(count)
     }
     val rows = (count + columns - 1) / columns
     return List(count) { index ->
@@ -133,6 +145,22 @@ internal fun concurrentFrames(count: Int, width: Int, height: Int, layout: Split
 /** Sensor output size is independent of how small or wide its Split panel is. */
 internal fun concurrentOutputSize(preview: LiveSize, rotation: Int): LiveSize =
     if ((rotation % 180 + 180) % 180 == 90) LiveSize(preview.height, preview.width) else preview
+
+/**
+ * Preview inside a Split panel, between a [header]-tall name bar and a [footer]-tall readout row that ends at the
+ * panel bottom. Spare height then sits above the name bar instead of as a black band next to the capture
+ * controls. [aspect] is null until the stream size is known.
+ */
+internal fun splitPreviewFrame(width: Int, height: Int, header: Int, footer: Int, aspect: Float?): ConcurrentFrame {
+    val room = (height - header - footer).coerceAtLeast(1)
+    val bottom = height - footer
+    if (aspect == null) return ConcurrentFrame(0, bottom - room, width, room)
+    val fit = fitConcurrentFrame(width, room, aspect)
+    return fit.copy(top = bottom - fit.height)
+}
+
+/** Side by side and grid panels are narrow, so FPS and exposure go under the preview; stacked ones fit them in the name bar. */
+internal fun splitReadoutBelow(layout: SplitLayout) = layout != SplitLayout.STACKED
 
 /** Letterbox instead of sampling a centre crop when a preview surface resizes. */
 internal fun fitConcurrentFrame(width: Int, height: Int, aspect: Float): ConcurrentFrame {

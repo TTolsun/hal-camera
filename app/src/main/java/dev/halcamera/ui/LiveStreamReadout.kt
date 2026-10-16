@@ -27,5 +27,17 @@ internal data class LiveStreamReadout(val text: String, val description: String)
             }
             return LiveStreamReadout(text, description)
         }
+
+        /** Multi: one entry per camera, numbered like its Split name bar. Two cameras get a line each. */
+        fun multi(cameras: List<Pair<String, Map<*, *>>>): LiveStreamReadout {
+            val parts = cameras.mapIndexedNotNull { index, (_, streams) ->
+                from(streams).takeIf { it.text.isNotEmpty() }?.let { "${index + 1} · ${it.text}" }
+            }
+            val text = parts.joinToString(if (parts.size <= 2) "\n" else "   ")
+            val description = cameras.mapIndexed { index, (name, streams) ->
+                "Screen ${index + 1}, $name: ${from(streams).description}"
+            }.joinToString("; ")
+            return LiveStreamReadout(text, description)
+        }
     }
 }

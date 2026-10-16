@@ -1,0 +1,6 @@
+kind: nested-class
+title: split-layout
+children: []
+parentPath:
+  - screens
+  - concurrent-camera-screen
