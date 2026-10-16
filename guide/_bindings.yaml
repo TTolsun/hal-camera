@@ -273,6 +273,8 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt
           - app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt
+      screens/concurrent-camera-screen/split-layout:
+        evidence:
           - app/src/main/java/dev/halcamera/camera/SplitSelection.kt
           - app/src/main/java/dev/halcamera/camera/SplitArrangement.kt
           - app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt
