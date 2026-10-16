@@ -52,7 +52,8 @@ def normalize(run):
                     comparison_eligible=not bool(flags & COMPARISON_BLOCKERS or unknown),
                     scoring_eligible=not bool(flags & SCORING_BLOCKERS or unknown))
     validity["flags"] = list(dict.fromkeys(validity["flags"]))
-    if not isinstance(validity.get("validity_rule_version"), str):
+    version = validity.get("validity_rule_version")
+    if not isinstance(version, str) or version in ("", "null"):
         validity["validity_rule_version"] = VALIDITY_RULE_VERSION
     metrics = run.get("metrics")
     if not isinstance(metrics, list) or any(not isinstance(m, dict) or not m.get("id") for m in metrics):

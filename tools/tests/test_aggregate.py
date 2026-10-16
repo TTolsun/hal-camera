@@ -53,6 +53,8 @@ class AggregateTests(unittest.TestCase):
         for schema in range(first, last + 1):
             aggregate.normalize(run(schema=schema))
         with self.assertRaises(ValueError):
+            aggregate.normalize(run(schema=first - 1))
+        with self.assertRaises(ValueError):
             aggregate.normalize(run(schema=last + 1))
 
     def test_output_failure_is_fatal_and_not_reported_as_a_corrupt_input(self):
@@ -86,7 +88,7 @@ class AggregateTests(unittest.TestCase):
             self.assertFalse(aggregate.normalize(run([flag]))["validity"]["comparison_eligible"])
 
     def test_missing_rule_version_uses_current_rules_but_preserves_recorded_version(self):
-        for missing in (None, 7):
+        for missing in (None, 7, "", "null"):
             data = run()
             data["validity"]["validity_rule_version"] = missing
             self.assertEqual("validity-v3", aggregate.normalize(data)["validity"]["validity_rule_version"])
