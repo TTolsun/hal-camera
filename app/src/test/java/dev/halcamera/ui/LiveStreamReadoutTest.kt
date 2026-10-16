@@ -33,6 +33,6 @@ class LiveStreamReadoutTest {
         assertEquals("1 · P 1280×720   J 1920×1440\n2 · P 640×480   J 1440×1080", two.text)
         assertTrue(two.description.startsWith("Screen 1, Front 1: Preview 1280x720"))
         val three = LiveStreamReadout.multi(List(3) { "Camera $it" to mapOf("preview" to "640x480") })
-        assertEquals("1 · P 640×480   2 · P 640×480   3 · P 640×480", three.text)
+        assertEquals("1 · P 640×480\n2 · P 640×480\n3 · P 640×480", three.text)
     }
 }

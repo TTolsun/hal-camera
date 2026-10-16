@@ -7,9 +7,7 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.SurfaceTexture
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.InsetDrawable
 import android.hardware.camera2.CameraCharacteristics
 import android.hardware.camera2.CameraManager
 import android.os.*
@@ -152,7 +150,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     }
 
     private fun showPage() {
-        root = FrameLayout(this).apply { setBackgroundColor(Look.cameraSurface) }
+        root = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
         stage = FrameLayout(this).apply { clipChildren = true }
         root.addView(stage,FrameLayout.LayoutParams(-1,-1))
         stage.addOnLayoutChangeListener { _,_,_,_,_,_,_,_,_ -> layoutPreviews() }
@@ -212,7 +210,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         },LinearLayout.LayoutParams(0,dp(64),1f))
         shutter = ShutterButton(this).apply { setOnClickListener { capture() } }
         captureRow.addView(shutter,LinearLayout.LayoutParams(dp(64),dp(64)).apply { marginStart = dp(12); marginEnd = dp(12) })
-        cameraButton = IconButton(this,R.drawable.ic_camera_select,"Choose Split cameras",filled = true) { showSplit() }
+        cameraButton = IconButton(this,R.drawable.ic_camera_select,"Choose Split cameras",filled = true) { showSplit(LiveChoiceSheet.Edge.BOTTOM) }
         snapshotButton = IconButton(this,R.drawable.ic_snapshot,"Take a photo while recording",filled = true) { takePhoto() }
         captureRow.addView(FrameLayout(this).apply {
             addView(cameraButton,FrameLayout.LayoutParams(dp(48),dp(48),Gravity.CENTER))
@@ -225,7 +223,12 @@ class ConcurrentCameraActivity : ComponentActivity() {
             val mode = button(label) {
                 if (!busy) {
                     if (index < 2) leave(index == 1)
-                    else if (videoMode != (index == 3)) { videoMode = index == 3; failed = false; closeSession() }
+                    else if (videoMode != (index == 3)) {
+                        videoMode = index == 3; failed = false
+                        zoomControl.collapse(animate = false)
+                        // Match Photo/Video: retain composition, but rebuild mode-specific streams after close(done).
+                        closeSession()
+                    }
                 }
             }.apply { textSize = 12f; setPadding(dp(4),0,dp(4),0) }
             modeButtons += mode; modeRow.addView(mode,LinearLayout.LayoutParams(0,dp(48),1f))
@@ -265,7 +268,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         repeat(count) { textures += null }
         if (arrangement.count != count) arrangement = SplitArrangement.identity(count,arrangement.layout)
         repeat(count) { index ->
-            val panel = FrameLayout(this).apply { clipChildren = true; setBackgroundColor(Look.cameraSurface) }
+            val panel = FrameLayout(this).apply { clipChildren = true; setBackgroundColor(Color.BLACK) }
             val preview = TextureView(this).apply { alpha = 0f }; previews += preview; panels += panel
             panel.addView(preview,FrameLayout.LayoutParams(-1,-1))
             lateinit var ring: FocusRing
@@ -291,6 +294,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
             focusRings += ring; panel.addView(ring,FrameLayout.LayoutParams(-1,-1))
             val label = text("",11).apply {
                 isSingleLine = true; ellipsize = android.text.TextUtils.TruncateAt.END
+                gravity = Gravity.CENTER_VERTICAL
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }
             // Each camera's own FPS and exposure ride on its name bar, so they follow the panel through every layout.
@@ -300,11 +304,10 @@ class ConcurrentCameraActivity : ComponentActivity() {
             }
             val handle = row().apply {
                 // The 28dp bar keeps a 48dp touch area by reaching up into the space above it, never over the preview.
-                // Background first: an InsetDrawable replaces the view padding with its insets.
-                background = InsetDrawable(ColorDrawable(Look.cameraGlass),0,labelTouch-labelBar,0,0)
-                setPadding(dp(12),labelTouch-labelBar,dp(12),0)
+                setPadding(dp(8),labelTouch-labelBar,dp(8),0)
                 setOnClickListener { selectActive(index) }
-                addView(label,LinearLayout.LayoutParams(0,-1,1f))
+                addView(label,LinearLayout.LayoutParams(-2,-1))
+                addView(View(this@ConcurrentCameraActivity),LinearLayout.LayoutParams(0,1,1f))
                 addView(info,LinearLayout.LayoutParams(-2,-1).apply { marginStart = dp(8) })
             }
             val footInfo = text("",10).apply {
@@ -353,11 +356,11 @@ class ConcurrentCameraActivity : ComponentActivity() {
         updateButtons()
     }
 
-    private fun showSplit() {
+    private fun showSplit(edge: LiveChoiceSheet.Edge = LiveChoiceSheet.Edge.TOP) {
         if (busy || plans.none { it.advertised }) return
         // The sheet lists cameras in on-screen order. Reordering the same cameras only moves panels.
         val onScreen = if (arrangement.count == selectedIds.size) arrangement.order.map { selectedIds[it] } else selectedIds
-        SplitChoiceSheet(this).show(plans,onScreen) { ids ->
+        SplitChoiceSheet(this).show(plans,onScreen,edge) { ids ->
             if (busy) false else {
                 if (ids.toSet() == selectedIds.toSet()) {
                     arrangement = arrangement.copy(order = ids.map(selectedIds::indexOf)); layoutPreviews(); bindLabels()
@@ -373,15 +376,22 @@ class ConcurrentCameraActivity : ComponentActivity() {
         val plan = plans.getOrNull(selected) ?: return
         labels.forEachIndexed { i,label ->
             val camera = plan.streams.getOrNull(i)?.camera ?: return@forEachIndexed
-            label.text = "${if (i == activeIndex) "● " else ""}${arrangement.order.indexOf(i)+1} · ${camera.label}"
+            val selected = i == activeIndex
+            label.text = "⠿  ${arrangement.order.indexOf(i)+1} · ${camera.label}${if (selected) "  ✓" else ""}"
+            label.background = Look.cardBackground(this,Look.cameraControlGlass,
+                if (selected) Look.cameraSelection else Look.cameraOutline)
+            label.setPadding(dp(8),0,dp(8),0)
+            label.setTextColor(if (selected) Look.onDark else Look.onDarkMuted)
+            label.setTypeface(null,if (selected) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
             describe(i)
             handles.getOrNull(i)?.let { ViewCompat.setStateDescription(it,if (i == activeIndex) "Selected" else "Not selected") }
         }
         bindSizes()
     }
     private fun describe(i: Int) {
+        val camera = plans.getOrNull(selected)?.streams?.getOrNull(i)?.camera ?: return
         handles.getOrNull(i)?.contentDescription =
-            "${labels[i].text}. ${infos[i].text}. Tap to control this camera. Hold and drag to move it"
+            "Screen ${arrangement.order.indexOf(i)+1}, ${camera.label}. ${infos[i].text}. Tap to control this camera. Hold and drag to move it"
     }
     /** FPS and exposure of each camera from its own fresh result; a stale camera shows dashes. */
     private fun bindInfos(events: List<dev.halcamera.telemetry.Event>,now: Long) {
@@ -415,7 +425,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         if (arrangement.count != streams.size) return
         liveIndicator.bindSizes(LiveStreamReadout.multi(arrangement.order.map { i ->
             streams[i].camera.label to mapOf("preview" to streams[i].preview.toString(),"jpeg" to streams[i].photo.toString())
-        }),"choose sizes")
+        }),"choose sizes",arrangement.order.indexOf(activeIndex))
     }
     private fun showSizes() {
         if (busy) return
@@ -558,6 +568,10 @@ class ConcurrentCameraActivity : ComponentActivity() {
             val fit = splitPreviewFrame(f.width,f.height,labelTouch,if (below) readoutRow else 0,
                 outputSizes.getOrNull(i)?.let { it.width.toFloat()/it.height })
             infos.getOrNull(i)?.visibility = if (readout && !below) View.VISIBLE else View.GONE
+            val infoWidth = if (readout && !below) infos.getOrNull(i)?.let {
+                it.paint.measureText("FPS 999.9  EXP 999.99ms").toInt()+dp(8)
+            } ?: 0 else 0
+            labels.getOrNull(i)?.maxWidth = (f.width-dp(16)-infoWidth).coerceAtLeast(dp(48))
             footInfos.getOrNull(i)?.let {
                 it.visibility = if (below) View.VISIBLE else View.GONE
                 // Starts under the preview but may run past it, so a narrow preview never clips the readout.
