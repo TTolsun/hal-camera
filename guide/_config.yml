@@ -20,6 +20,8 @@ exclude:
 
 # HAL 검증 작업 순서. 내부 구조와 검증 기록은 하단 참고 자료로 연결합니다.
 nav:
+  - path: download.html
+    label: Download
   - path: getting-started.html
     label: Quickstart
   - path: live.html
