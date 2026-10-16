@@ -100,8 +100,20 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
 
     fun bindSizes(streams: Map<*, *>?) = bindSizes(LiveStreamReadout.from(streams))
 
-    internal fun bindSizes(value: LiveStreamReadout, action: String = "open Live Streams") {
-        if (sizes.text.toString() != value.text) sizes.text = value.text
+    internal fun bindSizes(value: LiveStreamReadout, action: String = "open Live Streams", selectedLine: Int? = null) {
+        sizes.maxLines = maxOf(2,value.text.count { it == '\n' }+1)
+        if (selectedLine == null) {
+            if (sizes.text.toString() != value.text) sizes.text = value.text
+        } else {
+            val lines = value.text.split('\n')
+            val highlighted = android.text.SpannableString(value.text)
+            if (selectedLine in lines.indices) {
+                val start = lines.take(selectedLine).sumOf { it.length+1 }
+                highlighted.setSpan(android.text.style.ForegroundColorSpan(Look.onDark),start,
+                    start+lines[selectedLine].length,android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            sizes.text = highlighted
+        }
         sizes.contentDescription = "${value.description}, $action"
         sizes.visibility = if (value.text.isEmpty()) View.GONE else View.VISIBLE
     }
