@@ -6,9 +6,9 @@ home: true
   <p class="eyebrow">HAL CAMERA / User Guide</p>
   <h1 id="hero-title" lang="en">Capture. Measure. Verify.</h1>
 <figure class="brand-film" aria-labelledby="brand-film-title">
-  <video controls autoplay playsinline preload="metadata" width="1920" height="1080" poster="assets/media/camera-hal-tactile.jpg" aria-labelledby="brand-film-title" aria-describedby="brand-film-description brand-film-timing brand-film-ripple brand-film-prism">
-    <source src="assets/media/camera-hal-tactile.mp4" type="video/mp4">
-    <a href="assets/media/camera-hal-tactile.mp4">Camera HAL 소개 영상 보기</a>
+  <video controls autoplay playsinline preload="metadata" width="1920" height="1080" poster="assets/media/camera-hal-reviewed-v8.jpg" aria-labelledby="brand-film-title" aria-describedby="brand-film-description brand-film-timing brand-film-ripple brand-film-prism">
+    <source src="assets/media/camera-hal-reviewed-v8.mp4" type="video/mp4">
+    <a href="assets/media/camera-hal-reviewed-v8.mp4">Camera HAL 소개 영상 보기</a>
   </video>
   <figcaption>
     <h2 id="brand-film-title">Camera HAL.</h2>
