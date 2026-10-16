@@ -135,6 +135,22 @@ internal fun concurrentFrames(count: Int, width: Int, height: Int, layout: Split
 internal fun concurrentOutputSize(preview: LiveSize, rotation: Int): LiveSize =
     if ((rotation % 180 + 180) % 180 == 90) LiveSize(preview.height, preview.width) else preview
 
+/**
+ * Preview inside a Split panel, between a [header]-tall name bar and a [footer]-tall readout row that ends at the
+ * panel bottom. Spare height then sits above the name bar instead of as a black band next to the capture
+ * controls. [aspect] is null until the stream size is known.
+ */
+internal fun splitPreviewFrame(width: Int, height: Int, header: Int, footer: Int, aspect: Float?): ConcurrentFrame {
+    val room = (height - header - footer).coerceAtLeast(1)
+    val bottom = height - footer
+    if (aspect == null) return ConcurrentFrame(0, bottom - room, width, room)
+    val fit = fitConcurrentFrame(width, room, aspect)
+    return fit.copy(top = bottom - fit.height)
+}
+
+/** Side by side and grid panels are narrow, so FPS and exposure go under the preview; stacked ones fit them in the name bar. */
+internal fun splitReadoutBelow(layout: SplitLayout) = layout != SplitLayout.STACKED
+
 /** Letterbox instead of sampling a centre crop when a preview surface resizes. */
 internal fun fitConcurrentFrame(width: Int, height: Int, aspect: Float): ConcurrentFrame {
     require(width > 0 && height > 0 && aspect.isFinite() && aspect > 0)

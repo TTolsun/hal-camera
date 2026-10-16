@@ -54,6 +54,7 @@ internal class SplitPanelDrag(
             handle.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
             panel.translationZ = Look.dp(context,8).toFloat(); panel.alpha = .85f
             if (outline.parent == null) stage.addView(outline,FrameLayout.LayoutParams(0,0))
+            target = preview(index,0f,0f)
         }
         handle.setOnTouchListener { _,event ->
             when (event.actionMasked) {
@@ -66,10 +67,10 @@ internal class SplitPanelDrag(
                     false
                 } else {
                     panel.translationX = event.rawX-startX; panel.translationY = event.rawY-startY
-                    target = preview(index,event.rawX,event.rawY); true
+                    target = preview(index,event.rawX-startX,event.rawY-startY); true
                 }
                 MotionEvent.ACTION_UP -> { handle.removeCallbacks(begin); if (!dragging) false else {
-                    target = preview(index,event.rawX,event.rawY); end(drop = true); true
+                    target = preview(index,event.rawX-startX,event.rawY-startY); end(drop = true); true
                 } }
                 MotionEvent.ACTION_CANCEL -> { handle.removeCallbacks(begin); if (!dragging) false else { end(drop = false); true } }
                 else -> dragging
@@ -87,11 +88,10 @@ internal class SplitPanelDrag(
         }
     }
 
-    /** Places the outline where the panel would land and returns that arrangement. */
-    private fun preview(index: Int, rawX: Float, rawY: Float): SplitArrangement? {
+    /** Places the outline where the panel moved by ([dx], [dy]) would land; at pick-up that is its current place. */
+    private fun preview(index: Int, dx: Float, dy: Float): SplitArrangement? {
         val bounds = area() ?: return null
-        val origin = IntArray(2).also(stage::getLocationOnScreen)
-        val next = arrangement().snap(index,rawX-origin[0]-bounds.left,rawY-origin[1]-bounds.top,bounds.width(),bounds.height())
+        val next = arrangement().drag(index,dx,dy,bounds.width(),bounds.height())
         val frame = next.frames(bounds.width(),bounds.height()).getOrNull(index) ?: return null
         val inset = Look.dp(context,4)
         val params = outline.layoutParams as? FrameLayout.LayoutParams ?: return next
