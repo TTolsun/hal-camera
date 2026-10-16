@@ -31,17 +31,28 @@ object ConcurrentPlanner {
         combinations.forEach { ids -> subsets(available.filter { it.id in ids }, 0, emptyList()) }
         return groups.mapNotNull { group ->
             val streams = group.map { camera ->
-                val preview = size(camera.previews, 1280L * 720) ?: return@mapNotNull null
-                val photo = size(camera.photos, 1920L * 1440) ?: return@mapNotNull null
+                val preview = previewChoices(camera).firstOrNull() ?: return@mapNotNull null
+                val photo = photoChoices(camera).firstOrNull() ?: return@mapNotNull null
                 ConcurrentStream(camera, preview, photo)
             }
             ConcurrentPlan(streams, combinations.any { ids -> group.all { it.id in ids } })
         }.sortedWith(compareBy<ConcurrentPlan> { !it.advertised }.thenByDescending { it.streams.size })
     }
 
-    private fun size(sizes: List<LiveSize>, maxArea: Long) = sizes
+    /** Concurrent sessions guarantee s720p preview and s1440p JPEG, so only sizes within them are offered. Largest first. */
+    fun previewChoices(camera: ConcurrentCamera) = choices(camera.previews, 1280L * 720)
+    fun photoChoices(camera: ConcurrentCamera) = choices(camera.photos, 1920L * 1440)
+
+    /** Applies per-camera (preview, JPEG) choices; a size outside the offered list is ignored, never substituted. */
+    fun withSizes(plan: ConcurrentPlan, sizes: Map<String, Pair<LiveSize, LiveSize>>) = plan.copy(streams = plan.streams.map { stream ->
+        val (preview, photo) = sizes[stream.camera.id] ?: return@map stream
+        stream.copy(preview = preview.takeIf { it in previewChoices(stream.camera) } ?: stream.preview,
+            photo = photo.takeIf { it in photoChoices(stream.camera) } ?: stream.photo)
+    })
+
+    private fun choices(sizes: List<LiveSize>, maxArea: Long) = sizes.distinct()
         .filter { it.width.toLong() * it.height <= maxArea }
-        .maxWithOrNull(compareBy<LiveSize> { it.width.toLong() * it.height }.thenBy { it.width })
+        .sortedWith(compareByDescending<LiveSize> { it.width.toLong() * it.height }.thenByDescending { it.width })
 }
 
 /** Both opens must finish before any configure; shutdown must include late open callbacks. Handler-confined. */

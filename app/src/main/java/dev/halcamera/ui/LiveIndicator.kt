@@ -98,10 +98,11 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
         eis.setTextColor(if (status.warning != null) Look.statusWarn else Look.onDarkMuted)
     }
 
-    fun bindSizes(streams: Map<*, *>?) {
-        val value = LiveStreamReadout.from(streams)
+    fun bindSizes(streams: Map<*, *>?) = bindSizes(LiveStreamReadout.from(streams))
+
+    internal fun bindSizes(value: LiveStreamReadout, action: String = "open Live Streams") {
         if (sizes.text.toString() != value.text) sizes.text = value.text
-        sizes.contentDescription = value.description + ", open Live Streams"
+        sizes.contentDescription = "${value.description}, $action"
         sizes.visibility = if (value.text.isEmpty()) View.GONE else View.VISIBLE
     }
 

@@ -178,4 +178,18 @@ class ConcurrentPlanTest {
         lease.release(next)
         assertEquals(listOf("old", "next", "third"), opened)
     }
+
+    @Test fun `size choices stay within the concurrent guarantee and overrides never substitute`() {
+        val cam = ConcurrentCamera("0", CameraLabel.FACING_BACK,
+            listOf(LiveSize(1920,1080), LiveSize(640,480), preview, LiveSize(640,480)), listOf(LiveSize(4000,3000), jpeg, LiveSize(1440,1080)))
+        assertEquals(listOf(preview, LiveSize(640,480)), ConcurrentPlanner.previewChoices(cam))
+        assertEquals(listOf(jpeg, LiveSize(1440,1080)), ConcurrentPlanner.photoChoices(cam))
+        val plan = ConcurrentPlan(listOf(ConcurrentStream(cam, preview, jpeg), ConcurrentStream(front, preview, jpeg)))
+        val sized = ConcurrentPlanner.withSizes(plan, mapOf("0" to (LiveSize(640,480) to LiveSize(1440,1080))))
+        assertEquals(LiveSize(640,480), sized.streams[0].preview)
+        assertEquals(LiveSize(1440,1080), sized.streams[0].photo)
+        assertEquals(plan.streams[1], sized.streams[1])
+        val ignored = ConcurrentPlanner.withSizes(plan, mapOf("0" to (LiveSize(1920,1080) to LiveSize(4000,3000))))
+        assertEquals(plan, ignored)
+    }
 }
