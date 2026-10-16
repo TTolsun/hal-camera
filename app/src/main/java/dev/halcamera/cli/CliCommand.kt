@@ -60,7 +60,6 @@ data class CliCommand(
     companion object {
         val COMMANDS get() = CliCommands.specs.keys.toList()
         val STREAM_COMMANDS get() = CliCommands.specs.values.filter { it.streams }.map { it.name }.toSet()
-        val LIVE_CAMERA_COMMANDS get() = CliCommands.specs.values.filter { it.engine }.map { it.name }.toSet()
         val CAMERA_COMMANDS get() = CliCommands.specs.values.filter { it.camera }.map { it.name }.toSet()
         const val BENCHMARK_PROFILE = "camera2-standard-v2"
         const val MAX_CASES = 64

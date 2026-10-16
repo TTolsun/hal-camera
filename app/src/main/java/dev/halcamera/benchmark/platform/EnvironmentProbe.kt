@@ -42,7 +42,7 @@ class EnvironmentProbe(private val activity: Activity) {
         buildIncremental = Build.VERSION.INCREMENTAL, fingerprint = Build.FINGERPRINT,
         vendorFingerprint = systemProperty("ro.vendor.build.fingerprint"),
         sdk = Build.VERSION.SDK_INT,
-        securityPatch = if (Build.VERSION.SDK_INT >= 23) Build.VERSION.SECURITY_PATCH else null,
+        securityPatch = Build.VERSION.SECURITY_PATCH,
         cameraInfoVersion = cameraInfoVersion(cameraId)
     )
 

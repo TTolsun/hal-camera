@@ -11,20 +11,10 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 
 /** A checked choice list attached to its control; the platform places it above when needed. */
-fun showSelectionPopup(anchor: View, items: List<String>, selected: Int, onSelect: (Int) -> Unit) =
-    showPopup(anchor, items, selected, checked = true, onSelect)
-
-/**
- * The same list without radio buttons, for items that go somewhere rather than set a value. A radio button says
- * which value is current, and a list of destinations has none, so every circle would sit empty.
- */
-fun showActionPopup(anchor: View, items: List<String>, onSelect: (Int) -> Unit) =
-    showPopup(anchor, items, -1, checked = false, onSelect)
-
-private fun showPopup(anchor: View, items: List<String>, selected: Int, checked: Boolean, onSelect: (Int) -> Unit) {
+fun showSelectionPopup(anchor: View, items: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     if (items.isEmpty() || !anchor.isAttachedToWindow || !anchor.isEnabled) return
     val context = anchor.context
-    val layout = if (checked) android.R.layout.simple_list_item_single_choice else android.R.layout.simple_list_item_1
+    val layout = android.R.layout.simple_list_item_single_choice
     val adapter = object : ArrayAdapter<String>(context, layout, items) {
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View =
             (super.getView(position, convertView, parent) as TextView).apply {
@@ -55,11 +45,9 @@ private fun showPopup(anchor: View, items: List<String>, selected: Int, checked:
     lifecycle?.addObserver(observer)
     popup.show()
     popup.listView?.apply {
-        if (checked) {
-            choiceMode = ListView.CHOICE_MODE_SINGLE
-            setItemChecked(selected, true)
-            if (selected >= 0) setSelection(selected)
-        }
+        choiceMode = ListView.CHOICE_MODE_SINGLE
+        setItemChecked(selected, true)
+        if (selected >= 0) setSelection(selected)
         ViewCompat.setAccessibilityPaneTitle(this, anchor.contentDescription ?: (anchor as? TextView)?.text)
     }
 }

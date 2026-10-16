@@ -5,7 +5,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.Bundle
@@ -20,7 +19,6 @@ import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.WindowManager
 import android.widget.FrameLayout
-import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -210,16 +208,8 @@ class CtsCaseActivity : ComponentActivity(), CtsRunner.PreviewHost, SurfaceHolde
         body.addView(Look.text(this, CaseReportPresenter.DISCLAIMER, 11, Look.inkMuted), lp(top = 4))
 
         // The preview keeps its view size; only the buffer is resized per step, as in the CTS activity.
-        val frame = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
-        frame.addView(preview, FrameLayout.LayoutParams(-1, -1))
-        // A closed camera leaves its last frame on the surface, so the case ends with a still picture of
-        // whatever it last pointed at sitting under the results. The cover hides the surface whenever nothing
-        // is running; the surface itself is left alone because the runner holds it.
-        previewCover = Look.text(this, "", 12, Look.onDarkMuted).apply {
-            gravity = Gravity.CENTER
-            setBackgroundColor(Color.BLACK)
-        }
-        frame.addView(previewCover, FrameLayout.LayoutParams(-1, -1))
+        val frame = dev.halcamera.cts.CtsPreviewFrame(this, preview)
+        previewCover = frame.cover
         body.addView(frame, lp(top = 12).apply { height = dp(180) })
 
         statusView = Look.text(this, status, 13, Look.inkMuted)
@@ -252,7 +242,7 @@ class CtsCaseActivity : ComponentActivity(), CtsRunner.PreviewHost, SurfaceHolde
         cameras.forEach { r ->
             val card = Look.card(this, dark = false)
             card.addView(Look.text(this, CaseReportPresenter.cameraLine(r), 14, Look.ink, bold = true))
-            card.addView(wide(Look.text(this, colorize(CaseReportPresenter.cameraTable(r)), 11, Look.ink, mono = true)), lp(top = 10))
+            card.addView(Look.scrollableText(Look.text(this, colorize(CaseReportPresenter.cameraTable(r)), 11, Look.ink, mono = true)), lp(top = 10))
             results.addView(card, lp(top = 12))
         }
     }
@@ -296,15 +286,6 @@ class CtsCaseActivity : ComponentActivity(), CtsRunner.PreviewHost, SurfaceHolde
             putExtra(Intent.EXTRA_TEXT, text)
         }
         startActivity(Intent.createChooser(intent, "결과 공유"))
-    }
-
-    // Same reason as the suite screen: a step line that runs past the edge has to look unfinished, or the
-    // number it was cut in the middle of is read as the whole value.
-    private fun wide(view: TextView): HorizontalScrollView = HorizontalScrollView(this).apply {
-        isHorizontalScrollBarEnabled = true
-        isHorizontalFadingEdgeEnabled = true
-        setFadingEdgeLength(dp(24))
-        addView(view, LinearLayout.LayoutParams(-2, -2))
     }
 
     private fun dp(v: Int) = Look.dp(this, v)

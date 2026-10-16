@@ -5,7 +5,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.hardware.camera2.CameraManager
 import android.hardware.camera2.cts.Camera2SurfaceViewCtsActivity
 import android.os.Build
@@ -21,7 +20,6 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
-import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -160,17 +158,8 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
         body.addView(Look.text(this, "앱 내 검사 · 공식 CTS 인증 결과 아님", 11, Look.inkMuted), lp(top = 4))
 
         // The preview keeps its frame; each item resizes only the buffer, as in the CTS activity.
-        val frame = FrameLayout(this).apply { setBackgroundColor(Color.BLACK) }
-        frame.addView(preview, FrameLayout.LayoutParams(-1, -1))
-        // A closed camera leaves its last frame on the surface, so the run ends with a still picture of
-        // whatever the last item pointed at — a front camera for most of them — sitting under the results for
-        // as long as the screen is open. The cover hides the surface whenever nothing is running; the surface
-        // itself is left alone because the vendored tests hold it.
-        previewCover = Look.text(this, "", 12, Look.onDarkMuted).apply {
-            gravity = Gravity.CENTER
-            setBackgroundColor(Color.BLACK)
-        }
-        frame.addView(previewCover, FrameLayout.LayoutParams(-1, -1))
+        val frame = dev.halcamera.cts.CtsPreviewFrame(this, preview)
+        previewCover = frame.cover
         body.addView(frame, lp(top = 12).apply { height = dp(180) })
 
         statusView = Look.text(this, status, 13, Look.inkMuted)
@@ -445,7 +434,7 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
             card.isClickable = true; card.isFocusable = true
             card.contentDescription = "${entry.item.title} ${SuiteReportPresenter.outcomeLabel(entry.outcome)}, 상세 ${if (open) "접기" else "펼치기"}"
             card.setOnClickListener { if (open) expanded -= index else expanded += index; render() }
-            if (open) card.addView(wide(Look.text(this, entry.detail, 11, Look.ink, mono = true)), lp(top = 10))
+            if (open) card.addView(Look.scrollableText(Look.text(this, entry.detail, 11, Look.ink, mono = true)), lp(top = 10))
         }
         return card
     }
@@ -456,7 +445,7 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
             is SuiteItem.Custom -> SuiteReportPresenter.customDetail(liveSteps.map { CameraCaseResult(it.key, it.value) })
             is SuiteItem.Vendored -> SuiteReportPresenter.vendoredDetail(liveFailures)
         }
-        if (detail.isNotEmpty()) card.addView(wide(Look.text(this, detail, 11, Look.ink, mono = true)), lp(top = 10))
+        if (detail.isNotEmpty()) card.addView(Look.scrollableText(Look.text(this, detail, 11, Look.ink, mono = true)), lp(top = 10))
         return card
     }
 
@@ -498,16 +487,6 @@ class CtsSuiteRunActivity : Camera2SurfaceViewCtsActivity(), CtsRunner.PreviewHo
             putExtra(Intent.EXTRA_TEXT, text)
         }
         startActivity(Intent.createChooser(intent, "결과 공유"))
-    }
-
-    // A step line runs past the screen edge ("fast close 11." with the digits after the point still to come),
-    // and a measurement that looks cut off is read as a measurement that ended there. The bar alone is too
-    // brief to catch, so the clipped edge fades: the row is visibly unfinished for as long as it is scrollable.
-    private fun wide(view: TextView): HorizontalScrollView = HorizontalScrollView(this).apply {
-        isHorizontalScrollBarEnabled = true
-        isHorizontalFadingEdgeEnabled = true
-        setFadingEdgeLength(dp(24))
-        addView(view, LinearLayout.LayoutParams(-2, -2))
     }
 
     private fun dp(v: Int) = Look.dp(this, v)

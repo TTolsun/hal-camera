@@ -62,7 +62,7 @@ Windows에서 프로젝트 경로에 한글이 있으면 Android Gradle Plugin�
 
 ## run JSON
 
-run 하나는 `files/benchmarks/<run_id>.json`에 schema 4로 저장됩니다(schema 3 파일도 읽습니다). 결과 화면의 `내보내기`로 공유할 수 있습니다. 파일에는 지표값, profile, 기기와 빌드 식별자, 환경값(thermal 시작 · 최고 · 종료, 절전 모드, 충전 상태), validity flag, 그리고 raw 표본이 들어 있습니다. **사진이나 프리뷰 픽셀은 저장하지 않습니다.**
+run 하나는 `files/benchmarks/<run_id>.json`에 schema 5로 저장됩니다(schema 3·4 파일도 읽습니다). 결과 화면의 `내보내기`로 공유할 수 있습니다. 파일에는 지표값, profile, 기기와 빌드 식별자, 환경값(thermal 시작 · 최고 · 종료, 절전 모드, 충전 상태), validity flag, 그리고 raw 표본이 들어 있습니다. **사진이나 프리뷰 픽셀은 저장하지 않습니다.**
 
 ## 실행 이력과 CSV 내보내기
 
@@ -77,11 +77,11 @@ PC에서는 Python 3 표준 라이브러리만으로 같은 열 형식의 CSV를
 ```bash
 python tools/aggregate.py ./runs -o scores.csv
 python tools/aggregate.py ./runs --eligibility comparison_eligible -o comparison.csv
-python tools/aggregate.py ./runs --eligibility all --profile camera2-standard-v1 --endpoint 0 -o all.csv
+python tools/aggregate.py ./runs --eligibility all --profile camera2-standard-v2 --endpoint 0 -o all.csv
 python -m unittest discover -s tools/tests -v
 ```
 
-스크립트는 폴더 바로 아래의 schema 3·4 benchmark JSON을 읽고 `index.json`은 제외합니다. eligibility는 앱과 같은 validity flag 규칙으로 다시 계산합니다. 알 수 없는 flag가 있으면 비교와 점수 산정 대상에서 제외합니다. 손상된 파일은 파일명과 이유를 표준 오류로 알리고, 읽을 수 있는 실행은 계속 내보낸 뒤 종료 코드 1을 반환합니다. CSV에는 저장 당시의 회귀 판정이나 점수를 재계산해서 넣지 않습니다.
+스크립트는 폴더 바로 아래의 schema 3·4·5 benchmark JSON을 읽고 `index.json`은 제외합니다. eligibility는 앱과 같은 validity flag 규칙으로 다시 계산합니다. 알 수 없는 flag가 있으면 비교와 점수 산정 대상에서 제외합니다. 손상된 파일은 파일명과 이유를 표준 오류로 알리고, 읽을 수 있는 실행은 계속 내보낸 뒤 종료 코드 1을 반환합니다. CSV에는 저장 당시의 회귀 판정이나 점수를 재계산해서 넣지 않습니다.
 
 ## 문서
 

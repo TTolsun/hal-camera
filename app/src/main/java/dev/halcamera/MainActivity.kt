@@ -52,9 +52,7 @@ class MainActivity : ComponentActivity() {
         const val MARK_LABEL = "Save Events · ZIP"
     }
     // Camera UI follows docs/design/APP-UI.md; shared dark surfaces and active states use ui/Look.
-    private val bg = Look.cameraSurface
     private val panel = Look.cameraCard
-    private val muted = dev.halcamera.ui.Look.onDarkMuted
     private val coral = dev.halcamera.ui.Look.statusFail
     private val glass = Look.cameraGlass
     internal val main = Handler(Looper.getMainLooper())
@@ -364,7 +362,6 @@ class MainActivity : ComponentActivity() {
         previewStartup.reset()
         engineCameraId = cameraId
         val thisSession = sessionId
-        val thisCamera = cameraId
         val thisKey = streamKey()
         val requestedStreams = streamSettings[thisKey]?.forMode(videoMode)
         if (engineName == "Camera2") streamState[thisKey] = "Configuring… Getting the pixels in line."

@@ -57,10 +57,6 @@ class LiveFrameStats {
  * a RECORD stage, so a camera2-standard-v1 run still counts to six and its bar keeps the weights it had.
  */
 object ProgressPresenter {
-
-    const val PHASE_COUNT = 6
-    const val RECORDING_PHASE_COUNT = 7
-
     /**
      * The bar is deliberately short. U+2588 is absent from Roboto Mono, so every cell is drawn by a fallback
      * font whose advance is wider than the monospace one and grows with the user's display size setting. At the

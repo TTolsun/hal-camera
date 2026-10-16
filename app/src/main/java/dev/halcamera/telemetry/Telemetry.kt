@@ -106,11 +106,3 @@ class Telemetry(val recorder: FlightRecorder) {
 }
 
 fun nowNs(): Long = SystemClock.elapsedRealtimeNanos()
-fun stateName(axis: String, value: Int?): String {
-    val names = when (axis) {
-        "AE" -> listOf("INACTIVE", "SEARCHING", "CONVERGED", "LOCKED", "FLASH_REQUIRED", "PRECAPTURE")
-        "AF" -> listOf("INACTIVE", "PASSIVE_SCAN", "PASSIVE_FOCUSED", "ACTIVE_SCAN", "FOCUSED_LOCKED", "NOT_FOCUSED_LOCKED", "PASSIVE_UNFOCUSED")
-        else -> listOf("INACTIVE", "SEARCHING", "CONVERGED", "LOCKED")
-    }
-    return value?.let { names.getOrNull(it) ?: "UNKNOWN($it)" } ?: "UNAVAILABLE"
-}

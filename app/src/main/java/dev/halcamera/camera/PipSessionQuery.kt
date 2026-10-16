@@ -91,8 +91,6 @@ internal fun readPipPreviewSizes(manager: CameraManager, id: String, requested: 
         .sortedByDescending { it.width.toLong()*it.height }
 }
 
-internal fun readPipPreviewSize(manager: CameraManager, id: String): LiveSize? = readPipPreviewSizes(manager,id).firstOrNull()
-
 /** Temporary, detached preview surfaces query the exact output sizes without changing any live session. */
 @RequiresApi(30)
 internal fun queryCamera2Pip(manager: CameraManager, camera: CameraDevice, source: PipSource,

@@ -1,5 +1,5 @@
 graph LR
-    report["BenchmarkReport / codec"] -->|"schema 4 쓰기 · 3/4 읽기"| store["BenchmarkStore"]
+    report["BenchmarkReport / codec"] -->|"schema 5 쓰기 · 3/4/5 읽기"| store["BenchmarkStore"]
     store -->|"실행 파일 경로"| files["files/benchmarks/*.json"]
     baseline["BaselineManager"] -->|"기준 포인터"| index["BenchmarkIndex · index.json"]
     history["HistoryActivity / RunIndex"] -->|"실행 읽기"| report
