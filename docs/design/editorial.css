@@ -108,3 +108,8 @@ table{width:100%;border-collapse:collapse;display:block;overflow:auto;margin:28p
 
 /* Keep the first action visible on short phones. */
 @media(max-width:700px){.hero{padding-top:28px}.hero .eyebrow{margin-bottom:16px}.hero h1{font-size:clamp(36px,9vw,48px);margin-bottom:16px}.hero .intro{margin-block:12px 20px}.hero .task-contents a{padding-block:12px;gap:4px 12px}}
+
+/* Keep the brand and primary navigation together on desktop. */
+@media(min-width:1001px){.site-header{justify-content:flex-start;gap:56px}.site-nav.nav-grouped{gap:8px 28px}.nav-grouped>a,.site-nav .nav-group>summary{font-size:14px}.search-open{margin-left:auto;flex-shrink:0}}
+.download-page h1{font-size:clamp(36px,5vw,56px);margin-bottom:20px}.download-page .task-contents{margin-top:20px}.download-page .secondary-download{font-size:14px;margin-top:16px}
+@media(max-width:700px){.download-page .task-contents a{padding-block:12px;gap:4px 12px}}
