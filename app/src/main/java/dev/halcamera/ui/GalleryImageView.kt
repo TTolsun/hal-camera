@@ -12,6 +12,8 @@ import kotlin.math.abs
 import kotlin.math.min
 
 /** Fits the entire photo, with pinch/double-tap zoom and paging only at the fitted scale. */
+// Constructed programmatically with required collaborators; never inflated from XML.
+@android.annotation.SuppressLint("ViewConstructor")
 class GalleryImageView(context: Context, private val page: (Int) -> Unit) : ImageView(context) {
     private val transform = Matrix()
     private var zoom = 1f
@@ -128,6 +130,8 @@ class GalleryImageView(context: Context, private val page: (Int) -> Unit) : Imag
         }
     }
 
+    // Confirmed single taps call performClick in the GestureDetector; UP also covers swipes and zoom.
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.actionMasked == MotionEvent.ACTION_DOWN) multiplePointers = false
         if (event.pointerCount > 1) multiplePointers = true

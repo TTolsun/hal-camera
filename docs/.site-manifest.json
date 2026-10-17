@@ -4,7 +4,7 @@
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "_inputs/decisions.html": "74410055a21243cc476b2c96fd2e4ee1283f908cbccb91a71cdeec3367a37f96",
     "_inputs/device-verification.yaml": "1852f48d52f75733b4db973418fc7fad1f0f9d340a8b4b555cf9d49aa7016215",
-    "architecture.html": "083bba016fa8dddc1d3d4393c11547b41dd90fde49ef94c6e87b5e308a8b7e74",
+    "architecture.html": "b77b0844ccd0db3cf5b85cd64e9356bca4d5ba303589eda87ca6617134b4ea6e",
     "assets/brand-film.js": "c8b3ff272b84005ec1eeb1aafcf3fa6eeea4d778bc57ce76b4abd9f32503b726",
     "assets/docflow-design.css": "b1591ec434785fa5219ab7cbb92881c64f9a40e20147bd0013a044f8c5981ca9",
     "assets/media/camera-hal-reviewed-v8.jpg": "507c78d32402e3c61f1d22b34902d4a9d68672cbf86fa3b1d004fe8b10b370c4",
@@ -47,13 +47,13 @@
     "contributing.html": "5ae830a401a8f9c55367c1246f0792bd19382078276f136ce9da7aae55df7aa1",
     "cts.html": "b7896ab2d2828154eff8bde96aa4a4b3bcdbe53c70c96fc6eaa46fccd1a27014",
     "decisions.html": "818fc401c78f6ad2cbd73600eba7bdbe620866c535bf25f8a26200ab6ad3e5da",
-    "engine.html": "a916bf6aea2060d5a14d48b091c8b15fbf578eb0c9cb42bf8c1dbce62bcfabbb",
-    "evidence.html": "91c2af2e0dbbb1a9f39ae2f7b20e59358298e0809af7e9b32125015730a92532",
+    "engine.html": "419762e70620d28d6ca5e312c233c00dd01bff9c8343e66bfb5067832da186fa",
+    "evidence.html": "7b0de08a08d0f8e06fb84d8ef8fb0e0dfa2efdb59f647ad27e335ca7c48171e7",
     "getting-started.html": "aeb7c90f3d6ca9f3bf1e944430f1e70cac54ead943cf3dde4ffb2b36899516a8",
     "glossary.html": "b9ae6c9daa7dbfca40d62a17ee948f953b843c9f1a4f5ec36a8d7d3493ed6bbf",
     "index.html": "8b732447349e16d21b3daaf2d1ca368a346f41599d86c1ca82d7e59fa2bb2645",
     "live.html": "ce46df92c1e307f116a275d245470c06de7510d6da14b302dd1d6f5c948be77b",
     "probe.html": "bbb7b52f040773aa05b602792cc133d07b52dd01d1e1bbabbc4bd3471dfff3f8",
-    "troubleshooting.html": "52e63a136e45cc0dab80044ec9f2ddb746a57b8a8b4cff49cdd9e98fe450bf1b"
+    "troubleshooting.html": "5dfe0cc160727c27a423c6d0ac1ab87989faf11981f0750919ebca65570443ec"
   }
 }

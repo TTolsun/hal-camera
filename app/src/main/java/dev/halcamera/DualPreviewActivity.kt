@@ -792,7 +792,7 @@ class DualPreviewActivity : ComponentActivity() {
     }
 
     @Suppress("DEPRECATION")
-    private fun displayDegrees() = when (windowManager.defaultDisplay.rotation) { 1 -> 90; 2 -> 180; 3 -> 270; else -> 0 }
+    private fun displayDegrees() = when (windowManager.defaultDisplay.rotation) { android.view.Surface.ROTATION_90 -> 90; android.view.Surface.ROTATION_180 -> 180; android.view.Surface.ROTATION_270 -> 270; else -> 0 }
 
     private fun takePhoto() {
         if (busy() || mainControls == null || !previewReady()) return

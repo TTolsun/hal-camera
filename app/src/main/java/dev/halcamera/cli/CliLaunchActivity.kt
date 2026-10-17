@@ -6,6 +6,8 @@ import android.os.Bundle
 import dev.halcamera.MainActivity
 
 /** A translucent gate checks on main before CLEAR_TOP can stop a running benchmark. */
+// This is a command gate with no splash UI; it must check BUSY before changing the task.
+@android.annotation.SuppressLint("CustomSplashScreen")
 class CliLaunchActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

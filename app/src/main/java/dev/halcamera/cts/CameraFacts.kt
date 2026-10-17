@@ -15,6 +15,8 @@ object CameraFacts {
     fun isLegacy(chars: CameraCharacteristics): Boolean =
         chars[CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL] == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY
 
+    // This inlined metadata value can be compared on older devices; they cannot report EXTERNAL.
+    @android.annotation.SuppressLint("InlinedApi")
     fun isExternal(chars: CameraCharacteristics): Boolean =
         chars[CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL] == CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_EXTERNAL
 

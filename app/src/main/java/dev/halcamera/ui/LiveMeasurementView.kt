@@ -11,6 +11,8 @@ import android.widget.LinearLayout
 import kotlin.math.ceil
 
 /** Fixed columns reserve every known 3A state; changing a result never changes geometry or type size. */
+// Constructed programmatically with required collaborators; never inflated from XML.
+@android.annotation.SuppressLint("ViewConstructor")
 class LiveMeasurementView(context: Context, private val dual: Boolean = false) : LinearLayout(context) {
     private val row = LinearLayout(context).apply { gravity = Gravity.CENTER }
     private val reservedLabels = LiveMeasurementText.reservedLabels(dual)

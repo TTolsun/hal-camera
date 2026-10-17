@@ -22,6 +22,8 @@ import java.util.Locale
 import kotlin.math.roundToInt
 
 /** A fixed-height zoom rail that opens around the selected ratio and folds back into one circle. */
+// Constructed programmatically with required collaborators; never inflated from XML.
+@android.annotation.SuppressLint("ViewConstructor")
 class ExpandingZoomControl(context: Context, private val onSelect: (Float) -> Unit) : ViewGroup(context) {
     private val accessibility = context.getSystemService(AccessibilityManager::class.java)
     private var ratios = emptyList<Float>()

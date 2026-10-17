@@ -29,6 +29,8 @@ import dev.halcamera.camera.TouchPhase
  * It sits in the preview host, so every camera switch replaces it along with the preview; a token per mark makes
  * a late callback from an earlier touch do nothing. Controls drawn above it keep their own touches.
  */
+// Constructed programmatically with required collaborators; never inflated from XML.
+@android.annotation.SuppressLint("ViewConstructor")
 class FocusRing(
     context: Context,
     private val engine: () -> TouchMetering?,
