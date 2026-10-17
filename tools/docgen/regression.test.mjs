@@ -187,7 +187,7 @@ test('missing cited files never retain a fresh observed state', () => {
 
 test('malformed markers cause no partial page writes', () => {
   pass(run('verify', '--accept')); pass(run('generate'));
-  change('guide/troubleshooting.md', s => s.replace('<!-- omm:end id=status -->', '<!-- omm:end id=wrong -->'), () => {
+  change('guide/_reference/troubleshooting.md', s => s.replace('<!-- omm:end id=status -->', '<!-- omm:end id=wrong -->'), () => {
     const before = snapshot(file('guide'));
     assert.equal(run('generate').status, 1);
     assert.deepEqual(snapshot(file('guide')), before);

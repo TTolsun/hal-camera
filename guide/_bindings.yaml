@@ -820,7 +820,7 @@ pages:
         confidence: intent
 
   # Camera2·CameraX 엔진의 계약과 구현. Architecture에 흩어져 있던 엔진 설명을 모은 페이지입니다.
-  engine.md:
+  _reference/engine.md:
     title: 카메라 엔진
     blocks:
       - id: status
@@ -879,7 +879,7 @@ pages:
             - 코드에서 확인한 차이만 적습니다. 기기에서 관찰한 값은 Evidence의 device-notes 블록에 적습니다.
 
 
-  troubleshooting.md:
+  _reference/troubleshooting.md:
     title: 디버깅 및 문제 해결
     blocks:
       - id: status
@@ -903,7 +903,7 @@ pages:
           must_link: [FlightRecorder, capacityEvictions, INSUFFICIENT_SAMPLES]
           forbid:
             - 특정 기기에서 재현되었다는 서술을 하지 않습니다. device-verification.yaml 의 기록만 인용합니다.
-  getting-started.md:
+  _reference/getting-started.md:
     title: 개발 환경 및 빠른 시작
     blocks:
       - id: build-identity
@@ -911,7 +911,7 @@ pages:
         source: build-facts
         confidence: code
 
-  evidence.md:
+  _reference/evidence.md:
     title: Evidence
     blocks:
       - id: status

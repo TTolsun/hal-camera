@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Build · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
-  <link rel="stylesheet" href="./assets/site-theme-v2.css">
-  <script type="module" src="./assets/search.js"></script>
+  <link rel="stylesheet" href="./assets/site-theme-v3.css">
+  <script type="module" src="./assets/search-v2.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
 </head>
 <body>
@@ -24,14 +24,14 @@
       <a href="./automation.html">Automation</a>
       <a href="./troubleshooting.html">Troubleshooting</a>
     </nav>
-    <script src="./assets/navigation-v2.js"></script>
+    <script src="./assets/navigation-v3.js"></script>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
     <h1 lang="en">Build the app.</h1><p><strong>소스에서 APK를 만들어야 할 때만 이 절차를 사용하세요.</strong> 배포된 앱을 사용하는 절차는 <a href="getting-started.html">Quickstart</a>에 있습니다.</p>
 <h2 id="실행-전에-준비하세요">실행 전에 준비하세요</h2>
-<p>JDK 17과 Android SDK 36, <code>adb</code>가 필요합니다. PowerShell에서 <code>$env:JAVA_HOME</code>을 JDK 설치 경로로 설정합니다. SDK와 JVM 대상 버전은 <a href="getting-started.html#앱-버전과-빌드-설정">아래 빌드 정보</a>를 확인하세요.</p>
+<p>JDK 17과 Android SDK 36, <code>adb</code>가 필요합니다. PowerShell에서 <code>$env:JAVA_HOME</code>을 JDK 설치 경로로 설정합니다. SDK와 JVM 대상 버전은 <a href="https://github.com/TTolsun/hal-camera/blob/main/guide/_reference/getting-started.md#앱-버전과-빌드-설정">아래 빌드 정보</a>를 확인하세요.</p>
 <p>Android SDK 경로는 저장소 루트의 <code>local.properties</code>에 설정합니다. 이 파일은 개인 환경 설정이므로 커밋하지 않습니다. 기기에서 USB 디버깅을 켜고 PC의 연결 요청을 허용한 뒤 <code>adb devices</code>로 연결 상태를 확인하세요.</p>
 <h2 id="앱을-빌드하고-실행하세요">앱을 빌드하고 실행하세요</h2>
 <ol>
@@ -55,7 +55,7 @@
 <p><strong>다음 단계:</strong> <a href="live.html">Live</a>에서 설치한 앱의 첫 촬영을 확인하세요.</p>
 
   </main>
-  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
+  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a></nav>
   <footer class="site-footer" lang="en"><span>HAL CAMERA · Engineering the invisible.</span><span>User Guide <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Quickstart · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
-  <link rel="stylesheet" href="./assets/site-theme-v2.css">
-  <script type="module" src="./assets/search.js"></script>
+  <link rel="stylesheet" href="./assets/site-theme-v3.css">
+  <script type="module" src="./assets/search-v2.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
 </head>
 <body>
@@ -24,12 +24,12 @@
       <a href="./automation.html">Automation</a>
       <a href="./troubleshooting.html">Troubleshooting</a>
     </nav>
-    <script src="./assets/navigation-v2.js"></script>
+    <script src="./assets/navigation-v3.js"></script>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
-    <h1 lang="en">Install. Open. Check.</h1><p><strong>배포된 APK를 설치하고 Live 프리뷰부터 확인하세요.</strong> 이 가이드는 HALCamera로 기기를 검증하는 Camera HAL 개발자를 위한 문서입니다. 앱 소스를 빌드할 필요는 없습니다.</p>
+    <h1 lang="en">Install. Open. Check.</h1><p><strong>배포된 APK를 설치하고 Live 프리뷰부터 확인하세요.</strong> 사진을 저장한 뒤 촬영 조건과 측정 기능을 차례로 살펴보세요.</p>
 <p>용어가 낯설면 <a href="glossary.html">Glossary</a>에서 필요한 뜻만 확인하세요.</p>
 <h2 id="apk를-설치하세요">APK를 설치하세요</h2>
 <ol>
@@ -42,7 +42,7 @@
 <li><p>HAL CAMERA를 열고 카메라 권한을 허용합니다. 소리를 녹음하려면 마이크 권한도 허용합니다.</p>
 </li>
 </ol>
-<p>업데이트에서 서명 오류가 나면 기존 설치와 같은 서명의 APK를 받으세요. 앱을 삭제하면 내부 실행 기록이 사라집니다. 소스 빌드가 필요한 경우에는 <a href="building.html">Build</a>를 확인하세요.</p>
+<p>업데이트에서 서명 오류가 나면 기존 설치와 같은 서명의 APK를 받으세요. 앱을 삭제하면 내부 실행 기록이 사라집니다.</p>
 <h2 id="첫-화면을-확인하세요">첫 화면을 확인하세요</h2>
 <ol>
 <li>Live 상단에서 엔진을 고르고, 오른쪽 아래 카메라 버튼에서 카메라를 선택합니다.</li>
@@ -81,63 +81,10 @@
 <td><a href="troubleshooting.html">Troubleshooting</a></td>
 </tr>
 </tbody></table>
-<h2 id="앱-버전을-기록하세요">앱 버전을 기록하세요</h2>
-<p>재현 자료에는 기기에 설치한 앱 버전과 Android 빌드, 엔진, 카메라, 출력 조건을 함께 적으세요. 아래 표는 문서가 참조한 소스의 빌드 정보이며, 배포 APK나 기기의 설치 버전과 다를 수 있습니다.</p>
-<details id="build-reference" data-search-section>
-<summary>문서 기준 빌드 정보</summary><h2 id="앱-버전과-빌드-설정">앱 버전과 빌드 설정</h2>
-<!-- omm:begin id=build-identity --><table>
-<thead>
-<tr>
-<th>항목</th>
-<th>값</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>applicationId</code></td>
-<td><code>dev.halcamera</code></td>
-</tr>
-<tr>
-<td><code>namespace</code></td>
-<td><code>dev.halcamera</code></td>
-</tr>
-<tr>
-<td><code>versionName</code></td>
-<td><code>0.29.0</code></td>
-</tr>
-<tr>
-<td><code>versionCode</code></td>
-<td><code>683</code></td>
-</tr>
-<tr>
-<td><code>minSdk</code></td>
-<td><code>26</code></td>
-</tr>
-<tr>
-<td><code>targetSdk</code></td>
-<td><code>36</code></td>
-</tr>
-<tr>
-<td><code>compileSdk</code></td>
-<td><code>36</code></td>
-</tr>
-<tr>
-<td><code>gradleVersion</code></td>
-<td><code>8.13</code></td>
-</tr>
-<tr>
-<td><code>jvmTarget</code></td>
-<td><code>17</code></td>
-</tr>
-</tbody></table>
-<details class="doc-evidence">
-<summary>근거와 검토 정보</summary><ul>
-<li>근거: <code>app/build.gradle.kts</code>, <code>gradle/wrapper/gradle-wrapper.properties</code></li>
-<li>근거 수준: 코드 확인</li>
-</ul>
-</details><!-- omm:end id=build-identity --></details><p><strong>다음 단계:</strong> <a href="live.html">Live</a>에서 검증할 촬영 조건을 설정하세요.</p>
+<p><strong>다음 단계:</strong> <a href="live.html">Live</a>에서 촬영 조건을 바꾸고 사진·동영상을 확인하세요.</p>
 
   </main>
-  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
+  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a></nav>
   <footer class="site-footer" lang="en"><span>HAL CAMERA · Engineering the invisible.</span><span>User Guide <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">

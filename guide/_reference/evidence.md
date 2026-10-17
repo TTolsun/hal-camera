@@ -1,0 +1,106 @@
+---
+title: Validation
+---
+<h1 lang="en">Trust starts with a trace.</h1>
+
+**어떤 기기와 조건에서 확인했는지 살펴보세요.** 검증 결과는 기록에 명시된 앱 버전·기기·설정에 해당합니다. 다른 기기에서도 같은 결과가 나온다는 보장은 아닙니다.
+
+## 기기 검증 기록
+
+검증 날짜, 앱 빌드, 기기와 실행 조건을 함께 확인하세요. 앱 화면 촬영 기록과 이전 기기 검증 기록은 수행 시점과 확인 범위가 다릅니다.
+
+| 지금 확인할 내용 | 기록 |
+| --- | --- |
+| Split·카메라별 사진·영상·버튼 조작 | [Multi 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/multi-split-20261012.md) |
+| PIP 원본 저장·크기 선택·지원 검사 | [PIP 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/pip-availability-2026-10-11.md) |
+| HAL Recording과 앱 인코더의 구분 | [Callback 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/recording-callback-20261011.md) |
+| 정식 배포의 버전·검증 범위 | [최신 릴리스](https://github.com/TTolsun/hal-camera/releases/latest) |
+
+<details markdown="1" id="previous-device-observations" data-search-section>
+<summary>이전 화면·기기 관찰 기록</summary>
+
+### 앱 화면 촬영
+
+2026-10-11에 Live 첫 화면을 [AWB 실시간 정보 검증](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/live-awb.md)의 최종 촬영본으로 교체했습니다. Galaxy S25+·Android 16에서 FPS·EXP·AE·AF·AWB의 고정 배치와 가독성을 확인한 화면입니다. 나머지 사진은 아래 날짜의 기록이며 최신 사용법은 각 페이지 본문을 따릅니다.
+
+2026년 9월 27일 Galaxy S25+(SM-S936N)·Android 16(API 36)에서 배포된 0.15.0(versionCode 543)을 실행해 16개 화면을 촬영했습니다. 원본은 1440×3120 PNG이며, 각 기능의 담당 문서에 한 번씩 배치했습니다.
+
+Live·CameraX 전환·사진 자동 고정·Recording 콜백·Probe 조회·CTS 실행·Benchmark 완료와 기록 저장을 확인했습니다. CTS 원문 목록, CLI 허용 설정, ZIP 기록은 화면 조회만 확인했습니다. 자세한 절차와 한계는 [촬영 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/2026-09-27-app-screenshots.md)에 있습니다. 화면에 보이는 수치는 해당 순간의 관찰이며 기기의 대표 성능값이 아닙니다.
+
+2026년 9월 29일 같은 기기의 Lab 디자인 적용 빌드로 Probe, CTS 4개, Benchmark 4개, CLI 설정, ZIP 목록의 기존 이미지 11개를 교체했습니다. 설치 빌드는 기존 데이터 보존을 위해 versionCode 590을 유지했습니다. Rapid Open / Close는 35초 PASS로 완료했고, Benchmark 완료·결과·기록을 확인했습니다. Live 관련 이미지는 이전 촬영본입니다. [Lab 검증 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/lab-ui-20260929.md)에서 확인 범위를 구분합니다.
+
+2026년 9월 30일 같은 기기의 0.16.0(versionCode 593) 디자인 변경 빌드로 Live·Live 제어·CameraX·CLI 설정·ZIP 목록의 이미지 5개를 교체하고 Gallery·About·기기 정보·ZIP 작업 화면 7개를 추가했습니다. Gallery 첫 타일의 모서리를 실기기 리뷰에서 수정했습니다. Callback의 촬영·녹화 화면은 9월 27일 당시 검증 기록이며 이번 UI 변경의 검증 자료가 아닙니다. [Gallery·Lab UI 리뷰와 촬영 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/gallery-lab-ui-20260930.md)에서 코드 리뷰와 기기 관찰을 확인하세요.
+
+### 연사와 AEB
+
+2026년 10월 9일 Galaxy S25+·Android 16의 후면 기본 카메라에서 Camera2와 CameraX의 연사·AEB를 확인했습니다. 연사는 손을 떼면 멈췄고, AEB는 사진 3장을 저장한 뒤 EV를 복원했습니다. 요청한 ±2 EV와 실제 노출 차이는 같지 않을 수 있었습니다. 어두운 장면에서는 노출 시간과 ISO 상한 때문에 밝게 만드는 범위가 제한됐습니다.
+
+[실기기 검증 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/live-burst-bracketing-20261009.md)에 측정 조건과 결과가 있습니다. 이 기록은 HDR 합성의 검증 결과가 아닙니다. 저장 공간 부족·일부 촬영 실패·촬영 중 화면 종료는 단위 테스트 범위이며, Android 8~9의 권한 대화상자 동작도 실기기에서는 확인하지 않았습니다.
+
+### 녹화 중 사진
+
+2026년 10월 5일 Galaxy S25+(SM-S936N)·Android 16의 0.19.0(versionCode 628)에서 후면·전면·초광각 녹화 중 사진을 확인했습니다. CameraX 1.6.2에서는 사진 시점에 약 두 프레임 길이의 영상 간격이 생겼고, Camera2 1080p 30fps에서는 사진 3장씩을 저장해도 같은 간격 증가가 없었습니다. HEVC 60fps와 정지 직후의 사진 결과, 공식 소스에서 확인한 요청 출력 구성, 남은 검증 조건은 [녹화 중 사진 후속 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md)에 있습니다. CameraX의 영상 간격 증가는 알려진 제약으로 수용하고 문서에만 안내합니다. 남은 실패 경로와 기기 조합은 [#220](https://github.com/TTolsun/hal-camera/issues/220)과 [#221](https://github.com/TTolsun/hal-camera/issues/221)에서 추적합니다.
+
+### CTS 원문 케이스
+
+Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수행한 기록입니다. versionCode 108의 SKIP 판정을 적용한 결과는 40개 메서드 중 **PASS 33 · FAIL 1 · SKIP 6**입니다. 여러 실행과 재실행을 합친 기록입니다. 원본 요청 ID와 로그 해석은 [당시 작업 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/archive/STATUS-before-0.24.0.md)에 있습니다.
+
+| 클래스 | 결과 | 확인한 내용 |
+| --- | --- | --- |
+| `RecordingTest` | PASS 14 · SKIP 2 | `testBasic10BitRecordingAV1`은 AV1 10비트 인코더와 업스트림의 AV1 매핑이 없었으며, `testSlowMotionRecording`은 모든 카메라에 `HIGH_SPEED_VIDEO` 지원이 없어 건너뛰었습니다. `testVideoSnapshot`은 9분 52초, `testSupportedVideoSizes`는 4분 46초가 걸렸습니다. |
+| `StillCaptureTest` | PASS 17 · FAIL 1 · SKIP 3 | `testAeCompensation`은 카메라 0의 노출 시간 범위 초과와 카메라 2의 AE 보정 미적용으로 실패했습니다. HEIC·HEIC UltraHDR·dynamic depth 미지원으로 관련 세 메서드는 건너뛰었습니다. `testStillPreviewCombination`은 18분 29초가 걸렸습니다. |
+| `BurstCaptureTest` | PASS 2 · SKIP 1 | 정지 영상 bokeh를 지원하지 않아 `testYuvBurstWithStillBokeh`를 건너뛰었습니다. |
+
+이 기록에서 초기화 단계의 `UiAutomation`·`@TestApi` 실패는 없었습니다. 공식 CTS 인증 결과는 아니며 다른 기기나 현재 빌드의 결과를 보장하지 않습니다. 실행 방법과 PASS·FAIL·SKIP의 정의는 [CTS](cts.md)에 있습니다.
+
+추가 관찰은 [기기 검증 입력](_inputs/device-verification.yaml), [검증 문서](https://github.com/TTolsun/hal-camera/tree/main/docs/validation), [릴리스 기록](https://github.com/TTolsun/hal-camera/tree/main/docs/releases)에서 확인하세요.
+
+### CameraX 기기 관찰
+
+2026년 9월 27일의 V-002 기록입니다. 앱은 0.14.0 로컬 release 빌드(versionCode 540~542)이며, 마지막 빌드의 앱 코드는 main의 `06717ba`와 같습니다. Galaxy S25+의 Android 16 환경에서 후면 카메라 0으로 확인했습니다. 전면 카메라·다른 기기와 `yuvOffsetNs` 값은 검증하지 않았습니다.
+
+<!-- omm:begin id=device-notes -->
+
+아래는 위 조건에서 수행한 V-002 기록의 관찰 결과입니다.
+
+| 확인 항목 | 관찰 결과 |
+| --- | --- |
+| 사진 | 엔진 전환 없이 두 장이 저장됐습니다. JPEG는 4080×3060에 EXIF 방향 6, YUV는 480×640이었습니다. |
+| 녹화 | H.264 1920×1080(90도 회전 정보), 약 10Mbps, AAC 48kHz 파일이 저장됐습니다. |
+| AE 잠금 중 EV | EV +0.5를 적용하자 노출 시간×ISO가 1.42배가 됐고, 사진 EXIF는 1/59초, ISO 287, 노출 보정 +0.5였습니다. |
+| AE 잠금 중 플래시 On 사진 | 플래시가 발광했고 1/1169초, ISO 25로 저장됐습니다. 잠금 직전 프리뷰는 ISO 161, 8.33ms였습니다. |
+| 녹화 중 AF 잠금 | 첫 Status 이벤트에서 초점 요청을 다시 보내기 전에는 AF Idle, 다시 보낸 뒤에는 No focus(잠김)로 표시됐습니다. |
+| `cancelFocusAndMetering` 뒤의 AE 잠금 | 이 호출을 쓰던 빌드에서는 탭 초점이 끝난 뒤 AE 잠금을 켜도 결과가 AE OK였고, 최신 프레임 메타데이터의 `android.control.aeLock`이 OFF였습니다. 호출을 없앤 빌드에서는 탭 초점 종료, 녹화 시작·종료, 플래시 사진 뒤에도 AE Locked가 유지됐습니다. |
+
+`CameraXControls`의 `cancelFocusAndMetering` 우회와 녹화 중 초점 요청 재전송은 이 관찰에서 나온 수정입니다. 플래시 사진의 재측광은 CameraX ImageCapture의 precapture 순서에서 온 것으로 보지만, CameraX 내부 로그로 확인하지는 않았습니다.
+
+<details class="doc-evidence" markdown="1">
+<summary>근거와 검토 정보</summary>
+
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`
+- 기기 검증: `V-002`
+- 근거 수준: 기기 검증
+- 검토 2026-10-17 @ `fcdc1e50` · codex-user-requested-multi-audio-review
+
+</details>
+
+<!-- omm:end id=device-notes -->
+
+</details>
+
+## 문서 검토 상태
+
+아래 표는 이 페이지에 연결된 CameraX 기기 관찰 원고의 검토 상태입니다. 위 CTS 요약을 포함한 수동 본문의 검토 범위는 PR 기록에서 확인합니다.
+
+<!-- omm:begin id=status -->
+
+- 검증 기준 앱 버전: 0.29.0 (versionCode 683)
+
+| 항목 | 최신성 | 검토 |
+| --- | --- | --- |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-17 @ `fcdc1e50` · codex-user-requested-multi-audio-review |
+| 원고 `device-notes` | 최신 | 검토 2026-10-17 @ `fcdc1e50` · codex-user-requested-multi-audio-review |
+
+<!-- omm:end id=status -->
+
+**다음 단계:** [Download](download.md)에서 배포 버전을 확인하고 [Quickstart](getting-started.md)로 시작하세요.

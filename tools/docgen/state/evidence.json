@@ -3,7 +3,7 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",
@@ -360,7 +360,7 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "1d66a6ba6698d9d9",
@@ -626,7 +626,7 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "unreviewed"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "5b0c1bf56eebc58a",
@@ -662,67 +662,6 @@
           "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "dbb8c2c9616893e1d98a47d5282f1ed76a70dc59",
           "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "d4b3b65e6a0fff13327ab9bd1f0f7793138cc8f4",
           "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "09bd87832ccbbaabf6bfdb2fd8b3578d318732e8",
-          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "fe219e283daf08e967a663c19dc5b5c2b25750a6",
-          "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "7b0bb355ae1b739adbd23bfd1917a2df96e94546",
-          "app/src/main/java/dev/halcamera/cli/CtsController.kt": "5a9452034fcd7a549882c7a6850907710f5a36b2",
-          "app/src/main/java/dev/halcamera/cli/LiveController.kt": "de3da018c809d40e4f32c2d9ff6c7255aae36d51",
-          "app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt": "2dc23b55b00407ea5126dd19e3871fcb8f9fc5d4",
-          "app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt": "f5148663814d0aec3ed45a44478bae4b0323e01d",
-          "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
-          "tools/halcam/halcam/cli.py": "c50112ed454c4b2fd7ddd4a095f2c7934aabc72f",
-          "tools/halcam/halcam/download.py": "6cb9875bdae0257330e0942386f7ecd64a34d690",
-          "tools/halcam/halcam/submission.py": "0926be5a914626cdcefd9742872c3764a75f4da0"
-        }
-      }
-    },
-    "content:troubleshooting.md/layer-isolation": {
-      "observed": {
-        "state": "unreviewed"
-      },
-      "accepted": {
-        "codeHash": "946ca13e26c0f09a",
-        "modelHash": "09d5d2061b56ee0b",
-        "at": "2026-10-17",
-        "commit": "fcdc1e50",
-        "reviewer": "codex-user-requested-multi-audio-review",
-        "files": {
-          "app/src/main/java/dev/halcamera/GalleryActivity.kt": "67eb4d9a350f9f9edc0742bc38f3604e5c4f9657",
-          "app/src/main/java/dev/halcamera/MainActivity.kt": "526606ba67aa6341c1f3b91d58bda465400b46ec",
-          "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
-          "app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt": "1a423c9983fc6d2e4d97aa0e036f45dbbc0718ce",
-          "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt": "3ce60c16472f2ed3e100034c62feee32f13236d3",
-          "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkModel.kt": "b8f22fbbc05aa32eef79b3de9ea6117f7312d24f",
-          "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt": "f89f168bc5855756cf97b5c51526535a701031e4",
-          "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt": "c65c17f061e90b6a56158d8bcccb41e9491dfdcc",
-          "app/src/main/java/dev/halcamera/benchmark/domain/ComparePresenter.kt": "3c5584d45ee79c1fba0154c3f415b1617115d051",
-          "app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt": "f5f61d7831bc80cbb6d127dc804bd148b8653ef1",
-          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "b838323a48dabada44dc8513ad9c1066e7275cf3",
-          "app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt": "2e807d6300740557fdbf9b46b14409da40c848ea",
-          "app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt": "7ead12e708d436e412e88cc76558be7f67242de3",
-          "app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt": "cf4547aca0f4e8a1228363e2a1b0af7e8f1fa026",
-          "app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt": "df32b7ff015c81cb44407884ea02deda965752df",
-          "app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt": "cb8a23b1587af5faf4409d01b075f2a615987c62",
-          "app/src/main/java/dev/halcamera/benchmark/platform/DeviceInstance.kt": "de92f80d56a8fdd9c6123516e25595a0f309bd48",
-          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "8832526abe6d564204a1eded526c600f9165488f",
-          "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "7441e69d8ef8394db42448a69abd9fa688167c70",
-          "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "c885e0bb38e481d45fda923dbea1d03e60a1a2b7",
-          "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "0546762ba5a89e2be1b2788d90f9a49a78f89543",
-          "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
-          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "2fbb56c9e81761cea93f64109ec12497309cffe8",
-          "app/src/main/java/dev/halcamera/camera/MediaTransaction.kt": "34f0121f9c418c8e49fb0326a99882ae6f447c94",
-          "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
-          "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "dbb8c2c9616893e1d98a47d5282f1ed76a70dc59",
-          "app/src/main/java/dev/halcamera/cli/CliCommand.kt": "9a7f516243b6aca2b560c69d4de8e2e2bcdf89d4",
-          "app/src/main/java/dev/halcamera/cli/CliCommandSpec.kt": "c5f1d9c34b32c33d86a129eff10d40b27ac1b5dd",
-          "app/src/main/java/dev/halcamera/cli/CliEvents.kt": "85ffa36365357884ebe8fbbe9c549a1f50146c14",
-          "app/src/main/java/dev/halcamera/cli/CliExecution.kt": "b44e81149ee4ce08718c54e8938ca88f56f928f8",
-          "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "d4b3b65e6a0fff13327ab9bd1f0f7793138cc8f4",
-          "app/src/main/java/dev/halcamera/cli/CliLibrary.kt": "a6913ebb6606fab333043d9966c0d37215b6c652",
-          "app/src/main/java/dev/halcamera/cli/CliOptions.kt": "04196b449805ccf93c56579782112ae58f3b174b",
-          "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "09bd87832ccbbaabf6bfdb2fd8b3578d318732e8",
-          "app/src/main/java/dev/halcamera/cli/CliQueries.kt": "321b76e7340742e707fa85e5195b999f0d713d1e",
-          "app/src/main/java/dev/halcamera/cli/CliSequence.kt": "d6fbc5e5490f5fe5f0c3794f94b1948ff8a8b83f",
-          "app/src/main/java/dev/halcamera/cli/CliStreams.kt": "e319decaa3e97a297a6e2e56d4b95c54a4721e11",
           "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "fe219e283daf08e967a663c19dc5b5c2b25750a6",
           "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "7b0bb355ae1b739adbd23bfd1917a2df96e94546",
           "app/src/main/java/dev/halcamera/cli/CtsController.kt": "5a9452034fcd7a549882c7a6850907710f5a36b2",
@@ -996,7 +935,7 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "content:architecture.md/constraints": {
@@ -1259,7 +1198,7 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "omm:ui-camera-label": {
@@ -1311,9 +1250,9 @@
         }
       }
     },
-    "content:engine.md/contract": {
+    "content:_reference/engine.md/contract": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",
@@ -1574,9 +1513,9 @@
         }
       }
     },
-    "content:engine.md/camera2": {
+    "content:_reference/engine.md/camera2": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",
@@ -1837,9 +1776,9 @@
         }
       }
     },
-    "content:engine.md/camerax": {
+    "content:_reference/engine.md/camerax": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",
@@ -2100,9 +2039,9 @@
         }
       }
     },
-    "content:engine.md/comparison": {
+    "content:_reference/engine.md/comparison": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",
@@ -2363,9 +2302,70 @@
         }
       }
     },
-    "content:evidence.md/device-notes": {
+    "content:_reference/troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
+      },
+      "accepted": {
+        "codeHash": "946ca13e26c0f09a",
+        "modelHash": "09d5d2061b56ee0b",
+        "at": "2026-10-17",
+        "commit": "fcdc1e50",
+        "reviewer": "codex-user-requested-multi-audio-review",
+        "files": {
+          "app/src/main/java/dev/halcamera/GalleryActivity.kt": "67eb4d9a350f9f9edc0742bc38f3604e5c4f9657",
+          "app/src/main/java/dev/halcamera/MainActivity.kt": "526606ba67aa6341c1f3b91d58bda465400b46ec",
+          "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "b32b882047f380958397bd45023edf122d5cd2a1",
+          "app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt": "1a423c9983fc6d2e4d97aa0e036f45dbbc0718ce",
+          "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt": "3ce60c16472f2ed3e100034c62feee32f13236d3",
+          "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkModel.kt": "b8f22fbbc05aa32eef79b3de9ea6117f7312d24f",
+          "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt": "f89f168bc5855756cf97b5c51526535a701031e4",
+          "app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt": "c65c17f061e90b6a56158d8bcccb41e9491dfdcc",
+          "app/src/main/java/dev/halcamera/benchmark/domain/ComparePresenter.kt": "3c5584d45ee79c1fba0154c3f415b1617115d051",
+          "app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt": "f5f61d7831bc80cbb6d127dc804bd148b8653ef1",
+          "app/src/main/java/dev/halcamera/benchmark/domain/ResultPresenter.kt": "b838323a48dabada44dc8513ad9c1066e7275cf3",
+          "app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt": "2e807d6300740557fdbf9b46b14409da40c848ea",
+          "app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt": "7ead12e708d436e412e88cc76558be7f67242de3",
+          "app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt": "cf4547aca0f4e8a1228363e2a1b0af7e8f1fa026",
+          "app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt": "df32b7ff015c81cb44407884ea02deda965752df",
+          "app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt": "cb8a23b1587af5faf4409d01b075f2a615987c62",
+          "app/src/main/java/dev/halcamera/benchmark/platform/DeviceInstance.kt": "de92f80d56a8fdd9c6123516e25595a0f309bd48",
+          "app/src/main/java/dev/halcamera/camera/Camera2Engine.kt": "8832526abe6d564204a1eded526c600f9165488f",
+          "app/src/main/java/dev/halcamera/camera/CameraEngine.kt": "7441e69d8ef8394db42448a69abd9fa688167c70",
+          "app/src/main/java/dev/halcamera/camera/CameraXEngine.kt": "c885e0bb38e481d45fda923dbea1d03e60a1a2b7",
+          "app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt": "0546762ba5a89e2be1b2788d90f9a49a78f89543",
+          "app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt": "a3c9c783fc821e641b5b2096bd8fb53e7f00e695",
+          "app/src/main/java/dev/halcamera/camera/MediaLibrary.kt": "2fbb56c9e81761cea93f64109ec12497309cffe8",
+          "app/src/main/java/dev/halcamera/camera/MediaTransaction.kt": "34f0121f9c418c8e49fb0326a99882ae6f447c94",
+          "app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt": "73c42100c88a52bea13f731226cfa50ff047d721",
+          "app/src/main/java/dev/halcamera/cli/BenchmarkController.kt": "dbb8c2c9616893e1d98a47d5282f1ed76a70dc59",
+          "app/src/main/java/dev/halcamera/cli/CliCommand.kt": "9a7f516243b6aca2b560c69d4de8e2e2bcdf89d4",
+          "app/src/main/java/dev/halcamera/cli/CliCommandSpec.kt": "c5f1d9c34b32c33d86a129eff10d40b27ac1b5dd",
+          "app/src/main/java/dev/halcamera/cli/CliEvents.kt": "85ffa36365357884ebe8fbbe9c549a1f50146c14",
+          "app/src/main/java/dev/halcamera/cli/CliExecution.kt": "b44e81149ee4ce08718c54e8938ca88f56f928f8",
+          "app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt": "d4b3b65e6a0fff13327ab9bd1f0f7793138cc8f4",
+          "app/src/main/java/dev/halcamera/cli/CliLibrary.kt": "a6913ebb6606fab333043d9966c0d37215b6c652",
+          "app/src/main/java/dev/halcamera/cli/CliOptions.kt": "04196b449805ccf93c56579782112ae58f3b174b",
+          "app/src/main/java/dev/halcamera/cli/CliProvider.kt": "09bd87832ccbbaabf6bfdb2fd8b3578d318732e8",
+          "app/src/main/java/dev/halcamera/cli/CliQueries.kt": "321b76e7340742e707fa85e5195b999f0d713d1e",
+          "app/src/main/java/dev/halcamera/cli/CliSequence.kt": "d6fbc5e5490f5fe5f0c3794f94b1948ff8a8b83f",
+          "app/src/main/java/dev/halcamera/cli/CliStreams.kt": "e319decaa3e97a297a6e2e56d4b95c54a4721e11",
+          "app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt": "fe219e283daf08e967a663c19dc5b5c2b25750a6",
+          "app/src/main/java/dev/halcamera/cli/CommandStore.kt": "7b0bb355ae1b739adbd23bfd1917a2df96e94546",
+          "app/src/main/java/dev/halcamera/cli/CtsController.kt": "5a9452034fcd7a549882c7a6850907710f5a36b2",
+          "app/src/main/java/dev/halcamera/cli/LiveController.kt": "de3da018c809d40e4f32c2d9ff6c7255aae36d51",
+          "app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt": "2dc23b55b00407ea5126dd19e3871fcb8f9fc5d4",
+          "app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt": "f5148663814d0aec3ed45a44478bae4b0323e01d",
+          "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
+          "tools/halcam/halcam/cli.py": "c50112ed454c4b2fd7ddd4a095f2c7934aabc72f",
+          "tools/halcam/halcam/download.py": "6cb9875bdae0257330e0942386f7ecd64a34d690",
+          "tools/halcam/halcam/submission.py": "0926be5a914626cdcefd9742872c3764a75f4da0"
+        }
+      }
+    },
+    "content:_reference/evidence.md/device-notes": {
+      "observed": {
+        "state": "fresh"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",

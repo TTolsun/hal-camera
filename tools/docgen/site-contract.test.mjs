@@ -11,12 +11,12 @@ const nav = [...config.matchAll(/- path: (\S+)\s+label: ([^\r\n]+)/g)];
 
 test('every published page loads full-text search relative to the site root', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(docs, '.site-manifest.json'), 'utf8'));
-  assert.ok(manifest.files['assets/search.js']);
+  assert.ok(manifest.files['assets/search-v2.js']);
   assert.ok(manifest.files['assets/search-core.js']);
   for (const target of Object.keys(manifest.files).filter(file => file.endsWith('.html'))) {
     const html = fs.readFileSync(path.join(docs, target), 'utf8');
     const rootPrefix = target.includes('/') ? '../' : './';
-    assert.ok(html.includes(`src="${rootPrefix}assets/search.js"`), `${target}: search module`);
+    assert.ok(html.includes(`src="${rootPrefix}assets/search-v2.js"`), `${target}: search module`);
     assert.ok(html.includes('id="search-dialog"'), `${target}: search dialog`);
     assert.ok(html.includes('id="search-status" role="status"'), `${target}: accessible status`);
   }
@@ -59,4 +59,14 @@ test('Quickstart contains only current onboarding content', () => {
   assert.ok(!html.includes('id="screen-live"'));
   assert.ok(!html.includes('legacy-links'));
   assert.ok(html.includes('href="live.html"'));
+});
+
+test('public onboarding and comparisons do not publish implementation review records', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(docs, '.site-manifest.json'), 'utf8'));
+  assert.ok(!Object.keys(manifest.files).some(file => file.startsWith('_reference/')));
+  for (const page of ['getting-started', 'engine', 'evidence', 'troubleshooting']) {
+    const html = fs.readFileSync(path.join(docs, `${page}.html`), 'utf8');
+    assert.doesNotMatch(html, /문서 검토 상태|codex-user-requested|문서 기준 빌드 정보/);
+    assert.doesNotMatch(html, /href="(?:\.\/)?(?:building|architecture|contributing)\.html/);
+  }
 });

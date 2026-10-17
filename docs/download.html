@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Download · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
-  <link rel="stylesheet" href="./assets/site-theme-v2.css">
-  <script type="module" src="./assets/search.js"></script>
+  <link rel="stylesheet" href="./assets/site-theme-v3.css">
+  <script type="module" src="./assets/search-v2.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
 </head>
 <body>
@@ -24,44 +24,41 @@
       <a href="./automation.html">Automation</a>
       <a href="./troubleshooting.html">Troubleshooting</a>
     </nav>
-    <script src="./assets/navigation-v2.js"></script>
+    <script src="./assets/navigation-v3.js"></script>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
-    <h1 lang="en">Download. Install. Explore.</h1><p><strong>HALCamera APK 다운로드는 GitHub Releases에서 시작하세요.</strong> 최신 릴리스를 열어 변경 사항을 확인하고, Assets에서 <code>.apk</code> 파일을 내려받으세요.</p>
-<nav class="contents task-contents" aria-label="GitHub 릴리스 다운로드">
-  <a href="https://github.com/TTolsun/hal-camera/releases/latest"><span class="name">최신 릴리스 열기</span><span class="description">최신 버전의 APK와 변경 사항을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="https://github.com/TTolsun/hal-camera/releases"><span class="name">전체 릴리스 보기</span><span class="description">이전 버전이나 지정된 검증 빌드를 찾습니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-</nav><h2 id="받을-파일을-고르세요">받을 파일을 고르세요</h2>
-<p>릴리스 페이지의 <strong>Assets</strong>를 펼쳐 필요한 파일을 선택하세요. 팀에서 지정한 검증 빌드가 있다면 해당 버전의 릴리스를 사용하세요.</p>
-<table>
+    <div class="download-page">
+<h1 lang="en">Get HALCamera.</h1><p><strong>HALCamera APK를 Android 기기에 설치하세요.</strong> 최신 버전은 GitHub 릴리스에서 받을 수 있습니다.</p>
+<nav class="contents task-contents" aria-label="앱 다운로드">
+  <a href="https://github.com/TTolsun/hal-camera/releases/latest"><span class="name">최신 APK 받기</span><span class="description">GitHub 릴리스에서 설치 파일을 선택합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
+</nav><p class="secondary-download">이전 버전이 필요하면 <a href="https://github.com/TTolsun/hal-camera/releases">전체 릴리스</a>를 확인하세요.</p><h2 id="설치하고-첫-촬영을-시작하세요">설치하고 첫 촬영을 시작하세요</h2>
+<p>GitHub 릴리스의 Assets에서 <code>HAL-Camera-*.apk</code>를 받아 기기에서 엽니다. 설치 허용과 카메라 권한 설정은 <a href="getting-started.html#apk를-설치하세요">Quickstart</a>에 안내되어 있습니다.</p>
+<p>업데이트에서 서명 오류가 나면 기존 설치와 같은 서명의 APK를 받으세요. 앱을 삭제하면 내부 실행 기록이 사라집니다.</p>
+<details>
+<summary>릴리스에 함께 있는 파일은 무엇인가요?</summary><table>
 <thead>
 <tr>
 <th>파일</th>
-<th>용도</th>
+<th>필요한 경우</th>
 </tr>
 </thead>
 <tbody><tr>
-<td><code>HAL-Camera-*.apk</code></td>
-<td>Android 기기에 설치하는 앱입니다.</td>
-</tr>
-<tr>
 <td><code>halcam-cli-*-SKILL.md</code></td>
-<td>코딩 에이전트로 앱을 조작할 때 사용하는 스킬입니다. APK와 같은 릴리스의 파일을 받으세요.</td>
+<td>코딩 에이전트로 앱을 조작할 때 APK와 같은 릴리스의 파일을 받습니다.</td>
 </tr>
 <tr>
 <td><code>SHA256SUMS.txt</code></td>
 <td>내려받은 파일의 SHA-256 해시를 확인할 때 사용합니다.</td>
 </tr>
 </tbody></table>
-<p>GitHub의 <code>Source code (zip)</code>과 <code>Source code (tar.gz)</code>는 소스 코드 압축 파일입니다. 앱을 설치하려면 <code>.apk</code> 파일을 선택하세요.</p>
-<h2 id="설치하고-첫-촬영을-확인하세요">설치하고 첫 촬영을 확인하세요</h2>
-<p>받은 APK의 설치 방법과 권한 설정은 <a href="getting-started.html#apk를-설치하세요">Quickstart</a>에 안내되어 있습니다. 업데이트할 때 서명 오류가 나면 기존 설치와 같은 서명의 APK를 받으세요. 앱을 삭제하면 내부 실행 기록이 사라집니다.</p>
-<p><strong>다음 단계:</strong> <a href="getting-started.html">Quickstart</a>에서 앱을 설치하고 첫 촬영을 확인하세요.</p>
+<p><code>Source code (zip)</code>과 <code>Source code (tar.gz)</code>는 소스 코드입니다. 앱 설치에는 <code>.apk</code> 파일만 필요합니다.</p>
+</details><p><strong>다음 단계:</strong> <a href="getting-started.html">Quickstart</a>에서 첫 사진을 찍어 보세요.</p>
+</div>
 
   </main>
-  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
+  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a></nav>
   <footer class="site-footer" lang="en"><span>HAL CAMERA · Engineering the invisible.</span><span>User Guide <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">
