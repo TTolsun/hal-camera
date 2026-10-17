@@ -1,5 +1,6 @@
 package dev.halcamera.camera
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
@@ -22,13 +23,7 @@ internal class TimestampedVideoRecording(context: Context, private val name: Str
 
     init {
         try {
-            codec.configure(MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC,size.width,size.height).apply {
-                setInteger(MediaFormat.KEY_COLOR_FORMAT,MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
-                setInteger(MediaFormat.KEY_BIT_RATE,(size.width*size.height*6).coerceAtLeast(2_000_000))
-                setInteger(MediaFormat.KEY_FRAME_RATE,30)
-                setInteger(MediaFormat.KEY_I_FRAME_INTERVAL,1)
-                setInteger(MediaFormat.KEY_MAX_B_FRAMES,0)
-            },null,null,MediaCodec.CONFIGURE_FLAG_ENCODE)
+            codec.configure(format(size),null,null,MediaCodec.CONFIGURE_FLAG_ENCODE)
             surface = codec.createInputSurface()
         } catch (error: Throwable) { codec.release(); file.delete(); throw error }
     }
@@ -40,11 +35,10 @@ internal class TimestampedVideoRecording(context: Context, private val name: Str
     }
 
     private fun drain() {
-        var muxing = false
+        var output: EncoderTrack? = null
         try {
             val writer = MediaMuxer(file.absolutePath,MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4).also { muxer = it }
-            val info = MediaCodec.BufferInfo()
-            var track = -1
+            val track = EncoderTrack(codec,writer).also { output = it }
             var deadline = Long.MAX_VALUE
             while (true) {
                 if (stopping && deadline == Long.MAX_VALUE) {
@@ -52,25 +46,13 @@ internal class TimestampedVideoRecording(context: Context, private val name: Str
                     deadline = System.nanoTime()+5_000_000_000L
                 }
                 check(System.nanoTime() < deadline) { "Video encoder finalization timed out" }
-                val index = codec.dequeueOutputBuffer(info,10_000)
-                if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                    check(!muxing); track = writer.addTrack(codec.outputFormat); writer.start(); muxing = true
-                } else if (index >= 0) {
-                    try {
-                        if (info.size > 0 && info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG == 0) {
-                            check(muxing)
-                            info.presentationTimeUs = timeline.timeUs(info.presentationTimeUs)
-                            writer.writeSampleData(track,checkNotNull(codec.getOutputBuffer(index)),info)
-                        }
-                        if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) break
-                    } finally { codec.releaseOutputBuffer(index,false) }
-                }
+                if (track.drain(10_000,timeline::timeUs)) break
             }
             check(timeline.originUs >= 0) { "Video produced no frames" }
-            writer.stop(); muxing = false
+            track.stop()
         } catch (error: Throwable) { failure = error }
         finally {
-            if (muxing) runCatching { muxer?.stop() }
+            output?.abandon()
             runCatching { muxer?.release() }; muxer = null
         }
     }
@@ -95,5 +77,18 @@ internal class TimestampedVideoRecording(context: Context, private val name: Str
         runCatching { stop() }
         runCatching { codec.stop() }; runCatching { codec.release() }
         surface.release(); file.delete()
+    }
+
+    private companion object {
+        // "max-bframes" is a plain format key: API 26-28 encoders may still honor it, and none reject it.
+        // EncodedVideoTimeline needs output in presentation order, so the request is sent on every API level.
+        @SuppressLint("InlinedApi")
+        fun format(size: LiveSize): MediaFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC,size.width,size.height).apply {
+            setInteger(MediaFormat.KEY_COLOR_FORMAT,MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface)
+            setInteger(MediaFormat.KEY_BIT_RATE,(size.width*size.height*6).coerceAtLeast(2_000_000))
+            setInteger(MediaFormat.KEY_FRAME_RATE,30)
+            setInteger(MediaFormat.KEY_I_FRAME_INTERVAL,1)
+            setInteger(MediaFormat.KEY_MAX_B_FRAMES,0)
+        }
     }
 }

@@ -1,5 +1,6 @@
 package dev.halcamera.ui
 
+import androidx.core.view.isNotEmpty
 import android.app.AlertDialog
 import android.content.Context
 import android.view.View
@@ -42,7 +43,7 @@ object LiveStreamSettingsView {
         fun <T> choice(group: LinearLayout, label: String, values: () -> List<T>, selected: () -> T, change: (T) -> Unit,
                        hint: () -> String? = { null }, enabled: () -> Boolean = { true }, display: (T) -> String) {
             val value = selected()
-            if (group.childCount > 0) group.addView(View(themed).apply { setBackgroundColor(Look.hairline) },
+            if (group.isNotEmpty()) group.addView(View(themed).apply { setBackgroundColor(Look.hairline) },
                 LinearLayout.LayoutParams(-1, dp(1)).apply { marginStart = dp(18); marginEnd = dp(18) })
             val valueText = Look.text(themed, display(value), 15, Look.primary)
             val hintText = Look.text(themed, "", 13, Look.inkMuted)

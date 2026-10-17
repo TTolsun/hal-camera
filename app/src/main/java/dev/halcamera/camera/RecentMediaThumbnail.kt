@@ -1,5 +1,6 @@
 package dev.halcamera.camera
 
+import androidx.core.net.toUri
 import android.content.ContentUris
 import android.content.Context
 import android.database.ContentObserver
@@ -35,7 +36,7 @@ class RecentMediaThumbnail(context: Context, private val onLoaded: (Bitmap?, Boo
         if (active || worker.isShutdown) return
         active = true
         registered = runCatching {
-            resolver.registerContentObserver(Uri.parse("content://media"), true, observer)
+            resolver.registerContentObserver("content://media".toUri(), true, observer)
         }.isSuccess
         load()
     }

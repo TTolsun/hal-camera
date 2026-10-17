@@ -1,5 +1,6 @@
 package dev.halcamera.benchmark.platform
 
+import androidx.core.content.edit
 import android.content.Context
 import dev.halcamera.benchmark.domain.SubjectLabel
 
@@ -22,11 +23,11 @@ class SubjectPrefs(context: Context) {
     )
 
     fun save(label: SubjectLabel) {
-        prefs.edit()
-            .putString(KEY_BUILD, label.subjectBuildLabel)
-            .putString(KEY_COMMIT, label.subjectCommit)
-            .putString(KEY_BRANCH, label.subjectBranch)
-            .apply()
+        prefs.edit {
+            putString(KEY_BUILD, label.subjectBuildLabel)
+            putString(KEY_COMMIT, label.subjectCommit)
+            putString(KEY_BRANCH, label.subjectBranch)
+        }
     }
 
     companion object {

@@ -1,5 +1,7 @@
 package dev.halcamera.camera
 
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.scale
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -74,7 +76,7 @@ class BracketFusion(context: Context) : AutoCloseable {
         val qualities = bytes.map { b -> small(b, width, height, mapWidth, mapHeight).let { ExposureFusion.quality(it, mapWidth, mapHeight) } }
         val weights = ExposureFusion.weights(qualities, mapWidth, mapHeight, ExposureFusion.radiusFor(mapWidth, mapHeight))
 
-        val output = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        val output = createBitmap(width, height)
         try {
             val decoders = bytes.map(::regionDecoder)
             try {
@@ -111,7 +113,7 @@ class BracketFusion(context: Context) : AutoCloseable {
         while (width / (sample * 2) >= mapWidth && height / (sample * 2) >= mapHeight) sample *= 2
         val decoded = BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size, BitmapFactory.Options().apply {
             inSampleSize = sample; inPreferredConfig = Bitmap.Config.ARGB_8888 }) ?: error("Cannot decode a shot")
-        val scaled = Bitmap.createScaledBitmap(decoded, mapWidth, mapHeight, true)
+        val scaled = decoded.scale(mapWidth, mapHeight)
         try {
             return IntArray(mapWidth * mapHeight).also { scaled.getPixels(it, 0, mapWidth, 0, 0, mapWidth, mapHeight) }
         } finally { if (scaled !== decoded) scaled.recycle(); decoded.recycle() }

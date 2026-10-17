@@ -1,5 +1,6 @@
 package dev.halcamera.ui
 
+import androidx.core.content.edit
 import android.content.Context
 import android.os.Build
 
@@ -10,7 +11,7 @@ object DeviceIdentity {
     fun alias(context: Context): String = prefs(context).getString("device_alias", "").orEmpty()
 
     fun setAlias(context: Context, value: String) {
-        prefs(context).edit().putString("device_alias", value.trim()).apply()
+        prefs(context).edit { putString("device_alias", value.trim()) }
     }
 
     fun label(context: Context): String = alias(context).takeIf { it.isNotBlank() }

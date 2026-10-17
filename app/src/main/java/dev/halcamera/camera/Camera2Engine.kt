@@ -666,7 +666,7 @@ class Camera2Engine(
         }.let { buildRequest(it, outputs) }
 
     private fun outputRotation(c: CameraCharacteristics): Int {
-        val degrees = when (view.display?.rotation) { Surface.ROTATION_90 -> 90; Surface.ROTATION_180 -> 180; Surface.ROTATION_270 -> 270; else -> 0 }
+        val degrees = DisplayRotation.degrees(view.display?.rotation)
         val sensor = c[CameraCharacteristics.SENSOR_ORIENTATION] ?: 0
         return (sensor + if (c[CameraCharacteristics.LENS_FACING] == CameraCharacteristics.LENS_FACING_FRONT) degrees else -degrees + 360) % 360
     }

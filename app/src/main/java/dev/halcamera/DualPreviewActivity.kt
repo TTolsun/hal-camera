@@ -1,5 +1,7 @@
 package dev.halcamera
 
+import androidx.core.content.edit
+import androidx.core.view.isVisible
 import android.Manifest
 import android.app.AlertDialog
 import android.content.ClipData
@@ -32,6 +34,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import dev.halcamera.camera.CameraLabel
+import dev.halcamera.camera.DisplayRotation
 import dev.halcamera.camera.DualPreviewPlanner
 import dev.halcamera.camera.DualPreviewSession
 import dev.halcamera.camera.DualCameraSession
@@ -193,7 +196,7 @@ class DualPreviewActivity : ComponentActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 if (manualPanel.close()) return
-                if (callbackGraph.visibility == View.VISIBLE) { showCallbacks(false); return }
+                if (callbackGraph.isVisible) { showCallbacks(false); return }
                 if (!photoPending) leave(videoMode)
             }
         })
@@ -673,7 +676,7 @@ class DualPreviewActivity : ComponentActivity() {
         manualPanel.bind(controlBar.controls.manual, !busy(), mainControls?.manual ?: ManualSupport(camera2 = false), primary, SystemClock.elapsedRealtimeNanos())
         liveIndicator.bindStabilization(dev.halcamera.camera.LiveEisStatus(
             (latest?.values?.get("videoStabilization") as? Number)?.toInt()), recording)
-        if (callbackGraph.visibility == View.VISIBLE)
+        if (callbackGraph.isVisible)
             callbackGraph.update(events, sessionId, SystemClock.elapsedRealtimeNanos(), telemetry.sessions[sessionId].orEmpty())
         if (recording) {
             val seconds = (SystemClock.elapsedRealtime() - recordingSince) / 1000
@@ -792,7 +795,7 @@ class DualPreviewActivity : ComponentActivity() {
     }
 
     @Suppress("DEPRECATION")
-    private fun displayDegrees() = when (windowManager.defaultDisplay.rotation) { android.view.Surface.ROTATION_90 -> 90; android.view.Surface.ROTATION_180 -> 180; android.view.Surface.ROTATION_270 -> 270; else -> 0 }
+    private fun displayDegrees() = DisplayRotation.degrees(windowManager.defaultDisplay.rotation)
 
     private fun takePhoto() {
         if (busy() || mainControls == null || !previewReady()) return
@@ -937,7 +940,7 @@ class DualPreviewActivity : ComponentActivity() {
             val bounds = pipBounds(stage, pip)
             pipX = if (bounds.width() > 0) (pip.x - bounds.left) / bounds.width() else 0f
             pipY = if (bounds.height() > 0) (pip.y - bounds.top) / bounds.height() else 0f
-            positionPrefs.edit().putFloat("pip_x", pipX).putFloat("pip_y", pipY).apply()
+            positionPrefs.edit { putFloat("pip_x", pipX); putFloat("pip_y", pipY) }
         }
         pip.setOnTouchListener { view, event ->
             when (event.actionMasked) {

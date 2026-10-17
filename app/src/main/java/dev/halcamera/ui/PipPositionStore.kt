@@ -1,5 +1,6 @@
 package dev.halcamera.ui
 
+import androidx.core.content.edit
 import android.content.Context
 import dev.halcamera.camera.PipRect
 import dev.halcamera.camera.PipScene
@@ -12,10 +13,10 @@ internal class PipPositionStore(context: Context, private val scope: String) {
         fallback, prefs.getFloat("$scope.$parent.x", fallback.x), prefs.getFloat("$scope.$parent.y", fallback.y))
 
     fun save(parent: String, rect: PipRect) {
-        prefs.edit().putFloat("$scope.$parent.x", rect.x).putFloat("$scope.$parent.y", rect.y).apply()
+        prefs.edit { putFloat("$scope.$parent.x", rect.x); putFloat("$scope.$parent.y", rect.y) }
     }
 
     fun clear() {
-        prefs.edit().apply { prefs.all.keys.filter { it.startsWith("$scope.") }.forEach(::remove) }.apply()
+        prefs.edit { prefs.all.keys.filter { it.startsWith("$scope.") }.forEach(::remove) }
     }
 }

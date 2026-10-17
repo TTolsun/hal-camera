@@ -1,5 +1,9 @@
 package dev.halcamera
 
+import androidx.core.graphics.withClip
+import androidx.core.net.toUri
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.view.isVisible
 import android.app.AlertDialog
 import android.app.RecoverableSecurityException
 import android.content.ClipData
@@ -244,7 +248,7 @@ class GalleryActivity : ComponentActivity() {
             stretchMode = GridView.STRETCH_COLUMN_WIDTH
             setPadding(12.dp, 0, 12.dp, 12.dp)
             clipToPadding = false
-            selector = android.graphics.drawable.ColorDrawable(Color.TRANSPARENT)
+            selector = Color.TRANSPARENT.toDrawable()
             setOnItemClickListener { _, _, position, _ ->
                 val item = visibleItems[position]
                 if (selectionMode) toggleSelection(item) else openDetail(item)
@@ -330,10 +334,7 @@ class GalleryActivity : ComponentActivity() {
 
         override fun dispatchDraw(canvas: android.graphics.Canvas) {
             // GridView measures and recycles its first child before layout; clip at draw time too.
-            val save = canvas.save()
-            canvas.clipPath(thumbnailClip)
-            super.dispatchDraw(canvas)
-            canvas.restoreToCount(save)
+            canvas.withClip(thumbnailClip) { super.dispatchDraw(canvas) }
         }
 
         override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -628,7 +629,7 @@ class GalleryActivity : ComponentActivity() {
     private fun deleteLegacyNext() {
         val key = pendingDelete.firstOrNull() ?: return finishDeletion()
         queryIo.execute {
-            val result = runCatching { contentResolver.delete(Uri.parse(key), null, null) }
+            val result = runCatching { contentResolver.delete(key.toUri(), null, null) }
             main.post {
                 if (isDestroyed) return@post
                 val error = result.exceptionOrNull()
@@ -665,13 +666,13 @@ class GalleryActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         resumed = true
-        contentResolver.registerContentObserver(Uri.parse("content://media"), true, observer)
+        contentResolver.registerContentObserver("content://media".toUri(), true, observer)
         loadMedia()
     }
 
     override fun onPause() {
         resumed = false
-        if (video.visibility == View.VISIBLE) {
+        if (video.isVisible) {
             videoPosition = runCatching { video.currentPosition }.getOrDefault(0)
             stopVideo()
             photo.visibility = View.VISIBLE
@@ -790,7 +791,7 @@ class GalleryActivity : ComponentActivity() {
         outState.putInt("currentPosition", currentPosition)
         outState.putInt("gridPosition", gridPosition)
         outState.putInt("gridTop", gridTop)
-        outState.putInt("videoPosition", if (video.visibility == View.VISIBLE) runCatching { video.currentPosition }.getOrDefault(videoPosition) else videoPosition)
+        outState.putInt("videoPosition", if (video.isVisible) runCatching { video.currentPosition }.getOrDefault(videoPosition) else videoPosition)
         outState.putStringArrayList("pendingDelete", pendingDelete)
         outState.putBoolean("deleteBySystem", deleteBySystem)
         outState.putBoolean("awaitingDeletePermission", awaitingDeletePermission)

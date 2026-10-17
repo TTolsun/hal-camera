@@ -1,5 +1,6 @@
 package dev.halcamera.ui
 
+import androidx.core.content.edit
 import android.content.Context
 import android.hardware.camera2.CameraManager
 import android.os.Build
@@ -47,7 +48,7 @@ internal class PhysicalPipPicker(private val context: Context, private val manag
             clear = if (selected != null) ({ open(id,null) }) else null, edge = LiveChoiceSheet.Edge.TOP,
             scrollPosition = if (positions.contains("$engine.$id")) positions.getInt("$engine.$id",0)
                 else if (engine == "Camera2" && positions.contains(id)) positions.getInt(id,0) else null,
-            saveScrollPosition = { positions.edit().putInt("$engine.$id",it).apply() },
+            saveScrollPosition = { positions.edit { putInt("$engine.$id",it) } },
             loadChoices = check?.let { query -> { update -> query { checked ->
                 val byKey = checked.associateBy { it.key }
                 ordered = ordered.map { byKey[it.key] ?: it.copy(unavailableReason = "Camera unavailable") }

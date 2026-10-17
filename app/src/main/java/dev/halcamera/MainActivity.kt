@@ -1,5 +1,7 @@
 package dev.halcamera
 
+import androidx.core.net.toUri
+import androidx.core.view.isVisible
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -225,7 +227,7 @@ class MainActivity : ComponentActivity() {
             manualPanel.bind(controlBar.controls.manual, (ready || recordingVideo) && !stoppingRecording && cli.active == null && !bursts.controlsLocked,
                 manualCapabilities, frames.lastOrNull(), time)
             manualBack.isEnabled = manualPanel.isExpanded
-            if (callbackGraph.visibility == View.VISIBLE) callbackGraph.updateLive(events,sessionId,time,telemetry.sessions,(engine as? PipCamera)?.pipCallbackSession)
+            if (callbackGraph.isVisible) callbackGraph.updateLive(events,sessionId,time,telemetry.sessions,(engine as? PipCamera)?.pipCallbackSession)
             recorder.finish()?.let(::exportCliIncident)
             val remaining = recorder.remainingNs()
             reportButton.isEnabled = remaining == null && ready && !paused && cli.active == null
@@ -326,7 +328,7 @@ class MainActivity : ComponentActivity() {
         else if (shouldShowRequestPermissionRationale(Manifest.permission.CAMERA)) permission.launch(Manifest.permission.CAMERA)
         else {
             returningFromSettings = true
-            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, android.net.Uri.parse("package:$packageName")))
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, "package:$packageName".toUri()))
         }
     }
     internal fun restartCamera() {

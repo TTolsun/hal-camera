@@ -82,7 +82,7 @@ internal class LivePipSession(
 
     private fun sourceOrientation(): Int {
         val c = manager.getCameraCharacteristics(source.id)
-        val degrees = when (displayRotation()) { Surface.ROTATION_90 -> 90; Surface.ROTATION_180 -> 180; Surface.ROTATION_270 -> 270; else -> 0 }
+        val degrees = DisplayRotation.degrees(displayRotation())
         return pipPhotoOrientation(c[CameraCharacteristics.SENSOR_ORIENTATION] ?: 0,
             c[CameraCharacteristics.LENS_FACING] == CameraCharacteristics.LENS_FACING_FRONT,degrees)
     }

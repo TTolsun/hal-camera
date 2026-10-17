@@ -1,5 +1,6 @@
 package dev.halcamera.ui
 
+import androidx.core.view.isNotEmpty
 import android.content.Context
 import android.widget.LinearLayout
 import dev.halcamera.benchmark.domain.BenchmarkRun
@@ -74,7 +75,7 @@ object BenchmarkResultCards {
         val legend = Look.row(context)
         fun key(view: android.view.View, widthDp: Int, label: String) {
             legend.addView(view, LinearLayout.LayoutParams(dp(widthDp), -2).apply {
-                if (legend.childCount > 0) marginStart = dp(12)
+                if (legend.isNotEmpty()) marginStart = dp(12)
             })
             legend.addView(Look.text(context, label, 11, Look.inkMuted), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(6) })
         }

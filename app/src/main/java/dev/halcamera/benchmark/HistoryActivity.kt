@@ -1,5 +1,6 @@
 package dev.halcamera.benchmark
 
+import androidx.core.view.isNotEmpty
 import dev.halcamera.ui.BenchmarkResultCards
 
 import android.app.AlertDialog
@@ -144,7 +145,7 @@ class HistoryActivity : ComponentActivity() {
             rowButton(ghost("Export CSV", runs.isNotEmpty()) { exportCsv(runs) }.apply {
                 contentDescription = "현재 필터의 실행 ${runs.size}개를 CSV로 내보내기"
             }),
-            rowParams().apply { if (listActions.childCount > 0) marginStart = dp(8) }
+            rowParams().apply { if (listActions.isNotEmpty()) marginStart = dp(8) }
         )
         body.addView(listActions, lp())
         if (pickingComparison && selectedId == null) {

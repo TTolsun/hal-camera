@@ -1,5 +1,7 @@
 package dev.halcamera.cli
 
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import android.Manifest
 import android.app.KeyguardManager
 import android.content.Context
@@ -35,7 +37,7 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
     val busy: Boolean get() = active != null || uiBusy
 
     fun setEnabled(value: Boolean) {
-        context.getSharedPreferences("cli", Context.MODE_PRIVATE).edit().putBoolean("enabled", value).apply()
+        context.getSharedPreferences("cli", Context.MODE_PRIVATE).edit { putBoolean("enabled", value) }
         if (!value) active?.let { cancel(it.id) }
     }
 
@@ -283,7 +285,7 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
         if (record.optLong("expires_at_ms", Long.MAX_VALUE) <= System.currentTimeMillis()) throw CliFailure("ARTIFACT_EXPIRED", "Artifact registration expired")
         val files = record.getJSONArray("artifacts")
         for (i in 0 until files.length()) files.getJSONObject(i).let {
-            if (it.getString("artifact_id") == aid) return Uri.parse(it.getString("source_uri"))
+            if (it.getString("artifact_id") == aid) return it.getString("source_uri").toUri()
         }
         throw CliFailure("ARTIFACT_MISSING", "Unknown artifact")
     }
