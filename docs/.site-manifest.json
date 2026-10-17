@@ -4,7 +4,7 @@
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "_inputs/decisions.html": "48d617d466127ab5c458fc59079a5d8a75340e9a6ee186c8e93a86b93912e6a8",
     "_inputs/device-verification.yaml": "1852f48d52f75733b4db973418fc7fad1f0f9d340a8b4b555cf9d49aa7016215",
-    "architecture.html": "5552485fe8cc0acc3a8f03dad5fad74e50e824b7ae91f8fa1ad0c62b509f8848",
+    "architecture.html": "f3d9faa6247a3defebb87a552486c89360c86a2014fecb83408247c5cda4857f",
     "assets/brand-film.js": "c8b3ff272b84005ec1eeb1aafcf3fa6eeea4d778bc57ce76b4abd9f32503b726",
     "assets/docflow-design.css": "34f7127eae6a9d6fda28f0b4ab06a63b054f5a4349a03a438635ae54684146d6",
     "assets/media/camera-hal-reviewed-v8.jpg": "507c78d32402e3c61f1d22b34902d4a9d68672cbf86fa3b1d004fe8b10b370c4",
@@ -49,13 +49,13 @@
     "cts.html": "6d4644f2bbdf5022ef3930badeba1390cb9dcb1bb856717ac070e2e0aaeca307",
     "decisions.html": "e6ad5feb026608fd85c7f1d083af6017c5a0eef51d3afcbf5602004c2d3be495",
     "download.html": "d7e3b2ee62a643a57603d6320c89cad3535a3f1290ffcbd104d0977025f8bb90",
-    "engine.html": "862da432fca75ac2238cd738d1beed390f0b3309e1f9f4a031a4b047853ad86a",
-    "evidence.html": "8a32283d123c9eb2616af5d9581464ab507a8c923075abdbb1eb935320ee4d16",
-    "getting-started.html": "67ad4360dd1129924f19d5676ccd8bd7b003e076a4d380c53f582062e10f97e0",
+    "engine.html": "62e591d3ee0d22e12559fab040cbce5c8a4b995f779f07004015a4f34ecbd8a4",
+    "evidence.html": "49cefb603b75fedf2b1f8c62c4bffa890cd8cf337414eaf9e08c6a2696984cde",
+    "getting-started.html": "07d0d5122e3a058d1b98988af55652506f679a941e5db06341c2766d63e16f1d",
     "glossary.html": "8436e50d8c2ead13cd6e5a3422a36bf00e2a21c7013a3162998a5ea279ba0a3d",
     "index.html": "1b132dd386d6aa147305e7d21a17f474050d4f8223dd83b2408d4d2eff4cbcc1",
-    "live.html": "cd7e3ddadec22dc913cb4491b09cf2d653eb572dcb85f3cf49b12abcd526778e",
+    "live.html": "782ca276dfe7f309ec02d5c5711534efb5642ec8ab4ec0e5c50d1f1a81ee55df",
     "probe.html": "4176a152075fefefbcbc3ef44420946926ce00055aacc346c95e627af2b1ef42",
-    "troubleshooting.html": "0b109cf068f00f1d4075459ff8766d9cbf9b7a4988aa1a4d5a6405b2ebb73c1e"
+    "troubleshooting.html": "254ca5bdcdad9f168191952b385aa02d22c369eab1f31b013fa3adb42c5bb3b4"
   }
 }
