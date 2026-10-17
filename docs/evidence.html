@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Validation · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
-  <link rel="stylesheet" href="./assets/site-theme-v2.css">
+  <link rel="stylesheet" href="./assets/site-theme-v3.css">
   <script type="module" src="./assets/search-v2.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
 </head>
@@ -24,7 +24,7 @@
       <a href="./automation.html">Automation</a>
       <a href="./troubleshooting.html">Troubleshooting</a>
     </nav>
-    <script src="./assets/navigation-v2.js"></script>
+    <script src="./assets/navigation-v3.js"></script>
     <button class="search-open" type="button" aria-haspopup="dialog" aria-controls="search-dialog" hidden><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg>문서 찾기 <kbd>Ctrl K</kbd></button>
   </header>
   <main id="main-content" class="document">
@@ -67,7 +67,7 @@
 <p>2026년 10월 9일 Galaxy S25+·Android 16의 후면 기본 카메라에서 Camera2와 CameraX의 연사·AEB를 확인했습니다. 연사는 손을 떼면 멈췄고, AEB는 사진 3장을 저장한 뒤 EV를 복원했습니다. 요청한 ±2 EV와 실제 노출 차이는 같지 않을 수 있었습니다. 어두운 장면에서는 노출 시간과 ISO 상한 때문에 밝게 만드는 범위가 제한됐습니다.</p>
 <p><a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/live-burst-bracketing-20261009.md">실기기 검증 기록</a>에 측정 조건과 결과가 있습니다. 이 기록은 HDR 합성의 검증 결과가 아닙니다. 저장 공간 부족·일부 촬영 실패·촬영 중 화면 종료는 단위 테스트 범위이며, Android 8~9의 권한 대화상자 동작도 실기기에서는 확인하지 않았습니다.</p>
 <h3 id="녹화-중-사진">녹화 중 사진</h3>
-<p>2026년 10월 5일 Galaxy S25+(SM-S936N)·Android 16의 0.19.0(versionCode 628)에서 후면·전면·초광각 녹화 중 사진을 확인했습니다. CameraX 1.6.2에서는 사진 시점에 약 두 프레임 길이의 영상 간격이 생겼고, Camera2 1080p 30fps에서는 사진 3장씩을 저장해도 같은 간격 증가가 없었습니다. HEVC 60fps와 정지 직후의 사진 결과, 공식 소스에서 확인한 요청 출력 구성, 남은 검증 조건은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md">녹화 중 사진 후속 기록</a>에 있습니다. CameraX의 영상 간격 증가는 알려진 제약으로 수용하고 문서에만 안내합니다. 남은 실패 경로와 기기 조합은 <a href="https://github.com/TTolsun/hal-camera/issues/220">#220</a>과 <a href="https://github.com/TTolsun/hal-camera/issues/221">#221</a>에서 추적합니다.</p>
+<p>2026년 10월 5일 Galaxy S25+(SM-S936N)·Android 16의 0.19.0(versionCode 628)에서 후면·전면·초광각 녹화 중 사진을 확인했습니다. CameraX 1.6.2에서는 사진 시점에 약 두 프레임 길이의 영상 간격이 생겼고, Camera2 1080p 30fps에서는 사진 3장씩을 저장해도 같은 간격 증가가 없었습니다. HEVC 60fps와 정지 직후의 사진 결과, 공식 소스에서 확인한 요청 출력 구성, 남은 검증 조건은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md">녹화 중 사진 후속 기록</a>에 있습니다. CameraX의 영상 간격 증가는 알려진 제약으로 수용하고 문서에만 안내합니다.</p>
 <h3 id="cts-원문-케이스">CTS 원문 케이스</h3>
 <p>Galaxy S25+·Android 16에서 2026년 9월 17<del>19일, versionCode 106</del>108로 수행한 기록입니다. versionCode 108의 SKIP 판정을 적용한 결과는 40개 메서드 중 <strong>PASS 33 · FAIL 1 · SKIP 6</strong>입니다. 여러 실행과 재실행을 합친 기록입니다. 원본 요청 ID와 로그 해석은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/archive/STATUS-before-0.24.0.md">당시 작업 기록</a>에 있습니다.</p>
 <table>
@@ -95,10 +95,9 @@
 </tr>
 </tbody></table>
 <p>이 기록에서 초기화 단계의 <code>UiAutomation</code>·<code>@TestApi</code> 실패는 없었습니다. 공식 CTS 인증 결과는 아니며 다른 기기나 현재 빌드의 결과를 보장하지 않습니다. 실행 방법과 PASS·FAIL·SKIP의 정의는 <a href="cts.html">CTS</a>에 있습니다.</p>
-<p>추가 관찰은 <a href="_inputs/device-verification.yaml">기기 검증 입력</a>, <a href="https://github.com/TTolsun/hal-camera/tree/main/docs/validation">검증 문서</a>, <a href="https://github.com/TTolsun/hal-camera/tree/main/docs/releases">릴리스 기록</a>에서 확인하세요.</p>
 <h3 id="camerax-기기-관찰">CameraX 기기 관찰</h3>
-<p>2026년 9월 27일의 V-002 기록입니다. 앱은 0.14.0 로컬 release 빌드(versionCode 540~542)이며, 마지막 빌드의 앱 코드는 main의 <code>06717ba</code>와 같습니다. Galaxy S25+의 Android 16 환경에서 후면 카메라 0으로 확인했습니다. 전면 카메라·다른 기기와 <code>yuvOffsetNs</code> 값은 검증하지 않았습니다.</p>
-<!-- omm:begin id=device-notes --><p>아래는 위 조건에서 수행한 V-002 기록의 관찰 결과입니다.</p>
+<p>2026년 9월 27일의 V-002 기록입니다. 앱은 0.14.0 로컬 release 빌드(versionCode 540~542)입니다. Galaxy S25+의 Android 16 환경에서 후면 카메라 0으로 확인했습니다. 전면 카메라·다른 기기와 <code>yuvOffsetNs</code> 값은 검증하지 않았습니다.</p>
+<p>아래는 위 조건에서 수행한 V-002 기록의 관찰 결과입니다.</p>
 <table>
 <thead>
 <tr>
@@ -126,44 +125,9 @@
 <td>녹화 중 AF 잠금</td>
 <td>첫 Status 이벤트에서 초점 요청을 다시 보내기 전에는 AF Idle, 다시 보낸 뒤에는 No focus(잠김)로 표시됐습니다.</td>
 </tr>
-<tr>
-<td><code>cancelFocusAndMetering</code> 뒤의 AE 잠금</td>
-<td>이 호출을 쓰던 빌드에서는 탭 초점이 끝난 뒤 AE 잠금을 켜도 결과가 AE OK였고, 최신 프레임 메타데이터의 <code>android.control.aeLock</code>이 OFF였습니다. 호출을 없앤 빌드에서는 탭 초점 종료, 녹화 시작·종료, 플래시 사진 뒤에도 AE Locked가 유지됐습니다.</td>
-</tr>
 </tbody></table>
-<p><code>CameraXControls</code>의 <code>cancelFocusAndMetering</code> 우회와 녹화 중 초점 요청 재전송은 이 관찰에서 나온 수정입니다. 플래시 사진의 재측광은 CameraX ImageCapture의 precapture 순서에서 온 것으로 보지만, CameraX 내부 로그로 확인하지는 않았습니다.</p>
-<details class="doc-evidence">
-<summary>근거와 검토 정보</summary><ul>
-<li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/CameraXControls.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt</code></li>
-<li>기기 검증: <code>V-002</code></li>
-<li>근거 수준: 기기 검증</li>
-<li>검토 2026-10-17 @ <code>fcdc1e50</code> · codex-user-requested-multi-audio-review</li>
-</ul>
-</details><!-- omm:end id=device-notes --></details><h2 id="문서-검토-상태">문서 검토 상태</h2>
-<p>아래 표는 이 페이지에 연결된 CameraX 기기 관찰 원고의 검토 상태입니다. 위 CTS 요약을 포함한 수동 본문의 검토 범위는 PR 기록에서 확인합니다.</p>
-<!-- omm:begin id=status --><ul>
-<li>검증 기준 앱 버전: 0.29.0 (versionCode 683)</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>항목</th>
-<th>최신성</th>
-<th>검토</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>구조 원본 <code>overall-architecture</code></td>
-<td>최신</td>
-<td>검토 2026-10-17 @ <code>fcdc1e50</code> · codex-user-requested-multi-audio-review</td>
-</tr>
-<tr>
-<td>원고 <code>device-notes</code></td>
-<td>최신</td>
-<td>검토 2026-10-17 @ <code>fcdc1e50</code> · codex-user-requested-multi-audio-review</td>
-</tr>
-</tbody></table>
-<!-- omm:end id=status --><p><strong>다음 단계:</strong> <a href="download.html">Download</a>에서 배포 버전을 확인하고 <a href="getting-started.html">Quickstart</a>로 시작하세요.</p>
+<p>이 결과는 해당 기기와 빌드에서 관찰한 기록입니다. 현재 앱의 모든 촬영 조건을 검증한 결과는 아닙니다.</p>
+</details><p><strong>다음 단계:</strong> <a href="download.html">Download</a>에서 앱을 받아 직접 확인하세요.</p>
 
   </main>
   <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a></nav>

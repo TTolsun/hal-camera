@@ -60,3 +60,13 @@ test('Quickstart contains only current onboarding content', () => {
   assert.ok(!html.includes('legacy-links'));
   assert.ok(html.includes('href="live.html"'));
 });
+
+test('public onboarding and comparisons do not publish implementation review records', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(docs, '.site-manifest.json'), 'utf8'));
+  assert.ok(!Object.keys(manifest.files).some(file => file.startsWith('_reference/')));
+  for (const page of ['getting-started', 'engine', 'evidence', 'troubleshooting']) {
+    const html = fs.readFileSync(path.join(docs, `${page}.html`), 'utf8');
+    assert.doesNotMatch(html, /문서 검토 상태|codex-user-requested|문서 기준 빌드 정보/);
+    assert.doesNotMatch(html, /href="(?:\.\/)?(?:building|architecture|contributing)\.html/);
+  }
+});

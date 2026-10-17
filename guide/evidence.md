@@ -39,7 +39,7 @@ Live·CameraX 전환·사진 자동 고정·Recording 콜백·Probe 조회·CTS 
 
 ### 녹화 중 사진
 
-2026년 10월 5일 Galaxy S25+(SM-S936N)·Android 16의 0.19.0(versionCode 628)에서 후면·전면·초광각 녹화 중 사진을 확인했습니다. CameraX 1.6.2에서는 사진 시점에 약 두 프레임 길이의 영상 간격이 생겼고, Camera2 1080p 30fps에서는 사진 3장씩을 저장해도 같은 간격 증가가 없었습니다. HEVC 60fps와 정지 직후의 사진 결과, 공식 소스에서 확인한 요청 출력 구성, 남은 검증 조건은 [녹화 중 사진 후속 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md)에 있습니다. CameraX의 영상 간격 증가는 알려진 제약으로 수용하고 문서에만 안내합니다. 남은 실패 경로와 기기 조합은 [#220](https://github.com/TTolsun/hal-camera/issues/220)과 [#221](https://github.com/TTolsun/hal-camera/issues/221)에서 추적합니다.
+2026년 10월 5일 Galaxy S25+(SM-S936N)·Android 16의 0.19.0(versionCode 628)에서 후면·전면·초광각 녹화 중 사진을 확인했습니다. CameraX 1.6.2에서는 사진 시점에 약 두 프레임 길이의 영상 간격이 생겼고, Camera2 1080p 30fps에서는 사진 3장씩을 저장해도 같은 간격 증가가 없었습니다. HEVC 60fps와 정지 직후의 사진 결과, 공식 소스에서 확인한 요청 출력 구성, 남은 검증 조건은 [녹화 중 사진 후속 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/video-snapshot-20261005.md)에 있습니다. CameraX의 영상 간격 증가는 알려진 제약으로 수용하고 문서에만 안내합니다.
 
 ### CTS 원문 케이스
 
@@ -53,13 +53,12 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 
 이 기록에서 초기화 단계의 `UiAutomation`·`@TestApi` 실패는 없었습니다. 공식 CTS 인증 결과는 아니며 다른 기기나 현재 빌드의 결과를 보장하지 않습니다. 실행 방법과 PASS·FAIL·SKIP의 정의는 [CTS](cts.md)에 있습니다.
 
-추가 관찰은 [기기 검증 입력](_inputs/device-verification.yaml), [검증 문서](https://github.com/TTolsun/hal-camera/tree/main/docs/validation), [릴리스 기록](https://github.com/TTolsun/hal-camera/tree/main/docs/releases)에서 확인하세요.
+
 
 ### CameraX 기기 관찰
 
-2026년 9월 27일의 V-002 기록입니다. 앱은 0.14.0 로컬 release 빌드(versionCode 540~542)이며, 마지막 빌드의 앱 코드는 main의 `06717ba`와 같습니다. Galaxy S25+의 Android 16 환경에서 후면 카메라 0으로 확인했습니다. 전면 카메라·다른 기기와 `yuvOffsetNs` 값은 검증하지 않았습니다.
+2026년 9월 27일의 V-002 기록입니다. 앱은 0.14.0 로컬 release 빌드(versionCode 540~542)입니다. Galaxy S25+의 Android 16 환경에서 후면 카메라 0으로 확인했습니다. 전면 카메라·다른 기기와 `yuvOffsetNs` 값은 검증하지 않았습니다.
 
-<!-- omm:begin id=device-notes -->
 
 아래는 위 조건에서 수행한 V-002 기록의 관찰 결과입니다.
 
@@ -70,37 +69,12 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 | AE 잠금 중 EV | EV +0.5를 적용하자 노출 시간×ISO가 1.42배가 됐고, 사진 EXIF는 1/59초, ISO 287, 노출 보정 +0.5였습니다. |
 | AE 잠금 중 플래시 On 사진 | 플래시가 발광했고 1/1169초, ISO 25로 저장됐습니다. 잠금 직전 프리뷰는 ISO 161, 8.33ms였습니다. |
 | 녹화 중 AF 잠금 | 첫 Status 이벤트에서 초점 요청을 다시 보내기 전에는 AF Idle, 다시 보낸 뒤에는 No focus(잠김)로 표시됐습니다. |
-| `cancelFocusAndMetering` 뒤의 AE 잠금 | 이 호출을 쓰던 빌드에서는 탭 초점이 끝난 뒤 AE 잠금을 켜도 결과가 AE OK였고, 최신 프레임 메타데이터의 `android.control.aeLock`이 OFF였습니다. 호출을 없앤 빌드에서는 탭 초점 종료, 녹화 시작·종료, 플래시 사진 뒤에도 AE Locked가 유지됐습니다. |
 
-`CameraXControls`의 `cancelFocusAndMetering` 우회와 녹화 중 초점 요청 재전송은 이 관찰에서 나온 수정입니다. 플래시 사진의 재측광은 CameraX ImageCapture의 precapture 순서에서 온 것으로 보지만, CameraX 내부 로그로 확인하지는 않았습니다.
+이 결과는 해당 기기와 빌드에서 관찰한 기록입니다. 현재 앱의 모든 촬영 조건을 검증한 결과는 아닙니다.
 
-<details class="doc-evidence" markdown="1">
-<summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`
-- 기기 검증: `V-002`
-- 근거 수준: 기기 검증
-- 검토 2026-10-17 @ `fcdc1e50` · codex-user-requested-multi-audio-review
+
 
 </details>
 
-<!-- omm:end id=device-notes -->
-
-</details>
-
-## 문서 검토 상태
-
-아래 표는 이 페이지에 연결된 CameraX 기기 관찰 원고의 검토 상태입니다. 위 CTS 요약을 포함한 수동 본문의 검토 범위는 PR 기록에서 확인합니다.
-
-<!-- omm:begin id=status -->
-
-- 검증 기준 앱 버전: 0.29.0 (versionCode 683)
-
-| 항목 | 최신성 | 검토 |
-| --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-17 @ `fcdc1e50` · codex-user-requested-multi-audio-review |
-| 원고 `device-notes` | 최신 | 검토 2026-10-17 @ `fcdc1e50` · codex-user-requested-multi-audio-review |
-
-<!-- omm:end id=status -->
-
-**다음 단계:** [Download](download.md)에서 배포 버전을 확인하고 [Quickstart](getting-started.md)로 시작하세요.
+**다음 단계:** [Download](download.md)에서 앱을 받아 직접 확인하세요.

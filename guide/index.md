@@ -4,7 +4,7 @@ home: true
 ---
 <section class="hero" aria-labelledby="hero-title">
   <h1 id="hero-title" lang="en">Capture. Measure. Verify.</h1>
-  <p class="intro">APK를 다운로드하고 Quickstart를 따라 첫 촬영을 시작하세요.</p>
+  <p class="intro">Android 카메라의 촬영·콜백 관찰·반복 측정을 HALCamera 하나로 시작하세요.</p>
   <nav class="contents task-contents" aria-label="시작하기">
   <a href="download.html"><span class="name">Download</span><span class="description">GitHub 릴리스에서 APK를 받습니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="getting-started.html"><span class="name">Quickstart</span><span class="description">APK를 설치하고 첫 화면을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>

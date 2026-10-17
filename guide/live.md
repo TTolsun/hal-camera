@@ -210,7 +210,7 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 | RAW | 센서 원본 출력입니다. |
 | R | 녹화 출력입니다. H264·HEVC·Auto 포맷도 함께 표시합니다. |
 
-꺼진 스트림은 표시하지 않습니다. PIP 보조 출력은 두 번째 줄에 `PIP`를 한 번 쓰고 P·Y·J 크기를 나열합니다. 합성 파일 크기는 생략합니다. 구성 검사는 [Engine Comparison](engine.md#camera2-엔진)을 확인하세요.
+꺼진 스트림은 표시하지 않습니다. PIP 보조 출력은 두 번째 줄에 `PIP`를 한 번 쓰고 P·Y·J 크기를 나열합니다. 합성 파일 크기는 생략합니다. 엔진별 지원 범위는 [Engine Comparison](engine.md#두-엔진의-차이)을 확인하세요.
 
 </details>
 
@@ -244,7 +244,7 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 
 PIP는 Android 11 이상에서 제공하며 지원 조합은 기기마다 다릅니다. 플래시는 Off·Torch만 제공하고 AEB는 지원하지 않습니다.
 
-**회색 후보는 현재 조합에서 지원 불가가 확인된 카메라입니다.** 크기나 출력 설정을 바꾼 뒤 다시 열면 재검사합니다. `Not verified`는 조회가 불가능했다는 뜻이며 선택할 수 있습니다. 지원 조회가 통과해도 자원 상태나 HAL 문제로 실제 구성이 실패할 수 있습니다. 조회 방식은 [PIP 지원 검사](engine.md#pip-지원을-미리-확인하세요)에 있습니다.
+**회색 후보는 현재 조합에서 지원 불가가 확인된 카메라입니다.** 크기나 출력 설정을 바꾼 뒤 다시 열면 재검사합니다. `Not verified`는 조회가 불가능했다는 뜻이며 선택할 수 있습니다. 지원 조회가 통과해도 자원 상태나 HAL 문제로 실제 구성이 실패할 수 있습니다.
 
 <details markdown="1" id="pip-session-details" data-search-section>
 <summary>엔진별 재구성과 저장 해상도</summary>

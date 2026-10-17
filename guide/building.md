@@ -7,7 +7,7 @@ title: Build
 
 ## 실행 전에 준비하세요
 
-JDK 17과 Android SDK 36, `adb`가 필요합니다. PowerShell에서 `$env:JAVA_HOME`을 JDK 설치 경로로 설정합니다. SDK와 JVM 대상 버전은 [아래 빌드 정보](getting-started.md#앱-버전과-빌드-설정)를 확인하세요.
+JDK 17과 Android SDK 36, `adb`가 필요합니다. PowerShell에서 `$env:JAVA_HOME`을 JDK 설치 경로로 설정합니다. SDK와 JVM 대상 버전은 [아래 빌드 정보](https://github.com/TTolsun/hal-camera/blob/main/guide/_reference/getting-started.md#앱-버전과-빌드-설정)를 확인하세요.
 
 Android SDK 경로는 저장소 루트의 `local.properties`에 설정합니다. 이 파일은 개인 환경 설정이므로 커밋하지 않습니다. 기기에서 USB 디버깅을 켜고 PC의 연결 요청을 허용한 뒤 `adb devices`로 연결 상태를 확인하세요.
 
