@@ -5,7 +5,7 @@
 | 필요한 내용 | 원본 |
 | --- | --- |
 | 현재 조작과 결과 해석 | [guide/](../guide/index.md)의 Live·Callback·Benchmark 등입니다. `docs/*.html`은 여기서 생성합니다. |
-| 지표와 판정 규칙 | [METRICS.md](METRICS.md)와 [SCORING.md](SCORING.md)를 확인합니다. |
+| 지표와 판정 규칙 | [METRICS.md](METRICS.md)에서 현재 측정·회귀 판정 계약을 확인합니다. 현재 앱은 점수를 산정하지 않습니다. 과거 점수 제안은 [보관된 초안](archive/SCORING-v1-draft.md)에 있습니다. |
 | 실제로 확인한 기기·조건·한계 | [Validation](../guide/evidence.md)에서 `validation/`의 개별 기록으로 이동합니다. |
 | 버전별 변경·설계 이력 | `releases/`, `design/`, `archive/`, `PLAN-*.md`, [STATUS.md](STATUS.md)에 당시 상태를 보존합니다. 현재 사용법과 구분합니다. |
 
