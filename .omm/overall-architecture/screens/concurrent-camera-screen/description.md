@@ -1,4 +1,4 @@
-ConcurrentCameraActivity는 Live의 Multi · P와 Multi · V에서 여는 독립 장치 촬영 화면입니다. Photo·Video와 같은 상단 제어, 카메라별 크기 표시, 줌, 갤러리·64dp 셔터·카메라 선택, 네 모드와 Save Events · ZIP을 사용합니다. Photo·Video의 PIP 위치에는 Split 버튼을 배치하며 Manual 버튼과 입력창은 제공하지 않습니다. Multi는 기존 Camera2 경로를 사용합니다.
+ConcurrentCameraActivity는 Live의 Multi · P와 Multi · V에서 여는 독립 장치 촬영 화면입니다. Photo·Video와 같은 상단 제어, 카메라별 크기 표시, 줌, 갤러리·64dp 셔터·카메라 선택, 네 모드와 Save Events · ZIP을 사용합니다. Photo·Video의 PIP 위치에는 Split 버튼을 배치하며 Manual 버튼과 입력창은 제공하지 않습니다. MultiSession 계약으로 Camera2 ConcurrentSession과 CameraXMultiSession을 선택합니다. CameraX는 광고한 동시 조합의 최대 두 장치를 지원하며 Preview와 ImageCapture를 바인딩합니다.
 
 Split 설정창과 끌어 맞추기 배치 규칙은 split-layout 요소가 설명합니다. 이 화면은 그 결과인 배치와 패널 순서를 받아 패널 크기를 정하고, 같은 장치 조합 안의 순서·배치 변경은 세션을 유지한 채 패널만 옮깁니다.
 
@@ -10,6 +10,6 @@ Split 설정창과 끌어 맞추기 배치 규칙은 split-layout 요소가 설�
 
 ConcurrentLifecycle은 장치별 open·streaming·closing·closed 상태를 관리합니다. 모든 장치를 연 뒤 세션을 구성하고 모든 출력의 실제 프레임 도착 이후 셔터를 활성화합니다. Gallery·Lab 복귀 시 TextureView 크기가 확정된 뒤 시작을 다시 시도합니다. 출력 구성이 거부되면 실패와 Retry를 표시합니다. 종료 중 늦게 도착하는 open 콜백과 모든 onClosed를 기다린 뒤 compositor를 해제하고 ConcurrentLease를 넘깁니다. Live는 자신의 close(done) 이후 이 화면을 열고 돌아오면 원래 엔진의 프리뷰를 복구합니다. Benchmark 경로와 프로파일은 바꾸지 않습니다.
 
-사진은 각 장치의 Image.timestamp와 CaptureResult.SENSOR_TIMESTAMP를 연결한 온전한 JPEG를 저장합니다. Multi는 Physical·Service PIP를 합성하지 않습니다. ConcurrentPhotoStore는 공통 group ID, 장치 ID, 크기, 시각 기준과 성공·실패를 JSON에 기록합니다. 녹화 중에는 카메라 선택 아이콘 대신 사진 아이콘을 표시해 장치별 원본 JPEG를 저장하며 두 영상은 계속 녹화합니다. 사진 제한 시간은 10초이며 만료 시 미완료 장치를 실패로 기록하고 모두 닫습니다. 부분 실패는 성공한 파일을 유지하며 JSON 저장 실패는 해당 사진 묶음을 롤백합니다.
+Camera2 사진은 각 장치의 Image.timestamp와 CaptureResult.SENSOR_TIMESTAMP를 연결한 JPEG이며, CameraX 사진은 ImageCapture가 전달한 원본 JPEG와 이미지 시각을 저장합니다. Multi는 Physical·Service PIP를 합성하지 않습니다. ConcurrentPhotoStore는 공통 group ID, 장치 ID, 크기, 시각 기준과 성공·실패를 JSON에 기록합니다. 녹화 중에는 카메라 선택 아이콘 대신 사진 아이콘을 표시해 장치별 원본 JPEG를 저장하며 두 영상은 계속 녹화합니다. 사진 제한 시간은 10초이며 만료 시 미완료 장치를 실패로 기록합니다. Camera2는 장치를 닫고, CameraX는 진행 중인 사진 묶음을 종료합니다. 부분 실패는 성공한 파일을 유지하며 JSON 저장 실패는 해당 사진 묶음을 롤백합니다.
 
-영상은 장치별 독립 무음 MP4를 저장합니다. 인코더 크기는 해당 장치의 프리뷰 스트림과 센서 회전에서 정하며 Split 패널 크기와 무관합니다. preserveFullFrame은 EGL 대상 크기에 전체 입력을 맞추어 표시하며 화면 배치를 영상 크롭으로 사용하지 않습니다. 화면 전체·다른 장치·UI를 저장 영상에 합성하지 않습니다. 정상 종료 시 녹화를 저장한 뒤 해제하며 장치·인코더 오류 시 진행 중 녹화를 취소합니다. 사진·영상의 센서 동기는 보장하지 않습니다.
+영상은 장치별 독립 MP4를 저장합니다. 마이크 권한을 받은 뒤 MultiAudio가 하나의 MIC를 녹음하고 MultiRecording이 같은 AAC를 각 영상에 결합합니다. 무음 대체는 하지 않으며 결합에 실패하면 해당 묶음을 회수합니다. 인코더 크기는 해당 장치의 프리뷰 스트림과 센서 회전에서 정하며 Split 패널 크기와 무관합니다. preserveFullFrame은 EGL 대상 크기에 전체 입력을 맞추어 표시하며 화면 배치를 영상 크롭으로 사용하지 않습니다. 화면 전체·다른 장치·UI를 저장 영상에 합성하지 않습니다. 종료 시 진행 중인 녹화의 저장을 마친 뒤 자원을 해제하며, 저장 오류는 성공으로 보고하지 않습니다. 사진·영상의 센서 동기는 보장하지 않습니다.

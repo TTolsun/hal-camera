@@ -40,9 +40,10 @@ internal class CompositorRecording(context: Context, val name: String, private v
         if (audio != withAudio) { recorder.reset(); configure(audio); withAudio = audio }
         recorder.start()
     }
-    fun finish(save: Boolean, library: MediaLibrary): String = try {
+    fun finish(save: Boolean, library: MediaLibrary, process: ((File) -> Unit)? = null): String = try {
         recorder.stop()
         check(save) { "Recording cancelled" }
+        process?.invoke(file)
         library.saveVideo(file, name).toString()
     } finally { discard() }
 

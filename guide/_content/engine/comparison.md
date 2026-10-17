@@ -2,6 +2,9 @@
 based_on: [overall-architecture]
 confidence: code
 sources:
+  - app/src/main/java/dev/halcamera/camera/MultiSession.kt
+  - app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt
+  - app/src/main/java/dev/halcamera/camera/MultiRecording.kt
   - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
   - app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt
   - app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt
@@ -30,7 +33,7 @@ verifications: []
 | 버퍼 도착 기록 (Android 13 이상) | 프리뷰와 녹화 버퍼의 도착 시각을 relay로 기록합니다. 명시적인 EIS 녹화는 인코더 직결이므로 녹화 버퍼를 관측하지 않습니다. | 프리뷰와 녹화 버퍼는 직접 관측하지 못합니다. ImageAnalysis와 ImageCapture의 이미지 수신은 기록합니다. |
 | Benchmark | 지원합니다. | 지원하지 않으며 Camera2로 엽니다. |
 | 기존 Dual (CLI) | 공통 줌, 메인 센서 제어, 한 요청의 두 센서 사진과 무음 MP4 두 개를 지원합니다. | 공통 줌과 무음 MP4 두 개를 지원합니다. 메인 개별 제어와 두 센서 사진은 지원하지 않습니다. |
-| Multi | 지원되는 독립 장치 조합에서 동시 프리뷰와 카메라별 JPEG·무음 MP4를 제공합니다. 센서 동기를 보장하지 않습니다. | 미지원 안내 후 Camera2 경로로 열 수 있습니다. |
+| Multi | 지원되는 독립 장치 조합에서 동시 프리뷰와 카메라별 JPEG·소리 포함 MP4를 제공합니다. | CameraX가 광고한 조합의 최대 두 장치에서 프리뷰·JPEG를 구성하며, 카메라별 소리 포함 MP4를 저장합니다. |
 | PIP | Physical 또는 다른 Service ID 하나를 합성합니다. Live는 현재 CameraDevice와 화면을 유지하며 보조 Service 장치만 추가로 엽니다. | CameraX가 광고한 동시 조합의 Service ID 하나를 합성합니다. 메인 ID를 유지하며 단일·동시 use case를 다시 bind합니다. 두 장치 모두 CameraX로 열고 합성 JPEG·오디오 포함 MP4를 저장합니다. |
 
 버퍼 관측 여부와 PIP·기존 Dual의 Recording 표시는 [Callback](callback.md#스트림별-도착-시각을-읽으세요)을 확인하세요. 화면 갱신이나 앱 인코더 전송 시각을 카메라 버퍼 도착 시각으로 대신하지 않습니다.

@@ -36,7 +36,7 @@ import dev.halcamera.telemetry.Telemetry
  */
 @androidx.annotation.OptIn(markerClass = [ExperimentalCamera2Interop::class])
 internal class CameraXControls(
-    private val view: PreviewView,
+    private val view: PreviewView?,
     private val main: Handler,
     private val telemetry: Telemetry,
     private val sessionId: String,
@@ -103,7 +103,7 @@ internal class CameraXControls(
     fun meterAt(x: Float, y: Float, exposure: Boolean, feedback: (TouchPhase) -> Unit,
         mappedPoint: MeteringPoint? = null): Boolean {
         val camera = host.camera ?: return false
-        val point = mappedPoint ?: view.meteringPointFactory.createPoint(x, y)
+        val point = mappedPoint ?: view?.meteringPointFactory?.createPoint(x, y) ?: return false
         val flag = if (exposure) FocusMeteringAction.FLAG_AE else FocusMeteringAction.FLAG_AF
         if (!host.active || !camera.cameraInfo.isFocusMeteringSupported(FocusMeteringAction.Builder(point, flag).build())) return false
         val target = Target(point, feedback)

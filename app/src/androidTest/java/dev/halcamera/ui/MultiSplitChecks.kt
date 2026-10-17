@@ -234,7 +234,7 @@ object MultiSplitChecks {
         pass("Navigation PASS: Gallery and Lab return; Save Events ZIP and Share chooser complete without sending")
         ui {
             val current = field<Any>(activity,"session")
-            field<dev.halcamera.camera.ConcurrentSession.Listener>(current,"listener").onFailed("Injected retry check")
+            field<dev.halcamera.camera.MultiSession.Listener>(current,"listener").onFailed("Injected retry check")
         }
         press("retryButton"); ready()
         pass("Retry PASS: injected failure closes the previous cameras and restarts both previews")

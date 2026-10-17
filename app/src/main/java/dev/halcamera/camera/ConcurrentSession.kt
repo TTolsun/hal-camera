@@ -25,21 +25,12 @@ class ConcurrentSession(
     private val manager: CameraManager,
     private val plan: ConcurrentPlan,
     private val textures: List<SurfaceTexture>,
-    private val listener: Listener,
+    private val listener: MultiSession.Listener,
     private val outputSizes: List<LiveSize> = plan.streams.map { LiveSize(it.preview.height, it.preview.width) },
     private val telemetry: dev.halcamera.telemetry.Telemetry? = null,
     private val sessionId: String = "concurrent",
     private val videoMode: Boolean = false,
-) {
-    interface Listener {
-        fun onState(id: String, state: String)
-        fun onReady()
-        fun onFailed(reason: String)
-        fun onPhoto(result: ConcurrentMediaResult)
-        fun onRecording(active: Boolean, result: ConcurrentMediaResult)
-        fun onPhotoResult(result: Result<PhotoResult>) {}
-        fun onVideoResult(result: Result<List<android.net.Uri>>) {}
-    }
+) : MultiSession {
     private val thread = HandlerThread("HAL.Concurrent").apply { start() }
     private val worker = Handler(thread.looper)
     private val main = Handler(Looper.getMainLooper())
@@ -54,8 +45,11 @@ class ConcurrentSession(
     private val compositors = mutableMapOf<String, DeviceCompositor>()
     private val app = context.applicationContext
     private var disposing = false
-    private var recording = false
-    private var videoPending = false
+    private val video = MultiRecording(context.applicationContext, worker, compositors,
+        { active, result -> main.post { listener.onRecording(active, result) } },
+        { result -> main.post { listener.onVideoResult(result) } })
+    private val videoPending get() = video.pending
+    private var mediaClosed = false
     private val readers = mutableMapOf<String, ImageReader>()
     private val configs = mutableMapOf<String, SessionConfiguration>()
     private val timestamps = mutableMapOf<String, Int?>()
@@ -71,7 +65,7 @@ class ConcurrentSession(
     private val callbacks = mutableMapOf<String,CameraCaptureSession.CaptureCallback>()
     private val touch = mutableMapOf<String,Camera2TouchFocus>()
 
-    fun meterAt(id: String, u: Double, v: Double, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean {
+    override fun meterAt(id: String, u: Double, v: Double, exposure: Boolean, feedback: (TouchPhase) -> Unit): Boolean {
         val c = runCatching { manager.getCameraCharacteristics(id) }.getOrNull() ?: return false
         val supported = touchSupport(c)
         if (!(if (exposure) supported.second else supported.first)) return false
@@ -86,7 +80,7 @@ class ConcurrentSession(
     }
 
     /** Multi has automatic exposure/focus; manual sensor controls never reach a request. */
-    fun setControls(id: String, next: LiveControls) { worker.post {
+    override fun setControls(id: String, next: LiveControls) { worker.post {
         if (lifecycle.stopping || id !in devices) return@post
         val previous = controls[id] ?: LiveControls()
         val support = liveControlSupport(manager,id).copy(autoFlash = false,alwaysFlash = false)
@@ -99,7 +93,7 @@ class ConcurrentSession(
         } catch (e: Exception) { fail("Camera $id controls failed: ${e.message}") }
     } }
 
-    fun setZoom(id: String, ratio: Float) { worker.post {
+    override fun setZoom(id: String, ratio: Float) { worker.post {
         if (lifecycle.stopping || id !in devices || !ratio.isFinite()) return@post
         val range = zoomRange(manager,id)
         zooms[id] = ratio.coerceIn(range.first,range.second)
@@ -132,7 +126,7 @@ class ConcurrentSession(
             trigger?.let { set(CaptureRequest.CONTROL_AF_TRIGGER,it) }
         }.build()
 
-    fun start() { worker.post {
+    override fun start() { worker.post {
         if (started || lifecycle.stopping) return@post
         started = true
         lease.acquire(this) { worker.post { startOwned() } }
@@ -260,41 +254,10 @@ class ConcurrentSession(
         } catch (e: Exception) { fail("Camera configuration failed: ${e.message}") }
     }
 
-    fun startVideo() { worker.post {
-        if (!lifecycle.ready || capture != null || recording || videoPending) return@post
-        videoPending = true
-        val name = MediaLibrary(app).name()
-        val results = mutableMapOf<String,Result<Unit>>()
-        compositors.forEach { (id, compositor) -> compositor.startVideo(name) { result -> worker.post {
-            if (!lifecycle.stopping) {
-                results[id] = result
-                if (results.size == compositors.size) {
-                    videoPending = false
-                    if (results.values.any { it.isFailure }) {
-                        compositors.values.forEach { it.stopVideo(false) {} }
-                        main.post { listener.onRecording(false,ConcurrentMediaResult("Could not start recording",failed = true)) }
-                    } else { recording = true; main.post { listener.onRecording(true,ConcurrentMediaResult("Recording")) } }
-                }
-            }
-        } } }
+    override fun startVideo(audio: Boolean) { worker.post {
+        if (lifecycle.ready && capture == null) video.start(audio)
     } }
-
-    fun stopVideo() { worker.post {
-        if (!recording || videoPending) return@post
-        recording = false; videoPending = true
-        val results = mutableMapOf<String,Result<String>>()
-        compositors.forEach { (id, compositor) -> compositor.stopVideo(true) { result -> worker.post {
-            results[id] = result
-            if (results.size == compositors.size) {
-                videoPending = false
-                val message = results.entries.joinToString("\n") { "Camera ${it.key}: ${it.value.getOrElse { e -> "failed: ${e.message}" }}" }
-                main.post {
-                    listener.onRecording(false,ConcurrentMediaResult(message,results.values.any { it.isFailure }))
-                    listener.onVideoResult(runCatching { results.values.map { android.net.Uri.parse(it.getOrThrow()) } })
-                }
-            }
-        } } }
-    } }
+    override fun stopVideo() { worker.post { video.stop() } }
     @SuppressLint("MissingPermission")
     private fun open(id: String) {
         if (lifecycle.stopping) return
@@ -344,7 +307,7 @@ class ConcurrentSession(
         }
     }
 
-    fun capture(displayDegrees: Int) { worker.post {
+    override fun capture(displayDegrees: Int) { worker.post {
         if (!lifecycle.ready || capture != null || videoPending) return@post
         val group = ConcurrentCapture<ConcurrentPhoto>("HAL_concurrent_${UUID.randomUUID()}", SystemClock.elapsedRealtimeNanos(), plan.streams.map { it.camera.id })
         capture = group
@@ -414,12 +377,12 @@ class ConcurrentSession(
         }
     }
 
-    fun close(done: () -> Unit) {
+    override fun close(done: () -> Unit) {
         if (finished) { main.post(done); return }
         // finish and close are serialized; a rejected post means the worker has already exited.
         if (!worker.post {
             if (finished) main.post(done)
-            else { closeCallbacks += done; stop("Capture cancelled: screen closed", true) }
+            else { closeCallbacks += done; stop("Capture cancelled: screen closed") }
         }) main.post(done)
     }
 
@@ -429,10 +392,9 @@ class ConcurrentSession(
         stop(reason)
     }
 
-    private fun stop(reason: String, saveVideo: Boolean = false) {
+    private fun stop(reason: String) {
         lifecycle.stop()
-        if (recording || videoPending) compositors.values.forEach { it.stopVideo(saveVideo && recording) {} }
-        recording = false; videoPending = false
+        video.close { mediaClosed = true; finishIfClosed() }
         capture?.let { it.cancel(reason); saveGroup(it) }
         sessions.values.forEach { runCatching { it.close() } }
         sessions.clear()
@@ -441,7 +403,7 @@ class ConcurrentSession(
     }
 
     private fun finishIfClosed() {
-        if (finished || disposing || !lifecycle.closed) return
+        if (finished || disposing || !lifecycle.closed || !mediaClosed) return
         disposing = true
         readers.values.forEach { it.close() }; readers.clear(); surfaces.clear()
         var remaining = compositors.size
@@ -455,6 +417,6 @@ class ConcurrentSession(
     private fun state(id: String, state: String) { main.post { listener.onState(id, state) } }
 
     companion object {
-        private val lease = ConcurrentLease()
+        private val lease = MultiSessionLease.lease
     }
 }

@@ -34,6 +34,8 @@ internal class DeviceCompositor(
     private var snapshot = EGL14.EGL_NO_SURFACE
     private var encoder = EGL14.EGL_NO_SURFACE
     private var recordingStarted = false
+    @Volatile var recordingStartNs = 0L
+        private set
     private var recordingStopping = false
     private lateinit var config: EGLConfig
     private var viewSurface: Surface? = null
@@ -190,13 +192,14 @@ internal class DeviceCompositor(
         val result = runCatching {
             check(!closed && !recordingStarted && received.all { it })
             if (recorder == null) prepareVideo(name)
-            checkNotNull(recorder).start(audio); recordingStarted = true; lastVideoNs = 0L
+            checkNotNull(recorder).start(audio); recordingStartNs = System.nanoTime()
+            recordingStarted = true; lastVideoNs = 0L
         }
         if (result.isFailure) discardVideo()
         done(result)
     } }
 
-    fun stopVideo(save: Boolean, done: (Result<String>) -> Unit) { handler.post {
+    fun stopVideo(save: Boolean, process: ((java.io.File) -> Unit)? = null, done: (Result<String>) -> Unit) { handler.post {
         val recording = recorder
         if (recording == null) { done(Result.failure(IllegalStateException("Not recording"))); return@post }
         try {
@@ -205,7 +208,7 @@ internal class DeviceCompositor(
             recorder = null
             recordingStopping = true
             // finish() releases the encoder before returning, even when publication fails.
-            media.video(recording,save) { result ->
+            media.video(recording,save,process) { result ->
                 if (!handler.post {
                     recordingStopping = false
                     if (prepareRecording && !closed) runCatching { prepareVideo(MediaLibrary(app).name()) }

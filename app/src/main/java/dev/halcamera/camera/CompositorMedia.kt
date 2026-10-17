@@ -28,8 +28,8 @@ internal class CompositorMedia(context: Context) {
         }) }
     }
 
-    fun video(recording: CompositorRecording, save: Boolean, done: (Result<String>) -> Unit) {
-        work.execute { done(runCatching { recording.finish(save,library) }) }
+    fun video(recording: CompositorRecording, save: Boolean, process: ((java.io.File) -> Unit)?, done: (Result<String>) -> Unit) {
+        work.execute { done(runCatching { recording.finish(save,library,process) }) }
     }
 
     fun discard(recording: CompositorRecording) { work.execute { recording.discard() } }
