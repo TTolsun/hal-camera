@@ -133,7 +133,7 @@ internal class CameraXMultiSession(
                 scenes += id
                 if (scenes.size == plan.streams.size) { ready = true; main.removeCallbacks(timeout); listener.onReady() }
             } } }, onError = { main.post { fail("Camera $id: ${it.message}") } }, prepareRecording = videoMode,
-            preserveFullFrame = true, inputFrame = { _, timestamp ->
+            preserveFullFrame = true, captureTimeVideo = true, inputFrame = { _, timestamp ->
                 telemetry.recorder.record("${sessionId}_$id","preview_available",sensorNs = timestamp,values = mapOf("stream" to "preview"))
             })
         compositors[id] = compositor

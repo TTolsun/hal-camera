@@ -5,33 +5,21 @@ import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
-import android.media.MediaRecorder
 import java.io.File
 import java.nio.ByteBuffer
 
 /** One microphone recording is shared by every independent camera file. Never opens competing MIC sources. */
 internal class MultiAudio(context: Context) {
     private val file = File.createTempFile("multi-audio-", ".m4a", context.cacheDir)
-    @Suppress("DEPRECATION") private val recorder = MediaRecorder()
-    private var started = false
-    private var released = false
-    var startedNs = 0L
-        private set
+    private val recorder = MicrophoneCapture(file)
 
     fun start() {
-        recorder.setAudioSource(MediaRecorder.AudioSource.MIC)
-        recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-        recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-        recorder.setAudioSamplingRate(48_000)
-        recorder.setAudioEncodingBitRate(128_000)
-        recorder.setOutputFile(file.absolutePath)
-        recorder.prepare()
-        recorder.start(); startedNs = System.nanoTime(); started = true
+        recorder.start()
+        recorder.awaitReady()
     }
 
     fun stop() {
-        try { check(started); recorder.stop() }
-        finally { started = false; release() }
+        recorder.stop()
     }
 
     /** Called on media IO after both encoders stop; each invocation owns its own extractor. */
@@ -52,7 +40,8 @@ internal class MultiAudio(context: Context) {
             if (videoFormat.containsKey(MediaFormat.KEY_ROTATION)) writer.setOrientationHint(videoFormat.getInteger(MediaFormat.KEY_ROTATION))
             writer.start()
             copy(picture, vi, writer, vt) { it.takeIf { pts -> pts < durationUs } }
-            val timeline = RecordingTimeline(startedNs,videoStartedNs,durationUs)
+            check(videoStartedNs > 0) { "Video produced no timestamped frames" }
+            val timeline = RecordingTimeline(recorder.originNs,videoStartedNs,durationUs)
             check(copy(sound, ai, writer, at,timeline::audioTimeUs) > 0) { "Microphone produced no audio samples" }
             writer.stop(); writer.release(); muxer = null
             output.inputStream().use { input -> video.outputStream().use(input::copyTo) }
@@ -84,6 +73,5 @@ internal class MultiAudio(context: Context) {
         return count
     }
 
-    private fun release() { if (!released) { released = true; recorder.release() } }
-    fun close() { if (started) runCatching { recorder.stop() }; started = false; release(); file.delete() }
+    fun close() { recorder.close(); file.delete() }
 }

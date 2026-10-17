@@ -7,10 +7,10 @@ import java.io.File
 
 /** Encoder ownership can move to media IO once its EGL input has been detached. */
 internal class CompositorRecording(context: Context, val name: String, private val size: LiveSize, audio: Boolean,
-    private val onError: (Throwable) -> Unit) {
+    private val onError: (Throwable) -> Unit) : SurfaceRecording {
     private val file = File(context.cacheDir, name)
     @Suppress("DEPRECATION") private val recorder = MediaRecorder()
-    val surface: Surface = android.media.MediaCodec.createPersistentInputSurface()
+    override val surface: Surface = android.media.MediaCodec.createPersistentInputSurface()
     private var withAudio = audio
 
     init {
@@ -36,18 +36,18 @@ internal class CompositorRecording(context: Context, val name: String, private v
         } catch (e: Exception) { discard(); throw e }
     }
 
-    fun start(audio: Boolean = withAudio) {
+    override fun start(audio: Boolean) {
         if (audio != withAudio) { recorder.reset(); configure(audio); withAudio = audio }
         recorder.start()
     }
-    fun finish(save: Boolean, library: MediaLibrary, process: ((File) -> Unit)? = null): String = try {
+    override fun finish(save: Boolean, library: MediaLibrary, process: ((File, Long) -> Unit)?): String = try {
         recorder.stop()
         check(save) { "Recording cancelled" }
-        process?.invoke(file)
+        process?.invoke(file,0)
         library.saveVideo(file, name).toString()
     } finally { discard() }
 
-    fun discard() {
+    override fun discard() {
         runCatching { recorder.reset() }; runCatching { recorder.release() }
         surface.release()
         file.delete()
