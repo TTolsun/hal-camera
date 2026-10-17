@@ -32,6 +32,15 @@ import java.util.concurrent.Executors
 class ConcurrentCameraActivity : ComponentActivity() {
     private val manager by lazy { getSystemService(CameraManager::class.java) }
     private var videoMode = false
+    private var engineName = "Camera2"
+    private lateinit var engineButton: Button
+    private var microphonePending = false
+    private val microphonePermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        microphonePending = false
+        if (granted && foreground && ready && videoMode && !busy) startRecording()
+        else if (!granted) notice("Microphone permission is required for Multi video with sound.")
+        updateButtons()
+    }
     private var arrangement = SplitArrangement.identity(0)
     private lateinit var panelDrag: SplitPanelDrag
     private val labelBar by lazy { dp(28) }
@@ -81,7 +90,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     /** Camera ID to (preview, JPEG) chosen in the Sizes sheet; kept across device changes for cameras that return. */
     private var chosenSizes = emptyMap<String,Pair<LiveSize,LiveSize>>()
     private var activeIndex = 0
-    private var session: ConcurrentSession? = null
+    private var session: MultiSession? = null
     private var foreground = false
     private var closing = false
     private var exiting = false
@@ -93,7 +102,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private var recordingSince = 0L
     private var report = ""
     private var afterClose: (() -> Unit)? = null
-    private val busy get() = takingPhoto || recording || videoPending || closing
+    private val busy get() = takingPhoto || recording || videoPending || closing || microphonePending
     private val recorder = FlightRecorder(SystemClock::elapsedRealtimeNanos)
     private val telemetry = Telemetry(recorder)
     private var sessionId = "multi"
@@ -127,6 +136,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.AppTheme); super.onCreate(savedInstanceState)
+        engineName = (savedInstanceState?.getString(EXTRA_ENGINE) ?: intent.getStringExtra(EXTRA_ENGINE)).let { if (it == "CameraX") it else "Camera2" }
         videoMode = savedInstanceState?.getBoolean(EXTRA_VIDEO) ?: intent.getBooleanExtra(EXTRA_VIDEO,false)
         val layout = SplitLayout.entries.firstOrNull { it.name == savedInstanceState?.getString("layout") } ?: SplitLayout.SIDE_BY_SIDE
         arrangement = runCatching { SplitArrangement(layout,savedInstanceState?.getIntArray("order")?.toList().orEmpty()) }
@@ -163,7 +173,10 @@ class ConcurrentCameraActivity : ComponentActivity() {
         }
         val controls = row().apply { gravity = Gravity.TOP }
         val leading = row()
-        leading.addView(button("Camera2") {}.apply { isEnabled = false },LinearLayout.LayoutParams(-2,dp(48)))
+        engineButton = button(engineName) {
+            if (!busy) { engineName = if (engineName == "Camera2") "CameraX" else "Camera2"; failed = false; closeSession() }
+        }
+        leading.addView(engineButton,LinearLayout.LayoutParams(-2,dp(48)))
         splitButton = button("Split") { showSplit() }.apply { contentDescription = "Choose Split camera devices" }
         leading.addView(splitButton,LinearLayout.LayoutParams(-2,dp(48)))
         controls.addView(leading,LinearLayout.LayoutParams(0,dp(48),1f))
@@ -341,7 +354,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private fun discover() {
         if (Build.VERSION.SDK_INT < 30) { status.text = "Requires Android 11 or later."; return }
         try {
-            plans = readConcurrentPlans(manager,Int.MAX_VALUE)
+            plans = readConcurrentPlans(manager,if (engineName == "CameraX") 2 else Int.MAX_VALUE)
             selected = plans.indexOfFirst { it.streams.map { stream -> stream.camera.id }.toSet() == selectedIds.toSet() }.coerceAtLeast(0)
             if (plans.isEmpty()) { ready = false; status.visibility = View.VISIBLE; status.text = "Multi is unavailable on this device." }
             else {
@@ -451,8 +464,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
         }
         cameraControls.clear(); cameraZooms.clear(); ready = false; report = ""; resultText.text = ""
         status.visibility = View.VISIBLE; status.text = "Opening cameras…"; sessionId = "multi_${UUID.randomUUID()}"
-        lateinit var current: ConcurrentSession
-        current = ConcurrentSession(this,manager,plan,textures.map { checkNotNull(it) },object : ConcurrentSession.Listener {
+        lateinit var current: MultiSession
+        val listener = object : MultiSession.Listener {
             override fun onState(id: String,state: String) {}
             override fun onReady() {
                 if (session !== current || closing || !foreground || failed) return
@@ -478,7 +491,11 @@ class ConcurrentCameraActivity : ComponentActivity() {
                 resultText.text = if (active) "" else if (result.failed) "Video failed · Details" else "Videos saved · Details"
                 updateButtons()
             }
-        },outputSizes = outputSizes,telemetry = telemetry,sessionId = sessionId,videoMode = videoMode)
+        }
+        current = if (engineName == "CameraX") CameraXMultiSession(this,this,plan,textures.map { checkNotNull(it) },listener,
+            outputSizes,telemetry,sessionId,videoMode)
+        else ConcurrentSession(this,manager,plan,textures.map { checkNotNull(it) },listener,
+            outputSizes = outputSizes,telemetry = telemetry,sessionId = sessionId,videoMode = videoMode)
         session = current; layoutPreviews(); current.start(); updateButtons()
     }
 
@@ -496,10 +513,17 @@ class ConcurrentCameraActivity : ComponentActivity() {
         session?.close(done) ?: done()
     }
     private fun capture() {
-        if (Build.VERSION.SDK_INT < 30 || !ready || takingPhoto || videoPending || closing) return
-        if (videoMode) { videoPending = true; if (recording) session?.stopVideo() else session?.startVideo() }
+        if (Build.VERSION.SDK_INT < 30 || !ready || takingPhoto || videoPending || closing || microphonePending) return
+        if (videoMode) {
+            if (recording) { videoPending = true; session?.stopVideo() }
+            else if (ContextCompat.checkSelfPermission(this,Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) startRecording()
+            else { microphonePending = true; microphonePermission.launch(Manifest.permission.RECORD_AUDIO) }
+        }
         else if (!recording) takePhoto()
         updateButtons()
+    }
+    private fun startRecording() {
+        videoPending = true; session?.startVideo(audio = true)
     }
     private fun takePhoto() {
         if (Build.VERSION.SDK_INT < 30 || !ready || takingPhoto || videoPending || closing) return
@@ -510,7 +534,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         if (busy) return
         val id = activeCamera?.id ?: return
         afterClose = { startActivity(Intent(this,destination)
-            .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID,id).putExtra(WorkbenchActivity.EXTRA_ENGINE,"Camera2")) }
+            .putExtra(WorkbenchActivity.EXTRA_CAMERA_ID,id).putExtra(WorkbenchActivity.EXTRA_ENGINE,engineName)) }
         closeSession()
     }
     override fun onStart() {
@@ -524,15 +548,18 @@ class ConcurrentCameraActivity : ComponentActivity() {
     override fun onDestroy() { recentMedia.close(); io.shutdown(); super.onDestroy() }
     override fun finish() { exiting = true; closeSession() }
     override fun onSaveInstanceState(outState: Bundle) {
+        outState.putString(EXTRA_ENGINE,engineName)
         outState.putBoolean(EXTRA_VIDEO,videoMode); outState.putString("layout",arrangement.layout.name)
         outState.putIntArray("order",arrangement.order.toIntArray())
         outState.putSerializable("sizes",HashMap(chosenSizes))
         outState.putStringArrayList("devices",ArrayList(selectedIds)); super.onSaveInstanceState(outState)
     }
     private fun updateButtons() {
-        shutter.isEnabled = ready && !takingPhoto && !videoPending && !closing
+        engineButton.text = engineName; engineButton.isEnabled = !busy
+
+        shutter.isEnabled = ready && !takingPhoto && !videoPending && !closing && !microphonePending
         shutter.setCaptureState(videoMode = videoMode,recording = recording)
-        shutter.contentDescription = if (videoMode) { if (recording) "Stop all recordings" else "Record each camera separately" } else "Capture a separate photo from each camera"
+        shutter.contentDescription = if (videoMode) { if (recording) "Stop all recordings" else "Record each camera separately with microphone audio" } else "Capture a separate photo from each camera"
         splitButton.isEnabled = plans.isNotEmpty() && !busy; cameraButton.isEnabled = splitButton.isEnabled
         cameraButton.visibility = if (recording) View.GONE else View.VISIBLE
         snapshotButton.visibility = if (recording) View.VISIBLE else View.GONE
@@ -624,5 +651,5 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private fun button(value: String,action: () -> Unit) = CameraWidgets(this).chromeButton(value,action)
     private fun row() = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
     private fun lp(top: Int = 0) = LinearLayout.LayoutParams(-1,-2).apply { topMargin = dp(top) }
-    companion object { const val EXTRA_VIDEO = "multi_video" }
+    companion object { const val EXTRA_VIDEO = "multi_video"; const val EXTRA_ENGINE = "multi_engine" }
 }

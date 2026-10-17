@@ -850,17 +850,10 @@ class MainActivity : ComponentActivity() {
     private fun openConcurrent(video: Boolean) {
         if (cli.active != null || recordingVideo || stoppingRecording || closing ||
             pendingPermissionAction != null || mediaBusy()) return
-        if (engineName == "CameraX") {
-            LiveChoiceSheet.show(this,"Multi",listOf(LiveChoiceSheet.Choice("Camera2","Open Multi"))) {
-                openConcurrentCamera2(video)
-            }
-        } else openConcurrentCamera2(video)
-    }
-    private fun openConcurrentCamera2(video: Boolean) {
-        if (cli.active != null || recordingVideo || stoppingRecording || closing ||
-            pendingPermissionAction != null || mediaBusy()) return
         resetModeSettings()
-        openAfterClose("concurrent_opened") { Intent(this, ConcurrentCameraActivity::class.java).putExtra(ConcurrentCameraActivity.EXTRA_VIDEO,video) }
+        openAfterClose("concurrent_opened") { Intent(this, ConcurrentCameraActivity::class.java)
+            .putExtra(ConcurrentCameraActivity.EXTRA_VIDEO,video)
+            .putExtra(ConcurrentCameraActivity.EXTRA_ENGINE,engineName) }
     }
     private fun openLiveStreams() {
         if (cli.active != null || recordingVideo || stoppingRecording || closing ||
