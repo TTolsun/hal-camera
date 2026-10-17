@@ -18,7 +18,7 @@ exclude:
   - _bindings.yaml
   - AGENTS.md
 
-# HAL 검증 작업 순서. 내부 구조와 검증 기록은 하단 참고 자료로 연결합니다.
+# 전체 목적지 목록. navigation.js가 검증 도구와 도움말을 펼침 메뉴로 묶습니다.
 nav:
   - path: download.html
     label: Download
