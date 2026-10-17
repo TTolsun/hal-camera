@@ -3,8 +3,8 @@
   const nav = document.querySelector('.site-nav');
   if (!nav) return;
   const groups = [
-    { label: '검증 도구', pages: ['probe.html', 'cts.html', 'benchmark.html', 'callback.html'] },
-    { label: '도움말', pages: ['automation.html', 'troubleshooting.html'] },
+    { label: 'Validation Tools', pages: ['probe.html', 'cts.html', 'benchmark.html', 'callback.html'] },
+    { label: 'Help', pages: ['automation.html', 'troubleshooting.html'] },
   ];
   const links = [...nav.querySelectorAll('a')];
   const menus = [];
