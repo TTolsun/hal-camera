@@ -3,15 +3,14 @@ title: HAL Validation Guide
 home: true
 ---
 <section class="hero" aria-labelledby="hero-title">
-  <p class="eyebrow">HAL CAMERA / User Guide</p>
   <h1 id="hero-title" lang="en">Capture. Measure. Verify.</h1>
-  <p class="intro">사진 한 장에서 시작해 카메라가 일하는 순서를 확인하세요. APK를 받고 Quickstart를 따라 첫 촬영을 시작하세요.</p>
+  <p class="intro">APK를 다운로드하고 Quickstart를 따라 첫 촬영을 시작하세요.</p>
   <nav class="contents task-contents" aria-label="시작하기">
   <a href="download.html"><span class="name">Download</span><span class="description">GitHub 릴리스에서 APK를 받습니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="getting-started.html"><span class="name">Quickstart</span><span class="description">APK를 설치하고 첫 화면을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   </nav>
 <figure class="brand-film" aria-labelledby="brand-film-title">
-  <video controls playsinline preload="metadata" width="1920" height="1080" poster="assets/media/camera-hal-reviewed-v8.jpg" aria-labelledby="brand-film-title" aria-describedby="brand-film-description brand-film-timing brand-film-ripple brand-film-prism">
+  <video controls playsinline preload="none" width="1920" height="1080" poster="assets/media/camera-hal-reviewed-v8.jpg" aria-labelledby="brand-film-title" aria-describedby="brand-film-description brand-film-timing brand-film-ripple brand-film-prism">
     <source src="assets/media/camera-hal-reviewed-v8.mp4" type="video/mp4">
     <a href="assets/media/camera-hal-reviewed-v8.mp4">Camera HAL 소개 영상 보기</a>
   </video>
@@ -25,11 +24,10 @@ home: true
     <p class="signature" lang="en">by K.H. Kim</p>
   </figcaption>
 </figure>
-<script type="module" src="assets/brand-film-v2.js"></script>
+
 </section>
 
 <nav class="contents task-contents" aria-label="검증 작업별 문서">
-
 
   <a href="live.html"><span class="name">Live</span><span class="description">사진·녹화와 촬영 조건을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="callback.html"><span class="name">Callback</span><span class="description">프레임별 콜백과 시각을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
