@@ -2,6 +2,7 @@ import {AbsoluteFill, Composition, Sequence, staticFile, useVideoConfig} from 'r
 import {Audio, Video} from '@remotion/media';
 import {Automation} from './Automation';
 import {OpeningToolPreviews} from './SensorPreview';
+import {MobileFilm} from './MobileFilm';
 
 const Ending = () => <AbsoluteFill style={{background:'#0c1015',color:'#ecede9',fontFamily:'Segoe UI, Malgun Gothic, sans-serif',justifyContent:'center',alignItems:'center'}}>
   <div style={{fontSize:108,fontWeight:600}}>hal-camera</div>
@@ -29,6 +30,7 @@ const Tail = () => {
 };
 
 export const Root = () => <>
+  <Composition id="HALCameraMobile60" component={MobileFilm} durationInFrames={1440} fps={24} width={1080} height={1920}/>
   <Composition id="HALCamera60" component={Film} durationInFrames={1440} fps={24} width={1920} height={1080}/>
   <Composition id="Automation18" component={Automation} durationInFrames={432} fps={24} width={1920} height={1080}/>
   <Composition id="AutomationTail20" component={Tail} durationInFrames={480} fps={24} width={1920} height={1080}/>
