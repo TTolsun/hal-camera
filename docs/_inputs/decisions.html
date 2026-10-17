@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>설계 결정 기록 · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
-  <link rel="stylesheet" href="../assets/site-theme-v3.css">
+  <link rel="stylesheet" href="../assets/site-theme-v4.css">
   <script type="module" src="../assets/search-v2.js"></script>
   <script type="module" src="../assets/section-links.js"></script>
+  <script type="module" src="../assets/responsive-tables.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">본문으로 이동</a>
@@ -81,17 +82,17 @@
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">
       <div class="search-head"><h2 id="search-title">문서 찾기</h2><button class="search-close" type="button">닫기 <kbd>Esc</kbd></button></div>
-      <label for="search-input">제목부터 본문 속 API까지 검색하세요.</label>
-      <input id="search-input" name="q" type="search" autocomplete="off" spellcheck="false" placeholder="예: 센서 시각, SENSOR_TIMESTAMP…" aria-describedby="search-status" enterkeyhint="search" autofocus>
+      <label for="search-input">제목이나 궁금한 기능으로 검색하세요.</label>
+      <input id="search-input" name="q" type="search" autocomplete="off" spellcheck="false" placeholder="예: APK, 사진, RAW…" aria-describedby="search-status" enterkeyhint="search" autofocus>
       <p id="search-status" role="status"></p>
       <button class="search-retry" type="button" hidden>문서 다시 불러오기</button>
     </div>
     <div class="search-body">
       <div class="search-suggestions">
         <p>어디서 시작할지 모르겠다면</p>
-        <button type="button" data-query="센서 시각">센서 시각</button>
-        <button type="button" data-query="close(done)">close(done)</button>
-        <button type="button" data-query="YUV">YUV</button>
+        <button type="button" data-query="APK">다운로드</button>
+        <button type="button" data-query="사진">사진</button>
+        <button type="button" data-query="RAW">RAW</button>
       </div>
       <ol id="search-results" aria-label="검색 결과"></ol>
     </div>
