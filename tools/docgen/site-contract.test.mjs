@@ -53,13 +53,10 @@ test('published internal links resolve to existing files and section IDs', () =>
 });
 
 
-test('moved Live sections retain old shared anchors and link to canonical instructions', () => {
-  const old = fs.readFileSync(path.join(docs, 'getting-started.html'), 'utf8');
-  const live = fs.readFileSync(path.join(docs, 'live.html'), 'utf8');
-  for (const id of ['live에서-촬영하세요', 'detail-f29a963033', 'screen-live']) {
-    assert.ok(old.includes('id="' + id + '"'), id + ': old anchor');
-    assert.ok(old.includes('href="live.html#' + id + '"'), id + ': canonical link');
-    assert.ok(live.includes('id="' + id + '"'), id + ': new target');
-  }
-  assert.ok(!old.includes('<img '), 'screenshots belong to Live only');
+test('Quickstart contains only current onboarding content', () => {
+  const html = fs.readFileSync(path.join(docs, 'getting-started.html'), 'utf8');
+  assert.ok(!html.includes('이전에 공유한 Live 링크'));
+  assert.ok(!html.includes('id="screen-live"'));
+  assert.ok(!html.includes('legacy-links'));
+  assert.ok(html.includes('href="live.html"'));
 });
