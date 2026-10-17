@@ -127,7 +127,7 @@ Mermaid는 한 그림에 한 흐름만 담고 긴 클래스 목록은 표로 옮
 
 ## 구현과 유지
 
-상단 메뉴는 Download, Quickstart, Live, 검증 도구, 도움말 다섯 항목으로 구성합니다. 검증 도구에는 Probe·CTS·Benchmark·Callback을, 도움말에는 Automation·Troubleshooting을 둡니다. 펼침 메뉴는 클릭·터치·키보드로 열고 Escape나 메뉴 밖 클릭으로 닫습니다. 현재 문서가 속한 그룹도 파란색으로 표시합니다. 폭 420px 이하에서는 직접 링크 세 개와 그룹 두 개를 두 줄로 배치하며, 메뉴 항목의 터치 높이는 44px 이상입니다. JavaScript가 실행되지 않으면 모든 문서 링크를 그대로 표시합니다.
+상단 메뉴는 Download, Quickstart, Live, Validation Tools, Help 다섯 항목으로 구성합니다. Validation Tools에는 Probe·CTS·Benchmark·Callback을, Help에는 Automation·Troubleshooting을 둡니다. 펼침 메뉴는 클릭·터치·키보드로 열고 Escape나 메뉴 밖 클릭으로 닫습니다. 현재 문서가 속한 그룹도 파란색으로 표시합니다. 폭 420px 이하에서는 직접 링크 세 개와 그룹 두 개를 두 줄로 배치하며, 메뉴 항목의 터치 높이는 44px 이상입니다. JavaScript가 실행되지 않으면 모든 문서 링크를 그대로 표시합니다.
 
 문서 사이트 구현은 `guide/_layouts/default.html`, `docs/design/editorial.css`, `guide/index.md`에서, 앱의 공용 토큰은 `app/src/main/java/dev/halcamera/ui/Look.kt`에서 관리합니다. 디자인 변경 시 이 공통 기준과 각 플랫폼 매핑을 함께 검토합니다.
 
