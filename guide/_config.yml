@@ -18,7 +18,7 @@ exclude:
   - _bindings.yaml
   - AGENTS.md
 
-# 전체 목적지 목록. navigation.js가 검증 도구와 도움말을 펼침 메뉴로 묶습니다.
+# 전체 목적지 목록. navigation-v2.js가 검증 도구와 도움말을 펼침 메뉴로 묶습니다.
 nav:
   - path: download.html
     label: Download

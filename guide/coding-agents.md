@@ -8,10 +8,10 @@ title: Agents
 ## 작업을 준비하세요
 
 1. [CLI 연결 절차](cli.md#처음-실행하세요)에 따라 기기와 APK를 준비합니다.
-2. [스킬 원문](https://github.com/TTolsun/hal-camera/blob/main/skills/halcam-cli/SKILL.md)을 확인하거나 [SKILL.md 파일](https://raw.githubusercontent.com/TTolsun/hal-camera/main/skills/halcam-cli/SKILL.md)을 받아 작업 폴더의 `halcam-cli/SKILL.md`로 저장합니다. 사내에서 APK와 함께 받은 파일이 있으면 그 파일을 사용합니다. 스킬은 이 파일 하나로 배포할 수 있습니다.
+2. [Download](download.md)에서 설치한 APK와 **같은 릴리스**의 `halcam-cli-*-SKILL.md`를 받아 작업 폴더의 `halcam-cli/SKILL.md`로 저장합니다. APK와 함께 전달받은 호환 스킬이 있으면 그 파일을 사용합니다. 스킬은 이 파일 하나로 배포할 수 있습니다.
 3. 에이전트에게 아래 요청을 전달합니다. 웹 채팅에 파일을 첨부하는 것만으로 기기가 연결되지는 않습니다.
 
-저장소를 사용하는 팀원은 기존 `skills/halcam-cli/SKILL.md`를 지정하면 됩니다. `.claude/skills/halcam-cli/SKILL.md`는 저장소 안의 본문을 가리키는 진입점이므로 단독 배포하지 않습니다. 앱 업데이트 후에는 에이전트가 APK에 포함된 실행 스크립트를 다시 준비합니다.
+저장소를 사용하는 팀원은 APK와 일치하는 태그·리비전의 `skills/halcam-cli/SKILL.md`를 지정합니다. 최신 `main`의 파일이 설치된 APK와 호환된다고 가정하지 마세요. `.claude/skills/halcam-cli/SKILL.md`는 저장소 안의 본문을 가리키는 진입점이므로 단독 배포하지 않습니다. 앱 업데이트 후에는 에이전트가 APK에 포함된 실행 스크립트를 다시 준비합니다.
 
 ## 다음과 같이 요청하세요
 

@@ -77,27 +77,5 @@ title: Quickstart
 
 </details>
 
-<details markdown="1">
-<summary>이전에 공유한 Live 링크</summary>
-
-<p id="live에서-촬영하세요"><a href="live.html#live에서-촬영하세요">Live에서 촬영하세요</a></p>
-<p id="추가-설정"><a href="live.html#추가-설정">추가 설정</a></p>
-<p id="수동-촬영-조건을-고정하세요"><a href="live.html#수동-촬영-조건을-고정하세요">수동 촬영 조건을 고정하세요</a></p>
-<p id="live-스트림을-설정하세요"><a href="live.html#live-스트림을-설정하세요">Live 스트림을 설정하세요</a></p>
-<p id="두-물리-카메라를-함께-확인하세요"><a href="live.html#두-물리-카메라를-함께-확인하세요">두 물리 카메라를 함께 확인하세요</a></p>
-<p id="손떨림-보정을-선택하세요"><a href="live.html#손떨림-보정을-선택하세요">손떨림 보정을 선택하세요</a></p>
-<p id="초점과-노출을-조절하세요"><a href="live.html#초점과-노출을-조절하세요">초점과 노출을 조절하세요</a></p>
-<p id="screen-live"><a href="live.html#screen-live">Live에서 보기</a></p>
-<p id="detail-e76a9da117"><a href="live.html#detail-e76a9da117">Live에서 보기</a></p>
-<p id="detail-f29a963033"><a href="live.html#detail-f29a963033">Live에서 보기</a></p>
-<p id="detail-e8f4afe277"><a href="live.html#detail-e8f4afe277">Live에서 보기</a></p>
-<p id="detail-aa6a89b2d7"><a href="live.html#detail-aa6a89b2d7">Live에서 보기</a></p>
-<p id="detail-f2bbad292d"><a href="live.html#detail-f2bbad292d">Live에서 보기</a></p>
-<p id="screen-live-controls"><a href="live.html#screen-live-controls">Live에서 보기</a></p>
-
-<p id="실행-전에-준비하세요"><a href="building.html#실행-전에-준비하세요">소스 빌드 준비</a></p>
-<p id="앱을-빌드하고-실행하세요"><a href="building.html#앱을-빌드하고-실행하세요">소스 빌드와 실행</a></p>
-
-</details>
 
 **다음 단계:** [Live](live.md)에서 검증할 촬영 조건을 설정하세요.

@@ -3,7 +3,7 @@ title: Download
 ---
 <h1 lang="en">Download. Install. Explore.</h1>
 
-**HALCamera APK는 GitHub Releases에서 받을 수 있습니다.** 최신 릴리스를 열어 변경 사항을 확인하고, Assets에서 `.apk` 파일을 내려받으세요.
+**HALCamera APK 다운로드는 GitHub Releases에서 시작하세요.** 최신 릴리스를 열어 변경 사항을 확인하고, Assets에서 `.apk` 파일을 내려받으세요.
 
 <nav class="contents task-contents" aria-label="GitHub 릴리스 다운로드">
   <a href="https://github.com/TTolsun/hal-camera/releases/latest"><span class="name">최신 릴리스 열기</span><span class="description">최신 버전의 APK와 변경 사항을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
