@@ -11,12 +11,12 @@ const nav = [...config.matchAll(/- path: (\S+)\s+label: ([^\r\n]+)/g)];
 
 test('every published page loads full-text search relative to the site root', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(docs, '.site-manifest.json'), 'utf8'));
-  assert.ok(manifest.files['assets/search.js']);
+  assert.ok(manifest.files['assets/search-v2.js']);
   assert.ok(manifest.files['assets/search-core.js']);
   for (const target of Object.keys(manifest.files).filter(file => file.endsWith('.html'))) {
     const html = fs.readFileSync(path.join(docs, target), 'utf8');
     const rootPrefix = target.includes('/') ? '../' : './';
-    assert.ok(html.includes(`src="${rootPrefix}assets/search.js"`), `${target}: search module`);
+    assert.ok(html.includes(`src="${rootPrefix}assets/search-v2.js"`), `${target}: search module`);
     assert.ok(html.includes('id="search-dialog"'), `${target}: search dialog`);
     assert.ok(html.includes('id="search-status" role="status"'), `${target}: accessible status`);
   }

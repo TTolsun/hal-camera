@@ -6,7 +6,7 @@
   <title>Callback · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/site-theme-v2.css">
-  <script type="module" src="./assets/search.js"></script>
+  <script type="module" src="./assets/search-v2.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
 </head>
 <body>
@@ -147,16 +147,10 @@
 </tr>
 </tbody></table>
 <p>문제가 반복되면 <a href="troubleshooting.html#문제-발생-시-수집할-정보">진단 ZIP과 재현 조건</a>을 저장하세요.</p>
-<details id="callback-hold-flow" data-search-section>
-<summary>이전 화면과 검증 근거</summary><p>아래는 2026-09-27의 0.15.0 촬영본입니다. 현재의 <code>Frame</code>·<code>Hold 0s</code> 조작과 버튼 이름이 다릅니다. 당시 관측 결과를 보존한 자료이며 현재 사용법은 이 페이지의 절차를 따릅니다.</p>
-<div id="screen-callback-recording"><a id="detail-fb127fe169"></a>
-<a href="assets/screenshots/callback-recording.png">이전 녹화 Callback 화면 보기</a></div>
-<div id="screen-callback-event"><a id="detail-8d0a8ea66f"></a>
-<a href="assets/screenshots/callback-event.png">이전 촬영 프레임 고정 화면 보기</a></div><p>현재 코드는 <code>ui/ResultCallbackGraph.kt</code>(버튼), <code>ResultCallbackTimeline.kt</code>(고정·프레임 선택), <code>ResultCallbackSeries.kt</code>(결과 연결), <code>camera/StreamConfiguration.kt</code>·<code>PipOutputs.kt</code>(출력 이름)에서 확인합니다. <a href="evidence.html">Validation</a>에는 코드 확인과 기기 관찰을 구분해 기록합니다.</p>
-</details><p><strong>다음 단계:</strong> 같은 조건을 반복 측정하려면 <a href="benchmark.html">Benchmark</a>를 여세요.</p>
+<p><strong>다음 단계:</strong> 같은 조건을 반복 측정하려면 <a href="benchmark.html">Benchmark</a>를 여세요.</p>
 
   </main>
-  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
+  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a></nav>
   <footer class="site-footer" lang="en"><span>HAL CAMERA · Engineering the invisible.</span><span>User Guide <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">

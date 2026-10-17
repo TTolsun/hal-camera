@@ -110,3 +110,10 @@ test('late diagrams realign a linked disclosure without overriding manual scroll
   assert.doesNotThrow(() => malformed.events.get('halcamera:diagrams-ready')());
   assert.equal(malformed.scrolls.length, 1);
 });
+
+// Reader search must not surface contributor setup or historical decision pages.
+test('reader search keeps user guides and excludes contributor records', async () => {
+  const { isReaderPage } = await import('../../guide/assets/search-pages.js');
+  for (const page of ['download.html', 'cli.html', 'cts.html', 'evidence.html', 'engine.html']) assert.equal(isReaderPage(page), true, page);
+  for (const page of ['architecture.html', 'building.html', 'contributing.html', 'decisions.html', '_inputs/decisions.html', 'assets/search.js']) assert.equal(isReaderPage(page), false, page);
+});

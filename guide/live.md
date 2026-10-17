@@ -66,7 +66,7 @@ CameraX에서는 사진 촬영 때 영상의 프레임 간격이 늘어날 수 �
 
 <figure class="app-screenshot" id="screen-live">
 <a href="assets/screenshots/live.png" aria-label="Camera2 Live 사진 모드와 실시간 정보 원본 보기"><img src="assets/screenshots/live.png" alt="Camera2 Live 사진 모드와 실시간 정보" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>Camera2의 사진 모드입니다. 하단에서 실시간 정보, 줌, 셔터와 최근 썸네일을 확인할 수 있습니다. <a href="assets/screenshots/live.png">원본 보기</a></figcaption>
+<figcaption>Camera2의 사진 모드입니다. 하단에서 실시간 정보, 줌, 셔터와 최근 썸네일을 확인할 수 있습니다.</figcaption>
 </figure>
 
 ### 연사
@@ -335,7 +335,7 @@ Multi는 Android 11 이상과 독립 장치의 동시 실행 지원이 필요합
 
 <figure class="app-screenshot" id="screen-live-controls">
 <a href="assets/screenshots/live-controls.png" aria-label="Live의 Flash AF AE EV 제어 줄 원본 보기"><img src="assets/screenshots/live-controls.png" alt="Live의 Flash AF AE EV 제어 줄" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>상단 화살표로 제어 줄을 펼쳤습니다. Flash·AF·AE·EV를 조작할 수 있습니다. <a href="assets/screenshots/live-controls.png">원본 보기</a></figcaption>
+<figcaption>상단 화살표로 제어 줄을 펼쳤습니다. Flash·AF·AE·EV를 조작할 수 있습니다.</figcaption>
 </figure>
 
 `AE Locked`는 노출 잠금, `AF No focus`는 초점이 맞지 않은 상태입니다. AF 잠금 여부는 별도의 `AF Lock` 표시로 확인하세요. 촬영 지연이나 노출 변화가 예상과 다르면 [Troubleshooting](troubleshooting.md#앱과-프레임워크hal을-구분하세요)을 확인하세요.

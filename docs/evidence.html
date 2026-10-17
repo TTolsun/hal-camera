@@ -6,7 +6,7 @@
   <title>Validation · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/site-theme-v2.css">
-  <script type="module" src="./assets/search.js"></script>
+  <script type="module" src="./assets/search-v2.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
 </head>
 <body>
@@ -29,33 +29,7 @@
   </header>
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
-    <h1 lang="en">Trust starts with a trace.</h1><p><strong>코드로 확인한 동작과 기기에서 관찰한 결과를 구분하세요.</strong> 아래에서 근거의 종류와 기기 검증 기록을 확인하세요. 문서 갱신 절차는 <a href="contributing.html">Contributing</a>에 있습니다.</p>
-<h2 id="근거와-검토-범위">근거와 검토 범위</h2>
-<table>
-<thead>
-<tr>
-<th>근거 수준</th>
-<th>의미</th>
-<th>확인할 자료</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>코드 확인</td>
-<td>구현을 읽고 설명과 대조했습니다. 기기 실측을 의미하지 않습니다.</td>
-<td>각 페이지의 코드 근거와 PR 검토 기록을 확인합니다.</td>
-</tr>
-<tr>
-<td>기기 검증</td>
-<td>명시된 기기·빌드·조건에서 관찰한 결과입니다.</td>
-<td>아래의 기기 검증 자료를 확인합니다.</td>
-</tr>
-<tr>
-<td>설계 의도</td>
-<td>과거 결정 기록에 명시된 선택입니다. 현재 구현과 다를 수 있습니다.</td>
-<td><a href="_inputs/decisions.html">설계 결정 원문</a>의 D-번호를 확인합니다.</td>
-</tr>
-</tbody></table>
-<p><a href="architecture.html">Architecture</a>·<a href="engine.html">Engine Comparison</a>·<a href="troubleshooting.html">Troubleshooting</a>과 이 페이지 끝의 <strong>문서 검토 상태</strong>에는 해당 페이지에 연결된 구조 근거와 생성 원고의 기준 버전·검토 커밋이 있습니다. 관련 소스나 원고가 바뀌면 다시 검토해야 합니다. 이 상태는 수동으로 작성한 Probe·CTS·Benchmark·Callback 등 다른 페이지의 검토까지 보장하지 않습니다.</p>
+    <h1 lang="en">Trust starts with a trace.</h1><p><strong>어떤 기기와 조건에서 확인했는지 살펴보세요.</strong> 검증 결과는 기록에 명시된 앱 버전·기기·설정에 해당합니다. 다른 기기에서도 같은 결과가 나온다는 보장은 아닙니다.</p>
 <h2 id="기기-검증-기록">기기 검증 기록</h2>
 <p>검증 날짜, 앱 빌드, 기기와 실행 조건을 함께 확인하세요. 앱 화면 촬영 기록과 이전 기기 검증 기록은 수행 시점과 확인 범위가 다릅니다.</p>
 <table>
@@ -189,10 +163,10 @@
 <td>검토 2026-10-17 @ <code>7666395e</code> · codex-user-requested-release-review</td>
 </tr>
 </tbody></table>
-<!-- omm:end id=status --><p><strong>다음 단계:</strong> 구현 구조는 <a href="architecture.html">Architecture</a>, 과거의 선택은 <a href="_inputs/decisions.html">설계 결정 원문</a>에서 확인하세요.</p>
+<!-- omm:end id=status --><p><strong>다음 단계:</strong> <a href="download.html">Download</a>에서 배포 버전을 확인하고 <a href="getting-started.html">Quickstart</a>로 시작하세요.</p>
 
   </main>
-  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
+  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a></nav>
   <footer class="site-footer" lang="en"><span>HAL CAMERA · Engineering the invisible.</span><span>User Guide <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">
