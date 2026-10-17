@@ -1,12 +1,12 @@
 package dev.halcamera.ui
 
+import androidx.core.view.isVisible
 import android.content.Context
 import android.os.Build
 import android.os.Debug
 import android.os.PowerManager
 import android.os.Process
 import android.os.SystemClock
-import android.view.View
 
 import dev.halcamera.camera.LiveControls
 import dev.halcamera.camera.FlashMode
@@ -36,7 +36,7 @@ class LiveReadings(
 
     fun update(events: List<Event>, frames: List<Event>, time: Long, sessionId: String, controls: LiveControls) {
         last = readout.read(events, sessionId, time)
-        if (metrics.visibility == View.VISIBLE) updateReadings(frames, time, controls)
+        if (metrics.isVisible) updateReadings(frames, time, controls)
         if (time - lastSystemNs >= 1_000_000_000L && samplingSystem.compareAndSet(false, true)) {
             lastSystemNs = time
             // PSS collection can block for tens of milliseconds. Never run it on the preview's UI thread.

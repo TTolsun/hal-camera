@@ -1,5 +1,6 @@
 package dev.halcamera
 
+import androidx.core.view.isNotEmpty
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
@@ -222,7 +223,7 @@ class WorkbenchActivity : ComponentActivity() {
     }
 
     private fun entry(group: LinearLayout, title: String, detail: String? = null, action: () -> Unit) {
-        if (group.childCount > 0) {
+        if (group.isNotEmpty()) {
             group.addView(View(this).apply {
                 setBackgroundColor(Look.hairline)
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO

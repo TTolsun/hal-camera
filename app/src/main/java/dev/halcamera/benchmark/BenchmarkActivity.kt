@@ -1,6 +1,8 @@
 package dev.halcamera.benchmark
 
 
+import androidx.core.graphics.drawable.toDrawable
+import androidx.core.view.isNotEmpty
 import android.Manifest
 import android.content.ClipData
 import android.content.Intent
@@ -402,7 +404,7 @@ class BenchmarkActivity : ComponentActivity() {
         settingsDialog?.dismiss()
         val dialog = android.app.Dialog(this).apply {
             requestWindowFeature(android.view.Window.FEATURE_NO_TITLE)
-            window?.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(Color.TRANSPARENT))
+            window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
             setOnDismissListener { settingsDialog = null }
         }
         settingsDialog = dialog
@@ -550,7 +552,7 @@ class BenchmarkActivity : ComponentActivity() {
         }
         probe.batteryPercent()?.let {
             row.addView(chip("Battery $it%", Look.inkMuted),
-                LinearLayout.LayoutParams(-2, -2).apply { marginStart = if (row.childCount > 0) dp(8) else 0 })
+                LinearLayout.LayoutParams(-2, -2).apply { marginStart = if (row.isNotEmpty()) dp(8) else 0 })
         }
         return row
     }

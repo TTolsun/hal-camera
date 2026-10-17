@@ -1,5 +1,6 @@
 package dev.halcamera.ui
 
+import androidx.core.content.edit
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
@@ -46,7 +47,7 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
     private val duration = widgets.button("${timeline.holdSeconds}s") {
         timeline.cycleHoldSeconds()
         timeline.resume(nowNs)
-        prefs.edit().putInt("shot_seconds", timeline.holdSeconds).apply()
+        prefs.edit { putInt("shot_seconds", timeline.holdSeconds) }
         render()
     }
     private val plot = Plot(context)

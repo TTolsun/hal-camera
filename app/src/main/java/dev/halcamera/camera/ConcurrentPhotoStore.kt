@@ -1,5 +1,6 @@
 package dev.halcamera.camera
 
+import androidx.core.net.toUri
 import android.content.Context
 import android.net.Uri
 import org.json.JSONArray
@@ -52,8 +53,8 @@ internal class ConcurrentPhotoStore(context: Context) {
             published += metadata
             val photos = (0 until records.length()).map { records.getJSONObject(it) }.filter { it.has("uri") }
             if (photos.isNotEmpty()) saved(PhotoResult(null,capture.groupId,0,
-                photos.map { Uri.parse(it.getString("uri")) },photos.map {
-                    PhotoArtifact(it.getString("file"),"image/jpeg",Uri.parse(it.getString("uri")))
+                photos.map { it.getString("uri").toUri() },photos.map {
+                    PhotoArtifact(it.getString("file"),"image/jpeg",it.getString("uri").toUri())
                 }))
             val message = (0 until records.length()).joinToString(" · ") {
                 val entry = records.getJSONObject(it)

@@ -1,5 +1,6 @@
 package dev.halcamera.ui
 
+import androidx.core.view.isNotEmpty
 import android.content.Context
 import android.view.Gravity
 import android.widget.*
@@ -26,7 +27,7 @@ internal class MultiSizeSheet(private val context: Context) {
                     setPadding(dp(12),dp(8),dp(12),dp(8))
                 }
                 outputs.addView(value,LinearLayout.LayoutParams(0,dp(64),1f).apply {
-                    if (outputs.childCount > 0) marginStart = dp(8)
+                    if (outputs.isNotEmpty()) marginStart = dp(8)
                 })
             }
             picker("Preview",ConcurrentPlanner.previewChoices(camera),stream.preview) { chosen[camera.id] = it to chosen.getValue(camera.id).second }

@@ -1,5 +1,6 @@
 package dev.halcamera.ui
 
+import androidx.core.graphics.toColorInt
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
@@ -15,17 +16,17 @@ import android.widget.TextView
 object Look {
     val canvas = Color.WHITE
     val card = Color.WHITE
-    val labSurface = Color.parseColor("#f5f5f7")
-    val hairline = Color.parseColor("#e2e4e8")
-    val ink = Color.parseColor("#1d1d1f")
-    val inkMuted = Color.parseColor("#62666d")
-    val primary = Color.parseColor("#0066cc")
+    val labSurface = "#f5f5f7".toColorInt()
+    val hairline = "#e2e4e8".toColorInt()
+    val ink = "#1d1d1f".toColorInt()
+    val inkMuted = "#62666d".toColorInt()
+    val primary = "#0066cc".toColorInt()
     val onPrimary = Color.WHITE
-    val expertTile = Color.parseColor("#18191b")
-    val expertTile2 = Color.parseColor("#202124")
-    val expertTile3 = Color.parseColor("#303238")
+    val expertTile = "#18191b".toColorInt()
+    val expertTile2 = "#202124".toColorInt()
+    val expertTile3 = "#303238".toColorInt()
     val onDark = Color.WHITE
-    val onDarkMuted = Color.parseColor("#bdc1c7")
+    val onDarkMuted = "#bdc1c7".toColorInt()
     // Dark camera adaptation of the same Editorial palette.
     val cameraSurface = expertTile
     val cameraCard = expertTile2
@@ -34,21 +35,21 @@ object Look {
     val cameraControlGlass = Color.argb(120, 24, 25, 27)
     val cameraSelection = Color.WHITE
     val cameraOnSelection = ink
-    val cameraActive = Color.parseColor("#FFD966")
-    val primaryOnDark = Color.parseColor("#2997ff")
+    val cameraActive = "#FFD966".toColorInt()
+    val primaryOnDark = "#2997ff".toColorInt()
     // Runway-inspired surfaces are scoped to Gallery and About.
-    val gallerySurface = Color.parseColor("#111111")
-    val galleryControl = Color.parseColor("#252525")
-    val galleryOutline = Color.parseColor("#454545")
-    val runwayInk = Color.parseColor("#030303")
-    val runwayMuted = Color.parseColor("#676f7b")
-    val statusPass = Color.parseColor("#34c759")
-    val statusWarn = Color.parseColor("#ff9500")
-    val statusFail = Color.parseColor("#ff3b30")
+    val gallerySurface = "#111111".toColorInt()
+    val galleryControl = "#252525".toColorInt()
+    val galleryOutline = "#454545".toColorInt()
+    val runwayInk = "#030303".toColorInt()
+    val runwayMuted = "#676f7b".toColorInt()
+    val statusPass = "#34c759".toColorInt()
+    val statusWarn = "#ff9500".toColorInt()
+    val statusFail = "#ff3b30".toColorInt()
     val statusUnknown = inkMuted
-    val successInk = Color.parseColor("#18794e")
-    val warningInk = Color.parseColor("#9a5700")
-    val failureInk = Color.parseColor("#c62828")
+    val successInk = "#18794e".toColorInt()
+    val warningInk = "#9a5700".toColorInt()
+    val failureInk = "#c62828".toColorInt()
 
     fun dp(context: Context, v: Int) = (v * context.resources.displayMetrics.density).toInt()
 

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Product decisions, not defects. Rationale and review record: docs/validation/lint-audit-20261017.md. -->
+<lint>
+    <!-- UI is built in code with fixed English/Korean labels and measurement readouts; the app ships no
+         translations, so string resources would not change behavior. Revisit if localization starts. -->
+    <issue id="SetTextI18n" severity="ignore" />
+    <!-- Camera, CTS and benchmark screens are portrait-only: rotation would recreate Activities mid-session.
+         Android 16 ignores the lock on large screens (sw600dp+); phones keep it. -->
+    <issue id="LockedOrientationActivity" severity="ignore" />
+    <issue id="DiscouragedApi">
+        <ignore regexp="Fixed screen orientations will be ignored" />
+    </issue>
+    <!-- core-ktx 1.19+ requires compileSdk 37 and AGP 9.1; 1.18.0 is the newest release for this toolchain.
+         Remove when the AGP/compileSdk upgrade lands. -->
+    <issue id="GradleDependency">
+        <ignore regexp="androidx\.core:core-ktx than 1\.18\.0 is available: 1\.19\." />
+    </issue>
+</lint>

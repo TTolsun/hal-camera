@@ -1,5 +1,6 @@
 package dev.halcamera.ui
 
+import androidx.core.view.isVisible
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Canvas
@@ -106,7 +107,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
         override fun onDraw(canvas: Canvas) {
             val source=when {
                 manualExpanded -> manual
-                flashRow.visibility == View.VISIBLE -> flash
+                flashRow.isVisible -> flash
                 else -> ev
             }
             val x=(source.x+source.width/2f).coerceIn(dp(24).toFloat(),(width-dp(24)).coerceAtLeast(dp(24)).toFloat())
@@ -216,7 +217,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
 
     private fun openFlash() {
         if (!support.flash) { host.notice("This camera has no flash."); return }
-        if (flashRow.visibility == View.VISIBLE) { closePanels(); return }
+        if (flashRow.isVisible) { closePanels(); return }
         closePanels()
         flashRow.removeAllViews()
         support.flashModes(video || composited || controls.manual.exposure != null).forEach { mode ->
@@ -265,7 +266,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     private fun toggleRuler() {
         if (controls.manual.exposure != null) { host.notice("Adjust ISO and Shutter in manual exposure."); return }
         val range = support.evRange ?: run { host.notice("This camera does not support exposure compensation (EV)."); return }
-        if (ruler.visibility == View.VISIBLE) { closePanels(); return }
+        if (ruler.isVisible) { closePanels(); return }
         closePanels()
         ruler.set(range, support.evStep, controls.evIndex)
         ruler.visibility = View.VISIBLE
@@ -301,10 +302,10 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     }
 
     private fun render() {
-        connector.visibility=if (manualExpanded || flashRow.visibility==View.VISIBLE || ruler.visibility==View.VISIBLE) View.VISIBLE else View.GONE
+        connector.isVisible = manualExpanded || flashRow.isVisible || ruler.isVisible
         connector.invalidate()
         evPanel.visibility = ruler.visibility
-        flash.show(flashIcon(controls.flash), null, controls.flash != FlashMode.OFF || flashRow.visibility == View.VISIBLE, false, support.flash,
+        flash.show(flashIcon(controls.flash), null, controls.flash != FlashMode.OFF || flashRow.isVisible, false, support.flash,
             "Flash, current: ${controls.flash.label}")
         afLock.show(null, "AF", controls.afLock, controls.afLock, support.afLock && controls.manual.focusDiopters == null,
             if (controls.afLock) "AF lock on, tap to unlock" else "AF lock, tap to focus and lock")
@@ -312,8 +313,8 @@ class LiveControlBar(private val context: Context, private val host: Host) {
             if (controls.aeLock) "AE lock on, tap to unlock" else "AE lock, tap to lock the current exposure")
         val evText = if (controls.evIndex == 0) null else support.evLabel(controls.evIndex).removePrefix("EV ")
         ev.show(if (evText == null) R.drawable.ic_exposure else null, evText,
-            controls.evIndex != 0 || ruler.visibility == View.VISIBLE, false, support.evRange != null && controls.manual.exposure == null,
-            "Exposure compensation, current: ${support.evLabel(controls.evIndex)}, ${if (ruler.visibility == View.VISIBLE) "collapse adjustment" else "expand adjustment"}")
+            controls.evIndex != 0 || ruler.isVisible, false, support.evRange != null && controls.manual.exposure == null,
+            "Exposure compensation, current: ${support.evLabel(controls.evIndex)}, ${if (ruler.isVisible) "collapse adjustment" else "expand adjustment"}")
         bracket.show(null, "AEB", controls.bracket, false, bracketAvailable && support.evRange != null && controls.manual.exposure == null && !video && !composited,
             if (controls.bracket) "Bracketing on, three exposures per shutter press, tap to turn off" else "Bracketing, tap for three exposures per shutter press")
         // Dim while the bar is off (camera not ready, recording being saved, a CLI command running), as MainActivity

@@ -54,31 +54,13 @@ internal class MicrophoneCapture(private val file: File) {
     }
 
     private fun encode(recorder: AudioRecord, codec: MediaCodec) {
-        var muxing = false
+        var output: EncoderTrack? = null
         try {
-            val writer = checkNotNull(muxer)
+            val track = EncoderTrack(codec,checkNotNull(muxer)).also { output = it }
             val pcm = ShortArray(1024)
             val stamp = AudioTimestamp()
-            val info = MediaCodec.BufferInfo()
             var frames = 0L
-            var track = -1
             var eos = false
-            fun drain(waitUs: Long): Boolean {
-                while (true) {
-                    val index = codec.dequeueOutputBuffer(info,waitUs)
-                    if (index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                        check(!muxing); track = writer.addTrack(codec.outputFormat); writer.start(); muxing = true
-                    } else if (index >= 0) {
-                        try {
-                            if (info.size > 0 && info.flags and MediaCodec.BUFFER_FLAG_CODEC_CONFIG == 0) {
-                                check(muxing)
-                                writer.writeSampleData(track,checkNotNull(codec.getOutputBuffer(index)),info)
-                            }
-                            if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) return true
-                        } finally { codec.releaseOutputBuffer(index,false) }
-                    } else return false
-                }
-            }
             while (running) {
                 val count = recorder.read(pcm,0,pcm.size,AudioRecord.READ_NON_BLOCKING)
                 if (count == 0) { Thread.sleep(3); continue }
@@ -90,14 +72,14 @@ internal class MicrophoneCapture(private val file: File) {
                 var index = codec.dequeueInputBuffer(10_000)
                 while (index < 0) {
                     check(System.nanoTime() < inputDeadline) { "Audio encoder input timed out" }
-                    drain(0); index = codec.dequeueInputBuffer(10_000)
+                    track.drain(0); index = codec.dequeueInputBuffer(10_000)
                 }
                 val buffer = checkNotNull(codec.getInputBuffer(index)); buffer.clear()
                 buffer.order(java.nio.ByteOrder.nativeOrder()).asShortBuffer().put(pcm,0,count)
                 codec.queueInputBuffer(index,0,count*2,frames*1_000_000/RATE,0)
                 frames += count
                 if (frames >= RATE / 2 && originNs > 0) ready.countDown()
-                drain(0)
+                track.drain(0)
             }
             recorder.stop()
             check(originNs > 0) { "Microphone hardware timestamp unavailable; cannot synchronize audio" }
@@ -107,15 +89,15 @@ internal class MicrophoneCapture(private val file: File) {
                 if (index >= 0) {
                     codec.queueInputBuffer(index,0,0,frames*1_000_000/RATE,MediaCodec.BUFFER_FLAG_END_OF_STREAM)
                     eos = true
-                } else drain(0)
+                } else track.drain(0)
             }
             check(eos) { "Audio encoder input timed out" }
             var ended = false
-            while (!ended && System.nanoTime() < deadline) ended = drain(10_000)
+            while (!ended && System.nanoTime() < deadline) ended = track.drain(10_000)
             check(ended) { "Audio encoder finalization timed out" }
-            writer.stop(); muxing = false
+            track.stop()
         } catch (error: Throwable) { failure = error }
-        finally { ready.countDown(); if (muxing) runCatching { muxer?.stop() }; release() }
+        finally { ready.countDown(); output?.abandon(); release() }
     }
 
     /** Called on media IO, after all video inputs have stopped. */

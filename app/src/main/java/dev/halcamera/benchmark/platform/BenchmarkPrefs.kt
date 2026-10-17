@@ -1,5 +1,6 @@
 package dev.halcamera.benchmark.platform
 
+import androidx.core.content.edit
 import android.content.Context
 import dev.halcamera.benchmark.domain.RunRetention
 
@@ -12,7 +13,7 @@ class BenchmarkPrefs(context: Context) {
 
     var runLimit: Int
         get() = prefs.getInt(KEY_RUN_LIMIT, RunRetention.DEFAULT_LIMIT)
-        set(value) = prefs.edit().putInt(KEY_RUN_LIMIT, value).apply()
+        set(value) = prefs.edit { putInt(KEY_RUN_LIMIT, value) }
 
     companion object {
         private const val NAME = "benchmark_settings"

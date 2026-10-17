@@ -1,8 +1,25 @@
 # Android lint 전체 검토 — 2026-10-17
 
-기준 `eaca83dc`의 경고 159개를 위치별로 검토했습니다. 실제 수정 9개와 오탐의 한정 억제 18개를 반영해 **오류 0개·경고 132개**가 남았습니다. 전체 lint 비활성화나 baseline 파일은 추가하지 않았습니다. [159개 개별 판정 CSV](lint-audit-20261017.csv)는 기준 소스의 경로·행과 각 판단 근거를 담습니다. 동일 행에서 여러 진단이 나온 경우도 원래 개수대로 남겼습니다.
+**0.29.2부터 Android lint는 오류 0개·경고 0개입니다.** 1차 검토에서 남긴 경고 132개를 2차 정리에서 코드 수정 77개와 근거를 적은 억제 55개로 처리했습니다. lint baseline 파일은 쓰지 않으며, 억제 근거는 `app/lint.xml`과 아래 표에 함께 남깁니다.
 
-## 유형별 판단
+## 2차 정리 — 0.29.2
+
+기준 `b6a0b6a6`에서 남은 경고 132개를 처리했습니다.
+
+| 유형 | 개수 | 처리 |
+| --- | ---: | --- |
+| UseKtx | 72 | `toUri`, `toColorInt`, `isVisible`, `isNotEmpty`, `SharedPreferences.edit {}`, `createBitmap`, `scale`, `withClip`, `toDrawable`로 바꿨습니다. 동작은 같습니다. `DeviceInstance`는 동기 저장 성공값을 검사해야 하므로 `commit()`을 유지하고 그 함수만 억제했습니다. |
+| SetTextI18n | 35 | 앱은 화면을 코드로 만들고 번역을 제공하지 않습니다. 일부 문구만 리소스로 옮기면 번역이 되는 것처럼 보이므로, `app/lint.xml`에서 유형 전체를 억제했습니다. 번역을 시작하면 이 억제를 제거합니다. |
+| LockedOrientationActivity·DiscouragedApi | 20 | 카메라·CTS·benchmark 화면을 세로로 고정하는 것은 제품 결정입니다. 회전하면 측정 중에 Activity가 다시 만들어집니다. Android 16의 대화면(sw600dp 이상)에서는 고정이 무시될 수 있다는 한계를 `app/lint.xml`에 적고 억제했습니다. |
+| MonochromeLauncherIcon | 2 | 로봇 외곽과 렌즈·상태 링·입을 단색 실루엣으로 그린 `ic_launcher_monochrome`을 추가했습니다. |
+| GradleDependency | 2 | `activity-ktx`는 1.13.0으로, `core-ktx`는 1.18.0으로 올렸습니다. `core-ktx` 1.19 이상은 compileSdk 37과 AGP 9.1이 필요하므로, 그 알림만 `app/lint.xml`에서 억제했습니다. |
+| InlinedApi | 1 | `KEY_MAX_B_FRAMES`는 API 26~28에서도 안전하게 전달되는 format 문자열입니다. `EncodedVideoTimeline`은 표시 순서로 출력되는 프레임이 필요하므로 모든 API에서 이 요청을 보냅니다. format을 만드는 함수만 억제했습니다. |
+
+## 1차 검토 — 0.28.0
+
+기준 `eaca83dc`의 경고 159개를 위치별로 검토했습니다. 실제 수정 9개와 오탐의 한정 억제 18개를 반영해 오류 0개·경고 132개가 남았습니다. [159개 개별 판정 CSV](lint-audit-20261017.csv)는 기준 소스의 경로·행과 각 판단 근거를 담습니다. 동일 행에서 여러 진단이 나온 경우도 원래 개수대로 남겼습니다. 아래 표에서 "유지"로 적은 항목은 2차 정리에서 처리했습니다.
+
+### 유형별 판단
 
 | 유형 | 기존 개수 | 처리 |
 | --- | ---: | --- |
@@ -22,7 +39,7 @@
 | GradleDependency | 2 | 최신 버전 알림 자체는 결함이 아니므로 Activity/Core의 고정 버전을 유지했습니다. 보안 취약점 감사를 수행했다는 의미는 아닙니다. |
 | MonochromeLauncherIcon | 2 | 테마 아이콘용 단색 디자인이 아직 없습니다. 현재 컬러 로봇의 alpha만 재사용하면 내부 형상이 없어지므로 경고를 유지했습니다. |
 
-## 검증
+### 1차 검증
 
 - debug APK·instrumentation APK 빌드, JVM 테스트 828개와 lint가 통과했습니다. 백업 제외 정책과 DNG 방향 태그 계약에 JVM 회귀 검사를 추가했습니다. 문서 테스트 33개와 문서 파이프라인 6단계도 통과했습니다.
 - SM-S936N, Android 16에서 별도 `dev.halcamera.lintverify` 패키지를 사용했습니다. 기존 앱을 삭제하거나 데이터를 초기화하지 않았습니다.

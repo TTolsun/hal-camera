@@ -1,12 +1,12 @@
 package dev.halcamera.ui
 
+import androidx.core.net.toUri
 import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.RippleDrawable
-import android.net.Uri
 import android.view.ContextThemeWrapper
 import android.view.View
 import android.widget.ImageView
@@ -61,7 +61,7 @@ object AboutSheet {
             }
         }, params())
         root.addView(Look.ghostButton(themed, "$AUTHOR\n$EMAIL") {
-            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("mailto:$EMAIL"))) }
+            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, "mailto:$EMAIL".toUri())) }
                 .onFailure { Toast.makeText(context, EMAIL, Toast.LENGTH_LONG).show() }
         }.apply {
             setTextColor(Look.runwayInk)

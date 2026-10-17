@@ -1,5 +1,6 @@
 package dev.halcamera
 
+import androidx.core.view.isVisible
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -119,7 +120,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
             bindInfos(events,now)
             liveIndicator.bind(ready && latest != null && foreground && !closing)
             liveIndicator.bindStabilization(LiveEisStatus((latest?.values?.get("videoStabilization") as? Number)?.toInt()),recording)
-            if (callbackGraph.visibility == View.VISIBLE)
+            if (callbackGraph.isVisible)
                 // The camera chosen by its name bar drives the graph; the graph has no ID switch of its own here.
                 callbackGraph.update(events,activeSessionId,now,telemetry.sessions[activeSessionId].orEmpty())
             if (recording) {
@@ -152,7 +153,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         recentMedia = RecentMediaThumbnail(this) { bitmap,video -> galleryButton.setThumbnail(bitmap,video) }
         onBackPressedDispatcher.addCallback(this,object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (callbackGraph.visibility == View.VISIBLE) showCallbacks(false) else finish()
+                if (callbackGraph.isVisible) showCallbacks(false) else finish()
             }
         })
         if (ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) discover()
@@ -645,7 +646,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     }
     private fun notice(value: String) = Toast.makeText(this,value,Toast.LENGTH_LONG).show()
     @Suppress("DEPRECATION")
-    private fun displayDegrees() = when (windowManager.defaultDisplay.rotation) { android.view.Surface.ROTATION_90 -> 90; android.view.Surface.ROTATION_180 -> 180; android.view.Surface.ROTATION_270 -> 270; else -> 0 }
+    private fun displayDegrees() = DisplayRotation.degrees(windowManager.defaultDisplay.rotation)
     private fun dp(value: Int) = Look.dp(this,value)
     private fun text(value: String,size: Int) = Look.text(this,value,size,Look.onDark).apply { gravity = Gravity.CENTER_VERTICAL }
     private fun button(value: String,action: () -> Unit) = CameraWidgets(this).chromeButton(value,action)

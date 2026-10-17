@@ -1,5 +1,6 @@
 package dev.halcamera.benchmark.platform
 
+import android.annotation.SuppressLint
 import android.content.Context
 import java.util.UUID
 
@@ -9,6 +10,8 @@ import java.util.UUID
  * hardware identifier and is never treated as one.
  */
 object DeviceInstance {
+    // KTX edit(commit = true) returns Unit; the install ID must fail loudly when the synchronous write fails.
+    @SuppressLint("UseKtx")
     @Synchronized fun id(context: Context): String {
         val preferences = context.getSharedPreferences("profile-device", Context.MODE_PRIVATE)
         preferences.getString("id", null)?.let { return it }

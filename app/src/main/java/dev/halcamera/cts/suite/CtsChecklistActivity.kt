@@ -1,5 +1,6 @@
 package dev.halcamera.cts.suite
 
+import androidx.core.content.edit
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.hardware.camera2.CameraManager
@@ -78,7 +79,7 @@ abstract class CtsChecklistActivity : ComponentActivity() {
     }
 
     override fun onPause() {
-        getSharedPreferences(prefsName, MODE_PRIVATE).edit().putStringSet(KEY_SELECTED, HashSet(selected)).apply()
+        getSharedPreferences(prefsName, MODE_PRIVATE).edit { putStringSet(KEY_SELECTED, HashSet(selected)) }
         super.onPause()
     }
 
