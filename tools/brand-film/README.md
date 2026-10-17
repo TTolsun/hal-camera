@@ -2,6 +2,19 @@
 
 `HALCamera60`은 기존 v8의 0–40초를 유지하고 Automation을 18초로 확장한 뒤 2초 브랜드 엔딩으로 마무리합니다. 1920×1080, 24fps, 1,440프레임입니다.
 
+`HALCameraMobile60`은 1080×1920 세로형이며 동일하게 60초입니다. 실제 앱 캡처를 확대해 관련 영역을 보여주고, CLI와 그 실행 결과인 앱 화면을 별도 장면으로 번갈아 배치합니다. 주요 제목은 84px, 명령과 설명은 56px입니다. 305px 폭의 플레이어에서는 각각 약 24px, 16px로 표시됩니다. 원본 UI의 작은 세부 글자까지 모두 같은 크기로 확대하는 구성은 아닙니다.
+
+모바일 구성은 도입부 0–10초, Callback·Probe·CTS·Benchmark 10–26초, 원본 PIP·Multi 26–34초, 요청·스킬 읽기·CLI/앱 교대 34–58초, 앱 전체를 소개하는 엔딩 58–60초입니다. 원본 촬영 장면, 실제 앱 UI, 음악은 기존 영상의 자산을 재사용합니다. 첫 Shell 명령 이후 명령 인자는 ADB 접두어를 생략한 발췌입니다.
+
+홈페이지는 최초 진입 때 700px 이하 화면 또는 1100px 이하 터치 화면에서 세로형을 선택합니다. 재생 중 회전·크기 변경에는 소스를 바꾸지 않아 재생 위치가 유지됩니다. PC와 JavaScript 미지원 환경에서는 승인된 v13 가로형을 사용합니다. 두 버전 모두 명시적 재생 전에는 MP4를 미리 내려받지 않습니다.
+
+모바일 출력:
+
+```sh
+npx remotion render HALCameraMobile60 out/camera-hal-mobile-v1.mp4 --codec=h264 --crf=16
+ffmpeg -i out/camera-hal-mobile-v1.mp4 -t 60 -c:v copy -c:a aac -b:a 192k -movflags +faststart ../../guide/assets/media/camera-hal-mobile-v1.mp4
+```
+
 ## 미리보기와 출력
 
 이 디렉터리에서 Node.js 24로 실행합니다.
