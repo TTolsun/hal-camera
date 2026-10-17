@@ -6,7 +6,7 @@
   <title>Troubleshooting · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
   <link rel="stylesheet" href="./assets/site-theme-v2.css">
-  <script type="module" src="./assets/search.js"></script>
+  <script type="module" src="./assets/search-v2.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
 </head>
 <body>
@@ -70,7 +70,7 @@
 <p>ZIP에는 직전 10초와 이후 5초의 이벤트·메타데이터가 들어갑니다. 이미지 픽셀은 포함하지 않습니다. 사진 자체가 필요하면 갤러리에서 별도로 공유하세요.</p>
 <p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p><figure class="app-screenshot" id="screen-incident-history">
 <a href="assets/screenshots/incident-history.png" aria-label="앱의 Incident ZIP 기록 목록 원본 보기"><img src="assets/screenshots/incident-history.png" alt="앱의 Incident ZIP 기록 목록" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>Lab → ZIP Archives에서 기기에 저장된 incident 목록을 열었습니다. 기존 기록을 조회한 화면이며 이 촬영에서 ZIP 생성이나 공유를 실행하지 않았습니다. <a href="assets/screenshots/incident-history.png">원본 보기</a></figcaption>
+<figcaption>Lab → ZIP Archives에서 기기에 저장된 incident 목록을 열었습니다. 기존 기록을 조회한 화면이며 이 촬영에서 ZIP 생성이나 공유를 실행하지 않았습니다.</figcaption>
 </figure><details id="diagnostic-log-tags" data-search-section>
 <summary>개발자용: logcat 태그와 조회 명령</summary><p>아래는 현재 추출기가 <code>TAG</code> 상수와 <code>Log.*</code> 호출에서 찾은 로그 태그입니다. 목록에 없다는 이유만으로 코드 전체에서 해당 태그를 사용하지 않는다고 단정할 수는 없습니다.</p>
 <!-- omm:begin id=log-tags --><table>
@@ -234,7 +234,7 @@
 <p><strong>다음 단계:</strong> <a href="#문제-발생-시-수집할-정보">수집 절차</a>에 따라 문제 직후 진단 ZIP부터 저장하세요.</p>
 
   </main>
-  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="./architecture.html">Architecture</a><a href="./building.html">Build</a><a href="./contributing.html">Contributing</a></nav>
+  <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a></nav>
   <footer class="site-footer" lang="en"><span>HAL CAMERA · Engineering the invisible.</span><span>User Guide <span aria-hidden="true">/</span> by K.H. Kim</span></footer>
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">

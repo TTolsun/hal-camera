@@ -50,7 +50,7 @@ title: Benchmark
 
 <figure class="app-screenshot">
 <a href="assets/screenshots/benchmark-setup.png" aria-label="Benchmark의 실행 조건과 문서 촬영용 빌드 이름 원본 보기"><img src="assets/screenshots/benchmark-setup.png" alt="Benchmark의 실행 조건과 문서 촬영용 빌드 이름" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>카메라 0에서 실행하기 전의 조건입니다. 기기에 저장된 측정 대상 빌드 이름을 그대로 표시합니다. <a href="assets/screenshots/benchmark-setup.png">원본 보기</a></figcaption>
+<figcaption>카메라 0에서 실행하기 전의 조건입니다. 기기에 저장된 측정 대상 빌드 이름을 그대로 표시합니다.</figcaption>
 </figure>
 
 </details>
@@ -62,7 +62,7 @@ title: Benchmark
 
 <figure class="app-screenshot">
 <a href="assets/screenshots/benchmark-running.png" aria-label="Benchmark 카메라 열기 반복 측정 진행 중 원본 보기"><img src="assets/screenshots/benchmark-running.png" alt="Benchmark 카메라 열기 반복 측정 진행 중" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>카메라 열기 반복 측정이 진행 중입니다. 현재 단계와 회차, 진행률을 확인할 수 있습니다. <a href="assets/screenshots/benchmark-running.png">원본 보기</a></figcaption>
+<figcaption>카메라 열기 반복 측정이 진행 중입니다. 현재 단계와 회차, 진행률을 확인할 수 있습니다.</figcaption>
 </figure>
 
 </details>
@@ -106,7 +106,7 @@ title: Benchmark
 
 <figure class="app-screenshot">
 <a href="assets/screenshots/benchmark-result.png" aria-label="Benchmark 결과와 baseline 대비 조건 차이 경고 원본 보기"><img src="assets/screenshots/benchmark-result.png" alt="Benchmark 결과와 baseline 대비 조건 차이 경고" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>실행 완료 후 기존 baseline과 비교한 화면입니다. 충전 중 측정의 점수 제외 안내가 표시되므로, 이 장면을 앱 버전 간 성능 저하의 증거로 해석하지 않습니다. <a href="assets/screenshots/benchmark-result.png">원본 보기</a></figcaption>
+<figcaption>실행 완료 후 기존 baseline과 비교한 화면입니다. 충전 중 측정의 점수 제외 안내가 표시되므로, 이 장면을 앱 버전 간 성능 저하의 증거로 해석하지 않습니다.</figcaption>
 </figure>
 
 </details>
@@ -162,7 +162,7 @@ title: Benchmark
 
 <figure class="app-screenshot">
 <a href="assets/screenshots/benchmark-history.png" aria-label="저장된 Benchmark 실행 기록과 baseline 원본 보기"><img src="assets/screenshots/benchmark-history.png" alt="저장된 Benchmark 실행 기록과 baseline" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>저장된 실행을 최신 순서로 표시합니다. 기존 baseline은 별도 묶음에 남아 있습니다. <a href="assets/screenshots/benchmark-history.png">원본 보기</a></figcaption>
+<figcaption>저장된 실행을 최신 순서로 표시합니다. 기존 baseline은 별도 묶음에 남아 있습니다.</figcaption>
 </figure>
 
 </details>
@@ -184,13 +184,10 @@ PC의 `tools/aggregate.py`는 기존 점수 적격성 조건으로 필터링합�
 
 </details>
 
-## 구현과 검증 범위를 확인하세요
+## 결과를 해석할 때 확인하세요
 
-실행 순서와 저장 경로는 [Architecture](architecture.md#주요-실행-흐름), 표본 누락과 시각 해석은 [Troubleshooting](troubleshooting.md)에 있습니다. 이 페이지는 코드에 따른 사용법이며 기기 실측 결과는 [Validation](evidence.md)에서 별도로 확인합니다.
+표본이 없거나 비교 결과가 예상과 다르면 [Troubleshooting](troubleshooting.md)을 확인하세요. 실제로 확인한 기기·조건·한계는 [Validation](evidence.md)에 있습니다.
 
-<details>
-<summary>코드 근거를 확인하세요</summary>
-<p class="doc-evidence">실행과 조립은 <code>benchmark/domain/BenchmarkRunner.kt</code>·<code>RunAssembler.kt</code>, 판정과 결과 표시는 <code>RegressionDetector.kt</code>·<code>ResultPresenter.kt</code>·<code>ComparePresenter.kt</code>와 <code>ui/MetricBars.kt</code>에서 확인합니다. 실행 기록은 <code>benchmark/HistoryActivity.kt</code>·<code>domain/BaselineManager.kt</code>·<code>platform/StoreRunCatalog.kt</code>, 보관 한도는 <code>domain/RunRetention.kt</code>, 녹화 지표는 <code>metrics/RecordMetrics.kt</code>에 있습니다. 모든 경로는 <code>app/src/main/java/dev/halcamera/</code>를 기준으로 합니다.</p>
-</details>
+
 
 **다음 단계:** 프리뷰에서 개별 프레임의 콜백 도착 순서를 보려면 [Callback](callback.md)을 확인하세요.

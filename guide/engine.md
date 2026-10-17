@@ -122,7 +122,7 @@ CameraX 1.6.2로 녹화 중 사진을 찍으면 영상 간격이 늘어날 수 �
 
 <figure class="app-screenshot">
 <a href="assets/screenshots/engine-camerax.png" aria-label="CameraX로 전환한 Live 프리뷰 원본 보기"><img src="assets/screenshots/engine-camerax.png" alt="CameraX로 전환한 Live 프리뷰" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>CameraX로 전환한 뒤 프리뷰와 실시간 정보가 갱신되는 화면입니다. 상단의 엔진 이름으로 현재 경로를 확인합니다. <a href="assets/screenshots/engine-camerax.png">원본 보기</a></figcaption>
+<figcaption>CameraX로 전환한 뒤 프리뷰와 실시간 정보가 갱신되는 화면입니다. 상단의 엔진 이름으로 현재 경로를 확인합니다.</figcaption>
 </figure>
 
 </details>

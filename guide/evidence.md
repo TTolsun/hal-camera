@@ -3,17 +3,7 @@ title: Validation
 ---
 <h1 lang="en">Trust starts with a trace.</h1>
 
-**코드로 확인한 동작과 기기에서 관찰한 결과를 구분하세요.** 아래에서 근거의 종류와 기기 검증 기록을 확인하세요. 문서 갱신 절차는 [Contributing](contributing.md)에 있습니다.
-
-## 근거와 검토 범위
-
-| 근거 수준 | 의미 | 확인할 자료 |
-| --- | --- | --- |
-| 코드 확인 | 구현을 읽고 설명과 대조했습니다. 기기 실측을 의미하지 않습니다. | 각 페이지의 코드 근거와 PR 검토 기록을 확인합니다. |
-| 기기 검증 | 명시된 기기·빌드·조건에서 관찰한 결과입니다. | 아래의 기기 검증 자료를 확인합니다. |
-| 설계 의도 | 과거 결정 기록에 명시된 선택입니다. 현재 구현과 다를 수 있습니다. | [설계 결정 원문](_inputs/decisions.md)의 D-번호를 확인합니다. |
-
-[Architecture](architecture.md)·[Engine Comparison](engine.md)·[Troubleshooting](troubleshooting.md)과 이 페이지 끝의 **문서 검토 상태**에는 해당 페이지에 연결된 구조 근거와 생성 원고의 기준 버전·검토 커밋이 있습니다. 관련 소스나 원고가 바뀌면 다시 검토해야 합니다. 이 상태는 수동으로 작성한 Probe·CTS·Benchmark·Callback 등 다른 페이지의 검토까지 보장하지 않습니다.
+**어떤 기기와 조건에서 확인했는지 살펴보세요.** 검증 결과는 기록에 명시된 앱 버전·기기·설정에 해당합니다. 다른 기기에서도 같은 결과가 나온다는 보장은 아닙니다.
 
 ## 기기 검증 기록
 
@@ -113,4 +103,4 @@ Galaxy S25+·Android 16에서 2026년 9월 17~19일, versionCode 106~108로 수�
 
 <!-- omm:end id=status -->
 
-**다음 단계:** 구현 구조는 [Architecture](architecture.md), 과거의 선택은 [설계 결정 원문](_inputs/decisions.md)에서 확인하세요.
+**다음 단계:** [Download](download.md)에서 배포 버전을 확인하고 [Quickstart](getting-started.md)로 시작하세요.

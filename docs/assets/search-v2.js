@@ -1,5 +1,7 @@
 import { extractSections, normalize, search } from './search-core.js';
 
+import { isReaderPage } from './search-pages.js';
+
 const root = new URL('../', import.meta.url);
 const dialog = document.querySelector('#search-dialog');
 const openButton = document.querySelector('.search-open');
@@ -80,7 +82,7 @@ async function load() {
   try {
     // The builder owns this list, so newly published pages need no manual registration.
     const manifest = await get(new URL('.site-manifest.json', root), 'json');
-    const paths = Object.keys(manifest.files).filter(path => path.endsWith('.html'));
+    const paths = Object.keys(manifest.files).filter(isReaderPage);
     let failed = 0;
     // Four workers bound concurrency; successful pages are retained when retrying.
     const pending = paths.filter(path => !pages.has(path));

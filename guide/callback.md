@@ -94,18 +94,6 @@ CLI 호환용 Dual의 Main/Sub Preview는 버퍼 수신을 직접 관측하지 �
 
 문제가 반복되면 [진단 ZIP과 재현 조건](troubleshooting.md#문제-발생-시-수집할-정보)을 저장하세요.
 
-<details markdown="1" id="callback-hold-flow" data-search-section>
-<summary>이전 화면과 검증 근거</summary>
 
-아래는 2026-09-27의 0.15.0 촬영본입니다. 현재의 `Frame`·`Hold 0s` 조작과 버튼 이름이 다릅니다. 당시 관측 결과를 보존한 자료이며 현재 사용법은 이 페이지의 절차를 따릅니다.
-
-<div id="screen-callback-recording"><a id="detail-fb127fe169"></a>
-<a href="assets/screenshots/callback-recording.png">이전 녹화 Callback 화면 보기</a></div>
-<div id="screen-callback-event"><a id="detail-8d0a8ea66f"></a>
-<a href="assets/screenshots/callback-event.png">이전 촬영 프레임 고정 화면 보기</a></div>
-
-현재 코드는 `ui/ResultCallbackGraph.kt`(버튼), `ResultCallbackTimeline.kt`(고정·프레임 선택), `ResultCallbackSeries.kt`(결과 연결), `camera/StreamConfiguration.kt`·`PipOutputs.kt`(출력 이름)에서 확인합니다. [Validation](evidence.md)에는 코드 확인과 기기 관찰을 구분해 기록합니다.
-
-</details>
 
 **다음 단계:** 같은 조건을 반복 측정하려면 [Benchmark](benchmark.md)를 여세요.
