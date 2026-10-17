@@ -71,6 +71,7 @@ table{width:100%;border-collapse:collapse;display:block;overflow:auto;margin:28p
 /* The film and its meaning form one introduction below the home headline. */
 .brand-film{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:32px;align-items:center;margin:36px 0 40px}
 .brand-film video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:var(--ink);border-radius:4px}
+.brand-film video[data-layout="portrait"]{aspect-ratio:9/16;max-width:420px;justify-self:center}
 .brand-film video:focus-visible{outline:2px solid var(--blue);outline-offset:5px}
 .brand-film h2{margin:0;padding:0;border:0;font-size:28px}
 .brand-film p{margin:12px 0 0;font-size:14px;line-height:1.7}

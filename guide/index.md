@@ -10,7 +10,7 @@ home: true
   <a href="getting-started.html"><span class="name">Quickstart</span><span class="description">APK를 설치하고 첫 화면을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   </nav>
 <figure class="brand-film" aria-labelledby="brand-film-title">
-  <video controls playsinline preload="none" width="1920" height="1080" poster="assets/media/camera-hal-reviewed-v8.jpg" aria-labelledby="brand-film-title" aria-describedby="brand-film-description brand-film-timing brand-film-ripple brand-film-prism">
+  <video controls playsinline preload="none" width="1920" height="1080" poster="assets/media/camera-hal-reviewed-v8.jpg" data-mobile-src="assets/media/camera-hal-mobile-v1.mp4" data-mobile-poster="assets/media/camera-hal-mobile-v1.jpg" aria-labelledby="brand-film-title" aria-describedby="brand-film-description brand-film-timing brand-film-ripple brand-film-prism">
     <source src="assets/media/camera-hal-automation-v13.mp4" type="video/mp4">
     <a href="assets/media/camera-hal-automation-v13.mp4">Camera HAL 소개 영상 보기</a>
   </video>
@@ -24,6 +24,7 @@ home: true
     <p class="signature" lang="en">by K.H. Kim</p>
   </figcaption>
 </figure>
+<script src="assets/video-variant.js" defer></script>
 
 </section>
 
