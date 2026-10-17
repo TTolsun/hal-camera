@@ -51,6 +51,23 @@ table{width:100%;border-collapse:collapse;display:block;overflow:auto;margin:28p
 @media(max-width:700px){.site-header{position:relative}.site-header .brand{max-width:calc(100% - 120px)}.search-open{position:absolute;right:0;top:14px}.search-open kbd{display:none}#search-dialog{width:calc(100% - 16px);height:calc(100dvh - 32px - env(safe-area-inset-top) - env(safe-area-inset-bottom));margin-top:max(16px,env(safe-area-inset-top));border-radius:6px}.search-controls{padding:12px 16px 0}.search-head{margin-bottom:8px}.search-head h2{font-size:18px}.search-close kbd{display:none}.search-body{padding:4px 8px}#search-results a{padding:14px 8px}.search-suggestions{padding:16px 8px}.search-help{display:none}}
 @media print{.site-header,.site-footer,.skip-link,.diagram-dialog,#search-dialog{display:none}main{width:100%;padding:0}pre,.mermaid{break-inside:avoid}a{color:inherit}.hero{padding-top:0}}
 
+/* Five primary entries with native disclosure menus for related documents. */
+.site-nav.nav-grouped{align-items:center;gap:8px 20px}
+.nav-grouped>a,.site-nav .nav-group>summary{display:flex;align-items:center;min-height:44px;padding:8px 0;font-size:13px;white-space:nowrap}
+.site-nav .nav-group{position:relative;margin:0;padding:0;border:0}
+.site-nav .nav-group>summary{gap:6px;list-style:none;font-weight:400;color:var(--muted);touch-action:manipulation}
+.site-nav .nav-group>summary::-webkit-details-marker{display:none}
+.site-nav .nav-group>summary::after{content:"";width:6px;height:6px;border-right:1px solid currentColor;border-bottom:1px solid currentColor;transform:rotate(45deg);margin-top:-3px}
+.site-nav .nav-group[open]>summary::after{transform:rotate(225deg);margin-top:3px}
+.site-nav .nav-group>summary:hover,.site-nav .nav-group.has-current>summary{color:var(--blue)}
+.site-nav .nav-group.has-current>summary{font-weight:600;text-decoration:underline;text-underline-offset:6px}
+.nav-panel{position:absolute;top:100%;right:0;z-index:10;min-width:190px;padding:8px;background:white;border:1px solid var(--line);border-radius:4px}
+.site-nav .nav-panel a{display:flex;align-items:center;min-height:44px;padding:8px 12px;font-size:14px;white-space:nowrap;border-radius:3px}
+.site-nav .nav-panel a:hover,.site-nav .nav-panel a:focus-visible{background:var(--soft)}
+@media(min-width:701px) and (max-width:1000px){.site-header{position:relative;flex-direction:column;align-items:start;padding-block:22px;gap:18px}.search-open{position:absolute;right:0;top:14px}}
+@media(max-width:700px){.site-nav.nav-grouped{width:100%;gap:4px 14px;justify-content:space-between}.nav-grouped>a,.site-nav .nav-group>summary{min-width:44px}.site-nav .nav-group>summary{justify-content:center}}
+@media(max-width:420px){.site-nav.nav-grouped{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:0 12px}.nav-grouped>a{grid-column:span 2;justify-content:center}.site-nav .nav-group{grid-column:span 3}.site-nav .nav-group:first-of-type .nav-panel{left:0;right:auto}}
+
 /* The film and its meaning form one introduction below the home headline. */
 .brand-film{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:32px;align-items:center;margin:36px 0 40px}
 .brand-film video{display:block;width:100%;height:auto;aspect-ratio:16/9;background:var(--ink);border-radius:4px}
