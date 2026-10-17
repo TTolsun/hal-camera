@@ -11,6 +11,8 @@ import android.view.View
  * That scale is shared by every row of the same unit in the section, so the fills also rank the rows against
  * each other; ResultPresenter.metricBars computes both fractions.
  */
+// Constructed programmatically with required collaborators; never inflated from XML.
+@android.annotation.SuppressLint("ViewConstructor")
 internal class MeterView(
     context: Context,
     private val fraction: Float,
@@ -26,6 +28,7 @@ internal class MeterView(
     }
     // A dark 2dp reference tick stays distinct against the light track and blue fill.
     private val tick = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Look.ink }
+    private val arrow = android.graphics.Path()
     private val tickHalf = Look.dp(context, 1).toFloat()
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -43,10 +46,11 @@ internal class MeterView(
             if (baseBeyond) {
                 // A small arrow at the end of the track: the reference is further on than the track reaches.
                 val h = height.toFloat()
-                val path = android.graphics.Path().apply {
+                arrow.rewind()
+                arrow.apply {
                     moveTo(w - h * 0.6f, 0f); lineTo(w, h / 2); lineTo(w - h * 0.6f, h); close()
                 }
-                canvas.drawPath(path, tick)
+                canvas.drawPath(arrow, tick)
                 return@let
             }
             val x = (w * it.coerceIn(0f, 1f)).coerceIn(tickHalf, w - tickHalf)

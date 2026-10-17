@@ -618,7 +618,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     }
     private fun notice(value: String) = Toast.makeText(this,value,Toast.LENGTH_LONG).show()
     @Suppress("DEPRECATION")
-    private fun displayDegrees() = when (windowManager.defaultDisplay.rotation) { 1 -> 90; 2 -> 180; 3 -> 270; else -> 0 }
+    private fun displayDegrees() = when (windowManager.defaultDisplay.rotation) { android.view.Surface.ROTATION_90 -> 90; android.view.Surface.ROTATION_180 -> 180; android.view.Surface.ROTATION_270 -> 270; else -> 0 }
     private fun dp(value: Int) = Look.dp(this,value)
     private fun text(value: String,size: Int) = Look.text(this,value,size,Look.onDark).apply { gravity = Gravity.CENTER_VERTICAL }
     private fun button(value: String,action: () -> Unit) = CameraWidgets(this).chromeButton(value,action)

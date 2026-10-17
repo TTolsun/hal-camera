@@ -12,6 +12,8 @@ import androidx.annotation.DrawableRes
 import androidx.core.content.ContextCompat
 
 /** Familiar actions with a centered symbol, a full touch target and an explicit accessible name. */
+// Constructed programmatically with required collaborators; never inflated from XML.
+@android.annotation.SuppressLint("ViewConstructor")
 class IconButton(
     context: Context,
     @DrawableRes iconRes: Int,

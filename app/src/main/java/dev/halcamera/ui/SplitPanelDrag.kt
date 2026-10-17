@@ -35,6 +35,8 @@ internal class SplitPanelDrag(
         importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO; visibility = View.GONE
     }
 
+    // Non-drag touches fall through to the handle click; drags have explicit accessibility actions.
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
     fun attach(handle: View, panel: View, index: Int) {
         var dragging = false
         var startX = 0f; var startY = 0f

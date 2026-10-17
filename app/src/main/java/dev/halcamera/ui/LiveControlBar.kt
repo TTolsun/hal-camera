@@ -102,6 +102,7 @@ class LiveControlBar(private val context: Context, private val host: Host) {
     private val rows = FrameLayout(context).apply { visibility = View.GONE }
     private val connector = object : View(context) {
         private val paint=Paint(Paint.ANTI_ALIAS_FLAG).apply { color=Look.cameraControlGlass }
+        private val connectorPath = Path()
         override fun onDraw(canvas: Canvas) {
             val source=when {
                 manualExpanded -> manual
@@ -109,7 +110,12 @@ class LiveControlBar(private val context: Context, private val host: Host) {
                 else -> ev
             }
             val x=(source.x+source.width/2f).coerceIn(dp(24).toFloat(),(width-dp(24)).coerceAtLeast(dp(24)).toFloat())
-            canvas.drawPath(Path().apply { moveTo(x,0f); lineTo(x-dp(8),height.toFloat()); lineTo(x+dp(8),height.toFloat()); close() },paint)
+            connectorPath.rewind()
+            connectorPath.moveTo(x,0f)
+            connectorPath.lineTo(x-dp(8),height.toFloat())
+            connectorPath.lineTo(x+dp(8),height.toFloat())
+            connectorPath.close()
+            canvas.drawPath(connectorPath,paint)
         }
     }.apply { visibility=View.GONE; importantForAccessibility=View.IMPORTANT_FOR_ACCESSIBILITY_NO }
     /** Hosted in the centre of the preview header; the panel below contains only expanded controls. */
@@ -362,6 +368,8 @@ class LiveControlBar(private val context: Context, private val host: Host) {
  * A round quick-control button: a line icon or a short word ("AF", "+0.7") in a 40dp circle inside the full
  * 48dp touch target, with a small lock badge while a lock holds. On, it takes the zoom rail's white circle.
  */
+// Constructed programmatically with required collaborators; never inflated from XML.
+@android.annotation.SuppressLint("ViewConstructor")
 private class QuickButton(context: Context, action: () -> Unit) : Button(context) {
     private var icon: Drawable? = null
     private var iconRes = 0

@@ -16,6 +16,7 @@ class CliStoreInstrumentation : Instrumentation() {
     private var pinchZoom = false
     private var videoMode = false
     private var multiSplit = false
+    private var lintChecks = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
         exportReports = arguments?.getString("export_reports") == "true"
@@ -25,10 +26,20 @@ class CliStoreInstrumentation : Instrumentation() {
         pinchZoom = arguments?.getString("pinch_zoom") == "true"
         videoMode = arguments?.getString("video_mode") == "true"
         multiSplit = arguments?.getString("multi_split") == "true"
+        lintChecks = arguments?.getString("lint_checks") == "true"
         start()
     }
 
     override fun onStart() {
+        if (lintChecks) {
+            try {
+                val result = dev.halcamera.ui.LintRegressionChecks.run(this)
+                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
+            } catch (error: Throwable) {
+                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "LINT_REGRESSION_FAILED: ${error.stackTraceToString()}\n") })
+            }
+            return
+        }
         if (multiSplit) {
             try {
                 val result = dev.halcamera.ui.MultiSplitChecks.run(this)

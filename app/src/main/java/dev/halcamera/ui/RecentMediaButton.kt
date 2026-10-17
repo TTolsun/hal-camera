@@ -16,6 +16,8 @@ import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory
 import dev.halcamera.R
 
 /** Shows the latest saved item; remains an accessible album button when the album is empty. */
+// Constructed programmatically with required collaborators; never inflated from XML.
+@android.annotation.SuppressLint("ViewConstructor")
 class RecentMediaButton(context: Context, action: () -> Unit) : Button(context) {
     private val placeholder = ContextCompat.getDrawable(context, R.drawable.ic_gallery)
     private var thumbnail: Drawable? = null

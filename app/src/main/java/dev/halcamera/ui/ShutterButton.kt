@@ -41,6 +41,8 @@ class ShutterButton(context: Context) : Button(context) {
     }
 
     /** Only the touch that started a held burst releases it; an accessibility start uses the stop click. */
+    // The listener returns false so Button dispatches clicks and accessibility events itself.
+    @android.annotation.SuppressLint("ClickableViewAccessibility")
     fun bindBurstInput(available: () -> Boolean, permission: (() -> Unit) -> Unit, hold: () -> Unit, release: () -> Unit) {
         var holding = false
         setOnLongClickListener { available().also { allowed ->

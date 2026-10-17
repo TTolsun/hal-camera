@@ -294,6 +294,8 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
     private fun locked() = context.getSystemService(KeyguardManager::class.java).isKeyguardLocked
 
     companion object {
+        // get() passes applicationContext exclusively; this process singleton never retains an Activity context.
+        @android.annotation.SuppressLint("StaticFieldLeak")
         @Volatile private var instance: CommandCoordinator? = null
         fun get(context: Context): CommandCoordinator = instance ?: synchronized(this) {
             instance ?: CommandCoordinator(context.applicationContext).also { instance = it }

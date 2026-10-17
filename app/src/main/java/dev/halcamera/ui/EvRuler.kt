@@ -25,6 +25,8 @@ import kotlin.math.roundToInt
  *
  * Accessibility: exposed as an adjustable control; scroll forward and backward move one step.
  */
+// Constructed programmatically with required collaborators; never inflated from XML.
+@android.annotation.SuppressLint("ViewConstructor")
 class EvRuler(context: Context, private val onChange: (Int) -> Unit) : View(context) {
     private var range = 0..0
     private var step = 1.0

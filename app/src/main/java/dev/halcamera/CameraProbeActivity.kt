@@ -5,8 +5,8 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.hardware.camera2.CameraManager
 import android.graphics.text.LineBreaker
+import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
@@ -370,6 +370,8 @@ class CameraProbeActivity : ComponentActivity() {
      * One card per section, folded or unfolded by its title. The raw dump and the mandatory-combination prose
      * start folded: they are the complete record for the export, not what someone scrolls to on a phone.
      */
+    // TextView.setBreakStrategy exists since API 23; this inlined value is the same legacy SIMPLE (0).
+    @android.annotation.SuppressLint("InlinedApi")
     private fun section(title: String, rows: List<ProbeRow>) {
         val open = title !in collapsed
         val card = Look.card(this, dark = false)
