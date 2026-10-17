@@ -150,7 +150,7 @@ class ConcurrentSession(
                         }
                     } }, onError = { error -> worker.post { fail("Camera $id: ${error.message}") } },
                     prepareRecording = videoMode,
-                    preserveFullFrame = true,
+                    preserveFullFrame = true, captureTimeVideo = true,
                     inputFrame = { index, timestamp ->
                         telemetry?.recorder?.record("${sessionId}_$id","preview_available",sensorNs = timestamp,
                             values = mapOf("stream" to "preview", "input" to index))

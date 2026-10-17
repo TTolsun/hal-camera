@@ -24,6 +24,7 @@ internal class DeviceCompositor(
     private val inputFrame: (Int, Long) -> Unit = { _, _ -> },
     private val prepareRecording: Boolean = false,
     private val preserveFullFrame: Boolean = false,
+    private val captureTimeVideo: Boolean = false,
 ) {
     private val app = context.applicationContext
     private val thread = HandlerThread("HAL.Compose.$cameraId").apply { start() }
@@ -34,8 +35,6 @@ internal class DeviceCompositor(
     private var snapshot = EGL14.EGL_NO_SURFACE
     private var encoder = EGL14.EGL_NO_SURFACE
     private var recordingStarted = false
-    @Volatile var recordingStartNs = 0L
-        private set
     private var recordingStopping = false
     private lateinit var config: EGLConfig
     private var viewSurface: Surface? = null
@@ -51,9 +50,13 @@ internal class DeviceCompositor(
     private var rects = PipScene.initial(pipIds.size).mapIndexed { index, fallback ->
         initialRects.getOrNull(index)?.let { PipScene.restore(it,it.x,it.y) } ?: fallback
     }
-    private var recorder: CompositorRecording? = null
+    private var recorder: SurfaceRecording? = null
     private val media = CompositorMedia(app)
     private var lastVideoNs = 0L
+    private var frameMonotonicNs = 0L
+    private val sensorRealtime = captureTimeVideo && context.getSystemService(android.hardware.camera2.CameraManager::class.java)
+        .getCameraCharacteristics(cameraId)[android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE] ==
+        android.hardware.camera2.CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME
     private val vertices = ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().apply {
         put(floatArrayOf(-1f,-1f,0f,0f, 1f,-1f,1f,0f, -1f,1f,0f,1f, 1f,1f,1f,1f)); position(0)
     }
@@ -107,6 +110,13 @@ internal class DeviceCompositor(
         try {
             current(window); textures[index].updateTexImage(); textures[index].getTransformMatrix(transforms[index]); received[index] = true
             inputFrame(index, textures[index].timestamp)
+            if (index == 0) {
+                val before = System.nanoTime()
+                val realtime = android.os.SystemClock.elapsedRealtimeNanos()
+                val after = System.nanoTime()
+                frameMonotonicNs = if (sensorRealtime) RecordingTimebase(true,realtime-(before+(after-before)/2))
+                    .encoderTimestampNs(textures[index].timestamp) else after
+            }
             render()
             if (!readySent && received.all { it }) {
                 if (prepareRecording) prepareVideo(MediaLibrary(app).name())
@@ -121,8 +131,8 @@ internal class DeviceCompositor(
         check(EGL14.eglSwapBuffers(display,window))
         if (recordingStarted && encoder != EGL14.EGL_NO_SURFACE) {
             // MediaRecorder audio uses CLOCK_MONOTONIC, not the suspend-inclusive sensor/app clock.
-            val ns = maxOf(System.nanoTime(), lastVideoNs + 1)
-            if (ns - lastVideoNs >= 33_333_333L) {
+            val ns = if (captureTimeVideo) frameMonotonicNs else maxOf(System.nanoTime(), lastVideoNs + 1)
+            if (ns > lastVideoNs && (captureTimeVideo || ns - lastVideoNs >= 33_333_333L)) {
                 draw(encoder); EGLExt.eglPresentationTimeANDROID(display,encoder,ns)
                 check(EGL14.eglSwapBuffers(display,encoder)); lastVideoNs = ns
             }
@@ -182,7 +192,8 @@ internal class DeviceCompositor(
 
     private fun prepareVideo(name: String) {
         val filename = "${name}_cam${cameraId.replace(Regex("[^A-Za-z0-9_-]"),"_")}${if (pipIds.isEmpty()) "" else "_PIP"}.mp4"
-        val recording = CompositorRecording(app,filename,output,false,onError)
+        val recording = if (captureTimeVideo) TimestampedVideoRecording(app,filename,output)
+            else CompositorRecording(app,filename,output,false,onError)
         recorder = recording
         encoder = createWindow(recording.surface)
     }
@@ -192,14 +203,19 @@ internal class DeviceCompositor(
         val result = runCatching {
             check(!closed && !recordingStarted && received.all { it })
             if (recorder == null) prepareVideo(name)
-            checkNotNull(recorder).start(audio); recordingStartNs = System.nanoTime()
+            checkNotNull(recorder).start(audio)
             recordingStarted = true; lastVideoNs = 0L
         }
         if (result.isFailure) discardVideo()
         done(result)
     } }
 
-    fun stopVideo(save: Boolean, process: ((java.io.File) -> Unit)? = null, done: (Result<String>) -> Unit) { handler.post {
+    /** Stop frame submission before a shared microphone is drained; keep the encoder for finalization. */
+    fun endVideoInput(done: (Result<Unit>) -> Unit) { handler.post {
+        done(runCatching { recordingStarted = false; detachEncoder() })
+    } }
+
+    fun stopVideo(save: Boolean, process: ((java.io.File, Long) -> Unit)? = null, done: (Result<String>) -> Unit) { handler.post {
         val recording = recorder
         if (recording == null) { done(Result.failure(IllegalStateException("Not recording"))); return@post }
         try {

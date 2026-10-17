@@ -285,6 +285,8 @@ Camera2 Single은 현재 Live CameraDevice를 유지합니다. 다른 Service ID
 
 Multi는 Android 11 이상과 독립 장치의 동시 실행 지원이 필요합니다. Camera2와 CameraX를 선택할 수 있으며 Manual·AEB는 제공하지 않습니다. 플래시는 Off·Torch입니다. Multi V는 마이크 권한을 받아 소리를 녹음하고, 같은 마이크의 소리를 카메라별 MP4에 넣습니다. 권한이 없거나 녹음이 실패하면 무음으로 저장하지 않고 오류를 표시합니다. 센서 동기 촬영은 보장하지 않습니다.
 
+Multi V는 마이크의 시각을 확보한 뒤 녹화를 시작하므로 준비 시간이 약간 필요합니다. 종료할 때는 모든 카메라의 영상 입력을 먼저 멈추고 오디오를 마무리합니다. 영상과 소리는 캡처 시각으로 정렬하지만 완전히 같은 순간의 재생을 보장하지 않습니다. 기기별 오차와 시험 범위는 [0.29.1 검증 기록](https://github.com/TTolsun/hal-camera/blob/main/docs/validation/release-0.29.1.md)을 참고하세요.
+
 <details markdown="1" id="multi-session-details" data-search-section>
 <summary>장치 수·배치·재구성</summary>
 

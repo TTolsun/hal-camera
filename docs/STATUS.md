@@ -1,6 +1,6 @@
 # 작업 상태
 
-**0.29.0은 CameraX Multi와 Multi V 마이크 녹음을 추가한 릴리스입니다.** 설치는 [최신 릴리스](https://github.com/TTolsun/hal-camera/releases/latest), 변경 내용은 [릴리스 노트](releases/0.29.0.md), 촬영 방법은 [Live 가이드](../guide/live.md)를 확인하세요.
+**0.29.1은 Multi V의 오디오 종료 누락과 영상·소리의 시각 정렬을 개선한 릴리스입니다.** 설치는 [최신 릴리스](https://github.com/TTolsun/hal-camera/releases/latest), 변경 내용은 [릴리스 노트](releases/0.29.1.md), 촬영 방법은 [Live 가이드](../guide/live.md)를 확인하세요.
 
 ## 이번 버전에서 확인할 것
 
@@ -10,7 +10,7 @@
 
 ## 검증 범위
 
-Galaxy S25+ · Android 16의 데이터 보존 업데이트와 코드·기기 검증은 [0.29.0 검증 기록](validation/release-0.29.0.md)에 모았습니다. 다른 제조사, 세 카메라 이상, 전체 CTS와 장시간 녹화는 이번 기기 검증에 포함하지 않았습니다.
+Galaxy S25+ · Android 16의 데이터 보존 업데이트와 코드·기기 검증은 [0.29.1 검증 기록](validation/release-0.29.1.md)에 모았습니다. Camera2·CameraX에서 실제 박수 영상과 소리를 비교했으며 잔여 오차도 기록했습니다. 다른 제조사, 세 카메라 이상, 전체 CTS와 10분 이상 녹화는 이번 기기 검증에 포함하지 않았습니다.
 
 Baseline 기반 회귀 비교는 유지합니다. 내부 점수 초안은 2026-10-08에 제거했으며 새 run의 점수 필드는 호환을 위해 null로 남습니다. [점수 초안 보관 문서](archive/SCORING-v1-draft.md)를 참고하세요.
 

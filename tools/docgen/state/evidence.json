@@ -3,7 +3,7 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",
@@ -360,7 +360,7 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "1d66a6ba6698d9d9",
@@ -626,7 +626,7 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "5b0c1bf56eebc58a",
@@ -677,7 +677,7 @@
     },
     "content:troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "fresh"
+        "state": "unreviewed"
       },
       "accepted": {
         "codeHash": "946ca13e26c0f09a",
@@ -996,7 +996,7 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       }
     },
     "content:architecture.md/constraints": {
@@ -1259,7 +1259,7 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       }
     },
     "omm:ui-camera-label": {
@@ -1313,7 +1313,7 @@
     },
     "content:engine.md/contract": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",
@@ -1576,7 +1576,7 @@
     },
     "content:engine.md/camera2": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",
@@ -1839,7 +1839,7 @@
     },
     "content:engine.md/camerax": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",
@@ -2102,7 +2102,7 @@
     },
     "content:engine.md/comparison": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",
@@ -2365,7 +2365,7 @@
     },
     "content:evidence.md/device-notes": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "4f9761c1eca1e763",

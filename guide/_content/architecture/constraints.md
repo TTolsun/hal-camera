@@ -5,6 +5,9 @@ sources:
   - app/src/main/java/dev/halcamera/camera/MultiSession.kt
   - app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt
   - app/src/main/java/dev/halcamera/camera/MultiRecording.kt
+  - app/src/main/java/dev/halcamera/camera/MicrophoneCapture.kt
+  - app/src/main/java/dev/halcamera/camera/TimestampedVideoRecording.kt
+  - app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt
   - app/src/main/java/dev/halcamera/cli/CliProvider.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
   - app/src/main/java/dev/halcamera/cli/CommandStore.kt
@@ -34,6 +37,8 @@ verifications: []
 4. 벤치마크 JSON과 incident ZIP에는 관측 이벤트·메타데이터를 저장하며 이미지 픽셀을 저장하지 않습니다.
 
 Multi 모드의 `MultiSession`은 `CameraEngine`과 별도입니다. Camera2는 선택한 독립 장치를 연 뒤 세션을 구성하며, CameraX는 광고된 동시 조합을 바인딩합니다. 모든 장치의 종료 통지를 확인해야 출력을 해제하고 다음 동시 세션을 열 수 있습니다. 한 명령의 여러 사진을 센서 동기 촬영으로 해석하지 않습니다.
+
+Multi V의 `MicrophoneCapture`는 `AudioRecord`의 MONOTONIC 하드웨어 시각과 PCM 프레임 위치로 오디오 원점을 구합니다. `DeviceCompositor`는 REALTIME 센서의 프레임 시각만 MONOTONIC으로 변환하며, 시계 출처를 알 수 없으면 프레임 도착 시각을 사용합니다. `TimestampedVideoRecording`은 실제로 인코딩된 첫 프레임을 영상 원점으로 삼습니다. 이 경우에도 센서·마이크 처리 지연과 AAC 프레임 경계의 오차가 남을 수 있으므로 샘플 단위 동기를 보장하지 않습니다. `MultiRecording`은 모든 영상 입력을 닫은 뒤 오디오를 종료하고 파일을 결합합니다.
 
 ### 계산과 저장의 제약
 
