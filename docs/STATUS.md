@@ -1,6 +1,6 @@
 # 작업 상태
 
-**0.27.0은 Split으로 보고 카메라별 원본을 저장합니다.** 설치는 [최신 릴리스](https://github.com/TTolsun/hal-camera/releases/latest), 변경 내용은 [릴리스 노트](releases/0.27.0.md), 촬영 방법은 [Live 가이드](../guide/live.md)를 확인하세요.
+**0.28.0은 전체 코드·문서 검토와 lint 정리를 반영한 유지보수 릴리스입니다.** 설치는 [최신 릴리스](https://github.com/TTolsun/hal-camera/releases/latest), 변경 내용은 [릴리스 노트](releases/0.28.0.md), 촬영 방법은 [Live 가이드](../guide/live.md)를 확인하세요.
 
 ## 이번 버전에서 확인할 것
 
@@ -10,7 +10,7 @@
 
 ## 검증 범위
 
-Galaxy S25+ · Android 16의 버튼 조작·저장 결과와 코드·문서 검토는 [0.27.0 검증 기록](validation/release-0.27.0.md)에 모았습니다. 다른 제조사, 세 카메라 이상, 전체 CTS와 장시간 녹화는 이번 기기 검증에 포함하지 않았습니다.
+Galaxy S25+ · Android 16의 데이터 보존 업데이트와 코드·문서 검토는 [0.28.0 검증 기록](validation/release-0.28.0.md)에 모았습니다. 다른 제조사, 세 카메라 이상, 전체 CTS와 장시간 녹화는 이번 기기 검증에 포함하지 않았습니다.
 
 Baseline 기반 회귀 비교는 유지합니다. 내부 점수 초안은 2026-10-08에 제거했으며 새 run의 점수 필드는 호환을 위해 null로 남습니다. [점수 초안 보관 문서](archive/SCORING-v1-draft.md)를 참고하세요.
 
