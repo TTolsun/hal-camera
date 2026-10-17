@@ -3,7 +3,7 @@
   const nav = document.querySelector('.site-nav');
   if (!nav) return;
   const groups = [
-    { label: 'Validation Tools', pages: ['probe.html', 'cts.html', 'benchmark.html', 'callback.html'] },
+    { label: 'Tools', pages: ['probe.html', 'cts.html', 'benchmark.html', 'callback.html'] },
     { label: 'Help', pages: ['automation.html', 'troubleshooting.html'] },
   ];
   const links = [...nav.querySelectorAll('a')];
