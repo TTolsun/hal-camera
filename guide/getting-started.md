@@ -9,7 +9,7 @@ title: Quickstart
 
 ## APK를 설치하세요
 
-1. [배포 페이지](https://github.com/TTolsun/hal-camera/releases/latest)의 Assets에서 APK를 받습니다. 팀에서 지정한 검증 빌드가 있다면 그 APK를 사용합니다.
+1. [Download](download.md)에서 GitHub 릴리스를 열고 Assets의 APK를 받습니다. 팀에서 지정한 검증 빌드가 있다면 그 APK를 사용합니다.
 2. 기기에서 APK를 열어 설치합니다. 설치 허용을 요청하면 해당 파일을 연 앱에 허용합니다. PC에서는 USB 디버깅을 켜고 연결을 승인한 뒤 아래 명령으로 설치할 수 있습니다.
 
    ~~~powershell
