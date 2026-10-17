@@ -13,7 +13,6 @@ title: Live
 | 보조 화면을 합성하거나 여러 카메라로 촬영합니다. | [PIP](#pip로-보이는-구도를-저장하세요) · [Multi](#여러-카메라를-함께-촬영하세요) |
 | 보정·AF·AE를 조절합니다. | [손떨림 보정](#손떨림-보정을-선택하세요) · [초점과 노출](#초점과-노출을-조절하세요) |
 
-<p class="doc-evidence">첫 화면은 2026-10-11의 Live 정보 정렬 검증본입니다. WB 목록은 이번 검증본이며, 하단의 Flash·AF·AE·EV 화면은 이전 빌드라 현재 버튼과 다를 수 있습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건</a>을 확인하세요.</p>
 
 ## Live에서 촬영하세요
 
@@ -66,7 +65,7 @@ CameraX에서는 사진 촬영 때 영상의 프레임 간격이 늘어날 수 �
 
 <figure class="app-screenshot" id="screen-live">
 <a href="assets/screenshots/live.png" aria-label="Camera2 Live 사진 모드와 실시간 정보 원본 보기"><img src="assets/screenshots/live.png" alt="Camera2 Live 사진 모드와 실시간 정보" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>Camera2의 사진 모드입니다. 하단에서 실시간 정보, 줌, 셔터와 최근 썸네일을 확인할 수 있습니다.</figcaption>
+<figcaption>Camera2의 사진 모드입니다. 하단에서 실시간 정보, 줌, 셔터와 최근 썸네일을 확인할 수 있습니다. <span class="screenshot-date">Galaxy S25+ · Android 16 · 2026-10-11</span></figcaption>
 </figure>
 
 ### 연사
@@ -155,7 +154,7 @@ TalkBack에서는 `Start burst`로 시작하고 셔터의 `Stop burst`로 멈춥
 
 <figure class="app-screenshot" id="screen-wb-inline">
 <a href="assets/screenshots/wb-inline.png"><img src="assets/screenshots/wb-inline.png" alt="Video 모드에서 WB 버튼 아래에 연결된 프리셋 목록" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>WB 목록은 버튼 아래로 이어집니다. 아래 항목은 목록을 스크롤해 고르세요.</figcaption>
+<figcaption>WB 목록은 버튼 아래로 이어집니다. 아래 항목은 목록을 스크롤해 고르세요. <span class="screenshot-date">Galaxy S25+ · Android 16 · 2026-10-11</span></figcaption>
 </figure>
 
 카메라·엔진·촬영 모드·스트림 구성을 바꾸면 수동 설정이 초기화됩니다. 같은 모드의 프리뷰·촬영에는 같은 설정을 적용합니다.
@@ -333,10 +332,7 @@ Multi는 Android 11 이상과 독립 장치의 동시 실행 지원이 필요합
 | 프리뷰를 길게 누릅니다. | 해당 지점을 기준으로 AE를 잠급니다. 원 위의 자물쇠와 AE 버튼으로 잠금 상태를 확인합니다. |
 | 다른 지점을 짧게 터치하거나 AE 버튼을 누릅니다. | 터치로 설정한 AE 잠금을 해제합니다. |
 
-<figure class="app-screenshot" id="screen-live-controls">
-<a href="assets/screenshots/live-controls.png" aria-label="Live의 Flash AF AE EV 제어 줄 원본 보기"><img src="assets/screenshots/live-controls.png" alt="Live의 Flash AF AE EV 제어 줄" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>상단 화살표로 제어 줄을 펼쳤습니다. Flash·AF·AE·EV를 조작할 수 있습니다.</figcaption>
-</figure>
+
 
 `AE Locked`는 노출 잠금, `AF No focus`는 초점이 맞지 않은 상태입니다. AF 잠금 여부는 별도의 `AF Lock` 표시로 확인하세요. 촬영 지연이나 노출 변화가 예상과 다르면 [Troubleshooting](troubleshooting.md#앱과-프레임워크hal을-구분하세요)을 확인하세요.
 

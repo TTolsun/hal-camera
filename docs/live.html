@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Live · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
-  <link rel="stylesheet" href="./assets/site-theme-v3.css">
+  <link rel="stylesheet" href="./assets/site-theme-v4.css">
   <script type="module" src="./assets/search-v2.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
+  <script type="module" src="./assets/responsive-tables.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">본문으로 이동</a>
@@ -58,7 +59,7 @@
 <td><a href="#손떨림-보정을-선택하세요">손떨림 보정</a> · <a href="#초점과-노출을-조절하세요">초점과 노출</a></td>
 </tr>
 </tbody></table>
-<p class="doc-evidence">첫 화면은 2026-10-11의 Live 정보 정렬 검증본입니다. WB 목록은 이번 검증본이며, 하단의 Flash·AF·AE·EV 화면은 이전 빌드라 현재 버튼과 다를 수 있습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건</a>을 확인하세요.</p><h2 id="live에서-촬영하세요">Live에서 촬영하세요</h2>
+<h2 id="live에서-촬영하세요">Live에서 촬영하세요</h2>
 <ol>
 <li>상단에서 엔진을 고르고 오른쪽 아래 카메라 버튼에서 카메라를 선택합니다.</li>
 <li>사진 모드에서 셔터를 누릅니다.</li>
@@ -115,7 +116,7 @@
 <p>상단 화살표를 펼치면 Live·스트림 크기 대신 제어 버튼이 나옵니다. <code>M</code>·<code>EV</code>·<code>Flash</code>는 누른 버튼 아래로 열리며, 같은 버튼이나 화살표로 닫습니다. 활성 설정은 실시간 정보 아래에서 확인합니다. Callback 그래프를 켜면 정보 줄은 잠시 숨깁니다.</p>
 <figure class="app-screenshot" id="screen-live">
 <a href="assets/screenshots/live.png" aria-label="Camera2 Live 사진 모드와 실시간 정보 원본 보기"><img src="assets/screenshots/live.png" alt="Camera2 Live 사진 모드와 실시간 정보" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>Camera2의 사진 모드입니다. 하단에서 실시간 정보, 줌, 셔터와 최근 썸네일을 확인할 수 있습니다.</figcaption>
+<figcaption>Camera2의 사진 모드입니다. 하단에서 실시간 정보, 줌, 셔터와 최근 썸네일을 확인할 수 있습니다. <span class="screenshot-date">Galaxy S25+ · Android 16 · 2026-10-11</span></figcaption>
 </figure><h3 id="연사">연사</h3>
 <ol>
 <li>사진 모드에서 AEB를 끄고 셔터를 길게 누릅니다.</li>
@@ -209,7 +210,7 @@
 <p><strong>같은 흰 물체로 비교해 보세요.</strong> WB를 Auto → Daylight → Incandescent로 바꾸며 색이 어떻게 달라지는지 살펴보세요. 패널 아래 <code>Actual</code>은 카메라가 보고한 적용값입니다. 다시 Auto를 고르면 WB만 자동으로 돌아갑니다.</p>
 <figure class="app-screenshot" id="screen-wb-inline">
 <a href="assets/screenshots/wb-inline.png"><img src="assets/screenshots/wb-inline.png" alt="Video 모드에서 WB 버튼 아래에 연결된 프리셋 목록" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>WB 목록은 버튼 아래로 이어집니다. 아래 항목은 목록을 스크롤해 고르세요.</figcaption>
+<figcaption>WB 목록은 버튼 아래로 이어집니다. 아래 항목은 목록을 스크롤해 고르세요. <span class="screenshot-date">Galaxy S25+ · Android 16 · 2026-10-11</span></figcaption>
 </figure><p>카메라·엔진·촬영 모드·스트림 구성을 바꾸면 수동 설정이 초기화됩니다. 같은 모드의 프리뷰·촬영에는 같은 설정을 적용합니다.</p>
 <details id="manual-limits" data-search-section>
 <summary>수동 설정의 제한과 고급 WB</summary><ul>
@@ -466,10 +467,7 @@
 <td>터치로 설정한 AE 잠금을 해제합니다.</td>
 </tr>
 </tbody></table>
-<figure class="app-screenshot" id="screen-live-controls">
-<a href="assets/screenshots/live-controls.png" aria-label="Live의 Flash AF AE EV 제어 줄 원본 보기"><img src="assets/screenshots/live-controls.png" alt="Live의 Flash AF AE EV 제어 줄" width="1440" height="3120" loading="lazy" decoding="async"></a>
-<figcaption>상단 화살표로 제어 줄을 펼쳤습니다. Flash·AF·AE·EV를 조작할 수 있습니다.</figcaption>
-</figure><p><code>AE Locked</code>는 노출 잠금, <code>AF No focus</code>는 초점이 맞지 않은 상태입니다. AF 잠금 여부는 별도의 <code>AF Lock</code> 표시로 확인하세요. 촬영 지연이나 노출 변화가 예상과 다르면 <a href="troubleshooting.html#앱과-프레임워크hal을-구분하세요">Troubleshooting</a>을 확인하세요.</p>
+<p><code>AE Locked</code>는 노출 잠금, <code>AF No focus</code>는 초점이 맞지 않은 상태입니다. AF 잠금 여부는 별도의 <code>AF Lock</code> 표시로 확인하세요. 촬영 지연이나 노출 변화가 예상과 다르면 <a href="troubleshooting.html#앱과-프레임워크hal을-구분하세요">Troubleshooting</a>을 확인하세요.</p>
 </details><p><strong>다음 단계:</strong> <a href="callback.html">Callback</a>에서 촬영 프레임의 콜백과 시각을 확인하세요.</p>
 
   </main>
@@ -478,17 +476,17 @@
   <dialog id="search-dialog" aria-labelledby="search-title">
     <div class="search-controls">
       <div class="search-head"><h2 id="search-title">문서 찾기</h2><button class="search-close" type="button">닫기 <kbd>Esc</kbd></button></div>
-      <label for="search-input">제목부터 본문 속 API까지 검색하세요.</label>
-      <input id="search-input" name="q" type="search" autocomplete="off" spellcheck="false" placeholder="예: 센서 시각, SENSOR_TIMESTAMP…" aria-describedby="search-status" enterkeyhint="search" autofocus>
+      <label for="search-input">제목이나 궁금한 기능으로 검색하세요.</label>
+      <input id="search-input" name="q" type="search" autocomplete="off" spellcheck="false" placeholder="예: APK, 사진, RAW…" aria-describedby="search-status" enterkeyhint="search" autofocus>
       <p id="search-status" role="status"></p>
       <button class="search-retry" type="button" hidden>문서 다시 불러오기</button>
     </div>
     <div class="search-body">
       <div class="search-suggestions">
         <p>어디서 시작할지 모르겠다면</p>
-        <button type="button" data-query="센서 시각">센서 시각</button>
-        <button type="button" data-query="close(done)">close(done)</button>
-        <button type="button" data-query="YUV">YUV</button>
+        <button type="button" data-query="APK">다운로드</button>
+        <button type="button" data-query="사진">사진</button>
+        <button type="button" data-query="RAW">RAW</button>
       </div>
       <ol id="search-results" aria-label="검색 결과"></ol>
     </div>
