@@ -39,6 +39,8 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
     })
     @Volatile private var host: CliHost? = null
     @Volatile private var uiBusy = false
+    // A detached screen can still own cameras until close(done), even after its files are registered.
+    private val closingPreviews = java.util.concurrent.ConcurrentHashMap.newKeySet<CliHost>()
     @Volatile override var active: CliCommand? = null
         private set
     private var handover = false
@@ -47,7 +49,7 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
     @Volatile private var cancellationCode: String? = null
     // Default to ADB access; preserve an explicit opt-out across app updates.
     val enabled: Boolean get() = context.getSharedPreferences("cli", Context.MODE_PRIVATE).getBoolean("enabled", true)
-    val busy: Boolean get() = active != null || uiBusy
+    val busy: Boolean get() = active != null || uiBusy || closingPreviews.isNotEmpty()
 
     fun setEnabled(value: Boolean) {
         context.getSharedPreferences("cli", Context.MODE_PRIVATE).edit { putBoolean("enabled", value) }
@@ -56,6 +58,9 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
 
     fun attach(value: CliHost) { host = value; uiBusy = value.isBusy() }
     fun setUiBusy(owner: CliHost, value: Boolean) { if (host === owner) uiBusy = value }
+    fun setCameraClosing(owner: CliHost, value: Boolean) {
+        if (value) closingPreviews.add(owner) else closingPreviews.remove(owner)
+    }
     fun canOpenLive(): Boolean = !busy && host?.isBusy() != true
     /** Called on main by the translucent gate, before CLEAR_TOP can resume MainActivity. */
     fun prepareLiveLaunch(launch: () -> Unit): Boolean {

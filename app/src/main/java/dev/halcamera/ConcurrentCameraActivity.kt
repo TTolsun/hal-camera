@@ -524,9 +524,11 @@ class ConcurrentCameraActivity : ComponentActivity() {
         if (after == null && cli.active == null) cliPaused = false
         if (closing) return
         closing = true; ready = false; previews.forEach { it.alpha = 0f }
+        cli.setCameraClosing(multiCli, true)
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); updateButtons()
         val done = {
             session = null; closing = false; takingPhoto = false; recording = false; videoPending = false
+            cli.setCameraClosing(multiCli, false)
             retired.forEach { it.release() }; retired.clear()
             val callbacks = closeCallbacks.toList(); closeCallbacks.clear()
             callbacks.forEach { it() }

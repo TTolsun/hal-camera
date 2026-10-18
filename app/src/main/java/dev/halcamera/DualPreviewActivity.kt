@@ -618,8 +618,10 @@ class DualPreviewActivity : ComponentActivity() {
         session = null
         cliFrames.fill(false)
         closing = true
+        cli.setCameraClosing(cliHost, true)
         old.close {
             closing = false
+            cli.setCameraClosing(cliHost, false)
             recording = false; recordPending = false; photoPending = false
             retiredTextures.forEach { it.release() }; retiredTextures.clear()
             then()

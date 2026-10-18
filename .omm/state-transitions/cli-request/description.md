@@ -17,3 +17,5 @@ ADB CLI는 저장된 설정이 없으면 허용합니다. 사용자가 명시적
 Multi는 Live close(done) 뒤 ConcurrentCameraActivity의 MultiCliBridge/MultiController로 인계합니다. CliMultiOptions가 advertised 조합·엔진 대수·순서별 크기를 엄격히 검사합니다. 준비 중 취소는 닫기 완료 뒤 끝나며, 녹화 시작 전 정지는 시작 콜백까지 기다려 정지합니다. 화면 이탈은 APP_NOT_FOREGROUND로 끝냅니다. preview_screens가 현재 화면 명령의 대상 목록이며 Live·Dual·Multi를 광고합니다.
 
 녹화 준비·화면 인계 중 도착한 record.stop은 CommandCoordinator가 보관하고 실제 recordingStarted 콜백 뒤 현재 host에 전달합니다. 준비 중 정지가 다음 화면으로 사라지거나 녹화를 다시 시작하지 않도록 합니다.
+
+Dual·Multi는 화면이 detach된 뒤에도 카메라 닫기 소유권을 coordinator에 남깁니다. 파일 등록 완료와 카메라 해제 완료를 분리하여, close(done) 이전에는 다음 CLI 카메라 명령과 Live 전환을 BUSY로 막습니다.
