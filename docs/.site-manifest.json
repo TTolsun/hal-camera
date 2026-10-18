@@ -4,7 +4,7 @@
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "_inputs/decisions.html": "2d72d251c07291b0cf293bcb1e74c7d32bdec7ed57d94e8913b394e75bf73931",
     "_inputs/device-verification.yaml": "1852f48d52f75733b4db973418fc7fad1f0f9d340a8b4b555cf9d49aa7016215",
-    "architecture.html": "51bd9d76b64ef48cb8e43a5826bfb77662e0f8a66948fa6384b5e3e7b0e0092a",
+    "architecture.html": "322b11559da6bc840f55e18557f6ed88796ce0dee13ff50c025f8860055cedad",
     "assets/docflow-design.css": "c7e6ace53c14b9aeff717eb46e20b006b1a512e33c58a4fd52ee236444eb3684",
     "assets/media/automation/bridge.png": "bdbd7cbdc28010caa9b8e320e2d311efd35bb2f66cbb9b5cb322af638b7ccbff",
     "assets/media/automation/opening-sensor.mp4": "8e26f5eeeb0b92cd241b2235aab7ffd122cbf2ac94b66c37fafb440da4ae1178",
@@ -70,7 +70,7 @@
     "getting-started.html": "e8d7a0a85e8b9a6a9f9c689529e122a70ef863d7fe3175f0b36db609f6d2cb3c",
     "glossary.html": "699d0fea52088bb872510c4549176314d44e78d35587f5b14fb33a425461bc5c",
     "index.html": "77ba2bfc0e12cae3a30c059b1ea04d4560ed1892b15670100f252e18990b1222",
-    "live.html": "06208109a0320b9d83346e8ed5656d7a9b101f1813b56117febd485d0523f92c",
+    "live.html": "ea5a922c7e3703638230984e7d784f4522467d2cbcb1101df0ce62d750a3a63f",
     "probe.html": "6e1164984422267afdca48e6c2d32b0adae9fba9dcb96736b511d342bde0164e",
     "troubleshooting.html": "72d2aaee2059e93a93d3f1815f194756644338a7887b5a86ae0fed805e8dfc67"
   }
