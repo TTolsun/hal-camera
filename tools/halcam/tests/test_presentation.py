@@ -92,7 +92,9 @@ class PresentationTests(unittest.TestCase):
         text = render(dict(completed=False, request_id=RID, error={"code": "REQUEST_NOT_FOUND", "message": "Unknown"}), argparse.Namespace())
         self.assertIn("Next: halcam requests", text)
         rows = [{"request_id": RID, "command": "capture", "state": "succeeded", "artifact_count": 2}]
-        self.assertIn(RID, render({"protocol_version": 1, "requests": rows}, argparse.Namespace()))
+        listed = render({"protocol_version": 1, "requests": rows}, argparse.Namespace())
+        self.assertTrue(listed.startswith("1 retained request(s), newest first."))
+        self.assertIn(RID, listed)
         self.assertIn("(none)", render({"protocol_version": 1, "requests": []}, argparse.Namespace()))
 
     def test_stop_response_is_not_reported_as_a_new_recording(self):

@@ -42,6 +42,8 @@ def render(data, args):
         lines.append("Recording started. Stop to save the video.")
     elif data.get("busy"):
         lines.append("Busy. An app operation is running.")
+    elif isinstance(data.get("requests"), list):
+        lines.append(f"{len(data['requests'])} retained request(s), newest first.")
     elif "applied" in result:
         lines.append("Retention limit applied." if result["applied"] else "Preview only. Nothing has changed.")
     else:
