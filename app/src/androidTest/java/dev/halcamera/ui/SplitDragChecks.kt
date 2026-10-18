@@ -2,14 +2,18 @@ package dev.halcamera.ui
 
 import android.app.Instrumentation
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Rect
 import android.os.SystemClock
 import android.view.MotionEvent
+import android.view.Gravity
 import android.widget.FrameLayout
 import android.widget.TextView
 import dev.halcamera.WorkbenchActivity
 import dev.halcamera.camera.SplitArrangement
 import dev.halcamera.camera.SplitLayout
+import java.io.File
 
 /** Real attached Views exercise timer ownership, click suppression and cancellation without capturing media. */
 object SplitDragChecks {
@@ -21,7 +25,7 @@ object SplitDragChecks {
         }
         val activity = test.startActivitySync(Intent(test.targetContext,WorkbenchActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-        val distance = Look.dp(activity,56).toFloat()
+        val distance = Look.dp(activity,24).toFloat()
         var enabled = true
         var clicks = 0
         var drops = 0
@@ -41,15 +45,23 @@ object SplitDragChecks {
         }
         try {
             ui {
-                stage = FrameLayout(activity)
-                panel = FrameLayout(activity)
-                handle = TextView(activity).apply { text = "Sensor"; setOnClickListener { clicks++ } }
+                stage = FrameLayout(activity).apply { setBackgroundColor(Look.cameraSurface) }
+                panel = FrameLayout(activity).apply { setBackgroundColor(Look.cameraCard) }
+                handle = TextView(activity).apply {
+                    text = "Sensor 2 · Touch test"; textSize = 14f; setTextColor(Look.onDark)
+                    gravity = Gravity.CENTER; setOnClickListener { clicks++ }
+                }
                 panel.addView(handle,FrameLayout.LayoutParams(400,192))
                 stage.addView(panel,FrameLayout.LayoutParams(400,800))
                 activity.setContentView(stage)
-                SplitPanelDrag(stage,{ Rect(0,0,Look.dp(activity,400),Look.dp(activity,800)) },{ current },{ enabled }) {
+                SplitPanelDrag(stage,{ Rect(0,0,stage.width,stage.height) },{ current },{ enabled }) {
                     current = it; drops++
                 }.attach(handle,panel,1)
+            }
+            test.waitForIdleSync()
+            ui {
+                panel.layoutParams = FrameLayout.LayoutParams(stage.width/2,stage.height).apply { leftMargin = stage.width/2 }
+                handle.layoutParams = FrameLayout.LayoutParams(-1,Look.dp(activity,48)).apply { topMargin = Look.dp(activity,96) }
             }
             test.waitForIdleSync()
             touch(MotionEvent.ACTION_DOWN); touch(MotionEvent.ACTION_UP)
@@ -58,6 +70,16 @@ object SplitDragChecks {
             ui { check(clicks == 1 && drops == 0) }
             hold(); touch(MotionEvent.ACTION_MOVE,dy = -distance)
             ui { check(panel.translationY == -distance && drops == 0) }
+            SystemClock.sleep(100)
+            test.waitForIdleSync()
+            ui {
+                val bitmap = Bitmap.createBitmap(stage.width,stage.height,Bitmap.Config.ARGB_8888)
+                try {
+                    stage.draw(Canvas(bitmap))
+                    val directory = File(test.targetContext.getExternalFilesDir(null),"split-drag-checks").apply { mkdirs() }
+                    File(directory,"top-preview.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG,100,it) }
+                } finally { bitmap.recycle() }
+            }
             touch(MotionEvent.ACTION_UP,dy = -distance); restored()
             ui { check(drops == 1 && current.layout == SplitLayout.STACKED && current.order.first() == 1 && clicks == 1) }
             ui { current = SplitArrangement.identity(2) }
@@ -76,6 +98,6 @@ object SplitDragChecks {
             SystemClock.sleep(320); restored()
             ui { check(drops == 1) }
         } finally { ui { activity.finish() } }
-        return "Split drag PASS: tap, hold, 56dp snap, one-to-one motion, return to cancel, ACTION_CANCEL, disabled drop, second pointer, detach"
+        return "Split drag PASS: tap, 250ms hold, 24dp snap, one-to-one motion, return to cancel, ACTION_CANCEL, disabled drop, second pointer, detach"
     }
 }

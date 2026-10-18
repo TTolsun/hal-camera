@@ -3,14 +3,14 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1ad7350a924c66a1",
-        "modelHash": "db296054f02ec850",
-        "at": "2026-10-17",
-        "commit": "06963d06",
-        "reviewer": "claude-user-requested-review",
+        "codeHash": "4d292e20c0ca344b",
+        "modelHash": "53771fd926534ab7",
+        "at": "2026-10-18",
+        "commit": "0ac40770",
+        "reviewer": "codex-user-requested-code-review",
         "files": {
           "app/build.gradle.kts": "d334d1b8cb1b45d93a75c84c531978f1bc91e66c",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -155,7 +155,8 @@
           "app/src/main/java/dev/halcamera/camera/SampleClock.kt": "64397572af6bc204dce7c802c4077cbc4769a334",
           "app/src/main/java/dev/halcamera/camera/SnapshotRequest.kt": "86ea336a62641229a89f1e05963a2e42e63db030",
           "app/src/main/java/dev/halcamera/camera/SnapshotSessionRetry.kt": "da2e4b04f210dbcf02a14e57dd37737d4bf16110",
-          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "eafaaccf50aebbd750938cd93d1f6cb68051589b",
+          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "7b0bb0ba360498f9fc4703b46d93d92bbec903da",
+          "app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt": "9b81f7049c67bb995b69c78569587f411e2205d8",
           "app/src/main/java/dev/halcamera/camera/SplitSelection.kt": "f718bbd646cad8a073d8ebeec5c92b49373be93a",
           "app/src/main/java/dev/halcamera/camera/StillEncoding.kt": "5aa1b068280d42093d034b989cc7bca9c843582b",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "018512ebc2ca0b47dfdf67267d35b0481373cb92",
@@ -262,7 +263,7 @@
           "app/src/main/java/dev/halcamera/ui/SelectionPopup.kt": "761d5b6542b977fec151f37303b695faf72d9dab",
           "app/src/main/java/dev/halcamera/ui/ShutterButton.kt": "f16d22870bc6affb8a5323a8a2b490c3f8688174",
           "app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt": "2d1b60723a23380df623f84dd1c3fbcaa4b1b23f",
-          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "4aeb42d63b1103b5e614674040da8720b5ab75c8",
+          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "b7fb569aa07f9b7c7c909eabef4a50268466cb45",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/SkipDiagnosis.kt": "88723e9da8438a4073c8622e6a524ee823f170ed",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCatalog.kt": "0396467538fde71f43fdc735daa0f1f1e430dbf1",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCts.kt": "b8282158956ec4049fa3a0cb3bc263fec62abaff",
@@ -367,14 +368,14 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6506f9ec912a9fdb",
-        "modelHash": "9e73541de416ddaf",
-        "at": "2026-10-17",
-        "commit": "06963d06",
-        "reviewer": "claude-user-requested-review",
+        "codeHash": "879b6d065152202a",
+        "modelHash": "0f820ba059f3db02",
+        "at": "2026-10-18",
+        "commit": "0ac40770",
+        "reviewer": "codex-user-requested-code-review",
         "files": {
           "app/build.gradle.kts": "d334d1b8cb1b45d93a75c84c531978f1bc91e66c",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -519,7 +520,8 @@
           "app/src/main/java/dev/halcamera/camera/SampleClock.kt": "64397572af6bc204dce7c802c4077cbc4769a334",
           "app/src/main/java/dev/halcamera/camera/SnapshotRequest.kt": "86ea336a62641229a89f1e05963a2e42e63db030",
           "app/src/main/java/dev/halcamera/camera/SnapshotSessionRetry.kt": "da2e4b04f210dbcf02a14e57dd37737d4bf16110",
-          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "eafaaccf50aebbd750938cd93d1f6cb68051589b",
+          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "7b0bb0ba360498f9fc4703b46d93d92bbec903da",
+          "app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt": "9b81f7049c67bb995b69c78569587f411e2205d8",
           "app/src/main/java/dev/halcamera/camera/SplitSelection.kt": "f718bbd646cad8a073d8ebeec5c92b49373be93a",
           "app/src/main/java/dev/halcamera/camera/StillEncoding.kt": "5aa1b068280d42093d034b989cc7bca9c843582b",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "018512ebc2ca0b47dfdf67267d35b0481373cb92",
@@ -626,7 +628,7 @@
           "app/src/main/java/dev/halcamera/ui/SelectionPopup.kt": "761d5b6542b977fec151f37303b695faf72d9dab",
           "app/src/main/java/dev/halcamera/ui/ShutterButton.kt": "f16d22870bc6affb8a5323a8a2b490c3f8688174",
           "app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt": "2d1b60723a23380df623f84dd1c3fbcaa4b1b23f",
-          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "4aeb42d63b1103b5e614674040da8720b5ab75c8",
+          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "b7fb569aa07f9b7c7c909eabef4a50268466cb45",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/SkipDiagnosis.kt": "88723e9da8438a4073c8622e6a524ee823f170ed",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCatalog.kt": "0396467538fde71f43fdc735daa0f1f1e430dbf1",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCts.kt": "b8282158956ec4049fa3a0cb3bc263fec62abaff",
@@ -691,11 +693,11 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "1ad7350a924c66a1",
-        "modelHash": "dfedd05800aff701",
-        "at": "2026-10-17",
-        "commit": "06963d06",
-        "reviewer": "claude-user-requested-review",
+        "codeHash": "4d292e20c0ca344b",
+        "modelHash": "a3476fbbf462471d",
+        "at": "2026-10-18",
+        "commit": "0ac40770",
+        "reviewer": "codex-user-requested-code-review",
         "files": {
           "app/build.gradle.kts": "d334d1b8cb1b45d93a75c84c531978f1bc91e66c",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -840,7 +842,8 @@
           "app/src/main/java/dev/halcamera/camera/SampleClock.kt": "64397572af6bc204dce7c802c4077cbc4769a334",
           "app/src/main/java/dev/halcamera/camera/SnapshotRequest.kt": "86ea336a62641229a89f1e05963a2e42e63db030",
           "app/src/main/java/dev/halcamera/camera/SnapshotSessionRetry.kt": "da2e4b04f210dbcf02a14e57dd37737d4bf16110",
-          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "eafaaccf50aebbd750938cd93d1f6cb68051589b",
+          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "7b0bb0ba360498f9fc4703b46d93d92bbec903da",
+          "app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt": "9b81f7049c67bb995b69c78569587f411e2205d8",
           "app/src/main/java/dev/halcamera/camera/SplitSelection.kt": "f718bbd646cad8a073d8ebeec5c92b49373be93a",
           "app/src/main/java/dev/halcamera/camera/StillEncoding.kt": "5aa1b068280d42093d034b989cc7bca9c843582b",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "018512ebc2ca0b47dfdf67267d35b0481373cb92",
@@ -947,7 +950,7 @@
           "app/src/main/java/dev/halcamera/ui/SelectionPopup.kt": "761d5b6542b977fec151f37303b695faf72d9dab",
           "app/src/main/java/dev/halcamera/ui/ShutterButton.kt": "f16d22870bc6affb8a5323a8a2b490c3f8688174",
           "app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt": "2d1b60723a23380df623f84dd1c3fbcaa4b1b23f",
-          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "4aeb42d63b1103b5e614674040da8720b5ab75c8",
+          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "b7fb569aa07f9b7c7c909eabef4a50268466cb45",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/SkipDiagnosis.kt": "88723e9da8438a4073c8622e6a524ee823f170ed",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCatalog.kt": "0396467538fde71f43fdc735daa0f1f1e430dbf1",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCts.kt": "b8282158956ec4049fa3a0cb3bc263fec62abaff",
@@ -956,16 +959,16 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "1ad7350a924c66a1",
-        "modelHash": "cf6b890a693ea075",
-        "at": "2026-10-17",
-        "commit": "06963d06",
-        "reviewer": "claude-user-requested-review",
+        "codeHash": "4d292e20c0ca344b",
+        "modelHash": "64f9e58fc62ee65f",
+        "at": "2026-10-18",
+        "commit": "0ac40770",
+        "reviewer": "codex-user-requested-code-review",
         "files": {
           "app/build.gradle.kts": "d334d1b8cb1b45d93a75c84c531978f1bc91e66c",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -1110,7 +1113,8 @@
           "app/src/main/java/dev/halcamera/camera/SampleClock.kt": "64397572af6bc204dce7c802c4077cbc4769a334",
           "app/src/main/java/dev/halcamera/camera/SnapshotRequest.kt": "86ea336a62641229a89f1e05963a2e42e63db030",
           "app/src/main/java/dev/halcamera/camera/SnapshotSessionRetry.kt": "da2e4b04f210dbcf02a14e57dd37737d4bf16110",
-          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "eafaaccf50aebbd750938cd93d1f6cb68051589b",
+          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "7b0bb0ba360498f9fc4703b46d93d92bbec903da",
+          "app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt": "9b81f7049c67bb995b69c78569587f411e2205d8",
           "app/src/main/java/dev/halcamera/camera/SplitSelection.kt": "f718bbd646cad8a073d8ebeec5c92b49373be93a",
           "app/src/main/java/dev/halcamera/camera/StillEncoding.kt": "5aa1b068280d42093d034b989cc7bca9c843582b",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "018512ebc2ca0b47dfdf67267d35b0481373cb92",
@@ -1217,7 +1221,7 @@
           "app/src/main/java/dev/halcamera/ui/SelectionPopup.kt": "761d5b6542b977fec151f37303b695faf72d9dab",
           "app/src/main/java/dev/halcamera/ui/ShutterButton.kt": "f16d22870bc6affb8a5323a8a2b490c3f8688174",
           "app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt": "2d1b60723a23380df623f84dd1c3fbcaa4b1b23f",
-          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "4aeb42d63b1103b5e614674040da8720b5ab75c8",
+          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "b7fb569aa07f9b7c7c909eabef4a50268466cb45",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/SkipDiagnosis.kt": "88723e9da8438a4073c8622e6a524ee823f170ed",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCatalog.kt": "0396467538fde71f43fdc735daa0f1f1e430dbf1",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCts.kt": "b8282158956ec4049fa3a0cb3bc263fec62abaff",
@@ -1226,7 +1230,7 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "omm:ui-camera-label": {
@@ -1280,14 +1284,14 @@
     },
     "content:_reference/engine.md/contract": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1ad7350a924c66a1",
-        "modelHash": "47040f2f80097390",
-        "at": "2026-10-17",
-        "commit": "06963d06",
-        "reviewer": "claude-user-requested-review",
+        "codeHash": "4d292e20c0ca344b",
+        "modelHash": "fa55d3a34624dbdd",
+        "at": "2026-10-18",
+        "commit": "0ac40770",
+        "reviewer": "codex-user-requested-code-review",
         "files": {
           "app/build.gradle.kts": "d334d1b8cb1b45d93a75c84c531978f1bc91e66c",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -1432,7 +1436,8 @@
           "app/src/main/java/dev/halcamera/camera/SampleClock.kt": "64397572af6bc204dce7c802c4077cbc4769a334",
           "app/src/main/java/dev/halcamera/camera/SnapshotRequest.kt": "86ea336a62641229a89f1e05963a2e42e63db030",
           "app/src/main/java/dev/halcamera/camera/SnapshotSessionRetry.kt": "da2e4b04f210dbcf02a14e57dd37737d4bf16110",
-          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "eafaaccf50aebbd750938cd93d1f6cb68051589b",
+          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "7b0bb0ba360498f9fc4703b46d93d92bbec903da",
+          "app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt": "9b81f7049c67bb995b69c78569587f411e2205d8",
           "app/src/main/java/dev/halcamera/camera/SplitSelection.kt": "f718bbd646cad8a073d8ebeec5c92b49373be93a",
           "app/src/main/java/dev/halcamera/camera/StillEncoding.kt": "5aa1b068280d42093d034b989cc7bca9c843582b",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "018512ebc2ca0b47dfdf67267d35b0481373cb92",
@@ -1539,7 +1544,7 @@
           "app/src/main/java/dev/halcamera/ui/SelectionPopup.kt": "761d5b6542b977fec151f37303b695faf72d9dab",
           "app/src/main/java/dev/halcamera/ui/ShutterButton.kt": "f16d22870bc6affb8a5323a8a2b490c3f8688174",
           "app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt": "2d1b60723a23380df623f84dd1c3fbcaa4b1b23f",
-          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "4aeb42d63b1103b5e614674040da8720b5ab75c8",
+          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "b7fb569aa07f9b7c7c909eabef4a50268466cb45",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/SkipDiagnosis.kt": "88723e9da8438a4073c8622e6a524ee823f170ed",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCatalog.kt": "0396467538fde71f43fdc735daa0f1f1e430dbf1",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCts.kt": "b8282158956ec4049fa3a0cb3bc263fec62abaff",
@@ -1550,14 +1555,14 @@
     },
     "content:_reference/engine.md/camera2": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1ad7350a924c66a1",
-        "modelHash": "5fd2b8db2c1f7437",
-        "at": "2026-10-17",
-        "commit": "06963d06",
-        "reviewer": "claude-user-requested-review",
+        "codeHash": "4d292e20c0ca344b",
+        "modelHash": "675fe08bc7fd1a52",
+        "at": "2026-10-18",
+        "commit": "0ac40770",
+        "reviewer": "codex-user-requested-code-review",
         "files": {
           "app/build.gradle.kts": "d334d1b8cb1b45d93a75c84c531978f1bc91e66c",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -1702,7 +1707,8 @@
           "app/src/main/java/dev/halcamera/camera/SampleClock.kt": "64397572af6bc204dce7c802c4077cbc4769a334",
           "app/src/main/java/dev/halcamera/camera/SnapshotRequest.kt": "86ea336a62641229a89f1e05963a2e42e63db030",
           "app/src/main/java/dev/halcamera/camera/SnapshotSessionRetry.kt": "da2e4b04f210dbcf02a14e57dd37737d4bf16110",
-          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "eafaaccf50aebbd750938cd93d1f6cb68051589b",
+          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "7b0bb0ba360498f9fc4703b46d93d92bbec903da",
+          "app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt": "9b81f7049c67bb995b69c78569587f411e2205d8",
           "app/src/main/java/dev/halcamera/camera/SplitSelection.kt": "f718bbd646cad8a073d8ebeec5c92b49373be93a",
           "app/src/main/java/dev/halcamera/camera/StillEncoding.kt": "5aa1b068280d42093d034b989cc7bca9c843582b",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "018512ebc2ca0b47dfdf67267d35b0481373cb92",
@@ -1809,7 +1815,7 @@
           "app/src/main/java/dev/halcamera/ui/SelectionPopup.kt": "761d5b6542b977fec151f37303b695faf72d9dab",
           "app/src/main/java/dev/halcamera/ui/ShutterButton.kt": "f16d22870bc6affb8a5323a8a2b490c3f8688174",
           "app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt": "2d1b60723a23380df623f84dd1c3fbcaa4b1b23f",
-          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "4aeb42d63b1103b5e614674040da8720b5ab75c8",
+          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "b7fb569aa07f9b7c7c909eabef4a50268466cb45",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/SkipDiagnosis.kt": "88723e9da8438a4073c8622e6a524ee823f170ed",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCatalog.kt": "0396467538fde71f43fdc735daa0f1f1e430dbf1",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCts.kt": "b8282158956ec4049fa3a0cb3bc263fec62abaff",
@@ -1820,14 +1826,14 @@
     },
     "content:_reference/engine.md/camerax": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1ad7350a924c66a1",
-        "modelHash": "be795c2b70e9c1ef",
-        "at": "2026-10-17",
-        "commit": "06963d06",
-        "reviewer": "claude-user-requested-review",
+        "codeHash": "4d292e20c0ca344b",
+        "modelHash": "43356599ef34ab30",
+        "at": "2026-10-18",
+        "commit": "0ac40770",
+        "reviewer": "codex-user-requested-code-review",
         "files": {
           "app/build.gradle.kts": "d334d1b8cb1b45d93a75c84c531978f1bc91e66c",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -1972,7 +1978,8 @@
           "app/src/main/java/dev/halcamera/camera/SampleClock.kt": "64397572af6bc204dce7c802c4077cbc4769a334",
           "app/src/main/java/dev/halcamera/camera/SnapshotRequest.kt": "86ea336a62641229a89f1e05963a2e42e63db030",
           "app/src/main/java/dev/halcamera/camera/SnapshotSessionRetry.kt": "da2e4b04f210dbcf02a14e57dd37737d4bf16110",
-          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "eafaaccf50aebbd750938cd93d1f6cb68051589b",
+          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "7b0bb0ba360498f9fc4703b46d93d92bbec903da",
+          "app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt": "9b81f7049c67bb995b69c78569587f411e2205d8",
           "app/src/main/java/dev/halcamera/camera/SplitSelection.kt": "f718bbd646cad8a073d8ebeec5c92b49373be93a",
           "app/src/main/java/dev/halcamera/camera/StillEncoding.kt": "5aa1b068280d42093d034b989cc7bca9c843582b",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "018512ebc2ca0b47dfdf67267d35b0481373cb92",
@@ -2079,7 +2086,7 @@
           "app/src/main/java/dev/halcamera/ui/SelectionPopup.kt": "761d5b6542b977fec151f37303b695faf72d9dab",
           "app/src/main/java/dev/halcamera/ui/ShutterButton.kt": "f16d22870bc6affb8a5323a8a2b490c3f8688174",
           "app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt": "2d1b60723a23380df623f84dd1c3fbcaa4b1b23f",
-          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "4aeb42d63b1103b5e614674040da8720b5ab75c8",
+          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "b7fb569aa07f9b7c7c909eabef4a50268466cb45",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/SkipDiagnosis.kt": "88723e9da8438a4073c8622e6a524ee823f170ed",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCatalog.kt": "0396467538fde71f43fdc735daa0f1f1e430dbf1",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCts.kt": "b8282158956ec4049fa3a0cb3bc263fec62abaff",
@@ -2090,14 +2097,14 @@
     },
     "content:_reference/engine.md/comparison": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1ad7350a924c66a1",
-        "modelHash": "17430504bcb281c3",
-        "at": "2026-10-17",
-        "commit": "06963d06",
-        "reviewer": "claude-user-requested-review",
+        "codeHash": "4d292e20c0ca344b",
+        "modelHash": "1df26617a7c183db",
+        "at": "2026-10-18",
+        "commit": "0ac40770",
+        "reviewer": "codex-user-requested-code-review",
         "files": {
           "app/build.gradle.kts": "d334d1b8cb1b45d93a75c84c531978f1bc91e66c",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -2242,7 +2249,8 @@
           "app/src/main/java/dev/halcamera/camera/SampleClock.kt": "64397572af6bc204dce7c802c4077cbc4769a334",
           "app/src/main/java/dev/halcamera/camera/SnapshotRequest.kt": "86ea336a62641229a89f1e05963a2e42e63db030",
           "app/src/main/java/dev/halcamera/camera/SnapshotSessionRetry.kt": "da2e4b04f210dbcf02a14e57dd37737d4bf16110",
-          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "eafaaccf50aebbd750938cd93d1f6cb68051589b",
+          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "7b0bb0ba360498f9fc4703b46d93d92bbec903da",
+          "app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt": "9b81f7049c67bb995b69c78569587f411e2205d8",
           "app/src/main/java/dev/halcamera/camera/SplitSelection.kt": "f718bbd646cad8a073d8ebeec5c92b49373be93a",
           "app/src/main/java/dev/halcamera/camera/StillEncoding.kt": "5aa1b068280d42093d034b989cc7bca9c843582b",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "018512ebc2ca0b47dfdf67267d35b0481373cb92",
@@ -2349,7 +2357,7 @@
           "app/src/main/java/dev/halcamera/ui/SelectionPopup.kt": "761d5b6542b977fec151f37303b695faf72d9dab",
           "app/src/main/java/dev/halcamera/ui/ShutterButton.kt": "f16d22870bc6affb8a5323a8a2b490c3f8688174",
           "app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt": "2d1b60723a23380df623f84dd1c3fbcaa4b1b23f",
-          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "4aeb42d63b1103b5e614674040da8720b5ab75c8",
+          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "b7fb569aa07f9b7c7c909eabef4a50268466cb45",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/SkipDiagnosis.kt": "88723e9da8438a4073c8622e6a524ee823f170ed",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCatalog.kt": "0396467538fde71f43fdc735daa0f1f1e430dbf1",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCts.kt": "b8282158956ec4049fa3a0cb3bc263fec62abaff",
@@ -2421,14 +2429,14 @@
     },
     "content:_reference/evidence.md/device-notes": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "1ad7350a924c66a1",
-        "modelHash": "a26e72839fcc6885",
-        "at": "2026-10-17",
-        "commit": "06963d06",
-        "reviewer": "claude-user-requested-review",
+        "codeHash": "4d292e20c0ca344b",
+        "modelHash": "ae6d43ebf20dfabd",
+        "at": "2026-10-18",
+        "commit": "0ac40770",
+        "reviewer": "codex-user-requested-code-review",
         "files": {
           "app/build.gradle.kts": "d334d1b8cb1b45d93a75c84c531978f1bc91e66c",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -2573,7 +2581,8 @@
           "app/src/main/java/dev/halcamera/camera/SampleClock.kt": "64397572af6bc204dce7c802c4077cbc4769a334",
           "app/src/main/java/dev/halcamera/camera/SnapshotRequest.kt": "86ea336a62641229a89f1e05963a2e42e63db030",
           "app/src/main/java/dev/halcamera/camera/SnapshotSessionRetry.kt": "da2e4b04f210dbcf02a14e57dd37737d4bf16110",
-          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "eafaaccf50aebbd750938cd93d1f6cb68051589b",
+          "app/src/main/java/dev/halcamera/camera/SplitArrangement.kt": "7b0bb0ba360498f9fc4703b46d93d92bbec903da",
+          "app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt": "9b81f7049c67bb995b69c78569587f411e2205d8",
           "app/src/main/java/dev/halcamera/camera/SplitSelection.kt": "f718bbd646cad8a073d8ebeec5c92b49373be93a",
           "app/src/main/java/dev/halcamera/camera/StillEncoding.kt": "5aa1b068280d42093d034b989cc7bca9c843582b",
           "app/src/main/java/dev/halcamera/camera/StillPair.kt": "018512ebc2ca0b47dfdf67267d35b0481373cb92",
@@ -2680,7 +2689,7 @@
           "app/src/main/java/dev/halcamera/ui/SelectionPopup.kt": "761d5b6542b977fec151f37303b695faf72d9dab",
           "app/src/main/java/dev/halcamera/ui/ShutterButton.kt": "f16d22870bc6affb8a5323a8a2b490c3f8688174",
           "app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt": "2d1b60723a23380df623f84dd1c3fbcaa4b1b23f",
-          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "4aeb42d63b1103b5e614674040da8720b5ab75c8",
+          "app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt": "b7fb569aa07f9b7c7c909eabef4a50268466cb45",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/SkipDiagnosis.kt": "88723e9da8438a4073c8622e6a524ee823f170ed",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCatalog.kt": "0396467538fde71f43fdc735daa0f1f1e430dbf1",
           "ctsvendor/src/main/java/dev/halcamera/ctsvendor/VendoredCts.kt": "b8282158956ec4049fa3a0cb3bc263fec62abaff",

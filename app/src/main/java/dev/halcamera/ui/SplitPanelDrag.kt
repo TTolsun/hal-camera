@@ -74,7 +74,7 @@ internal class SplitPanelDrag(
         val begin = Runnable {
             val bounds = area() ?: return@Runnable
             if (!enabled() || !handle.isAttachedToWindow || bounds.width() <= 0 || bounds.height() <= 0) return@Runnable
-            gesture = SplitDragGesture(arrangement(),index,bounds.width(),bounds.height(),Look.dp(context,56).toFloat())
+            gesture = SplitDragGesture(arrangement(),index,bounds.width(),bounds.height(),Look.dp(context,24).toFloat())
             dragging = true; target = null; handle.isPressed = false
             handle.parent?.requestDisallowInterceptTouchEvent(true)
             handle.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
