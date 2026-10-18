@@ -4,10 +4,11 @@ home: true
 ---
 <section class="hero" aria-labelledby="hero-title">
   <h1 id="hero-title" lang="en">Capture. Measure. Verify.</h1>
-  <p class="intro">Android 카메라의 촬영·콜백 관찰·반복 측정을 HALCamera 하나로 시작하세요.</p>
+  <p class="intro">사진 한 장이 완성되기까지의 과정을 들여다봅니다.</p>
+  <p>HALCamera는 Android 카메라의 촬영·콜백 관찰·반복 측정을 한곳에 모은 개발자 도구입니다.</p>
   <nav class="contents task-contents" aria-label="시작하기">
-  <a href="download.html"><span class="name">Download</span><span class="description">GitHub 릴리스에서 APK를 받습니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="getting-started.html"><span class="name">Quickstart</span><span class="description">APK를 설치하고 첫 화면을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="download.html"><span class="name">Download</span><span class="description">최신 릴리스에서 APK를 받습니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="getting-started.html"><span class="name">Quickstart</span><span class="description">앱을 설치하고 첫 사진을 찍습니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   </nav>
 <figure class="brand-film" aria-labelledby="brand-film-title">
   <video controls playsinline preload="none" width="1920" height="1080" poster="assets/media/camera-hal-reviewed-v8.jpg" data-mobile-src="assets/media/camera-hal-mobile-v1.mp4" data-mobile-poster="assets/media/camera-hal-mobile-v1.jpg" aria-labelledby="brand-film-title" aria-describedby="brand-film-description brand-film-timing brand-film-ripple brand-film-prism">
@@ -16,11 +17,11 @@ home: true
   </video>
   <figcaption>
     <h2 id="brand-film-title">Camera HAL.</h2>
-    <p>카메라를 이해하는 또 하나의 시선.</p>
-    <p id="brand-film-description">하나의 화음은 그 차이가 어우러질 때 만들어집니다.</p>
+    <p>한 장의 사진에서, 카메라를 이해하는 일로 나아갑니다.</p>
+    <p id="brand-film-description">서로 다른 순간이 모여 하나의 장면을 만듭니다.</p>
     <p id="brand-film-timing">사진 한 장에도 정확한 타이밍이 필요합니다.</p>
-    <p id="brand-film-ripple">작은 움직임 하나가 우리가 보는 장면을 바꿉니다.</p>
-    <p id="brand-film-prism">빛 속의 정보를 한 장의 이미지로 풀어냅니다.</p>
+    <p id="brand-film-ripple">작은 움직임이 장면에 남긴 차이를 살펴봅니다.</p>
+    <p id="brand-film-prism">빛이 이미지가 되는 순간을, 한 장씩 들여다봅니다.</p>
     <p class="signature" lang="en">by K.H. Kim</p>
   </figcaption>
 </figure>
@@ -30,8 +31,8 @@ home: true
 
 <nav class="contents task-contents" aria-label="검증 작업별 문서">
 
-  <a href="live.html"><span class="name">Live</span><span class="description">사진·녹화와 촬영 조건을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
-  <a href="callback.html"><span class="name">Callback</span><span class="description">프레임별 콜백과 시각을 확인합니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="live.html"><span class="name">Live</span><span class="description">사진·동영상과 촬영 조건을 바꿔 봅니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
+  <a href="callback.html"><span class="name">Callback</span><span class="description">콜백과 이미지의 도착 순서를 읽습니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="troubleshooting.html"><span class="name">Troubleshooting</span><span class="description">증상을 좁히고 재현 자료를 모읍니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
 </nav>
 
@@ -46,18 +47,20 @@ home: true
 </details>
 
 <section class="feature" aria-labelledby="try-title">
-  <div class="feature-heading"><h2 id="try-title">직접 확인하면 더 잘 보입니다.</h2></div>
+  <div class="feature-heading"><h2 id="try-title">직접 찍고, 기록을 읽어 보세요.</h2></div>
   <ul>
-    <li><a href="live.html#동영상을-찍으세요">녹화하며 가까이, 다시 멀리.</a> 1배 → 2배 → 1배로 바꿔도 녹화가 이어지는지 확인합니다.</li>
-    <li><a href="callback.html#촬영-프레임을-고정하세요">사진과 메타데이터의 도착 순서를 보세요.</a> 그래프를 3초 고정하면 두 점을 천천히 비교할 수 있습니다.</li>
-    <li><a href="live.html#여러-카메라를-함께-촬영하세요">화면은 나눠 보고, 파일은 각각.</a> Multi에서 앞과 뒤를 찍고 배치를 바꿔 보세요. 파일에는 각 카메라의 전체 영상이 남습니다.</li>
+    <li><a href="live.html#동영상을-찍으세요">녹화 중에 줌을 바꿔 보세요.</a> 1배 → 2배 → 1배로 움직이며 녹화가 이어지는지 확인합니다.</li>
+    <li><a href="callback.html#촬영-프레임을-고정하세요">사진과 메타데이터를 나란히 보세요.</a> 그래프를 3초 고정하고 두 점의 도착 순서를 읽습니다.</li>
+    <li><a href="live.html#여러-카메라를-함께-촬영하세요">앞과 뒤를 각각 남겨 보세요.</a> Multi는 화면을 나누어도 카메라별 원본 파일을 저장합니다.</li>
   </ul>
 </section>
 
 <section class="feature" aria-labelledby="scope-title">
   <div class="feature-heading"><h2 id="scope-title">측정값은 어디에서 왔나요?</h2></div>
-  <p>HALCamera는 앱이 받은 콜백과 이미지, 결과 메타데이터를 관찰합니다. 콜백 간격만으로 HAL 내부 처리 시간이나 프레임 드롭을 확정할 수는 없습니다.</p>
-  <p>결과를 비교할 때에는 엔진·카메라·출력 조건과 시각 기준을 먼저 맞추세요. 차이가 남으면 앱 기록과 시스템 트레이스를 함께 확인하세요.</p>
+  <p>HALCamera는 앱이 받은 콜백과 이미지, 결과 메타데이터를 관찰합니다.</p>
+  <p>콜백 간격만으로 HAL 내부 처리 시간이나 프레임 드롭을 확정할 수는 없습니다.</p>
+  <p>결과를 비교할 때에는 엔진·카메라·출력 조건과 시각 기준을 먼저 맞추세요.</p>
+  <p>차이가 남으면 앱 기록과 시스템 트레이스를 함께 확인하세요.</p>
   <a href="engine.html">엔진별 관측 차이 확인 <span aria-hidden="true">→</span></a>
 </section>
 
