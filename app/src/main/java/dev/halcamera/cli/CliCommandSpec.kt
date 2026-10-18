@@ -47,6 +47,7 @@ object CliCommands {
         add(CliCommandSpec("live.info", currentScreen = true))
         add(CliCommandSpec("pip.sources"))
         add(CliCommandSpec("dual.cameras", CliCommandSpec.Target.QUERY))
+        add(CliCommandSpec("multi.cameras", CliCommandSpec.Target.QUERY))
         for (name in listOf("dual.preview", "dual.capture", "dual.record")) {
             add(CliCommandSpec(name, camera = true, engine = true, audio = name == "dual.record",
                 timeoutMs = if (name == "dual.record") 3_600_000 else 30_000,

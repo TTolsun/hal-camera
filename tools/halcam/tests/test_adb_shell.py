@@ -106,6 +106,13 @@ sha256sum() {
         self.assertIn("--method results.show", calls)
         self.assertNotIn("v1/status", calls)
 
+    def test_multi_cameras_is_listed_without_launching_live(self):
+        proc, calls = self.run_client(["multi", "cameras"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("--method multi.cameras", calls)
+        self.assertNotIn("camera:s:", calls)
+        self.assertNotIn("v1/status", calls)
+
     def test_benchmark_label_is_one_argument(self):
         proc, calls = self.run_client(["benchmark", "run", "--build", "Candidate A", "--note", "Same room"])
         self.assertEqual(proc.returncode, 0, proc.stderr)
