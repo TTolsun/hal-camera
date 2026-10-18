@@ -209,7 +209,10 @@ adb shell sh /data/local/tmp/halcam preview --camera 0 --mode Video --video-size
 <p>앱과 같은 <code>camera2-standard-v2</code> 프로파일로 측정하고 원본 JSON을 받습니다. <strong>보고서 저장 성공과 측정·비교 가능 여부는 별개입니다.</strong> validity와 성능 저하 판정은 JSON에서 확인하세요.</p>
 <p>프로파일은 고정이며 <code>--engine</code>, Live 스트림, <code>--no-audio</code>를 받지 않습니다. 크기를 자동 대체하거나 baseline을 자동 지정하지 않습니다. 보고서에는 이미지 픽셀·녹화 MP4가 포함되지 않습니다.</p>
 <details>
-<summary>측정 라벨·결과 비교·보관</summary><p><code>--build &quot;Candidate A&quot; --commit SHA --branch NAME --note &quot;Same room&quot;</code>으로 라벨을 지정합니다. 생략한 라벨은 빈 값이며 이전 화면 입력을 이어받지 않습니다. 콜론을 포함한 라벨은 아래 Python 도구로 전달합니다.</p>
+<summary>측정 라벨·결과 비교·보관</summary><p><code>--build LABEL --commit SHA --branch NAME --note TEXT</code>로 라벨을 지정합니다. 생략한 라벨은 빈 값이며 이전 화면 입력을 이어받지 않습니다. 콜론을 포함한 라벨은 아래 Python 도구로 전달합니다.</p>
+<p><strong>공백이 있는 라벨은 기기 명령 전체를 큰따옴표로 감싸고 라벨을 작은따옴표로 감쌉니다.</strong> <code>adb shell</code>은 PC에서 받은 인자를 공백으로 이어 붙여 기기 셸에 넘기므로, <code>--note &quot;Same room&quot;</code>처럼 라벨만 감싸면 기기에서 <code>Same</code>과 <code>room</code>으로 나뉘어 <code>Unknown option: room</code>이 납니다. 아래 형식은 Bash, PowerShell, cmd에서 같게 동작합니다.</p>
+<pre><code class="language-sh">adb shell &quot;sh /data/local/tmp/halcam benchmark run --camera 0 --build &#39;Candidate A&#39; --note &#39;Same room&#39;&quot;
+</code></pre>
 <table>
 <thead>
 <tr>
