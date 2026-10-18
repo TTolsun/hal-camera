@@ -22,7 +22,8 @@ data class CliCommand(
     val options: CliOptions? = null,
     val mode: String? = null
 ) {
-    val videoMode get() = command in setOf("record.start", "dual.record") || mode == "Video"
+    val spec: CliCommandSpec get() = CliCommands.get(command)
+    val videoMode get() = spec.recording || mode == "Video"
     init {
         validateId(id)
         val spec = CliCommands.get(command)
@@ -32,7 +33,7 @@ data class CliCommand(
             throw CliFailure("INVALID_ARGUMENT", "Unexpected option for $command")
         val required = spec.requiredOptions
         if (!options?.values.orEmpty().keys.containsAll(required)) throw CliFailure("INVALID_ARGUMENT", "$command requires ${required.joinToString()}")
-        if (command.endsWith(".delete") && options?.values?.get("confirm") != "true")
+        if (spec.confirmRequired && options?.values?.get("confirm") != "true")
             throw CliFailure("CONFIRM_REQUIRED", "Inspect the listed ID, then add --confirm true to delete that item")
         if (timeoutMs !in 1..3_600_000) throw CliFailure("INVALID_ARGUMENT", "Invalid execution timeout")
         if (spec.camera && (camera.isNullOrBlank() || camera.length > 128)) throw CliFailure("INVALID_ARGUMENT", "camera_id is required")
@@ -41,14 +42,14 @@ data class CliCommand(
             throw CliFailure("INVALID_ARGUMENT", "engine requires a camera command and must be Camera2 or CameraX")
         if (streams != null && !spec.streams)
             throw CliFailure("INVALID_ARGUMENT", "Stream overrides require preview, capture or record.start")
-        if (command in setOf("capture", "burst", "bracket") && streams?.values?.get("yuv_size") == "off" && streams.values["jpeg_size"] == "off" && streams.values["raw_size"].let { it == null || it == "off" })
+        if (spec.stills && streams?.values?.get("yuv_size") == "off" && streams.values["jpeg_size"] == "off" && streams.values["raw_size"].let { it == null || it == "off" })
             throw CliFailure("INVALID_ARGUMENT", "Capture requires JPEG (HAL or YUV) or RAW output")
-        if (command == "benchmark.run") {
+        if (spec.profile) {
             if (profile != BENCHMARK_PROFILE) throw CliFailure("INVALID_ARGUMENT", "profile_id must be $BENCHMARK_PROFILE")
         } else if (profile != null) throw CliFailure("INVALID_ARGUMENT", "Unexpected profile_id")
         if (!spec.audio && audio != null) throw CliFailure("INVALID_ARGUMENT", "Unexpected audio")
-        if (command == "dual.record" && audio == true) throw CliFailure("INVALID_ARGUMENT", "Dual video supports silent recording only")
-        if (command == "cts.run") {
+        if (spec.silentOnly && audio == true) throw CliFailure("INVALID_ARGUMENT", "Dual video supports silent recording only")
+        if (spec.cases) {
             if (cases.isNullOrEmpty()) throw CliFailure("INVALID_ARGUMENT", "cases must name at least one suite item")
             if (cases.size > MAX_CASES) throw CliFailure("INVALID_ARGUMENT", "cases lists more than $MAX_CASES items")
             if (cases.any { it.length !in 1..256 || (!it.startsWith(CUSTOM_PREFIX) && !it.startsWith(VENDORED_PREFIX)) })

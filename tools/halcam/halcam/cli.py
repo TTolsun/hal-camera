@@ -9,7 +9,7 @@ from .adb import Adb
 from .download import collect
 from .protocol import CliError, TERMINAL, identifier, raise_app_error, validate_request
 from .presentation import progress, render
-from .submission import STREAM_KEYS, CONTROL_KEYS, PIP_KEYS, LABEL_KEYS, pairs, make_request
+from .submission import STREAM_KEYS, CONTROL_KEYS, PIP_KEYS, LABEL_KEYS, COMMAND_OPTION_KEYS, pairs, make_request, spec
 
 
 
@@ -139,7 +139,7 @@ def parser():
     run.set_defaults(camera=None)
     run.add_argument("--mode", choices=("Photo", "Video"))
     case_options(run)
-    for key in ("count", "interval_ms", "x", "y", "meter", "run", "reference", "media", "confirm", "first", "second", "incident", "limit") + LABEL_KEYS:
+    for key in COMMAND_OPTION_KEYS + LABEL_KEYS:
         run.add_argument("--" + key.replace("_", "-"))
     run.add_argument("--profile", choices=("camera2-standard-v2",))
     run.add_argument("--no-audio", action="store_true", help="Silent recording (record.start or dual.record)")
@@ -163,10 +163,6 @@ def execution_options(p, timeout=None):
     p.add_argument("--no-wait", action="store_true")
     p.add_argument("--timeout", type=positive, default=timeout, help="App execution deadline in seconds")
     p.add_argument("--wait-timeout", type=positive, default=None, help="PC waiting deadline; does not cancel app execution")
-
-
-# Commands the app answers without a screen: nothing to bring to the foreground first.
-SCREENLESS = ("streams", "cameras", "probe", "cts.cases", "multi.cameras")
 
 
 def app_command(args):
@@ -297,14 +293,13 @@ def execute(args, context):
         except CliError as error:
             if error.code != "REQUEST_NOT_FOUND":
                 raise
-    spec = hello.get("command_specs", {}).get(app_command(args))
-    foreground = spec["foreground"] if spec else (app_command(args) not in SCREENLESS and not app_command(args).startswith(("results.", "baseline.", "gallery.", "settings.", "incidents.")) and app_command(args) != "dual.cameras")
-    if previous is None and foreground:
+    operation = app_command(args)
+    # Screenless commands (queries, the library) need nothing brought to the foreground first.
+    if previous is None and spec(hello, operation, "foreground"):
         status = raise_app_error(adb.read("/v1/status"))
         if status.get("busy"):
             raise CliError("BUSY", "An app operation is already running")
-        current_screen = spec["current_screen"] if spec else app_command(args) in ("live.info", "events", "meter", "preview.stop")
-        target_screen = "dual" if status.get("screen") == "dual" and current_screen else "live"
+        target_screen = "dual" if status.get("screen") == "dual" and spec(hello, operation, "current_screen") else "live"
         if not status.get("foreground") or status.get("screen") != target_screen:
             adb.launch()
             deadline = time.monotonic() + 10
@@ -327,7 +322,7 @@ def execute(args, context):
     print(f"request_id={rid}", file=sys.stderr, flush=True)
     if args.no_wait:
         return data
-    if app_command(args) in ("record.start", "dual.record"):
+    if spec(hello, operation, "recording"):
         deadline = time.monotonic() + (args.wait_timeout or 45)
         while not data.get("completed") and not (data.get("result") or {}).get("recording"):
             if time.monotonic() >= deadline:

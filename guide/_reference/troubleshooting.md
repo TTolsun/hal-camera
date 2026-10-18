@@ -140,7 +140,7 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `43f2f412` · claude
+- 검토 2026-10-18 @ `3e7627e0` · claude-cli-specs-refactor
 
 </details>
 
@@ -172,9 +172,9 @@ PC의 대기 시간이 끝나도 앱 작업은 계속될 수 있습니다. 요�
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-10-18 @ `43f2f412` · claude |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-18 @ `43f2f412` · claude |
-| 원고 `layer-isolation` | 최신 | 검토 2026-10-18 @ `43f2f412` · claude |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-10-18 @ `3e7627e0` · claude-cli-specs-refactor |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-18 @ `3e7627e0` · claude-cli-specs-refactor |
+| 원고 `layer-isolation` | 최신 | 검토 2026-10-18 @ `3e7627e0` · claude-cli-specs-refactor |
 
 <!-- omm:end id=status -->
 

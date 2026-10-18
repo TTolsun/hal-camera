@@ -6,7 +6,7 @@ import dev.halcamera.camera.*
 internal fun DualPreviewActivity.createDualCliHost(): dev.halcamera.cli.CliHost = object : dev.halcamera.cli.CliHost, dev.halcamera.cli.CliControlsHost, dev.halcamera.cli.CliRecordingHost {
 override val screen = "dual"
 override fun isBusy() = closing || recording || recordPending || photoPending
-override fun tune(options: dev.halcamera.cli.CliOptions?, reset: Boolean): org.json.JSONObject {
+override fun tune(options: dev.halcamera.cli.CliOptions?, reset: Boolean): Map<String, Any?> {
     if (session == null || streamingSize == null || closing || recordPending || photoPending)
         throw dev.halcamera.cli.CliFailure("BUSY", "Wait for Dual preview to be ready")
     val controls = if (reset) LiveControls() else options!!.controls(mainControls?.support ?: LiveControlSupport.NONE,
@@ -16,17 +16,17 @@ override fun tune(options: dev.halcamera.cli.CliOptions?, reset: Boolean): org.j
         throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Dual zoom is outside the supported range")
     controlBar.applyRequested(controls); session?.setControls(controls)
     zoomRatio = zoom; session?.setZoom(zoom); zoomControl.setChoices(zoomPresets(cliZoomRange), zoom)
-    return dev.halcamera.cli.CliJson.envelope().put("completed", true).put("zoom", zoom).put("controls", controls.toString())
+    return mapOf("completed" to true, "zoom" to zoom, "controls" to controls.toString())
 }
 override fun execute(command: dev.halcamera.cli.CliCommand) {
     when (command.command) {
         "live.info" -> {
-            cli.complete(command.id, org.json.JSONObject().put("camera_id", logicalId).put("engine", engineName)
-                .put("first", pair?.first).put("second", pair?.second).put("ready", streamingSize != null)
-                .put("size", streamingSize?.toString()).put("zoom", zoomRatio)
-                .put("zoom_range", dev.halcamera.cli.CliJson.of(listOf(cliZoomRange.first, cliZoomRange.second)))
-                .put("controls", controlBar.controls.toString())
-                .put("report", dualReport()).put("events", dev.halcamera.cli.CliJson.of(dev.halcamera.cli.CliEvents.recent(recorder))))
+            cli.complete(command.id, dev.halcamera.cli.cliResult("camera_id" to logicalId, "engine" to engineName,
+                "first" to pair?.first, "second" to pair?.second, "ready" to (streamingSize != null),
+                "size" to streamingSize?.toString(), "zoom" to zoomRatio,
+                "zoom_range" to listOf(cliZoomRange.first, cliZoomRange.second),
+                "controls" to controlBar.controls.toString(),
+                "report" to dualReport(), "events" to dev.halcamera.cli.CliEvents.recent(recorder)))
             return
         }
         "events" -> {
@@ -40,11 +40,11 @@ override fun execute(command: dev.halcamera.cli.CliCommand) {
                 ?: throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Wait for a visible Dual preview")
             val accepted = (session as? DualPreviewSession)?.meterAt(point.first, point.second, values["meter"] == "exposure") { } == true
             if (!accepted) throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Metering unavailable on this Dual configuration")
-            cli.complete(command.id, org.json.JSONObject().put("submitted", true)); return
+            cli.complete(command.id, mapOf("submitted" to true)); return
         }
         "preview.stop" -> {
             cliStopping = true
-            closeSession { cli.complete(command.id, org.json.JSONObject().put("camera_ready", false)) }; return
+            closeSession { cli.complete(command.id, mapOf("camera_ready" to false)) }; return
         }
     }
     cliRequest = command
@@ -61,7 +61,7 @@ override fun cancel(command: dev.halcamera.cli.CliCommand) {
     cliCancelled = true
     cliStopping = true
     closeSession { if (cli.active?.id == command.id) cli.complete(command.id,
-        org.json.JSONObject().put("cancelled", true), cliArtifacts.toList(), dev.halcamera.cli.CliFailure("CANCELLED", "Dual operation stopped")) }
+        mapOf("cancelled" to true), cliArtifacts.toList(), dev.halcamera.cli.CliFailure("CANCELLED", "Dual operation stopped")) }
 }
 override fun stopRecording(command: dev.halcamera.cli.CliCommand) {
     cliStopping = true

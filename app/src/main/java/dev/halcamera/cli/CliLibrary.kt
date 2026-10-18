@@ -7,11 +7,10 @@ import android.os.Build
 import android.provider.MediaStore
 import dev.halcamera.benchmark.domain.*
 import dev.halcamera.benchmark.platform.*
-import org.json.JSONObject
 import java.io.File
 
 /** Uses the same reports and baseline rules as Results; media IDs are resolved only inside HALCamera. */
-class CliLibrary(private val context: Context, private val commands: CliArtifacts, private val capabilities: () -> JSONObject) {
+class CliLibrary(private val context: Context, private val commands: CliArtifacts, private val capabilities: () -> Map<String, Any?>) {
     fun execute(command: CliCommand) {
         val options = command.options?.values.orEmpty()
         if (command.command.startsWith("incidents.")) { incidents(command); return }
@@ -27,43 +26,43 @@ class CliLibrary(private val context: Context, private val commands: CliArtifact
         val id = options["run"]
         val run = id?.takeUnless { command.command == "results.delete" }?.let(::load)
         val result = when (command.command) {
-            "results.list" -> JSONObject().put("runs", CliJson.of(store.files().map { file ->
+            "results.list" -> mapOf("runs" to store.files().map { file ->
                 val value = catalog.load(file.nameWithoutExtension)
                 mapOf("run_id" to file.nameWithoutExtension, "readable" to (value != null),
                     "baseline" to (value?.let(baselines::isBaseline) ?: false), "camera" to value?.endpoint?.key,
                     "profile" to value?.contract?.profileId, "subject" to value?.subject?.toJsonMap(),
                     "comparison_eligible" to value?.validity?.comparisonEligible)
-            }))
+            })
             "results.show" -> {
                 val current = run!!
                 val resolved = baselines.resolve(current)
                 val view = ResultPresenter.present(current, resolved.comparison(current), resolved.comparedTo,
                     baselines.isBaseline(current), current.device.model, current.endpoint.key)
-                (CliJson.of(BenchmarkReportCodec.toJsonMap(current)) as JSONObject).put("summary", view.render())
-                    .put("compared_to", resolved.comparedTo.name).put("reference_ids", CliJson.of(resolved.runs.map { it.runId }))
+                BenchmarkReportCodec.toJsonMap(current) + mapOf("summary" to view.render(),
+                    "compared_to" to resolved.comparedTo.name, "reference_ids" to resolved.runs.map { it.runId })
             }
             "results.compare" -> {
                 val reference = load(options.getValue("reference"))
                 // Like History: an explicitly selected reference is the baseline for this comparison only.
                 val kind = ComparedTo.BASELINE
                 val view = ComparePresenter.present(reference, run!!, RegressionDetector.compare(reference, run), kind, selectedReference = true)
-                JSONObject().put("comparison", view.render()).put("compared_to", kind.name)
+                mapOf("comparison" to view.render(), "compared_to" to kind.name)
             }
             "baseline.add" -> {
                 val outcome = baselines.set(run!!)
                 if (outcome == BaselineManager.SetOutcome.NOT_ELIGIBLE) throw CliFailure("NOT_ELIGIBLE", "Run is not comparison eligible; choose another run")
-                JSONObject().put("baseline", true).put("run_id", id)
+                cliResult("baseline" to true, "run_id" to id)
             }
-            "baseline.remove" -> { baselines.clear(run!!); JSONObject().put("baseline", false).put("run_id", id) }
+            "baseline.remove" -> { baselines.clear(run!!); cliResult("baseline" to false, "run_id" to id) }
             "results.delete" -> {
                 if (!store.deleteRun(id!!)) throw CliFailure("DELETE_FAILED", "Run could not be deleted")
-                JSONObject().put("deleted", id)
+                mapOf("deleted" to id)
             }
             "results.export" -> {
                 val dir = commands.artifactDir(command.id)
                 val json = File(dir, "run.json").apply { writeText(store.file(id!!).readText()) }
                 val csv = File(dir, "metrics.csv").apply { bufferedWriter().use { BenchmarkCsv.write(sequenceOf(run!!), it) } }
-                commands.complete(command.id, JSONObject().put("run_id", id).put("artifact_count", 2), listOf(
+                commands.complete(command.id, cliResult("run_id" to id, "artifact_count" to 2), listOf(
                     CliArtifact(json.name, "application/json", Uri.fromFile(json)), CliArtifact(csv.name, "text/csv", Uri.fromFile(csv))))
                 return
             }
@@ -76,22 +75,22 @@ class CliLibrary(private val context: Context, private val commands: CliArtifact
         val dir = File(context.filesDir, "incidents")
         val files = dir.listFiles()?.filter { it.isFile && it.extension == "zip" }.orEmpty()
         if (command.command == "incidents.list") {
-            commands.complete(command.id, JSONObject().put("incidents", CliJson.of(files.sortedByDescending { it.name }.map {
+            commands.complete(command.id, mapOf("incidents" to files.sortedByDescending { it.name }.map {
                 mapOf("incident_id" to it.nameWithoutExtension, "bytes" to it.length())
-            }))); return
+            })); return
         }
         val file = files.firstOrNull { it.nameWithoutExtension == command.options!!.values["incident"] }
             ?: throw CliFailure("ARTIFACT_MISSING", "ZIP not found; use incidents list")
         if (command.command == "incidents.delete") {
             if (!file.delete()) throw CliFailure("DELETE_FAILED", "ZIP could not be deleted")
-            commands.complete(command.id, JSONObject().put("deleted", file.nameWithoutExtension))
-        } else commands.complete(command.id, JSONObject().put("artifact_count", 1), listOf(CliArtifact(file.name, "application/zip", Uri.fromFile(file))))
+            commands.complete(command.id, mapOf("deleted" to file.nameWithoutExtension))
+        } else commands.complete(command.id, mapOf("artifact_count" to 1), listOf(CliArtifact(file.name, "application/zip", Uri.fromFile(file))))
     }
 
     private fun settings(command: CliCommand) {
         val prefs = BenchmarkPrefs(context)
         if (command.command == "settings.show") {
-            commands.complete(command.id, capabilities().put("run_limit", prefs.runLimit)); return
+            commands.complete(command.id, capabilities() + ("run_limit" to prefs.runLimit)); return
         }
         val store = BenchmarkStore(context)
         store.index()
@@ -104,8 +103,8 @@ class CliLibrary(private val context: Context, private val commands: CliArtifact
             deleting.forEach { if (!store.deleteRun(it)) throw CliFailure("DELETE_FAILED", "Could not delete $it; retention setting was not changed") }
             prefs.runLimit = limit
         }
-        commands.complete(command.id, JSONObject().put("run_limit", limit).put("applied", apply)
-            .put("delete_runs", CliJson.of(deleting)).put("next", if (apply) "settings show" else "settings limit --limit $limit --confirm true"))
+        commands.complete(command.id, mapOf("run_limit" to limit, "applied" to apply,
+            "delete_runs" to deleting, "next" to if (apply) "settings show" else "settings limit --limit $limit --confirm true"))
     }
 
     data class Media(val id: String, val name: String, val mime: String, val bytes: Long, val uri: Uri)
@@ -127,7 +126,7 @@ class CliLibrary(private val context: Context, private val commands: CliArtifact
     private fun gallery(command: CliCommand) {
         val entries = media()
         if (command.command == "gallery.list") {
-            commands.complete(command.id, JSONObject().put("media", CliJson.of(entries.map { mapOf("media_id" to it.id, "name" to it.name, "mime" to it.mime, "bytes" to it.bytes) })))
+            commands.complete(command.id, mapOf("media" to entries.map { mapOf("media_id" to it.id, "name" to it.name, "mime" to it.mime, "bytes" to it.bytes) }))
             return
         }
         val item = entries.firstOrNull { it.id == command.options?.values?.get("media") }
@@ -136,9 +135,9 @@ class CliLibrary(private val context: Context, private val commands: CliArtifact
             try {
                 if (context.contentResolver.delete(item.uri, null, null) != 1) throw CliFailure("DELETE_FAILED", "File was not deleted")
             } catch (e: SecurityException) { throw CliFailure("PERMISSION_REQUIRED", "Android requires owner approval; delete this file in Gallery") }
-            commands.complete(command.id, JSONObject().put("deleted", item.id))
+            commands.complete(command.id, mapOf("deleted" to item.id))
         } else {
-            commands.complete(command.id, JSONObject().put("artifact_count", 1).put("original_name", item.name), listOf(CliArtifact(
+            commands.complete(command.id, mapOf("artifact_count" to 1, "original_name" to item.name), listOf(CliArtifact(
                 "media_${item.id}." + item.name.substringAfterLast('.', "bin").takeIf { it.matches(Regex("[A-Za-z0-9]+")) }.orEmpty().ifEmpty { "bin" }, item.mime, item.uri)))
         }
     }

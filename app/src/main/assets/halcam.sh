@@ -113,6 +113,25 @@ last_id() {
 validate_id() {
     echo "$1" | grep -Eq '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' || die 'Invalid request ID'
 }
+# The app describes each command in hello (command_specs), so this script lists only its own controls.
+# Spec fields hold no nested objects, so one command's spec is the text between its braces.
+json_list() { printf '%s' "$1" | sed -n "s/.*\"$2\":\[\([^]]*\)\].*/\1/p"; }
+spec_of() {
+    pattern=$(printf '%s' "$1" | sed 's/\./\\./g')
+    printf '%s' "$hello" | sed -n "s/.*\"command_specs\":{.*\"$pattern\":{\([^}]*\)}.*/\1/p"
+}
+spec_has() { case "$spec" in *"\"$1\":true"*) return 0 ;; *) return 1 ;; esac; }
+# Without a spec (an APK that predates command_specs) the app alone validates the option.
+allowed_option() {
+    case "$1" in ''|*[!a-z0-9_]*) return 1 ;; esac
+    [ -n "$spec" ] || return 0
+    case ",$(json_list "$spec" options)," in *",\"$1\","*) return 0 ;; esac
+    case "$1" in engine) spec_has engine; return ;; mode) spec_has mode; return ;; esac
+    spec_has streams || return 1
+    keys=$(json_list "$hello" stream_keys)
+    [ -n "$keys" ] || return 0
+    case ",$keys," in *",\"$1\","*) return 0 ;; *) return 1 ;; esac
+}
 downloads() {
     case "$1" in *'"artifact_id":'*) ;; *) return ;; esac
     dest=/sdcard/Download/HALCamera-cli/$rid
@@ -162,7 +181,7 @@ wait_for() {
                 downloads "$result"
                 return ;;
         esac
-        if { [ "$method" = record.start ] || [ "$method" = dual.record ]; }; then
+        if spec_has recording; then
             case "$result" in *'"recording":true'*)
                 echo "Recording started. Stop with: adb shell sh /data/local/tmp/halcam record stop"
                 echo 'If using adb -s SERIAL, add the same -s SERIAL to the stop command.'
@@ -198,9 +217,18 @@ EOF
         [ $# -gt 0 ] || die "$method needs a subcommand; use help"
         method=$method.$1; shift ;;
 esac
+hello=
+spec=
 case "$method" in
-    settings.show|settings.limit|incidents.list|incidents.export|incidents.delete|live.set|live.reset|doctor|streams|cameras|preview|preview.stop|capture|burst|bracket|meter|events|live.info|pip.sources|dual.cameras|multi.cameras|dual.preview|dual.capture|dual.record|results.list|results.show|results.export|results.compare|results.delete|baseline.add|baseline.remove|gallery.list|gallery.export|gallery.delete|record.start|record.stop|record.snapshot|probe|cts.cases|cts.run|benchmark.run|requests.list|status|cancel|fetch) ;;
-    *) die "Unknown command: $method. Use help." ;;
+    doctor|status|cancel|fetch|live.set|live.reset|record.stop|record.snapshot|requests.list) ;;
+    *)
+        hello=$(content read --uri "$URI/v1/hello")
+        check_response "$hello"
+        commands=$(json_list "$hello" commands)
+        if [ -n "$commands" ]; then
+            case ",$commands," in *",\"$method\","*) ;; *) die "Unknown command: $method. Use help." ;; esac
+            spec=$(spec_of "$method")
+        fi ;;
 esac
 
 case "$method" in
@@ -318,13 +346,6 @@ branch=
 note=
 while [ $# -gt 0 ]; do
     case "$1" in
-        --engine|--mode|--preview-size|--yuv-size|--jpeg-size|--video-size|--video-fps|--codec|--raw-size|--fps|--stabilization|--pip-type|--pip-camera|--pip-x|--pip-y|--pip-width|--pip-height|--pip-preview-size|--pip-photo-size|--zoom|--ev|--flash|--ae-lock|--af-lock|--iso|--exposure-ns|--focus|--wb|--gains|--matrix|--count|--interval-ms|--x|--y|--meter|--run|--reference|--media|--confirm|--first|--second|--incident|--limit)
-            [ $# -ge 2 ] || die "$1 needs a value"
-            case "$2" in ''|*[!a-zA-Z0-9x.,_-]*) die 'Invalid stream option value' ;; esac
-            key=$(echo "${1#--}" | tr '-' '_')
-            unique_option "$key"
-            stream_options="$stream_options $key:s:$2"
-            shift 2 ;;
         --build|--commit|--branch|--note)
             [ $# -ge 2 ] || die "$1 needs a value"
             [ "$method" = benchmark.run ] || die 'Build labels are only for benchmark run'
@@ -340,16 +361,23 @@ while [ $# -gt 0 ]; do
             shift 2 ;;
         --no-audio) audio=false; shift ;;
         --no-wait) no_wait=true; shift ;;
+        --*)
+            key=$(echo "${1#--}" | tr '-' '_')
+            allowed_option "$key" || die "Unknown option: $1. Use help."
+            [ $# -ge 2 ] || die "$1 needs a value"
+            case "$2" in ''|*[!a-zA-Z0-9x.,_-]*) die 'Invalid stream option value' ;; esac
+            unique_option "$key"
+            stream_options="$stream_options $key:s:$2"
+            shift 2 ;;
         *) die "Unknown option: $1. Use help." ;;
     esac
 done
 if [ -n "$profile" ]; then
-    [ "$method" = benchmark.run ] || die '--profile is only for benchmark run'
+    [ -z "$spec" ] || spec_has profile || die '--profile is only for benchmark run'
     [ "$profile" = camera2-standard-v2 ] || die 'Supported benchmark profile: camera2-standard-v2'
 fi
-if [ "$method" = benchmark.run ]; then
-    [ -z "$stream_options$audio$cases" ] || die 'Benchmark uses a fixed Camera2 profile; stream, audio and CTS options are not supported'
-fi
+[ -z "$audio" ] || [ -z "$spec" ] || spec_has audio || die '--no-audio is only for record start and dual record'
+[ -z "$cases" ] || [ -z "$spec" ] || spec_has cases || die '--cases is only for cts run'
 set -- --method "$method"
 case "$method" in live.set|live.reset) ;; *) set -- "$@" --extra "request_id:s:$rid" ;; esac
 [ -z "$build" ] || set -- "$@" --extra "build:s:$build"
@@ -372,35 +400,38 @@ if [ -n "$timeout" ]; then
     [ "$timeout" -ge 1 ] && [ "$timeout" -le 3600 ] || die 'Timeout must be 1–3600 seconds'
     set -- "$@" --extra "timeout_ms:l:$((timeout * 1000))"
     wait_seconds=$((timeout + 15))
-elif [ "$method" = cts.run ]; then wait_seconds=1815
-elif [ "$method" = benchmark.run ]; then wait_seconds=615
+elif ! spec_has recording; then
+    # A recording returns once it starts; anything else may take its whole default deadline.
+    default_ms=$(printf '%s' "$spec" | sed -n 's/.*"default_timeout_ms":\([0-9]*\).*/\1/p')
+    [ -z "$default_ms" ] || wait_seconds=$((default_ms / 1000 + 15))
 fi
 
-hello=$(content read --uri "$URI/v1/hello")
-check_response "$hello"
-case "$method" in
-    preview|preview.stop|capture|burst|bracket|meter|events|live.info|pip.sources|dual.preview|dual.capture|dual.record|record.start|cts.run|benchmark.run)
+if [ -z "$hello" ]; then
+    hello=$(content read --uri "$URI/v1/hello")
+    check_response "$hello"
+fi
+if spec_has foreground; then
+    status=$(content read --uri "$URI/v1/status")
+    check_response "$status"
+    case "$status" in *'"busy":true'*) die 'Another operation is running. Use status or record stop.' ;; esac
+    target_screen=live
+    if spec_has current_screen; then
+        case "$status" in *'"screen":"dual"'*) target_screen=dual ;; esac
+    fi
+    case "$status" in
+        *\"screen\":\"$target_screen\"*) ;;
+        *) am start -W -n dev.halcamera/.cli.CliLaunchActivity >/dev/null || die 'Unlock the device and open HAL CAM' ;;
+    esac
+    attempts=0
+    while :; do
         status=$(content read --uri "$URI/v1/status")
         check_response "$status"
-        case "$status" in *'"busy":true'*) die 'Another operation is running. Use status or record stop.' ;; esac
-        target_screen=live
-        case "$method:$status" in
-            meter:*'"screen":"dual"'*|events:*'"screen":"dual"'*|live.info:*'"screen":"dual"'*|preview.stop:*'"screen":"dual"'*) target_screen=dual ;;
-        esac
-        case "$status" in
-            *\"screen\":\"$target_screen\"*) ;;
-            *) am start -W -n dev.halcamera/.cli.CliLaunchActivity >/dev/null || die 'Unlock the device and open HAL CAM' ;;
-        esac
-        attempts=0
-        while :; do
-            status=$(content read --uri "$URI/v1/status")
-            check_response "$status"
-            case "$status" in *\"screen\":\"$target_screen\"*) break ;; esac
-            attempts=$((attempts + 1))
-            [ "$attempts" -lt 10 ] || die 'Unlock the device and open Live in HAL CAM'
-            sleep 1
-        done ;;
-esac
+        case "$status" in *\"screen\":\"$target_screen\"*) break ;; esac
+        attempts=$((attempts + 1))
+        [ "$attempts" -lt 10 ] || die 'Unlock the device and open Live in HAL CAM'
+        sleep 1
+    done
+fi
 result=$(call "$@")
 check_response "$result"
 case "$method" in live.set|live.reset) echo "$result"; exit 0 ;; esac

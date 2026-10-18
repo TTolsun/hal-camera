@@ -10,20 +10,20 @@ object AdbArguments {
      * so it rejects the binding before the provider sees it.
      */
     fun command(method: String, values: Map<String, Any?>, arg: String? = null): CliCommand {
-        val command = if (method == "preview.start") "preview" else method
+        val command = CliCommands.aliases[method] ?: method
         val spec = CliCommands.get(command)
         val allowed = mutableSetOf("request_id", "timeout_ms")
         if (spec.camera) allowed += "camera"
         if (spec.engine) allowed += "engine"
         if (spec.acceptsMode) allowed += "mode"
-        if (command == "benchmark.run") allowed += "profile"
+        if (spec.profile) allowed += "profile"
         if (spec.streams) allowed += CliStreams.KEYS
         if (spec.audio) allowed += "audio"
         allowed += CliOptions.allowed(command)
-        if (command == "cts.run") allowed += "cases"
-        if (values.keys.any { it !in allowed }) throw CliFailure("INVALID_ARGUMENT", "Unexpected argument for $method")
+        if (spec.cases) allowed += "cases"
+        values.keys.firstOrNull { it !in allowed }?.let { throw CliFailure("INVALID_ARGUMENT", "Unexpected argument for $method: $it") }
         if (arg != null) {
-            if (command != "cts.run") throw CliFailure("INVALID_ARGUMENT", "Use --extra for command options")
+            if (!spec.cases) throw CliFailure("INVALID_ARGUMENT", "Use --extra for command options")
             if (values.containsKey("cases")) throw CliFailure("INVALID_ARGUMENT", "cases is given twice")
         }
         fun string(key: String): String? = if (!values.containsKey(key)) null else
@@ -35,7 +35,7 @@ object AdbArguments {
         if (values.containsKey("audio") && audio !is Boolean) throw CliFailure("INVALID_ARGUMENT", "audio must be a boolean")
         return CliCommand(string("request_id") ?: UUID.randomUUID().toString(), command,
             if (spec.camera) string("camera") ?: "0" else null,
-            if (command == "benchmark.run") string("profile") ?: CliCommand.BENCHMARK_PROFILE else null,
+            if (spec.profile) string("profile") ?: CliCommand.BENCHMARK_PROFILE else null,
             (timeout as? Number)?.toLong() ?: spec.timeoutMs,
             (arg ?: string("cases"))?.split(","), audio as? Boolean, string("engine"),
             values.keys.intersect(CliStreams.KEYS).takeIf { it.isNotEmpty() }?.let { keys ->

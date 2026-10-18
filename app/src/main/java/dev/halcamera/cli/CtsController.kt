@@ -57,8 +57,8 @@ class CtsController(private val commands: CliCompletion, private val driver: Dri
     fun reportSaved(cancelled: Boolean, passed: Int, failed: Int, skipped: Int, notRun: Int, json: File, text: File) {
         val command = request ?: return
         request = null
-        val result = org.json.JSONObject().put("cancelled", cancelled).put("passed", passed).put("failed", failed)
-            .put("skipped", skipped).put("not_run", notRun).put("artifact_count", 2)
+        val result = mapOf("cancelled" to cancelled, "passed" to passed, "failed" to failed,
+            "skipped" to skipped, "not_run" to notRun, "artifact_count" to 2)
         val artifacts = listOf(CliArtifact(json.name, "application/json", Uri.fromFile(json)), CliArtifact(text.name, "text/plain", Uri.fromFile(text)))
         commands.complete(command.id, result, artifacts, if (cancelled) CliFailure("CANCELLED", "CTS suite stopped") else null)
     }

@@ -493,6 +493,7 @@ sources:
       - app/src/main/java/dev/halcamera/camera/MediaTransaction.kt
       - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
       - app/src/main/java/dev/halcamera/cli/BenchmarkController.kt
+      - app/src/main/java/dev/halcamera/cli/CliArtifactRegistry.kt
       - app/src/main/java/dev/halcamera/cli/CliLaunchActivity.kt
       - app/src/main/java/dev/halcamera/cli/CliProvider.kt
       - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
@@ -514,6 +515,7 @@ sources:
       cli-artifacts:
         evidence:
           - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
+          - app/src/main/java/dev/halcamera/cli/CliArtifactRegistry.kt
           - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
           - app/src/main/java/dev/halcamera/camera/MediaTransaction.kt
           - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt

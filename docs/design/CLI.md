@@ -62,15 +62,19 @@ flowchart LR
     BA[BenchmarkActivity] --> B
     L --> E[기존 Camera2Engine]
     B --> R[기존 BenchmarkRunner]
-    Q --> F[CommandCoordinator artifact 등록]
-    P -->|읽기 전용 스트림| F
+    Q --> F[CliArtifactRegistry artifact 등록]
+    P -->|읽기 전용 스트림| Q
 ```
 
 `CliProvider`는 인증·입력 검증·짧은 응답만 담당한다. 카메라나 벤치마크를 Binder 호출 안에서 실행하거나 완료까지 기다리지 않는다. 검증된 명령은 main thread의 `CommandCoordinator`에 전달하며 파일 작업은 IO executor가 처리한다.
 
 `LiveController`와 `BenchmarkController`는 화면의 권한·preview surface·생명주기와 기존 엔진 사이를 연결한다. 화면 전체를 한 번에 재작성하지 않고 CLI와 UI가 함께 호출할 동작과 완료 결과부터 분리한다. Activity 참조는 attach/detach로 관리하고, 프로세스 범위 객체가 종료된 Activity를 보유하지 않도록 한다.
 
-`CommandStore`는 요청·상태·결과 식별자를 앱 내부에 보관한다. artifact 등록·읽기 책임은 별도 클래스 대신 `CommandCoordinator`에 두며 CLI 요청이 생성한 결과만 노출한다. 기존 갤러리 전체나 임의의 앱 내부 파일을 조회하는 API로 확대하지 않는다.
+`CommandStore`는 요청·상태·결과 식별자를 앱 내부에 보관한다. artifact의 크기·SHA-256 등록은 `CliArtifactRegistry`가 계산하고, 등록된 artifact를 여는 읽기 책임은 `CommandCoordinator`에 둔다. 두 경로 모두 CLI 요청이 생성한 결과만 노출한다. 기존 갤러리 전체나 임의의 앱 내부 파일을 조회하는 API로 확대하지 않는다.
+
+명령 정의는 `CliCommands.specs` 한 곳에 둔다. spec은 실행 대상과 허용 인자뿐 아니라 Live 실행 방식(`flow`), 녹화(`recording`)·스냅샷·무음 전용·삭제 확인 여부, 준비 중 취소를 화면에 알릴지까지 기록한다. 앱 코드는 명령 이름 대신 이 속성을 조회하므로 명령 하나를 추가할 때 고칠 곳은 spec 항목과 그 흐름을 처리하는 화면뿐이다. `hello.command_specs`는 기존 필드에 `profile`, `cases`, `recording`을 더하고, hello는 `stream_keys`를 더한다(필드 추가만 있고 기존 필드는 바뀌지 않는다). 기기 셸 `halcam.sh`는 hello의 `commands`와 해당 명령의 spec으로 명령·옵션·전면 화면·대기 시간을 판정하고, spec이 없는 APK에서는 판정을 앱에 맡긴다. Python `halcam`도 spec을 먼저 읽고, spec이나 필드가 없으면 `submission.py`의 호환 목록을 쓴다. `tools/halcam/tests/fixtures/hello.json`은 spec의 사본이며 `CliCommandSpecTest`가 앱 정의와 일치하는지 검사한다.
+
+실행 전 검사(`CliPreflight`), 종료 상태·취소 단계 결정(`CliOutcome`), artifact 등록(`CliArtifactRegistry`)은 Android에 의존하지 않는다. 화면과 컨트롤러가 주고받는 결과·record 필드는 `Map`이며, org.json 변환은 `CommandCoordinator`가 저장소와 `CliProvider` 경계에서만 수행한다. 그래서 `LiveController` 상태 전이와 취소·timeout 판정을 JVM 테스트로 검증한다.
 
 ## 4. ADB 전송 방식
 
