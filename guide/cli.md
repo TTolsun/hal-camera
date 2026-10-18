@@ -107,13 +107,15 @@ PIP 사진은 합성 사진과 두 카메라의 원본을 비교할 수 있습�
 **성공 확인:** 회수한 합성 JPEG와 카메라별 원본을 나란히 열어 보세요. 조회와 촬영의 카메라·엔진을 맞춰야 합니다. `Not verified` 후보는 실제 구성에서 실패할 수 있습니다.
 
 <details>
-<summary>PIP 위치·크기와 Dual의 두 원본 영상</summary>
+<summary>PIP 위치·크기, Dual의 두 원본 영상과 Multi 조합</summary>
 
 PIP는 `preview`, `capture`, `record start`에서 선택합니다. CameraX Physical PIP, PIP Flash Auto/On, 연사·AEB PIP는 지원하지 않습니다.
 
 PIP 크기는 `--pip-preview-size WIDTHxHEIGHT`, `--pip-photo-size WIDTHxHEIGHT`로 지정합니다. 위치는 `--pip-x`, `--pip-y`, `--pip-width`, `--pip-height` 네 값을 함께 지정하며 왼쪽 위를 0으로 하는 0–1 영역 안에 들어야 합니다. 생략하면 기본 위치를 사용합니다.
 
 Dual은 `dual cameras`에서 ID를 고른 뒤 `dual preview|capture|record --camera ID --first ID --second ID`로 실행합니다. 사진·수동 제어는 Camera2에서 지원하며, 영상은 두 개의 무음 MP4로 저장하고 `record stop`으로 종료합니다. 물리 ID가 있어도 조합의 구성 성공까지 보장하지 않습니다.
+
+Multi로 함께 열 수 있는 카메라 조합은 `multi cameras`로 조회합니다. 카메라를 열지 않고 화면도 바꾸지 않습니다. `combinations`는 기기가 동시 사용을 알린 조합(`advertised: true`)을 먼저 나열하며, 각 카메라의 기본 프리뷰·사진 크기를 함께 보여 줍니다. `cameras`의 `preview_sizes`와 `photo_sizes`는 Multi가 카메라마다 제공하는 크기입니다. CameraX는 최대 `camerax_max_devices`대까지 엽니다. Android 10 이하에서는 `supported: false`와 사유를 반환합니다. Multi 프리뷰·촬영·녹화 명령은 아직 제공하지 않습니다.
 
 </details>
 
@@ -233,9 +235,10 @@ flowchart LR
 
 **기존 요청 ID로 상태부터 확인하세요.** PC의 대기 종료·연결 끊김만으로 앱 작업이 실패한 것은 아닙니다.
 
-1. `REQUEST_ID`를 처음 출력된 ID로 바꿔 조회합니다.
+1. `REQUEST_ID`를 처음 출력된 ID로 바꿔 조회합니다. ID를 잃었으면 `requests list`로 보관 중인 요청을 최신순으로 찾습니다. 각 줄에는 ID·상태·명령·파일 수가 나옵니다.
 
    ```sh
+   adb shell sh /data/local/tmp/halcam requests list
    adb shell sh /data/local/tmp/halcam status REQUEST_ID
    ```
 
@@ -252,6 +255,8 @@ flowchart LR
 <summary>요청 ID·파일 검증·만료</summary>
 
 `status`는 앱 상태를, `status REQUEST_ID`는 그 요청을 읽습니다. 셸의 `status --last`와 ID 없는 `fetch`·`cancel`은 마지막 제출 요청을 사용합니다. 다른 작업과 혼동하지 않도록 복구에는 ID를 명시합니다.
+
+`requests list`는 요청을 새로 제출하지 않는 조회라서 다른 작업이 실행 중이어도 동작하고, 보관 중인 기록을 밀어내지 않습니다. 실행 중인 요청과 완료 기록이 함께 나오므로 명령 이름과 순서로 잃어버린 요청을 고릅니다.
 
 기기의 `Download/HALCamera-cli/요청ID`에는 크기·SHA-256을 검증한 복사본이 준비됩니다. 바이너리는 PC 셸의 `>` 대신 `adb pull`로 받으며, PC 파일도 아래 manifest의 크기·해시와 대조합니다.
 
@@ -271,7 +276,7 @@ manifest는 파일 ID·이름·바이트 수·SHA-256을 탭으로 구분합니�
 | `BUSY` | `status`로 현재 작업을 확인하고 기다립니다. 실행 중인 CLI 녹화 종료·요청 취소는 가능합니다. |
 | `PREFLIGHT_FAILED`, `UNSUPPORTED_CAMERA`, `UNKNOWN_CASE` | 오류 사유와 `streams`·`cameras`·`cts cases`를 대조합니다. Benchmark라면 발열·절전 조건도 확인합니다. |
 | `interrupted`, `EXECUTION_TIMEOUT`, `RECORDING_INTERRUPTED` | 정상 완료와 구분하고 남은 파일부터 확인합니다. 자동으로 재실행하지 않습니다. |
-| `REQUEST_NOT_FOUND`, `ARTIFACT_EXPIRED` | PC에 받은 파일과 기기 복사본을 확인합니다. 남은 파일이 없으면 해당 요청의 결과를 회수할 수 없습니다. |
+| `REQUEST_NOT_FOUND`, `ARTIFACT_EXPIRED` | `requests list`로 ID를 잘못 옮겨 적었는지 확인합니다. 목록에 없으면 PC에 받은 파일과 기기 복사본을 확인합니다. 남은 파일이 없으면 해당 요청의 결과를 회수할 수 없습니다. |
 
 <details>
 <summary>실행 제한과 녹화 준비 오류</summary>
@@ -298,6 +303,15 @@ halcam --serial SERIAL record stop --output ./videos
 ```
 
 인자 없는 `halcam`은 시작 안내, `halcam --help`는 전체 문법을 보여 줍니다. `--json`은 stdout에 JSON 하나를 출력하며 `--output`은 PC에서 파일의 크기·SHA-256을 검증해 저장합니다. `--wait-timeout`은 PC 대기만 제한합니다.
+
+`--no-wait`로 제출했거나 PC 대기가 먼저 끝났다면 같은 요청을 다시 기다립니다. `wait`는 완료될 때까지 상태를 조회하고, `--output`을 주면 완료 뒤 파일을 받습니다. 요청을 다시 제출하지 않으며 Ctrl+C로 멈춰도 앱 작업을 취소하지 않습니다. ID를 잃었으면 `halcam requests`로 먼저 찾습니다.
+
+```sh
+halcam --serial SERIAL requests
+halcam --serial SERIAL wait REQUEST_ID --output ./photos
+```
+
+녹화 요청은 `record stop`이 와야 끝나므로 `wait` 대신 `record stop --output DIRECTORY`를 사용합니다.
 
 일반 촬영 옵션은 전용 명령과 공통 `run`에서 동일하게 사용합니다. 공통 경로의 작업 이름은 APK가 제공하는 `hello.commands`를 따릅니다.
 
@@ -327,7 +341,7 @@ adb shell content call --uri content://dev.halcamera.cli --method capture --extr
 adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/REQUEST_ID
 ```
 
-응답은 평문 JSON을 감싼 `Result: Bundle[{json=...}]`입니다. 지원 작업은 `/v1/hello`의 `commands`, 상태 변경 등의 조작은 `controls`로 확인합니다. 상태 변경은 `content call`로만 보냅니다.
+`content call`의 응답은 평문 JSON을 감싼 `Result: Bundle[{json=...}]`입니다. ID를 잃었으면 `adb exec-out content read --uri content://dev.halcamera.cli/v1/requests`로 보관 중인 요청 목록(`requests`)을 최신순으로 읽습니다. 지원 작업은 `/v1/hello`의 `commands`, 상태 변경 등의 조작은 `controls`로 확인합니다. 상태 변경은 `content call`로만 보냅니다.
 
 CTS 키는 콜론 때문에 `--extra` 대신 `--method cts.run --arg KEY[,KEY...]`로 전달합니다. 실행 제한은 `--extra timeout_ms:l:30000`, 요청 ID 지정은 `--extra request_id:s:UUID`입니다. JSON 제출에서 엔진은 `params.engine`, 스트림은 `params.streams`이며 크기·FPS·코덱은 문자열입니다. Benchmark 프로파일은 `params.profile_id`이고 직접 호출에서는 `--extra profile:s:camera2-standard-v2`로 지정합니다. 기존 Python의 Base64 전송은 유지합니다.
 

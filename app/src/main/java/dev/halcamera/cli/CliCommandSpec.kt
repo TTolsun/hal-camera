@@ -76,6 +76,7 @@ object CliCommands {
         // Kept off the early-cancel list as before: the screen answers it at once.
         add(CliCommandSpec("pip.sources", flow = CliCommandSpec.Flow.INSPECT, earlyCancelNotifiesHost = false))
         add(CliCommandSpec("dual.cameras", CliCommandSpec.Target.QUERY))
+        add(CliCommandSpec("multi.cameras", CliCommandSpec.Target.QUERY))
         for (name in listOf("dual.preview", "dual.capture", "dual.record")) {
             val record = name == "dual.record"
             add(CliCommandSpec(name, camera = true, engine = true, audio = record,

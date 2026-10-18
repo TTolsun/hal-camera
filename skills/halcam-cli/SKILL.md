@@ -57,6 +57,8 @@ PIP는 원하는 모드의 `preview`를 연 뒤 `pip sources`로 조회합니다
 
 Dual은 `dual cameras`로 ID를 찾고 `dual preview|capture|record --camera ID --first ID --second ID`를 사용합니다. 사진·수동 제어는 Camera2, 영상은 두 개의 무음 MP4이며 `record stop`으로 종료합니다. 지원하지 않는 조합을 다른 센서·엔진으로 대체하지 않습니다.
 
+Multi(여러 독립 카메라 동시 사용)는 현재 `multi cameras` 조회만 지원합니다. `advertised: true`인 조합과 카메라별 크기를 확인하며 카메라를 열지 않습니다. Multi 촬영·녹화를 요청받으면 아직 CLI로 실행할 수 없다고 알립니다.
+
 ### 그 밖의 작업
 
 - `record snapshot`은 CLI 녹화에 사진을 추가하며 지원은 엔진·출력 구성에 따라 다릅니다. 사진 저장 중 `record stop`은 저장을 기다리며 영상·사진은 녹화 요청에 함께 등록됩니다.
@@ -82,6 +84,14 @@ Dual은 `dual cameras`로 ID를 찾고 `dual preview|capture|record --camera ID 
 
 위 세 명령은 상황에 맞게 선택합니다. `status`만 실행하면 앱 상태를 읽습니다. `status --last`와 ID 없는 `fetch`·`cancel`은 마지막 제출 요청을 사용하므로 복구에는 ID를 명시합니다.
 
+4. ID를 잃었으면 재촬영하지 말고 보관 중인 요청을 최신순으로 나열합니다. 각 줄은 `ID 상태 명령 파일수`이며, 명령과 순서로 해당 요청을 고른 뒤 3번으로 돌아갑니다. 이 조회는 요청을 제출하지 않아 `BUSY` 중에도 동작합니다.
+
+   ```sh
+   adb -s SERIAL shell sh /data/local/tmp/halcam requests list
+   ```
+
+Python 클라이언트에서는 `halcam requests`로 같은 목록을 읽고, `halcam wait REQUEST_ID --output DIR`로 `--no-wait` 요청이나 PC 대기가 끝난 요청을 다시 기다려 파일까지 받습니다. `wait`는 재제출하지 않으며 Ctrl+C로 앱 작업을 취소하지 않습니다. 녹화는 `record stop`으로 끝냅니다.
+
 완료 기록은 최대 **24시간·200개**입니다. 만료 뒤 조회·회수는 실패하지만 원본과 `Download/HALCamera-cli/요청ID` 복사본은 삭제하지 않습니다. 파일은 실행 직후 받고 사용자 요청 없이 원본·복사본·앱 데이터를 정리하지 않습니다.
 
 ## 4. 막혔을 때
@@ -92,7 +102,7 @@ Dual은 `dual cameras`로 ID를 찾고 `dual preview|capture|record --camera ID 
 | `BUSY` | 대기열이 없습니다. `status`로 작업을 확인하고 끝날 때까지 기다립니다. 기존 CLI 녹화의 `record stop`과 요청 `cancel`은 가능합니다. |
 | `PREFLIGHT_FAILED`, `UNSUPPORTED_CAMERA`, `UNKNOWN_CASE` | 오류 사유와 `streams`·`cameras`·`cts cases`를 대조합니다. Benchmark의 발열·절전 조건도 확인합니다. |
 | `EXECUTION_TIMEOUT`, `interrupted`, `RECORDING_INTERRUPTED` | 정상 완료로 보고하지 않습니다. 기존 파일부터 확인합니다. `NOT_RECORDING`이면 CLI 녹화 시작 여부를 확인하며 UI 녹화를 CLI로 멈추지 않습니다. |
-| `REQUEST_NOT_FOUND`, `ARTIFACT_EXPIRED`, `REQUEST_CONFLICT` | 받은 PC 파일·기기 복사본을 확인합니다. 같은 ID에 다른 인자는 충돌입니다. 남은 결과가 없으면 회수 불가를 알리고 재실행 여부를 정합니다. |
+| `REQUEST_NOT_FOUND`, `ARTIFACT_EXPIRED`, `REQUEST_CONFLICT` | `requests list`로 ID를 다시 확인하고, 목록에 없으면 받은 PC 파일·기기 복사본을 확인합니다. 같은 ID에 다른 인자는 충돌입니다. 남은 결과가 없으면 회수 불가를 알리고 재실행 여부를 정합니다. |
 
 앱 실행 제한은 사진·프리뷰·probe 30초, benchmark 600초, CTS 1,800초, 녹화 3,600초입니다. `--timeout 초`는 1–3,600초이며 `--no-wait`는 접수 후 반환합니다. PC의 대기 종료는 앱 작업 취소가 아닙니다. 준비·측정 중에는 사람이 화면을 조작하지 않도록 안내합니다.
 

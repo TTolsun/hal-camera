@@ -19,6 +19,7 @@ HAL CAM — adb only
   benchmark run [--camera ID] [--profile camera2-standard-v2]
                                         Run the fixed Camera2 benchmark; export JSON
   status [REQUEST_ID|--app|--last] | cancel [REQUEST_ID]
+  requests list                         Find a lost request ID (newest first)
   fetch [REQUEST_ID]                     Prepare files and show one adb pull command
 More tasks (start with the list command to find an ID):
   burst --count 3 [--interval-ms 500]     Save a fixed number of photos
@@ -33,6 +34,7 @@ More tasks (start with the list command to find an ID):
   dual cameras                          List logical and physical camera IDs
   dual preview|capture|record --camera ID --first ID --second ID
                                         Dual video is silent; stop with record stop
+  multi cameras                         List camera sets Multi can open together
   results list | results show --run ID
   results compare --run ID --reference ID
   results export --run ID                Export JSON and CSV
@@ -98,14 +100,14 @@ check_response() {
                 *'"PREFLIGHT_FAILED"'*) echo 'Run streams for supported options. Adjust the named option, then retry.' >&2 ;;
                 *'"CONFIRM_REQUIRED"'*) echo 'Read the ID with results list or gallery list. To delete just that item, add --confirm true.' >&2 ;;
                 *'"BUSY"'*) echo 'Run status. Wait for completion, or use cancel to stop and keep saved files.' >&2 ;;
-                *'"REQUEST_NOT_FOUND"'*) echo 'Use status --app for current app state. Completed requests expire after 24 hours or 200 records.' >&2 ;;
+                *'"REQUEST_NOT_FOUND"'*) echo 'Find retained IDs with requests list; status --app shows the running one. Completed requests expire after 24 hours or 200 records.' >&2 ;;
             esac
             exit 1
         fi ;;
     esac
 }
 last_id() {
-    [ -f "$LAST" ] || die 'No previous request. Run capture, preview, or record start first.'
+    [ -f "$LAST" ] || die 'No previous request on this device. Find one with requests list.'
     cat "$LAST"
 }
 validate_id() {
@@ -211,14 +213,14 @@ EOF
         exit 0 ;;
     preview)
         case "${1:-}" in start) shift ;; stop) method=preview.stop; shift ;; esac ;;
-    record|cts|benchmark|results|baseline|gallery|dual|live|pip|settings|incidents)
+    record|cts|benchmark|results|baseline|gallery|dual|multi|live|pip|settings|incidents|requests)
         [ $# -gt 0 ] || die "$method needs a subcommand; use help"
         method=$method.$1; shift ;;
 esac
 hello=
 spec=
 case "$method" in
-    doctor|status|cancel|fetch|live.set|live.reset|record.stop|record.snapshot) ;;
+    doctor|status|cancel|fetch|live.set|live.reset|record.stop|record.snapshot|requests.list) ;;
     *)
         hello=$(content read --uri "$URI/v1/hello")
         check_response "$hello"
@@ -252,6 +254,23 @@ case "$method" in
         esac
         [ "$ready" = true ] || exit 1
         echo 'Basic setup is ready. Recording with audio also needs microphone permission; Android 8-9 saving needs storage permission.'
+        exit 0 ;;
+    requests.list)
+        [ $# -eq 0 ] || die 'requests list takes no options'
+        result=$(content read --uri "$URI/v1/requests")
+        check_response "$result"
+        # Rows are flat objects inside the one array, so neither [ ] nor { } appear within a row.
+        rows=$(printf '%s' "$result" | sed -n 's/.*"requests":\[\([^]]*\)\].*/\1/p' | grep -o '{[^{}]*}')
+        if [ -z "$rows" ]; then echo 'No retained requests. Completed requests expire after 24 hours or 200 records.'; exit 0; fi
+        echo 'Newest first: REQUEST_ID STATE COMMAND FILES'
+        echo "$rows" | while read -r row; do
+            id=$(echo "$row" | field_id)
+            state=$(echo "$row" | sed -n 's/.*"state":"\([a-z]*\)".*/\1/p')
+            name=$(echo "$row" | sed -n 's/.*"command":"\([a-z.]*\)".*/\1/p')
+            files=$(echo "$row" | sed -n 's/.*"artifact_count":\([0-9]*\).*/\1/p')
+            echo "$id $state $name ${files:-0}"
+        done
+        echo 'Next: status REQUEST_ID to inspect, fetch REQUEST_ID to prepare saved files. Do not repeat the capture.'
         exit 0 ;;
     status|cancel|fetch)
         [ $# -le 1 ] || die 'Expected at most one request ID'

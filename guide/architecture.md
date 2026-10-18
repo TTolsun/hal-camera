@@ -56,7 +56,7 @@ PC에서 같은 기능을 실행하려면 [CLI](cli.md)를 사용합니다. `Cli
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`, `app/src/main/java/dev/halcamera/WorkbenchActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor
+- 검토 2026-10-18 @ `43f2f412` · claude
 
 </details>
 
@@ -115,7 +115,7 @@ flowchart TB
 - Activity는 이 어댑터를 연결하며 카메라 엔진과 순수 benchmark/domain은 CLI를 알지 못합니다.
 - `MainCliBridge`와 `DualCliBridge`는 Activity의 카메라 동작을 연결합니다. `LiveController`는 프리뷰·사진·녹화와 저장 완료를 관리하며 `CliSequence`는 연속 촬영과 AEB의 일부 저장 결과도 보존합니다.
 - `CtsController.reportSaved`와 `BenchmarkController.reportSaved`는 완료 결과와 보고서 파일을 받습니다. 저장된 결과를 조회·비교하는 `CliLibrary`는 기존 benchmark 도메인 타입과 저장소를 재사용하며, 도메인에서 CLI로 향하는 의존성은 없습니다.
-- `streams`·`probe`·`cts.cases`는 화면 없이 `CommandCoordinator`가 처리합니다. 결과·baseline·갤러리·진단 ZIP·보관 한도는 `CliLibrary`가 IO 스레드에서 처리합니다.
+- `streams`·`probe`·`cts.cases`·`dual.cameras`·`multi.cameras`는 화면 없이 `CommandCoordinator`가 `CliQueries`로 처리합니다. 결과·baseline·갤러리·진단 ZIP·보관 한도는 `CliLibrary`가 IO 스레드에서 처리합니다.
 - `CliStreams`는 요청별 크기 옵션을 검증하며 Camera2·CameraX 설정으로 변환합니다.
 - protocol v1을 변경할 때 양쪽 검증기를 함께 확인합니다.
 
@@ -215,7 +215,7 @@ flowchart TB
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/MultiSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt`, `app/src/main/java/dev/halcamera/camera/MultiRecording.kt`, `app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/cli/CliLibrary.kt`, `app/src/main/java/dev/halcamera/MainCliBridge.kt`, `app/src/main/java/dev/halcamera/DualCliBridge.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/ui/Look.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor
+- 검토 2026-10-18 @ `43f2f412` · claude
 
 </details>
 
@@ -355,7 +355,7 @@ CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩�
 
 `benchmark.run`은 Live 카메라 종료 뒤 벤치마크 화면으로 인계하며, `BenchmarkController`가 기존 Runner 실행과 JSON 저장 완료를 요청 결과에 연결합니다.
 
-`cameras`·`streams`·`probe`·`cts.cases`는 화면을 거치지 않고 coordinator가 처리합니다.
+`cameras`·`streams`·`probe`·`cts.cases`·`dual.cameras`·`multi.cameras`는 화면을 거치지 않고 coordinator가 처리합니다.
 
 `CliLibrary`는 저장된 결과·baseline·갤러리·진단 ZIP과 보관 한도를 처리합니다. 결과 비교에는 기존 presenter와 비교 규칙을 재사용합니다. 삭제는 대상 ID와 명시적 확인을 요구하고, 보관 한도 변경은 적용 전에 삭제할 실행 목록을 보여 줍니다.
 
@@ -372,7 +372,7 @@ PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor
+- 검토 2026-10-18 @ `43f2f412` · claude
 
 </details>
 
@@ -583,7 +583,7 @@ Multi V의 `MicrophoneCapture`는 `AudioRecord`의 MONOTONIC 하드웨어 시각
 ### 계산과 저장의 제약
 
 1. `BenchmarkRunner`는 `Driver`, `Scheduler`, `clock`을 통해 카메라와 시계에 접근합니다. 지표·통계·회귀 계산은 `benchmark/domain/`과 `metrics/`에 두어 JVM에서 테스트하며, Android 화면은 Activity와 `ui/`, 파일·기기 어댑터는 `benchmark/platform/`에 둡니다. 새 파일에 `android.*` import가 필요하면 역할에 맞는 경계에 두거나 인터페이스로 주입합니다.
-2. 벤치마크의 `org.json`은 파일 경계에서 사용합니다. `BenchmarkReportCodec`의 데이터 계약은 `Map<String, Any?>`로 전달합니다. schema 5를 쓰되 schema 3·4도 읽습니다. CLI protocol v1은 별도로 JSON 명령·상태를 정의하며 측정 보고서 schema를 바꾸지 않습니다. CLI 안에서도 화면 어댑터와 컨트롤러는 결과를 `Map`으로 전달하고, `org.json` 변환은 `CommandCoordinator`가 저장·전송 경계에서 수행합니다.
+2. 벤치마크의 `org.json`은 파일 경계에서 사용합니다. `BenchmarkReportCodec`의 데이터 계약은 `Map<String, Any?>`로 전달합니다. schema 5를 쓰되 schema 3·4도 읽습니다. CLI protocol v1은 별도로 JSON 명령·상태를 정의하며 측정 보고서 schema를 바꾸지 않습니다.
 3. `RunValidity`는 flag 규칙에서 measurement·comparison·scoring eligibility를 계산합니다. 알 수 없는 flag는 비교를 막습니다. 내부 점수 초안은 제거했으며(이슈 #162), scoring eligibility는 충전·디버그 빌드 같은 flag가 없는 run을 표시하는 용도로만 남습니다.
 4. 회귀 임계값은 `RegressionRules`에서 관리합니다. baseline은 자동으로 지정하지 않으며 임의의 두 실행을 고르는 동작도 baseline을 바꾸지 않습니다.
 5. 파일 삭제 실패 시 baseline 목록에서 먼저 빼지 않습니다. 목록 정리 실패 후 남은 잘못된 참조는 `BaselineManager`가 이후 조회에서 정리합니다.
@@ -601,7 +601,7 @@ Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9�
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/MultiSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt`, `app/src/main/java/dev/halcamera/camera/MultiRecording.kt`, `app/src/main/java/dev/halcamera/camera/MicrophoneCapture.kt`, `app/src/main/java/dev/halcamera/camera/TimestampedVideoRecording.kt`, `app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor
+- 검토 2026-10-18 @ `43f2f412` · claude
 
 </details>
 
@@ -651,16 +651,16 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-10-18 @ `43f2f412` · claude |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-18 @ `43f2f412` · claude |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-18 @ `43f2f412` · claude |
 | 구조 원본 `ui-camera-label` | 최신 | 검토 2026-10-10 @ `93385443` · Codex (mode reset, labels and numeric ID selection review) |
-| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor |
-| 구조 원본 `ui-zoom` | 최신 | 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor |
-| 원고 `overview` | 최신 | 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor |
-| 원고 `module-roles` | 최신 | 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor |
-| 원고 `runtime-flow` | 최신 | 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor |
-| 원고 `constraints` | 최신 | 검토 2026-10-18 @ `21fc9cb2` · claude-cli-specs-refactor |
+| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-10-17 @ `06963d06` · claude-user-requested-review |
+| 구조 원본 `ui-zoom` | 최신 | 검토 2026-10-17 @ `06963d06` · claude-user-requested-review |
+| 원고 `overview` | 최신 | 검토 2026-10-18 @ `43f2f412` · claude |
+| 원고 `module-roles` | 최신 | 검토 2026-10-18 @ `43f2f412` · claude |
+| 원고 `runtime-flow` | 최신 | 검토 2026-10-18 @ `43f2f412` · claude |
+| 원고 `constraints` | 최신 | 검토 2026-10-18 @ `43f2f412` · claude |
 
 <!-- omm:end id=status -->
 

@@ -42,11 +42,11 @@ def case_options(p, required=False):
 
 def parser():
     root = ArgumentParser(prog="halcam", description="Control HALCamera through ADB", formatter_class=argparse.RawDescriptionHelpFormatter,
-                          epilog="Start with one task:\n  1. Check setup: halcam doctor\n  2. Take a photo: halcam capture --camera 0 --output ./captures\n  3. Record: halcam record start --no-audio\n     Finish: halcam record stop --output ./videos\n  4. Read results: halcam run results.list\n  5. Find files: halcam run gallery.list\nUse --json for complete machine-readable results.")
+                          epilog="Start with one task:\n  1. Check setup: halcam doctor\n  2. Take a photo: halcam capture --camera 0 --output ./captures\n  3. Record: halcam record start --no-audio\n     Finish: halcam record stop --output ./videos\n  4. Read results: halcam run results.list\n  5. Find files: halcam run gallery.list\nLost a request ID: halcam requests, then halcam wait REQUEST_ID --output DIR\nUse --json for complete machine-readable results.")
     common(root, True)
     root.add_argument("--version", action="version", version=__version__)
     commands = root.add_subparsers(dest="command", required=True)
-    for name in ("devices", "doctor", "launch", "cameras", "streams", "preview", "capture", "burst", "bracket", "probe", "status", "fetch", "cancel"):
+    for name in ("devices", "doctor", "launch", "cameras", "streams", "preview", "capture", "burst", "bracket", "probe", "status", "requests", "wait", "fetch", "cancel"):
         p = commands.add_parser(name)
         common(p)
         if name in ("preview", "capture", "burst", "bracket", "streams"):
@@ -65,11 +65,16 @@ def parser():
             p.add_argument("request_id", nargs="?")
             p.add_argument("--request", help="Legacy alias for the positional request ID")
             p.add_argument("--app", action="store_true", help="Read current app state (the default)")
-        if name in ("fetch", "cancel"):
+        if name in ("wait", "fetch", "cancel"):
             p.add_argument("request")
         if name in ("capture", "burst", "bracket", "probe", "fetch"):
             p.add_argument("--output", required=True)
             p.add_argument("--transfer-timeout", type=positive, default=60)
+        if name == "wait":
+            # Recovery for --no-wait or an expired PC wait: download only when an output folder is given.
+            p.add_argument("--output")
+            p.add_argument("--transfer-timeout", type=positive, default=60)
+            p.add_argument("--wait-timeout", type=positive, default=3600, help="PC waiting deadline; does not cancel app execution")
     cts = commands.add_parser("cts")
     common(cts)
     cts_commands = cts.add_subparsers(dest="cts_command", required=True)
@@ -108,6 +113,12 @@ def parser():
     record_stop.add_argument("--transfer-timeout", type=positive, default=60)
     record_stop.add_argument("--wait-timeout", type=positive, default=60)
     common(record_commands.add_parser("snapshot"))
+    multi = commands.add_parser("multi", help="List camera sets Multi can open together")
+    common(multi)
+    multi_commands = multi.add_subparsers(dest="multi_command", required=True)
+    multi_cameras = multi_commands.add_parser("cameras")
+    common(multi_cameras)
+    execution_options(multi_cameras)
     pip = commands.add_parser("pip", help="Read PIP candidates for the current preview")
     common(pip)
     pip_commands = pip.add_subparsers(dest="pip_command", required=True)
@@ -165,6 +176,8 @@ def app_command(args):
         return "record." + args.record_command
     if args.command == "pip":
         return "pip." + args.pip_command
+    if args.command == "multi":
+        return "multi." + args.multi_command
     if args.command == "preview" and args.action == "stop":
         return "preview.stop"
     return args.command
@@ -175,6 +188,15 @@ def request_status(adb, rid):
     if "state" not in data:
         raise_app_error(data)
     return validate_request(data, rid)
+
+
+def request_list(adb):
+    data = raise_app_error(adb.read("/v1/requests"))
+    rows = data.get("requests")
+    if not isinstance(rows, list) or any(not isinstance(row, dict) or not isinstance(row.get("request_id"), str)
+                                         or not isinstance(row.get("state"), str) for row in rows):
+        raise CliError("PROTOCOL_ERROR", "Invalid request list")
+    return data
 
 
 def wait(adb, rid, seconds, report=None):
@@ -189,7 +211,7 @@ def wait(adb, rid, seconds, report=None):
         if data["state"] in TERMINAL:
             return data
         if time.monotonic() >= deadline:
-            raise CliError("WAIT_TIMEOUT", "PC wait expired; app may still be running. Use status --request and fetch.", request_id=rid)
+            raise CliError("WAIT_TIMEOUT", "PC wait expired; app may still be running. Use wait REQUEST_ID to keep waiting.", request_id=rid)
         time.sleep(min(2, max(0, deadline - time.monotonic())))
 
 
@@ -242,6 +264,15 @@ def execute(args, context):
             raise CliError("INVALID_ARGUMENT", "Use one request ID or --app")
         rid = args.request or args.request_id
         return request_status(adb, rid) if rid else raise_app_error(adb.read("/v1/status"))
+    if args.command == "requests":
+        return request_list(adb)
+    if args.command == "wait":
+        rid = identifier(args.request)
+        context["request_id"] = rid
+        # Waiting again owns nothing: Ctrl+C stops the PC wait and never cancels the app request.
+        context["submitted"] = False
+        report = None if args.json else lambda message: print(message, file=sys.stderr, flush=True)
+        return finish(adb, wait(adb, rid, args.wait_timeout, report), args)
     if args.command in ("fetch", "cancel"):
         rid = identifier(args.request)
         if args.command == "fetch":

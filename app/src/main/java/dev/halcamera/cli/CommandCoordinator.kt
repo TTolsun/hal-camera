@@ -85,7 +85,7 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
     private fun capabilities(): Map<String, Any?> = cliResult("protocol_version" to 1, "enabled" to true,
         "app_version" to context.packageManager.getPackageInfo(context.packageName, 0).versionName,
         "commands" to CliCommand.COMMANDS, "command_specs" to CliCommands.specs.mapValues { it.value.toMap() }, "stream_keys" to CliStreams.KEYS.toList(),
-        "controls" to listOf("live.set", "live.reset", "record.snapshot", "record.stop", "status", "request", "request.cancel"),
+        "controls" to listOf("live.set", "live.reset", "record.snapshot", "record.stop", "status", "request", "requests.list", "request.cancel"),
         "retention_ms" to CommandStore.RETENTION_MS, "max_completed_requests" to CommandStore.MAX_RECORDS,
         "camera_permission" to permission(Manifest.permission.CAMERA), "locked" to locked(), "completed" to true)
 
@@ -257,6 +257,21 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
     fun readRecord(id: String): JSONObject? = store.read(id)
     override fun updateRecord(id: String, fields: Map<String, Any?>) {
         store.update(id) { record -> fields.forEach { (key, value) -> if (value == null) record.remove(key) else record.put(key, CliJson.of(value)) } }
+    }
+
+    /**
+     * The retained requests, newest first, for a client that lost a request ID. A read rather than a submitted
+     * command: it creates no record, so it never evicts one of the [CommandStore.MAX_RECORDS] it lists.
+     */
+    fun requests(): JSONObject {
+        if (!enabled) return CliJson.failure("CLI_DISABLED", "Enable ADB CLI in the app")
+        val items = store.list().mapNotNull { record -> runCatching {
+            CliRequestSummary(record.getString("request_id"), record.getJSONObject("request").getString("command"),
+                record.getString("state"), record.optLong("created_at_ms"), record.optJSONArray("artifacts")?.length() ?: 0,
+                record.optJSONObject("error")?.optString("code"))
+        }.getOrNull() }
+        return CliJson.envelope().put("requests", CliJson.of(CliRequestSummary.listing(items)))
+            .put("retention_ms", CommandStore.RETENTION_MS).put("max_completed_requests", CommandStore.MAX_RECORDS)
     }
 
     fun request(id: String): JSONObject = CliJson.publicRecord(store.read(id) ?: throw CliFailure("REQUEST_NOT_FOUND", "Unknown or expired request"))

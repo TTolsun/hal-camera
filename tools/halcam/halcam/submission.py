@@ -26,7 +26,7 @@ OPTION_KEYS = CONTROL_KEYS + PIP_KEYS + LABEL_KEYS + COMMAND_OPTION_KEYS
 # contract in hello, and spec() prefers it; tests/fixtures/hello.json keeps these lists equal to it.
 CAMERA_COMMANDS = {"preview", "capture", "burst", "bracket", "record.start", "streams", "dual.preview", "dual.capture", "dual.record", "benchmark.run"}
 DEFAULT_SECONDS = {"record.start": 3600, "dual.record": 3600, "cts.run": 1800, "benchmark.run": 600}
-SCREENLESS = {"streams", "cameras", "probe", "cts.cases", "dual.cameras"}
+SCREENLESS = {"streams", "cameras", "probe", "cts.cases", "dual.cameras", "multi.cameras"}
 LIBRARY_PREFIXES = ("results.", "baseline.", "gallery.", "settings.", "incidents.")
 LEGACY = {
     "camera": CAMERA_COMMANDS,
