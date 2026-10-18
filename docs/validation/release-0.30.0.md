@@ -32,6 +32,7 @@ Camera2의 `--cameras 1,0 --preview-sizes 640x480,1280x720 --photo-sizes 1280x72
 - `--no-wait`로 접수한 직후 정지한 Live 녹화와 Camera2·CameraX Multi 녹화가 모두 저장을 마쳤습니다. 준비 중 정지 의도가 화면 인계 뒤에도 유지됐으며, 완료 후 busy 상태가 해제됐습니다.
 - 현재 Multi 화면에서 `events`가 ZIP을 저장했습니다. Events 취소는 `cancelled`로 끝났고 ZIP 1개를 보존했습니다. 녹화 취소도 `cancelled`와 영상 2개를 보존했습니다.
 - 녹화 중 홈으로 나가면 `APP_NOT_FOREGROUND`로 끝나고 busy 상태가 해제됐습니다.
+- CameraX 프리뷰와 녹화에서 각각 홈으로 나갔다가 종료 정리가 끝난 뒤 새 Multi 사진 요청을 실행하여 성공했습니다. 화면 detach나 파일 등록 완료만으로 카메라 소유권을 해제하지 않고, `close(done)`까지 busy 상태를 유지합니다.
 - 마이크 권한을 잠시 해제했을 때 유음 요청은 `PERMISSION_REQUIRED`로 거부됐으며, 같은 상태의 `--no-audio` 녹화는 저장까지 성공했습니다. 검사 뒤 마이크 권한을 원래 허용 상태로 복구했습니다.
 
 ## 검증하지 않은 범위
