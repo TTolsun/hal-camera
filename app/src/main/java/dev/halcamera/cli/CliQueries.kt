@@ -35,6 +35,7 @@ class CliQueries(private val context: Context, private val commands: CliArtifact
             "dual.cameras" -> commands.complete(command.id, JSONObject().put("cameras", CliJson.of(dev.halcamera.camera.readLogicalMultiCameras(context.getSystemService(CameraManager::class.java)).map {
                 mapOf("camera_id" to it.logicalId, "physical" to it.physical.map { lens -> mapOf("id" to lens.id, "role" to lens.role.name) })
             })))
+            "multi.cameras" -> multiCameras(command)
             else -> throw CliFailure("INVALID_ARGUMENT", "Unknown query")
         }
     }
@@ -61,6 +62,16 @@ class CliQueries(private val context: Context, private val commands: CliArtifact
                         "stabilization" to (if (command.videoMode) support.stabilization else listOf(dev.halcamera.camera.LiveStabilization.OFF)).map { it.name }, "jpeg_source" to listOf("CAMERA", "YUV"),
                         "video" to support.videos.takeIf { command.videoMode }.orEmpty().map { mapOf("size" to it.size.toString(), "fps" to it.fps, "codec" to it.codec) }))))
             } catch (e: Exception) { commands.fail(command.id, (e as? CliFailure)?.code ?: "PREFLIGHT_FAILED", e.message ?: "Cannot read stream capabilities") }
+        }
+    }
+
+    /** The sets Multi offers, read like the Multi screen does (CameraCharacteristics only, no camera opened). */
+    private fun multiCameras(command: CliCommand) {
+        io.execute {
+            try {
+                val plans = if (Build.VERSION.SDK_INT >= 30) dev.halcamera.camera.readConcurrentPlans(context.getSystemService(CameraManager::class.java)) else emptyList()
+                commands.complete(command.id, CliJson.of(CliMultiCameras.toMap(plans, Build.VERSION.SDK_INT >= 30)) as JSONObject)
+            } catch (e: Exception) { commands.fail(command.id, (e as? CliFailure)?.code ?: "PREFLIGHT_FAILED", e.message ?: "Cannot read concurrent cameras") }
         }
     }
 

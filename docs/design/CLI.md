@@ -92,7 +92,7 @@ Provider는 `exported=true`, `grantUriPermissions=false`, `android.permission.DU
 
 `call()`의 세부 권한은 구현자가 검사해야 한다. `call`, `query`, `openFile` 등 구현한 모든 진입점에서 동일한 검사기를 사용하고, 호출자 확인 전에 `clearCallingIdentity()`를 실행하거나 작업을 다른 스레드로 넘기지 않는다. 앱 권한으로 MediaStore를 읽는 것은 검사 후 제한된 artifact URI를 해석한 경우에만 허용한다. [ContentProvider API](https://developer.android.com/reference/android/content/ContentProvider)
 
-앱 설정에 **ADB CLI 허용** 스위치를 추가하고 초기값은 꺼짐이다. 활성화는 사용자 0의 앱 설정에 저장하여 재실행 후에도 유지한다. 비활성화하면 신규 명령과 파일 접근을 막고 실행 중 작업은 취소 절차를 진행한다. 비활성화 상태의 shell에는 파일이나 실행 이력이 없는 `CLI_DISABLED` 진단만 반환한다. 이 설정은 ADB로 승인된 모든 PC에 적용되며 PC별 접근 권한은 ADB 인증이 담당한다.
+앱 설정에 **ADB CLI 허용** 스위치를 두고 초기값은 켜짐이다. 사용자가 스위치를 바꾸면 그 값을 사용자 0의 앱 설정에 저장하여 재실행과 앱 업데이트 후에도 유지한다. 비활성화하면 신규 명령과 파일 접근을 막고 실행 중 작업은 취소 절차를 진행한다. 비활성화 상태의 shell에는 파일이나 실행 이력이 없는 `CLI_DISABLED` 진단만 반환한다. 이 설정은 ADB로 승인된 모든 PC에 적용되며 PC별 접근 권한은 ADB 인증이 담당한다.
 
 기존 MainActivity에 Intent extras만으로 촬영하는 경로를 추가하지 않는다. CLI가 먼저 앱을 열고 Provider로 검증된 요청을 전달한다. BenchmarkActivity는 계속 비공개로 유지하고 앱 내부에서 이동한다.
 
@@ -123,7 +123,7 @@ halcam --serial DEVICE launch
 halcam --serial DEVICE cameras --json
 halcam --serial DEVICE preview --camera 0
 halcam --serial DEVICE capture --camera 0 --output ./photos
-halcam --serial DEVICE benchmark run --camera 0 --profile camera2-standard-v1 --output ./runs
+halcam --serial DEVICE benchmark run --camera 0 --profile camera2-standard-v2 --output ./runs
 halcam --serial DEVICE probe --output ./probe
 halcam --serial DEVICE cts cases --json
 halcam --serial DEVICE cts run --case custom:fast_on_off --case vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording --output ./cts
@@ -257,7 +257,7 @@ Provider는 허용된 ID만 받으며 경로 이동 문자열, 다른 authority,
 | 항목 | 확정 정책 | 검증 범위 |
 |---|---|---|
 | 실행·배포 | Python 3.11+, PC + ADB, wheel·저장소 설치 | Windows 실기기, 3개 PC OS의 CI |
-| 전송·접근 | shell UID 2000 + DUMP, 스위치 기본 꺼짐 | API 26·36의 일반 앱 접근 거부 |
+| 전송·접근 | shell UID 2000 + DUMP, 스위치 기본 켜짐 | API 26·36의 일반 앱 접근 거부 |
 | 시간·보존 | 30/180초 기본, 3,600초 상한, 완료 후 24시간·200개 | 시간 초과·만료·상한 테스트 |
 | Android | 사용자 0, API 26 이상, 잠금 해제·전면 화면 | API 26 에뮬레이터, Galaxy S25+ API 36 |
 

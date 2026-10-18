@@ -58,7 +58,7 @@ def render(data, args):
     elif artifacts:
         lines.append(f"{len(artifacts)} file(s) available, including any saved before cancellation.")
     # Lists and summaries are the requested result, so keep every entry visible.
-    for key in ("summary", "comparison", "runs", "media", "incidents", "cameras", "cases", "streams", "pip_sources", "devices", "delete_runs", "requests"):
+    for key in ("summary", "comparison", "runs", "media", "incidents", "cameras", "combinations", "cases", "streams", "pip_sources", "devices", "delete_runs", "requests"):
         value = result.get(key, data.get(key))
         if value is not None:
             lines.append(f"{key}:")

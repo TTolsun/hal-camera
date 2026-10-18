@@ -57,6 +57,8 @@ PIP는 원하는 모드의 `preview`를 연 뒤 `pip sources`로 조회합니다
 
 Dual은 `dual cameras`로 ID를 찾고 `dual preview|capture|record --camera ID --first ID --second ID`를 사용합니다. 사진·수동 제어는 Camera2, 영상은 두 개의 무음 MP4이며 `record stop`으로 종료합니다. 지원하지 않는 조합을 다른 센서·엔진으로 대체하지 않습니다.
 
+Multi(여러 독립 카메라 동시 사용)는 현재 `multi cameras` 조회만 지원합니다. `advertised: true`인 조합과 카메라별 크기를 확인하며 카메라를 열지 않습니다. Multi 촬영·녹화를 요청받으면 아직 CLI로 실행할 수 없다고 알립니다.
+
 ### 그 밖의 작업
 
 - `record snapshot`은 CLI 녹화에 사진을 추가하며 지원은 엔진·출력 구성에 따라 다릅니다. 사진 저장 중 `record stop`은 저장을 기다리며 영상·사진은 녹화 요청에 함께 등록됩니다.
@@ -64,6 +66,7 @@ Dual은 `dual cameras`로 ID를 찾고 `dual preview|capture|record --camera ID 
 - `results list`, `gallery list`, `incidents list`, `settings show`로 먼저 ID·설정을 찾습니다. 상세·export·비교·삭제·보관 한도 문법은 `help all`에 있습니다.
 - baseline은 명시적으로 지정합니다. 없으면 변화량만 표시하며 REGRESSED 판정을 붙이지 않습니다. 삭제·baseline 변경·보관 한도 적용은 사용자 요청 범위에서만 합니다. `settings limit --limit N`은 미리보기이며 `--confirm true`로 적용합니다.
 - Benchmark에는 엔진·Live 스트림·무음 옵션을 붙이지 않습니다. 라벨에 콜론이 필요하면 아래 Python 경로를 사용합니다.
+- 공백이 있는 값(`--build`, `--note` 라벨)은 `adb -s SERIAL shell "sh /data/local/tmp/halcam benchmark run --note 'Same room'"`처럼 기기 명령 전체를 큰따옴표로, 값을 작은따옴표로 감쌉니다. `adb shell`은 인자를 공백으로 이어 붙이므로 값만 감싸면 기기에서 다시 나뉘어 `Unknown option`으로 실패합니다.
 
 ## 3. 파일 회수와 연결 끊김 복구
 

@@ -107,13 +107,15 @@ PIP 사진은 합성 사진과 두 카메라의 원본을 비교할 수 있습�
 **성공 확인:** 회수한 합성 JPEG와 카메라별 원본을 나란히 열어 보세요. 조회와 촬영의 카메라·엔진을 맞춰야 합니다. `Not verified` 후보는 실제 구성에서 실패할 수 있습니다.
 
 <details>
-<summary>PIP 위치·크기와 Dual의 두 원본 영상</summary>
+<summary>PIP 위치·크기, Dual의 두 원본 영상과 Multi 조합</summary>
 
 PIP는 `preview`, `capture`, `record start`에서 선택합니다. CameraX Physical PIP, PIP Flash Auto/On, 연사·AEB PIP는 지원하지 않습니다.
 
 PIP 크기는 `--pip-preview-size WIDTHxHEIGHT`, `--pip-photo-size WIDTHxHEIGHT`로 지정합니다. 위치는 `--pip-x`, `--pip-y`, `--pip-width`, `--pip-height` 네 값을 함께 지정하며 왼쪽 위를 0으로 하는 0–1 영역 안에 들어야 합니다. 생략하면 기본 위치를 사용합니다.
 
 Dual은 `dual cameras`에서 ID를 고른 뒤 `dual preview|capture|record --camera ID --first ID --second ID`로 실행합니다. 사진·수동 제어는 Camera2에서 지원하며, 영상은 두 개의 무음 MP4로 저장하고 `record stop`으로 종료합니다. 물리 ID가 있어도 조합의 구성 성공까지 보장하지 않습니다.
+
+Multi로 함께 열 수 있는 카메라 조합은 `multi cameras`로 조회합니다. 카메라를 열지 않고 화면도 바꾸지 않습니다. `combinations`는 기기가 동시 사용을 알린 조합(`advertised: true`)을 먼저 나열하며, 각 카메라의 기본 프리뷰·사진 크기를 함께 보여 줍니다. `cameras`의 `preview_sizes`와 `photo_sizes`는 Multi가 카메라마다 제공하는 크기입니다. CameraX는 최대 `camerax_max_devices`대까지 엽니다. Android 10 이하에서는 `supported: false`와 사유를 반환합니다. Multi 프리뷰·촬영·녹화 명령은 아직 제공하지 않습니다.
 
 </details>
 
@@ -171,7 +173,13 @@ adb shell sh /data/local/tmp/halcam benchmark run --camera 0
 <details>
 <summary>측정 라벨·결과 비교·보관</summary>
 
-`--build "Candidate A" --commit SHA --branch NAME --note "Same room"`으로 라벨을 지정합니다. 생략한 라벨은 빈 값이며 이전 화면 입력을 이어받지 않습니다. 콜론을 포함한 라벨은 아래 Python 도구로 전달합니다.
+`--build LABEL --commit SHA --branch NAME --note TEXT`로 라벨을 지정합니다. 생략한 라벨은 빈 값이며 이전 화면 입력을 이어받지 않습니다. 콜론을 포함한 라벨은 아래 Python 도구로 전달합니다.
+
+**공백이 있는 라벨은 기기 명령 전체를 큰따옴표로 감싸고 라벨을 작은따옴표로 감쌉니다.** `adb shell`은 PC에서 받은 인자를 공백으로 이어 붙여 기기 셸에 넘기므로, `--note "Same room"`처럼 라벨만 감싸면 기기에서 `Same`과 `room`으로 나뉘어 `Unknown option: room`이 납니다. 아래 형식은 Bash, PowerShell, cmd에서 같게 동작합니다.
+
+```sh
+adb shell "sh /data/local/tmp/halcam benchmark run --camera 0 --build 'Candidate A' --note 'Same room'"
+```
 
 | 작업 | 명령 |
 | --- | --- |

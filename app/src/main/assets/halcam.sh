@@ -34,6 +34,7 @@ More tasks (start with the list command to find an ID):
   dual cameras                          List logical and physical camera IDs
   dual preview|capture|record --camera ID --first ID --second ID
                                         Dual video is silent; stop with record stop
+  multi cameras                         List camera sets Multi can open together
   results list | results show --run ID
   results compare --run ID --reference ID
   results export --run ID                Export JSON and CSV
@@ -63,6 +64,8 @@ Default camera: 0. Microphone is enabled unless --no-audio is given.
 Only one operation runs at a time. Unlock the device. ADB CLI is allowed by default.
 Example: adb shell sh /data/local/tmp/halcam capture --camera 0
 With multiple connections, use the same adb -s SERIAL for every command and pull.
+Values with spaces: quote the whole command, because adb shell rejoins arguments:
+  adb shell "sh /data/local/tmp/halcam benchmark run --note 'Same room'"
 EOF
 }
 help() {
@@ -160,7 +163,10 @@ wait_for() {
                 return ;;
         esac
         if { [ "$method" = record.start ] || [ "$method" = dual.record ]; }; then
-            case "$result" in *'"recording":true'*) echo "Recording started. Stop with: adb shell sh /data/local/tmp/halcam record stop"; return ;; esac
+            case "$result" in *'"recording":true'*)
+                echo "Recording started. Stop with: adb shell sh /data/local/tmp/halcam record stop"
+                echo 'If using adb -s SERIAL, add the same -s SERIAL to the stop command.'
+                return ;; esac
         fi
         [ "$(date +%s)" -lt "$end" ] || die "Wait timed out; operation may still run. Use status $rid."
         sleep 1
@@ -188,12 +194,12 @@ EOF
         exit 0 ;;
     preview)
         case "${1:-}" in start) shift ;; stop) method=preview.stop; shift ;; esac ;;
-    record|cts|benchmark|results|baseline|gallery|dual|live|pip|settings|incidents|requests)
+    record|cts|benchmark|results|baseline|gallery|dual|multi|live|pip|settings|incidents|requests)
         [ $# -gt 0 ] || die "$method needs a subcommand; use help"
         method=$method.$1; shift ;;
 esac
 case "$method" in
-    settings.show|settings.limit|incidents.list|incidents.export|incidents.delete|live.set|live.reset|doctor|streams|cameras|preview|preview.stop|capture|burst|bracket|meter|events|live.info|pip.sources|dual.cameras|dual.preview|dual.capture|dual.record|results.list|results.show|results.export|results.compare|results.delete|baseline.add|baseline.remove|gallery.list|gallery.export|gallery.delete|record.start|record.stop|record.snapshot|probe|cts.cases|cts.run|benchmark.run|requests.list|status|cancel|fetch) ;;
+    settings.show|settings.limit|incidents.list|incidents.export|incidents.delete|live.set|live.reset|doctor|streams|cameras|preview|preview.stop|capture|burst|bracket|meter|events|live.info|pip.sources|dual.cameras|multi.cameras|dual.preview|dual.capture|dual.record|results.list|results.show|results.export|results.compare|results.delete|baseline.add|baseline.remove|gallery.list|gallery.export|gallery.delete|record.start|record.stop|record.snapshot|probe|cts.cases|cts.run|benchmark.run|requests.list|status|cancel|fetch) ;;
     *) die "Unknown command: $method. Use help." ;;
 esac
 
@@ -267,6 +273,7 @@ case "$method" in
                     if [ "$count" -gt 0 ]; then
                         echo "Operation ended. $count saved file(s) remain available."
                         echo "Next: adb shell sh /data/local/tmp/halcam fetch $rid"
+                        echo 'If using adb -s SERIAL, add the same -s SERIAL to the fetch command.'
                     else echo 'Operation ended. No files are registered for this request.'; fi
                     case "$result" in *'"error":{'*) exit 1 ;; esac ;;
             esac
