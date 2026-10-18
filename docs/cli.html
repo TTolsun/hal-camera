@@ -151,9 +151,10 @@ adb shell sh /data/local/tmp/halcam pip sources
 </ol>
 <p><strong>성공 확인:</strong> 회수한 합성 JPEG와 카메라별 원본을 나란히 열어 보세요. 조회와 촬영의 카메라·엔진을 맞춰야 합니다. <code>Not verified</code> 후보는 실제 구성에서 실패할 수 있습니다.</p>
 <details>
-<summary>PIP 위치·크기와 Dual의 두 원본 영상</summary><p>PIP는 <code>preview</code>, <code>capture</code>, <code>record start</code>에서 선택합니다. CameraX Physical PIP, PIP Flash Auto/On, 연사·AEB PIP는 지원하지 않습니다.</p>
+<summary>PIP 위치·크기, Dual의 두 원본 영상과 Multi 조합</summary><p>PIP는 <code>preview</code>, <code>capture</code>, <code>record start</code>에서 선택합니다. CameraX Physical PIP, PIP Flash Auto/On, 연사·AEB PIP는 지원하지 않습니다.</p>
 <p>PIP 크기는 <code>--pip-preview-size WIDTHxHEIGHT</code>, <code>--pip-photo-size WIDTHxHEIGHT</code>로 지정합니다. 위치는 <code>--pip-x</code>, <code>--pip-y</code>, <code>--pip-width</code>, <code>--pip-height</code> 네 값을 함께 지정하며 왼쪽 위를 0으로 하는 0–1 영역 안에 들어야 합니다. 생략하면 기본 위치를 사용합니다.</p>
 <p>Dual은 <code>dual cameras</code>에서 ID를 고른 뒤 <code>dual preview|capture|record --camera ID --first ID --second ID</code>로 실행합니다. 사진·수동 제어는 Camera2에서 지원하며, 영상은 두 개의 무음 MP4로 저장하고 <code>record stop</code>으로 종료합니다. 물리 ID가 있어도 조합의 구성 성공까지 보장하지 않습니다.</p>
+<p>Multi로 함께 열 수 있는 카메라 조합은 <code>multi cameras</code>로 조회합니다. 카메라를 열지 않고 화면도 바꾸지 않습니다. <code>combinations</code>는 기기가 동시 사용을 알린 조합(<code>advertised: true</code>)을 먼저 나열하며, 각 카메라의 기본 프리뷰·사진 크기를 함께 보여 줍니다. <code>cameras</code>의 <code>preview_sizes</code>와 <code>photo_sizes</code>는 Multi가 카메라마다 제공하는 크기입니다. CameraX는 최대 <code>camerax_max_devices</code>대까지 엽니다. Android 10 이하에서는 <code>supported: false</code>와 사유를 반환합니다. Multi 프리뷰·촬영·녹화 명령은 아직 제공하지 않습니다.</p>
 </details><h2 id="스트림-크기를-지정하세요">스트림 크기를 지정하세요</h2>
 <p><strong>조회와 실행에 같은 카메라·엔진·모드를 사용하세요.</strong> 기본 엔진은 Camera2이며 CameraX는 양쪽 명령에 <code>--engine CameraX</code>를 붙입니다.</p>
 <pre><code class="language-sh">adb shell sh /data/local/tmp/halcam streams --camera 0 --mode Video

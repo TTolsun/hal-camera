@@ -153,7 +153,7 @@ CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩�
 
 `benchmark.run`은 Live 카메라 종료 뒤 벤치마크 화면으로 인계하며, `BenchmarkController`가 기존 Runner 실행과 JSON 저장 완료를 요청 결과에 연결합니다.
 
-`cameras`·`streams`·`probe`·`cts.cases`는 화면을 거치지 않고 coordinator가 처리합니다.
+`cameras`·`streams`·`probe`·`cts.cases`·`dual.cameras`·`multi.cameras`는 화면을 거치지 않고 coordinator가 처리합니다.
 
 `CliLibrary`는 저장된 결과·baseline·갤러리·진단 ZIP과 보관 한도를 처리합니다. 결과 비교에는 기존 presenter와 비교 규칙을 재사용합니다. 삭제는 대상 ID와 명시적 확인을 요구하고, 보관 한도 변경은 적용 전에 삭제할 실행 목록을 보여 줍니다.
 

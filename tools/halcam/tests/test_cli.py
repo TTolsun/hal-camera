@@ -272,6 +272,15 @@ class ProbeAndCtsTests(unittest.TestCase):
         self.assertEqual(got["payload"]["params"], {})
         self.assertFalse(got["launched"])
 
+    def test_multi_cameras_lists_without_camera_or_launching(self):
+        with patch("sys.stdout", new_callable=io.StringIO):
+            got = self.submitted(["--serial", "phone", "multi", "cameras"],
+                                 status={"protocol_version": 1, "foreground": False, "screen": None, "busy": False})
+        self.assertEqual(got["payload"]["command"], "multi.cameras")
+        self.assertEqual(got["payload"]["params"], {})
+        self.assertEqual(got["payload"]["execution_timeout_ms"], 30000)
+        self.assertFalse(got["launched"])
+
     def test_benchmark_launches_live_and_submits_profile_without_stream_overrides(self):
         with patch("sys.stdout", new_callable=io.StringIO):
             got = self.submitted(["benchmark", "run", "--camera", "1", "--output", "out"],

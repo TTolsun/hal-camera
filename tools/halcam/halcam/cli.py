@@ -108,6 +108,12 @@ def parser():
     record_stop.add_argument("--transfer-timeout", type=positive, default=60)
     record_stop.add_argument("--wait-timeout", type=positive, default=60)
     common(record_commands.add_parser("snapshot"))
+    multi = commands.add_parser("multi", help="List camera sets Multi can open together")
+    common(multi)
+    multi_commands = multi.add_subparsers(dest="multi_command", required=True)
+    multi_cameras = multi_commands.add_parser("cameras")
+    common(multi_cameras)
+    execution_options(multi_cameras)
     pip = commands.add_parser("pip", help="Read PIP candidates for the current preview")
     common(pip)
     pip_commands = pip.add_subparsers(dest="pip_command", required=True)
@@ -155,7 +161,7 @@ def execution_options(p, timeout=None):
 
 
 # Commands the app answers without a screen: nothing to bring to the foreground first.
-SCREENLESS = ("streams", "cameras", "probe", "cts.cases")
+SCREENLESS = ("streams", "cameras", "probe", "cts.cases", "multi.cameras")
 
 
 def app_command(args):
@@ -169,6 +175,8 @@ def app_command(args):
         return "record." + args.record_command
     if args.command == "pip":
         return "pip." + args.pip_command
+    if args.command == "multi":
+        return "multi." + args.multi_command
     if args.command == "preview" and args.action == "stop":
         return "preview.stop"
     return args.command

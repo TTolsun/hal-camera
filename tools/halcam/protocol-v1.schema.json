@@ -33,6 +33,7 @@
         "live.info",
         "pip.sources",
         "dual.cameras",
+        "multi.cameras",
         "dual.preview",
         "dual.capture",
         "dual.record",
@@ -470,6 +471,25 @@
         "properties": {
           "command": {
             "const": "dual.cameras"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {},
+            "required": []
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "multi.cameras"
           }
         }
       },

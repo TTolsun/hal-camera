@@ -57,6 +57,8 @@ PIP는 원하는 모드의 `preview`를 연 뒤 `pip sources`로 조회합니다
 
 Dual은 `dual cameras`로 ID를 찾고 `dual preview|capture|record --camera ID --first ID --second ID`를 사용합니다. 사진·수동 제어는 Camera2, 영상은 두 개의 무음 MP4이며 `record stop`으로 종료합니다. 지원하지 않는 조합을 다른 센서·엔진으로 대체하지 않습니다.
 
+Multi(여러 독립 카메라 동시 사용)는 현재 `multi cameras` 조회만 지원합니다. `advertised: true`인 조합과 카메라별 크기를 확인하며 카메라를 열지 않습니다. Multi 촬영·녹화를 요청받으면 아직 CLI로 실행할 수 없다고 알립니다.
+
 ### 그 밖의 작업
 
 - `record snapshot`은 CLI 녹화에 사진을 추가하며 지원은 엔진·출력 구성에 따라 다릅니다. 사진 저장 중 `record stop`은 저장을 기다리며 영상·사진은 녹화 요청에 함께 등록됩니다.

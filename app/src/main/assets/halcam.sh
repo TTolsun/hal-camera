@@ -33,6 +33,7 @@ More tasks (start with the list command to find an ID):
   dual cameras                          List logical and physical camera IDs
   dual preview|capture|record --camera ID --first ID --second ID
                                         Dual video is silent; stop with record stop
+  multi cameras                         List camera sets Multi can open together
   results list | results show --run ID
   results compare --run ID --reference ID
   results export --run ID                Export JSON and CSV
@@ -192,12 +193,12 @@ EOF
         exit 0 ;;
     preview)
         case "${1:-}" in start) shift ;; stop) method=preview.stop; shift ;; esac ;;
-    record|cts|benchmark|results|baseline|gallery|dual|live|pip|settings|incidents)
+    record|cts|benchmark|results|baseline|gallery|dual|multi|live|pip|settings|incidents)
         [ $# -gt 0 ] || die "$method needs a subcommand; use help"
         method=$method.$1; shift ;;
 esac
 case "$method" in
-    settings.show|settings.limit|incidents.list|incidents.export|incidents.delete|live.set|live.reset|doctor|streams|cameras|preview|preview.stop|capture|burst|bracket|meter|events|live.info|pip.sources|dual.cameras|dual.preview|dual.capture|dual.record|results.list|results.show|results.export|results.compare|results.delete|baseline.add|baseline.remove|gallery.list|gallery.export|gallery.delete|record.start|record.stop|record.snapshot|probe|cts.cases|cts.run|benchmark.run|status|cancel|fetch) ;;
+    settings.show|settings.limit|incidents.list|incidents.export|incidents.delete|live.set|live.reset|doctor|streams|cameras|preview|preview.stop|capture|burst|bracket|meter|events|live.info|pip.sources|dual.cameras|multi.cameras|dual.preview|dual.capture|dual.record|results.list|results.show|results.export|results.compare|results.delete|baseline.add|baseline.remove|gallery.list|gallery.export|gallery.delete|record.start|record.stop|record.snapshot|probe|cts.cases|cts.run|benchmark.run|status|cancel|fetch) ;;
     *) die "Unknown command: $method. Use help." ;;
 esac
 
