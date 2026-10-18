@@ -12,7 +12,6 @@ import dev.halcamera.cts.suite.SuiteItem
 import dev.halcamera.cts.suite.SuitePlan
 import dev.halcamera.ctsvendor.VendoredCatalog
 import dev.halcamera.ctsvendor.VendoredCts
-import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
@@ -26,15 +25,14 @@ class CliQueries(private val context: Context, private val commands: CliArtifact
         when (command.command) {
             "streams" -> streamSupport(command)
             "probe" -> probe(command)
-            "cts.cases" -> commands.complete(command.id, JSONObject().put("cases", CliJson.of(suiteItems())))
+            "cts.cases" -> commands.complete(command.id, mapOf("cases" to suiteItems()))
             "cameras" -> {
                 val endpoints = CameraEndpointResolver(context.getSystemService(CameraManager::class.java)).resolve()
-                val cameras = JSONArray(endpoints.map { JSONObject(it.toJsonMap()).put("selectable", it.independentlyOpenable && it.physicalCameraId == null) })
-                commands.complete(command.id, JSONObject().put("cameras", cameras))
+                commands.complete(command.id, mapOf("cameras" to endpoints.map { it.toJsonMap() + ("selectable" to (it.independentlyOpenable && it.physicalCameraId == null)) }))
             }
-            "dual.cameras" -> commands.complete(command.id, JSONObject().put("cameras", CliJson.of(dev.halcamera.camera.readLogicalMultiCameras(context.getSystemService(CameraManager::class.java)).map {
+            "dual.cameras" -> commands.complete(command.id, mapOf("cameras" to dev.halcamera.camera.readLogicalMultiCameras(context.getSystemService(CameraManager::class.java)).map {
                 mapOf("camera_id" to it.logicalId, "physical" to it.physical.map { lens -> mapOf("id" to lens.id, "role" to lens.role.name) })
-            })))
+            }))
             else -> throw CliFailure("INVALID_ARGUMENT", "Unknown query")
         }
     }
@@ -49,17 +47,17 @@ class CliQueries(private val context: Context, private val commands: CliArtifact
                 val characteristics = manager.getCameraCharacteristics(command.camera)
                 val controls = dev.halcamera.camera.liveControlSupport(characteristics)
                 val manual = if (command.engine == "CameraX") dev.halcamera.camera.ManualSupport(camera2 = false) else dev.halcamera.camera.manualSupport(characteristics, 30)
-                commands.complete(command.id, JSONObject().put("camera_id", command.camera).put("engine", command.engine ?: "Camera2").put("mode", command.mode ?: "Photo")
-                    .put("controls", CliJson.of(mapOf("zoom" to dev.halcamera.camera.zoomRange(manager, command.camera).let { listOf(it.first, it.second) },
+                commands.complete(command.id, cliResult("camera_id" to command.camera, "engine" to (command.engine ?: "Camera2"), "mode" to (command.mode ?: "Photo"),
+                    "controls" to mapOf("zoom" to dev.halcamera.camera.zoomRange(manager, command.camera).let { listOf(it.first, it.second) },
                         "ev_steps" to controls.evRange?.let { listOf(it.first, it.last) }, "ev_step" to controls.evStep,
                         "ae_lock" to controls.aeLock, "af_lock" to controls.afLock, "flash" to controls.flashModes(command.videoMode).map { it.name },
                         "iso" to manual.iso?.let { listOf(it.first, it.last) }, "exposure_ns" to manual.exposureNs?.let { listOf(it.first.toString(), manual.maxExposureNs.toString()) },
-                        "focus_max_diopters" to manual.maxFocus, "white_balance" to manual.whiteBalances.map { it.name })))
-                    .put("streams", CliJson.of(mapOf("preview" to support.preview.map { it.toString() },
+                        "focus_max_diopters" to manual.maxFocus, "white_balance" to manual.whiteBalances.map { it.name }),
+                    "streams" to mapOf("preview" to support.preview.map { it.toString() },
                         "yuv" to support.yuv.map { it.toString() }, "jpeg" to support.jpeg.map { it.toString() },
                         "raw" to support.raw.takeUnless { command.videoMode }.orEmpty().map { it.toString() }, "fps" to support.fps.takeUnless { command.videoMode }.orEmpty().map { "${it.min}-${it.max}" },
                         "stabilization" to (if (command.videoMode) support.stabilization else listOf(dev.halcamera.camera.LiveStabilization.OFF)).map { it.name }, "jpeg_source" to listOf("CAMERA", "YUV"),
-                        "video" to support.videos.takeIf { command.videoMode }.orEmpty().map { mapOf("size" to it.size.toString(), "fps" to it.fps, "codec" to it.codec) }))))
+                        "video" to support.videos.takeIf { command.videoMode }.orEmpty().map { mapOf("size" to it.size.toString(), "fps" to it.fps, "codec" to it.codec) })))
             } catch (e: Exception) { commands.fail(command.id, (e as? CliFailure)?.code ?: "PREFLIGHT_FAILED", e.message ?: "Cannot read stream capabilities") }
         }
     }
@@ -75,8 +73,8 @@ class CliQueries(private val context: Context, private val commands: CliArtifact
                 val model = Build.MODEL.replace(Regex("[^A-Za-z0-9_-]"), "_")
                 val json = File(dir, "camera-probe-$model-$stamp.json").apply { writeText((CliJson.of(snapshot.toJsonMap()) as JSONObject).toString(2), Charsets.UTF_8) }
                 val text = File(dir, "camera-probe-$model-$stamp.txt").apply { writeText(CameraProbeText.render(snapshot), Charsets.UTF_8) }
-                commands.complete(command.id, JSONObject().put("captured_at", snapshot.capturedAt).put("camera_count", snapshot.cameras.size)
-                    .put("errors", JSONArray(snapshot.errors)).put("artifact_count", 2),
+                commands.complete(command.id, cliResult("captured_at" to snapshot.capturedAt, "camera_count" to snapshot.cameras.size,
+                    "errors" to snapshot.errors, "artifact_count" to 2),
                     listOf(CliArtifact(json.name, "application/json", Uri.fromFile(json)), CliArtifact(text.name, "text/plain", Uri.fromFile(text))))
             } catch (e: Exception) { commands.fail(command.id, (e as? CliFailure)?.code ?: "PROBE_FAILED", e.message ?: "Cannot read camera characteristics") }
         }

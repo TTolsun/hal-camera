@@ -13,12 +13,12 @@ internal object CliFlowChecks {
         override fun beginHandover() = Unit
         override fun state(id: String, value: String): Boolean { record.put("state", value); return true }
         override fun fail(id: String, code: String, message: String) { error = code; active = null }
-        override fun complete(id: String, result: JSONObject, artifacts: List<CliArtifact>, failure: CliFailure?) { active = null }
+        override fun complete(id: String, result: Map<String, Any?>, artifacts: List<CliArtifact>, failure: CliFailure?) { active = null }
         override fun recordingStarted(command: CliCommand, streams: Map<String, Any?>): Boolean {
             record.put("result", JSONObject().put("recording", true)); return true
         }
-        override fun readRecord(id: String) = record
-        override fun updateRecord(id: String, mutate: (JSONObject) -> Unit) { mutate(record) }
+        override fun recording(id: String) = record.optJSONObject("result")?.optBoolean("recording") == true
+        override fun updateRecord(id: String, fields: Map<String, Any?>) { fields.forEach { (key, value) -> record.put(key, value) } }
     }
 
     private class Driver : LiveController.Driver {
@@ -31,8 +31,8 @@ internal object CliFlowChecks {
         var captureFailure = false
         override fun prepare(command: CliCommand, ready: () -> Unit) = ready()
         override fun prepareScene(command: CliCommand, ready: () -> Unit) { sceneReady = ready }
-        override fun tune(options: CliOptions?, reset: Boolean) = JSONObject()
-        override fun sequence(command: CliCommand, done: (JSONObject, List<CliArtifact>, CliFailure?) -> Unit) = Unit
+        override fun tune(options: CliOptions?, reset: Boolean) = emptyMap<String, Any?>()
+        override fun sequence(command: CliCommand, done: (Map<String, Any?>, List<CliArtifact>, CliFailure?) -> Unit) = Unit
         override fun cancelSequence() = Unit
         override fun cancelEvents() = Unit
         override fun inspect(command: CliCommand) = Unit

@@ -102,7 +102,7 @@ class DualPreviewActivity : ComponentActivity() {
         zoomControl.setChoices(zoomPresets(cliZoomRange), zoom)
         session?.setZoom(zoom)
         when (command.command) {
-            "dual.preview" -> cli.complete(command.id, org.json.JSONObject().put("camera_ready", true).put("size", streamingSize.toString()))
+            "dual.preview" -> cli.complete(command.id, mapOf("camera_ready" to true, "size" to streamingSize.toString()))
             "dual.capture" -> { photoPending = true; session?.capturePhoto(displayDegrees()) }
             "dual.record" -> { recordPending = true; session?.startRecording() }
         }
@@ -229,7 +229,7 @@ class DualPreviewActivity : ComponentActivity() {
             cliInterrupted = true; cliStopping = true
             closeSession {
                 if (cli.active?.id == command.id && cli.readRecord(command.id)?.optString("state") !in dev.halcamera.cli.CliStates.terminal + "saving")
-                    cli.complete(command.id, org.json.JSONObject().put("artifact_count", cliArtifacts.size), cliArtifacts.toList(), dev.halcamera.cli.CliFailure("RECORDING_INTERRUPTED", "Dual screen left foreground"))
+                    cli.complete(command.id, mapOf("artifact_count" to cliArtifacts.size), cliArtifacts.toList(), dev.halcamera.cli.CliFailure("RECORDING_INTERRUPTED", "Dual screen left foreground"))
             }
         }
         cli.detach(cliHost)
@@ -595,7 +595,7 @@ class DualPreviewActivity : ComponentActivity() {
         }
         override fun onVideoSaved(result: Result<Int>) {
             cliRequest?.let { request ->
-                result.fold({ cli.complete(request.id, org.json.JSONObject().put("artifact_count", cliArtifacts.size).put("recording", false).put("cancelled", cliCancelled), cliArtifacts.toList(),
+                result.fold({ cli.complete(request.id, mapOf("artifact_count" to cliArtifacts.size, "recording" to false, "cancelled" to cliCancelled), cliArtifacts.toList(),
                     if (cliStopping && !cliInterrupted) null else dev.halcamera.cli.CliFailure("RECORDING_INTERRUPTED", "Recording stopped unexpectedly")) },
                     { cli.fail(request.id, "RECORDING_FAILED", it.message ?: "Dual recording failed") })
             }
@@ -603,7 +603,7 @@ class DualPreviewActivity : ComponentActivity() {
                 { Toast.makeText(this@DualPreviewActivity, "Save failed: ${it.message}", Toast.LENGTH_LONG).show() })
         }
         override fun onPhotoSaved(result: Result<Int>) {
-            cliRequest?.let { request -> result.fold({ cli.complete(request.id, org.json.JSONObject().put("artifact_count", cliArtifacts.size), cliArtifacts.toList()) },
+            cliRequest?.let { request -> result.fold({ cli.complete(request.id, mapOf("artifact_count" to cliArtifacts.size), cliArtifacts.toList()) },
                 { cli.fail(request.id, "CAPTURE_FAILED", it.message ?: "Dual photo failed") }) }
             photoPending = false
             result.fold({ Toast.makeText(this@DualPreviewActivity, "Saved ${it} photos from both sensors", Toast.LENGTH_SHORT).show() },
@@ -865,8 +865,8 @@ class DualPreviewActivity : ComponentActivity() {
         io.execute {
             val result = runCatching { IncidentExporter(applicationContext).export(incident, sessions) }
             if (cli.active?.let { it.id == incident.id && it.command == "events" } == true) {
-                result.fold({ file -> cli.complete(incident.id, org.json.JSONObject().put("artifact_count", 1)
-                    .put("cancelled", cli.readRecord(incident.id)?.optString("state") == "cancelling"),
+                result.fold({ file -> cli.complete(incident.id, mapOf("artifact_count" to 1,
+                    "cancelled" to (cli.readRecord(incident.id)?.optString("state") == "cancelling")),
                     listOf(dev.halcamera.cli.CliArtifact(file.name, "application/zip", android.net.Uri.fromFile(file)))) },
                     { cli.fail(incident.id, "SAVE_FAILED", it.message ?: "Events export failed") })
                 return@execute

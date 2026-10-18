@@ -12,6 +12,10 @@ ROOT = Path(__file__).resolve().parents[3]
 SCRIPT = ROOT / "app/src/main/assets/halcam.sh"
 BASH = "C:/Program Files/Git/bin/bash.exe" if os.name == "nt" and Path("C:/Program Files/Git/bin/bash.exe").exists() else shutil.which("bash")
 RID = "b616d5cc-7706-4983-b49e-4e4d5c0ef816"
+# Invalid usage may read hello, where the command's options are listed, but submits and launches nothing.
+READ_ONLY = ("", "read --uri content://dev.halcamera.cli/v1/hello\n")
+# The command lists and specs a current APK sends in hello; CliCommandSpecTest keeps the fixture in step.
+SPEC_HELLO = json.loads((Path(__file__).parent / "fixtures" / "hello.json").read_text(encoding="utf-8"))
 
 
 @unittest.skipUnless(BASH, "A POSIX shell is needed for client tests")
@@ -56,7 +60,7 @@ class AdbShellTests(unittest.TestCase):
             if result:
                 state.update(result)
             env = os.environ | {
-                "TEST_HELLO": json.dumps(hello or {"protocol_version": 1, "enabled": True}, separators=(",", ":")),
+                "TEST_HELLO": json.dumps(hello or {"protocol_version": 1, "enabled": True, **SPEC_HELLO}, separators=(",", ":")),
                 "TEST_STATUS": json.dumps({"protocol_version": 1, "screen": screen, "busy": busy}, separators=(",", ":")),
                 "TEST_RESULT": json.dumps(state, separators=(",", ":")),
                 "TEST_RID": RID,
@@ -142,7 +146,7 @@ sha256sum() {
     def test_stream_option_cannot_inject_shell_or_extra_delimiter(self):
         proc, calls = self.run_client(["preview", "--preview-size", "1280:720"])
         self.assertNotEqual(proc.returncode, 0)
-        self.assertEqual(calls, "")
+        self.assertIn(calls, READ_ONLY)
 
     def test_capture_waits_and_needs_no_user_generated_id(self):
         proc, calls = self.run_client(["capture", "--camera", "1"])
@@ -257,6 +261,30 @@ sha256sum() {
         self.assertIn("v1/requests/" + RID, calls)
         self.assertIn('"state":"succeeded"', proc.stdout)
 
+    def test_commands_and_options_come_from_the_app_specs(self):
+        for args, message in ((["frobnicate"], "Unknown command"), (["results", "list", "--zoom", "2"], "Unknown option: --zoom"),
+                              (["capture", "--count", "3"], "Unknown option: --count"), (["streams", "--yuv-size", "off"], "Unknown option: --yuv-size"),
+                              (["results", "list", "--no-audio"], "--no-audio is only"), (["capture", "--cases", "custom:a"], "--cases is only")):
+            with self.subTest(args=args):
+                proc, calls = self.run_client(args)
+                self.assertNotEqual(proc.returncode, 0)
+                self.assertIn(message, proc.stderr)
+                self.assertIn(calls, READ_ONLY)
+
+    def test_screenless_and_screen_commands_follow_the_foreground_spec(self):
+        proc, calls = self.run_client(["meter", "--x", "0.5", "--y", "0.5"], screen="dual")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("v1/status", calls)
+        self.assertNotIn("am start", calls)
+        proc, calls = self.run_client(["cts", "cases"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertNotIn("v1/status", calls)
+
+    def test_an_apk_without_command_specs_validates_the_request_itself(self):
+        proc, calls = self.run_client(["results", "list", "--zoom", "2"], hello={"protocol_version": 1, "enabled": True})
+        self.assertIn("--method results.list", calls)
+        self.assertIn("zoom:s:2", calls)
+
     def test_invalid_usage_does_not_touch_device(self):
         for args in (["benchmark"], ["benchmark", "run", "--engine", "CameraX"],
                      ["benchmark", "run", "--profile", "camera2-standard-v1"],
@@ -264,4 +292,4 @@ sha256sum() {
                      ["capture", "--camera"], ["capture", "--timeout", "0"], ["capture", "--timeout", "3601"], ["capture", "--typo"], ["status", "../foo"]):
             proc, calls = self.run_client(args)
             self.assertNotEqual(proc.returncode, 0, args)
-            self.assertEqual(calls, "", args)
+            self.assertIn(calls, READ_ONLY, args)

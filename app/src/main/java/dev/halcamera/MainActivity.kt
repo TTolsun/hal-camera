@@ -42,8 +42,8 @@ class MainActivity : ComponentActivity() {
             io.execute {
                 try {
                     val file = IncidentExporter(this).export(incident, sessions)
-                    cli.complete(incident.id, org.json.JSONObject().put("artifact_count", 1)
-                        .put("cancelled", cli.readRecord(incident.id)?.optString("state") == "cancelling"),
+                    cli.complete(incident.id, mapOf("artifact_count" to 1,
+                        "cancelled" to (cli.readRecord(incident.id)?.optString("state") == "cancelling")),
                         listOf(dev.halcamera.cli.CliArtifact(file.name, "application/zip", android.net.Uri.fromFile(file))))
                 } catch (e: Exception) { cli.fail(incident.id, "SAVE_FAILED", e.message ?: "Events export failed") }
             }

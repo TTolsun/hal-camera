@@ -27,7 +27,7 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
             main.post {
                 if (cli.active?.id != command.id || !resumed) return@post
                 selected.fold({ settings ->
-                    if (command.command in setOf("capture", "burst", "bracket") && settings?.canCapture == false) {
+                    if (command.spec.stills && settings?.canCapture == false) {
                         cli.fail(command.id, "PREFLIGHT_FAILED", "Capture requires JPEG (HAL or YUV) or RAW output")
                         return@fold
                     }
@@ -70,7 +70,7 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
         if (camera == null) done(Result.failure(IllegalStateException("Media capture unavailable; camera not ready"))) else camera.capturePhoto(id, done)
         updateMediaControls()
     }
-    override fun tune(options: dev.halcamera.cli.CliOptions?, reset: Boolean): org.json.JSONObject {
+    override fun tune(options: dev.halcamera.cli.CliOptions?, reset: Boolean): Map<String, Any?> {
         if ((!ready && !recordingVideo) || closing || stoppingRecording) throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Start preview or recording first")
         val requested = if (reset) LiveControls() else options!!.controls(controlBar.support, manualCapabilities, videoMode, controlBar.controls, pipUi.selected != null)
         val zoom = if (reset) 1f else options!!.values["zoom"]?.toFloat() ?: zoomRatio
@@ -78,12 +78,12 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
         if (zoom !in range.first..range.second) throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Unsupported zoom")
         controlBar.applyRequested(requested)
         zoomRatio = zoom; engine?.setZoom(zoom)
-        return dev.halcamera.cli.CliJson.envelope().put("completed", true).put("zoom", zoom).put("requested_controls", requested.toString())
+        return mapOf("completed" to true, "zoom" to zoom, "requested_controls" to requested.toString())
     }
-    override fun sequence(command: dev.halcamera.cli.CliCommand, done: (org.json.JSONObject, List<dev.halcamera.cli.CliArtifact>, dev.halcamera.cli.CliFailure?) -> Unit) {
+    override fun sequence(command: dev.halcamera.cli.CliCommand, done: (Map<String, Any?>, List<dev.halcamera.cli.CliArtifact>, dev.halcamera.cli.CliFailure?) -> Unit) {
         cliSequence.start(command, engine as? MediaCapture, controlBar.controls, controlBar.support) { result, artifacts, failure ->
-            if (resumed) captureFeedback.showResult("${result.optInt("saved")}/${result.optInt("requested")} saved" +
-                result.optString("hdr").takeIf { it.isNotEmpty() }.let { if (it == null) "" else " · HDR $it" })
+            if (resumed) captureFeedback.showResult("${result["saved"]}/${result["requested"]} saved" +
+                result["hdr"]?.let { " · HDR $it" }.orEmpty())
             done(result, artifacts, failure)
         }
     }
@@ -95,16 +95,16 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
                 val camera = engine as? PipCamera ?: throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Start preview first")
                 cli.state(command.id, "running")
                 camera.checkPipSources { sources ->
-                    if (cli.active?.id == command.id) cli.complete(command.id, dev.halcamera.cli.CliJson.of(mapOf("camera_id" to cameraId,
+                    if (cli.active?.id == command.id) cli.complete(command.id, mapOf("camera_id" to cameraId,
                         "engine" to engineName, "mode" to if (videoMode) "Video" else "Photo", "pip_sources" to sources.map {
                             mapOf("camera_id" to it.id, "type" to if (it.physical) "physical" else "service",
                                 "selectable" to it.selectable, "reason" to it.unavailableReason, "note" to it.supportNote)
-                        })) as org.json.JSONObject)
+                        }))
                 }
             }
-            "live.info" -> cli.complete(command.id, dev.halcamera.cli.CliJson.of(mapOf("camera_id" to cameraId, "engine" to engineName,
+            "live.info" -> cli.complete(command.id, mapOf("camera_id" to cameraId, "engine" to engineName,
                 "ready" to ready, "zoom" to zoomRatio, "streams" to streamInfo(), "controls" to controlBar.controls.toString(),
-                "events" to dev.halcamera.cli.CliEvents.recent(recorder))) as org.json.JSONObject)
+                "events" to dev.halcamera.cli.CliEvents.recent(recorder)))
             "events" -> {
                 if (!recorder.trigger(command.id)) throw dev.halcamera.cli.CliFailure("BUSY", "Events are already being saved")
                 cli.state(command.id, "running")
@@ -115,14 +115,14 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
                 val accepted = (engine as? TouchMetering)?.meterAt(opts.getValue("x").toFloat() * v.width,
                     opts.getValue("y").toFloat() * v.height, opts["meter"] == "exposure") { } == true
                 if (!accepted) throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Metering unavailable. Start preview with automatic focus/exposure.")
-                cli.complete(command.id, org.json.JSONObject().put("submitted", true).put("note", "Metering requested; inspect live.info for capture results"))
+                cli.complete(command.id, mapOf("submitted" to true, "note" to "Metering requested; inspect live.info for capture results"))
             }
         }
     }
     override fun dual(command: dev.halcamera.cli.CliCommand) = handOver(command) {
         Intent(this@createLiveCli, DualPreviewActivity::class.java)
             .putExtra(DualPreviewActivity.EXTRA_ENGINE, command.engine ?: "Camera2")
-            .putExtra(DualPreviewActivity.EXTRA_VIDEO, command.command == "dual.record")
+            .putExtra(DualPreviewActivity.EXTRA_VIDEO, command.spec.recording)
     }
     override fun snapshot(done: (Result<PhotoResult>) -> Unit) {
         (engine as? MediaCapture)?.captureSnapshot(done) ?: done(Result.failure(IllegalStateException("Camera unavailable")))

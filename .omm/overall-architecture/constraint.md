@@ -1,5 +1,5 @@
 - BenchmarkRunner는 Driver·Scheduler·clock을 주입받습니다. 지표·통계·회귀 계산은 JVM 테스트로 검증하며 Activity와 파일 어댑터는 Android 의존성이 있습니다.
-- 벤치마크의 org.json은 파일 경계에서 사용하고 측정 데이터 계약은 Map으로 전달합니다. CLI의 org.json은 별도의 명령 전송·상태 저장 경계에서 사용합니다.
+- 벤치마크의 org.json은 파일 경계에서 사용하고 측정 데이터 계약은 Map으로 전달합니다. CLI의 org.json은 명령 전송·상태 저장 경계(CliProvider, CommandStore, CommandCoordinator)에서만 사용하고, 화면 어댑터와 컨트롤러는 결과와 기록 필드를 Map으로 전달합니다.
 - 앱 시각은 elapsedRealtimeNanos이며 센서 시각과의 차이는 REALTIME 소스가 확인될 때만 해석합니다.
 - close(done) 완료 전에 다음 카메라를 열지 않습니다. close(done)이 카메라 서비스의 실제 해제보다 먼저 올 수 있어, Live의 첫 Camera2 열기는 이전 카메라가 사용 가능해질 때까지 최대 2초 더 기다립니다(#230). CameraX는 다음 엔진도 CameraX가 아니면 닫을 때 provider를 종료해 1초 유지 없이 카메라를 놓습니다. 공개 Camera2 API로 endpoint를 열거합니다.
 - 벤치마크와 incident 파일에는 이미지 픽셀을 저장하지 않습니다.

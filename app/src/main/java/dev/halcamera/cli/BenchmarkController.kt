@@ -1,7 +1,6 @@
 package dev.halcamera.cli
 
 import android.net.Uri
-import org.json.JSONObject
 import java.io.File
 
 /** Bridges the existing UI run path to durable command completion after report persistence. */
@@ -44,9 +43,9 @@ class BenchmarkController(private val commands: CliCompletion, private val drive
             hardFailure != null -> CliFailure("BENCHMARK_FAILED", "Benchmark failed at $hardFailure")
             else -> null
         }
-        commands.complete(command.id, JSONObject().put("run_id", runId).put("camera_id", command.camera)
-            .put("profile_id", command.profile).put("artifact_count", if (file == null) 0 else 1)
-            .put("cancelled", aborted != null).put("report_schema_version", schemaVersion),
+        commands.complete(command.id, cliResult("run_id" to runId, "camera_id" to command.camera,
+            "profile_id" to command.profile, "artifact_count" to if (file == null) 0 else 1,
+            "cancelled" to (aborted != null), "report_schema_version" to schemaVersion),
             file?.let { listOf(CliArtifact(it.name, "application/json", Uri.fromFile(it))) }.orEmpty(), failure)
     }
 }

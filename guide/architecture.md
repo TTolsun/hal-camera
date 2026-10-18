@@ -222,7 +222,7 @@ flowchart TB
 
 ### CLI 책임을 따라가세요
 
-`CliCommands`는 명령별 필수 인자·허용 옵션·기본 제한·실행 대상을 한곳에서 정의하고 `hello.command_specs`로 제공합니다. `CommandCoordinator`는 요청 소유권·상태·취소를 관리하며 조회는 `CliQueries`, 저장된 결과 조작은 `CliLibrary`에 전달합니다. Live·CTS·Benchmark 컨트롤러는 `CliCompletion` 또는 `CliExecution`을 받아 상태를 보고하고 저장소를 직접 수정하지 않습니다. 녹화·스냅샷·제어 변경은 해당 기능을 지원하는 host 인터페이스에만 있습니다. UI와 CLI의 AEB는 `BracketCapture`의 같은 촬영·대기·복원 절차를 사용합니다.
+`CliCommands`는 명령별 필수 인자·허용 옵션·기본 제한·실행 대상과 Live에서 실행되는 방식(`flow`)·녹화 여부를 한곳에서 정의하고 `hello.command_specs`로 제공합니다. 앱 코드는 명령 이름을 비교하지 않고 이 spec을 조회하며, 기기 셸 `halcam.sh`와 Python `halcam`도 hello의 spec을 읽어 명령과 옵션을 검사합니다. `CommandCoordinator`는 요청 소유권·스레드·저장소·화면 연결을 관리합니다. 실행 전 검사는 `CliPreflight`, artifact 해시 등록은 `CliArtifactRegistry`, 종료 상태와 취소 단계 결정은 `CliOutcome`이 맡으며 세 클래스 모두 Android 없이 JVM 테스트로 검증합니다. 조회는 `CliQueries`, 저장된 결과 조작은 `CliLibrary`에 전달합니다. Live·CTS·Benchmark 컨트롤러는 `CliCompletion` 또는 `CliExecution`을 받아 결과를 `Map`으로 보고하고 저장소를 직접 수정하지 않습니다. 녹화·스냅샷·제어 변경은 해당 기능을 지원하는 host 인터페이스에만 있습니다. UI와 CLI의 AEB는 `BracketCapture`의 같은 촬영·대기·복원 절차를 사용합니다.
 
 ## 주요 실행 흐름
 

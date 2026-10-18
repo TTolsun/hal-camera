@@ -19,19 +19,43 @@ def pairs(items, initial=None):
     return values
 
 
-# Compatibility defaults for APKs predating command_specs. New APKs advertise their contract.
+COMMAND_OPTION_KEYS = ("count", "interval_ms", "x", "y", "meter", "run", "reference", "media", "confirm", "first", "second", "incident", "limit")
+OPTION_KEYS = CONTROL_KEYS + PIP_KEYS + LABEL_KEYS + COMMAND_OPTION_KEYS
+
+# Compatibility defaults for APKs predating command_specs or one of its fields. New APKs advertise their
+# contract in hello, and spec() prefers it; tests/fixtures/hello.json keeps these lists equal to it.
 CAMERA_COMMANDS = {"preview", "capture", "burst", "bracket", "record.start", "streams", "dual.preview", "dual.capture", "dual.record", "benchmark.run"}
 DEFAULT_SECONDS = {"record.start": 3600, "dual.record": 3600, "cts.run": 1800, "benchmark.run": 600}
-OPTION_KEYS = CONTROL_KEYS + PIP_KEYS + LABEL_KEYS + ("count", "interval_ms", "x", "y", "meter", "run", "reference", "media", "confirm", "first", "second", "incident", "limit")
+SCREENLESS = {"streams", "cameras", "probe", "cts.cases", "dual.cameras"}
+LIBRARY_PREFIXES = ("results.", "baseline.", "gallery.", "settings.", "incidents.")
+LEGACY = {
+    "camera": CAMERA_COMMANDS,
+    "audio": {"record.start", "dual.record"},
+    "mode": {"preview", "streams"},
+    "current_screen": {"live.info", "events", "meter", "preview.stop"},
+    "recording": {"record.start", "dual.record"},
+    "profile": {"benchmark.run"},
+    "cases": {"cts.run"},
+}
+
+
+def spec(hello, operation, field):
+    """One boolean of the command's advertised spec, or the legacy list when this APK does not send it."""
+    advertised = hello.get("command_specs", {}).get(operation)
+    if advertised and field in advertised:
+        return bool(advertised[field])
+    if field == "foreground":
+        return operation not in SCREENLESS and not operation.startswith(LIBRARY_PREFIXES)
+    return operation in LEGACY[field]
 
 
 def make_request(args, operation, hello):
-    spec = hello.get("command_specs", {}).get(operation)
+    advertised = hello.get("command_specs", {}).get(operation)
     if args.command == "run" and operation not in hello.get("commands", []):
         raise CliError("INVALID_ARGUMENT", "This APK does not list that command; run doctor")
     timeout = args.timeout
     if timeout is None:
-        timeout = spec["default_timeout_ms"] / 1000 if spec else DEFAULT_SECONDS.get(operation, 30)
+        timeout = advertised["default_timeout_ms"] / 1000 if advertised else DEFAULT_SECONDS.get(operation, 30)
     rid = identifier(args.request_id) if args.request_id else str(uuid.uuid4())
     payload = {"protocol_version": 1, "request_id": rid, "command": operation,
                "params": {}, "execution_timeout_ms": int(timeout * 1000)}
@@ -39,13 +63,12 @@ def make_request(args, operation, hello):
     camera = getattr(args, "camera", None)
     if camera is not None:
         params["camera_id"] = camera
-    if spec.get("camera") if spec else operation in CAMERA_COMMANDS:
+    if spec(hello, operation, "camera"):
         params.setdefault("camera_id", "0")
     if getattr(args, "engine", None):
         params["engine"] = args.engine
     if getattr(args, "mode", None):
-        accepts_mode = spec["mode"] if spec else operation in ("preview", "streams")
-        if not accepts_mode:
+        if not spec(hello, operation, "mode"):
             raise CliError("INVALID_ARGUMENT", "--mode is only for preview or streams")
         params["mode"] = args.mode
     streams = {key: getattr(args, key) for key in STREAM_KEYS if getattr(args, key, None) is not None}
@@ -57,31 +80,32 @@ def make_request(args, operation, hello):
     if options:
         params["options"] = options
     profile = getattr(args, "profile", None)
-    if profile is not None and operation != "benchmark.run":
+    takes_profile = spec(hello, operation, "profile")
+    if profile is not None and not takes_profile:
         raise CliError("INVALID_ARGUMENT", "--profile is only for benchmark.run")
-    if profile is not None or operation == "benchmark.run":
+    if takes_profile:
         params["profile_id"] = profile or "camera2-standard-v2"
     if getattr(args, "no_audio", False):
-        if operation not in ("record.start", "dual.record"):
+        if not spec(hello, operation, "audio"):
             raise CliError("INVALID_ARGUMENT", "--no-audio requires record.start or dual.record")
         params["audio"] = False
     if getattr(args, "cases", None):
-        if operation != "cts.run":
+        if not spec(hello, operation, "cases"):
             raise CliError("INVALID_ARGUMENT", "--cases is only for cts.run")
         cases = [key for item in args.cases for key in item.split(",")]
         if len(cases) > 64 or len(set(cases)) != len(cases) or any(not key.startswith(("custom:", "vendored:")) or not 1 <= len(key) <= 256 for key in cases):
             raise CliError("INVALID_ARGUMENT", "Use up to 64 distinct suite keys from cts cases")
         params["cases"] = cases
-    if operation == "cts.run" and not params.get("cases"):
+    if spec(hello, operation, "cases") and not params.get("cases"):
         raise CliError("INVALID_ARGUMENT", "cts.run requires --cases KEY[,KEY...]")
-    if spec:
+    if advertised:
         for field in ("camera", "engine", "streams", "audio"):
             key = "camera_id" if field == "camera" else field
-            if key in params and not spec[field]:
+            if key in params and not advertised[field]:
                 raise CliError("INVALID_ARGUMENT", f"{operation} does not accept {field}")
-        if options.keys() - set(spec["options"]):
+        if options.keys() - set(advertised["options"]):
             raise CliError("INVALID_ARGUMENT", f"Unexpected option for {operation}")
-        missing = set(spec["required_options"]) - options.keys()
+        missing = set(advertised["required_options"]) - options.keys()
         if missing:
             raise CliError("INVALID_ARGUMENT", f"{operation} requires {', '.join(sorted(missing))}")
     return payload
