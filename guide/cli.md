@@ -173,7 +173,13 @@ adb shell sh /data/local/tmp/halcam benchmark run --camera 0
 <details>
 <summary>측정 라벨·결과 비교·보관</summary>
 
-`--build "Candidate A" --commit SHA --branch NAME --note "Same room"`으로 라벨을 지정합니다. 생략한 라벨은 빈 값이며 이전 화면 입력을 이어받지 않습니다. 콜론을 포함한 라벨은 아래 Python 도구로 전달합니다.
+`--build LABEL --commit SHA --branch NAME --note TEXT`로 라벨을 지정합니다. 생략한 라벨은 빈 값이며 이전 화면 입력을 이어받지 않습니다. 콜론을 포함한 라벨은 아래 Python 도구로 전달합니다.
+
+**공백이 있는 라벨은 기기 명령 전체를 큰따옴표로 감싸고 라벨을 작은따옴표로 감쌉니다.** `adb shell`은 PC에서 받은 인자를 공백으로 이어 붙여 기기 셸에 넘기므로, `--note "Same room"`처럼 라벨만 감싸면 기기에서 `Same`과 `room`으로 나뉘어 `Unknown option: room`이 납니다. 아래 형식은 Bash, PowerShell, cmd에서 같게 동작합니다.
+
+```sh
+adb shell "sh /data/local/tmp/halcam benchmark run --camera 0 --build 'Candidate A' --note 'Same room'"
+```
 
 | 작업 | 명령 |
 | --- | --- |

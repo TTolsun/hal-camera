@@ -44,7 +44,7 @@ class AdbShellTests(unittest.TestCase):
                 self.assertIn(f"fetch {RID}" if artifacts else "No files are registered", proc.stdout)
                 self.assertNotIn("/files", calls)
 
-    def run_client(self, args, *, hello=None, busy=False, result=None, remember=False, corrupt=False, screen="live"):
+    def run_client(self, args, *, hello=None, busy=False, result=None, remember=False, corrupt=False, screen="live", remote=None):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             script = root / "halcam.sh"
@@ -62,6 +62,9 @@ class AdbShellTests(unittest.TestCase):
                 "TEST_RID": RID,
                 "TEST_MANIFEST": "file-0\trecording.mp4\t13\t" + ("0" * 64 if corrupt else hashlib.sha256(b"video\x00bytes\r\n").hexdigest()),
             }
+            if remote is not None:
+                # adbd hands the device shell one string: the PC arguments joined with spaces.
+                env["TEST_REMOTE"] = remote
             harness = r'''
 content() {
     printf '%s\n' "$*" >> calls
@@ -82,7 +85,7 @@ sha256sum() {
     if type -P sha256sum >/dev/null 2>&1; then command sha256sum "$@"
     else shasum -a 256 "$@"; fi
 }
-. ./halcam.sh "$@"
+if [ -n "${TEST_REMOTE:-}" ]; then eval ". ./halcam.sh $TEST_REMOTE"; else . ./halcam.sh "$@"; fi
 '''
             proc = subprocess.run([BASH, "-c", harness, "test", *args], cwd=root, env=env, capture_output=True, text=True, encoding="utf-8", timeout=10)
             calls = (root / "calls").read_text() if (root / "calls").exists() else ""
@@ -117,6 +120,15 @@ sha256sum() {
         proc, calls = self.run_client(["benchmark", "run", "--build", "Candidate A", "--note", "Same room"])
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn("build:s:Candidate A", calls)
+        self.assertIn("note:s:Same room", calls)
+
+    def test_spaced_label_needs_the_whole_command_quoted_through_adb_shell(self):
+        proc, calls = self.run_client([], remote="benchmark run --note Same room")
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("Unknown option: room", proc.stderr)
+        self.assertNotIn("--method", calls)
+        proc, calls = self.run_client([], remote="benchmark run --note 'Same room'")
+        self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn("note:s:Same room", calls)
 
     def test_live_update_does_not_start_another_request(self):

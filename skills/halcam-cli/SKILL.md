@@ -66,6 +66,7 @@ Multi(여러 독립 카메라 동시 사용)는 현재 `multi cameras` 조회만
 - `results list`, `gallery list`, `incidents list`, `settings show`로 먼저 ID·설정을 찾습니다. 상세·export·비교·삭제·보관 한도 문법은 `help all`에 있습니다.
 - baseline은 명시적으로 지정합니다. 없으면 변화량만 표시하며 REGRESSED 판정을 붙이지 않습니다. 삭제·baseline 변경·보관 한도 적용은 사용자 요청 범위에서만 합니다. `settings limit --limit N`은 미리보기이며 `--confirm true`로 적용합니다.
 - Benchmark에는 엔진·Live 스트림·무음 옵션을 붙이지 않습니다. 라벨에 콜론이 필요하면 아래 Python 경로를 사용합니다.
+- 공백이 있는 값(`--build`, `--note` 라벨)은 `adb -s SERIAL shell "sh /data/local/tmp/halcam benchmark run --note 'Same room'"`처럼 기기 명령 전체를 큰따옴표로, 값을 작은따옴표로 감쌉니다. `adb shell`은 인자를 공백으로 이어 붙이므로 값만 감싸면 기기에서 다시 나뉘어 `Unknown option`으로 실패합니다.
 
 ## 3. 파일 회수와 연결 끊김 복구
 

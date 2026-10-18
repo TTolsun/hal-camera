@@ -63,6 +63,8 @@ Default camera: 0. Microphone is enabled unless --no-audio is given.
 Only one operation runs at a time. Unlock the device. ADB CLI is allowed by default.
 Example: adb shell sh /data/local/tmp/halcam capture --camera 0
 With multiple connections, use the same adb -s SERIAL for every command and pull.
+Values with spaces: quote the whole command, because adb shell rejoins arguments:
+  adb shell "sh /data/local/tmp/halcam benchmark run --note 'Same room'"
 EOF
 }
 help() {
@@ -160,7 +162,10 @@ wait_for() {
                 return ;;
         esac
         if { [ "$method" = record.start ] || [ "$method" = dual.record ]; }; then
-            case "$result" in *'"recording":true'*) echo "Recording started. Stop with: adb shell sh /data/local/tmp/halcam record stop"; return ;; esac
+            case "$result" in *'"recording":true'*)
+                echo "Recording started. Stop with: adb shell sh /data/local/tmp/halcam record stop"
+                echo 'If using adb -s SERIAL, add the same -s SERIAL to the stop command.'
+                return ;; esac
         fi
         [ "$(date +%s)" -lt "$end" ] || die "Wait timed out; operation may still run. Use status $rid."
         sleep 1
@@ -250,6 +255,7 @@ case "$method" in
                     if [ "$count" -gt 0 ]; then
                         echo "Operation ended. $count saved file(s) remain available."
                         echo "Next: adb shell sh /data/local/tmp/halcam fetch $rid"
+                        echo 'If using adb -s SERIAL, add the same -s SERIAL to the fetch command.'
                     else echo 'Operation ended. No files are registered for this request.'; fi
                     case "$result" in *'"error":{'*) exit 1 ;; esac ;;
             esac
