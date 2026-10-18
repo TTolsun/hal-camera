@@ -44,15 +44,6 @@ internal data class SplitArrangement(val layout: SplitLayout, val order: List<In
         return copy(order = order.map { when (it) { panel -> target; target -> panel; else -> it } })
     }
 
-    /**
-     * Snap judged by where the dragged panel's centre has moved, not by the finger. The grab handle sits on the
-     * panel's top edge, so a finger-based judgement would read every pick-up as a top-edge drop.
-     */
-    fun drag(panel: Int, dx: Float, dy: Float, width: Int, height: Int): SplitArrangement {
-        val frame = frames(width, height).getOrNull(panel) ?: return this
-        return snap(panel, frame.left + frame.width / 2f + dx, frame.top + frame.height / 2f + dy, width, height)
-    }
-
     private fun place(next: SplitLayout, panel: Int, slot: Int) =
         SplitArrangement(next, (order - panel).toMutableList().apply { add(slot, panel) })
 

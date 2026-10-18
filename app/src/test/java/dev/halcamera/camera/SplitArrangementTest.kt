@@ -58,17 +58,6 @@ class SplitArrangementTest {
         }
     }
 
-    @Test fun `picking a panel up keeps its place until its centre moves`() {
-        val two = SplitArrangement.identity(2)
-        assertSame(two, two.drag(1, 0f, 0f, w, h))
-        assertSame(two, two.drag(0, 0f, -200f, w, h))
-        assertEquals(SplitArrangement(SplitLayout.STACKED, listOf(1,0)), two.drag(1, -250f, -700f, w, h))
-        assertEquals(SplitArrangement(SplitLayout.SIDE_BY_SIDE, listOf(1,0)), two.drag(1, -500f, 0f, w, h))
-        val stacked = SplitArrangement(SplitLayout.STACKED, listOf(0,1))
-        assertSame(stacked, stacked.drag(0, 0f, 0f, w, h))
-        assertSame(stacked, stacked.drag(1, 0f, 0f, w, h))
-    }
-
     @Test fun `preview sits on the panel bottom below the name bar`() {
         assertEquals(ConcurrentFrame(0,257,720,1280), splitPreviewFrame(720,1537,168,0,720f/1280))
         assertEquals(ConcurrentFrame(0,173,720,1280), splitPreviewFrame(720,1537,168,84,720f/1280))
