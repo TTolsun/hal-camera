@@ -33,6 +33,7 @@ data class CliCommand(
             throw CliFailure("INVALID_ARGUMENT", "Unexpected option for $command")
         val required = spec.requiredOptions
         if (!options?.values.orEmpty().keys.containsAll(required)) throw CliFailure("INVALID_ARGUMENT", "$command requires ${required.joinToString()}")
+        if (spec.flow == CliCommandSpec.Flow.MULTI) CliMultiOptions.validate(options!!.values)
         if (spec.confirmRequired && options?.values?.get("confirm") != "true")
             throw CliFailure("CONFIRM_REQUIRED", "Inspect the listed ID, then add --confirm true to delete that item")
         if (timeoutMs !in 1..3_600_000) throw CliFailure("INVALID_ARGUMENT", "Invalid execution timeout")

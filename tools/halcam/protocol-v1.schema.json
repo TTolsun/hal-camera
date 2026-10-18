@@ -56,7 +56,10 @@
         "probe",
         "cts.cases",
         "cts.run",
-        "benchmark.run"
+        "benchmark.run",
+        "multi.preview",
+        "multi.capture",
+        "multi.record"
       ]
     },
     "execution_timeout_ms": {
@@ -1528,6 +1531,147 @@
             "required": [
               "camera_id",
               "profile_id"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "multi.preview"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "engine": {
+                "$ref": "#/$defs/engine"
+              },
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "cameras": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{1,128}(,[A-Za-z0-9_-]{1,128}){1,15}$"
+                  },
+                  "preview_sizes": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}(,[1-9][0-9]{0,4}x[1-9][0-9]{0,4}){1,15}$"
+                  },
+                  "photo_sizes": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}(,[1-9][0-9]{0,4}x[1-9][0-9]{0,4}){1,15}$"
+                  }
+                },
+                "required": [
+                  "cameras"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "multi.capture"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "engine": {
+                "$ref": "#/$defs/engine"
+              },
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "cameras": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{1,128}(,[A-Za-z0-9_-]{1,128}){1,15}$"
+                  },
+                  "preview_sizes": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}(,[1-9][0-9]{0,4}x[1-9][0-9]{0,4}){1,15}$"
+                  },
+                  "photo_sizes": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}(,[1-9][0-9]{0,4}x[1-9][0-9]{0,4}){1,15}$"
+                  }
+                },
+                "required": [
+                  "cameras"
+                ]
+              }
+            },
+            "required": [
+              "options"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "const": "multi.record"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "params": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "engine": {
+                "$ref": "#/$defs/engine"
+              },
+              "audio": {
+                "type": "boolean"
+              },
+              "options": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "cameras": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{1,128}(,[A-Za-z0-9_-]{1,128}){1,15}$"
+                  },
+                  "preview_sizes": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}(,[1-9][0-9]{0,4}x[1-9][0-9]{0,4}){1,15}$"
+                  },
+                  "photo_sizes": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]{0,4}x[1-9][0-9]{0,4}(,[1-9][0-9]{0,4}x[1-9][0-9]{0,4}){1,15}$"
+                  }
+                },
+                "required": [
+                  "cameras"
+                ]
+              }
+            },
+            "required": [
+              "options"
             ]
           }
         }

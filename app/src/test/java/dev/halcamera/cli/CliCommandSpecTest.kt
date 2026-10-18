@@ -23,7 +23,7 @@ class CliCommandSpecTest {
     }
 
     @Test fun `derived properties match the name lists they replaced`() {
-        assertEquals(setOf("record.start", "dual.record"), names { it.recording })
+        assertEquals(setOf("record.start", "dual.record", "multi.record"), names { it.recording })
         assertEquals(setOf("record.start"), names { it.snapshots })
         assertEquals(setOf("capture", "burst", "bracket"), names { it.stills })
         assertEquals(setOf("dual.record"), names { it.silentOnly })
@@ -36,7 +36,7 @@ class CliCommandSpecTest {
         val cameraCommands = names { it.camera }
         val legacyEarlyCancel = names { (it.name in cameraCommands && it.name != "streams") ||
             it.name in setOf("preview.stop", "cts.run", "events", "meter", "live.info") }
-        assertEquals(legacyEarlyCancel, names { it.earlyCancelNotifiesHost })
+        assertEquals(legacyEarlyCancel + names { it.flow == Flow.MULTI }, names { it.earlyCancelNotifiesHost })
     }
 
     @Test fun `content call aliases resolve to listed commands`() {
@@ -59,6 +59,7 @@ class CliCommandSpecTest {
         val expected = buildString {
             append("{\n\"commands\": ").append(json(CliCommand.COMMANDS)).append(",\n")
             append("\"stream_keys\": ").append(json(CliStreams.KEYS.toList())).append(",\n")
+            append("\"preview_screens\": ").append(json(CliCommands.previewScreens.toList())).append(",\n")
             append("\"command_specs\": {\n")
             append(CliCommands.specs.entries.joinToString(",\n") { (name, spec) -> "  ${json(name)}: ${json(spec.toMap())}" })
             append("\n}\n}\n")

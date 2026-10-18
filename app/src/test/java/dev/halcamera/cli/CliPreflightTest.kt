@@ -61,5 +61,15 @@ class CliPreflightTest {
         refuses("APP_NOT_FOREGROUND") { screen(command("capture"), "dual") }
         screen(command("meter", mapOf("x" to "0.5", "y" to "0.5")), "dual")
         screen(command("live.info"), "dual")
+        screen(command("live.info"), "multi")
+        screen(command("preview.stop"), "multi")
+        refuses("APP_NOT_FOREGROUND") { screen(command("capture"), "multi") }
+        refuses("APP_NOT_FOREGROUND") { screen(command("live.info"), "gallery") }
+    }
+
+    @Test fun `Multi audio permission is explicit and silent recording needs none`() {
+        device.microphone = false
+        refuses("PERMISSION_REQUIRED") { screen(command("multi.record", mapOf("cameras" to "1,0"))) }
+        screen(command("multi.record", mapOf("cameras" to "1,0", "audio" to false)))
     }
 }

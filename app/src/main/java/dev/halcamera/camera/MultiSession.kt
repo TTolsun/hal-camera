@@ -10,6 +10,8 @@ interface MultiSession {
         fun onRecording(active: Boolean, result: ConcurrentMediaResult)
         fun onPhotoResult(result: Result<PhotoResult>) {}
         fun onVideoResult(result: Result<List<android.net.Uri>>) {}
+        fun onPhotoOutcomes(outcomes: Map<String, Result<android.net.Uri>>) {}
+        fun onVideoOutcomes(outcomes: Map<String, Result<android.net.Uri>>) {}
     }
 
     fun start()

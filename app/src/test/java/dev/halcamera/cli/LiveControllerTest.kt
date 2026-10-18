@@ -47,6 +47,7 @@ class LiveControllerTest {
         override fun cancelEvents() { calls += "cancelEvents" }
         override fun inspect(command: CliCommand) { calls += "inspect:${command.command}" }
         override fun dual(command: CliCommand) { calls += "dual" }
+        override fun multi(command: CliCommand) { calls += "multi" }
         override fun snapshot(done: (Result<PhotoResult>) -> Unit) { snapshotDone = done }
         override fun streamInfo() = mapOf<String, Any?>("preview" to "1920x1080")
         override fun photoLabels() = listOf("JPEG")
@@ -156,6 +157,7 @@ class LiveControllerTest {
     @Test fun `screen handovers and diagnostics reach the driver directly`() {
         for ((method, values, expected) in listOf(
             Triple("dual.preview", mapOf("first" to "2", "second" to "3"), "dual"),
+            Triple("multi.preview", mapOf("cameras" to "1,0"), "multi"),
             Triple("benchmark.run", emptyMap(), "benchmark"))) {
             val request = command(method, values)
             val (sink, driver, live) = live(request)

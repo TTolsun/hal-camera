@@ -47,7 +47,8 @@ class ConcurrentSession(
     private var disposing = false
     private val video = MultiRecording(context.applicationContext, worker, compositors,
         { active, result -> main.post { listener.onRecording(active, result) } },
-        { result -> main.post { listener.onVideoResult(result) } })
+        { result -> main.post { listener.onVideoResult(result) } },
+        { outcomes -> main.post { listener.onVideoOutcomes(outcomes) } })
     private val videoPending get() = video.pending
     private var mediaClosed = false
     private val readers = mutableMapOf<String, ImageReader>()
@@ -368,10 +369,12 @@ class ConcurrentSession(
         capture = null
         expected.clear(); images.clear()
         var photo: PhotoResult? = null
-        val result = runCatching { store.save(group, plan, timestamps) { photo = it } }
+        var outcomes = emptyMap<String, Result<android.net.Uri>>()
+        val result = runCatching { store.save(group, plan, timestamps, { outcomes = it }) { photo = it } }
             .getOrElse { ConcurrentMediaResult("Could not save capture group; files rolled back: ${it.message}",failed = true) }
         main.post {
             listener.onPhoto(result)
+            listener.onPhotoOutcomes(outcomes.ifEmpty { ownedIds.associateWith { Result.failure(IllegalStateException(result.message)) } })
             listener.onPhotoResult(photo?.let { Result.success(it) }
                 ?: Result.failure(IllegalStateException(result.message)))
         }

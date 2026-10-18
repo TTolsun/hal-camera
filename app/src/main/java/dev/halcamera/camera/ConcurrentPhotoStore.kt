@@ -15,8 +15,10 @@ internal class ConcurrentPhotoStore(context: Context) {
     private val library = MediaLibrary(context)
 
     fun save(capture: ConcurrentCapture<ConcurrentPhoto>, plan: ConcurrentPlan, timestampSources: Map<String, Int?>,
+        outcomes: (Map<String, Result<Uri>>) -> Unit = {},
         saved: (PhotoResult) -> Unit = {}): ConcurrentMediaResult {
         val published = mutableListOf<Uri>()
+        val cameraOutcomes = linkedMapOf<String, Result<Uri>>()
         try {
             val records = JSONArray()
             plan.streams.forEachIndexed { index, stream ->
@@ -38,7 +40,9 @@ internal class ConcurrentPhotoStore(context: Context) {
                             .put("physicalIds", JSONArray(photo.physicalIds)).put("serviceIds", JSONArray(photo.serviceIds))
                             .put("sourceSurfaceTimestampsNs", JSONObject(photo.sourceTimestamps))
                     }
+                    uri
                 }
+                cameraOutcomes[id] = saved
                 entry.put("status", if (saved.isSuccess) "saved" else "failed")
                 saved.exceptionOrNull()?.let { entry.put("error", it.message ?: it.javaClass.simpleName) }
                 records.put(entry)
@@ -51,6 +55,7 @@ internal class ConcurrentPhotoStore(context: Context) {
                 it.write(manifest.toString(2).toByteArray(Charsets.UTF_8))
             }.uri
             published += metadata
+            outcomes(cameraOutcomes)
             val photos = (0 until records.length()).map { records.getJSONObject(it) }.filter { it.has("uri") }
             if (photos.isNotEmpty()) saved(PhotoResult(null,capture.groupId,0,
                 photos.map { it.getString("uri").toUri() },photos.map {

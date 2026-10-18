@@ -12,6 +12,7 @@ internal class MultiRecording(
     private val compositors: Map<String, DeviceCompositor>,
     private val changed: (Boolean, ConcurrentMediaResult) -> Unit,
     private val saved: (Result<List<Uri>>) -> Unit,
+    private val outcomes: (Map<String, Result<Uri>>) -> Unit = {},
 ) {
     var active = false
         private set
@@ -99,6 +100,8 @@ internal class MultiRecording(
                     }
                     // All camera files form one recording transaction. Never report silent/partial success.
                     if (outcome.isFailure) MediaLibrary(context).deleteAll(uris)
+                    outcomes(results.mapValues { (_, result) -> outcome.exceptionOrNull()?.let { Result.failure(it) }
+                        ?: result.map { it.toUri() } })
                     if (!closing) {
                         changed(false, ConcurrentMediaResult(outcome.fold(
                             { results.entries.joinToString("\n") { "Camera ${it.key}: ${it.value.getOrThrow()}" } },

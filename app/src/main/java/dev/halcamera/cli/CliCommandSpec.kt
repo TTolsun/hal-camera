@@ -37,7 +37,7 @@ data class CliCommandSpec(
     val earlyCancelNotifiesHost: Boolean = target == Target.LIVE
 ) {
     enum class Target { QUERY, LIBRARY, LIVE }
-    enum class Flow { NONE, INSPECT, EVENTS, STOP_PREVIEW, DUAL, CTS, BENCHMARK, PREVIEW, CAPTURE, SEQUENCE, RECORD }
+    enum class Flow { NONE, INSPECT, EVENTS, STOP_PREVIEW, DUAL, MULTI, CTS, BENCHMARK, PREVIEW, CAPTURE, SEQUENCE, RECORD }
     /** Saves still photos, so at least one still output must stay enabled. */
     val stills get() = flow == Flow.CAPTURE || flow == Flow.SEQUENCE
     fun toMap(): Map<String, Any?> = mapOf("camera" to camera, "engine" to engine, "streams" to streams,
@@ -47,6 +47,8 @@ data class CliCommandSpec(
 }
 
 object CliCommands {
+    /** Screens that own a preview and can receive the current-screen commands. Advertised to both clients. */
+    val previewScreens = setOf("live", "dual", "multi")
     private val controls = setOf("zoom", "ev", "ae_lock", "af_lock", "flash", "iso", "exposure_ns", "focus", "wb", "gains", "matrix")
     val controlKeys: Set<String> get() = controls
     val pipKeys = setOf("pip_type", "pip_camera", "pip_x", "pip_y", "pip_width", "pip_height")
@@ -77,6 +79,13 @@ object CliCommands {
         add(CliCommandSpec("pip.sources", flow = CliCommandSpec.Flow.INSPECT, earlyCancelNotifiesHost = false))
         add(CliCommandSpec("dual.cameras", CliCommandSpec.Target.QUERY))
         add(CliCommandSpec("multi.cameras", CliCommandSpec.Target.QUERY))
+        for (name in listOf("multi.preview", "multi.capture", "multi.record")) {
+            val record = name == "multi.record"
+            add(CliCommandSpec(name, engine = true, audio = record,
+                timeoutMs = if (record) 3_600_000 else 30_000,
+                options = setOf("cameras", "preview_sizes", "photo_sizes"), requiredOptions = setOf("cameras"),
+                savesMedia = name != "multi.preview", flow = CliCommandSpec.Flow.MULTI, recording = record))
+        }
         for (name in listOf("dual.preview", "dual.capture", "dual.record")) {
             val record = name == "dual.record"
             add(CliCommandSpec(name, camera = true, engine = true, audio = record,

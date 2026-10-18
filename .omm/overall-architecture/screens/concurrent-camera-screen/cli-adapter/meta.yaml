@@ -1,0 +1,4 @@
+kind: nested-class
+title: cli-adapter
+children: []
+parentPath: [screens, concurrent-camera-screen]

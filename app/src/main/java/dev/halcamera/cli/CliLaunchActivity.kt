@@ -9,12 +9,14 @@ import dev.halcamera.MainActivity
 // This is a command gate with no splash UI; it must check BUSY before changing the task.
 @android.annotation.SuppressLint("CustomSplashScreen")
 class CliLaunchActivity : Activity() {
+    private var stopped = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (CommandCoordinator.get(this).canOpenLive()) {
-            startActivity(Intent(this, MainActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP))
-        }
-        finish()
+        if (!CommandCoordinator.get(this).prepareLiveLaunch {
+                if (!stopped && !isFinishing && !isDestroyed) startActivity(Intent(this, MainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+                finish()
+            }) finish()
     }
+    override fun onStop() { stopped = true; super.onStop() }
 }

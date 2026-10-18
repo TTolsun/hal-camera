@@ -60,10 +60,14 @@ internal class CameraXMultiPhotos(
         group = null; saving = true
         io.execute {
             var photo: PhotoResult? = null
-            val result = runCatching { store.save(next,plan,sources) { photo = it } }
+            var outcomes = emptyMap<String, Result<android.net.Uri>>()
+            val result = runCatching { store.save(next,plan,sources, { outcomes = it }) { photo = it } }
             main.post {
                 saving = false
                 listener.onPhoto(result.getOrElse { ConcurrentMediaResult("Could not save photos: ${it.message}",true) })
+                listener.onPhotoOutcomes(outcomes.ifEmpty { captures.keys.associateWith {
+                    Result.failure(IllegalStateException(result.exceptionOrNull()?.message ?: "No photo saved"))
+                } })
                 listener.onPhotoResult(photo?.let { Result.success(it) } ?: Result.failure(IllegalStateException(result.exceptionOrNull()?.message ?: "No photo saved")))
             }
         }

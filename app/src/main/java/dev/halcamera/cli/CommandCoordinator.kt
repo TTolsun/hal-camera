@@ -42,6 +42,7 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
     @Volatile override var active: CliCommand? = null
         private set
     private var handover = false
+    private var stopRecordingRequested = false
     private var timeout: Runnable? = null
     @Volatile private var cancellationCode: String? = null
     // Default to ADB access; preserve an explicit opt-out across app updates.
@@ -56,6 +57,18 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
     fun attach(value: CliHost) { host = value; uiBusy = value.isBusy() }
     fun setUiBusy(owner: CliHost, value: Boolean) { if (host === owner) uiBusy = value }
     fun canOpenLive(): Boolean = !busy && host?.isBusy() != true
+    /** Called on main by the translucent gate, before CLEAR_TOP can resume MainActivity. */
+    fun prepareLiveLaunch(launch: () -> Unit): Boolean {
+        if (!canOpenLive()) return false
+        val previous = host
+        if (previous is CliNavigationHost) {
+            uiBusy = true
+            previous.closeForNavigation {
+                if (host === previous && active == null) { uiBusy = false; launch() }
+            }
+        } else launch()
+        return true
+    }
     fun detach(value: CliHost) {
         if (host !== value) return
         host = null; uiBusy = false
@@ -85,6 +98,7 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
     private fun capabilities(): Map<String, Any?> = cliResult("protocol_version" to 1, "enabled" to true,
         "app_version" to context.packageManager.getPackageInfo(context.packageName, 0).versionName,
         "commands" to CliCommand.COMMANDS, "command_specs" to CliCommands.specs.mapValues { it.value.toMap() }, "stream_keys" to CliStreams.KEYS.toList(),
+        "preview_screens" to CliCommands.previewScreens.toList(),
         "controls" to listOf("live.set", "live.reset", "record.snapshot", "record.stop", "status", "request", "requests.list", "request.cancel"),
         "retention_ms" to CommandStore.RETENTION_MS, "max_completed_requests" to CommandStore.MAX_RECORDS,
         "camera_permission" to permission(Manifest.permission.CAMERA), "locked" to locked(), "completed" to true)
@@ -105,6 +119,7 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
         val record = store.create(command)
         active = command
         cancellationCode = null
+        stopRecordingRequested = false
         main.post {
             if (active?.id != command.id) return@post
             val spec = command.spec
@@ -148,6 +163,9 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
         store.transition(command.id, "running") {
             it.put("result", JSONObject().put("camera_id", command.camera).put("recording", true).put("engine", command.engine ?: "Camera2").put("streams", CliJson.of(streams)))
         }
+        // A stop may arrive while Live is still preparing or handing over to Dual/Multi.
+        // Dispatch only after the actual start, when the recording host and engine both exist.
+        if (stopRecordingRequested) main.post { dispatchRecordingStop(command) }
         true
     } catch (error: Exception) { fail(command.id, "STORE_FAILED", error.message ?: "Cannot persist recording state"); false }
 
@@ -197,11 +215,17 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
             if (active?.id != command.id) return@post
             val current = store.read(command.id)?.optString("state")
             if (current == "saving" || current in CliStates.terminal) return@post
-            try {
-                (host as? CliRecordingHost ?: throw CliFailure("NOT_RECORDING", "Recording screen is unavailable")).stopRecording(command)
-            } catch (e: Exception) { fail(command.id, (e as? CliFailure)?.code ?: "RECORDING_FAILED", e.message ?: "Cannot stop recording") }
+            stopRecordingRequested = true
+            if (recording(command.id)) dispatchRecordingStop(command)
         }
         return request(command.id)
+    }
+
+    private fun dispatchRecordingStop(command: CliCommand) {
+        if (active?.id != command.id || store.read(command.id)?.optString("state") != "running") return
+        try {
+            (host as? CliRecordingHost ?: throw CliFailure("NOT_RECORDING", "Recording screen is unavailable")).stopRecording(command)
+        } catch (e: Exception) { fail(command.id, (e as? CliFailure)?.code ?: "RECORDING_FAILED", e.message ?: "Cannot stop recording") }
     }
 
     fun tune(options: CliOptions?, reset: Boolean): JSONObject {
@@ -250,7 +274,7 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
     @Synchronized private fun release(id: String) {
         if (active?.id != id) return
         timeout?.let(main::removeCallbacks); timeout = null
-        active = null; handover = false; cancellationCode = null
+        active = null; handover = false; cancellationCode = null; stopRecordingRequested = false
     }
 
     /** The stored record, for screens that show CLI progress. */

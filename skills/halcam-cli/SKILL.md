@@ -57,7 +57,9 @@ PIP는 원하는 모드의 `preview`를 연 뒤 `pip sources`로 조회합니다
 
 Dual은 `dual cameras`로 ID를 찾고 `dual preview|capture|record --camera ID --first ID --second ID`를 사용합니다. 사진·수동 제어는 Camera2, 영상은 두 개의 무음 MP4이며 `record stop`으로 종료합니다. 지원하지 않는 조합을 다른 센서·엔진으로 대체하지 않습니다.
 
-Multi(여러 독립 카메라 동시 사용)는 현재 `multi cameras` 조회만 지원합니다. `advertised: true`인 조합과 카메라별 크기를 확인하며 카메라를 열지 않습니다. Multi 촬영·녹화를 요청받으면 아직 CLI로 실행할 수 없다고 알립니다.
+Multi(여러 독립 카메라 동시 사용)는 `multi cameras`에서 `advertised: true`인 조합을 고르고 `multi preview|capture|record --cameras 1,0 [--engine Camera2|CameraX]`로 실행합니다. Android 11 이상이 필요하고 CameraX는 최대 2대입니다. `--preview-sizes WxH,WxH`·`--photo-sizes WxH,WxH`는 `--cameras` 순서로 카메라마다 하나씩 지정합니다. 지원하지 않는 조합·크기는 자동 대체하지 않습니다. 녹화는 기본 유음이며 `--no-audio`이면 마이크 권한이 필요 없습니다. `record stop`으로 종료하고 `preview stop`, `live info`, `events`는 현재 Multi 화면에 적용합니다.
+
+Multi 결과의 `cameras`에서 카메라별 `saved`와 `error`를 확인하고 `multi_요청ID_카메라ID.jpg|mp4`를 회수합니다. 사진 일부가 실패해도 성공한 파일을 보존하므로 `CAPTURE_FAILED` 뒤에도 fetch합니다. 영상은 전체 묶음이 성공해야 보존됩니다. Multi의 녹화 중 사진·카메라별 제어·측광은 CLI에서 지원하지 않습니다.
 
 ### 그 밖의 작업
 

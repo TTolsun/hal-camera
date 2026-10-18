@@ -273,12 +273,18 @@ sources:
         evidence:
           - app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt
           - app/src/main/java/dev/halcamera/camera/ConcurrentPlan.kt
-          - app/src/main/java/dev/halcamera/ui/MultiSizeSheet.kt
+      screens/concurrent-camera-screen/cli-adapter:
+        evidence:
+          - app/src/main/java/dev/halcamera/MultiCliBridge.kt
+          - app/src/main/java/dev/halcamera/cli/MultiController.kt
+          - app/src/main/java/dev/halcamera/cli/CliMultiOptions.kt
+          - app/src/main/java/dev/halcamera/camera/MultiSession.kt
       screens/concurrent-camera-screen/split-layout:
         evidence:
           - app/src/main/java/dev/halcamera/camera/SplitSelection.kt
           - app/src/main/java/dev/halcamera/camera/SplitArrangement.kt
           - app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt
+          - app/src/main/java/dev/halcamera/ui/MultiSizeSheet.kt
           - app/src/main/java/dev/halcamera/ui/SplitChoiceSheet.kt
           - app/src/main/java/dev/halcamera/ui/SplitPanelDrag.kt
       screens/concurrent-camera-screen/session:

@@ -31,9 +31,9 @@ import java.util.concurrent.Executors
 
 /** Split changes preview geometry. Every device saves its own full photo or video. */
 class ConcurrentCameraActivity : ComponentActivity() {
-    private val manager by lazy { getSystemService(CameraManager::class.java) }
-    private var videoMode = false
-    private var engineName = "Camera2"
+    internal val manager by lazy { getSystemService(CameraManager::class.java) }
+    internal var videoMode = false
+    internal var engineName = "Camera2"
     private lateinit var engineButton: Button
     private var microphonePending = false
     private val microphonePermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -42,7 +42,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         else if (!granted) notice("Microphone permission is required for Multi video with sound.")
         updateButtons()
     }
-    private var arrangement = SplitArrangement.identity(0)
+    internal var arrangement = SplitArrangement.identity(0)
     private lateinit var panelDrag: SplitPanelDrag
     private val labelBar by lazy { dp(28) }
     private val labelTouch by lazy { dp(48) }
@@ -84,27 +84,33 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private val retired = mutableListOf<SurfaceTexture>()
     private val cameraControls = mutableMapOf<String,LiveControls>()
     private val cameraZooms = mutableMapOf<String,Float>()
-    private var plans = emptyList<ConcurrentPlan>()
+    internal var plans = emptyList<ConcurrentPlan>()
     private var outputSizes = emptyList<LiveSize>()
-    private var selected = 0
-    private var selectedIds = emptyList<String>()
+    internal var selected = 0
+    internal var selectedIds = emptyList<String>()
     /** Camera ID to (preview, JPEG) chosen in the Sizes sheet; kept across device changes for cameras that return. */
-    private var chosenSizes = emptyMap<String,Pair<LiveSize,LiveSize>>()
-    private var activeIndex = 0
-    private var session: MultiSession? = null
-    private var foreground = false
+    internal var chosenSizes = emptyMap<String,Pair<LiveSize,LiveSize>>()
+    internal var activeIndex = 0
+    internal var session: MultiSession? = null
+    internal var foreground = false
     private var closing = false
     private var exiting = false
-    private var failed = false
-    private var ready = false
-    private var takingPhoto = false
-    private var recording = false
-    private var videoPending = false
+    internal var failed = false
+    internal var ready = false
+    internal var takingPhoto = false
+    internal var recording = false
+    internal var videoPending = false
     private var recordingSince = 0L
     private var report = ""
     private var afterClose: (() -> Unit)? = null
-    private val busy get() = takingPhoto || recording || videoPending || closing || microphonePending
-    private val recorder = FlightRecorder(SystemClock::elapsedRealtimeNanos)
+    internal val cli by lazy { dev.halcamera.cli.CommandCoordinator.get(this) }
+    internal val multiCli by lazy { createMultiCli() }
+    internal var cliPaused = false
+    private var cliWasActive = false
+    private val closeCallbacks = mutableListOf<() -> Unit>()
+    internal val mediaBusy get() = takingPhoto || recording || videoPending || closing || microphonePending
+    private val busy get() = mediaBusy || cli.active != null
+    internal val recorder = FlightRecorder(SystemClock::elapsedRealtimeNanos)
     private val telemetry = Telemetry(recorder)
     private var sessionId = "multi"
     private val main = Handler(Looper.getMainLooper())
@@ -113,6 +119,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
     private val activeSessionId get() = "${sessionId}_${activeCamera?.id}"
     private val tick = object : Runnable {
         override fun run() {
+            val cliActive = cli.active != null
+            if (cliActive != cliWasActive) { cliWasActive = cliActive; updateButtons() }
             val now = SystemClock.elapsedRealtimeNanos()
             val events = recorder.snapshot()
             val latest = events.lastOrNull { it.session == activeSessionId && it.kind == "capture_result" }
@@ -130,7 +138,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
             recorder.finish()?.let(::exportIncident)
             val remaining = recorder.remainingNs()
             reportButton.text = remaining?.let { "Saving in ${String.format(Locale.US,"%.1f",it/1e9)}s" } ?: "Save Events · ZIP"
-            reportButton.isEnabled = ready && remaining == null && !closing
+            reportButton.isEnabled = ready && remaining == null && !closing && cli.active == null
             main.postDelayed(this,100)
         }
     }
@@ -139,6 +147,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         setTheme(R.style.AppTheme); super.onCreate(savedInstanceState)
         engineName = (savedInstanceState?.getString(EXTRA_ENGINE) ?: intent.getStringExtra(EXTRA_ENGINE)).let { if (it == "CameraX") it else "Camera2" }
         videoMode = savedInstanceState?.getBoolean(EXTRA_VIDEO) ?: intent.getBooleanExtra(EXTRA_VIDEO,false)
+        cliPaused = intent.hasExtra("cli_request_id")
         val layout = SplitLayout.entries.firstOrNull { it.name == savedInstanceState?.getString("layout") } ?: SplitLayout.SIDE_BY_SIDE
         arrangement = runCatching { SplitArrangement(layout,savedInstanceState?.getIntArray("order")?.toList().orEmpty()) }
             .getOrElse { SplitArrangement.identity(0,layout) }
@@ -157,7 +166,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
             }
         })
         if (ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) discover()
-        else permission.launch(Manifest.permission.CAMERA)
+        else if (!intent.hasExtra("cli_request_id")) permission.launch(Manifest.permission.CAMERA)
     }
 
     private fun showPage() {
@@ -212,7 +221,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
         val bottomBar = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_HORIZONTAL }
         callbackGraph = ResultCallbackGraph(this).apply { visibility = View.GONE }; bottomBar.addView(callbackGraph,lp())
         zoomControl = ExpandingZoomControl(this) { ratio ->
-            if (Build.VERSION.SDK_INT >= 30 && ready && !takingPhoto && !videoPending && !closing) activeCamera?.let {
+            if (Build.VERSION.SDK_INT >= 30 && ready && cli.active == null && !takingPhoto && !videoPending && !closing) activeCamera?.let {
                 cameraZooms[it.id] = ratio; session?.setZoom(it.id,ratio)
             }
         }
@@ -293,7 +302,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
                     return activeCamera?.let { session?.meterAt(it.id,x.toDouble()/ring.width,y.toDouble()/ring.height,exposure,feedback) } == true
                 }
             } },{ on -> selectActive(index); controlBar.setAeLock(on) }).apply {
-                canInteract = { ready && !takingPhoto && !videoPending && !closing }
+                canInteract = { ready && cli.active == null && !takingPhoto && !videoPending && !closing }
                 onZoomScale = { factor ->
                     if (Build.VERSION.SDK_INT >= 30 && factor.isFinite() && factor > 0) {
                         if (activeIndex != index) selectActive(index)
@@ -455,8 +464,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
         }
     }
 
-    private fun startIfReady() {
-        if (Build.VERSION.SDK_INT < 30 || !foreground || exiting || closing || failed || session != null || plans.isEmpty()) return
+    internal fun startIfReady() {
+        if (Build.VERSION.SDK_INT < 30 || cliPaused || !foreground || exiting || closing || failed || session != null || plans.isEmpty()) return
         val plan = plans[selected]
         if (textures.size != plan.streams.size) { createPanels(plan.streams.size); return }
         if (textures.any { it == null } || previews.any { it.width == 0 || it.height == 0 }) return
@@ -472,12 +481,20 @@ class ConcurrentCameraActivity : ComponentActivity() {
                 if (session !== current || closing || !foreground || failed) return
                 ready = true; previews.forEach { it.alpha = 1f }; status.visibility = View.GONE
                 window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); selectActive(activeIndex); updateButtons()
+                multiCli.ready()
             }
             override fun onFailed(reason: String) {
                 if (session !== current) return
                 failed = true; ready = false; recording = false; videoPending = false; takingPhoto = false
                 status.text = reason; status.visibility = View.VISIBLE; previews.forEach { it.alpha = 0f }
                 window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); updateButtons()
+                multiCli.failed(reason)
+            }
+            override fun onPhotoOutcomes(outcomes: Map<String, Result<android.net.Uri>>) {
+                if (session === current) multiArtifacts(outcomes, false)
+            }
+            override fun onVideoOutcomes(outcomes: Map<String, Result<android.net.Uri>>) {
+                if (session === current) multiArtifacts(outcomes, true)
             }
             override fun onPhoto(result: ConcurrentMediaResult) {
                 if (session !== current) return
@@ -488,7 +505,8 @@ class ConcurrentCameraActivity : ComponentActivity() {
             override fun onRecording(active: Boolean,result: ConcurrentMediaResult) {
                 if (session !== current) return
                 recording = active; videoPending = false; report = result.message
-                if (active) recordingSince = SystemClock.elapsedRealtime()
+                if (active) { recordingSince = SystemClock.elapsedRealtime(); multiCli.recordingStarted() }
+                else if (result.failed) multiCli.failed(result.message)
                 resultText.text = if (active) "" else if (result.failed) "Video failed · Details" else "Videos saved · Details"
                 updateButtons()
             }
@@ -501,15 +519,19 @@ class ConcurrentCameraActivity : ComponentActivity() {
     }
 
     @SuppressLint("NewApi")
-    private fun closeSession() {
+    internal fun closeSession(after: (() -> Unit)? = null) {
+        after?.let { closeCallbacks += it }
+        if (after == null && cli.active == null) cliPaused = false
         if (closing) return
         closing = true; ready = false; previews.forEach { it.alpha = 0f }
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON); updateButtons()
         val done = {
             session = null; closing = false; takingPhoto = false; recording = false; videoPending = false
             retired.forEach { it.release() }; retired.clear()
+            val callbacks = closeCallbacks.toList(); closeCallbacks.clear()
+            callbacks.forEach { it() }
             val destination = afterClose; afterClose = null
-            if (exiting) super.finish() else if (destination != null) destination() else { updateButtons(); if (foreground) discover() }
+            if (exiting) super.finish() else if (destination != null) destination() else { updateButtons(); if (foreground && !cliPaused && callbacks.isEmpty()) discover() }
         }
         session?.close(done) ?: done()
     }
@@ -540,10 +562,15 @@ class ConcurrentCameraActivity : ComponentActivity() {
     }
     override fun onStart() {
         super.onStart(); foreground = true; recentMedia.start(); main.post(tick)
+        val incoming = intent.getStringExtra("cli_request_id")
+        if (incoming != null && cli.active?.id != incoming) { cliPaused = true; finish(); return }
+        if (cli.active == null) cliPaused = false
+        if (intent.hasExtra("cli_request_id")) { intent.removeExtra("cli_request_id"); cli.continueHandover(multiCli) }
+        else cli.attach(multiCli)
         if (session == null && !closing && ContextCompat.checkSelfPermission(this,Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) discover() else startIfReady()
     }
     override fun onStop() {
-        foreground = false; main.removeCallbacks(tick); recentMedia.stop(); recorder.finish("screen_stopped")?.let(::exportIncident)
+        foreground = false; multiCli.stopped(); cli.detach(multiCli); main.removeCallbacks(tick); recentMedia.stop(); recorder.finish("screen_stopped")?.let(::exportIncident)
         closeSession(); super.onStop()
     }
     override fun onDestroy() { recentMedia.close(); io.shutdown(); super.onDestroy() }
@@ -555,22 +582,23 @@ class ConcurrentCameraActivity : ComponentActivity() {
         outState.putSerializable("sizes",HashMap(chosenSizes))
         outState.putStringArrayList("devices",ArrayList(selectedIds)); super.onSaveInstanceState(outState)
     }
-    private fun updateButtons() {
+    internal fun updateButtons() {
+        cli.setUiBusy(multiCli, mediaBusy)
         engineButton.text = engineName; engineButton.isEnabled = !busy
 
-        shutter.isEnabled = ready && !takingPhoto && !videoPending && !closing && !microphonePending
+        shutter.isEnabled = ready && cli.active == null && !takingPhoto && !videoPending && !closing && !microphonePending
         shutter.setCaptureState(videoMode = videoMode,recording = recording)
         shutter.contentDescription = if (videoMode) { if (recording) "Stop all recordings" else "Record each camera separately with microphone audio" } else "Capture a separate photo from each camera"
         splitButton.isEnabled = plans.isNotEmpty() && !busy; cameraButton.isEnabled = splitButton.isEnabled
         cameraButton.visibility = if (recording) View.GONE else View.VISIBLE
         snapshotButton.visibility = if (recording) View.VISIBLE else View.GONE
-        snapshotButton.isEnabled = ready && recording && !takingPhoto && !videoPending && !closing
+        snapshotButton.isEnabled = ready && cli.active == null && recording && !takingPhoto && !videoPending && !closing
         labButton.isEnabled = !busy && activeCamera != null; galleryButton.isEnabled = !busy
         retryButton.visibility = if (failed) View.VISIBLE else View.GONE; retryButton.isEnabled = !busy
-        reportButton.isEnabled = ready && recorder.remainingNs() == null && !closing
+        reportButton.isEnabled = ready && recorder.remainingNs() == null && !closing && cli.active == null
         resultText.isClickable = report.isNotEmpty() && !recording; resultText.isFocusable = resultText.isClickable
-        controlBar.bind(videoMode,ready && !takingPhoto && !videoPending && !closing)
-        zoomControl.isEnabled = ready && !takingPhoto && !videoPending && !closing; liveIndicator.setSizesEnabled(!busy)
+        controlBar.bind(videoMode,ready && cli.active == null && !takingPhoto && !videoPending && !closing)
+        zoomControl.isEnabled = ready && cli.active == null && !takingPhoto && !videoPending && !closing; liveIndicator.setSizesEnabled(!busy)
         modeRow.visibility = if (recording || videoPending) View.INVISIBLE else View.VISIBLE
         recordingTime.visibility = if (recording || videoPending) View.VISIBLE else View.GONE
         if (videoPending) recordingTime.text = if (recording) "Saving…" else "Starting…"
@@ -628,11 +656,18 @@ class ConcurrentCameraActivity : ComponentActivity() {
         callbackGraph.visibility = if (show) View.VISIBLE else View.GONE; layoutPreviews()
         CameraWidgets(this).highlight(callbackButton,show)
     }
-    private fun exportIncident(incident: dev.halcamera.telemetry.Incident) {
+    internal fun exportIncident(incident: dev.halcamera.telemetry.Incident) {
         val metadata = telemetry.sessions.toMap()
         io.execute {
             val result = runCatching { IncidentExporter(applicationContext).export(incident,metadata) }
             main.post {
+                if (cli.active?.let { it.id == incident.id && it.command == "events" } == true) {
+                    result.fold({ file -> cli.complete(incident.id, mapOf("artifact_count" to 1,
+                        "cancelled" to (cli.readRecord(incident.id)?.optString("state") == "cancelling")),
+                        listOf(dev.halcamera.cli.CliArtifact(file.name, "application/zip", android.net.Uri.fromFile(file)))) },
+                        { cli.fail(incident.id, "SAVE_FAILED", it.message ?: "Events export failed") })
+                    return@post
+                }
                 if (!foreground || isDestroyed) return@post
                 result.fold({ file ->
                     LiveChoiceSheet.show(this,"Events ZIP saved",content = text(file.name,12),actionLabel = "Share",confirm = {
@@ -646,7 +681,7 @@ class ConcurrentCameraActivity : ComponentActivity() {
     }
     private fun notice(value: String) = Toast.makeText(this,value,Toast.LENGTH_LONG).show()
     @Suppress("DEPRECATION")
-    private fun displayDegrees() = DisplayRotation.degrees(windowManager.defaultDisplay.rotation)
+    internal fun displayDegrees() = DisplayRotation.degrees(windowManager.defaultDisplay.rotation)
     private fun dp(value: Int) = Look.dp(this,value)
     private fun text(value: String,size: Int) = Look.text(this,value,size,Look.onDark).apply { gravity = Gravity.CENTER_VERTICAL }
     private fun button(value: String,action: () -> Unit) = CameraWidgets(this).chromeButton(value,action)

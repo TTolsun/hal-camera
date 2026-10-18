@@ -124,6 +124,11 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
             .putExtra(DualPreviewActivity.EXTRA_ENGINE, command.engine ?: "Camera2")
             .putExtra(DualPreviewActivity.EXTRA_VIDEO, command.spec.recording)
     }
+    override fun multi(command: dev.halcamera.cli.CliCommand) = handOver(command) {
+        Intent(this@createLiveCli, ConcurrentCameraActivity::class.java)
+            .putExtra(ConcurrentCameraActivity.EXTRA_ENGINE, command.engine ?: "Camera2")
+            .putExtra(ConcurrentCameraActivity.EXTRA_VIDEO, command.spec.recording)
+    }
     override fun snapshot(done: (Result<PhotoResult>) -> Unit) {
         (engine as? MediaCapture)?.captureSnapshot(done) ?: done(Result.failure(IllegalStateException("Camera unavailable")))
     }
