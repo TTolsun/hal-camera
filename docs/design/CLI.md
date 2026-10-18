@@ -104,6 +104,7 @@ Provider는 `exported=true`, `grantUriPermissions=false`, `android.permission.DU
 | `call(method=cancel, arg=<base64url JSON>)` | 요청 ID를 지정하여 취소를 요청한다. |
 | `/v1/hello` | 프로토콜 버전, 앱 버전, 지원 명령, 활성화·권한 상태를 JSON으로 읽는다. |
 | `/v1/status` | 현재 앱 상태, 실행 중 요청 ID를 JSON으로 읽는다. |
+| `/v1/requests` | 보관 중인 요청(실행 중 포함)을 최신순으로 나열한다. 행마다 `request_id`, `command`, `state`, `completed`, `created_at_ms`, `artifact_count`, `error_code`만 담고 요청 인자와 파일 위치는 담지 않는다. `call(method=requests.list)`도 같은 응답을 반환한다. |
 | `/v1/requests/<uuid>` | 특정 요청의 상태와 결과 목록을 JSON으로 읽는다. |
 | `/v1/requests/<uuid>/artifacts/<artifact-id>` | 등록된 결과 파일을 읽기 전용으로 전송한다. |
 
@@ -127,6 +128,8 @@ halcam --serial DEVICE probe --output ./probe
 halcam --serial DEVICE cts cases --json
 halcam --serial DEVICE cts run --case custom:fast_on_off --case vendored:android.hardware.camera2.cts.RecordingTest#testBasicRecording --output ./cts
 halcam --serial DEVICE status --request REQUEST_UUID --json
+halcam --serial DEVICE requests --json
+halcam --serial DEVICE wait REQUEST_UUID --output ./recovered
 halcam --serial DEVICE fetch REQUEST_UUID --output ./recovered
 halcam --serial DEVICE cancel REQUEST_UUID
 ```
@@ -144,6 +147,8 @@ halcam --serial DEVICE cancel REQUEST_UUID
 | `cts cases` | CTS suite 체크리스트의 항목을 키(`custom:<id>`, `vendored:<class>#<method>`)·종류·출처·오디오 필요 여부·예상 시간과 함께 반환한다. vendored 항목은 API 34 이상에서만 나온다. |
 | `cts run` | `--case`로 고른 항목을 체크리스트 순서로 `CtsSuiteRunActivity`에서 실행하고 suite 보고서 JSON(`cts_suite/1`)과 공유 텍스트를 수집한다. FAIL 행은 실행 실패가 아니라 결과다. 마이크가 필요한 항목은 RECORD_AUDIO 권한을 미리 허용해야 하며 없으면 `PERMISSION_REQUIRED`로 끝난다. |
 | `status` | 앱을 전면으로 이동시키지 않고 상태를 조회한다. |
+| `requests` | 요청 ID를 잃었을 때 보관 중인 요청을 최신순으로 나열한다. 기기 셸에서는 `requests list`다. 요청을 제출하지 않는 조회이므로 `BUSY` 중에도 동작하며 보관 기록을 밀어내지 않는다. |
+| `wait` | `--no-wait`로 제출했거나 PC 대기가 끝난 요청을 완료까지 다시 기다리고, `--output`이 있으면 파일을 수집한다. 요청을 재제출하지 않고 Ctrl+C로 앱 작업을 취소하지 않는다. 기본 PC 대기 한도는 3,600초다. |
 | `fetch` | 이미 생성된 결과를 다시 내려받는다. 촬영·측정을 다시 실행하지 않는다. |
 | `cancel` | 실행 중 요청을 취소한다. 완료된 요청에는 현재 결과를 반환한다. |
 
@@ -151,7 +156,7 @@ halcam --serial DEVICE cancel REQUEST_UUID
 
 `--camera`는 독립적으로 열 수 있는 logical ID만 허용한다. physical endpoint의 `0.2` 같은 key를 camera ID로 잘못 전달하지 않도록 목록에 `selectable`과 선택 불가 사유를 포함한다. 다른 카메라로 자동 대체하지 않는다.
 
-`--json`에서는 stdout에 최종 JSON 하나만 출력하고 진행·진단은 stderr로 출력한다. 모든 작업 결과에는 request ID를 포함한다. `--no-wait`은 요청 접수 결과를 반환하며 다운로드를 수행하지 않는다. 해당 결과에는 `completed=false`를 표시한다. 이후 `status`와 `fetch`로 이어간다.
+`--json`에서는 stdout에 최종 JSON 하나만 출력하고 진행·진단은 stderr로 출력한다. 모든 작업 결과에는 request ID를 포함한다. `--no-wait`은 요청 접수 결과를 반환하며 다운로드를 수행하지 않는다. 해당 결과에는 `completed=false`를 표시한다. 이후 `wait REQUEST_ID --output DIR`로 완료와 수집을 이어가거나, `status`와 `fetch`로 단계별로 진행한다. 요청 ID를 잃었으면 `requests`로 다시 찾는다. 셸의 마지막 요청 기억(`--last`)은 기기 한 대에서 마지막 제출만 가리키므로 복구의 기본 수단으로 삼지 않는다.
 
 `--request-id`로 이전 요청 ID를 재사용할 수 있다. 기본 ID는 CLI가 생성하며 제출 전에 stderr에 알린다. `--output`은 고유 요청 하위 폴더를 생성하고 기존 파일은 덮어쓰지 않는다. 동일 요청을 다시 받을 때 해시가 일치하는 파일은 재사용한다.
 

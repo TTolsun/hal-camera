@@ -84,7 +84,18 @@ class PresentationTests(unittest.TestCase):
 
     def test_timeout_preserves_request_and_device_for_status(self):
         data = dict(request_id=RID, completed=False, error={"code": "WAIT_TIMEOUT", "message": "Still running"})
-        self.assertIn(f"Next: halcam --serial phone status --request {RID}", render(data, argparse.Namespace(serial="phone")))
+        self.assertIn(f"Next: halcam --serial phone wait {RID} --output ./results", render(data, argparse.Namespace(serial="phone")))
+        accepted = dict(request_id=RID, state="accepted", completed=False, error=None)
+        self.assertIn(f"Next: halcam wait {RID}", render(accepted, argparse.Namespace()))
+
+    def test_lost_request_points_to_the_retained_list_before_the_gallery(self):
+        text = render(dict(completed=False, request_id=RID, error={"code": "REQUEST_NOT_FOUND", "message": "Unknown"}), argparse.Namespace())
+        self.assertIn("Next: halcam requests", text)
+        rows = [{"request_id": RID, "command": "capture", "state": "succeeded", "artifact_count": 2}]
+        listed = render({"protocol_version": 1, "requests": rows}, argparse.Namespace())
+        self.assertTrue(listed.startswith("1 retained request(s), newest first."))
+        self.assertIn(RID, listed)
+        self.assertIn("(none)", render({"protocol_version": 1, "requests": []}, argparse.Namespace()))
 
     def test_stop_response_is_not_reported_as_a_new_recording(self):
         text = render(record("running", result={"recording": True}), argparse.Namespace(operation="record.stop"))

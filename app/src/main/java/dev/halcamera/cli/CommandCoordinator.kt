@@ -72,7 +72,7 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
         return CliJson.envelope().put("enabled", true).put("app_version", info.versionName)
             .put("commands", JSONArray(CliCommand.COMMANDS))
             .put("command_specs", CliJson.of(CliCommands.specs.mapValues { it.value.toMap() }))
-            .put("controls", JSONArray(listOf("live.set", "live.reset", "record.snapshot", "record.stop", "status", "request", "request.cancel")))
+            .put("controls", JSONArray(listOf("live.set", "live.reset", "record.snapshot", "record.stop", "status", "request", "requests.list", "request.cancel")))
             .put("retention_ms", CommandStore.RETENTION_MS).put("max_completed_requests", CommandStore.MAX_RECORDS)
             .put("camera_permission", permission(Manifest.permission.CAMERA)).put("locked", locked())
             .put("completed", true)
@@ -276,6 +276,21 @@ class CommandCoordinator private constructor(private val context: Context) : Cli
 
     override fun readRecord(id: String): JSONObject? = store.read(id)
     override fun updateRecord(id: String, mutate: (JSONObject) -> Unit) { store.update(id, mutate) }
+
+    /**
+     * The retained requests, newest first, for a client that lost a request ID. A read rather than a submitted
+     * command: it creates no record, so it never evicts one of the [CommandStore.MAX_RECORDS] it lists.
+     */
+    fun requests(): JSONObject {
+        if (!enabled) return CliJson.failure("CLI_DISABLED", "Enable ADB CLI in the app")
+        val items = store.list().mapNotNull { record -> runCatching {
+            CliRequestSummary(record.getString("request_id"), record.getJSONObject("request").getString("command"),
+                record.getString("state"), record.optLong("created_at_ms"), record.optJSONArray("artifacts")?.length() ?: 0,
+                record.optJSONObject("error")?.optString("code"))
+        }.getOrNull() }
+        return CliJson.envelope().put("requests", CliJson.of(CliRequestSummary.listing(items)))
+            .put("retention_ms", CommandStore.RETENTION_MS).put("max_completed_requests", CommandStore.MAX_RECORDS)
+    }
 
     fun request(id: String): JSONObject = CliJson.publicRecord(store.read(id) ?: throw CliFailure("REQUEST_NOT_FOUND", "Unknown or expired request"))
     fun artifact(id: String, aid: String): Uri {

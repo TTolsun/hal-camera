@@ -97,6 +97,10 @@ class CommandStore(
         return transition(id, record.getString("state"), mutate)
     }
 
+    /** Every unexpired record, unfinished ones included. Listing submits nothing, so it also works while busy. */
+    @Synchronized fun list(): List<JSONObject> = directory.listFiles().orEmpty().filter { it.extension == "json" }
+        .mapNotNull { file -> runCatching { read(file.nameWithoutExtension) }.getOrNull() }
+
     @Synchronized fun cleanup() {
         val records = directory.listFiles().orEmpty().filter { it.extension == "json" }.mapNotNull { file ->
             runCatching { read(file.nameWithoutExtension) }.getOrNull()?.takeIf { it.optBoolean("completed") }

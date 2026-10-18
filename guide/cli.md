@@ -235,9 +235,10 @@ flowchart LR
 
 **기존 요청 ID로 상태부터 확인하세요.** PC의 대기 종료·연결 끊김만으로 앱 작업이 실패한 것은 아닙니다.
 
-1. `REQUEST_ID`를 처음 출력된 ID로 바꿔 조회합니다.
+1. `REQUEST_ID`를 처음 출력된 ID로 바꿔 조회합니다. ID를 잃었으면 `requests list`로 보관 중인 요청을 최신순으로 찾습니다. 각 줄에는 ID·상태·명령·파일 수가 나옵니다.
 
    ```sh
+   adb shell sh /data/local/tmp/halcam requests list
    adb shell sh /data/local/tmp/halcam status REQUEST_ID
    ```
 
@@ -254,6 +255,8 @@ flowchart LR
 <summary>요청 ID·파일 검증·만료</summary>
 
 `status`는 앱 상태를, `status REQUEST_ID`는 그 요청을 읽습니다. 셸의 `status --last`와 ID 없는 `fetch`·`cancel`은 마지막 제출 요청을 사용합니다. 다른 작업과 혼동하지 않도록 복구에는 ID를 명시합니다.
+
+`requests list`는 요청을 새로 제출하지 않는 조회라서 다른 작업이 실행 중이어도 동작하고, 보관 중인 기록을 밀어내지 않습니다. 실행 중인 요청과 완료 기록이 함께 나오므로 명령 이름과 순서로 잃어버린 요청을 고릅니다.
 
 기기의 `Download/HALCamera-cli/요청ID`에는 크기·SHA-256을 검증한 복사본이 준비됩니다. 바이너리는 PC 셸의 `>` 대신 `adb pull`로 받으며, PC 파일도 아래 manifest의 크기·해시와 대조합니다.
 
@@ -273,7 +276,7 @@ manifest는 파일 ID·이름·바이트 수·SHA-256을 탭으로 구분합니�
 | `BUSY` | `status`로 현재 작업을 확인하고 기다립니다. 실행 중인 CLI 녹화 종료·요청 취소는 가능합니다. |
 | `PREFLIGHT_FAILED`, `UNSUPPORTED_CAMERA`, `UNKNOWN_CASE` | 오류 사유와 `streams`·`cameras`·`cts cases`를 대조합니다. Benchmark라면 발열·절전 조건도 확인합니다. |
 | `interrupted`, `EXECUTION_TIMEOUT`, `RECORDING_INTERRUPTED` | 정상 완료와 구분하고 남은 파일부터 확인합니다. 자동으로 재실행하지 않습니다. |
-| `REQUEST_NOT_FOUND`, `ARTIFACT_EXPIRED` | PC에 받은 파일과 기기 복사본을 확인합니다. 남은 파일이 없으면 해당 요청의 결과를 회수할 수 없습니다. |
+| `REQUEST_NOT_FOUND`, `ARTIFACT_EXPIRED` | `requests list`로 ID를 잘못 옮겨 적었는지 확인합니다. 목록에 없으면 PC에 받은 파일과 기기 복사본을 확인합니다. 남은 파일이 없으면 해당 요청의 결과를 회수할 수 없습니다. |
 
 <details>
 <summary>실행 제한과 녹화 준비 오류</summary>
@@ -300,6 +303,15 @@ halcam --serial SERIAL record stop --output ./videos
 ```
 
 인자 없는 `halcam`은 시작 안내, `halcam --help`는 전체 문법을 보여 줍니다. `--json`은 stdout에 JSON 하나를 출력하며 `--output`은 PC에서 파일의 크기·SHA-256을 검증해 저장합니다. `--wait-timeout`은 PC 대기만 제한합니다.
+
+`--no-wait`로 제출했거나 PC 대기가 먼저 끝났다면 같은 요청을 다시 기다립니다. `wait`는 완료될 때까지 상태를 조회하고, `--output`을 주면 완료 뒤 파일을 받습니다. 요청을 다시 제출하지 않으며 Ctrl+C로 멈춰도 앱 작업을 취소하지 않습니다. ID를 잃었으면 `halcam requests`로 먼저 찾습니다.
+
+```sh
+halcam --serial SERIAL requests
+halcam --serial SERIAL wait REQUEST_ID --output ./photos
+```
+
+녹화 요청은 `record stop`이 와야 끝나므로 `wait` 대신 `record stop --output DIRECTORY`를 사용합니다.
 
 일반 촬영 옵션은 전용 명령과 공통 `run`에서 동일하게 사용합니다. 공통 경로의 작업 이름은 APK가 제공하는 `hello.commands`를 따릅니다.
 
@@ -329,7 +341,7 @@ adb shell content call --uri content://dev.halcamera.cli --method capture --extr
 adb exec-out content read --uri content://dev.halcamera.cli/v1/requests/REQUEST_ID
 ```
 
-응답은 평문 JSON을 감싼 `Result: Bundle[{json=...}]`입니다. 지원 작업은 `/v1/hello`의 `commands`, 상태 변경 등의 조작은 `controls`로 확인합니다. 상태 변경은 `content call`로만 보냅니다.
+`content call`의 응답은 평문 JSON을 감싼 `Result: Bundle[{json=...}]`입니다. ID를 잃었으면 `adb exec-out content read --uri content://dev.halcamera.cli/v1/requests`로 보관 중인 요청 목록(`requests`)을 최신순으로 읽습니다. 지원 작업은 `/v1/hello`의 `commands`, 상태 변경 등의 조작은 `controls`로 확인합니다. 상태 변경은 `content call`로만 보냅니다.
 
 CTS 키는 콜론 때문에 `--extra` 대신 `--method cts.run --arg KEY[,KEY...]`로 전달합니다. 실행 제한은 `--extra timeout_ms:l:30000`, 요청 ID 지정은 `--extra request_id:s:UUID`입니다. JSON 제출에서 엔진은 `params.engine`, 스트림은 `params.streams`이며 크기·FPS·코덱은 문자열입니다. Benchmark 프로파일은 `params.profile_id`이고 직접 호출에서는 `--extra profile:s:camera2-standard-v2`로 지정합니다. 기존 Python의 Base64 전송은 유지합니다.
 

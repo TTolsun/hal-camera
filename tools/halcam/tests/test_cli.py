@@ -306,6 +306,73 @@ class ProbeAndCtsTests(unittest.TestCase):
                 parser().parse_args(argv)
             self.assertEqual(caught.exception.code, "INVALID_ARGUMENT")
 
+    def recover(self, argv, reads):
+        """Run a recovery command against canned reads; returns (exit code, JSON document, reads made, calls made)."""
+        seen, calls = [], []
+
+        def read(path):
+            seen.append(path)
+            value = reads[path].pop(0) if isinstance(reads[path], list) else reads[path]
+            if isinstance(value, Exception):
+                raise value
+            return value
+
+        with patch.object(Adb, "select", lambda self: self), patch.object(Adb, "installed", lambda self: self), \
+                patch.object(Adb, "hello", lambda self: {"protocol_version": 1, "enabled": True}), \
+                patch.object(Adb, "read", lambda self, p: read(p)), \
+                patch.object(Adb, "call", lambda self, m, p: calls.append((m, p))), \
+                patch.object(Adb, "launch", lambda self: calls.append(("launch", None))), \
+                patch("halcam.cli.time.sleep"), patch("sys.stdout", new_callable=io.StringIO) as stdout, \
+                patch("sys.stderr", new_callable=io.StringIO):
+            code = main(argv + ["--json"])
+        return code, json.loads(stdout.getvalue()), seen, calls
+
+    def test_requests_lists_retained_ids_without_submitting_or_launching(self):
+        rows = [{"request_id": RID, "command": "capture", "state": "succeeded", "completed": True,
+                 "created_at_ms": 2000, "artifact_count": 2, "error_code": None}]
+        code, data, seen, calls = self.recover(["requests"], {"/v1/requests": {"protocol_version": 1, "requests": rows}})
+        self.assertEqual(code, 0)
+        self.assertEqual(data["requests"], rows)
+        self.assertEqual(seen, ["/v1/requests"])
+        self.assertEqual(calls, [])
+
+    def test_requests_rejects_a_malformed_list(self):
+        for body in ({"protocol_version": 1}, {"protocol_version": 1, "requests": [{"state": "running"}]}):
+            code, data, _, _ = self.recover(["requests"], {"/v1/requests": body})
+            self.assertEqual(data["error"]["code"], "PROTOCOL_ERROR")
+            self.assertEqual(code, 8)
+
+    def test_wait_resumes_a_no_wait_request_and_downloads_without_resubmitting(self):
+        done = response() | {"artifacts": [{"artifact_id": "file-0"}]}
+        reads = {f"/v1/requests/{RID}": [response("running"), done]}
+        with patch("halcam.cli.collect", return_value=["out/photo.jpg"]) as collect_files:
+            code, result, seen, calls = self.recover(["wait", RID, "--output", "out"], reads)
+        self.assertEqual(code, 0)
+        self.assertEqual(result["downloaded_files"], ["out/photo.jpg"])
+        self.assertEqual(seen, [f"/v1/requests/{RID}"] * 2)
+        self.assertEqual(calls, [])
+        collect_files.assert_called_once()
+
+    def test_wait_without_output_only_reports_and_unknown_ids_are_explicit(self):
+        with patch("halcam.cli.collect") as collect_files:
+            code, result, _, _ = self.recover(["wait", RID], {f"/v1/requests/{RID}": response()})
+        self.assertEqual((code, result["state"]), (0, "succeeded"))
+        collect_files.assert_not_called()
+        code, result, _, calls = self.recover(["wait", RID], {f"/v1/requests/{RID}": CliError("REQUEST_NOT_FOUND", "Unknown")})
+        self.assertEqual((code, result["error"]["code"]), (7, "REQUEST_NOT_FOUND"))
+        self.assertEqual(calls, [])
+        code, result, seen, _ = self.recover(["wait", "../" + RID], {})
+        self.assertEqual((code, result["error"]["code"], seen), (2, "INVALID_ARGUMENT", []))
+
+    def test_interrupting_wait_never_cancels_the_app_request(self):
+        def interrupted(*_):
+            raise KeyboardInterrupt
+        with patch("halcam.cli.wait", interrupted):
+            code, result, _, calls = self.recover(["wait", RID], {})
+        self.assertEqual(code, 130)
+        self.assertEqual(calls, [])
+        self.assertIn("saving may continue", result["error"]["message"])
+
     def test_text_artifacts_are_accepted_by_the_download_name_filter(self):
         body = b"HAL CAM CTS suite\n"
         data = response() | {"artifacts": [{"artifact_id": "file-1", "name": "cts-suite.txt", "mime_type": "text/plain",

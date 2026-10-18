@@ -42,6 +42,8 @@ def render(data, args):
         lines.append("Recording started. Stop to save the video.")
     elif data.get("busy"):
         lines.append("Busy. An app operation is running.")
+    elif isinstance(data.get("requests"), list):
+        lines.append(f"{len(data['requests'])} retained request(s), newest first.")
     elif "applied" in result:
         lines.append("Retention limit applied." if result["applied"] else "Preview only. Nothing has changed.")
     else:
@@ -56,7 +58,7 @@ def render(data, args):
     elif artifacts:
         lines.append(f"{len(artifacts)} file(s) available, including any saved before cancellation.")
     # Lists and summaries are the requested result, so keep every entry visible.
-    for key in ("summary", "comparison", "runs", "media", "incidents", "cameras", "combinations", "cases", "streams", "pip_sources", "devices", "delete_runs"):
+    for key in ("summary", "comparison", "runs", "media", "incidents", "cameras", "combinations", "cases", "streams", "pip_sources", "devices", "delete_runs", "requests"):
         value = result.get(key, data.get(key))
         if value is not None:
             lines.append(f"{key}:")
@@ -74,7 +76,8 @@ def render(data, args):
     elif error and error["code"] == "CLI_DISABLED":
         next_step = "Open HALCamera > Lab > ADB CLI and enable access."
     elif error and error["code"] in ("REQUEST_NOT_FOUND", "ARTIFACT_EXPIRED"):
-        next_step = command(args, "run", "gallery.list") + " (saved photos/videos may still be available; do not repeat capture)"
+        next_step = (command(args, "requests") + " (lists retained IDs; once a request expires, saved photos/videos may still be in "
+                     + command(args, "run", "gallery.list") + "; do not repeat capture)")
     elif (stopping or snapshot) and rid:
         next_step = command(args, "status", "--request", rid)
     elif result.get("recording"):
@@ -83,6 +86,9 @@ def render(data, args):
         next_step = command(args, "fetch", rid, "--output", "./captures")
     elif error and error["code"] == "BUSY":
         next_step = command(args, "status")
+    elif rid and not data.get("completed") and (not error or error["code"] == "WAIT_TIMEOUT"):
+        # Accepted with --no-wait, or the PC stopped waiting: the request exists, so wait for it instead of polling.
+        next_step = command(args, "wait", rid, "--output", "./results")
     elif rid and not data.get("completed"):
         next_step = command(args, "status", "--request", rid)
     elif error and error["code"] == "CONFIRM_REQUIRED":
