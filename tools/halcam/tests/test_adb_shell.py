@@ -44,6 +44,34 @@ class AdbShellTests(unittest.TestCase):
                 self.assertIn(f"fetch {RID}" if artifacts else "No files are registered", proc.stdout)
                 self.assertNotIn("/files", calls)
 
+    def test_requests_list_prints_retained_ids_newest_first_without_submitting(self):
+        rows = [{"request_id": RID, "command": "record.start", "state": "running", "completed": False, "created_at_ms": 2000,
+                 "artifact_count": 0, "error_code": None},
+                {"request_id": "a616d5cc-7706-4983-b49e-4e4d5c0ef816", "command": "capture", "state": "cancelled", "completed": True,
+                 "created_at_ms": 1000, "artifact_count": 2, "error_code": "CANCELLED"}]
+        proc, calls = self.run_client(["requests", "list"], result={"requests": rows})
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        lines = proc.stdout.splitlines()
+        self.assertEqual(lines[1:3], [f"{RID} running record.start 0", "a616d5cc-7706-4983-b49e-4e4d5c0ef816 cancelled capture 2"])
+        self.assertIn("fetch REQUEST_ID", proc.stdout)
+        self.assertIn("/v1/requests", calls)
+        self.assertNotIn("--method", calls)
+        self.assertNotIn("am start", calls)
+
+    def test_requests_list_without_records_explains_retention(self):
+        proc, _ = self.run_client(["requests", "list"], result={"requests": []})
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("No retained requests", proc.stdout)
+        proc, calls = self.run_client(["requests", "list", "--camera", "0"])
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertEqual(calls, "")
+
+    def test_missing_last_request_points_to_the_list(self):
+        proc, calls = self.run_client(["status", "--last"])
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertIn("requests list", proc.stderr)
+        self.assertEqual(calls, "")
+
     def run_client(self, args, *, hello=None, busy=False, result=None, remember=False, corrupt=False, screen="live"):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)

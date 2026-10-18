@@ -73,11 +73,12 @@ class CliProvider : ContentProvider() {
             if (method == "live.reset") { require(values.isEmpty()); return commands.tune(null, true) }
             return commands.tune(CliOptions(values.mapValues { it.value as? String ?: throw CliFailure("INVALID_ARGUMENT", "Controls must be strings") }), false)
         }
-        if (method in setOf("hello", "status", "request", "request.cancel", "record.stop", "record.snapshot")) {
+        if (method in setOf("hello", "status", "request", "requests.list", "request.cancel", "record.stop", "record.snapshot")) {
             require(values.isEmpty()) { "Unexpected extras" }
             return when (method) {
                 "hello" -> { require(arg == null); commands.hello() }
                 "status" -> { require(arg == null); commands.status() }
+                "requests.list" -> { require(arg == null); commands.requests() }
                 "request" -> commands.request(requireNotNull(arg) { "Request ID required" })
                 "record.snapshot" -> { require(arg == null); commands.snapshot() }
                 "request.cancel" -> commands.cancel(requireNotNull(arg) { "Request ID required" })
@@ -124,6 +125,7 @@ class CliProvider : ContentProvider() {
             when {
                 parts == listOf("v1", "hello") -> commands.hello()
                 parts == listOf("v1", "status") -> commands.status()
+                parts == listOf("v1", "requests") -> commands.requests()
                 parts.size == 3 && parts[0] == "v1" && parts[1] == "requests" -> commands.request(parts[2])
                 else -> throw CliFailure("INVALID_ARGUMENT", "Unknown URI")
             }
