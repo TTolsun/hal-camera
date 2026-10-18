@@ -48,7 +48,7 @@ internal class CameraXMultiSession(
     private val observers = mutableListOf<Pair<Camera,Observer<CameraState>>>()
     private val controls = java.util.concurrent.ConcurrentHashMap<String,CameraXControls>()
     private val photos = CameraXMultiPhotos(context,plan,main,telemetry,sessionId,listener)
-    private val video = MultiRecording(context,main,compositors,listener::onRecording,listener::onVideoResult)
+    private val video = MultiRecording(context,main,compositors,listener::onRecording,listener::onVideoResult,listener::onVideoOutcomes)
     private val timeout = Runnable { if (!ready && !closing) fail("CameraX Multi timed out") }
 
     override fun start() {

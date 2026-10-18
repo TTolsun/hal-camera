@@ -3,9 +3,10 @@ package dev.halcamera
 import dev.halcamera.camera.*
 
 /** Activity-side adapter for Dual controls, diagnostics and request lifecycle. */
-internal fun DualPreviewActivity.createDualCliHost(): dev.halcamera.cli.CliHost = object : dev.halcamera.cli.CliHost, dev.halcamera.cli.CliControlsHost, dev.halcamera.cli.CliRecordingHost {
+internal fun DualPreviewActivity.createDualCliHost(): dev.halcamera.cli.CliHost = object : dev.halcamera.cli.CliHost, dev.halcamera.cli.CliControlsHost, dev.halcamera.cli.CliRecordingHost, dev.halcamera.cli.CliNavigationHost {
 override val screen = "dual"
 override fun isBusy() = closing || recording || recordPending || photoPending
+override fun closeForNavigation(done: () -> Unit) { cliStopping = true; closeSession(done) }
 override fun tune(options: dev.halcamera.cli.CliOptions?, reset: Boolean): Map<String, Any?> {
     if (session == null || streamingSize == null || closing || recordPending || photoPending)
         throw dev.halcamera.cli.CliFailure("BUSY", "Wait for Dual preview to be ready")

@@ -268,3 +268,13 @@ Provider는 허용된 ID만 받으며 경로 이동 문자열, 다른 authority,
 상태 조회는 메모리 snapshot을 읽으며 파일 쓰기는 상태 전환 시에만 한다. 파일 저장소에 쓰지 못하면 해당 프로세스에서는 `STORE_FAILED`와 `durable=false`로 실패를 알리고 추가 실행을 하지 않는다. 재시작 시 마지막 영속 기록은 `interrupted`로 복구한다.
 
 제출 스키마는 `tools/halcam/protocol-v1.schema.json`, 상태 응답 스키마는 `tools/halcam/record-v1.schema.json`, Android·Python 공통 fixture는 `tools/halcam/fixtures/protocol-v1.json`이다. 다른 OEM 전체와 Linux·macOS의 실제 ADB 장치 연결을 검증한 것으로 확대하지 않는다.
+
+## 9. Multi 실행 확장 (0.30.0)
+
+`multi.preview`, `multi.capture`, `multi.record`는 `cameras` 옵션에 쉼표로 나열한 독립 카메라를 화면 순서대로 엽니다. `preview_sizes`·`photo_sizes`도 같은 순서이며, API 30 미만·광고되지 않은 조합·목록 밖 크기·CameraX 3대 이상은 사전 검사에서 거부합니다. `Flow.MULTI`는 Live의 close(done) 이후 MultiCliBridge/MultiController로 인계합니다.
+
+`preview_screens`는 현재 화면 명령을 받을 수 있는 화면 목록입니다. 클라이언트와 preflight가 Live·Dual·Multi를 같은 목록으로 판정합니다. Multi의 `live.info`·`events`·`preview.stop`과 CLI 녹화의 `record.stop`을 지원합니다. 수동 제어·측광·녹화 중 사진·배치 옵션은 후속 범위입니다.
+
+카메라 ID별 저장 결과를 받아 요청 순서의 `cameras: [{camera_id, saved, error}]`와 `multi_<request_id>_<camera_id>.jpg|mp4`를 등록합니다. 사진은 일부 성공을 보존하며, 영상은 기존 전체 묶음 롤백 규칙을 유지합니다. 오디오는 기본 켜짐이며 audio=false는 마이크 권한이 필요 없습니다. CLI에서 권한 대화상자를 띄우지 않습니다.
+
+준비·화면 인계 중 정지 의도는 coordinator가 보관하고 녹화 시작 뒤 전달합니다. 새 명령을 위해 Dual·Multi에서 Live로 돌아갈 때도 CliNavigationHost의 닫기 완료 뒤 MainActivity를 엽니다. Multi 화면이 백그라운드로 가면 APP_NOT_FOREGROUND로 끝냅니다.

@@ -1,6 +1,7 @@
 kind: nested-class
 title: concurrent-camera-screen
 children:
+  - cli-adapter
   - session
   - pip-composition
   - photo-storage

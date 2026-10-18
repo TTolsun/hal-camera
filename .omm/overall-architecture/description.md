@@ -13,3 +13,5 @@ PC의 기본 CLI는 ADB이며 APK의 assets/halcam.sh를 기기에 한 번 준�
 앱을 열 때는 투명한 `CliLaunchActivity`가 main thread에서 작업 상태를 다시 확인합니다. 실행 중인 작업이 있으면 Live로 전환하지 않습니다. 상태 조회는 `CommandStore`의 메모리 snapshot을 읽으며 파일 기록은 상태 전환 때만 수행합니다. 요청 ID를 잃은 PC를 위한 요청 목록(`/v1/requests`, `requests.list`)도 보관 기록을 읽기만 하는 조회이므로 새 기록을 만들지 않고 다른 작업이 실행 중일 때도 응답합니다.
 
 벤치마크 비교는 baseline과 이번 실행, 두 개 사이에서만 이루어집니다. 여러 실행을 묶어 순열검정을 수행하던 ProfileComparisonActivity와 외부 JSON archive(ProfileLibrary, ProfileArchive)는 0.13.0에서 제거했습니다. 다기기 분포 수집을 하지 않기로 결정해 그 경로의 용도가 사라졌기 때문입니다. 실행 JSON의 device_instance_id는 DeviceInstance가 계속 채웁니다.
+
+MultiController는 MainCliBridge의 Live 종료 후 ConcurrentCameraActivity의 MultiCliBridge로 요청을 인계받습니다. multi.preview·multi.capture·multi.record는 advertised 조합·크기를 엄격히 검증하고 카메라 ID별 저장 파일을 회수할 수 있게 등록합니다. Live로 돌아가는 CLI 전환도 이전 화면의 close(done)을 기다립니다.

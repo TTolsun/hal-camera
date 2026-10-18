@@ -19,21 +19,21 @@ def pairs(items, initial=None):
     return values
 
 
-COMMAND_OPTION_KEYS = ("count", "interval_ms", "x", "y", "meter", "run", "reference", "media", "confirm", "first", "second", "incident", "limit")
+COMMAND_OPTION_KEYS = ("count", "interval_ms", "x", "y", "meter", "run", "reference", "media", "confirm", "first", "second", "incident", "limit", "cameras", "preview_sizes", "photo_sizes")
 OPTION_KEYS = CONTROL_KEYS + PIP_KEYS + LABEL_KEYS + COMMAND_OPTION_KEYS
 
 # Compatibility defaults for APKs predating command_specs or one of its fields. New APKs advertise their
 # contract in hello, and spec() prefers it; tests/fixtures/hello.json keeps these lists equal to it.
 CAMERA_COMMANDS = {"preview", "capture", "burst", "bracket", "record.start", "streams", "dual.preview", "dual.capture", "dual.record", "benchmark.run"}
-DEFAULT_SECONDS = {"record.start": 3600, "dual.record": 3600, "cts.run": 1800, "benchmark.run": 600}
+DEFAULT_SECONDS = {"record.start": 3600, "dual.record": 3600, "multi.record": 3600, "cts.run": 1800, "benchmark.run": 600}
 SCREENLESS = {"streams", "cameras", "probe", "cts.cases", "dual.cameras", "multi.cameras"}
 LIBRARY_PREFIXES = ("results.", "baseline.", "gallery.", "settings.", "incidents.")
 LEGACY = {
     "camera": CAMERA_COMMANDS,
-    "audio": {"record.start", "dual.record"},
+    "audio": {"record.start", "dual.record", "multi.record"},
     "mode": {"preview", "streams"},
     "current_screen": {"live.info", "events", "meter", "preview.stop"},
-    "recording": {"record.start", "dual.record"},
+    "recording": {"record.start", "dual.record", "multi.record"},
     "profile": {"benchmark.run"},
     "cases": {"cts.run"},
 }

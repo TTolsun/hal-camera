@@ -35,6 +35,9 @@ More tasks (start with the list command to find an ID):
   dual preview|capture|record --camera ID --first ID --second ID
                                         Dual video is silent; stop with record stop
   multi cameras                         List camera sets Multi can open together
+  multi preview|capture|record --cameras ID,ID [--engine Camera2|CameraX]
+                                        Sizes: --preview-sizes WxH,WxH --photo-sizes WxH,WxH
+                                        Video includes sound; --no-audio disables it. Use record stop.
   results list | results show --run ID
   results compare --run ID --reference ID
   results export --run ID                Export JSON and CSV
@@ -416,7 +419,10 @@ if spec_has foreground; then
     case "$status" in *'"busy":true'*) die 'Another operation is running. Use status or record stop.' ;; esac
     target_screen=live
     if spec_has current_screen; then
-        case "$status" in *'"screen":"dual"'*) target_screen=dual ;; esac
+        screens=$(json_list "$hello" preview_screens)
+        [ -n "$screens" ] || screens='"live","dual"'
+        current_screen=$(printf '%s' "$status" | sed -n 's/.*"screen":"\([a-z]*\)".*/\1/p')
+        case ",$screens," in *",\"$current_screen\","*) target_screen=$current_screen ;; esac
     fi
     case "$status" in
         *\"screen\":\"$target_screen\"*) ;;

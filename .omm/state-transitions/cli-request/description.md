@@ -1,4 +1,4 @@
-`cli/CommandStore.kt`, `cli/CommandCoordinator.kt`와 화면 어댑터 `LiveController`, `CtsController`, `BenchmarkController`가 CLI 요청의 상태를 관리합니다. accepted → preparing → running → saving → succeeded로 진행합니다. 실패는 failed, 취소는 cancelling을 거쳐 cancelled, 프로세스 재시작으로 끝나지 못한 요청은 interrupted로 기록하며, `CliStates.allows`가 허용하는 전이만 `CommandStore.transition`이 받습니다.
+`cli/CommandStore.kt`, `cli/CommandCoordinator.kt`와 화면 어댑터 `LiveController`, `MultiController`, `CtsController`, `BenchmarkController`가 CLI 요청의 상태를 관리합니다. accepted → preparing → running → saving → succeeded로 진행합니다. 실패는 failed, 취소는 cancelling을 거쳐 cancelled, 프로세스 재시작으로 끝나지 못한 요청은 interrupted로 기록하며, `CliStates.allows`가 허용하는 전이만 `CommandStore.transition`이 받습니다.
 
 `submit`은 기록을 먼저 저장한 뒤 main thread에서 `CliPreflight`로 바쁨·권한·잠금·카메라 ID·CTS 키·화면을 검사하고, 명령 spec의 실행 대상과 `flow`에 따라 명령을 나눕니다. `cameras`, `streams`, `probe`, `cts.cases`, `dual.cameras`, `multi.cameras`는 화면 없이 처리합니다. `preview`, `preview.stop`, `capture`, `record.start`, `cts.run`, `benchmark.run`은 Live host에 전달합니다. CTS와 벤치마크는 Live 카메라의 close(done) 이후 전용 화면으로 인계합니다. 벤치마크는 고정 Camera2 표준 v2 profile만 허용하며 기본 실행 제한은 600초입니다. 기존 Runner의 중단·종료와 보고서 저장 완료를 CLI 상태에 연결합니다.
 
@@ -13,3 +13,9 @@ ADB CLI는 저장된 설정이 없으면 허용합니다. 사용자가 명시적
 `DualPreviewActivity`는 별도 CLI host이며 Live의 close(done) 이후 요청을 넘겨받습니다. 명시한 물리 ID를 검증하고 두 프리뷰의 첫 업데이트를 확인합니다. 사진·영상 저장 URI를 파일 목록으로 전달하며 종료 시 영상 저장을 기다립니다.
 
 `CliLibrary`는 결과·baseline·갤러리·진단 ZIP·보관 한도를 처리합니다. 삭제는 대상 ID와 명시적 확인을 요구하며 보관 한도는 먼저 영향 목록을 반환합니다. 기준 실행은 `BaselineManager`로 명시적으로 추가합니다. 작업이 실행 중이면 저장 결과가 확정될 때까지 소유권을 유지합니다. `live.set`과 `live.reset`은 현재 Live 또는 CLI 녹화의 제어를 바꾸는 별도 제어 명령이며 새 저장 요청을 만들지 않습니다.
+
+Multi는 Live close(done) 뒤 ConcurrentCameraActivity의 MultiCliBridge/MultiController로 인계합니다. CliMultiOptions가 advertised 조합·엔진 대수·순서별 크기를 엄격히 검사합니다. 준비 중 취소는 닫기 완료 뒤 끝나며, 녹화 시작 전 정지는 시작 콜백까지 기다려 정지합니다. 화면 이탈은 APP_NOT_FOREGROUND로 끝냅니다. preview_screens가 현재 화면 명령의 대상 목록이며 Live·Dual·Multi를 광고합니다.
+
+녹화 준비·화면 인계 중 도착한 record.stop은 CommandCoordinator가 보관하고 실제 recordingStarted 콜백 뒤 현재 host에 전달합니다. 준비 중 정지가 다음 화면으로 사라지거나 녹화를 다시 시작하지 않도록 합니다.
+
+Dual·Multi는 화면이 detach된 뒤에도 카메라 닫기 소유권을 coordinator에 남깁니다. 파일 등록 완료와 카메라 해제 완료를 분리하여, close(done) 이전에는 다음 CLI 카메라 명령과 Live 전환을 BUSY로 막습니다.

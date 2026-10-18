@@ -37,6 +37,7 @@ internal object CliFlowChecks {
         override fun cancelEvents() = Unit
         override fun inspect(command: CliCommand) = Unit
         override fun dual(command: CliCommand) = Unit
+        override fun multi(command: CliCommand) = Unit
         override fun snapshot(done: (Result<PhotoResult>) -> Unit) { snapshotDone = done }
         override fun streamInfo() = emptyMap<String, Any?>()
         override fun photoLabels() = listOf("JPEG")

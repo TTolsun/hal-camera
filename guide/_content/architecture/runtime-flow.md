@@ -147,13 +147,13 @@ Lab은 `WorkbenchActivity`가 담당하며 카메라를 직접 열지 않습니�
 
 CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩니다.
 
-요청 ID와 내용을 먼저 저장하고 `LiveController`, `CtsController`가 화면의 카메라·CTS suite 동작을 실행합니다.
+요청 ID와 내용을 먼저 저장하고 `LiveController`, `MultiController`, `CtsController`가 화면의 카메라·CTS suite 동작을 실행합니다.
 
 사진은 켜진 출력 이미지의 저장 완료, CTS suite는 보고서 JSON·텍스트 쓰기 완료 후 artifact를 등록합니다.
 
 `benchmark.run`은 Live 카메라 종료 뒤 벤치마크 화면으로 인계하며, `BenchmarkController`가 기존 Runner 실행과 JSON 저장 완료를 요청 결과에 연결합니다.
 
-`cameras`·`streams`·`probe`·`cts.cases`·`dual.cameras`·`multi.cameras`는 화면을 거치지 않고 coordinator가 처리합니다.
+`cameras`·`streams`·`probe`·`cts.cases`·`dual.cameras`·`multi.cameras`는 화면을 거치지 않고 coordinator가 처리합니다. `multi.preview`·`multi.capture`·`multi.record`는 Live가 카메라를 닫은 뒤 Multi host로 인계합니다. 카메라 ID가 붙은 저장 결과로 파일을 등록하므로 콜백 도착 순서가 파일 소유권을 바꾸지 않습니다. 사진 일부 실패의 성공 파일은 회수할 수 있으며, 영상은 기존의 전체 묶음 저장 규칙을 유지합니다.
 
 `CliLibrary`는 저장된 결과·baseline·갤러리·진단 ZIP과 보관 한도를 처리합니다. 결과 비교에는 기존 presenter와 비교 규칙을 재사용합니다. 삭제는 대상 ID와 명시적 확인을 요구하고, 보관 한도 변경은 적용 전에 삭제할 실행 목록을 보여 줍니다.
 
@@ -164,3 +164,7 @@ CLI 명령은 ADB와 `CliProvider`를 거쳐 `CommandCoordinator`에 접수됩�
 PC는 요청 상태를 조회하고 완료된 artifact의 크기와 SHA-256을 확인합니다. 같은 요청 ID와 같은 내용은 기존 결과를 반환하며 새로운 촬영을 시작하지 않습니다. 명령 사용법과 전송 실패 대응은 [CLI](cli.md)에 있습니다.
 
 앱을 열 때는 투명한 `CliLaunchActivity`가 main thread에서 작업 상태를 다시 확인합니다. 실행 중인 작업이 있으면 Live로 전환하지 않습니다. 상태 조회는 `CommandStore`의 메모리 snapshot을 읽으며 파일 기록은 상태 전환 때만 수행합니다.
+
+녹화 준비·화면 인계 중 도착한 record.stop은 CommandCoordinator가 보관하고 실제 recordingStarted 콜백 뒤 현재 host에 전달합니다. 준비 중 정지가 다음 화면으로 사라지거나 녹화를 다시 시작하지 않도록 합니다.
+
+CliLaunchActivity는 Dual·Multi에서 Live로 돌아갈 때 CliNavigationHost의 closeForNavigation 완료를 기다립니다. 이전 CameraX 그래프가 닫히기 전에 MainActivity가 다시 카메라를 열지 않도록 합니다.

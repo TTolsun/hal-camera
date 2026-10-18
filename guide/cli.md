@@ -115,7 +115,11 @@ PIP 크기는 `--pip-preview-size WIDTHxHEIGHT`, `--pip-photo-size WIDTHxHEIGHT`
 
 Dual은 `dual cameras`에서 ID를 고른 뒤 `dual preview|capture|record --camera ID --first ID --second ID`로 실행합니다. 사진·수동 제어는 Camera2에서 지원하며, 영상은 두 개의 무음 MP4로 저장하고 `record stop`으로 종료합니다. 물리 ID가 있어도 조합의 구성 성공까지 보장하지 않습니다.
 
-Multi로 함께 열 수 있는 카메라 조합은 `multi cameras`로 조회합니다. 카메라를 열지 않고 화면도 바꾸지 않습니다. `combinations`는 기기가 동시 사용을 알린 조합(`advertised: true`)을 먼저 나열하며, 각 카메라의 기본 프리뷰·사진 크기를 함께 보여 줍니다. `cameras`의 `preview_sizes`와 `photo_sizes`는 Multi가 카메라마다 제공하는 크기입니다. CameraX는 최대 `camerax_max_devices`대까지 엽니다. Android 10 이하에서는 `supported: false`와 사유를 반환합니다. Multi 프리뷰·촬영·녹화 명령은 아직 제공하지 않습니다.
+Multi로 함께 열 수 있는 카메라 조합은 `multi cameras`로 조회합니다. 카메라를 열지 않고 화면도 바꾸지 않습니다. `combinations`는 기기가 동시 사용을 알린 조합(`advertised: true`)을 먼저 나열하며, 각 카메라의 기본 프리뷰·사진 크기를 함께 보여 줍니다. `cameras`의 `preview_sizes`와 `photo_sizes`는 Multi가 카메라마다 제공하는 크기입니다. CameraX는 최대 `camerax_max_devices`대까지 엽니다. Android 10 이하에서는 `supported: false`와 사유를 반환합니다. Android 11 이상에서 `multi preview|capture|record --cameras 1,0 [--engine Camera2|CameraX]`로 실행합니다. `--cameras`는 화면 순서이며, `--preview-sizes 1280x720,1280x720`과 `--photo-sizes 1920x1440,1920x1440`도 같은 순서로 카메라마다 하나씩 지정합니다. 지원하지 않는 조합·크기는 `PREFLIGHT_FAILED`로 거부하며 자동 대체하지 않습니다.
+
+Multi 녹화는 기본으로 마이크 소리를 포함하며, `--no-audio`이면 마이크 권한 없이 무음으로 녹화합니다. `record stop`으로 종료합니다. CLI는 권한 대화상자를 띄우지 않으므로 소리가 필요하면 앱에서 마이크 권한을 먼저 허용하세요.
+
+결과의 `cameras`에는 카메라별 `camera_id`, `saved`, `error`가 들어갑니다. 회수 파일은 `multi_요청ID_카메라ID.jpg|mp4`이며, 사진 일부가 실패하면 `CAPTURE_FAILED`와 성공한 파일을 함께 보존합니다. 영상은 기존 Multi의 묶음 저장 규칙을 따르므로 하나라도 실패하면 전체 영상을 롤백합니다. 녹화 중 사진과 카메라별 제어·측광은 아직 CLI에서 제공하지 않습니다.
 
 </details>
 
@@ -154,7 +158,7 @@ adb shell sh /data/local/tmp/halcam preview --camera 0 --mode Video --video-size
 - 현재 프리뷰·CLI 녹화를 유지하며 조절하려면 `live set --zoom 2`, 제어 초기화는 `live reset`을 사용합니다. 생략한 제어는 유지합니다.
 - `meter --x 0.5 --y 0.5 --meter focus`는 가운데 초점, `--meter exposure`는 노출 측광입니다. 명령 접수와 센서 적용은 다르므로 `live info`·사진 메타데이터로 실제 값을 확인합니다.
 
-`live info`, `meter`, `events`, `preview stop`, `live set/reset`은 현재 열린 Live 또는 Dual 화면에 적용됩니다. 엔진이 지원하지 않는 제어는 거부됩니다.
+`live info`, `meter`, `events`, `preview stop`, `live set/reset`은 현재 열린 Live 또는 Dual 화면에 적용됩니다. Multi에서는 `live info`, `events`, `preview stop`과 CLI 녹화의 `record stop`을 지원합니다. 엔진이 지원하지 않는 제어는 거부됩니다.
 
 `live info`의 이벤트는 `session_id`로 메인·Service PIP를 구분하고 `frame_number`·`sensor_timestamp_ns`로 같은 세션의 콜백을 연결합니다. 없는 값은 `null`이며, 앱 관측 시각인 `at_ns`와 센서 시각은 각각 문자열로 보존합니다. 센서 시각을 앱 시각과 비교하려면 해당 카메라의 timestamp source가 REALTIME인지 확인해야 합니다.
 

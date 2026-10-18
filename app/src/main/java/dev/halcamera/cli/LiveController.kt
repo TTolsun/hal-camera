@@ -15,6 +15,7 @@ class LiveController(private val commands: CliExecution, private val driver: Dri
         fun cancelEvents()
         fun inspect(command: CliCommand)
         fun dual(command: CliCommand)
+        fun multi(command: CliCommand)
         fun snapshot(done: (Result<PhotoResult>) -> Unit)
         fun streamInfo(): Map<String, Any?>
         fun photoLabels(): List<String>
@@ -51,6 +52,7 @@ class LiveController(private val commands: CliExecution, private val driver: Dri
                 driver.inspect(command)
             }
             Flow.DUAL -> { commands.beginHandover(); driver.dual(command); pending = null }
+            Flow.MULTI -> { commands.beginHandover(); driver.multi(command); pending = null }
             Flow.STOP_PREVIEW -> {
                 submitted = true
                 commands.state(command.id, "running")

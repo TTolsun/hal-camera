@@ -135,6 +135,28 @@ if [ -n "${TEST_REMOTE:-}" ]; then eval ". ./halcam.sh $TEST_REMOTE"; else . ./h
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertIn("--method live.info", calls)
 
+    def test_multi_diagnostics_use_advertised_preview_screens(self):
+        for args in (["live", "info"], ["preview", "stop"], ["events"]):
+            proc, calls = self.run_client(args, screen="multi")
+            self.assertEqual(proc.returncode, 0, proc.stderr)
+            self.assertNotIn("am start", calls)
+
+    def test_multi_capture_forwards_camera_and_size_order_without_single_camera_default(self):
+        proc, calls = self.run_client(["multi", "capture", "--cameras", "1,0", "--engine", "CameraX",
+                                       "--preview-sizes", "640x480,1280x720", "--photo-sizes", "640x480,640x480"])
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        for value in ("--method multi.capture", "cameras:s:1,0", "engine:s:CameraX",
+                      "preview_sizes:s:640x480,1280x720", "photo_sizes:s:640x480,640x480"):
+            self.assertIn(value, calls)
+        self.assertNotIn("camera:s:", calls)
+
+    def test_multi_record_returns_when_started_and_can_disable_sound(self):
+        proc, calls = self.run_client(["multi", "record", "--cameras", "3,0", "--no-audio"],
+                                      result={"state": "running", "completed": False, "result": {"recording": True}})
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertIn("audio:b:false", calls)
+        self.assertIn("record stop", proc.stdout)
+
     def test_results_do_not_launch_camera(self):
         proc, calls = self.run_client(["results", "show", "--run", "20261009-123000-123"])
         self.assertEqual(proc.returncode, 0, proc.stderr)

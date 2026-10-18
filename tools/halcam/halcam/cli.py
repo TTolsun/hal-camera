@@ -113,12 +113,25 @@ def parser():
     record_stop.add_argument("--transfer-timeout", type=positive, default=60)
     record_stop.add_argument("--wait-timeout", type=positive, default=60)
     common(record_commands.add_parser("snapshot"))
-    multi = commands.add_parser("multi", help="List camera sets Multi can open together")
+    multi = commands.add_parser("multi", help="Control independent concurrent cameras")
     common(multi)
     multi_commands = multi.add_subparsers(dest="multi_command", required=True)
     multi_cameras = multi_commands.add_parser("cameras")
     common(multi_cameras)
     execution_options(multi_cameras)
+    for name in ("preview", "capture", "record"):
+        task = multi_commands.add_parser(name)
+        common(task)
+        task.add_argument("--cameras", required=True)
+        task.add_argument("--engine", choices=("Camera2", "CameraX"))
+        task.add_argument("--preview-sizes")
+        task.add_argument("--photo-sizes")
+        if name == "record":
+            task.add_argument("--no-audio", action="store_true")
+        if name == "capture":
+            task.add_argument("--output", required=True)
+            task.add_argument("--transfer-timeout", type=positive, default=60)
+        execution_options(task)
     pip = commands.add_parser("pip", help="Read PIP candidates for the current preview")
     common(pip)
     pip_commands = pip.add_subparsers(dest="pip_command", required=True)
@@ -299,7 +312,8 @@ def execute(args, context):
         status = raise_app_error(adb.read("/v1/status"))
         if status.get("busy"):
             raise CliError("BUSY", "An app operation is already running")
-        target_screen = "dual" if status.get("screen") == "dual" and spec(hello, operation, "current_screen") else "live"
+        screens = hello.get("preview_screens", ("live", "dual"))
+        target_screen = status.get("screen") if status.get("screen") in screens and spec(hello, operation, "current_screen") else "live"
         if not status.get("foreground") or status.get("screen") != target_screen:
             adb.launch()
             deadline = time.monotonic() + 10

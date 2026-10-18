@@ -17,6 +17,8 @@ interface CliHost {
 interface CliControlsHost { fun tune(options: CliOptions?, reset: Boolean): Map<String, Any?> }
 interface CliRecordingHost { fun stopRecording(command: CliCommand) }
 interface CliSnapshotHost { fun snapshot(command: CliCommand) }
+/** A preview screen must release its cameras before the launcher may bring Live forward. */
+interface CliNavigationHost { fun closeForNavigation(done: () -> Unit) }
 
 data class CliArtifact(val name: String, val mimeType: String, val uri: Uri)
 

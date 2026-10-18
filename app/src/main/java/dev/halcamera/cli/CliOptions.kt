@@ -8,6 +8,8 @@ data class CliOptions(val values: Map<String, String>) {
         if (values.isEmpty() || values.keys.any { it !in KEYS }) invalid("Unknown or empty options")
         values.forEach { (key, value) ->
             when (key) {
+                "cameras" -> CliMultiOptions.ids(value)
+                "preview_sizes", "photo_sizes" -> CliMultiOptions.sizes(value)
                 "limit" -> if (value.toIntOrNull() !in dev.halcamera.benchmark.domain.RunRetention.OPTIONS) invalid("limit must be 0 (unlimited), 10, 20, ... or 100")
                 "build", "commit", "branch", "note" -> if (value.length > 500 || value.any { it == '\n' || it == '\r' || it == '\u0000' }) invalid("Label must be a single line of at most 500 characters")
                 "zoom" -> number(value, 0.01, 1000.0)

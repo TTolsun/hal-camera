@@ -34,7 +34,7 @@ class CliPreflight(private val device: Device) {
         } else if (spec.camera && command.camera !in device.cameraIds()) {
             throw CliFailure("UNSUPPORTED_CAMERA", "Camera is not independently openable")
         }
-        if (screen != "live" && !(screen == "dual" && spec.currentScreen))
+        if (screen != "live" && !(screen in CliCommands.previewScreens && spec.currentScreen))
             throw CliFailure("APP_NOT_FOREGROUND", "Open Live before executing a camera command")
     }
 }
