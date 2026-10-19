@@ -98,7 +98,8 @@ class LiveIndicator(context: Context) : LinearLayout(context) {
         eis.setTextColor(if (status.warning != null) Look.statusWarn else Look.onDarkMuted)
     }
 
-    fun bindSizes(streams: Map<*, *>?) = bindSizes(LiveStreamReadout.from(streams))
+    fun bindSizes(streams: Map<*, *>?) = bindSizes(LiveStreamReadout.from(streams),
+        if (streams?.get("portrait") != null) "open Depth and Portrait" else "open Live Streams")
 
     internal fun bindSizes(value: LiveStreamReadout, action: String = "open Live Streams", selectedLine: Int? = null) {
         sizes.maxLines = maxOf(2,value.text.count { it == '\n' }+1)

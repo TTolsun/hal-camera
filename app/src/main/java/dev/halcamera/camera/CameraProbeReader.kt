@@ -88,6 +88,7 @@ class CameraProbeReader(private val manager: CameraManager, private val extraDev
         sections += guarded("Identity") { identity(id, physicalOf, c) }
         sections += guarded("Capabilities") { capabilities(c) }
         sections += guarded("Depth") { depthSupport(c).probeRows(physicalOf == null) }
+        sections += guarded("Portrait · Manufacturer Bokeh") { portraitSupport(manager, id, physicalOf == null).probeRows() }
         sections += guarded("Sensor") { sensor(c) }
         sections += guarded("Lens") { lens(c) }
         sections += guarded("Control") { control(c) }

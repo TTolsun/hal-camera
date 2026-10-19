@@ -9,6 +9,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.widget.Button
 import dev.halcamera.MainActivity
+import dev.halcamera.updateCameraChoices
 import dev.halcamera.camera.zoomRange
 import dev.halcamera.telemetry.FlightRecorder
 import java.io.File

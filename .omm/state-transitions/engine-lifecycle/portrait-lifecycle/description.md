@@ -1,0 +1,1 @@
+Depth 메뉴의 Off·Portrait (Bokeh)·Depth Map을 구분합니다. Portrait 선택은 기존 close(done) 뒤 CameraExtensionSession을 열며, 첫 표시 프레임 이후 셔터를 허용합니다. JPEG를 받기 전 종료되면 촬영을 실패로 한 번 완료하고, 이미 받은 JPEG의 저장은 마칠 수 있습니다. Photo·Video·카메라·엔진 전환과 새 CLI 촬영은 Portrait를 종료합니다. 실패 뒤에도 Photo 복귀와 다른 해상도 선택을 허용합니다.

@@ -1,0 +1,26 @@
+{
+  "model": "SM-S936N",
+  "api": 36,
+  "cameras": [
+    {
+      "camera": "0",
+      "bokehDepthJpegSizes": [],
+      "readError": null
+    },
+    {
+      "camera": "1",
+      "bokehDepthJpegSizes": [],
+      "readError": null
+    },
+    {
+      "camera": "2",
+      "bokehDepthJpegSizes": [],
+      "readError": null
+    },
+    {
+      "camera": "3",
+      "bokehDepthJpegSizes": [],
+      "readError": null
+    }
+  ]
+}

@@ -25,7 +25,9 @@ internal data class LiveStreamReadout(val text: String, val description: String)
             val description = active.joinToString(", ") { (label, size) ->
                 "${label.name}${if (label.key == "recording") " $format" else ""} $size"
             }
-            return LiveStreamReadout(text, description)
+            val portrait = value("portrait")
+            return LiveStreamReadout(if (portrait != null) "Portrait · $text" else text,
+                if (portrait != null) "$portrait, $description" else description)
         }
 
         /** Multi: one line per camera, numbered like its Split name bar. */

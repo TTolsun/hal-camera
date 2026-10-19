@@ -19,6 +19,9 @@ class CliStoreInstrumentation : Instrumentation() {
     private var lintChecks = false
     private var splitDrag = false
     private var depthChecks = false
+    private var portraitChecks = false
+    private var portraitMetadata = false
+    private var portraitUi = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
         exportReports = arguments?.getString("export_reports") == "true"
@@ -31,10 +34,26 @@ class CliStoreInstrumentation : Instrumentation() {
         lintChecks = arguments?.getString("lint_checks") == "true"
         splitDrag = arguments?.getString("split_drag") == "true"
         depthChecks = arguments?.getString("depth_checks") == "true"
+        portraitChecks = arguments?.getString("portrait_checks") == "true"
+        portraitMetadata = arguments?.getString("portrait_metadata") == "true"
+        portraitUi = arguments?.getString("portrait_ui") == "true"
         start()
     }
 
     override fun onStart() {
+        if (portraitChecks || portraitMetadata || portraitUi) {
+            try {
+                val result = when {
+                    portraitMetadata -> dev.halcamera.ui.PortraitChecks.metadata(this)
+                    portraitUi -> dev.halcamera.ui.PortraitChecks.uiChecks(this)
+                    else -> dev.halcamera.ui.PortraitChecks.run(this)
+                }
+                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
+            } catch (error: Throwable) {
+                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "PORTRAIT_CHECKS_FAILED: ${error.stackTraceToString()}\n") })
+            }
+            return
+        }
         if (depthChecks) {
             try {
                 val result = dev.halcamera.ui.DepthMapChecks.run(this)

@@ -1,0 +1,1 @@
+MainCameraPicker는 Live의 공개 카메라 선택과 공통 CameraLabel·배율 표시를 담당합니다. 녹화·저장·CLI·종료 처리 중 선택을 막고, 카메라가 바뀌면 Depth·Portrait를 종료하며 줌과 렌즈별 제어를 초기화합니다. restartCamera는 기존 엔진의 close(done) 뒤 선택한 카메라를 엽니다. 버튼과 핀치는 applyZoom을 공유하며 Depth·Portrait에서는 배율 변경을 거절합니다.

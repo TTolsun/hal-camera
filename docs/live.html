@@ -34,6 +34,7 @@
 <p>Photo로 한 장을 찍고, Video로 움직임을 담아 보세요. 처음에는 기본값이면 충분합니다.</p>
 <ul>
 <li><strong><a href="#live에서-촬영하세요">촬영</a></strong> · 사진·연사·AEB·동영상을 촬영합니다.</li>
+<li><strong><a href="#제조사-portrait로-배경을-흐리세요">Portrait</a></strong> · Depth 메뉴에서 제조사 Bokeh 사진을 선택합니다.</li>
 <li><strong><a href="#수동-촬영-조건을-고정하세요">수동 설정</a></strong> · ISO·노출 시간·초점을 고정합니다.</li>
 <li><strong><a href="#live-스트림을-설정하세요">스트림 설정</a></strong> · 출력 크기·FPS·포맷을 바꿉니다.</li>
 <li><strong><a href="#pip로-보이는-구도를-저장하세요">PIP</a> · <a href="#여러-카메라를-함께-촬영하세요">Multi</a></strong> · 보조 화면을 합성하거나 여러 카메라로 촬영합니다.</li>
@@ -48,11 +49,23 @@
 <p><strong>기본 사진은 카메라가 만든 JPEG 한 장입니다.</strong> <code>DCIM/HALCamera</code>에 저장하며, 촬영 메타데이터 JSON도 남깁니다.</p>
 <p><a href="#live-스트림을-설정하세요">JPEG 목록</a>에서 YUV를 고르면 앱이 변환한 JPEG를 저장합니다. Camera2에서 RAW를 켜면 DNG도 저장합니다.</p>
 <p><strong>모드나 엔진을 바꾸면 새 촬영으로 시작합니다.</strong> PIP·스트림·줌·촬영 제어는 초기화됩니다. Callback의 고정 시간은 사용자 설정으로 유지합니다.</p>
+<h3 id="제조사-portrait로-배경을-흐리세요">제조사 Portrait로 배경을 흐리세요</h3>
+<ol>
+<li><code>Lab → Probe</code>에서 카메라별 <code>Portrait · Manufacturer Bokeh</code> 지원 여부와 전용 미리보기·JPEG 해상도를 확인합니다.</li>
+<li>Live의 <code>Depth → Portrait (Bokeh)</code>를 선택합니다.</li>
+<li>JPEG 해상도를 고릅니다. 각 항목에 함께 구성할 미리보기 해상도를 표시합니다.</li>
+<li>미리보기가 준비되면 가운데 셔터로 촬영하고, 저장 완료 뒤 갤러리에서 JPEG를 확인합니다.</li>
+<li>일반 촬영으로 돌아가려면 <code>Photo</code>나 <code>Video</code>를 누릅니다. <code>Depth → Off</code>로도 Photo로 돌아갑니다.</li>
+</ol>
+<p><strong>Portrait는 제조사가 처리한 컬러 미리보기와 JPEG를 받는 촬영 모드입니다.</strong> Depth 메뉴에서 선택하지만 센서 Depth 맵을 받는 기능은 아닙니다. <code>DEPTH_OUTPUT</code>이 없는 카메라도 Bokeh 확장을 제공할 수 있습니다. 이 앱의 제조사 Portrait는 Android 12 / API 31 이상에서 Camera2 확장 세션을 사용합니다.</p>
+<p>선택하면 기존 카메라를 닫고 표시한 해상도로 세션을 엽니다. 나열된 크기라도 조합에 따라 제조사가 거절할 수 있으며, 다른 크기로 자동 대체하지 않습니다. 세션 구성 후 첫 미리보기 프레임은 15초, 촬영 요청 후 JPEG 수신은 60초까지 기다리고 실패 이유를 표시합니다. 실패 뒤에는 Depth 메뉴에서 해상도를 다시 고르거나 Photo로 돌아가세요.</p>
+<p>Portrait에서는 동영상·RAW·YUV 사진·연사·AEB·PIP·줌·터치 측광·수동 제어를 제공하지 않습니다. 배경 흐림의 모양과 강도는 제조사가 정합니다. JPEG와 <code>manufacturer_bokeh</code> 촬영 메타데이터는 일반 사진과 같은 저장 경로에 남고 Benchmark JSON이나 진단 ZIP에 이미지 픽셀을 넣지 않습니다.</p>
+<p>같은 모드로 Lab에서 돌아오거나 앱을 다시 표시하면 Portrait 해상도를 유지합니다. 카메라·엔진을 바꾸거나 일반 Live Streams 설정을 적용하면 Portrait를 종료합니다. 크기 표시는 일반 Live Streams 대신 Depth 선택 메뉴를 엽니다. 새 CLI 촬영 요청은 일반 Photo·Video 구성을 사용하며 Portrait를 이어받지 않습니다.</p>
 <h3 id="depth-맵을-보세요">Depth 맵을 보세요</h3>
 <ol>
 <li><code>Lab → Probe</code>에서 카메라의 <code>Depth</code> 섹션을 확인합니다.</li>
 <li>Live로 돌아와 카메라를 선택합니다.</li>
-<li>하단의 <code>Depth</code>를 누르고 <code>DEPTH16</code> 해상도를 선택합니다. 지원하지 않거나 정보를 읽지 못한 카메라는 이유를 표시합니다.</li>
+<li>하단의 <code>Depth → Depth Map</code>에서 <code>DEPTH16</code> 해상도를 선택합니다. 지원하지 않거나 정보를 읽지 못한 카메라는 Depth 메뉴에 이유를 표시합니다.</li>
 <li>컬러 화면으로 돌아가려면 <code>Photo</code> 또는 <code>Video</code>를 누릅니다. <code>Depth → Off</code>로도 Photo로 돌아갈 수 있습니다.</li>
 </ol>
 <p><strong>Depth는 Camera2의 깊이 맵만 표시하는 보기 모드입니다.</strong> 선택하면 기존 카메라를 닫은 뒤 Depth 전용 세션을 엽니다. 컬러와 Depth를 같은 요청에서 받을 수 없는 기기에서도 사용할 수 있으며, 컬러와 정렬된 합성 화면은 제공하지 않습니다. 사진·동영상 저장, 줌·터치 측광·수동 제어와 PIP는 사용할 수 없습니다.</p>

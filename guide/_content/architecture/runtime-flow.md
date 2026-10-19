@@ -7,6 +7,7 @@ sources:
   - tools/halcam/halcam/cli.py
   - tools/halcam/halcam/download.py
   - app/src/main/java/dev/halcamera/MainActivity.kt
+  - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
   - app/src/main/java/dev/halcamera/GalleryActivity.kt
   - app/src/main/java/dev/halcamera/camera/MediaLibrary.kt
   - app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt
@@ -40,6 +41,8 @@ verifications: []
 Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 동작으로 이어집니다.
 
 Live의 Depth 보기는 `DepthCameraEngine → ImageReader → DepthFrame → DepthMapView`로 연결합니다. 컬러 촬영과 분리된 보기이며, Telemetry에는 버퍼의 시각·크기·형식과 capture 콜백만 기록합니다. 맵 픽셀을 벤치마크나 incident ZIP의 입력으로 전달하지 않습니다. 사용 순서는 [Depth 맵 보기](live.md#depth-맵을-보세요)에 있습니다.
+
+같은 Depth 메뉴의 Portrait는 `PortraitCameraEngine → CameraExtensionSession → JPEG ImageReader → MediaLibrary`로 연결합니다. 제조사 Bokeh가 적용된 컬러 사진을 저장하며 별도의 센서 Depth 맵을 받지 않습니다. 확장 처리 이벤트는 일반 Camera2 프레임 지표와 구분하고, 사진 픽셀은 측정 파일에 넣지 않습니다.
 
 벤치마크는 별도 화면인 `BenchmarkActivity`가 준비를 마친 뒤 `BenchmarkRunner.start()`를 호출하여 시작합니다.
 
