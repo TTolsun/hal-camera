@@ -1,0 +1,139 @@
+{
+  "model": "SM-S936N",
+  "android": "16",
+  "api": 36,
+  "checks": [
+    {
+      "scenario": "preview",
+      "camera": "0",
+      "preview": "1440x1080",
+      "jpeg": "640x480",
+      "result": "PASS"
+    },
+    {
+      "scenario": "preview",
+      "camera": "0",
+      "preview": "1440x1080",
+      "jpeg": "4080x3060",
+      "result": "PASS"
+    },
+    {
+      "scenario": "capture",
+      "camera": "0",
+      "jpeg": "4080x3060",
+      "name": "HAL_20261020_021604_278_3768e9_JPEG.jpg",
+      "bytes": 1601011,
+      "sha256": "0ea4e9bf5716eeb6ccb92eeb8fe8cb99921e21474987cb7eefd3d380bc3df4b3",
+      "encodedWidth": 4080,
+      "encodedHeight": 3060,
+      "exifOrientation": 6,
+      "effect": "manufacturer_bokeh",
+      "result": "PASS"
+    },
+    {
+      "scenario": "return_to_photo",
+      "camera": "0",
+      "result": "PASS"
+    },
+    {
+      "scenario": "preview",
+      "camera": "1",
+      "preview": "1440x1080",
+      "jpeg": "640x480",
+      "result": "PASS"
+    },
+    {
+      "scenario": "preview",
+      "camera": "1",
+      "preview": "1440x1080",
+      "jpeg": "4000x3000",
+      "result": "PASS"
+    },
+    {
+      "scenario": "capture",
+      "camera": "1",
+      "jpeg": "4000x3000",
+      "name": "HAL_20261020_021607_237_a4840c_JPEG.jpg",
+      "bytes": 3815626,
+      "sha256": "7c4a48cae6b75a7a296d1df7bb475750d1c84f53f550f5617b74b4a8d8daa2e3",
+      "encodedWidth": 4000,
+      "encodedHeight": 3000,
+      "exifOrientation": 8,
+      "effect": "manufacturer_bokeh",
+      "result": "PASS"
+    },
+    {
+      "scenario": "return_to_photo",
+      "camera": "1",
+      "result": "PASS"
+    },
+    {
+      "scenario": "preview",
+      "camera": "2",
+      "preview": "1440x1080",
+      "jpeg": "640x480",
+      "result": "PASS"
+    },
+    {
+      "scenario": "preview",
+      "camera": "2",
+      "preview": "1440x1080",
+      "jpeg": "4000x3000",
+      "result": "PASS"
+    },
+    {
+      "scenario": "capture",
+      "camera": "2",
+      "jpeg": "4000x3000",
+      "name": "HAL_20261020_021609_825_fc7fe1_JPEG.jpg",
+      "bytes": 1315877,
+      "sha256": "6841ee864c017e7897e9eccace76b460899cbaf1e4bf15435ee4d58e895d9e10",
+      "encodedWidth": 4000,
+      "encodedHeight": 3000,
+      "exifOrientation": 6,
+      "effect": "manufacturer_bokeh",
+      "result": "PASS"
+    },
+    {
+      "scenario": "return_to_photo",
+      "camera": "2",
+      "result": "PASS"
+    },
+    {
+      "scenario": "preview",
+      "camera": "3",
+      "preview": "1440x1080",
+      "jpeg": "640x480",
+      "result": "PASS"
+    },
+    {
+      "scenario": "preview",
+      "camera": "3",
+      "preview": "1440x1080",
+      "jpeg": "3392x2544",
+      "result": "PASS"
+    },
+    {
+      "scenario": "capture",
+      "camera": "3",
+      "jpeg": "3392x2544",
+      "name": "HAL_20261020_021612_309_78e803_JPEG.jpg",
+      "bytes": 2811331,
+      "sha256": "5df424c2290de14d3aa3e447664b3b931aa49173556792cd97ede28c8dcc0e94",
+      "encodedWidth": 3392,
+      "encodedHeight": 2544,
+      "exifOrientation": 8,
+      "effect": "manufacturer_bokeh",
+      "result": "PASS"
+    },
+    {
+      "scenario": "return_to_photo",
+      "camera": "3",
+      "result": "PASS"
+    },
+    {
+      "scenario": "three_reopens_and_cancel_open",
+      "result": "PASS"
+    }
+  ]
+}

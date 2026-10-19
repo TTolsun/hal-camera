@@ -32,7 +32,7 @@ verifications: []
 
 | 화면 | 할 수 있는 일 |
 | --- | --- |
-| Live · `MainActivity` | 앱을 열면 나오는 화면입니다. 프리뷰를 보고 사진·동영상을 촬영하며 지원 카메라의 Depth 맵을 봅니다. |
+| Live · `MainActivity` | 앱을 열면 나오는 화면입니다. 프리뷰를 보고 사진·동영상을 촬영하며, 지원 카메라의 제조사 Portrait와 Depth 맵을 선택합니다. |
 | Multi · `ConcurrentCameraActivity` | 독립 카메라 장치별 사진·영상을 제공합니다. Live의 Multi · P와 Multi · V에서 엽니다. |
 | Lab · `WorkbenchActivity` | 기기 정보, 검사 도구, 저장된 결과와 설정을 엽니다. |
 | Benchmark · `BenchmarkActivity` | 정해진 조건(profile)으로 측정하고 결과를 저장합니다. |

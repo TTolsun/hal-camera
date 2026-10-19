@@ -9,3 +9,5 @@ Live Streams는 Lab 또는 Live의 크기 표시에서 열 수 있으며 카메�
 Multi도 Live의 close(done) 뒤 ConcurrentCameraActivity를 엽니다. Live에서 선택한 엔진을 전달하며 Multi 화면에서도 Camera2와 CameraX를 바꿀 수 있습니다. 이 화면은 모든 카메라의 onClosed를 기다린 뒤 Live로 돌아가며, Live는 기존 엔진 선택으로 프리뷰를 다시 엽니다.
 
 Depth 보기에서도 Lab 진입 전에 close(done)를 기다립니다. 촬영 모드를 바꾸지 않고 Lab에서 돌아오면 선택한 Depth 해상도를 다시 엽니다. Depth 보기 중에는 크기 표시로 Live Streams를 여는 동작을 비활성화합니다.
+
+Portrait에서도 Lab 진입 전에 close(done)를 기다리고 복귀 때 선택 해상도를 다시 엽니다. Portrait의 크기 표시를 누르면 일반 Live Streams 대신 Depth 메뉴를 엽니다. Lab에서 일반 Live Streams 설정을 적용하면 Portrait를 종료하고 해당 설정을 사용합니다.

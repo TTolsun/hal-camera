@@ -4,6 +4,11 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class LiveStreamReadoutTest {
+    @Test fun portraitNamesTheManufacturerEffectAndItsActualStreams() {
+        val readout = LiveStreamReadout.from(mapOf("portrait" to "Manufacturer Bokeh", "preview" to "1440x1080", "jpeg" to "4000x3000"))
+        assertEquals("Portrait · P 1440×1080   J 4000×3000", readout.text)
+        assertEquals("Manufacturer Bokeh, Preview 1440x1080, JPEG 4000x3000", readout.description)
+    }
     @Test fun depthOnlyDoesNotInventColorOutputs() {
         assertEquals(LiveStreamReadout("Depth 320×240", "Depth 320x240"),
             LiveStreamReadout.from(mapOf("depth" to "320x240")))

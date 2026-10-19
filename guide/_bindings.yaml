@@ -125,6 +125,12 @@ sources:
           - app/src/main/java/dev/halcamera/camera/DepthSupport.kt
           - app/src/main/java/dev/halcamera/camera/DepthFrame.kt
           - app/src/main/java/dev/halcamera/ui/DepthMapView.kt
+      camera-engines/portrait-engine:
+        evidence:
+          - app/src/main/java/dev/halcamera/MainPortraitBridge.kt
+          - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
+          - app/src/main/java/dev/halcamera/camera/PortraitCapabilities.kt
+          - app/src/main/java/dev/halcamera/camera/PortraitSupport.kt
       camera-engines/camera2-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
@@ -203,6 +209,9 @@ sources:
       screens/expert-screen:
         evidence:
           - app/src/main/java/dev/halcamera/MainActivity.kt
+      screens/expert-screen/camera-picker:
+        evidence:
+          - app/src/main/java/dev/halcamera/MainCameraPicker.kt
       # MainActivity 하나만으로도 스캔 입력이 6만 자 한도에 가깝습니다. 최근 촬영물 조회는 화면 배치와 별개의
       # 주제이므로 하위 요소로 내려, 둘 다 한도 안에서 스캔되게 합니다.
       screens/expert-screen/cli-adapter:
@@ -369,6 +378,8 @@ sources:
           - app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt
           - app/src/main/java/dev/halcamera/camera/DepthCapabilities.kt
           - app/src/main/java/dev/halcamera/camera/DepthSupport.kt
+          - app/src/main/java/dev/halcamera/camera/PortraitCapabilities.kt
+          - app/src/main/java/dev/halcamera/camera/PortraitSupport.kt
       screens/cts-screen:
         evidence:
           - app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt
@@ -596,6 +607,9 @@ sources:
     # data-flow 와 같은 규칙입니다: 요소 근거와 원고 인용의 합집합만 적습니다.
     evidence:
       - app/src/main/java/dev/halcamera/MainActivity.kt
+      - app/src/main/java/dev/halcamera/MainDepthBridge.kt
+      - app/src/main/java/dev/halcamera/MainPortraitBridge.kt
+      - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
       - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
       - app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt
       - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt
@@ -656,6 +670,11 @@ sources:
       engine-lifecycle/camerax-lifecycle:
         evidence:
           - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+      engine-lifecycle/portrait-lifecycle:
+        evidence:
+          - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
+          - app/src/main/java/dev/halcamera/MainPortraitBridge.kt
+          - app/src/main/java/dev/halcamera/MainDepthBridge.kt
       runner-sequence:
         evidence:
           - app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt
@@ -706,11 +725,13 @@ sources:
       - app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt
       - app/src/main/java/dev/halcamera/ui/FocusRing.kt
       - app/src/main/java/dev/halcamera/MainActivity.kt
+      - app/src/main/java/dev/halcamera/MainCameraPicker.kt
     elements:
       .:
         evidence:
           - app/src/main/java/dev/halcamera/ui/ExpandingZoomControl.kt
           - app/src/main/java/dev/halcamera/ui/FocusRing.kt
+          - app/src/main/java/dev/halcamera/MainCameraPicker.kt
 
   telemetry-facts:
     kind: fact

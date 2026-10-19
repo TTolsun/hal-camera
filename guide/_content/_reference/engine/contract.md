@@ -7,6 +7,7 @@ sources:
   - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
   - app/src/main/java/dev/halcamera/camera/DepthCameraEngine.kt
   - app/src/main/java/dev/halcamera/MainActivity.kt
+  - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
   - app/src/main/java/dev/halcamera/ui/LiveControlBar.kt
   - app/src/main/java/dev/halcamera/ui/FocusRing.kt
   - app/src/main/java/dev/halcamera/camera/LiveControls.kt
@@ -95,3 +96,5 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 | CameraX에서 EIS (Video)를 선택합니다. | VideoCapture가 연결된 녹화 중에 대조합니다. 녹화 전에는 실제 결과만 표시합니다. |
 
 사진 결과는 Camera2의 요청 태그와 CameraX의 `captureIntent`로 제외합니다. 설정 화면은 구성 실패 오류만 표시하며 이전 세션 결과 목록을 제공하지 않습니다.
+
+제조사 Portrait는 별도 `CameraExtensionSession`을 사용합니다. 일반 `CaptureResult` 지표와 EIS 대조를 표시하지 않으며 수동 제어·줌·측광도 제공하지 않습니다. Depth 메뉴에서 선택하지만 출력은 OEM 컬러 미리보기와 JPEG이며, 센서 Depth 맵과 구분합니다.

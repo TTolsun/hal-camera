@@ -3,6 +3,7 @@ based_on: [overall-architecture]
 confidence: code
 sources:
   - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+  - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
   - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
   - app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt
   - app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt
@@ -65,6 +66,8 @@ Camera2 Live의 프리뷰·사진·녹화·녹화 중 사진 요청은 기존 �
 수동 WB는 MANUAL_POST_PROCESSING과 관련 요청 키가 있고 수동 노출이 켜져 있을 때 gains와 transform을 사용합니다.
 
 색온도를 추정하지 않습니다.
+
+제조사 Portrait는 일반 Camera2Engine의 스트림에 섞지 않습니다. API 31 이상에서 PortraitCameraEngine이 BOKEH 확장 전용 미리보기·JPEG 크기를 재검사하고 CameraExtensionSession을 엽니다. JPEG는 MediaLibrary로 저장하며, 미리보기 15초·JPEG 60초 시간 제한과 CameraDevice.onClosed 이후 close(done) 완료 순서를 적용합니다.
 
 </details>
 
