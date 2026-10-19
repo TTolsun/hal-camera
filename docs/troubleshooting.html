@@ -31,14 +31,29 @@
   <main id="main-content" class="document">
     <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
     <h1 lang="en">Trace the cause.</h1><p>예상과 다른 결과가 나왔다면, 같은 조건의 기록부터 살펴보세요.</p>
-<p><strong>문제 직후 진단 ZIP부터 저장하세요.</strong> 아래에서 증상에 맞는 항목을 고릅니다.</p>
+<p><strong>처음 촬영에서 막혔다면 권한과 프리뷰부터 확인하세요.</strong> 촬영 중 생긴 문제는 <a href="#문제-발생-시-수집할-정보">진단 ZIP</a>을 바로 남깁니다.</p>
 <ul>
-<li><strong>프리뷰나 출력 구성이 실패한다면</strong> <a href="live.html#live-스트림을-설정하세요">Live 스트림 설정</a>에서 요청한 조합과 오류를 확인하세요.</li>
+<li><strong>권한을 거절했거나 첫 사진을 못 찾겠다면</strong> <a href="#첫-촬영에서-막혔을-때">첫 촬영 복구 순서</a>를 확인하세요.</li>
+<li><strong>출력 설정을 바꾼 뒤 구성이 실패한다면</strong> <a href="live.html#live-스트림을-설정하세요">Live 스트림 설정</a>에서 요청한 조합과 오류를 확인하세요.</li>
 <li><strong>Callback 값이 비어 있다면</strong> <a href="#callback에-값이-없을-때">관측 가능 여부와 대기 상태</a>를 구분하세요.</li>
-<li><strong>사진이 없거나 노출이 다르다면</strong> <a href="#사진-저장이나-노출이-예상과-다를-때">저장 포맷과 엔진별 조건</a>을 확인하세요.</li>
+<li><strong>YUV 사진이나 노출이 예상과 다르다면</strong> <a href="#사진-저장이나-노출이-예상과-다를-때">저장 포맷과 엔진별 조건</a>을 확인하세요.</li>
 <li><strong>실행 기록이나 CSV가 예상과 다르다면</strong> <a href="#실행-기록과-csv의-개수가-다를-때">필터와 결과 조건</a>을 확인하세요.</li>
 <li><strong>PC 명령이 끝나지 않는다면</strong> <a href="#cli-작업이-끝나지-않을-때">기존 요청의 상태</a>를 조회하세요.</li>
 </ul>
+<h2 id="첫-촬영에서-막혔을-때">첫 촬영에서 막혔을 때</h2>
+<p><strong>프리뷰가 없거나 카메라 권한을 거절했다면 다음 순서로 확인하세요.</strong></p>
+<ol>
+<li>Live에서 <code>Lab → Reconnect Camera</code>를 누릅니다.</li>
+<li>권한 창이 뜨면 허용합니다. 앱 설정이 열리면 카메라 권한을 허용하고 HAL CAMERA로 돌아옵니다.</li>
+</ol>
+<p>마이크 또는 Android 8–9의 저장소 권한을 거절했다면 Android 설정의 HAL CAMERA 앱 권한에서 다시 허용하세요.</p>
+<p>다른 카메라 앱에서 촬영 중이라면 촬영을 끝낸 뒤 다시 연결하세요. 출력 설정을 바꾼 뒤 실패했다면 <a href="live.html#live-스트림을-설정하세요">이전 설정 복원</a>을 확인합니다.</p>
+<p><strong>저장 안내가 없거나 사진을 찾지 못했다면 다음 항목을 확인하세요.</strong></p>
+<ol>
+<li>촬영 화면에 저장 완료 안내가 있었는지 확인합니다. 없었다면 화면에 남은 오류부터 읽으세요.</li>
+<li>앱 갤러리의 필터를 <code>전체</code> 또는 <code>사진</code>으로 바꾸고 방금 찍은 사진을 찾습니다. 사진을 열어 실제 이미지가 보이는지 확인하세요.</li>
+</ol>
+<p>확인이 끝나면 <a href="getting-started.html#첫-화면을-확인하세요">Quickstart의 첫 촬영</a>으로 돌아가세요. 같은 오류가 반복되면 아래 절차로 진단 자료를 남깁니다.</p>
 <p><span id="재현-자료를-모으세요"></span></p>
 <h2 id="문제-발생-시-수집할-정보">문제 발생 시 수집할 정보</h2>
 <ol>

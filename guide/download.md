@@ -16,7 +16,11 @@ title: Download
 
 ## 설치하고 첫 촬영을 시작하세요
 
-Assets에서 `HAL-Camera-*.apk`를 받은 뒤 [Quickstart](getting-started.md#apk를-설치하세요)를 따라 설치하고 첫 사진을 찍으세요.
+1. 설치할 Android 기기에서 위의 `최신 APK 받기`를 누릅니다.
+2. 릴리스 페이지 아래쪽의 `Assets`를 펼치고 `HAL-Camera-*.apk`를 받습니다.
+3. [Quickstart](getting-started.md#apk를-설치하세요)를 따라 APK를 설치하고 첫 사진을 찍습니다.
+
+첫 설치에는 `Source code`나 나머지 첨부 파일이 필요하지 않습니다. 파일 목록이 뜨지 않으면 페이지를 새로고침하고 `Assets`를 다시 여세요.
 
 서명 오류가 나면 기존 설치와 같은 서명의 APK를 받으세요. 앱을 삭제하면 내부 실행 기록이 사라집니다.
 
@@ -27,7 +31,7 @@ Assets에서 `HAL-Camera-*.apk`를 받은 뒤 [Quickstart](getting-started.md#ap
 - **`halcamera_cli-*.whl`** · PC에 Python 클라이언트를 설치할 때 사용합니다. Python 3.11 이상이 필요합니다.
 - **`SHA256SUMS.txt`** · 내려받은 파일의 SHA-256 해시를 확인할 때 사용합니다.
 
-기본 ADB 명령에는 Python 클라이언트가 필요하지 않습니다. `Source code` 파일은 설치용 APK가 아닙니다.
+기본 ADB 명령에는 Python 클라이언트가 필요하지 않습니다.
 
 </details>
 
