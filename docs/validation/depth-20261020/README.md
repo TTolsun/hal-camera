@@ -49,7 +49,15 @@ PROBE 요청 `0be1d193-a8ac-4ee0-8c88-f9bec825c01b`는 `succeeded`로 끝났으�
 
 실기기에서 `depth_checks=true` instrumentation도 `DEPTH_MAP_CHECKS_OK`로 통과했습니다. 합성 DEPTH16의 stride 해석, 중앙 거리 1.000 m, Android View 렌더링 및 접근성 설명을 확인한 결과이며 센서 출력 검증은 아닙니다.
 
-기기가 잠금 화면에 있어 LIVE의 미지원 선택 화면, 일반 프리뷰 유지 및 복귀 동작에 대한 실기기 UI 검증은 아직 완료하지 못했습니다. 잠금 해제 후 이어서 확인해야 합니다.
+잠금 해제 후 실기기 UI에서 다음을 확인했습니다.
+
+1. 공개 카메라 0·1·2·3 모두 컬러 프리뷰가 준비됐고, `Depth unavailable`과 `This camera does not advertise DEPTH_OUTPUT.` 안내가 표시됐습니다. 미지원 항목을 눌러도 Depth 세션을 시작하지 않았습니다.
+2. PROBE에서 `Depth` 검색 시 지원 여부·해상도·컬러 동시 요청·LIVE 안내가 검색됐으며, 검색 결과를 눌러 실제 Depth 사양 섹션으로 이동했습니다.
+3. Video에서 `Depth → Off · Return to Photo`를 선택해도 Video에 남는 문제를 발견했습니다. Video에서 Off를 현재 선택으로 표시하지 않도록 고치고, 같은 Depth 크기라는 이유로 Photo 복귀를 건너뛰지 않도록 수정했습니다.
+4. 수정한 APK를 재설치한 뒤 `Video → Depth → Off → Photo`를 반복해 Photo 선택과 `Live, preview running`을 확인했습니다. 홈 이동 후 복귀에서도 프리뷰가 다시 준비됐습니다.
+5. 회전 설정을 가로로 바꿔도 LIVE는 manifest의 기존 `portrait` 설정대로 세로 화면을 유지했습니다. 검증 후 기기의 원래 `lock 0` 설정을 복원했습니다. 실제 Depth 맵의 센서 방향 보정 검증은 아닙니다.
+
+수정 후 앱 JVM 테스트 907개와 `lintDebug`(오류·경고 없음), `assembleDebug`가 통과했습니다. 최종 앱 프로세스 로그에서 앱 충돌이나 카메라 세션 실패는 관측하지 않았습니다. `ashmem`의 pinning 폐기 안내와 Adreno/QSPM·`libpenguin.so` 관련 플랫폼 로그는 있었습니다.
 
 ## 실제 기기에서 남은 확인
 

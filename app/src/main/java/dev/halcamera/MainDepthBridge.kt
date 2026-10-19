@@ -9,7 +9,7 @@ import androidx.core.view.ViewCompat
 import dev.halcamera.camera.*
 import dev.halcamera.ui.*
 
-/** LIVE depth selection, display and controls; camera ownership stays with MainActivity. */
+/** LIVE depth UI; MainActivity owns the camera. */
 internal fun MainActivity.chooseDepth() {
     if (!resumed || closing || cli.active != null || recordingVideo || stoppingRecording || mediaBusy() ||
         pendingPermissionAction != null || cameraId.isEmpty()) return
@@ -20,11 +20,11 @@ internal fun MainActivity.chooseDepth() {
     val choices = listOf(LiveChoiceSheet.Choice("Off", "Return to Photo")) +
         sizes.map { LiveChoiceSheet.Choice("DEPTH16 · $it", "Camera2 · Depth-only view") } +
         if (support.available) emptyList() else listOf(LiveChoiceSheet.Choice("Depth unavailable", support.unavailableReason.orEmpty(), false))
-    LiveChoiceSheet.show(this, "Depth map", choices, sizes.indexOf(depthSize) + 1,
+    LiveChoiceSheet.show(this, "Depth map", choices, if (videoMode) -1 else sizes.indexOf(depthSize) + 1,
         content = Look.text(this, "${support.colorSummary}\nNear: bright · Far: dark · Black: invalid\nView only; photos and video are disabled.", 12, Look.onDarkMuted)) { index ->
         if (!resumed || closing || cli.active != null || recordingVideo || mediaBusy()) return@show
         val chosen = if (index == 0) null else sizes.getOrNull(index - 1) ?: return@show
-        if (chosen == depthSize) return@show
+        if (chosen == depthSize && !videoMode) { return@show }
         recorder.finish("depth_view_changed")?.let(::exportCliIncident)
         captureFeedback.clearResult()
         engineName = "Camera2"
