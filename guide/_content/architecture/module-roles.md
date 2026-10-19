@@ -94,7 +94,7 @@ verifications: []
 <details markdown="1" id="detail-f44ea46951" data-search-section>
 <summary>camera/</summary>
 
-- 엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다.
+- 엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다. `DepthCameraEngine`은 컬러 출력 없이 DEPTH16 맵만 받으며 `DepthFrame`이 순수 Kotlin으로 표시용 표본을 만듭니다.
 - `close(done)` 완료 전에 다음 카메라를 열지 않습니다.
 - 엔진 계약(`MediaCapture`, `LiveTuning`, `TouchMetering`)과 두 엔진의 구현, 두 엔진의 차이는 [Engine Comparison](engine.md)에 있습니다.
 - 벤치마크 RECORD 단계의 recorder 상태 기계는 `BenchmarkRecorder`가 담당하고 `Camera2Engine`은 그 호출을 위임합니다.

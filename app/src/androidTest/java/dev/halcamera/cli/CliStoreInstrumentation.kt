@@ -18,6 +18,7 @@ class CliStoreInstrumentation : Instrumentation() {
     private var multiSplit = false
     private var lintChecks = false
     private var splitDrag = false
+    private var depthChecks = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
         exportReports = arguments?.getString("export_reports") == "true"
@@ -29,10 +30,20 @@ class CliStoreInstrumentation : Instrumentation() {
         multiSplit = arguments?.getString("multi_split") == "true"
         lintChecks = arguments?.getString("lint_checks") == "true"
         splitDrag = arguments?.getString("split_drag") == "true"
+        depthChecks = arguments?.getString("depth_checks") == "true"
         start()
     }
 
     override fun onStart() {
+        if (depthChecks) {
+            try {
+                val result = dev.halcamera.ui.DepthMapChecks.run(this)
+                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
+            } catch (error: Throwable) {
+                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "DEPTH_MAP_CHECKS_FAILED: ${error.stackTraceToString()}\n") })
+            }
+            return
+        }
         if (splitDrag) {
             try {
                 val result = dev.halcamera.ui.SplitDragChecks.run(this)

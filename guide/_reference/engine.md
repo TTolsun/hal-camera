@@ -59,7 +59,7 @@ PIP와 Multi는 Android 11 이상에서 제공합니다. 저장물과 설정 방
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/MultiSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt`, `app/src/main/java/dev/halcamera/camera/MultiRecording.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -146,6 +146,7 @@ classDiagram
     class TouchMetering { <<interface>> }
     CameraEngine <|.. Camera2Engine
     CameraEngine <|.. CameraXEngine
+    CameraEngine <|.. DepthCameraEngine
     MediaCapture <|.. Camera2Engine
     MediaCapture <|.. CameraXEngine
     LiveTuning <|.. Camera2Engine
@@ -155,6 +156,8 @@ classDiagram
 ```
 
 점선 화살표는 인터페이스 구현을 뜻합니다. 실제로 사용할 수 있는 기능은 엔진의 실행 모드와 아래 조건에 따라 달라집니다.
+
+`DepthCameraEngine`은 LIVE의 깊이 맵 보기에서만 사용하는 Camera2 엔진입니다. `CameraEngine`만 구현하고 컬러·촬영·녹화·수동 제어·터치 측광은 제공하지 않습니다. `Photo` 또는 `Video`로 전환하면 기존 컬러 엔진을 다시 엽니다.
 
 | 인터페이스 | 담당하는 동작 | 구현 |
 | --- | --- | --- |
@@ -213,9 +216,9 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/DepthCameraEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -597,7 +600,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -814,7 +817,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review
+- 검토 상태: 관련 소스 변경됨: 재검토 필요
 
 </details>
 
@@ -834,11 +837,11 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
-| 원고 `contract` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
-| 원고 `camera2` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
-| 원고 `camerax` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
-| 원고 `comparison` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
+| 구조 원본 `overall-architecture` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
+| 원고 `contract` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
+| 원고 `camera2` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
+| 원고 `camerax` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
+| 원고 `comparison` | 관련 소스 변경됨: 재검토 필요 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
 
 <!-- omm:end id=status -->
 

@@ -4,6 +4,10 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class LiveStreamReadoutTest {
+    @Test fun depthOnlyDoesNotInventColorOutputs() {
+        assertEquals(LiveStreamReadout("Depth 320×240", "Depth 320x240"),
+            LiveStreamReadout.from(mapOf("depth" to "320x240")))
+    }
     @Test fun everyInactiveStreamIsHiddenFromBothReadouts() {
         val values = listOf("analysis", "jpeg", "raw", "recording", "pip", "pipYuv", "pipJpeg").associateWith { null } +
             mapOf("preview" to "1280x720", "composite" to "590x1280")

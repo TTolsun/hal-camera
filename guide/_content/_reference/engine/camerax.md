@@ -23,6 +23,8 @@ verifications: []
 
 **CameraXEngine은 CameraX use case로 Live 촬영과 제어를 제공하지만, 요청 키 일부는 CameraX가 정합니다.** Live 스트림 설정에서 Preview·YUV·JPEG 크기와 출력 활성화를 선택할 수 있습니다. 앱이 CameraX 1.6.2에 직접 넣는 Camera2 키에는 AE 잠금(`CONTROL_AE_LOCK`), AF 잠금 해제용 cancel trigger, 광학 보정(`LENS_OPTICAL_STABILIZATION_MODE`)이 있습니다. 엔진 자체는 use case bind, 줌, 수명 주기를 담당하고, 사진은 `CameraXStillCapture`, 녹화는 `CameraXLiveRecorder`, Live 제어와 터치 측광은 `CameraXControls`가 맡습니다.
 
+Depth 해상도를 선택하면 CameraX 세션을 해제하고 Camera2의 `DepthCameraEngine`으로 전환합니다. CameraX use case에 Depth 출력을 추가하지 않습니다. 표시와 촬영 제한은 [Depth 맵 보기](live.md#depth-맵을-보세요)를 확인하세요.
+
 ### CameraX PIP
 
 **PIP 목록에는 모든 후보를 표시하고 지원 불가가 확인된 항목만 비활성화합니다.** Physical 후보는 `Camera2 only`로 표시합니다. Service 후보는 CameraX가 제공하는 동시 조합에 포함되어야 합니다. 제조사·칩셋·카메라 ID에 따른 예외는 두지 않습니다.

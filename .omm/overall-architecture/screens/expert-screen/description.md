@@ -1,4 +1,4 @@
-MainActivity는 Live 런처입니다. CameraEngine을 선택하고 카메라 수명주기, 권한, 촬영 모드와 버튼 상태를 관리합니다. LiveReadings가 실시간 측정값을 갱신하고 IncidentActions가 이벤트 ZIP 저장과 공유를 담당합니다. Benchmark는 Lab에서 엽니다.
+MainActivity는 Live 런처로 CameraEngine 선택·카메라 수명주기·권한·촬영 모드·버튼 상태를 관리합니다. LiveReadings는 측정값을 갱신하고 IncidentActions는 이벤트 ZIP 저장·공유를 담당합니다. Benchmark는 Lab에서 엽니다.
 
 프리뷰의 제어·측정값·촬영 버튼 배치는 docs/design/APP-UI.md를 따릅니다. 아이콘 터치 영역은 48dp 이상이며 색·서체는 Look을 사용합니다.
 

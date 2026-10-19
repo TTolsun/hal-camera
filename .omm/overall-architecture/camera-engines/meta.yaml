@@ -6,6 +6,7 @@ kind: nested-class
 title: camera-engines
 children:
   - camera2-engine
+  - depth-engine
   - camerax-engine
   - endpoint-model
   - endpoint-resolver
