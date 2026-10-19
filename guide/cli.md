@@ -70,7 +70,7 @@ adb devices -l
 
 **아래의 짧은 명령은 `adb shell sh /data/local/tmp/halcam` 뒤에 붙입니다.** 전체 문법은 이 접두어에 `help all`을 붙여 확인합니다.
 
-Python 도구는 [선택 사항](#python-client)입니다. 전체 옵션은 `help all`, 수동 제어는 `help controls`로 조회하세요.
+Python 도구는 [선택 사항](#python-client)입니다. 수동 제어는 `help controls`로 조회하세요.
 
 <details markdown="1" id="cli-task-examples" data-search-section>
 <summary>촬영·스트림·벤치마크 예시</summary>
