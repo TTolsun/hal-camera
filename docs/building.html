@@ -43,8 +43,8 @@
 <pre><code class="language-powershell">.\gradlew.bat :app:assembleDebug
 </code></pre>
 </li>
-<li><p>JVM 단위 테스트를 실행합니다.</p>
-<pre><code class="language-powershell">.\gradlew.bat :app:testDebugUnitTest
+<li><p>JVM 단위 테스트와 Android lint를 실행합니다.</p>
+<pre><code class="language-powershell">.\gradlew.bat :app:testDebugUnitTest :app:lintDebug
 </code></pre>
 </li>
 <li><p>연결한 기기에 APK를 설치합니다.</p>
@@ -55,8 +55,12 @@
 </li>
 </ol>
 <p>PC에서 촬영·녹화·CTS를 실행하려면 <a href="cli.html">CLI</a>의 연결 절차를 따르세요.</p>
-<p>빌드·JVM 테스트 통과와 실제 기기 동작 검증은 별개입니다. 확인한 조건은 <a href="evidence.html">Validation</a>에 기록합니다.</p>
-<p><strong>다음 단계:</strong> <a href="live.html">Live</a>에서 설치한 앱의 첫 촬영을 확인하세요.</p>
+<p>빌드·JVM 테스트·lint 통과와 실제 기기 동작 검증은 별개입니다. 확인한 조건은 <a href="evidence.html">Validation</a>에 기록합니다.</p>
+<details id="release-signing" data-search-section>
+<summary>릴리스 APK와 서명</summary><p>릴리스는 <code>.\gradlew.bat :app:assembleRelease</code>로 빌드합니다.</p>
+<p>서명하려면 저장소 루트의 <code>keystore.properties</code>에 <code>storeFile</code>·<code>storePassword</code>·<code>keyAlias</code>·<code>keyPassword</code>를 설정합니다. 이 파일이 없으면 서명되지 않은 APK가 생성됩니다.</p>
+<p>키와 설정 파일은 커밋하지 마세요. 기존 앱을 업데이트하려면 같은 키로 서명해야 합니다. 서명이 다르면 앱을 삭제하지 말고 같은 서명의 APK를 준비하세요.</p>
+</details><p><strong>다음 단계:</strong> <a href="live.html">Live</a>에서 설치한 앱의 첫 촬영을 확인하세요.</p>
 
   </main>
   <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="https://github.com/TTolsun/hal-camera" target="_blank" rel="noopener noreferrer">GitHub</a></nav>

@@ -12,7 +12,7 @@ title: Benchmark
 ## 실행 조건을 확인하세요
 
 1. Live에서 `Lab → Benchmark`를 엽니다.
-2. 카메라와 [profile](glossary.md#profile)을 확인합니다. Live의 출력 설정과는 별개입니다.
+2. 카메라와 [profile](glossary.md#profile)을 확인합니다. Live의 엔진·출력 설정과 별개로 Camera2를 사용합니다.
 3. 측정을 실행하고 완료될 때까지 기다립니다.
 4. 판정과 `Run Details`를 확인합니다. 무효·표본 부족이면 사유를 확인한 뒤 다시 측정합니다.
 

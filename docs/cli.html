@@ -197,7 +197,7 @@ adb shell sh /data/local/tmp/halcam preview --camera 0 --mode Video --video-size
 <pre><code class="language-sh">adb shell sh /data/local/tmp/halcam benchmark run --camera 0
 </code></pre>
 <p>앱과 같은 <code>camera2-standard-v2</code> 프로파일로 측정하고 원본 JSON을 받습니다.</p>
-<p><strong>보고서 저장 성공과 측정·비교 가능 여부는 별개입니다.</strong> validity와 성능 저하 판정은 JSON에서 확인하세요.</p>
+<p><strong>보고서 저장 성공과 측정·비교 가능 여부는 별개입니다.</strong> 원본 JSON의 <code>validity</code>를 확인하세요. 비교 판정은 저장된 측정값으로 다시 계산합니다.</p>
 <p>프로파일은 고정이며 <code>--engine</code>, Live 스트림, <code>--no-audio</code>를 받지 않습니다. 크기를 자동 대체하거나 baseline을 자동 지정하지 않습니다.</p>
 <p>보고서에는 이미지 픽셀·녹화 MP4가 포함되지 않습니다.</p>
 <details>
@@ -208,14 +208,14 @@ adb shell sh /data/local/tmp/halcam preview --camera 0 --mode Video --video-size
 <pre><code class="language-sh">adb shell &quot;sh /data/local/tmp/halcam benchmark run --camera 0 --build &#39;Candidate A&#39; --note &#39;Same room&#39;&quot;
 </code></pre>
 <ul>
-<li><strong>목록·상세:</strong> <code>results list</code>, <code>results show --run ID</code>를 사용합니다.</li>
+<li><strong>목록·판정:</strong> <code>results list</code>, <code>results show --run ID</code>로 실행 목록과 현재 기준의 판정을 확인합니다.</li>
 <li><strong>명시한 두 실행 비교:</strong> <code>results compare --run ID --reference ID</code>를 사용합니다.</li>
 <li><strong>정상 기준 지정·해제:</strong> <code>baseline add --run ID</code>, <code>baseline remove --run ID</code>를 사용합니다.</li>
 <li><strong>JSON·CSV 회수:</strong> <code>results export --run ID</code>를 사용합니다.</li>
 <li><strong>실행과 baseline 등록 삭제:</strong> <code>results delete --run ID --confirm true</code>를 사용합니다.</li>
 </ul>
-<p>baseline이 없으면 변화량만 표시하며 REGRESSED 판정을 붙이지 않습니다.</p>
-<p><code>results compare</code>의 참조는 이번 비교에만 사용하고 저장된 baseline을 바꾸지 않습니다.</p>
+<p>baseline 없는 자동 비교는 이전 실행과의 변화량만 표시하며 REGRESSED 판정을 붙이지 않습니다.</p>
+<p><code>results compare</code>는 명시한 참조를 기준으로 저하·개선을 판정합니다. 참조는 이번 비교에만 사용하며 저장된 baseline을 바꾸지 않습니다.</p>
 </details><h3 id="cts와-다른-작업을-찾으세요">CTS와 다른 작업을 찾으세요</h3>
 <p>CTS는 아래 목록에서 나온 키를 그대로 사용합니다.</p>
 <pre><code class="language-sh">adb shell sh /data/local/tmp/halcam cts cases
