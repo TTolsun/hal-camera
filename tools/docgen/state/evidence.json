@@ -6,10 +6,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "025f44d5f3c7e34f",
+        "codeHash": "c896f57e566251f5",
         "modelHash": "0f722523cc241bb1",
         "at": "2026-10-19",
-        "commit": "14ca1ae2",
+        "commit": "b0648a05",
         "reviewer": "codex-user-authorized-depth-review",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
@@ -22,7 +22,7 @@
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "71377b456162e55482645967b3d5b22260d91223",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "0fa42b6713f8b20632ec77a6b4afd57cf3f80ebb",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "fde7bf3ae0a6f1a451fa84718a37d90052efd6da",
-          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "372ebb8c3844a595be6b2fb0c58a496d66c0487b",
+          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "1d8d7f6f32f0b2feaa59c279bb0d0a31481acf4b",
           "app/src/main/java/dev/halcamera/MultiCliBridge.kt": "52a5825ca1ec9d495a6ab76f5738bb5e1d7a1004",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "f9c6c4c5e045c737e5375f8c3c2ec283b6381891",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "2c93630441feea87cc093dd8aed8384cf45956f1",
@@ -386,10 +386,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "b744f92eb02a420a",
+        "codeHash": "19ab0340fcab873e",
         "modelHash": "66bd16d22ce9ca3f",
         "at": "2026-10-19",
-        "commit": "14ca1ae2",
+        "commit": "b0648a05",
         "reviewer": "codex-user-authorized-depth-review",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
@@ -402,7 +402,7 @@
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "71377b456162e55482645967b3d5b22260d91223",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "0fa42b6713f8b20632ec77a6b4afd57cf3f80ebb",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "fde7bf3ae0a6f1a451fa84718a37d90052efd6da",
-          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "372ebb8c3844a595be6b2fb0c58a496d66c0487b",
+          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "1d8d7f6f32f0b2feaa59c279bb0d0a31481acf4b",
           "app/src/main/java/dev/halcamera/MultiCliBridge.kt": "52a5825ca1ec9d495a6ab76f5738bb5e1d7a1004",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "f9c6c4c5e045c737e5375f8c3c2ec283b6381891",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "2c93630441feea87cc093dd8aed8384cf45956f1",
@@ -723,10 +723,10 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "025f44d5f3c7e34f",
+        "codeHash": "c896f57e566251f5",
         "modelHash": "8ffefe5ee952f837",
         "at": "2026-10-19",
-        "commit": "14ca1ae2",
+        "commit": "b0648a05",
         "reviewer": "codex-user-authorized-depth-review",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
@@ -739,7 +739,7 @@
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "71377b456162e55482645967b3d5b22260d91223",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "0fa42b6713f8b20632ec77a6b4afd57cf3f80ebb",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "fde7bf3ae0a6f1a451fa84718a37d90052efd6da",
-          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "372ebb8c3844a595be6b2fb0c58a496d66c0487b",
+          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "1d8d7f6f32f0b2feaa59c279bb0d0a31481acf4b",
           "app/src/main/java/dev/halcamera/MultiCliBridge.kt": "52a5825ca1ec9d495a6ab76f5738bb5e1d7a1004",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "f9c6c4c5e045c737e5375f8c3c2ec283b6381891",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "2c93630441feea87cc093dd8aed8384cf45956f1",
@@ -1008,10 +1008,10 @@
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "025f44d5f3c7e34f",
+        "codeHash": "c896f57e566251f5",
         "modelHash": "90c7c730cb5e8337",
         "at": "2026-10-19",
-        "commit": "14ca1ae2",
+        "commit": "b0648a05",
         "reviewer": "codex-user-authorized-depth-review",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
@@ -1024,7 +1024,7 @@
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "71377b456162e55482645967b3d5b22260d91223",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "0fa42b6713f8b20632ec77a6b4afd57cf3f80ebb",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "fde7bf3ae0a6f1a451fa84718a37d90052efd6da",
-          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "372ebb8c3844a595be6b2fb0c58a496d66c0487b",
+          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "1d8d7f6f32f0b2feaa59c279bb0d0a31481acf4b",
           "app/src/main/java/dev/halcamera/MultiCliBridge.kt": "52a5825ca1ec9d495a6ab76f5738bb5e1d7a1004",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "f9c6c4c5e045c737e5375f8c3c2ec283b6381891",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "2c93630441feea87cc093dd8aed8384cf45956f1",
@@ -1345,10 +1345,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "025f44d5f3c7e34f",
+        "codeHash": "c896f57e566251f5",
         "modelHash": "a882f52b4155cd27",
         "at": "2026-10-19",
-        "commit": "14ca1ae2",
+        "commit": "b0648a05",
         "reviewer": "codex-user-authorized-depth-review",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
@@ -1361,7 +1361,7 @@
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "71377b456162e55482645967b3d5b22260d91223",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "0fa42b6713f8b20632ec77a6b4afd57cf3f80ebb",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "fde7bf3ae0a6f1a451fa84718a37d90052efd6da",
-          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "372ebb8c3844a595be6b2fb0c58a496d66c0487b",
+          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "1d8d7f6f32f0b2feaa59c279bb0d0a31481acf4b",
           "app/src/main/java/dev/halcamera/MultiCliBridge.kt": "52a5825ca1ec9d495a6ab76f5738bb5e1d7a1004",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "f9c6c4c5e045c737e5375f8c3c2ec283b6381891",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "2c93630441feea87cc093dd8aed8384cf45956f1",
@@ -1630,10 +1630,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "025f44d5f3c7e34f",
+        "codeHash": "c896f57e566251f5",
         "modelHash": "a1c4cf8671b1c8c4",
         "at": "2026-10-19",
-        "commit": "14ca1ae2",
+        "commit": "b0648a05",
         "reviewer": "codex-user-authorized-depth-review",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
@@ -1646,7 +1646,7 @@
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "71377b456162e55482645967b3d5b22260d91223",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "0fa42b6713f8b20632ec77a6b4afd57cf3f80ebb",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "fde7bf3ae0a6f1a451fa84718a37d90052efd6da",
-          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "372ebb8c3844a595be6b2fb0c58a496d66c0487b",
+          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "1d8d7f6f32f0b2feaa59c279bb0d0a31481acf4b",
           "app/src/main/java/dev/halcamera/MultiCliBridge.kt": "52a5825ca1ec9d495a6ab76f5738bb5e1d7a1004",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "f9c6c4c5e045c737e5375f8c3c2ec283b6381891",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "2c93630441feea87cc093dd8aed8384cf45956f1",
@@ -1915,10 +1915,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "025f44d5f3c7e34f",
+        "codeHash": "c896f57e566251f5",
         "modelHash": "ab1f7e43500f5869",
         "at": "2026-10-19",
-        "commit": "14ca1ae2",
+        "commit": "b0648a05",
         "reviewer": "codex-user-authorized-depth-review",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
@@ -1931,7 +1931,7 @@
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "71377b456162e55482645967b3d5b22260d91223",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "0fa42b6713f8b20632ec77a6b4afd57cf3f80ebb",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "fde7bf3ae0a6f1a451fa84718a37d90052efd6da",
-          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "372ebb8c3844a595be6b2fb0c58a496d66c0487b",
+          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "1d8d7f6f32f0b2feaa59c279bb0d0a31481acf4b",
           "app/src/main/java/dev/halcamera/MultiCliBridge.kt": "52a5825ca1ec9d495a6ab76f5738bb5e1d7a1004",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "f9c6c4c5e045c737e5375f8c3c2ec283b6381891",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "2c93630441feea87cc093dd8aed8384cf45956f1",
@@ -2200,10 +2200,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "025f44d5f3c7e34f",
+        "codeHash": "c896f57e566251f5",
         "modelHash": "1ac54c16fae61b66",
         "at": "2026-10-19",
-        "commit": "14ca1ae2",
+        "commit": "b0648a05",
         "reviewer": "codex-user-authorized-depth-review",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
@@ -2216,7 +2216,7 @@
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "71377b456162e55482645967b3d5b22260d91223",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "0fa42b6713f8b20632ec77a6b4afd57cf3f80ebb",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "fde7bf3ae0a6f1a451fa84718a37d90052efd6da",
-          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "372ebb8c3844a595be6b2fb0c58a496d66c0487b",
+          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "1d8d7f6f32f0b2feaa59c279bb0d0a31481acf4b",
           "app/src/main/java/dev/halcamera/MultiCliBridge.kt": "52a5825ca1ec9d495a6ab76f5738bb5e1d7a1004",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "f9c6c4c5e045c737e5375f8c3c2ec283b6381891",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "2c93630441feea87cc093dd8aed8384cf45956f1",
@@ -2547,10 +2547,10 @@
         "state": "fresh"
       },
       "accepted": {
-        "codeHash": "025f44d5f3c7e34f",
+        "codeHash": "c896f57e566251f5",
         "modelHash": "ab3da8834574c341",
         "at": "2026-10-19",
-        "commit": "14ca1ae2",
+        "commit": "b0648a05",
         "reviewer": "codex-user-authorized-depth-review",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
@@ -2563,7 +2563,7 @@
           "app/src/main/java/dev/halcamera/LiveStreamsActivity.kt": "71377b456162e55482645967b3d5b22260d91223",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "0fa42b6713f8b20632ec77a6b4afd57cf3f80ebb",
           "app/src/main/java/dev/halcamera/MainCliBridge.kt": "fde7bf3ae0a6f1a451fa84718a37d90052efd6da",
-          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "372ebb8c3844a595be6b2fb0c58a496d66c0487b",
+          "app/src/main/java/dev/halcamera/MainDepthBridge.kt": "1d8d7f6f32f0b2feaa59c279bb0d0a31481acf4b",
           "app/src/main/java/dev/halcamera/MultiCliBridge.kt": "52a5825ca1ec9d495a6ab76f5738bb5e1d7a1004",
           "app/src/main/java/dev/halcamera/WorkbenchActivity.kt": "f9c6c4c5e045c737e5375f8c3c2ec283b6381891",
           "app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt": "2c93630441feea87cc093dd8aed8384cf45956f1",
