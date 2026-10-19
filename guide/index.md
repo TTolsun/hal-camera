@@ -30,7 +30,6 @@ home: true
 </section>
 
 <nav class="contents task-contents" aria-label="검증 작업별 문서">
-
   <a href="live.html"><span class="name">Live</span><span class="description">사진·동영상과 촬영 조건을 바꿔 봅니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="callback.html"><span class="name">Callback</span><span class="description">콜백과 이미지의 도착 순서를 읽습니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
   <a href="troubleshooting.html"><span class="name">Troubleshooting</span><span class="description">증상을 좁히고 재현 자료를 모읍니다.</span><span class="arrow" aria-hidden="true">↗</span></a>

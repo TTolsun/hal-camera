@@ -252,4 +252,4 @@ CTS 원문 케이스도 같은 앱 전용 폴더(`getExternalFilesDir`)에 씁�
 </details>
 </div>
 
-**다음 단계:** 판정에 쓰인 시간 규칙이 어디서 오는지 [Benchmark](benchmark.md)의 측정 범위와 비교해 읽으세요. CTS는 통과·실패를, Benchmark는 얼마나 걸리는지를 답합니다.
+**다음 단계:** 검사 통과 여부와 별도로 성능 변화를 비교하려면 [Benchmark](benchmark.md)를 확인하세요. CTS는 통과·실패를, Benchmark는 얼마나 걸리는지를 답합니다.

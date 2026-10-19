@@ -31,28 +31,66 @@ verifications: []
 
 ### 실행과 측정의 제약
 
-1. 카메라를 점유하는 `CameraEngine`은 하나만 유지합니다. Live는 기존 엔진의 `close(done)` 완료 콜백을 받은 뒤 다음 엔진을 엽니다. 현재 CameraX는 공급자 종료가 1초 안에 끝나지 않아도 완료 콜백을 호출할 수 있으므로, 완료 통지를 카메라 서비스의 가용 상태와 같다고 보지 않습니다. [카메라 열기와 닫기](architecture.md#카메라-열기와-닫기)에서 다음 Camera2 엔진의 가용 대기를, [실행 흐름](architecture.md#실행에서-저장까지)에서 BenchmarkRunner의 닫기 제한 시간을 확인하세요.
+1. 카메라를 점유하는 `CameraEngine`은 하나만 유지합니다. Live는 기존 엔진의 `close(done)` 완료 콜백을 받은 뒤 다음 엔진을 엽니다.
+
+   현재 CameraX는 공급자 종료가 1초 안에 끝나지 않아도 완료 콜백을 호출할 수 있으므로, 완료 통지를 카메라 서비스의 가용 상태와 같다고 보지 않습니다.
+
+   [카메라 열기와 닫기](architecture.md#카메라-열기와-닫기)에서 다음 Camera2 엔진의 가용 대기를, [실행 흐름](architecture.md#실행에서-저장까지)에서 BenchmarkRunner의 닫기 제한 시간을 확인하세요.
 2. 앱의 시각은 `elapsedRealtimeNanos`를 사용합니다. 센서 시각은 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 앱 시각과 직접 비교합니다.
 3. 카메라 열거에는 공개 Camera2 API만 사용합니다. 논리 카메라의 물리 endpoint를 독립적으로 열 수 있다고 가정하지 않습니다.
 4. 벤치마크 JSON과 incident ZIP에는 관측 이벤트·메타데이터를 저장하며 이미지 픽셀을 저장하지 않습니다.
 
-Multi 모드의 `MultiSession`은 `CameraEngine`과 별도입니다. Camera2는 선택한 독립 장치를 연 뒤 세션을 구성하며, CameraX는 광고된 동시 조합을 바인딩합니다. 모든 장치의 종료 통지를 확인해야 출력을 해제하고 다음 동시 세션을 열 수 있습니다. 한 명령의 여러 사진을 센서 동기 촬영으로 해석하지 않습니다.
+Multi 모드의 `MultiSession`은 `CameraEngine`과 별도입니다. Camera2는 선택한 독립 장치를 연 뒤 세션을 구성하며, CameraX는 광고된 동시 조합을 바인딩합니다.
 
-Multi V의 `MicrophoneCapture`는 `AudioRecord`의 MONOTONIC 하드웨어 시각과 PCM 프레임 위치로 오디오 원점을 구합니다. `DeviceCompositor`는 REALTIME 센서의 프레임 시각만 MONOTONIC으로 변환하며, 시계 출처를 알 수 없으면 프레임 도착 시각을 사용합니다. `TimestampedVideoRecording`은 실제로 인코딩된 첫 프레임을 영상 원점으로 삼습니다. 이 경우에도 센서·마이크 처리 지연과 AAC 프레임 경계의 오차가 남을 수 있으므로 샘플 단위 동기를 보장하지 않습니다. `MultiRecording`은 모든 영상 입력을 닫은 뒤 오디오를 종료하고 파일을 결합합니다.
+모든 장치의 종료 통지를 확인해야 출력을 해제하고 다음 동시 세션을 열 수 있습니다. 한 명령의 여러 사진을 센서 동기 촬영으로 해석하지 않습니다.
+
+Multi V의 `MicrophoneCapture`는 `AudioRecord`의 MONOTONIC 하드웨어 시각과 PCM 프레임 위치로 오디오 원점을 구합니다.
+
+`DeviceCompositor`는 REALTIME 센서의 프레임 시각만 MONOTONIC으로 변환하며, 시계 출처를 알 수 없으면 프레임 도착 시각을 사용합니다.
+
+`TimestampedVideoRecording`은 실제로 인코딩된 첫 프레임을 영상 원점으로 삼습니다.
+
+이 경우에도 센서·마이크 처리 지연과 AAC 프레임 경계의 오차가 남을 수 있으므로 샘플 단위 동기를 보장하지 않습니다.
+
+`MultiRecording`은 모든 영상 입력을 닫은 뒤 오디오를 종료하고 파일을 결합합니다.
 
 ### 계산과 저장의 제약
 
-1. `BenchmarkRunner`는 `Driver`, `Scheduler`, `clock`을 통해 카메라와 시계에 접근합니다. 지표·통계·회귀 계산은 `benchmark/domain/`과 `metrics/`에 두어 JVM에서 테스트하며, Android 화면은 Activity와 `ui/`, 파일·기기 어댑터는 `benchmark/platform/`에 둡니다. 새 파일에 `android.*` import가 필요하면 역할에 맞는 경계에 두거나 인터페이스로 주입합니다.
-2. 벤치마크의 `org.json`은 파일 경계에서 사용합니다. `BenchmarkReportCodec`의 데이터 계약은 `Map<String, Any?>`로 전달합니다. schema 5를 쓰되 schema 3·4도 읽습니다. CLI protocol v1은 별도로 JSON 명령·상태를 정의하며 측정 보고서 schema를 바꾸지 않습니다. CLI 안에서도 화면 어댑터와 컨트롤러는 결과를 `Map`으로 전달하고, `org.json` 변환은 `CommandCoordinator`가 저장·전송 경계에서 수행합니다.
-3. `RunValidity`는 flag 규칙에서 measurement·comparison·scoring eligibility를 계산합니다. 알 수 없는 flag는 비교를 막습니다. 내부 점수 초안은 제거했으며(이슈 #162), scoring eligibility는 충전·디버그 빌드 같은 flag가 없는 run을 표시하는 용도로만 남습니다.
+1. `BenchmarkRunner`는 `Driver`, `Scheduler`, `clock`을 통해 카메라와 시계에 접근합니다.
+
+   지표·통계·회귀 계산은 `benchmark/domain/`과 `metrics/`에 두어 JVM에서 테스트하며, Android 화면은 Activity와 `ui/`, 파일·기기 어댑터는 `benchmark/platform/`에 둡니다.
+
+   새 파일에 `android.*` import가 필요하면 역할에 맞는 경계에 두거나 인터페이스로 주입합니다.
+2. 벤치마크의 `org.json`은 파일 경계에서 사용합니다. `BenchmarkReportCodec`의 데이터 계약은 `Map<String, Any?>`로 전달합니다.
+
+   schema 5를 쓰되 schema 3·4도 읽습니다. CLI protocol v1은 별도로 JSON 명령·상태를 정의하며 측정 보고서 schema를 바꾸지 않습니다.
+
+   CLI 안에서도 화면 어댑터와 컨트롤러는 결과를 `Map`으로 전달하고, `org.json` 변환은 `CommandCoordinator`가 저장·전송 경계에서 수행합니다.
+3. `RunValidity`는 flag 규칙에서 measurement·comparison·scoring eligibility를 계산합니다. 알 수 없는 flag는 비교를 막습니다.
+
+   내부 점수 초안은 제거했으며(이슈 #162), scoring eligibility는 충전·디버그 빌드 같은 flag가 없는 run을 표시하는 용도로만 남습니다.
 4. 회귀 임계값은 `RegressionRules`에서 관리합니다. baseline은 자동으로 지정하지 않으며 임의의 두 실행을 고르는 동작도 baseline을 바꾸지 않습니다.
 5. 파일 삭제 실패 시 baseline 목록에서 먼저 빼지 않습니다. 목록 정리 실패 후 남은 잘못된 참조는 `BaselineManager`가 이후 조회에서 정리합니다.
 
-Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9에서는 저장소 권한을, 소리를 포함한 녹화에는 마이크 권한이 필요합니다. CLI의 무음 녹화에는 마이크 권한이 필요하지 않습니다. 벤치마크의 StreamSpec과 메타데이터 전용 내보내기 계약은 유지합니다.
+Live의 사진·동영상만 이미지 픽셀을 저장합니다. Android 8–9에서는 저장소 권한을, 소리를 포함한 녹화에는 마이크 권한이 필요합니다.
+
+CLI의 무음 녹화에는 마이크 권한이 필요하지 않습니다. 벤치마크의 StreamSpec과 메타데이터 전용 내보내기 계약은 유지합니다.
 
 ### CLI의 접근과 완료 경계
 
-`CliProvider`는 각 진입점에서 shell UID 2000과 DUMP 권한을 검사합니다. 호출자 확인 전에는 Binder identity를 해제하지 않습니다. 파일 접근은 CLI 요청이 등록한 artifact ID에 한정하며 임의 경로나 쓰기 모드를 받지 않습니다.
+`CliProvider`는 각 진입점에서 shell UID 2000과 DUMP 권한을 검사합니다. 호출자 확인 전에는 Binder identity를 해제하지 않습니다.
 
-명령은 동작 전에 저장하며 한 번에 하나의 변경 작업을 처리합니다. 사진·MP4 저장, CTS suite 보고서 쓰기를 마친 뒤 결과 파일을 등록합니다. 녹화 시작 응답과 최종 저장 완료를 구분하며, 종료 명령은 활성 녹화 요청을 제어하므로 BUSY 상태에서도 실행합니다. `cts.run`의 항목 키는 접수 시점에 카탈로그와 대조해 알 수 없는 키를 `UNKNOWN_CASE`로 거부하고, 마이크가 필요한 항목의 권한은 요청하지 않고 `PERMISSION_REQUIRED`로 끝냅니다. 프로세스가 종료된 미완료 요청은 재실행하지 않습니다. CLI 기록 정리와 원본 사진·동영상 삭제는 서로 다른 동작입니다. `benchmark.run`은 고정된 `camera2-standard-v2` 프로파일만 받으며 Live 엔진·스트림 옵션을 거부합니다. Live 카메라 종료 후 벤치마크 화면으로 이동하고 기존 측정·판정 규칙을 유지합니다.
+파일 접근은 CLI 요청이 등록한 artifact ID에 한정하며 임의 경로나 쓰기 모드를 받지 않습니다.
+
+명령은 동작 전에 저장하며 한 번에 하나의 변경 작업을 처리합니다. 사진·MP4 저장, CTS suite 보고서 쓰기를 마친 뒤 결과 파일을 등록합니다.
+
+녹화 시작 응답과 최종 저장 완료를 구분하며, 종료 명령은 활성 녹화 요청을 제어하므로 BUSY 상태에서도 실행합니다.
+
+`cts.run`의 항목 키는 접수 시점에 카탈로그와 대조해 알 수 없는 키를 `UNKNOWN_CASE`로 거부하고, 마이크가 필요한 항목의 권한은 요청하지 않고 `PERMISSION_REQUIRED`로 끝냅니다.
+
+프로세스가 종료된 미완료 요청은 재실행하지 않습니다. CLI 기록 정리와 원본 사진·동영상 삭제는 서로 다른 동작입니다.
+
+`benchmark.run`은 고정된 `camera2-standard-v2` 프로파일만 받으며 Live 엔진·스트림 옵션을 거부합니다.
+
+Live 카메라 종료 후 벤치마크 화면으로 이동하고 기존 측정·판정 규칙을 유지합니다.
 

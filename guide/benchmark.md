@@ -97,8 +97,6 @@ title: Benchmark
 
 ## 판정과 막대를 읽으세요
 
-숫자의 차이를 읽기 전에, 비교할 수 있는 실행인지 살펴보세요.
-
 **판정을 먼저 읽고, 달라진 지표를 확인하세요.** 막대만 보고 성능 저하를 판단하지 마세요.
 
 <figure class="doc-visual" aria-labelledby="metric-example-title">
@@ -199,7 +197,7 @@ validity flag는 화면에서는 뜻을 풀어 쓰고 JSON과 CSV에는 원래 �
 기록을 관리하거나 파일로 남기는 방법도 있습니다.
 
 - **실행 하나를 관리하려면** 행의 `⋮` 메뉴를 누르거나 길게 누릅니다. baseline 추가·빼기, 비교, JSON·CSV 내보내기, 삭제를 고릅니다.
-- **실행을 삭제하면** 확인 후 삭제하며, baseline에서도 빠집니다.
+- **실행 삭제를 선택하면** 확인을 거쳐 실행을 지우고 baseline에서도 뺍니다.
 - **현재 목록을 내보내려면** `Export CSV`를 누릅니다. 현재 필터에 맞는 실행을 CSV 하나로 저장합니다.
 
 <div id="screen-benchmark-history">

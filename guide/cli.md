@@ -44,7 +44,9 @@ title: CLI
 
 `adb version`이 실패하면 Android SDK Platform-Tools의 실행 파일을 전체 경로로 호출하거나 PATH에 추가합니다.
 
-- Windows는 PowerShell·CMD에서 실행합니다. Git Bash는 먼저 `export MSYS2_ARG_CONV_EXCL='*' MSYS_NO_PATHCONV=1`을 설정해야 기기 경로가 Windows 경로로 바뀌지 않습니다.
+- Windows는 PowerShell·CMD에서 실행합니다.
+
+  Git Bash는 먼저 `export MSYS2_ARG_CONV_EXCL='*' MSYS_NO_PATHCONV=1`을 설정해야 기기 경로가 Windows 경로로 바뀌지 않습니다.
 - WSL은 Linux `adb`로 무선·USB 연결을 사용하거나 Windows `adb.exe`를 호출합니다.
 
   Windows 실행 파일로 `pull`하면 `C:/Users/USERNAME/Downloads` 같은 Windows 대상 경로를 씁니다. 실행·조회·회수에 같은 ADB 실행 파일을 유지합니다.

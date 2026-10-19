@@ -381,10 +381,10 @@
       },
       "accepted": {
         "codeHash": "17867e1678c12800",
-        "modelHash": "a34a88f156d1ade5",
-        "at": "2026-10-18",
-        "commit": "e9d3233c",
-        "reviewer": "codex-multi-cli-code-review",
+        "modelHash": "52012a5183697d02",
+        "at": "2026-10-19",
+        "commit": "cc58ea27",
+        "reviewer": "codex-editorial-formatting-only",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -663,10 +663,10 @@
       },
       "accepted": {
         "codeHash": "d8bf9992cd2c94cb",
-        "modelHash": "8b50a835d85343d5",
-        "at": "2026-10-18",
-        "commit": "e9d3233c",
-        "reviewer": "codex-multi-cli-code-review",
+        "modelHash": "8baed94c0132e532",
+        "at": "2026-10-19",
+        "commit": "cc58ea27",
+        "reviewer": "codex-editorial-formatting-only",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "d220302a8e9dd392cf1560e5b28dc5aa6378202f",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "6dea5501360372fa3ae1ce5f176be9191544d152",
@@ -712,10 +712,10 @@
     "content:architecture.md/module-roles": {
       "accepted": {
         "codeHash": "4ee54ca1bee6a0f5",
-        "modelHash": "c9ea5cc68a76a3ff",
-        "at": "2026-10-18",
-        "commit": "e9d3233c",
-        "reviewer": "codex-multi-cli-code-review",
+        "modelHash": "f0177f51617171de",
+        "at": "2026-10-19",
+        "commit": "cc58ea27",
+        "reviewer": "codex-editorial-formatting-only",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -991,10 +991,10 @@
     "content:architecture.md/constraints": {
       "accepted": {
         "codeHash": "4ee54ca1bee6a0f5",
-        "modelHash": "fc73235ea6f1f372",
-        "at": "2026-10-18",
-        "commit": "e9d3233c",
-        "reviewer": "codex-multi-cli-code-review",
+        "modelHash": "09630393d3c7be02",
+        "at": "2026-10-19",
+        "commit": "cc58ea27",
+        "reviewer": "codex-editorial-formatting-only",
         "files": {
           "app/build.gradle.kts": "d66d0773b7c3040674518d8a9db04d40fd67ee57",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",

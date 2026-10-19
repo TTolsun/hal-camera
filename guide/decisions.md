@@ -7,10 +7,13 @@ title: Decisions
 
 ## 과거 결정 기록을 확인하세요
 
-| 기록 | 선택한 방식 | 이유의 기록 상태 |
-| --- | --- | --- |
-| [D-001](_inputs/decisions.md#d-001-camera2-엔진과-camerax-엔진을-모두-유지합니다) | Camera2를 측정 경로로, CameraX를 비교 경로로 유지합니다. | 배경·대안·선택 이유는 보완이 필요합니다. |
-| [D-002](_inputs/decisions.md#d-002-v02-건강-판정-제품을-중단하고-v03-camera-benchmarker로-전환합니다) | v0.2 건강 판정에서 v0.3 측정·비교 계약으로 전환합니다. | 배경·대안·전환 이유는 보완이 필요합니다. |
+- **[D-001](_inputs/decisions.md#d-001-camera2-엔진과-camerax-엔진을-모두-유지합니다):** Camera2를 측정 경로로, CameraX를 비교 경로로 유지합니다.
+
+  배경·대안·선택 이유는 보완이 필요합니다.
+
+- **[D-002](_inputs/decisions.md#d-002-v02-건강-판정-제품을-중단하고-v03-camera-benchmarker로-전환합니다):** v0.2 건강 판정에서 v0.3 측정·비교 계약으로 전환합니다.
+
+  배경·대안·전환 이유는 보완이 필요합니다.
 
 <p class="editorial" lang="en">Clarity includes knowing<br>what has not been explained.</p>
 
