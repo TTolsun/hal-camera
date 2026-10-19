@@ -24,6 +24,7 @@ nav_order: 5
 | 항목 | Camera2 | CameraX |
 | --- | --- | --- |
 | Depth 보기 | DEPTH_OUTPUT과 DEPTH16 해상도를 공개한 카메라에서 별도 Depth 전용 세션을 엽니다. 맵 표시만 제공합니다. | Depth 해상도를 선택하면 Camera2로 전환합니다. |
+| 제조사 Portrait | API 31 이상의 BOKEH 확장 세션으로 전용 미리보기와 JPEG를 받습니다. Depth 메뉴에서 선택하며 수동 제어·RAW·PIP·영상은 제공하지 않습니다. | Portrait를 선택하면 Camera2로 전환합니다. |
 | 수동 촬영 | ISO·노출 시간·초점과 WB를 프리뷰·사진·녹화에 적용합니다. 지원 여부와 실제 적용값을 표시합니다. | Manual 버튼을 미지원 상태로 비활성화합니다. |
 | YUV를 JPEG로 선택 | 요청한 YUV 이미지와 최종 CaptureResult의 센서 시각을 맞춥니다. | 촬영 뒤 받은 analysis 프레임 하나를 변환합니다. |
 | JPEG 출처 | YUV 앱 변환 또는 HAL JPEG 중 하나와 촬영 JSON을 저장합니다. | YUV 앱 변환 또는 ImageCapture JPEG 중 하나와 촬영 JSON을 저장합니다. |
@@ -58,9 +59,9 @@ PIP와 Multi는 Android 11 이상에서 제공합니다. 저장물과 설정 방
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/MultiSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt`, `app/src/main/java/dev/halcamera/camera/MultiRecording.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/MultiSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt`, `app/src/main/java/dev/halcamera/camera/MultiRecording.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review
+- 검토 2026-10-19 @ `2fb9f2aa` · codex-user-authorized-portrait-review
 
 </details>
 
@@ -214,12 +215,14 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
 사진 결과는 Camera2의 요청 태그와 CameraX의 `captureIntent`로 제외합니다. 설정 화면은 구성 실패 오류만 표시하며 이전 세션 결과 목록을 제공하지 않습니다.
 
+제조사 Portrait는 별도 `CameraExtensionSession`을 사용합니다. 일반 `CaptureResult` 지표와 EIS 대조를 표시하지 않으며 수동 제어·줌·측광도 제공하지 않습니다. Depth 메뉴에서 선택하지만 출력은 OEM 컬러 미리보기와 JPEG이며, 센서 Depth 맵과 구분합니다.
+
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/DepthCameraEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/DepthCameraEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review
+- 검토 2026-10-19 @ `2fb9f2aa` · codex-user-authorized-portrait-review
 
 </details>
 
@@ -264,6 +267,8 @@ Camera2 Live의 프리뷰·사진·녹화·녹화 중 사진 요청은 기존 �
 수동 WB는 MANUAL_POST_PROCESSING과 관련 요청 키가 있고 수동 노출이 켜져 있을 때 gains와 transform을 사용합니다.
 
 색온도를 추정하지 않습니다.
+
+제조사 Portrait는 일반 Camera2Engine의 스트림에 섞지 않습니다. API 31 이상에서 PortraitCameraEngine이 BOKEH 확장 전용 미리보기·JPEG 크기를 재검사하고 CameraExtensionSession을 엽니다. JPEG는 MediaLibrary로 저장하며, 미리보기 15초·JPEG 60초 시간 제한과 CameraDevice.onClosed 이후 close(done) 완료 순서를 적용합니다.
 
 </details>
 
@@ -601,9 +606,9 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review
+- 검토 2026-10-19 @ `2fb9f2aa` · codex-user-authorized-portrait-review
 
 </details>
 
@@ -822,7 +827,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review
+- 검토 2026-10-19 @ `2fb9f2aa` · codex-user-authorized-portrait-review
 
 </details>
 
@@ -842,11 +847,11 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review |
-| 원고 `contract` | 최신 | 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review |
-| 원고 `camera2` | 최신 | 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review |
-| 원고 `camerax` | 최신 | 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review |
-| 원고 `comparison` | 최신 | 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-19 @ `2fb9f2aa` · codex-user-authorized-portrait-review |
+| 원고 `contract` | 최신 | 검토 2026-10-19 @ `2fb9f2aa` · codex-user-authorized-portrait-review |
+| 원고 `camera2` | 최신 | 검토 2026-10-19 @ `2fb9f2aa` · codex-user-authorized-portrait-review |
+| 원고 `camerax` | 최신 | 검토 2026-10-19 @ `2fb9f2aa` · codex-user-authorized-portrait-review |
+| 원고 `comparison` | 최신 | 검토 2026-10-19 @ `2fb9f2aa` · codex-user-authorized-portrait-review |
 
 <!-- omm:end id=status -->
 

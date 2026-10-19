@@ -39,6 +39,8 @@ PROBE 요청 `dd81ce3e-9c78-4537-a7f6-f8034c9a06b7`는 오류 없이 완료됐�
 
 앱 JVM 테스트 911개, `lintDebug`(오류·경고 없음), `assembleDebug`, `assembleDebugAndroidTest`가 통과했습니다. 문서 회귀 검사 37개가 통과했습니다.
 
+코드와 원고를 대조한 뒤 최신성 15개 항목의 검토 기록을 `codex-user-authorized-portrait-review`로 갱신했습니다. 기존 최신 항목의 검토자는 유지했습니다. `docflow check --build` 6단계에서 최신성·coverage·생성 일치·사이트 빌드를 통과했습니다.
+
 지원 선언과 Unknown·읽기 오류 구분, 확장 전용 크기 선택, close(done) 순서, 늦은 JPEG 차단, 한 번뿐인 촬영 완료, 실패 후 Photo 복귀, 저장 중 전환 방지, CLI 초기화, 일반 Live Streams 및 Benchmark 경계를 코드에 대조했습니다. 문서에는 Depth 메뉴 진입 경로, 확장 전용 JPEG 저장과 제어 제한, 수명주기·데이터 흐름을 반영했습니다. 이 기록은 사용자 요청에 따른 Codex의 코드 대조이며 별도 사람의 독립 리뷰를 뜻하지 않습니다.
 
 사용 방법은 [Live 가이드](../../../guide/live.md#제조사-portrait로-배경을-흐리세요)를 참고하세요.
