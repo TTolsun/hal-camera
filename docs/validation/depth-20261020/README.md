@@ -7,8 +7,8 @@
 - `testDebugUnitTest`: 앱 JVM 테스트 907개가 통과했습니다. Depth 신뢰도 코드, 거리 0, stride·crop·버퍼 위치, 잘린 plane, 표시 표본 제한, 지원 여부와 Unknown 구분, TXT·JSON 내보내기와 Depth 스트림 표시를 포함합니다.
 - `lintDebug`: 오류와 경고가 없습니다.
 - `assembleDebug`, `assembleDebugAndroidTest`: APK를 생성했습니다.
-- 문서 회귀 검사에서 새 요소 수를 112개로 반영했습니다. 입력 크기 한도와 dry-run 검사를 포함한 검사를 실행했으며, 한도 초과를 수정한 두 검사는 재실행하여 통과했습니다.
-- 문서 coverage, 생성 일치와 사이트 산출물 일치 검사를 통과했습니다. 후속 문서 검토에서는 사용자가 승인한 범위에서 원본 최신성 기록을 갱신하고 전체 `docflow check --build`와 `check --ci`를 확인합니다.
+- 문서 회귀 검사 37개가 모두 통과했습니다. 새 요소 수 112개, 입력 크기 한도, dry-run, 앱 UI 규칙 사본 일치와 배포 링크를 포함합니다.
+- 사용자 요청에 따라 코드를 대조하고 원본 최신성 15개 항목의 검토 기록을 `codex-user-authorized-depth-review`로 갱신했습니다. 기존 최신 항목의 검토자는 보존했습니다. 전체 `docflow check --build` 6단계와 coverage·생성 일치·사이트 산출물 일치 검사를 통과했습니다.
 
 ## 에뮬레이터 확인
 
