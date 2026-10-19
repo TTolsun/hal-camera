@@ -5,7 +5,7 @@ internal data class LiveStreamReadout(val text: String, val description: String)
     companion object {
         private data class Label(val key: String, val short: String, val name: String, val pip: Boolean = false)
         private val labels = listOf(Label("preview", "P", "Preview"), Label("analysis", "Y", "YUV"),
-            Label("jpeg", "J", "JPEG"), Label("raw", "RAW", "RAW"), Label("recording", "R", "Recording"),
+            Label("jpeg", "J", "JPEG"), Label("raw", "RAW", "RAW"), Label("depth", "Depth", "Depth"), Label("recording", "R", "Recording"),
             Label("pip", "P", "PIP Preview", true), Label("pipYuv", "Y", "PIP YUV", true), Label("pipJpeg", "J", "PIP JPEG", true))
 
         fun from(streams: Map<*, *>?): LiveStreamReadout {

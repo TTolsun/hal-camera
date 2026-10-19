@@ -28,13 +28,14 @@ title: Probe
 
 - **카메라 목록:** 논리 카메라와 그 안의 물리 카메라를 구분합니다. 사양이 보여도 단독으로 열 수 없는 물리 카메라가 있습니다.
 - **섹션:** 제목을 눌러 접거나 펼칩니다. 출력 형식별 크기는 STREAMS에서 확인합니다.
+- **DEPTH:** `DEPTH_OUTPUT` 지원 여부와 `DEPTH16` 해상도, 컬러와 Depth를 같은 요청에 포함할 수 있는지를 확인합니다. `Allowed by HAL`은 기기의 선언이며 특정 출력 조합의 동작을 보장하지 않습니다. `Unknown`은 해당 정보를 읽지 못한 상태입니다. 단독으로 열 수 없는 물리 카메라는 LIVE에서 직접 선택할 수 없습니다.
 - **필터:** 단어가 들어간 줄을 찾습니다. 결과를 누르면 해당 항목으로 이동합니다.
 - **REQUEST · RESULT KEYS / SESSION KEYS:** 요청·결과에서 지원하는 key 이름입니다. 실제 촬영값은 아닙니다.
 
 <details markdown="1" id="probe-fields" data-search-section>
 <summary>섹션 이름과 API별 표시 조건</summary>
 
-IDENTITY, CAPABILITIES, SENSOR, LENS, CONTROL, PROCESSING, REQUEST 뒤에 REQUEST · RESULT KEYS가 나옵니다.
+IDENTITY, CAPABILITIES, DEPTH, SENSOR, LENS, CONTROL, PROCESSING, REQUEST 뒤에 REQUEST · RESULT KEYS가 나옵니다.
 
 SESSION KEYS는 API 28 이상, MANDATORY STREAM COMBINATIONS는 API 29 이상에서 표시합니다.
 

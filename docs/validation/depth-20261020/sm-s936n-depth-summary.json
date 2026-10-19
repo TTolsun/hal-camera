@@ -1,0 +1,168 @@
+{
+  "captured_at": "2026-10-20T01:05:38.0000000+09:00",
+  "device": {
+    "Manufacturer": "samsung",
+    "Model": "SM-S936N",
+    "Device": "pa2q",
+    "Android": "16 (API 36)",
+    "Build": "BP4A.251205.006.S936NKSSCCZH2",
+    "Security patch": "2026-08-05",
+    "SoC": "QTI SM8750",
+    "ABIs": "arm64-v8a"
+  },
+  "request_id": "0be1d193-a8ac-4ee0-8c88-f9bec825c01b",
+  "state": "succeeded",
+  "errors": [],
+  "original_artifacts": [
+    {
+      "name": "camera-probe-SM-S936N-20261020_010538.json",
+      "size_bytes": 367246,
+      "sha256": "8675661879a0fb6f6b5e2a90ae25bfa6ceb1cb39b60bd55e41d74ba17acdea9c"
+    },
+    {
+      "name": "camera-probe-SM-S936N-20261020_010538.txt",
+      "size_bytes": 261858,
+      "sha256": "1dc6a056f2ed73328d390bebb655e41ef254bd96f5ba900f087b7c5926753044"
+    }
+  ],
+  "cameras": [
+    {
+      "camera_id": "0",
+      "physical_of": null,
+      "title": "Camera · 0 (Wide · Rear) · LEVEL_3",
+      "depth": [
+        {
+          "key": "DEPTH_OUTPUT",
+          "value": "Not supported"
+        },
+        {
+          "key": "DEPTH16 resolutions",
+          "value": "None reported"
+        },
+        {
+          "key": "Color + depth (same request)",
+          "value": "Not applicable: no DEPTH_OUTPUT"
+        },
+        {
+          "key": "LIVE depth map",
+          "value": "This camera does not advertise DEPTH_OUTPUT."
+        }
+      ]
+    },
+    {
+      "camera_id": "5",
+      "physical_of": "0",
+      "title": "Camera · 0.5 (Wide · Rear) · physical · LEVEL_3",
+      "depth": [
+        {
+          "key": "DEPTH_OUTPUT",
+          "value": "Not supported"
+        },
+        {
+          "key": "DEPTH16 resolutions",
+          "value": "None reported"
+        },
+        {
+          "key": "Color + depth (same request)",
+          "value": "Not applicable: no DEPTH_OUTPUT"
+        },
+        {
+          "key": "LIVE depth map",
+          "value": "Physical camera: select a publicly listed camera ID in LIVE"
+        }
+      ]
+    },
+    {
+      "camera_id": "6",
+      "physical_of": "0",
+      "title": "Camera · 0.6 (Tele · Rear) · physical · LIMITED",
+      "depth": [
+        {
+          "key": "DEPTH_OUTPUT",
+          "value": "Not supported"
+        },
+        {
+          "key": "DEPTH16 resolutions",
+          "value": "None reported"
+        },
+        {
+          "key": "Color + depth (same request)",
+          "value": "Not applicable: no DEPTH_OUTPUT"
+        },
+        {
+          "key": "LIVE depth map",
+          "value": "Physical camera: select a publicly listed camera ID in LIVE"
+        }
+      ]
+    },
+    {
+      "camera_id": "1",
+      "physical_of": null,
+      "title": "Camera · 1 (Front · 25 mm) · FULL",
+      "depth": [
+        {
+          "key": "DEPTH_OUTPUT",
+          "value": "Not supported"
+        },
+        {
+          "key": "DEPTH16 resolutions",
+          "value": "None reported"
+        },
+        {
+          "key": "Color + depth (same request)",
+          "value": "Not applicable: no DEPTH_OUTPUT"
+        },
+        {
+          "key": "LIVE depth map",
+          "value": "This camera does not advertise DEPTH_OUTPUT."
+        }
+      ]
+    },
+    {
+      "camera_id": "2",
+      "physical_of": null,
+      "title": "Camera · 2 (UWide · Rear) · LIMITED",
+      "depth": [
+        {
+          "key": "DEPTH_OUTPUT",
+          "value": "Not supported"
+        },
+        {
+          "key": "DEPTH16 resolutions",
+          "value": "None reported"
+        },
+        {
+          "key": "Color + depth (same request)",
+          "value": "Not applicable: no DEPTH_OUTPUT"
+        },
+        {
+          "key": "LIVE depth map",
+          "value": "This camera does not advertise DEPTH_OUTPUT."
+        }
+      ]
+    },
+    {
+      "camera_id": "3",
+      "physical_of": null,
+      "title": "Camera · 3 (Front · 30 mm) · FULL",
+      "depth": [
+        {
+          "key": "DEPTH_OUTPUT",
+          "value": "Not supported"
+        },
+        {
+          "key": "DEPTH16 resolutions",
+          "value": "None reported"
+        },
+        {
+          "key": "Color + depth (same request)",
+          "value": "Not applicable: no DEPTH_OUTPUT"
+        },
+        {
+          "key": "LIVE depth map",
+          "value": "This camera does not advertise DEPTH_OUTPUT."
+        }
+      ]
+    }
+  ]
+}

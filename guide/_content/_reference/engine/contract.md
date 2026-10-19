@@ -5,6 +5,7 @@ sources:
   - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
   - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
   - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
+  - app/src/main/java/dev/halcamera/camera/DepthCameraEngine.kt
   - app/src/main/java/dev/halcamera/MainActivity.kt
   - app/src/main/java/dev/halcamera/ui/LiveControlBar.kt
   - app/src/main/java/dev/halcamera/ui/FocusRing.kt
@@ -28,6 +29,7 @@ classDiagram
     class TouchMetering { <<interface>> }
     CameraEngine <|.. Camera2Engine
     CameraEngine <|.. CameraXEngine
+    CameraEngine <|.. DepthCameraEngine
     MediaCapture <|.. Camera2Engine
     MediaCapture <|.. CameraXEngine
     LiveTuning <|.. Camera2Engine
@@ -37,6 +39,8 @@ classDiagram
 ```
 
 점선 화살표는 인터페이스 구현을 뜻합니다. 실제로 사용할 수 있는 기능은 엔진의 실행 모드와 아래 조건에 따라 달라집니다.
+
+`DepthCameraEngine`은 LIVE의 깊이 맵 보기에서만 사용하는 Camera2 엔진입니다. `CameraEngine`만 구현하고 컬러·촬영·녹화·수동 제어·터치 측광은 제공하지 않습니다. `Photo` 또는 `Video`로 전환하면 기존 컬러 엔진을 다시 엽니다.
 
 | 인터페이스 | 담당하는 동작 | 구현 |
 | --- | --- | --- |
@@ -56,7 +60,7 @@ classDiagram
 
 종료 통지와 다음 엔진의 대기 순서는 [엔진 전환 그림](architecture.md#카메라-열기와-닫기)을 확인하세요.
 
-Photo·Video·Multi · P·Multi · V 사이에서 모드를 바꾸면 기존 세션을 닫고 스트림을 다시 구성합니다. 같은 모드를 다시 누르면 유지합니다. 단일 카메라는 새 프리뷰의 첫 화면 갱신 뒤, Multi는 모든 장치의 합성 프리뷰가 준비된 뒤에 촬영 버튼을 활성화합니다. CLI 호환용 Dual도 두 프리뷰가 모두 갱신된 뒤에 촬영할 수 있습니다. 모드 선택 자체로 사진이나 녹화를 시작하지는 않습니다.
+Photo·Video·Depth·Multi · P·Multi · V 사이에서 모드를 바꾸면 기존 세션을 닫고 스트림을 다시 구성합니다. 같은 모드를 다시 누르면 유지하며 Depth 버튼은 해상도 선택창을 엽니다. 일반 단일 카메라는 새 프리뷰의 첫 화면 갱신 뒤, Multi는 모든 장치의 합성 프리뷰가 준비된 뒤에 촬영 버튼을 활성화합니다. Depth는 첫 맵 수신 후에도 촬영 버튼을 비활성화합니다. CLI 호환용 Dual도 두 프리뷰가 모두 갱신된 뒤에 촬영할 수 있습니다. 모드 선택 자체로 사진이나 녹화를 시작하지는 않습니다.
 
 ### Benchmark와 CLI가 쓰는 엔진
 
@@ -66,7 +70,7 @@ CLI의 `preview`·`capture`·`record.start`는 `LiveController`를 통해 Camera
 
 ### 두 엔진이 함께 남기는 기록
 
-두 엔진은 세션을 열 때 `Telemetry.registerSession`에 엔진 이름(`Camera2` 또는 `CameraX`)을 남기고, 같은 `Telemetry.callback`으로 capture 콜백을 기록합니다. 그래서 `capture_started`, `capture_result` 같은 이벤트 종류가 엔진과 관계없이 같습니다. 엔진별로 요청을 만드는 방법이 다르므로, 같은 이벤트라도 요청에 들어간 키는 엔진마다 다를 수 있습니다.
+일반 컬러 엔진은 세션을 열 때 `Telemetry.registerSession`에 엔진 이름(`Camera2` 또는 `CameraX`)을 남기고, 같은 `Telemetry.callback`으로 capture 콜백을 기록합니다. Depth 전용 엔진은 이름을 `Camera2 · Depth`로 남기며 같은 콜백 경로를 사용합니다. 그래서 `capture_started`, `capture_result` 같은 이벤트 종류가 엔진과 관계없이 같습니다. 엔진별로 요청을 만드는 방법이 다르므로, 같은 이벤트라도 요청에 들어간 키는 엔진마다 다를 수 있습니다.
 
 Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 

@@ -23,6 +23,7 @@ nav_order: 5
 
 | 항목 | Camera2 | CameraX |
 | --- | --- | --- |
+| Depth 보기 | DEPTH_OUTPUT과 DEPTH16 해상도를 공개한 카메라에서 별도 Depth 전용 세션을 엽니다. 맵 표시만 제공합니다. | Depth 해상도를 선택하면 Camera2로 전환합니다. |
 | 수동 촬영 | ISO·노출 시간·초점과 WB를 프리뷰·사진·녹화에 적용합니다. 지원 여부와 실제 적용값을 표시합니다. | Manual 버튼을 미지원 상태로 비활성화합니다. |
 | YUV를 JPEG로 선택 | 요청한 YUV 이미지와 최종 CaptureResult의 센서 시각을 맞춥니다. | 촬영 뒤 받은 analysis 프레임 하나를 변환합니다. |
 | JPEG 출처 | YUV 앱 변환 또는 HAL JPEG 중 하나와 촬영 JSON을 저장합니다. | YUV 앱 변환 또는 ImageCapture JPEG 중 하나와 촬영 JSON을 저장합니다. |
@@ -59,7 +60,7 @@ PIP와 Multi는 Android 11 이상에서 제공합니다. 저장물과 설정 방
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/MultiSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt`, `app/src/main/java/dev/halcamera/camera/MultiRecording.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review
+- 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review
 
 </details>
 
@@ -146,6 +147,7 @@ classDiagram
     class TouchMetering { <<interface>> }
     CameraEngine <|.. Camera2Engine
     CameraEngine <|.. CameraXEngine
+    CameraEngine <|.. DepthCameraEngine
     MediaCapture <|.. Camera2Engine
     MediaCapture <|.. CameraXEngine
     LiveTuning <|.. Camera2Engine
@@ -155,6 +157,8 @@ classDiagram
 ```
 
 점선 화살표는 인터페이스 구현을 뜻합니다. 실제로 사용할 수 있는 기능은 엔진의 실행 모드와 아래 조건에 따라 달라집니다.
+
+`DepthCameraEngine`은 LIVE의 깊이 맵 보기에서만 사용하는 Camera2 엔진입니다. `CameraEngine`만 구현하고 컬러·촬영·녹화·수동 제어·터치 측광은 제공하지 않습니다. `Photo` 또는 `Video`로 전환하면 기존 컬러 엔진을 다시 엽니다.
 
 | 인터페이스 | 담당하는 동작 | 구현 |
 | --- | --- | --- |
@@ -174,7 +178,7 @@ classDiagram
 
 종료 통지와 다음 엔진의 대기 순서는 [엔진 전환 그림](architecture.md#카메라-열기와-닫기)을 확인하세요.
 
-Photo·Video·Multi · P·Multi · V 사이에서 모드를 바꾸면 기존 세션을 닫고 스트림을 다시 구성합니다. 같은 모드를 다시 누르면 유지합니다. 단일 카메라는 새 프리뷰의 첫 화면 갱신 뒤, Multi는 모든 장치의 합성 프리뷰가 준비된 뒤에 촬영 버튼을 활성화합니다. CLI 호환용 Dual도 두 프리뷰가 모두 갱신된 뒤에 촬영할 수 있습니다. 모드 선택 자체로 사진이나 녹화를 시작하지는 않습니다.
+Photo·Video·Depth·Multi · P·Multi · V 사이에서 모드를 바꾸면 기존 세션을 닫고 스트림을 다시 구성합니다. 같은 모드를 다시 누르면 유지하며 Depth 버튼은 해상도 선택창을 엽니다. 일반 단일 카메라는 새 프리뷰의 첫 화면 갱신 뒤, Multi는 모든 장치의 합성 프리뷰가 준비된 뒤에 촬영 버튼을 활성화합니다. Depth는 첫 맵 수신 후에도 촬영 버튼을 비활성화합니다. CLI 호환용 Dual도 두 프리뷰가 모두 갱신된 뒤에 촬영할 수 있습니다. 모드 선택 자체로 사진이나 녹화를 시작하지는 않습니다.
 
 ### Benchmark와 CLI가 쓰는 엔진
 
@@ -184,7 +188,7 @@ CLI의 `preview`·`capture`·`record.start`는 `LiveController`를 통해 Camera
 
 ### 두 엔진이 함께 남기는 기록
 
-두 엔진은 세션을 열 때 `Telemetry.registerSession`에 엔진 이름(`Camera2` 또는 `CameraX`)을 남기고, 같은 `Telemetry.callback`으로 capture 콜백을 기록합니다. 그래서 `capture_started`, `capture_result` 같은 이벤트 종류가 엔진과 관계없이 같습니다. 엔진별로 요청을 만드는 방법이 다르므로, 같은 이벤트라도 요청에 들어간 키는 엔진마다 다를 수 있습니다.
+일반 컬러 엔진은 세션을 열 때 `Telemetry.registerSession`에 엔진 이름(`Camera2` 또는 `CameraX`)을 남기고, 같은 `Telemetry.callback`으로 capture 콜백을 기록합니다. Depth 전용 엔진은 이름을 `Camera2 · Depth`로 남기며 같은 콜백 경로를 사용합니다. 그래서 `capture_started`, `capture_result` 같은 이벤트 종류가 엔진과 관계없이 같습니다. 엔진별로 요청을 만드는 방법이 다르므로, 같은 이벤트라도 요청에 들어간 키는 엔진마다 다를 수 있습니다.
 
 Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 
@@ -213,9 +217,9 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/DepthCameraEngine.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ui/LiveControlBar.kt`, `app/src/main/java/dev/halcamera/ui/FocusRing.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/StartCardPresenter.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review
+- 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review
 
 </details>
 
@@ -231,6 +235,8 @@ Live 제어와 터치 측광은 다음 이벤트를 추가로 남깁니다.
 <!-- omm:begin id=camera2 -->
 
 **Camera2Engine은 앱에서 CaptureRequest를 직접 구성합니다.** `request_observed`에 기록한 키를 HAL 로그와 대조할 수 있습니다. 엔진 자체는 세션, 요청 구성, 줌, Live 제어를 담당하고, 사진은 `Camera2StillCapture`, Live 녹화는 `Camera2LiveRecorder`, 터치 측광은 `Camera2TouchFocus`, 벤치마크 녹화는 `BenchmarkRecorder`가 맡습니다. 카메라 요청과 capture 콜백은 엔진이 만든 카메라 스레드 하나에서 처리하고, 버퍼 relay와 파일 저장은 각자의 스레드에서 처리합니다.
+
+Depth 보기는 일반 `Camera2Engine`과 별도인 `DepthCameraEngine`이 담당합니다. 컬러·사진·녹화 출력 대신 DEPTH16 ImageReader 하나만 사용하며, 기존 엔진을 닫은 뒤 선택한 해상도로 엽니다. 사용 방법과 표시 범위는 [Depth 맵 보기](live.md#depth-맵을-보세요)를 확인하세요.
 
 ### PIP 지원을 미리 확인하세요
 
@@ -597,7 +603,7 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/Camera2Engine.kt`, `app/src/main/java/dev/halcamera/camera/LivePipSession.kt`, `app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt`, `app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt`, `app/src/main/java/dev/halcamera/camera/CameraReleaseWait.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamSettings.kt`, `app/src/main/java/dev/halcamera/camera/LiveStabilization.kt`, `app/src/main/java/dev/halcamera/camera/LiveStreamCapabilities.kt`, `app/src/main/java/dev/halcamera/camera/LiveSessionCheck.kt`, `app/src/main/java/dev/halcamera/camera/Camera2StillCapture.kt`, `app/src/main/java/dev/halcamera/camera/Camera2LiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/Camera2VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/camera/PreviewBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/RecordingBufferRelay.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/StillPair.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/RawFrame.kt`, `app/src/main/java/dev/halcamera/camera/DngOutput.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/LiveControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/ManualControls.kt`, `app/src/main/java/dev/halcamera/camera/ManualControlRequests.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeterRequests.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review
+- 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review
 
 </details>
 
@@ -613,6 +619,8 @@ Camera2에서 짧게 터치한 경우입니다. 긴 누르기는 별도의 AE �
 <!-- omm:begin id=camerax -->
 
 **CameraXEngine은 CameraX use case로 Live 촬영과 제어를 제공하지만, 요청 키 일부는 CameraX가 정합니다.** Live 스트림 설정에서 Preview·YUV·JPEG 크기와 출력 활성화를 선택할 수 있습니다. 앱이 CameraX 1.6.2에 직접 넣는 Camera2 키에는 AE 잠금(`CONTROL_AE_LOCK`), AF 잠금 해제용 cancel trigger, 광학 보정(`LENS_OPTICAL_STABILIZATION_MODE`)이 있습니다. 엔진 자체는 use case bind, 줌, 수명 주기를 담당하고, 사진은 `CameraXStillCapture`, 녹화는 `CameraXLiveRecorder`, Live 제어와 터치 측광은 `CameraXControls`가 맡습니다.
+
+Depth 해상도를 선택하면 CameraX 세션을 해제하고 Camera2의 `DepthCameraEngine`으로 전환합니다. CameraX use case에 Depth 출력을 추가하지 않습니다. 표시와 촬영 제한은 [Depth 맵 보기](live.md#depth-맵을-보세요)를 확인하세요.
 
 ### CameraX PIP
 
@@ -814,7 +822,7 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 - 근거 파일: `app/src/main/java/dev/halcamera/camera/CameraXEngine.kt`, `app/src/main/java/dev/halcamera/camera/CameraXPipSession.kt`, `app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt`, `app/src/main/java/dev/halcamera/camera/CameraXStillCapture.kt`, `app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt`, `app/src/main/java/dev/halcamera/camera/CameraXVideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/VideoSnapshot.kt`, `app/src/main/java/dev/halcamera/camera/CameraXControls.kt`, `app/src/main/java/dev/halcamera/camera/StillEncoding.kt`, `app/src/main/java/dev/halcamera/camera/YuvPacking.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/StreamConfiguration.kt`, `app/src/main/java/dev/halcamera/camera/LiveControls.kt`, `app/src/main/java/dev/halcamera/camera/TouchMeter.kt`, `app/build.gradle.kts`
 - 근거 수준: 코드 확인
-- 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review
+- 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review
 
 </details>
 
@@ -834,11 +842,11 @@ AE 재잠금은 Camera2와 같은 [AeRelock 상태도](#노출은-언제-다시-
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
-| 원고 `contract` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
-| 원고 `camera2` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
-| 원고 `camerax` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
-| 원고 `comparison` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review |
+| 원고 `contract` | 최신 | 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review |
+| 원고 `camera2` | 최신 | 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review |
+| 원고 `camerax` | 최신 | 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review |
+| 원고 `comparison` | 최신 | 검토 2026-10-19 @ `b0648a05` · codex-user-authorized-depth-review |
 
 <!-- omm:end id=status -->
 

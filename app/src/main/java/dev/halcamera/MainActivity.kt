@@ -91,18 +91,18 @@ class MainActivity : ComponentActivity() {
     private lateinit var bottomBar: LinearLayout
     private lateinit var graphButton: Button
     private lateinit var callbackGraph: ResultCallbackGraph
-    private lateinit var zoomControl: ExpandingZoomControl
+    internal lateinit var zoomControl: ExpandingZoomControl
     internal lateinit var controlBar: LiveControlBar
-    private lateinit var manualPanel: ManualControlPanel
+    internal lateinit var manualPanel: ManualControlPanel
     internal var manualCapabilities = ManualSupport()
     private lateinit var cameraNotice: TextView
     private var savedNoticeShown = false
     private val clearNotice = Runnable { savedNoticeShown = false; if (ready || recordingVideo) cameraNotice.visibility = View.GONE }
     private lateinit var recentMedia: RecentMediaThumbnail
-    private lateinit var liveIndicator: LiveIndicator
+    internal lateinit var liveIndicator: LiveIndicator
     private var lastPreviewFrameNs = 0L
     private var cameraXStreaming = false
-    private lateinit var metrics: LiveMeasurementView
+    internal lateinit var metrics: LiveMeasurementView
     private lateinit var readings: LiveReadings
     private val incidents by lazy {
         IncidentActions(this, io, main, object : IncidentActions.Host {
@@ -114,7 +114,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private lateinit var reportButton: Button
-    private lateinit var mediaButton: ShutterButton
+    internal lateinit var mediaButton: ShutterButton
     private lateinit var photoModeButton: Button
     private lateinit var videoModeButton: Button
     private lateinit var multiButton: Button
@@ -130,6 +130,8 @@ class MainActivity : ComponentActivity() {
     private var cameraEndpoints = emptyMap<String, CameraEndpoint>()
     private lateinit var labButton: Button
     internal var videoMode = false
+    internal var depthSize: LiveSize? = null
+    internal lateinit var depthModeButton: Button
     internal var recordingVideo = false
     internal var stoppingRecording = false
     private var recordingStartedAt = 0L
@@ -145,7 +147,7 @@ class MainActivity : ComponentActivity() {
         if (grants.values.all { it }) action?.invoke() else toast("Allow the requested permissions to save media.")
     }
     private lateinit var engineButton: Button
-    private lateinit var physicalPipButton: Button
+    internal lateinit var physicalPipButton: Button
     internal var pendingPip: PipSource? = null
     internal val pipUi by lazy { LivePipController(this,{ previewHost },{ engine as? PipCamera },::updateMediaControls,{ lastPreviewFrameNs = nowNs() },::showNotice,{ cameraId }) }
     private val physicalPip by lazy { dev.halcamera.ui.PhysicalPipPicker(this,manager) }
@@ -224,7 +226,7 @@ class MainActivity : ComponentActivity() {
                 liveIndicator.bindSizes(telemetry.sessions[sessionId]?.get("negotiatedStreams") as? Map<*, *>)
             }
             readings.update(events, frames, time, sessionId, controlBar.controls)
-            manualPanel.bind(controlBar.controls.manual, (ready || recordingVideo) && !stoppingRecording && cli.active == null && !bursts.controlsLocked,
+            manualPanel.bind(controlBar.controls.manual, depthSize == null && (ready || recordingVideo) && !stoppingRecording && cli.active == null && !bursts.controlsLocked,
                 manualCapabilities, frames.lastOrNull(), time)
             manualBack.isEnabled = manualPanel.isExpanded
             if (callbackGraph.isVisible) callbackGraph.updateLive(events,sessionId,time,telemetry.sessions,(engine as? PipCamera)?.pipCallbackSession)
@@ -247,6 +249,8 @@ class MainActivity : ComponentActivity() {
         reconnectFromLab = savedInstanceState?.getBoolean("reconnectFromLab") ?: false
         zoomRatio = savedInstanceState?.getFloat("zoom") ?: 1f
         videoMode = savedInstanceState?.getBoolean("videoMode") ?: false
+        @Suppress("DEPRECATION")
+        depthSize = savedInstanceState?.getSerializable("depthSize") as? LiveSize
         @Suppress("DEPRECATION", "UNCHECKED_CAST")
         (savedInstanceState?.getSerializable("liveStreams") as? HashMap<String, LiveStreamSettings>)?.let(streamSettings::putAll)
         @Suppress("DEPRECATION", "UNCHECKED_CAST")
@@ -261,6 +265,7 @@ class MainActivity : ComponentActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("engine", engineName); outState.putString("camera", cameraId); outState.putBoolean("paused", paused); outState.putFloat("zoom", zoomRatio)
         outState.putBoolean("videoMode", videoMode)
+        outState.putSerializable("depthSize", depthSize)
         outState.putSerializable("liveStreams", HashMap(streamSettings))
         outState.putSerializable("goodStreams", HashMap(goodStreams))
         outState.putBoolean("returningFromLab", returningFromLab)
@@ -343,7 +348,7 @@ class MainActivity : ComponentActivity() {
         ready=false; mediaButton.isEnabled=false; reportButton.isEnabled=false
         val old = engine; engine = null
         val released = engineCameraId.takeIf { old != null }
-        (old as? CameraXEngine)?.releaseOnClose = engineName != "CameraX"
+        (old as? CameraXEngine)?.releaseOnClose = engineName != "CameraX" || depthSize != null
         if (old != null) {
             closing = true; setStatus("Closing camera…", false)
             old.close {
@@ -360,7 +365,7 @@ class MainActivity : ComponentActivity() {
         }
         if (cameraId.isEmpty()) { setStatus("No cameras available.", false); return }
         sessionId = UUID.randomUUID().toString()
-        if (pendingPip == null && engineCameraId == cameraId) pendingPip = pipUi.selected
+        if (depthSize == null && pendingPip == null && engineCameraId == cameraId) pendingPip = pipUi.selected
         previewStartup.reset()
         engineCameraId = cameraId
         val thisSession = sessionId
@@ -392,7 +397,9 @@ class MainActivity : ComponentActivity() {
         }
         val notice = { text: String -> if (thisSession == sessionId && resumed && !closing) showNotice(text) }
         val status = { text: String, ok: Boolean -> if (thisSession == sessionId && resumed && !closing) setStatus(text,ok) }
-        engine = if (engineName == "CameraX") {
+        engine = if (depthSize != null) {
+            createDepthEngine(released, status)
+        } else if (engineName == "CameraX") {
             val view = PreviewView(this).apply { implementationMode = PreviewView.ImplementationMode.COMPATIBLE; scaleType = PreviewView.ScaleType.FILL_CENTER }
             previewHost.addView(view, FrameLayout.LayoutParams(-1,-1))
             view.previewStreamState.observe(this) { state ->
@@ -442,7 +449,7 @@ class MainActivity : ComponentActivity() {
                 }
             }, recordingState = recordingState, notice = notice, status = status)
         }
-        previewHost.addView(FocusRing(this, { engine as? TouchMetering }) { controlBar.setAeLock(it) }.apply {
+        if (depthSize == null) previewHost.addView(FocusRing(this, { engine as? TouchMetering }) { controlBar.setAeLock(it) }.apply {
             canInteract = { !bursts.controlsLocked && cli.active == null }
             onZoomScale = { factor ->
                 if (factor.isFinite() && factor > 0f) applyZoom(zoomRatio * factor)
@@ -455,6 +462,10 @@ class MainActivity : ComponentActivity() {
         }, FrameLayout.LayoutParams(-1,-1))
         try { engine?.start() } catch (e: Exception) { setStatus("Start failed: ${e.message}",false) }
         updateCameraChoices()
+    }
+    internal fun depthFrameArrived() {
+        lastPreviewFrameNs = nowNs()
+        initialPreviewArrived()
     }
     private fun initialPreviewArrived() {
         previewStartup.frameArrived()?.let { setStatus(it, true) }
@@ -646,9 +657,10 @@ class MainActivity : ComponentActivity() {
         modeControls=row().apply { gravity=Gravity.CENTER; isBaselineAligned=false }
         photoModeButton=button("Photo") { selectMode(false) }
         videoModeButton=button("Video") { selectMode(true) }
+        depthModeButton=button("Depth") { chooseDepth() }
         multiButton=button("Multi · P") { openConcurrent(false) }
         multiVideoButton=button("Multi · V") { openConcurrent(true) }
-        listOf(photoModeButton,videoModeButton,multiButton,multiVideoButton).forEach {
+        listOf(photoModeButton,videoModeButton,depthModeButton,multiButton,multiVideoButton).forEach {
             it.background=cameraChrome(Color.TRANSPARENT)
             it.textSize=12f; it.gravity=Gravity.CENTER; it.includeFontPadding=false; it.setSingleLine(true)
             it.setPadding(dp(4),0,dp(4),0)
@@ -706,19 +718,10 @@ class MainActivity : ComponentActivity() {
                 pendingPermissionAction=null
                 recorder.finish("camera_changed")?.let(incidents::export)
                 cameraId=chosen; zoomRatio=1f
+                depthSize=null
                 resetControls(); updateCameraChoices(); restartCamera()
             }
         }
-    }
-    private fun selectMode(video: Boolean) {
-        if (cli.active != null) return
-        if (recordingVideo || stoppingRecording || closing || pendingPermissionAction != null ||
-            mediaBusy() || !ready || videoMode==video) return
-        pendingPermissionAction=null
-        videoMode=video
-        resetModeSettings()
-        restartCamera()
-        updateMediaControls()
     }
     /** Share lens labels with Benchmark, Probe and History; unknown IDs retain the short label. */
     private fun cameraLabel(id:String):String {
@@ -726,7 +729,7 @@ class MainActivity : ComponentActivity() {
         return cameraEndpoints[id]?.let(CameraLabel::full) ?: CameraLabel.short(id)
     }
     private fun applyZoom(ratio: Float) {
-        if (!resumed || paused || closing || cli.active != null || bursts.controlsLocked ||
+        if (depthSize != null || !resumed || paused || closing || cli.active != null || bursts.controlsLocked ||
             !(ready || recordingVideo) || stoppingRecording || cameraId.isEmpty() || !ratio.isFinite()) return
         val range = zoomRange(manager, cameraId)
         zoomRatio = ratio.coerceIn(range.first, range.second)
@@ -750,9 +753,9 @@ class MainActivity : ComponentActivity() {
         val idle=!recordingVideo && bursts.run==null
         cli.setUiBusy(liveCli, recordingVideo || stoppingRecording || pendingPermissionAction != null || mediaBusy())
         listOf(photoModeButton,videoModeButton).forEachIndexed { index, button ->
-            val selected=(index==1)==videoMode
+            val selected=depthSize == null && (index==1)==videoMode
             button.isSelected=selected
-            button.isEnabled=ready && idle && !mediaBusy() && pendingPermissionAction == null
+            button.isEnabled=(ready || depthSize != null) && idle && !closing && !mediaBusy() && pendingPermissionAction == null
             button.setTextColor(if(selected) Look.onDark else Look.onDarkMuted)
             button.setTypeface(null,if(selected) Typeface.BOLD else Typeface.NORMAL)
             button.contentDescription=if(index==0) "Photo mode: save selected JPEG and RAW outputs" else "Video mode with audio"
@@ -792,7 +795,7 @@ class MainActivity : ComponentActivity() {
         // Zoom stays live while recording (#174): the engine changes the recording request in place.
         // The engine reports "REC" as not-ready, so a running recording counts as ready here, as for the shutter.
         zoomControl.isEnabled=(ready || recordingVideo) && !stoppingRecording && !bursts.controlsLocked
-        controlBar.bind(videoMode,(ready || recordingVideo) && !stoppingRecording && cli.active==null && !bursts.controlsLocked,
+        controlBar.bind(videoMode,depthSize == null && (ready || recordingVideo) && !stoppingRecording && cli.active==null && !bursts.controlsLocked,
             pipUi.selected != null || pipUi.busy)
         galleryButton.isEnabled=idle
         labButton.isEnabled=!recordingVideo && !stoppingRecording && !closing && !mediaBusy()
@@ -813,6 +816,7 @@ class MainActivity : ComponentActivity() {
         if (cli.active != null) {
             listOf(mediaButton, engineButton, cameraShortcut, photoModeButton, videoModeButton, zoomControl, galleryButton, labButton, reportButton).forEach { it.isEnabled = false }
         }
+        updateDepthControls(callbackGraph.isVisible, topBar.height + dp(8), bottomBar.height + dp(64))
         listOf(engineButton,cameraShortcut,photoModeButton,videoModeButton,mediaButton,galleryButton,labButton).forEach {
             it.alpha=if(it.isEnabled) 1f else 0.4f
         }
@@ -823,6 +827,7 @@ class MainActivity : ComponentActivity() {
         engineName=name; resetModeSettings(); updateCameraChoices(); restartCamera()
     }
     internal fun resetModeSettings() {
+        depthSize = null
         if (::callbackGraph.isInitialized) showCallbacks(false)
         pendingPip = null
         pipUi.resetMode()
@@ -919,7 +924,7 @@ class MainActivity : ComponentActivity() {
         if (show && ::manualPanel.isInitialized) manualPanel.close()
         callbackGraph.reset()
         callbackGraph.visibility = if (show) View.VISIBLE else View.GONE
-        metrics.visibility = if (show) View.GONE else View.VISIBLE
+        metrics.visibility = if (show || depthSize != null) View.GONE else View.VISIBLE
         graphBack.isEnabled = show
         graphButton.contentDescription = if (show) "Hide callback timing" else "Show callback timing"
         widgets.highlight(graphButton,show)

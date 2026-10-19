@@ -37,6 +37,8 @@ verifications: []
 
 **Camera2Engine은 앱에서 CaptureRequest를 직접 구성합니다.** `request_observed`에 기록한 키를 HAL 로그와 대조할 수 있습니다. 엔진 자체는 세션, 요청 구성, 줌, Live 제어를 담당하고, 사진은 `Camera2StillCapture`, Live 녹화는 `Camera2LiveRecorder`, 터치 측광은 `Camera2TouchFocus`, 벤치마크 녹화는 `BenchmarkRecorder`가 맡습니다. 카메라 요청과 capture 콜백은 엔진이 만든 카메라 스레드 하나에서 처리하고, 버퍼 relay와 파일 저장은 각자의 스레드에서 처리합니다.
 
+Depth 보기는 일반 `Camera2Engine`과 별도인 `DepthCameraEngine`이 담당합니다. 컬러·사진·녹화 출력 대신 DEPTH16 ImageReader 하나만 사용하며, 기존 엔진을 닫은 뒤 선택한 해상도로 엽니다. 사용 방법과 표시 범위는 [Depth 맵 보기](live.md#depth-맵을-보세요)를 확인하세요.
+
 ### PIP 지원을 미리 확인하세요
 
 **현재 해상도와 유지되는 YUV·JPEG·RAW 출력, 보조 카메라의 Preview·사진 출력으로 PIP 지원 여부를 조회합니다.** 선택창을 열 때와 적용 직전에 검사하며 제조사·칩셋·ID별 예외는 두지 않습니다. Physical은 열린 카메라의 `isSessionConfigurationSupported`, Service는 `CameraManager.isConcurrentSessionConfigurationSupported`를 사용합니다. 합성 녹화의 인코더는 GL 출력을 받으므로 카메라 세션 조회에 넣지 않습니다.
