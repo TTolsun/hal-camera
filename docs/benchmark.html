@@ -32,8 +32,7 @@
     <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
     <h1 lang="en">Measurements with meaning.</h1><p>같은 조건에서도, 카메라의 응답은 조금씩 달라집니다.</p>
 <p><strong>먼저 설정을 바꾸지 않고 두 번 측정해 보세요.</strong> Benchmark는 카메라 열기·프리뷰·촬영·녹화에 걸린 시간과 콜백을 기록합니다.</p>
-<p>결과에서는 비교 기준인 <a href="glossary.html#baseline">baseline</a> 대비 변화를 읽습니다. 실행 기록에서는 비교 대상을 고르고, 결과 파일을 내보냅니다.</p>
-<p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p><h2 id="실행-조건을-확인하세요">실행 조건을 확인하세요</h2>
+<p class="doc-evidence">스크린샷은 당시 빌드의 기록입니다. <a href="evidence.html#앱-화면-촬영">촬영 기기·버전·확인 범위</a>를 함께 읽으세요.</p><h2 id="실행-조건을-확인하세요">실행 조건을 확인하세요</h2>
 <ol>
 <li>Live에서 <code>Lab → Benchmark</code>를 엽니다.</li>
 <li>카메라와 <a href="glossary.html#profile">profile</a>을 확인합니다. Live의 출력 설정과는 별개입니다.</li>
@@ -41,10 +40,8 @@
 <li>판정과 <code>Run Details</code>를 확인합니다. 무효·표본 부족이면 사유를 확인한 뒤 다시 측정합니다.</li>
 </ol>
 <p><strong>현재 앱은 종합 점수를 계산하지 않습니다.</strong> 지표별 측정값과 baseline 대비 저하 판정을 확인하세요.</p>
-<p><a href="#실행-기록에서-비교하고-내보내세요">두 실행 비교</a>를 열면 같은 조건에서도 달라지는 값을 볼 수 있습니다.</p>
-<p>작은 차이가 반복해도 나타나는지 살펴보세요. 한 번의 차이를 HAL 변경의 효과로 단정하기 전에 확인할 일입니다.</p>
+<p>한 번의 차이를 HAL 변경의 효과로 단정하지 말고, 같은 조건에서 반복되는지 확인하세요.</p>
 <h3 id="비교-기준을-고르세요">비교 기준을 고르세요</h3>
-<p><strong>처음 비교한다면 정상 실행을 기준으로 지정하세요.</strong></p>
 <ol>
 <li>Benchmark의 <code>Run History</code> 또는 <code>Lab → Run History</code>를 엽니다.</li>
 <li>기준으로 쓸 정상 실행의 <code>⋮</code> 메뉴에서 <code>baseline에 추가</code>를 선택합니다.</li>
@@ -52,7 +49,6 @@
 <li>결과의 판정과 달라진 지표를 확인합니다.</li>
 </ol>
 <p>반복 측정에서는 정상 실행을 다섯 개 이상 baseline에 추가하기를 권장합니다.</p>
-<p>한 번만 비교하려면 <a href="#실행-기록에서-비교하고-내보내세요">두 실행 비교</a>를 사용하세요. 기준을 고르는 방식에 따라 결과를 읽는 방법도 달라집니다.</p>
 <ul>
 <li><strong>처음 측정했다면</strong> 비교할 실행이 없으므로 측정값만 봅니다.</li>
 <li><strong>baseline을 지정하지 않았다면</strong> 이전의 비교 가능한 실행과 변화량만 표시합니다. 저하·개선은 판정하지 않습니다.</li>
@@ -79,9 +75,7 @@
 <figcaption>카메라 열기 반복 측정이 진행 중입니다. 현재 단계와 회차, 진행률을 확인할 수 있습니다.</figcaption>
 </figure></details>
 </div><details id="benchmark-sampling" data-search-section>
-<summary>진행 표시와 녹화 표본의 세부 규칙</summary><p>진행 화면은 단계 제목 아래에 준비·첫 프레임 대기·관측·촬영·저장 상태를 짧게 표시합니다.</p>
-<p>워밍업과 관측에는 경과 시간과 예정 시간을, 사진에는 현재 촬영 순서를 표시합니다. 녹화 프레임 수는 현재 회차의 capture_result를 집계하므로 새 회차에서 초기화됩니다.</p>
-<p>진행률은 표시용 추정치이며 측정값에 영향을 주지 않습니다.</p>
+<summary>진행 표시와 녹화 표본의 세부 규칙</summary><p>진행률은 표시용 추정치이며 측정값에 영향을 주지 않습니다.</p>
 <p><code>camera2-standard-v2</code>는 사진 촬영을 마친 뒤 카메라를 닫지 않고 9초 녹화를 다섯 번 반복합니다.</p>
 <p>첫 회를 워밍업으로 제외하므로 녹화 지표의 유효 표본은 네 개입니다. 이때 p95는 사실상 최대값입니다.</p>
 <p>녹화를 마지막에 실행하므로 녹화 세션 구성의 영향이 앞선 프리뷰 관측과 촬영 지연에 섞이지 않습니다.</p>
@@ -94,18 +88,21 @@
 <div class="doc-metric-track" aria-hidden="true"><span class="doc-metric-bar"></span><span class="doc-metric-baseline"></span></div>
 <dl class="doc-metric-key"><div><dt>막대 · 이번 값</dt><dd>120 ms</dd></div><div><dt>눈금 · 기준 값</dt><dd>100 ms</dd></div><div><dt>변화량</dt><dd>+20 ms (+20%)</dd></div></dl>
 <figcaption>이 예시에서는 20 ms 더 걸렸습니다. 실제 저하 판정은 비교 조건과 지표별 임계값으로 결정합니다. 실측 결과나 앱 화면이 아닙니다.</figcaption>
-</figure><p>비교가 성립하는지부터 확인합니다.</p>
-<ul>
-<li><strong><code>Measurement invalid</code>:</strong> 측정 유효성 조건을 충족하지 못했습니다. <code>Run Details</code>에서 무효 사유를 확인하고 조건을 바로잡은 뒤 다시 측정하세요.</li>
-<li><strong><code>First run</code>:</strong> 비교할 실행이 없습니다. 이번 조건과 측정값을 확인하고 같은 조건으로 다음 실행을 측정하세요.</li>
-<li><strong><code>This run is the baseline</code>:</strong> 현재 실행이 기준입니다. 비교할 다른 실행을 선택하세요.</li>
-<li><strong><code>No baseline</code>:</strong> 이전 실행과의 변화량만 보입니다. 저하 판정이 필요하면 정상 실행을 baseline에 추가하세요.</li>
-<li><strong><code>No verdict</code>:</strong> 기준은 있지만 비교 조건을 충족한 지표가 없습니다. <code>Run Details</code>에서 비교 불가 사유를 확인하세요.</li>
-</ul>
-<p>판정이 나왔다면, 해당 지표와 실행 조건을 함께 읽습니다.</p>
-<ul>
-<li><strong><code>N metrics degraded</code>:</strong> 저하된 지표가 N개입니다. 해당 지표와 실행 조건 차이를 확인하고 같은 조건에서 재현되는지 측정하세요.</li>
-<li><strong><code>No degradation</code>:</strong> 판정한 지표에는 저하가 없습니다. 제외된 지표와 경고도 확인하세요. 모든 HAL 동작이 정상이라는 뜻은 아닙니다.</li>
+</figure><ul>
+<li><p><strong><code>Measurement invalid</code>:</strong> 측정 유효성 조건을 충족하지 못했습니다. <code>Run Details</code>에서 무효 사유를 확인하고 조건을 바로잡은 뒤 다시 측정하세요.</p>
+</li>
+<li><p><strong><code>First run</code>:</strong> 비교할 실행이 없습니다. 이번 조건과 측정값을 확인하고 같은 조건으로 다음 실행을 측정하세요.</p>
+</li>
+<li><p><strong><code>This run is the baseline</code>:</strong> 현재 실행이 기준입니다. 비교할 다른 실행을 선택하세요.</p>
+</li>
+<li><p><strong><code>No baseline</code>:</strong> 이전 실행과의 변화량만 보입니다. 저하 판정이 필요하면 정상 실행을 baseline에 추가하세요.</p>
+</li>
+<li><p><strong><code>No verdict</code>:</strong> 기준은 있지만 비교 조건을 충족한 지표가 없습니다. <code>Run Details</code>에서 비교 불가 사유를 확인하세요.</p>
+</li>
+<li><p><strong><code>N metrics degraded</code>:</strong> 저하된 지표가 N개입니다. 해당 지표와 실행 조건 차이를 확인하고 같은 조건에서 재현되는지 측정하세요.</p>
+</li>
+<li><p><strong><code>No degradation</code>:</strong> 판정한 지표에는 저하가 없습니다. 제외된 지표와 경고도 확인하세요. 모든 HAL 동작이 정상이라는 뜻은 아닙니다.</p>
+</li>
 </ul>
 <div id="screen-benchmark-result">
 <details id="detail-ee38b8ed09" data-search-section>
@@ -117,34 +114,31 @@
 <summary>막대·단위·프레임 지표 자세히 읽기</summary><p>지표는 <code>Launch</code>·<code>Preview</code>·<code>Capture</code>·<code>Stability</code>·<code>Record</code>·<code>3A</code>로 묶습니다. 막대는 비교 대상의 값, 눈금은 baseline 또는 이전 실행의 값입니다.</p>
 <p>시간 값의 대표값은 중앙값이며, 각 지표 아래에는 측정한 Camera2 구간을 표시합니다. 지표 정의는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/METRICS.md">METRICS.md</a>를 확인하세요.</p>
 <p>Benchmark의 <code>Partial</code>은 <code>onCaptureStarted → onCaptureCompleted</code> 구간을 뜻합니다. Camera2의 중간 메타데이터 콜백인 <code>onCaptureProgressed</code>를 뜻하지 않습니다.</p>
-<p>막대의 길이와 변화량은 다음처럼 읽습니다.</p>
 <ul>
-<li><strong>막대 길이:</strong> 같은 묶음에서 단위가 같은 지표끼리 축을 공유하며, 이번 실행의 최댓값이 트랙의 80%에 옵니다. 단위가 다른 행이나 다른 묶음의 길이는 직접 비교하지 않습니다.</li>
-<li><strong>별도 축:</strong> 묶음에서 단위가 하나뿐인 지표와 <code>Jitter</code>·<code>Record jitter</code>는 자체 축을 씁니다.</li>
-<li><strong>끝의 ▸:</strong> 기준 값이 표시 범위를 넘었습니다.</li>
-<li><strong>변화량:</strong> 시간·비율 지표는 절댓값과 변화율을, 개수 지표는 절댓값만 표시합니다. 단위가 다르면 변화율을 표시하지 않습니다.</li>
-<li><strong>빨강·초록·회색:</strong> 각각 저하, 개선, 판정하지 않은 변화를 뜻합니다. 이전 실행과의 비교는 회색으로 표시합니다.</li>
-</ul>
-<p>값이 없거나 판정에서 빠진 지표에는 이유를 표시합니다.</p>
-<ul>
-<li><strong><code>timeout</code>:</strong> 3A가 관측 창 안에 수렴하지 않았습니다. 현재 값의 막대는 비우며, 기준 값이 timeout이면 눈금과 변화량을 표시하지 않습니다.</li>
-<li><strong><code>Baseline에만 있음</code>:</strong> 기준 실행에만 값이 있습니다. 현재 값은 <code>—</code>로 표시하고 기준 눈금은 남깁니다.</li>
-<li><strong><code>조건 불일치</code>·<code>표본 부족</code>:</strong> 해당 지표를 판정하지 못한 이유입니다.</li>
+<li><p><strong>막대 길이:</strong> 같은 묶음에서 단위가 같은 지표끼리 축을 공유하며, 이번 실행의 최댓값이 트랙의 80%에 옵니다. 단위가 다른 행이나 다른 묶음의 길이는 직접 비교하지 않습니다.</p>
+</li>
+<li><p><strong>별도 축:</strong> 묶음에서 단위가 하나뿐인 지표와 <code>Jitter</code>·<code>Record jitter</code>는 자체 축을 씁니다.</p>
+</li>
+<li><p><strong>끝의 ▸:</strong> 기준 값이 표시 범위를 넘었습니다.</p>
+</li>
+<li><p><strong>변화량:</strong> 시간·비율 지표는 절댓값과 변화율을, 개수 지표는 절댓값만 표시합니다. 단위가 다르면 변화율을 표시하지 않습니다.</p>
+</li>
+<li><p><strong>빨강·초록·회색:</strong> 각각 저하, 개선, 판정하지 않은 변화를 뜻합니다. 이전 실행과의 비교는 회색으로 표시합니다.</p>
+</li>
+<li><p><strong><code>timeout</code>:</strong> 3A가 관측 창 안에 수렴하지 않았습니다. 현재 값의 막대는 비우며, 기준 값이 timeout이면 눈금과 변화량을 표시하지 않습니다.</p>
+</li>
+<li><p><strong><code>Baseline에만 있음</code>:</strong> 기준 실행에만 값이 있습니다. 현재 값은 <code>—</code>로 표시하고 기준 눈금은 남깁니다.</p>
+</li>
+<li><p><strong><code>조건 불일치</code>·<code>표본 부족</code>:</strong> 해당 지표를 판정하지 못한 이유입니다.</p>
+</li>
 </ul>
 <p><code>Stalls</code>·<code>Callback fail</code>·<code>Record stalls</code>는 막대 없이 개수를 표시합니다. 기준과 같으면 변화량을 생략합니다.</p>
-<p>0.1 ms보다 작은 시간 값은 µs로, 1 µs보다 작으면 ns로 표시합니다.</p>
-<p><code>Frame rate</code>는 프리뷰 간격 지표 <code>H.1</code>의 역수이며 판정은 <code>H.1</code>에 따릅니다.</p>
-<p><code>Record fps</code>는 녹화 시작 3초를 제외한 뒤 1초 창에서 관측한 프레임 수를 바탕으로 계산합니다. 값이 낮아질 때 저하로 판정합니다.</p>
-<p><code>Stalls</code>와 <code>Record stalls</code>는 기준의 1.5배를 넘은 프레임 간격의 횟수입니다. <code>Jitter</code>와 <code>Record jitter</code>는 간격의 편차입니다.</p>
+<p>지표별 계산식과 임계값은 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/METRICS.md">METRICS.md</a>를 확인하세요. <code>Partial</code>은 중간 메타데이터 콜백을 뜻하지 않습니다.</p>
 <p>이 수치만으로 HAL 내부의 프레임 손실을 확정할 수는 없습니다.</p>
 </details><p><code>Run Details</code>에는 기기, 카메라, OS 빌드, subject, 표본 수, 발열, 비고, 파일과 비교 기준의 정보가 있습니다.</p>
 <p>validity flag는 화면에서는 뜻을 풀어 쓰고 JSON과 CSV에는 원래 코드를 유지합니다. <code>Export</code>로 결과 파일을 공유합니다.</p>
 <h2 id="실행-기록에서-비교하고-내보내세요">실행 기록에서 비교하고 내보내세요</h2>
-<p>한 번의 결과를 읽었다면, 기록에서 비교할 실행을 골라 보세요.</p>
 <p><code>Lab → Run History</code>에서 실행 기록을 엽니다. 지정된 baseline을 위에, 나머지 실행을 최신순으로 표시합니다.</p>
-<p>각 행에는 실행 시각과 촬영 지연, 카메라가 나옵니다. 빌드 이름을 입력했다면 한 줄이 추가됩니다.</p>
-<p>카메라 하나로 필터링한 목록에서는 행마다 카메라 이름을 반복하지 않습니다.</p>
-<p>배지는 실행의 판정과 사용 조건을 요약합니다.</p>
 <ul>
 <li><strong><code>▲ N degraded</code>:</strong> 지정된 baseline 대비 N개 지표가 저하되었습니다.</li>
 <li><strong><code>측정 무효</code>·<code>비교 불가</code>·<code>점수 제외</code>:</strong> 결과의 사용 조건을 충족하지 못했습니다. <code>점수 제외</code>는 호환용 적격성 표시이며 현재 점수를 계산한다는 뜻은 아닙니다.</li>
@@ -156,7 +150,6 @@
 <li>기준으로 쓸 실행을 먼저 고릅니다.</li>
 <li>비교할 실행을 고릅니다. 취소나 뒤로 가기로 선택을 해제할 수 있습니다.</li>
 </ol>
-<p>기록을 관리하거나 파일로 남기는 방법도 있습니다.</p>
 <ul>
 <li><strong>실행 하나를 관리하려면</strong> 행의 <code>⋮</code> 메뉴를 누르거나 길게 누릅니다. baseline 추가·빼기, 비교, JSON·CSV 내보내기, 삭제를 고릅니다.</li>
 <li><strong>실행 삭제를 선택하면</strong> 확인을 거쳐 실행을 지우고 baseline에서도 뺍니다.</li>

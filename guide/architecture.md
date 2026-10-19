@@ -4,19 +4,16 @@ nav_order: 4
 ---
 <h1 lang="en">One system.<br>Clear responsibilities.</h1>
 
-**수정할 기능과 연결된 코드부터 찾으세요.** 이 문서는 카메라 구동부터 이벤트 기록, 지표 계산, 결과 표시까지의 책임과 변경 시 지켜야 할 제약을 설명합니다.
+**측정·판정은 Android 의존성이 없는 Kotlin에서 계산합니다.** 카메라 콜백은 이벤트로 기록한 뒤 지표로 바꾸고 저장된 실행과 비교합니다.
 
-| 지금 확인할 내용 | 이동할 절 |
-| --- | --- |
-| 앱의 전체 구조와 관측·비교 경로를 이해합니다. | [앱의 역할과 평가 경로](#앱의-역할과-평가-경로) |
-| 수정할 패키지를 찾습니다. | [패키지별 역할](#패키지별-역할) |
-| 측정값이 만들어지는 순서를 추적합니다. | [주요 실행 흐름](#주요-실행-흐름) |
-| 카메라 종료와 스레드 제약을 확인합니다. | [생명주기와 스레드](#생명주기와-스레드) |
-| 변경 후 지켜야 할 규칙과 검증 방법을 확인합니다. | [변경 시 지켜야 할 제약](#변경-시-지켜야-할-제약) |
+- **촬영과 기록:** `camera/`가 카메라를 구동하고 `telemetry/`가 이벤트를 남깁니다.
+- **계산과 비교:** `metrics/`와 `benchmark/domain/`에서 처리합니다. Android·`org.json`을 사용하지 않습니다.
+- **변경 경계:** 기존 카메라의 `close(done)`가 끝난 뒤 다음 카메라를 엽니다. 지원하지 않는 출력 크기는 자동 대체하지 않습니다.
 
-앱 소스를 빌드하려면 [Build](building.md)를 확인하세요.
+수정할 부분의 [패키지 역할](#패키지별-역할), [실행 흐름](#주요-실행-흐름), [변경 제약](#변경-시-지켜야-할-제약)을 골라 읽으세요. 아래 코드 근거는 기기 실측과 구분합니다.
 
-아래의 `코드 확인`은 구현을 대조했다는 뜻이며, 기기 실측을 뜻하지 않습니다.
+<details markdown="1" id="architecture-reference">
+<summary>전체 구조·실행 흐름·코드 근거</summary>
 
 ## 앱의 역할과 평가 경로
 
@@ -816,9 +813,11 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 ## 관련 설계 자료
 
-- [v0.2 제품 정의](https://github.com/TTolsun/hal-camera/blob/main/docs/PRODUCT-v0.2.md)와 [v0.3 전환 계획](https://github.com/TTolsun/hal-camera/blob/main/docs/PLAN-BenchMarker-v0.3.md)을 확인할 수 있습니다.
+- [v0.2 제품 정의](https://github.com/TTolsun/hal-camera/blob/main/docs/archive/PRODUCT-v0.2.md)와 [v0.3 전환 계획](https://github.com/TTolsun/hal-camera/blob/main/docs/PLAN-BenchMarker-v0.3.md)을 확인할 수 있습니다.
 - [지표 정의](https://github.com/TTolsun/hal-camera/blob/main/docs/METRICS.md)에서 측정값의 의미를 확인할 수 있습니다.
 - [설계 결정 기록](_inputs/decisions.md)에서 확정한 선택과 아직 기록하지 않은 이유를 구분할 수 있습니다.
 - 구조 원본은 저장소의 `.omm/`에 있으며 `omm view`로 열람할 수 있습니다.
 
-**다음 단계:** [디버깅 절차](troubleshooting.md#앱과-프레임워크hal을-구분하세요)에 따라 원시 이벤트와 계산 결과를 대조하세요.
+</details>
+
+**다음 단계:** [Build](building.md)에서 개발 환경과 실행 명령을 확인하세요.
