@@ -32,7 +32,6 @@
     <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
     <h1 lang="en">Set. Capture. Inspect.</h1><p>같은 장면도, 촬영 조건을 바꾸면 다르게 남습니다.</p>
 <p>Photo로 한 장을 찍고, Video로 움직임을 담아 보세요. 처음에는 기본값이면 충분합니다.</p>
-<p>지금 해 볼 작업 하나에서 시작하세요.</p>
 <ul>
 <li><strong><a href="#live에서-촬영하세요">촬영</a></strong> · 사진·연사·AEB·동영상을 촬영합니다.</li>
 <li><strong><a href="#수동-촬영-조건을-고정하세요">수동 설정</a></strong> · ISO·노출 시간·초점을 고정합니다.</li>
@@ -51,20 +50,17 @@
 <p><strong>모드나 엔진을 바꾸면 새 촬영으로 시작합니다.</strong> PIP·스트림·줌·촬영 제어는 초기화됩니다. Callback의 고정 시간은 사용자 설정으로 유지합니다.</p>
 <h3 id="동영상을-찍으세요">동영상을 찍으세요</h3>
 <ol>
-<li>하단에서 <code>Video</code>를 선택합니다. 녹화 스트림을 미리 준비합니다.</li>
-<li>빨간 셔터를 누릅니다. 시작할 때 카메라 세션을 다시 만들지 않습니다.</li>
+<li>하단에서 <code>Video</code>를 선택합니다.</li>
+<li>빨간 셔터로 녹화를 시작합니다.</li>
 <li>프리뷰를 두 손가락으로 확대하거나 줌 버튼을 눌러 구도를 바꿉니다.</li>
 <li>같은 셔터로 녹화를 끝내고 저장 완료 안내를 확인합니다.</li>
 </ol>
-<p><strong>직접 해 보기:</strong> 같은 물체를 녹화하며 1배 → 2배 → 1배로 바꿔 보세요. 녹화 시간은 계속 흐르고 줌 표시가 손동작을 따라옵니다.</p>
 <p>Photo와 PIP에서도 같은 방식으로 확대하며, PIP의 줌은 메인 카메라에 적용됩니다.</p>
 <ul>
 <li><strong>RAW/DNG</strong> · Photo: 지원되는 Camera2에서 선택합니다. Video: 사용할 수 없습니다.</li>
 <li><strong>손떨림 보정</strong> · Photo: Off로 고정합니다. Video: 기기가 지원하는 모드를 선택합니다.</li>
-<li><strong>셔터</strong> · Photo: 사진을 저장합니다. Video: 녹화를 시작·정지합니다.</li>
 </ul>
-<p>그 밖의 촬영 제어는 같은 방식을 따릅니다. 저장 중에는 완료를 기다리세요.</p>
-<p>일반 사진·PIP 사진·동영상의 성공 안내는 3초 뒤 사라지고, 실패 안내는 유지합니다.</p>
+<p>저장 완료 뒤 다음 촬영을 시작하세요. 실패 안내는 화면에 남습니다.</p>
 <h3 id="녹화-중-조작">녹화 중 조작</h3>
 <p>녹화 중에는 셔터 아래에 경과 시간이 표시됩니다. 줌은 계속 바꿀 수 있지만 엔진·카메라·모드 변경, 일시정지, 갤러리와 다른 도구 진입은 제한됩니다.</p>
 <p>정지·저장이 끝나면 VIDEO 스트림을 다시 준비합니다. 준비가 끝나면 다음 녹화를 시작할 수 있습니다.</p>
@@ -75,15 +71,14 @@
 <li>저장 완료를 기다립니다. 저장하는 동안에는 다음 사진을 찍을 수 없습니다.</li>
 </ol>
 <p><strong>저장 결과:</strong> 선택한 JPEG 소스에 따라 카메라 JPEG 또는 YUV에서 변환한 JPEG 한 장을 저장합니다.</p>
-<p>PIP의 저장물은 <a href="#pip로-보이는-구도를-저장하세요">PIP 저장 결과</a>를 따릅니다.</p>
-<p>Multi에서는 <a href="#여러-카메라를-함께-촬영하세요">카메라별 원본</a>을 저장합니다. 사진 촬영이 실패해도 녹화는 계속됩니다.</p>
+<p><a href="#pip로-보이는-구도를-저장하세요">PIP는 합성 결과</a>, <a href="#여러-카메라를-함께-촬영하세요">Multi는 카메라별 원본</a>을 저장합니다. 사진이 실패해도 녹화는 계속됩니다.</p>
 <p>사진 버튼이 흐리면 눌러 이유를 확인하세요. JPEG가 Off이거나 기기가 녹화와 선택한 스냅샷 출력 조합을 지원하지 않으면 사용할 수 없습니다.</p>
 <p>일반 녹화의 JPEG 목록에서 YUV를 고르면 현재 YUV 크기를 사용합니다. PIP 사진은 PHOTO와 같은 합성 해상도를 사용합니다.</p>
 <p>CameraX에서는 사진 촬영 때 영상의 프레임 간격이 늘어날 수 있습니다.</p>
 <p>녹화 연속성이 중요하면 <a href="engine.html#녹화-중-사진의-알려진-제약">엔진별 제약과 검증 조건</a>을 먼저 확인하세요.</p>
 <h3 id="화면에서-바로-읽는-정보">화면에서 바로 읽는 정보</h3>
 <p><code>FPS · EXP · AE · AF · AWB</code>는 현재 프레임 속도, 노출 시간, 자동 노출·초점·화이트 밸런스 상태입니다.</p>
-<p>중앙의 고정된 자리에 표시하므로 상태가 바뀌어도 가로 위치가 움직이지 않습니다. <code>EXP 10.00ms</code>는 노출 시간이 10ms라는 뜻입니다.</p>
+<p><code>EXP 10.00ms</code>는 노출 시간이 10ms라는 뜻입니다.</p>
 <p>상단 화살표를 펼치면 Live·스트림 크기 대신 제어 버튼이 나옵니다.</p>
 <p><code>M</code>·<code>EV</code>·<code>Flash</code>는 누른 버튼 아래로 열리며, 같은 버튼이나 화살표로 닫습니다. 활성 설정은 실시간 정보 아래에서 확인합니다.</p>
 <p>Callback 그래프를 켜면 정보 줄은 잠시 숨깁니다.</p>
@@ -96,8 +91,7 @@
 <li>원하는 만큼 찍었으면 손을 뗍니다.</li>
 <li>저장한 장수와 실패 안내를 확인합니다.</li>
 </ol>
-<p><strong>저장 결과:</strong> 손을 뗄 때 이미 시작한 사진은 저장됩니다. 다음 사진은 찍지 않습니다.</p>
-<p>촬영 종료 안내는 자동으로 사라지지 않으며, 갤러리에서 저장물을 확인할 수 있습니다. 새 촬영을 시작하면 이전 안내를 지웁니다.</p>
+<p>손을 뗄 때 이미 시작한 사진은 저장하고, 다음 사진은 찍지 않습니다.</p>
 <p>TalkBack에서는 <code>Start burst</code>로 시작하고 셔터의 <code>Stop burst</code>로 멈춥니다.</p>
 <details id="burst-limits" data-search-section>
 <summary>촬영 속도·중단 조건·파일 식별자</summary><ul>
@@ -112,11 +106,9 @@
 <li>셔터 위의 진행 장수와 HDR 저장 결과를 확인합니다. 중단하려면 흰 정지 사각형으로 바뀐 셔터를 누릅니다.</li>
 </ol>
 <p><strong>저장 결과:</strong> 현재 EV, 2 EV 어둡게, 2 EV 밝게 원본 3장을 촬영합니다. 합성 조건을 충족하면 <code>_AEB_HDR.jpg</code>도 저장합니다.</p>
-<p>촬영이 끝나면 원래 EV로 돌아갑니다.</p>
 <p>수동 노출·동영상 모드·PIP 합성·EV 미지원 카메라에서는 AEB를 사용할 수 없습니다. 움직이는 물체는 합성 이미지에 겹쳐 보일 수 있습니다.</p>
-<p>촬영 중에는 EV·수동 제어·줌·터치 측광을 잠급니다. 합성 중에는 <code>HDR…</code>를 표시하며, 다음 AEB는 합성이 끝난 뒤 시작합니다.</p>
-<p>합성에는 원본 3장의 JPEG가 필요합니다. JPEG 출처는 카메라 또는 YUV 앱 변환 중 어느 쪽이든 사용할 수 있습니다.</p>
-<p>RAW만 저장했다면 합성할 JPEG가 없습니다.</p>
+<p>촬영 중에는 EV·수동 제어·줌·터치 측광을 잠그고, 끝나면 원래 EV로 돌아갑니다. 다음 AEB는 <code>HDR…</code> 합성이 끝난 뒤 시작합니다.</p>
+<p>합성에는 카메라 또는 YUV 앱 변환 JPEG 3장이 필요합니다. RAW만 저장하면 합성하지 않습니다.</p>
 <ul>
 <li><strong><code>HDR saved</code></strong> · 합성 이미지가 저장됐습니다.</li>
 <li><strong><code>HDR skipped</code></strong> · 함께 표시된 저장 장수·중단·실패 결과를 확인하세요. 원본 3장이 모두 저장되지 않아 합성을 시작하지 않았습니다.</li>
@@ -137,7 +129,6 @@
 <h3 id="수동-촬영-조건을-고정하세요">수동 촬영 조건을 고정하세요</h3>
 <details id="detail-e76a9da117" data-search-section>
 <summary>수동 촬영 설정</summary><p><strong>Camera2에서만 사용할 수 있습니다.</strong> 상단 화살표를 펼치고 <code>M</code>을 눌러 Manual 패널을 여세요. 닫은 뒤에도 설정은 실시간 정보에 표시됩니다.</p>
-<p>별도 요약 패널은 남기지 않습니다.</p>
 <h4 id="iso와-노출-시간을-고정하세요">ISO와 노출 시간을 고정하세요</h4>
 <ol>
 <li><code>ISO</code> 또는 <code>Shutter</code>에서 <code>Manual</code>을 선택합니다. 현재 ISO와 노출 시간이 함께 고정됩니다.</li>
@@ -146,12 +137,11 @@
 </ol>
 <h4 id="초점과-화이트밸런스를-바꾸세요">초점과 화이트밸런스를 바꾸세요</h4>
 <ul>
-<li><strong>초점을 고정합니다.</strong> · <code>Focus → Manual</code>에서 초점 거리를 diopter 단위로 조절합니다.</li>
-<li><strong>화이트밸런스를 고릅니다.</strong> · <code>WB → WB 값 버튼</code>을 누르면 버튼 아래 목록이 열립니다. 프리셋을 고르면 적용 후 접힙니다.</li>
-<li><strong>설정을 유지하고 패널을 닫습니다.</strong> · 닫기 아이콘을 누릅니다. 뒤로 가기는 열린 WB 목록을 먼저 접습니다.</li>
-<li><strong>자동 촬영으로 돌아갑니다.</strong> · <code>Reset</code>을 누르면 노출·초점·WB가 모두 자동으로 돌아갑니다.</li>
+<li><strong>초점:</strong> <code>Focus → Manual</code>에서 diopter 단위로 조절합니다.</li>
+<li><strong>WB:</strong> <code>WB → WB 값 버튼</code>에서 프리셋을 고릅니다.</li>
+<li><strong>닫기:</strong> 설정은 유지됩니다. 뒤로 가기는 열린 WB 목록부터 접습니다.</li>
+<li><strong>Reset:</strong> 노출·초점·WB를 모두 자동으로 되돌립니다.</li>
 </ul>
-<p><strong>같은 흰 물체로 비교해 보세요.</strong> WB를 Auto → Daylight → Incandescent로 바꾸며 색이 어떻게 달라지는지 살펴보세요.</p>
 <p>패널 아래 <code>Actual</code>은 카메라가 보고한 적용값입니다. 다시 Auto를 고르면 WB만 자동으로 돌아갑니다.</p>
 <figure class="app-screenshot" id="screen-wb-inline">
 <a href="assets/screenshots/wb-inline.png"><img src="assets/screenshots/wb-inline.png" alt="Video 모드에서 WB 버튼 아래에 연결된 프리셋 목록" width="1440" height="3120" loading="lazy" decoding="async"></a>
@@ -195,18 +185,14 @@
 </ul>
 <p>지원하지 않는 개별 설정은 이유를 표시하고 Apply를 비활성화합니다. <strong>실제 구성에 실패하면</strong> <code>이전 설정으로 복원</code>을 누르세요.</p>
 <p>이 버튼은 실패했을 때만 나타납니다. 개별 크기를 지원해도 여러 출력의 조합은 거부될 수 있습니다.</p>
-<p><strong>같은 장면으로 비교해 보세요.</strong></p>
-<p>JPEG에서 해상도를 골라 한 장, <code>YUV (현재 크기)</code>를 골라 한 장을 찍으면 카메라 JPEG와 앱 변환 결과를 비교할 수 있습니다.</p>
-<p>두 촬영은 서로 다른 시점이며, 해상도도 같다고 보장하지 않습니다.</p>
+<p>JPEG 해상도와 <code>YUV (현재 크기)</code>로 각각 찍어 변환 결과를 비교할 수 있습니다. 두 사진의 시점과 해상도가 같다고 가정하지 마세요.</p>
 <p>일반 사진에서 JPEG와 RAW를 모두 끄면 셔터가 비활성화됩니다. PIP 합성 JPEG는 별도입니다.</p>
 <p>설정은 현재 카메라·엔진에 적용되며 모드·엔진 전환 때 초기화됩니다. Benchmark의 profile은 바꾸지 않습니다.</p>
 <details id="stream-readout" data-search-section>
 <summary>P·Y·J·RAW·R 표시 읽기</summary><ul>
-<li><strong>P</strong> · 프리뷰입니다.</li>
-<li><strong>Y</strong> · YUV 분석 출력입니다.</li>
-<li><strong>J</strong> · JPEG 저장 원본입니다. <code>J YUV</code>는 앱 변환 사진입니다.</li>
-<li><strong>RAW</strong> · 센서 원본 출력입니다.</li>
-<li><strong>R</strong> · 녹화 출력입니다. H264·HEVC·Auto 포맷도 함께 표시합니다.</li>
+<li><strong>P / Y:</strong> 프리뷰 / YUV 분석 출력입니다.</li>
+<li><strong>J / J YUV:</strong> 카메라 JPEG / 앱 변환 사진입니다.</li>
+<li><strong>RAW / R:</strong> 센서 원본 / 녹화 출력입니다. R에는 H264·HEVC·Auto 포맷도 표시합니다.</li>
 </ul>
 <p>꺼진 스트림은 표시하지 않습니다. PIP 보조 출력은 두 번째 줄에 <code>PIP</code>를 한 번 쓰고 P·Y·J 크기를 나열합니다. 합성 파일 크기는 생략합니다.</p>
 <p>엔진별 지원 범위는 <a href="engine.html#두-엔진의-차이">Engine Comparison</a>을 확인하세요.</p>
@@ -217,7 +203,6 @@
 <li>보조 카메라 하나를 고릅니다. 선택창이 닫히고 현재 Live 안에 보조 영상이 나타납니다.</li>
 <li>보조 영상을 원하는 자리로 드래그한 뒤 기존 셔터로 촬영합니다.</li>
 </ol>
-<p><strong>셔터는 한 번인데 사진은 세 장?</strong> JPEG를 켜고 촬영한 뒤 갤러리를 열어 보세요. 같은 촬영의 합성 사진·메인 원본·보조 원본을 비교할 수 있습니다.</p>
 <ul>
 <li><strong>Photo · JPEG On</strong> · 합성 JPEG 한 장과 두 카메라 원본 JPEG를 저장합니다.</li>
 <li><strong>Photo · JPEG Off</strong> · 합성 JPEG 한 장을 저장합니다.</li>
@@ -226,20 +211,12 @@
 <p>화면의 버튼과 라벨은 파일에 들어가지 않습니다. 끄려면 <code>PIP → Turn off PIP</code>를 선택합니다.</p>
 <p>그래프에서 원본을 찾으려면 <a href="callback.html#pip를-켜면-무엇이-추가되나요">PIP Callback</a>을 확인하세요.</p>
 <ul>
-<li><p><strong>후보</strong> · 모든 후보를 표시하며 지원 불가가 확인된 항목은 선택할 수 없습니다. CameraX의 Physical 후보는 <code>Camera2 only</code>로 표시합니다.</p>
-</li>
-<li><p><strong>위치</strong> · 같은 모드에서는 PIP 카메라 변경·Off/On 뒤에도 위치를 기억합니다. 모드·엔진을 바꾸면 초기화됩니다.</p>
-</li>
-<li><p><strong>목록</strong></p>
-<p>종류·ID, 방향·렌즈와 짧은 비활성화 사유를 표시합니다. 조회가 불가능하면 <code>Not verified</code>로 표시하고 선택은 허용합니다.</p>
-<p>다시 열면 이전 스크롤 위치로 돌아갑니다.</p>
-</li>
-<li><p><strong>DNG</strong> · Photo 모드의 Camera2에서 RAW가 켜져 있으면 메인 원본 DNG와 JSON도 저장합니다. DNG에는 보조 영상을 합성하지 않습니다.</p>
-</li>
+<li><strong>후보:</strong> 지원 불가가 확인된 회색 항목은 선택할 수 없습니다. 크기·출력 설정을 바꾸고 다시 열면 재검사합니다. CameraX Physical 후보는 <code>Camera2 only</code>입니다.</li>
+<li><strong>Not verified:</strong> 조회하지 못한 후보입니다. 선택은 가능하지만 실제 구성에서 실패할 수 있습니다.</li>
+<li><strong>위치:</strong> 같은 모드의 카메라 변경·Off/On 뒤에도 유지합니다. 모드·엔진 전환 때 초기화됩니다.</li>
+<li><strong>DNG:</strong> Camera2 Photo에서 RAW를 켜면 메인 원본 DNG와 JSON도 저장합니다. 보조 영상은 합성하지 않습니다.</li>
 </ul>
-<p>PIP는 Android 11 이상에서 제공하며 지원 조합은 기기마다 다릅니다. 플래시는 Off·Torch만 제공하고 AEB는 지원하지 않습니다.</p>
-<p><strong>회색 후보는 현재 조합에서 지원 불가가 확인된 카메라입니다.</strong> 크기나 출력 설정을 바꾼 뒤 다시 열면 재검사합니다.</p>
-<p><code>Not verified</code>는 조회가 불가능했다는 뜻이며 선택할 수 있습니다. 지원 조회가 통과해도 자원 상태나 HAL 문제로 실제 구성이 실패할 수 있습니다.</p>
+<p>PIP는 Android 11 이상과 해당 조합의 지원이 필요합니다. 플래시는 Off·Torch이며 AEB는 지원하지 않습니다.</p>
 <details id="pip-session-details" data-search-section>
 <summary>엔진별 재구성과 저장 해상도</summary><p>Camera2 Single은 현재 Live CameraDevice를 유지합니다.</p>
 <p>다른 Service ID는 그 장치만 추가로 열고 Physical ID는 현재 장치의 출력을 추가합니다.</p>
@@ -260,23 +237,22 @@
 <li>가운데 셔터로 촬영하거나 녹화를 시작·종료합니다.</li>
 <li>왼쪽 갤러리에서 카메라별 파일을 확인합니다.</li>
 </ol>
-<p>상단 <code>Split</code>은 위에서, 하단 카메라 버튼은 아래에서 같은 카메라 설정창을 엽니다. 크기·카메라 수·화면 순서는 Photo와 같은 선택 목록으로 고릅니다.</p>
-<p>설정창의 <code>Apply</code>를 눌러야 변경되며, 닫으면 기존 설정을 유지합니다.</p>
-<p><code>Multi · P</code>와 <code>Multi · V</code>는 같은 조작 배치를 사용하며, 모드를 바꿀 때에는 기존 세션의 종료를 기다린 뒤 해당 모드의 스트림을 다시 구성합니다.</p>
-<p>선택한 카메라 ID에는 흰 테두리와 체크 표시가 나타나며, 상단 Live에서도 해당 카메라의 크기를 밝게 표시합니다.</p>
-<p>Live의 크기는 카메라마다 한 줄씩 표시합니다. Sizes에서는 카메라별 Preview와 JPEG 크기를 나란히 비교하며 고를 수 있습니다.</p>
-<p>Split의 지원하지 않는 조합은 <code>Unavailable combinations</code>를 눌러 펼칠 수 있습니다.</p>
-<p><strong>직접 해 보기:</strong> 전면과 후면으로 한 번 찍고, 한 카메라의 이름을 꾹 누른 뒤 위로 살짝 끄세요.</p>
-<p><code>Release · Top</code> 안내를 확인하고 손을 놓은 뒤 다시 찍으세요. 화면 배치는 달라도 두 파일의 크기와 전체 구도는 유지됩니다.</p>
-<ul>
+<p>Split 설정은 <code>Apply</code>로 적용하며, 닫으면 기존 설정을 유지합니다. 지원하지 않는 조합은 <code>Unavailable combinations</code>에서 확인하세요.</p>
+<p>Multi는 Android 11 이상과 독립 장치의 동시 실행 지원이 필요합니다.</p>
+<p>Camera2와 CameraX를 선택할 수 있으며 Manual·AEB는 제공하지 않습니다. 플래시는 Off·Torch입니다.</p>
+<p>Multi V는 마이크 권한을 받아 소리를 녹음하고, 같은 마이크의 소리를 카메라별 MP4에 넣습니다.</p>
+<p>권한이 없거나 녹음이 실패하면 무음으로 저장하지 않고 오류를 표시합니다. 센서 동기 촬영은 보장하지 않습니다.</p>
+<p>영상과 소리는 캡처 시각으로 정렬하지만 완전히 같은 순간의 재생을 보장하지는 않습니다.</p>
+<p>기기별 오차와 시험 범위는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/release-0.29.1.md">0.29.1 검증 기록</a>을 참고하세요.</p>
+<details id="multi-session-details" data-search-section>
+<summary>장치 수·배치·재구성</summary><ul>
 <li><p><strong>한 카메라를 조절합니다.</strong> · 분할 화면의 이름을 누릅니다. 그 장치의 줌·AF·AE·EV를 조절합니다.</p>
 </li>
 <li><p><strong>카메라별 FPS·노출을 봅니다.</strong></p>
-<p>좌우 배치에서는 각 화면 아래, 위아래 배치에서는 이름 오른쪽에 <code>FPS</code>와 <code>EXP</code>가 표시됩니다. 화면을 옮기면 함께 따라갑니다.</p>
+<p>각 화면의 <code>FPS</code>와 <code>EXP</code>를 확인합니다. 배치가 바뀌어도 해당 카메라를 따라갑니다.</p>
 </li>
 <li><p><strong>화면 위치를 바꿉니다.</strong></p>
-<p>분할 화면의 이름을 꾹 누른 채 끕니다. 누르는 순간 지금 자리를 흰 테두리로 보여 주고, 끄는 동안 들어갈 자리를 미리 보여 줍니다.</p>
-<p>손을 떼면 그 자리로 옮깁니다.</p>
+<p>이름을 꾹 누른 채 끌고, 놓일 자리의 안내가 보이면 손을 뗍니다. 화면 배치만 바뀌며 저장 파일은 유지됩니다.</p>
 </li>
 <li><p><strong>두 카메라의 콜백을 비교합니다.</strong></p>
 <p><code>Callback</code>을 켠 뒤 분할 화면의 이름을 눌러 장치를 바꿉니다. Callback을 켠 동안에는 화면별 FPS·EXP를 숨깁니다.</p>
@@ -291,19 +267,9 @@
 <p><code>Details</code>는 장치별 성공·실패를 보여줍니다.</p>
 </li>
 </ul>
-<p>Multi는 Android 11 이상과 독립 장치의 동시 실행 지원이 필요합니다.</p>
-<p>Camera2와 CameraX를 선택할 수 있으며 Manual·AEB는 제공하지 않습니다. 플래시는 Off·Torch입니다.</p>
-<p>Multi V는 마이크 권한을 받아 소리를 녹음하고, 같은 마이크의 소리를 카메라별 MP4에 넣습니다.</p>
-<p>권한이 없거나 녹음이 실패하면 무음으로 저장하지 않고 오류를 표시합니다. 센서 동기 촬영은 보장하지 않습니다.</p>
-<p>Multi V는 마이크의 시각을 확보한 뒤 녹화를 시작하므로 준비 시간이 약간 필요합니다.</p>
-<p>종료할 때는 모든 카메라의 영상 입력을 먼저 멈추고 오디오를 마무리합니다. 영상과 소리는 캡처 시각으로 정렬하지만 완전히 같은 순간의 재생을 보장하지 않습니다.</p>
-<p>기기별 오차와 시험 범위는 <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/validation/release-0.29.1.md">0.29.1 검증 기록</a>을 참고하세요.</p>
-<details id="multi-session-details" data-search-section>
-<summary>장치 수·배치·재구성</summary><p>처음에는 화면을 좌우로 나란히 표시합니다. 카메라 이름을 꾹 누르면 화면이 집히며 손가락을 따라 움직입니다.</p>
-<p>원하는 방향으로 약 24dp를 끌면 테두리와 <code>Release</code> 안내가 놓일 자리를 보여 줍니다. 화면 가장자리까지 끌 필요는 없습니다.</p>
+<p>카메라 이름을 원하는 방향으로 끌면 <code>Release</code> 안내가 놓일 자리를 보여 줍니다. 화면 가장자리까지 끌 필요는 없습니다.</p>
 <p>왼쪽·오른쪽은 좌우로, 위·아래는 위아래로 나누며 끈 화면이 그쪽 절반을 차지합니다. 카메라가 3개 이상이면 대각선으로 끌어 격자의 모서리 칸을 고릅니다.</p>
 <p>손을 놓기 전에 시작 위치 가까이 되돌리면 기존 배치를 유지하며, 두 손가락 입력이나 터치 취소도 배치를 유지합니다.</p>
-<p>작은 화면에서는 필요한 이동 거리를 더 줄입니다.</p>
 <p>화면 낭독기에서는 이름의 <code>Move to left</code>·<code>Move to right</code>·<code>Move to top</code>·<code>Move to bottom</code> 동작으로 같은 배치를 만듭니다.</p>
 <p>실제 장치 조합은 기기의 동시 세션 검사에 따라 거부될 수 있으며, 지원하지 않는 조합을 자동으로 대체하지 않습니다.</p>
 <p><code>Cameras</code>는 기기가 광고한 동시 조합에서 촬영할 카메라 수를 정합니다.</p>
@@ -311,7 +277,6 @@
 <p>크기 창은 동시 촬영이 보장되는 범위(Preview 1280×720 이하, JPEG 1920×1440 이하)의 크기만 보여 주며, 크기를 바꾸면 세션을 다시 구성합니다.</p>
 <p>CameraX에서는 CameraX가 광고한 동시 카메라 조합을 사용하며 최대 두 대를 지원합니다.</p>
 <p>지원하지 않는 조합이나 크기는 오류를 표시하고 다른 엔진이나 크기로 자동 대체하지 않습니다.</p>
-<p>상단 엔진 버튼으로 Camera2와 CameraX를 전환할 수 있습니다.</p>
 <p>장치 조합을 바꾸면 전체 세션을 닫고 다시 구성합니다. 배치와 화면 순서만 바꾸면 기존 세션을 유지합니다.</p>
 <p>Split 창의 <code>Screen</code> 번호는 지금 화면에 놓인 순서이며, 화면 이름 앞의 번호와 같습니다. 닫기·뒤로 가기는 Split 설정 초안을 버립니다.</p>
 <p>녹화·촬영 중에는 Split 설정과 화면 끌기를 사용할 수 없습니다. Live로 돌아갈 때에는 모든 장치와 출력의 종료를 기다립니다.</p>

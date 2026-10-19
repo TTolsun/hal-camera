@@ -41,8 +41,7 @@
 <li><code>Run Selected (선택 개수)</code>를 누르고 필요한 권한을 허용합니다.</li>
 <li>끝난 카드를 눌러 결과를 확인합니다.</li>
 </ol>
-<p>선택한 항목에 판정과 소요 시간이 표시됩니다. 실패나 SKIP이 있으면 <a href="#판정을-읽으세요">판정 읽기</a>에서 다음 확인 항목을 찾으세요.</p>
-<p>검사를 조작하거나 보고서를 가져오는 방법은 다음과 같습니다.</p>
+<p>결과에는 판정과 소요 시간이 남습니다. 실패나 SKIP은 <a href="#판정을-읽으세요">판정 읽기</a>에서 확인하세요.</p>
 <ul>
 <li><strong>한꺼번에 선택하려면</strong> 그룹의 <code>Select All</code>을 누릅니다. 선택은 다음에 열 때도 유지됩니다.</li>
 <li><strong>도중에 멈추려면</strong> <code>Stop</code>을 누릅니다. 현재 항목은 <code>중단됨</code>, 나머지는 <code>실행 안 함</code>으로 남습니다.</li>
@@ -56,22 +55,16 @@
 <li>항목마다 공개 카메라를 순회합니다. 컬러 출력이 없거나 외장 카메라이면 CTS와 같은 사유로 건너뜁니다.</li>
 <li>한 항목이 카메라를 닫고 결과를 보고한 뒤 다음 항목을 시작합니다.</li>
 </ul>
-<p>목록과 진행 화면에서는 다음 정보를 표시합니다.</p>
-<ul>
-<li>행마다 제목과 예상 시간을 표시합니다. 이력이 없는 원문 메서드는 <code>시간 미상</code>으로 표시하며, 커스텀 행에는 원본도 표시합니다.</li>
-<li>진행 중에는 단계별 결과를 바로 추가합니다. 완료 후에는 판정과 소요 시간을 표시하고 머리글에 전체 결과를 모읍니다.</li>
-</ul>
+<p>이력이 없는 원문 메서드의 예상 시간은 <code>시간 미상</code>입니다. 진행 중에는 단계별 결과가 추가되고, 완료 후 판정과 소요 시간이 남습니다.</p>
 </details><p>항목 하나만 보려면 행의 <code>›</code>를 누릅니다. 단일 항목도 <code>Run</code>·<code>Stop</code>·<code>Copy</code>·<code>Share</code>로 조작합니다.</p>
 <p>커스텀 케이스는 한 단계가 실패해도 나머지를 계속 실행합니다. CTS 원문은 중단 처리에 몇 초가 걸릴 수 있습니다.</p>
 <h2 id="검사-방식의-차이">검사 방식의 차이</h2>
-<p>같은 기능을 확인하더라도, 실행하는 코드와 판정 단위가 다릅니다.</p>
 <ul>
 <li><strong>커스텀 케이스:</strong> CTS 규칙과 상수를 앱의 Kotlin으로 옮긴 다섯 가지 검사입니다. 카메라와 단계별로 판정합니다.</li>
 <li><strong>CTS 원문 케이스:</strong> AOSP의 Java 테스트를 앱 안의 JUnit으로 실행합니다. 테스트 메서드 하나에 판정 하나를 냅니다.</li>
 </ul>
 <p>CTS 판정과 Benchmark의 성능 저하 판정은 별개입니다.</p>
-<p class="doc-evidence">아래 화면은 2026년 9월 29일 Galaxy S25+·Android 16에서 HAL CAMERA 0.15.0을 실행해 촬영했습니다. <a href="evidence.html#앱-화면-촬영">촬영 조건과 확인 범위</a>를 함께 확인하세요. 이미지를 누르면 원본이 열립니다.</p><h2 id="커스텀-케이스를-선택하세요">커스텀 케이스를 선택하세요</h2>
-<p>확인하고 싶은 동작에서 시작하세요.</p>
+<p class="doc-evidence">스크린샷은 당시 빌드의 기록입니다. <a href="evidence.html#앱-화면-촬영">촬영 기기·버전·확인 범위</a>를 함께 읽으세요.</p><h2 id="커스텀-케이스를-선택하세요">커스텀 케이스를 선택하세요</h2>
 <ul>
 <li><strong>빠른 켜기·끄기:</strong> 열고 닫는 두 순서의 첫 프레임을 비교합니다.</li>
 <li><strong>카메라 전환:</strong> 카메라를 바꿔 열고 녹화합니다.</li>
@@ -111,8 +104,6 @@
 <p><code>RecordingTest#testBasicRecording</code>은 CTS 원문 케이스로만 제공합니다.</p>
 <p>녹화 판정 규칙(<code>BasicRecordingRules</code>)은 카메라 전환과 동영상 스냅샷이 공유합니다.</p>
 </details><h2 id="cts-원문-메서드를-선택하세요">CTS 원문 메서드를 선택하세요</h2>
-<p>검사할 기능에 맞는 클래스를 고르세요. Android 14 이상에서 사용할 수 있습니다.</p>
-<p>클래스마다 다음 범위의 메서드를 제공합니다.</p>
 <ul>
 <li><strong><code>RecordingTest</code>:</strong> CamcorderProfile 녹화, 동영상 스냅샷, 고속·슬로모션 녹화, 프리뷰 크기별 녹화 등 16개 메서드입니다.</li>
 <li><strong><code>StillCaptureTest</code>:</strong> JPEG·HEIC·RAW·DNG 촬영, AE/AF 수렴, 줌, 회전, 초점 거리, 프리뷰와 정지 영상 크기 조합, 타임스탬프 등 21개 메서드입니다.</li>
@@ -127,21 +118,16 @@
 <a href="assets/screenshots/cts-vendored.png" aria-label="CTS 원문 메서드 선택 목록 원본 보기"><img src="assets/screenshots/cts-vendored.png" alt="CTS 원문 메서드 선택 목록" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>AOSP 원문 메서드 목록을 연 화면입니다. 이 장면에서는 항목을 선택하거나 원문 테스트를 실행하지 않았습니다.</figcaption>
 </figure></details>
-</div><p>CTS 원문 케이스는 Android 14 이상에서 사용할 수 있습니다. AOSP 테스트를 앱 실행 환경에 맞춰 실행하므로 공식 CTS 인증을 대신하지 않습니다.</p>
-<div id="screen-cts-running">
+</div><div id="screen-cts-running">
 <details id="detail-5459e791e2" data-search-section>
 <summary>실제 화면 보기</summary><figure class="app-screenshot">
 <a href="assets/screenshots/cts-running.png" aria-label="빠른 켜기 끄기 CTS 검사 실행 중 원본 보기"><img src="assets/screenshots/cts-running.png" alt="빠른 켜기 끄기 CTS 검사 실행 중" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>빠른 켜기·끄기를 실행 중인 화면입니다. 카메라 프리뷰와 현재 회차, 단계별 판정을 함께 표시합니다.</figcaption>
 </figure></details>
 </div><h2 id="판정을-읽으세요">판정을 읽으세요</h2>
-<p>판정을 읽을 때에는 어떤 카메라의 어느 단계를 검사했는지 함께 살펴보세요.</p>
 <p><strong>커스텀 케이스는 카메라와 단계별로 판정합니다.</strong> PASS 행에도 시간과 수치를 남깁니다.</p>
-<p>FAIL의 상세 문구는 CTS assertion 메시지와 같습니다.</p>
 <details id="detail-a9a4eb4398" data-search-section>
-<summary>카메라·단계 이름 읽기</summary><p>커스텀 케이스의 <code>PASS</code>·<code>FAIL</code>·<code>SKIP</code>은 카메라와 단계 단위로 붙습니다.</p>
-<p>카메라는 진행 줄과 보고서 모두 <code>Camera · 0</code>처럼 축약 표기로 적습니다. 한 줄에 단계와 수치가 함께 들어가기 때문입니다.</p>
-<p>단계 이름은 케이스마다 다릅니다.</p>
+<summary>카메라·단계 이름 읽기</summary><p>카메라는 <code>Camera · 0</code>처럼 표시하고, 단계는 다음처럼 구분합니다.</p>
 <ul>
 <li><strong>동영상 스냅샷:</strong> 프로파일 이름을 표시합니다.</li>
 <li><strong>빠른 켜기·끄기:</strong> <code>standard_1</code>·<code>fast_1</code>과 <code>compare</code>를 표시합니다.</li>
@@ -149,9 +135,7 @@
 <li><strong>크기 케이스:</strong> <code>1920x1080</code>처럼 크기를 표시합니다.</li>
 <li><strong>조합 케이스:</strong> <code>4000x3000/1920x1080</code>처럼 정지 영상과 프리뷰 크기를 표시합니다.</li>
 </ul>
-<p>PASS 행에도 열기·세션 구성·첫 프레임·닫기의 소요 시간이나 녹화 길이·프레임 수 같은 수치를 남깁니다.</p>
-<p>경계에 가까운 통과를 다시 실행하지 않고 볼 수 있습니다.</p>
-<p>FAIL의 상세 문구는 CTS의 assertion 메시지와 같으므로 원본 테스트 결과와 나란히 읽을 수 있습니다.</p>
+<p>PASS에도 소요 시간·녹화 길이·프레임 수가 남습니다. FAIL은 CTS assertion 메시지와 대조하세요.</p>
 </details><p><strong>CTS 원문은 테스트 메서드 단위로 판정합니다.</strong> <code>SKIP</code>은 통과했다는 뜻이 아닙니다.</p>
 <ul>
 <li><strong>PASS:</strong> JUnit 실패가 없고 카메라를 하나 이상 열었습니다. 실행 조건과 측정값을 확인하세요.</li>
@@ -176,15 +160,14 @@
 <p>업스트림 코드 자체가 카메라를 열지 않는 메서드도 이유를 남깁니다. 예를 들어 10비트 AV1 경로는 <code>getDynamicRangeProfile()</code>의 switch에 AV1 case가 없습니다.</p>
 <p>앱은 자기 프로세스의 logcat만 읽습니다. 카메라별·프로파일별 세부 정보가 모두 남는 것은 아닙니다.</p>
 <p>실패 카드에는 예외 메시지와 CTS 호출 위치 세 줄을 표시합니다. 어느 카메라에서 실패했는지는 메시지의 카메라 ID로 확인하세요.</p>
-</details><p>녹화한 동영상은 앱 전용 폴더에 <code>test_video.mp4</code>로 쓰고 판정 뒤 삭제합니다. 정지 영상과 스냅샷은 크기와 디코딩만 확인하고 버립니다.</p>
-<p>CTS 원문 케이스도 같은 앱 전용 폴더(<code>getExternalFilesDir</code>)에 씁니다. 앨범에는 아무것도 남지 않습니다.</p>
+</details><p>검사용 동영상은 앱 전용 폴더의 <code>test_video.mp4</code>를 판정 뒤 삭제합니다. 정지 영상·스냅샷도 검사 뒤 버립니다. CTS 원문도 같은 폴더를 사용하며 앨범에는 남기지 않습니다.</p>
 <div id="screen-cts-result">
 <details id="detail-31bd2adc8d" data-search-section>
 <summary>실제 화면 보기</summary><figure class="app-screenshot">
 <a href="assets/screenshots/cts-result.png" aria-label="빠른 켜기 끄기 CTS 검사 PASS 완료 원본 보기"><img src="assets/screenshots/cts-result.png" alt="빠른 켜기 끄기 CTS 검사 PASS 완료" width="1440" height="3120" loading="lazy" decoding="async"></a>
 <figcaption>이번 실행은 35초에 PASS로 끝났습니다. 이 결과는 해당 기기의 앱 내 검사 한 건이며 공식 CTS 인증 결과가 아닙니다.</figcaption>
 </figure></details>
-</div><p><strong>다음 단계:</strong> 검사 통과 여부와 별도로 성능 변화를 비교하려면 <a href="benchmark.html">Benchmark</a>를 확인하세요. CTS는 통과·실패를, Benchmark는 얼마나 걸리는지를 답합니다.</p>
+</div><p><strong>다음 단계:</strong> 같은 조건의 성능 변화는 <a href="benchmark.html">Benchmark</a>에서 비교하세요.</p>
 
   </main>
   <nav class="reference-nav" aria-label="References" lang="en"><span>References</span><a href="./glossary.html">Glossary</a><a href="./engine.html">Engine Comparison</a><a href="./evidence.html">Validation</a><a href="https://github.com/TTolsun/hal-camera" target="_blank" rel="noopener noreferrer">GitHub</a></nav>

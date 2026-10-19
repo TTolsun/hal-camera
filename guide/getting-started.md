@@ -5,13 +5,9 @@ title: Quickstart
 
 첫 사진을 저장하면, 카메라를 살펴볼 준비가 됩니다.
 
-APK를 설치하고 Live에서 한 장을 찍어 보세요. 그다음 촬영 조건과 콜백을 차례로 살펴봅니다.
-
-용어가 낯설면 [Glossary](glossary.md)에서 필요한 뜻만 확인하세요.
+APK를 설치하고 Live에서 한 장을 찍어 보세요. 낯선 용어는 [Glossary](glossary.md)에서 확인할 수 있습니다.
 
 ## APK를 설치하세요
-
-팀에서 지정한 검증 빌드가 있다면 그 APK를 사용합니다.
 
 1. [Download](download.md)에서 GitHub 릴리스를 열고 Assets의 APK를 받습니다.
 2. 기기에서 APK를 열어 설치합니다. 설치 허용을 요청하면 해당 파일을 연 앱에 허용합니다.
@@ -19,9 +15,7 @@ APK를 설치하고 Live에서 한 장을 찍어 보세요. 그다음 촬영 조
 
 소리를 함께 녹음하려면 마이크 권한도 허용합니다.
 
-업데이트에서 서명 오류가 나면 기존 설치와 같은 서명의 APK를 받으세요.
-
-앱을 삭제하면 내부 실행 기록이 사라집니다.
+업데이트의 서명 오류는 [Download](download.md)에서 확인하세요. 앱을 삭제하면 내부 실행 기록이 사라집니다.
 
 <details markdown="1">
 <summary>PC에서 설치하려면</summary>
@@ -43,22 +37,14 @@ adb install -r "받은-파일.apk"
 
 **갤러리에서 방금 찍은 사진을 찾았다면 첫 촬영은 끝났습니다.**
 
-기본 사진은 카메라가 만든 JPEG 한 장입니다. 앱에서 YUV를 JPEG로 변환하려면 [Live의 JPEG 출처 선택](live.md#live-스트림을-설정하세요)을 사용하세요.
-
-다음에는 같은 장면에서 `Callback`을 켜고 `Hold 3s`를 선택한 뒤 한 장 더 찍어 보세요.
-
-사진을 보는 데서 한 걸음 더 나아가, 이미지와 메타데이터가 도착하는 순서를 확인할 수 있습니다.
+다음에는 `Callback`을 켜고 `Hold 3s`를 선택한 뒤 한 장 더 찍어 보세요. 이미지와 메타데이터가 도착하는 순서를 비교할 수 있습니다.
 
 프리뷰·저장 성공만으로 HAL 적합성이 검증되는 것은 아닙니다.
 
 ## 확인할 작업을 고르세요
 
-- **[Live](live.md)** · 촬영 조건을 바꾸고 파일을 확인합니다.
-- **[Probe](probe.md)** · 카메라가 공개한 지원 사양을 찾습니다.
-- **[CTS](cts.md)** · 카메라 동작을 사전 점검합니다.
-- **[Benchmark](benchmark.md)** · 같은 조건에서 반복 측정하고 결과를 비교합니다.
-- **[Callback](callback.md)** · 같은 프레임의 콜백과 이미지 도착 순서를 읽습니다.
-- **[Automation](automation.md)** · PC에서 반복 실행하고 결과를 받습니다.
-- **[Troubleshooting](troubleshooting.md)** · 예상과 다른 결과의 원인을 좁힙니다.
+- **촬영과 관찰:** [Live](live.md)에서 조건을 바꾸고 [Callback](callback.md)에서 도착 순서를 읽습니다.
+- **사양과 검사:** [Probe](probe.md)에서 지원 값을 찾고 [CTS](cts.md)로 사전 점검합니다.
+- **반복과 비교:** [Benchmark](benchmark.md)로 측정하고 [Automation](automation.md)으로 PC에서 실행합니다.
 
-**다음 단계:** [Live](live.md)에서 촬영 조건을 바꾸고 사진·동영상을 확인하세요.
+**다음 단계:** [Live](live.md)에서 촬영 조건을 바꾸세요. 예상과 다르면 [Troubleshooting](troubleshooting.md)을 확인합니다.
