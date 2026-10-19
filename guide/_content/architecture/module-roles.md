@@ -54,7 +54,9 @@ decisions: []
 verifications: []
 ---
 
-**변경할 기능의 패키지부터 여세요.** Kotlin 패키지는 `app/src/main/java/dev/halcamera/`를 기준으로 합니다. `app/src/main/assets/halcam.sh`, `tools/halcam/`, `ctsvendor/`는 저장소 루트 기준 경로입니다.
+**변경할 기능의 패키지부터 여세요.** Kotlin 패키지는 `app/src/main/java/dev/halcamera/`를 기준으로 합니다.
+
+`app/src/main/assets/halcam.sh`, `tools/halcam/`, `ctsvendor/`는 저장소 루트 기준 경로입니다.
 
 | 영역 | 하는 일 | 자세히 |
 | --- | --- | --- |
@@ -73,9 +75,17 @@ verifications: []
 - shell 호출자 검사, 영속 요청 상태, artifact 등록과 PC 파일 수집을 담당합니다.
 - 화면 어댑터 `LiveController`, `MultiController`, `CtsController`, `BenchmarkController`도 이 패키지에 둡니다.
 - Activity는 이 어댑터를 연결하며 카메라 엔진과 순수 benchmark/domain은 CLI를 알지 못합니다.
-- `MainCliBridge`, `DualCliBridge`, `MultiCliBridge`는 Activity의 카메라 동작을 연결합니다. `MultiController`는 Live의 close(done) 뒤 Multi 화면을 인계받아 명시한 순서·크기를 검증하고 카메라별 저장 URI를 등록합니다. `LiveController`는 프리뷰·사진·녹화와 저장 완료를 관리하며 `CliSequence`는 연속 촬영과 AEB의 일부 저장 결과도 보존합니다.
-- `CtsController.reportSaved`와 `BenchmarkController.reportSaved`는 완료 결과와 보고서 파일을 받습니다. 저장된 결과를 조회·비교하는 `CliLibrary`는 기존 benchmark 도메인 타입과 저장소를 재사용하며, 도메인에서 CLI로 향하는 의존성은 없습니다.
-- `streams`·`probe`·`cts.cases`·`dual.cameras`·`multi.cameras`는 화면 없이 `CommandCoordinator`가 `CliQueries`로 처리합니다. 결과·baseline·갤러리·진단 ZIP·보관 한도는 `CliLibrary`가 IO 스레드에서 처리합니다.
+- `MainCliBridge`, `DualCliBridge`, `MultiCliBridge`는 Activity의 카메라 동작을 연결합니다.
+
+  `MultiController`는 Live의 close(done) 뒤 Multi 화면을 인계받아 명시한 순서·크기를 검증하고 카메라별 저장 URI를 등록합니다.
+
+  `LiveController`는 프리뷰·사진·녹화와 저장 완료를 관리하며 `CliSequence`는 연속 촬영과 AEB의 일부 저장 결과도 보존합니다.
+- `CtsController.reportSaved`와 `BenchmarkController.reportSaved`는 완료 결과와 보고서 파일을 받습니다.
+
+  저장된 결과를 조회·비교하는 `CliLibrary`는 기존 benchmark 도메인 타입과 저장소를 재사용하며, 도메인에서 CLI로 향하는 의존성은 없습니다.
+- `streams`·`probe`·`cts.cases`·`dual.cameras`·`multi.cameras`는 화면 없이 `CommandCoordinator`가 `CliQueries`로 처리합니다.
+
+  결과·baseline·갤러리·진단 ZIP·보관 한도는 `CliLibrary`가 IO 스레드에서 처리합니다.
 - `CliStreams`는 요청별 크기 옵션을 검증하며 Camera2·CameraX 설정으로 변환합니다.
 - protocol v1을 변경할 때 양쪽 검증기를 함께 확인합니다.
 
@@ -91,9 +101,19 @@ verifications: []
 - 카메라를 화면에 적는 이름(`Camera · 0 (Wide · Rear)`)도 이 패키지의 `CameraLabel` 하나가 만들며, Live·Benchmark·Probe·CTS가 모두 그것을 부릅니다.
 - 렌즈 이름을 붙이지 못한 카메라에는 HAL이 보고한 35mm 환산 초점거리를 덧붙여 `Camera · 1 (Front · 26 mm)`처럼 적으므로, 전면 카메라가 둘인 기기에서도 목록이 두 항목을 구별합니다.
 - 기존 `DualPreviewSession`과 `DualCameraXSession`의 물리 출력 경로는 CLI 호환용으로 남아 있으며 Live의 Multi에서는 사용하지 않습니다.
-- Multi 화면은 `MultiSession` 계약으로 Camera2 `ConcurrentSession` 또는 `CameraXMultiSession`을 사용합니다. CameraX는 동시 Preview·ImageCapture를 바인딩하며, 두 엔진은 사진 묶음 저장과 `MultiRecording` 녹화 처리를 공유합니다. 마이크 하나의 AAC를 카메라별 MP4에 결합한 뒤 공개하며, 한 파일이라도 실패하면 해당 녹화 묶음의 공개 파일을 회수합니다.
-- `SplitArrangement`는 Multi의 배치·화면 순서를, `SplitDragGesture`는 시작 위치에서의 이동 방향·거리와 전환 유지 조건을 순수 Kotlin으로 계산합니다. `ui/SplitPanelDrag`는 이름표의 터치를 받아 패널 이동과 놓일 자리 안내를 표시합니다. 배치 적용은 `ConcurrentCameraActivity`의 화면 크기·이름표 갱신으로 끝나며 카메라 세션을 다시 열지 않습니다.
-- CLI 호환용 Dual에서 두 엔진의 줌은 두 물리 출력에 공통 적용합니다. Camera2는 메인 센서의 노출·초점 제어와 한 요청으로 촬영하는 두 센서 사진을 지원합니다. CameraX는 메인 개별 제어와 두 센서 사진을 지원하지 않습니다.
+- Multi 화면은 `MultiSession` 계약으로 Camera2 `ConcurrentSession` 또는 `CameraXMultiSession`을 사용합니다.
+
+  CameraX는 동시 Preview·ImageCapture를 바인딩하며, 두 엔진은 사진 묶음 저장과 `MultiRecording` 녹화 처리를 공유합니다.
+
+  마이크 하나의 AAC를 카메라별 MP4에 결합한 뒤 공개하며, 한 파일이라도 실패하면 해당 녹화 묶음의 공개 파일을 회수합니다.
+- `SplitArrangement`는 Multi의 배치·화면 순서를, `SplitDragGesture`는 시작 위치에서의 이동 방향·거리와 전환 유지 조건을 순수 Kotlin으로 계산합니다.
+
+  `ui/SplitPanelDrag`는 이름표의 터치를 받아 패널 이동과 놓일 자리 안내를 표시합니다.
+
+  배치 적용은 `ConcurrentCameraActivity`의 화면 크기·이름표 갱신으로 끝나며 카메라 세션을 다시 열지 않습니다.
+- CLI 호환용 Dual에서 두 엔진의 줌은 두 물리 출력에 공통 적용합니다. Camera2는 메인 센서의 노출·초점 제어와 한 요청으로 촬영하는 두 센서 사진을 지원합니다.
+
+  CameraX는 메인 개별 제어와 두 센서 사진을 지원하지 않습니다.
 - CLI 호환용 Dual의 CameraX는 `ConcurrentCamera`의 물리 ID 선택과 `DualPreviewRelay`를 사용해 각 Preview를 화면과 개별 MP4 인코더에 전달합니다.
 
 </details>
@@ -156,16 +176,32 @@ verifications: []
 <details markdown="1" id="detail-531107fb1a" data-search-section>
 <summary>저장·목록·썸네일 구현</summary>
 
-`BenchmarkActivity`는 실행 완료 후 별도 입출력 스레드에서 조립·저장·비교를 처리하고 `ResultPresenter`와 `ComparePresenter`의 결과를 표시합니다. 시작 카드와 진행률에는 `StartCardPresenter`와 `ProgressPresenter`를 사용합니다.
+`BenchmarkActivity`는 실행 완료 후 별도 입출력 스레드에서 조립·저장·비교를 처리하고 `ResultPresenter`와 `ComparePresenter`의 결과를 표시합니다.
 
-`HistoryActivity`는 같은 저장소를 읽습니다. `RunIndex`는 이벤트와 표본 배열을 제거한 목록 데이터를 유지하고, 결과를 열 때 원본 JSON을 다시 읽습니다. 파일 읽기·삭제·CSV 생성은 별도 스레드에서 처리합니다. `BenchmarkCsv`는 지표당 한 행을 작성하고 FileProvider로 공유합니다.
+시작 카드와 진행률에는 `StartCardPresenter`와 `ProgressPresenter`를 사용합니다.
 
-`BenchmarkReport`는 schema 5를 쓰고 schema 3·4·5를 읽습니다. `BenchmarkStore`는 실행 파일과 baseline 인덱스를 관리합니다. 인덱스는 측정 계약·endpoint마다 baseline 실행 목록을 저장합니다. 삭제한 실행은 목록에서 빼며, 기존 실행 JSON은 비교 상태가 바뀌어도 다시 쓰지 않습니다.
+`HistoryActivity`는 같은 저장소를 읽습니다. `RunIndex`는 이벤트와 표본 배열을 제거한 목록 데이터를 유지하고, 결과를 열 때 원본 JSON을 다시 읽습니다.
 
-`camera/MediaLibrary`는 선택한 사진 출력과 동영상을 MediaStore에 저장합니다. `MediaTransaction`이 쓰기·공개·실패 시 삭제를 공통 처리하며, `GalleryActivity`는 저장한 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다. 파일별 형식과 위치는 [저장 파일](engine.md#yuv-저장-포맷)에 있습니다.
+파일 읽기·삭제·CSV 생성은 별도 스레드에서 처리합니다. `BenchmarkCsv`는 지표당 한 행을 작성하고 FileProvider로 공유합니다.
 
-저장 포맷과 폴더는 [Engine의 저장 파일 표](engine.md#yuv-저장-포맷)를 확인하세요. `YuvPacking`이 앱 JPEG 변환용 샘플을 준비하고 `MediaLibrary`가 파일과 JSON을 저장합니다. Camera2의 RAW (DNG)는 `RawFrame`이 RAW 샘플을 복사하고 `DngOutput`이 `DngCreator`로 `_RAW.dng`를 씁니다.
+`BenchmarkReport`는 schema 5를 쓰고 schema 3·4·5를 읽습니다. `BenchmarkStore`는 실행 파일과 baseline 인덱스를 관리합니다.
 
-`camera/RecentMediaThumbnail`은 저장 완료된 앨범 항목의 썸네일을 별도 작업 스레드에서 읽고 `ui/RecentMediaButton`에 전달합니다. 화면을 나가면 관찰을 중단하고 뒤늦은 조회 결과는 반영하지 않습니다. `ui/RecentMediaButton`은 받은 썸네일을 원형으로 그리며, 항목이 동영상이면 가운데에 재생 표시를 겹쳐 접근성 설명뿐 아니라 화면으로도 종류를 알 수 있게 합니다.
+인덱스는 측정 계약·endpoint마다 baseline 실행 목록을 저장합니다. 삭제한 실행은 목록에서 빼며, 기존 실행 JSON은 비교 상태가 바뀌어도 다시 쓰지 않습니다.
+
+`camera/MediaLibrary`는 선택한 사진 출력과 동영상을 MediaStore에 저장합니다.
+
+`MediaTransaction`이 쓰기·공개·실패 시 삭제를 공통 처리하며, `GalleryActivity`는 저장한 앨범을 조회합니다. 미디어 저장은 벤치마크 지표 계산과 분리되어 있습니다.
+
+파일별 형식과 위치는 [저장 파일](engine.md#yuv-저장-포맷)에 있습니다.
+
+저장 포맷과 폴더는 [Engine의 저장 파일 안내](engine.md#yuv-저장-포맷)를 확인하세요. `YuvPacking`이 앱 JPEG 변환용 샘플을 준비하고 `MediaLibrary`가 파일과 JSON을 저장합니다.
+
+Camera2의 RAW (DNG)는 `RawFrame`이 RAW 샘플을 복사하고 `DngOutput`이 `DngCreator`로 `_RAW.dng`를 씁니다.
+
+`camera/RecentMediaThumbnail`은 저장 완료된 앨범 항목의 썸네일을 별도 작업 스레드에서 읽고 `ui/RecentMediaButton`에 전달합니다.
+
+화면을 나가면 관찰을 중단하고 뒤늦은 조회 결과는 반영하지 않습니다.
+
+`ui/RecentMediaButton`은 받은 썸네일을 원형으로 그리며, 항목이 동영상이면 가운데에 재생 표시를 겹쳐 접근성 설명뿐 아니라 화면으로도 종류를 알 수 있게 합니다.
 
 </details>

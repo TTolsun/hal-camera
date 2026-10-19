@@ -40,7 +40,9 @@ verifications: []
 
 PC에서 같은 기능을 실행하려면 [CLI](cli.md)를 사용합니다. `CliProvider`와 `CommandCoordinator`가 ADB 요청을 받아 화면이나 조회 기능에 연결합니다. Python 도구는 선택 사항입니다.
 
-비교 기준을 고르는 방법은 [Benchmark](benchmark.md#비교-기준을-고르세요)에 있습니다. Live의 사진·동영상은 측정 파일과 별도로 저장합니다. 포맷과 폴더는 [저장 파일](engine.md#yuv-저장-포맷)을 확인하세요. 벤치마크 JSON과 incident ZIP에는 이미지 픽셀을 넣지 않습니다.
+비교 기준을 고르는 방법은 [Benchmark](benchmark.md#비교-기준을-고르세요)에 있습니다. Live의 사진·동영상은 측정 파일과 별도로 저장합니다.
+
+포맷과 폴더는 [저장 파일](engine.md#yuv-저장-포맷)을 확인하세요. 벤치마크 JSON과 incident ZIP에는 이미지 픽셀을 넣지 않습니다.
 
 ### 코드를 처음 읽는 순서
 

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Decisions · HALCamera User Guide</title>
   <meta name="description" content="Camera HAL 개발자를 위한 촬영·측정·검증 가이드">
-  <link rel="stylesheet" href="./assets/site-theme-v4.css">
+  <link rel="stylesheet" href="./assets/site-theme-v5.css">
   <script type="module" src="./assets/search-v2.js"></script>
   <script type="module" src="./assets/section-links.js"></script>
   <script type="module" src="./assets/responsive-tables.js"></script>
@@ -32,25 +32,14 @@
     <p class="eyebrow page-label">HAL CAMERA / User Guide</p>
     <h1 lang="en">Make the reasoning visible.</h1><p><strong>결정 번호를 따라 구현과 설계 의도를 구분하세요.</strong> 선택한 방식은 기록에 근거해 설명하고, 기록되지 않은 이유는 확인이 필요한 상태로 남깁니다.</p>
 <h2 id="과거-결정-기록을-확인하세요">과거 결정 기록을 확인하세요</h2>
-<table>
-<thead>
-<tr>
-<th>기록</th>
-<th>선택한 방식</th>
-<th>이유의 기록 상태</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><a href="_inputs/decisions.html#d-001-camera2-엔진과-camerax-엔진을-모두-유지합니다">D-001</a></td>
-<td>Camera2를 측정 경로로, CameraX를 비교 경로로 유지합니다.</td>
-<td>배경·대안·선택 이유는 보완이 필요합니다.</td>
-</tr>
-<tr>
-<td><a href="_inputs/decisions.html#d-002-v02-건강-판정-제품을-중단하고-v03-camera-benchmarker로-전환합니다">D-002</a></td>
-<td>v0.2 건강 판정에서 v0.3 측정·비교 계약으로 전환합니다.</td>
-<td>배경·대안·전환 이유는 보완이 필요합니다.</td>
-</tr>
-</tbody></table>
+<ul>
+<li><p><strong><a href="_inputs/decisions.html#d-001-camera2-엔진과-camerax-엔진을-모두-유지합니다">D-001</a>:</strong> Camera2를 측정 경로로, CameraX를 비교 경로로 유지합니다.</p>
+<p>배경·대안·선택 이유는 보완이 필요합니다.</p>
+</li>
+<li><p><strong><a href="_inputs/decisions.html#d-002-v02-건강-판정-제품을-중단하고-v03-camera-benchmarker로-전환합니다">D-002</a>:</strong> v0.2 건강 판정에서 v0.3 측정·비교 계약으로 전환합니다.</p>
+<p>배경·대안·전환 이유는 보완이 필요합니다.</p>
+</li>
+</ul>
 <p class="editorial" lang="en">Clarity includes knowing<br>what has not been explained.</p><p>과거의 결정은 현재 구현 전체에 대한 보증이 아닙니다.</p>
 <p><strong>다음 단계:</strong> <a href="_inputs/decisions.html">설계 결정 원문</a>을 열어 결정의 상태와 아직 기록되지 않은 내용을 확인하세요.</p>
 
