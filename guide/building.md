@@ -43,4 +43,15 @@ PC에서 촬영·녹화·CTS를 실행하려면 [CLI](cli.md)의 연결 절차�
 
 빌드·JVM 테스트·lint 통과와 실제 기기 동작 검증은 별개입니다. 확인한 조건은 [Validation](evidence.md)에 기록합니다.
 
+<details markdown="1" id="release-signing" data-search-section>
+<summary>릴리스 APK와 서명</summary>
+
+릴리스는 `.\gradlew.bat :app:assembleRelease`로 빌드합니다.
+
+서명하려면 저장소 루트의 `keystore.properties`에 `storeFile`·`storePassword`·`keyAlias`·`keyPassword`를 설정합니다. 이 파일이 없으면 서명되지 않은 APK가 생성됩니다.
+
+키와 설정 파일은 커밋하지 마세요. 기존 앱을 업데이트하려면 같은 키로 서명해야 합니다. 서명이 다르면 앱을 삭제하지 말고 같은 서명의 APK를 준비하세요.
+
+</details>
+
 **다음 단계:** [Live](live.md)에서 설치한 앱의 첫 촬영을 확인하세요.
