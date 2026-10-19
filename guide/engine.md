@@ -6,7 +6,9 @@ nav_order: 5
 
 같은 장면도, 카메라를 구동하는 방식에 따라 다르게 기록됩니다.
 
-**수동 촬영·RAW·Benchmark를 사용하려면 Camera2를 선택하세요.** Live 상단에서 Camera2와 CameraX를 바꿔 같은 장면을 비교할 수 있습니다.
+**수동 촬영·RAW를 사용하려면 Camera2를 선택하세요.** Benchmark는 Live의 엔진 선택과 별개로 Camera2를 사용합니다.
+
+Live 상단에서 Camera2와 CameraX를 바꿔 같은 장면을 비교할 수 있습니다.
 
 지원 기능과 촬영 결과는 기기와 출력 설정에 따라 달라집니다. 먼저 해 볼 작업의 지원 조건을 확인하세요.
 
@@ -35,7 +37,7 @@ PIP와 Multi는 Android 11 이상에서 제공합니다. 선택 가능한 카메
 
 ## JPEG는 누가 만드나요?
 
-JPEG 크기를 선택하면 Camera2는 카메라가 만든 JPEG를, CameraX는 ImageCapture의 JPEG를 저장합니다.
+일반 Live 사진에서 JPEG 크기를 선택하면 Camera2는 카메라가 만든 JPEG를, CameraX는 ImageCapture의 JPEG를 저장합니다.
 
 **YUV를 선택하면 앱이 이미지를 JPEG로 변환합니다.** 두 출처의 사진을 한 번에 두 장 저장하는 기능은 아닙니다.
 
@@ -65,9 +67,11 @@ CameraX 1.6.2로 녹화 중 사진을 찍으면 영상 간격이 늘어날 수 �
 
 사진과 동영상은 기기의 `DCIM/HALCamera`에 저장합니다.
 
-- **사진:** 선택한 출처의 JPEG입니다. RAW를 켠 경우 DNG도 함께 저장합니다.
-- **촬영 JSON:** 설정과 메타데이터가 담깁니다.
+- **사진:** JPEG 출처를 켜면 해당 JPEG를, RAW를 켜면 DNG를 저장합니다.
+- **촬영 JSON:** 설정과 메타데이터를 `Download/HALCamera`에 저장합니다.
 - **벤치마크 보고서·진단 ZIP:** 별도 기록이며 이미지 픽셀을 담지 않습니다.
+
+[PIP](live.md#pip로-보이는-구도를-저장하세요)는 합성과 원본을, [Multi](live.md#여러-카메라를-함께-촬영하세요)는 카메라별 파일을 저장하므로 해당 조건을 확인하세요.
 
 ## 두 엔진이 함께 남기는 기록
 

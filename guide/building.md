@@ -25,10 +25,10 @@ Android SDK 경로는 저장소 루트의 `local.properties`에 설정합니다.
    .\gradlew.bat :app:assembleDebug
    ~~~
 
-2. JVM 단위 테스트를 실행합니다.
+2. JVM 단위 테스트와 Android lint를 실행합니다.
 
    ~~~powershell
-   .\gradlew.bat :app:testDebugUnitTest
+   .\gradlew.bat :app:testDebugUnitTest :app:lintDebug
    ~~~
 
 3. 연결한 기기에 APK를 설치합니다.
@@ -41,6 +41,6 @@ Android SDK 경로는 저장소 루트의 `local.properties`에 설정합니다.
 
 PC에서 촬영·녹화·CTS를 실행하려면 [CLI](cli.md)의 연결 절차를 따르세요.
 
-빌드·JVM 테스트 통과와 실제 기기 동작 검증은 별개입니다. 확인한 조건은 [Validation](evidence.md)에 기록합니다.
+빌드·JVM 테스트·lint 통과와 실제 기기 동작 검증은 별개입니다. 확인한 조건은 [Validation](evidence.md)에 기록합니다.
 
 **다음 단계:** [Live](live.md)에서 설치한 앱의 첫 촬영을 확인하세요.

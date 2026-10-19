@@ -249,7 +249,7 @@ adb shell sh /data/local/tmp/halcam benchmark run --camera 0
 
 앱과 같은 `camera2-standard-v2` 프로파일로 측정하고 원본 JSON을 받습니다.
 
-**보고서 저장 성공과 측정·비교 가능 여부는 별개입니다.** validity와 성능 저하 판정은 JSON에서 확인하세요.
+**보고서 저장 성공과 측정·비교 가능 여부는 별개입니다.** 원본 JSON의 `validity`를 확인하세요. 비교 판정은 저장된 측정값으로 다시 계산합니다.
 
 프로파일은 고정이며 `--engine`, Live 스트림, `--no-audio`를 받지 않습니다. 크기를 자동 대체하거나 baseline을 자동 지정하지 않습니다.
 
@@ -270,15 +270,15 @@ adb shell sh /data/local/tmp/halcam benchmark run --camera 0
 adb shell "sh /data/local/tmp/halcam benchmark run --camera 0 --build 'Candidate A' --note 'Same room'"
 ```
 
-- **목록·상세:** `results list`, `results show --run ID`를 사용합니다.
+- **목록·판정:** `results list`, `results show --run ID`로 실행 목록과 현재 기준의 판정을 확인합니다.
 - **명시한 두 실행 비교:** `results compare --run ID --reference ID`를 사용합니다.
 - **정상 기준 지정·해제:** `baseline add --run ID`, `baseline remove --run ID`를 사용합니다.
 - **JSON·CSV 회수:** `results export --run ID`를 사용합니다.
 - **실행과 baseline 등록 삭제:** `results delete --run ID --confirm true`를 사용합니다.
 
-baseline이 없으면 변화량만 표시하며 REGRESSED 판정을 붙이지 않습니다.
+baseline 없는 자동 비교는 이전 실행과의 변화량만 표시하며 REGRESSED 판정을 붙이지 않습니다.
 
-`results compare`의 참조는 이번 비교에만 사용하고 저장된 baseline을 바꾸지 않습니다.
+`results compare`는 명시한 참조를 기준으로 저하·개선을 판정합니다. 참조는 이번 비교에만 사용하며 저장된 baseline을 바꾸지 않습니다.
 
 </details>
 

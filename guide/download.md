@@ -6,7 +6,7 @@ title: Download
 
 한 장을 찍고, 그 안의 시간을 살펴보세요.
 
-앱 설치에는 APK 파일 하나면 됩니다.
+앱 설치에는 **Android 8.0 이상** 기기와 APK 파일 하나면 됩니다. 사용할 수 있는 기능은 기기·엔진에 따라 다릅니다.
 
 <nav class="contents task-contents" aria-label="앱 다운로드">
   <a href="https://github.com/TTolsun/hal-camera/releases/latest"><span class="name">최신 APK 받기</span><span class="description">Assets에서 APK 파일을 고릅니다.</span><span class="arrow" aria-hidden="true">↗</span></a>
