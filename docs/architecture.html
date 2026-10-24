@@ -79,7 +79,7 @@
 </thead>
 <tbody><tr>
 <td>Live · <code>MainActivity</code></td>
-<td>앱을 열면 나오는 화면입니다. 프리뷰를 보고 사진·동영상을 촬영하며, 지원 카메라의 제조사 Portrait와 Depth 맵을 선택합니다.</td>
+<td>앱을 열면 나오는 화면입니다. 프리뷰를 보고 사진·동영상을 촬영합니다. App Bokeh로 촬영 후 배경 흐림을 조절하며, 지원 카메라의 제조사 Portrait와 Depth 맵도 선택합니다.</td>
 </tr>
 <tr>
 <td>Multi · <code>ConcurrentCameraActivity</code></td>
@@ -113,7 +113,7 @@
 <summary>근거와 검토 정보</summary><ul>
 <li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt</code>, <code>app/src/main/java/dev/halcamera/WorkbenchActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</li>
+<li>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</li>
 </ul>
 </details><!-- omm:end id=overview --><h2 id="전체-구조도">전체 구조도</h2>
 <p>화살표는 코드를 사용하는 방향입니다. 이벤트와 파일이 이동하는 순서는 <a href="#이벤트와-결과가-전달되는-경로">데이터 흐름</a>에서 확인하세요.</p>
@@ -214,6 +214,8 @@
 </li>
 <li><p><code>close(done)</code> 완료 전에 다음 카메라를 열지 않습니다.</p>
 </li>
+<li><p><code>AppBokehProcessor</code>는 일반 JPEG를 RGB로 읽고 기기 안에서 상대 깊이를 추정합니다. <code>RelativeDepth</code>와 <code>DepthBokeh</code>는 깊이 정규화·선택 지점·배경 흐림을 순수 Kotlin으로 계산합니다. <code>MainAppBokehBridge</code>와 <code>AppBokehEditor</code>가 촬영 후 편집을 연결하며 원본과 보케 결과를 별도로 보관합니다.</p>
+</li>
 <li><p>엔진 계약(<code>MediaCapture</code>, <code>LiveTuning</code>, <code>TouchMetering</code>)과 두 엔진의 구현, 두 엔진의 차이는 <a href="engine.html">Engine Comparison</a>에 있습니다.</p>
 </li>
 <li><p>벤치마크 RECORD 단계의 recorder 상태 기계는 <code>BenchmarkRecorder</code>가 담당하고 <code>Camera2Engine</code>은 그 호출을 위임합니다.</p>
@@ -292,9 +294,9 @@
 <p><code>ui/RecentMediaButton</code>은 받은 썸네일을 원형으로 그리며, 항목이 동영상이면 가운데에 재생 표시를 겹쳐 접근성 설명뿐 아니라 화면으로도 종류를 알 수 있게 합니다.</p>
 </details><details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
-<li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/MultiSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MultiRecording.kt</code>, <code>app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/BenchmarkController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CliLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/MainCliBridge.kt</code>, <code>app/src/main/java/dev/halcamera/DualCliBridge.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/ui/Look.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCatalog.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/Camera2Ops.kt</code>, <code>app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt</code>, <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbe.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt</code></li>
+<li>근거 파일: <code>app/src/main/java/dev/halcamera/MainAppBokehBridge.kt</code>, <code>app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RelativeDepth.kt</code>, <code>app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MultiSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MultiRecording.kt</code>, <code>app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/LiveController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/BenchmarkController.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CliLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/MainCliBridge.kt</code>, <code>app/src/main/java/dev/halcamera/DualCliBridge.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt</code>, <code>app/src/main/java/dev/halcamera/ui/Look.kt</code>, <code>app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt</code>, <code>app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsCatalog.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CtsRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt</code>, <code>app/src/main/java/dev/halcamera/cts/Camera2Ops.kt</code>, <code>app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt</code>, <code>app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt</code>, <code>app/src/main/java/dev/halcamera/CameraProbeActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbe.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</li>
+<li>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</li>
 </ul>
 </details><!-- omm:end id=module-roles --><h3 id="cli-책임을-따라가세요">CLI 책임을 따라가세요</h3>
 <p><code>CliCommands</code>는 명령별 필수 인자·허용 옵션·기본 제한·실행 대상과 Live에서 실행되는 방식(<code>flow</code>)·녹화 여부를 한곳에서 정의하고 <code>hello.command_specs</code>로 제공합니다.</p>
@@ -313,6 +315,7 @@
 <p>Live 셔터 조작은 <code>MainActivity</code>에서 선택한 엔진의 촬영·녹화 동작으로 이어집니다.</p>
 <p>Live의 Depth 보기는 <code>DepthCameraEngine → ImageReader → DepthFrame → DepthMapView</code>로 연결합니다. 컬러 촬영과 분리된 보기이며, Telemetry에는 버퍼의 시각·크기·형식과 capture 콜백만 기록합니다. 맵 픽셀을 벤치마크나 incident ZIP의 입력으로 전달하지 않습니다. 사용 순서는 <a href="live.html#depth-맵을-보세요">Depth 맵 보기</a>에 있습니다.</p>
 <p>같은 Depth 메뉴의 Portrait는 <code>PortraitCameraEngine → CameraExtensionSession → JPEG ImageReader → MediaLibrary</code>로 연결합니다. 제조사 Bokeh가 적용된 컬러 사진을 저장하며 별도의 센서 Depth 맵을 받지 않습니다. 확장 처리 이벤트는 일반 Camera2 프레임 지표와 구분하고, 사진 픽셀은 측정 파일에 넣지 않습니다.</p>
+<p>App Bokeh는 일반 Camera2의 Preview+JPEG로 촬영한 원본을 저장한 뒤 <code>MainAppBokehBridge → AppBokehEditor → AppBokehProcessor</code>로 전달합니다. JPEG를 RGB로 디코딩하고 MiDaS 모델이 256×256 Float 상대 깊이를 추론합니다. 사용자가 선택한 깊이보다 먼 영역을 앱에서 흐린 뒤 보케 JPEG·깊이 PNG·처리 메타데이터를 별도 저장합니다. 원본은 그대로 유지하며 분석용 YUV·HAL Depth·제조사 보케 버퍼는 사용하지 않습니다.</p>
 <p>벤치마크는 별도 화면인 <code>BenchmarkActivity</code>가 준비를 마친 뒤 <code>BenchmarkRunner.start()</code>를 호출하여 시작합니다.</p>
 <p><code>Telemetry.callback(...)</code>이 반환한 Camera2 콜백의 <code>onCaptureStarted</code>는 프레임워크 신호를 기록하며, Live 셔터와 벤치마크 시작을 연결하는 메서드가 아닙니다.</p>
 <h3 id="실행에서-저장까지">실행에서 저장까지</h3>
@@ -439,9 +442,9 @@
 <p>이전 CameraX 그래프가 닫히기 전에 MainActivity가 다시 카메라를 열지 않도록 합니다.</p>
 <details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
-<li>근거 파일: <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>tools/halcam/halcam/download.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/GalleryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
+<li>근거 파일: <code>app/src/main/java/dev/halcamera/MainAppBokehBridge.kt</code>, <code>app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt</code>, <code>app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>tools/halcam/halcam/cli.py</code>, <code>tools/halcam/halcam/download.py</code>, <code>app/src/main/java/dev/halcamera/MainActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/GalleryActivity.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MediaLibrary.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/Telemetry.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt</code>, <code>app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</li>
+<li>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</li>
 </ul>
 </details><!-- omm:end id=runtime-flow --><h3 id="이벤트와-결과가-전달되는-경로">이벤트와 결과가 전달되는 경로</h3>
 <!-- omm:begin id=runtime-diagram --><pre><code class="language-mermaid">graph TB
@@ -636,6 +639,7 @@
 </ol>
 <p>Depth 보기는 컬러와 Depth를 같은 요청에 포함하지 않는 별도 Camera2 세션입니다. HAL의 동시 요청 허용 선언은 특정 출력 조합의 성공을 보장하지 않습니다. <code>DepthCameraEngine</code>은 촬영·녹화·수동 제어·줌·터치 측광을 제공하지 않으며 CLI 제어 변경도 거절합니다. Photo·Video 또는 CLI 촬영 준비로 전환하면 Depth를 해제합니다.</p>
 <p>제조사 Portrait도 일반 촬영과 별도의 확장 세션을 사용합니다. Bokeh 확장 전용 해상도로 컬러 미리보기와 JPEG만 요청하며, 세션이 거절되면 다른 크기로 자동 대체하지 않습니다. 단일 촬영의 JPEG를 받기 전에 실패하거나 종료되면 세션을 해제하여 늦은 이미지를 다음 촬영에 연결하지 않습니다. 이미 받은 JPEG의 저장 작업은 종료 후에도 마칠 수 있습니다.</p>
+<p>App Bokeh는 제조사 Portrait와 달리 일반 JPEG 저장 이후의 앱 처리입니다. 상대 깊이는 센서 거리나 DEPTH16으로 해석하지 않으며, 편집·저장 해상도는 긴 변 최대 1600픽셀로 제한합니다. 원본은 수정하지 않습니다. 추론·렌더·추가 저장 실패는 원본을 삭제하지 않으며, Activity 중단 후에는 편집기의 늦은 결과를 화면에 적용하지 않습니다.</p>
 <p>Multi 모드의 <code>MultiSession</code>은 <code>CameraEngine</code>과 별도입니다. Camera2는 선택한 독립 장치를 연 뒤 세션을 구성하며, CameraX는 광고된 동시 조합을 바인딩합니다.</p>
 <p>모든 장치의 종료 통지를 확인해야 출력을 해제하고 다음 동시 세션을 열 수 있습니다. 한 명령의 여러 사진을 센서 동기 촬영으로 해석하지 않습니다.</p>
 <p>Multi V의 <code>MicrophoneCapture</code>는 <code>AudioRecord</code>의 MONOTONIC 하드웨어 시각과 PCM 프레임 위치로 오디오 원점을 구합니다.</p>
@@ -674,9 +678,9 @@
 <p>Live 카메라 종료 후 벤치마크 화면으로 이동하고 기존 측정·판정 규칙을 유지합니다.</p>
 <details class="doc-evidence">
 <summary>근거와 검토 정보</summary><ul>
-<li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/MultiSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MultiRecording.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MicrophoneCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TimestampedVideoRecording.kt</code>, <code>app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandStore.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt</code></li>
+<li>근거 파일: <code>app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt</code>, <code>app/src/main/java/dev/halcamera/camera/RelativeDepth.kt</code>, <code>app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MultiSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MultiRecording.kt</code>, <code>app/src/main/java/dev/halcamera/camera/MicrophoneCapture.kt</code>, <code>app/src/main/java/dev/halcamera/camera/TimestampedVideoRecording.kt</code>, <code>app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CliProvider.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt</code>, <code>app/src/main/java/dev/halcamera/cli/CommandStore.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt</code>, <code>app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt</code>, <code>app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt</code>, <code>app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt</code>, <code>app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt</code></li>
 <li>근거 수준: 코드 확인</li>
-<li>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</li>
+<li>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</li>
 </ul>
 </details><!-- omm:end id=constraints --><h2 id="변경-후-검증">변경 후 검증</h2>
 <p>Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 확인할 수 있습니다. 저장소 루트에서 실행하세요.</p>
@@ -716,17 +720,17 @@
 <tbody><tr>
 <td>구조 원본 <code>data-flow</code></td>
 <td>최신</td>
-<td>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</td>
+<td>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</td>
 </tr>
 <tr>
 <td>구조 원본 <code>overall-architecture</code></td>
 <td>최신</td>
-<td>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</td>
+<td>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</td>
 </tr>
 <tr>
 <td>구조 원본 <code>state-transitions</code></td>
 <td>최신</td>
-<td>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</td>
+<td>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</td>
 </tr>
 <tr>
 <td>구조 원본 <code>ui-camera-label</code></td>
@@ -736,32 +740,32 @@
 <tr>
 <td>구조 원본 <code>ui-tool-handoff</code></td>
 <td>최신</td>
-<td>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</td>
+<td>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</td>
 </tr>
 <tr>
 <td>구조 원본 <code>ui-zoom</code></td>
 <td>최신</td>
-<td>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</td>
+<td>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</td>
 </tr>
 <tr>
 <td>원고 <code>overview</code></td>
 <td>최신</td>
-<td>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</td>
+<td>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</td>
 </tr>
 <tr>
 <td>원고 <code>module-roles</code></td>
 <td>최신</td>
-<td>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</td>
+<td>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</td>
 </tr>
 <tr>
 <td>원고 <code>runtime-flow</code></td>
 <td>최신</td>
-<td>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</td>
+<td>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</td>
 </tr>
 <tr>
 <td>원고 <code>constraints</code></td>
 <td>최신</td>
-<td>검토 2026-10-19 @ <code>2fb9f2aa</code> · codex-user-authorized-portrait-review</td>
+<td>검토 2026-10-24 @ <code>e4de2762</code> · codex-app-bokeh-code-review</td>
 </tr>
 </tbody></table>
 <!-- omm:end id=status --><p>표의 <code>최신</code>은 기록된 근거와 원고가 검토 이후 바뀌지 않았다는 뜻입니다. 모든 기기에서 동작을 검증했다는 뜻은 아닙니다.</p>
