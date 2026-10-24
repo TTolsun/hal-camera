@@ -4,6 +4,7 @@ confidence: code
 sources:
   - app/src/main/java/dev/halcamera/MainAppBokehBridge.kt
   - app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt
+  - app/src/main/java/dev/halcamera/camera/BokehMask.kt
   - app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt
   - app/src/main/java/dev/halcamera/cli/CliProvider.kt
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
@@ -47,7 +48,7 @@ Live의 Depth 보기는 `DepthCameraEngine → ImageReader → DepthFrame → De
 
 같은 Depth 메뉴의 Portrait는 `PortraitCameraEngine → CameraExtensionSession → JPEG ImageReader → MediaLibrary`로 연결합니다. 제조사 Bokeh가 적용된 컬러 사진을 저장하며 별도의 센서 Depth 맵을 받지 않습니다. 확장 처리 이벤트는 일반 Camera2 프레임 지표와 구분하고, 사진 픽셀은 측정 파일에 넣지 않습니다.
 
-App Bokeh는 일반 Camera2의 Preview+JPEG로 촬영한 원본을 저장한 뒤 `MainAppBokehBridge → AppBokehEditor → AppBokehProcessor`로 전달합니다. JPEG를 RGB로 디코딩하고 MiDaS 모델이 256×256 Float 상대 깊이를 추론합니다. 사용자가 선택한 깊이보다 먼 영역을 앱에서 흐린 뒤 보케 JPEG·깊이 PNG·처리 메타데이터를 별도 저장합니다. 원본은 그대로 유지하며 분석용 YUV·HAL Depth·제조사 보케 버퍼는 사용하지 않습니다.
+App Bokeh는 일반 Camera2의 Preview+JPEG로 촬영한 원본을 저장한 뒤 `MainAppBokehBridge → AppBokehEditor → AppBokehProcessor`로 전달합니다. JPEG를 RGB로 디코딩하고 MiDaS 모델이 256×256 Float 상대 깊이를 추론합니다. 사용자가 선택한 깊이보다 먼 영역의 흐림 가중치를 원본 밝기 경계로 보정한 뒤 배경을 흐립니다. 보케 JPEG·깊이 PNG·처리 메타데이터를 별도 저장하며 깊이 PNG에는 합성 마스크가 아닌 모델 출력을 담습니다. 원본은 그대로 유지하며 분석용 YUV·HAL Depth·제조사 보케 버퍼는 사용하지 않습니다.
 
 벤치마크는 별도 화면인 `BenchmarkActivity`가 준비를 마친 뒤 `BenchmarkRunner.start()`를 호출하여 시작합니다.
 

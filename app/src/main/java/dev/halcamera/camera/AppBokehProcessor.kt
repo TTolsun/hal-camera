@@ -90,6 +90,7 @@ class AppBokehProcessor(context: Context) {
                 "model" to "MiDaS v2.1 model_opt", "modelSha256" to MODEL_SHA256, "depthKind" to "relative_inverse_depth",
                 "depthNear" to "white", "metricDepth" to false, "focusX" to x, "focusY" to y,
                 "focusDepth" to scene.depth.focus(x, y), "strength" to strength,
+                "renderer" to "guided_luma_mask_v1",
                 "width" to result.width, "height" to result.height, "inferenceMs" to scene.elapsedMs,
                 "outputs" to listOf(jpeg.name, depth.name))
             val json = save("${name}_metadata.json", "application/json") { it.write(org.json.JSONObject(metadata).toString(2).toByteArray()) }
