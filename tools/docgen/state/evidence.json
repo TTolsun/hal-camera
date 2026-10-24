@@ -3,7 +3,7 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "256cd50e4dae5e7f",
@@ -351,7 +351,7 @@
     },
     "omm:state-transitions": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "6c26499ca15e0c52",
@@ -400,7 +400,7 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "7b3a5428bb6445ea",
@@ -697,7 +697,7 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "48aa19e183edff3d",
@@ -1043,7 +1043,7 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       }
     },
     "content:architecture.md/constraints": {
@@ -1337,7 +1337,7 @@
         }
       },
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       }
     },
     "omm:ui-camera-label": {
@@ -1392,7 +1392,7 @@
     },
     "content:_reference/engine.md/contract": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "256cd50e4dae5e7f",
@@ -1686,7 +1686,7 @@
     },
     "content:_reference/engine.md/camera2": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "256cd50e4dae5e7f",
@@ -1980,7 +1980,7 @@
     },
     "content:_reference/engine.md/camerax": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "256cd50e4dae5e7f",
@@ -2274,7 +2274,7 @@
     },
     "content:_reference/engine.md/comparison": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "256cd50e4dae5e7f",
@@ -2568,7 +2568,7 @@
     },
     "content:_reference/troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "bce4991cbed5d674",
@@ -2637,7 +2637,7 @@
     },
     "content:_reference/evidence.md/device-notes": {
       "observed": {
-        "state": "fresh"
+        "state": "stale"
       },
       "accepted": {
         "codeHash": "256cd50e4dae5e7f",

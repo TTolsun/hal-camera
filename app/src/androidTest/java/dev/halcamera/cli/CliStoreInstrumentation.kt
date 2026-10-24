@@ -10,6 +10,7 @@ import java.util.UUID
 /** Device tests use real JSONObject and AtomicFile, with a deterministic clock and isolated files. */
 class CliStoreInstrumentation : Instrumentation() {
     private var appBokehSource: String? = null
+    private var appBokehUi = false
     private var appBokehFocusX = .5f
     private var appBokehFocusY = .5f
     private var exportReports = false
@@ -28,6 +29,7 @@ class CliStoreInstrumentation : Instrumentation() {
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
         appBokehSource = arguments?.getString("app_bokeh_source")
+        appBokehUi = arguments?.getString("app_bokeh_ui") == "true"
         appBokehFocusX = arguments?.getString("app_bokeh_focus_x")?.toFloat() ?: .5f
         appBokehFocusY = arguments?.getString("app_bokeh_focus_y")?.toFloat() ?: .5f
         exportReports = arguments?.getString("export_reports") == "true"
@@ -49,7 +51,8 @@ class CliStoreInstrumentation : Instrumentation() {
     override fun onStart() {
         appBokehSource?.let { path ->
             try {
-                val result = dev.halcamera.camera.AppBokehChecks.run(targetContext, path, appBokehFocusX, appBokehFocusY)
+                val result = if (appBokehUi) dev.halcamera.camera.AppBokehChecks.ui(this, path)
+                    else dev.halcamera.camera.AppBokehChecks.run(targetContext, path, appBokehFocusX, appBokehFocusY)
                 finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
             } catch (error: Throwable) {
                 finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "APP_BOKEH_FAILED: ${error.stackTraceToString()}\n") })
