@@ -9,6 +9,9 @@ import java.util.UUID
 
 /** Device tests use real JSONObject and AtomicFile, with a deterministic clock and isolated files. */
 class CliStoreInstrumentation : Instrumentation() {
+    private var appBokehSource: String? = null
+    private var appBokehFocusX = .5f
+    private var appBokehFocusY = .5f
     private var exportReports = false
     private var probeLaunchDiagnostics = false
     private var snapshotFailures = false
@@ -24,6 +27,9 @@ class CliStoreInstrumentation : Instrumentation() {
     private var portraitUi = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
+        appBokehSource = arguments?.getString("app_bokeh_source")
+        appBokehFocusX = arguments?.getString("app_bokeh_focus_x")?.toFloat() ?: .5f
+        appBokehFocusY = arguments?.getString("app_bokeh_focus_y")?.toFloat() ?: .5f
         exportReports = arguments?.getString("export_reports") == "true"
         probeLaunchDiagnostics = arguments?.getString("probe_launch_diagnostics") == "true"
         snapshotFailures = arguments?.getString("snapshot_failures") == "true"
@@ -41,6 +47,15 @@ class CliStoreInstrumentation : Instrumentation() {
     }
 
     override fun onStart() {
+        appBokehSource?.let { path ->
+            try {
+                val result = dev.halcamera.camera.AppBokehChecks.run(targetContext, path, appBokehFocusX, appBokehFocusY)
+                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
+            } catch (error: Throwable) {
+                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "APP_BOKEH_FAILED: ${error.stackTraceToString()}\n") })
+            }
+            return
+        }
         if (portraitChecks || portraitMetadata || portraitUi) {
             try {
                 val result = when {

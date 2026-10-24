@@ -34,6 +34,7 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
                     captureFeedback.clearResult()
                     depthSize = null
                     portraitConfig = null
+                    appBokehMode = false
                     showCallbacks(false)
                     val modeChanged = engineName != (command.engine ?: "Camera2") || videoMode != command.videoMode
                     cameraId = requireNotNull(command.camera); engineName = command.engine ?: "Camera2"

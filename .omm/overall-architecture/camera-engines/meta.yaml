@@ -8,6 +8,7 @@ children:
   - camera2-engine
   - depth-engine
   - portrait-engine
+  - app-bokeh
   - camerax-engine
   - endpoint-model
   - endpoint-resolver

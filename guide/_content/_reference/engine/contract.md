@@ -7,6 +7,7 @@ sources:
   - app/src/main/java/dev/halcamera/camera/CameraXEngine.kt
   - app/src/main/java/dev/halcamera/camera/DepthCameraEngine.kt
   - app/src/main/java/dev/halcamera/MainActivity.kt
+  - app/src/main/java/dev/halcamera/MainAppBokehBridge.kt
   - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
   - app/src/main/java/dev/halcamera/ui/LiveControlBar.kt
   - app/src/main/java/dev/halcamera/ui/FocusRing.kt
@@ -61,7 +62,9 @@ classDiagram
 
 종료 통지와 다음 엔진의 대기 순서는 [엔진 전환 그림](architecture.md#카메라-열기와-닫기)을 확인하세요.
 
-Photo·Video·Depth·Multi · P·Multi · V 사이에서 모드를 바꾸면 기존 세션을 닫고 스트림을 다시 구성합니다. 같은 모드를 다시 누르면 유지하며 Depth 버튼은 해상도 선택창을 엽니다. 일반 단일 카메라는 새 프리뷰의 첫 화면 갱신 뒤, Multi는 모든 장치의 합성 프리뷰가 준비된 뒤에 촬영 버튼을 활성화합니다. Depth는 첫 맵 수신 후에도 촬영 버튼을 비활성화합니다. CLI 호환용 Dual도 두 프리뷰가 모두 갱신된 뒤에 촬영할 수 있습니다. 모드 선택 자체로 사진이나 녹화를 시작하지는 않습니다.
+Photo·Video·Depth·Multi · P·Multi · V 사이에서 모드를 바꾸면 기존 세션을 닫고 스트림을 다시 구성합니다. 같은 모드를 다시 누르면 유지하며 Depth 버튼은 App Bokeh·제조사 Portrait·센서 Depth 선택창을 엽니다. 일반 단일 카메라는 새 프리뷰의 첫 화면 갱신 뒤, Multi는 모든 장치의 합성 프리뷰가 준비된 뒤에 촬영 버튼을 활성화합니다. 센서 Depth는 첫 맵 수신 후에도 촬영 버튼을 비활성화합니다. CLI 호환용 Dual도 두 프리뷰가 모두 갱신된 뒤에 촬영할 수 있습니다. 모드 선택 자체로 사진이나 녹화를 시작하지는 않습니다.
+
+App Bokeh는 Camera2의 일반 Preview+JPEG 세션에서 촬영한 원본을 편집기로 전달합니다. 분석 YUV와 센서 Depth를 사용하지 않으며, 모델로 추정한 상대 깊이에 따라 저장할 복사본에 배경 흐림을 적용합니다. 카메라·엔진 변경이나 일반 스트림 설정 적용 시 App Bokeh 모드를 종료합니다.
 
 ### Benchmark와 CLI가 쓰는 엔진
 

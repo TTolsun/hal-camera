@@ -3,6 +3,7 @@ based_on: [overall-architecture]
 confidence: code
 sources:
   - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
+  - app/src/main/java/dev/halcamera/MainAppBokehBridge.kt
   - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
   - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
   - app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt
@@ -118,6 +119,8 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 | 프리뷰 | 1280×720 이하에서 가장 큰 크기 | TextureView 표시 |
 | YUV (`analysis_acquire_latest`) | 640×480 이하에서 가장 큰 크기 | 프레임 도착 기록, 앱 변환을 선택한 사진 입력 |
 | JPEG (`still`) | 1920×1080 이하에서 가장 큰 크기 | 카메라 JPEG 사진, 벤치마크 still |
+
+App Bokeh에서는 이 기본 크기의 Preview와 JPEG만 구성하고 분석 YUV는 끕니다. 저장한 JPEG를 앱의 깊이 추정 모델에 전달하므로 촬영 세션에 DEPTH16 출력을 추가하지 않습니다.
 
 벤치마크 세션은 profile의 `StreamSpec` 크기를 그대로 사용합니다. 지원하지 않는 크기이면 작은 크기로 대체하지 않고 구성 단계에서 실패합니다. 같은 profile ID로 다른 크기를 측정하면 비교가 무의미해지기 때문입니다.
 

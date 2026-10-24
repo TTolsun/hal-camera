@@ -1,4 +1,8 @@
 import java.util.Properties
+import java.security.MessageDigest
+import java.net.URI
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 plugins {
     id("com.android.application")
@@ -49,8 +53,39 @@ android {
     kotlinOptions { jvmTarget = "17" }
     lint { abortOnError = true }
     sourceSets.getByName("androidTest").assets.srcDir("../tools/halcam/fixtures")
+    sourceSets.getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/depthAssets"))
+    androidResources { noCompress += "tflite" }
 }
+
+// Official, MIT-licensed MiDaS v2.1 mobile model. Never accept an unverified download.
+val depthModel = layout.buildDirectory.file("generated/depthAssets/midas-v2_1.tflite")
+val prepareDepthModel by tasks.registering {
+    outputs.file(depthModel)
+    val expected = "93d871071edff1218973ce25ee27ce95ccd20450c70a55e1b89efa3f5a772cdd"
+    fun hash(file: File): String = MessageDigest.getInstance("SHA-256").let { digest ->
+        file.inputStream().use { input ->
+            val bytes = ByteArray(65536)
+            while (true) { val n = input.read(bytes); if (n < 0) break; digest.update(bytes, 0, n) }
+        }
+        digest.digest().joinToString("") { "%02x".format(it) }
+    }
+    outputs.upToDateWhen { depthModel.get().asFile.let { it.exists() && hash(it) == expected } }
+    doLast {
+        val destination = depthModel.get().asFile
+        destination.parentFile.mkdirs()
+        val temporary = File(destination.parentFile, "model.download")
+        try {
+            val connection = URI("https://github.com/isl-org/MiDaS/releases/download/v2_1/model_opt.tflite").toURL().openConnection()
+            connection.connectTimeout = 30000; connection.readTimeout = 120000
+            connection.getInputStream().use { input -> temporary.outputStream().use { input.copyTo(it) } }
+            check(hash(temporary) == expected) { "MiDaS model SHA-256 mismatch" }
+            Files.move(temporary.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING)
+        } finally { temporary.delete() }
+    }
+}
+tasks.named("preBuild").configure { dependsOn(prepareDepthModel) }
 dependencies {
+    implementation("com.google.ai.edge.litert:litert:1.4.2")
     implementation("androidx.activity:activity-ktx:1.13.0")
     implementation("androidx.core:core-ktx:1.18.0")
     implementation("androidx.exifinterface:exifinterface:1.4.2")

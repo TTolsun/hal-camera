@@ -22,7 +22,8 @@ internal fun MainActivity.selectCamera() {
             pendingPermissionAction = null
             recorder.finish("camera_changed")?.let(::exportCliIncident)
             cameraId = chosen; zoomRatio = 1f
-            depthSize = null; portraitConfig = null
+            if (appBokehMode) captureFeedback.clearResult()
+            depthSize = null; portraitConfig = null; appBokehMode = false
             resetControls(); updateCameraChoices(); restartCamera()
         }
     }
