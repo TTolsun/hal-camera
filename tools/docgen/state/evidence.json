@@ -3,14 +3,14 @@
   "entries": {
     "omm:overall-architecture": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "256cd50e4dae5e7f",
-        "modelHash": "cce80d4534048485",
+        "codeHash": "e5526928cc6bb406",
+        "modelHash": "d7c4aa2c4c6325a1",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/build.gradle.kts": "f253a1187163f8d464f7eb2ae00426c64806ad75",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -248,7 +248,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "daa585260738255daaa1bca7a784b3f19d0a02bf",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "743c60bd7877908b05b50f2dceaa309ea4b55344",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "5ff28a3023ab38034e6322214e29ef066e671435",
           "app/src/main/java/dev/halcamera/ui/CaptureFeedback.kt": "d7c54ea31ebe7827ca434f2d1c9ab2eb21114c5c",
@@ -351,14 +351,14 @@
     },
     "omm:state-transitions": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "6c26499ca15e0c52",
+        "codeHash": "bf2492172cb06636",
         "modelHash": "29c82f37e7694476",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/src/main/java/dev/halcamera/MainActivity.kt": "b29ca903388af63b0218a32b5bcc2d8075479cef",
           "app/src/main/java/dev/halcamera/MainAppBokehBridge.kt": "964638cb0bef8555c7495f56beb992faf1223583",
@@ -392,7 +392,7 @@
           "app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt": "2dc23b55b00407ea5126dd19e3871fcb8f9fc5d4",
           "app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt": "f5148663814d0aec3ed45a44478bae4b0323e01d",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "tools/halcam/halcam/cli.py": "4161d167e0c041fdca0c185505083b57907bc789",
           "tools/halcam/halcam/submission.py": "34a8444dcbaec0b783fc71ac1cffb844d9fc2147"
         }
@@ -400,14 +400,14 @@
     },
     "content:architecture.md/overview": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "7b3a5428bb6445ea",
-        "modelHash": "c6d557a56b5f62f7",
+        "codeHash": "4bd046519edd291b",
+        "modelHash": "61c84735e9b9b510",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/build.gradle.kts": "f253a1187163f8d464f7eb2ae00426c64806ad75",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -645,7 +645,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "daa585260738255daaa1bca7a784b3f19d0a02bf",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "743c60bd7877908b05b50f2dceaa309ea4b55344",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "5ff28a3023ab38034e6322214e29ef066e671435",
           "app/src/main/java/dev/halcamera/ui/CaptureFeedback.kt": "d7c54ea31ebe7827ca434f2d1c9ab2eb21114c5c",
@@ -697,14 +697,14 @@
     },
     "content:architecture.md/runtime-flow": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "48aa19e183edff3d",
+        "codeHash": "167e256bf008a70d",
         "modelHash": "3291cd6bfd0a9310",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "d220302a8e9dd392cf1560e5b28dc5aa6378202f",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "b29ca903388af63b0218a32b5bcc2d8075479cef",
@@ -745,7 +745,7 @@
           "app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt": "2dc23b55b00407ea5126dd19e3871fcb8f9fc5d4",
           "app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt": "f5148663814d0aec3ed45a44478bae4b0323e01d",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "tools/halcam/halcam/cli.py": "4161d167e0c041fdca0c185505083b57907bc789",
           "tools/halcam/halcam/download.py": "6cb9875bdae0257330e0942386f7ecd64a34d690",
           "tools/halcam/halcam/submission.py": "34a8444dcbaec0b783fc71ac1cffb844d9fc2147"
@@ -754,11 +754,11 @@
     },
     "content:architecture.md/module-roles": {
       "accepted": {
-        "codeHash": "256cd50e4dae5e7f",
-        "modelHash": "357181d41ec7931b",
+        "codeHash": "e5526928cc6bb406",
+        "modelHash": "21de31d2606fef6b",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/build.gradle.kts": "f253a1187163f8d464f7eb2ae00426c64806ad75",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -996,7 +996,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "daa585260738255daaa1bca7a784b3f19d0a02bf",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "743c60bd7877908b05b50f2dceaa309ea4b55344",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "5ff28a3023ab38034e6322214e29ef066e671435",
           "app/src/main/java/dev/halcamera/ui/CaptureFeedback.kt": "d7c54ea31ebe7827ca434f2d1c9ab2eb21114c5c",
@@ -1043,16 +1043,16 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "content:architecture.md/constraints": {
       "accepted": {
-        "codeHash": "256cd50e4dae5e7f",
-        "modelHash": "2b7fa475e3b6d941",
+        "codeHash": "e5526928cc6bb406",
+        "modelHash": "36d19ef7ee11f149",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/build.gradle.kts": "f253a1187163f8d464f7eb2ae00426c64806ad75",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -1290,7 +1290,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "daa585260738255daaa1bca7a784b3f19d0a02bf",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "743c60bd7877908b05b50f2dceaa309ea4b55344",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "5ff28a3023ab38034e6322214e29ef066e671435",
           "app/src/main/java/dev/halcamera/ui/CaptureFeedback.kt": "d7c54ea31ebe7827ca434f2d1c9ab2eb21114c5c",
@@ -1337,7 +1337,7 @@
         }
       },
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       }
     },
     "omm:ui-camera-label": {
@@ -1392,14 +1392,14 @@
     },
     "content:_reference/engine.md/contract": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "256cd50e4dae5e7f",
-        "modelHash": "66c6d69f9fc52416",
+        "codeHash": "e5526928cc6bb406",
+        "modelHash": "4ef7c17af745df2f",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/build.gradle.kts": "f253a1187163f8d464f7eb2ae00426c64806ad75",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -1637,7 +1637,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "daa585260738255daaa1bca7a784b3f19d0a02bf",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "743c60bd7877908b05b50f2dceaa309ea4b55344",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "5ff28a3023ab38034e6322214e29ef066e671435",
           "app/src/main/java/dev/halcamera/ui/CaptureFeedback.kt": "d7c54ea31ebe7827ca434f2d1c9ab2eb21114c5c",
@@ -1686,14 +1686,14 @@
     },
     "content:_reference/engine.md/camera2": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "256cd50e4dae5e7f",
-        "modelHash": "7af1d65d67f75fb3",
+        "codeHash": "e5526928cc6bb406",
+        "modelHash": "e53b130506a00ed6",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/build.gradle.kts": "f253a1187163f8d464f7eb2ae00426c64806ad75",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -1931,7 +1931,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "daa585260738255daaa1bca7a784b3f19d0a02bf",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "743c60bd7877908b05b50f2dceaa309ea4b55344",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "5ff28a3023ab38034e6322214e29ef066e671435",
           "app/src/main/java/dev/halcamera/ui/CaptureFeedback.kt": "d7c54ea31ebe7827ca434f2d1c9ab2eb21114c5c",
@@ -1980,14 +1980,14 @@
     },
     "content:_reference/engine.md/camerax": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "256cd50e4dae5e7f",
-        "modelHash": "da611927ad8a984f",
+        "codeHash": "e5526928cc6bb406",
+        "modelHash": "9db4e087c89fd6e3",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/build.gradle.kts": "f253a1187163f8d464f7eb2ae00426c64806ad75",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -2225,7 +2225,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "daa585260738255daaa1bca7a784b3f19d0a02bf",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "743c60bd7877908b05b50f2dceaa309ea4b55344",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "5ff28a3023ab38034e6322214e29ef066e671435",
           "app/src/main/java/dev/halcamera/ui/CaptureFeedback.kt": "d7c54ea31ebe7827ca434f2d1c9ab2eb21114c5c",
@@ -2274,14 +2274,14 @@
     },
     "content:_reference/engine.md/comparison": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "256cd50e4dae5e7f",
-        "modelHash": "c6e5f3e19d40ec82",
+        "codeHash": "e5526928cc6bb406",
+        "modelHash": "159d4eedf4472bea",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/build.gradle.kts": "f253a1187163f8d464f7eb2ae00426c64806ad75",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -2519,7 +2519,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "daa585260738255daaa1bca7a784b3f19d0a02bf",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "743c60bd7877908b05b50f2dceaa309ea4b55344",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "5ff28a3023ab38034e6322214e29ef066e671435",
           "app/src/main/java/dev/halcamera/ui/CaptureFeedback.kt": "d7c54ea31ebe7827ca434f2d1c9ab2eb21114c5c",
@@ -2568,14 +2568,14 @@
     },
     "content:_reference/troubleshooting.md/layer-isolation": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "bce4991cbed5d674",
+        "codeHash": "844a3e7c556ad4ae",
         "modelHash": "1c146246635748ea",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/src/main/java/dev/halcamera/GalleryActivity.kt": "d220302a8e9dd392cf1560e5b28dc5aa6378202f",
           "app/src/main/java/dev/halcamera/MainActivity.kt": "b29ca903388af63b0218a32b5bcc2d8075479cef",
@@ -2628,7 +2628,7 @@
           "app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt": "2dc23b55b00407ea5126dd19e3871fcb8f9fc5d4",
           "app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt": "f5148663814d0aec3ed45a44478bae4b0323e01d",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "tools/halcam/halcam/cli.py": "4161d167e0c041fdca0c185505083b57907bc789",
           "tools/halcam/halcam/download.py": "6cb9875bdae0257330e0942386f7ecd64a34d690",
           "tools/halcam/halcam/submission.py": "34a8444dcbaec0b783fc71ac1cffb844d9fc2147"
@@ -2637,14 +2637,14 @@
     },
     "content:_reference/evidence.md/device-notes": {
       "observed": {
-        "state": "stale"
+        "state": "fresh"
       },
       "accepted": {
-        "codeHash": "256cd50e4dae5e7f",
-        "modelHash": "20cdcdfca8bd78ef",
+        "codeHash": "e5526928cc6bb406",
+        "modelHash": "b9db0c76a101865b",
         "at": "2026-10-24",
-        "commit": "e4de2762",
-        "reviewer": "codex-app-bokeh-code-review",
+        "commit": "9e71f282",
+        "reviewer": "codex-app-bokeh-ui-review",
         "files": {
           "app/build.gradle.kts": "f253a1187163f8d464f7eb2ae00426c64806ad75",
           "app/src/main/AndroidManifest.xml": "394f1ceb67558a1400f691c3eb3157f7be783960",
@@ -2882,7 +2882,7 @@
           "app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt": "b3bbdcb22853d8b517dd1b3232ad3e3f12c1e0e8",
           "app/src/main/java/dev/halcamera/telemetry/Telemetry.kt": "3b5449d9b65774b05888a61cf7a3c856749035db",
           "app/src/main/java/dev/halcamera/ui/AboutSheet.kt": "daa585260738255daaa1bca7a784b3f19d0a02bf",
-          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "d06a67f29686176bfa65f72d87a422da48482514",
+          "app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt": "3f8dc072f1b1efe267d4f1a52121ea2efaaad902",
           "app/src/main/java/dev/halcamera/ui/BenchmarkResultCards.kt": "743c60bd7877908b05b50f2dceaa309ea4b55344",
           "app/src/main/java/dev/halcamera/ui/CameraWidgets.kt": "5ff28a3023ab38034e6322214e29ef066e671435",
           "app/src/main/java/dev/halcamera/ui/CaptureFeedback.kt": "d7c54ea31ebe7827ca434f2d1c9ab2eb21114c5c",

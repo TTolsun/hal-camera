@@ -55,8 +55,8 @@
 <li><code>Depth → App Bokeh</code>를 선택합니다. 제조사 Bokeh나 센서 Depth 지원 여부와 관계없이 일반 JPEG 촬영을 사용합니다.</li>
 <li>셔터를 누릅니다. 원본을 저장한 뒤 기기 안에서 깊이를 추정합니다. LIVE 미리보기에는 이 효과가 적용되지 않습니다.</li>
 <li>편집 화면에서 선명하게 유지할 인물이나 사물을 누릅니다. 선택한 지점보다 멀다고 추정된 영역을 흐리게 처리합니다.</li>
-<li>슬라이더로 강도를 조절하고 <code>Bokeh</code>, <code>Original</code>, <code>Depth</code>로 결과를 비교합니다. 강도 0은 처리용 원본 픽셀을 유지합니다.</li>
-<li><code>Save copy</code>를 누릅니다. 보케 JPEG와 추정 깊이 PNG는 <code>DCIM/HALCamera</code>, 모델·원본 URI·선택 지점·강도 기록은 <code>Download/HALCamera</code>에 저장합니다. 촬영 원본은 변경하지 않습니다.</li>
+<li>슬라이더로 강도를 조절하고 <code>Bokeh</code>, <code>Original</code>, <code>Depth</code>로 결과를 비교합니다. 선택한 화면은 테두리와 굵은 글씨로 표시하며 강도를 바꾸면 <code>Bokeh</code> 결과로 돌아갑니다. 강도 0은 처리용 원본 픽셀을 유지합니다.</li>
+<li><code>Save Bokeh</code>를 누릅니다. 비교 중인 화면과 관계없이 보케 JPEG와 추정 깊이 PNG는 <code>DCIM/HALCamera</code>, 모델·원본 URI·선택 지점·강도 기록은 <code>Download/HALCamera</code>에 저장합니다. 촬영 원본은 변경하지 않습니다. 상단 닫기 버튼이나 시스템 뒤로 가기로 Live에 돌아갑니다.</li>
 </ol>
 <p><strong>App Bokeh는 RGB 사진 한 장으로 상대적인 깊이를 추정합니다.</strong> MiDaS v2.1 모바일 모델을 LiteRT CPU에서 실행하고 앱이 배경 흐림과 JPEG 인코딩을 수행합니다. 모델은 앱에 포함되며 사진을 서버로 보내지 않습니다. 깊이 맵의 흰색은 가까운 영역, 검은색은 먼 영역을 뜻하고 미터 단위 거리나 센서 DEPTH16이 아닙니다.</p>
 <p>편집·저장 결과는 메모리 사용을 제한하기 위해 긴 변이 최대 1600픽셀입니다. 원본 해상도는 별도로 유지하며, 깊이 추론 해상도는 256×256입니다. 얇은 물체, 반사·투명 물체, 머리카락 경계나 무늬가 적은 장면에서는 깊이와 경계가 부정확할 수 있습니다. 깊이를 구분하지 못하면 실패 이유를 표시하고 원본을 유지합니다. 선택한 지점과 같은 깊이 또는 더 가까운 물체는 선명하게 남습니다.</p>
