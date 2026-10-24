@@ -34,6 +34,7 @@
 <p>Photo로 한 장을 찍고, Video로 움직임을 담아 보세요. 처음에는 기본값이면 충분합니다.</p>
 <ul>
 <li><strong><a href="#live에서-촬영하세요">촬영</a></strong> · 사진·연사·AEB·동영상을 촬영합니다.</li>
+<li><strong><a href="#앱에서-배경을-흐리세요">App Bokeh</a></strong> · 인물이나 사물의 깊이를 추정하고 촬영 후 배경 흐림을 조절합니다.</li>
 <li><strong><a href="#제조사-portrait로-배경을-흐리세요">Portrait</a></strong> · Depth 메뉴에서 제조사 Bokeh 사진을 선택합니다.</li>
 <li><strong><a href="#수동-촬영-조건을-고정하세요">수동 설정</a></strong> · ISO·노출 시간·초점을 고정합니다.</li>
 <li><strong><a href="#live-스트림을-설정하세요">스트림 설정</a></strong> · 출력 크기·FPS·포맷을 바꿉니다.</li>
@@ -49,6 +50,17 @@
 <p><strong>기본 사진은 카메라가 만든 JPEG 한 장입니다.</strong> <code>DCIM/HALCamera</code>에 저장하며, 촬영 메타데이터 JSON도 남깁니다.</p>
 <p><a href="#live-스트림을-설정하세요">JPEG 목록</a>에서 YUV를 고르면 앱이 변환한 JPEG를 저장합니다. Camera2에서 RAW를 켜면 DNG도 저장합니다.</p>
 <p><strong>모드나 엔진을 바꾸면 새 촬영으로 시작합니다.</strong> PIP·스트림·줌·촬영 제어는 초기화됩니다. Callback의 고정 시간은 사용자 설정으로 유지합니다.</p>
+<h3 id="앱에서-배경을-흐리세요">앱에서 배경을 흐리세요</h3>
+<ol>
+<li><code>Depth → App Bokeh</code>를 선택합니다. 제조사 Bokeh나 센서 Depth 지원 여부와 관계없이 일반 JPEG 촬영을 사용합니다.</li>
+<li>셔터를 누릅니다. 원본을 저장한 뒤 기기 안에서 깊이를 추정합니다. LIVE 미리보기에는 이 효과가 적용되지 않습니다.</li>
+<li>편집 화면에서 선명하게 유지할 인물이나 사물을 누릅니다. 선택한 지점보다 멀다고 추정된 영역을 흐리게 처리합니다.</li>
+<li>슬라이더로 강도를 조절하고 <code>Bokeh</code>, <code>Original</code>, <code>Depth</code>로 결과를 비교합니다. 선택한 화면은 테두리와 굵은 글씨로 표시하며 강도를 바꾸면 <code>Bokeh</code> 결과로 돌아갑니다. 강도 0은 처리용 원본 픽셀을 유지합니다.</li>
+<li><code>Save Bokeh</code>를 누릅니다. 비교 중인 화면과 관계없이 보케 JPEG와 추정 깊이 PNG는 <code>DCIM/HALCamera</code>, 모델·원본 URI·선택 지점·강도 기록은 <code>Download/HALCamera</code>에 저장합니다. 촬영 원본은 변경하지 않습니다. 상단 닫기 버튼이나 시스템 뒤로 가기로 Live에 돌아갑니다.</li>
+</ol>
+<p><strong>App Bokeh는 RGB 사진 한 장으로 상대적인 깊이를 추정합니다.</strong> MiDaS v2.1 모바일 모델을 LiteRT CPU에서 실행하고 앱이 배경 흐림과 JPEG 인코딩을 수행합니다. 모델은 앱에 포함되며 사진을 서버로 보내지 않습니다. 깊이 맵의 흰색은 가까운 영역, 검은색은 먼 영역을 뜻하고 미터 단위 거리나 센서 DEPTH16이 아닙니다.</p>
+<p>편집·저장 결과는 메모리 사용을 제한하기 위해 긴 변이 최대 1600픽셀입니다. 원본 해상도는 별도로 유지하며, 깊이 추론 해상도는 256×256입니다. 얇은 물체, 반사·투명 물체, 머리카락 경계나 무늬가 적은 장면에서는 깊이와 경계가 부정확할 수 있습니다. 깊이를 구분하지 못하면 실패 이유를 표시하고 원본을 유지합니다. 선택한 지점과 같은 깊이 또는 더 가까운 물체는 선명하게 남습니다.</p>
+<p>App Bokeh는 사진 한 장씩 처리합니다. 연사·AEB·PIP·수동 제어는 제공하지 않으며, <code>Photo</code>나 <code>Video</code>를 누르면 일반 촬영으로 돌아갑니다. 화면을 다시 열면 원본에서 편집을 다시 시작하므로 저장 전 선택 지점과 강도는 초기화됩니다. <a href="https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-BOKEH.md">모델 출처와 빌드 절차</a>를 참고하세요.</p>
 <h3 id="제조사-portrait로-배경을-흐리세요">제조사 Portrait로 배경을 흐리세요</h3>
 <ol>
 <li><code>Lab → Probe</code>에서 카메라별 <code>Portrait · Manufacturer Bokeh</code> 지원 여부와 전용 미리보기·JPEG 해상도를 확인합니다.</li>

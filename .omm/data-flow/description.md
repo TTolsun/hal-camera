@@ -15,3 +15,5 @@ CLI는 직접 인자 또는 base64url JSON을 받고 shell UID·허용 설정·�
 Multi 모드의 ConcurrentSession은 독립 장치마다 출력과 저장을 관리합니다. 사진은 이미지·CaptureResult 센서 시각을 연결한 장치별 JPEG이며 다른 장치 영상을 합성하지 않습니다. ConcurrentPhotoStore는 JPEG를 DCIM/HALCamera에, 공통 촬영 ID·장치 ID·성공 또는 실패를 Download/HALCamera의 JSON에 기록합니다. 두 엔진은 MultiRecording을 공유하며, 하나의 마이크 AAC를 장치별 MP4에 결합한 뒤 공개합니다. 녹음이나 파일 하나라도 실패하면 해당 녹화 묶음의 공개 파일을 회수합니다. Split 배치는 프리뷰만 바꾸며 인코더 크기는 장치 스트림과 회전에서 정합니다. 이 경로는 Benchmark 계산과 분리됩니다.
 
 Portrait는 Depth 메뉴에서 선택하지만 별도 확장 세션의 컬러 미리보기와 OEM JPEG를 받습니다. PortraitCameraEngine은 JPEG를 MediaLibrary로 저장하고 효과·해상도·시각만 촬영 JSON에 남깁니다. 확장 콜백은 벤치마크나 일반 CaptureResult 지표에 섞지 않습니다.
+
+App Bokeh는 일반 Camera2 Preview+JPEG 세션에서 원본 JPEG를 저장한 뒤 RGB로 디코딩합니다. MiDaS 모델의 Float 상대 깊이와 사용자 선택 지점을 DepthBokeh에 전달하여 배경을 흐리고, 보케 JPEG·깊이 PNG·처리 메타데이터를 MediaLibrary로 저장합니다. HAL Depth나 분석용 YUV를 입력으로 사용하지 않습니다.

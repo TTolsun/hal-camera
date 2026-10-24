@@ -131,6 +131,12 @@ sources:
           - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
           - app/src/main/java/dev/halcamera/camera/PortraitCapabilities.kt
           - app/src/main/java/dev/halcamera/camera/PortraitSupport.kt
+      camera-engines/app-bokeh:
+        evidence:
+          - app/src/main/java/dev/halcamera/MainAppBokehBridge.kt
+          - app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt
+          - app/src/main/java/dev/halcamera/camera/RelativeDepth.kt
+          - app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt
       camera-engines/camera2-engine:
         evidence:
           - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
@@ -496,6 +502,9 @@ sources:
     # 통째로 잡았는데, 그러면 이 관점과 무관한 파일 하나를 고쳐도 원고 전체가 재검토 대상이 되었습니다.
     # 새로 생긴 파일은 coverage --check 가 담당 요소 없음으로 잡아내므로, 그때 elements 와 이 목록에 함께 적습니다.
     evidence:
+      - app/src/main/java/dev/halcamera/MainAppBokehBridge.kt
+      - app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt
+      - app/src/main/java/dev/halcamera/camera/RelativeDepth.kt
       - app/src/main/java/dev/halcamera/GalleryActivity.kt
       - app/src/main/java/dev/halcamera/MainActivity.kt
       - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt
@@ -606,6 +615,8 @@ sources:
     diagram_type: sequence
     # data-flow 와 같은 규칙입니다: 요소 근거와 원고 인용의 합집합만 적습니다.
     evidence:
+      - app/src/main/java/dev/halcamera/MainAppBokehBridge.kt
+      - app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt
       - app/src/main/java/dev/halcamera/MainActivity.kt
       - app/src/main/java/dev/halcamera/MainDepthBridge.kt
       - app/src/main/java/dev/halcamera/MainPortraitBridge.kt

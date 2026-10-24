@@ -11,3 +11,5 @@ Multi도 Live의 close(done) 뒤 ConcurrentCameraActivity를 엽니다. Live에�
 Depth 보기에서도 Lab 진입 전에 close(done)를 기다립니다. 촬영 모드를 바꾸지 않고 Lab에서 돌아오면 선택한 Depth 해상도를 다시 엽니다. Depth 보기 중에는 크기 표시로 Live Streams를 여는 동작을 비활성화합니다.
 
 Portrait에서도 Lab 진입 전에 close(done)를 기다리고 복귀 때 선택 해상도를 다시 엽니다. Portrait의 크기 표시를 누르면 일반 Live Streams 대신 Depth 메뉴를 엽니다. Lab에서 일반 Live Streams 설정을 적용하면 Portrait를 종료하고 해당 설정을 사용합니다.
+
+App Bokeh도 Depth 메뉴에서 선택하지만 일반 Preview+JPEG 세션을 사용합니다. 셔터 완료 후 편집 Dialog가 원본 URI를 받아 열립니다. 편집 중에는 Lab·카메라·모드 전환을 막고 닫은 뒤 다시 허용합니다. 카메라·엔진 변경, 일반 Live Streams 적용이나 새 CLI 촬영 준비는 App Bokeh 모드를 종료합니다.

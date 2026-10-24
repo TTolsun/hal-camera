@@ -69,7 +69,7 @@ class MainActivity : ComponentActivity() {
     private var engineCameraId: String? = null
     internal var closing = false
     internal var resumed = false
-    private var destroyed = false
+    internal var destroyed = false
     internal var paused = false
     internal var engineName = "CameraX"
     internal var cameraId = ""
@@ -132,6 +132,10 @@ class MainActivity : ComponentActivity() {
     internal var videoMode = false
     internal var depthSize: LiveSize? = null
     internal var portraitConfig: PortraitConfig? = null
+    internal var appBokehMode = false
+    internal var appBokehCapturing = false
+    internal var appBokehEditor: AppBokehEditor? = null
+    internal var appBokehSource: String? = null
     internal lateinit var depthModeButton: Button
     internal var recordingVideo = false
     internal var stoppingRecording = false
@@ -178,6 +182,7 @@ class MainActivity : ComponentActivity() {
             @Suppress("DEPRECATION")
             val settings = data.getSerializableExtra(LiveStreamsActivity.EXTRA_SETTINGS) as? LiveStreamSettings
             portraitConfig = null
+            appBokehMode = false
             if (settings == null) streamSettings.remove(streamKey()) else streamSettings[streamKey()] = settings
             telemetry.event(sessionId, "live_streams_changed", settings?.metadata() ?: mapOf("mode" to "default"))
             paused = false
@@ -255,6 +260,8 @@ class MainActivity : ComponentActivity() {
         depthSize = savedInstanceState?.getSerializable("depthSize") as? LiveSize
         @Suppress("DEPRECATION")
         portraitConfig = savedInstanceState?.getSerializable("portraitConfig") as? PortraitConfig
+        appBokehMode = savedInstanceState?.getBoolean("appBokehMode") ?: false
+        appBokehSource = savedInstanceState?.getString("appBokehSource")
         @Suppress("DEPRECATION", "UNCHECKED_CAST")
         (savedInstanceState?.getSerializable("liveStreams") as? HashMap<String, LiveStreamSettings>)?.let(streamSettings::putAll)
         @Suppress("DEPRECATION", "UNCHECKED_CAST")
@@ -271,6 +278,8 @@ class MainActivity : ComponentActivity() {
         outState.putBoolean("videoMode", videoMode)
         outState.putSerializable("depthSize", depthSize)
         outState.putSerializable("portraitConfig", portraitConfig)
+        outState.putBoolean("appBokehMode", appBokehMode)
+        outState.putString("appBokehSource", appBokehSource)
         outState.putSerializable("liveStreams", HashMap(streamSettings))
         outState.putSerializable("goodStreams", HashMap(goodStreams))
         outState.putBoolean("returningFromLab", returningFromLab)
@@ -290,6 +299,7 @@ class MainActivity : ComponentActivity() {
     }
     override fun onResume() {
         super.onResume()
+        appBokehSource?.takeIf { appBokehEditor == null }?.let { openAppBokehEditor(android.net.Uri.parse(it)) }
         when {
             returningFromLab -> {
                 returningFromLab = false
@@ -307,6 +317,9 @@ class MainActivity : ComponentActivity() {
         }
     }
     override fun onStop() {
+        val retainedBokehSource = appBokehSource
+        appBokehEditor?.dismiss()
+        appBokehSource = retainedBokehSource
         cliSequence.cancel()
         cli.detach(liveCli)
         zoomControl.collapse(animate = false)
@@ -645,9 +658,12 @@ class MainActivity : ComponentActivity() {
                 else if(recordingVideo) stopRecording()
                 else if(videoMode) {
                     withMediaPermissions(true) { (engine as? MediaCapture)?.startRecording() }
-                } else withMediaPermissions(false) { controlBar.controls.let { if (it.bracket) bursts.bracket(sessionId, it, controlBar.support) else engine?.capture() } }
+                } else withMediaPermissions(false) {
+                    if (appBokehMode) captureAppBokeh()
+                    else controlBar.controls.let { if (it.bracket) bursts.bracket(sessionId, it, controlBar.support) else engine?.capture() }
+                }
             }
-            bindBurstInput({ !videoMode && portraitConfig == null && !mediaBusy() && !controlBar.controls.bracket && cli.active == null },
+            bindBurstInput({ !videoMode && !appBokehMode && portraitConfig == null && !mediaBusy() && !controlBar.controls.bracket && cli.active == null },
                 { withMediaPermissions(false,it) }, { bursts.hold(sessionId) }, bursts::release)
         }
         captureRow.addView(mediaButton,LinearLayout.LayoutParams(captureSize,captureSize).apply { marginStart=dp(12); marginEnd=dp(12) })
@@ -714,7 +730,7 @@ class MainActivity : ComponentActivity() {
         val idle=!recordingVideo && bursts.run==null
         cli.setUiBusy(liveCli, recordingVideo || stoppingRecording || pendingPermissionAction != null || mediaBusy())
         listOf(photoModeButton,videoModeButton).forEachIndexed { index, button ->
-            val selected=depthSize == null && portraitConfig == null && (index==1)==videoMode
+            val selected=depthSize == null && portraitConfig == null && !appBokehMode && (index==1)==videoMode
             button.isSelected=selected
             button.isEnabled=(ready || depthSize != null || portraitConfig != null) && idle && !closing && !mediaBusy() && pendingPermissionAction == null
             button.setTextColor(if(selected) Look.onDark else Look.onDarkMuted)
@@ -779,6 +795,12 @@ class MainActivity : ComponentActivity() {
         }
         updateDepthControls(callbackGraph.isVisible, topBar.height + dp(8), bottomBar.height + dp(64))
         updatePortraitControls()
+        if (appBokehMode) {
+            controlBar.bind(false, false, false); manualPanel.close()
+            physicalPipButton.isEnabled = false; physicalPipButton.alpha = .4f
+            mediaButton.contentDescription = "Take photo for App Bokeh"
+            if (appBokehCapturing || appBokehEditor != null) mediaButton.isEnabled = false
+        }
         listOf(engineButton,cameraShortcut,photoModeButton,videoModeButton,mediaButton,galleryButton,labButton).forEach {
             it.alpha=if(it.isEnabled) 1f else 0.4f
         }
@@ -789,8 +811,10 @@ class MainActivity : ComponentActivity() {
         engineName=name; resetModeSettings(); updateCameraChoices(); restartCamera()
     }
     internal fun resetModeSettings() {
+        if (appBokehMode) captureFeedback.clearResult()
         depthSize = null
         portraitConfig = null
+        appBokehMode = false
         if (::callbackGraph.isInitialized) showCallbacks(false)
         pendingPip = null
         pipUi.resetMode()
@@ -864,7 +888,7 @@ class MainActivity : ComponentActivity() {
     }
     private fun pipSources(): List<PipSource> = (engine as? PipCamera)?.pipSources.orEmpty()
 
-    internal fun mediaBusy() = pipUi.busy || (engine as? MediaCapture)?.mediaBusy == true || bursts.run != null
+    internal fun mediaBusy() = appBokehCapturing || appBokehEditor != null || pipUi.busy || (engine as? MediaCapture)?.mediaBusy == true || bursts.run != null
     /** One snapshot at a time; failures leave recording active and unsupported cameras explain why. */
     private fun takeSnapshot() {
         if (cli.active != null) return

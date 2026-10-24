@@ -20,18 +20,20 @@ internal fun MainActivity.chooseDepth() {
             if (!resumed || closing || cameraId != id || cli.active != null || mediaBusy() || recordingVideo ||
                 stoppingRecording || pendingPermissionAction != null) return@post
             val choices = listOf(LiveChoiceSheet.Choice("Off", "Return to Photo"),
+                LiveChoiceSheet.Choice("App Bokeh", if (appBokehMode) "Active · Tap shutter, then choose the subject" else "People and objects · Offline estimated depth · Edit after capture"),
                 LiveChoiceSheet.Choice("Portrait (Bokeh)", portraitConfig?.let { "Active · JPEG ${it.jpeg} · Change resolution" }
                     ?: if (portrait.available) "Manufacturer background blur · Photos" else portrait.unavailableReason.orEmpty(), portrait.available),
                 LiveChoiceSheet.Choice("Depth Map", depthSize?.let { "Active · DEPTH16 $it · Change resolution" }
                     ?: if (depth?.available == true) "View sensor DEPTH16 · No photo capture" else depth?.unavailableReason ?: "Cannot read Depth capabilities.", depth?.available == true))
             LiveChoiceSheet.show(this, "Depth · Portrait", choices,
-                if (depthSize == null && portraitConfig == null && !videoMode) 0 else -1) { index ->
+                if (appBokehMode) 1 else if (depthSize == null && portraitConfig == null && !videoMode) 0 else -1) { index ->
                 if (!resumed || closing || cameraId != id || cli.active != null || mediaBusy() || recordingVideo ||
                     stoppingRecording || pendingPermissionAction != null) return@show
                 when (index) {
                     0 -> selectMode(false)
-                    1 -> choosePortrait(portrait)
-                    2 -> depth?.let { chooseDepthMap(it) }
+                    1 -> chooseAppBokeh()
+                    2 -> choosePortrait(portrait)
+                    3 -> depth?.let { chooseDepthMap(it) }
                 }
             }
         }
@@ -80,12 +82,12 @@ internal fun MainActivity.createDepthEngine(released: String?, status: (String, 
 internal fun MainActivity.updateDepthControls(callbacks: Boolean, topInset: Int, bottomInset: Int) {
     depthModeButton.isEnabled = resumed && !closing && !recordingVideo && bursts.run == null && !stoppingRecording && !mediaBusy() &&
         cli.active == null && pendingPermissionAction == null && cameraId.isNotEmpty()
-    val selected = depthSize != null || portraitConfig != null
+    val selected = depthSize != null || portraitConfig != null || appBokehMode
     depthModeButton.isSelected = selected
     depthModeButton.setTextColor(if (selected) Look.onDark else Look.onDarkMuted)
     depthModeButton.setTypeface(null, if (selected) Typeface.BOLD else Typeface.NORMAL)
     depthModeButton.alpha = if (depthModeButton.isEnabled) 1f else .4f
-    depthModeButton.contentDescription = "Depth and Portrait: choose manufacturer Bokeh photos or a sensor Depth map"
+    depthModeButton.contentDescription = "Depth and Portrait: choose App Bokeh, manufacturer Bokeh, or a sensor Depth map"
     ViewCompat.setStateDescription(depthModeButton, if (selected) "Selected" else "Not selected")
     if (depthSize != null) {
         mediaButton.isEnabled = false
@@ -105,7 +107,7 @@ internal fun MainActivity.updateDepthControls(callbacks: Boolean, topInset: Int,
 internal fun MainActivity.selectMode(video: Boolean) {
     if (cli.active != null) return
     if (recordingVideo || stoppingRecording || closing || pendingPermissionAction != null ||
-        mediaBusy() || (depthSize == null && portraitConfig == null && (!ready || videoMode==video))) return
+        mediaBusy() || (depthSize == null && portraitConfig == null && !appBokehMode && (!ready || videoMode==video))) return
     pendingPermissionAction=null
     videoMode=video
     resetModeSettings()

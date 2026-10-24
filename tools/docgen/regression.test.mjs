@@ -114,7 +114,7 @@ test('all configured elements fit the prompt budget and exclude descendant field
         assert.ok(input.files.length > 0); count++;
       }
     }
-    assert.equal(count, 115); // Depth/Portrait engines, Portrait lifecycle and LIVE camera picker own their evidence.
+    assert.equal(count, 116); // App Bokeh owns its capture, inference, rendering and editor evidence.
   `));
 });
 
