@@ -17,3 +17,5 @@ Multi 모드의 ConcurrentSession은 독립 장치마다 출력과 저장을 관
 Portrait는 Depth 메뉴에서 선택하지만 별도 확장 세션의 컬러 미리보기와 OEM JPEG를 받습니다. PortraitCameraEngine은 JPEG를 MediaLibrary로 저장하고 효과·해상도·시각만 촬영 JSON에 남깁니다. 확장 콜백은 벤치마크나 일반 CaptureResult 지표에 섞지 않습니다.
 
 App Bokeh는 일반 Camera2 Preview+JPEG 세션에서 원본 JPEG를 저장한 뒤 RGB로 디코딩합니다. MiDaS 모델의 Float 상대 깊이와 사용자 선택 지점을 DepthBokeh에 전달하여 배경을 흐리고, 보케 JPEG·깊이 PNG·처리 메타데이터를 MediaLibrary로 저장합니다. HAL Depth나 분석용 YUV를 입력으로 사용하지 않습니다.
+
+배경 흐림 가중치는 원본 밝기 경계로 보정한 뒤 색 표본과 최종 합성에 동일하게 사용합니다. 깊이 PNG에는 보정 마스크가 아닌 모델 상대 깊이를 저장하며, 메타데이터의 renderer로 합성 방식을 구별합니다.

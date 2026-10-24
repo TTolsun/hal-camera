@@ -136,6 +136,7 @@ sources:
           - app/src/main/java/dev/halcamera/MainAppBokehBridge.kt
           - app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt
           - app/src/main/java/dev/halcamera/camera/RelativeDepth.kt
+          - app/src/main/java/dev/halcamera/camera/BokehMask.kt
           - app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt
       camera-engines/camera2-engine:
         evidence:
@@ -505,6 +506,7 @@ sources:
       - app/src/main/java/dev/halcamera/MainAppBokehBridge.kt
       - app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt
       - app/src/main/java/dev/halcamera/camera/RelativeDepth.kt
+      - app/src/main/java/dev/halcamera/camera/BokehMask.kt
       - app/src/main/java/dev/halcamera/GalleryActivity.kt
       - app/src/main/java/dev/halcamera/MainActivity.kt
       - app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt

@@ -47,8 +47,9 @@ object DepthBokeh {
         require(focusX.isFinite() && focusY.isFinite())
         if (strength == 0) return pixels.copyOf()
         val focus = depth.focus(focusX, focusY)
-        val weights = FloatArray(pixels.size) { i -> amount(depth.at((i % width).toFloat() / (width - 1).coerceAtLeast(1),
+        val coarseWeights = FloatArray(pixels.size) { i -> amount(depth.at((i % width).toFloat() / (width - 1).coerceAtLeast(1),
             (i / width).toFloat() / (height - 1).coerceAtLeast(1)), focus) }
+        val weights = BokehMask.refine(pixels, width, height, coarseWeights)
         val radius = (maxOf(width, height) * .018f * strength / 100).roundToInt().coerceAtLeast(1)
         val blurredWeight = blur(weights, width, height, radius)
         val channels = arrayOf(16, 8, 0).map { shift ->

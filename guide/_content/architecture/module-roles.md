@@ -5,6 +5,7 @@ sources:
   - app/src/main/java/dev/halcamera/MainAppBokehBridge.kt
   - app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt
   - app/src/main/java/dev/halcamera/camera/RelativeDepth.kt
+  - app/src/main/java/dev/halcamera/camera/BokehMask.kt
   - app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt
   - app/src/main/java/dev/halcamera/camera/MultiSession.kt
   - app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt
@@ -102,7 +103,7 @@ verifications: []
 - 엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다. `DepthCameraEngine`은 컬러 출력 없이 DEPTH16 맵만 받으며 `DepthFrame`이 순수 Kotlin으로 표시용 표본을 만듭니다.
 - `PortraitCameraEngine`은 LIVE의 제조사 BOKEH 전용 세션입니다. MainPortraitBridge가 JPEG 크기를 선택하고 MainDepthBridge가 Depth Map과 Portrait의 진입점을 구분합니다. 이 경로는 벤치마크를 실행하거나 센서 Depth 맵을 저장하지 않습니다.
 - `close(done)` 완료 전에 다음 카메라를 열지 않습니다.
-- `AppBokehProcessor`는 일반 JPEG를 RGB로 읽고 기기 안에서 상대 깊이를 추정합니다. `RelativeDepth`와 `DepthBokeh`는 깊이 정규화·선택 지점·배경 흐림을 순수 Kotlin으로 계산합니다. `MainAppBokehBridge`와 `AppBokehEditor`가 촬영 후 편집을 연결하며 원본과 보케 결과를 별도로 보관합니다.
+- `AppBokehProcessor`는 일반 JPEG를 RGB로 읽고 기기 안에서 상대 깊이를 추정합니다. `RelativeDepth`와 `DepthBokeh`는 깊이 정규화·선택 지점·배경 흐림을 순수 Kotlin으로 계산합니다. `BokehMask`는 원본 밝기 경계로 흐림 가중치를 보정해 가는 구조물의 손실을 줄입니다. `MainAppBokehBridge`와 `AppBokehEditor`가 촬영 후 편집을 연결하며 원본과 보케 결과를 별도로 보관합니다.
 - 엔진 계약(`MediaCapture`, `LiveTuning`, `TouchMetering`)과 두 엔진의 구현, 두 엔진의 차이는 [Engine Comparison](engine.md)에 있습니다.
 - 벤치마크 RECORD 단계의 recorder 상태 기계는 `BenchmarkRecorder`가 담당하고 `Camera2Engine`은 그 호출을 위임합니다.
 - 카메라를 화면에 적는 이름(`Camera · 0 (Wide · Rear)`)도 이 패키지의 `CameraLabel` 하나가 만들며, Live·Benchmark·Probe·CTS가 모두 그것을 부릅니다.
