@@ -9,10 +9,6 @@ import java.util.UUID
 
 /** Device tests use real JSONObject and AtomicFile, with a deterministic clock and isolated files. */
 class CliStoreInstrumentation : Instrumentation() {
-    private var appBokehSource: String? = null
-    private var appBokehUi = false
-    private var appBokehFocusX = .5f
-    private var appBokehFocusY = .5f
     private var exportReports = false
     private var probeLaunchDiagnostics = false
     private var snapshotFailures = false
@@ -22,16 +18,8 @@ class CliStoreInstrumentation : Instrumentation() {
     private var multiSplit = false
     private var lintChecks = false
     private var splitDrag = false
-    private var depthChecks = false
-    private var portraitChecks = false
-    private var portraitMetadata = false
-    private var portraitUi = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
-        appBokehSource = arguments?.getString("app_bokeh_source")
-        appBokehUi = arguments?.getString("app_bokeh_ui") == "true"
-        appBokehFocusX = arguments?.getString("app_bokeh_focus_x")?.toFloat() ?: .5f
-        appBokehFocusY = arguments?.getString("app_bokeh_focus_y")?.toFloat() ?: .5f
         exportReports = arguments?.getString("export_reports") == "true"
         probeLaunchDiagnostics = arguments?.getString("probe_launch_diagnostics") == "true"
         snapshotFailures = arguments?.getString("snapshot_failures") == "true"
@@ -41,46 +29,10 @@ class CliStoreInstrumentation : Instrumentation() {
         multiSplit = arguments?.getString("multi_split") == "true"
         lintChecks = arguments?.getString("lint_checks") == "true"
         splitDrag = arguments?.getString("split_drag") == "true"
-        depthChecks = arguments?.getString("depth_checks") == "true"
-        portraitChecks = arguments?.getString("portrait_checks") == "true"
-        portraitMetadata = arguments?.getString("portrait_metadata") == "true"
-        portraitUi = arguments?.getString("portrait_ui") == "true"
         start()
     }
 
     override fun onStart() {
-        appBokehSource?.let { path ->
-            try {
-                val result = if (appBokehUi) dev.halcamera.camera.AppBokehChecks.ui(this, path)
-                    else dev.halcamera.camera.AppBokehChecks.run(targetContext, path, appBokehFocusX, appBokehFocusY)
-                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
-            } catch (error: Throwable) {
-                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "APP_BOKEH_FAILED: ${error.stackTraceToString()}\n") })
-            }
-            return
-        }
-        if (portraitChecks || portraitMetadata || portraitUi) {
-            try {
-                val result = when {
-                    portraitMetadata -> dev.halcamera.ui.PortraitChecks.metadata(this)
-                    portraitUi -> dev.halcamera.ui.PortraitChecks.uiChecks(this)
-                    else -> dev.halcamera.ui.PortraitChecks.run(this)
-                }
-                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
-            } catch (error: Throwable) {
-                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "PORTRAIT_CHECKS_FAILED: ${error.stackTraceToString()}\n") })
-            }
-            return
-        }
-        if (depthChecks) {
-            try {
-                val result = dev.halcamera.ui.DepthMapChecks.run(this)
-                finish(Activity.RESULT_OK, Bundle().apply { putString("stream", "$result\n") })
-            } catch (error: Throwable) {
-                finish(Activity.RESULT_CANCELED, Bundle().apply { putString("stream", "DEPTH_MAP_CHECKS_FAILED: ${error.stackTraceToString()}\n") })
-            }
-            return
-        }
         if (splitDrag) {
             try {
                 val result = dev.halcamera.ui.SplitDragChecks.run(this)

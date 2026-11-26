@@ -114,7 +114,7 @@ test('all configured elements fit the prompt budget and exclude descendant field
         assert.ok(input.files.length > 0); count++;
       }
     }
-    assert.equal(count, 116); // App Bokeh owns its capture, inference, rendering and editor evidence.
+    assert.equal(count, 111); // Includes Multi's separate CLI adapter, session and split-layout evidence.
   `));
 });
 

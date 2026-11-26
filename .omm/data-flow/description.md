@@ -6,16 +6,8 @@ JPEG에서 YUV를 고르면 앱이 현재 YUV 크기의 프레임을 JPEG로 변
 
 RecentMediaThumbnail은 MediaStore 변경·화면 복귀 시 저장 완료 항목을 조회합니다. 별도 스레드에서 디코딩하고 활성 화면의 최신 결과만 RecentMediaButton에 반영합니다.
 
-LIVE Depth는 ImageReader의 DEPTH16을 DepthFrame에서 표시 표본으로 바꾸고 DepthMapView로 전달합니다. Telemetry에는 크기·시각·형식과 capture 콜백만 남깁니다. 표시 픽셀은 저장하지 않으며 벤치마크 조립기로 전달하지 않습니다.
-
 CLI는 직접 인자 또는 base64url JSON을 받고 shell UID·허용 설정·프로토콜을 검사합니다. CommandStore는 실행 전 요청을 저장합니다. 저장 완료 뒤 CliArtifactRegistry가 계산한 artifact 크기·SHA-256과 원본 URI를 CommandCoordinator가 기록하며, PC에는 URI 없이 결과와 등록된 artifact ID의 읽기 전용 파일을 제공합니다. ADB 스크립트는 manifest의 이름·크기·SHA-256을 검증하고 Download/HALCamera-cli/요청ID에 파일을 준비해 adb pull을 안내합니다. Python CLI도 검증한 임시 파일만 공개합니다.
 
 벤치마크 JSON은 기기 안에서만 생성하며, files/benchmarks와 baseline 목록으로 비교합니다. 외부 JSON 가져오기는 0.13.0에서 제거했습니다.
 
 Multi 모드의 ConcurrentSession은 독립 장치마다 출력과 저장을 관리합니다. 사진은 이미지·CaptureResult 센서 시각을 연결한 장치별 JPEG이며 다른 장치 영상을 합성하지 않습니다. ConcurrentPhotoStore는 JPEG를 DCIM/HALCamera에, 공통 촬영 ID·장치 ID·성공 또는 실패를 Download/HALCamera의 JSON에 기록합니다. 두 엔진은 MultiRecording을 공유하며, 하나의 마이크 AAC를 장치별 MP4에 결합한 뒤 공개합니다. 녹음이나 파일 하나라도 실패하면 해당 녹화 묶음의 공개 파일을 회수합니다. Split 배치는 프리뷰만 바꾸며 인코더 크기는 장치 스트림과 회전에서 정합니다. 이 경로는 Benchmark 계산과 분리됩니다.
-
-Portrait는 Depth 메뉴에서 선택하지만 별도 확장 세션의 컬러 미리보기와 OEM JPEG를 받습니다. PortraitCameraEngine은 JPEG를 MediaLibrary로 저장하고 효과·해상도·시각만 촬영 JSON에 남깁니다. 확장 콜백은 벤치마크나 일반 CaptureResult 지표에 섞지 않습니다.
-
-App Bokeh는 일반 Camera2 Preview+JPEG 세션에서 원본 JPEG를 저장한 뒤 RGB로 디코딩합니다. MiDaS 모델의 Float 상대 깊이와 사용자 선택 지점을 DepthBokeh에 전달하여 배경을 흐리고, 보케 JPEG·깊이 PNG·처리 메타데이터를 MediaLibrary로 저장합니다. HAL Depth나 분석용 YUV를 입력으로 사용하지 않습니다.
-
-배경 흐림 가중치는 원본 밝기 경계로 보정한 뒤 색 표본과 최종 합성에 동일하게 사용합니다. 깊이 PNG에는 보정 마스크가 아닌 모델 상대 깊이를 저장하며, 메타데이터의 renderer로 합성 방식을 구별합니다.

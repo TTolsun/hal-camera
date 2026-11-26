@@ -32,7 +32,7 @@ nav_order: 4
 
 | 화면 | 할 수 있는 일 |
 | --- | --- |
-| Live · `MainActivity` | 앱을 열면 나오는 화면입니다. 프리뷰를 보고 사진·동영상을 촬영합니다. App Bokeh로 촬영 후 배경 흐림을 조절하며, 지원 카메라의 제조사 Portrait와 Depth 맵도 선택합니다. |
+| Live · `MainActivity` | 앱을 열면 나오는 화면입니다. 프리뷰를 보고 사진·동영상을 촬영합니다. |
 | Multi · `ConcurrentCameraActivity` | 독립 카메라 장치별 사진·영상을 제공합니다. Live의 Multi · P와 Multi · V에서 엽니다. |
 | Lab · `WorkbenchActivity` | 기기 정보, 검사 도구, 저장된 결과와 설정을 엽니다. |
 | Benchmark · `BenchmarkActivity` | 정해진 조건(profile)으로 측정하고 결과를 저장합니다. |
@@ -57,7 +57,7 @@ PC에서 같은 기능을 실행하려면 [CLI](cli.md)를 사용합니다. `Cli
 
 - 근거 파일: `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`, `app/src/main/java/dev/halcamera/WorkbenchActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-24 @ `2157ebe2` · codex-bokeh-edge-review
+- 검토 2026-10-19 @ `cc58ea27` · codex-editorial-formatting-only
 
 </details>
 
@@ -135,10 +135,8 @@ flowchart TB
 <details markdown="1" id="detail-f44ea46951" data-search-section>
 <summary>camera/</summary>
 
-- 엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다. `DepthCameraEngine`은 컬러 출력 없이 DEPTH16 맵만 받으며 `DepthFrame`이 순수 Kotlin으로 표시용 표본을 만듭니다.
-- `PortraitCameraEngine`은 LIVE의 제조사 BOKEH 전용 세션입니다. MainPortraitBridge가 JPEG 크기를 선택하고 MainDepthBridge가 Depth Map과 Portrait의 진입점을 구분합니다. 이 경로는 벤치마크를 실행하거나 센서 Depth 맵을 저장하지 않습니다.
+- 엔진 계약, Camera2·CameraX 구현, 엔드포인트 열거를 제공합니다.
 - `close(done)` 완료 전에 다음 카메라를 열지 않습니다.
-- `AppBokehProcessor`는 일반 JPEG를 RGB로 읽고 기기 안에서 상대 깊이를 추정합니다. `RelativeDepth`와 `DepthBokeh`는 깊이 정규화·선택 지점·배경 흐림을 순수 Kotlin으로 계산합니다. `BokehMask`는 원본 밝기 경계로 흐림 가중치를 보정해 가는 구조물의 손실을 줄입니다. `MainAppBokehBridge`와 `AppBokehEditor`가 촬영 후 편집을 연결하며 원본과 보케 결과를 별도로 보관합니다.
 - 엔진 계약(`MediaCapture`, `LiveTuning`, `TouchMetering`)과 두 엔진의 구현, 두 엔진의 차이는 [Engine Comparison](engine.md)에 있습니다.
 - 벤치마크 RECORD 단계의 recorder 상태 기계는 `BenchmarkRecorder`가 담당하고 `Camera2Engine`은 그 호출을 위임합니다.
 - 카메라를 화면에 적는 이름(`Camera · 0 (Wide · Rear)`)도 이 패키지의 `CameraLabel` 하나가 만들며, Live·Benchmark·Probe·CTS가 모두 그것을 부릅니다.
@@ -252,9 +250,9 @@ Camera2의 RAW (DNG)는 `RawFrame`이 RAW 샘플을 복사하고 `DngOutput`이 
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/MainAppBokehBridge.kt`, `app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt`, `app/src/main/java/dev/halcamera/camera/RelativeDepth.kt`, `app/src/main/java/dev/halcamera/camera/BokehMask.kt`, `app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt`, `app/src/main/java/dev/halcamera/camera/MultiSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt`, `app/src/main/java/dev/halcamera/camera/MultiRecording.kt`, `app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/cli/CliLibrary.kt`, `app/src/main/java/dev/halcamera/MainCliBridge.kt`, `app/src/main/java/dev/halcamera/DualCliBridge.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/ui/Look.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/MultiSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt`, `app/src/main/java/dev/halcamera/camera/MultiRecording.kt`, `app/src/main/java/dev/halcamera/camera/SplitDragGesture.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/LiveController.kt`, `app/src/main/java/dev/halcamera/cli/BenchmarkController.kt`, `app/src/main/java/dev/halcamera/cli/CliLibrary.kt`, `app/src/main/java/dev/halcamera/MainCliBridge.kt`, `app/src/main/java/dev/halcamera/DualCliBridge.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/BenchmarkRecorder.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/EnvironmentProbe.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/HistoryActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkCsv.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/ui/RecentMediaButton.kt`, `app/src/main/java/dev/halcamera/ui/Look.kt`, `app/src/main/java/dev/halcamera/cts/recording/BasicRecordingRules.kt`, `app/src/main/java/dev/halcamera/cts/CtsEntryActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/vendored/VendoredCtsListActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseActivity.kt`, `app/src/main/java/dev/halcamera/cts/CtsCaseListActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsChecklistActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/CtsSuiteRunActivity.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuitePlan.kt`, `app/src/main/java/dev/halcamera/cts/suite/SuiteReport.kt`, `app/src/main/java/dev/halcamera/cts/CtsCatalog.kt`, `app/src/main/java/dev/halcamera/cts/CtsRunner.kt`, `app/src/main/java/dev/halcamera/cts/CameraCaseRunner.kt`, `app/src/main/java/dev/halcamera/cts/Camera2Ops.kt`, `app/src/main/java/dev/halcamera/cts/onoff/FastOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/switching/SwitchingRules.kt`, `app/src/main/java/dev/halcamera/cts/sizes/AllSizeOnOffRules.kt`, `app/src/main/java/dev/halcamera/cts/combination/StillPreviewCombinationRules.kt`, `app/src/main/java/dev/halcamera/cts/snapshot/VideoSnapshotRules.kt`, `app/src/main/java/dev/halcamera/CameraProbeActivity.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbe.kt`, `app/src/main/java/dev/halcamera/camera/CameraProbeReader.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-24 @ `2157ebe2` · codex-bokeh-edge-review
+- 검토 2026-10-19 @ `cc58ea27` · codex-editorial-formatting-only
 
 </details>
 
@@ -291,12 +289,6 @@ Live·CTS·Benchmark 컨트롤러는 `CliCompletion` 또는 `CliExecution`을 �
 배치·간격·애니메이션·접근성 문구 같은 앱의 조작 규칙은 [APP-UI.md](https://github.com/TTolsun/hal-camera/blob/main/docs/design/APP-UI.md)가 관리합니다.
 
 Live 셔터 조작은 `MainActivity`에서 선택한 엔진의 촬영·녹화 동작으로 이어집니다.
-
-Live의 Depth 보기는 `DepthCameraEngine → ImageReader → DepthFrame → DepthMapView`로 연결합니다. 컬러 촬영과 분리된 보기이며, Telemetry에는 버퍼의 시각·크기·형식과 capture 콜백만 기록합니다. 맵 픽셀을 벤치마크나 incident ZIP의 입력으로 전달하지 않습니다. 사용 순서는 [Depth 맵 보기](live.md#depth-맵을-보세요)에 있습니다.
-
-같은 Depth 메뉴의 Portrait는 `PortraitCameraEngine → CameraExtensionSession → JPEG ImageReader → MediaLibrary`로 연결합니다. 제조사 Bokeh가 적용된 컬러 사진을 저장하며 별도의 센서 Depth 맵을 받지 않습니다. 확장 처리 이벤트는 일반 Camera2 프레임 지표와 구분하고, 사진 픽셀은 측정 파일에 넣지 않습니다.
-
-App Bokeh는 일반 Camera2의 Preview+JPEG로 촬영한 원본을 저장한 뒤 `MainAppBokehBridge → AppBokehEditor → AppBokehProcessor`로 전달합니다. JPEG를 RGB로 디코딩하고 MiDaS 모델이 256×256 Float 상대 깊이를 추론합니다. 사용자가 선택한 깊이보다 먼 영역의 흐림 가중치를 원본 밝기 경계로 보정한 뒤 배경을 흐립니다. 보케 JPEG·깊이 PNG·처리 메타데이터를 별도 저장하며 깊이 PNG에는 합성 마스크가 아닌 모델 출력을 담습니다. 원본은 그대로 유지하며 분석용 YUV·HAL Depth·제조사 보케 버퍼는 사용하지 않습니다.
 
 벤치마크는 별도 화면인 `BenchmarkActivity`가 준비를 마친 뒤 `BenchmarkRunner.start()`를 호출하여 시작합니다.
 
@@ -477,9 +469,9 @@ CliLaunchActivity는 Dual·Multi에서 Live로 돌아갈 때 CliNavigationHost�
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/MainAppBokehBridge.kt`, `app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt`, `app/src/main/java/dev/halcamera/camera/BokehMask.kt`, `app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `tools/halcam/halcam/cli.py`, `tools/halcam/halcam/download.py`, `app/src/main/java/dev/halcamera/MainActivity.kt`, `app/src/main/java/dev/halcamera/GalleryActivity.kt`, `app/src/main/java/dev/halcamera/camera/MediaLibrary.kt`, `app/src/main/java/dev/halcamera/camera/RecentMediaThumbnail.kt`, `app/src/main/java/dev/halcamera/telemetry/Telemetry.kt`, `app/src/main/java/dev/halcamera/telemetry/FlightRecorder.kt`, `app/src/main/java/dev/halcamera/metrics/MetricExtractor.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunAssembler.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunRetention.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkEvaluator.kt`, `app/src/main/java/dev/halcamera/benchmark/BenchmarkActivity.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/LaunchDiagnostics.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionDetector.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-24 @ `2157ebe2` · codex-bokeh-edge-review
+- 검토 2026-10-19 @ `cc58ea27` · codex-editorial-formatting-only
 
 </details>
 
@@ -649,7 +641,7 @@ sequenceDiagram
 
 Live 프리뷰에서 두 손가락을 벌리거나 모으면 지원 범위 안에서 연속으로 줌을 바꿉니다. 가장 가까운 프리셋의 원에 현재 배율을 소수 첫째 자리까지 표시하며, 펼친 상태에서 그 원을 누르면 해당 프리셋 배율로 돌아갑니다. 화면의 카메라 선택 정보를 갱신해도 중간 배율은 유지합니다.
 
-핀치와 버튼 선택은 같은 MainActivity.applyZoom 경로로 엔진과 표시를 갱신합니다. Depth 보기·제조사 Portrait, 프리뷰 준비 전, 일시정지·종료 처리·CLI 작업·연사 중에는 변경하지 않으며 녹화 중에는 허용합니다. 두 손가락 입력이 시작되면 대기 중인 터치 초점과 길게 누르기 인식을 취소하고, 마지막 손가락을 뗄 때까지 초점 터치로 처리하지 않습니다.
+핀치와 버튼 선택은 같은 MainActivity.applyZoom 경로로 엔진과 표시를 갱신합니다. 프리뷰 준비 전, 일시정지·종료 처리·CLI 작업·연사 중에는 변경하지 않으며 녹화 중에는 허용합니다. 두 손가락 입력이 시작되면 대기 중인 터치 초점과 길게 누르기 인식을 취소하고, 마지막 손가락을 뗄 때까지 초점 터치로 처리하지 않습니다.
 
 | 조건 | 동작 |
 | --- | --- |
@@ -690,12 +682,6 @@ Photo·Video 프리뷰와 녹화 중에 두 손가락을 벌리거나 모아 연
 2. 앱의 시각은 `elapsedRealtimeNanos`를 사용합니다. 센서 시각은 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 앱 시각과 직접 비교합니다.
 3. 카메라 열거에는 공개 Camera2 API만 사용합니다. 논리 카메라의 물리 endpoint를 독립적으로 열 수 있다고 가정하지 않습니다.
 4. 벤치마크 JSON과 incident ZIP에는 관측 이벤트·메타데이터를 저장하며 이미지 픽셀을 저장하지 않습니다.
-
-Depth 보기는 컬러와 Depth를 같은 요청에 포함하지 않는 별도 Camera2 세션입니다. HAL의 동시 요청 허용 선언은 특정 출력 조합의 성공을 보장하지 않습니다. `DepthCameraEngine`은 촬영·녹화·수동 제어·줌·터치 측광을 제공하지 않으며 CLI 제어 변경도 거절합니다. Photo·Video 또는 CLI 촬영 준비로 전환하면 Depth를 해제합니다.
-
-제조사 Portrait도 일반 촬영과 별도의 확장 세션을 사용합니다. Bokeh 확장 전용 해상도로 컬러 미리보기와 JPEG만 요청하며, 세션이 거절되면 다른 크기로 자동 대체하지 않습니다. 단일 촬영의 JPEG를 받기 전에 실패하거나 종료되면 세션을 해제하여 늦은 이미지를 다음 촬영에 연결하지 않습니다. 이미 받은 JPEG의 저장 작업은 종료 후에도 마칠 수 있습니다.
-
-App Bokeh는 제조사 Portrait와 달리 일반 JPEG 저장 이후의 앱 처리입니다. 상대 깊이는 센서 거리나 DEPTH16으로 해석하지 않으며, 편집·저장 해상도는 긴 변 최대 1600픽셀로 제한합니다. 원본은 수정하지 않습니다. 추론·렌더·추가 저장 실패는 원본을 삭제하지 않으며, Activity 중단 후에는 편집기의 늦은 결과를 화면에 적용하지 않습니다.
 
 Multi 모드의 `MultiSession`은 `CameraEngine`과 별도입니다. Camera2는 선택한 독립 장치를 연 뒤 세션을 구성하며, CameraX는 광고된 동시 조합을 바인딩합니다.
 
@@ -754,9 +740,9 @@ Live 카메라 종료 후 벤치마크 화면으로 이동하고 기존 측정·
 <details class="doc-evidence" markdown="1">
 <summary>근거와 검토 정보</summary>
 
-- 근거 파일: `app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt`, `app/src/main/java/dev/halcamera/camera/RelativeDepth.kt`, `app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt`, `app/src/main/java/dev/halcamera/camera/MultiSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt`, `app/src/main/java/dev/halcamera/camera/MultiRecording.kt`, `app/src/main/java/dev/halcamera/camera/MicrophoneCapture.kt`, `app/src/main/java/dev/halcamera/camera/TimestampedVideoRecording.kt`, `app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
+- 근거 파일: `app/src/main/java/dev/halcamera/camera/MultiSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt`, `app/src/main/java/dev/halcamera/camera/MultiRecording.kt`, `app/src/main/java/dev/halcamera/camera/MicrophoneCapture.kt`, `app/src/main/java/dev/halcamera/camera/TimestampedVideoRecording.kt`, `app/src/main/java/dev/halcamera/camera/DeviceCompositor.kt`, `app/src/main/java/dev/halcamera/cli/CliProvider.kt`, `app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt`, `app/src/main/java/dev/halcamera/cli/CommandStore.kt`, `app/src/main/java/dev/halcamera/camera/CameraEngine.kt`, `app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt`, `app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt`, `app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkRunner.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RunValidity.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/RegressionRules.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkReport.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkReportCodec.kt`, `app/src/main/java/dev/halcamera/benchmark/platform/BenchmarkStore.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/BenchmarkIndex.kt`, `app/src/main/java/dev/halcamera/benchmark/domain/AtomicFiles.kt`
 - 근거 수준: 코드 확인
-- 검토 2026-10-24 @ `2157ebe2` · codex-bokeh-edge-review
+- 검토 2026-10-19 @ `cc58ea27` · codex-editorial-formatting-only
 
 </details>
 
@@ -808,16 +794,16 @@ Android 의존성이 없는 러너와 평가 로직은 JVM 단위 테스트로 �
 
 | 항목 | 최신성 | 검토 |
 | --- | --- | --- |
-| 구조 원본 `data-flow` | 최신 | 검토 2026-10-24 @ `2157ebe2` · codex-bokeh-edge-review |
-| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-24 @ `2157ebe2` · codex-bokeh-edge-review |
-| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-24 @ `9e71f282` · codex-app-bokeh-ui-review |
+| 구조 원본 `data-flow` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
+| 구조 원본 `overall-architecture` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
+| 구조 원본 `state-transitions` | 최신 | 검토 2026-10-18 @ `e9d3233c` · codex-multi-cli-code-review |
 | 구조 원본 `ui-camera-label` | 최신 | 검토 2026-10-10 @ `93385443` · Codex (mode reset, labels and numeric ID selection review) |
-| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-10-24 @ `e4de2762` · codex-app-bokeh-code-review |
-| 구조 원본 `ui-zoom` | 최신 | 검토 2026-10-24 @ `e4de2762` · codex-app-bokeh-code-review |
-| 원고 `overview` | 최신 | 검토 2026-10-24 @ `2157ebe2` · codex-bokeh-edge-review |
-| 원고 `module-roles` | 최신 | 검토 2026-10-24 @ `2157ebe2` · codex-bokeh-edge-review |
-| 원고 `runtime-flow` | 최신 | 검토 2026-10-24 @ `2157ebe2` · codex-bokeh-edge-review |
-| 원고 `constraints` | 최신 | 검토 2026-10-24 @ `2157ebe2` · codex-bokeh-edge-review |
+| 구조 원본 `ui-tool-handoff` | 최신 | 검토 2026-10-18 @ `e4bc487a` · codex-multi-cli-code-review |
+| 구조 원본 `ui-zoom` | 최신 | 검토 2026-10-18 @ `3e7627e0` · claude-cli-specs-refactor |
+| 원고 `overview` | 최신 | 검토 2026-10-19 @ `cc58ea27` · codex-editorial-formatting-only |
+| 원고 `module-roles` | 최신 | 검토 2026-10-19 @ `cc58ea27` · codex-editorial-formatting-only |
+| 원고 `runtime-flow` | 최신 | 검토 2026-10-19 @ `cc58ea27` · codex-editorial-formatting-only |
+| 원고 `constraints` | 최신 | 검토 2026-10-19 @ `cc58ea27` · codex-editorial-formatting-only |
 
 <!-- omm:end id=status -->
 
