@@ -17,6 +17,7 @@ class CliStoreInstrumentation : Instrumentation() {
     private var videoMode = false
     private var multiSplit = false
     private var lintChecks = false
+    private var callbackFrames = false
     private var splitDrag = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
@@ -28,11 +29,19 @@ class CliStoreInstrumentation : Instrumentation() {
         videoMode = arguments?.getString("video_mode") == "true"
         multiSplit = arguments?.getString("multi_split") == "true"
         lintChecks = arguments?.getString("lint_checks") == "true"
+        callbackFrames = arguments?.getString("callback_frames") == "true"
         splitDrag = arguments?.getString("split_drag") == "true"
         start()
     }
 
     override fun onStart() {
+        if (callbackFrames) {
+            val result = runCatching { dev.halcamera.ui.CallbackFrameChecks(this).run() }
+            finish(if (result.isSuccess) Activity.RESULT_OK else Activity.RESULT_CANCELED, Bundle().apply {
+                putString("stream", result.fold({ it }, { it.stackTraceToString() }))
+            })
+            return
+        }
         if (splitDrag) {
             try {
                 val result = dev.halcamera.ui.SplitDragChecks.run(this)

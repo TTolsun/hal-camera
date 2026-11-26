@@ -66,6 +66,18 @@ class ResultCallbackSeriesTest {
         assertEquals(60.0, tracks[2].points.single().latencyMs!!, 0.001)
         assertEquals(70.0, tracks[3].points.single().latencyMs!!, 0.001)
     }
+    @Test fun dualPhotoCanMatchTheLogicalStillResultTimestampButNeverBorrowPreviewTime() {
+        val events = listOf(
+            Event(10, "s", "capture_started", 1, 100, mapOf("firstStart" to true)),
+            Event(20, "s", "capture_result", 1, 100),
+            Event(30, "s", "capture_started", 2, 200, mapOf("requestTag" to "dual_photo")),
+            Event(40, "s", "capture_result", 2, 201, mapOf("physicalTimestamps" to mapOf("6" to 202L))),
+            Event(50, "s", "image_available", sensorNs = 201, values = mapOf("stream" to "photo_sub")),
+            Event(60, "s", "image_available", sensorNs = 100, values = mapOf("stream" to "photo_sub")))
+        val config = metadata(stream("photo_sub")) + ("physicalIds" to listOf("5", "6"))
+        assertEquals(listOf(30L, null), ResultCallbackSeries.read(events, "s", 60, config).tracks.last().points.map { it.startAtNs })
+    }
+
     @Test fun matchingTimestampOnOtherSensorDoesNotSelectTheWrongFrame() {
         val events = listOf(
             Event(100_000_000, "s", "capture_started", 8, 900, mapOf("firstStart" to true)),

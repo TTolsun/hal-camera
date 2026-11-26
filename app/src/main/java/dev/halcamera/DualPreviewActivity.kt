@@ -669,6 +669,8 @@ class DualPreviewActivity : ComponentActivity() {
         val current = stats
         fun fps(value: PhysicalOutputStats?) = value?.fps()?.let { String.format(Locale.US, "%.1f", it) } ?: "—"
         liveIndicator.bind(started && !closing && !failed && streamingSize != null && SystemClock.elapsedRealtime() - lastPreviewMs < 1500)
+        // Use a cutoff taken before the snapshot so arrivals during rendering survive the next Hold scan.
+        val now = SystemClock.elapsedRealtimeNanos()
         val events = recorder.snapshot()
         val latest = events.lastOrNull { it.session == sessionId && it.kind == "capture_result" }
         val primary = events.lastOrNull { it.session == sessionId && it.kind == "dual_main_result" }
@@ -679,7 +681,7 @@ class DualPreviewActivity : ComponentActivity() {
         liveIndicator.bindStabilization(dev.halcamera.camera.LiveEisStatus(
             (latest?.values?.get("videoStabilization") as? Number)?.toInt()), recording)
         if (callbackGraph.isVisible)
-            callbackGraph.update(events, sessionId, SystemClock.elapsedRealtimeNanos(), telemetry.sessions[sessionId].orEmpty())
+            callbackGraph.update(events, sessionId, now, telemetry.sessions[sessionId].orEmpty())
         if (recording) {
             val seconds = (SystemClock.elapsedRealtime() - recordingSince) / 1000
             recordLabel?.text = "REC ${seconds / 60}:${(seconds % 60).toString().padStart(2, '0')} · MP4 × 2"

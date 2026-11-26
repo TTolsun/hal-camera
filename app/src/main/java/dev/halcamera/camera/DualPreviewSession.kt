@@ -352,9 +352,7 @@ class DualPreviewSession(
                         "timestampSource" to characteristics[CameraCharacteristics.SENSOR_INFO_TIMESTAMP_SOURCE]))
                     val callbackStreams = dualCallbackStreams(recordingConfigured = videoContext != null,
                         physicalIds = listOf(plan.first.id, plan.second.id))
-                    // Restoring the same photo preview must retain captured events and the Hold epoch.
-                    if (telemetry?.sessions?.get(sessionId)?.get("callbackStreams") != callbackStreams)
-                        telemetry?.configureCallbackStreams(sessionId, callbackStreams)
+                    telemetry?.configureCallbackStreams(sessionId, callbackStreams, frameConfiguration = "preview")
                     s.setRepeatingRequest(request(), captureCallback, handler)
                     main.post { if (active) listener.onStreaming(size) }
                     status("${plan.first.id} + ${plan.second.id} · $size")

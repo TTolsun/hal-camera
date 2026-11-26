@@ -77,7 +77,12 @@ class ResultCallbackTimeline {
         }
         // Select the newest complete frame, or advance after 250 ms even if an output is missing.
         // An older complete frame must not pin the graph indefinitely when a stream stalls.
+        val stillOutputs = series.tracks.filterNot { it.repeating }.mapTo(HashSet()) { it.id }
         val frame = series.frames.lastOrNull { candidate ->
+            if (candidate.startAtNs < series.currentSinceNs) return@lastOrNull false
+            // A dedicated still session may close before the next tick. Show its shutter immediately,
+            // then fill the same frame as metadata and physical buffers arrive.
+            if (!candidate.configuredOutputs.isNullOrEmpty() && stillOutputs.containsAll(candidate.configuredOutputs)) return@lastOrNull true
             nowNs - candidate.startAtNs >= 250_000_000L || required.all { (id, arrivals) ->
                 (candidate.targets != null && id !in candidate.targets && id != "all" && id != "start" && !id.startsWith("metadata:")) ||
                     candidate.startAtNs in arrivals
@@ -102,8 +107,13 @@ class ResultCallbackTimeline {
         }
     }
 
-    private fun snapshot(series: ResultCallbackSeries, frame: ResultCallbackFrame?, trigger: Pair<String, Long>? = null) =
-        CallbackTimelineFrame(frame?.number, frame?.startAtNs, series.tracks.map { track ->
+    private fun snapshot(series: ResultCallbackSeries, frame: ResultCallbackFrame?, trigger: Pair<String, Long>? = null): CallbackTimelineFrame {
+        val outputs = frame?.configuredOutputs ?: trigger?.let { shot ->
+            series.configurations.firstOrNull { shot.first in it }
+        } ?: series.currentOutputs
+        return CallbackTimelineFrame(frame?.number, frame?.startAtNs, series.tracks.mapNotNull { track ->
+            if (outputs != null && track.id !in outputs && track.id != "start" && track.id != "all" &&
+                !track.id.startsWith("metadata:")) return@mapNotNull null
             val points = track.points.filter { (frame != null && it.startAtNs == frame.startAtNs) ||
                 (trigger?.first == track.id && trigger.second == it.atNs) }
             val values = points.mapNotNull { it.latencyMs }
@@ -119,4 +129,5 @@ class ResultCallbackTimeline {
             }
             CallbackTimelineRow(track.id, track.label, values, state)
         })
+    }
 }

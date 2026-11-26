@@ -109,7 +109,7 @@ class ResultCallbackGraph(context: Context) : LinearLayout(context) {
         camera.contentDescription = "Callback camera ID $id; tap to switch device"
         // MainActivity already schedules this at 100 ms. A second throttle adds visible lag.
         timeline.update(ResultCallbackSeries.read(latestEvents, current, nowNs, currentMetadata), current,
-            (currentMetadata["callbackStreamsAtNs"] as? Number)?.toLong() ?: Long.MIN_VALUE, nowNs)
+            ((currentMetadata["callbackTimelineAtNs"] ?: currentMetadata["callbackStreamsAtNs"]) as? Number)?.toLong() ?: Long.MIN_VALUE, nowNs)
         render(animate)
         if (animate) {
             for (view in listOf(status, plot)) {

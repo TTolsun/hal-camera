@@ -81,7 +81,7 @@ Preview에 `Camera2Interop.Extender.setSessionCaptureCallback`으로 Camera2 엔
 
 AE 재잠금과 길게 누르기 측광이 결과의 AE 상태를 읽기 때문입니다.
 
-Callback 그래프에는 프리뷰(관측 불가), analysis, still 출력을 등록합니다.
+엔진은 기본 유스케이스를 바인딩한 직후 Callback 그래프에 프리뷰와 활성 analysis·still 출력을 등록합니다. 영상 준비가 바인딩 전에 실패하면 기본 출력 행을 유지하고, 영상 바인딩이 성공하면 그래프를 실제 영상 출력으로 갱신합니다.
 
 CameraX는 프리뷰와 인코더 버퍼를 앱에 넘겨주지 않으므로 두 출력의 도착 시각은 기록하지 않습니다.
 

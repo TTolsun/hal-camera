@@ -5,13 +5,17 @@ import dev.halcamera.telemetry.Event
 /** Offsets share the previous frame's Start callback. Sensor timestamps are equality keys only. */
 data class ResultCallbackPoint(val atNs: Long, val latencyMs: Double?, val startAtNs: Long? = null)
 data class ResultCallbackTrack(val id: String, val label: String, val unavailable: String?, val points: List<ResultCallbackPoint>, val repeating: Boolean = true)
-data class ResultCallbackFrame(val number: Long, val startAtNs: Long, val targets: Set<String>?)
-data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frames: List<ResultCallbackFrame> = emptyList()) {
+data class ResultCallbackFrame(val number: Long, val startAtNs: Long, val targets: Set<String>?,
+    val configuredOutputs: Set<String>? = null)
+data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frames: List<ResultCallbackFrame> = emptyList(),
+    val currentOutputs: Set<String>? = null, val currentSinceNs: Long = Long.MIN_VALUE,
+    val configurations: Collection<Set<String>> = emptyList()) {
     companion object {
         const val WINDOW_NS = 10_000_000_000L
 
         fun read(events: List<Event>, session: String, nowNs: Long, metadata: Map<String, Any?>): ResultCallbackSeries {
-            val since = (metadata["callbackStreamsAtNs"] as? Number)?.toLong() ?: Long.MIN_VALUE
+            val configuredAt = (metadata["callbackStreamsAtNs"] as? Number)?.toLong() ?: Long.MIN_VALUE
+            val since = (metadata["callbackTimelineAtNs"] as? Number)?.toLong() ?: configuredAt
             val current = events.filter { it.session == session && it.atNs in since..nowNs }
             val starts = current.filter { it.kind == "capture_started" && it.frame != null }.associateBy { it.frame }
             // Persisted references survive ring eviction and opening the overlay mid-session.
@@ -27,13 +31,23 @@ data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frame
             }.toMap()
             val sensorStarts = current.filter { it.kind == "capture_started" && it.sensorNs != null }.associateBy { it.sensorNs }
             val physicalIds = (metadata["physicalIds"] as? List<*>)?.filterIsInstance<String>().orEmpty()
-            val streams = (metadata["callbackStreams"] as? List<*>)?.filterIsInstance<Map<*, *>>().orEmpty()
+            fun descriptors(value: Any?) = (value as? List<*>)?.filterIsInstance<Map<*, *>>().orEmpty()
+            val active = descriptors(metadata["callbackStreams"])
+            val layouts = (metadata["frameConfigurations"] as? Map<*, *>)?.mapValues { descriptors(it.value) }.orEmpty()
+            val outputIds = layouts.mapValues { (_, rows) -> rows.mapNotNull { it["id"] as? String }.toSet() }
+            val streams = if (layouts.isEmpty()) active else (active + layouts.values.flatten()).distinctBy { it["id"] }
             val physicalStarts = current.filter { it.kind == "dual_physical_result" || it.kind == "capture_result" }.flatMap { event ->
                 val start = starts[event.frame] ?: return@flatMap emptyList()
                 ((event.values["physicalTimestamps"] ?: event.values["timestamps"]) as? Map<*, *>)?.entries.orEmpty().mapNotNull { (id, value) ->
                     (value as? Number)?.toLong()?.let { (id to it) to start }
                 }
             }.toMap()
+            // DualStillPair accepts the logical result timestamp on either physical reader. Keep
+            // that fallback scoped to the actual two-output still request, never a preview frame.
+            val dualPhotoStarts = current.filter { it.kind == "capture_result" && it.sensorNs != null }
+                .mapNotNull { result ->
+                    starts[result.frame]?.takeIf { it.values["requestTag"] == "dual_photo" }?.let { result.sensorNs to it }
+                }.toMap()
             val window = current.filter { it.atNs >= nowNs - WINDOW_NS }
             fun points(kind: String, stream: String? = null) = window.filter {
                 it.kind == kind && (stream == null || it.values["stream"] == stream)
@@ -46,9 +60,10 @@ data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frame
                 val start = if (stream == null) event.frame?.let { starts[it] }
                     else event.sensorNs?.let { timestamp ->
                         if (physicalId == null) sensorStarts[timestamp]
-                        else physicalStarts[physicalId to timestamp] ?: sensorStarts[timestamp].takeIf {
-                            // Some HALs stamp physical SurfaceTexture buffers with the logical request timestamp.
-                            kind == "pip_preview_available"
+                        else physicalStarts[physicalId to timestamp] ?: when {
+                            kind == "pip_preview_available" -> sensorStarts[timestamp]
+                            stream == "photo_main" || stream == "photo_sub" -> dualPhotoStarts[timestamp]
+                            else -> null
                         }
                     }
                 val latency = start?.let { origins[it.atNs] }?.let { event.atNs - it }?.div(1e6)
@@ -78,8 +93,9 @@ data class ResultCallbackSeries(val tracks: List<ResultCallbackTrack>, val frame
             }
             return ResultCallbackSeries(tracks, starts.values.map { start ->
                 ResultCallbackFrame(start.frame!!, start.atNs,
-                    (start.values["streams"] as? List<*>)?.filterIsInstance<String>()?.toSet())
-            }.sortedBy { it.startAtNs })
+                    (start.values["streams"] as? List<*>)?.filterIsInstance<String>()?.toSet(),
+                    outputIds[start.values["frameConfiguration"]])
+            }.sortedBy { it.startAtNs }, outputIds[metadata["frameConfiguration"]], configuredAt, outputIds.values)
         }
     }
 }

@@ -240,6 +240,36 @@ class ResultCallbackTimelineTest {
         assertEquals(5, t.holdSeconds)
     }
 
+    @Test fun dualPhotoUsesItsOwnOutputsEvenWhenPreviewReturnsBetweenGraphUpdates() {
+        val preview = listOf(mapOf("id" to "preview", "observable" to false))
+        val photo = listOf(mapOf("id" to "still", "repeating" to false))
+        val events = frame(1, 0) + frame(2, 1000, true) + frame(3, 1200)
+        val tagged = events.map { event ->
+            if (event.kind == "capture_started") event.copy(values = event.values +
+                ("frameConfiguration" to if (event.frame == 2L) "photo" else "preview")) else event
+        }
+        for (hold in listOf(0, 3)) {
+            val timeline = ResultCallbackTimeline().apply { holdSeconds = hold }
+            fun tick(time: Long, since: Long, layout: String) {
+                val metadata = mapOf("frameConfigurations" to mapOf("photo" to photo, "preview" to preview),
+                    "frameConfiguration" to layout, "callbackStreams" to if (layout == "photo") photo else preview,
+                    "callbackStreamsAtNs" to since * 1_000_000, "callbackTimelineAtNs" to 0L)
+                timeline.update(ResultCallbackSeries.read(tagged, "s", time * 1_000_000, metadata), "s", 0, time * 1_000_000)
+            }
+            fun expect(number: Long?, output: String) {
+                assertEquals(number, timeline.displayed!!.number)
+                assertEquals(listOf("start", "all", output), timeline.displayed!!.rows.map { it.id })
+            }
+            tick(200, 0, "preview"); expect(1, "preview")
+            tick(995, 990, "photo"); expect(null, "still")
+            tick(1001, 990, "photo"); expect(2, "still") // Only the shutter has arrived.
+            tick(1070, 990, "photo"); expect(2, "still")
+            tick(1400, 1190, "preview") // Both the still buffer and the new preview arrived since the last tick.
+            if (hold == 0) expect(3, "preview") else expect(2, "still")
+            tick(4400, 1190, "preview"); expect(3, "preview")
+        }
+    }
+
     @Test fun unmatchedPhotoDoesNotBorrowLatencyFromAnotherFrame() {
         val t = ResultCallbackTimeline().apply { holdSeconds = 3 }
         update(t, frame(1, 0), 100)

@@ -13,13 +13,12 @@ internal object DualOutputs {
 }
 
 /** Only Camera2's direct camera recording targets belong in the Callback stream list. */
-fun dualCallbackStreams(recordingConfigured: Boolean = false, photos: Boolean = true,
+fun dualCallbackStreams(recordingConfigured: Boolean = false,
     physicalIds: List<String> = emptyList()): List<Map<String, Any?>> = buildList {
     fun physical(outputs: List<OutputDescriptor>) = outputs.mapIndexed { index, output ->
         output.copy(physicalId = physicalIds.getOrNull(index)).metadata()
     }
     addAll(physical(DualOutputs.previews))
-    if (photos) addAll(DualOutputs.photos.map { it.metadata() })
     if (recordingConfigured) addAll(physical(DualOutputs.recordings))
 }
 

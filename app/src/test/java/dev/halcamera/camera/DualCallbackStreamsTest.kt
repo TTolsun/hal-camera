@@ -17,7 +17,7 @@ class DualCallbackStreamsTest {
     }
 
     @Test fun cameraXPreviewRelayDoesNotAdvertiseAppEncodersOrUnsupportedPhotoRows() {
-        val rows = dualCallbackStreams(photos = false)
+        val rows = dualCallbackStreams()
         assertEquals(listOf("preview_main", "preview_sub"), rows.map { it["id"] })
         assertFalse(rows.any { it["kind"] == "RECORDING" })
         assertTrue(rows.all { it["observable"] == false && it["kind"] == "PREVIEW" })
@@ -25,7 +25,7 @@ class DualCallbackStreamsTest {
 
     @Test fun photoModeDoesNotAdvertiseEncoderOutputs() {
         assertFalse(dualCallbackStreams().any { it["kind"] == "RECORDING" })
-        assertEquals(2, dualCallbackStreams(photos = false).size)
+        assertEquals(2, dualCallbackStreams().size)
     }
 
     @Test fun nativeRecordingTargetsAreTrackedOnlyWhileRecordingAndNeverAddedToPhotos() {

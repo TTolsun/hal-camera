@@ -98,6 +98,8 @@ CameraX의 YUV는 ImageAnalysis, 카메라 JPEG는 ImageCapture의 수신 시각
 
 저장 방식은 [JPEG 출처](live.md#live-스트림을-설정하세요)를 확인하세요.
 
+Camera2 Dual에서 촬영 전에는 Main/Sub Preview가 보이고, 셔터를 누르면 사진 프레임에 Main/Sub photo가 보입니다. Hold 시간이 남아 있으면 카메라가 프리뷰로 돌아온 뒤에도 사진 프레임의 두 행을 유지합니다. Hold가 끝나면 다시 프리뷰 행을 표시합니다.
+
 CLI 호환용 Dual의 Main/Sub Preview는 버퍼 수신을 직접 관측하지 못하므로 `No callback`입니다.
 
 화면 갱신 시각을 대신 표시하지 않습니다. Camera2의 Main/Sub photo는 두 센서 이미지 수신입니다.
