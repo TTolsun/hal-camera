@@ -2,9 +2,6 @@
 based_on: [overall-architecture]
 confidence: code
 sources:
-  - app/src/main/java/dev/halcamera/camera/AppBokehProcessor.kt
-  - app/src/main/java/dev/halcamera/camera/RelativeDepth.kt
-  - app/src/main/java/dev/halcamera/ui/AppBokehEditor.kt
   - app/src/main/java/dev/halcamera/camera/MultiSession.kt
   - app/src/main/java/dev/halcamera/camera/CameraXMultiSession.kt
   - app/src/main/java/dev/halcamera/camera/MultiRecording.kt
@@ -15,7 +12,6 @@ sources:
   - app/src/main/java/dev/halcamera/cli/CommandCoordinator.kt
   - app/src/main/java/dev/halcamera/cli/CommandStore.kt
   - app/src/main/java/dev/halcamera/camera/CameraEngine.kt
-  - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
   - app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt
   - app/src/main/java/dev/halcamera/camera/CameraEndpointResolver.kt
   - app/src/main/java/dev/halcamera/telemetry/IncidentExporter.kt
@@ -43,12 +39,6 @@ verifications: []
 2. 앱의 시각은 `elapsedRealtimeNanos`를 사용합니다. 센서 시각은 기기가 `SENSOR_INFO_TIMESTAMP_SOURCE_REALTIME`을 보고할 때만 앱 시각과 직접 비교합니다.
 3. 카메라 열거에는 공개 Camera2 API만 사용합니다. 논리 카메라의 물리 endpoint를 독립적으로 열 수 있다고 가정하지 않습니다.
 4. 벤치마크 JSON과 incident ZIP에는 관측 이벤트·메타데이터를 저장하며 이미지 픽셀을 저장하지 않습니다.
-
-Depth 보기는 컬러와 Depth를 같은 요청에 포함하지 않는 별도 Camera2 세션입니다. HAL의 동시 요청 허용 선언은 특정 출력 조합의 성공을 보장하지 않습니다. `DepthCameraEngine`은 촬영·녹화·수동 제어·줌·터치 측광을 제공하지 않으며 CLI 제어 변경도 거절합니다. Photo·Video 또는 CLI 촬영 준비로 전환하면 Depth를 해제합니다.
-
-제조사 Portrait도 일반 촬영과 별도의 확장 세션을 사용합니다. Bokeh 확장 전용 해상도로 컬러 미리보기와 JPEG만 요청하며, 세션이 거절되면 다른 크기로 자동 대체하지 않습니다. 단일 촬영의 JPEG를 받기 전에 실패하거나 종료되면 세션을 해제하여 늦은 이미지를 다음 촬영에 연결하지 않습니다. 이미 받은 JPEG의 저장 작업은 종료 후에도 마칠 수 있습니다.
-
-App Bokeh는 제조사 Portrait와 달리 일반 JPEG 저장 이후의 앱 처리입니다. 상대 깊이는 센서 거리나 DEPTH16으로 해석하지 않으며, 편집·저장 해상도는 긴 변 최대 1600픽셀로 제한합니다. 원본은 수정하지 않습니다. 추론·렌더·추가 저장 실패는 원본을 삭제하지 않으며, Activity 중단 후에는 편집기의 늦은 결과를 화면에 적용하지 않습니다.
 
 Multi 모드의 `MultiSession`은 `CameraEngine`과 별도입니다. Camera2는 선택한 독립 장치를 연 뒤 세션을 구성하며, CameraX는 광고된 동시 조합을 바인딩합니다.
 

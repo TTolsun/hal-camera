@@ -3,12 +3,37 @@ package dev.halcamera.ui
 import dev.halcamera.telemetry.Event
 import dev.halcamera.camera.OutputDescriptor
 import dev.halcamera.camera.OutputKind
+import dev.halcamera.camera.DualOutputs
 import dev.halcamera.camera.ConfiguredOutput
 import dev.halcamera.camera.StreamConfiguration
 import org.junit.Assert.*
 import org.junit.Test
 
 class ResultCallbackSeriesTest {
+    @Test fun dualGlInputRequiresBothPhysicalIdentityAndAnUnambiguousFrameEvenWhenMetadataIsLate() {
+        val rows = listOf("6", "5").mapIndexed(DualOutputs::glPreview)
+        val config = metadata(*rows.map { it.metadata() }.toTypedArray())
+        fun input(time: Long, stream: String, physical: String?, stamp: Long) =
+            Event(time, "s", DualOutputs.GL_INPUT, sensorNs = stamp,
+                values = mapOf("stream" to stream, "physicalId" to physical))
+        fun result(frame: Long, main: Long, sub: Long) = Event(80 + frame, "s", "capture_result", frame,
+            values = mapOf("physicalTimestamps" to mapOf("6" to main, "5" to sub)))
+        val inputs = listOf(
+            Event(10, "s", "capture_started", 1, 700, mapOf("firstStart" to true)),
+            Event(20, "s", "capture_started", 2, 800), Event(30, "s", "capture_started", 3, 900),
+            input(40, "preview_main", "6", 501), input(41, "preview_sub", "5", 501),
+            input(42, "preview_main", "5", 501), input(43, "preview_main", null, 501),
+            input(44, "preview_sub", "5", 700), input(45, "preview_main", "6", 503),
+            input(46, "preview_sub", "5", 601), input(47, "preview_sub", "5", 0),
+            Event(48, "s", "preview_available", sensorNs = 501, values = mapOf("stream" to "preview_main")))
+        fun previews(events: List<Event>) = ResultCallbackSeries.read(events, "s", 120, config).tracks.takeLast(2)
+        assertTrue(previews(inputs).all { it.points.isEmpty() && it.unavailable == null })
+        val results = listOf(result(1, 501, 601), result(2, 503, 501), result(3, 504, 0),
+            result(4, 503, 601), result(5, 501, 501).copy(session = "other"))
+        val tracks = previews(inputs + results)
+        assertEquals(listOf(40L to 10L), tracks.first().points.map { it.atNs to it.startAtNs })
+        assertEquals(listOf(41L to 20L), tracks.last().points.map { it.atNs to it.startAtNs })
+    }
     @Test fun appConversionAndComposedRecordingEventsNeverBecomeCameraCallbackRows() {
         val config = StreamConfiguration(listOf(ConfiguredOutput(OutputDescriptor("yuv", OutputKind.YUV, true), "camera-surface")))
         val events = listOf(Event(0, "s", "capture_started", 1, 900L, mapOf("firstStart" to true)),
@@ -66,6 +91,18 @@ class ResultCallbackSeriesTest {
         assertEquals(60.0, tracks[2].points.single().latencyMs!!, 0.001)
         assertEquals(70.0, tracks[3].points.single().latencyMs!!, 0.001)
     }
+    @Test fun dualPhotoCanMatchTheLogicalStillResultTimestampButNeverBorrowPreviewTime() {
+        val events = listOf(
+            Event(10, "s", "capture_started", 1, 100, mapOf("firstStart" to true)),
+            Event(20, "s", "capture_result", 1, 100),
+            Event(30, "s", "capture_started", 2, 200, mapOf("requestTag" to "dual_photo")),
+            Event(40, "s", "capture_result", 2, 201, mapOf("physicalTimestamps" to mapOf("6" to 202L))),
+            Event(50, "s", "image_available", sensorNs = 201, values = mapOf("stream" to "photo_sub")),
+            Event(60, "s", "image_available", sensorNs = 100, values = mapOf("stream" to "photo_sub")))
+        val config = metadata(stream("photo_sub")) + ("physicalIds" to listOf("5", "6"))
+        assertEquals(listOf(30L, null), ResultCallbackSeries.read(events, "s", 60, config).tracks.last().points.map { it.startAtNs })
+    }
+
     @Test fun matchingTimestampOnOtherSensorDoesNotSelectTheWrongFrame() {
         val events = listOf(
             Event(100_000_000, "s", "capture_started", 8, 900, mapOf("firstStart" to true)),

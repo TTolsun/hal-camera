@@ -98,13 +98,17 @@ CameraX의 YUV는 ImageAnalysis, 카메라 JPEG는 ImageCapture의 수신 시각
 
 저장 방식은 [JPEG 출처](live.md#live-스트림을-설정하세요)를 확인하세요.
 
-CLI 호환용 Dual의 Main/Sub Preview는 버퍼 수신을 직접 관측하지 못하므로 `No callback`입니다.
+Camera2 Dual에서 촬영 전에는 Main/Sub Preview가 보이고, 셔터를 누르면 사진 프레임에 Main/Sub photo가 보입니다. Hold 시간이 남아 있으면 카메라가 프리뷰로 돌아온 뒤에도 사진 프레임의 두 행을 유지합니다. Hold가 끝나면 다시 프리뷰 행을 표시합니다.
+
+Camera2 Dual의 Main/Sub Preview는 버퍼 수신을 직접 관측하지 못하므로 `No callback`입니다.
 
 화면 갱신 시각을 대신 표시하지 않습니다. Camera2의 Main/Sub photo는 두 센서 이미지 수신입니다.
 
 Camera2 VIDEO의 두 HAL Recording 출력은 `No callback`으로 표시합니다.
 
-CameraX Dual은 프리뷰를 GPU로 인코더에 전달하므로 별도 Recording 행이 없습니다. 이 차이를 센서 동기화 성능으로 해석하지 마세요.
+CameraX Dual의 Main/Sub Preview 행은 각 GL 입력이 버퍼를 읽은 시각을 표시합니다. 해당 프리뷰의 물리 카메라 ID와 버퍼 타임스탬프가 표시 중인 프레임의 물리 촬영 결과와 정확히 일치해야 값이 나옵니다. 대응하는 프레임을 확인할 수 없으면 행에 `Awaiting data`가 표시됩니다.
+
+CameraX Dual은 같은 GL 입력을 화면과 인코더에 전달합니다. 녹화 중에도 프리뷰 입력은 한 번만 기록하며 별도 Recording 행은 없습니다.
 
 Multi는 프리뷰 위의 카메라 ID 이름표로 선택한 장치의 Preview·Photo를 표시합니다. 그래프 안에 별도 ID 선택 버튼은 없습니다.
 

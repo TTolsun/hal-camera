@@ -1,6 +1,0 @@
-kind: nested-class
-title: camera-picker
-children: []
-parentPath:
-  - screens
-  - expert-screen

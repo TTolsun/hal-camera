@@ -32,9 +32,6 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
                         return@fold
                     }
                     captureFeedback.clearResult()
-                    depthSize = null
-                    portraitConfig = null
-                    appBokehMode = false
                     showCallbacks(false)
                     val modeChanged = engineName != (command.engine ?: "Camera2") || videoMode != command.videoMode
                     cameraId = requireNotNull(command.camera); engineName = command.engine ?: "Camera2"
@@ -74,7 +71,6 @@ internal fun MainActivity.createLiveCli(): LiveController = LiveController(cli, 
         updateMediaControls()
     }
     override fun tune(options: dev.halcamera.cli.CliOptions?, reset: Boolean): Map<String, Any?> {
-        if (depthSize != null || portraitConfig != null) throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Select standard Photo or Video before changing camera controls.")
         if ((!ready && !recordingVideo) || closing || stoppingRecording) throw dev.halcamera.cli.CliFailure("PREFLIGHT_FAILED", "Start preview or recording first")
         val requested = if (reset) LiveControls() else options!!.controls(controlBar.support, manualCapabilities, videoMode, controlBar.controls, pipUi.selected != null)
         val zoom = if (reset) 1f else options!!.values["zoom"]?.toFloat() ?: zoomRatio

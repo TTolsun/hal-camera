@@ -71,6 +71,10 @@ internal class DualStillCapture(
                         session = s
                         if (closing) { s.close(); return }
                         try {
+                            telemetry?.configureCallbackStreams(sessionId, DualOutputs.photos.mapIndexed { index, photo ->
+                                photo.copy(physicalId = ids[index]).metadata()
+                            },
+                                frameConfiguration = "photo")
                             val request = camera.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE, ids.toSet()).apply {
                                 readers.forEach { addTarget(it.surface) }
                                 setTag("dual_photo")

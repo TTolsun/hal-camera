@@ -17,6 +17,7 @@ import java.nio.ByteOrder
 internal class DualPreviewRelay(
     private val texture: SurfaceTexture,
     private val size: LiveSize,
+    private val onInput: (Long) -> Unit,
     private val onError: (Throwable) -> Unit,
 ) {
     private val thread = HandlerThread("DualPreviewRelay").apply { start() }
@@ -32,6 +33,7 @@ internal class DualPreviewRelay(
     private var program = 0
     private var textureId = 0
     private var closed = false
+    private var lastInputTimestamp: Long? = null
     private val transform = FloatArray(16)
     private val vertices = ByteBuffer.allocateDirect(16 * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().apply {
         put(floatArrayOf(-1f,-1f,0f,0f, 1f,-1f,1f,0f, -1f,1f,0f,1f, 1f,1f,1f,1f)); position(0)
@@ -91,9 +93,16 @@ internal class DualPreviewRelay(
         try {
             check(EGL14.eglMakeCurrent(display,window,window,context))
             val input = checkNotNull(inputTexture)
-            input.updateTexImage(); input.getTransformMatrix(transform)
-            draw(window,input.timestamp)
-            if (encoder != EGL14.EGL_NO_SURFACE) draw(encoder,input.timestamp)
+            input.updateTexImage()
+            val timestamp = input.timestamp
+            // A queued notification can latch the same buffer after a newer frame overtook it.
+            if (timestamp != lastInputTimestamp) {
+                lastInputTimestamp = timestamp
+                onInput(timestamp)
+            }
+            input.getTransformMatrix(transform)
+            draw(window,timestamp)
+            if (encoder != EGL14.EGL_NO_SURFACE) draw(encoder,timestamp)
         } catch (e: Exception) { closed = true; onError(e) }
     }
 

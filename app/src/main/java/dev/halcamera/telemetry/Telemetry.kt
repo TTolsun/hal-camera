@@ -9,9 +9,18 @@ class Telemetry(val recorder: FlightRecorder) {
     val sessions = ConcurrentHashMap<String, Map<String, Any?>>()
     fun event(session: String, kind: String, values: Map<String, Any?> = emptyMap()) = recorder.record(session, kind, values = values)
     /** Snapshot the configured outputs, including outputs with no app-visible buffer callback. */
-    fun configureCallbackStreams(session: String, outputs: List<Map<String, Any?>>) {
+    fun configureCallbackStreams(session: String, outputs: List<Map<String, Any?>>, frameConfiguration: String? = null) {
         val event = recorder.record(session, "callback_streams", values = mapOf("outputs" to outputs))
-        sessions.computeIfPresent(session) { _, old -> old + mapOf("callbackStreams" to outputs, "callbackStreamsAtNs" to event.atNs) }
+        sessions.computeIfPresent(session) { _, old ->
+            val current = old + mapOf("callbackStreams" to outputs, "callbackStreamsAtNs" to event.atNs)
+            if (frameConfiguration == null) current else {
+                // Dual alternates between two native sessions while one UI timeline stays open.
+                val configurations = old["frameConfigurations"] as? Map<*, *> ?: emptyMap<String, Any?>()
+                current + mapOf("frameConfigurations" to configurations + (frameConfiguration to outputs),
+                    "frameConfiguration" to frameConfiguration,
+                    "callbackTimelineAtNs" to (old["callbackTimelineAtNs"] ?: event.atNs))
+            }
+        }
     }
     fun callback(sessionId: String, streams: (CaptureRequest) -> List<String>? = { null }, alive: () -> Boolean): CameraCaptureSession.CaptureCallback {
         val tracker = FrameTracker()
@@ -20,11 +29,18 @@ class Telemetry(val recorder: FlightRecorder) {
             @Synchronized
             override fun onCaptureStarted(session: CameraCaptureSession, request: CaptureRequest, timestamp: Long, frameNumber: Long) {
                 if (!alive()) return
-                val configuredAt = (sessions[sessionId]?.get("callbackStreamsAtNs") as? Number)?.toLong() ?: Long.MIN_VALUE
-                val previous = previousStart?.takeIf { it.atNs >= configuredAt }
+                val metadata = sessions[sessionId]
+                val timelineStart = ((metadata?.get("callbackTimelineAtNs") ?: metadata?.get("callbackStreamsAtNs")) as? Number)?.toLong()
+                val previous = previousStart?.takeIf { timelineStart == null || it.atNs >= timelineStart }
                 previousStart = recorder.record(sessionId, "capture_started", frameNumber, timestamp,
-                    mapOf("requestTag" to request.tag?.toString(), "templateObservable" to false, "streams" to streams(request),
-                        "previousStartAtNs" to previous?.atNs, "firstStart" to (previous == null)))
+                    buildMap {
+                        put("requestTag", request.tag?.toString())
+                        put("templateObservable", false)
+                        put("streams", streams(request))
+                        put("previousStartAtNs", previous?.atNs)
+                        put("firstStart", previous == null)
+                        metadata?.get("frameConfiguration")?.let { put("frameConfiguration", it) }
+                    })
                 recorder.record(sessionId, "request_observed", frameNumber, values = requestValues(request))
             }
             override fun onCaptureProgressed(session: CameraCaptureSession, request: CaptureRequest, partialResult: CaptureResult) {

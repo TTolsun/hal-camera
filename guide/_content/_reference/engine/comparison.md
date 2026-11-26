@@ -15,8 +15,6 @@ sources:
   - app/src/main/java/dev/halcamera/camera/CameraXLiveRecorder.kt
   - app/src/main/java/dev/halcamera/camera/CameraXControls.kt
   - app/src/main/java/dev/halcamera/MainActivity.kt
-  - app/src/main/java/dev/halcamera/MainAppBokehBridge.kt
-  - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
   - app/src/main/java/dev/halcamera/camera/ConcurrentSession.kt
   - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
   - app/src/main/java/dev/halcamera/ConcurrentCameraActivity.kt
@@ -28,9 +26,6 @@ verifications: []
 
 | 항목 | Camera2 | CameraX |
 | --- | --- | --- |
-| App Bokeh | 일반 Preview+JPEG로 촬영하고 앱에서 상대 깊이를 추정해 배경 흐림을 적용합니다. 인물·사물 모두 선택할 수 있으며 긴 변 최대 1600픽셀로 저장합니다. | App Bokeh를 선택하면 Camera2로 전환합니다. |
-| Depth 보기 | DEPTH_OUTPUT과 DEPTH16 해상도를 공개한 카메라에서 별도 Depth 전용 세션을 엽니다. 맵 표시만 제공합니다. | Depth 해상도를 선택하면 Camera2로 전환합니다. |
-| 제조사 Portrait | API 31 이상의 BOKEH 확장 세션으로 전용 미리보기와 JPEG를 받습니다. Depth 메뉴에서 선택하며 수동 제어·RAW·PIP·영상은 제공하지 않습니다. | Portrait를 선택하면 Camera2로 전환합니다. |
 | 수동 촬영 | ISO·노출 시간·초점과 WB를 프리뷰·사진·녹화에 적용합니다. 지원 여부와 실제 적용값을 표시합니다. | Manual 버튼을 미지원 상태로 비활성화합니다. |
 | YUV를 JPEG로 선택 | 요청한 YUV 이미지와 최종 CaptureResult의 센서 시각을 맞춥니다. | 촬영 뒤 받은 analysis 프레임 하나를 변환합니다. |
 | JPEG 출처 | YUV 앱 변환 또는 HAL JPEG 중 하나와 촬영 JSON을 저장합니다. | YUV 앱 변환 또는 ImageCapture JPEG 중 하나와 촬영 JSON을 저장합니다. |

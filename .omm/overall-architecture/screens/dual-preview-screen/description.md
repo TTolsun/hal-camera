@@ -6,10 +6,10 @@ DualPreviewPlanner는 후면 논리 멀티 카메라의 서로 다른 물리 카
 
 DualPreviewSession은 공개 논리 ID를 열고 OutputConfiguration.setPhysicalCameraId로 각 출력을 연결합니다. API 29 이상에서는 isSessionConfigurationSupported를 확인하고, 거부되면 다음 크기를 시도합니다. 물리 ID를 직접 열 수 있다고 가정하지 않습니다. opening 중 종료 요청도 CameraDevice의 콜백과 onClosed를 기다립니다. 장치가 닫힌 뒤 SurfaceTexture를 해제하고 다음 세션을 시작합니다.
 
-Camera2의 Dual · V는 각 physical camera의 프리뷰와 MediaRecorder surface를 같은 OutputConfiguration에서 공유합니다. 두 카메라의 MediaRecorder 출력 크기도 확인하며, 인코더 또는 HAL이 거부한 크기는 다음 후보로 넘어갑니다. 녹화 버튼을 누르면 H.264·30 fps 인코더 두 개를 시작하고 두 encoder surface를 repeating request에 추가합니다. Callback에 두 물리 Recording 출력을 등록하고 버퍼 관측 불가는 No callback으로 표시합니다. 출력 목록이 바뀔 때만 Callback 기준 시각을 갱신하여 사진 촬영 뒤 같은 프리뷰를 복원해도 촬영 기록과 Hold를 유지합니다. 요청 생성 때 대상 ID를 고정하므로 녹화 시작 전에 제출한 프리뷰 요청에 녹화 대상을 붙이지 않습니다. 오디오는 저장하지 않으며 프리뷰 위치는 저장 영상에 영향을 주지 않습니다. 30 fps는 인코더 설정이고 실제 프레임 전달률을 보장하지 않습니다.
+Camera2의 Dual · V는 각 physical camera의 프리뷰와 MediaRecorder surface를 같은 OutputConfiguration에서 공유합니다. 두 카메라의 MediaRecorder 출력 크기도 확인하며, 인코더 또는 HAL이 거부한 크기는 다음 후보로 넘어갑니다. 녹화 버튼을 누르면 H.264·30 fps 인코더 두 개를 시작하고 두 encoder surface를 repeating request에 추가합니다. Callback에 두 물리 Recording 출력을 등록하고 버퍼 관측 불가는 No callback으로 표시합니다. 프리뷰와 사진 세션이 구성될 때 각각의 출력을 등록하고 프레임의 Shutter에 해당 구성을 기록합니다. 사진 프레임에는 Main/Sub photo가 표시되며, Hold 중에 프리뷰 세션이 다시 열려도 그 사진 프레임의 두 행을 유지합니다. 요청 생성 때 대상 ID를 고정하므로 녹화 시작 전에 제출한 프리뷰 요청에 녹화 대상을 붙이지 않습니다. 오디오는 저장하지 않으며 프리뷰 위치는 저장 영상에 영향을 주지 않습니다. 30 fps는 인코더 설정이고 실제 프레임 전달률을 보장하지 않습니다.
 
 정지·화면 이탈 때 장치를 닫은 뒤 인코더를 종료하여 카메라별 MP4 두 개를 MediaLibrary로 저장합니다. 파일명은 공통 촬영 식별자와 A/B, physical camera ID를 포함합니다. 두 파일의 쓰기·공개 중 하나라도 실패하면 이번 저장의 MediaStore 항목을 모두 지웁니다. encoder 오류 또는 stop 실패도 두 파일을 공개하지 않습니다. 카메라·인코더를 순차 시작하므로 두 MP4의 시작 시각과 길이가 정확히 같다고 보장하지 않습니다.
 
 CameraX는 같은 논리 카메라의 물리 ID 두 개를 ConcurrentCamera 설정으로 연결합니다. Dual · P는 공통 크기 중 첫 후보를 사용하고 Dual · V는 1280×720으로 구성합니다. 기기가 해당 구성을 거부하면 실패 상태를 표시하며 Camera2로 자동 전환하지 않습니다. 각 Preview는 GPU relay를 거쳐 화면과 해당 카메라의 H.264 인코더에 전달됩니다. Callback에는 실제 카메라 출력인 프리뷰만 표시하고 앱 인코더와 지원하지 않는 사진 출력은 제외합니다. 합성 영상이 아니며 MP4 두 개에 프리뷰 위치나 UI는 포함하지 않습니다. 장치의 onClosed와 CameraX surface 반환을 기다린 뒤 relay와 인코더 종료를 완료하고 다음 세션을 엽니다. CameraX provider는 듀얼 모드 전환마다 shutdown하지 않고 재사용합니다.
 
-Callback의 Main/Sub Preview는 실제 카메라 출력 설명자이며 직접 버퍼 수신을 관측하지 못해 No callback으로 표시합니다. TextureView 화면 갱신 이벤트는 도착 시각으로 사용하지 않습니다.
+Camera2 Dual의 Main/Sub Preview는 버퍼 수신을 직접 관측할 수 없어 No callback으로 표시합니다. CameraX Dual은 각 GL 입력이 읽은 버퍼의 타임스탬프와 물리 ID를 기록합니다. 두 값이 같은 세션의 물리 촬영 결과에서 한 프레임을 가리킬 때만 해당 프리뷰 행에 수신 시각을 표시합니다. 화면 갱신과 인코더 전달은 별도 입력으로 세지 않습니다.

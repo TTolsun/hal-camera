@@ -4,7 +4,7 @@
     ".nojekyll": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "_inputs/decisions.html": "aadc3cad5fb3b8e37af148aa62ae79f9be0ba19a076fd2837f85c471b1629ded",
     "_inputs/device-verification.yaml": "1852f48d52f75733b4db973418fc7fad1f0f9d340a8b4b555cf9d49aa7016215",
-    "architecture.html": "b3de159e6d839d09d50c1c006d6d3ea43f69848c9ae23fb69ce6a7f10d61bd14",
+    "architecture.html": "255e3b31679befa49917cf66b357e40be349d8294b3913d3396b1b0c6f4e4b38",
     "assets/docflow-design.css": "1cc4f34d8df94abdcf70ab2e9c51e456d8ef7f52283a2ef3adb986a6bd38d44c",
     "assets/media/automation/bridge.png": "bdbd7cbdc28010caa9b8e320e2d311efd35bb2f66cbb9b5cb322af638b7ccbff",
     "assets/media/automation/opening-sensor.mp4": "8e26f5eeeb0b92cd241b2235aab7ffd122cbf2ac94b66c37fafb440da4ae1178",
@@ -60,7 +60,7 @@
     "automation.html": "f5e2267081e227eacf7dc45d687afd52781250c5ce6f658cbe3331af4c98f84a",
     "benchmark.html": "6d9491b4cdc31217df7b89fcb9fae6f52df132cfb4f7fb9cf41743cef40e8627",
     "building.html": "b5b94450d5d5a98ed10333816037aee7d56ed458c01dfde5097c3625f010d448",
-    "callback.html": "be14419ffc2c7668723fcac46171b6639c00cfda40e7058855085eebd3877647",
+    "callback.html": "7483618a58e2e98101aa1c17ef07536db6b191782842cfdeac2afbdbc749ff8d",
     "cli.html": "64d1c99a2458c7d611c5cb4acea7e0d0e947125f7a1493ddd9c071a8e7e1aa1b",
     "coding-agents.html": "213fcd207773cb88d1b72d7bd4795564ec33fa18b706e14ec0559a26d91a099f",
     "contributing.html": "c86b56fbb92f444916651ac0ca4c9310239e8e3699d7ebf3273ca2a63073068f",
@@ -72,8 +72,8 @@
     "getting-started.html": "75b356487a9be6930c095686fcdc47229ecdd53b73b77f971a770f1e0f387e0f",
     "glossary.html": "a26775e3f8a0d6af19b7531b2dc86ea7630a9c0511bb34a308e3a630522462f1",
     "index.html": "34466a88605267322b92082ec1592c72a48a9fd2e3cdee59e66cea770d79372a",
-    "live.html": "53ad3916ebe83fffd922a56eb4dbb93d15270d34b82d5933fe3501d9ebffb321",
-    "probe.html": "1a6eca6e50a2a21ede1c88bd122a000ca4be349733e4866ab6870b676f76447a",
+    "live.html": "15a39112070431467c9a8e04c04747df2d4866bad5fcf8d09cf96d51300308d2",
+    "probe.html": "926734ca1971e5c93cf19474edd8f1931536770100ec81d94944cf801af0aaed",
     "troubleshooting.html": "819baee906880fbaab14d0a649623326227868e748966ddbfe2d0272a50e53cb"
   }
 }

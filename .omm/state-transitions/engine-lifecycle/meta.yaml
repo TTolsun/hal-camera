@@ -6,5 +6,4 @@ kind: nested-class
 title: engine-lifecycle
 children:
   - camerax-lifecycle
-  - portrait-lifecycle
 parentPath: []

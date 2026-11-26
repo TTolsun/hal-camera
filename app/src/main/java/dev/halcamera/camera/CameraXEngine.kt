@@ -223,6 +223,7 @@ class CameraXEngine(
                 }.build()
                 val outputs = liveOutputs()
                 camera = provider!!.bindToLifecycle(owner, selector!!, *outputs.targets.toTypedArray())
+                telemetry.configureCallbackStreams(session, outputs.metadata())
                 camera!!.cameraInfo.cameraState.observe(owner) { state ->
                     if (!active) return@observe
                     if (pip == null && !pipChanging) {
@@ -233,7 +234,6 @@ class CameraXEngine(
                 if (videoMode) video.prepare()
                 val sizes = if (videoMode) (telemetry.sessions[session]?.get("negotiatedStreams") as? Map<String, Any?>).orEmpty() else streamSizes()
                 telemetry.sessions.computeIfPresent(session) { _, old -> old + mapOf("negotiatedStreams" to sizes) }
-                if (!videoMode) telemetry.configureCallbackStreams(session, outputs.metadata())
                 telemetry.event(session, "bound", sizes)
                 streamsConfigured(sizes)
             } catch (e: Exception) {

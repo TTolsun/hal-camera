@@ -3,8 +3,6 @@ based_on: [overall-architecture]
 confidence: code
 sources:
   - app/src/main/java/dev/halcamera/camera/Camera2Engine.kt
-  - app/src/main/java/dev/halcamera/MainAppBokehBridge.kt
-  - app/src/main/java/dev/halcamera/camera/PortraitCameraEngine.kt
   - app/src/main/java/dev/halcamera/camera/LivePipSession.kt
   - app/src/main/java/dev/halcamera/camera/PipSessionQuery.kt
   - app/src/main/java/dev/halcamera/camera/CameraOpenRetry.kt
@@ -39,8 +37,6 @@ verifications: []
 
 **Camera2Engine은 앱에서 CaptureRequest를 직접 구성합니다.** `request_observed`에 기록한 키를 HAL 로그와 대조할 수 있습니다. 엔진 자체는 세션, 요청 구성, 줌, Live 제어를 담당하고, 사진은 `Camera2StillCapture`, Live 녹화는 `Camera2LiveRecorder`, 터치 측광은 `Camera2TouchFocus`, 벤치마크 녹화는 `BenchmarkRecorder`가 맡습니다. 카메라 요청과 capture 콜백은 엔진이 만든 카메라 스레드 하나에서 처리하고, 버퍼 relay와 파일 저장은 각자의 스레드에서 처리합니다.
 
-Depth 보기는 일반 `Camera2Engine`과 별도인 `DepthCameraEngine`이 담당합니다. 컬러·사진·녹화 출력 대신 DEPTH16 ImageReader 하나만 사용하며, 기존 엔진을 닫은 뒤 선택한 해상도로 엽니다. 사용 방법과 표시 범위는 [Depth 맵 보기](live.md#depth-맵을-보세요)를 확인하세요.
-
 ### PIP 지원을 미리 확인하세요
 
 **현재 해상도와 유지되는 YUV·JPEG·RAW 출력, 보조 카메라의 Preview·사진 출력으로 PIP 지원 여부를 조회합니다.** 선택창을 열 때와 적용 직전에 검사하며 제조사·칩셋·ID별 예외는 두지 않습니다. Physical은 열린 카메라의 `isSessionConfigurationSupported`, Service는 `CameraManager.isConcurrentSessionConfigurationSupported`를 사용합니다. 합성 녹화의 인코더는 GL 출력을 받으므로 카메라 세션 조회에 넣지 않습니다.
@@ -67,8 +63,6 @@ Camera2 Live의 프리뷰·사진·녹화·녹화 중 사진 요청은 기존 �
 수동 WB는 MANUAL_POST_PROCESSING과 관련 요청 키가 있고 수동 노출이 켜져 있을 때 gains와 transform을 사용합니다.
 
 색온도를 추정하지 않습니다.
-
-제조사 Portrait는 일반 Camera2Engine의 스트림에 섞지 않습니다. API 31 이상에서 PortraitCameraEngine이 BOKEH 확장 전용 미리보기·JPEG 크기를 재검사하고 CameraExtensionSession을 엽니다. JPEG는 MediaLibrary로 저장하며, 미리보기 15초·JPEG 60초 시간 제한과 CameraDevice.onClosed 이후 close(done) 완료 순서를 적용합니다.
 
 </details>
 
@@ -119,8 +113,6 @@ Live의 기본 세션은 프리뷰, YUV_420_888, JPEG 세 스트림으로 구성
 | 프리뷰 | 1280×720 이하에서 가장 큰 크기 | TextureView 표시 |
 | YUV (`analysis_acquire_latest`) | 640×480 이하에서 가장 큰 크기 | 프레임 도착 기록, 앱 변환을 선택한 사진 입력 |
 | JPEG (`still`) | 1920×1080 이하에서 가장 큰 크기 | 카메라 JPEG 사진, 벤치마크 still |
-
-App Bokeh에서는 이 기본 크기의 Preview와 JPEG만 구성하고 분석 YUV는 끕니다. 저장한 JPEG를 앱의 깊이 추정 모델에 전달하므로 촬영 세션에 DEPTH16 출력을 추가하지 않습니다.
 
 벤치마크 세션은 profile의 `StreamSpec` 크기를 그대로 사용합니다. 지원하지 않는 크기이면 작은 크기로 대체하지 않고 구성 단계에서 실패합니다. 같은 profile ID로 다른 크기를 측정하면 비교가 무의미해지기 때문입니다.
 
