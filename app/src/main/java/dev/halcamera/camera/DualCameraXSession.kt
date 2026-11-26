@@ -84,7 +84,6 @@ class DualCameraXSession(
     private fun bind() {
         telemetry.sessions[sessionId] = mapOf("engine" to "CameraX", "cameraId" to plan.logicalId, "physicalIds" to ids)
         val previews = ids.mapIndexed(DualOutputs::glPreview)
-        telemetry.configureCallbackStreams(sessionId, previews.map { it.metadata() })
         val configs = previews.mapIndexed { index, output ->
             val physicalId = requireNotNull(output.physicalId)
             val inputTags = mapOf("stream" to output.id, "physicalId" to physicalId)
@@ -156,6 +155,7 @@ class DualCameraXSession(
             ConcurrentCamera.SingleCameraConfig(selector, UseCaseGroup.Builder().addUseCase(preview).build(), owner)
         }
         boundCameras = checkNotNull(provider).bindToLifecycle(configs).cameras
+        telemetry.configureCallbackStreams(sessionId, previews.map { it.metadata() })
         boundCameras.firstOrNull()?.cameraInfo?.zoomState?.value?.let {
             listener.onZoomRange(it.minZoomRatio to it.maxZoomRatio)
         }
