@@ -10,6 +10,8 @@ import dev.halcamera.MainActivity
 import dev.halcamera.camera.LiveSize
 import dev.halcamera.camera.LiveStreamSettings
 import dev.halcamera.camera.LiveVideo
+import dev.halcamera.camera.DualOutputs
+import dev.halcamera.telemetry.Event
 import java.util.concurrent.FutureTask
 
 /** Opt-in hardware regression: takes a pair of real sensor photos for each Hold setting. */
@@ -37,6 +39,102 @@ class CallbackFrameChecks(private val test: Instrumentation) {
 
     private fun CallbackTimelineFrame?.outputs() = this?.rows.orEmpty().map { it.id }
         .filterNot { it == "start" || it == "all" || it.startsWith("metadata:") }
+
+    fun dualGl(): String {
+        val log = mutableListOf<String>()
+        for (video in listOf(false, true)) {
+            val dual = test.startActivitySync(Intent(test.targetContext, DualPreviewActivity::class.java)
+                .putExtra(DualPreviewActivity.EXTRA_ENGINE, "CameraX")
+                .putExtra(DualPreviewActivity.EXTRA_VIDEO, video)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) as DualPreviewActivity
+            try {
+                ui { dual.field<View>("callbackButton").performClick() }
+                waitFor("both GL preview streams") {
+                    dual.recorder.snapshot().filter { it.kind == DualOutputs.GL_INPUT }
+                        .map { it.values["stream"] }.distinct().size == 2 && dual.frame()?.number != null
+                }
+                log += checkGlFrames(dual, if (video) "video preview" else "photo preview")
+                if (video) {
+                    ui { dual.field<View>("recordButton").performClick() }
+                    waitFor("dual recording") { dual.recording }
+                    log += checkGlFrames(dual, "recording")
+                    ui { dual.field<View>("recordButton").performClick() }
+                    waitFor("video preview reopened") {
+                        !dual.recording && !dual.closing && dual.field<View?>("recordButton")?.isEnabled == true
+                    }
+                }
+                ui {
+                    if (dual.field<View>("callbackGraph").visibility == View.VISIBLE) dual.onBackPressedDispatcher.onBackPressed()
+                    dual.onBackPressedDispatcher.onBackPressed()
+                }
+                waitFor("Dual exit after camera close") { dual.isFinishing }
+            } catch (failure: Exception) {
+                throw IllegalStateException("${log.joinToString("\n")}\n${failure.message}", failure)
+            } finally { ui { if (!dual.isFinishing) dual.finish() }; test.waitForIdleSync() }
+        }
+        return log.joinToString("\n")
+    }
+
+    /** Reconstruct each displayed value from the graph's own input snapshot, even on devices
+     * whose preview timestamps do not match either physical result. */
+    private fun checkGlFrames(dual: DualPreviewActivity, phase: String): String {
+        val session = ui { dual.field<String>("sessionId") }
+        val since = SystemClock.elapsedRealtimeNanos()
+        val displayed = mutableSetOf<Long>()
+        val numbers = mutableMapOf<String, Int>()
+        val ids = listOf("preview_main", "preview_sub")
+        val sensors = ids.zip(ui { requireNotNull(dual.pair).toList() }).toMap()
+        repeat(24) {
+            SystemClock.sleep(130)
+            ui {
+                val graph = dual.field<ResultCallbackGraph>("callbackGraph")
+                val frame = dual.frame() ?: return@ui
+                val number = frame.number ?: return@ui
+                val cutoff = graph.field<Long>("nowNs")
+                val events = graph.field<List<Event>>("latestEvents").filter { it.session == session && it.atNs <= cutoff }
+                val start = events.singleOrNull { it.kind == "capture_started" && it.frame == number } ?: return@ui
+                if (start.atNs < since || !displayed.add(number)) return@ui
+                check(frame.outputs() == ids)
+                val origin = if (start.values["firstStart"] == true) start.atNs else start.values["previousStartAtNs"] as Long
+                val result = events.singleOrNull { it.kind == "capture_result" && it.frame == number }
+                val times = result?.values?.get("physicalTimestamps") as? Map<*, *>
+                val outputs = events.last { it.kind == "callback_streams" }.values["outputs"] as List<*>
+                for (row in frame.rows.filter { it.id in ids }) {
+                    val physical = outputs.filterIsInstance<Map<*, *>>().single { it["id"] == row.id }["physicalId"] as String
+                    check(physical == sensors[row.id])
+                    val stamp = times?.get(physical) as? Long
+                    val expected = events.filter { it.kind == DualOutputs.GL_INPUT && it.values["stream"] == row.id &&
+                        it.values["physicalId"] == physical && stamp != null && stamp > 0 && it.sensorNs == stamp }
+                        .map { (it.atNs - origin) / 1e6 }
+                    check(expected == row.latenciesMs) { "$phase #$number ${row.id} physical $physical: expected $expected, saw $row" }
+                    if (expected.isEmpty()) check(row.state == "Awaiting data")
+                    numbers[row.id] = numbers.getOrDefault(row.id, 0) + expected.size
+                }
+            }
+        }
+        check(displayed.size >= 3) {
+            "$phase: only ${displayed.size} frames advanced, status=${ui { dual.field<String>("status") }}, " +
+                "errors=${dual.recorder.snapshot().filter { it.kind == "camera_error" }}"
+        }
+        val end = SystemClock.elapsedRealtimeNanos()
+        // Give the last buffer's metadata a chance to arrive, and keep results just before the sample too.
+        SystemClock.sleep(300)
+        val events = dual.recorder.snapshot().filter { it.session == session }
+        val results = events.filter { it.kind == "capture_result" }
+        val logical = results.mapNotNull { it.sensorNs }.toSet()
+        val counts = ids.map { id ->
+            val inputs = events.filter { it.kind == DualOutputs.GL_INPUT && it.values["stream"] == id && it.atNs in since..end }
+            check(inputs.size >= 3 && inputs.map { it.sensorNs }.distinct().size == inputs.size)
+            val physical = inputs.map { it.values["physicalId"] }.distinct().single()
+            check(physical == sensors[id])
+            val stamps = results.mapNotNull {
+                (it.values["physicalTimestamps"] as? Map<*, *>)?.get(physical) as? Long }.toSet()
+            val logicalOnly = inputs.count { it.sensorNs !in stamps && it.sensorNs in logical }
+            "$id (ID $physical): raw=${inputs.size}, exact=${inputs.count { it.sensorNs in stamps }}, " +
+                "logicalOnly=$logicalOnly, shown=${numbers[id]}"
+        }
+        return "$phase: ${displayed.size} displayed frames; ${counts.joinToString()}"
+    }
 
     fun run(): String {
         val context = test.targetContext

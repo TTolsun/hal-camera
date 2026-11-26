@@ -12,4 +12,4 @@ Camera2의 Dual · V는 각 physical camera의 프리뷰와 MediaRecorder surfac
 
 CameraX는 같은 논리 카메라의 물리 ID 두 개를 ConcurrentCamera 설정으로 연결합니다. Dual · P는 공통 크기 중 첫 후보를 사용하고 Dual · V는 1280×720으로 구성합니다. 기기가 해당 구성을 거부하면 실패 상태를 표시하며 Camera2로 자동 전환하지 않습니다. 각 Preview는 GPU relay를 거쳐 화면과 해당 카메라의 H.264 인코더에 전달됩니다. Callback에는 실제 카메라 출력인 프리뷰만 표시하고 앱 인코더와 지원하지 않는 사진 출력은 제외합니다. 합성 영상이 아니며 MP4 두 개에 프리뷰 위치나 UI는 포함하지 않습니다. 장치의 onClosed와 CameraX surface 반환을 기다린 뒤 relay와 인코더 종료를 완료하고 다음 세션을 엽니다. CameraX provider는 듀얼 모드 전환마다 shutdown하지 않고 재사용합니다.
 
-Callback의 Main/Sub Preview는 실제 카메라 출력 설명자이며 직접 버퍼 수신을 관측하지 못해 No callback으로 표시합니다. TextureView 화면 갱신 이벤트는 도착 시각으로 사용하지 않습니다.
+Camera2 Dual의 Main/Sub Preview는 버퍼 수신을 직접 관측할 수 없어 No callback으로 표시합니다. CameraX Dual은 각 GL 입력이 읽은 버퍼의 타임스탬프와 물리 ID를 기록합니다. 두 값이 같은 세션의 물리 촬영 결과에서 한 프레임을 가리킬 때만 해당 프리뷰 행에 수신 시각을 표시합니다. 화면 갱신과 인코더 전달은 별도 입력으로 세지 않습니다.

@@ -18,6 +18,7 @@ class CliStoreInstrumentation : Instrumentation() {
     private var multiSplit = false
     private var lintChecks = false
     private var callbackFrames = false
+    private var dualGl = false
     private var splitDrag = false
     override fun onCreate(arguments: Bundle?) {
         super.onCreate(arguments)
@@ -30,13 +31,15 @@ class CliStoreInstrumentation : Instrumentation() {
         multiSplit = arguments?.getString("multi_split") == "true"
         lintChecks = arguments?.getString("lint_checks") == "true"
         callbackFrames = arguments?.getString("callback_frames") == "true"
+        dualGl = arguments?.getString("dual_gl") == "true"
         splitDrag = arguments?.getString("split_drag") == "true"
         start()
     }
 
     override fun onStart() {
-        if (callbackFrames) {
-            val result = runCatching { dev.halcamera.ui.CallbackFrameChecks(this).run() }
+        if (callbackFrames || dualGl) {
+            val checks = dev.halcamera.ui.CallbackFrameChecks(this)
+            val result = runCatching { if (dualGl) checks.dualGl() else checks.run() }
             finish(if (result.isSuccess) Activity.RESULT_OK else Activity.RESULT_CANCELED, Bundle().apply {
                 putString("stream", result.fold({ it }, { it.stackTraceToString() }))
             })

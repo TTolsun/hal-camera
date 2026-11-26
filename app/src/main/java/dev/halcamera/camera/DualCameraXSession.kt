@@ -46,7 +46,7 @@ class DualCameraXSession(
     private val io = Executors.newSingleThreadExecutor()
     private var provider: ProcessCameraProvider? = null
     private var loading = false
-    private var active = true
+    @Volatile private var active = true
     private var released = false
     private var closing = false
     private var done: (() -> Unit)? = null
@@ -83,8 +83,11 @@ class DualCameraXSession(
 
     private fun bind() {
         telemetry.sessions[sessionId] = mapOf("engine" to "CameraX", "cameraId" to plan.logicalId, "physicalIds" to ids)
-        telemetry.configureCallbackStreams(sessionId, dualCallbackStreams(physicalIds = ids))
-        val configs = ids.mapIndexed { index, physicalId ->
+        val previews = ids.mapIndexed(DualOutputs::glPreview)
+        telemetry.configureCallbackStreams(sessionId, previews.map { it.metadata() })
+        val configs = previews.mapIndexed { index, output ->
+            val physicalId = requireNotNull(output.physicalId)
+            val inputTags = mapOf("stream" to output.id, "physicalId" to physicalId)
             val selector = CameraSelector.Builder()
                 .addCameraFilter { infos -> infos.filter { Camera2CameraInfo.from(it).cameraId == plan.logicalId } }
                 .setPhysicalCameraId(physicalId).build()
@@ -129,7 +132,9 @@ class DualCameraXSession(
                 var provided = false
                 lateinit var relay: DualPreviewRelay
                 relay = DualPreviewRelay(if (index == 0) textures.first else textures.second,
-                    LiveSize(request.resolution.width, request.resolution.height)) { error ->
+                    LiveSize(request.resolution.width, request.resolution.height), onInput = { timestamp ->
+                        if (active) telemetry.recorder.record(sessionId, output.eventKind, sensorNs = timestamp, values = inputTags)
+                    }) { error ->
                     main.execute {
                         if (!provided) {
                             provided = true

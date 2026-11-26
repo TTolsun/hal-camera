@@ -2,12 +2,15 @@ package dev.halcamera.camera
 
 /** One identity definition for graph rows, submitted targets and image telemetry. */
 internal object DualOutputs {
+    const val GL_INPUT = "dual_gl_preview_available"
     private fun outputs(prefix: String, kind: OutputKind, label: String, repeating: Boolean, observable: Boolean, still: Boolean = false) =
         listOf("main", "sub").mapIndexed { index, id ->
             OutputDescriptor("${prefix}_$id", kind, repeating, stillCapture = still, observable = observable,
                 displayName = "${if (index == 0) "Main" else "Sub"} $label")
         }
     val previews = outputs("preview", OutputKind.PREVIEW, "Preview", true, false)
+    fun glPreview(index: Int, physicalId: String): OutputDescriptor =
+        previews[index].copy(physicalId = physicalId, observable = true, eventKind = GL_INPUT)
     val photos = outputs("photo", OutputKind.YUV, "photo", false, true, still = true)
     val recordings = outputs("recording", OutputKind.RECORDING, "Recording", true, false)
 }
